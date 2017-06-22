@@ -400,6 +400,11 @@ def test_better_sqrt():
     assert eq.expand() == (7 - 24*I)/125
 
     # issue 12775
+    # pos im part
     assert sqrt(2*I) == (1 + I)
-    assert sqrt(2*9*I) == (3 + 3*I)
+    assert sqrt(2*9*I) == Mul(3, 1 + I, evaluate=False)
     assert Pow(2*I, 3*S.Half) == (1 + I)**3
+    # neg im part
+    assert sqrt(-I/2) == Mul(S.Half, 1 - I, evaluate=False)
+    # fractional im part
+    assert Pow(-9*I/2, 3/S(2)) == 27*(1 - I)**3/8

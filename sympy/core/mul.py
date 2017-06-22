@@ -627,13 +627,17 @@ class Mul(Expr, AssocOp):
                 Pow(Mul._from_args(nc), e, evaluate=False)
         if e.is_Rational and e.q == 2:
             from sympy.core.power import integer_nthroot
+            from sympy.functions.elementary.complexes import sign
             if b.is_imaginary:
-                try:
-                    r, t = integer_nthroot(b.as_real_imag()[1]/2, 2)
+                a = b.as_real_imag()[1]
+                if a.is_Rational:
+                    n, d = abs(a/2).as_numer_denom()
+                    n, t = integer_nthroot(n, 2)
                     if t:
-                        return (r + S.ImaginaryUnit*r)**e.p
-                except ValueError:
-                    pass
+                        d, t = integer_nthroot(d, 2)
+                        if t:
+                            r = sympify(n)/d
+                            return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
         p = Pow(b, e, evaluate=False)
 
