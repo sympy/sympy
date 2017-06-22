@@ -51,8 +51,9 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
-    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
+    Derivative, exp, sin, tanh, expand, oo, I, pi, re, im, rootof,
+    Eq, Tuple, Expr, diff, log)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
@@ -2918,14 +2919,16 @@ def test_cancel():
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
 
-def test_issue_1506b():
+def test_issue_15605():
     f = (exp(x) + 1)/exp(x)
+    assert cancel(log(f)) == log(f)
     assert cancel(f, exp(-x)) == 1 + exp(-x)
     assert cancel(f, exp(-x), exp(x)) == 1 + exp(-x)
     # order matters
     assert cancel(f, exp(x), exp(-x)) == f
-    assert isinstance(cancel((2, 3)), Tuple)
-    assert isinstance(cancel((1, 2, 3)), Tuple)
+    raw = cancel((2, 3))
+    assert isinstance(raw, Tuple) and raw == (1, 2, 3)
+    raises(ValueError, lambda: cancel((1, 2, 3)))
 
 
 def test_reduced():
