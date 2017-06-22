@@ -237,7 +237,8 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        PREC = precedence(expr)
+        return self._print(self.parenthesize(expr.parent, PREC, strict=True)) + '[%s, %s]'%(expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
