@@ -463,10 +463,8 @@ def make_simp(z):
     def simp(expr):
         """ Efficiently simplify the rational function ``expr``. """
         numer, denom = expr.as_numer_denom()
-        # /!\ poly will not expand unless told to do so
-        # and we want this to be efficient so we use only
-        # mininal expansion
-        numer = expand_mul(numer)
+        numer = numer.expand()
+        # denom = denom.expand()  # is this needed?
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
         return c * numer.as_expr() / denom.as_expr()
 
