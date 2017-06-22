@@ -934,7 +934,7 @@ def fraction(expr, exact=False):
        flag is unset, then structure this exponent's structure will
        be analyzed and pretty fraction will be returned:
 
-       >>> from sympy import exp
+       >>> from sympy import exp, Mul
        >>> fraction(2*x**(-y))
        (2, x**y)
 
@@ -944,6 +944,14 @@ def fraction(expr, exact=False):
        >>> fraction(exp(-x), exact=True)
        (exp(-x), 1)
 
+       The `exact` flag will also keep any unevaluated Muls from
+       being evaluated:
+
+       >>> u = Mul(2, x + 1, evaluate=False)
+       >>> fraction(u)
+       (2*x + 2, 1)
+       >>> fraction(u, exact=True)
+       (2*(x  + 1), 1)
     """
     expr = sympify(expr)
 
