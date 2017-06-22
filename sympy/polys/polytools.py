@@ -6415,7 +6415,15 @@ def cancel(f, *gens, **args):
     from sympy.functions.elementary.piecewise import Piecewise
     options.allowed_flags(args, ['polys'])
 
-    f = sympify(f)
+    f = sympify(f)  # if tuple, now a Tuple
+
+    sifted = sift(gens, lambda x: not isinstance(x, Symbol))
+    if sifted[True]:
+        reps = [(g, Dummy()) for g in sifted[True]]
+        # the reps are processed in the order give
+        rv = cancel(f.subs(reps), *Tuple(*gens).xreplace(dict(reps)), **args)
+        _reps = dict([(v, k) for k, v in reps])
+        return rv.xreplace(_reps)
 
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
@@ -6433,10 +6441,10 @@ def cancel(f, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
-        if not isinstance(f, (tuple, Tuple)):
+        if not isinstance(f, Tuple):
             return f
         else:
-            return S.One, p, q
+            return Tuple(S.One, p, q)
     except PolynomialError as msg:
         if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
@@ -6463,13 +6471,13 @@ def cancel(f, *gens, **args):
 
     c, P, Q = F.cancel(G)
 
-    if not isinstance(f, (tuple, Tuple)):
+    if not isinstance(f, Tuple):
         return c*(P.as_expr()/Q.as_expr())
     else:
         if not opt.polys:
-            return c, P.as_expr(), Q.as_expr()
+            return Tuple(c, P.as_expr(), Q.as_expr())
         else:
-            return c, P, Q
+            return Tuple(c, P, Q)
 
 
 @public

@@ -2917,6 +2917,17 @@ def test_cancel():
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
+
+def test_issue_1506b():
+    f = (exp(x) + 1)/exp(x)
+    assert cancel(f, exp(-x)) == 1 + exp(-x)
+    assert cancel(f, exp(-x), exp(x)) == 1 + exp(-x)
+    # order matters
+    assert cancel(f, exp(x), exp(-x)) == f
+    assert isinstance(cancel((2, 3)), Tuple)
+    assert isinstance(cancel((1, 2, 3)), Tuple)
+
+
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
     G = [x**3 - x, y**3 - y]
