@@ -6397,9 +6397,6 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
 def _cancel_pq(p, q, *gens, **args):
     # helper for cancel to handle explicit numerator and denominator
-    from sympy.core.exprtools import factor_terms
-    from sympy.functions.elementary.piecewise import Piecewise
-
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
@@ -6443,6 +6440,7 @@ def _cancel(f, *gens, **args):
             c, nc = sifted[True], sifted[False]
             nc = [_cancel(i) for i in nc]
             return f.func(_cancel(f.func._from_args(c)), *nc)
+        return f.func(*[_cancel(i) for i in f.args])
 
 
 @public

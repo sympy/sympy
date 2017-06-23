@@ -161,6 +161,7 @@ def test_issue_5652():
     assert simplify(E + exp(-E)) == exp(-E) + E
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
+    assert simplify(n + n**(-(x**2 + x)/(x + 1))) == n + n**(-x)
 
 
 def test_simplify_fail1():
