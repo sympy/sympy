@@ -13,7 +13,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
-from sympy import exp, polylog, N, Wild, cancel
+from sympy import exp, polylog, N, Wild, together
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 #from .rubi import rubi_integrate
@@ -525,7 +525,7 @@ def NiceSqrtQ(u):
     return Not(NegativeQ(u)) & NiceSqrtAuxQ(u)
 
 def Together(u):
-    return cancel(u)
+    return together(u)
 
 def FixSimplify(u):
     return u
@@ -572,6 +572,28 @@ def CoefficientList(u, x):
 
 def ReplaceAll(expr, x, substitution):
     return expr.subs(x, substitution)
+
+def NormalizeIntegrand(u, x):
+    # returns u in a standard form recognizable by integration rules.
+    return u
+
+def SimplifyTerm(u, x):
+    v = Simplify(u)
+    w = Together(v)
+    if LeafCount(v) < LeafCount(w):
+        return NormalizeIntegrand(v, x)
+    else:
+        return NormalizeIntegrand(w, x)
+
+def ExpandLinearProduct(v, u, a, b, x):
+    # If u is a polynomial in x, ExpandLinearProduct[v,u,a,b,x] expands v*u into a sum of terms of the form c*v*(a+b*x)^n.
+    if FreeQ([a, b], x) and PolynomialQ(u, x):
+        lst = CoefficientList(ReplaceAll(u, x, (x - a)/b), x)
+        lst = [SimplifyTerm(i, x) for i in lst]
+        res = 0
+        for k in range(1, len(lst)+1):
+            res = res + v*lst[k-1]*(a + b*x)**(k - 1)
+        return res
 
 def ExpandIntegrand(u, x):
     return None

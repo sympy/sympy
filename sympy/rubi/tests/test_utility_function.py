@@ -471,3 +471,9 @@ def test_CoefficientList():
 def test_ReplaceAll():
     assert ReplaceAll(x, x, a) == a
     assert ReplaceAll(a*x, x, a + b) == a*(a + b)
+
+def test_SimplifyTerm():
+    assert SimplifyTerm(a/100 + 100/b*x, x) == a/100 + 100/b*x
+
+def test_ExpandLinearProduct():
+    assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
