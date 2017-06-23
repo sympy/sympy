@@ -364,7 +364,7 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
-            + '[%s,%s]'%(expr.i+1, expr.j+1)
+            + '[%s,%s]' % (expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):

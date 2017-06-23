@@ -288,7 +288,7 @@ def test_octave_matrix_elements():
     assert mcode(A[0, 0]**2 + A[0, 1] + A[0, 2]) == "x.^2 + x.*y + 2"
     A = MatrixSymbol('AA', 1, 3)
     assert mcode(A) == "AA"
-    assert mcode(A[0,0]**2 + sin(A[0,1]) + A[0,2]) == \
+    assert mcode(A[0, 0]**2 + sin(A[0,1]) + A[0,2]) == \
            "sin(AA(1, 2)) + AA(1, 1).^2 + AA(1, 3)"
     assert mcode(sum(A)) == "AA(1, 1) + AA(1, 2) + AA(1, 3)"
 
@@ -384,33 +384,9 @@ def test_MatrixElement_printing():
     A = MatrixSymbol("A", 1, 3)
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
-    M = MatrixSymbol("M", 1, 3)
 
-    assert mcode(A[0,0]) == "A(1, 1)"
-    assert mcode(3 * A[0,0]) == "3*A(1, 1)"
+    assert mcode(A[0, 0]) == "A(1, 1)"
+    assert mcode(3 * A[0, 0]) == "3*A(1, 1)"
 
-    E = A-B
-    F = C[0, 0]
-    F = F.subs(C, E)
+    F = C[0, 0].subs(C, A - B)
     assert mcode(F) == "((-1)*B + A)(1, 1)"
-
-    E = A - B + M
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert mcode(F) == "((-1)*B + A + M)(1, 1)"
-
-    E = A + M
-    F = C[0, 1]
-    F = F.subs(C, E)
-    assert mcode(F) == "(A + M)(1, 2)"
-
-    x, y, z = symbols("x y z")
-    E = x*A - y*B + z*M
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert(mcode(F) == "(x*A + (-y)*B + z*M)(1, 1)" )
-
-    E = 2*x*A + 3*Matrix([[x, y, z]])
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert(mcode(F) == "([3*x 3*y 3*z] + (2*x)*A)(1, 1)")

@@ -765,33 +765,9 @@ def test_MatrixElement_printing():
     A = MatrixSymbol("A", 1, 3)
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
-    M = MatrixSymbol("M", 1, 3)
 
-    assert(str(A[0,0]) == "A[0, 0]")
-    assert(str(3 * A[0,0]) == "3*A[0, 0]")
+    assert(str(A[0, 0]) == "A[0, 0]")
+    assert(str(3 * A[0, 0]) == "3*A[0, 0]")
 
-    E = A-B
-    F = C[0, 0]
-    F = F.subs(C, E)
+    F = C[0, 0].subs(C, A - B)
     assert str(F) == "((-1)*B + A)[0, 0]"
-
-    E = A - B + M
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert str(F) == "((-1)*B + A + M)[0, 0]"
-
-    E = A + M
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert str(F) == "(A + M)[0, 0]"
-
-    x, y, z = symbols("x y z")
-    E = x*A - y*B + z*M
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert(str(F) == "(x*A + (-y)*B + z*M)[0, 0]" )
-
-    E = 2*x*A + 3*Matrix([[x, y, z]])
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert(str(F) == "(Matrix([[3*x, 3*y, 3*z]]) + (2*x)*A)[0, 0]")

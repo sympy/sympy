@@ -1601,33 +1601,9 @@ def test_MatrixElement_printing():
     A = MatrixSymbol("A", 1, 3)
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
-    M = MatrixSymbol("M", 1, 3)
 
-    assert latex(A[0,0]) == r"A_{0, 0}"
-    assert latex(3 * A[0,0]) == r"3 A_{0, 0}"
+    assert latex(A[0, 0]) == r"A_{0, 0}"
+    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
-    E = A-B
-    F = C[0, 0]
-    F = F.subs(C, E)
+    F = C[0, 0].subs(C, A - B)
     assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
-
-    E = A - B + M
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert latex(F) == r"\left(-1 B + A + M\right)_{0, 0}"
-
-    E = A + M
-    F = C[0, 1]
-    F = F.subs(C, E)
-    assert latex(F) == r"\left(A + M\right)_{0, 1}"
-
-    x, y, z = symbols("x y z")
-    E = x*A - y*B + z*M
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert(latex(F) == r"\left(x A + - y B + z M\right)_{0, 0}")
-
-    E = 2*x*A + 3*Matrix([[x, y, z]])
-    F = C[0, 0]
-    F = F.subs(C, E)
-    assert(latex(F) == r'\left(\left[\begin{matrix}3 x & 3 y & 3 z\end{matrix}\right] + 2 x A\right)_{0, 0}')
