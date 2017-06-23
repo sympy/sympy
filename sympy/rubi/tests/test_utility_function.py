@@ -3,7 +3,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
-from sympy import I, E
+from sympy import I, E, pi
 
 a, b, c, d, x, y, z = symbols('a b c d x y z')
 
@@ -63,9 +63,9 @@ def test_IntPart():
     assert IntPart(-3.6) == -4
 
 def test_NegQ():
-    assert NegQ(-3)
-    assert not NegQ(0)
-    assert not NegQ(4)
+    assert NegQ(-S(3))
+    assert not NegQ(S(0))
+    assert not NegQ(S(0))
 
 def test_RationalQ():
     assert RationalQ(S(5)/6)
@@ -208,6 +208,12 @@ def test_ComplexNumberQ():
     assert ComplexNumberQ(1 + I*2, I) == True
     assert ComplexNumberQ(a + b, I) == False
 
+def test_Re():
+    assert Re(1 + I) == 1
+
+def test_Im():
+    assert Im(1 + 2*I) == 2
+
 def test_RealNumericQ():
     assert RealNumericQ(S(1)) == True
 
@@ -243,9 +249,13 @@ def test_NonsumQ():
 
 def test_First():
     assert First([1, 2, 3, 4]) == 1
+    assert First(a*b*c) == a
+    assert First(a + b + c) == a
 
 def test_Rest():
     assert Rest([1, 2, 3, 4]) == [2, 3, 4]
+    assert Rest(a*b*c) == b*c
+    assert Rest(a + b + c) == b + c
 
 def test_SqrtNumberQ():
     assert SqrtNumberQ(sqrt(2)) == True
@@ -370,7 +380,6 @@ def test_SinhCoshQ():
     assert SinhCoshQ(sech(x))
     assert SinhCoshQ(csch(x))
 
-
 def test_Rt():
     assert Rt(8, 3) == 2
     assert Rt(16807, 5) == 7
@@ -404,7 +413,52 @@ def test_InverseFunctionQ():
     assert InverseFunctionQ(acosh(a))
     assert InverseFunctionQ(polylog(a, b))
 
-
 def test_EqQ():
     assert EqQ(a, a)
     assert not EqQ(a, b)
+
+def test_PolynomialQ():
+    assert PolynomialQ(x**3, x)
+    assert not PolynomialQ(sqrt(x), x)
+
+def test_PolyQ():
+    assert PolyQ(x, x, 1)
+    assert PolyQ(x**2, x, 2)
+    assert not PolyQ(x**3, x, 2)
+
+def test_EvenQ():
+    assert EvenQ(S(2))
+    assert not EvenQ(S(1))
+
+def test_OddQ():
+    assert OddQ(S(1))
+    assert not OddQ(S(2))
+
+def test_PerfectSquareQ():
+    assert PerfectSquareQ(S(4))
+    assert PerfectSquareQ(a**S(2)*b**S(4))
+    assert not PerfectSquareQ(S(1)/3)
+
+def test_NiceSqrtQ():
+    assert NiceSqrtQ(S(1)/3)
+    assert not NiceSqrtQ(-S(1))
+    assert NiceSqrtQ(pi**2)
+    assert NiceSqrtQ(pi**2*sin(4)**4)
+    assert not NiceSqrtQ(pi**2*sin(4)**3)
+
+def test_Together():
+    assert Together(1/a + b/2) == (a*b + 2)/(2*a)
+
+def test_PosQ():
+    assert not PosQ(S(0))
+    assert PosQ(S(1))
+    assert PosQ(pi)
+    assert PosQ(pi**3)
+    assert PosQ((-pi)**4)
+    assert PosQ(sin(1)**2*pi**4)
+
+def test_NumericQ():
+    assert NumericQ(sin(cos(2)))
+
+def test_NumberQ():
+    assert NumberQ(pi)

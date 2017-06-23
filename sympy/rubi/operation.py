@@ -104,6 +104,10 @@ class Sqrt(Operation):
     name = "Sqrt"
     arity = Arity.unary
 
+class NegativeQ(Operation):
+    name = "NegativeQ"
+    arity = Arity.unary
+
 class ArcCosh(Operation):
     name = "ArcCosh"
     arity = Arity.unary
@@ -167,3 +171,23 @@ class GreaterEqual(Operation):
 class FractionQ(Operation):
     name = "FractionQ"
     arity = Arity.variadic
+
+class ExpandIntegrand(Operation):
+    name = "ExpandIntegrand"
+    arity = Arity.binary
+
+class With(Operation):
+    name = "With"
+    arity = Arity.binary
+
+class Set(Operation):
+    name = "Set"
+    arity = Arity.binary
+
+class Hypergeometric2F1(Operation):
+    name = "Hypergeometric2F1"
+    arity = Arity.variadic
+
+class TogetherSimplify(Operation):
+    name = "TogetherSimplify"
+    arity = Arity.unary

@@ -1,5 +1,5 @@
 '''
-Utility functions for Constraints in Rubi
+Utility functions for Rubi integration
 '''
 
 from sympy.functions.elementary.integers import floor, frac
@@ -13,10 +13,15 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
-from sympy import exp, polylog, N
-
+from sympy import exp, polylog, N, Wild, cancel
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
+#from .rubi import rubi_integrate
+
+#def Int(expr, var):
+#    if expr == None:
+#        return None
+#    return rubi_integrate(expr, var)
 
 def Set(expr, value):
     return {expr: value}
@@ -54,6 +59,9 @@ def FalseQ(u):
 
 def ZeroQ(expr):
     return expr == 0
+
+def NegativeQ(u):
+    return u < 0
 
 def NonzeroQ(expr):
     return expr != 0
@@ -134,17 +142,25 @@ def NonsumQ(expr):
     return not SumQ(expr)
 
 def Subst(a, x, y):
+    if None in [a, x, y]:
+        return None
     return a.subs(x, y)
 
 def First(expr, d=None):
     # gives the first element if it exists, or d otherwise.
     try:
-        return expr[0]
+        if isinstance(expr, list):
+            return expr[0]
+        else:
+            return expr.func(expr.args[0])
     except:
         return d
 
-def Rest(l):
-    return l[1:]
+def Rest(expr):
+    if isinstance(expr, list):
+        return expr[1:]
+    else:
+        return expr.func(*expr.args[1:])
 
 def SqrtNumberQ(expr):
     # SqrtNumberQ[u] returns True if u^2 is a rational number; else it returns False.
@@ -369,10 +385,13 @@ def LeafCount(expr):
     return len(list(postorder_traversal(expr)))
 
 def Numerator(u):
-    return fraction(var)[0]
+    return fraction(u)[0]
 
 def NumberQ(u):
-    return u.is_Number
+    return u.is_number
+
+def NumericQ(u):
+    return N(u).is_number
 
 def Length(expr):
     # returns number of elements in the experssion
@@ -387,10 +406,12 @@ def ListQ(u):
 def Im(u):
     return im(u)
 
+def Re(u):
+    return re(u)
+
 def InverseHyperbolicQ(u):
     if not u.is_Atom:
         u = Head(u)
-
     return u in [acosh, asinh, atanh, acoth, acsch, acsch]
 
 def InverseFunctionQ(u):
@@ -454,3 +475,94 @@ def RealQ(u):
 
 def EqQ(u, v):
     return ZeroQ(u - v)
+
+def PolynomialQ(u, x):
+    return u.is_polynomial(x)
+
+def PolyQ(u, x, n):
+    # returns True iff u is a polynomial of degree n.
+    if u.is_polynomial(x):
+        return degree(u, gen=x) == n
+    return False
+
+def EvenQ(u):
+    # gives True if expr is an even integer, and False otherwise.
+    return u.is_Integer and u%2 == 0
+
+def OddQ(u):
+    # gives True if expr is an odd integer, and False otherwise.
+    return u.is_Integer and u%2 == 1
+
+def PerfectSquareQ(u):
+    # (* If u is a rational number whose squareroot is rational or if u is of the form u1^n1 u2^n2 ...
+    # and n1, n2, ... are even, PerfectSquareQ[u] returns True; else it returns False. *)
+    if RationalQ(u):
+        return u > 0 and RationalQ(Sqrt(u))
+    elif PowerQ(u):
+        return EvenQ(u.args[1])
+    elif ProductQ(u):
+        return PerfectSquareQ(First(u)) & PerfectSquareQ(Rest(u))
+    elif SumQ(u):
+        s = Simplify(u)
+        return NonsumQ(s) & PerfectSquareQ(s)
+    else:
+        return False
+
+def NiceSqrtAuxQ(u):
+    if RationalQ(u):
+        return u > 0
+    elif PowerQ(u):
+        return EvenQ(u.args[1])
+    elif ProductQ(u):
+        return NiceSqrtAuxQ(First(u)) & NiceSqrtAuxQ(Rest(u))
+    elif SumQ(u):
+        s = Simplify(u)
+        return  NonsumQ(s) & NiceSqrtAuxQ(s)
+    else:
+        return False
+
+def NiceSqrtQ(u):
+    return Not(NegativeQ(u)) & NiceSqrtAuxQ(u)
+
+def Together(u):
+    return cancel(u)
+
+def FixSimplify(u):
+    return u
+
+def TogetherSimplify(u):
+    return u
+    #return With(Set(v, Together(Simplify(Together(u)))), FixSimplify(v))
+
+def PosAux(u):
+    if RationalQ(u):
+        return u>0
+    elif NumberQ(u):
+        if ZeroQ(Re(u)):
+            return Im(u) > 0
+        else:
+            return Re(u) > 0
+    elif NumericQ(u):
+        v = N(u)
+        if ZeroQ(Re(v)):
+            return Im(v) > 0
+        else:
+            return Re(v) > 0
+    elif PowerQ(u) and OddQ(u.args[1]):
+        return PosAux(u.args[0])
+    elif ProductQ(u):
+        if PosAux(First(u)):
+            return PosAux(Rest(u))
+        else:
+            return not PosAux(Rest(u))
+    elif SumQ(u):
+        return PosAux(First(u))
+    else:
+        return True
+
+def PosQ(u):
+    # If u is not 0 and has a positive form, PosQ[u] returns True, else it returns False.
+    return PosAux(TogetherSimplify(u))
+
+def ExpandIntegrand(u, x):
+    return None
