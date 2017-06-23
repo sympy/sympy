@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Pow
 )
 
 from sympy.core.mul import _keep_coeff
@@ -6396,7 +6396,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
 
 def _cancel_pq(p, q, *gens, **args):
-    # helper for cancel where f is a Tuple
+    # helper for cancel to handle explicit numerator and denominator
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
 
@@ -6414,15 +6414,22 @@ def _cancel_pq(p, q, *gens, **args):
 
 
 def _cancel(f, *gens, **args):
-    # helper for cancel when f is an Expr
+    # helper for cancel when it is given an Expr
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
 
-    if not isinstance(f, Expr):
+    if not isinstance(f, Expr) or f.is_Atom:
         return f
+    elif not isinstance(f, (Add, Mul, Pow)):
+        return f.replace(
+            lambda x: isinstance(x, (Mul, Add, Pow)),
+            lambda x: _cancel(x, *gens, **args))
+
     p, q = factor_terms(f, radical=True).as_numer_denom()
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
+        c, P, Q = F.cancel(G)
+        return c*(P.as_expr()/Q.as_expr())
     except PolificationFailed:
         return p/q
     except PolynomialError as msg:
@@ -6430,27 +6437,12 @@ def _cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
+            sifted = sift(f.args, lambda x:
+                x.is_commutative is True and
+                not x.has(Piecewise))
             c, nc = sifted[True], sifted[False]
             nc = [_cancel(i) for i in nc]
             return f.func(_cancel(f.func._from_args(c)), *nc)
-        else:
-            reps = []
-            pot = preorder_traversal(f)
-            next(pot)
-            for e in pot:
-                # XXX: This should really skip anything that's not Expr.
-                if isinstance(e, (tuple, Tuple, BooleanAtom)):
-                    continue
-                try:
-                    reps.append((e, _cancel(e)))
-                    pot.skip()  # this was handled successfully
-                except NotImplementedError:
-                    pass
-            return f.xreplace(dict(reps))
-    else:
-        c, P, Q = F.cancel(G)
-        return c*(P.as_expr()/Q.as_expr())
 
 
 @public
@@ -6496,12 +6488,8 @@ def cancel(f, *gens, **args):
     if isinstance(F, Tuple):
         p, q = F
         rv = _cancel_pq(p, q, *G, **args)
-    elif isinstance(F, (Mul, Add)):
-        rv = _cancel(F, *G, **args)
     else:
-        rv = f.replace(
-            lambda x: isinstance(x, (Mul, Add)),
-            lambda x: _cancel(x, *G, **args))
+        rv = _cancel(F, *G, **args)
 
     # post-process if necessary
     if sifted[True]:

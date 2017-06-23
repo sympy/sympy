@@ -2900,20 +2900,22 @@ def test_cancel():
 
     # issue 7022
     A = Symbol('A', commutative=False)
-    p1 = Piecewise((A*(x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
+    rat = (x**2 - 1)/(x + 1)
+    p1 = Piecewise((A*rat, x > 1), ((x + 2)/(x**2 + 2*x), True))
     p2 = Piecewise((A*(x - 1), x > 1), (1/x, True))
     assert cancel(p1) == p2
     assert cancel(2*p1) == 2*p2
     assert cancel(1 + p1) == 1 + p2
-    assert cancel((x**2 - 1)/(x + 1)*p1) == (x - 1)*p2
-    assert cancel((x**2 - 1)/(x + 1) + p1) == (x - 1) + p2
-    p3 = Piecewise(((x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
+    assert cancel(rat*p1) == (x - 1)*p2
+    assert cancel(rat + p1) == (x - 1) + p2
+    p3 = Piecewise((rat, x > 1), ((x + 2)/(x**2 + 2*x), True))
     p4 = Piecewise(((x - 1), x > 1), (1/x, True))
     assert cancel(p3) == p4
     assert cancel(2*p3) == 2*p4
     assert cancel(1 + p3) == 1 + p4
-    assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
-    assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
+    assert cancel(rat*p3) == (x - 1)*p4
+    assert cancel(rat + p3) == (x - 1) + p4
+    assert cancel(Piecewise((rat, rat > 1))) == Piecewise((x - 1, x - 1 > 1))
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
