@@ -462,3 +462,12 @@ def test_NumericQ():
 
 def test_NumberQ():
     assert NumberQ(pi)
+
+def test_CoefficientList():
+    assert CoefficientList(1 + a*x, x) == [1, a]
+    assert CoefficientList(1 + a*x**3, x) == [1, 0, 0, a]
+    assert CoefficientList(sqrt(x), x) == []
+
+def test_ReplaceAll():
+    assert ReplaceAll(x, x, a) == a
+    assert ReplaceAll(a*x, x, a + b) == a*(a + b)

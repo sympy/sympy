@@ -564,5 +564,14 @@ def PosQ(u):
     # If u is not 0 and has a positive form, PosQ[u] returns True, else it returns False.
     return PosAux(TogetherSimplify(u))
 
+def CoefficientList(u, x):
+    if PolynomialQ(u, x):
+        return list(reversed(Poly(u, x).all_coeffs()))
+    else:
+        return []
+
+def ReplaceAll(expr, x, substitution):
+    return expr.subs(x, substitution)
+
 def ExpandIntegrand(u, x):
     return None
