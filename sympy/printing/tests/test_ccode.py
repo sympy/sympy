@@ -619,3 +619,9 @@ def test_MatrixElement_printing():
     F = C[0, 0]
     F = F.subs(C, E)
     assert(ccode(F) == "(x*A + (-y)*B + z*M)[0]")
+
+
+def test_subclass_CCodePrinter():
+    # issue gh-12687
+    class MySubClass(CCodePrinter):
+        pass

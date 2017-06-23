@@ -264,7 +264,7 @@ def test_sparse_matrix():
                             [ 3, 3, 7, 4],
                             [ 8, 4, 0, 2],
                             [-2, 6, 3, 4]])
-    L, U, p = testmat.LUdecomposition()
+    L, U, p = testmat.LU_decomposition()
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - testmat == sparse_zeros(4)
@@ -273,14 +273,14 @@ def test_sparse_matrix():
                             [ 0,  3, 6, 7],
                             [ 1, -2, 7, 4],
                             [-9,  2, 6, 3]])
-    L, U, p = testmat.LUdecomposition()
+    L, U, p = testmat.LU_decomposition()
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - testmat == sparse_zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
-    L, U, p = M.LUdecomposition()
+    L, U, p = M.LU_decomposition()
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - M == sparse_zeros(3)
@@ -375,7 +375,7 @@ def test_sparse_matrix():
 
     # test_QR
     A = Matrix([[1, 2], [2, 3]])
-    Q, S = A.QRdecomposition()
+    Q, S = A.QR_decomposition()
     R = Rational
     assert Q == Matrix([
         [  5**R(-1, 2),  (R(2)/5)*(R(1)/5)**R(-1, 2)],
@@ -529,17 +529,17 @@ def test_copyin():
 def test_sparse_solve():
     from sympy.matrices import SparseMatrix
     A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    assert A.cholesky() == Matrix([
+    assert A.cholesky_decomposition() == Matrix([
         [ 5, 0, 0],
         [ 3, 3, 0],
         [-1, 1, 3]])
-    assert A.cholesky() * A.cholesky().T == Matrix([
+    assert A.cholesky_decomposition() * A.cholesky_decomposition().T == Matrix([
         [25, 15, -5],
         [15, 18, 0],
         [-5, 0, 11]])
 
     A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    L, D = A.LDLdecomposition()
+    L, D = A.LDL_decomposition()
     assert 15*L == Matrix([
         [15, 0, 0],
         [ 9, 15, 0],
