@@ -6418,6 +6418,8 @@ def _cancel(f, *gens, **args):
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
 
+    if not isinstance(f, Expr):
+        return f
     p, q = factor_terms(f, radical=True).as_numer_denom()
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
