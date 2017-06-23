@@ -45,7 +45,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group, sift, public
+from sympy.utilities import group, sift, public, flatten
 from sympy.utilities.misc import filldedent
 
 import sympy.polys
@@ -6422,7 +6422,7 @@ def _cancel(f, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
-        return f
+        return p/q
     except PolynomialError as msg:
         if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
@@ -6481,11 +6481,12 @@ def cancel(f, *gens, **args):
         raise ValueError('expecting tuple or Expr, not %s' % f)
 
     # recognize non-Symbol args
+    gens = Tuple(*flatten(gens))
     sifted = sift(gens, lambda x: not isinstance(x, Symbol))
     if sifted[True]:
         reps = [(g, Dummy()) for g in sifted[True]]
         # the reps are processed in the order give
-        F, G = f.subs(reps), Tuple(*gens).xreplace(dict(reps))
+        F, G = f.subs(reps), gens.xreplace(dict(reps))
     else:
         F, G = f, gens
 

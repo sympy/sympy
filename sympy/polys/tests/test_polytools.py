@@ -2820,6 +2820,9 @@ def test_cancel():
     assert cancel((1, 0), x) == (1, 1, 0)
     assert cancel((0, 1), x) == (1, 0, 1)
 
+    # PolificationFailed raises for this case
+    assert cancel((2 + 2*x)/(1 + x)) == 2
+
     f, g, p, q = 4*x**2 - 4, 2*x - 2, 2*x + 2, 1
     F, G, P, Q = [ Poly(u, x) for u in (f, g, p, q) ]
 
