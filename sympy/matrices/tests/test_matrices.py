@@ -13,7 +13,8 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
+    MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
@@ -1075,6 +1076,9 @@ def test_transpose():
     assert M.T.T == M
     assert M.T == M.transpose()
 
+    M = MatrixSymbol('M', 4, 4)
+    assert M.transpose() == M.T
+    assert M.T.T == M
 
 def test_conjugate():
     M = Matrix([[0, I, 5],

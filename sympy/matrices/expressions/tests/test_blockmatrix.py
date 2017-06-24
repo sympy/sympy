@@ -4,7 +4,7 @@ from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
-from sympy.core import Tuple, symbols, Expr
+from sympy.core import Tuple, symbols, Expr, Symbol
 from sympy.core.compatibility import range
 from sympy.functions import transpose
 
@@ -109,6 +109,22 @@ def test_BlockMatrix_Determinant():
         assert det(X) == det(A) * det(D - C*A.I*B)
 
     assert isinstance(det(X), Expr)
+
+def test_BlockMatrix_Transpose():
+    x = Symbol('x')
+    A = BlockMatrix([[x]]).transpose()
+    assert A == BlockMatrix([[x]])
+
+    x = Symbol('x', complex=True)
+    A = BlockMatrix([[x]]).transpose()
+    assert A == BlockMatrix([[x]])
+
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', n, m)
+    y = Symbol('y')
+    X = BlockMatrix([[A, y], [x, B]])
+
+    assert X.transpose() == BlockMatrix([[A.T, x], [y, B.T]])
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
