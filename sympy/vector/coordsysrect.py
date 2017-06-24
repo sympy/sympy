@@ -4,7 +4,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.core import S
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
@@ -150,6 +150,9 @@ class CoordSysCartesian(Basic):
         obj._h2 = S.One
         obj._h3 = S.One
 
+        obj._transformation_eq1 = S.One
+        obj._transformation_eq2 = S.One
+        obj._transformation_eq3 = S.One
 
         # Assign params
         obj._parent = parent
@@ -173,6 +176,57 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
+    def set_coordinate_type(self,  curv_coord_type):
+        """
+        Change the type of orthogonal curvilinear system. It could be done
+        by tuple of transformation equations or by choosing one of pre-defined
+        coordinate system.
+
+        Parameters
+        ==========
+
+        :param curv_coord_type: str, tuple
+
+        """
+        if type(curv_coord_type) is str:
+            self._set_transformation_equations_mapping(curv_coord_type)
+            self._set_lame_coefficient_mapping(curv_coord_type)
+
+        elif type(curv_coord_type) is tuple and len(curv_coord_type) == 3:
+            self._transformation_eq1, self._transformation_eq2, self._transformation_eq3 =\
+                self._transformation_equations(curv_coord_type)
+            self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(self.transformation_equations())
+
+        else:
+            raise ValueError("Wrong set of parameter.")
+
+    def _set_transformation_equations_mapping(self, curv_coord_name):
+        """
+        Store information about some default, pre-defined transformation
+        equations.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+        equations_mapping = {
+            'cartesian': (self.x, self.y, self.z),
+            'spherical': (self.x * sin(self.y) * cos(self.z),
+                          self.x * sin(self.y) * sin(self.z),
+                          self.x * cos(self.y)),
+            'cylindrical': (self.x * cos(self.y),
+                            self.x * sin(self.y),
+                            self.z)
+        }
+        if curv_coord_name not in equations_mapping:
+            raise ValueError('Wrong set of parameters.'
+                             'Type of coordinate system is defined')
+        self._transformation_eq1, self._transformation_eq2, self._transformation_eq3 =\
+            equations_mapping[curv_coord_name]
+
     def _set_lame_coefficient_mapping(self, curv_coord_name):
         """
         Store information about Lame coefficient, for pre-defined
@@ -195,6 +249,46 @@ class CoordSysCartesian(Basic):
         if curv_coord_name not in coefficient_mapping:
             raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
         self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
+
+    def _transformation_equations(self, equations):
+        """
+        Helper method for set_coordinate_type. It substitute scalar into symbols.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+        from sympy import symbols
+        x, y, z = symbols('x y z')
+        return [eq.subs({x:self.x, y:self.y, z:self.z}) for eq in equations]
+
+    def _calculate_lame_coefficients(self, equations):
+        """
+        Helper method for set_coordinate_type. It calculates Lame coefficients
+        for given transformations equations.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+        h1 = sqrt(diff(equations[0], self.x)**2 +
+                  diff(equations[1], self.x)**2 +
+                  diff(equations[2], self.x)**2)
+
+        h2 = sqrt(diff(equations[0], self.y)**2 +
+                  diff(equations[1], self.y)**2 +
+                  diff(equations[2], self.y)**2)
+
+        h3 = sqrt(diff(equations[0], self.z)**2 +
+                  diff(equations[1], self.z)**2 +
+                  diff(equations[2], self.z)**2)
+        return h1, h2, h3
 
     @property
     def origin(self):
@@ -242,6 +336,11 @@ class CoordSysCartesian(Basic):
 
     def lame_coefficients(self):
         return self._h1, self._h2, self._h3
+
+    def transformation_equations(self):
+        return self._transformation_eq1,\
+               self._transformation_eq2,\
+               self._transformation_eq3
 
     @cacheit
     def rotation_matrix(self, other):

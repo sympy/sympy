@@ -306,3 +306,23 @@ def test_lame_coefficients():
     a = CoordSysCartesian('a')
     a._set_lame_coefficient_mapping('cylindrical')
     assert a.lame_coefficients() == (1, a.y, 1)
+
+
+def test_transformation_equations():
+    from sympy import symbols
+    x, y, z = symbols('x y z')
+    a = CoordSysCartesian('a')
+    a.set_coordinate_type('spherical')
+    assert a.transformation_equations() == (a.x * sin(a.y) * cos(a.z),
+                          a.x * sin(a.y) * sin(a.z),
+                          a.x * cos(a.y))
+    assert a.lame_coefficients() == (1, a.x, a.x * sin(a.y))
+    a.set_coordinate_type('cylindrical')
+    assert a.transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
+    assert a.lame_coefficients() == (1, a.y, 1)
+    a.set_coordinate_type('cartesian')
+    assert a.transformation_equations() == (a.x, a.y, a.z)
+    assert a.lame_coefficients() == (1, 1, 1)
+    a.set_coordinate_type((x, y, z))
+    assert a.transformation_equations() == (a.x, a.y, a.z)
+    assert a.lame_coefficients() == (1, 1, 1)
