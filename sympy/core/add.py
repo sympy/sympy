@@ -350,6 +350,30 @@ class Add(Expr, AssocOp):
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
     # issue 5524.
 
+    def _eval_power(self, e):
+        if e.is_Rational and self.is_number:
+            from sympy.core.evalf import pure_complex
+            from sympy.core.mul import _unevaluated_Mul
+            from sympy.core.exprtools import factor_terms
+            from sympy.core.function import expand_multinomial
+            from sympy.functions.elementary.complexes import sign
+            from sympy.functions.elementary.miscellaneous import sqrt
+            ri = pure_complex(self)
+            if ri:
+                r, i = ri
+                if e.q == 2:
+                    D = sqrt(r**2 + i**2)
+                    if D.is_Rational:
+                        # (r, i, D) is a Pythagorean triple
+                        root = sqrt(factor_terms((D - r)/2))**e.p
+                        return root*expand_multinomial((
+                            # principle value
+                            (D + r)/abs(i) + sign(i)*S.ImaginaryUnit)**e.p)
+                elif e == -1:
+                    return _unevaluated_Mul(
+                        r - i*S.ImaginaryUnit,
+                        1/(r**2 + i**2))
+
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
