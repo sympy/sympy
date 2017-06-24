@@ -6492,7 +6492,8 @@ def cancel(f, *gens, **args):
     # post-process if necessary
     if sifted[True]:
         _reps = dict([(v, k) for k, v in reps])
-        return rv.xreplace(_reps)
+        rv = rv.xreplace(_reps)
+
     return rv
 
 

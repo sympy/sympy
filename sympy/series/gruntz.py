@@ -119,6 +119,7 @@ debug this function to figure out the exact problem.
 from __future__ import print_function, division
 
 from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
+from sympy.core.function import expand_mul, expand_power_base
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
@@ -468,6 +469,8 @@ def calculate_series(e, x, logx=None):
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
+        if t.has(exp):
+            t = expand_power_base(expand_mul(t))
 
         if t.simplify():
             break
