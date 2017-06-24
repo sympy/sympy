@@ -469,3 +469,16 @@ def test_rcode_For():
     assert sol == ("for (x = 0; x < 10; x += 2) {\n"
                    "   y *= x;\n"
                    "}")
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(rcode(A[0, 0]) == "A[0]")
+    assert(rcode(3 * A[0, 0]) == "3*A[0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(rcode(F) == "((-1)*B + A)[0]")

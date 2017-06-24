@@ -16,7 +16,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
 # List of known functions.  First, those that have the same name in
@@ -345,7 +345,8 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '(%s, %s)' % (expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):

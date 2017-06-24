@@ -588,6 +588,20 @@ def test_get_math_macros():
     assert macros[exp(1)] == 'M_E'
     assert macros[1/Sqrt(2)] == 'M_SQRT1_2'
 
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(ccode(A[0, 0]) == "A[0]")
+    assert(ccode(3 * A[0, 0]) == "3*A[0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(ccode(F) == "((-1)*B + A)[0]")
+
+
 def test_subclass_CCodePrinter():
     # issue gh-12687
     class MySubClass(CCodePrinter):
