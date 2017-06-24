@@ -1,4 +1,5 @@
 from sympy import S, Integral, sin, cos, pi, sqrt, symbols
+from sympy.solvers.solvers import solve
 from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector
 from sympy.physics.vector.functions import (cross, dot, express,
                                             time_derivative,
@@ -440,6 +441,13 @@ def test_kin_eqs():
             -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
             -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
             0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]
+    # test a couple special cases where the solution is 0
+    assert solve(kinematic_equations(
+        [u1, u2, u3], [q0, pi/2, q2], 'body', '123'), [u1, u2, u3]
+        ) == {u1: 0, u2: 0}
+    assert solve(kinematic_equations(
+        [u1, u2, u3], [q0, 0, q2], 'body', '121'), [u1, u2, u3]
+        ) == {u2: 0, u3: 0}
 
 
 def test_partial_velocity():
