@@ -56,11 +56,12 @@ def test_PosQ():
 
 def test_FracPart():
     assert FracPart(S(10)) == 0
+    assert FracPart(S(10)+0.5) == 10.5
 
 def test_IntPart():
-    assert IntPart(10) == 10
-    assert IntPart(3.6) == 3
-    assert IntPart(-3.6) == -4
+    assert IntPart(S(10)) == 10
+    #assert IntPart(3*pi)
+
 
 def test_NegQ():
     assert NegQ(-S(3))
@@ -477,3 +478,19 @@ def test_SimplifyTerm():
 
 def test_ExpandLinearProduct():
     assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
+
+def test_ExpandIntegrand():
+
+    assert True
+
+def test_MatchQ():
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    assert MatchQ(a*b + c, a_*b_ + c_, a_, b_, c_) == (a, b, c)
+
+def test_Exponent():
+    assert Exponent(1 + x + a*x**3, x) == 3
+
+def test_PolynomialQuotientRemainder():
+    assert PolynomialQuotientRemainder(x**2, x+a, x) == [-a + x, a**2]
