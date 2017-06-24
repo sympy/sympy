@@ -12,6 +12,7 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import Derivative
 
 from sympy.logic.boolalg import BooleanAtom
@@ -6409,19 +6410,31 @@ def _cancel_pq(p, q, *gens, **args):
         else:
             return c, P, Q
 
-
 def _cancel(f, *gens, **args):
     # helper for cancel when it is given an Expr
-    from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
 
     if not isinstance(f, Expr) or f.is_Atom:
         return f
-    elif not isinstance(f, (Add, Mul, Pow)):
-        return f.replace(
-            lambda x: isinstance(x, (Mul, Add, Pow)),
-            lambda x: _cancel(x, *gens, **args))
 
+    if not isinstance(f, (Add, Mul, Pow)):
+        # `replace` won't enter non-Basic args
+        # `preorder_traversal` will, but it can't replace them
+        # if they are not hashable
+        # so...we use `bottom_up`. This functionality is put here
+        # instead of in cancel b/c arguments might have iterables
+        # but a pure iterable should be handled like
+        # it = map(cancel, it)
+        def F(e):
+            if isinstance(e, Basic) and e.args:
+                return e.func(*[_cancel(i, *gens, **args) for i in e.args])
+            if iterable(e):
+                return type(e)([_cancel(i) for i in e])
+            return e
+        from sympy.simplify.simplify import bottom_up
+        return bottom_up(f, F, nonbasic=True)
+
+    # f is Mul, Add or Pow
     p, q = factor_terms(f, radical=True).as_numer_denom()
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)

@@ -2915,7 +2915,10 @@ def test_cancel():
     assert cancel(1 + p3) == 1 + p4
     assert cancel(rat*p3) == (x - 1)*p4
     assert cancel(rat + p3) == (x - 1) + p4
-    assert cancel(Piecewise((rat, rat > 1))) == Piecewise((x - 1, x - 1 > 1))
+    assert cancel(Piecewise((rat, rat > 1))
+        ) == Piecewise((x - 1, x - 1 > 1))
+    assert cancel(Piecewise(([rat], x > 1))
+        ) == Piecewise(([x - 1], x > 1))
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
@@ -2934,7 +2937,7 @@ def test_issue_11506():
     raw = cancel((2, 3))
     assert isinstance(raw, tuple) and raw == (1, 2, 3)
     raises(ValueError, lambda: cancel((1, 2, 3)))
-    raises(ValueError, lambda: cancel([x]))
+    raises(ValueError, lambda: cancel([x]))  # by design; use map
 
 
 def test_reduced():
