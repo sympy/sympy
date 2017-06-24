@@ -2,14 +2,15 @@
 
 from __future__ import division
 
-from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols
+from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols, Basic
 from sympy.physics.units import convert_to, find_unit
 
 from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
-    quart, inch, coulomb, millimeter, steradian
+    quart, inch, coulomb, millimeter, steradian, second, mile, centimeter, hour
 from sympy.physics.units.dimensions import length, time, charge
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import PREFIXES, kilo
+from sympy.utilities.pytest import raises
 
 k = PREFIXES["k"]
 
@@ -190,7 +191,8 @@ def test_issue_quart():
 
 
 def test_issue_5565():
-    assert (m < s).is_Relational
+    raises(ValueError, lambda: m < s)
+    assert (m < km).is_Relational
 
 
 def test_find_unit():
@@ -221,3 +223,16 @@ def test_Quantity_derivative():
     assert diff(x**3*meter**2, x) == 3*x**2*meter**2
     assert diff(meter, meter) == 1
     assert diff(meter**2, meter) == 2*meter
+
+
+def test_sum_of_incompatible_quantities():
+    raises(ValueError, lambda: meter + second)
+    raises(ValueError, lambda: 2 * meter + second)
+    raises(ValueError, lambda: 2 * meter + 3 * second)
+    raises(ValueError, lambda: 1 / second + 1 / meter)
+    raises(ValueError, lambda: 2 * meter*(mile + centimeter) + km)
+
+    expr = 2 * (mile + centimeter)/second + km/hour
+    assert expr in Basic._constructor_postprocessor_mapping
+    for i in expr.args:
+        assert i in Basic._constructor_postprocessor_mapping
