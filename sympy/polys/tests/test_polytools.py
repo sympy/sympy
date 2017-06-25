@@ -2815,6 +2815,12 @@ def test_cancel():
 
     assert cancel(oo) == oo
 
+    raises(ValueError, lambda: cancel((1, 2, 3)))  # too long
+    # sending a tuple is a special case to be used with care;
+    # it represents (numer, denom) of an expression and should.
+    # To cancel items in a list, iterate over the items or use map.
+    raises(ValueError, lambda: cancel([x]))
+
     # if there is no generator, the (p, q) must be sympified
     pq = Tuple(1, 2).args
     assert cancel(pq) == (S.Half, 1, 1)
@@ -2936,15 +2942,9 @@ def test_cancel():
 
 def test_issue_11506():
     f = (exp(x) + 1)/exp(x)
-    assert cancel(log(f)) == log(f)
-    assert cancel(f, exp(-x)) == 1 + exp(-x)
-    assert cancel(f, exp(-x), exp(x)) == 1 + exp(-x)
-    # order matters
-    assert cancel(f, exp(x), exp(-x)) == f
-    raw = cancel((2, 3))
-    assert isinstance(raw, tuple) and raw == (1, 2, 3)
-    raises(ValueError, lambda: cancel((1, 2, 3)))
-    raises(ValueError, lambda: cancel([x]))  # by design; use map
+    e = f.expand()
+    assert cancel(e) == f
+    assert cancel(log(e)) == log(f)
 
 
 def test_reduced():

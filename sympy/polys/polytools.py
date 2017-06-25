@@ -7077,6 +7077,7 @@ def poly(expr, *gens, **args):
     return _poly(expr, opt)
 
 def _clear_numer(P):
+    from sympy.core.compatibility import reduce
     # a very light touch to remove any Integer gcd from
     # terms of P
     if P.is_Add:
