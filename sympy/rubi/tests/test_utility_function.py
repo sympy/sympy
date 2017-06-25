@@ -411,14 +411,16 @@ def test_EqQ():
 
 def test_Rest():
     assert Rest([2, 3, 5, 7]) == [3, 5, 7]
-    assert Rest(E**2) == 2
     assert Rest(1/b) == -1
+    assert Rest(a + b + c) == b + c
+    assert Rest(a*b*c) == b*c
 
 def test_First():
     assert First([2, 3, 5, 7]) == 2
-    assert First(E**2) == exp
     assert First(y**2) == y
     assert First((1/b)) == b
+    assert First(a + b + c) == a
+    assert First(a*b*c) == a
 
 def test_ComplexFreeQ():
     assert ComplexFreeQ(x)

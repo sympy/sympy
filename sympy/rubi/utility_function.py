@@ -507,7 +507,6 @@ def RealQ(u):
 def EqQ(u, v):
     return ZeroQ(u - v)
 
-<<<<<<< HEAD
 def FractionalPowerFreeQ(u):
     if AtomQ(u):
         return True
@@ -574,25 +573,6 @@ def QuadraticQ(u, x):
 
 def LinearPairQ(u, v, x):
     return LinearQ(u, x) and LinearQ(v, x) and NonzeroQ(u-x) and ZeroQ(Coefficient(u, x, 0)*Coefficient(v, x, 1)-Coefficient(u, x, 1)*Coefficient(v, x, 0))
-
-def MonomialQ(u, x):
-    if ListQ(u):
-        for expr in u:
-            if not MonomialQ(expr, x):
-                return False
-        return True 
-    [a, n] = u.args
-
-def MonomialSumQ(u, x):
-    if SumQ(u):
-        for expr in u.args:
-            if Not(FreeQ(expr, x) or MonomialQ(expr, x)):
-                return False
-        return True
-
-#def MonomialExponent(a_.*x_^n_., x):
- # n /; 
-#FreeQ[{a,n},x]
 
 def BinomialParts(u, x):
     if PolynomialQ(u, x):
