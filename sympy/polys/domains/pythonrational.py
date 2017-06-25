@@ -232,7 +232,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         if exp < 0:
             p, q, exp = q, p, -exp
 
-        return self.new(p**exp, q**exp)
+        return self.__class__(p**exp, q**exp, _gcd=False)
 
     def __nonzero__(self):
         return self.p != 0
