@@ -3,7 +3,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
-from sympy import I, E
+from sympy import I, E, pi
 
 a, b, c, d, x, y, z = symbols('a b c d x y z')
 
@@ -56,16 +56,17 @@ def test_PosQ():
 
 def test_FracPart():
     assert FracPart(S(10)) == 0
+    assert FracPart(S(10)+0.5) == 10.5
 
 def test_IntPart():
-    assert IntPart(10) == 10
-    assert IntPart(3.6) == 3
-    assert IntPart(-3.6) == -4
+    assert IntPart(S(10)) == 10
+    #assert IntPart(3*pi)
+
 
 def test_NegQ():
-    assert NegQ(-3)
-    assert not NegQ(0)
-    assert not NegQ(4)
+    assert NegQ(-S(3))
+    assert not NegQ(S(0))
+    assert not NegQ(S(0))
 
 def test_RationalQ():
     assert RationalQ(S(5)/6)
@@ -208,6 +209,12 @@ def test_ComplexNumberQ():
     assert ComplexNumberQ(1 + I*2, I) == True
     assert ComplexNumberQ(a + b, I) == False
 
+def test_Re():
+    assert Re(1 + I) == 1
+
+def test_Im():
+    assert Im(1 + 2*I) == 2
+
 def test_RealNumericQ():
     assert RealNumericQ(S(1)) == True
 
@@ -240,12 +247,6 @@ def test_SumQ():
 def test_NonsumQ():
     assert NonsumQ(a*b) == True
     assert NonsumQ(a + b) == False
-
-def test_First():
-    assert First([1, 2, 3, 4]) == 1
-
-def test_Rest():
-    assert Rest([1, 2, 3, 4]) == [2, 3, 4]
 
 def test_SqrtNumberQ():
     assert SqrtNumberQ(sqrt(2)) == True
@@ -370,7 +371,6 @@ def test_SinhCoshQ():
     assert SinhCoshQ(sech(x))
     assert SinhCoshQ(csch(x))
 
-
 def test_Rt():
     assert Rt(8, 3) == 2
     assert Rt(16807, 5) == 7
@@ -404,10 +404,10 @@ def test_InverseFunctionQ():
     assert InverseFunctionQ(acosh(a))
     assert InverseFunctionQ(polylog(a, b))
 
-
 def test_EqQ():
     assert EqQ(a, a)
     assert not EqQ(a, b)
+
 
 def test_Rest():
     assert Rest([2, 3, 5, 7]) == [3, 5, 7]
@@ -448,14 +448,83 @@ def test_QuadraticQ():
     assert QuadraticQ(x**2+1+x, x)
     assert not QuadraticQ(x**2, x)
 
-def test_PolyQ():
-    assert not PolyQ(x**2 + x + 1, x, 1)
-    assert PolyQ(x**2 + x + 1, x, 2)
-    assert PolyQ([x**2 + x + 1, 5*x**2 + 3*x + 6], x, 2)
-    assert not PolyQ([x**2+x+1, 5*x**2+3*x+6], x, 1)
-
 def test_BinomialParts():
     assert BinomialParts(2 + x*(9*x), x) == [2, 9, 2]
     assert BinomialParts(x**9, x) == [0, 1, 9]
     assert BinomialParts(2*x**3, x) == [0, 2, 3]
     assert BinomialParts(2 + x, x) == [2, 1, 1]
+
+def test_PolynomialQ():
+    assert PolynomialQ(x**3, x)
+    assert not PolynomialQ(sqrt(x), x)
+
+def test_PolyQ():
+    assert PolyQ(x, x, 1)
+    assert PolyQ(x**2, x, 2)
+    assert not PolyQ(x**3, x, 2)
+
+def test_EvenQ():
+    assert EvenQ(S(2))
+    assert not EvenQ(S(1))
+
+def test_OddQ():
+    assert OddQ(S(1))
+    assert not OddQ(S(2))
+
+def test_PerfectSquareQ():
+    assert PerfectSquareQ(S(4))
+    assert PerfectSquareQ(a**S(2)*b**S(4))
+    assert not PerfectSquareQ(S(1)/3)
+
+def test_NiceSqrtQ():
+    assert NiceSqrtQ(S(1)/3)
+    assert not NiceSqrtQ(-S(1))
+    assert NiceSqrtQ(pi**2)
+    assert NiceSqrtQ(pi**2*sin(4)**4)
+    assert not NiceSqrtQ(pi**2*sin(4)**3)
+
+def test_Together():
+    assert Together(1/a + b/2) == (a*b + 2)/(2*a)
+
+def test_PosQ():
+    assert not PosQ(S(0))
+    assert PosQ(S(1))
+    assert PosQ(pi)
+    assert PosQ(pi**3)
+    assert PosQ((-pi)**4)
+    assert PosQ(sin(1)**2*pi**4)
+
+def test_NumericQ():
+    assert NumericQ(sin(cos(2)))
+
+def test_NumberQ():
+    assert NumberQ(pi)
+
+def test_CoefficientList():
+    assert CoefficientList(1 + a*x, x) == [1, a]
+    assert CoefficientList(1 + a*x**3, x) == [1, 0, 0, a]
+    assert CoefficientList(sqrt(x), x) == []
+
+def test_ReplaceAll():
+    assert ReplaceAll(x, x, a) == a
+    assert ReplaceAll(a*x, x, a + b) == a*(a + b)
+
+def test_SimplifyTerm():
+    assert SimplifyTerm(a/100 + 100/b*x, x) == a/100 + 100/b*x
+
+def test_ExpandLinearProduct():
+    assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
+
+def test_ExpandIntegrand():
+
+    assert True
+
+def test_MatchQ():
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    assert MatchQ(a*b + c, a_*b_ + c_, a_, b_, c_) == (a, b, c)
+
+def test_PolynomialQuotientRemainder():
+    assert PolynomialQuotientRemainder(x**2, x+a, x) == [-a + x, a**2]
+

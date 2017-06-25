@@ -7,29 +7,21 @@ from .operation import *
 from sympy.core import sympify
 from .symbol import VariableSymbol, Integer
 
-
 get_matchpy_node = {
     "Add": Add,
     "Mul": Mul,
     "Pow": Pow,
     "log": Log,
     'Int': Int,
-    'ZeroQ': ZeroQ,
-    'NonzeroQ': NonzeroQ,
-    'FreeQ': FreeQ,
-    'And': And,
-    'Or': Or,
-    'RemoveContent': RemoveContent,
     'Log': Log,
-    'List': List,
 }
-
 
 def sympy2matchpy(expr):
     '''
     Converts a SymPy expression into a MatchPy expression
-    `parse_rules` is used internally to parse rules.
     '''
+    if expr == None:
+        return None
     if isinstance(expr, int):
         return Integer(expr)
     elif expr.is_Atom:
