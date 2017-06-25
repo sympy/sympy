@@ -437,17 +437,17 @@ More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
 
 .. autofunction:: print_mathml
 
-PythonPrinter
--------------
+SymPyPrinter
+------------
 
-.. module:: sympy.printing.python
+.. module:: sympy.printing.sympycode
 
 This class implements Python printing. Usage::
 
-    >>> from sympy import print_python, sin
+    >>> from sympy import print_sympy_code, sin
     >>> from sympy.abc import x
 
-    >>> print_python(5*x**3 + sin(x))
+    >>> print_sympy_code(5*x**3 + sin(x))
     x = Symbol('x')
     e = 5*x**3 + sin(x)
 

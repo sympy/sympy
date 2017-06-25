@@ -26,7 +26,7 @@ class SymPyPrinter(ReprPrinter, StrPrinter):
         for name in STRPRINT:
             f_name = "_print_%s" % name
             f = getattr(StrPrinter, f_name)
-            setattr(PythonPrinter, f_name, f)
+            setattr(SymPyPrinter, f_name, f)
 
     def _print_Function(self, expr):
         func = expr.func.__name__
