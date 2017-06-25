@@ -53,7 +53,7 @@ from sympy.polys.orderings import lex, grlex, grevlex
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
     Derivative, exp, sin, tanh, expand, oo, I, pi, re, im, rootof,
-    Eq, Tuple, Expr, diff, log)
+    Eq, Tuple, Expr, diff, log, fraction)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
@@ -2815,8 +2815,10 @@ def test_cancel():
 
     assert cancel(oo) == oo
 
-    assert cancel((2, 3)) == (1, 2, 3)
-
+    # if there is no generator, the (p, q) must be sympified
+    pq = Tuple(1, 2).args
+    assert cancel(pq) == (S.Half, 1, 1)
+    # these are fine
     assert cancel((1, 0), x) == (1, 1, 0)
     assert cancel((0, 1), x) == (1, 0, 1)
 
@@ -2826,13 +2828,20 @@ def test_cancel():
     f, g, p, q = 4*x**2 - 4, 2*x - 2, 2*x + 2, 1
     F, G, P, Q = [ Poly(u, x) for u in (f, g, p, q) ]
 
+    eans = (2, x + 1, 1)
     assert F.cancel(G) == (1, P, Q)
-    assert cancel((f, g)) == (1, p, q)
-    assert cancel((f, g), x) == (1, p, q)
-    assert cancel((f, g), (x,)) == (1, p, q)
+    assert cancel((f, g)) == eans
+    assert cancel((f, g), x) == eans
+    assert cancel((f, g), *(x,)) == eans
     assert cancel((F, G)) == (1, P, Q)
     assert cancel((f, g), polys=True) == (1, P, Q)
-    assert cancel((F, G), polys=False) == (1, p, q)
+    assert cancel((F, G), polys=False) == eans
+    eq = (x**2/4 - 1)/(x/2 - 1)
+    ans = (S.Half, x + 2, 1)
+    assert cancel(fraction(eq)) == ans
+    assert cancel(eq.as_numer_denom()) == ans
+    assert cancel(eq) == _keep_coeff(S.Half, x + 2)
+    assert cancel((1/eq).as_numer_denom()) == (2, 1, x + 2)
 
     f = (x**2 - 2)/(x + sqrt(2))
 
@@ -2844,8 +2853,6 @@ def test_cancel():
     assert cancel(f) == f
     assert cancel(f, greedy=False) == x + sqrt(2)
 
-    assert cancel((x**2/4 - 1, x/2 - 1)) == (S(1)/2, x + 2, 1)
-
     assert cancel((x**2 - y)/(x - y)) == 1/(x - y)*(x**2 - y)
 
     assert cancel((x**2 - y**2)/(x - y), x) == x + y
@@ -2853,7 +2860,7 @@ def test_cancel():
     assert cancel((x**2 - y**2)/(x - y)) == x + y
 
     assert cancel((x**3 - 1)/(x**2 - 1)) == (x**2 + x + 1)/(x + 1)
-    assert cancel((x**3/2 - S(1)/2)/(x**2 - 1)) == (x**2 + x + 1)/(2*x + 2)
+    assert cancel((x**3/2 - S(1)/2)/(x**2 - 1)) == (x**2 + x + 1)/(x + 1)/2
 
     assert cancel((exp(2*x) + 2*exp(x) + 1)/(exp(x) + 1)) == exp(x) + 1
 
@@ -3226,7 +3233,20 @@ def test_issue_11198():
     assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
     assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])
 
+
 def test_Poly_precision():
     # Make sure Poly doesn't lose precision
     p = Poly(pi.evalf(100)*x)
     assert p.as_expr() == pi.evalf(100)*x
+
+
+@XFAIL
+def test_gcd_extraction():
+    p, q = Poly(x**2/4 - 1), Poly(x/2 - 1)
+    pq = p.cancel(q)
+    qp = q.cancel(p)
+    p, q = [Poly(i) for i in (p/q).as_expr().as_numer_denom()]
+    assert p.as_expr() == 2*x**2 - 8
+    assert q.as_expr() == 4*x - 8
+    assert p.cancel(q) == pq  # same as cancel((p,q))
+    assert q.cancel(p) == qp

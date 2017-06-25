@@ -9,6 +9,7 @@ from sympy.core import (
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
 from sympy.core.basic import preorder_traversal
+from sympy.core.numbers import igcd
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
@@ -6375,7 +6376,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
     (x**2 - x + 1)**2
 
     >>> R_f = [ (r**2).expand() for r in roots(f) ]
-    >>> R_g = roots(g).keys()
+    >>> R_g = [ i.expand() for i in roots(g).keys() ]
 
     >>> set(R_f) == set(R_g)
     True
@@ -6395,7 +6396,6 @@ def nth_power_roots_poly(f, n, *gens, **args):
     else:
         return result
 
-
 def _cancel_pq(p, q, *gens, **args):
     # helper for cancel to handle explicit numerator and denominator
     try:
@@ -6406,8 +6406,14 @@ def _cancel_pq(p, q, *gens, **args):
         c, P, Q = F.cancel(G)
 
         if not opt.polys:
-            return c, P.as_expr(), Q.as_expr()
+            cp, P = _clear_numer(P.as_expr())
+            cq, Q = _clear_numer(Q.as_expr())
+            return c*cp/cq, P, Q
         else:
+            # XXX it is possible that there is a gcd in P or Q
+            # it is being left there unless there is a compelling
+            # reason to fix this when returning Polys; it is
+            # already handled when Expr are returned.
             return c, P, Q
 
 def _cancel(f, *gens, **args):
@@ -6439,7 +6445,11 @@ def _cancel(f, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
         c, P, Q = F.cancel(G)
-        return c*(P.as_expr()/Q.as_expr())
+        P = P.as_expr()
+        Q = Q.as_expr()
+        cp, P = _clear_numer(P)
+        cq, Q = _clear_numer(Q)
+        return _keep_coeff(c*cp/cq, P/Q)
     except PolificationFailed:
         return p/q
     except PolynomialError as msg:
@@ -6461,51 +6471,124 @@ def cancel(f, *gens, **args):
     """
     Cancel common factors in a rational function ``f``.
 
+    If the numerator and denominator of ``f`` are already
+    known, they can be sent directly and a tuple giving
+    the coefficient, numerator and denominator will
+    be returned. If either is a Poly instance, the numerator
+    and denominator returned will also be Poly instances; if
+    neither is a Poly instance, the returned values will be Exprs.
+    To force the result to be one or the other, use the flag
+    `polys`.
+
+    The flag `tuple` can be used to get a tuple of the coefficient,
+    numerator and denominator when passing and Expr. The coefficient
+    should always contain any numeric coefficients of the expression;
+    the numerator and denominator should not have an extractable gcd.
+
     Examples
     ========
 
-    >>> from sympy import cancel, sqrt, Symbol
-    >>> from sympy.abc import x
+    >>> from sympy import cancel, sqrt, Symbol, Poly
+    >>> from sympy.abc import x, y
     >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
-    (2*x + 2)/(x - 1)
+    2*(x + 1)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
+
+    Unless the denominator is 1, the result should always be a
+    fraction (unevaluated, if necessary):
+
+    >>> cancel(x/2  + y/2)
+    (x + y)/2
+
+    If it is desired to get the coefficient, numerator and denominator
+    back individually, set the flag `tuple` to True:
+
+    >>> cancel(_, tuple=True)
+    (1/2, x + y, 1)
+
+    If it is important to remove any gcd from the expression then
+    an Expr (or tuple of Exprs) should be passed:
+
+    >>> p, q = 2*x + 4, 3*x**2 + 6*x
+    >>> cancel((Poly(p), q))
+    (1, Poly(2, x, domain='ZZ'), Poly(3*x, x, domain='ZZ'))
+    >>> cancel((p, q))
+    (2/3, 1, x)
     """
+    from sympy.simplify.radsimp import fraction
+
+    # remove this before passing to options or it will complain
+    as_tuple = args.pop('tuple', isinstance(f, tuple))
+
     options.allowed_flags(args, ['polys'])
 
-    f = sympify(f)  # if tuple, now a Tuple
+    F = f
+    if not isinstance(F, tuple):
+        F = sympify(f)
+
+    # gens may have been sent as gens=x or gens=(x,) so
+    # flatten out the star args
+    # gens = tuple(flatten(gens))
 
     # argument checking
-    if isinstance(f, Tuple) and len(f) != 2:
+    if isinstance(F, tuple):
+        if len(F) != 2:
+            raise ValueError(filldedent('''
+                Use a tuple of length 2 to send the numerator and
+                denominator of an expression.'''))
+    elif not isinstance(F, Expr):
         raise ValueError(filldedent('''
-            Use a tuple of length 2 to send the numerator and
-            denominator of an expression.'''))
-    if not isinstance(f, (Tuple, Expr)):
-        raise ValueError('expecting tuple or Expr, not %s' % f)
+            expecting tuple (containing the numerator and denominator)
+            or Expr, not %s''' % F))
 
-    # recognize non-Symbol args
-    gens = Tuple(*flatten(gens))
-    sifted = sift(gens, lambda x: not isinstance(x, Symbol))
-    if sifted[True]:
-        reps = [(g, Dummy()) for g in sifted[True]]
+    # recognize non-Symbol gens
+    symbol_gens = sift(gens, lambda x: isinstance(x, Symbol))
+    if symbol_gens[False]:
+        reps = [(g, Dummy()) for g in symbol_gens[True]]
         # the reps are processed in the order give
-        F, G = f.subs(reps), gens.xreplace(dict(reps))
+        if isinstance(F, tuple):
+            F = tuple([i.subs(reps) for i in F])
+        else:
+            F = F.subs(reps)
+        G = tuple([d for _, d in reps] + symbol_gens[True])
     else:
-        F, G = f, gens
+        G = gens
 
     # dispatch to helper
-    if isinstance(F, Tuple):
+    if isinstance(F, tuple):
         p, q = F
-        rv = _cancel_pq(p, q, *G, **args)
+        c, n, d = _cancel_pq(p, q, *G, **args)
+        # when polification fails the expression may
+        # have become a number; put the numbers in the
+        # c position
+        if d and d.is_Number:
+            c /= d
+            d = S.One
+        if n and n.is_Number:
+            c *= n
+            n = S.One
+
     else:
         rv = _cancel(F, *G, **args)
+        c, nd = rv.as_coeff_Mul()
+        n, d = fraction(nd) if nd.is_Mul else (nd, S.One)
 
-    # post-process if necessary
-    if sifted[True]:
+    if not as_tuple:
+       rv = _keep_coeff(c, n/d)
+    else:
+       rv = c, n, d
+
+    # post-process for non-symbol generators
+    if symbol_gens[False]:
         _reps = dict([(v, k) for k, v in reps])
-        rv = rv.xreplace(_reps)
+        if isinstance(rv, tuple):
+            c, p, q = rv
+            rv = c, p.xreplace(_reps), q.xreplace(_reps)
+        else:
+            rv = rv.xreplace(_reps)
 
     return rv
 
@@ -6993,3 +7076,22 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
+
+def _clear_numer(P):
+    # a very light touch to remove any Integer gcd from
+    # terms of P
+    if P.is_Add:
+        co, t = list(zip(*[i.as_coeff_Mul() for i in P.args]))
+        if all(i.is_Integer for i in co):
+            g = reduce(igcd, co)
+            if g != 1:
+                co = [i//g for i in co]
+                P = Add(*[
+                    Mul(*i, evaluate=False) for i in list(zip(co, t))],
+                    evaluate=False)
+            cp = g
+        else:
+            cp = S.One
+    else:
+        cp, P = P.as_coeff_Mul()
+    return cp, P
