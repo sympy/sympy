@@ -6570,11 +6570,10 @@ def cancel(f, *gens, **args):
         if n and n.is_Number:
             c *= n
             n = S.One
-
     else:
         rv = _cancel(F, *G, **args)
         c, nd = rv.as_coeff_Mul()
-        n, d = fraction(nd) if nd.is_Mul else (nd, S.One)
+        n, d = fraction(nd)
 
     if not as_tuple:
        rv = _keep_coeff(c, n/d)
