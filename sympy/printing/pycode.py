@@ -13,8 +13,8 @@ _known_functions = {
     'Abs': 'abs'
 }
 
-class PyCodePrinter(CodePrinter):
-    printmethod = "_pycode"
+class PythonCodePrinter(CodePrinter):
+    printmethod = "_pythoncode"
     language = "Python"
     standard = "python3"
     reserved_words = _kw_py2and3.union(_kw_only_py2)
@@ -27,7 +27,7 @@ class PyCodePrinter(CodePrinter):
     _kf = _known_functions
 
     def __init__(self, settings={}):
-        super(PyCodePrinter, self).__init__(settings)
+        super(PythonCodePrinter, self).__init__(settings)
         self.known_functions = dict(self._kf, **settings.get(
             'user_functions', {}))
 

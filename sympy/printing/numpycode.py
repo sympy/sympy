@@ -1,4 +1,4 @@
-from .pycode import PyCodePrinter
+from .pycode import PythonCodePrinter
 
-class NumPyCodePrinter(PyCodePrinter):
+class NumPyCodePrinter(PythonCodePrinter):
     pass
