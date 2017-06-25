@@ -122,7 +122,9 @@ def test_piecewise():
 
     # Test commutativity
     assert p.is_commutative is True
-
+    # if there is a non-Basic arg it might *contain*
+    # commutative things but it, itself, is not commutative
+    assert Piecewise(([1], x < 0)).is_commutative is False
 
 def test_piecewise_free_symbols():
     a = symbols('a')

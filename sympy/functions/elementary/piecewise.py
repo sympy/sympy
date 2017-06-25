@@ -45,7 +45,7 @@ class ExprCondPair(Tuple):
 
     @property
     def is_commutative(self):
-        return self.expr.is_commutative
+        return getattr(self.expr, 'is_commutative', False)
 
     def __iter__(self):
         yield self.expr
