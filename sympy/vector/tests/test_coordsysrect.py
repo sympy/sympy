@@ -314,37 +314,37 @@ def test_transformation_equations():
     a = CoordSysCartesian('a')
     # Str
     a.connect_to_standard_cartesian('spherical')
-    assert a.transformation_equations() == (a.x * sin(a.y) * cos(a.z),
+    assert a._transformation_equations() == (a.x * sin(a.y) * cos(a.z),
                           a.x * sin(a.y) * sin(a.z),
                           a.x * cos(a.y))
     assert a.lame_coefficients() == (1, a.x, a.x * sin(a.y))
     a.connect_to_standard_cartesian('cylindrical')
-    assert a.transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
+    assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert a.lame_coefficients() == (1, a.y, 1)
     a.connect_to_standard_cartesian('cartesian')
-    assert a.transformation_equations() == (a.x, a.y, a.z)
+    assert a._transformation_equations() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
     # Variables and expressions
     a.connect_to_standard_cartesian(((x, y, z), (x, y, z)))
-    assert a.transformation_equations() == (a.x, a.y, a.z)
+    assert a._transformation_equations() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
     a.connect_to_standard_cartesian(((x, y, z), ((x * cos(y), x * sin(y), z))))
-    assert a.transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
+    assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
     a.connect_to_standard_cartesian(((x, y, z), (x * sin(y) * cos(z), x * sin(y) * sin(z), x * cos(y))))
-    assert a.transformation_equations() == (a.x * sin(a.y) * cos(a.z),
+    assert a._transformation_equations() == (a.x * sin(a.y) * cos(a.z),
                           a.x * sin(a.y) * sin(a.z),
                           a.x * cos(a.y))
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), sqrt(sin(a.y)**2*a.x**2))
     # Equations
     a.connect_to_standard_cartesian((a.x*sin(a.y)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)))
-    assert a.transformation_equations() == (a.x * sin(a.y) * cos(a.z),
+    assert a._transformation_equations() == (a.x * sin(a.y) * cos(a.z),
                           a.x * sin(a.y) * sin(a.z),
                           a.x * cos(a.y))
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), sqrt(sin(a.y)**2*a.x**2))
     a.connect_to_standard_cartesian((a.x, a.y, a.z))
-    assert a.transformation_equations() == (a.x, a.y, a.z)
+    assert a._transformation_equations() == (a.x, a.y, a.z)
     assert simplify(a.lame_coefficients()) == (1, 1, 1)
     a.connect_to_standard_cartesian((a.x * cos(a.y), a.x * sin(a.y), a.z))
-    assert a.transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
+    assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
