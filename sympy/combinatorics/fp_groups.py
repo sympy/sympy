@@ -51,29 +51,30 @@ class FpGroup(DefaultPrinting):
     is_FpGroup = True
     is_PermutationGroup = False
 
-    def __new__(cls, fr_grp, relators):
+    def __init__(self, fr_grp, relators):
         relators = _parse_relators(relators)
         # return the corresponding FreeGroup if no relators are specified
         if not relators:
             return fr_grp
-        obj = object.__new__(cls)
-        obj.free_group = fr_grp
-        obj.relators = relators
-        obj.generators = obj._generators()
-        obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
+        self.free_group = fr_grp
+        self.relators = relators
+        self.generators = self._generators()
+        self.dtype = type("FpGroupElement", (FpGroupElement,), {"group": self})
 
         # CosetTable instance on identity subgroup
-        obj._coset_table = None
+        self._coset_table = None
         # returns whether coset table on identity subgroup
         # has been standardized
-        obj._is_standardized = False
+        self._is_standardized = False
 
-        obj._order = None
-        obj._center = None
-        return obj
+        self._order = None
+        self._center = None
 
     def _generators(self):
         return self.free_group.generators
+
+    def __contains__(self, g):
+        return g in self.free_group
 
     def subgroup(self, gens, C=None):
         '''
@@ -276,6 +277,28 @@ class FpGroup(DefaultPrinting):
 
     __repr__ = __str__
 
+
+class FpSubgroup(FpGroup):
+    '''
+    The class implementing a subgroup of an FpGroup. This is mainly for testing
+
+    '''
+    def __init__(self, G, gens):
+        C = G.coset_enumeration(gens)
+        C.compress()
+        gens, rels = reidemeister_presentation(G, gens, C=C)
+        super(FpSubgroup,self).__init__(gens[0].group, rels)
+        self.parent = G
+        self.C = C
+
+    def __contains__(self, g):
+        if not g in self.parent:
+            raise ValueError
+        i = 0
+        C = self.C
+        for j in range(len(g)):
+            i = C.table[i][C.A_dict[g[j]]]
+        return i == 0
 
 ###############################################################################
 #                           COSET TABLE                                       #
