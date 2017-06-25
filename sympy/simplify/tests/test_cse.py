@@ -494,3 +494,18 @@ def test_cse_ignore():
     subst2, red2 = cse(exprs, ignore=(y,))  # y is not allowed in substitutions
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
+
+
+def test_cse__performance():
+    import time
+    nexprs, nterms = 3, 20
+    x = symbols('x:%d' % nterms)
+    exprs = [
+        reduce(add, [x[j]*(-1)**(i+j) for j in range(nterms)])
+        for i in range(nexprs)
+    ]
+    assert exprs[0] == exprs[1]
+    subst, red = cse(exprs)
+    assert len(subst) > 0, "exprs[0] == exprs[2], i.e. a CSE"
+    for i, e in enumerate(red):
+        assert (e.subs(reversed(subst)) - exprs[i]).simplify() == 0
