@@ -670,6 +670,15 @@ def ExpandExpression(expr, x):
     return expr.expand()
 
 def MatchQ(expr, pattern, *var):
+    # returns the matched arguments after matching pattern with expression
+    '''
+    Example:
+    >>> a_ = Wild('a', exclude=[x])
+    >>> b_ = Wild('b', exclude=[x])
+    >>> c_ = Wild('c', exclude=[x])
+    >>> MatchQ(a + b, a_ + b_, a_, b_)
+    (a, b) # or {a_: a, b_: b}
+    '''
     match = expr.match(pattern)
     if match:
         return tuple(match[i] for i in var)
@@ -681,6 +690,10 @@ def Exponent(u, x):
 
 def PolynomialQuotientRemainder(p, q, x):
     return [quo(p, q), rem(p, q)]
+
+def RemoveContent(u, x):
+    # returns u with the content free of x removed.
+    return None
 
 def ExpandIntegrand(expr, x):
 
