@@ -150,9 +150,7 @@ class CoordSysCartesian(Basic):
         obj._h2 = S.One
         obj._h3 = S.One
 
-        obj._transformation_eq1 = S.One
-        obj._transformation_eq2 = S.One
-        obj._transformation_eq3 = S.One
+        obj._transformation_eqs = obj._x, obj._y, obj._y
 
         # Assign params
         obj._parent = parent
@@ -176,7 +174,7 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
-    def set_coordinate_type(self,  curv_coord_type):
+    def connect_to_standard_cartesian(self,  curv_coord_type):
         """
         Change the type of orthogonal curvilinear system. It could be done
         by tuple of transformation equations or by choosing one of pre-defined
@@ -193,8 +191,10 @@ class CoordSysCartesian(Basic):
             self._set_lame_coefficient_mapping(curv_coord_type)
 
         elif type(curv_coord_type) is tuple and len(curv_coord_type) == 3:
-            self._transformation_eq1, self._transformation_eq2, self._transformation_eq3 =\
-                self._transformation_equations(curv_coord_type)
+            self._transformation_eqs = curv_coord_type
+            self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
+        elif type(curv_coord_type) is tuple and len(curv_coord_type) == 2:
+            self._transformation_eqs = self._transformation_equations(curv_coord_type)
             self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(self.transformation_equations())
 
         else:
@@ -224,8 +224,22 @@ class CoordSysCartesian(Basic):
         if curv_coord_name not in equations_mapping:
             raise ValueError('Wrong set of parameters.'
                              'Type of coordinate system is defined')
-        self._transformation_eq1, self._transformation_eq2, self._transformation_eq3 =\
-            equations_mapping[curv_coord_name]
+        self._transformation_eqs = equations_mapping[curv_coord_name]
+
+    def _transformation_equations(self, args):
+        """
+        Helper method for set_coordinate_type. It substitute scalar into symbols.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of two args. They contains variables and transformation
+            equations.
+
+        """
+
+        return tuple([eq.subs({args[0][0]:self.x, args[0][1]:self.y, args[0][2]:self.z}) for eq in args[1]])
 
     def _set_lame_coefficient_mapping(self, curv_coord_name):
         """
@@ -250,21 +264,6 @@ class CoordSysCartesian(Basic):
             raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
         self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
 
-    def _transformation_equations(self, equations):
-        """
-        Helper method for set_coordinate_type. It substitute scalar into symbols.
-
-        Parameters
-        ==========
-
-        equations : tuple
-            Tuple of transformation equations
-
-        """
-        from sympy import symbols
-        x, y, z = symbols('x y z')
-        return [eq.subs({x:self.x, y:self.y, z:self.z}) for eq in equations]
-
     def _calculate_lame_coefficients(self, equations):
         """
         Helper method for set_coordinate_type. It calculates Lame coefficients
@@ -277,6 +276,7 @@ class CoordSysCartesian(Basic):
             Tuple of transformation equations
 
         """
+
         h1 = sqrt(diff(equations[0], self.x)**2 +
                   diff(equations[1], self.x)**2 +
                   diff(equations[2], self.x)**2)
@@ -338,9 +338,7 @@ class CoordSysCartesian(Basic):
         return self._h1, self._h2, self._h3
 
     def transformation_equations(self):
-        return self._transformation_eq1,\
-               self._transformation_eq2,\
-               self._transformation_eq3
+        return self._transformation_eqs
 
     @cacheit
     def rotation_matrix(self, other):
