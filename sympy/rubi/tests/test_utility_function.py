@@ -408,3 +408,54 @@ def test_InverseFunctionQ():
 def test_EqQ():
     assert EqQ(a, a)
     assert not EqQ(a, b)
+
+def test_Rest():
+    assert Rest([2, 3, 5, 7]) == [3, 5, 7]
+    assert Rest(E**2) == 2
+    assert Rest(1/b) == -1
+
+def test_First():
+    assert First([2, 3, 5, 7]) == 2
+    assert First(E**2) == exp
+    assert First(y**2) == y
+    assert First((1/b)) == b
+
+def test_ComplexFreeQ():
+    assert ComplexFreeQ(x)
+    assert not ComplexFreeQ(x+2*I)
+
+def test_FractionalPowerFreeQ():
+    assert not FractionalPowerFreeQ(x**(S(2)/3))
+    assert FractionalPowerFreeQ(x)
+
+def test_FactorSquareFree():
+    assert FactorSquareFree((x**5 - x**3 - x**2 + 1)*(x+1)**2) == (x - 1)**2*(x + 1)**3*(x**2 + x + 1)
+    assert FactorSquareFree((x**5 - x**3 - x**2 + 1)*(x-1)) == (x - 1)**3*(x**3 + 2*x**2 + 2*x + 1)
+    assert FactorSquareFree(x**5 - x**3 - x**2 + 1) == (x - 1)**2*(x**3 + 2*x**2 + 2*x + 1)
+
+def test_Exponent():
+    assert Exponent(x**2+x+1+5, x, List) == [0, 1, 2]
+    assert Exponent(x**2+x+1, x, List) == [0, 1, 2]
+    assert Exponent(x**2+2*x+1, x, List) == [0, 2, 1]
+    assert Exponent(x**3+x+1, x) == 3
+    assert Exponent(x**2+2*x+1, x) == 2
+    assert Exponent(x**3, x, List) == [3]
+
+def test_QuadraticQ():
+    assert not QuadraticQ([x**2+x+1, 5*x**2], x)
+    assert QuadraticQ([x**2+x+1, 5*x**2+3*x+6], x)
+    assert not QuadraticQ(x**2+1+x**3, x)
+    assert QuadraticQ(x**2+1+x, x)
+    assert not QuadraticQ(x**2, x)
+
+def test_PolyQ():
+    assert not PolyQ(x**2 + x + 1, x, 1)
+    assert PolyQ(x**2 + x + 1, x, 2)
+    assert PolyQ([x**2 + x + 1, 5*x**2 + 3*x + 6], x, 2)
+    assert not PolyQ([x**2+x+1, 5*x**2+3*x+6], x, 1)
+
+def test_BinomialParts():
+    assert BinomialParts(2 + x*(9*x), x) == [2, 9, 2]
+    assert BinomialParts(x**9, x) == [0, 1, 9]
+    assert BinomialParts(2*x**3, x) == [0, 2, 3]
+    assert BinomialParts(2 + x, x) == [2, 1, 1]
