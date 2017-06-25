@@ -6404,23 +6404,21 @@ def _cancel_pq(p, q, *gens, **args):
         return S.One, p, q
     else:
         c, P, Q = F.cancel(G)
+        if c.is_Rational and c.q != 1:
+            Q *= c.q
+            c = c.p
 
         if not opt.polys:
-            cp, P = _clear_numer(P.as_expr())
-            cq, Q = _clear_numer(Q.as_expr())
-            return c*cp/cq, P, Q
-        else:
-            # XXX it is possible that there is a gcd in P or Q.
-            # It is being left there unless there is a compelling
-            # reason to fix this when returning Polys; it is
-            # already handled when Expr are returned.
-            return c, P, Q
+            P = P.as_expr()
+            Q = Q.as_expr()
+
+        return c, P, Q
 
 def _cancel(f, *gens, **args):
     # helper for cancel when it is given an Expr
     from sympy.functions.elementary.piecewise import Piecewise
 
-    if not isinstance(f, Expr) or f.is_Atom:
+    if f.is_Atom:
         return f
 
     if not isinstance(f, (Add, Mul, Pow)):
@@ -6432,58 +6430,54 @@ def _cancel(f, *gens, **args):
         # but a pure iterable should be handled like
         # it = map(cancel, it)
         def F(e):
-            if isinstance(e, Basic) and e.args:
-                return e.func(*[_cancel(i, *gens, **args) for i in e.args])
-            if iterable(e):
+            if isinstance(e, (Add, Mul, Pow)):
+                return _cancel(e, *gens, **args)
+            if not isinstance(e, Basic) and iterable(e):
+                # the check against Basic is there because
+                # Basic args will have already been traversed
                 return type(e)([_cancel(i) for i in e])
             return e
         from sympy.simplify.simplify import bottom_up
         return bottom_up(f, F, nonbasic=True)
 
-    # f is Mul, Add or Pow
-    p, q = factor_terms(f, radical=True).as_numer_denom()
-    try:
-        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
-        c, P, Q = F.cancel(G)
-        P = P.as_expr()
-        Q = Q.as_expr()
-        cp, P = _clear_numer(P)
-        cq, Q = _clear_numer(Q)
-        return _keep_coeff(c*cp/cq, P/Q)
-    except PolificationFailed:
-        return p/q
-    except PolynomialError as msg:
-        if f.is_commutative and not f.has(Piecewise):
-            raise PolynomialError(msg)
-        # Handling of noncommutative and/or piecewise expressions
-        if f.is_Add or f.is_Mul:
+    # f is Mul, Add or Pow, maybe with Piecewise
+    if f.is_commutative and not f.has(Piecewise):
+        p, q = f.as_numer_denom()
+        c, P, Q = _cancel_pq(p, q, *gens, **args)
+        # use of as_numer_denom() guarantees that |c| == 1
+        if Q.is_Number:  # keep expr like (x + 1)/2 unevaluated
+            return _keep_coeff(c/Q, P)
+        return c*P/Q  # allow c to distribute
+    else:  # not commutative or has Piecewise
+        if isinstance(f, (Mul, Add)):
             sifted = sift(f.args, lambda x:
-                x.is_commutative is True and
-                not x.has(Piecewise))
+                x.is_commutative and not isinstance(x, Piecewise))
             c, nc = sifted[True], sifted[False]
-            nc = [_cancel(i) for i in nc]
-            return f.func(_cancel(f.func._from_args(c)), *nc)
-        return f.func(*[_cancel(i) for i in f.args])
+            nc = [_cancel(i, *gens, **args) for i in nc]
+            return f.func(_cancel(f.func._from_args(c), *gens, **args), *nc)
+        else:
+            return f.func(*[_cancel(i, *gens, **args) for i in f.args])
 
 
 @public
 def cancel(f, *gens, **args):
     """
-    Cancel common factors in a rational function ``f``.
+    Cancel common factors in a rational function ``f`` returning
+    ``p/q`` where ``p`` and ``q`` are fully expanded expressions
+    with no factors in common.
 
     If the numerator and denominator of ``f`` are already
     known, they can be sent directly and a tuple giving
     the coefficient, numerator and denominator will
     be returned. If either is a Poly instance, the numerator
-    and denominator returned will also be Poly instances; if
-    neither is a Poly instance, the returned values will be Exprs.
-    To force the result to be one or the other, use the flag
-    `polys`.
+    and denominator returned will also be Poly instances, else
+    they will be Expr instances. To force the result to be one
+    or the other, use the flag `polys` and set it to True/False
+    to obtain Poly/Expr.
 
     The flag `tuple` can be used to get a tuple of the coefficient,
-    numerator and denominator when passing and Expr. The coefficient
-    should always contain any numeric coefficients of the expression;
-    the numerator and denominator should not have an extractable gcd.
+    numerator and denominator when passing an Expr. The coefficient
+    will be +/-1.
 
     Examples
     ========
@@ -6493,7 +6487,7 @@ def cancel(f, *gens, **args):
     >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
-    2*(x + 1)/(x - 1)
+    (2*x + 2)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
 
@@ -6507,7 +6501,7 @@ def cancel(f, *gens, **args):
     back individually, set the flag `tuple` to True:
 
     >>> cancel(_, tuple=True)
-    (1/2, x + y, 1)
+    (1, x + y, 2)
 
     If it is important to remove any gcd from the expression then
     an Expr (or tuple of Exprs) should be passed:
@@ -6516,7 +6510,34 @@ def cancel(f, *gens, **args):
     >>> cancel((Poly(p), q))
     (1, Poly(2, x, domain='ZZ'), Poly(3*x, x, domain='ZZ'))
     >>> cancel((p, q))
-    (2/3, 1, x)
+    (1, 2, 3*x)
+
+    Notes
+    =====
+
+    The coefficient is returned to be consistent with the Poly.cancel
+    method. Because of how expressions are processed, this will never
+    be anything other than +/-1 (though it may be a Float). If the
+    Poly.cancel method is used directly, then the coefficient is the
+    Rational ratio of the integers cleared from the denominators of
+    p and q:
+
+    >>> from sympy.polys import Poly
+    >>> def poly_cancel_coeff(p, q):
+    ...     return Poly(p).cancel(Poly(q))[0]
+
+    >>> poly_cancel_coeff(x/2, x/4) == (1/2)/(1/4)
+    True
+
+    Coefficients in the numerators of p and q are not removed but any
+    common factor between p and q will be removed. And if there were no
+    integers cleared from the denominators of p and q then the
+    coefficient will be 1:
+
+    >>> poly_cancel_coeff(2*x, 4*x)
+    1
+    >>> poly_cancel_coeff(2*x/7, 4*x/3)
+    3/7
     """
     from sympy.simplify.radsimp import fraction
 
@@ -6543,28 +6564,21 @@ def cancel(f, *gens, **args):
     # dispatch to helper
     if isinstance(F, tuple):
         p, q = F
-        c, n, d = _cancel_pq(p, q, *gens, **args)
-        # when polification fails the expression may
-        # have become a number; put the numbers in the
-        # c position
-        if d and d.is_Number:
-            c /= d
-            d = S.One
-        if n and n.is_Number:
-            c *= n
-            n = S.One
+        rv = c, n, d = _cancel_pq(p, q, *gens, **args)
+        if not as_tuple:
+            rv = _keep_coeff(c, nd)
     else:
+        F = factor_terms(F, radical=True)
         rv = _cancel(F, *gens, **args)
-        c, nd = rv.as_coeff_Mul()
-        n, d = fraction(nd)
-
-    if not as_tuple:
-       rv = _keep_coeff(c, n/d)
-    else:
-       rv = c, n, d
+        if as_tuple:
+            c, nd = rv.as_coeff_Mul()
+            n, d = fraction(nd)
+            if c.q is not S.One:
+                d *= c.q
+                c *= c.q
+            rv = c, n, d
 
     return rv
-
 
 @public
 def reduced(f, G, *gens, **args):
@@ -7049,23 +7063,3 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
-
-def _clear_numer(P):
-    from sympy.core.compatibility import reduce
-    # a very light touch to remove any Integer gcd from
-    # terms of P
-    if P.is_Add:
-        co, t = list(zip(*[i.as_coeff_Mul() for i in P.args]))
-        if all(i.is_Integer for i in co):
-            g = reduce(igcd, co)
-            if g != 1:
-                co = [i//g for i in co]
-                P = Add(*[
-                    Mul(*i, evaluate=False) for i in list(zip(co, t))],
-                    evaluate=False)
-            cp = g
-        else:
-            cp = S.One
-    else:
-        cp, P = P.as_coeff_Mul()
-    return cp, P

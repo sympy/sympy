@@ -2823,7 +2823,7 @@ def test_cancel():
 
     # if there is no generator, the (p, q) must be sympified
     pq = Tuple(1, 2).args
-    assert cancel(pq) == (S.Half, 1, 1)
+    assert cancel(pq) == (1, 1, 2)
     # these are fine
     assert cancel((1, 0), x) == (1, 1, 0)
     assert cancel((0, 1), x) == (1, 0, 1)
@@ -2834,20 +2834,18 @@ def test_cancel():
     f, g, p, q = 4*x**2 - 4, 2*x - 2, 2*x + 2, 1
     F, G, P, Q = [ Poly(u, x) for u in (f, g, p, q) ]
 
-    eans = (2, x + 1, 1)
     assert F.cancel(G) == (1, P, Q)
-    assert cancel((f, g)) == eans
-    assert cancel((f, g), x) == eans
-    assert cancel((f, g), *(x,)) == eans
+    assert cancel((f, g)) == (1, p, q)
+    assert cancel((f, g), x) == (1, p, q)
+    assert cancel((f, g), *(x,)) == (1, p, q)
     assert cancel((F, G)) == (1, P, Q)
     assert cancel((f, g), polys=True) == (1, P, Q)
-    assert cancel((F, G), polys=False) == eans
+    assert cancel((F, G), polys=False) == (1, p, q)
     eq = (x**2/4 - 1)/(x/2 - 1)
-    ans = (S.Half, x + 2, 1)
-    assert cancel(fraction(eq)) == ans
-    assert cancel(eq.as_numer_denom()) == ans
+    assert cancel(fraction(eq)) == (1, x + 2, 2)
+    assert cancel(eq.as_numer_denom()) == (1, x + 2, 2)
     assert cancel(eq) == _keep_coeff(S.Half, x + 2)
-    assert cancel((1/eq).as_numer_denom()) == (2, 1, x + 2)
+    assert cancel((1/eq).as_numer_denom()) == (1, 2, x + 2)
 
     f = (x**2 - 2)/(x + sqrt(2))
 
@@ -2866,7 +2864,7 @@ def test_cancel():
     assert cancel((x**2 - y**2)/(x - y)) == x + y
 
     assert cancel((x**3 - 1)/(x**2 - 1)) == (x**2 + x + 1)/(x + 1)
-    assert cancel((x**3/2 - S(1)/2)/(x**2 - 1)) == (x**2 + x + 1)/(x + 1)/2
+    assert cancel((x**3/2 - S(1)/2)/(x**2 - 1)) == (x**2 + x + 1)/(2*x + 2)
 
     assert cancel((exp(2*x) + 2*exp(x) + 1)/(exp(x) + 1)) == exp(x) + 1
 
