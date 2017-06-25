@@ -9,7 +9,7 @@ from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core.compatibility import integer_types
 from sympy.core.sympify import converter
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Integer
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 
@@ -44,6 +44,11 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
     def __init__(self, p, q=1, _gcd=True):
         from sympy.polys.domains.groundtypes import python_gcd as gcd
+        if isinstance(p, Integer):
+            p = p.p
+        elif isinstance(p, Rational):
+            p, q = p.p, p.q
+
         if not q:
             raise ZeroDivisionError('rational number')
         elif q < 0:
