@@ -6410,8 +6410,8 @@ def _cancel_pq(p, q, *gens, **args):
             cq, Q = _clear_numer(Q.as_expr())
             return c*cp/cq, P, Q
         else:
-            # XXX it is possible that there is a gcd in P or Q
-            # it is being left there unless there is a compelling
+            # XXX it is possible that there is a gcd in P or Q.
+            # It is being left there unless there is a compelling
             # reason to fix this when returning Polys; it is
             # already handled when Expr are returned.
             return c, P, Q
@@ -6529,10 +6529,6 @@ def cancel(f, *gens, **args):
     if not isinstance(F, tuple):
         F = sympify(f)
 
-    # gens may have been sent as gens=x or gens=(x,) so
-    # flatten out the star args
-    # gens = tuple(flatten(gens))
-
     # argument checking
     if isinstance(F, tuple):
         if len(F) != 2:
@@ -6544,23 +6540,10 @@ def cancel(f, *gens, **args):
             expecting tuple (containing the numerator and denominator)
             or Expr, not %s''' % F))
 
-    # recognize non-Symbol gens
-    symbol_gens = sift(gens, lambda x: isinstance(x, Symbol))
-    if symbol_gens[False]:
-        reps = [(g, Dummy()) for g in symbol_gens[True]]
-        # the reps are processed in the order give
-        if isinstance(F, tuple):
-            F = tuple([i.subs(reps) for i in F])
-        else:
-            F = F.subs(reps)
-        G = tuple([d for _, d in reps] + symbol_gens[True])
-    else:
-        G = gens
-
     # dispatch to helper
     if isinstance(F, tuple):
         p, q = F
-        c, n, d = _cancel_pq(p, q, *G, **args)
+        c, n, d = _cancel_pq(p, q, *gens, **args)
         # when polification fails the expression may
         # have become a number; put the numbers in the
         # c position
@@ -6571,7 +6554,7 @@ def cancel(f, *gens, **args):
             c *= n
             n = S.One
     else:
-        rv = _cancel(F, *G, **args)
+        rv = _cancel(F, *gens, **args)
         c, nd = rv.as_coeff_Mul()
         n, d = fraction(nd)
 
@@ -6579,15 +6562,6 @@ def cancel(f, *gens, **args):
        rv = _keep_coeff(c, n/d)
     else:
        rv = c, n, d
-
-    # post-process for non-symbol generators
-    if symbol_gens[False]:
-        _reps = dict([(v, k) for k, v in reps])
-        if isinstance(rv, tuple):
-            c, p, q = rv
-            rv = c, p.xreplace(_reps), q.xreplace(_reps)
-        else:
-            rv = rv.xreplace(_reps)
 
     return rv
 
