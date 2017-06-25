@@ -10,7 +10,7 @@ from sympy.geometry.point import Point
 from sympy.core.function import diff
 from sympy.core.expr import Expr
 from sympy.abc import x, y
-from sympy.polys.polytools import gcd_list
+from sympy.polys.polytools import gcd_list, LC
 
 
 def polytope_integrate(poly, expr, **kwargs):
@@ -73,6 +73,145 @@ def polytope_integrate(poly, expr, **kwargs):
     return result
 
 
+def polytope_integrate_dynamic(poly, expr, degrees, **kwargs):
+    """This is currently a basic prototype for integrating
+    univariate/bivariate polynomials over 2-Polytopes.
+    Parameters
+    ==========
+    poly : The input Polygon.
+    expr : The input polynomial.
+    dims : The tuple of symbols denoting axes.
+    Example
+    =======
+    >>> from sympy.abc import x, y
+    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy.geometry.point import Point
+    >>> from sympy.integrals.intpoly import polytope_integrate_dynamic
+    >>> poly = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
+    >>> expr = x*y
+    >>> polytope_integrate_dynamic(poly, expr)
+    1/4
+    """
+    clockwise = kwargs.get('clockwise', False)
+
+    if clockwise is True and isinstance(poly, Polygon):
+        poly = clockwise_sort(poly)
+
+    dims = (x, y)
+
+    if isinstance(poly, Polygon):
+        # For Vertex Representation
+        hp_params = hyperplane_parameters(poly)
+        facets = poly.sides
+    else:
+        # For Hyperplane Representation
+        plen = len(poly)
+        intersections = [intersection(poly[(i - 1) % plen], poly[i])
+                         for i in range(0, plen)]
+        hp_params = poly
+        lints = len(intersections)
+        facets = [Segment2D(intersections[i], intersections[(i + 1) % lints])
+                  for i in range(0, lints)]
+
+    dim_length = len(dims)
+    result = S.Zero
+    monomials = {}
+    facet_count = 0
+    for hp in hp_params:
+        facet_contribute = S.Zero
+        for i in range(0, len(expr)):
+            x0 = facets[facet_count].points[0]
+            value_over_boundary = integration_reduction_dynamic(facets, facet_count,
+                                                        hp[0], hp[1],
+                                                        expr[i],
+                                                        dims, degrees[i],
+                                                        x0, monomials)
+            facet_contribute += value_over_boundary/(dim_length + degrees[i])
+        result += facet_contribute * (hp[1]/norm(hp[0]))
+        monomials = {}
+        facet_count += 1
+    return result
+
+
+def monomial_values(degree):
+    monoms = {}
+    for i in range(0, degree + 1):
+        for j in range(0, i + 1):
+            term = x**(i - j)*y**j
+            monoms[term] = None
+    return monoms
+
+
+def integration_reduction_dynamic(facets, index, a, b, expr,
+                                  dims, degree, x0, monomial_values):
+    expr = S(expr)
+    if expr == S.Zero:
+        return expr
+
+    a, b = (S(a[0]), S(a[1])), S(b)
+
+    value = S.Zero
+    m = len(facets)
+    gens = (x, y)
+
+    dfx, dfy = diff(expr, gens[0]), diff(expr, gens[1])
+
+    cx = dfx.args[0] if not dfx.is_number else dfx
+    cy = dfy.args[0] if not dfy.is_number else dfy
+    dfx = dfx/cx if cx is not S.Zero else S.Zero
+    dfy = dfy/cy if cy is not S.Zero else S.Zero
+
+    x_value = monomial_values.get(dfx, None)
+    y_value = monomial_values.get(dfy, None)
+
+    if not x_value:
+        inner_product = cx * dfx * x0[0]
+        x_value = integration_reduction(facets, index, a, b,
+                                           inner_product, dims,
+                                           degree - 1)
+        value += x_value
+    else:
+        value += x_value * cx * x0[0]
+
+    if not y_value:
+        inner_product = cy * dfy * x0[1]
+        y_value = integration_reduction(facets, index, a, b,
+                                               inner_product, dims,
+                                               degree - 1)
+        value += y_value
+    else:
+        value += y_value * cx * x0[1]
+
+    for j in range(0, m):
+        intersect = ()
+        if j == (index - 1) % m or j == (index + 1) % m:
+            intersect = intersection(facets[index], facets[j])
+        if intersect:
+            distance_origin = norm(tuple(map(lambda x, y: x - y,
+                                             intersect, x0)))
+            if is_vertex(intersect):
+                if isinstance(expr, Expr):
+                    if len(gens) == 3:
+                        expr_dict = {gens[0]: intersect[0],
+                                     gens[1]: intersect[1],
+                                     gens[2]: intersect[2]}
+                    else:
+                        expr_dict = {gens[0]: intersect[0],
+                                     gens[1]: intersect[1]}
+                    value += distance_origin * expr.subs(expr_dict)
+                else:
+                    value += distance_origin * expr
+            else:
+                value += integration_reduction(intersect, 0, a, b,
+                                               distance_origin * expr, dims,
+                                               degree)
+
+    cexpr = LC(expr) if not expr.is_number else expr
+    monomial_values[expr/cexpr] = value/((len(dims) + degree - 1)*cexpr)
+
+    return value/(len(dims) + degree - 1)
+
+
 def integration_reduction(facets, index, a, b, expr, dims, degree):
     """Helper method for polytope_integrate.
     Returns the value of the input expression evaluated over the
@@ -93,8 +232,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     a, b = (S(a[0]), S(a[1])), S(b)
 
     value = S.Zero
-    x0 = best_origin(a, b, facets[index], expr)
-    gens = [x, y]
+    x0 = facets[index].points[0]
     m = len(facets)
     gens = (x, y)
 
@@ -233,7 +371,8 @@ def best_origin(a, b, lineseg, expr):
         else:
             return ()
 
-    a1, b1 = lineseg.points[0]
+    return lineseg.points[0]
+    #return (a1, b1)
 
     gens = [x, y]
     power_gens = {}
