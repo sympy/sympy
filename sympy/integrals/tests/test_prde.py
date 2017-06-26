@@ -148,30 +148,15 @@ def test_prde_no_cancel():
 
 def test_prde_cancel_liouvillian():
     ### 1. case == 'primitive'
-    # used when integrating (log(-1/y)/2 - log(1/y)/2)/y - (log(1 - 1/y)/2 - log(1 + 1/y)/2)/y
+    # used when integrating f = log(x) - log(x - 1)
     # Not taken from 'the' book
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    assert prde_cancel_liouvillian(Poly(-1/(x - 1), t), [Poly(-x + 1, t), Poly(1, t)], 1, DE) == \
-        ([Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly((x - 1)*t, t, domain='ZZ(x)'),
-            Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'),
-            Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(x - 1, t, domain='ZZ(x)'),
-            Poly(-x**2 + x, t, domain='ZZ(x)'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'),
-            Poly(0, t, domain='QQ')], Matrix([[ 0,  1,  0,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-                                            [ 0,  0,  0,  0, 1,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-                                            [-1,  0,  0,  0, 0,  0,  0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                            [ 0,  0, -1,  0, 0,  0,  0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-                                            [ 0,  0,  0, -1, 0,  0,  0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 ],
-                                            [ 0,  0,  0,  0, 0, -1,  0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 ],
-                                            [ 0,  0,  0,  0, 0,  0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 ],
-                                            [-1,  0,  0,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-                                            [ 0,  0, -1,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 ],
-                                            [ 0,  0,  0, -1, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 ],
-                                            [ 0,  0,  0,  0, 0, -1,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 ],
-                                            [ 0,  0,  0,  0, 0,  0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 ],
-                                            [-1,  0,  1,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                            [ 0, -1,  0,  1, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-                                            [-1,  0,  0,  0, 0,  1,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                            [ 0, -1,  0,  0, 0,  0,  1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]]))
+    p0 = Poly(0, t, field=True)
+    h, A = prde_cancel_liouvillian(Poly(-1/(x - 1), t), [Poly(-x + 1, t), Poly(1, t)], 1, DE)
+    V = A.nullspace()
+    h == [p0, p0, Poly((x - 1)*t, t), p0, p0, p0, p0, p0, p0, p0, Poly(x - 1, t), Poly(-x**2 + x, t), p0, p0, p0, p0]
+    assert A.rank() == 16
+    assert (Matrix([h])*V[0][:16, :]) == Matrix([[Poly(0, t, domain='QQ(x)')]])
 
     ### 2. case == 'exp'
     # used when integrating log(x/exp(x) + 1)
