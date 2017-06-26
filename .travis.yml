@@ -259,8 +259,8 @@ before_install:
     fi
   - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
         conda config --add channels conda-forge;
-        conda config --add channels symengine;
-        conda install python-symengine=0.2.0;
+        conda config --add channels symengine/label/dev;
+        conda install python-symengine=0.3.0.rc0;
     fi
   - |
     if [[ "${TEST_THEANO}" == "true" ]]; then
