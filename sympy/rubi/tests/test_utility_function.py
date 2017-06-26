@@ -480,7 +480,6 @@ def test_ExpandLinearProduct():
     assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
 
 def test_ExpandIntegrand():
-
     assert True
 
 def test_MatchQ():
@@ -494,3 +493,31 @@ def test_Exponent():
 
 def test_PolynomialQuotientRemainder():
     assert PolynomialQuotientRemainder(x**2, x+a, x) == [-a + x, a**2]
+
+def test_FreeFactors():
+    assert FreeFactors(a, x) == a
+    assert FreeFactors(x + a, x) == 1
+    assert FreeFactors(a*b*x, x) == a*b
+
+def test_NonfreeFactors():
+    assert NonfreeFactors(a, x) == 1
+    assert NonfreeFactors(x + a, x) == x + a
+    assert NonfreeFactors(a*b*x, x) == x
+
+def test_FreeTerms():
+    assert FreeTerms(a, x) == a
+    assert FreeTerms(x*a, x) == 0
+    assert FreeTerms(a*x + b, x) == b
+
+def test_NonfreeTerms():
+    assert NonfreeTerms(a, x) == 0
+    assert NonfreeTerms(a*x, x) == a*x
+    assert NonfreeTerms(a*x + b, x) == a*x
+
+def test_RemoveContent():
+    assert RemoveContent(a + b*x, x) == a + b*x
+
+def test_ExpandAlgebraicFunction():
+    assert ExpandAlgebraicFunction((a + b)*x, x) == a*x + b*x
+    assert ExpandAlgebraicFunction((a + b)**2*x, x)== a**2*x + 2*a*b*x + b**2*x
+    assert ExpandAlgebraicFunction((a + b)**2*x**2, x) == a**2*x**2 + 2*a*b*x**2 + b**2*x**2
