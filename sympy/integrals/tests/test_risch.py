@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
     Symbol, Lambda, sin, Eq, Piecewise, factor, expand_log, simplify,
-    expand)
+    expand, diff, pi)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -646,7 +646,7 @@ def test_risch_integrate():
     # also tests issue #10798
     e2 = (log(-1/y)/2 - log(1/y)/2)/y - (log(1 - 1/y)/2 - log(1 + 1/y)/2)/y
     ans2 = risch_integrate(e2, y)
-    assert ans2 = log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 + \
+    assert ans2 == log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 + \
             NonElementaryIntegral((I*pi*y**2 - 2*y*log(1/y) - I*pi)/(2*y**3 - 2*y), y)
     assert expand_log(simplify(diff(ans2, y) - e2), force=True) == 0
 
