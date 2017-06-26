@@ -390,7 +390,7 @@ class HolonomicFunction(object):
     format:
     :math:`{s0: [C_0, C_1, ...], s1: [C^1_0, C^1_1, ...], ...}`
     where s0, s1, ... are the roots of indicial equation and vectors
-    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intiial
+    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intial
     terms of the associated power series. See Examples below.
 
     Examples
@@ -1629,7 +1629,7 @@ class HolonomicFunction(object):
         Finds the power series expansion of given holonomic function about :math:`x_0`.
 
         A list of series might be returned if :math:`x_0` is a regular point with
-        multiple roots of the indcial equation.
+        multiple roots of the indicial equation.
 
         Examples
         ========
@@ -2406,7 +2406,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
             _y0 = _find_conditions(func, x, x0, lenics)
         return sol.composition(func.args[0], x0, _y0)
 
-    # iterate though the expression recursively
+    # iterate through the expression recursively
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow

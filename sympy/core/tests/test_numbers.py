@@ -2,12 +2,12 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin)
+                   AlgebraicNumber, simplify, sin, fibonacci)
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
-    mpf_norm, comp, mod_inverse)
+    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
@@ -217,6 +217,24 @@ def test_igcd():
     for args in permutations((1, 2, None)):
         raises(ValueError, lambda: igcd(*args))
 
+
+def test_igcd_lehmer():
+    a, b = fibonacci(10001), fibonacci(10000)
+    # len(str(a)) == 2090
+    # small divisors, long Euclidean sequence
+    assert igcd_lehmer(a, b) == 1
+    c = fibonacci(100)
+    assert igcd_lehmer(a*c, b*c) == c
+    # big divisor
+    assert igcd_lehmer(a, 10**1000) == 1
+
+
+def test_igcd2():
+    # short loop
+    assert igcd2(2**100 - 1, 2**99 - 1) == 1
+    # Lehmer's algorithm
+    a, b = int(fibonacci(10001)), int(fibonacci(10000))
+    assert igcd2(a, b) == 1
 
 def test_ilcm():
     assert ilcm(0, 0) == 0
@@ -487,14 +505,34 @@ def test_Float():
     assert Float(decimal.Decimal('-Infinity')) == S.NegativeInfinity
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
-    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == \
+        '3.14159265358979323846264338327950288'
 
     assert Float(oo) == Float('+inf')
     assert Float(-oo) == Float('-inf')
 
     # unicode
-    assert Float(u'0.73908513321516064100000000') == Float('0.73908513321516064100000000')
-    assert Float(u'0.73908513321516064100000000', 28) == Float('0.73908513321516064100000000', 28)
+    assert Float(u'0.73908513321516064100000000') == \
+        Float('0.73908513321516064100000000')
+    assert Float(u'0.73908513321516064100000000', 28) == \
+        Float('0.73908513321516064100000000', 28)
+
+    # binary precision
+    # Decimal value 0.1 cannot be expressed precisely as a base 2 fraction
+    a = Float(S(1)/10, dps=15)
+    b = Float(S(1)/10, dps=16)
+    p = Float(S(1)/10, precision=53)
+    q = Float(S(1)/10, precision=54)
+    assert a._mpf_ == p._mpf_
+    assert not a._mpf_ == q._mpf_
+    assert not b._mpf_ == q._mpf_
+
+    # Precision specifying errors
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=10))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=10))
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=""))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=""))
+
 
 @conserve_mpmath_dps
 def test_float_mpf():
@@ -1287,12 +1325,27 @@ def test_issue_4611():
     assert (EulerGamma + x).evalf() == EulerGamma.evalf() + x
     assert (GoldenRatio + x).evalf() == GoldenRatio.evalf() + x
 
-
+@conserve_mpmath_dps
 def test_conversion_to_mpmath():
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
     assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
     assert mpmath.mpmathify(Float('1.23', 15)) == mpmath.mpf('1.23')
 
+    assert mpmath.mpmathify(I) == mpmath.mpc(1j)
+
+    assert mpmath.mpmathify(1 + 2*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(1.0 + 2*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(1 + 2.0*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(1.0 + 2.0*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(Rational(1, 2) + Rational(1, 2)*I) == mpmath.mpc(0.5 + 0.5j)
+
+    assert mpmath.mpmathify(2*I) == mpmath.mpc(2j)
+    assert mpmath.mpmathify(2.0*I) == mpmath.mpc(2j)
+    assert mpmath.mpmathify(Rational(1, 2)*I) == mpmath.mpc(0.5j)
+
+    mpmath.mp.dps = 100
+    assert mpmath.mpmathify(pi.evalf(100) + pi.evalf(100)*I) == mpmath.pi + mpmath.pi*mpmath.j
+    assert mpmath.mpmathify(pi.evalf(100)*I) == mpmath.pi*mpmath.j
 
 def test_relational():
     # real

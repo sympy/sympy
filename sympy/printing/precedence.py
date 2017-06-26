@@ -16,7 +16,9 @@ PRECEDENCE = {
     "Pow": 60,
     "Func": 70,
     "Not": 100,
-    "Atom": 1000
+    "Atom": 1000,
+    "BitwiseOr": 36,
+    "BitwiseAnd": 38
 }
 
 # A dictionary assigning precedence values to certain classes. These values are
@@ -38,7 +40,9 @@ PRECEDENCE_VALUES = {
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
     "MatPow": PRECEDENCE["Pow"],
-    "HadamardProduct": PRECEDENCE["Mul"]
+    "HadamardProduct": PRECEDENCE["Mul"],
+    "Equality": PRECEDENCE["Mul"],
+    "Unequality": PRECEDENCE["Mul"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a

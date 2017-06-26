@@ -308,7 +308,7 @@ class LatexPrinter(Printer):
 
     def _print_Cycle(self, expr):
         from sympy.combinatorics.permutations import Permutation
-        if str(expr) == '()':
+        if expr.size == 0:
             return r"\left( \right)"
         expr = Permutation(expr)
         expr_perm = expr.cyclic_form
@@ -811,7 +811,7 @@ class LatexPrinter(Printer):
     _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
-        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Func'])
+        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
 
         return self._do_exponent(tex, exp)
 
@@ -1356,11 +1356,13 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_Matrix = _print_MatrixBase
+    _print_ImmutableMatrix = _print_ImmutableDenseMatrix \
+                           = _print_Matrix \
+                           = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '_{%s, %s}'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '_{%s, %s}' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):

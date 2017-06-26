@@ -256,28 +256,28 @@ def test_geometric_sums():
     assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
 
     #issue 11642:
-    result = Sum(0.5**n,(n, 1, oo)).doit()
+    result = Sum(0.5**n, (n, 1, oo)).doit()
     assert result == 1
     assert result.is_Float
 
-    result = Sum(0.25**n,(n, 1, oo)).doit()
+    result = Sum(0.25**n, (n, 1, oo)).doit()
     assert result == S(1)/3
     assert result.is_Float
 
-    result = Sum(0.99999**n,(n, 1, oo)).doit()
+    result = Sum(0.99999**n, (n, 1, oo)).doit()
     assert result == 99999
     assert result.is_Float
 
-    result = Sum(Rational(1,2)**n,(n, 1, oo)).doit()
+    result = Sum(Rational(1, 2)**n, (n, 1, oo)).doit()
     assert result == 1
     assert not result.is_Float
 
-    result = Sum(Rational(3,5)**n,(n, 1, oo)).doit()
+    result = Sum(Rational(3, 5)**n, (n, 1, oo)).doit()
     assert result == S(3)/2
     assert not result.is_Float
 
-    assert Sum(1.0**n,(n,1,oo)).doit() == oo
-    assert Sum(2.43**n,(n,1,oo)).doit() == oo
+    assert Sum(1.0**n, (n, 1, oo)).doit() == oo
+    assert Sum(2.43**n, (n, 1, oo)).doit() == oo
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
@@ -963,6 +963,15 @@ def test_is_convergent():
     assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
     assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
+    # integral test
+
+    assert Sum(log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(-log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    # the following function has maxima located at (x, y) =
+    # (1.2, 0.43), (3.0, -0.25) and (6.8, 0.050)
+    eq = (x - 2)*(x**2 - 6*x + 4)*exp(-x)
+    assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
+
 
 def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
@@ -972,8 +981,6 @@ def test_is_absolutely_convergent():
 @XFAIL
 def test_convergent_failing():
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    # is_decreasing is not handling "is_decreasing(1)", so raises error
 
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true

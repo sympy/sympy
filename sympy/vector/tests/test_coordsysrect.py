@@ -108,13 +108,13 @@ def test_coordinate_vars():
            {N.x: A.x, N.z: A.z, N.y: A.y}
     C = A.orient_new_axis('C', q, A.i + A.j + A.k)
     mapping = A.scalar_map(C)
-    assert mapping[A.x] == (C.x*(2*cos(q) + 1)/3 +
+    assert mapping[A.x].equals(C.x*(2*cos(q) + 1)/3 +
                             C.y*(-2*sin(q + pi/6) + 1)/3 +
                             C.z*(-2*cos(q + pi/3) + 1)/3)
-    assert mapping[A.y] == (C.x*(-2*cos(q + pi/3) + 1)/3 +
+    assert mapping[A.y].equals(C.x*(-2*cos(q + pi/3) + 1)/3 +
                             C.y*(2*cos(q) + 1)/3 +
                             C.z*(-2*sin(q + pi/6) + 1)/3)
-    assert mapping[A.z] == (C.x*(-2*sin(q + pi/6) + 1)/3 +
+    assert mapping[A.z].equals(C.x*(-2*sin(q + pi/6) + 1)/3 +
                             C.y*(-2*cos(q + pi/3) + 1)/3 +
                             C.z*(2*cos(q) + 1)/3)
     D = A.locate_new('D', a*A.i + b*A.j + c*A.k)
@@ -292,3 +292,17 @@ def test_evalf():
     v = 3*A.i + 4*A.j + a*A.k
     assert v.n() == v.evalf()
     assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()
+
+
+def test_lame_coefficients():
+    a = CoordSysCartesian('a')
+    a._set_lame_coefficient_mapping('spherical')
+    assert a.lame_coefficients() == (1, a.x, sin(a.y)*a.x)
+    a = CoordSysCartesian('a')
+    assert a.lame_coefficients() == (1, 1, 1)
+    a = CoordSysCartesian('a')
+    a._set_lame_coefficient_mapping('cartesian')
+    assert a.lame_coefficients() == (1, 1, 1)
+    a = CoordSysCartesian('a')
+    a._set_lame_coefficient_mapping('cylindrical')
+    assert a.lame_coefficients() == (1, a.y, 1)

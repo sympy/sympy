@@ -35,6 +35,7 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy import MatrixSymbol
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -279,8 +280,8 @@ def test_latex_functions():
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Max(x, y)**2) == r"\max\left(x, y\right)^{2}"
     assert latex(Abs(x)) == r"\left|{x}\right|"
-    assert latex(re(x)) == r"\Re{x}"
-    assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
+    assert latex(re(x)) == r"\Re{\left(x\right)}"
+    assert latex(re(x + y)) == r"\Re{\left(x\right)} + \Re{\left(y\right)}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma{\left(x \right)}"
@@ -299,7 +300,7 @@ def test_latex_functions():
 
     assert latex(cot(x)) == r'\cot{\left (x \right )}'
     assert latex(coth(x)) == r'\coth{\left (x \right )}'
-    assert latex(re(x)) == r'\Re{x}'
+    assert latex(re(x)) == r'\Re{\left(x\right)}'
     assert latex(im(x)) == r'\Im{x}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left (x \right )}'
@@ -1586,7 +1587,6 @@ def test_issue_10489():
     assert latex(s) == latexSymbolWithBrace
     assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'
 
-
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
     he = UnevaluatedExpr(1/x)
@@ -1594,3 +1594,16 @@ def test_latex_UnevaluatedExpr():
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
     assert latex(he + 1) == r"1 + \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert latex(A[0, 0]) == r"A_{0, 0}"
+    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
+
+    F = C[0, 0].subs(C, A - B)
+    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"

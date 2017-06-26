@@ -16,7 +16,7 @@ from sympy.utilities.randtest import verify_numerically as tn
 from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf, exp_polar)
+                   gamma, sqrt, pi, erf, exp_polar, Rational)
 
 
 def test_branch_bug():
@@ -93,6 +93,7 @@ def test_polynomial():
     assert hyperexpand(hyper([-2], [-1], z)) == oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
+    assert hyperexpand(hyper((-1, 1), (-2,), z)) == 1 + z/2
 
 
 def test_hyperexpand_bases():
@@ -1030,3 +1031,10 @@ def test_prudnikov_fail_other():
 def test_bug():
     h = hyper([-1, 1], [z], -1)
     assert hyperexpand(h) == (z + 1)/z
+
+
+def test_omgissue_203():
+    h = hyper((-5, -3, -4), (-6, -6), 1)
+    assert hyperexpand(h) == Rational(1, 30)
+    h = hyper((-6, -7, -5), (-6, -6), 1)
+    assert hyperexpand(h) == -Rational(1, 6)

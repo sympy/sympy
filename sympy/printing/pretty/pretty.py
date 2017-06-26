@@ -100,8 +100,14 @@ class PrettyPrinter(Printer):
     _print_Naturals = _print_Atom
     _print_Naturals0 = _print_Atom
     _print_Integers = _print_Atom
-    _print_Reals = _print_Atom
     _print_Complexes = _print_Atom
+
+    def _print_Reals(self, e):
+        if self._use_unicode:
+            return self._print_Atom(e)
+        else:
+            inf_list = ['-oo', 'oo']
+            return self._print_seq(inf_list, '(', ')')
 
     def _print_subfactorial(self, e):
         x = e.args[0]
@@ -683,9 +689,10 @@ class PrettyPrinter(Printer):
         if (isinstance(expr.parent, MatrixSymbol)
                 and expr.i.is_number and expr.j.is_number):
             return self._print(
-                    Symbol(expr.parent.name + '_%d%d'%(expr.i, expr.j)))
+                    Symbol(expr.parent.name + '_%d%d' % (expr.i, expr.j)))
         else:
             prettyFunc = self._print(expr.parent)
+            prettyFunc = prettyForm(*prettyFunc.parens())
             prettyIndices = self._print_seq((expr.i, expr.j), delimiter=', '
                     ).parens(left='[', right=']')[0]
             pform = prettyForm(binding=prettyForm.FUNC,
