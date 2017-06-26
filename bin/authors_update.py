@@ -77,13 +77,13 @@ running `./bin/authors_update.py`.
 """
 header_extra = """There are a total of {authors_count} authors.\n""".format(authors_count=len(git_people))
 
-fd = open(os.path.realpath(os.path.join(__file__, os.path.pardir,
-    os.path.pardir, "AUTHORS")), "w")
-fd.write(header)
-fd.write(header_extra)
-fd.write("\n")
-fd.write("\n".join(git_people).encode("utf8"))
-fd.write("\n")
+with open(os.path.realpath(os.path.join(__file__, os.path.pardir,
+                                        os.path.pardir, "AUTHORS")), "w") as fd:
+    fd.write(header)
+    fd.write(header_extra)
+    fd.write("\n")
+    fd.write("\n".join(git_people).encode("utf8"))
+    fd.write("\n")
 
 print(blue("""
 Please make sure that there are no duplicates in the new AUTHORS, then commit
