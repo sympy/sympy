@@ -19,7 +19,7 @@ def ratint(f, x, **flags):
        >>> from sympy.abc import x
 
        >>> ratint(36/(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2), x)
-       6*(2*x + 1)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)
+       (12*x + 6)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)
 
        References
        ==========
@@ -131,7 +131,7 @@ def ratint_ratpart(f, g, x):
         (0, 1/(x**2 + y**2))
         >>> ratint_ratpart(Poly(36, x, domain='ZZ'),
         ... Poly(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2, x, domain='ZZ'), x)
-        (6*(2*x + 1)/(x**2 - 1), 12/(x**2 - x - 2))
+        ((12*x + 6)/(x**2 - 1), 12/(x**2 - x - 2))
 
     See Also
     ========

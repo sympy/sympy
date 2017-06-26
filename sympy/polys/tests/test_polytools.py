@@ -58,6 +58,7 @@ from sympy import (
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
+from sympy.stats import Variance
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.simplify import simplify
 
@@ -2936,6 +2937,11 @@ def test_cancel():
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
+
+    nc = Variance(x)
+    assert nc.is_commutative is None  # if this fails get a new object
+    eq = 4*nc
+    assert cancel(eq) == eq
 
 
 def test_issue_11506():

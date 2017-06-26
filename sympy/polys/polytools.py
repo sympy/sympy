@@ -6452,7 +6452,7 @@ def _cancel(f, *gens, **args):
         if isinstance(f, (Mul, Add)):
             sifted = sift(f.args, lambda x:
                 x.is_commutative and not isinstance(x, Piecewise))
-            c, nc = sifted[True], sifted[False]
+            c, nc = sifted[True], sifted[False] + sifted[None]
             nc = [_cancel(i, *gens, **args) for i in nc]
             return f.func(_cancel(f.func._from_args(c), *gens, **args), *nc)
         else:
