@@ -697,13 +697,13 @@ def param_rischDE(fa, fd, G, DE):
     # y = p/gamma of the initial equation with ci = Sum(dj*aji).
 
     try:
-        # We try n=2. At least for prde_spde, it will always
+        # We try n=5. At least for prde_spde, it will always
         # terminate no matter what n is.
         n = bound_degree(a, b, r, DE, parametric=True)
     except NotImplementedError:
         # A temporary bound is set. Eventually, it will be removed.
         # the currently added test case takes large time
-        # even with n=2, and much longer wit large n's.
+        # even with n=5, and much longer with large n's.
         n = 5
 
     h, B = param_poly_rischDE(a, b, r, n, DE)
