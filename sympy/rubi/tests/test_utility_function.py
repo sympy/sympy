@@ -5,7 +5,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi
 
-a, b, c, d, x, y, z = symbols('a b c d x y z')
+a, b, c, d, e, f, x, y, z = symbols('a b c d e f x y z')
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -521,3 +521,21 @@ def test_ExpandAlgebraicFunction():
     assert ExpandAlgebraicFunction((a + b)*x, x) == a*x + b*x
     assert ExpandAlgebraicFunction((a + b)**2*x, x)== a**2*x + 2*a*b*x + b**2*x
     assert ExpandAlgebraicFunction((a + b)**2*x**2, x) == a**2*x**2 + 2*a*b*x**2 + b**2*x**2
+
+def test_CollectReciprocals():
+    assert CollectReciprocals(-1/(1 + 1*x) - 1/(1 - 1*x), x) == -2/(-x**2 + 1)
+    assert CollectReciprocals(1/(1 + 1*x) - 1/(1 - 1*x), x) == -2*x/(-x**2 + 1)
+
+def test_ExpandCleanup():
+    assert ExpandCleanup(a + b, x) == a + b
+
+def test_AlgebraicFunctionQ():
+    assert AlgebraicFunctionQ(a, x) == True
+    assert AlgebraicFunctionQ(a*b, x) == True
+    assert AlgebraicFunctionQ(x**2, x) == True
+    assert AlgebraicFunctionQ(x**2*a, x) == True
+    assert AlgebraicFunctionQ(x**2 + a, x) == True
+    assert AlgebraicFunctionQ(sin(x), x) == False
+    assert AlgebraicFunctionQ([], x) == True
+    assert AlgebraicFunctionQ([a, a*b], x) == True
+    assert AlgebraicFunctionQ([sin(x)], x) == False

@@ -834,6 +834,68 @@ def ExpandAlgebraicFunction(expr, x):
 
     return expr
 
+def CollectReciprocals(expr, x):
+    # Basis: e/(a+b x)+f/(c+d x)==(c e+a f+(d e+b f) x)/(a c+(b c+a d) x+b d x^2)
+    if SumQ(expr):
+        u_ = Wild('u')
+        a_ = Wild('a', exclude=[x])
+        b_ = Wild('b', exclude=[x])
+        c_ = Wild('c', exclude=[x])
+        d_ = Wild('d', exclude=[x])
+        e_ = Wild('e', exclude=[x])
+        f_ = Wild('f', exclude=[x])
+        pattern = u_ + e_/(a_ + b_*x) + f_/(c_+d_*x)
+        match = expr.match(pattern)
+        if match:
+            try: # .match() does not work peoperly always
+                keys = [u_, a_, b_, c_, d_, e_, f_]
+                u, a, b, c, d, e, f = tuple([match[i] for i in keys])
+                if ZeroQ(b*c + a*d) & ZeroQ(d*e + b*f):
+                    return CollectReciprocals(u + (c*e + a*f)/(a*c + b*d*x**2),x)
+                elif ZeroQ(b*c + a*d) & ZeroQ(c*e + a*f):
+                    return CollectReciprocals(u + (d*e + b*f)*x/(a*c + b*d*x**2),x)
+            except:
+                pass
+    return expr
+
+def UnifySum(term, x):
+    # returns u with terms having indentical nonfree factors of x collected into a single term.
+    return term
+
+def ExpandCleanup(u, x):
+    v = CollectReciprocals(u, x)
+    if SumQ(v):
+        res = 0
+        for i in v.args:
+            res += SimplifyTerm(i, x)
+        v = res
+        if SumQ(v):
+            return UnifySum(v, x)
+        else:
+            return v
+    else:
+        return v
+
+def AlgebraicFunctionQ(u, x, flag=False):
+    if ListQ(u):
+        if u == []:
+            return True
+        elif AlgebraicFunctionQ(First(u), x, flag):
+            return AlgebraicFunctionQ(Rest(u), x, flag)
+        else:
+            return False
+    elif AtomQ(u) or FreeQ(u, x):
+        return True
+    elif PowerQ(u):
+        if RationalQ(u.args[1]) | flag & FreeQ(u.args[1], x):
+            return AlgebraicFunctionQ(u.args[1], x, flag)
+    elif ProductQ(u) | SumQ(u):
+        for i in u.args:
+            if not AlgebraicFunctionQ(i, x, flag):
+                return False
+        return True
+    return False
+
 def ExpandIntegrand(expr, x):
     w_ = Wild('w')
     p_ = Wild('p')
