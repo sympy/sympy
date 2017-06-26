@@ -7,6 +7,7 @@ from sympy import (
     Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
     IndexedBase, Idx, Piecewise, O
 )
+from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
@@ -446,7 +447,6 @@ def test_issue_11230():
 @XFAIL
 def test_issue_11577():
     def check(eq):
-        from sympy.core.function import count_ops
         r, c = cse(eq)
         assert eq.count_ops() >= \
             len(r) + sum([i[1].count_ops() for i in r]) + \
@@ -494,3 +494,10 @@ def test_cse__performance():
     assert len(subst) > 0, "exprs[0] == -exprs[2], i.e. a CSE"
     for i, e in enumerate(red):
         assert (e.subs(reversed(subst)) - exprs[i]).simplify() == 0
+
+
+def test_issue_12070():
+    exprs = [x+y,2+x+y,x+y+z,3+x+y+z]
+    subst, red = cse(exprs)
+    assert 6 >= (len(subst) + sum([v.count_ops() for k, v in subst]) +
+                 count_ops(red))
