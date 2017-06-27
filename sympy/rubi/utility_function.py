@@ -181,7 +181,7 @@ def First(expr, d=None):
         if isinstance(expr, list):
             return expr[0]
         else:
-            return expr.func(expr.args[0])
+            return expr.args[0]
     except:
         return d
 
@@ -189,7 +189,10 @@ def Rest(expr):
     if isinstance(expr, list):
         return expr[1:]
     else:
-        return expr.func(*expr.args[1:])
+        if SumQ(expr) or ProductQ(expr):
+            return expr.func(*expr.args[1:])
+        else:
+            return expr.args[1]
 
 def SqrtNumberQ(expr):
     # SqrtNumberQ[u] returns True if u^2 is a rational number; else it returns False.
