@@ -249,16 +249,6 @@ def test_NonsumQ():
     assert NonsumQ(a*b) == True
     assert NonsumQ(a + b) == False
 
-def test_First():
-    assert First([1, 2, 3, 4]) == 1
-    assert First(a*b*c) == a
-    assert First(a + b + c) == a
-
-def test_Rest():
-    assert Rest([1, 2, 3, 4]) == [2, 3, 4]
-    assert Rest(a*b*c) == b*c
-    assert Rest(a + b + c) == b + c
-
 def test_SqrtNumberQ():
     assert SqrtNumberQ(sqrt(2)) == True
 
@@ -419,6 +409,54 @@ def test_EqQ():
     assert EqQ(a, a)
     assert not EqQ(a, b)
 
+
+def test_Rest():
+    assert Rest([2, 3, 5, 7]) == [3, 5, 7]
+    assert Rest(1/b) == -1
+    assert Rest(a + b + c) == b + c
+    assert Rest(a*b*c) == b*c
+
+def test_First():
+    assert First([2, 3, 5, 7]) == 2
+    assert First(y**2) == y
+    assert First((1/b)) == b
+    assert First(a + b + c) == a
+    assert First(a*b*c) == a
+
+def test_ComplexFreeQ():
+    assert ComplexFreeQ(x)
+    assert not ComplexFreeQ(x+2*I)
+
+def test_FractionalPowerFreeQ():
+    assert not FractionalPowerFreeQ(x**(S(2)/3))
+    assert FractionalPowerFreeQ(x)
+
+def test_FactorSquareFree():
+    assert FactorSquareFree((x**5 - x**3 - x**2 + 1)*(x+1)**2) == (x - 1)**2*(x + 1)**3*(x**2 + x + 1)
+    assert FactorSquareFree((x**5 - x**3 - x**2 + 1)*(x-1)) == (x - 1)**3*(x**3 + 2*x**2 + 2*x + 1)
+    assert FactorSquareFree(x**5 - x**3 - x**2 + 1) == (x - 1)**2*(x**3 + 2*x**2 + 2*x + 1)
+
+def test_Exponent():
+    assert Exponent(x**2+x+1+5, x, List) == [0, 1, 2]
+    assert Exponent(x**2+x+1, x, List) == [0, 1, 2]
+    assert Exponent(x**2+2*x+1, x, List) == [0, 2, 1]
+    assert Exponent(x**3+x+1, x) == 3
+    assert Exponent(x**2+2*x+1, x) == 2
+    assert Exponent(x**3, x, List) == [3]
+
+def test_QuadraticQ():
+    assert not QuadraticQ([x**2+x+1, 5*x**2], x)
+    assert QuadraticQ([x**2+x+1, 5*x**2+3*x+6], x)
+    assert not QuadraticQ(x**2+1+x**3, x)
+    assert QuadraticQ(x**2+1+x, x)
+    assert not QuadraticQ(x**2, x)
+
+def test_BinomialParts():
+    assert BinomialParts(2 + x*(9*x), x) == [2, 9, 2]
+    assert BinomialParts(x**9, x) == [0, 1, 9]
+    assert BinomialParts(2*x**3, x) == [0, 2, 3]
+    assert BinomialParts(2 + x, x) == [2, 1, 1]
+
 def test_PolynomialQ():
     assert PolynomialQ(x**3, x)
     assert not PolynomialQ(sqrt(x), x)
@@ -488,9 +526,6 @@ def test_MatchQ():
     b_ = Wild('b', exclude=[x])
     c_ = Wild('c', exclude=[x])
     assert MatchQ(a*b + c, a_*b_ + c_, a_, b_, c_) == (a, b, c)
-
-def test_Exponent():
-    assert Exponent(1 + x + a*x**3, x) == 3
 
 def test_PolynomialQuotientRemainder():
     assert PolynomialQuotientRemainder(x**2, x+a, x) == [-a + x, a**2]

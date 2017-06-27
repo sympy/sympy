@@ -4,11 +4,10 @@ Utility functions for Rubi integration
 
 from sympy.functions.elementary.integers import floor, frac
 from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf)
-from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly, quo, rem
-from sympy.simplify.simplify import fraction, simplify, count_ops
+from sympy.simplify.simplify import fraction, simplify, count_ops, factor
 from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
@@ -331,7 +330,13 @@ def FractionalPowerQ(u):
     return PowerQ(u) & FractionQ(u.args[1])
 
 def AtomQ(expr):
-    return expr.is_Atom
+    if isinstance(expr, list):
+        for e in expr:
+            if not e.is_Atom:
+                return False
+        return True
+    else:
+        return expr.is_Atom
 
 def ExpQ(u):
     return Head(u) == exp
@@ -427,9 +432,6 @@ def Length(expr):
     # returns number of elements in the experssion
     return len(expr.args)
 
-def AtomQ(expr):
-    return expr.is_Atom
-
 def ListQ(u):
     return isinstance(u, list)
 
@@ -506,8 +508,255 @@ def RealQ(u):
 def EqQ(u, v):
     return ZeroQ(u - v)
 
+def FractionalPowerFreeQ(u):
+    if AtomQ(u):
+        return True
+    elif FractionalPowerQ(u):
+        return False
+
+def ComplexFreeQ(u):
+    if AtomQ(u) and Not(ComplexNumberQ(u)):
+        return True
+    else:
+         return False
+
 def PolynomialQ(u, x):
     return u.is_polynomial(x)
+
+def FactorSquareFree(u):
+    e = factor(u).args
+    mul_fac = 1
+    for expr in e:
+        if expr.is_Pow:
+            mul_fac = mul_fac*expr
+    return mul_fac*simplify(u/mul_fac)
+
+def PowerOfLinearQ(expr, x):
+    [u, m] = expr.args
+    if FreeQ(m, x) and PolynomialQ(u, x):
+        if IntegerQ(m):
+            FactorSquareFree(u).match(w**n)
+            return FreeQ(n, x) and LinearQ(w, x)
+        else:
+            return LinearQ(u, x)
+
+def Exponent(expr, x, *k):
+    if not k:
+        return degree(expr, gen = x)
+    else:
+        lst=[]
+        if expr.is_Add:
+            for t in expr.args:
+                if t.is_Pow:
+                    lst = lst + [t.args[1]]
+                if t.is_Mul:
+                    if t.args[1].is_Pow:
+                        lst = lst + [(t.args[1]).args[1]]
+                    if AtomQ(t.args[1]):
+                        lst = lst + [1]
+                if t.is_Number:
+                    lst = lst + [0]
+                if AtomQ(t) and not t.is_Number:
+                    lst = lst + [1]
+            return lst
+        else:
+            return [degree(expr, gen = x)]
+
+
+def QuadraticQ(u, x):
+    if ListQ(u):
+        for expr in u:
+            if Not(PolyQ(expr, x, 2) and Not(Coefficient(expr, x, 0) == 0 and Coefficient(expr, x, 1) == 0)):
+                return False
+        return True
+    else:
+        return PolyQ(u, x, 2) and Not(Coefficient(u, x, 0) == 0 and Coefficient(u, x, 1) == 0)
+
+def LinearPairQ(u, v, x):
+    return LinearQ(u, x) and LinearQ(v, x) and NonzeroQ(u-x) and ZeroQ(Coefficient(u, x, 0)*Coefficient(v, x, 1)-Coefficient(u, x, 1)*Coefficient(v, x, 0))
+
+def BinomialParts(u, x):
+    if PolynomialQ(u, x):
+        if Exponent(u, x)>0:
+            lst = Exponent(u, x, List)
+            if len(lst)==1:
+                return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u,x)]
+            elif len(lst) == 2 and lst[0] == 0:
+                return [Coefficient(u, x, 0), Coefficient(u, x, Exponent(u, x)), Exponent(u, x)]
+            else:
+                return False
+        else:
+            return False
+    elif PowerQ(u):
+        if u.args[0] == x and FreeQ(u.args[1], x):
+            return [0, 1, u.args[1]]
+        else:
+            return False
+    elif ProductQ(u):
+        if FreeQ(First(u), x):
+            lst2 = BinomialParts(Rest(u), x)
+            if AtomQ(lst2):
+                return False
+            else:
+                return [First(u)*lst2[0], First(u)*lst2[1], lst2[2]]
+        elif FreeQ(Rest(u), x):
+            lst1 = BinomialParts(First(u), x)
+            if AtomQ(lst1):
+                return False
+            else:
+                return [Rest(u)*lst1[0], Rest(u)*lst1[1], lst1[2]]
+        lst1 = BinomialParts(First(u), x)
+        if AtomQ(lst1):
+            return False
+        lst2 = BinomialParts(Rest(u), x)
+        if AtomQ(lst2):
+            return False
+        a = lst1[0]
+        b = lst1[1]
+        m = lst1[2]
+        c = lst2[0]
+        d = lst2[1]
+        n = lst2[2]
+        if ZeroQ(a):
+            if ZeroQ(c):
+                return [0, b*d, m + n]
+            elif ZeroQ(m + n):
+                return [b*d, b*c, m]
+            else:
+                return False
+        if ZeroQ(c):
+            if ZeroQ(m + n):
+                return [b*d, a*d, n]
+            else:
+                return False
+        if EqQ(m, n) and ZeroQ(a*d + b*c):
+            return [a*c, b*d, 2*m]
+        else:
+            return False
+    elif SumQ(u):
+        if FreeQ(First(u),x):
+            lst2 = BinomialParts(Rest(u), x)
+            if AtomQ(lst2):
+                return False
+            else:
+                return [First(u) + lst2[0], lst2[1], lst2[2]]
+        elif FreeQ(Rest(u), x):
+            lst1 = BinomialParts(First(u), x)
+            if AtomQ(lst1):
+                return False
+            else:
+                return[Rest(u) + lst1[0], lst1[1], lst1[2]]
+        lst1 = BinomialParts(First(u), x)
+        if AtomQ(lst1):
+            return False
+        lst2 = BinomialParts(Rest(u),x)
+        if AtomQ(lst2):
+            return False
+        if EqQ(lst1[2], lst2[2]):
+            return [lst1[0] + lst2[0], lst1[1] + lst2[1], lst1[2]]
+        else:
+            return False
+    else:
+        return False
+
+def TrinomialParts(u, x):
+    if PolynomialQ(u, x):
+        lst = CoefficientList(u, x)
+        if len(lst)<3 or EvenQ(len(lst)) or ZeroQ((len(lst)+1)/2):
+            return False
+        #Catch(
+         #   Scan(Function(if ZeroQ(lst), Null, Throw(False), Drop(Drop(Drop(lst, [(len(lst)+1)/2]), 1), -1];
+          #  [First(lst), lst[(len(lst)+1)/2], Last(lst), (len(lst)-1)/2]):
+    if PowerQ(u):
+        if EqQ(u.args[1], 2):
+            lst = BinomialParts(u.args[0], x)
+            if AtomQ(lst) or ZeroQ(lst[0]):
+                return False
+            else:
+                return [lst[0]**2, 2*lst[0]*lst[1], lst[1]**2, lst[2]]
+        else:
+            return False
+    if ProductQ(u):
+        if FreeQ(First(u), x):
+            lst2 = TrinomialParts(Rest(u), x)
+            if AtomQ(lst2):
+                return False
+            else:
+                return [First(u)*lst2[0], First(u)*lst2[1], First(u)*lst2[2], lst2[3]]
+        if FreeQ(Rest(u), x):
+            lst1 = TrinomialParts(First(u), x)
+            if AtomQ(lst1):
+                return False
+            else:
+                return [Rest(u)*lst1[0], Rest(u)*lst1[1], Rest(u)*lst1[2], lst1[3]]
+        lst1 = BinomialParts(First(u), x)
+        if AtomQ(lst1):
+            return False
+        lst2 = BinomialParts(Rest(u), x)
+        if AtomQ(lst2):
+            return False
+        a = lst1[0]
+        b = lst1[1]
+        m = lst1[2]
+        c = lst2[0]
+        d = lst2[1]
+        n = lst2[2]
+        if EqQ(m, n) and NonzeroQ(a*d+b*c):
+            return [a*c, a*d + b*c, b*d, m]
+        else:
+            return False
+    if SumQ(u):
+        if FreeQ(First(u), x):
+            lst2 = TrinomialParts(Rest(u), x)
+            if AtomQ(lst2):
+                return False
+            else:
+                return [First(u)+lst2[0], lst2[1], lst2[2], lst2[3]]
+        if FreeQ(Rest(u), x):
+            lst1 = TrinomialParts(First(u), x)
+            if AtomQ(lst1):
+                return False
+            else:
+                return [Rest(u)+lst1[0], lst1[1], lst1[2], lst1[3]]
+        lst1 = TrinomialParts(First(u), x)
+        if AtomQ(lst1):
+            lst3 = BinomialParts(First(u), x)
+            if AtomQ(lst3):
+                return False
+            lst2 = TrinomialParts(Rest(u), x)
+            if AtomQ(lst2):
+                lst4 = BinomialParts(Rest(u), x)
+                if AtomQ(lst4):
+                    return False
+                if EqQ(lst3[3], 2*lst4[3]):
+                    return [lst3[0]+lst4[0], lst4[1], lst3[1], lst4[2]]
+                if EqQ(lst4[3], 2*lst3[3]):
+                    return [lst3[0]+lst4[0], lst3[1], lst4[1], lst3[2]]
+                else:
+                    return False
+            if EqQ(lst3[2], lst2[3]) and NonzeroQ(lst3[1]+lst2[1]):
+                return [lst3[0]+lst2[0], lst3[1]+lst2[1], lst2[2], lst2[3]]
+            if EqQ(lst3[2], 2*lst2[3]) and NonzeroQ(lst3[1]+lst2[2]):
+                return [lst3[0]+lst2[0], lst2[1], lst3[1]+lst2[2], lst2[3]]
+            else:
+                return False
+        lst2 = TrinomialParts(Rest(u), x)
+        if AtomQ(lst2):
+            lst4 = BinomialParts(Rest(u), x)
+            if AtomQ(lst4):
+                return False
+            if EqQ(lst4[2], lst1[3]) and NonzeroQ(lst1[1]+lst4[0]):
+                return [lst1[0]+lst4[0], lst1[1]+lst4[1], lst1[2], lst1[3]]
+            if EqQ(lst4[2], 2*lst1[3]) and NonzeroQ(lst1[2]+lst4[1]):
+                return [lst1[0]+lst4[0], lst1[1], lst1[2]+lst4[1], lst1[3]]
+            else:
+                return False
+        if EqQ(lst1[3], lst2[3]) and NonzeroQ(lst1[1]+lst2[1]) and NonzeroQ(lst1[2]+lst2[2]):
+            return [lst1[0]+lst2[0], lst1[1]+lst2[1], lst1[2]+lst2[2], lst1[3]]
+        else:
+            return False
+    else:
+        return False
 
 def PolyQ(u, x, n):
     # returns True iff u is a polynomial of degree n.
@@ -685,9 +934,6 @@ def MatchQ(expr, pattern, *var):
         return tuple(match[i] for i in var)
     else:
         return None
-
-def Exponent(u, x):
-    return degree(u, x)
 
 def PolynomialQuotientRemainder(p, q, x):
     return [quo(p, q), rem(p, q)]
