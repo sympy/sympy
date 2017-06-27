@@ -51,7 +51,9 @@ EOF
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
-    # -Werror for Python 3.6 string escape deprecation warnings. See #12028.
+    # Note that tests themselves are run in a subprocess, so -Werror is only
+    # for errors at import time (particularly, string escape deprecation
+    # warnings). See #12028.
     cat << EOF | python -Werror
 print('Testing DOCTESTS')
 import sympy
@@ -118,7 +120,9 @@ EOF
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
-    # -Werror for Python 3.6 string escape deprecation warnings. See #12028.
+    # Note that tests themselves are run in a subprocess, so -Werror is only
+    # for errors at import time (particularly, string escape deprecation
+    # warnings). See #12028.
     cat << EOF | python -Werror
 print('Testing SYMPY, split ${SPLIT}')
 import sympy
