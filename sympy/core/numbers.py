@@ -944,10 +944,11 @@ class Float(Number):
         if prec is not None:
             SymPyDeprecationWarning(
                             feature="Using 'prec=XX' to denote decimal precision",
-                            useinstead="'dps=XX' to denote decimal and 'precision=XX' "\
+                            useinstead="'dps=XX' for decimal precision and 'precision=XX' "\
                                               "for binary precision",
-                            value="This is an effort to improve functionality "\
-                                       "of Float class. ").warn()
+                            value="This is an effort to improve the functionality "\
+                                       "of the Float class. ",
+                            issue=12820).warn()
             dps = prec
 
         if dps is not None and precision is not None:
