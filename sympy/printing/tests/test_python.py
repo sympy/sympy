@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import warnings
 from sympy import limit, oo, Symbol
+from sympy.printing.python import python
 from sympy.utilities.pytest import raises
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from ..python import python
 
 x = Symbol
 

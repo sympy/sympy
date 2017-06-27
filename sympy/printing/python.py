@@ -4,7 +4,7 @@ from .sympycode import SymPyPrinter, sympy_code, print_sympy_code
 
 @deprecated(
     last_supported_version='1.2',
-    useinstead="SymPyPrinter",
+    useinstead="sympy.printing.sympycode.SymPyPrinter",
     issue=12807,
     deprecated_since_version='1.1')
 class PythonPrinter(SymPyPrinter):
@@ -13,7 +13,7 @@ class PythonPrinter(SymPyPrinter):
 
 @deprecated(
     last_supported_version='1.2',
-    useinstead="SymPyPrinter",
+    useinstead="sympy.printing.sympycode.sympy_code",
     issue=12807,
     deprecated_since_version='1.1')
 def python(expr, **settings):
@@ -22,7 +22,7 @@ def python(expr, **settings):
 
 @deprecated(
     last_supported_version='1.2',
-    useinstead="SymPyPrinter",
+    useinstead="sympy.printing.sympycode.print_sympy_code",
     issue=12807,
     deprecated_since_version='1.1')
 def print_python(expr, **settings):

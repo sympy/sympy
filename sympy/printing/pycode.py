@@ -4,10 +4,10 @@ _kw_py2and3 = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
     'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
     'is', 'lambda', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while',
-    'with', 'yield'
+    'with', 'yield', 'None'  # 'None' is actually not in Python 2's keyword.kwlist
 }
 _kw_only_py2 = {'exec', 'print'}
-_kw_only_py3 = {'False', 'None', 'nonlocal', 'True'}
+_kw_only_py3 = {'False', 'nonlocal', 'True'}
 
 _known_functions = {
     'Abs': 'abs'
@@ -17,7 +17,7 @@ class PythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
     standard = "python3"
-    reserved_words = _kw_py2and3.union(_kw_only_py2)
+    reserved_words = _kw_py2and3.union(_kw_only_py3)
     _default_settings = {
         'user_functions': {},
         'human': True,

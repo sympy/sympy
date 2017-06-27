@@ -444,7 +444,8 @@ SymPyPrinter
 
 This class implements Python printing. Usage::
 
-    >>> from sympy import print_sympy_code, sin
+    >>> from sympy.printing.sympycode import print_sympy_code
+    >>> from sympy import sin
     >>> from sympy.abc import x
 
     >>> print_sympy_code(5*x**3 + sin(x))

@@ -3,8 +3,8 @@ from __future__ import (absolute_import, division, print_function)
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
     log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
     I, Matrix)
+from sympy.printing.sympycode import sympy_code
 from sympy.utilities.pytest import raises, XFAIL
-from ..sympycode import sympy_code
 
 
 x, y = symbols('x,y')
