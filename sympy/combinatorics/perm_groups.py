@@ -1193,6 +1193,14 @@ class PermutationGroup(Basic):
         return self._degree
 
     @property
+    def identity(self):
+        '''
+        Return the identity element of the permutation group.
+
+        '''
+        return _af_new(list(range(self.degree)))
+
+    @property
     def elements(self):
         """Returns all the elements of the permutation group as a set
 

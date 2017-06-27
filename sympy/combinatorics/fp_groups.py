@@ -73,6 +73,10 @@ class FpGroup(DefaultPrinting):
     def _generators(self):
         return self.free_group.generators
 
+    @property
+    def identity(self):
+        return self.free_group.identity
+
     def __contains__(self, g):
         return g in self.free_group
 
@@ -278,27 +282,49 @@ class FpGroup(DefaultPrinting):
     __repr__ = __str__
 
 
-class FpSubgroup(FpGroup):
+class FpSubgroup(DefaultPrinting):
     '''
-    The class implementing a subgroup of an FpGroup. This is mainly for testing
+    The class implementing a subgroup of an FpGroup (only finite index subgroups are
+    supported at this point). This is to be used if one wishes to check if an element
+    of the original group belongs to the subgroup
 
     '''
     def __init__(self, G, gens):
-        C = G.coset_enumeration(gens)
-        C.compress()
-        gens, rels = reidemeister_presentation(G, gens, C=C)
-        super(FpSubgroup,self).__init__(gens[0].group, rels)
+        super(FpSubgroup,self).__init__()
         self.parent = G
-        self.C = C
+        self.generators = list(set([g for g in gens if g != G.identity]))
+        self.C = None
 
     def __contains__(self, g):
         if not g in self.parent:
             raise ValueError
+        gens = g.contains_generators()
+        if any([g not in self.generators for g in gens]):
+            return False
+        if self.C is None:
+            C = self.parent.coset_enumeration(self.generators)
+            C.compress()
+            self.C = C
         i = 0
         C = self.C
         for j in range(len(g)):
             i = C.table[i][C.A_dict[g[j]]]
         return i == 0
+
+    def order(self):
+        # This is valid because `len(self.C.table)` (the index of the subgroup)
+        # will always be finite - otherwise coset enumeration doesn't terminate
+        if not self.generators:
+            return 1
+        if self.C is None:
+            C = self.parent.coset_enumeration(self.generators)
+            C.compress()
+            self.C = C
+        return self.parent.order()/len(self.C.table)
+
+    def to_FpGroup(self):
+        return self.parent.subgroup(C=self.C)
+            
 
 ###############################################################################
 #                           COSET TABLE                                       #
