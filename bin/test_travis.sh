@@ -51,7 +51,8 @@ EOF
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
-    cat << EOF | python
+    # -Werror for Python 3.6 string escape deprecation warnings. See #12028.
+    cat << EOF | python -Werror
 print('Testing DOCTESTS')
 import sympy
 if not sympy.doctest():
@@ -117,7 +118,8 @@ EOF
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
-    cat << EOF | python
+    # -Werror for Python 3.6 string escape deprecation warnings. See #12028.
+    cat << EOF | python -Werror
 print('Testing SYMPY, split ${SPLIT}')
 import sympy
 if not sympy.test(split='${SPLIT}'):
