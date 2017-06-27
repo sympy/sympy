@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Eq, Piecewise, factor, expand_log, simplify,
+    Symbol, Lambda, sin, Eq, Piecewise, factor, expand_log, cancel,
     expand, diff, pi)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
@@ -641,14 +641,14 @@ def test_risch_integrate():
     e1 = log(x/exp(x) + 1)
     ans1 = risch_integrate(e1, x)
     assert ans1 == (x*log(x*exp(-x) + 1) + NonElementaryIntegral((x**2 - x)/(x + exp(x)), x))
-    assert expand(diff(ans1, x) - e1) == 0
+    assert cancel(diff(ans1, x) - e1) == 0
 
     # also tests issue #10798
     e2 = (log(-1/y)/2 - log(1/y)/2)/y - (log(1 - 1/y)/2 - log(1 + 1/y)/2)/y
     ans2 = risch_integrate(e2, y)
     assert ans2 == log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 + \
             NonElementaryIntegral((I*pi*y**2 - 2*y*log(1/y) - I*pi)/(2*y**3 - 2*y), y)
-    assert expand_log(simplify(diff(ans2, y) - e2), force=True) == 0
+    assert expand_log(cancel(diff(ans2, y) - e2), force=True) == 0
 
     # These are tested here in addition to in test_DifferentialExtension above
     # (symlogs) to test that backsubs works correctly.  The integrals should be
