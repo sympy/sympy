@@ -11,12 +11,12 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        build_hypergeometric_formula)
 from sympy import hyper, I, S, meijerg, Piecewise, Tuple
 from sympy.abc import z, a, b, c
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf, exp_polar)
+                   gamma, sqrt, pi, erf, exp_polar, Rational)
 
 
 def test_branch_bug():
@@ -93,6 +93,7 @@ def test_polynomial():
     assert hyperexpand(hyper([-2], [-1], z)) == oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
+    assert hyperexpand(hyper((-1, 1), (-2,), z)) == 1 + z/2
 
 
 def test_hyperexpand_bases():
@@ -727,6 +728,10 @@ def test_prudnikov_2():
 
 @slow
 def test_prudnikov_3():
+    if ON_TRAVIS:
+        # See https://github.com/sympy/sympy/pull/12795
+        skip("Too slow for travis.")
+
     h = S.Half
     assert can_do([S(1)/4, S(3)/4], [h])
     assert can_do([S(1)/4, S(3)/4], [3*h])
@@ -1030,3 +1035,10 @@ def test_prudnikov_fail_other():
 def test_bug():
     h = hyper([-1, 1], [z], -1)
     assert hyperexpand(h) == (z + 1)/z
+
+
+def test_omgissue_203():
+    h = hyper((-5, -3, -4), (-6, -6), 1)
+    assert hyperexpand(h) == Rational(1, 30)
+    h = hyper((-6, -7, -5), (-6, -6), 1)
+    assert hyperexpand(h) == -Rational(1, 6)

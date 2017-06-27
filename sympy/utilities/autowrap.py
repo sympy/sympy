@@ -84,7 +84,7 @@ from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.utilities.codegen import (make_routine, get_code_generator,
             OutputArgument, InOutArgument, InputArgument,
-            CodeGenArgumentListError, Result, ResultBase, CCodeGen)
+            CodeGenArgumentListError, Result, ResultBase, C99CodeGen)
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -430,9 +430,9 @@ def _get_code_wrapper_class(backend):
 # Here we define a lookup of backends -> tuples of languages. For now, each
 # tuple is of length 1, but if a backend supports more than one language,
 # the most preferable language is listed first.
-_lang_lookup = {'CYTHON': ('C',),
+_lang_lookup = {'CYTHON': ('C99', 'C89', 'C'),
                 'F2PY': ('F95',),
-                'NUMPY': ('C',),
+                'NUMPY': ('C99', 'C89', 'C'),
                 'DUMMY': ('F95',)}     # Dummy here just for testing
 
 def _infer_language(backend):
@@ -893,11 +893,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> import numpy as np
     >>> f = ufuncify((x, y), y + x**2)
     >>> type(f)
-    numpy.ufunc
+    <class 'numpy.ufunc'>
     >>> f([1, 2, 3], 2)
-    array([ 3.,  6.,  11.])
+    array([  3.,   6.,  11.])
     >>> f(np.arange(5), 3)
-    array([ 3.,  4.,  7.,  12.,  19.])
+    array([  3.,   4.,   7.,  12.,  19.])
 
     For the F2Py and Cython backends, inputs are required to be equal length
     1-dimensional arrays. The F2Py backend will perform type conversion, but
@@ -905,15 +905,15 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
 
     >>> f_fortran = ufuncify((x, y), y + x**2, backend='F2Py')
     >>> f_fortran(1, 2)
-    3
-    >>> f_fortran(numpy.array([1, 2, 3]), numpy.array([1.0, 2.0, 3.0]))
-    array([2.,  6.,  12.])
+    array([ 3.])
+    >>> f_fortran(np.array([1, 2, 3]), np.array([1.0, 2.0, 3.0]))
+    array([  2.,   6.,  12.])
     >>> f_cython = ufuncify((x, y), y + x**2, backend='Cython')
-    >>> f_cython(1, 2)
+    >>> f_cython(1, 2)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    File "<stdin>", line 1, in <module>
+      ...
     TypeError: Argument '_x' has incorrect type (expected numpy.ndarray, got int)
-    >>> f_cython(numpy.array([1.0]), numpy.array([2.0]))
+    >>> f_cython(np.array([1.0]), np.array([2.0]))
     array([ 3.])
     """
 
@@ -938,7 +938,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         helps = []
         for name, expr, args in helpers:
             helps.append(make_routine(name, expr, args))
-        code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir,
+        code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"), tempdir,
                                            flags, verbose)
         if not isinstance(expr, (list, tuple)):
             expr = [expr]

@@ -61,7 +61,47 @@ from sympy.core.compatibility import iterable, range
 
 @public
 class Poly(Expr):
-    """Generic class for representing polynomial expressions. """
+    """
+    Generic class for representing and operating on polynomial expressions.
+    Subclasses Expr class.
+
+    Examples
+    ========
+
+    >>> from sympy import Poly
+    >>> from sympy.abc import x, y
+
+    Create a univariate polynomial:
+
+    >>> Poly(x*(x**2 + x - 1)**2)
+    Poly(x**5 + 2*x**4 - x**3 - 2*x**2 + x, x, domain='ZZ')
+
+    Create a univariate polynomial with specific domain:
+
+    >>> from sympy import sqrt
+    >>> Poly(x**2 + 2*x + sqrt(3), domain='R')
+    Poly(1.0*x**2 + 2.0*x + 1.73205080756888, x, domain='RR')
+
+    Create a multivariate polynomial:
+
+    >>> Poly(y*x**2 + x*y + 1)
+    Poly(x**2*y + x*y + 1, x, y, domain='ZZ')
+
+    Create a univariate polynomial, where y is a constant:
+
+    >>> Poly(y*x**2 + x*y + 1,x)
+    Poly(y*x**2 + y*x + 1, x, domain='ZZ[y]')
+
+    You can evaluate the above polynomial as a function of y:
+
+    >>> Poly(y*x**2 + x*y + 1,x).eval(2)
+    6*y + 1
+
+    See Also
+    ========
+    sympy.core.expr.Expr
+
+    """
 
     __slots__ = ['rep', 'gens']
 
@@ -1548,7 +1588,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -1587,7 +1627,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -1624,7 +1664,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -1663,7 +1703,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -2112,7 +2152,7 @@ class Poly(Expr):
         """
         f = self
 
-        if not f.rep.dom.has_Field:
+        if not f.rep.dom.is_Field:
             return S.One, f
 
         dom = f.get_domain()
@@ -2159,7 +2199,7 @@ class Poly(Expr):
         f = per(f)
         g = per(g)
 
-        if not (dom.has_Field and dom.has_assoc_Ring):
+        if not (dom.is_Field and dom.has_assoc_Ring):
             return f, g
 
         a, f = f.clear_denoms(convert=True)
@@ -2189,7 +2229,7 @@ class Poly(Expr):
         """
         f = self
 
-        if args.get('auto', True) and f.rep.dom.has_Ring:
+        if args.get('auto', True) and f.rep.dom.is_Ring:
             f = f.to_field()
 
         if hasattr(f.rep, 'integrate'):
@@ -2369,7 +2409,7 @@ class Poly(Expr):
         """
         dom, per, F, G = f._unify(g)
 
-        if auto and dom.has_Ring:
+        if auto and dom.is_Ring:
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'half_gcdex'):
@@ -2402,7 +2442,7 @@ class Poly(Expr):
         """
         dom, per, F, G = f._unify(g)
 
-        if auto and dom.has_Ring:
+        if auto and dom.is_Ring:
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'gcdex'):
@@ -2433,7 +2473,7 @@ class Poly(Expr):
         """
         dom, per, F, G = f._unify(g)
 
-        if auto and dom.has_Ring:
+        if auto and dom.is_Ring:
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'invert'):
@@ -2827,7 +2867,7 @@ class Poly(Expr):
         """
         f = self
 
-        if auto and f.rep.dom.has_Ring:
+        if auto and f.rep.dom.is_Ring:
             f = f.to_field()
 
         if hasattr(f.rep, 'monic'):
@@ -2989,7 +3029,7 @@ class Poly(Expr):
         """
         f = self
 
-        if auto and f.rep.dom.has_Ring:
+        if auto and f.rep.dom.is_Ring:
             f = f.to_field()
 
         if hasattr(f.rep, 'sturm'):
@@ -5313,13 +5353,13 @@ def terms_gcd(f, *gens, **args):
 
     J, f = F.terms_gcd()
 
-    if opt.domain.has_Ring:
-        if opt.domain.has_Field:
+    if opt.domain.is_Ring:
+        if opt.domain.is_Field:
             denom, f = f.clear_denoms(convert=True)
 
         coeff, f = f.primitive()
 
-        if opt.domain.has_Field:
+        if opt.domain.is_Field:
             coeff /= denom
     else:
         coeff = S.One
@@ -6459,7 +6499,7 @@ def reduced(f, G, *gens, **args):
     domain = opt.domain
     retract = False
 
-    if opt.auto and domain.has_Ring and not domain.has_Field:
+    if opt.auto and domain.is_Ring and not domain.is_Field:
         opt = opt.clone(dict(domain=domain.get_field()))
         retract = True
 
@@ -6740,7 +6780,7 @@ class GroebnerBasis(Basic):
         G = matrix_fglm(polys, _ring, dst_order)
         G = [Poly._from_dict(dict(g), opt) for g in G]
 
-        if not domain.has_Field:
+        if not domain.is_Field:
             G = [g.clear_denoms(convert=True)[1] for g in G]
             opt.domain = domain
 
@@ -6782,7 +6822,7 @@ class GroebnerBasis(Basic):
 
         retract = False
 
-        if auto and domain.has_Ring and not domain.has_Field:
+        if auto and domain.is_Ring and not domain.is_Field:
             opt = opt.clone(dict(domain=domain.get_field()))
             retract = True
 

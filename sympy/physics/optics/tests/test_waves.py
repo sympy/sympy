@@ -2,8 +2,11 @@ from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
     Function, simplify, I, atan2)
 from sympy.abc import epsilon, mu
 from sympy.functions.elementary.exponential import exp
-from sympy.physics.units import c, m, s
+from sympy.physics.units import speed_of_light, m, s
 from sympy.physics.optics import TWave
+
+
+c = speed_of_light.convert_to(m/s)
 
 
 def test_twave():

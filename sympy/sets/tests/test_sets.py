@@ -311,6 +311,8 @@ def test_intersection():
 
     assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
+    # issue 12178
+    assert Intersection() == S.UniversalSet
 
 def test_issue_9623():
     n = Symbol('n')

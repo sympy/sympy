@@ -16,7 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
-from sympy.utilities.pytest import raises, XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1410,6 +1410,7 @@ def test_hermitian():
         Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) is True
 
 
+@slow
 def test_imaginary():
     assert ask(Q.imaginary(x)) is None
     assert ask(Q.imaginary(x), Q.real(x)) is False
@@ -1778,6 +1779,7 @@ def test_nonpositive():
     assert ask(Q.nonpositive(sqrt(-1))) is False
     assert ask(Q.nonpositive(x), Q.imaginary(x)) is False
 
+
 def test_nonnegative():
     assert ask(Q.nonnegative(-1)) is False
     assert ask(Q.nonnegative(0))
@@ -1787,6 +1789,8 @@ def test_nonnegative():
     assert ask(Q.nonnegative(sqrt(-1))) is False
     assert ask(Q.nonnegative(x), Q.imaginary(x)) is False
 
+
+@slow
 def test_real():
     assert ask(Q.real(x)) is None
     assert ask(Q.real(x), Q.real(x)) is True

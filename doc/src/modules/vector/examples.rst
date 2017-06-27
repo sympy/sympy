@@ -88,7 +88,8 @@ Solution
 
 Start with a coordinate system
 
-  >>> from sympy.vector import CoordSysCartesian
+  >>> from sympy.vector import CoordSysCartesian, Del
+  >>> delop = Del()
   >>> C = CoordSysCartesian('C')
 
 The scalar field :math:`f` and the measure numbers of the vector field
@@ -109,11 +110,11 @@ Define the vector field as ``vfield`` and the scalar field as ``sfield``.
 
 Construct the expression for the LHS of the equation using ``C.delop``.
 
-  >>> lhs = (C.delop.dot(ffield * vfield)).doit()
+  >>> lhs = (delop.dot(ffield * vfield)).doit()
 
 Similarly, the RHS would be defined.
 
-  >>> rhs = ((vfield.dot(C.delop(ffield))) + (ffield * (C.delop.dot(vfield)))).doit()
+  >>> rhs = ((vfield.dot(delop(ffield))) + (ffield * (delop.dot(vfield)))).doit()
 
 Now, to prove the product rule, we would just need to equate the expanded and
 simplified versions of the lhs and the rhs, so that the SymPy expressions match.

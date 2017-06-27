@@ -15,6 +15,7 @@ python:
   - 3.3
   - 3.4
   - 3.5
+  - 3.6
 
 matrix:
   include:
@@ -302,11 +303,11 @@ install:
       python setup.py install;
     fi
 script:
-  # Don't run doctr of the build fails
+  # Don't run doctr if the build fails
   - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-        doctr deploy --deploy-repo sympy/sympy_doc --gh-pages-docs dev --command './generate_indexes.py';
+        doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
     fi
 notifications:
   email: false

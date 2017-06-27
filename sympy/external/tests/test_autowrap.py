@@ -1,10 +1,12 @@
 import sympy
 import tempfile
 import os
+import warnings
 from sympy import symbols, Eq
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import skip
 
 numpy = import_module('numpy', min_module_version='1.6.1')
@@ -176,31 +178,35 @@ def test_ufuncify_f95_f2py():
 
 def test_wrap_twice_c_cython():
     has_module('Cython')
-    runtest_autowrap_twice('C', 'cython')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_autowrap_twice('C', 'cython')
 
 
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
-    runtest_autowrap_trace('C', 'cython')
+    runtest_autowrap_trace('C99', 'cython')
 
 
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
-    runtest_autowrap_matrix_vector('C', 'cython')
+    runtest_autowrap_matrix_vector('C99', 'cython')
 
 
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
-    runtest_autowrap_matrix_matrix('C', 'cython')
+    runtest_autowrap_matrix_matrix('C99', 'cython')
 
 
 def test_ufuncify_C_Cython():
     has_module('Cython')
-    runtest_ufuncify('C', 'cython')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_ufuncify('C99', 'cython')
 
 def test_issue_10274_C_cython():
     has_module('Cython')
-    runtest_issue_10274('C', 'cython')
+    runtest_issue_10274('C89', 'cython')
 
 # Numpy
 
@@ -208,4 +214,6 @@ def test_ufuncify_numpy():
     # This test doesn't use Cython, but if Cython works, then there is a valid
     # C compiler, which is needed.
     has_module('Cython')
-    runtest_ufuncify('C', 'numpy')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_ufuncify('C99', 'numpy')

@@ -651,8 +651,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c
 
-    >>> radsimp(1/(I + 1))
-    (1 - I)/2
     >>> radsimp(1/(2 + sqrt(2)))
     (-sqrt(2) + 2)/2
     >>> x,y = map(Symbol, 'xy')
@@ -735,14 +733,14 @@ def radsimp(expr, symbolic=True, max_terms=4):
         if not d.is_Pow:
             return False
         e = d.exp
-        if e.is_Rational and e.q == 2 or symbolic and fraction(e)[1] == 2:
+        if e.is_Rational and e.q == 2 or symbolic and denom(e) == 2:
             return True
         if log2:
             q = 1
             if e.is_Rational:
                 q = e.q
             elif symbolic:
-                d = fraction(e)[1]
+                d = denom(e)
                 if d.is_Integer:
                     q = d
             if q != 1 and log(q, 2).is_Integer:
@@ -772,7 +770,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             return expr
 
         if ispow2(d):
-            d2 = sqrtdenest(sqrt(d.base))**fraction(d.exp)[0]
+            d2 = sqrtdenest(sqrt(d.base))**numer(d.exp)
             if d2 != d:
                 return handle(1/d2)
         elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
@@ -936,7 +934,7 @@ def fraction(expr, exact=False):
        flag is unset, then structure this exponent's structure will
        be analyzed and pretty fraction will be returned:
 
-       >>> from sympy import exp
+       >>> from sympy import exp, Mul
        >>> fraction(2*x**(-y))
        (2, x**y)
 
@@ -946,6 +944,14 @@ def fraction(expr, exact=False):
        >>> fraction(exp(-x), exact=True)
        (exp(-x), 1)
 
+       The `exact` flag will also keep any unevaluated Muls from
+       being evaluated:
+
+       >>> u = Mul(2, x + 1, evaluate=False)
+       >>> fraction(u)
+       (2*x + 2, 1)
+       >>> fraction(u, exact=True)
+       (2*(x  + 1), 1)
     """
     expr = sympify(expr)
 

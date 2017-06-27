@@ -174,18 +174,23 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        if i.left_open:
-            left = '('
+        fin =  'Interval{m}({a}, {b})'
+        a, b, l, r = i.args
+        if a.is_infinite and b.is_infinite:
+            m = ''
+        elif a.is_infinite and not r:
+            m = ''
+        elif b.is_infinite and not l:
+            m = ''
+        elif not l and not r:
+            m = ''
+        elif l and r:
+            m = '.open'
+        elif l:
+            m = '.Lopen'
         else:
-            left = '['
-
-        if i.right_open:
-            right = ')'
-        else:
-            right = ']'
-
-        return "%s%s, %s%s" % \
-               (left, self._print(i.start), self._print(i.end), right)
+            m = '.Ropen'
+        return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
         left = '<'
@@ -232,7 +237,8 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '[%s, %s]' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
@@ -520,6 +526,18 @@ class StrPrinter(Printer):
     def _print_Integer(self, expr):
         return str(expr.p)
 
+    def _print_Integers(self, expr):
+        return 'S.Integers'
+
+    def _print_Naturals(self, expr):
+        return 'S.Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'S.Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'S.Reals'
+
     def _print_int(self, expr):
         return str(expr)
 
@@ -567,6 +585,9 @@ class StrPrinter(Printer):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
             rv = '0.' + rv[2:]
+        if rv.startswith('+'):
+            # e.g., +inf -> inf
+            rv = rv[1:]
         return rv
 
     def _print_Relational(self, expr):
@@ -678,14 +699,13 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return ' U '.join(self._print(set) for set in expr.args)
+        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
 
-
-    def _print_Unit(self, expr):
-        return expr.abbrev
+    def _print_Quantity(self, expr):
+        return "%s" % expr.name
 
     def _print_Dimension(self, expr):
         return str(expr)

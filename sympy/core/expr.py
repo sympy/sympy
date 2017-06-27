@@ -11,7 +11,6 @@ from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
-
 class Expr(Basic, EvalfMixin):
     """
     Base class for algebraic expressions.
@@ -256,6 +255,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 >= 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonnegative is not None and \
@@ -275,6 +277,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 <= 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonpositive is not None and \
@@ -294,6 +299,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 > 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_positive is not None and \
@@ -313,6 +321,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 < 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_negative is not None and \
@@ -773,12 +784,14 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
+        from sympy.solvers.solveset import solveset
+        from sympy.sets.sets import Interval
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
 
         if a == b:
-            return 0;
+            return 0
 
         if a is None:
             A = 0
@@ -808,7 +821,24 @@ class Expr(Basic, EvalfMixin):
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
 
-        return B - A
+        if (a and b) is None:
+            return B - A
+
+        value = B - A
+
+        if a.is_comparable and b.is_comparable:
+            if a < b:
+                domain = Interval(a, b)
+            else:
+                domain = Interval(b, a)
+            singularities = list(solveset(self.cancel().as_numer_denom()[1], x, domain = domain))
+            for s in singularities:
+                if a < s < b:
+                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                elif b < s < a:
+                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+
+        return value
 
     def _eval_power(self, other):
         # subclass to compute self**other for cases when
@@ -1056,7 +1086,7 @@ class Expr(Basic, EvalfMixin):
         Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
-        >>> A, B = symbols('A B', commutative=False)
+        >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
@@ -1106,11 +1136,12 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term(s) containing ``x**n`` or None. If ``n``
+        Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
 
-        When x is noncommutative, the coeff to the left (default) or right of x
-        can be returned. The keyword 'right' is ignored when x is commutative.
+        When ``x`` is noncommutative, the coefficient to the left (default) or
+        right of ``x`` can be returned. The keyword 'right' is ignored when
+        ``x`` is commutative.
 
         See Also
         ========
@@ -1732,10 +1763,10 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_mul(self, *deps, **kwargs):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
-        c should be a Rational multiplied by any terms of the Mul that are
+        c should be a Rational multiplied by any factors of the Mul that are
         independent of deps.
 
-        args should be a tuple of all other terms of m; args is empty
+        args should be a tuple of all other factors of m; args is empty
         if self is a Number or if self is independent of deps (when given).
 
         This should be used when you don't know if self is a Mul or not but
@@ -1897,10 +1928,17 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def normal(self):
+        from .mul import _unevaluated_Mul
         n, d = self.as_numer_denom()
         if d is S.One:
             return n
-        return n/d
+        if d.is_Number:
+            if d is S.One:
+                return n
+            else:
+                return _unevaluated_Mul(n, 1/d)
+        else:
+            return n/d
 
     def extract_multiplicatively(self, c):
         """Return None if it's not possible to make self in the form
@@ -1925,6 +1963,8 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from .function import _coeff_isneg
+
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -1932,15 +1972,18 @@ class Expr(Basic, EvalfMixin):
             return self
         elif c == self:
             return S.One
+
         if c.is_Add:
             cc, pc = c.primitive()
             if cc is not S.One:
                 c = Mul(cc, pc, evaluate=False)
+
         if c.is_Mul:
             a, b = c.as_two_terms()
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
+
         quotient = self / c
         if self.is_Number:
             if self is S.Infinity:
@@ -1983,16 +2026,31 @@ class Expr(Basic, EvalfMixin):
                 return quotient
         elif self.is_Add:
             cs, ps = self.primitive()
-            if cs is not S.One:
-                return Mul(cs, ps, evaluate=False).extract_multiplicatively(c)
+            # assert cs >= 1
+            if c.is_Number and c is not S.NegativeOne:
+                # assert c != 1 (handled at top)
+                if cs is not S.One:
+                    if c.is_negative:
+                        xc = -(cs.extract_multiplicatively(-c))
+                    else:
+                        xc = cs.extract_multiplicatively(c)
+                    if xc is not None:
+                        return xc*ps  # rely on 2-arg Mul to restore Add
+                return  # |c| != 1 can only be extracted from cs
+            if c == ps:
+                return cs
+            # check args of ps
             newargs = []
-            for arg in self.args:
+            for arg in ps.args:
                 newarg = arg.extract_multiplicatively(c)
-                if newarg is not None:
-                    newargs.append(newarg)
-                else:
-                    return None
-            return Add(*newargs)
+                if newarg is None:
+                    return  # all or nothing
+                newargs.append(newarg)
+            # args should be in same order so use unevaluated return
+            if cs is not S.One:
+                return Add._from_args([cs*t for t in newargs])
+            else:
+                return Add._from_args(newargs)
         elif self.is_Mul:
             args = list(self.args)
             for i, arg in enumerate(args):
@@ -3290,6 +3348,7 @@ class UnevaluatedExpr(Expr):
     """
 
     def __new__(cls, arg, **kwargs):
+        arg = _sympify(arg)
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
@@ -3298,6 +3357,20 @@ class UnevaluatedExpr(Expr):
             return self.args[0].doit(*args, **kwargs)
         else:
             return self.args[0]
+
+
+def _n2(a, b):
+    """Return (a - b).evalf(2) if it, a and b are comparable, else None.
+    This should only be used when a and b are already sympified.
+    """
+    if not all(i.is_number for i in (a, b)):
+        return
+    # /!\ if is very important (see issue 8245) not to
+    # use a re-evaluated number in the calculation of dif
+    if a.is_comparable and b.is_comparable:
+        dif = (a - b).evalf(2)
+        if dif.is_comparable:
+            return dif
 
 
 from .mul import Mul

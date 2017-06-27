@@ -4,14 +4,17 @@
 import os
 import tempfile
 import shutil
+import warnings
 
-from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
-from sympy.utilities.codegen import (CCodeGen, CodeGenArgumentListError,
-                                     make_routine)
-from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises
+from sympy.utilities.autowrap import (autowrap, binary_function,
+            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
+from sympy.utilities.codegen import (
+    CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
+)
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
@@ -33,8 +36,11 @@ def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     routine = make_routine("test", expr)
-    code_gen = CythonCodeWrapper(CCodeGen())
-    source = get_string(code_gen.dump_pyx, [routine])
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', category=SymPyDeprecationWarning)
+        code_gen = CythonCodeWrapper(CCodeGen())
+        source = get_string(code_gen.dump_pyx, [routine])
+
     expected = (
         "cdef extern from 'file.h':\n"
         "    double test(double x, double y, double z)\n"
@@ -48,7 +54,7 @@ def test_cython_wrapper_scalar_function():
 def test_cython_wrapper_outarg():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
-    code_gen = CythonCodeWrapper(CCodeGen())
+    code_gen = CythonCodeWrapper(C99CodeGen())
 
     routine = make_routine("test", Equality(z, x + y))
     source = get_string(code_gen.dump_pyx, [routine])
@@ -67,7 +73,7 @@ def test_cython_wrapper_outarg():
 def test_cython_wrapper_inoutarg():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
-    code_gen = CythonCodeWrapper(CCodeGen())
+    code_gen = CythonCodeWrapper(C99CodeGen())
     routine = make_routine("test", Equality(z, x + y + z))
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
@@ -142,7 +148,7 @@ def test_binary_function():
 
 def test_ufuncify_source():
     x, y, z = symbols('x,y,z')
-    code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"))
+    code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
     CodeWrapper._module_counter = 0
     routine = make_routine("test", x + y + z)
     source = get_string(code_wrapper.dump_c, [routine])
@@ -237,7 +243,7 @@ def test_ufuncify_source_multioutput():
     x, y, z = symbols('x,y,z')
     var_symbols = (x, y, z)
     expr = x + y**3 + 10*z**2
-    code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"))
+    code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
     CodeWrapper._module_counter = 0
     routines = [make_routine("func{}".format(i), expr.diff(var_symbols[i]), var_symbols) for i in range(len(var_symbols))]
     source = get_string(code_wrapper.dump_c, routines, funcname='multitest')
