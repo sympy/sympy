@@ -174,7 +174,7 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
-    def connect_to_standard_cartesian(self,  curv_coord_type):
+    def _connect_to_standard_cartesian(self,  curv_coord_type):
         """
         Change the type of orthogonal curvilinear system. It could be done
         by tuple of transformation equations or by choosing one of pre-defined
