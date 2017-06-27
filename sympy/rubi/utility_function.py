@@ -13,7 +13,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
-from sympy import exp, polylog, N, Wild, factor, gcd, Sum
+from sympy import exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 
@@ -97,7 +97,7 @@ def IntegersQ(*var):
     return all(IntegerQ(i) for i in var)
 
 def ComplexNumberQ(*var):
-    return all(i.is_complex for i in var)
+    return all((im(i)!=0) for i in var)
 
 def RealNumericQ(u):
     return u.is_real
@@ -218,7 +218,7 @@ def Sqrt(a):
 def ArcCosh(a):
     return acosh(a)
 
-def Coefficient(expr, var, n):
+def Coefficient(expr, var, n=1):
     a = Poly(expr, var)
     if (degree(a) - n) < 0:
         return 0
@@ -895,6 +895,84 @@ def AlgebraicFunctionQ(u, x, flag=False):
                 return False
         return True
     return False
+
+def Coeff(expr, form, n=1):
+    if n == 1:
+        return Coefficient(Together(expr), form, n)
+    else:
+        coef1 = Coefficient(expr, form, n)
+        coef2 = Coefficient(Together(expr), form, n)
+        if Simplify(coef1 - coef2) == 0:
+            return coef1
+        else:
+            return coef2
+
+def LeadTerm(u):
+    if SumQ(u):
+        return First(u)
+    return u
+
+def RemainingTerms(u):
+    if SumQ(u):
+        return Rest(u)
+    return u
+
+def LeadFactor(u):
+    # returns the leading factor of u.
+    if ComplexNumberQ(u) and Re(u) == 0:
+        if Im(u) == S(1):
+            return u
+        else:
+            return LeadFactor(Im(u))
+    elif ProductQ(u):
+            return LeadFactor(First(u))
+    return u
+
+def RemainingFactors(u):
+    # returns the remaining factors of u.
+    if ComplexNumberQ(u) and Re(u) == 0:
+        if Im(u) == 1:
+            return S(1)
+        else:
+            return I*RemainingFactors(Im(u))
+    elif ProductQ(u):
+        return RemainingFactors(First(u))*Rest(u)
+    return S(1)
+
+def LeadBase(u):
+    # returns the base of the leading factor of u.
+    v = LeadFactor(u)
+    if PowerQ(v):
+        return v.args[0]
+    return v
+
+def LeadDegree(u):
+    # returns the degree of the leading factor of u.
+    v = LeadFactor(u)
+    if PowerQ(v):
+        return v.args[1]
+    return v
+
+def Numer(expr):
+    # returns the numerator of u.
+    if PowerQ(expr):
+        if expr.args[1] < 0:
+            return 1
+    if ProductQ(expr):
+        return Mul(*[Numer(i) for i in expr.args])
+    return Numerator(expr)
+
+def Denom(u):
+    # returns the denominator of u
+    if PowerQ(u):
+        if u.args[1] < 0:
+            return u.args[0]**(-u.args[1])
+    elif ProductQ(u):
+        return Mul(*[Denom(i) for i in u.args])
+    return Denominator(u)
+
+def hypergeom(n, d, z):
+    return hyper(n, d, z)
 
 def ExpandIntegrand(expr, x):
     w_ = Wild('w')

@@ -5,7 +5,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi
 
-a, b, c, d, e, f, x, y, z = symbols('a b c d e f x y z')
+a, b, c, d, e, f, x, y, z = symbols('a b c d e f x y z', real=True, imaginary=False)
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -214,6 +214,7 @@ def test_Re():
 
 def test_Im():
     assert Im(1 + 2*I) == 2
+    assert Im(a*I) == a
 
 def test_RealNumericQ():
     assert RealNumericQ(S(1)) == True
@@ -539,3 +540,45 @@ def test_AlgebraicFunctionQ():
     assert AlgebraicFunctionQ([], x) == True
     assert AlgebraicFunctionQ([a, a*b], x) == True
     assert AlgebraicFunctionQ([sin(x)], x) == False
+
+def test_LeadTerm():
+    assert LeadTerm(a*b*c) == a*b*c
+    assert LeadTerm(a + b + c) == a
+
+def test_RemainingTerms():
+    assert RemainingTerms(a*b*c) == a*b*c
+    assert RemainingTerms(a + b + c) == b + c
+
+def test_LeadFactor():
+    assert LeadFactor(a*b*c) == a
+    assert LeadFactor(a + b + c) == a + b + c
+    assert LeadFactor(b*I) == b
+
+def test_RemainingFactors():
+    assert RemainingFactors(a*b*c) == b*c
+    assert RemainingFactors(a + b + c) == 1
+    assert RemainingFactors(a*I) == I
+
+def test_LeadBase():
+    assert LeadBase(a**b) == a
+    assert LeadBase(a**b*c) == c
+
+def test_LeadDegree():
+    assert LeadDegree(a**b) == b
+    assert LeadDegree(a**b*c) == c
+
+def test_Numer():
+    assert Numer(a/b) == a
+    assert Numer(a**(-2)) == 1
+    assert Numer(a**(-2)*a/b) == 1
+
+def test_Denom():
+    assert Denom(a/b) == b
+    assert Denom(a**(-2)) == a**2
+    assert Denom(a**(-2)*a/b) == a*b
+
+def test_Coeff():
+    assert Coeff(7 + 2*x + 4*x**3, x, 1) == 2
+    assert Coeff(a + b*x + c*x**3, x, 0) == a
+    assert Coeff(a + b*x + c*x**3, x, 4) == 0
+    assert Coeff(b*x + c*x**3, x, 3) == c

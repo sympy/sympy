@@ -24,7 +24,7 @@ def rubi_integrate(expr, var):
         if None in args:
             return None
         return Add(*args)
-    elif isinstance(expr, Mul): #seperate out constants
+    elif isinstance(expr, Mul): #seperate out constants in Mul expression
         e = 1
         c = 1
         for i in expr.args:
@@ -43,6 +43,7 @@ def rubi_integrate(expr, var):
         expr = Int(sympy2matchpy(expr), sympy2matchpy(var))
 
     result = rubi.replace(expr)
+
     if result == expr:
         #print(('Unable to integrate: {}').format(expr))
         return None

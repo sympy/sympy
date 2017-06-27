@@ -14,12 +14,14 @@ get_matchpy_node = {
     "log": Log,
     'Int': Int,
     'Log': Log,
+    'sqrt': Sqrt
 }
 
 def sympy2matchpy(expr):
     '''
     Converts a SymPy expression into a MatchPy expression
     '''
+
     if expr == None:
         return None
     if isinstance(expr, int):
