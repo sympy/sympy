@@ -39,8 +39,7 @@ def test_one_dof():
     assert simplify(KM.rhs() -
                     KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
 
-    assert (KM.linearize(A_and_B=True, new_method=True)[0] ==
-            Matrix([[0, 1], [-k/m, -c/m]]))
+    assert (KM.linearize(A_and_B=True, )[0] == Matrix([[0, 1], [-k/m, -c/m]]))
 
     # Ensure that the old linearizer still works and that the new linearizer
     # gives the same results. The old linearizer is deprecated and should be
@@ -51,7 +50,7 @@ def test_one_dof():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         F_A_old, F_B_old, r_old = KM.linearize()
-    M_new, F_A_new, F_B_new, r_new = KM.linearize(new_method=True)
+    M_new, F_A_new, F_B_new, r_new = KM.linearize()
     assert simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old) == zeros(2)
 
 
@@ -194,7 +193,7 @@ def test_rolling_disc():
     # This code tests our output vs. benchmark values. When r=g=m=1, the
     # critical speed (where all eigenvalues of the linearized equations are 0)
     # is 1 / sqrt(3) for the upright case.
-    A = KM.linearize(A_and_B=True, new_method=True)[0]
+    A = KM.linearize(A_and_B=True)[0]
     A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
     import sympy
     assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S(0): 6}
