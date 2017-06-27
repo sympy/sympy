@@ -427,10 +427,10 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (PythonIntegerRing, PythonIntegerRing()):
-        check(c)
+        check(c, check_attr=False)
 
     for c in (PythonRationalField, PythonRationalField()):
-        check(c)
+        check(c, check_attr=False)
 
     if HAS_GMPY:
         from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
@@ -442,10 +442,10 @@ def test_pickling_polys_domains():
         #     check(c)
 
         for c in (GMPYIntegerRing, GMPYIntegerRing()):
-            check(c)
+            check(c, check_attr=False)
 
         for c in (GMPYRationalField, GMPYRationalField()):
-            check(c)
+            check(c, check_attr=False)
 
     from sympy.polys.domains.realfield import RealField
     from sympy.polys.domains.complexfield import ComplexField
@@ -463,7 +463,7 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (AlgebraicField, AlgebraicField(QQ, sqrt(3))):
-        check(c)
+        check(c, check_attr=False)
 
     # TODO: AssertionError
     # for c in (PolynomialRing, PolynomialRing(ZZ, "x,y,z")):
@@ -474,13 +474,13 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (ExpressionDomain, ExpressionDomain()):
-        check(c)
+        check(c, check_attr=False)
 
 def test_pickling_polys_numberfields():
     from sympy.polys.numberfields import AlgebraicNumber
 
     for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
-        check(c)
+        check(c, check_attr=False)
 
 def test_pickling_polys_orderings():
     from sympy.polys.orderings import (LexOrder, GradedLexOrder,

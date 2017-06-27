@@ -92,9 +92,10 @@ would be accessible as ``C.delop``.
 
 Given below is an example of usage of the ``delop`` object.
 
-  >>> from sympy.vector import CoordSysCartesian
+  >>> from sympy.vector import CoordSysCartesian, Del
   >>> C = CoordSysCartesian('C')
-  >>> gradient_field = C.delop(C.x*C.y*C.z)
+  >>> delop = Del()
+  >>> gradient_field = delop(C.x*C.y*C.z)
   >>> gradient_field
   (Derivative(C.x*C.y*C.z, C.x))*C.i + (Derivative(C.x*C.y*C.z, C.y))*C.j + (Derivative(C.x*C.y*C.z, C.z))*C.k
 
@@ -137,17 +138,18 @@ accomplished in two ways.
 
 One, by using the ``delop`` property
 
-  >>> from sympy.vector import CoordSysCartesian
+  >>> from sympy.vector import CoordSysCartesian, Del
   >>> C = CoordSysCartesian('C')
-  >>> C.delop.cross(C.x*C.y*C.z*C.i).doit()
+  >>> delop = Del()
+  >>> delop.cross(C.x*C.y*C.z*C.i).doit()
   C.x*C.y*C.j + (-C.x*C.z)*C.k
-  >>> (C.delop ^ C.x*C.y*C.z*C.i).doit()
+  >>> (delop ^ C.x*C.y*C.z*C.i).doit()
   C.x*C.y*C.j + (-C.x*C.z)*C.k
 
 Or by using the dedicated function
 
   >>> from sympy.vector import curl
-  >>> curl(C.x*C.y*C.z*C.i, C)
+  >>> curl(C.x*C.y*C.z*C.i)
   C.x*C.y*C.j + (-C.x*C.z)*C.k
 
 Divergence
@@ -174,17 +176,18 @@ accomplished in two ways.
 
 One, by using the ``delop`` property
 
-  >>> from sympy.vector import CoordSysCartesian
+  >>> from sympy.vector import CoordSysCartesian, Del
   >>> C = CoordSysCartesian('C')
-  >>> C.delop.dot(C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
+  >>> delop = Del()
+  >>> delop.dot(C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
   C.x*C.y + C.x*C.z + C.y*C.z
-  >>> (C.delop & C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
+  >>> (delop & C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
   C.x*C.y + C.x*C.z + C.y*C.z
 
 Or by using the dedicated function
 
   >>> from sympy.vector import divergence
-  >>> divergence(C.x*C.y*C.z*(C.i + C.j + C.k), C)
+  >>> divergence(C.x*C.y*C.z*(C.i + C.j + C.k))
   C.x*C.y + C.x*C.z + C.y*C.z
 
 Gradient
@@ -207,17 +210,18 @@ accomplished in two ways.
 
 One, by using the ``delop`` property
 
-  >>> from sympy.vector import CoordSysCartesian
+  >>> from sympy.vector import CoordSysCartesian, Del
   >>> C = CoordSysCartesian('C')
-  >>> C.delop.gradient(C.x*C.y*C.z).doit()
+  >>> delop = Del()
+  >>> delop.gradient(C.x*C.y*C.z).doit()
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
-  >>> C.delop(C.x*C.y*C.z).doit()
+  >>> delop(C.x*C.y*C.z).doit()
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
 Or by using the dedicated function
 
   >>> from sympy.vector import gradient
-  >>> gradient(C.x*C.y*C.z, C)
+  >>> gradient(C.x*C.y*C.z)
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
 Directional Derivative
@@ -237,14 +241,15 @@ Directional derivatives of vector and scalar fields can be computed in
 :mod:`sympy.vector` using the ``delop`` property of
 ``CoordSysCartesian``.
 
-  >>> from sympy.vector import CoordSysCartesian
+  >>> from sympy.vector import CoordSysCartesian, Del
   >>> C = CoordSysCartesian('C')
+  >>> delop = Del()
   >>> vel = C.i + C.j + C.k
   >>> scalar_field = C.x*C.y*C.z
   >>> vector_field = C.x*C.y*C.z*C.i
-  >>> (vel.dot(C.delop))(scalar_field)
+  >>> (vel.dot(delop))(scalar_field)
   C.x*C.y + C.x*C.z + C.y*C.z
-  >>> (vel & C.delop)(vector_field)
+  >>> (vel & delop)(vector_field)
   (C.x*C.y + C.x*C.z + C.y*C.z)*C.i
 
 Conservative and Solenoidal fields
@@ -268,7 +273,7 @@ To check if a vector field is conservative in :mod:`sympy.vector`, the
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_conservative(field)
   True
-  >>> curl(field, R)
+  >>> curl(field)
   0
 
 A solenoidal field, on the other hand, is a vector field whose divergence
@@ -282,7 +287,7 @@ To check if a vector field is solenoidal in :mod:`sympy.vector`, the
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_solenoidal(field)
   True
-  >>> divergence(field, R)
+  >>> divergence(field)
   0
 
 Scalar potential functions

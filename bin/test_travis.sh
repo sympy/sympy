@@ -65,7 +65,7 @@ if [[ "${TEST_SLOW}" == "true" ]]; then
     cat << EOF | python
 print('Testing SLOW')
 import sympy
-if not sympy.test(split='${SPLIT}', slow=True):
+if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
     # Travis times out if no activity is seen for 10 minutes. It also times
     # out if the whole tests run for more than 50 minutes.
     raise Exception('Tests failed')
@@ -134,4 +134,3 @@ if not sympy.test('sympy/physics/mechanics'):
     raise Exception('Tests failed')
 EOF
 fi
-

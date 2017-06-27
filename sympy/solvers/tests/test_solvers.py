@@ -107,7 +107,7 @@ def test_solve_args():
     assert solve([x + y - 3, x - y - 5]) == {x: 4, y: -1}
     assert solve(x - exp(x), x, implicit=True) == [exp(x)]
     # no symbol to solve for
-    assert solve(42) == []
+    assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
     # duplicate symbols removed
     assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
@@ -1529,30 +1529,28 @@ def test_lambert_multivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
-    # these only give one of the solutions (see XFAIL below)
     assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3),
                                      -3*LambertW(-log(3)/3, -1)/log(3)]
-    #     replacing 3 with 2 in the above solution gives 2
     assert solve(x**2 - 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
     assert solve(-x**2 + 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
     assert solve(3**cos(x) - cos(x)**3) == [
         acos(-3*LambertW(-log(3)/3)/log(3)),
         acos(-3*LambertW(-log(3)/3, -1)/log(3))]
+    assert set(solve(3*log(x) - x*log(3))) == set(  # 2.478... and 3
+        [-3*LambertW(-log(3)/3)/log(3),
+        -3*LambertW(-log(3)/3, -1)/log(3)])
+    assert solve(LambertW(2*x) - y, x) == [y*exp(y)/2]
 
 
 @XFAIL
 def test_other_lambert():
     from sympy.abc import x
     assert solve(3*sin(x) - x*sin(3), x) == [3]
-    assert set(solve(3*log(x) - x*log(3))) == set(
-        [3, -3*LambertW(-log(3)/3)/log(3)])
     a = S(6)/5
     assert set(solve(x**a - a**x)) == set(
         [a, -a*LambertW(-log(a)/a)/log(a)])
     assert set(solve(3**cos(x) - cos(x)**3)) == set(
         [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))])
-    assert set(solve(x**2 - 2**x)) == set(
-        [2, -2/log(2)*LambertW(log(2)/2)])
 
 
 def test_rewrite_trig():
@@ -1779,19 +1777,20 @@ def test_issue_8828():
 
 def test_issue_2840_8155():
     assert solve(sin(3*x) + sin(6*x)) == [
-        0, -pi, pi, 2*pi, -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
-        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-S(1)/2 -
-        sqrt(3)*I/2), -2*I*log(-S(1)/2 + sqrt(3)*I/2), -2*I*log(S(1)/2 -
-        sqrt(3)*I/2), -2*I*log(S(1)/2 + sqrt(3)*I/2), -2*I*log(-sqrt(3)/2 - I/2),
-        -2*I*log(-sqrt(3)/2 + I/2), -2*I*log(sqrt(3)/2 - I/2),
-        -2*I*log(sqrt(3)/2 + I/2), -2*I*log(-sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(-sin(pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) -
-        I*cos(pi/18)), -2*I*log(sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
+        0, -pi, pi, 2*pi, 2*I*(log(2) - log(-1 - sqrt(3)*I)), 2*I*(log(2) -
+        log(-1 + sqrt(3)*I)), 2*I*(log(2) - log(1 - sqrt(3)*I)), 2*I*(log(2) -
+        log(1 + sqrt(3)*I)), 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
+        log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
+        log(sqrt(3) + I)), -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
+        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-sin(pi/18) -
+        I*cos(pi/18)), -2*I*log(-sin(pi/18) + I*cos(pi/18)),
+        -2*I*log(sin(pi/18) - I*cos(pi/18)), -2*I*log(sin(pi/18) +
+        I*cos(pi/18)), -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
         -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
     assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
-        -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
+        0, -pi, pi, 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
+        log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
+        log(sqrt(3) + I))]
 
 
 def test_issue_9567():
@@ -1872,3 +1871,25 @@ def test_denoms():
     assert denoms(1/x + 1/y + 1/z, [x, y]) == set([x, y])
     assert denoms(1/x + 1/y + 1/z, x, y) == set([x, y])
     assert denoms(1/x + 1/y + 1/z, set([x, y])) == set([x, y])
+
+def test_issue_12476():
+    x0, x1, x2, x3, x4, x5 = symbols('x0 x1 x2 x3 x4 x5')
+    eqns = [x0**2 - x0, x0*x1 - x1, x0*x2 - x2, x0*x3 - x3, x0*x4 - x4, x0*x5 - x5,
+            x0*x1 - x1, -x0/3 + x1**2 - 2*x2/3, x1*x2 - x1/3 - x2/3 - x3/3,
+            x1*x3 - x2/3 - x3/3 - x4/3, x1*x4 - 2*x3/3 - x5/3, x1*x5 - x4, x0*x2 - x2,
+            x1*x2 - x1/3 - x2/3 - x3/3, -x0/6 - x1/6 + x2**2 - x2/6 - x3/3 - x4/6,
+            -x1/6 + x2*x3 - x2/3 - x3/6 - x4/6 - x5/6, x2*x4 - x2/3 - x3/3 - x4/3,
+            x2*x5 - x3, x0*x3 - x3, x1*x3 - x2/3 - x3/3 - x4/3,
+            -x1/6 + x2*x3 - x2/3 - x3/6 - x4/6 - x5/6,
+            -x0/6 - x1/6 - x2/6 + x3**2 - x3/3 - x4/6, -x1/3 - x2/3 + x3*x4 - x3/3,
+            -x2 + x3*x5, x0*x4 - x4, x1*x4 - 2*x3/3 - x5/3, x2*x4 - x2/3 - x3/3 - x4/3,
+            -x1/3 - x2/3 + x3*x4 - x3/3, -x0/3 - 2*x2/3 + x4**2, -x1 + x4*x5, x0*x5 - x5,
+            x1*x5 - x4, x2*x5 - x3, -x2 + x3*x5, -x1 + x4*x5, -x0 + x5**2, x0 - 1]
+    sols = [{x0: 1, x3: S(1)/6, x2: S(1)/6, x4: -S(2)/3, x1: -S(2)/3, x5: 1},
+            {x0: 1, x3: S(1)/2, x2: -S(1)/2, x4: 0, x1: 0, x5: -1},
+            {x0: 1, x3: -S(1)/3, x2: -S(1)/3, x4: S(1)/3, x1: S(1)/3, x5: 1},
+            {x0: 1, x3: 1, x2: 1, x4: 1, x1: 1, x5: 1},
+            {x0: 1, x3: -S(1)/3, x2: S(1)/3, x4: sqrt(5)/3, x1: -sqrt(5)/3, x5: -1},
+            {x0: 1, x3: -S(1)/3, x2: S(1)/3, x4: -sqrt(5)/3, x1: sqrt(5)/3, x5: -1}]
+
+    assert solve(eqns) == sols

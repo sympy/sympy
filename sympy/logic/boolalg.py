@@ -84,9 +84,13 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    is_Atom = True
     _op_priority = 11  # higher than Expr
 
-    def simplify(self, ratio=None, measure=None):
+    def simplify(self, *a, **kw):
+        return self
+
+    def expand(self, *a, **kw):
         return self
 
     @property

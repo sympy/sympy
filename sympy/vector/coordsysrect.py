@@ -1,11 +1,13 @@
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
+from sympy.core import S
+from sympy.vector.scalar import BaseScalar
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin
+import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import sympy.vector
 
 
 class CoordSysCartesian(Basic):
@@ -144,9 +146,10 @@ class CoordSysCartesian(Basic):
         obj._z = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
-        # Assign a Del operator instance
-        from sympy.vector.deloperator import Del
-        obj._delop = Del(obj)
+        obj._h1 = S.One
+        obj._h2 = S.One
+        obj._h3 = S.One
+
 
         # Assign params
         obj._parent = parent
@@ -170,13 +173,42 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
+    def _set_lame_coefficient_mapping(self, curv_coord_name):
+        """
+        Store information about Lame coefficient, for pre-defined
+        curvilinear coordinate systems. Return tuple with scaling
+        factor.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+
+        coefficient_mapping = {
+            'cartesian': (1, 1, 1),
+            'spherical': (1, self.x, self.x * sin(self.y)),
+            'cylindrical': (1, self.y, 1)
+        }
+        if curv_coord_name not in coefficient_mapping:
+            raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
+        self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
+
     @property
     def origin(self):
         return self._origin
 
     @property
     def delop(self):
-        return self._delop
+        SymPyDeprecationWarning(
+            feature="delop operator inside coordinate system",
+            useinstead="it as instance Del class",
+            deprecated_since_version="1.1"
+            ).warn()
+        from sympy.vector.deloperator import Del
+        return Del()
 
     @property
     def i(self):
@@ -207,6 +239,9 @@ class CoordSysCartesian(Basic):
 
     def base_scalars(self):
         return self._x, self._y, self._z
+
+    def lame_coefficients(self):
+        return self._h1, self._h2, self._h3
 
     @cacheit
     def rotation_matrix(self, other):
@@ -698,7 +733,7 @@ class CoordSysCartesian(Basic):
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
-                 pretty_scalars=None):
+                 curv_coord_name=None, pretty_scalars=None):
         # Dummy initializer for setting docstring
         pass
 

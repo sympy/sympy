@@ -8,6 +8,7 @@ from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
+from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 
@@ -155,44 +156,10 @@ class SparseMatrix(MatrixBase):
         # input matrix is symmetric
 
         #assert self.is_symmetric()
-        L = self._cholesky_sparse()
+        L = self._eval_cholesky_decomposition()
         Y = L._lower_triangular_solve(rhs)
         rv = L.T._upper_triangular_solve(Y)
         return rv
-
-    def _cholesky_sparse(self):
-        """Algorithm for numeric Cholesky factorization of a sparse matrix."""
-        Crowstruc = self.row_structure_symbolic_cholesky()
-        C = self.zeros(self.rows)
-        for i in range(len(Crowstruc)):
-            for j in Crowstruc[i]:
-                if i != j:
-                    C[i, j] = self[i, j]
-                    summ = 0
-                    for p1 in Crowstruc[i]:
-                        if p1 < j:
-                            for p2 in Crowstruc[j]:
-                                if p2 < j:
-                                    if p1 == p2:
-                                        summ += C[i, p1]*C[j, p1]
-                                else:
-                                    break
-                            else:
-                                break
-                    C[i, j] -= summ
-                    C[i, j] /= C[j, j]
-                else:
-                    C[j, j] = self[j, j]
-                    summ = 0
-                    for k in Crowstruc[j]:
-                        if k < j:
-                            summ += C[j, k]**2
-                        else:
-                            break
-                    C[j, j] -= summ
-                    C[j, j] = sqrt(C[j, j])
-
-        return C
 
     def _diagonal_solve(self, rhs):
         "Diagonal solve."
@@ -250,6 +217,9 @@ class SparseMatrix(MatrixBase):
             rv /= scale
         return self._new(rv)
 
+    def _eval_Abs(self):
+        return self.applyfunc(lambda x: Abs(x))
+
     def _eval_add(self, other):
         """If `other` is a SparseMatrix, add efficiently. Otherwise,
         do standard addition."""
@@ -263,6 +233,40 @@ class SparseMatrix(MatrixBase):
             if sum != 0:
                 smat[key] = sum
         return self._new(self.rows, self.cols, smat)
+
+    def _eval_cholesky_decomposition(self):
+        """Algorithm for numeric Cholesky factorization of a sparse matrix."""
+        Crowstruc = self.row_structure_symbolic_cholesky()
+        C = self.zeros(self.rows)
+        for i in range(len(Crowstruc)):
+            for j in Crowstruc[i]:
+                if i != j:
+                    C[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Crowstruc[i]:
+                        if p1 < j:
+                            for p2 in Crowstruc[j]:
+                                if p2 < j:
+                                    if p1 == p2:
+                                        summ += C[i, p1]*C[j, p1]
+                                else:
+                                    break
+                            else:
+                                break
+                    C[i, j] -= summ
+                    C[i, j] /= C[j, j]
+                else:
+                    C[j, j] = self[j, j]
+                    summ = 0
+                    for k in Crowstruc[j]:
+                        if k < j:
+                            summ += C[j, k]**2
+                        else:
+                            break
+                    C[j, j] -= summ
+                    C[j, j] = sqrt(C[j, j])
+
+        return C
 
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
@@ -315,6 +319,11 @@ class SparseMatrix(MatrixBase):
                     rv = rv.col_insert(i, rv.col(i_previous))
         return rv
 
+    @classmethod
+    def _eval_eye(cls, rows, cols):
+        entries = {(i,i): S.One for i in range(min(rows, cols))}
+        return cls._new(rows, cols, entries)
+
     def _eval_has(self, *patterns):
         # if the matrix has any zeros, see if S.Zero
         # has the pattern.  If _smat is full length,
@@ -332,6 +341,42 @@ class SparseMatrix(MatrixBase):
     def _eval_is_symmetric(self, simpfunc):
         diff = (self - self.T).applyfunc(simpfunc)
         return len(diff.values()) == 0
+
+    def _eval_LDL_decomposition(self):
+        """Algorithm for numeric LDL factorization, exploiting sparse structure.
+        """
+        Lrowstruc = self.row_structure_symbolic_cholesky()
+        L = self.eye(self.rows)
+        D = self.zeros(self.rows, self.cols)
+
+        for i in range(len(Lrowstruc)):
+            for j in Lrowstruc[i]:
+                if i != j:
+                    L[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Lrowstruc[i]:
+                        if p1 < j:
+                            for p2 in Lrowstruc[j]:
+                                if p2 < j:
+                                    if p1 == p2:
+                                        summ += L[i, p1]*L[j, p1]*D[p1, p1]
+                                else:
+                                    break
+                        else:
+                            break
+                    L[i, j] -= summ
+                    L[i, j] /= D[j, j]
+                elif i == j:
+                    D[i, i] = self[i, i]
+                    summ = 0
+                    for k in Lrowstruc[i]:
+                        if k < i:
+                            summ += L[i, k]**2*D[k, k]
+                        else:
+                            break
+                    D[i, i] -= summ
+
+        return L, D
 
     def _eval_matrix_mul(self, other):
         """Fast multiplication exploiting the sparsity of the matrix."""
@@ -403,52 +448,20 @@ class SparseMatrix(MatrixBase):
     def _eval_values(self):
         return [v for k,v in self._smat.items() if not v.is_zero]
 
+    @classmethod
+    def _eval_zeros(cls, rows, cols):
+        return cls._new(rows, cols, {})
+
     def _LDL_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
         # having difficulties, try uncommenting to make sure that the
         # input matrix is symmetric
 
         #assert self.is_symmetric()
-        L, D = self._LDL_sparse()
+        L, D = self._eval_LDL_decomposition()
         Z = L._lower_triangular_solve(rhs)
         Y = D._diagonal_solve(Z)
         return L.T._upper_triangular_solve(Y)
-
-    def _LDL_sparse(self):
-        """Algorithm for numeric LDL factization, exploiting sparse structure.
-        """
-        Lrowstruc = self.row_structure_symbolic_cholesky()
-        L = self.eye(self.rows)
-        D = self.zeros(self.rows, self.cols)
-
-        for i in range(len(Lrowstruc)):
-            for j in Lrowstruc[i]:
-                if i != j:
-                    L[i, j] = self[i, j]
-                    summ = 0
-                    for p1 in Lrowstruc[i]:
-                        if p1 < j:
-                            for p2 in Lrowstruc[j]:
-                                if p2 < j:
-                                    if p1 == p2:
-                                        summ += L[i, p1]*L[j, p1]*D[p1, p1]
-                                else:
-                                    break
-                        else:
-                            break
-                    L[i, j] -= summ
-                    L[i, j] /= D[j, j]
-                elif i == j:
-                    D[i, i] = self[i, i]
-                    summ = 0
-                    for k in Lrowstruc[i]:
-                        if k < i:
-                            summ += L[i, k]**2*D[k, k]
-                        else:
-                            break
-                    D[i, i] -= summ
-
-        return L, D
 
     def _lower_triangular_solve(self, rhs):
         """Fast algorithm for solving a lower-triangular system,
@@ -464,6 +477,12 @@ class SparseMatrix(MatrixBase):
                 X[i, 0] -= v*X[j, 0]
             X[i, 0] /= self[i, i]
         return self._new(X)
+
+    @property
+    def _mat(self):
+        """Return a list of matrix elements.  Some routines
+        in DenseMatrix use `_mat` directly to speed up operations."""
+        return list(self)
 
     def _upper_triangular_solve(self, rhs):
         """Fast algorithm for solving an upper-triangular system,
@@ -534,38 +553,6 @@ class SparseMatrix(MatrixBase):
         """
         return MutableSparseMatrix(self)
 
-    def cholesky(self):
-        """
-        Returns the Cholesky decomposition L of a matrix A
-        such that L * L.T = A
-
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
-        >>> A.cholesky()
-        Matrix([
-        [ 5, 0, 0],
-        [ 3, 3, 0],
-        [-1, 1, 3]])
-        >>> A.cholesky() * A.cholesky().T == A
-        True
-        """
-
-        from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
-            raise ValueError('Cholesky decomposition applies only to '
-                'symmetric matrices.')
-        M = self.as_mutable()._cholesky_sparse()
-        if M.has(nan) or M.has(oo):
-            raise ValueError('Cholesky decomposition applies only to '
-                'positive-definite matrices')
-        return self._new(M)
-
     def col_list(self):
         """Returns a column-sorted list of non-zero elements of the matrix.
 
@@ -590,52 +577,6 @@ class SparseMatrix(MatrixBase):
 
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
-
-    @classmethod
-    def eye(cls, n):
-        """Return an n x n identity matrix."""
-        n = as_int(n)
-        return cls(n, n, {(i, i): S.One for i in range(n)})
-
-    def LDLdecomposition(self):
-        """
-        Returns the LDL Decomposition (matrices ``L`` and ``D``) of matrix
-        ``A``, such that ``L * D * L.T == A``. ``A`` must be a square,
-        symmetric, positive-definite and non-singular.
-
-        This method eliminates the use of square root and ensures that all
-        the diagonal entries of L are 1.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1,   0, 0],
-        [ 3/5,   1, 0],
-        [-1/5, 1/3, 1]])
-        >>> D
-        Matrix([
-        [25, 0, 0],
-        [ 0, 9, 0],
-        [ 0, 0, 9]])
-        >>> L * D * L.T == A
-        True
-
-        """
-        from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
-            raise ValueError('LDL decomposition applies only to '
-                'symmetric matrices.')
-        L, D = self.as_mutable()._LDL_sparse()
-        if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
-            raise ValueError('LDL decomposition applies only to '
-                'positive-definite matrices')
-
-        return self._new(L), self._new(D)
 
     def liupc(self):
         """Liu's algorithm, for pre-determination of the Elimination Tree of
@@ -830,13 +771,6 @@ class SparseMatrix(MatrixBase):
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
-    @classmethod
-    def zeros(cls, r, c=None):
-        """Return an r x c matrix of zeros, square if c is omitted."""
-        c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls(r, c, {})
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod

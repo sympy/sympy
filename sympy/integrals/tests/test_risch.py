@@ -1,6 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Eq, Piecewise, factor)
+    Symbol, Lambda, sin, Eq, Piecewise, factor, expand_log, cancel,
+    expand, diff, pi)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -636,6 +637,19 @@ def test_risch_integrate():
 
     assert risch_integrate(0, x) == 0
 
+    # also tests prde_cancel()
+    e1 = log(x/exp(x) + 1)
+    ans1 = risch_integrate(e1, x)
+    assert ans1 == (x*log(x*exp(-x) + 1) + NonElementaryIntegral((x**2 - x)/(x + exp(x)), x))
+    assert cancel(diff(ans1, x) - e1) == 0
+
+    # also tests issue #10798
+    e2 = (log(-1/y)/2 - log(1/y)/2)/y - (log(1 - 1/y)/2 - log(1 + 1/y)/2)/y
+    ans2 = risch_integrate(e2, y)
+    assert ans2 == log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 + \
+            NonElementaryIntegral((I*pi*y**2 - 2*y*log(1/y) - I*pi)/(2*y**3 - 2*y), y)
+    assert expand_log(cancel(diff(ans2, y) - e2), force=True) == 0
+
     # These are tested here in addition to in test_DifferentialExtension above
     # (symlogs) to test that backsubs works correctly.  The integrals should be
     # written in terms of the original logarithms in the integrands.
@@ -661,18 +675,29 @@ def test_NonElementaryIntegral():
     # Make sure methods of Integral still give back a NonElementaryIntegral
     assert isinstance(NonElementaryIntegral(x**x*t0, x).subs(t0, log(x)), NonElementaryIntegral)
 
+
 def test_xtothex():
     a = risch_integrate(x**x, x)
     assert a == NonElementaryIntegral(x**x, x)
     assert isinstance(a, NonElementaryIntegral)
 
 
+def test_DifferentialExtension_equality():
+    DE1 = DE2 = DifferentialExtension(log(x), x)
+    assert DE1 == DE2
+
+
 def test_DifferentialExtension_printing():
     DE = DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)
-    assert repr(DE) == "DifferentialExtension(extension=dict(fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), " \
-        "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), " \
-        "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]))"
-    assert str(DE) == "{'fa': Poly(t1 + t0**2, t1, domain='ZZ[t0]'), 'fd': Poly(1, t1, domain='ZZ'), " \
-        "'D': [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')], " \
-        "'T': [x, t0, t1], 'Tfuncs': [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))], 'backsubs': [], " \
-        "'E_K': [1], 'E_args': [x**2], 'L_K': [2], 'L_args': [t0 + 1]}"
+    assert repr(DE) == ("DifferentialExtension(dict([('f', exp(2*x**2) + log(exp(x**2) + 1)), "
+        "('x', x), ('T', [x, t0, t1]), ('D', [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
+        "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]), ('fa', Poly(t1 + t0**2, t1, domain='ZZ[t0]')), "
+        "('fd', Poly(1, t1, domain='ZZ')), ('Tfuncs', [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))]), "
+        "('backsubs', []), ('E_K', [1]), ('E_args', [x**2]), ('L_K', [2]), ('L_args', [t0 + 1]), "
+        "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('t', t1), "
+        "('d', Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')), ('newf', t0**2 + t1), ('level', -1), "
+        "('dummy', False)]))")
+
+    assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
+        "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
+        "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]})")
