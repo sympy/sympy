@@ -483,12 +483,11 @@ class RisingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens) > 1 or x.degree() <= 1:
-                                return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                            if len(gens)!= 1:
+                                raise ValueError("rf only defined for polynomials on one generator")
                             else:
-                                v = gens[0]
                                 return reduce(lambda r, i:
-                                              r*(x.subs(v, v + i).expand()),
+                                              r*(x.shift(i).expand()),
                                               range(0, int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
@@ -501,14 +500,11 @@ class RisingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens) > 1 or x.degree() <= 1:
-                                return 1/reduce(lambda r, i:
-                                                r*(x - i),
-                                                range(1, abs(int(k)) + 1), 1)
+                            if len(gens)!= 1:
+                                raise ValueError("rf only defined for polynomials on one generator")
                             else:
-                                v = gens[0]
                                 return 1/reduce(lambda r, i:
-                                                r*(x.subs(v, v - i).expand()),
+                                                r*(x.shift(-i).expand()),
                                                 range(1, abs(int(k)) + 1), 1)
                         else:
                             return 1/reduce(lambda r, i:
@@ -618,13 +614,11 @@ class FallingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens) > 1 or x.degree() <= 1:
-                                return reduce(lambda r, i: r*(x - i),
-                                              range(0, int(k)), 1)
+                            if len(gens)!= 1:
+                                raise ValueError("ff only defined for polynomials on one generator")
                             else:
-                                v = gens[0]
                                 return reduce(lambda r, i:
-                                              r*(x.subs(v, v - i).expand()),
+                                              r*(x.shift(-i).expand()),
                                               range(0, int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x - i),
@@ -637,13 +631,11 @@ class FallingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens) > 1 or x.degree() <= 1:
-                                return 1/reduce(lambda r, i: r*(x + i),
-                                                range(1, abs(int(k)) + 1), 1)
+                            if len(gens)!= 1:
+                                raise ValueError("rf only defined for polynomials on one generator")
                             else:
-                                v = gens[0]
                                 return 1/reduce(lambda r, i:
-                                                r*(x.subs(v, v + i).expand()),
+                                                r*(x.shift(i).expand()),
                                                 range(1, abs(int(k)) + 1), 1)
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),

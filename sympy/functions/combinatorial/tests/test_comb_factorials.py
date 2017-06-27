@@ -45,9 +45,9 @@ def test_rf_eval_apply():
 
     assert rf(Poly(x**2 + 3*x, x), 2) == Poly(x**4 + 8*x**3 + 19*x**2 + 12*x, x)
     assert isinstance(rf(Poly(x**2 + 3*x, x), 2), Poly)
-    assert rf(Poly(x**2 + 3*x, x, y), 2) == Poly((x**2 + 3*x)*(x**2 + 3*x + 1), x, y)
+    raises(ValueError, lambda: rf(Poly(x**2 + 3*x, x, y), 2))
     assert rf(Poly(x**3 + x, x), -2) == 1/(x**6 - 9*x**5 + 35*x**4 - 75*x**3 + 94*x**2 - 66*x + 20)
-    assert rf(Poly(x**3 + x, x, y), -2) == 1/((x**3 + x - 1)*(x**3 + x - 2)).expand()
+    raises(ValueError, lambda: rf(Poly(x**3 + x, x, y), -2))
 
     assert rf(x, m).is_integer is None
     assert rf(n, k).is_integer is None
@@ -99,9 +99,9 @@ def test_ff_eval_apply():
 
     assert ff(Poly(2*x**2 - 5*x, x), 2) == Poly(4*x**4 - 28*x**3 + 59*x**2 - 35*x, x)
     assert isinstance(ff(Poly(2*x**2 - 5*x, x), 2), Poly)
-    assert ff(Poly(2*x**2 - 5*x, x, y), 2) == Poly((2*x**2  - 5*x)*(2*x**2 - 5*x - 1), x, y)
+    raises(ValueError, lambda: ff(Poly(2*x**2 - 5*x, x, y), 2))
     assert ff(Poly(x**2 + 3*x, x), -2) == 1/(x**4 + 12*x**3 + 49*x**2 + 78*x + 40)
-    assert ff(Poly(x**2 + 3*x, x, y), -2) == 1/((x**2 + 3*x + 1)*(x**2 + 3*x + 2)).expand()
+    raises(ValueError, lambda: ff(Poly(x**2 + 3*x, x, y), -2))
 
 
     assert ff(x, m).is_integer is None
