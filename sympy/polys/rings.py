@@ -194,15 +194,16 @@ class PolyRing(DefaultPrinting, IPolys):
         domain = DomainOpt.preprocess(domain)
         order = OrderOpt.preprocess(order)
 
-        _hash = hash((cls.__name__, symbols, ngens, domain, order))
-        obj = _ring_cache.get(_hash)
+        _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
+        obj = _ring_cache.get(_hash_tuple)
 
         if obj is None:
             if domain.is_Composite and set(symbols) & set(domain.symbols):
                 raise GeneratorsError("polynomial ring and it's ground domain share generators")
 
             obj = object.__new__(cls)
-            obj._hash = _hash
+            obj._hash_tuple = _hash_tuple
+            obj._hash = hash(_hash_tuple)
             obj.dtype = type("PolyElement", (PolyElement,), {"ring": obj})
             obj.symbols = symbols
             obj.ngens = ngens
@@ -248,7 +249,7 @@ class PolyRing(DefaultPrinting, IPolys):
                     if not hasattr(obj, name):
                         setattr(obj, name, generator)
 
-            _ring_cache[_hash] = obj
+            _ring_cache[_hash_tuple] = obj
 
         return obj
 
