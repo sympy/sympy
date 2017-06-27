@@ -878,15 +878,11 @@ def solve(f, *symbols, **flags):
             for fi in f:
                 pot = preorder_traversal(fi)
                 for p in pot:
-                    if not (p.is_number or p.is_Add or p.is_Mul) or \
-                            isinstance(p, AppliedUndef):
+                    if isinstance(p, AppliedUndef):
                         flags['dict'] = True  # better show symbols
                         symbols.add(p)
                         pot.skip()  # don't go any deeper
         symbols = list(symbols)
-        # supply dummy symbols so solve(3) behaves like solve(3, x)
-        for i in range(len(f) - len(symbols)):
-            symbols.append(Dummy())
 
         ordered_symbols = False
     elif len(symbols) == 1 and iterable(symbols[0]):
