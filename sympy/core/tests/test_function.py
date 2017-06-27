@@ -10,6 +10,7 @@ from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
+from sympy.core.basic import preorder_traversal
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -77,6 +78,13 @@ def test_derivative_evaluate():
 
     assert Derivative(Derivative(f(x), x), x) == diff(f(x), x, x)
     assert Derivative(sin(x), x, 0) == sin(x)
+
+
+def test_derivative_reuse_dummy():
+    # this chain rule should introduce two and only two Dummy variables
+    A = f(g(x), h(g(x))).diff(x)
+    dummies = {d for d in preorder_traversal(A) if d.is_Dummy}
+    assert len(dummies) == 2
 
 
 def test_diff_symbols():
