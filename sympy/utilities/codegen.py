@@ -1348,7 +1348,6 @@ class JuliaCodeGen(CodeGen):
         # statement-by-statement by JuliaPrinter then again here.
         p = JuliaCodePrinter({'human': False})
         return p.indent_code(codelines)
-        return codelines
 
     def dump_jl(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
@@ -1567,7 +1566,6 @@ class OctaveCodeGen(CodeGen):
         # statement-by-statement by OctavePrinter then again here.
         p = OctaveCodePrinter({'human': False})
         return p.indent_code(codelines)
-        return codelines
 
     def dump_m(self, routines, f, prefix, header=True, empty=True, inline=True):
         # Note used to call self.dump_code() but we need more control for header
