@@ -13,7 +13,9 @@ class cons(Constraint):
         sub = substitute(self.expr, substitution)
 
         try:
-            if isinstance(sympify(str(sub)), BooleanTrue):
+            res = sympify(str(sub))
+            
+            if isinstance(res, BooleanTrue) or res == True:
                 return True
             else:
                 return False
@@ -38,3 +40,28 @@ class cons(Constraint):
 
     def __hash__(self):
         return hash((self.vars, self.expr))
+
+
+class FreeQ(Constraint):
+    def __init__(self, expr, var):
+        self.expr = expr if isinstance(expr, str) else expr.name
+        self.var = var if isinstance(var, str) else var.name
+
+    def __call__(self, substitution):
+        return substitution[self.var] not in substitution[self.expr]
+
+    @property
+    def variables(self):
+        return frozenset([self.expr, self.var])
+
+    def with_renamed_vars(self, renaming):
+        return FreeQ(
+            renaming.get(self.expr, self.expr),
+            renaming.get(self.var, self.var)
+        )
+
+    def __eq__(self, other):
+        return isinstance(other, FreeQ) and other.expr == self.expr and other.var == self.var
+
+    def __hash__(self):
+        return hash((self.expr, self.var))

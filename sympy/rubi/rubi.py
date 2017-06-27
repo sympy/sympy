@@ -47,6 +47,8 @@ def rubi_integrate(expr, var):
     if result == expr:
         #print(('Unable to integrate: {}').format(expr))
         return None
+
+    return sympify(str(result))
     try:
         return sympify(str(result))
     except:

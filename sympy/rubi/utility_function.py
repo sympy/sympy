@@ -14,10 +14,10 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy import exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
-
+from .rubi import rubi_integrate
 
 def Int(expr, var):
-    from .rubi import rubi_integrate
+
     if expr == None:
         return None
     return rubi_integrate(expr, var)
@@ -544,6 +544,8 @@ def PowerOfLinearQ(expr, x):
             return LinearQ(u, x)
 
 def Exponent(expr, x, *k):
+    if expr.is_number:
+        return 0
     if not k:
         return degree(expr, gen = x)
     else:
@@ -981,21 +983,27 @@ def RemoveContentAux(expr, x):
         pattern = a_**m_*u_ + b_*v_
         match = expr.match(pattern)
         if match:
-            keys = [a_, m_, u_, b_, v_]
-            a, m, u, b, v = tuple([match[i] for i in keys])
-            if IntegersQ(a, b) & (a + b == 0) & RationalQ(m):
-                if m > 0:
-                    return RemoveContentAux(a**(m - 1)*u - v, x)
-                else:
-                    return RemoveContentAux(u - a**(1 - m)*v, x)
+            try:
+                keys = [a_, m_, u_, b_, v_]
+                a, m, u, b, v = tuple([match[i] for i in keys])
+                if IntegersQ(a, b) & (a + b == 0) & RationalQ(m):
+                    if m > 0:
+                        return RemoveContentAux(a**(m - 1)*u - v, x)
+                    else:
+                        return RemoveContentAux(u - a**(1 - m)*v, x)
+            except:
+                pass
 
         pattern = a_**m_*u_ + a_**n_*v_
         match = expr.match(pattern)
         if match:
-            keys = [a_, m_, u_, n_, v_]
-            a, m, u, n, v = tuple([match[i] for i in keys])
-            if FreeQ(a, x) & RationalQ(m, n) & (n - m >= 0) & (m != 0):
-                return RemoveContentAux(u + a**(n - m)*v, x)
+            try:
+                keys = [a_, m_, u_, n_, v_]
+                a, m, u, n, v = tuple([match[i] for i in keys])
+                if FreeQ(a, x) & RationalQ(m, n) & (n - m >= 0) & (m != 0):
+                    return RemoveContentAux(u + a**(n - m)*v, x)
+            except:
+                pass
 
         '''
         pattern = a_**m_*u_ + a_**n_*v_ + a_**p_*w_
@@ -1223,6 +1231,12 @@ def Denom(u):
 def hypergeom(n, d, z):
     return hyper(n, d, z)
 
+def Expon(expr, form, h=None):
+    if h:
+        return Exponent(Together(expr), form, h)
+    else:
+        return Exponent(Together(expr), form)
+
 def ExpandIntegrand(expr, x):
     w_ = Wild('w')
     p_ = Wild('p')
@@ -1323,6 +1337,7 @@ def ExpandIntegrand(expr, x):
                     return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g))
                 else:
                     return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g))
+
 
     #return None
     return expr.expand()

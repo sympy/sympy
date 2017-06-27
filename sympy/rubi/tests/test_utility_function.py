@@ -442,6 +442,11 @@ def test_Exponent():
     assert Exponent(x**3+x+1, x) == 3
     assert Exponent(x**2+2*x+1, x) == 2
     assert Exponent(x**3, x, List) == [3]
+    assert Exponent(S(1), x) == 0
+
+def test_Expon():
+    assert Expon(x**2+2*x+1, x) == 2
+    assert Expon(x**3, x, List) == [3]
 
 def test_QuadraticQ():
     assert not QuadraticQ([x**2+x+1, 5*x**2], x)
@@ -518,6 +523,7 @@ def test_ExpandLinearProduct():
     assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
 
 def test_ExpandIntegrand():
+    #print(ExpandIntegrand((a + b*x)/x**3, x))
     assert True
 
 def test_MatchQ():
