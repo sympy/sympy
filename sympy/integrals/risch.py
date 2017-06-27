@@ -1698,7 +1698,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     result = S(0)
     for case in reversed(DE.cases):
-        if not DE.fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
+        if not fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
             DE.decrement_level()
             fa, fd = frac_in((fa, fd), DE.t)
             continue
