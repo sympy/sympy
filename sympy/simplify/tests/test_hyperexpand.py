@@ -11,7 +11,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        build_hypergeometric_formula)
 from sympy import hyper, I, S, meijerg, Piecewise, Tuple
 from sympy.abc import z, a, b, c
-from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS
+from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.core.compatibility import range
 
