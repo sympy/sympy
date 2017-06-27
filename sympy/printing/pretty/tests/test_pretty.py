@@ -5585,7 +5585,7 @@ def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \\ S.Naturals0'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \\ ℕ₀'
 
-    
+
 def test_pretty_SymmetricDifference():
     from sympy import SymmetricDifference, Interval
     from sympy.utilities.pytest import raises
