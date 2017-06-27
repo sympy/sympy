@@ -3137,7 +3137,7 @@ class MatrixBase(MatrixDeprecated, MatrixDecompositions,
             return sol, tau
 
     def inv_mod(self, m):
-        """
+        r"""
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
 
         Method to find the matrix inverse of `K` (mod `m`) implemented in this function:

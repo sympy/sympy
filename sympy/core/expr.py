@@ -2293,7 +2293,7 @@ class Expr(Basic, EvalfMixin):
         return False
 
     def is_polynomial(self, *syms):
-        """
+        r"""
         Return True if self is a polynomial in syms and False otherwise.
 
         This checks if self is an exact polynomial in syms.  This function

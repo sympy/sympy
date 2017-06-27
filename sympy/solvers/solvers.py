@@ -365,7 +365,7 @@ def check_assumptions(expr, against=None, **assumptions):
 
 
 def solve(f, *symbols, **flags):
-    """
+    r"""
     Algebraically solves equations and systems of equations.
 
     Currently supported are:

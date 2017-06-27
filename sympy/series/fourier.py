@@ -196,7 +196,7 @@ class FourierSeries(SeriesBase):
         return Add(*terms)
 
     def sigma_approximation(self, n=3):
-        """
+        r"""
         Return :math:`\sigma`-approximation of Fourier series with respect
         to order n.
 

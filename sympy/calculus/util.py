@@ -459,7 +459,7 @@ def lcim(numbers):
 
 
 class AccumulationBounds(AtomicExpr):
-    """
+    r"""
     # Note AccumulationBounds has an alias: AccumBounds
 
     AccumulationBounds represent an interval `[a, b]`, which is always closed

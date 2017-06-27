@@ -331,7 +331,7 @@ class Wild(Symbol):
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 def symbols(names, **args):
-    """
+    r"""
     Transform strings into instances of :class:`Symbol` class.
 
     :func:`symbols` function returns a sequence of symbols with names taken
@@ -422,7 +422,7 @@ def symbols(names, **args):
 
         >>> symbols('x((a:b))')
         (x(a), x(b))
-        >>> symbols('x(:1\,:2)')  # or 'x((:1)\,(:2))'
+        >>> symbols(r'x(:1\,:2)')  # or r'x((:1)\,(:2))'
         (x(0,0), x(0,1))
 
     All newly created symbols have assumptions set according to ``args``::
