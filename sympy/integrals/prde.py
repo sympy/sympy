@@ -18,12 +18,12 @@ from __future__ import print_function, division
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S, oo
 
-from sympy.matrices import Matrix, zeros, eye
+from sympy.matrices import zeros, eye
+from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
-from sympy.polys.polymatrix import PolyMatrix
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -441,6 +441,53 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     return f + H, A.col_join(B).col_join(C)
 
 
+def prde_cancel_liouvillian(b, Q, n, DE):
+    """
+    Pg, 237.
+    """
+    H = []
+
+    # Why use DecrementLevel? Below line answers that:
+    # Assuming that we can solve such problems over 'k' (not k[t])
+    if DE.case == 'primitive':
+        with DecrementLevel(DE):
+            ba, bd = frac_in(b, DE.t, field=True)
+
+    for i in range(n, -1, -1):
+        if DE.case == 'exp': # this re-checking can be avoided
+            with DecrementLevel(DE):
+                ba, bd = frac_in(b + i*derivation(DE.t, DE)/DE.t,
+                                DE.t, field=True)
+        with DecrementLevel(DE):
+            Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
+            fi, Ai = param_rischDE(ba, bd, Qy, DE)
+        fi = [Poly(fa.as_expr()/fd.as_expr(), DE.t, field=True)
+                for fa, fd in fi]
+
+        ri = len(fi)
+
+        if i == n:
+            M = Ai
+        else:
+            M = Ai.col_join(M.row_join(zeros(M.rows, ri)))
+
+        Fi, hi = [None]*ri, [None]*ri
+
+        # from eq. on top of p.238 (unnumbered)
+        for j in range(ri):
+            hji = fi[j]*DE.t**i
+            hi[j] = hji
+            # building up Sum(djn*(D(fjn*t^n) - b*fjnt^n))
+            Fi[j] = -(derivation(hji, DE) - b*hji)
+
+        H += hi
+        # in the next loop instead of Q it has
+        # to be Q + Fi taking its place
+        Q = Q + Fi
+
+    return (H, M)
+
+
 def param_poly_rischDE(a, b, q, n, DE):
     """Polynomial solutions of a parametric Risch differential equation.
 
@@ -480,14 +527,17 @@ def param_poly_rischDE(a, b, q, n, DE):
 
         elif (DE.d.degree() >= 2 and
               b.degree() == DE.d.degree() - 1 and
-              n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC()):
+              n > -b.as_poly().LC()/DE.d.as_poly().LC()):
             raise NotImplementedError("prde_no_cancel_b_equal() is "
                 "not yet implemented.")
 
         else:
-            # Cancellation
-            raise NotImplementedError("prde_cancel() is not yet "
-                "implemented.")
+            # Liouvillian cases
+            if DE.case == 'primitive' or DE.case == 'exp':
+                return prde_cancel_liouvillian(b, q, n, DE)
+            else:
+                raise NotImplementedError("non-linear and hypertangent "
+                        "cases have not yet been implemented")
 
     # else: deg(a) > 0
 
@@ -536,14 +586,14 @@ def param_poly_rischDE(a, b, q, n, DE):
         return [], eye(m)  # Could return A, but this has
                            # the minimum number of rows.
 
-    Mqq = PolyMatrix([qq])  # A single row.
+    Mqq = Matrix([qq])  # A single row.
     r = [(Mqq*vj)[0] for vj in V]  # [r1, ..., ru]
 
     # Solutions of (a/d)*Dp + (b/d)*p = Sum(dj*rj) correspond to
     # solutions alpha*p + Sum(Sum(dj*aji)*betai) of the initial
     # equation. These are equal to alpha*p + Sum(dj*fj) where
     # fj = Sum(aji*betai).
-    Mbeta = PolyMatrix([beta])
+    Mbeta = Matrix([beta])
     f = [(Mbeta*vj)[0] for vj in V]  # [f1, ..., fu]
 
     #
@@ -640,21 +690,21 @@ def param_rischDE(fa, fd, G, DE):
     if not V:  # No non-trivial solution
         return [], eye(m)
 
-    Mq = PolyMatrix([q])  # A single row.
+    Mq = Matrix([q])  # A single row.
     r = [(Mq*vj)[0] for vj in V]  # [r1, ..., ru]
 
     # Solutions of a*Dp + b*p = Sum(dj*rj) correspond to solutions
     # y = p/gamma of the initial equation with ci = Sum(dj*aji).
 
     try:
-        # Similar to rischDE(), we try oo, even though it might lead to
-        # non-termination when there is no solution.  At least for prde_spde,
-        # it will always terminate no matter what n is.
+        # We try n=5. At least for prde_spde, it will always
+        # terminate no matter what n is.
         n = bound_degree(a, b, r, DE, parametric=True)
     except NotImplementedError:
-        debug("param_rischDE: Proceeding with n = oo; may cause "
-              "non-termination.")
-        n = oo
+        # A temporary bound is set. Eventually, it will be removed.
+        # the currently added test case takes large time
+        # even with n=5, and much longer with large n's.
+        n = 5
 
     h, B = param_poly_rischDE(a, b, r, n, DE)
 
@@ -837,8 +887,9 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     z = ls*ln.gcd(ln.diff(DE.t))
 
     if not z.has(DE.t):
-        raise NotImplementedError("parametric_log_deriv_heu() "
-            "heuristic failed: z in k.")
+        # TODO: We treat this as 'no solution', until the structure
+        # theorem version of parametric_log_deriv is implemented.
+        return None
 
     u1, r1 = (fa*l.quo(fd)).div(z)  # (l*f).div(z)
     u2, r2 = (wa*l.quo(wd)).div(z)  # (l*w).div(z)

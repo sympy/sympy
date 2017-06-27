@@ -6,6 +6,7 @@ from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
 from sympy.vector.operators import curl, divergence, gradient
+from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
                                     scalar_potential_difference)
@@ -14,16 +15,14 @@ from sympy.utilities.pytest import raises
 C = CoordSysCartesian('C')
 i, j, k = C.base_vectors()
 x, y, z = C.base_scalars()
-delop = C.delop
+delop = Del()
 a, b, c, q = symbols('a b c q')
 
 
 def test_del_operator():
     # Tests for curl
-    assert (delop ^ Vector.zero ==
-            (Derivative(0, C.y) - Derivative(0, C.z))*C.i +
-            (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
-            (Derivative(0, C.x) - Derivative(0, C.y))*C.k)
+
+    assert delop ^ Vector.zero == Vector.zero
     assert ((delop ^ Vector.zero).doit() == Vector.zero ==
             curl(Vector.zero))
     assert delop.cross(Vector.zero) == delop ^ Vector.zero
@@ -224,3 +223,29 @@ def test_scalar_potential_difference():
     assert (scalar_potential_difference(grad_field, P, P.origin,
                                         genericpointP).simplify() ==
             potential_diff_P.simplify())
+
+
+def test_differential_operators_curvilinear_system():
+    A = CoordSysCartesian('A')
+    A._set_lame_coefficient_mapping('spherical')
+    B = CoordSysCartesian('B')
+    B._set_lame_coefficient_mapping('cylindrical')
+    # Test for spherical coordinate system and gradient
+    assert gradient(3*A.x + 4*A.y) == 3*A.i + 4/A.x*A.j
+    assert gradient(3*A.x*A.z + 4*A.y) == 3*A.z*A.i + 4/A.x*A.j + (3/sin(A.y))*A.k
+    assert gradient(0*A.x + 0*A.y+0*A.z) == Vector.zero
+    assert gradient(A.x*A.y*A.z) == A.y*A.z*A.i + A.z*A.j + (A.y/sin(A.y))*A.k
+    # Test for spherical coordinate system and divergence
+    assert divergence(A.x * A.i + A.y * A.j + A.z * A.k) == \
+           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 3 + 1/(sin(A.y)*A.x)
+    assert divergence(3*A.x*A.z*A.i + A.y*A.j + A.x*A.y*A.z*A.k) == \
+           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 9*A.z + A.y/sin(A.y)
+    assert divergence(Vector.zero) == 0
+    assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
+    # Test for cylindrical coordinate system and divergence
+    assert divergence(B.x*B.i + B.y*B.j + B.z*B.k) == 2 + 1/B.y
+    assert divergence(B.x*B.j + B.z*B.k) == 1
+    # Test for spherical coordinate system and divergence
+    assert curl(A.x*A.i + A.y*A.j + A.z*A.k) == \
+           (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + A.y/A.x*A.k
+    assert curl(A.x*A.j + A.z*A.k) == (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + 2*A.k

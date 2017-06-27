@@ -31,7 +31,7 @@ from sympy.codegen.ast import (Assignment, Declaration, Pointer, Type,
                                float32, float64, complex64, complex128)
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 known_functions = {
     "sin": "sin",
@@ -197,7 +197,8 @@ class FCodePrinter(CodePrinter):
                                       "standards earlier than Fortran95.")
 
     def _print_MatrixElement(self, expr):
-        return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
+        return "{0}({1}, {2})".format(self.parenthesize(expr.parent,
+                PRECEDENCE["Atom"], strict=True), expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.

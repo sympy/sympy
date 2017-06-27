@@ -35,6 +35,7 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy import MatrixSymbol
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -1593,3 +1594,16 @@ def test_latex_UnevaluatedExpr():
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
     assert latex(he + 1) == r"1 + \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert latex(A[0, 0]) == r"A_{0, 0}"
+    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
+
+    F = C[0, 0].subs(C, A - B)
+    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"

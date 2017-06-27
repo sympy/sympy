@@ -43,6 +43,7 @@ class Domain(object):
 
     is_Simple = False
     is_Composite = False
+    is_PID = False
 
     has_CharacteristicZero = False
 

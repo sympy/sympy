@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.core.compatibility import string_types, range
 
 
@@ -160,8 +160,9 @@ class JavascriptCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
+        return "{0}[{1}]".format(self.parenthesize(expr.parent,
+            PRECEDENCE["Atom"], strict=True),
+            expr.j + expr.i*expr.parent.shape[1])
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

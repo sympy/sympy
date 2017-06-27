@@ -1086,7 +1086,7 @@ class Expr(Basic, EvalfMixin):
         Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
-        >>> A, B = symbols('A B', commutative=False)
+        >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
@@ -1928,10 +1928,17 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def normal(self):
+        from .mul import _unevaluated_Mul
         n, d = self.as_numer_denom()
         if d is S.One:
             return n
-        return n/d
+        if d.is_Number:
+            if d is S.One:
+                return n
+            else:
+                return _unevaluated_Mul(n, 1/d)
+        else:
+            return n/d
 
     def extract_multiplicatively(self, c):
         """Return None if it's not possible to make self in the form

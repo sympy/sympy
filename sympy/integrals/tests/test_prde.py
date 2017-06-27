@@ -1,15 +1,17 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, Matrix, S, symbols
-from sympy.integrals.risch import DifferentialExtension, derivation
+from sympy.integrals.risch import (DifferentialExtension, NonElementaryIntegral,
+        derivation, risch_integrate)
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
-    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE)
+    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
+    prde_cancel_liouvillian)
 
-from sympy.polys.polymatrix import PolyMatrix
+from sympy.polys.polymatrix import PolyMatrix as Matrix
 
-from sympy.abc import x, t, n
+from sympy import Poly, S, symbols, integrate, log, I, pi, exp
+from sympy.abc import x, t, n, y
 
 t0, t1, t2, t3, k = symbols('t:4 k')
 
@@ -140,8 +142,28 @@ def test_prde_no_cancel():
     V = A.nullspace()
     assert len(V) == 1
     assert V[0] == Matrix([-1/2, 0, 0, 1, 0, 0]*3)
-    assert (PolyMatrix([h])*V[0][6:, :])[0] == Poly(x**2/2, t, domain='ZZ(x)')
-    assert (PolyMatrix([q])*V[0][:6, :])[0] == Poly(x - 1/2, t, domain='QQ(x)')
+    assert (Matrix([h])*V[0][6:, :])[0] == Poly(x**2/2, t, domain='ZZ(x)')
+    assert (Matrix([q])*V[0][:6, :])[0] == Poly(x - 1/2, t, domain='QQ(x)')
+
+
+def test_prde_cancel_liouvillian():
+    ### 1. case == 'primitive'
+    # used when integrating f = log(x) - log(x - 1)
+    # Not taken from 'the' book
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    p0 = Poly(0, t, field=True)
+    h, A = prde_cancel_liouvillian(Poly(-1/(x - 1), t), [Poly(-x + 1, t), Poly(1, t)], 1, DE)
+    V = A.nullspace()
+    h == [p0, p0, Poly((x - 1)*t, t), p0, p0, p0, p0, p0, p0, p0, Poly(x - 1, t), Poly(-x**2 + x, t), p0, p0, p0, p0]
+    assert A.rank() == 16
+    assert (Matrix([h])*V[0][:16, :]) == Matrix([[Poly(0, t, domain='QQ(x)')]])
+
+    ### 2. case == 'exp'
+    # used when integrating log(x/exp(x) + 1)
+    # Not taken from book
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t, t)]})
+    assert prde_cancel_liouvillian(Poly(0, t, domain='QQ[x]'), [Poly(1, t, domain='QQ(x)')], 0, DE) == \
+            ([Poly(1, t, domain='QQ'), Poly(x, t)], Matrix([[-1, 0, 1]]))
 
 
 def test_param_poly_rischDE():
@@ -180,6 +202,20 @@ def test_param_rischDE():
     assert V[0] == Matrix([-1, 1, 0, -1, 1, 0])
     y = -p[0] + p[1] + 0*p[2]  # x
     assert y.diff(x) - y/x**2 == 1 - 1/x  # Dy + f*y == -G0 + G1 + 0*G2
+
+    # the below test computation takes place while computing the integral
+    # of 'f = log(log(x + exp(x)))'
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    G = [(Poly(t + x, t, domain='ZZ(x)'), Poly(1, t, domain='QQ')), (Poly(0, t, domain='QQ'), Poly(1, t, domain='QQ'))]
+    h, A = param_rischDE(Poly(-t - 1, t, field=True), Poly(t + x, t, field=True), G, DE)
+    assert len(h) == 5
+    p = [hi[0].as_expr()/hi[1].as_expr() for hi in h]
+    V = A.nullspace()
+    assert len(V) == 3
+    assert V[0] == Matrix([0, 0, 0, 0, 1, 0, 0])
+    y = 0*p[0] + 0*p[1] + 1*p[2] + 0*p[3] + 0*p[4]
+    assert y.diff(t) - y/(t + x) == 0   # Dy + f*y = 0*G0 + 0*G1
+
 
 def test_limited_integrate_reduce():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
@@ -270,13 +306,3 @@ def test_parametric_log_deriv():
     assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
     Poly(-1, t), Poly(x*t**2, t), DE) == \
         (2, 6, t*x**5)
-
-
-def test_issue_10798():
-    from sympy import integrate, pi, I, log, polylog, exp_polar, Piecewise, meijerg, Abs
-    from sympy.abc import x, y
-    assert integrate(1/(1-(x*y)**2), (x, 0, 1), y) == \
-        -Piecewise((I*pi*log(y) - polylog(2, y), Abs(y) < 1), (-I*pi*log(1/y) - polylog(2, y), Abs(1/y) < 1), \
-                   (-I*pi*meijerg(((), (1, 1)), ((0, 0), ()), y) + I*pi*meijerg(((1, 1), ()), ((), (0, 0)), y) - polylog(2, y), True))/2 \
-                   - log(y)*log(1 - 1/y)/2 + log(y)*log(1 + 1/y)/2 + log(y)*log(y - 1)/2 \
-                   - log(y)*log(y + 1)/2 + I*pi*log(y)/2 - polylog(2, y*exp_polar(I*pi))/2

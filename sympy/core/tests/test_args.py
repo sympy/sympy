@@ -3969,9 +3969,7 @@ def test_sympy__vector__dyadic__DyadicZero():
 
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(Del(C))
+    assert _test_args(Del())
 
 
 def test_sympy__vector__operators__Curl():

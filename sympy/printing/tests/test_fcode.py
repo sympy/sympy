@@ -687,6 +687,7 @@ def test_fcode_For():
                    "         y = x*y\n"
                    "      end do")
 
+
 def test_fcode_Declaration():
     def check(expr, ref, **kwargs):
         assert fcode(expr, standard=95, source_format='free', **kwargs) == ref
@@ -712,3 +713,16 @@ def test_fcode_Declaration():
     check(Type('real'), "real(4)", precision=6)
     check(Type('real'), "real(8)", precision=float64)
     check(Type('real'), "real(8)", precision=15)
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(fcode(A[0, 0]) == "      A(1, 1)")
+    assert(fcode(3 * A[0, 0]) == "      3*A(1, 1)")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(fcode(F) == "      ((-1)*B + A)(1, 1)")
