@@ -51,10 +51,9 @@ EOF
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
-    # Note that tests themselves are run in a subprocess, so -Werror is only
-    # for errors at import time (particularly, string escape deprecation
-    # warnings). See #12028.
-    cat << EOF | python -Werror
+    # -We:invalid makes invalid escape sequences error in Python 3.6. See
+    # -#12028.
+    cat << EOF | python -We:invalid
 print('Testing DOCTESTS')
 import sympy
 if not sympy.doctest():
@@ -120,10 +119,9 @@ EOF
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
-    # Note that tests themselves are run in a subprocess, so -Werror is only
-    # for errors at import time (particularly, string escape deprecation
-    # warnings). See #12028.
-    cat << EOF | python -Werror
+    # -We:invalid makes invalid escape sequences error in Python 3.6. See
+    # -#12028.
+    cat << EOF | python -We:invalid
 print('Testing SYMPY, split ${SPLIT}')
 import sympy
 if not sympy.test(split='${SPLIT}'):
