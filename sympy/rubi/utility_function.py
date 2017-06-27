@@ -15,6 +15,7 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy import exp, polylog, N, Wild, factor, gcd, Sum
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
+
 def Int(expr, var):
     from .rubi import rubi_integrate
     if expr == None:
@@ -937,12 +938,211 @@ def MatchQ(expr, pattern, *var):
 def PolynomialQuotientRemainder(p, q, x):
     return [quo(p, q), rem(p, q)]
 
+def FreeFactors(u, x):
+    # returns the product of the factors of u free of x.
+    if ProductQ(u):
+        result = 1
+        for i in u.args:
+            if FreeQ(i, x):
+                result *= i
+        return result
+    elif FreeQ(u, x):
+        return u
+    else:
+        return 1
+
+def NonfreeFactors(u, x):
+    # returns the product of the factors of u not free of x.
+    if ProductQ(u):
+        result = 1
+        for i in u.args:
+            if not FreeQ(i, x):
+                result *= i
+        return result
+    elif FreeQ(u, x):
+        return 1
+    else:
+        return u
+
+def RemoveContentAux(expr, x):
+    if SumQ(expr):
+        w_ = Wild('w')
+        p_ = Wild('p')
+        n_ = Wild('n', exclude=[x])
+        m_ = Wild('m', exclude=[x])
+        u_ = Wild('u')
+        v_ = Wild('v')
+        b_ = Wild('b', exclude=[x])
+        a_ = Wild('a', exclude=[x])
+
+        pattern = a_**m_*u_ + b_*v_
+        match = expr.match(pattern)
+        if match:
+            keys = [a_, m_, u_, b_, v_]
+            a, m, u, b, v = tuple([match[i] for i in keys])
+            if IntegersQ(a, b) & (a + b == 0) & RationalQ(m):
+                if m > 0:
+                    return RemoveContentAux(a**(m - 1)*u - v, x)
+                else:
+                    return RemoveContentAux(u - a**(1 - m)*v, x)
+
+        pattern = a_**m_*u_ + a_**n_*v_
+        match = expr.match(pattern)
+        if match:
+            keys = [a_, m_, u_, n_, v_]
+            a, m, u, n, v = tuple([match[i] for i in keys])
+            if FreeQ(a, x) & RationalQ(m, n) & (n - m >= 0) & (m != 0):
+                return RemoveContentAux(u + a**(n - m)*v, x)
+
+        '''
+        pattern = a_**m_*u_ + a_**n_*v_ + a_**p_*w_
+        match = expr.match(pattern)
+        if match:
+            keys = [a_, m_, u_, n_, v_, p_, w_]
+            a, m, u, n, v, p, w = tuple([match[i] for i in keys])
+            if RationalQ(m, n, p) & (n - m >= 0) & (p - m >= 0):
+                return RemoveContentAux(u + a**(n - m)*v + a**(p - m)*w, x)
+
+
+        if NegQ(First(expr)):
+            return -expr
+        '''
+
+    return expr
+
+
 def RemoveContent(u, x):
-    # returns u with the content free of x removed.
-    return None
+    v = NonfreeFactors(u, x)
+    w = Together(v)
+
+    if EqQ(FreeFactors(w, x), 1):
+        return RemoveContentAux(v, x)
+    else:
+        return RemoveContentAux(NonfreeFactors(w, x), x)
+
+
+def FreeTerms(u, x):
+    # returns the sum of the terms of u free of x.
+    if SumQ(u):
+        result = 0
+        for i in u.args:
+            if FreeQ(i, x):
+                result += i
+        return result
+    elif FreeQ(u, x):
+        return u
+    else:
+        return 0
+
+def NonfreeTerms(u, x):
+    # returns the sum of the terms of u free of x.
+    if SumQ(u):
+        result = 0
+        for i in u.args:
+            if not FreeQ(i, x):
+                result += i
+        return result
+    elif not FreeQ(u, x):
+        return u
+    else:
+        return 0
+
+
+def ExpandAlgebraicFunction(expr, x):
+    if ProductQ(expr):
+        u_ = Wild('u', exclude=[x])
+        n_ = Wild('n', exclude=[x])
+        v_ = Wild('v')
+        pattern = u_*v_
+        match = expr.match(pattern)
+        if match:
+            keys = [u_, v_]
+            u, v = tuple([match[i] for i in keys])
+            if SumQ(v):
+                u, v = v, u
+            if not FreeQ(u, x) and SumQ(u):
+                result = 0
+                for i in u.args:
+                    result += i*v
+                return result
+
+        pattern = u_**n_*v_
+        match = expr.match(pattern)
+        if match:
+            keys = [u_, n_, v_]
+            u, n, v = tuple([match[i] for i in keys])
+            if PositiveIntegerQ(n) and SumQ(u):
+                w = Expand(u**n)
+                result = 0
+                for i in w.args:
+                    result += i*v
+                return result
+
+    return expr
+
+def CollectReciprocals(expr, x):
+    # Basis: e/(a+b x)+f/(c+d x)==(c e+a f+(d e+b f) x)/(a c+(b c+a d) x+b d x^2)
+    if SumQ(expr):
+        u_ = Wild('u')
+        a_ = Wild('a', exclude=[x])
+        b_ = Wild('b', exclude=[x])
+        c_ = Wild('c', exclude=[x])
+        d_ = Wild('d', exclude=[x])
+        e_ = Wild('e', exclude=[x])
+        f_ = Wild('f', exclude=[x])
+        pattern = u_ + e_/(a_ + b_*x) + f_/(c_+d_*x)
+        match = expr.match(pattern)
+        if match:
+            try: # .match() does not work peoperly always
+                keys = [u_, a_, b_, c_, d_, e_, f_]
+                u, a, b, c, d, e, f = tuple([match[i] for i in keys])
+                if ZeroQ(b*c + a*d) & ZeroQ(d*e + b*f):
+                    return CollectReciprocals(u + (c*e + a*f)/(a*c + b*d*x**2),x)
+                elif ZeroQ(b*c + a*d) & ZeroQ(c*e + a*f):
+                    return CollectReciprocals(u + (d*e + b*f)*x/(a*c + b*d*x**2),x)
+            except:
+                pass
+    return expr
+
+def UnifySum(term, x):
+    # returns u with terms having indentical nonfree factors of x collected into a single term.
+    return term
+
+def ExpandCleanup(u, x):
+    v = CollectReciprocals(u, x)
+    if SumQ(v):
+        res = 0
+        for i in v.args:
+            res += SimplifyTerm(i, x)
+        v = res
+        if SumQ(v):
+            return UnifySum(v, x)
+        else:
+            return v
+    else:
+        return v
+
+def AlgebraicFunctionQ(u, x, flag=False):
+    if ListQ(u):
+        if u == []:
+            return True
+        elif AlgebraicFunctionQ(First(u), x, flag):
+            return AlgebraicFunctionQ(Rest(u), x, flag)
+        else:
+            return False
+    elif AtomQ(u) or FreeQ(u, x):
+        return True
+    elif PowerQ(u):
+        if RationalQ(u.args[1]) | flag & FreeQ(u.args[1], x):
+            return AlgebraicFunctionQ(u.args[1], x, flag)
+    elif ProductQ(u) | SumQ(u):
+        for i in u.args:
+            if not AlgebraicFunctionQ(i, x, flag):
+                return False
+        return True
+    return False
 
 def ExpandIntegrand(expr, x):
-
     w_ = Wild('w')
     p_ = Wild('p')
     u_ = Wild('u')
