@@ -522,7 +522,7 @@ class Max(MinMaxBase, Application):
     3
     >>> Max(p, -2)
     p
-    >>> Max(x, y)                   #doctest: +SKIP
+    >>> Max(x, y)
     Max(x, y)
     >>> Max(x, y) == Max(y, x)
     True

@@ -50,6 +50,7 @@ from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
 from sympy.core.compatibility import range
 from itertools import islice, takewhile
+from sympy.series.fourier import fourier_series
 
 
 R = Rational
@@ -1268,12 +1269,13 @@ def test_O3():
     assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
 
 def test_O4():
-    from sympy.vector import CoordSysCartesian
+    from sympy.vector import CoordSysCartesian, Del
     N = CoordSysCartesian("N")
+    delop = Del()
     i, j, k = N.base_vectors()
     x, y, z = N.base_scalars()
     F = i*(x*y*z) + j*((x*y*z)**2) + k*((y**2)*(z**3))
-    assert N.delop.cross(F).doit() == (-2*x**2*y**2*z + 2*y*z**3)*i + x*y*j + (2*x*y**2*z**2 - x*z)*k
+    assert delop.cross(F).doit() == (-2*x**2*y**2*z + 2*y*z**3)*i + x*y*j + (2*x*y**2*z**2 - x*z)*k
 
 # The vector module has no way of representing vectors symbolically (without
 # respect to a basis)
@@ -1424,7 +1426,7 @@ def test_P13():
     M = Matrix([[1,     x - 2,                         x - 3],
                 [x - 1, x**2 - 3*x + 6,       x**2 - 3*x - 2],
                 [x - 2, x**2 - 8,       2*(x**2) - 12*x + 14]])
-    L, U, _ = M.LUdecomposition()
+    L, U, _ = M.LU_decomposition()
     assert simplify(L) == Matrix([[1,     0,     0],
                                   [x - 1, 1,     0],
                                   [x - 2, x - 3, 1]])
@@ -1578,7 +1580,7 @@ def test_P26():
                 [  0,   0,   0,   0,   0,  1,  0,  0,  0],
                 [  0,   0,   0,   0,   0,  0,  1, -1, -1],
                 [  0,   0,   0,   0,   0,  0,  0,  1,  0]])
-    assert M.eigenvals() == {
+    assert M.eigenvals(error_when_incomplete=False) == {
         S('-1/2 - sqrt(3)*I/2'): 2,
         S('-1/2 + sqrt(3)*I/2'): 2}
 
@@ -2819,37 +2821,22 @@ def test_X20():
     raise NotImplementedError("Symbolic Pade approximant not supported")
 
 
-@XFAIL
 def test_X21():
-    # (c48) /* Fourier series of f(x) of period 2 p over the interval [-p, p]
-    #    => - (2 p / pi) sum( (-1)^n sin(n pi x / p) / n, n = 1..infinity ) */
-    # assume(p > 0)$
-    # Time= 0 msecs
-    #
-    # (c49) fourier_series(x, x, p);
-    # /aquarius/data2/opt/local/macsyma_422/share/fourier.so being loaded.
-    # (e49)                      a  = 0
-    #                       0
-    #
-    # (e50)                     a    = 0
-    #                      %nn
-    #
-    #                          %nn
-    #                       2 (- 1)    p
-    # (e51)                  b      = - ------------
-    #                   %nn       %pi %nn
-    #
-    # Time= 4540 msecs
-    #                inf            %nn     %pi %nn x
-    #                ====       (- 1)    sin(---------)
-    #                \                p
-    #                2 p  >       -----------------------
-    #                /             %nn
-    #                ====
-    #                %nn = 1
-    # (d51)              - -----------------------------------
-    #                        %pi
-    raise NotImplementedError("Fourier series not supported")
+    """
+    Test whether `fourier_series` of x periodical on the [-p, p] interval equals
+    `- (2 p / pi) sum( (-1)^n / n sin(n pi x / p), n = 1..infinity )`.
+    """
+    p = symbols('p', positive=True)
+    n = symbols('n', positive=True, integer=True)
+    s = fourier_series(x, (x, -p, p))
+
+    # All cosine coefficients are equal to 0
+    assert s.an.formula == 0
+
+    # Check for sine coefficients
+    assert s.bn.formula.subs(s.bn.variables[0], 0) == 0
+    assert s.bn.formula.subs(s.bn.variables[0], n) == \
+        -2*p/pi * (-1)**n / n * sin(n*pi*x/p)
 
 
 @XFAIL

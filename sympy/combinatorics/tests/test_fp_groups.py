@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sympy import S
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
         coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
 from sympy.combinatorics.free_groups import free_group
@@ -808,6 +809,9 @@ def test_subgroup_presentations():
     p1 = reidemeister_presentation(f, H)
     assert str(p1) == "((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))"
 
+    H = f.subgroup(H)
+    assert (H.generators, H.relators) == p1
+
     f = FpGroup(F, [x**3, y**3, (x*y)**3])
     H = [x*y, x*y**-1]
     p2 = reidemeister_presentation(f, H)
@@ -830,21 +834,20 @@ def test_subgroup_presentations():
     F, a, b, c = free_group("a, b, c")
     f = FpGroup(F, [a**11, b**5, c**4, (b*c**2)**2, (a*b*c)**3, (a**4*c**2)**3, b**2*c**-1*b**-1*c, a**4*b**-1*a**-1*b])
     H = [a, b, c**2]
-    k = ("((a_0, b_1, c_3), "
-        "(c_3**3, b_1**5, a_0**4*b_1**-2*a_0**-1*b_1**2, "
-        "c_3*b_1**-2*c_3*b_1**-2*c_3*b_1**-2, b_1**-1*a_0*b_1**2*c_3**-1*b_1**-1*a_0*b_1**2*c_3**-1, "
-        "a_0**11, a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**2*c_3, "
-        "a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1, "
-        "a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1, "
-        "a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
-        "b_1**-2*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**2*c_3**-1*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2, "
-        "b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**2*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
-        "b_1**2*c_3*b_1**-2*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2*c_3**-1*b_1*c_3, "
-        "b_1**2*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**-2*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
-        "c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
-        "c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2, "
-        "b_1**2*a_0*b_1**2*c_3**-1*b_1**-1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2*c_3**-1*b_1**2*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1, "
-        "c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0, "
-        "a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1))"
-        )
-    assert str(reidemeister_presentation(f, H)) == k
+    gens, rels = reidemeister_presentation(f, H)
+    assert str(gens) == "(b_1, c_3)"
+    assert len(rels) == 18
+
+
+def test_order():
+    from sympy import S
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    assert f.order() == 8
+
+    f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
+    assert f.order() == S.Infinity
+
+    F, a, b, c = free_group("a, b, c")
+    f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
+    assert f.order() == 2000

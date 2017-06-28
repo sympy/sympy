@@ -10,6 +10,12 @@ from sympy.core.compatibility import get_function_name, range
 
 
 
+class Undecidable(ValueError):
+    # an error to be raised when a decision cannot be made definitively
+    # where a definitive answer is needed
+    pass
+
+
 def filldedent(s, w=70):
     """
     Strips leading and trailing empty lines from a copy of `s`, then dedents,
@@ -224,7 +230,10 @@ def func_name(x):
     ========
     sympy.core.compatibility get_function_name
     '''
-    return getattr(getattr(x, 'func', x), '__name__', type(x))
+    typ = type(x)
+    if str(typ).startswith("<type '"):
+        typ = str(typ).split("'")[1].split("'")[0]
+    return getattr(getattr(x, 'func', x), '__name__', typ)
 
 
 def _replace(reps):

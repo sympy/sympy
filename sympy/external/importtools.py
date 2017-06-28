@@ -1,8 +1,8 @@
 """Tools to assist importing optional external modules."""
 
 from __future__ import print_function, division
-
 import sys
+from distutils.version import StrictVersion
 
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
@@ -154,10 +154,14 @@ def import_module(module, min_module_version=None, min_python_version=None,
         modversion = getattr(mod, module_version_attr)
         if module_version_attr_call_args is not None:
             modversion = modversion(*module_version_attr_call_args)
-        if modversion < min_module_version:
+        # NOTE: StrictVersion() is use here to make sure a comparison like
+        # '1.11.2' < '1.6.1' doesn't fail. There is not a straight forward way
+        # to create a unit test for this.
+        if StrictVersion(modversion) < StrictVersion(min_module_version):
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
-                if isinstance(min_module_version, basestring):
+                from ..core.compatibility import string_types
+                if isinstance(min_module_version, string_types):
                     verstr = min_module_version
                 elif isinstance(min_module_version, (tuple, list)):
                     verstr = '.'.join(map(str, min_module_version))

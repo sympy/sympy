@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import Symbol, pi, symbols, Tuple, S
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 
 def test_curve():
@@ -48,6 +48,7 @@ def test_curve():
     raises(ValueError, lambda: Curve((s, s + t), (t, 1, 2)).arbitrary_point(s))
 
 
+@slow
 def test_free_symbols():
     a, b, c, d, e, f, s = symbols('a:f,s')
     assert Point(a, b).free_symbols == {a, b}

@@ -1,4 +1,5 @@
-from sympy import symbols, Matrix, atan, simplify, zeros
+from sympy.core.backend import symbols, Matrix, atan, zeros
+from sympy import simplify
 from sympy.physics.mechanics import (dynamicsymbols, Particle, Point,
                                      ReferenceFrame, SymbolicSystem)
 from sympy.utilities.pytest import raises

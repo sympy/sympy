@@ -91,7 +91,7 @@ class LambdaPrinter(StrPrinter):
 class TensorflowPrinter(LambdaPrinter):
     """
     Tensorflow printer which handles vectorized piecewise functions,
-    logical operators, etc.
+    logical operators, max/min, and relational operators.
     """
 
     def _print_And(self, expr):
@@ -252,6 +252,33 @@ class NumPyPrinter(LambdaPrinter):
     def _print_Max(self, expr):
         return '{0}(({1}))'.format('amax', ','.join(self._print(i) for i in expr.args))
 
+    def _print_Pow(self, expr):
+        if expr.exp == 0.5:
+            return '{0}({1})'.format('sqrt', self._print(expr.base))
+        else:
+            return super(NumPyPrinter, self)._print_Pow(expr)
+
+    def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
+        return 'log10({0})'.format(self._print(expr.args[0]))
+
+    def _print_Sqrt(self, expr):
+        return 'sqrt({0})'.format(self._print(expr.args[0]))
+
+    def _print_hypot(self, expr):
+        return 'hypot({0}, {1})'.format(*map(self._print, expr.args))
+
+    def _print_expm1(self, expr):
+        return 'expm1({0})'.format(self._print(expr.args[0]))
+
+    def _print_log1p(self, expr):
+        return 'log1p({0})'.format(self._print(expr.args[0]))
+
+    def _print_exp2(self, expr):
+        return 'exp2({0})'.format(self._print(expr.args[0]))
+
+    def _print_log2(self, expr):
+        return 'log2({0})'.format(self._print(expr.args[0]))
+
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
@@ -334,6 +361,25 @@ class NumExprPrinter(LambdaPrinter):
     def doprint(self, expr):
         lstr = super(NumExprPrinter, self).doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
+
+class MpmathPrinter(LambdaPrinter):
+    """
+    Lambda printer for mpmath which maintains precision for floats
+    """
+    def _print_Float(self, e):
+        # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
+        # the caller of the lambdified function will have set it to sufficient
+        # precision to match the Floats in the expression.
+
+        # Remove 'mpz' if gmpy is installed.
+        args = str(tuple(map(int, e._mpf_)))
+        return 'mpf(%s)' % args
+
+    def _print_uppergamma(self,e): #printer for the uppergamma function
+        return "gammainc({0}, {1}, inf)".format(self._print(e.args[0]), self._print(e.args[1]))
+
+    def _print_lowergamma(self,e): #printer for the lowergamma functioin
+        return "gammainc({0}, 0, {1})".format(self._print(e.args[0]), self._print(e.args[1]))
 
 def lambdarepr(expr, **settings):
     """

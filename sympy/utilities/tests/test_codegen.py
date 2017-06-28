@@ -1,11 +1,14 @@
+import warnings
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
 from sympy import erf, Integral
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
-            InputArgument, CodeGenError, FCodeGen, CodeGenArgumentListError,
-            OutputArgument, InOutArgument)
+from sympy.utilities.codegen import (
+    codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
+    CodeGenError, FCodeGen, CodeGenArgumentListError, OutputArgument,
+    InOutArgument)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
@@ -56,13 +59,15 @@ def test_Routine_argument_order():
 
 
 def test_empty_c_code():
-    code_gen = CCodeGen()
-    source = get_string(code_gen.dump_c, [])
-    assert source == "#include \"file.h\"\n#include <math.h>\n"
+    code_gen = C89CodeGen()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        source = get_string(code_gen.dump_c, [])
+        assert source == "#include \"file.h\"\n#include <math.h>\n"
 
 
 def test_empty_c_code_with_comment():
-    code_gen = CCodeGen()
+    code_gen = C89CodeGen()
     source = get_string(code_gen.dump_c, [], header=True)
     assert source[:82] == (
         "/******************************************************************************\n *"
@@ -80,7 +85,7 @@ def test_empty_c_code_with_comment():
 
 
 def test_empty_c_header():
-    code_gen = CCodeGen()
+    code_gen = C99CodeGen()
     source = get_string(code_gen.dump_h, [])
     assert source == "#ifndef PROJECT__FILE__H\n#define PROJECT__FILE__H\n#endif\n"
 
@@ -89,7 +94,7 @@ def test_simple_c_code():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     routine = make_routine("test", expr)
-    code_gen = CCodeGen()
+    code_gen = C89CodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
         "#include \"file.h\"\n"
@@ -107,7 +112,7 @@ def test_c_code_reserved_words():
     x, y, z = symbols('if, typedef, while')
     expr = (x + y) * z
     routine = make_routine("test", expr)
-    code_gen = CCodeGen()
+    code_gen = C99CodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
         "#include \"file.h\"\n"
@@ -123,7 +128,7 @@ def test_c_code_reserved_words():
 
 def test_numbersymbol_c_code():
     routine = make_routine("test", pi**Catalan)
-    code_gen = CCodeGen()
+    code_gen = C89CodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
         "#include \"file.h\"\n"
@@ -142,7 +147,7 @@ def test_c_code_argument_order():
     x, y, z = symbols('x,y,z')
     expr = x + y
     routine = make_routine("test", expr, argument_sequence=[z, x, y])
-    code_gen = CCodeGen()
+    code_gen = C89CodeGen()
     source = get_string(code_gen.dump_c, [routine])
     expected = (
         "#include \"file.h\"\n"
@@ -160,7 +165,7 @@ def test_simple_c_header():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     routine = make_routine("test", expr)
-    code_gen = CCodeGen()
+    code_gen = C89CodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
         "#ifndef PROJECT__FILE__H\n"
@@ -174,7 +179,6 @@ def test_simple_c_header():
 def test_simple_c_codegen():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    result = codegen(("test", expr), "C", "file", header=False, empty=False)
     expected = [
         ("file.c",
         "#include \"file.h\"\n"
@@ -190,7 +194,10 @@ def test_simple_c_codegen():
         "double test(double x, double y, double z);\n"
         "#endif\n")
     ]
-    assert result == expected
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        result = codegen(("test", expr), "C", "file", header=False, empty=False)
+        assert result == expected
 
 
 def test_multiple_results_c():
@@ -201,7 +208,7 @@ def test_multiple_results_c():
         "test",
         [expr1, expr2]
     )
-    code_gen = CCodeGen()
+    code_gen = C99CodeGen()
     raises(CodeGenError, lambda: get_string(code_gen.dump_h, [routine]))
 
 
@@ -231,7 +238,7 @@ def test_ansi_math1_codegen():
         ("test_tan", tan(x)),
         ("test_tanh", tanh(x)),
     ]
-    result = codegen(name_expr, "C", "file", header=False, empty=False)
+    result = codegen(name_expr, "C89", "file", header=False, empty=False)
     assert result[0][0] == "file.c"
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
@@ -273,7 +280,7 @@ def test_ansi_math2_codegen():
         ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
     ]
-    result = codegen(name_expr, "C", "file", header=False, empty=False)
+    result = codegen(name_expr, "C89", "file", header=False, empty=False)
     assert result[0][0] == "file.c"
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
@@ -296,7 +303,7 @@ def test_complicated_codegen():
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),
     ]
-    result = codegen(name_expr, "C", "file", header=False, empty=False)
+    result = codegen(name_expr, "C89", "file", header=False, empty=False)
     assert result[0][0] == "file.c"
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
@@ -368,7 +375,7 @@ def test_loops_c():
     j = Idx('j', n)
 
     (f1, code), (f2, interface) = codegen(
-        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C99", "file", header=False, empty=False)
 
     assert f1 == 'file.c'
     expected = (
@@ -415,10 +422,12 @@ def test_dummy_loops_c():
         '}\n'
     ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
     r = make_routine('test_dummies', Eq(y[i], x[i]))
-    c = CCodeGen()
-    code = get_string(c.dump_c, [r])
+    c89 = C89CodeGen()
+    c99 = C99CodeGen()
+    code = get_string(c99.dump_c, [r])
     assert code == expected
-
+    with raises(NotImplementedError):
+        get_string(c89.dump_c, [r])
 
 def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
@@ -433,7 +442,7 @@ def test_partial_loops_c():
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
     (f1, code), (f2, interface) = codegen(
-        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C99", "file", header=False, empty=False)
 
     assert f1 == 'file.c'
     expected = (
@@ -468,7 +477,7 @@ def test_output_arg_c():
     from sympy import sin, cos, Equality
     x, y, z = symbols("x,y,z")
     r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
-    c = CCodeGen()
+    c = C89CodeGen()
     result = c.write([r], "test", header=False, empty=False)
     assert result[0][0] == "test.c"
     expected = (
@@ -488,7 +497,7 @@ def test_output_arg_c_reserved_words():
     from sympy import sin, cos, Equality
     x, y, z = symbols("if, while, z")
     r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
-    c = CCodeGen()
+    c = C89CodeGen()
     result = c.write([r], "test", header=False, empty=False)
     assert result[0][0] == "test.c"
     expected = (
@@ -512,9 +521,6 @@ def test_ccode_results_named_ordered():
     expr2 = Equality(C, (x + y)*z)
     expr3 = Equality(B, 2*x)
     name_expr = ("test", [expr1, expr2, expr3])
-    result = codegen(name_expr, "c", "test", header=False, empty=False,
-                     argument_sequence=(x, C, z, y, A, B))
-    source = result[0][1]
     expected = (
         '#include "test.h"\n'
         '#include <math.h>\n'
@@ -526,7 +532,13 @@ def test_ccode_results_named_ordered():
         '   (*B) = 2*x;\n'
         '}\n'
     )
-    assert source == expected
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+
+        result = codegen(name_expr, "c", "test", header=False, empty=False,
+                         argument_sequence=(x, C, z, y, A, B))
+        source = result[0][1]
+        assert source == expected
 
 
 def test_ccode_matrixsymbol_slice():
@@ -537,7 +549,7 @@ def test_ccode_matrixsymbol_slice():
     name_expr = ("test", [Equality(B, A[0, :]),
                           Equality(C, A[1, :]),
                           Equality(D, A[:, 2])])
-    result = codegen(name_expr, "c", "test", header=False, empty=False)
+    result = codegen(name_expr, "c99", "test", header=False, empty=False)
     source = result[0][1]
     expected = (
         '#include "test.h"\n'
@@ -739,7 +751,7 @@ def test_intrinsic_math_codegen():
         'REAL*8 function test_abs(x)\n'
         'implicit none\n'
         'REAL*8, intent(in) :: x\n'
-        'test_abs = Abs(x)\n'
+        'test_abs = abs(x)\n'
         'end function\n'
         'REAL*8 function test_acos(x)\n'
         'implicit none\n'
@@ -1284,8 +1296,8 @@ def test_c_fortran_omit_routine_name():
     assert result[0][1] == expresult[0][1]
 
     name_expr = ("foo", Matrix([[x, y], [x+y, x-y]]))
-    result = codegen(name_expr, "C", header=False, empty=False)
-    expresult = codegen(name_expr, "C", "foo", header=False, empty=False)
+    result = codegen(name_expr, "C89", header=False, empty=False)
+    expresult = codegen(name_expr, "C89", "foo", header=False, empty=False)
     assert result[0][1] == expresult[0][1]
 
 
@@ -1414,9 +1426,6 @@ def test_global_vars():
         )
     assert source == expected
 
-    result = codegen(('f', x*y+z), "C", header=False, empty=False,
-                     global_vars=(z, t))
-    source = result[0][1]
     expected = (
         '#include "f.h"\n'
         '#include <math.h>\n'
@@ -1426,4 +1435,9 @@ def test_global_vars():
         '   return f_result;\n'
         '}\n'
     )
-    assert source == expected
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        result = codegen(('f', x*y+z), "C", header=False, empty=False,
+                         global_vars=(z, t))
+        source = result[0][1]
+        assert source == expected

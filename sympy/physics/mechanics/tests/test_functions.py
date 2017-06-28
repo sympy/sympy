@@ -1,4 +1,4 @@
-from sympy import sin, cos, tan, pi, symbols, Matrix
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody, Vector)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
@@ -88,9 +88,9 @@ def test_angular_momentum_and_linear_momentum():
     Pa = Particle('Pa', P, m)
     A = RigidBody('A', Ac, a, M, (I * outer(N.z, N.z), Ac))
     expected = 2 * m * omega * l * N.y + M * l * omega * N.y
-    assert (linear_momentum(N, A, Pa) - expected) == Vector(0)
+    assert linear_momentum(N, A, Pa) == expected
     expected = (I + M * l**2 + 4 * m * l**2) * omega * N.z
-    assert (angular_momentum(O, N, A, Pa) - expected).simplify() == Vector(0)
+    assert angular_momentum(O, N, A, Pa) == expected
 
 
 def test_kinetic_energy():
@@ -108,8 +108,8 @@ def test_kinetic_energy():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert 0 == kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
-            + 2*l1**2*m*omega**2 + omega**2/2)
+    assert 0 == (kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
+            + 2*l1**2*m*omega**2 + omega**2/2)).expand()
 
 
 def test_potential_energy():

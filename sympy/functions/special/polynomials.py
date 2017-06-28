@@ -935,7 +935,7 @@ class hermite(OrthogonalPolynomial):
     hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
 
     The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`
-    with respect to the weight :math:`\exp\left(-\frac{x^2}{2}\right)`.
+    with respect to the weight :math:`\exp\left(-x^2\right)`.
 
     Examples
     ========
@@ -1077,6 +1077,8 @@ class laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
+    _ortho_poly = staticmethod(laguerre_poly)
+
     @classmethod
     def eval(cls, n, x):
         if not n.is_Number:
@@ -1098,7 +1100,7 @@ class laguerre(OrthogonalPolynomial):
                 raise ValueError(
                     "The index n must be nonnegative integer (got %r)" % n)
             else:
-                return laguerre_poly(n, x, 0)
+                return cls._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:

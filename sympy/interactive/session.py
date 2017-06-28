@@ -429,9 +429,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip = init_python_session()
         mainloop = ip.interact
     else:
-        if ip is None:
-            ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-                auto_int_to_Integer=auto_int_to_Integer)
+        ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
+            auto_int_to_Integer=auto_int_to_Integer)
 
         if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't

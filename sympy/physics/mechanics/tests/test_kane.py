@@ -1,7 +1,8 @@
 import warnings
 
-from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
-                   simplify, zeros)
+from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
+                                zeros)
+from sympy import simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
@@ -195,7 +196,8 @@ def test_rolling_disc():
     # is 1 / sqrt(3) for the upright case.
     A = KM.linearize(A_and_B=True, new_method=True)[0]
     A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
-    assert A_upright.subs(u2, 1 / sqrt(3)).eigenvals() == {S(0): 6}
+    import sympy
+    assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S(0): 6}
 
 
 def test_aux():

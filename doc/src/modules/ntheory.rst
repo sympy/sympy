@@ -133,6 +133,8 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
+.. autofunction:: discrete_log
+
 .. automodule:: sympy.ntheory.continued_fraction
     :members:
 

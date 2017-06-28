@@ -1,12 +1,13 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-    simplify, together, collect, factorial, apart, combsimp, factor, refine,
-    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, expand, diff, O, Heaviside, Si, Max)
+                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
+                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
+                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
+                   integrate)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -634,6 +635,7 @@ def test_as_independent():
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
     eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
+    assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
 @XFAIL
 def test_call_2():
@@ -1010,6 +1012,12 @@ def test_extractions():
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
     assert x.extract_multiplicatively(-x) is None
+    assert (-2 - 4*I).extract_multiplicatively(-2) == 1 + 2*I
+    assert (-2 - 4*I).extract_multiplicatively(3) is None
+    assert (-2*x - 4*y - 8).extract_multiplicatively(-2) == x + 2*y + 4
+    assert (-2*x*y - 4*x**2*y).extract_multiplicatively(-2*y) == 2*x**2 + x
+    assert (2*x*y + 4*x**2*y).extract_multiplicatively(2*y) == 2*x**2 + x
+    assert (-4*y**2*x).extract_multiplicatively(-3*y) is None
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
@@ -1146,6 +1154,7 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
+    assert (x*y).coeff(z, 0) == x*y
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1435,15 +1444,18 @@ def test_sort_key_atomic_expr():
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 
-def test_issue_4199():
+def test_eval_interval():
+    assert exp(x)._eval_interval(*Tuple(x, 0, 1)) == exp(1) - exp(0)
+
+    # issue 4199
     # first subs and limit gives NaN
     a = x/y
-    assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) is S.NaN
+    assert a._eval_interval(x, S(0), oo)._eval_interval(y, oo, S(0)) is S.NaN
     # second subs and limit gives NaN
-    assert a._eval_interval(x, 0, oo)._eval_interval(y, 0, oo) is S.NaN
+    assert a._eval_interval(x, S(0), oo)._eval_interval(y, S(0), oo) is S.NaN
     # difference gives S.NaN
     a = x - y
-    assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
+    assert a._eval_interval(x, S(1), oo)._eval_interval(y, oo, S(1)) is S.NaN
     raises(ValueError, lambda: x._eval_interval(x, None, None))
     a = -y*Heaviside(x - y)
     assert a._eval_interval(x, -oo, oo) == -y
@@ -1452,7 +1464,7 @@ def test_issue_4199():
 
 def test_eval_interval_zoo():
     # Test that limit is used when zoo is returned
-    assert Si(1/x)._eval_interval(x, 0, 1) == -pi/2 + Si(1)
+    assert Si(1/x)._eval_interval(x, S(0), S(1)) == -pi/2 + Si(1)
 
 
 def test_primitive():
@@ -1683,6 +1695,28 @@ def test_round():
     assert S.ComplexInfinity.round() == S.ComplexInfinity
 
 
+def test_held_expression_UnevaluatedExpr():
+    x = symbols("x")
+    he = UnevaluatedExpr(1/x)
+    e1 = x*he
+
+    assert isinstance(e1, Mul)
+    assert e1.args == (x, he)
+    assert e1.doit() == 1
+
+    xx = Mul(x, x, evaluate=False)
+    assert xx != x**2
+
+    ue2 = UnevaluatedExpr(xx)
+    assert isinstance(ue2, UnevaluatedExpr)
+    assert ue2.args == (xx,)
+    assert ue2.doit() == x**2
+    assert ue2.doit(deep=False) == xx
+
+    x2 = UnevaluatedExpr(2)*2
+    assert type(x2) is Mul
+    assert x2.args == (2, UnevaluatedExpr(2))
+
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
     # it's too slow
@@ -1734,6 +1768,7 @@ def test_issue_1112():
     x = Symbol('x', positive=False)
     assert (x > 0) is S.false
 
+
 def test_issue_10161():
     x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
@@ -1743,3 +1778,14 @@ def test_issue_10755():
     x = symbols('x')
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
+
+
+def test_issue_11877():
+    x = symbols('x')
+    assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
+
+
+def test_normal():
+    x = symbols('x')
+    e = Mul(S.Half, 1 + x, evaluate=False)
+    assert e.normal() == e

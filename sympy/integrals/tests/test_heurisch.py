@@ -231,6 +231,10 @@ def test_pmint_trig():
 
 @slow # 8 seconds on 3.4 GHz
 def test_pmint_logexp():
+    if ON_TRAVIS:
+        # See https://github.com/sympy/sympy/pull/12795
+        skip("Too slow for travis.")
+
     f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
     g = log(x + exp(x) + log(x)) + 1/(x + exp(x) + log(x))
 

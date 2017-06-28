@@ -11,7 +11,7 @@ Most of the things are already documented though in this document, that is
 automatically generated using SymPy's docstrings.
 
 Click the  "modules" (:ref:`modindex`) link in the top right corner to easily
-access any SymPy module, or use this contens:
+access any SymPy module, or use the list below:
 
 .. toctree::
    :maxdepth: 2
@@ -26,6 +26,7 @@ access any SymPy module, or use this contens:
    numeric-computation.rst
    functions/index.rst
    geometry/index.rst
+   holonomic/index.rst
    integrals/integrals.rst
    liealgebras/index.rst
    logic.rst

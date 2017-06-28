@@ -27,6 +27,11 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     ./bin/test -k tensorflow
 fi
 
+if [[ "${TEST_SYMENGINE}" == "true" ]]; then
+    echo "Testing SYMENGINE"
+    export USE_SYMENGINE=1
+fi
+
 # We change directories to make sure that we test the installed version of
 # sympy.
 mkdir empty
@@ -60,7 +65,7 @@ if [[ "${TEST_SLOW}" == "true" ]]; then
     cat << EOF | python
 print('Testing SLOW')
 import sympy
-if not sympy.test(split='${SPLIT}', slow=True):
+if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
     # Travis times out if no activity is seen for 10 minutes. It also times
     # out if the whole tests run for more than 50 minutes.
     raise Exception('Tests failed')
@@ -117,5 +122,15 @@ print('Testing SYMPY, split ${SPLIT}')
 import sympy
 if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
+EOF
+fi
+
+
+if [[ "${TEST_SYMENGINE}" == "true" ]]; then
+    cat << EOF | python
+print('Testing SymEngine')
+import sympy
+if not sympy.test('sympy/physics/mechanics'):
+    raise Exception('Tests failed')
 EOF
 fi

@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 __all__ = ['RigidBody']
 
-from sympy import sympify
+from sympy.core.backend import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 

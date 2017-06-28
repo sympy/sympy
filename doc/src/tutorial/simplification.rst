@@ -605,7 +605,7 @@ represents `\Gamma(z) = \int_0^\infty t^{z - 1}e^{-t}\,dt`, which for positive i
 The `generalized hypergeometric function
 <http://en.wikipedia.org/wiki/Generalized_hypergeometric_function>`_ is
 ``hyper``.  ``hyper([a_1, ..., a_p], [b_1, ..., b_q], z)`` represents
-`{}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+`{}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
 \middle| z \right)`.  The most common case is `{}_2F_1`, which is often
 referred to as the `ordinary hypergeometric function
 <http://en.wikipedia.org/wiki/Hypergeometric_function>`_.

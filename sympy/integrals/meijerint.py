@@ -343,13 +343,13 @@ def _exponents(expr, x):
     >>> from sympy.abc import x, y
     >>> from sympy import sin
     >>> _exponents(x, x)
-    set([1])
+    {1}
     >>> _exponents(x**2, x)
-    set([2])
+    {2}
     >>> _exponents(x**2 + x, x)
-    set([1, 2])
+    {1, 2}
     >>> _exponents(x**3*sin(x + x**y) + 1/x, x)
-    set([-1, 1, 3, y])
+    {-1, 1, 3, y}
     """
     def _exponents_(expr, x, res):
         if expr == x:
@@ -380,11 +380,11 @@ def _find_splitting_points(expr, x):
     >>> from sympy import sin
     >>> from sympy.abc import a, x
     >>> fsp(x, x)
-    set([0])
+    {0}
     >>> fsp((x-1)**3, x)
-    set([1])
+    {1}
     >>> fsp(sin(x+3)*x, x)
-    set([-3, 0])
+    {-3, 0}
     """
     p, q = [Wild(n, exclude=[x]) for n in 'pq']
 
@@ -587,7 +587,7 @@ def _condsimp(cond):
     >>> from sympy import Or, Eq, unbranched_argument as arg, And
     >>> from sympy.abc import x, y, z
     >>> simp(Or(x < y, z, Eq(x, y)))
-    Or(x <= y, z)
+    z | (x <= y)
     >>> simp(Or(x <= y, And(x < y, z)))
     x <= y
     """
@@ -1631,7 +1631,7 @@ def meijerint_indefinite(f, x):
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
-    from sympy import Integral, piecewise_fold
+    from sympy import Integral, piecewise_fold, nan, zoo
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
@@ -1669,7 +1669,12 @@ def _meijerint_indefinite_1(f, x):
         else:
             r = meijerg(
                 tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
-        r = hyperexpand(r.subs(t, a*x**b))
+        # The antiderivative is most often expected to be defined
+        # in the neighborhood of  x = 0.
+        place = 0
+        if b < 0 or f.subs(x, 0).has(nan, zoo):
+            place = None
+        r = hyperexpand(r.subs(t, a*x**b), place=place)
 
         # now substitute back
         # Note: we really do want the powers of x to combine.
