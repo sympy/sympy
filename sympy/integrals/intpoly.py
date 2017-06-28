@@ -10,8 +10,9 @@ from sympy.geometry.point import Point
 from sympy.core.function import diff
 from sympy.core.expr import Expr
 from sympy.abc import x, y
-from sympy.polys.polytools import gcd_list, LC
 
+from sympy.polys.polytools import LC
+from sympy.polys.polytools import gcd_list
 
 def polytope_integrate(poly, expr, **kwargs):
     """This is currently a basic prototype for integrating
@@ -73,7 +74,16 @@ def polytope_integrate(poly, expr, **kwargs):
     return result
 
 
-def polytope_integrate_dynamic(poly, expr, degrees, **kwargs):
+def gradient_terms(monomial, x_degree, y_degree):
+    terms = []
+    for x_count in range(0, x_degree + 1):
+        for y_count in range(0, y_degree + 1):
+            term = x**x_count*y**y_count
+            terms.append([term, x_count, y_count, None])
+    return terms
+
+
+def polytope_integrate_dynamic(poly, expr, **kwargs):
     """This is currently a basic prototype for integrating
     univariate/bivariate polynomials over 2-Polytopes.
     Parameters
@@ -97,6 +107,7 @@ def polytope_integrate_dynamic(poly, expr, degrees, **kwargs):
     if clockwise is True and isinstance(poly, Polygon):
         poly = clockwise_sort(poly)
 
+    expr = S(expr)
     dims = (x, y)
 
     if isinstance(poly, Polygon):
@@ -113,74 +124,73 @@ def polytope_integrate_dynamic(poly, expr, degrees, **kwargs):
         facets = [Segment2D(intersections[i], intersections[(i + 1) % lints])
                   for i in range(0, lints)]
 
+    monoms = decompose(expr, separate=1)
+
     dim_length = len(dims)
-    result = S.Zero
-    monomials = {}
+    result = {}
     facet_count = 0
-    for hp in hp_params:
-        facet_contribute = S.Zero
-        for i in range(0, len(expr)):
+    integral_value = S.Zero
+
+    for term in monoms:
+        monomial, x_degree, y_degree = term
+        grad_terms = [[0, 0, 0, 0]] + \
+            gradient_terms(monomial, x_degree, y_degree)
+        for hp in hp_params:
+            a, b = hp[0], hp[1]
             x0 = facets[facet_count].points[0]
-            value_over_boundary = integration_reduction_dynamic(facets, facet_count,
-                                                        hp[0], hp[1],
-                                                        expr[i],
-                                                        dims, degrees[i],
-                                                        x0, monomials)
-            facet_contribute += value_over_boundary/(dim_length + degrees[i])
-        result += facet_contribute * (hp[1]/norm(hp[0]))
-        monomials = {}
-        facet_count += 1
-    return result
+            max_degree = x_degree + y_degree
 
+            for i, monomial in enumerate(grad_terms):
+                #  Every monomial is a tuple :
+                #  (term, x_degree, y_degree, value over boundary)
+                m, x_d, y_d, _ = monomial
+                value_over_boundary =\
+                    integration_reduction_dynamic(facets, facet_count, a, b, m,
+                                                  dims, x_d, y_d, y_degree, x0,
+                                                  grad_terms, i)
+                monomial[3] = value_over_boundary
+                value = result.get(m, None)
+                degree = x_d + y_d
+                if value:
+                    result[m] += value_over_boundary *\
+                                    (b / norm(a)) / (dim_length + degree)
+                else:
+                    result[m] = value_over_boundary *\
+                                   (b / norm(a)) / (dim_length + degree)
+            facet_count += 1
 
-def monomial_values(degree):
-    monoms = {}
-    for i in range(0, degree + 1):
-        for j in range(0, i + 1):
-            term = x**(i - j)*y**j
-            monoms[term] = None
-    return monoms
+        for monom in monoms:
+            term = monom[0]
+            if term.is_number:
+                integral_value += result[1] * term
+            else:
+                coeff = LC(term)
+                integral_value += result[term/coeff] * coeff
+
+    return integral_value
 
 
 def integration_reduction_dynamic(facets, index, a, b, expr,
-                                  dims, degree, x0, monomial_values):
+                                  dims, x_degree, y_degree, max_y_degree,
+                                  x0, monomial_values, monom_index):
     expr = S(expr)
+    value = S.Zero
+    degree = x_degree + y_degree
+    m = len(facets)
+    gens = (x, y)
     if expr == S.Zero:
         return expr
 
-    a, b = (S(a[0]), S(a[1])), S(b)
+    if not expr.is_number:
+        a, b = (S(a[0]), S(a[1])), S(b)
 
-    value = S.Zero
-    m = len(facets)
-    gens = (x, y)
+        x_index = monom_index - max_y_degree - 1 if x_degree >= 1 else 0
+        y_index = monom_index - 1 if y_degree >= 1 else 0
 
-    dfx, dfy = diff(expr, gens[0]), diff(expr, gens[1])
+        x_value, y_value =\
+            monomial_values[x_index][3], monomial_values[y_index][3]
 
-    cx = dfx.args[0] if not dfx.is_number else dfx
-    cy = dfy.args[0] if not dfy.is_number else dfy
-    dfx = dfx/cx if cx is not S.Zero else S.Zero
-    dfy = dfy/cy if cy is not S.Zero else S.Zero
-
-    x_value = monomial_values.get(dfx, None)
-    y_value = monomial_values.get(dfy, None)
-
-    if not x_value:
-        inner_product = cx * dfx * x0[0]
-        x_value = integration_reduction(facets, index, a, b,
-                                           inner_product, dims,
-                                           degree - 1)
-        value += x_value
-    else:
-        value += x_value * cx * x0[0]
-
-    if not y_value:
-        inner_product = cy * dfy * x0[1]
-        y_value = integration_reduction(facets, index, a, b,
-                                               inner_product, dims,
-                                               degree - 1)
-        value += y_value
-    else:
-        value += y_value * cx * x0[1]
+        value += x_degree * x_value * x0[0] + y_degree * y_value * x0[1]
 
     for j in range(0, m):
         intersect = ()
@@ -205,9 +215,6 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
                 value += integration_reduction(intersect, 0, a, b,
                                                distance_origin * expr, dims,
                                                degree)
-
-    cexpr = LC(expr) if not expr.is_number else expr
-    monomial_values[expr/cexpr] = value/((len(dims) + degree - 1)*cexpr)
 
     return value/(len(dims) + degree - 1)
 
@@ -337,6 +344,7 @@ def best_origin(a, b, lineseg, expr):
     >>> best_origin((2, 1), 3, l, expr)
     (0, 3.0)
     """
+    a1, b1 = lineseg.points[0]
     def x_axis_cut(ls):
         """Returns the point where the input line segment
         intersects the x-axis.
@@ -371,10 +379,7 @@ def best_origin(a, b, lineseg, expr):
         else:
             return ()
 
-    return lineseg.points[0]
-    #return (a1, b1)
-
-    gens = [x, y]
+    gens = (x, y)
     power_gens = {}
 
     for i in gens:
@@ -444,7 +449,7 @@ def best_origin(a, b, lineseg, expr):
     return x0
 
 
-def decompose(expr):
+def decompose(expr, separate=0):
     """Decomposes an input polynomial into homogeneous ones of
     smaller or equal degree.
     Returns a dictionary with keys as the degree of the smaller
@@ -459,43 +464,97 @@ def decompose(expr):
     >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5)
     {1: x + y, 2: x**2 + x*y, 5: x**3*y**2 + y**5}
     """
-    poly_dict = {}
-    if isinstance(expr, Expr):
+    expr = S(expr)
+    if separate:
+        monoms = []
+    else:
+        poly_dict = {}
+
+    if isinstance(expr, Expr) and not expr.is_number:
         if expr.is_Add:
             for monomial in expr.args:
-                degree = S.Zero
+                x_degree = y_degree = 0
                 if monomial.is_Pow:
-                    degree += monomial.args[1]
+                    if monomial.args[0] is x:
+                        x_degree += monomial.args[1]
+                    else:
+                        y_degree += monomial.args[1]
                 else:
                     term_type = len(monomial.args)
                     if term_type == 0:
                         if monomial.is_Symbol:
-                            degree += 1
+                            if monomial is x:
+                                x_degree += 1
+                            else:
+                                y_degree += 1
                     for univariate in monomial.args:
                         term_type = len(univariate.args)
                         if term_type == 0 and univariate.is_Symbol:
-                            degree += 1
+                            if univariate is x:
+                                x_degree += 1
+                            else:
+                                y_degree += 1
                         elif term_type == 2:
-                            degree += univariate.args[1]
-                if degree in poly_dict:
-                    poly_dict[degree] += monomial
+                            if univariate.args[0] is x:
+                                x_degree += univariate.args[1]
+                            else:
+                                y_degree += univariate.args[1]
+                if separate:
+                    monoms.append((monomial, x_degree, y_degree))
                 else:
-                    poly_dict[degree] = monomial
+                    degree = x_degree + y_degree
+                    if degree in poly_dict:
+                        poly_dict[degree] += monomial
+                    else:
+                        poly_dict[degree] = monomial
         elif expr.is_Mul:
-            degree = S.Zero
+            x_degree = y_degree = 0
             for term in expr.args:
                 term_type = len(term.args)
                 if term_type == 0 and term.is_Symbol:
-                    degree += 1
+                    if term is x:
+                        x_degree += 1
+                    else:
+                        y_degree += 1
                 elif term_type == 2:
-                    degree += term.args[1]
-            poly_dict[degree] = expr
+                    if term.args[0] is x:
+                        x_degree += term.args[1]
+                    else:
+                        y_degree += term.args[1]
+            if separate:
+                monoms.append((expr, x_degree, y_degree))
+            else:
+                poly_dict[x_degree + y_degree] = expr
         elif expr.is_Pow:
-            poly_dict[expr.args[1]] = expr
+            x_degree = y_degree = 0
+            if expr.args[0] is x:
+                x_degree += expr.args[1]
+            else:
+                y_degree += expr.args[1]
+
+            if separate:
+                monoms.append((expr, x_degree, y_degree))
+            else:
+                poly_dict[x_degree + y_degree] = expr
         else:
-            poly_dict[1] = expr
+            if separate:
+                if expr.is_Symbol:
+                    if expr is x:
+                        monoms.append((expr, 1, 0))
+                    else:
+                        monoms.append((expr, 0, 1))
+                else:
+                    monoms.append((expr, 0, 0))
+            else:
+                poly_dict[1] = expr
     else:
-        poly_dict[0] = expr
+        if separate:
+            monoms.append((expr, 0, 0))
+        else:
+            poly_dict[0] = expr
+
+    if separate:
+        return monoms
     return poly_dict
 
 
@@ -652,7 +711,6 @@ def plot_polytope(poly):
     poly: Denotes a 2-Polytope
     """
     from sympy.plotting.plot import Plot, List2DSeries
-    xl, yl = list(), list()
 
     xl = list(map(lambda vertex: vertex.x, poly.vertices))
     yl = list(map(lambda vertex: vertex.y, poly.vertices))
