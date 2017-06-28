@@ -67,8 +67,6 @@ When is this module NOT the best approach?
 
 from __future__ import print_function, division
 
-_doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'), 'modules': ('numpy',)}
-
 import sys
 import os
 import shutil
@@ -84,10 +82,14 @@ from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.utilities.codegen import (make_routine, get_code_generator,
-            OutputArgument, InOutArgument, InputArgument,
-            CodeGenArgumentListError, Result, ResultBase, C99CodeGen)
+                                     OutputArgument, InOutArgument,
+                                     InputArgument, CodeGenArgumentListError,
+                                     Result, ResultBase, C99CodeGen)
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
+
+_doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'),
+                       'modules': ('numpy',)}
 
 
 class CodeWrapError(Exception):
@@ -253,31 +255,32 @@ setup(cmdclass={{'build_ext': build_ext}},
     std_compile_flag = '-std=c99'
 
     def __init__(self, *args, **kwargs):
-        """
+        """Instantiates a Cython code wrapper.
+
         The following optional parameters get passed to ``distutils.Extension``
-        for buidling the Python extension module. Read it's documentation to
+        for building the Python extension module. Read its documentation to
         learn more.
 
         Parameters
         ==========
         include_dirs : [string]
-            list of directories to search for C/C++ header files (in Unix
-            form for portability)
+            A list of directories to search for C/C++ header files (in Unix
+            form for portability).
         library_dirs : [string]
-            list of directories to search for C/C++ libraries at link time
+            A list of directories to search for C/C++ libraries at link time.
         libraries : [string]
-            list of library names (not filenames or paths) to link against
+            A list of library names (not filenames or paths) to link against.
         extra_compile_args : [string]
-            any extra platform- and compiler-specific information to use
-            when compiling the source files in 'sources'.  For platforms and
+            Any extra platform- and compiler-specific information to use when
+            compiling the source files in 'sources'.  For platforms and
             compilers where "command line" makes sense, this is typically a
-            list of command-line arguments, but for other platforms it could
-            be anything.
+            list of command-line arguments, but for other platforms it could be
+            anything.
         extra_link_args : [string]
-            any extra platform- and compiler-specific information to use
-            when linking object files together to create the extension (or
-            to create a new static Python interpreter).  Similar
-            interpretation as for 'extra_compile_args'.
+            Any extra platform- and compiler-specific information to use when
+            linking object files together to create the extension (or to create
+            a new static Python interpreter). Similar interpretation as for
+            'extra_compile_args'.
 
         """
 
@@ -298,6 +301,7 @@ setup(cmdclass={{'build_ext': build_ext}},
         return command
 
     def _prepare_files(self, routine, build_dir=os.curdir):
+        # NOTE : build_dir is used for testing purposes.
         pyxfilename = self.module_name + '.pyx'
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
@@ -352,7 +356,7 @@ setup(cmdclass={{'build_ext': build_ext}},
 
             # C Function Header Import
             headers.append(self.pyx_header.format(header_file=prefix,
-                    prototype=prototype))
+                                                  prototype=prototype))
 
             # Partition the C function arguments into categories
             py_rets, py_args, py_loc, py_inf = self._partition_args(routine.arguments)
@@ -412,7 +416,8 @@ setup(cmdclass={{'build_ext': build_ext}},
         # locally in the Cython code.
             if isinstance(arg, (InputArgument, InOutArgument)) and arg.dimensions:
                 dims = [d[1] + 1 for d in arg.dimensions]
-                sym_dims = [(i, d) for (i, d) in enumerate(dims) if isinstance(d, Symbol)]
+                sym_dims = [(i, d) for (i, d) in enumerate(dims) if
+                            isinstance(d, Symbol)]
                 for (i, d) in sym_dims:
                     py_inferred[d] = (arg.name, i)
         for arg in args:
@@ -499,6 +504,7 @@ _lang_lookup = {'CYTHON': ('C99', 'C89', 'C'),
                 'NUMPY': ('C99', 'C89', 'C'),
                 'DUMMY': ('F95',)}     # Dummy here just for testing
 
+
 def _infer_language(backend):
     """For a given backend, return the top choice of language"""
     langs = _lang_lookup.get(backend.upper(), False)
@@ -555,11 +561,11 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         is mandatory to supply an argument sequence to helper routines.
     include_dirs : [string]
         A list of directories to search for C/C++ header files (in Unix form
-        for portability)
+        for portability).
     library_dirs : [string]
-        A list of directories to search for C/C++ libraries at link time
+        A list of directories to search for C/C++ libraries at link time.
     libraries : [string]
-        A list of library names (not filenames or paths) to link against
+        A list of library names (not filenames or paths) to link against.
     extra_compile_args : [string]
         Any extra platform- and compiler-specific information to use when
         compiling the source files in 'sources'.  For platforms and compilers
@@ -571,6 +577,8 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         new static Python interpreter).  Similar interpretation as for
         'extra_compile_args'.
 
+    Examples
+    --------
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
@@ -598,7 +606,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
 
     for name_h, expr_h, args_h in helpers:
         if expr.has(expr_h):
-            name_h = binary_function(name_h, expr_h, backend = 'dummy')
+            name_h = binary_function(name_h, expr_h, backend='dummy')
             expr = expr.subs(expr_h, name_h(*args_h))
     try:
         routine = make_routine('autofunc', expr, args)
@@ -624,6 +632,17 @@ def binary_function(symfunc, expr, **kwargs):
     autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
+    Parameters
+    ----------
+    symfunc : sympy Function
+        The function to bind the callable to.
+    expr : sympy Expression
+        The expression used to generate the function.
+    kwargs : dict
+        Any kwargs accepted by autowrap.
+
+    Examples
+    --------
     >>> from sympy.abc import x, y
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
@@ -840,7 +859,8 @@ class UfuncifyCodeWrapper(CodeWrapper):
         if (funcname is None) and (len(routines) == 1):
             funcname = routines[0].name
         elif funcname is None:
-            raise ValueError('funcname must be specified for multiple output routines')
+            msg = 'funcname must be specified for multiple output routines'
+            raise ValueError(msg)
         functions = []
         function_creation = []
         ufunc_init = []
@@ -897,15 +917,17 @@ class UfuncifyCodeWrapper(CodeWrapper):
                                                 ind=r_index)
         ufunc_init.append(init_form)
 
-        outcalls = [_ufunc_outcalls.substitute(outnum=i, call_args=call_args,
-                                               funcname=routines[i].name) for i in range(n_out)]
+        outcalls = [_ufunc_outcalls.substitute(
+            outnum=i, call_args=call_args, funcname=routines[i].name) for i in
+            range(n_out)]
 
         body = _ufunc_body.substitute(module=module, funcname=name,
                                       declare_args=declare_args,
                                       declare_steps=declare_steps,
                                       call_args=call_args,
                                       step_increments=step_increments,
-                                      n_types=n_types, types=types, outcalls='\n        '.join(outcalls))
+                                      n_types=n_types, types=types,
+                                      outcalls='\n        '.join(outcalls))
         functions.append(body)
 
         body = '\n\n'.join(functions)
@@ -968,6 +990,9 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         Items should be tuples with (<funtion_name>, <sympy_expression>,
         <arguments>). It is mandatory to supply an argument sequence to
         helper routines.
+    kwargs : dict
+        These kwargs will be passed to autowrap if the `f2py` or `cython`
+        backend is used and ignored if the `numpy` backend is used.
 
     Note
     ----
@@ -1041,9 +1066,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         if len(expr) == 0:
             raise ValueError('Expression iterable has zero length')
         if (len(expr) + len(args)) > maxargs:
-            raise ValueError('Cannot create ufunc with more than {0} total arguments: got {1} in, {2} out'
-                             .format(maxargs, len(args), len(expr)))
-        routines = [make_routine('autofunc{}'.format(idx), exprx, args) for idx, exprx in enumerate(expr)]
+            msg = ('Cannot create ufunc with more than {0} total arguments: '
+                   'got {1} in, {2} out')
+            raise ValueError(msg.format(maxargs, len(args), len(expr)))
+        routines = [make_routine('autofunc{}'.format(idx), exprx, args) for
+                    idx, exprx in enumerate(expr)]
         return code_wrapper.wrap_code(routines, helpers=helps)
     else:
         # Dummies are used for all added expressions to prevent name clashes
