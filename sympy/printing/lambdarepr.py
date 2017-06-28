@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
 from .str import StrPrinter
+from .pycode import PythonCodePrinter
 from sympy.utilities import default_sort_key
 
 
-class LambdaPrinter(StrPrinter):
+class LambdaPrinter(PythonCodePrinter):
     """
     This printer converts expressions into strings that can be used by
     lambdify.
@@ -12,7 +13,7 @@ class LambdaPrinter(StrPrinter):
 
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (expr.__class__.__name__,
-                           self._print((expr.tolist())))
+                           self._print(expr.tolist()))
 
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
@@ -171,10 +172,6 @@ class NumPyPrinter(LambdaPrinter):
     Numpy printer which handles vectorized piecewise functions,
     logical operators, etc.
     """
-    _default_settings = {
-        "order": "none",
-        "full_prec": "auto",
-    }
 
     def _print_seq(self, seq, delimiter=', '):
         "General sequence printer: converts to tuple"

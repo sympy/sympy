@@ -89,4 +89,4 @@ def sympy_code(expr, **settings):
 
 def print_sympy_code(expr, **settings):
     """Print output of python() function"""
-    print(python(expr, **settings))
+    print(sympy_code(expr, **settings))

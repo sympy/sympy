@@ -129,7 +129,10 @@ class StrPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr):
-        return '_' + expr.name
+        if expr.name.endswith('_%i' % (expr.dummy_index - 1)):
+            return expr.name
+        else: # dummies must be printed as unique symbols
+            return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
