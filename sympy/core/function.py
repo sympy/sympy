@@ -746,8 +746,12 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname)
+        func = getattr(sage, fname,None)
         args = [arg._sage_() for arg in self.args]
+        if func is None:
+            # abstract function
+            return sage.function(fname)(*args)
+
         return func(*args)
 
 
