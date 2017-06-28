@@ -10,17 +10,13 @@ class cons(Constraint):
     def __call__(self, substitution):
         if isinstance(self.expr, bool): #handle rules without constraints
             return self.expr
-        sub = substitute(self.expr, substitution)
 
-        try:
-            res = sympify(str(sub))
-            
-            if isinstance(res, BooleanTrue) or res == True:
-                return True
-            else:
-                return False
-        except:
-            #print(('Unable to sympify: {}').format(sub))
+        sub = substitute(self.expr, substitution)
+        res = sympify(str(sub))
+
+        if isinstance(res, BooleanTrue) or res == True:
+            return True
+        else:
             return False
 
     @property

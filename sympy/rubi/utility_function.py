@@ -14,10 +14,10 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy import exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
-from .rubi import rubi_integrate
+
 
 def Int(expr, var):
-
+    from .rubi import rubi_integrate
     if expr == None:
         return None
     return rubi_integrate(expr, var)
@@ -60,7 +60,10 @@ def ZeroQ(expr):
     return expr == 0
 
 def NegativeQ(u):
-    return u < 0
+    res = u < 0
+    if not res.is_Rational:
+        return res
+    return False
 
 def NonzeroQ(expr):
     return expr != 0
@@ -77,14 +80,17 @@ def List(*var):
 def Log(e):
     return log(e)
 
+def PositiveQ(var):
+    res = var > 0
+    if not res.is_Rational:
+        return res
+    return False
+
 def PositiveIntegerQ(var):
-    return var.is_Integer and var > 0
+    return var.is_Integer and PositiveQ(var)
 
 def NegativeIntegerQ(var):
-    return var.is_Integer and var < 0
-
-def PositiveQ(var):
-    return var > 0
+    return var.is_Integer and NegativeQ(var)
 
 def IntegerQ(var):
     if isinstance(var, int):
@@ -108,13 +114,13 @@ def NegativeOrZeroQ(u):
     return u.is_real and u <= 0
 
 def FractionOrNegativeQ(u):
-    return FractionQ(u) or u < 0
+    return FractionQ(u) or NegativeQ(u)
 
 def PosQ(var):
-    return var > 0
+    return PositiveQ(var)
 
 def NegQ(var):
-    return var < 0
+    return NegativeQ(var)
 
 def Equal(a, b):
     return a == b
@@ -327,7 +333,7 @@ def IntegerPowerQ(u):
     return PowerQ(u) and IntegerQ(u.args[1])
 
 def PositiveIntegerPowerQ(u):
-    return PowerQ(u) and IntegerQ(u.args[1]) and u.args[1]>0
+    return PowerQ(u) and IntegerQ(u.args[1]) and PositiveQ(u.args[1])
 
 def FractionalPowerQ(u):
     return PowerQ(u) & FractionQ(u.args[1])
@@ -451,7 +457,7 @@ def InverseHyperbolicQ(u):
 
 def InverseFunctionQ(u):
     # returns True if u is a call on an inverse function; else returns False.
-    return LogQ(u) or InverseTrigQ(u) and Length(u)<=1 or InverseHyperbolicQ(u) or u.func == polylog
+    return LogQ(u) or InverseTrigQ(u) and Length(u) <= 1 or InverseHyperbolicQ(u) or u.func == polylog
 
 def TrigHyperbolicFreeQ(u, x):
     # If u is free of trig, hyperbolic and calculus functions involving x, TrigHyperbolicFreeQ[u,x] returns true; else it returns False.
@@ -582,7 +588,7 @@ def LinearPairQ(u, v, x):
 
 def BinomialParts(u, x):
     if PolynomialQ(u, x):
-        if Exponent(u, x)>0:
+        if Exponent(u, x) > 0:
             lst = Exponent(u, x, List)
             if len(lst)==1:
                 return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u,x)]

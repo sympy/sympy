@@ -198,8 +198,8 @@ def test_Scan():
     assert list(Scan(sin, [a, b])) == [sin(a), sin(b)]
 
 def test_MapAnd():
-    assert MapAnd(PositiveQ, [1, 2, 3, 0]) == False
-    assert MapAnd(PositiveQ, [1, 2, 3]) == True
+    assert MapAnd(PositiveQ, [S(1), S(2), S(3), S(0)]) == False
+    assert MapAnd(PositiveQ, [S(1), S(2), S(3)]) == True
 
 def test_FalseQ():
     assert FalseQ(True) == False
