@@ -8,6 +8,10 @@ class GroupHomomorphism(object):
     '''
     A class representing group homomorphisms. Instantiate using `homomorphism()`.
 
+    References
+    ==========
+    [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
+
     '''
 
     def __init__(self, domain, codomain, images):
@@ -21,23 +25,27 @@ class GroupHomomorphism(object):
     def _invs(self):
         '''
         Return a dictionary with `{gen: inverse}` where `gen` is a rewriting
-        generator of `codomain` and `inverse` is an element of its preimage
+        generator of `codomain` (e.g. strong generator for permutation groups)
+        and `inverse` is an element of its preimage
 
         '''
+        image = self.image()
         vals = [v for v in self.images.values() if not v.is_identity]
         keys = self.images.keys()
-        vs = list(set(vals))
-        keys = [keys[vals.index(v)] for v in vs]
-        inverses = dict(zip(vals,keys))
-        gens = [g for g in self.image().strong_gens if g not in inverses]
+        inverses = {}
+        for i, v in enumerate(vals):
+            inverses[v] = keys[i]
+        gens = image.strong_gens
         for g in gens:
-            w = self.codomain.identity
-            for s in self.codomain.coset_factor(g):
-                if s.is_identity:
-                    continue
-                w = w*inverses[s]
+            if g in inverses or g.is_identity:
+                continue
+            w = self.domain.identity
+            for s in image._strong_gens_slp[g]:
+                if s in inverses:
+                    w = inverses[s]*w
+                else:
+                    w = inverses[s**-1]**-1*w
             inverses[g] = w
-        inverses[self.codomain.identity] = self.domain.free_group.identity
         return inverses
 
     def invert(self, g):
@@ -50,19 +58,17 @@ class GroupHomomorphism(object):
                 "Only elements of PermutationGroups can be inverted")
         if self._inverses is None:
             self._inverses = self._invs()
+        image = self.image()
         w = self.domain.identity
-        print(self.codomain.coset_factor(g))
-        for s in self.codomain.coset_factor(g):
-            w = w*self._inverses[s]
+        for g in image.generator_product(g):
+            if g.is_identity:
+                continue
+            w = self._inverses[g]*w
         return w
 
     def kernel(self):
         '''
         Compute the kernel of `self`.
-
-        =======
-        Example
-        =======
 
         '''
         if self._kernel is None:
@@ -92,10 +98,6 @@ class GroupHomomorphism(object):
         '''
         Compute the image of `self`.
 
-        =======
-        Example
-        =======
-
         '''
         if self._image is None:
             values = list(set(self.images.values()))
@@ -106,7 +108,10 @@ class GroupHomomorphism(object):
         return self._image
 
     def _apply(self, elem):
-        '''Apply `self` to `elem`.'''
+        '''
+        Apply `self` to `elem`.
+
+        '''
         if not elem in self.domain.free_group:
             raise ValueError("The supplied element doesn't belong to the domain")
         if elem.is_identity:
@@ -121,21 +126,6 @@ class GroupHomomorphism(object):
 
     def __call__(self, elem):
         return self._apply(elem)
-
-    def _compose(self, oth):
-        '''
-        Compose `self` with `oth`, so that the returned homomorphism
-        is `self.oth(elem) == self(oth(elem))`
-
-        '''
-        if self.domain != oth.codomain:
-            raise ValueError("The given homomorphism is incompatible with 'self'")
-        domain = oth.domain
-        codomain = self.codomain
-        images = oth.images
-        for g in images:
-            images[g] = self(images[g])
-        return GroupHomomorphism(domain, codomain, images)
 
     def is_injective(self):
         '''
@@ -155,7 +145,7 @@ class GroupHomomorphism(object):
         if im == S.Infinity and oth == S.Infinity:
             return None
         else:
-            return self.image().order() == self.codomain.order()
+            return im == oth
 
     def is_isomorphism(self):
         '''
@@ -174,18 +164,14 @@ class GroupHomomorphism(object):
 
 def homomorphism(domain, codomain, gens, images=[]):
     '''
-    Create (if possible) a group homomorphism from the group `domain` defined by
-    the images of its generators `gens`. The image elements must all belong to
-    the same group. `gens` and `images` can be either lists or tuples of equal sizes.
-    If `gens` is a proper subset of the group's generators, the unspecified generators
-    will be mapped to the identity. Also, if the images are not specified, a trivial
-    homomorphism will be created.
+    Create (if possible) a group homomorphism from the group `domain` to the group
+    `codomain` defined by the images of the domain's generators `gens`. `gens` and
+    `images` can be either lists or tuples of equal sizes. If `gens` is a proper subset
+    of the group's generators, the unspecified generators will be mapped to the identity.
+    If the images are not specified, a trivial homomorphism will be created.
 
     If the given images of the generators do not define a homomorphism, an exception
     is raised.
-
-    Examples
-    ========
 
     '''
     if isinstance(domain, PermutationGroup):
@@ -199,12 +185,13 @@ def homomorphism(domain, codomain, gens, images=[]):
     if any([g not in generators for g in gens]):
         raise ValueError("The supplied generators must be a subset of the domain's generators")
     if any([g not in codomain for g in images]):
-        print([g for g in images if g not in codomain],g[0] in codomain, codomain)
         raise ValueError("The images must be elements of the codomain")
 
-    if len(images) > len(gens):
-        raise ValueError("Too many images were given")
+    if images and len(images) != len(gens):
+        raise ValueError("The number of images must be equal to the number of generators")
 
+    gens = list(gens)
+    images = list(images)
     images.extend([codomain.identity]*(len(generators)-len(images)))
     gens.extend([g for g in generators if g not in gens])
     images = dict(zip(gens,images))
@@ -224,9 +211,7 @@ def _check_homomorphism(domain, images, identity):
             power = r.array_form[0][1]
             return images[r[0]]**power*_image(r.subword(abs(power),len(r)))
 
-    print([_image(r) for r in rels])
     if any([not _image(r).is_identity for r in rels]):
-        print(
         return False
     else:
         return True
