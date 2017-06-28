@@ -88,7 +88,7 @@ from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.codeprinter import AssignmentError
-from sympy.printing.ccode import ccode, c_code_printers
+from sympy.printing.ccode import c_code_printers
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.printing.julia import julia_code, JuliaCodePrinter
 from sympy.printing.octave import octave_code, OctaveCodePrinter
@@ -767,10 +767,17 @@ class CCodeGen(CodeGen):
     code_extension = "c"
     interface_extension = "h"
     standard = 'c99'
+    preprocessor_extras = []
+    printer_class = None
 
-    def _ccode(self, *args, **kwargs):
-        kwargs['standard'] = kwargs.get('standard', self.standard)
-        return ccode(*args, **kwargs)
+    def __init__(self, project="project"):
+        super(CCodeGen, self).__init__(project=project)
+
+        if self.printer_class is None:
+            self.printer_class = c_code_printers[self.standard.lower()]
+
+    def _ccode(self, expr, assign_to=None, **settings):
+        return self.printer_class(settings).doprint(expr, assign_to)
 
     def _get_header(self):
         """Writes a common header for the generated files."""
@@ -813,6 +820,7 @@ class CCodeGen(CodeGen):
         code_lines = []
         code_lines.append("#include \"%s.h\"\n" % os.path.basename(prefix))
         code_lines.append("#include <math.h>\n")
+        code_lines.extend(self.preprocessor_extras)
         return code_lines
 
     def _get_routine_opening(self, routine):
@@ -871,8 +879,7 @@ class CCodeGen(CodeGen):
         return code_lines
 
     def _indent_code(self, codelines):
-        p = c_code_printers[self.standard.lower()]()
-        return p.indent_code(codelines)
+        return self.printer_class().indent_code(codelines)
 
     def _get_routine_ending(self, routine):
         return ["}\n"]
