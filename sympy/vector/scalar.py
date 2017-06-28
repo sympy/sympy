@@ -30,7 +30,7 @@ class BaseScalar(Expr):
                                              Symbol(pretty_str),
                                              Symbol(latex_str))
         if not isinstance(system, CoordSys3D):
-            raise TypeError("system should be a CoordSysCartesian")
+            raise TypeError("system should be a CoordSys3D")
         if index not in range(0, 3):
             raise ValueError("Invalid index specified.")
         # The _id is used for equating purposes, and for hashing

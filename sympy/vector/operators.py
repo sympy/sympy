@@ -115,7 +115,7 @@ def curl(vect, coord_sys=None, doit=True):
     vect : Vector
         The vector operand
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to calculate the gradient in.
         Deprecated since version 1.1
 
@@ -170,7 +170,7 @@ def divergence(vect, coord_sys=None, doit=True):
     vector : Vector
         The vector operand
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to calculate the gradient in
         Deprecated since version 1.1
 
@@ -220,7 +220,7 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     scalar_field : SymPy Expr
         The scalar field to compute the gradient of
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to calculate the gradient in
         Deprecated since version 1.1
 

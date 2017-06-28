@@ -41,7 +41,7 @@ class Del(Basic):
         ========
 
         >>> from sympy.vector import CoordSys3D, Del
-        >>> C = CoordSysCartesian('C')
+        >>> C = CoordSys3D('C')
         >>> delop = Del()
         >>> delop.gradient(9)
         0
@@ -76,7 +76,7 @@ class Del(Basic):
 
         >>> from sympy.vector import CoordSys3D, Del
         >>> delop = Del()
-        >>> C = CoordSysCartesian('C')
+        >>> C = CoordSys3D('C')
         >>> delop.dot(C.x*C.i)
         Derivative(C.x, C.x)
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
@@ -109,7 +109,7 @@ class Del(Basic):
         ========
 
         >>> from sympy.vector import CoordSys3D, Del
-        >>> C = CoordSysCartesian('C')
+        >>> C = CoordSys3D('C')
         >>> delop = Del()
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
         >>> delop.cross(v, doit = True)

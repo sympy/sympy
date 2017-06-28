@@ -50,7 +50,7 @@ class Dyadic(BasisDependent):
         ========
 
         >>> from sympy.vector import CoordSys3D
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> D1 = N.i.outer(N.j)
         >>> D2 = N.j.outer(N.j)
         >>> D1.dot(D2)
@@ -101,7 +101,7 @@ class Dyadic(BasisDependent):
         ========
 
         >>> from sympy.vector import CoordSys3D
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> d = N.i.outer(N.i)
         >>> d.cross(N.j)
         (N.i|N.k)
@@ -135,11 +135,11 @@ class Dyadic(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The coordinate system that the rows and columns of the matrix
             correspond to. If a second system is provided, this
             only corresponds to the rows of the matrix.
-        second_system : CoordSysCartesian, optional, default=None
+        second_system : CoordSys3D, optional, default=None
             The coordinate system that the columns of the matrix correspond
             to.
 
@@ -147,7 +147,7 @@ class Dyadic(BasisDependent):
         ========
 
         >>> from sympy.vector import CoordSys3D
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> v = N.i + 2*N.j
         >>> d = v.outer(N.i)
         >>> d.to_matrix(N)

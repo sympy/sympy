@@ -23,12 +23,12 @@ def express(expr, system, system2=None, variables=False):
     ==========
 
     expr : Vector/Dyadic/scalar(sympyfiable)
-        The expression to re-express in CoordSysCartesian 'system'
+        The expression to re-express in CoordSys3D 'system'
 
-    system: CoordSysCartesian
+    system: CoordSys3D
         The coordinate system the expr is to be expressed in
 
-    system2: CoordSysCartesian
+    system2: CoordSys3D
         The other coordinate system required for re-expression
         (only for a Dyadic Expr)
 
@@ -59,7 +59,7 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
     if not isinstance(system, CoordSys3D):
-        raise TypeError("system should be a CoordSysCartesian \
+        raise TypeError("system should be a CoordSys3D \
                         instance")
 
     if isinstance(expr, Vector):
@@ -94,7 +94,7 @@ def express(expr, system, system2=None, variables=False):
         if system2 is None:
             system2 = system
         if not isinstance(system2, CoordSys3D):
-            raise TypeError("system2 should be a CoordSysCartesian \
+            raise TypeError("system2 should be a CoordSys3D \
                             instance")
         outdyad = Dyadic.zero
         var = variables
@@ -138,7 +138,7 @@ def directional_derivative(scalar, vect):
     vect : Vector
         The vector operand
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to calculate the gradient in
 
     Examples
@@ -236,7 +236,7 @@ def scalar_potential(field, coord_sys):
         The vector field whose scalar potential function is to be
         calculated
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to do the calculation in
 
     Examples
@@ -262,7 +262,7 @@ def scalar_potential(field, coord_sys):
     # Express the field exntirely in coord_sys
     # Subsitute coordinate variables also
     if not isinstance(coord_sys, CoordSys3D):
-        raise TypeError("coord_sys must be a CoordSysCartesian")
+        raise TypeError("coord_sys must be a CoordSys3D")
     field = express(field, coord_sys, variables=True)
     dimensions = coord_sys.base_vectors()
     scalars = coord_sys.base_scalars()
@@ -295,7 +295,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     field : Vector/Expr
         The field to calculate wrt
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to do the calculations in
 
     point1 : Point
@@ -321,7 +321,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     """
 
     if not isinstance(coord_sys, CoordSys3D):
-        raise TypeError("coord_sys must be a CoordSysCartesian")
+        raise TypeError("coord_sys must be a CoordSys3D")
     if isinstance(field, Vector):
         # Get the scalar potential function
         scalar_fn = scalar_potential(field, coord_sys)
@@ -358,7 +358,7 @@ def matrix_to_vector(matrix, system):
     matrix : SymPy Matrix, Dimensions: (3, 1)
         The matrix to be converted to a vector
 
-    system : CoordSysCartesian
+    system : CoordSys3D
         The coordinate system the vector is to be defined in
 
     Examples

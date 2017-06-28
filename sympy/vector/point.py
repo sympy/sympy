@@ -46,12 +46,12 @@ class Point(Basic):
     def position_wrt(self, other):
         """
         Returns the position vector of this Point with respect to
-        another Point/CoordSysCartesian.
+        another Point/CoordSys3D.
 
         Parameters
         ==========
 
-        other : Point/CoordSysCartesian
+        other : Point/CoordSys3D
             If other is a Point, the position of this Point wrt it is
             returned. If its an instance of CoordSyRect, the position
             wrt its origin is returned.
@@ -70,7 +70,7 @@ class Point(Basic):
         if (not isinstance(other, Point) and
                 not isinstance(other, CoordSys3D)):
             raise TypeError(str(other) +
-                            "is not a Point or CoordSysCartesian")
+                            "is not a Point or CoordSys3D")
         if isinstance(other, CoordSys3D):
             other = other.origin
         # Handle special cases
@@ -123,12 +123,12 @@ class Point(Basic):
     def express_coordinates(self, coordinate_system):
         """
         Returns the Cartesian/rectangular coordinates of this point
-        wrt the origin of the given CoordSysCartesian instance.
+        wrt the origin of the given CoordSys3D instance.
 
         Parameters
         ==========
 
-        coordinate_system : CoordSysCartesian
+        coordinate_system : CoordSys3D
             The coordinate system to express the coordinates of this
             Point in.
 

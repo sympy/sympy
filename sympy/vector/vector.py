@@ -300,7 +300,7 @@ class Vector(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The system wrt which the matrix form is to be computed
 
         Examples
@@ -326,7 +326,7 @@ class Vector(BasisDependent):
         The constituents of this vector in different coordinate systems,
         as per its definition.
 
-        Returns a dict mapping each CoordSysCartesian to the corresponding
+        Returns a dict mapping each CoordSys3D to the corresponding
         constituent Vector.
 
         Examples
@@ -364,7 +364,7 @@ class BaseVector(Vector, AtomicExpr):
         if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
         if not isinstance(system, CoordSys3D):
-            raise TypeError("system should be a CoordSysCartesian")
+            raise TypeError("system should be a CoordSys3D")
         # Initialize an object
         obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
                                              system, Symbol(pretty_str),
