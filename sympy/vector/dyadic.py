@@ -49,7 +49,7 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSysCartesian('N')
         >>> D1 = N.i.outer(N.j)
         >>> D2 = N.j.outer(N.j)
@@ -100,7 +100,7 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSysCartesian('N')
         >>> d = N.i.outer(N.i)
         >>> d.cross(N.j)
@@ -146,7 +146,7 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSysCartesian('N')
         >>> v = N.i + 2*N.j
         >>> d = v.outer(N.i)

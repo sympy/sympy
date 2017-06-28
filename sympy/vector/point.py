@@ -1,7 +1,7 @@
 from sympy.core.compatibility import range
 from sympy.core.basic import Basic
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import _path
 from sympy import Symbol
 from sympy.core.cache import cacheit
@@ -59,8 +59,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import Point, CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)
         (-10)*N.i
@@ -68,10 +68,10 @@ class Point(Basic):
         """
 
         if (not isinstance(other, Point) and
-                not isinstance(other, CoordSysCartesian)):
+                not isinstance(other, CoordSys3D)):
             raise TypeError(str(other) +
                             "is not a Point or CoordSysCartesian")
-        if isinstance(other, CoordSysCartesian):
+        if isinstance(other, CoordSys3D):
             other = other.origin
         # Handle special cases
         if other == self:
@@ -111,8 +111,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import Point, CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p1.position_wrt(N.origin)
         10*N.i
@@ -135,8 +135,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import Point, CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p2 = p1.locate_new('p2', 5 * N.j)
         >>> p2.express_coordinates(N)

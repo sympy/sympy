@@ -53,7 +53,7 @@ class AxisOrienter(Orienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = CoordSysCartesian('N')
@@ -193,7 +193,7 @@ class BodyOrienter(ThreeAngleOrienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian, BodyOrienter
+        >>> from sympy.vector import CoordSys3D, BodyOrienter
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
         >>> N = CoordSysCartesian('N')
@@ -265,7 +265,7 @@ class SpaceOrienter(ThreeAngleOrienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian, SpaceOrienter
+        >>> from sympy.vector import CoordSys3D, SpaceOrienter
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
         >>> N = CoordSysCartesian('N')
@@ -354,7 +354,7 @@ class QuaternionOrienter(Orienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = CoordSysCartesian('N')

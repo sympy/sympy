@@ -4,7 +4,7 @@ from sympy.vector.dyadic import (Dyadic, DyadicAdd, DyadicMul,
                                  BaseDyadic, DyadicZero)
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.deloperator import Del
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D, CoorSysCartesian
 from sympy.vector.functions import (express, matrix_to_vector,
                                     is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,

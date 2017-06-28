@@ -3,7 +3,7 @@ from sympy.core import S, Pow, Symbol
 from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
@@ -29,8 +29,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.components
         {C.i: 3, C.j: 4, C.k: 5}
@@ -73,8 +73,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian, Del
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D, Del
+        >>> C = CoordSys3D('C')
         >>> delop = Del()
         >>> C.i.dot(C.j)
         0
@@ -158,8 +158,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> C.i.cross(C.j)
         C.k
         >>> C.i ^ C.i
@@ -237,8 +237,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> N.i.outer(N.j)
         (N.i|N.j)
 
@@ -267,9 +267,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector.coordsysrect import CoordSysCartesian
+        >>> from sympy.vector.coordsysrect import CoordSys3D
         >>> from sympy.vector.vector import Vector, BaseVector
-        >>> C = CoordSysCartesian('C')
+        >>> C = CoordSys3D('C')
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k
         >>> v2 = 3*i + 4*j
@@ -306,8 +306,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> from sympy.abc import a, b, c
         >>> v = a*C.i + b*C.j + c*C.k
         >>> v.to_matrix(C)
@@ -332,9 +332,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> R1 = CoordSysCartesian('R1')
-        >>> R2 = CoordSysCartesian('R2')
+        >>> from sympy.vector import CoordSys3D
+        >>> R1 = CoordSys3D('R1')
+        >>> R2 = CoordSys3D('R2')
         >>> v = R1.i + R2.i
         >>> v.separate() == {R1: R1.i, R2: R2.i}
         True
@@ -363,7 +363,7 @@ class BaseVector(Vector, AtomicExpr):
         # Verify arguments
         if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
-        if not isinstance(system, CoordSysCartesian):
+        if not isinstance(system, CoordSys3D):
             raise TypeError("system should be a CoordSysCartesian")
         # Initialize an object
         obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),

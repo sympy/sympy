@@ -1,4 +1,4 @@
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
@@ -39,9 +39,9 @@ def express(expr, system, system2=None, variables=False):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy import Symbol, cos, sin
-    >>> N = CoordSysCartesian('N')
+    >>> N = CoordSys3D('N')
     >>> q = Symbol('q')
     >>> B = N.orient_new_axis('B', q, N.k)
     >>> from sympy.vector import express
@@ -58,7 +58,7 @@ def express(expr, system, system2=None, variables=False):
     if expr == 0 or expr == Vector.zero:
         return expr
 
-    if not isinstance(system, CoordSysCartesian):
+    if not isinstance(system, CoordSys3D):
         raise TypeError("system should be a CoordSysCartesian \
                         instance")
 
@@ -93,7 +93,7 @@ def express(expr, system, system2=None, variables=False):
     elif isinstance(expr, Dyadic):
         if system2 is None:
             system2 = system
-        if not isinstance(system2, CoordSysCartesian):
+        if not isinstance(system2, CoordSys3D):
             raise TypeError("system2 should be a CoordSysCartesian \
                             instance")
         outdyad = Dyadic.zero
@@ -144,8 +144,8 @@ def directional_derivative(scalar, vect):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, directional_derivative
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, directional_derivative
+    >>> R = CoordSys3D('R')
     >>> f1 = R.x*R.y*R.z
     >>> v1 = 3*R.i + 4*R.j + R.k
     >>> directional_derivative(f1, v1)
@@ -171,9 +171,9 @@ def is_conservative(field):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import is_conservative
-    >>> R = CoordSysCartesian('R')
+    >>> R = CoordSys3D('R')
     >>> is_conservative(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
     True
     >>> is_conservative(R.z*R.j)
@@ -204,9 +204,9 @@ def is_solenoidal(field):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import is_solenoidal
-    >>> R = CoordSysCartesian('R')
+    >>> R = CoordSys3D('R')
     >>> is_solenoidal(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
     True
     >>> is_solenoidal(R.y * R.j)
@@ -242,9 +242,9 @@ def scalar_potential(field, coord_sys):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import scalar_potential, gradient
-    >>> R = CoordSysCartesian('R')
+    >>> R = CoordSys3D('R')
     >>> scalar_potential(R.k, R) == R.z
     True
     >>> scalar_field = 2*R.x**2*R.y*R.z
@@ -261,7 +261,7 @@ def scalar_potential(field, coord_sys):
         return S(0)
     # Express the field exntirely in coord_sys
     # Subsitute coordinate variables also
-    if not isinstance(coord_sys, CoordSysCartesian):
+    if not isinstance(coord_sys, CoordSys3D):
         raise TypeError("coord_sys must be a CoordSysCartesian")
     field = express(field, coord_sys, variables=True)
     dimensions = coord_sys.base_vectors()
@@ -307,9 +307,9 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, Point
+    >>> from sympy.vector import CoordSys3D, Point
     >>> from sympy.vector import scalar_potential_difference
-    >>> R = CoordSysCartesian('R')
+    >>> R = CoordSys3D('R')
     >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
     >>> vectfield = 4*R.x*R.y*R.i + 2*R.x**2*R.j
     >>> scalar_potential_difference(vectfield, R, R.origin, P)
@@ -320,7 +320,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
 
     """
 
-    if not isinstance(coord_sys, CoordSysCartesian):
+    if not isinstance(coord_sys, CoordSys3D):
         raise TypeError("coord_sys must be a CoordSysCartesian")
     if isinstance(field, Vector):
         # Get the scalar potential function
@@ -366,8 +366,8 @@ def matrix_to_vector(matrix, system):
 
     >>> from sympy import ImmutableMatrix as Matrix
     >>> m = Matrix([1, 2, 3])
-    >>> from sympy.vector import CoordSysCartesian, matrix_to_vector
-    >>> C = CoordSysCartesian('C')
+    >>> from sympy.vector import CoordSys3D, matrix_to_vector
+    >>> C = CoordSys3D('C')
     >>> v = matrix_to_vector(m, C)
     >>> v
     C.i + 2*C.j + 3*C.k
@@ -435,10 +435,10 @@ def orthogonalize(*vlist, **kwargs):
     Examples
     ========
 
-    >>> from sympy.vector.coordsysrect import CoordSysCartesian
+    >>> from sympy.vector.coordsysrect import CoordSys3D
     >>> from sympy.vector.vector import Vector, BaseVector
     >>> from sympy.vector.functions import orthogonalize
-    >>> C = CoordSysCartesian('C')
+    >>> C = CoordSys3D('C')
     >>> i, j, k = C.base_vectors()
     >>> v1 = i + 2*j
     >>> v2 = 2*i + 3*j
