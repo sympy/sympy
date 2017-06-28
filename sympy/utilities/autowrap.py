@@ -499,7 +499,8 @@ def autowrap(
     -1.0
     """
     if language:
-        _validate_backend_language(backend, language)
+        if not isinstance(language, type):
+            _validate_backend_language(backend, language)
     else:
         language = _infer_language(backend)
 
