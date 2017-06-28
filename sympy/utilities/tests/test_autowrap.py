@@ -81,6 +81,99 @@ def test_cython_wrapper_inoutarg():
     assert source == expected
 
 
+def test_cython_wrapper_compile_flags():
+    from sympy import Equality
+    x, y, z = symbols('x,y,z')
+    routine = make_routine("test", Equality(z, x + y))
+
+    code_gen = CythonCodeWrapper(CCodeGen())
+
+    expected = """\
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+
+
+setup(cmdclass={'build_ext': build_ext},
+      ext_modules=[Extension('wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+                             include_dirs=[],
+                             library_dirs=[],
+                             libraries=[],
+                             extra_compile_args=['-std=c99'],
+                             extra_link_args=[]
+                            )],
+    )\
+"""
+    try:
+        code_gen._prepare_files(routine)
+        with open('setup.py') as f:
+            setup_text = f.read()
+        assert setup_text == expected
+    finally:
+        os.remove(code_gen.module_name + '.pyx')
+        os.remove('setup.py')
+
+    code_gen = CythonCodeWrapper(CCodeGen(),
+                                 include_dirs=['/usr/local/include', '/opt/booger/include'],
+                                 library_dirs=['/user/local/lib'],
+                                 libraries=['thelib', 'nilib'],
+                                 extra_compile_args=['-slow-math'],
+                                 extra_link_args=['-lswamp', '-ltrident']
+                                 )
+
+    expected = """\
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+
+
+setup(cmdclass={'build_ext': build_ext},
+      ext_modules=[Extension('wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+                             include_dirs=['/usr/local/include', '/opt/booger/include'],
+                             library_dirs=['/user/local/lib'],
+                             libraries=['thelib', 'nilib'],
+                             extra_compile_args=['-slow-math', '-std=c99'],
+                             extra_link_args=['-lswamp', '-ltrident']
+                            )],
+    )\
+"""
+    try:
+        code_gen._prepare_files(routine)
+        with open('setup.py') as f:
+            setup_text = f.read()
+        assert setup_text == expected
+    finally:
+        os.remove(code_gen.module_name + '.pyx')
+        os.remove('setup.py')
+
+    expected = """\
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+import numpy as np
+
+
+setup(cmdclass={'build_ext': build_ext},
+      ext_modules=[Extension('wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+                             include_dirs=['/usr/local/include', '/opt/booger/include', np.get_include()],
+                             library_dirs=['/user/local/lib'],
+                             libraries=['thelib', 'nilib'],
+                             extra_compile_args=['-slow-math', '-std=c99'],
+                             extra_link_args=['-lswamp', '-ltrident']
+                            )],
+    )\
+"""
+
+    try:
+        code_gen._need_numpy = True
+        code_gen._prepare_files(routine)
+        with open('setup.py') as f:
+            setup_text = f.read()
+        assert setup_text == expected
+    finally:
+        os.remove(code_gen.module_name + '.pyx')
+        os.remove('setup.py')
+
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
 
