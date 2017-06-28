@@ -21,10 +21,15 @@ from __future__ import print_function, division
 
 import string
 
-from sympy.core import S, C, Add, N
+from sympy.core import S, Add, N
 from sympy.core.compatibility import string_types, range
-from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence
+from sympy.core.function import Function
+from sympy.core.relational import Eq
+from sympy.sets import Range
+from sympy.codegen.ast import Assignment
+from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
+from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 known_functions = {
     "sin": "sin",
@@ -40,10 +45,10 @@ known_functions = {
     "log": "log",
     "exp": "exp",
     "erf": "erf",
-    "Abs": "Abs",
-    "sign": "sign",
+    "Abs": "abs",
     "conjugate": "conjg"
 }
+
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
@@ -90,7 +95,7 @@ class FCodePrinter(CodePrinter):
         else:
             raise ValueError("Unknown source format: %s" % self._settings[
                              'source_format'])
-        standards = set([66, 77, 90, 95, 2003, 2008])
+        standards = {66, 77, 90, 95, 2003, 2008}
         if self._settings['standard'] not in standards:
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
@@ -124,6 +129,18 @@ class FCodePrinter(CodePrinter):
             open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
         return open_lines, close_lines
+
+    def _print_sign(self, expr):
+        from sympy import Abs
+        arg, = expr.args
+        if arg.is_integer:
+            new_expr = merge(0, isign(1, arg), Eq(arg, 0))
+        elif arg.is_complex:
+            new_expr = merge(cmplx(literal_dp(0), literal_dp(0)), arg/Abs(arg), Eq(Abs(arg), literal_dp(0)))
+        else:
+            new_expr = merge(literal_dp(0), dsign(literal_dp(1), arg), Eq(arg, literal_dp(0)))
+        return self._print(new_expr)
+
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -168,7 +185,8 @@ class FCodePrinter(CodePrinter):
                                       "standards earlier than Fortran95.")
 
     def _print_MatrixElement(self, expr):
-        return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
+        return "{0}({1}, {2})".format(self.parenthesize(expr.parent,
+                PRECEDENCE["Atom"], strict=True), expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -214,7 +232,7 @@ class FCodePrinter(CodePrinter):
         prec =  self._settings['precision']
         args = [N(a, prec) for a in expr.args]
         eval_expr = expr.func(*args)
-        if not isinstance(eval_expr, C.Function):
+        if not isinstance(eval_expr, Function):
             return self._print(eval_expr)
         else:
             return CodePrinter._print_Function(self, expr.func(*args))
@@ -268,6 +286,26 @@ class FCodePrinter(CodePrinter):
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    def _print_For(self, expr):
+        target = self._print(expr.target)
+        if isinstance(expr.iterable, Range):
+            start, stop, step = expr.iterable.args
+        else:
+            raise NotImplementedError("Only iterable currently supported is Range")
+        body = self._print(expr.body)
+        return ('do {target} = {start}, {stop}, {step}\n'
+                '{body}\n'
+                'end do').format(target=target, start=start, stop=stop,
+                        step=step, body=body)
+
+    def _print_Equality(self, expr):
+        lhs, rhs = expr.args
+        return ' == '.join(map(self._print, (lhs, rhs)))
+
+    def _print_Unequality(self, expr):
+        lhs, rhs = expr.args
+        return ' /= '.join(map(self._print, (lhs, rhs)))
 
     def _pad_leading_columns(self, lines):
         result = []

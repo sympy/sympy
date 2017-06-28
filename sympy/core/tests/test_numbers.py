@@ -2,14 +2,22 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify)
-from sympy.core.compatibility import long, u
-from sympy.core.power import integer_nthroot
-from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
-from mpmath import mpf
+                   AlgebraicNumber, simplify, sin, fibonacci)
+from sympy.core.compatibility import long
+from sympy.core.power import integer_nthroot, isqrt
+from sympy.core.logic import fuzzy_not
+from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
+    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
+from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
+
+from mpmath import mpf
 import mpmath
 
+
+
+t = Symbol('t', real=False)
 
 def same_and_same_prec(a, b):
     # stricter matching for Floats
@@ -65,6 +73,14 @@ def test_mod():
     assert (a % .2) == 0
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
+
+    p = Symbol('p', infinite=True)
+
+    assert zoo % 0 == nan
+    assert oo % oo == nan
+    assert zoo % oo == nan
+    assert 5 % oo == nan
+    assert p % 5 == nan
 
     # In these two tests, if the precision of m does
     # not match the precision of the ans, then it is
@@ -192,9 +208,33 @@ def test_igcd():
     assert igcd(-7, 3) == 1
     assert igcd(-7, -3) == 1
     assert igcd(*[10, 20, 30]) == 10
-    raises(ValueError, lambda: igcd(45.1, 30))
-    raises(ValueError, lambda: igcd(45, 30.1))
+    raises(TypeError, lambda: igcd())
+    raises(TypeError, lambda: igcd(2))
+    raises(ValueError, lambda: igcd(0, None))
+    raises(ValueError, lambda: igcd(1, 2.2))
+    for args in permutations((45.1, 1, 30)):
+        raises(ValueError, lambda: igcd(*args))
+    for args in permutations((1, 2, None)):
+        raises(ValueError, lambda: igcd(*args))
 
+
+def test_igcd_lehmer():
+    a, b = fibonacci(10001), fibonacci(10000)
+    # len(str(a)) == 2090
+    # small divisors, long Euclidean sequence
+    assert igcd_lehmer(a, b) == 1
+    c = fibonacci(100)
+    assert igcd_lehmer(a*c, b*c) == c
+    # big divisor
+    assert igcd_lehmer(a, 10**1000) == 1
+
+
+def test_igcd2():
+    # short loop
+    assert igcd2(2**100 - 1, 2**99 - 1) == 1
+    # Lehmer's algorithm
+    a, b = int(fibonacci(10001)), int(fibonacci(10000))
+    assert igcd2(a, b) == 1
 
 def test_ilcm():
     assert ilcm(0, 0) == 0
@@ -230,11 +270,11 @@ def _test_rational_new(cls):
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
     assert cls('1') is S.One
-    assert cls(u('-1')) is S.NegativeOne
+    assert cls(u'-1') is S.NegativeOne
 
     i = Integer(10)
     assert _strictly_equal(i, cls('10'))
-    assert _strictly_equal(i, cls(u('10')))
+    assert _strictly_equal(i, cls(u'10'))
     assert _strictly_equal(i, cls(long(10)))
     assert _strictly_equal(i, cls(i))
 
@@ -277,8 +317,10 @@ def test_Rational_new():
     assert Rational(1, 3.0) == Rational(1, 3)
     assert Rational(Float(0.5)) == Rational(1, 2)
     assert Rational('1e2/1e-2') == Rational(10000)
-    assert Rational(-1, 0) == S.NegativeInfinity
-    assert Rational(1, 0) == S.Infinity
+    assert Rational(-1, 0) == S.ComplexInfinity
+    assert Rational(1, 0) == S.ComplexInfinity
+    # Make sure Rational doesn't lose precision on Floats
+    assert Rational(pi.evalf(100)).evalf(100) == pi.evalf(100)
     raises(TypeError, lambda: Rational('3**3'))
     raises(TypeError, lambda: Rational('1/2 + 2/3'))
 
@@ -337,10 +379,10 @@ def test_Rational_cmp():
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
 
-    assert (n1 < S.NaN) is S.false
-    assert (n1 <= S.NaN) is S.false
-    assert (n1 > S.NaN) is S.false
-    assert (n1 >= S.NaN) is S.false
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Float():
@@ -358,8 +400,14 @@ def test_Float():
     x2_str = Float((0, '26666666666666', -53, 53))
     x_hex = Float((0, long(0x13333333333333), -52, 53))
     x_dec = Float((0, 5404319552844595, -52, 53))
+    assert x_str == x_hex == x_dec == Float(1.2)
+    # This looses a binary digit of precision, so it isn't equal to the above,
+    # but check that it normalizes correctly
     x2_hex = Float((0, long(0x13333333333333)*2, -53, 53))
-    assert x_str == x_hex == x_dec == x2_hex == Float(1.2)
+    assert x2_hex._mpf_ == (0, 5404319552844595, -52, 52)
+    # XXX: Should this test also hold?
+    # assert x2_hex._prec == 52
+
     # x2_str and 1.2 are superficially the same
     assert str(x2_str) == str(Float(1.2))
     # but are different at the mpf level
@@ -452,10 +500,51 @@ def test_Float():
     assert Float(S.One) == Float(1.0)
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
+    assert Float(decimal.Decimal('nan')) == S.NaN
+    assert Float(decimal.Decimal('Infinity')) == S.Infinity
+    assert Float(decimal.Decimal('-Infinity')) == S.NegativeInfinity
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
-    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == \
+        '3.14159265358979323846264338327950288'
 
+    assert Float(oo) == Float('+inf')
+    assert Float(-oo) == Float('-inf')
+
+    # unicode
+    assert Float(u'0.73908513321516064100000000') == \
+        Float('0.73908513321516064100000000')
+    assert Float(u'0.73908513321516064100000000', 28) == \
+        Float('0.73908513321516064100000000', 28)
+
+    # binary precision
+    # Decimal value 0.1 cannot be expressed precisely as a base 2 fraction
+    a = Float(S(1)/10, dps=15)
+    b = Float(S(1)/10, dps=16)
+    p = Float(S(1)/10, precision=53)
+    q = Float(S(1)/10, precision=54)
+    assert a._mpf_ == p._mpf_
+    assert not a._mpf_ == q._mpf_
+    assert not b._mpf_ == q._mpf_
+
+    # Precision specifying errors
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=10))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=10))
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=""))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=""))
+
+
+@conserve_mpmath_dps
+def test_float_mpf():
+    import mpmath
+    mpmath.mp.dps = 100
+    mp_pi = mpmath.pi()
+
+    assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
+
+    mpmath.mp.dps = 15
+
+    assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))
@@ -726,6 +815,10 @@ def test_Infinity_inequations():
     assert (oo > oo) == False
     assert (-oo > -oo) == False and (-oo < -oo) == False
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
+    assert (-oo < -Float('inf')) ==  False
+    assert (oo > Float('inf')) == False
+    assert -oo >= -Float('inf')
+    assert oo <= Float('inf')
 
     x = Symbol('x')
     b = Symbol('b', finite=True, real=True)
@@ -755,14 +848,14 @@ def test_NaN():
     assert 1/nan == nan
     assert 1/(-nan) == nan
     assert 8/nan == nan
-    assert not nan > 0
-    assert not nan < 0
-    assert not nan >= 0
-    assert not nan <= 0
-    assert not 0 < nan
-    assert not 0 > nan
-    assert not 0 <= nan
-    assert not 0 >= nan
+    raises(TypeError, lambda: nan > 0)
+    raises(TypeError, lambda: nan < 0)
+    raises(TypeError, lambda: nan >= 0)
+    raises(TypeError, lambda: nan <= 0)
+    raises(TypeError, lambda: 0 < nan)
+    raises(TypeError, lambda: 0 > nan)
+    raises(TypeError, lambda: 0 <= nan)
+    raises(TypeError, lambda: 0 >= nan)
     assert S.One + nan == nan
     assert S.One - nan == nan
     assert S.One*nan == nan
@@ -834,10 +927,22 @@ def test_powers():
     # Test that this is fast
     assert integer_nthroot(2, 10**10) == (1, False)
 
+    # output should be int if possible
+    assert type(integer_nthroot(2**61, 2)[0]) is int
+
 
 def test_integer_nthroot_overflow():
     assert integer_nthroot(10**(50*50), 50) == (10**50, True)
     assert integer_nthroot(10**100000, 10000) == (10**10, True)
+
+
+def test_isqrt():
+    from math import sqrt as _sqrt
+    limit = 17984395633462800708566937239551
+    assert int(_sqrt(limit)) == integer_nthroot(limit, 2)[0]
+    assert int(_sqrt(limit + 1)) != integer_nthroot(limit + 1, 2)[0]
+    assert isqrt(limit + 1) == integer_nthroot(limit + 1, 2)[0]
+    assert isqrt(limit + 1 + S.Half) == integer_nthroot(limit + 1, 2)[0]
 
 
 def test_powers_Integer():
@@ -1009,6 +1114,10 @@ def test_int():
     assert int(pi) == 3
     assert int(E) == 2
     assert int(GoldenRatio) == 1
+    # issue 10368
+    a = S(32442016954)/78058255275
+    assert type(int(a)) is type(int(-a)) is int
+
 
 def test_long():
     a = Rational(5)
@@ -1072,7 +1181,7 @@ def test_Integer_factors():
     def F(i):
         return Integer(i).factors()
 
-    assert F(1) == {1: 1}
+    assert F(1) == {}
     assert F(2) == {2: 1}
     assert F(3) == {3: 1}
     assert F(4) == {2: 2}
@@ -1133,10 +1242,6 @@ def test_Rational_factors():
     assert F(2, 9) == {2: 1, 3: -2}
     assert F(2, 15) == {2: 1, 3: -1, 5: -1}
     assert F(6, 10) == {3: 1, 5: -1}
-    assert str(F(12, 1, visual=True)) == '2**2*3**1'
-    assert str(F(1, 1, visual=True)) == '1'
-    assert str(F(25, 14, visual=True)) == '5**2/(2*7)'
-    assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
 
 def test_issue_4107():
@@ -1220,12 +1325,27 @@ def test_issue_4611():
     assert (EulerGamma + x).evalf() == EulerGamma.evalf() + x
     assert (GoldenRatio + x).evalf() == GoldenRatio.evalf() + x
 
-
+@conserve_mpmath_dps
 def test_conversion_to_mpmath():
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
     assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
     assert mpmath.mpmathify(Float('1.23', 15)) == mpmath.mpf('1.23')
 
+    assert mpmath.mpmathify(I) == mpmath.mpc(1j)
+
+    assert mpmath.mpmathify(1 + 2*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(1.0 + 2*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(1 + 2.0*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(1.0 + 2.0*I) == mpmath.mpc(1 + 2j)
+    assert mpmath.mpmathify(Rational(1, 2) + Rational(1, 2)*I) == mpmath.mpc(0.5 + 0.5j)
+
+    assert mpmath.mpmathify(2*I) == mpmath.mpc(2j)
+    assert mpmath.mpmathify(2.0*I) == mpmath.mpc(2j)
+    assert mpmath.mpmathify(Rational(1, 2)*I) == mpmath.mpc(0.5j)
+
+    mpmath.mp.dps = 100
+    assert mpmath.mpmathify(pi.evalf(100) + pi.evalf(100)*I) == mpmath.pi + mpmath.pi*mpmath.j
+    assert mpmath.mpmathify(pi.evalf(100)*I) == mpmath.pi*mpmath.j
 
 def test_relational():
     # real
@@ -1285,7 +1405,7 @@ def test_zoo():
             assert (zoo + i) is S.NaN
             assert (zoo - i) is S.NaN
 
-        if i.is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not(i.is_zero) and (i.is_real or i.is_imaginary):
             assert i*zoo is zoo
             assert zoo*i is zoo
         elif i.is_zero:
@@ -1295,7 +1415,7 @@ def test_zoo():
             assert (i*zoo).is_Mul
             assert (zoo*i).is_Mul
 
-        if (1/i).is_nonzero and (i.is_real or i.is_imaginary):
+        if fuzzy_not((1/i).is_zero) and (i.is_real or i.is_imaginary):
             assert zoo/i is zoo
         elif (1/i).is_zero:
             assert zoo/i is S.NaN
@@ -1465,3 +1585,65 @@ def test_Float_idempotence():
     z = Float(x, 15)
     assert same_and_same_prec(y, x)
     assert not same_and_same_prec(z, x)
+
+
+def test_comp():
+    # sqrt(2) = 1.414213 5623730950...
+    a = sqrt(2).n(7)
+    assert comp(a, 1.41421346) is False
+    assert comp(a, 1.41421347)
+    assert comp(a, 1.41421366)
+    assert comp(a, 1.41421367) is False
+    assert comp(sqrt(2).n(2), '1.4')
+    assert comp(sqrt(2).n(2), Float(1.4, 2), '')
+    raises(ValueError, lambda: comp(sqrt(2).n(2), 1.4, ''))
+    assert comp(sqrt(2).n(2), Float(1.4, 3), '') is False
+
+
+def test_issue_9491():
+    assert oo**zoo == nan
+
+
+def test_issue_10063():
+    assert 2**Float(3) == Float(8)
+
+
+def test_issue_10020():
+    assert oo**I is S.NaN
+    assert oo**(1 + I) is S.ComplexInfinity
+    assert oo**(-1 + I) is S.Zero
+    assert (-oo)**I is S.NaN
+    assert (-oo)**(-1 + I) is S.Zero
+    assert oo**t == Pow(oo, t, evaluate=False)
+    assert (-oo)**t == Pow(-oo, t, evaluate=False)
+
+
+def test_invert_numbers():
+    assert S(2).invert(5) == 3
+    assert S(2).invert(S(5)/2) == S.Half
+    assert S(2).invert(5.) == 3
+    assert S(2).invert(S(5)) == 3
+    assert S(2.).invert(5) == 3
+    assert S(sqrt(2)).invert(5) == 1/sqrt(2)
+    assert S(sqrt(2)).invert(sqrt(3)) == 1/sqrt(2)
+
+
+def test_mod_inverse():
+    assert mod_inverse(3, 11) == 4
+    assert mod_inverse(5, 11) == 9
+    assert mod_inverse(21124921, 521512) == 7713
+    assert mod_inverse(124215421, 5125) == 2981
+    assert mod_inverse(214, 12515) == 1579
+    assert mod_inverse(5823991, 3299) == 1442
+    assert mod_inverse(123, 44) == 39
+    assert mod_inverse(2, 5) == 3
+    assert mod_inverse(-2, 5) == -3
+    x = Symbol('x')
+    assert S(2).invert(x) == S.Half
+    raises(TypeError, lambda: mod_inverse(2, x))
+    raises(ValueError, lambda: mod_inverse(2, S.Half))
+    raises(ValueError, lambda: mod_inverse(2, cos(1)**2 + sin(1)**2))
+
+
+def test_golden_ratio_rewrite_as_sqrt():
+    assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half

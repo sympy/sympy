@@ -97,12 +97,12 @@ def test_BlockMatrix():
 
 
 def test_BlockMatrix_trace():
-    A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
+    A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
     assert trace(X) == trace(A) + trace(D)
 
 def test_BlockMatrix_Determinant():
-    A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
+    A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
     from sympy import assuming, Q
     with assuming(Q.invertible(A)):

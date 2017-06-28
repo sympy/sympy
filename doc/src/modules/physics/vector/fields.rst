@@ -148,8 +148,9 @@ the time differentiation is being done, the output will change/remain the same.
   >>> time_derivative(electric_potential, R)
   0
   >>> time_derivative(electric_potential, R1).simplify()
-  (R1_x*cos(q(t)) - R1_y*sin(q(t)))*(3*R1_x**2*cos(2*q(t)) - R1_x**2 -
-  6*R1_x*R1_y*sin(2*q(t)) - 3*R1_y**2*cos(2*q(t)) - R1_y**2)*Derivative(q(t), t)
+  2*(R1_x*cos(q(t)) - R1_y*sin(q(t)))*(3*R1_x**2*cos(2*q(t))/2 -
+  R1_x**2/2 - 3*R1_x*R1_y*sin(2*q(t)) - 3*R1_y**2*cos(2*q(t))/2 -
+  R1_y**2/2)*Derivative(q(t), t)
 
 Field operators and other related functions
 ===========================================
@@ -222,14 +223,14 @@ is defined as the vector of the 3 partial derivatives of :math:`f` with respect 
 :math:`x`, :math:`y` and :math:`z` in the :math:`X`, :math:`Y` and :math:`Z`
 directions respectively.
 
-In the 3D Cartesian system, the divergence of a scalar field :math:`f`,
+In the 3D Cartesian system, the gradient of a scalar field :math:`f`,
 denoted by :math:`\nabla f` is given by -
 
 :math:`\nabla f = \frac{\partial f}{\partial x} \mathbf{\hat{i}} +
 \frac{\partial f}{\partial y}  \mathbf{\hat{j}} +
 \frac{\partial f}{\partial z} \mathbf{\hat{k}}`
 
-To compute the divergence of a vector field in :mod:`physics.vector`, you
+To compute the gradient of a scalar field in :mod:`physics.vector`, you
 would do
 
   >>> from sympy.physics.vector import ReferenceFrame

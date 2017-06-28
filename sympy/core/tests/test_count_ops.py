@@ -1,5 +1,6 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
-    count_ops, S, And, I, pi, Eq, Or, Not, Xor ,Nand ,Nor, Implies,Equivalent, ITE
+    count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
+    Equivalent, MatrixSymbol, Symbol, ITE
 from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
@@ -25,6 +26,7 @@ def test_count_ops_non_visual():
     assert count(Equivalent(x,y)) == 1
     assert count(ITE(x,y,z)) == 1
     assert count(ITE(True,x,y)) == 0
+
 
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
@@ -109,3 +111,19 @@ def test_count_ops_visual():
     #It checks that TUPLE is counted as an operation.
 
     assert count(Eq(x + y, S(2))) == ADD
+
+
+def test_issue_9324():
+    def count(val):
+        return count_ops(val, visual=False)
+
+    M = MatrixSymbol('M', 10, 10)
+    assert count(M[0, 0]) == 0
+    assert count(2 * M[0, 0] + M[5, 7]) == 2
+    P = MatrixSymbol('P', 3, 3)
+    Q = MatrixSymbol('Q', 3, 3)
+    assert count(P + Q) == 3
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True)
+    M = MatrixSymbol('M', m + n, m * m)
+    assert count(M[0, 1]) == 2

@@ -24,7 +24,7 @@ def DirectProduct(*groups):
     >>> from sympy.combinatorics.group_constructs import DirectProduct
     >>> from sympy.combinatorics.named_groups import CyclicGroup
     >>> C = CyclicGroup(4)
-    >>> G = DirectProduct(C,C,C)
+    >>> G = DirectProduct(C, C, C)
     >>> G.order()
     64
 
@@ -53,7 +53,7 @@ def DirectProduct(*groups):
         for j in range(current_gen, current_gen + gens_count[i]):
             gen = ((groups[i].generators)[j - current_gen]).array_form
             array_gens[j][current_deg:current_deg + degrees[i]] = \
-                [ x + current_deg for x in gen]
+                [x + current_deg for x in gen]
         current_gen += gens_count[i]
         current_deg += degrees[i]
     perm_gens = list(uniq([_af_new(list(a)) for a in array_gens]))

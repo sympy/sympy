@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
+    log, cos, sin)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -13,6 +14,10 @@ x, y, z, t = symbols('x,y,z,t')
 
 def test_rel_ne():
     assert Relational(x, y, '!=') == Ne(x, y)
+
+    # issue 6116
+    p = Symbol('p', positive=True)
+    assert Ne(p, 0) is S.true
 
 
 def test_rel_subs():
@@ -262,10 +267,17 @@ def test_new_relational():
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
             if relation_type not in ('==', 'eq', '!=', '<>', 'ne', '>=', 'ge',
-                                     '<=', 'le', '>', 'gt', '<', 'lt'):
+                                     '<=', 'le', '>', 'gt', '<', 'lt', ':=',
+                                     '+=', '-=', '*=', '/=', '%='):
                 break
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
+    assert all(Relational(x, 0, op).rel_op == '==' for op in ('eq', '=='))
+    assert all(Relational(x, 0, op).rel_op == '!=' for op in ('ne', '<>', '!='))
+    assert all(Relational(x, 0, op).rel_op == '>' for op in ('gt', '>'))
+    assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
+    assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
+    assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
 
 
 def test_relational_bool_output():
@@ -445,6 +457,27 @@ def test_nan_equality_exceptions():
     assert Unequality(random.choice(A), nan) is S.true
 
 
+def test_nan_inequality_raise_errors():
+    # See discussion in pull request #7776.  We test inequalities with
+    # a set including examples of various classes.
+    for q in (x, S(0), S(10), S(1)/3, pi, S(1.3), oo, -oo, nan):
+        assert_all_ineq_raise_TypeError(q, nan)
+
+
+def test_nan_complex_inequalities():
+    # Comparisons of NaN with non-real raise errors, we're not too
+    # fussy whether its the NaN error or complex error.
+    for r in (I, zoo, Symbol('z', imaginary=True)):
+        assert_all_ineq_raise_TypeError(r, nan)
+
+
+def test_complex_infinity_inequalities():
+    raises(TypeError, lambda: zoo > 0)
+    raises(TypeError, lambda: zoo >= 0)
+    raises(TypeError, lambda: zoo < 0)
+    raises(TypeError, lambda: zoo <= 0)
+
+
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # We test all combinations from a set
@@ -475,7 +508,6 @@ def test_inequalities_symbol_name_same_complex():
     With complex non-real numbers, both should raise errors.
     """
     # FIXME: could replace with random selection after test passes
-    # FIXME: add NaN here too later
     for a in (x, S(0), S(1)/3, pi, oo):
         raises(TypeError, lambda: Gt(a, I))
         raises(TypeError, lambda: a > I)
@@ -539,6 +571,8 @@ def test_issue_8245():
     assert (r < a) == True
     assert (r >= a) == False
     assert (r <= a) == True
+
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
 
 
 def test_issue_8449():
@@ -630,3 +664,53 @@ def test_issue_8444():
     i = symbols('i', integer=True)
     assert (i > floor(i)) == False
     assert (i < ceiling(i)) == False
+
+
+def test_issue_10304():
+    d = cos(1)**2 + sin(1)**2 - 1
+    assert d.is_comparable is False  # if this fails, find a new d
+    e = 1 + d*I
+    assert simplify(Eq(e, 0)) is S.false
+
+
+def test_issue_10401():
+    x = symbols('x')
+    fin = symbols('inf', finite=True)
+    inf = symbols('inf', infinite=True)
+    inf2 = symbols('inf2', infinite=True)
+    zero = symbols('z', zero=True)
+    nonzero = symbols('nz', zero=False, finite=True)
+
+    assert Eq(1/(1/x + 1), 1).func is Eq
+    assert Eq(1/(1/x + 1), 1).subs(x, S.ComplexInfinity) is S.true
+    assert Eq(1/(1/fin + 1), 1) is S.false
+
+    T, F = S.true, S.false
+    assert Eq(fin, inf) is F
+    assert Eq(inf, inf2) is T and inf != inf2
+    assert Eq(inf/inf2, 0) is F
+    assert Eq(inf/fin, 0) is F
+    assert Eq(fin/inf, 0) is T
+    assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+    assert Eq(inf, -inf) is F
+
+
+    assert Eq(fin/(fin + 1), 1) is S.false
+
+    o = symbols('o', odd=True)
+    assert Eq(o, 2*o) is S.false
+
+    p = symbols('p', positive=True)
+    assert Eq(p/(p - 1), 1) is F
+
+
+def test_issue_10633():
+    assert Eq(True, False) == False
+    assert Eq(False, True) == False
+    assert Eq(True, True) == True
+    assert Eq(False, False) == True
+
+def test_issue_10927():
+    x = symbols('x')
+    assert str(Eq(x, oo)) == 'Eq(x, oo)'
+    assert str(Eq(x, -oo)) == 'Eq(x, -oo)'

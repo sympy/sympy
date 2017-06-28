@@ -21,6 +21,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     is_Exact = False
     is_Numerical = True
+    is_PID = False
 
     has_assoc_Ring = False
     has_assoc_Field = True
@@ -101,7 +102,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
-        raise DomainError('there is no ring associated with %s' % self)
+        return self
 
     def get_exact(self):
         """Returns an exact domain associated with ``self``. """

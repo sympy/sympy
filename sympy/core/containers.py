@@ -22,6 +22,17 @@ class Tuple(Basic):
     SymPy framework.  The wrapped tuple is available as self.args, but
     you can also access elements or slices with [:] syntax.
 
+    Parameters
+    ==========
+
+    sympify : bool
+        If ``False``, ``sympify`` is not called on ``args``. This
+        can be used for speedups for very large tuples where the
+        elements are known to already be sympy objects.
+
+    Example
+    =======
+
     >>> from sympy import symbols
     >>> from sympy.core.containers import Tuple
     >>> a, b, c, d = symbols('a b c d')
@@ -32,15 +43,16 @@ class Tuple(Basic):
 
     """
 
-    def __new__(cls, *args, **assumptions):
-        args = [ sympify(arg) for arg in args ]
-        obj = Basic.__new__(cls, *args, **assumptions)
+    def __new__(cls, *args, **kwargs):
+        if kwargs.get('sympify', True):
+            args = ( sympify(arg) for arg in args )
+        obj = Basic.__new__(cls, *args)
         return obj
 
     def __getitem__(self, i):
         if isinstance(i, slice):
             indices = i.indices(len(self))
-            return Tuple(*[self.args[j] for j in range(*indices)])
+            return Tuple(*(self.args[j] for j in range(*indices)))
         return self.args[i]
 
     def __len__(self):
@@ -91,7 +103,7 @@ class Tuple(Basic):
         return hash(self.args)
 
     def _to_mpmath(self, prec):
-        return tuple([a._to_mpmath(prec) for a in self.args])
+        return tuple(a._to_mpmath(prec) for a in self.args)
 
     def __lt__(self, other):
         return sympify(self.args < other.args)
@@ -194,8 +206,7 @@ class Dict(Basic):
     """
 
     def __new__(cls, *args):
-        if len(args) == 1 and ((args[0].__class__ is dict) or
-                             (args[0].__class__ is Dict)):
+        if len(args) == 1 and isinstance(args[0], (dict, Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
             items = [Tuple(k, v) for k, v in args]

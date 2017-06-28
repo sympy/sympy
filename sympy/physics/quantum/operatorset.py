@@ -262,7 +262,7 @@ def _get_ops(state_inst, op_classes, **options):
         ret = state_inst._state_to_operators(op_classes, **options)
     except NotImplementedError:
         if isinstance(op_classes, (set, tuple, frozenset)):
-            ret = tuple(map(lambda x: _make_default(x), op_classes))
+            ret = tuple(_make_default(x) for x in op_classes)
         else:
             ret = _make_default(op_classes)
 

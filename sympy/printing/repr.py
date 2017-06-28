@@ -50,6 +50,9 @@ class ReprPrinter(Printer):
         args = map(self._print, args)
         return "Add(%s)" % ", ".join(args)
 
+    def _print_Cycle(self, expr):
+        return expr.__repr__()
+
     def _print_Function(self, expr):
         r = self._print(expr.func)
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
@@ -132,9 +135,8 @@ class ReprPrinter(Printer):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
-        dps = prec_to_dps(expr._prec)
         r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
-        return "%s('%s', prec=%i)" % (expr.__class__.__name__, r, dps)
+        return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
@@ -168,8 +170,8 @@ class ReprPrinter(Printer):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)
 
     def _print_AlgebraicNumber(self, expr):
-        return "%s(%s, %s)" % (self.__class__.__name__,
-            self._print(self.coeffs()), self._print(expr.root))
+        return "%s(%s, %s)" % (expr.__class__.__name__,
+            self._print(expr.root), self._print(expr.coeffs()))
 
     def _print_PolyRing(self, ring):
         return "%s(%s, %s, %s)" % (ring.__class__.__name__,

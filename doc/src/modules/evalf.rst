@@ -89,7 +89,7 @@ can be created with a custom precision as second argument:
 
 As the last example shows, some Python floats are only accurate to about 15
 digits as inputs, while others (those that have a denominator that is a
-power of 2, like .125 = 1/4) are exact. To create a ``Float`` from a
+power of 2, like 0.125 = 1/8) are exact. To create a ``Float`` from a
 high-precision decimal number, it is better to pass a string, ``Rational``,
 or ``evalf`` a ``Rational``:
 

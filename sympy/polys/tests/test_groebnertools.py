@@ -150,7 +150,7 @@ def test_benchmark_minpoly_f5b():
     with config.using(groebner='f5b'):
         _do_test_benchmark_minpoly()
 
-@slow
+
 def test_benchmark_coloring():
     V = range(1, 12 + 1)
     E = [(1, 2), (2, 3), (1, 4), (1, 6), (1, 12), (2, 5), (2, 7), (3, 8), (3, 10),
@@ -326,7 +326,6 @@ def test_benchmark_czichowski_buchberger():
     with config.using(groebner='buchberger'):
         _do_test_benchmark_czichowski()
 
-@slow
 def test_benchmark_czichowski_f5b():
     with config.using(groebner='f5b'):
         _do_test_benchmark_czichowski()

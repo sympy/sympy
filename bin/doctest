@@ -34,6 +34,10 @@ parser.add_option("-n", "--normal", action="store_true", dest="normal",
 parser.add_option('-t', '--types', dest='types', action='store',
         default=None, choices=['gmpy', 'gmpy1', 'python'],
         help='setup ground types: gmpy | gmpy1 | python')
+parser.add_option("--no-colors", action="store_false", dest="colors",
+        default=True, help="Do not report colored [OK] and [FAIL]")
+parser.add_option("--force-colors", action="store_true", dest="force_colors",
+        default=False, help="Always use colors, even if the output is not to a terminal.")
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
@@ -70,7 +74,7 @@ import sympy
 
 ok = sympy.doctest(*args, verbose=options.verbose, blacklist=blacklist,
     normal=options.normal, subprocess=options.subprocess, split=options.split,
-    rerun=options.rerun)
+    rerun=options.rerun, colors=options.colors, force_colors=options.force_colors)
 
 if ok:
     sys.exit(0)

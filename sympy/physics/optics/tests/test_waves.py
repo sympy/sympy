@@ -1,8 +1,12 @@
 from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
-    Function, simplify, C, I, atan2)
+    Function, simplify, I, atan2)
 from sympy.abc import epsilon, mu
-from sympy.physics.units import c, m, s
+from sympy.functions.elementary.exponential import exp
+from sympy.physics.units import speed_of_light, m, s
 from sympy.physics.optics import TWave
+
+
+c = speed_of_light.convert_to(m/s)
 
 
 def test_twave():
@@ -12,7 +16,6 @@ def test_twave():
     x = Symbol('x')  # Spatial varaible
     k = Symbol('k')  # Wave number
     E = Function('E')
-    exp = C.exp
     w1 = TWave(A1, f, phi1)
     w2 = TWave(A2, f, phi2)
     assert w1.amplitude == A1

@@ -84,8 +84,8 @@ def unify(x, y, s=None, **fns):
     outputs:
         lazy sequence of mappings {Variable: subtree}
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.unify.core import unify, Compound, Variable
     >>> expr    = Compound("Add", ("x", "y"))

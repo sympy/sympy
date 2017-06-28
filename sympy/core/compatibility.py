@@ -69,12 +69,12 @@ if PY3:
     integer_types = (int,)
     string_types = (str,)
     long = int
+    int_info = sys.int_info
 
     # String / unicode compatibility
     unicode = str
     unichr = chr
-    def u(x):
-        return x
+
     def u_decode(x):
         return x
 
@@ -101,12 +101,12 @@ else:
     integer_types = (int, long)
     string_types = (str, unicode)
     long = long
+    int_info = sys.long_info
 
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
+
     def u_decode(x):
         return x.decode('utf-8')
 
@@ -172,14 +172,14 @@ def with_metaclass(meta, *bases):
     <class 'Meta'>
 
     """
+    # This requires a bit of explanation: the basic idea is to make a dummy
+    # metaclass for one level of class instantiation that replaces itself with
+    # the actual metaclass.
+    # Code copied from the 'six' library.
     class metaclass(meta):
-        __call__ = type.__call__
-        __init__ = type.__init__
         def __new__(cls, name, this_bases, d):
-            if this_bases is None:
-                return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
-    return metaclass("NewBase", None, {})
+    return type.__new__(metaclass, "NewBase", (), {})
 
 
 # These are in here because telling if something is an iterable just by calling
@@ -205,6 +205,15 @@ def iterable(i, exclude=(string_types, dict, NotIterable)):
     that the iterable is not a string or a mapping, so those are excluded
     by default. If you want a pure Python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
+
+    You can also set the _iterable attribute to True or False on your class,
+    which will override the checks here, including the exclude test.
+
+    As a rule of thumb, some SymPy functions use this to check if they should
+    recursively map over an object. If an object is technically iterable in
+    the Python sense but does not desire this behavior (e.g., because its
+    iteration is not finite, or because iteration might induce an unwanted
+    computation), it should disable it by setting the _iterable attribute to False.
 
     See also: is_sequence
 
@@ -233,6 +242,8 @@ def iterable(i, exclude=(string_types, dict, NotIterable)):
     False
 
     """
+    if hasattr(i, '_iterable'):
+        return i._iterable
     try:
         iter(i)
     except TypeError:
@@ -282,78 +293,15 @@ def is_sequence(i, include=None):
             isinstance(i, include))
 
 try:
-    from functools import cmp_to_key
-except ImportError: # <= Python 2.6
-    def cmp_to_key(mycmp):
-        """
-        Convert a cmp= function into a key= function
-        """
-        class K(object):
-            def __init__(self, obj, *args):
-                self.obj = obj
-
-            def __lt__(self, other):
-                return mycmp(self.obj, other.obj) < 0
-
-            def __gt__(self, other):
-                return mycmp(self.obj, other.obj) > 0
-
-            def __eq__(self, other):
-                return mycmp(self.obj, other.obj) == 0
-
-            def __le__(self, other):
-                return mycmp(self.obj, other.obj) <= 0
-
-            def __ge__(self, other):
-                return mycmp(self.obj, other.obj) >= 0
-
-            def __ne__(self, other):
-                return mycmp(self.obj, other.obj) != 0
-        return K
-
-try:
     from itertools import zip_longest
 except ImportError: # <= Python 2.7
     from itertools import izip_longest as zip_longest
 
+
 try:
-    from itertools import combinations_with_replacement
-except ImportError:  # <= Python 2.6
-    def combinations_with_replacement(iterable, r):
-        """Return r length subsequences of elements from the input iterable
-        allowing individual elements to be repeated more than once.
-
-        Combinations are emitted in lexicographic sort order. So, if the
-        input iterable is sorted, the combination tuples will be produced
-        in sorted order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, the generated combinations
-        will also be unique.
-
-        See also: combinations
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import combinations_with_replacement
-        >>> list(combinations_with_replacement('AB', 2))
-        [('A', 'A'), ('A', 'B'), ('B', 'B')]
-        """
-        pool = tuple(iterable)
-        n = len(pool)
-        if not n and r:
-            return
-        indices = [0] * r
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != n - 1:
-                    break
-            else:
-                return
-            indices[i:] = [indices[i] + 1] * (r - i)
-            yield tuple(pool[i] for i in indices)
+    from string import maketrans
+except ImportError:
+    maketrans = str.maketrans
 
 
 def as_int(n):
@@ -385,7 +333,7 @@ def as_int(n):
         if result != n:
             raise TypeError
     except TypeError:
-        raise ValueError('%s is not an integer' % n)
+        raise ValueError('%s is not an integer' % (n,))
     return result
 
 
@@ -410,7 +358,7 @@ def default_sort_key(item, order=None):
     Examples
     ========
 
-    >>> from sympy import S, I, default_sort_key
+    >>> from sympy import S, I, default_sort_key, sin, cos, sqrt
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
@@ -488,16 +436,26 @@ def default_sort_key(item, order=None):
     The order of terms obtained when using these keys is the order that would
     be obtained if those terms were *factors* in a product.
 
+    Although it is useful for quickly putting expressions in canonical order,
+    it does not sort expressions based on their complexity defined by the
+    number of operations, power of variables and others:
+
+    >>> sorted([sin(x)*cos(x), sin(x)], key=default_sort_key)
+    [sin(x)*cos(x), sin(x)]
+    >>> sorted([x, x**2, sqrt(x), x**3], key=default_sort_key)
+    [sqrt(x), x, x**2, x**3]
+
     See Also
     ========
 
-    sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
+    ordered, sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
 
     """
 
-    from sympy.core import S, Basic
-    from sympy.core.sympify import sympify, SympifyError
-    from sympy.core.compatibility import iterable
+    from .singleton import S
+    from .basic import Basic
+    from .sympify import sympify, SympifyError
+    from .compatibility import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)
@@ -724,26 +682,6 @@ SYMPY_INTS = integer_types
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
-
-# check_output() is new in Python 2.7
-import os
-
-try:
-    try:
-        from subprocess import check_output
-    except ImportError: # <= Python 2.6
-        from subprocess import CalledProcessError, check_call
-        def check_output(*args, **kwargs):
-            with open(os.devnull, 'w') as fh:
-                kwargs['stdout'] = fh
-                try:
-                    return check_call(*args, **kwargs)
-                except CalledProcessError as e:
-                    e.output = ("program output is not available for Python 2.6.x")
-                    raise e
-except ImportError:
-    # running on platform like App Engine, no subprocess at all
-    pass
 
 
 # lru_cache compatible with py2.6->py3.2 copied directly from

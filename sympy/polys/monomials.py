@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from textwrap import dedent
 
-from sympy.core import S, C, Mul, Tuple, sympify
+from sympy.core import S, Mul, Tuple, sympify
 from sympy.core.compatibility import exec_, iterable, range
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -87,7 +87,8 @@ def monomial_count(V, N):
     6
 
     """
-    return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
+    from sympy import factorial
+    return factorial(V + N) / factorial(V) / factorial(N)
 
 def monomial_mul(A, B):
     """
@@ -263,7 +264,7 @@ def term_div(a, b, domain):
 
     monom = monomial_div(a_lm, b_lm)
 
-    if domain.has_Field:
+    if domain.is_Field:
         if monom is not None:
             return monom, domain.quo(a_lc, b_lc)
         else:

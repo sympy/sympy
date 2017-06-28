@@ -14,7 +14,7 @@ Printers
 There are several printers available in SymPy.  The most common ones are
 
 - str
-- repr
+- srepr
 - ASCII pretty printer
 - Unicode pretty printer
 - LaTeX
@@ -37,7 +37,7 @@ environment.
 
 .. sidebar:: Quick Tip
 
-   You an also change the printer used in SymPy Live.  Just change the "Output
+   You can also change the printer used in SymPy Live. Just change the "Output
    Format" in the settings.
 
 If you plan to work in an interactive calculator-type session, the
@@ -119,17 +119,17 @@ exactly the same as the expression as you would enter it.
     >>> print(Integral(sqrt(1/x), x))
     Integral(sqrt(1/x), x)
 
-repr
-----
+srepr
+-----
 
-The repr form of an expression is designed to show the exact form of an
+The srepr form of an expression is designed to show the exact form of an
 expression.  It will be discussed more in the :ref:`tutorial-manipulation`
 section.  To get it, use ``srepr()`` [#srepr-fn]_.
 
     >>> srepr(Integral(sqrt(1/x), x))
     "Integral(Pow(Pow(Symbol('x'), Integer(-1)), Rational(1, 2)), Tuple(Symbol('x')))"
 
-The repr form is mostly useful for understanding how an expression is built
+The srepr form is mostly useful for understanding how an expression is built
 internally.
 
 
@@ -169,7 +169,7 @@ Unicode Pretty Printer
 ----------------------
 
 The Unicode pretty printer is also accessed from ``pprint()`` and
-``pretty()``.  It the terminal supports Unicode, it is used automatically.  If
+``pretty()``.  If the terminal supports Unicode, it is used automatically.  If
 ``pprint()`` is not able to detect that the terminal supports unicode, you can
 pass ``use_unicode=True`` to force it to use Unicode.
 
@@ -228,6 +228,27 @@ The ``dotprint()`` function in ``sympy.printing.dot`` prints output to dot
 format, which can be rendered with Graphviz.  See the
 :ref:`tutorial-manipulation` section for some examples of the output of this
 printer.
+
+    >>> from sympy.printing.dot import dotprint
+    >>> from sympy.abc import x
+    >>> print(dotprint(x+2)) 
+    digraph{
+    # Graph style
+    "ordering"="out"
+    "rankdir"="TD"
+    #########
+    # Nodes #
+    #########
+    "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
+    "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    #########
+    # Edges #
+    #########
+    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    }
+
 
 .. rubric:: Footnotes
 

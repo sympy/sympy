@@ -14,7 +14,7 @@ from sympy.physics.quantum.spin import (
     Rotation, WignerD
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 j1, j2, j3, j4, m1, m2, m3, m4 = symbols('j1:5 m1:5')
 j12, j13, j24, j34, j123, j134, mi, mi1, mp = symbols(
@@ -756,6 +756,7 @@ def test_uncouple_3_coupled_states():
                2), JzKet(1, -1), JzKet(S(1)/2, S(-1)/2)), ((1, 3), (1, 2)) )))
 
 
+@slow
 def test_uncouple_4_coupled_states():
     # j1=1/2, j2=1/2, j3=1/2, j4=1/2
     assert TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2)) == \

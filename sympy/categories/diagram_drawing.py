@@ -725,7 +725,7 @@ class DiagramGrid(object):
                 def good_triangle(tri):
                     objs = DiagramGrid._triangle_objects(tri)
                     return obj in objs and \
-                        placed_objects & (objs - set([obj])) == set()
+                        placed_objects & (objs - {obj}) == set()
 
                 tris = [tri for tri in triangles if good_triangle(tri)]
                 if not tris:
@@ -1065,7 +1065,7 @@ class DiagramGrid(object):
         grid = _GrowableGrid(1, 1)
         grid[0, 0] = root
 
-        placed_objects = set([root])
+        placed_objects = {root}
 
         def place_objects(pt, placed_objects):
             """
@@ -1450,7 +1450,7 @@ class ArrowStringDescription(object):
     References
     ==========
 
-    [Xypic] http://www.tug.org/applications/Xy-pic/
+    [Xypic] http://xy-pic.sourceforge.net/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,

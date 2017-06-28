@@ -229,7 +229,7 @@ def _get_arg_list(name, fobj):
         arg_list.append(argspec.keywords)
 
     # Truncate long arguments
-    arg_list = map(lambda x: x[:trunc], arg_list)
+    arg_list = [x[:trunc] for x in arg_list]
 
     # Construct the parameter string (enclosed in brackets)
     str_param = "%s(%s)" % (name, ', '.join(arg_list))
@@ -396,7 +396,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     contained. It then goes through each of the classes/functions to get
     the docstring and doctest coverage of the module. """
 
-    # Import the package and find membmers
+    # Import the package and find members
     m = None
     try:
         __import__(module_path)

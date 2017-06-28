@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 __all__ = ['Linearizer']
 
-from sympy import Matrix, eye, zeros, Dummy
+from sympy.core.backend import Matrix, eye, zeros
+from sympy import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import msubs
@@ -161,11 +162,11 @@ class Linearizer(object):
                 f_v_jac_q = self.f_v.jacobian(self.q)
                 self._C_1 = -self._Pud * temp.LUsolve(f_v_jac_q)
             else:
-                self._C_1 = 0
+                self._C_1 = zeros(o, n)
             self._C_2 = (eye(o) - self._Pud *
                     temp.LUsolve(f_v_jac_u)) * self._Pui
         else:
-            self._C_1 = 0
+            self._C_1 = zeros(o, n)
             self._C_2 = eye(o)
 
     def _form_block_matrices(self):

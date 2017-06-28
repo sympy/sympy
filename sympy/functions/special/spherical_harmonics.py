@@ -1,13 +1,14 @@
 from __future__ import print_function, division
 
 from sympy import pi, I
-from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions import assoc_legendre
-from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 
 _x = Dummy("x")
@@ -147,20 +148,20 @@ class Ynm(Function):
         # Handle negative index m and arguments theta, phi
         if m.could_extract_minus_sign():
             m = -m
-            return S.NegativeOne**m * C.exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
+            return S.NegativeOne**m * exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
         if theta.could_extract_minus_sign():
             theta = -theta
             return Ynm(n, m, theta, phi)
         if phi.could_extract_minus_sign():
             phi = -phi
-            return C.exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
+            return exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
 
         # TODO Add more simplififcation here
 
     def _eval_expand_func(self, **hints):
         n, m, theta, phi = self.args
-        rv = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
-                C.exp(I*m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        rv = (sqrt((2*n + 1)/(4*pi) * factorial(n - m)/factorial(n + m)) *
+                exp(I*m*phi) * assoc_legendre(n, m, cos(theta)))
         # We can do this because of the range of theta
         return rv.subs(sqrt(-cos(theta)**2 + 1), sin(theta))
 
@@ -174,8 +175,8 @@ class Ynm(Function):
         elif argindex == 3:
             # Diff wrt theta
             n, m, theta, phi = self.args
-            return (m * C.cot(theta) * Ynm(n, m, theta, phi) +
-                    sqrt((n - m)*(n + m + 1)) * C.exp(-I*phi) * Ynm(n, m + 1, theta, phi))
+            return (m * cot(theta) * Ynm(n, m, theta, phi) +
+                    sqrt((n - m)*(n + m + 1)) * exp(-I*phi) * Ynm(n, m + 1, theta, phi))
         elif argindex == 4:
             # Diff wrt phi
             n, m, theta, phi = self.args
@@ -209,10 +210,10 @@ class Ynm(Function):
     def as_real_imag(self, deep=True, **hints):
         # TODO: Handle deep and hints
         n, m, theta, phi = self.args
-        re = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
-              C.cos(m*phi) * assoc_legendre(n, m, C.cos(theta)))
-        im = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
-              C.sin(m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        re = (sqrt((2*n + 1)/(4*pi) * factorial(n - m)/factorial(n + m)) *
+              cos(m*phi) * assoc_legendre(n, m, cos(theta)))
+        im = (sqrt((2*n + 1)/(4*pi) * factorial(n - m)/factorial(n + m)) *
+              sin(m*phi) * assoc_legendre(n, m, cos(theta)))
         return (re, im)
 
     def _eval_evalf(self, prec):

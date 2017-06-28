@@ -12,10 +12,12 @@ from sympy.simplify import simplify
 from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
 
+
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point, literal field
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
+from sympy.tensor.array import ImmutableDenseNDimArray
 
 
 class Manifold(Basic):
@@ -46,14 +48,14 @@ class Patch(Basic):
 
     On a manifold one can have many patches that do not always include the
     whole manifold. On these patches coordinate charts can be defined that
-    permit the parametrization of any point on the patch in terms of a tuple
+    permit the parameterization of any point on the patch in terms of a tuple
     of real numbers (the coordinates).
 
     This object serves as a container/parent for all coordinate system charts
     that can be defined on the patch it represents.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Define a Manifold and a Patch on that Manifold:
 
@@ -573,6 +575,9 @@ class BaseVectorField(Expr):
         if covariant_order(scalar_field) or contravariant_order(scalar_field):
             raise ValueError('Only scalar fields can be supplied as arguments to vector fields.')
 
+        if scalar_field is None:
+            return self
+
         base_scalars = list(scalar_field.atoms(BaseScalarField))
 
         # First step: e_x(x+r**2) -> e_x(x) + 2*r*e_x(r)
@@ -788,10 +793,10 @@ class TensorProduct(Expr):
     """Tensor product of forms.
 
     The tensor product permits the creation of multilinear functionals (i.e.
-    higher order tensors) out of lower order forms (e.g. 1-forms). However, the
-    higher tensors thus created lack the interesting features provided by the
-    other type of product, the wedge product, namely they are not antisymmetric
-    and hence are not form fields.
+    higher order tensors) out of lower order fields (e.g. 1-forms and vector
+    fields). However, the higher tensors thus created lack the interesting
+    features provided by the other type of product, the wedge product, namely
+    they are not antisymmetric and hence are not form fields.
 
     Examples
     ========
@@ -809,6 +814,11 @@ class TensorProduct(Expr):
     0
     >>> TensorProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
     x**2
+    >>> TensorProduct(R2.e_x, R2.e_y)(R2.x**2, R2.y**2)
+    4*x*y
+    >>> TensorProduct(R2.e_y, R2.dx)(R2.y)
+    dx
+
 
     You can nest tensor products.
 
@@ -832,14 +842,12 @@ class TensorProduct(Expr):
 
     """
     def __new__(cls, *args):
-        if any(contravariant_order(a) for a in args):
-            raise ValueError('A vector field was supplied as an argument to TensorProduct.')
-        scalar = Mul(*[m for m in args if covariant_order(m) == 0])
-        forms = [m for m in args if covariant_order(m)]
-        if forms:
-            if len(forms) == 1:
-                return scalar*forms[0]
-            return scalar*super(TensorProduct, cls).__new__(cls, *forms)
+        scalar = Mul(*[m for m in args if covariant_order(m) + contravariant_order(m) == 0])
+        multifields = [m for m in args if covariant_order(m) + contravariant_order(m)]
+        if multifields:
+            if len(multifields) == 1:
+                return scalar*multifields[0]
+            return scalar*super(TensorProduct, cls).__new__(cls, *multifields)
         else:
             return scalar
 
@@ -847,25 +855,25 @@ class TensorProduct(Expr):
         super(TensorProduct, self).__init__()
         self._args = args
 
-    def __call__(self, *v_fields):
-        """Apply on a list of vector_fields.
+    def __call__(self, *fields):
+        """Apply on a list of fields.
 
-        If the number of vector fields supplied is not equal to the order of
-        the form field the list of arguments is padded with ``None``'s.
+        If the number of input fields supplied is not equal to the order of
+        the tensor product field, the list of arguments is padded with ``None``'s.
 
         The list of arguments is divided in sublists depending on the order of
         the forms inside the tensor product. The sublists are provided as
         arguments to these forms and the resulting expressions are given to the
         constructor of ``TensorProduct``.
         """
-        tot_order = covariant_order(self)
-        tot_args = len(v_fields)
+        tot_order = covariant_order(self) + contravariant_order(self)
+        tot_args = len(fields)
         if tot_args != tot_order:
-            v_fields = list(v_fields) + [None]*(tot_order - tot_args)
-        orders = [covariant_order(f) for f in self._args]
+            fields = list(fields) + [None]*(tot_order - tot_args)
+        orders = [covariant_order(f) + contravariant_order(f) for f in self._args]
         indices = [sum(orders[:i + 1]) for i in range(len(orders) - 1)]
-        v_fields = [v_fields[i:j] for i, j in zip([0] + indices, indices + [None])]
-        multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, v_fields)]
+        fields = [fields[i:j] for i, j in zip([0] + indices, indices + [None])]
+        multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, fields)]
         return TensorProduct(*multipliers)
 
     def _latex(self, printer, *args):
@@ -895,6 +903,8 @@ class WedgeProduct(TensorProduct):
     -1
     >>> WedgeProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
     x**2
+    >>> WedgeProduct(R2.e_x,R2.e_y)(R2.y,None)
+    -e_x
 
     You can nest wedge products.
 
@@ -905,15 +915,15 @@ class WedgeProduct(TensorProduct):
     """
     # TODO the calculation of signatures is slow
     # TODO you do not need all these permutations (neither the prefactor)
-    def __call__(self, *vector_fields):
+    def __call__(self, *fields):
         """Apply on a list of vector_fields.
 
         The expression is rewritten internally in terms of tensor products and evaluated."""
-        orders = (covariant_order(e) for e in self.args)
+        orders = (covariant_order(e) + contravariant_order(e) for e in self.args)
         mul = 1/Mul(*(factorial(o) for o in orders))
-        perms = permutations(vector_fields)
+        perms = permutations(fields)
         perms_par = (Permutation(
-            p).signature() for p in permutations(list(range(len(vector_fields)))))
+            p).signature() for p in permutations(list(range(len(fields)))))
         tensor_prod = TensorProduct(*self.args)
         return mul*Add(*[tensor_prod(*p[0])*p[1] for p in zip(perms, perms_par)])
 
@@ -990,7 +1000,7 @@ class BaseCovarDerivativeOp(Expr):
     >>> TP = TensorProduct
     >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     >>> ch
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
     >>> cvd(R2.x)
     1
@@ -1035,7 +1045,7 @@ class BaseCovarDerivativeOp(Expr):
         # Third step: evaluate the derivatives of the vectors
         derivs = []
         for v in vectors:
-            d = Add(*[(self._christoffel[k][wrt_vector._index][v._index]
+            d = Add(*[(self._christoffel[k, wrt_vector._index, v._index]
                        *v._coord_sys.base_vector(k))
                       for k in range(v._coord_sys.dim)])
             derivs.append(d)
@@ -1057,7 +1067,7 @@ class CovarDerivativeOp(Expr):
     >>> TP = TensorProduct
     >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     >>> ch
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = CovarDerivativeOp(R2.x*R2.e_x, ch)
     >>> cvd(R2.x)
     x
@@ -1299,13 +1309,6 @@ def dummyfy(args, exprs):
     return d_args, d_exprs
 
 
-def list_to_tuple_rec(the_list):
-    # TODO remove in favor of tensor classes
-    if isinstance(the_list, list):
-        return tuple(list_to_tuple_rec(e) for e in the_list)
-    return the_list
-
-
 ###############################################################################
 # Helpers
 ###############################################################################
@@ -1346,6 +1349,8 @@ def contravariant_order(expr, _strict=False):
         return 0
     elif isinstance(expr, BaseVectorField):
         return 1
+    elif isinstance(expr, TensorProduct):
+        return sum(contravariant_order(a) for a in expr.args)
     elif not _strict or expr.atoms(BaseScalarField):
         return 0
     else:  # If it does not contain anything related to the diffgeom module and it is _strict
@@ -1484,9 +1489,9 @@ def metric_to_Christoffel_1st(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_1st(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_1st(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((1/2, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[1/2, 0], [0, 0]], [[0, 0], [0, 0]]]
 
     """
     matrix = twoform_to_matrix(expr)
@@ -1501,7 +1506,7 @@ def metric_to_Christoffel_1st(expr):
                      for k in indices]
                     for j in indices]
                    for i in indices]
-    return list_to_tuple_rec(christoffel)
+    return ImmutableDenseNDimArray(christoffel)
 
 
 def metric_to_Christoffel_2nd(expr):
@@ -1517,9 +1522,9 @@ def metric_to_Christoffel_2nd(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_2nd(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((1/(2*x), 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[1/(2*x), 0], [0, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_1st = metric_to_Christoffel_1st(expr)
@@ -1536,11 +1541,11 @@ def metric_to_Christoffel_2nd(expr):
     dums = coord_sys._dummies
     matrix = matrix.subs(list(zip(s_fields, dums))).inv().subs(list(zip(dums, s_fields)))
     # XXX end of workaround
-    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
+    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l, j, k] for l in indices])
                      for k in indices]
                     for j in indices]
                    for i in indices]
-    return list_to_tuple_rec(christoffel)
+    return ImmutableDenseNDimArray(christoffel)
 
 
 def metric_to_Riemann_components(expr):
@@ -1558,24 +1563,23 @@ def metric_to_Riemann_components(expr):
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    ((((0, 0), (0, 0)), ((0, 0), (0, 0))), (((0, 0), (0, 0)), ((0, 0),
-     (0, 0))))
+    [[[[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]]
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
-    >>> riemann[0]
-    (((0, 0), (0, 0)), ((0, exp(-2*r)*r), (-exp(-2*r)*r, 0)))
-    >>> riemann[1]
-    (((0, -1/r), (1/r, 0)), ((0, 0), (0, 0)))
+    >>> riemann[0, :, :, :]
+    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
+    >>> riemann[1, :, :, :]
+    [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = list(range(coord_sys.dim))
-    deriv_ch = [[[[d(ch_2nd[i][j][k])
+    deriv_ch = [[[[d(ch_2nd[i, j, k])
                    for d in coord_sys.base_vectors()]
                   for k in indices]
                  for j in indices]
@@ -1585,7 +1589,7 @@ def metric_to_Riemann_components(expr):
                    for mu in indices]
                   for sig in indices]
                      for rho in indices]
-    riemann_b = [[[[Add(*[ch_2nd[rho][l][mu]*ch_2nd[l][sig][nu] - ch_2nd[rho][l][nu]*ch_2nd[l][sig][mu] for l in indices])
+    riemann_b = [[[[Add(*[ch_2nd[rho, l, mu]*ch_2nd[l, sig, nu] - ch_2nd[rho, l, nu]*ch_2nd[l, sig, mu] for l in indices])
                     for nu in indices]
                    for mu in indices]
                   for sig in indices]
@@ -1595,7 +1599,7 @@ def metric_to_Riemann_components(expr):
                      for mu in indices]
                 for sig in indices]
                for rho in indices]
-    return list_to_tuple_rec(riemann)
+    return ImmutableDenseNDimArray(riemann)
 
 
 def metric_to_Ricci_components(expr):
@@ -1613,20 +1617,20 @@ def metric_to_Ricci_components(expr):
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    ((0, 0), (0, 0))
+    [[0, 0], [0, 0]]
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    ((1/r, 0), (0, exp(-2*r)*r))
+    [[1/r, 0], [0, exp(-2*r)*r]]
 
     """
     riemann = metric_to_Riemann_components(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = list(range(coord_sys.dim))
-    ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
+    ricci = [[Add(*[riemann[k, i, k, j] for k in indices])
               for j in indices]
              for i in indices]
-    return list_to_tuple_rec(ricci)
+    return ImmutableDenseNDimArray(ricci)

@@ -11,9 +11,9 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
         exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
 from sympy.utilities import default_sort_key, sift
+from sympy.core.operations import AssocOp
 
-
-class MatAdd(MatrixExpr):
+class MatAdd(MatrixExpr, AssocOp):
     """A Sum of Matrix Expressions
 
     MatAdd inherits from and operates like SymPy Add
@@ -50,11 +50,16 @@ class MatAdd(MatrixExpr):
         return MatAdd(*[adjoint(arg) for arg in self.args]).doit()
 
     def _eval_trace(self):
-        from trace import Trace
-        return MatAdd(*[Trace(arg) for arg in self.args]).doit()
+        from .trace import trace
+        return Add(*[trace(arg) for arg in self.args]).doit()
 
-    def doit(self, **ignored):
-        return canonicalize(self)
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return canonicalize(MatAdd(*args))
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -84,12 +89,12 @@ def merge_explicit(matadd):
     >>> C = Matrix([[1, 2], [3, 4]])
     >>> X = MatAdd(A, B, C)
     >>> pprint(X)
-    A + [1  0] + [1  2]
-        [    ]   [    ]
+        [1  0]   [1  2]
+    A + [    ] + [    ]
         [0  1]   [3  4]
     >>> pprint(merge_explicit(X))
-    A + [2  2]
-        [    ]
+        [2  2]
+    A + [    ]
         [3  5]
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))

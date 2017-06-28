@@ -91,23 +91,8 @@ Details are described here:
 API reference
 -------------
 
-.. automethod:: sympy.integrals.integrate
-
-.. automethod:: sympy.integrals.line_integrate
-
-.. automethod:: sympy.integrals.deltaintegrate
-
-.. automethod:: sympy.integrals.ratint
-
-.. automethod:: sympy.integrals.heurisch
-
-.. automethod:: sympy.integrals.heurisch_wrapper
-
-.. automethod:: sympy.integrals.trigintegrate
-
-.. automethod:: sympy.integrals.manualintegrate
-
-.. automethod:: sympy.integrals.manualintegrate.integral_steps
+.. autofunction:: sympy.integrals.integrate
+.. autofunction:: sympy.integrals.line_integrate
 
 The class `Integral` represents an unevaluated integral and has some methods that help in the integration of an expression.
 
@@ -120,7 +105,7 @@ The class `Integral` represents an unevaluated integral and has some methods tha
 
 TODO and Bugs
 -------------
-There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?labels=Integration
+There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=label%3AIntegration
 
 Numeric Integrals
 =================

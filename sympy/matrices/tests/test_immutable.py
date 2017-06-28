@@ -1,5 +1,8 @@
+from itertools import product
+
 from sympy import (ImmutableMatrix, Matrix, eye, zeros, S, Equality,
-        Unequality, ImmutableSparseMatrix, SparseMatrix, sympify)
+        Unequality, ImmutableSparseMatrix, SparseMatrix, sympify,
+        integrate)
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
@@ -50,7 +53,7 @@ def test_function_return_types():
     # I.e. do MatrixBase methods return the correct class?
     X = ImmutableMatrix([[1, 2], [3, 4]])
     Y = ImmutableMatrix([[1], [0]])
-    q, r = X.QRdecomposition()
+    q, r = X.QR_decomposition()
     assert (type(q), type(r)) == (ImmutableMatrix, ImmutableMatrix)
 
     assert type(X.LUsolve(Y)) == ImmutableMatrix
@@ -59,12 +62,12 @@ def test_function_return_types():
     X = ImmutableMatrix([[1, 2], [2, 1]])
     assert X.T == X
     assert X.is_symmetric
-    assert type(X.cholesky()) == ImmutableMatrix
-    L, D = X.LDLdecomposition()
+    assert type(X.cholesky_decomposition()) == ImmutableMatrix
+    L, D = X.LDL_decomposition()
     assert (type(L), type(D)) == (ImmutableMatrix, ImmutableMatrix)
 
     assert X.is_diagonalizable()
-    assert X.berkowitz_det() == -3
+    assert X.det() == -3
     assert X.norm(2) == 3
 
     assert type(X.eigenvects()[0][2][0]) == ImmutableMatrix
@@ -75,7 +78,7 @@ def test_function_return_types():
     assert type(X.lower_triangular_solve(Y)) == ImmutableMatrix
     assert type(X.T.upper_triangular_solve(Y)) == ImmutableMatrix
 
-    assert type(X.minorMatrix(0, 0)) == ImmutableMatrix
+    assert type(X.minor_submatrix(0, 0)) == ImmutableMatrix
 
 # issue 6279
 # https://github.com/sympy/sympy/issues/6279
@@ -110,3 +113,10 @@ def test_Equality():
     assert Unequality(M, M.subs(x, 2)).subs(x, 2) is S.false
     assert Equality(M, M.subs(x, 2)).subs(x, 3) is S.false
     assert Unequality(M, M.subs(x, 2)).subs(x, 3) is S.true
+
+
+def test_integrate():
+    intIM = integrate(IM, x)
+    assert intIM.shape == IM.shape
+    assert all([intIM[i, j] == (1 + j + 3*i)*x for i, j in
+                product(range(3), range(3))])

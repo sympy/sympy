@@ -1,5 +1,10 @@
 from __future__ import print_function, division
 
+try:
+    from pyglet.gl.gl import c_float
+except ImportError:
+    pass
+
 from pyglet.gl import *
 from sympy.core import S
 from sympy.core.compatibility import range

@@ -387,7 +387,7 @@ class GeometricRay(Matrix):
     matrix : a 2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
-    =======
+    ========
 
     >>> from sympy.physics.optics import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix
@@ -510,6 +510,7 @@ class BeamParameter(Expr):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
+    .. [2] http://en.wikipedia.org/wiki/Gaussian_beam
     """
     #TODO A class Complex may be implemented. The BeamParameter may
     # subclass it. See:
@@ -558,9 +559,9 @@ class BeamParameter(Expr):
         >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.radius
-        0.2809/pi**2 + 1
+        1 + 3.55998576005696*pi**2
         """
-        return self.z*(1 + (self.z/self.z_r)**2)
+        return self.z*(1 + (self.z_r/self.z)**2)
 
     @property
     def w(self):

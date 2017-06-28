@@ -262,7 +262,7 @@ class ExprWithIntLimits(ExprWithLimits):
 
         index, reorder, reverse_order
         """
-        var = set([limit[0] for limit in expr.limits])
+        var = {limit[0] for limit in expr.limits}
         limit_x = expr.limits[x]
         limit_y = expr.limits[y]
 

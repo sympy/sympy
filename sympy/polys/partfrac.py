@@ -87,7 +87,7 @@ def apart(f, x=None, full=False, **options):
         # non-commutative
         if f.is_Mul:
             c, nc = f.args_cnc(split_1=False)
-            nc = f.func(*[apart(i, x=x, full=full, **_options) for i in nc])
+            nc = f.func(*nc)
             if c:
                 c = apart(f.func._from_args(c), x=x, full=full, **_options)
                 return c*nc

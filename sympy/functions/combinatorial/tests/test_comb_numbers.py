@@ -11,6 +11,8 @@ from sympy.functions import (
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
 
+from sympy.core.numbers import GoldenRatio
+
 x = Symbol('x')
 
 
@@ -59,6 +61,20 @@ def test_fibonacci():
     assert fibonacci(2, x) == x
     assert fibonacci(3, x) == x**2 + 1
     assert fibonacci(4, x) == x**3 + 2*x
+
+    # issue #8800
+    n = Dummy('n')
+    assert fibonacci(n).limit(n, S.Infinity) == S.Infinity
+    assert lucas(n).limit(n, S.Infinity) == S.Infinity
+
+    assert fibonacci(n).rewrite(sqrt) == \
+        2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
+    assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
+    assert fibonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
+        fibonacci(10)
+    assert lucas(n).rewrite(sqrt) == \
+        (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
+    assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
 
 
 def test_bell():
@@ -324,12 +340,14 @@ def test_genocchi():
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
     assert genocchi(m) == genocchi(m)
-    assert genocchi(n).rewrite(bernoulli) == 2 * (1 - 2 ** n) * bernoulli(n)
+    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
     assert genocchi(2 * n).is_odd
     assert genocchi(4 * n).is_positive
-    # This should work for 4 * n - 2, but fails due to some variation of issue
-    # 8632 ((4*n-2).is_positive returns None)
+    # these are the only 2 prime Genocchi numbers
+    assert genocchi(6, evaluate=False).is_prime == S(-3).is_prime
+    assert genocchi(8, evaluate=False).is_prime
     assert genocchi(4 * n + 2).is_negative
+    assert genocchi(4 * n - 2).is_negative
 
 
 def test_nC_nP_nT():
@@ -495,3 +513,15 @@ def test_issue_8496():
 
     raises(TypeError, lambda: catalan(n, k))
     raises(TypeError, lambda: euler(n, k))
+
+
+def test_issue_8601():
+    n = Symbol('n', integer=True, negative=True)
+
+    assert catalan(n - 1) == S.Zero
+    assert catalan(-S.Half) == S.ComplexInfinity
+    assert catalan(-S.One) == -S.Half
+    c1 = catalan(-5.6).evalf()
+    assert str(c1) == '6.93334070531408e-5'
+    c2 = catalan(-35.4).evalf()
+    assert str(c2) == '-4.14189164517449e-24'
