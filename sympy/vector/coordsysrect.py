@@ -6,6 +6,7 @@ from sympy.core import S
 from sympy.vector.scalar import BaseScalar
 from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple
 import sympy.vector
+from sympy import simplify
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 
@@ -174,7 +175,7 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
-    def _connect_to_standard_cartesian(self,  curv_coord_type):
+    def _connect_to_standard_cartesian(self, curv_coord_type):
         """
         Change the type of orthogonal curvilinear system. It could be done
         by tuple of transformation equations or by choosing one of pre-defined
@@ -186,7 +187,7 @@ class CoordSysCartesian(Basic):
         :param curv_coord_type: str, tuple
 
         """
-        if type(curv_coord_type) is str:
+        if isinstance(curv_coord_type, string_types):
             self._set_transformation_equations_mapping(curv_coord_type)
             self._set_lame_coefficient_mapping(curv_coord_type)
 
@@ -277,7 +278,7 @@ class CoordSysCartesian(Basic):
         h3 = sqrt(diff(equations[0], self.z)**2 +
                   diff(equations[1], self.z)**2 +
                   diff(equations[2], self.z)**2)
-        return h1, h2, h3
+        return map(simplify, [h1, h2, h3])
 
     @property
     def origin(self):
@@ -286,10 +287,10 @@ class CoordSysCartesian(Basic):
     @property
     def delop(self):
         SymPyDeprecationWarning(
-            feature="delop operator inside coordinate system",
-            useinstead="it as instance Del class",
+            feature="coord_system.delop has been replaced.",
+            useinstead="Use the Del() class",
             deprecated_since_version="1.1"
-            ).warn()
+        ).warn()
         from sympy.vector.deloperator import Del
         return Del()
 
