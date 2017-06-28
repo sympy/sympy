@@ -3,7 +3,7 @@ order of the date of their first contribution), except those who explicitly
 didn't want to be mentioned. People with a * next to their names are not found
 in the metadata of the git history. This file is generated automatically by
 running `./bin/authors_update.py`.
-There are a total of 591 authors.
+There are a total of 590 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -574,7 +574,6 @@ Vedant Rathore <vedantr1998@gmail.com>
 Johan Blåbäck <johan.blaback@cea.fr>
 Pranjal Tale <pranjaltale16@gmail.com>
 jtoka <jason.tokayer@gmail.com>
-jtoka <jason.tokayer@capitalone.com>
 Raghav Jajodia <jajodia.raghav@gmail.com>
 Rajat Thakur <rajatthakur1997@gmail.com>
 Dhruv Bhanushali <dhruv_b@live.com>
