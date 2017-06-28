@@ -5,6 +5,7 @@ import os
 import tempfile
 import shutil
 import warnings
+import tempfile
 
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
@@ -114,14 +115,13 @@ setup(cmdclass={'build_ext': build_ext},
                             )],
     )\
 """
-    try:
-        code_gen._prepare_files(routine)
-        with open('setup.py') as f:
-            setup_text = f.read()
-        assert setup_text == expected
-    finally:
-        os.remove(code_gen.module_name + '.pyx')
-        os.remove('setup.py')
+    temp_dir = tempfile.mkdtemp()
+    setup_file_path = os.path.join(temp_dir, 'setup.py')
+
+    code_gen._prepare_files(routine, build_dir=temp_dir)
+    with open(setup_file_path) as f:
+        setup_text = f.read()
+    assert setup_text == expected
 
     code_gen = CythonCodeWrapper(CCodeGen(),
                                  include_dirs=['/usr/local/include', '/opt/booger/include'],
@@ -151,14 +151,10 @@ setup(cmdclass={'build_ext': build_ext},
                             )],
     )\
 """
-    try:
-        code_gen._prepare_files(routine)
-        with open('setup.py') as f:
-            setup_text = f.read()
-        assert setup_text == expected
-    finally:
-        os.remove(code_gen.module_name + '.pyx')
-        os.remove('setup.py')
+    code_gen._prepare_files(routine, build_dir=temp_dir)
+    with open(setup_file_path) as f:
+        setup_text = f.read()
+    assert setup_text == expected
 
     expected = """\
 try:
@@ -182,15 +178,11 @@ setup(cmdclass={'build_ext': build_ext},
     )\
 """
 
-    try:
-        code_gen._need_numpy = True
-        code_gen._prepare_files(routine)
-        with open('setup.py') as f:
-            setup_text = f.read()
-        assert setup_text == expected
-    finally:
-        os.remove(code_gen.module_name + '.pyx')
-        os.remove('setup.py')
+    code_gen._need_numpy = True
+    code_gen._prepare_files(routine, build_dir=temp_dir)
+    with open(setup_file_path) as f:
+        setup_text = f.read()
+    assert setup_text == expected
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')

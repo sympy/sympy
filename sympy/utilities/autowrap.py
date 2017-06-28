@@ -297,7 +297,7 @@ setup(cmdclass={{'build_ext': build_ext}},
         command = [sys.executable, "setup.py", "build_ext", "--inplace"]
         return command
 
-    def _prepare_files(self, routine):
+    def _prepare_files(self, routine, build_dir=os.curdir):
         pyxfilename = self.module_name + '.pyx'
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
@@ -312,7 +312,8 @@ setup(cmdclass={{'build_ext': build_ext}},
             self._include_dirs.append('np.get_include()')
         else:
             np_import = ''
-        with open('setup.py', 'w') as f:
+
+        with open(os.path.join(build_dir, 'setup.py'), 'w') as f:
             includes = str(self._include_dirs).replace("'np.get_include()'",
                                                        'np.get_include()')
             f.write(self.setup_template.format(ext_args=", ".join(ext_args),
