@@ -245,3 +245,4 @@ def mulrowcol(row, col, K):
     for i in range(len(row)):
         result += row[i]*col[i]
     return result
+

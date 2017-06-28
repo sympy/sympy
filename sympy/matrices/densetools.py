@@ -248,3 +248,4 @@ def isHermitian(matlist, K):
     False
     """
     return conjugate_transpose(matlist, K) == matlist
+

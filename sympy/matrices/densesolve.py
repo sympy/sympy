@@ -444,3 +444,4 @@ def backward_substitution(upper_triangle, variable, constant, K):
             a += copy_upper_triangle[i][j]*variable[j][0]
         variable[i][0] = (constant[i][0] - a)/copy_upper_triangle[i][i]
     return variable
+
