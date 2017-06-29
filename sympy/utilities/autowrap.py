@@ -900,11 +900,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> f(np.arange(5), 3)
     array([  3.,   4.,   7.,  12.,  19.])
 
-    For the F2Py and Cython backends, inputs are required to be equal length
-    1-dimensional arrays. The F2Py backend will perform type conversion, but
+    For the 'f2py' and 'cython' backends, inputs are required to be equal length
+    1-dimensional arrays. The 'f2py' backend will perform type conversion, but
     the Cython backend will error if the inputs are not of the expected type.
 
-    >>> f_fortran = ufuncify((x, y), y + x**2, backend='F2Py')
+    >>> f_fortran = ufuncify((x, y), y + x**2, backend='f2py')
     >>> f_fortran(1, 2)
     array([ 3.])
     >>> f_fortran(np.array([1, 2, 3]), np.array([1.0, 2.0, 3.0]))
