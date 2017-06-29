@@ -14,6 +14,16 @@ from sympy.abc import x, y
 from sympy.polys.polytools import LC
 from sympy.polys.polytools import gcd_list
 
+
+def gradient_terms(monomial, x_degree, y_degree):
+    terms = []
+    for x_count in range(0, x_degree + 1):
+        for y_count in range(0, y_degree + 1):
+            term = x**x_count*y**y_count
+            terms.append([term, x_count, y_count, None])
+    return terms
+
+
 def polytope_integrate(poly, expr, **kwargs):
     """This is currently a basic prototype for integrating
     univariate/bivariate polynomials over 2-Polytopes.
@@ -31,75 +41,6 @@ def polytope_integrate(poly, expr, **kwargs):
     >>> poly = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
     >>> expr = x*y
     >>> polytope_integrate(poly, expr)
-    1/4
-    """
-    clockwise = kwargs.get('clockwise', False)
-
-    if clockwise is True and isinstance(poly, Polygon):
-        poly = clockwise_sort(poly)
-
-    dims = (x, y)
-    polys = decompose(expr)
-
-    if isinstance(poly, Polygon):
-        # For Vertex Representation
-        hp_params = hyperplane_parameters(poly)
-        facets = poly.sides
-    else:
-        # For Hyperplane Representation
-        plen = len(poly)
-        intersections = [intersection(poly[(i - 1) % plen], poly[i])
-                         for i in range(0, plen)]
-        hp_params = poly
-        lints = len(intersections)
-        facets = [Segment2D(intersections[i], intersections[(i + 1) % lints])
-                  for i in range(0, lints)]
-
-    dim_length = len(dims)
-    result = S.Zero
-
-    for degree in polys:
-        poly_contribute = S.Zero
-        facet_count = 0
-        for hp in hp_params:
-            value_over_boundary = integration_reduction(facets, facet_count,
-                                                        hp[0], hp[1],
-                                                        polys[degree],
-                                                        dims, degree)
-            poly_contribute += value_over_boundary * (hp[1]/norm(hp[0]))
-            facet_count += 1
-        poly_contribute /= (dim_length + degree)
-        result += poly_contribute
-
-    return result
-
-
-def gradient_terms(monomial, x_degree, y_degree):
-    terms = []
-    for x_count in range(0, x_degree + 1):
-        for y_count in range(0, y_degree + 1):
-            term = x**x_count*y**y_count
-            terms.append([term, x_count, y_count, None])
-    return terms
-
-
-def polytope_integrate_dynamic(poly, expr, **kwargs):
-    """This is currently a basic prototype for integrating
-    univariate/bivariate polynomials over 2-Polytopes.
-    Parameters
-    ==========
-    poly : The input Polygon.
-    expr : The input polynomial.
-    dims : The tuple of symbols denoting axes.
-    Example
-    =======
-    >>> from sympy.abc import x, y
-    >>> from sympy.geometry.polygon import Polygon
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.integrals.intpoly import polytope_integrate_dynamic
-    >>> poly = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
-    >>> expr = x*y
-    >>> polytope_integrate_dynamic(poly, expr)
     1/4
     """
     clockwise = kwargs.get('clockwise', False)
@@ -145,7 +86,7 @@ def polytope_integrate_dynamic(poly, expr, **kwargs):
                 #  (term, x_degree, y_degree, value over boundary)
                 m, x_d, y_d, _ = monomial
                 value_over_boundary =\
-                    integration_reduction_dynamic(facets, facet_count, a, b, m,
+                    integration_reduction(facets, facet_count, a, b, m,
                                                   dims, x_d, y_d, y_degree, x0,
                                                   grad_terms, i)
                 monomial[3] = value_over_boundary
@@ -170,7 +111,7 @@ def polytope_integrate_dynamic(poly, expr, **kwargs):
     return integral_value
 
 
-def integration_reduction_dynamic(facets, index, a, b, expr,
+def integration_reduction(facets, index, a, b, expr,
                                   dims, x_degree, y_degree, max_y_degree,
                                   x0, monomial_values, monom_index):
     expr = S(expr)
@@ -216,62 +157,6 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
                                                distance_origin * expr, dims,
                                                degree)
 
-    return value/(len(dims) + degree - 1)
-
-
-def integration_reduction(facets, index, a, b, expr, dims, degree):
-    """Helper method for polytope_integrate.
-    Returns the value of the input expression evaluated over the
-    polytope facet referenced by a given index.
-    Parameters
-    ===========
-    facets : List of facets of the polytope.
-    index : Index referencing the facet to integrate the expression over.
-    a : Hyperplane parameter denoting direction.
-    b : Hyperplane parameter denoting distance.
-    expr : The expression to integrate over the facet.
-    dims : List of symbols denoting axes.
-    degree : Degree of the homogeneous polynomial.
-    """
-    if expr == S.Zero:
-        return expr
-
-    a, b = (S(a[0]), S(a[1])), S(b)
-
-    value = S.Zero
-    x0 = facets[index].points[0]
-    m = len(facets)
-    gens = (x, y)
-
-    inner_product = diff(expr, gens[0]) * x0[0] + diff(expr, gens[1]) * x0[1]
-
-    if inner_product != 0:
-        value += integration_reduction(facets, index, a, b,
-                                       inner_product, dims, degree - 1)
-
-    for j in range(0, m):
-        intersect = ()
-        if j == (index - 1) % m or j == (index + 1) % m:
-            intersect = intersection(facets[index], facets[j])
-        if intersect:
-            distance_origin = norm(tuple(map(lambda x, y: x - y,
-                                             intersect, x0)))
-            if is_vertex(intersect):
-                if isinstance(expr, Expr):
-                    if len(gens) == 3:
-                        expr_dict = {gens[0]: intersect[0],
-                                     gens[1]: intersect[1],
-                                     gens[2]: intersect[2]}
-                    else:
-                        expr_dict = {gens[0]: intersect[0],
-                                     gens[1]: intersect[1]}
-                    value += distance_origin * expr.subs(expr_dict)
-                else:
-                    value += distance_origin * expr
-            else:
-                value += integration_reduction(intersect, 0, a, b,
-                                               distance_origin * expr, dims,
-                                               degree)
     return value/(len(dims) + degree - 1)
 
 
