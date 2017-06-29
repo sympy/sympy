@@ -224,18 +224,18 @@ try:
 except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
-from Cython.Distutils import build_ext
+from Cython.Build import cythonize
+cy_opts = {cythonize_options}
 {np_import}
-
-setup(cmdclass={{'build_ext': build_ext}},
-      ext_modules=[Extension({ext_args},
-                             include_dirs={include_dirs},
-                             library_dirs={library_dirs},
-                             libraries={libraries},
-                             extra_compile_args={extra_compile_args},
-                             extra_link_args={extra_link_args}
-                            )],
-    )\
+ext_mods = [Extension(
+    {ext_args},
+    include_dirs={include_dirs},
+    library_dirs={library_dirs},
+    libraries={libraries},
+    extra_compile_args={extra_compile_args},
+    extra_link_args={extra_link_args}
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """
 
     pyx_imports = (
@@ -263,24 +263,27 @@ setup(cmdclass={{'build_ext': build_ext}},
 
         Parameters
         ==========
-        include_dirs : [string]
+        include_dirs : [list of strings]
             A list of directories to search for C/C++ header files (in Unix
             form for portability).
-        library_dirs : [string]
+        library_dirs : [list of strings]
             A list of directories to search for C/C++ libraries at link time.
-        libraries : [string]
+        libraries : [list of strings]
             A list of library names (not filenames or paths) to link against.
-        extra_compile_args : [string]
+        extra_compile_args : [list of strings]
             Any extra platform- and compiler-specific information to use when
             compiling the source files in 'sources'.  For platforms and
             compilers where "command line" makes sense, this is typically a
             list of command-line arguments, but for other platforms it could be
-            anything.
-        extra_link_args : [string]
+            anything. Note that the attribute ``std_compile_flag`` will be
+            appended to this list.
+        extra_link_args : [list of strings]
             Any extra platform- and compiler-specific information to use when
             linking object files together to create the extension (or to create
             a new static Python interpreter). Similar interpretation as for
             'extra_compile_args'.
+        cythonize_options : [dictionary]
+            Keyword arguments passed on to cythonize.
 
         """
 
@@ -290,6 +293,7 @@ setup(cmdclass={{'build_ext': build_ext}},
         self._extra_compile_args = kwargs.pop('extra_compile_args', [])
         self._extra_compile_args.append(self.std_compile_flag)
         self._extra_link_args = kwargs.pop('extra_link_args', [])
+        self._cythonize_options = kwargs.pop('cythonize_options', {})
 
         self._need_numpy = False
 
@@ -320,14 +324,16 @@ setup(cmdclass={{'build_ext': build_ext}},
         with open(os.path.join(build_dir, 'setup.py'), 'w') as f:
             includes = str(self._include_dirs).replace("'np.get_include()'",
                                                        'np.get_include()')
-            f.write(self.setup_template.format(ext_args=", ".join(ext_args),
-                                               np_import=np_import,
-                                               include_dirs=includes,
-                                               library_dirs=self._library_dirs,
-                                               libraries=self._libraries,
-                                               extra_compile_args=self._extra_compile_args,
-                                               extra_link_args=self._extra_link_args))
-
+            f.write(self.setup_template.format(
+                ext_args=", ".join(ext_args),
+                np_import=np_import,
+                include_dirs=includes,
+                library_dirs=self._library_dirs,
+                libraries=self._libraries,
+                extra_compile_args=self._extra_compile_args,
+                extra_link_args=self._extra_link_args,
+                cythonize_options=self._cythonize_options
+            ))
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
