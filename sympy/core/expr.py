@@ -346,9 +346,9 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' has no free symbols.
-        It will be faster than `if not self.free_symbols`, however, since
-        `is_number` will fail as soon as it hits a free symbol.
+        """Returns True if ``self`` has no free symbols.
+        It will be faster than ``if not self.free_symbols``, however, since
+        ``is_number`` will fail as soon as it hits a free symbol.
 
         Examples
         ========
