@@ -12,7 +12,7 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count)
+    udivisor_count, primenu, primeomega)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -154,6 +154,20 @@ def test_factorint():
     assert factorint(5951757) == {3: 1, 7: 1, 29: 2, 337: 1}
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
+
+    assert factorint(0, multiple=True) == [0]
+    assert factorint(1, multiple=True) == []
+    assert factorint(-1, multiple=True) == [-1]
+    assert factorint(-2, multiple=True) == [-1, 2]
+    assert factorint(-16, multiple=True) == [-1, 2, 2, 2, 2]
+    assert factorint(2, multiple=True) == [2]
+    assert factorint(24, multiple=True) == [2, 2, 2, 3]
+    assert factorint(126, multiple=True) == [2, 3, 3, 7]
+    assert factorint(123456, multiple=True) == [2, 2, 2, 2, 2, 2, 3, 643]
+    assert factorint(5951757, multiple=True) == [3, 7, 29, 29, 337]
+    assert factorint(64015937, multiple=True) == [7993, 8009]
+    assert factorint(2**(2**6) + 1, multiple=True) == [274177, 67280421310721]
+
     assert multiproduct(factorint(fac(200))) == fac(200)
     for b, e in factorint(fac(150)).items():
         assert e == fac_multiplicity(150, b)
@@ -424,6 +438,13 @@ def test_factorrat():
     assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
     assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
 
+    assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
+    assert factorrat(S(1)/1, multiple=True) == []
+    assert factorrat(S(25)/14, multiple=True) == [1/7, 1/2, 5, 5]
+    assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
+    assert factorrat(S(-25)/14/9, multiple=True) == \
+        [-1, 1/7, 1/3, 1/3, 1/2, 5, 5]
+
 
 def test_visual_io():
     sm = smoothness_p
@@ -482,3 +503,31 @@ def test_digits():
     assert digits(384753, 71) == [71, 1, 5, 23, 4]
     assert digits(93409) == [10, 9, 3, 4, 0, 9]
     assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
+
+
+def test_primenu():
+    assert primenu(2) == 1
+    assert primenu(2 * 3) == 2
+    assert primenu(2 * 3 * 5) == 3
+    assert primenu(3 * 25) == primenu(3) + primenu(25)
+    assert [primenu(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
+    assert primenu(fac(50)) == 15
+    assert primenu(2 ** 9941 - 1) == 1
+    n = Symbol('n', integer=True)
+    assert primenu(n)
+    assert primenu(n).subs(n, 2 ** 31 - 1) == 1
+    assert summation(primenu(n), (n, 2, 30)) == 43
+
+
+def test_primeomega():
+    assert primeomega(2) == 1
+    assert primeomega(2 * 2) == 2
+    assert primeomega(2 * 2 * 3) == 3
+    assert primeomega(3 * 25) == primeomega(3) + primeomega(25)
+    assert [primeomega(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
+    assert primeomega(fac(50)) == 108
+    assert primeomega(2 ** 9941 - 1) == 1
+    n = Symbol('n', integer=True)
+    assert primeomega(n)
+    assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
+    assert summation(primeomega(n), (n, 2, 30)) == 59

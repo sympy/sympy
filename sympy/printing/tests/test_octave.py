@@ -1,7 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
+from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
+                             sinc)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -9,6 +10,7 @@ from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
+from sympy.functions.special.gamma_functions import (lowergamma, uppergamma)
 from sympy.utilities.pytest import XFAIL
 from sympy.core.compatibility import range
 
@@ -286,7 +288,7 @@ def test_octave_matrix_elements():
     assert mcode(A[0, 0]**2 + A[0, 1] + A[0, 2]) == "x.^2 + x.*y + 2"
     A = MatrixSymbol('AA', 1, 3)
     assert mcode(A) == "AA"
-    assert mcode(A[0,0]**2 + sin(A[0,1]) + A[0,2]) == \
+    assert mcode(A[0, 0]**2 + sin(A[0,1]) + A[0,2]) == \
            "sin(AA(1, 2)) + AA(1, 1).^2 + AA(1, 3)"
     assert mcode(sum(A)) == "AA(1, 1) + AA(1, 2) + AA(1, 3)"
 
@@ -353,6 +355,12 @@ def test_sparse():
     )
 
 
+def test_sinc():
+    assert mcode(sinc(x)) == 'sinc(x/pi)'
+    assert mcode(sinc((x + 3))) == 'sinc((x + 3)/pi)'
+    assert mcode(sinc(pi*(x + 3))) == 'sinc(x + 3)'
+
+
 def test_specfun():
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:
@@ -363,5 +371,22 @@ def test_specfun():
     assert octave_code(airyaiprime(x)) == 'airy(1, x)'
     assert octave_code(airybi(x)) == 'airy(2, x)'
     assert octave_code(airybiprime(x)) == 'airy(3, x)'
+    assert octave_code(uppergamma(n, x)) == 'gammainc(x, n, \'upper\')'
+    assert octave_code(lowergamma(n, x)) == 'gammainc(x, n, \'lower\')'
     assert octave_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
+    assert octave_code(LambertW(x)) == 'lambertw(x)'
+    assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert mcode(A[0, 0]) == "A(1, 1)"
+    assert mcode(3 * A[0, 0]) == "3*A(1, 1)"
+
+    F = C[0, 0].subs(C, A - B)
+    assert mcode(F) == "((-1)*B + A)(1, 1)"

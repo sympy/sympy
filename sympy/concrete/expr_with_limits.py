@@ -27,13 +27,13 @@ def _process_limits(*symbols):
     orientation = 1
     for V in symbols:
         if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
-            limits.append(Tuple(V))
-            continue
-        elif isinstance(V, Idx):
-            if V.lower is None or V.upper is None:
-                limits.append(Tuple(V))
+            if isinstance(V, Idx):
+                if V.lower is None or V.upper is None:
+                    limits.append(Tuple(V))
+                else:
+                    limits.append(Tuple(V, V.lower, V.upper))
             else:
-                limits.append(Tuple(V, V.lower, V.upper))
+                limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
@@ -185,7 +185,7 @@ class ExprWithLimits(Expr):
         >>> from sympy import Sum
         >>> from sympy.abc import x, y
         >>> Sum(x, (x, y, 1)).free_symbols
-        set([y])
+        {y}
         """
         # don't test for any special values -- nominal free symbols
         # should be returned, e.g. don't return set() if the

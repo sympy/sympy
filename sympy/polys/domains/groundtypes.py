@@ -14,7 +14,7 @@ from .pythonrational import PythonRational
 
 from sympy.core.numbers import (
     igcdex as python_gcdex,
-    igcd as python_gcd,
+    igcd2 as python_gcd,
     ilcm as python_lcm,
 )
 

@@ -25,7 +25,7 @@ class AssumptionsContext(set):
     >>> from sympy.abc import x
     >>> global_assumptions.add(Q.real(x))
     >>> global_assumptions
-    AssumptionsContext([Q.real(x)])
+    AssumptionsContext({Q.real(x)})
     >>> global_assumptions.remove(Q.real(x))
     >>> global_assumptions
     AssumptionsContext()
@@ -38,6 +38,10 @@ class AssumptionsContext(set):
         for a in assumptions:
             super(AssumptionsContext, self).add(a)
 
+    def _sympystr(self, printer):
+        if not self:
+            return "%s()" % self.__class__.__name__
+        return "%s(%s)" % (self.__class__.__name__, printer._print_set(self))
 
 global_assumptions = AssumptionsContext()
 

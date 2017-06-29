@@ -578,7 +578,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0))]
     >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
     >>> dsolve(eq)
-    set([Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))])
+    {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -1367,28 +1367,27 @@ def classify_sysode(eq, funcs=None, **kwargs):
             derivs = eqs.atoms(Derivative)
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
-                order[func_] = 0
                 funcs.append(func_)
     funcs = list(set(funcs))
     if len(funcs) < len(eq):
         raise ValueError("Number of functions given is less than number of equations %s" % funcs)
     func_dict = dict()
     for func in funcs:
-        if not order[func]:
+        if not order.get(func, False):
             max_order = 0
             for i, eqs_ in enumerate(eq):
                 order_ = ode_order(eqs_,func)
                 if max_order < order_:
                     max_order = order_
                     eq_no = i
-        if eq_no in func_dict:
-            list_func = []
-            list_func.append(func_dict[eq_no])
-            list_func.append(func)
-            func_dict[eq_no] = list_func
-        else:
-            func_dict[eq_no] = func
-        order[func] = max_order
+            if eq_no in func_dict:
+                list_func = []
+                list_func.append(func_dict[eq_no])
+                list_func.append(func)
+                func_dict[eq_no] = list_func
+            else:
+                func_dict[eq_no] = func
+            order[func] = max_order
     funcs = [func_dict[i] for i in range(len(func_dict))]
     matching_hints['func'] = funcs
     for func in funcs:
@@ -2034,7 +2033,7 @@ def odesimp(eq, func, order, constants, hint):
                             |
                            /
 
-    >>> pprint(odesimp(eq, f(x), 1, set([C1]),
+    >>> pprint(odesimp(eq, f(x), 1, {C1},
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
     ... )) #doctest: +SKIP
         x
@@ -2628,11 +2627,11 @@ def constantsimp(expr, constants):
     >>> from sympy import symbols
     >>> from sympy.solvers.ode import constantsimp
     >>> C1, C2, C3, x, y = symbols('C1, C2, C3, x, y')
-    >>> constantsimp(2*C1*x, set([C1, C2, C3]))
+    >>> constantsimp(2*C1*x, {C1, C2, C3})
     C1*x
-    >>> constantsimp(C1 + 2 + x, set([C1, C2, C3]))
+    >>> constantsimp(C1 + 2 + x, {C1, C2, C3})
     C1 + x
-    >>> constantsimp(C1*C2 + 2 + C2 + C3*x, set([C1, C2, C3]))
+    >>> constantsimp(C1*C2 + 2 + C2 + C3*x, {C1, C2, C3})
     C1 + C3*x
 
     """
@@ -2811,7 +2810,7 @@ def _handle_Integral(expr, func, order, hint):
         sol = (expr.doit()).subs(y, f(x))
         del y
     elif hint == "1st_exact_Integral":
-        sol = expr.subs(y, f(x))
+        sol = Eq(Subs(expr.lhs, y, f(x)), expr.rhs)
         del y
     elif hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
@@ -4862,7 +4861,7 @@ def _undetermined_coefficients_match(expr, x):
     >>> from sympy.solvers.ode import _undetermined_coefficients_match
     >>> from sympy.abc import x
     >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
-    {'test': True, 'trialset': set([x*exp(x), exp(-x), exp(x)])}
+    {'test': True, 'trialset': {x*exp(x), exp(-x), exp(x)}}
     >>> _undetermined_coefficients_match(log(x), x)
     {'test': False}
 

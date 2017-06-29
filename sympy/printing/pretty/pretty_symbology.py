@@ -6,7 +6,7 @@ import sys
 import warnings
 unicode_warnings = ''
 
-from sympy.core.compatibility import u, unicode, range
+from sympy.core.compatibility import unicode, range
 
 # first, setup unicodedate environment
 try:
@@ -432,6 +432,11 @@ _xsym = {
     '>=':  ('>=', U('GREATER-THAN OR EQUAL TO')),
     '!=':  ('!=', U('NOT EQUAL TO')),
     ':=':  (':=', ':='),
+    '+=':  ('+=', '+='),
+    '-=':  ('-=', '-='),
+    '*=':  ('*=', '*='),
+    '/=':  ('/=', '/='),
+    '%=':  ('%=', '%='),
     '*':   ('*', U('DOT OPERATOR')),
     '-->': ('-->', U('EM DASH') + U('EM DASH') +
             U('BLACK RIGHT-POINTING TRIANGLE') if U('EM DASH')
@@ -559,13 +564,12 @@ def annotated(letter):
     information.
     """
     ucode_pics = {
-        'F': (2, 0, 2, 0, u('\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                            '\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                            '\N{BOX DRAWINGS LIGHT UP}')),
-        'G': (3, 0, 3, 1,
-              u('\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
-                '\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
-                '\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}'))
+        'F': (2, 0, 2, 0, u'\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          u'\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          u'\N{BOX DRAWINGS LIGHT UP}'),
+        'G': (3, 0, 3, 1, u'\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
+                          u'\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
+                          u'\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}')
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),

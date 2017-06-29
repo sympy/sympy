@@ -115,7 +115,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         elif r.func in (Eq, Ne):
             r = r.func(*ordered(r.args), evaluate=False)
         else:
-            raise NotImplemented
+            raise NotImplementedError
         if r.lhs.is_Number and not r.rhs.is_Number:
             r = r.reversed
         elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
@@ -205,8 +205,8 @@ class Relational(Boolean, Expr, EvalfMixin):
 
         >>> from sympy import Symbol, Eq
         >>> x = Symbol('x', real=True)
-        >>> (x>0).as_set()
-        (0, oo)
+        >>> (x > 0).as_set()
+        Interval.open(0, oo)
         >>> Eq(x, 0).as_set()
         {0}
 
@@ -286,6 +286,7 @@ class Equality(Relational):
     def __new__(cls, lhs, rhs=0, **options):
         from sympy.core.add import Add
         from sympy.core.logic import fuzzy_bool
+        from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients
 
         lhs = _sympify(lhs)
@@ -315,7 +316,11 @@ class Equality(Relational):
                 if L != R:
                     return S.false
                 if L is False:
+                    if lhs == -rhs:  # Eq(oo, -oo)
+                        return S.false
                     return S.true
+            elif None in fin and False in fin:
+                return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
                 # see if the difference evaluates
@@ -326,6 +331,10 @@ class Equality(Relational):
                         return S.false
                     if z:
                         return S.true
+                # evaluate numerically if possible
+                n2 = _n2(lhs, rhs)
+                if n2 is not None:
+                    return _sympify(n2 == 0)
                 # see if the ratio evaluates
                 n, d = dif.as_numer_denom()
                 rv = None
@@ -669,7 +678,7 @@ class GreaterThan(_Greater):
     >>> type( e )
     And
     >>> e
-    And(x < y, y < z)
+    (x < y) & (y < z)
 
     Note that this is different than chaining an equality directly via use of
     parenthesis (this is currently an open bug in SymPy [2]_):

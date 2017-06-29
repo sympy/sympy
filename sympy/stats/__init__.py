@@ -58,10 +58,10 @@ from .crv_types import (
     ContinuousRV,
     Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
-    GammaInverse, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell,
-    Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
-    StudentT, Triangular, Uniform, UniformSum, VonMises, Weibull,
-    WignerSemicircle
+    GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
+    Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
+    ShiftedGompertz, StudentT, Triangular, Uniform, UniformSum, VonMises,
+    Weibull, WignerSemicircle
 )
 __all__.extend(crv_types.__all__)
 

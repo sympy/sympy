@@ -21,7 +21,7 @@ where `k > 0` and `a_{i}(n)` are polynomials in `n`. To use
 
     ``L = [ a_{0}(n), ..., a_{k-1}(n), a_{k}(n) ]``
 
-where ``L[i]``, for `i=0, \dots, k`, maps to
+where ``L[i]``, for `i=0, \ldots, k`, maps to
 `a_{i}(n) y(n+i)` (`y(n+i)` is implicit).
 
 For example if we would like to compute `m`-th Bernoulli polynomial
@@ -667,9 +667,9 @@ def rsolve(f, y, init=None):
     or equivalently:
 
     .. math:: a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +
-              \dots + a_{0}(n) y(n) = f(n)
+              \cdots + a_{0}(n) y(n) = f(n)
 
-    where `a_{i}(n)`, for `i=0, \dots, k`, are polynomials or rational
+    where `a_{i}(n)`, for `i=0, \ldots, k`, are polynomials or rational
     functions in `n`, and `f` is a hypergeometric function or a sum
     of a fixed number of pairwise dissimilar hypergeometric terms in
     `n`, finds all solutions or returns ``None``, if none were found.
@@ -683,7 +683,7 @@ def rsolve(f, y, init=None):
 
         ``L = [ v_0, v_1, ..., v_m ]``
 
-    where ``L[i] = v_i``, for `i=0, \dots, m`, maps to `y(n_i)`.
+    where ``L[i] = v_i``, for `i=0, \ldots, m`, maps to `y(n_i)`.
 
     Examples
     ========

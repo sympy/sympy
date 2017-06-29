@@ -69,12 +69,12 @@ if PY3:
     integer_types = (int,)
     string_types = (str,)
     long = int
+    int_info = sys.int_info
 
     # String / unicode compatibility
     unicode = str
     unichr = chr
-    def u(x):
-        return x
+
     def u_decode(x):
         return x
 
@@ -101,12 +101,12 @@ else:
     integer_types = (int, long)
     string_types = (str, unicode)
     long = long
+    int_info = sys.long_info
 
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
+
     def u_decode(x):
         return x.decode('utf-8')
 
@@ -333,7 +333,7 @@ def as_int(n):
         if result != n:
             raise TypeError
     except TypeError:
-        raise ValueError('%s is not an integer' % n)
+        raise ValueError('%s is not an integer' % (n,))
     return result
 
 

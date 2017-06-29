@@ -17,6 +17,7 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, DiracDelta, sympify)
 from sympy.core.relational import Relational
+from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
 from sympy.solvers.solveset import solveset
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -146,7 +147,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(self, sym) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(sym, self) for sym in self.domain.symbols)
 
     @property
     def symbols(self):
@@ -174,7 +175,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, str):
+        if isinstance(s, string_types):
             s = Symbol(s)
         if not isinstance(s, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -182,7 +183,7 @@ class SinglePSpace(PSpace):
 
     @property
     def value(self):
-        return RandomSymbol(self, self.symbol)
+        return RandomSymbol(self.symbol, self)
 
     @property
     def symbol(self):
@@ -223,24 +224,25 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
-    def __new__(cls, pspace, symbol=None):
-        if symbol is None:
+    def __new__(cls, symbol, pspace=None):
+        if pspace is None:
             # Allow single arg, representing pspace == PSpace()
-            pspace, symbol = PSpace(), pspace
+            pspace = PSpace()
         if not isinstance(symbol, Symbol):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
-        return Basic.__new__(cls, pspace, symbol)
+        return Basic.__new__(cls, symbol, pspace)
 
     is_finite = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     _diff_wrt = True
 
-    pspace = property(lambda self: self.args[0])
-    symbol = property(lambda self: self.args[1])
+    pspace = property(lambda self: self.args[1])
+    symbol = property(lambda self: self.args[0])
     name   = property(lambda self: self.symbol.name)
 
     def _eval_is_positive(self):
@@ -780,13 +782,14 @@ def where(condition, given_condition=None, **kwargs):
     >>> X = Normal('x', 0, 1)
 
     >>> where(X**2<1)
-    Domain: And(-1 < x, x < 1)
+    Domain: (-1 < x) & (x < 1)
 
     >>> where(X**2<1).set
-    (-1, 1)
+    Interval.open(-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
-    Domain: Or(And(Eq(a, 1), Eq(b, 1)), And(Eq(a, 1), Eq(b, 2)), And(Eq(a, 2), Eq(b, 2)))    """
+    Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
+    """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)

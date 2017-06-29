@@ -148,7 +148,7 @@ class Order(Expr):
                 variables = list(map(sympify, args))
                 point = [S.Zero]*len(variables)
 
-        if not all(isinstance(v, Symbol) for v in variables):
+        if not all(v.is_Symbol for v in variables):
             raise TypeError('Variables are not symbols, got %s' % variables)
 
         if len(list(uniq(variables))) != len(variables):
@@ -356,7 +356,7 @@ class Order(Expr):
                 return all([x in self.args[1:] for x in expr.args[1:]])
             if expr.expr.is_Add:
                 return all([self.contains(x) for x in expr.expr.args])
-            if self.expr.is_Add:
+            if self.expr.is_Add and point == S.Zero:
                 return any([self.func(x, *self.args[1:]).contains(expr)
                             for x in self.expr.args])
             if self.variables and expr.variables:

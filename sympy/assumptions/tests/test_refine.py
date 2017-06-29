@@ -3,6 +3,7 @@ from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.utilities.pytest import slow
 
 
 def test_Abs():
@@ -15,7 +16,8 @@ def test_Abs():
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
 
-def test_pow():
+@slow
+def test_pow1():
     assert refine((-1)**x, Q.even(x)) == 1
     assert refine((-1)**x, Q.odd(x)) == -1
     assert refine((-2)**x, Q.even(x)) == 2**x
@@ -33,6 +35,9 @@ def test_pow():
     assert refine(sqrt(1/x), Q.real(x)) != 1/sqrt(x)
     assert refine(sqrt(1/x), Q.positive(x)) == 1/sqrt(x)
 
+
+@slow
+def test_pow2():
     # powers of (-1)
     assert refine((-1)**(x + y), Q.even(x)) == (-1)**y
     assert refine((-1)**(x + y + z), Q.odd(x) & Q.odd(z)) == (-1)**y
@@ -40,9 +45,17 @@ def test_pow():
     assert refine((-1)**(x + y + 2), Q.odd(x)) == (-1)**(y + 1)
     assert refine((-1)**(x + 3)) == (-1)**(x + 1)
 
+
+@slow
+def test_pow3():
+    # continuation
     assert refine((-1)**((-1)**x/2 - S.Half), Q.integer(x)) == (-1)**x
     assert refine((-1)**((-1)**x/2 + S.Half), Q.integer(x)) == (-1)**(x + 1)
     assert refine((-1)**((-1)**x/2 + 5*S.Half), Q.integer(x)) == (-1)**(x + 1)
+
+
+@slow
+def test_pow4():
     assert refine((-1)**((-1)**x/2 - 7*S.Half), Q.integer(x)) == (-1)**(x + 1)
     assert refine((-1)**((-1)**x/2 - 9*S.Half), Q.integer(x)) == (-1)**x
 

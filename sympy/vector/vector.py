@@ -7,7 +7,6 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
-from sympy.core.compatibility import u
 
 
 class Vector(BasisDependent):
@@ -74,8 +73,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSysCartesian, Del
         >>> C = CoordSysCartesian('C')
+        >>> delop = Del()
         >>> C.i.dot(C.j)
         0
         >>> C.i & C.i
@@ -83,7 +83,7 @@ class Vector(BasisDependent):
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.dot(C.k)
         5
-        >>> (C.i & C.delop)(C.x*C.y*C.z)
+        >>> (C.i & delop)(C.x*C.y*C.z)
         C.y*C.z
         >>> d = C.i.outer(C.i)
         >>> C.i.dot(d)
@@ -109,14 +109,20 @@ class Vector(BasisDependent):
         # Check if the other is a del operator
         if isinstance(other, Del):
             def directional_derivative(field):
-                field = express(field, other.system, variables=True)
-                out = self.dot(other._i) * df(field, other._x)
-                out += self.dot(other._j) * df(field, other._y)
-                out += self.dot(other._k) * df(field, other._z)
-                if out == 0 and isinstance(field, Vector):
-                    out = Vector.zero
-                return out
-
+                from sympy.vector.operators import _get_coord_sys_from_expr
+                coord_sys = _get_coord_sys_from_expr(field)
+                if coord_sys is not None:
+                    field = express(field, coord_sys, variables=True)
+                    out = self.dot(coord_sys._i) * df(field, coord_sys._x)
+                    out += self.dot(coord_sys._j) * df(field, coord_sys._y)
+                    out += self.dot(coord_sys._k) * df(field, coord_sys._z)
+                    if out == 0 and isinstance(field, Vector):
+                        out = Vector.zero
+                    return out
+                elif isinstance(field, Vector) :
+                    return Vector.zero
+                else:
+                    return S(0)
             return directional_derivative
 
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):
@@ -345,6 +351,9 @@ class Vector(BasisDependent):
 class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
+
+    Unicode pretty forms in Python 2 should use the prefix ``u``.
+
     """
 
     def __new__(cls, name, index, system, pretty_str, latex_str):
@@ -365,7 +374,7 @@ class BaseVector(Vector, AtomicExpr):
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
         obj._name = name
-        obj._pretty_form = u(pretty_str)
+        obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
 

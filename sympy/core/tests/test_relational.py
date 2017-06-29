@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
+    log, cos, sin)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -266,10 +267,17 @@ def test_new_relational():
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
             if relation_type not in ('==', 'eq', '!=', '<>', 'ne', '>=', 'ge',
-                                     '<=', 'le', '>', 'gt', '<', 'lt'):
+                                     '<=', 'le', '>', 'gt', '<', 'lt', ':=',
+                                     '+=', '-=', '*=', '/=', '%='):
                 break
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
+    assert all(Relational(x, 0, op).rel_op == '==' for op in ('eq', '=='))
+    assert all(Relational(x, 0, op).rel_op == '!=' for op in ('ne', '<>', '!='))
+    assert all(Relational(x, 0, op).rel_op == '>' for op in ('gt', '>'))
+    assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
+    assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
+    assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
 
 
 def test_relational_bool_output():
@@ -564,6 +572,8 @@ def test_issue_8245():
     assert (r >= a) == False
     assert (r <= a) == True
 
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+
 
 def test_issue_8449():
     p = Symbol('p', nonnegative=True)
@@ -657,7 +667,7 @@ def test_issue_8444():
 
 
 def test_issue_10304():
-    d = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    d = cos(1)**2 + sin(1)**2 - 1
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
@@ -682,6 +692,7 @@ def test_issue_10401():
     assert Eq(inf/fin, 0) is F
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+    assert Eq(inf, -inf) is F
 
 
     assert Eq(fin/(fin + 1), 1) is S.false
@@ -698,3 +709,8 @@ def test_issue_10633():
     assert Eq(False, True) == False
     assert Eq(True, True) == True
     assert Eq(False, False) == True
+
+def test_issue_10927():
+    x = symbols('x')
+    assert str(Eq(x, oo)) == 'Eq(x, oo)'
+    assert str(Eq(x, -oo)) == 'Eq(x, -oo)'

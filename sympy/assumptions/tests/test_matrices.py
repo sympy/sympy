@@ -7,6 +7,11 @@ from sympy.utilities.pytest import XFAIL
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
 Z = MatrixSymbol('Z', 2, 2)
+A1x1 = MatrixSymbol('A1x1', 1, 1)
+B1x1 = MatrixSymbol('B1x1', 1, 1)
+C0x0 = MatrixSymbol('C0x0', 0, 0)
+V1 = MatrixSymbol('V1', 2, 1)
+V2 = MatrixSymbol('V2', 2, 1)
 
 def test_square():
     assert ask(Q.square(X))
@@ -46,7 +51,13 @@ def test_symmetric():
     assert ask(Q.symmetric(Y.T*X*Y)) is None
     assert ask(Q.symmetric(Y.T*X*Y), Q.symmetric(X)) is True
     assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
-
+    assert ask(Q.symmetric(A1x1)) is True
+    assert ask(Q.symmetric(A1x1 + B1x1)) is True
+    assert ask(Q.symmetric(A1x1 * B1x1)) is True
+    assert ask(Q.symmetric(V1.T*V1)) is True
+    assert ask(Q.symmetric(V1.T*(V1 + V2))) is True
+    assert ask(Q.symmetric(V1.T*(V1 + V2) + A1x1)) is True
+    assert ask(Q.symmetric(MatrixSlice(Y, (0, 1), (1, 2)))) is True
 
 def _test_orthogonal_unitary(predicate):
     assert ask(predicate(X), predicate(X))
@@ -115,6 +126,14 @@ def test_diagonal():
     assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X))
     assert ask(Q.symmetric(X), Q.diagonal(X))
     assert ask(Q.triangular(X), Q.diagonal(X))
+    assert ask(Q.diagonal(C0x0))
+    assert ask(Q.diagonal(A1x1))
+    assert ask(Q.diagonal(A1x1 + B1x1))
+    assert ask(Q.diagonal(A1x1*B1x1))
+    assert ask(Q.diagonal(V1.T*V2))
+    assert ask(Q.diagonal(V1.T*(X + Z)*V1))
+    assert ask(Q.diagonal(MatrixSlice(Y, (0, 1), (1, 2)))) is True
+    assert ask(Q.diagonal(V1.T*(V1 + V2))) is True
 
 
 def test_non_atoms():

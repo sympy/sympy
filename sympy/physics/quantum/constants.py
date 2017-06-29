@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
-from sympy.core.compatibility import u, with_metaclass
+from sympy.core.compatibility import with_metaclass
 from sympy.printing.pretty.stringpict import prettyForm
 import mpmath.libmp as mlib
 

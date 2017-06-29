@@ -625,6 +625,19 @@ class Mul(Expr, AssocOp):
         if e.is_Integer:
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
                 Pow(Mul._from_args(nc), e, evaluate=False)
+        if e.is_Rational and e.q == 2:
+            from sympy.core.power import integer_nthroot
+            from sympy.functions.elementary.complexes import sign
+            if b.is_imaginary:
+                a = b.as_real_imag()[1]
+                if a.is_Rational:
+                    n, d = abs(a/2).as_numer_denom()
+                    n, t = integer_nthroot(n, 2)
+                    if t:
+                        d, t = integer_nthroot(d, 2)
+                        if t:
+                            r = sympify(n)/d
+                            return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
         p = Pow(b, e, evaluate=False)
 
@@ -653,6 +666,21 @@ class Mul(Expr, AssocOp):
             return rv.expand()
         return rv
 
+    @property
+    def _mpc_(self):
+        """
+        Convert self to an mpmath mpc if possible
+        """
+        from sympy.core.numbers import I, Float
+        im_part, imag_unit = self.as_coeff_Mul()
+        if not imag_unit == I:
+            # ValueError may seem more reasonable but since it's a @property,
+            # we need to use AttributeError to keep from confusing things like
+            # hasattr.
+            raise AttributeError("Cannot convert Mul to mpc. Must be of the form Number*I")
+
+        return (Float(0)._mpf_, Float(im_part)._mpf_)
+
     @cacheit
     def as_two_terms(self):
         """Return head and tail of self.
@@ -680,6 +708,33 @@ class Mul(Expr, AssocOp):
 
         else:
             return args[0], self._new_rawargs(*args[1:])
+
+    @cacheit
+    def as_coefficients_dict(self):
+        """Return a dictionary mapping terms to their coefficient.
+        Since the dictionary is a defaultdict, inquiries about terms which
+        were not present will return a coefficient of 0. The dictionary
+        is considered to have a single term.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import a, x
+        >>> (3*a*x).as_coefficients_dict()
+        {a*x: 3}
+        >>> _[a]
+        0
+        """
+
+        d = defaultdict(int)
+        args = self.args
+
+        if len(args) == 1 or not args[0].is_Number:
+            d[self] = S.One
+        else:
+            d[self._new_rawargs(*args[1:])] = args[0]
+
+        return d
 
     @cacheit
     def as_coeff_mul(self, *deps, **kwargs):
@@ -722,10 +777,11 @@ class Mul(Expr, AssocOp):
         coeffi = []
         addterms = S.One
         for a in self.args:
-            if a.is_real:
-                coeffr.append(a)
-            elif a.is_imaginary:
-                coeffi.append(a)
+            r, i = a.as_real_imag()
+            if i.is_zero:
+                coeffr.append(r)
+            elif r.is_zero:
+                coeffi.append(i*S.ImaginaryUnit)
             elif a.is_commutative:
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
@@ -1072,14 +1128,15 @@ class Mul(Expr, AssocOp):
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
-        zero = one_neither = False
+        zero = False
+        t_not_re_im = None
 
         for t in self.args:
             if not t.is_complex:
                 return t.is_complex
-            elif t.is_imaginary:
+            elif t.is_imaginary:  # I
                 real = not real
-            elif t.is_real:
+            elif t.is_real:  # 2
                 if not zero:
                     z = t.is_zero
                     if not z and zero is False:
@@ -1089,15 +1146,24 @@ class Mul(Expr, AssocOp):
                             return True
                         return
             elif t.is_real is False:
-                if one_neither:
+                # symbolic or literal like `2 + I` or symbolic imaginary
+                if t_not_re_im:
                     return  # complex terms might cancel
-                one_neither = True
+                t_not_re_im = t
+            elif t.is_imaginary is False:  # symbolic like `2` or `2 + I`
+                if t_not_re_im:
+                    return  # complex terms might cancel
+                t_not_re_im = t
             else:
                 return
 
-        if one_neither:  # self is a+I*b or I*b
-            if real:
-                return zero  # real*self is like self: neither is real
+        if t_not_re_im:
+            if t_not_re_im.is_real is False:
+                if real:  # like 3
+                    return zero  # 3*(smthng like 2 + I or i) is not real
+            if t_not_re_im.is_imaginary is False:  # symbolic 2 or 2 + I
+                if not real:  # like I
+                    return zero  # I*(smthng like 2 or 2 + I) is not real
         elif zero is False:
             return real  # can't be trumped by 0
         elif real:

@@ -7,6 +7,7 @@ from sympy.core.compatibility import iterable
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
+from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
 
 from sympy.functions import Abs
@@ -29,7 +30,7 @@ def solve_poly_inequality(poly, rel):
     [{0}]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
-    [(-oo, -1), (-1, 1), (1, oo)]
+    [Interval.open(-oo, -1), Interval.open(-1, 1), Interval.open(1, oo)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
     [{-1}, {1}]
@@ -119,7 +120,7 @@ def solve_poly_inequalities(polys):
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
     ... Poly(-x**2 + 1), ">")))
-    (-oo, -sqrt(3)) U (-1, 1) U (sqrt(3), oo)
+    Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
     """
     from sympy import Union
     return Union(*[solve_poly_inequality(*p) for p in polys])
@@ -143,7 +144,7 @@ def solve_rational_inequalities(eqs):
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
     ... ((Poly(-x + 1), Poly(1, x)), '>=')]])
-    (-oo, 0) U (0, 1]
+    Union(Interval.open(-oo, 0), Interval.Lopen(0, 1))
 
     See Also
     ========
@@ -207,9 +208,9 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     Eq(x, 0)
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
-    And(-2 < x, x < oo)
+    (-2 < x) & (x < oo)
     >>> reduce_rational_inequalities([[(x + 2, ">")]], x)
-    And(-2 < x, x < oo)
+    (-2 < x) & (x < oo)
     >>> reduce_rational_inequalities([[x + 2]], x)
     Eq(x, -2)
     """
@@ -281,10 +282,10 @@ def reduce_abs_inequality(expr, rel, gen):
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequality(Abs(x - 5) - 3, '<', x)
-    And(2 < x, x < 8)
+    (2 < x) & (x < 8)
 
     >>> reduce_abs_inequality(Abs(x + 2)*3 - 13, '<', x)
-    And(-19/3 < x, x < 7/3)
+    (-19/3 < x) & (x < 7/3)
 
     See Also
     ========
@@ -364,10 +365,10 @@ def reduce_abs_inequalities(exprs, gen):
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
     ... (Abs(x + 25) - 13, '>')], x)
-    And(-2/3 < x, Or(And(-12 < x, x < oo), And(-oo < x, x < -38)), x < 4)
+    (-2/3 < x) & (x < 4) & (((-oo < x) & (x < -38)) | ((-12 < x) & (x < oo)))
 
     >>> reduce_abs_inequalities([(Abs(x - 4) + Abs(3*x - 5) - 7, '<')], x)
-    And(1/2 < x, x < 4)
+    (1/2 < x) & (x < 4)
 
     See Also
     ========
@@ -378,25 +379,68 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality(expr, gen, relational=True):
+def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
     """Solves a real univariate inequality.
+
+    Parameters
+    ==========
+
+    expr : Relational
+        The target inequality
+    gen : Symbol
+        The variable for which the inequality is solved
+    relational : bool
+        A Relational type output is expected or not
+    domain : Set
+        The domain over which the equation is solved
+    continuous: bool
+        True if expr is known to be continuous over the given domain
+        (and so continuous_domain() doesn't need to be called on it)
+
+    Raises
+    ======
+
+    NotImplementedError
+        The solution of the inequality cannot be determined due to limitation
+        in `solvify`.
+
+    Notes
+    =====
+
+    Currently, we cannot solve all the inequalities due to limitations in
+    `solvify`. Also, the solution returned for trigonometric inequalities
+    are restricted in its periodic interval.
+
+    See Also
+    ========
+
+    solvify: solver returning solveset solutions with solve's output API
 
     Examples
     ========
 
     >>> from sympy.solvers.inequalities import solve_univariate_inequality
-    >>> from sympy.core.symbol import Symbol
+    >>> from sympy import Symbol, sin, Interval, S
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
-    Or(And(-oo < x, x <= -2), And(2 <= x, x < oo))
+    ((2 <= x) & (x < oo)) | ((x <= -2) & (-oo < x))
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
-    (-oo, -2] U [2, oo)
+    Union(Interval(-oo, -2), Interval(2, oo))
+
+    >>> domain = Interval(0, S.Infinity)
+    >>> solve_univariate_inequality(x**2 >= 4, x, False, domain)
+    Interval(2, oo)
+
+    >>> solve_univariate_inequality(sin(x) > 0, x, relational=False)
+    Interval.open(0, pi)
 
     """
-
-    from sympy.solvers.solvers import solve, denoms
+    from sympy.calculus.util import (continuous_domain, periodicity,
+        function_range)
+    from sympy.solvers.solvers import denoms
+    from sympy.solvers.solveset import solveset_real, solvify
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -405,85 +449,126 @@ def solve_univariate_inequality(expr, gen, relational=True):
     expr = expr.subs(gen, d)
     _gen = gen
     gen = d
+    rv = None
 
     if expr is S.true:
-        rv = S.Reals
+        rv = domain
+
     elif expr is S.false:
         rv = S.EmptySet
+
     else:
         e = expr.lhs - expr.rhs
-        parts = n, d = e.as_numer_denom()
-        if all(i.is_polynomial(gen) for i in parts):
-            solns = solve(n, gen, check=False)
-            singularities = solve(d, gen, check=False)
-        else:
-            solns = solve(e, gen, check=False)
+        period = periodicity(e, gen)
+        if period is not None:
+            frange = function_range(e, gen, domain)
+
+            rel = expr.rel_op
+            if rel == '<' or rel == '<=':
+                if expr.func(frange.sup, 0):
+                    rv = domain
+                elif not expr.func(frange.inf, 0):
+                    rv = S.EmptySet
+
+            elif rel == '>' or rel == '>=':
+                if expr.func(frange.inf, 0):
+                    rv = domain
+                elif not expr.func(frange.sup, 0):
+                    rv = S.EmptySet
+
+            inf, sup = domain.inf, domain.sup
+            if sup - inf is S.Infinity:
+                domain = Interval(0, period, False, True)
+
+        if rv is None:
+            solns = solvify(e, gen, domain)
+            if solns is None:
+                raise NotImplementedError(filldedent('''The inequality cannot be
+                    solved using solve_univariate_inequality.'''))
             singularities = []
-            for d in denoms(e):
-                singularities.extend(solve(d, gen))
+            for d in denoms(expr, gen):
+                singularities.extend(solvify(d, gen, domain))
+            if not continuous:
+                domain = continuous_domain(e, gen, domain)
 
-        include_x = expr.func(0, 0)
+            include_x = expr.func(0, 0)
 
-        def valid(x):
-            v = e.subs(gen, x)
+            def valid(x):
+                v = e.subs(gen, x)
+                try:
+                    r = expr.func(v, 0)
+                except TypeError:
+                    r = S.false
+                if r in (S.true, S.false):
+                    return r
+                if v.is_real is False:
+                    return S.false
+                else:
+                    v = v.n(2)
+                    if v.is_comparable:
+                        return expr.func(v, 0)
+                    return S.false
+
             try:
-                r = expr.func(v, 0)
-            except TypeError:
-                r = S.false
-            if r in (S.true, S.false):
-                return r
-            if v.is_real is False:
-                return S.false
-            else:
-                v = v.n(2)
-                if v.is_comparable:
-                    return expr.func(v, 0)
-                return S.false
+                discontinuities = set(domain.boundary -
+                    FiniteSet(domain.inf, domain.sup))
+                # remove points that are not between inf and sup of domain
+                critical_points = FiniteSet(*(solns + singularities + list(
+                    discontinuities))).intersection(
+                    Interval(domain.inf, domain.sup,
+                    domain.inf not in domain, domain.sup not in domain))
+                reals = _nsort(critical_points, separated=True)[0]
+            except NotImplementedError:
+                raise NotImplementedError('sorting of these roots is not supported')
 
-        start = S.NegativeInfinity
-        sol_sets = [S.EmptySet]
-        try:
-            reals = _nsort(set(solns + singularities), separated=True)[0]
-        except NotImplementedError:
-            raise NotImplementedError('sorting of these roots is not supported')
-        for x in reals:
-            end = x
+            sol_sets = [S.EmptySet]
 
-            if end in [S.NegativeInfinity, S.Infinity]:
-                if valid(S(0)):
-                    sol_sets.append(Interval(start, S.Infinity, True, True))
-                    break
+            start = domain.inf
+            if valid(start) and start.is_finite:
+                sol_sets.append(FiniteSet(start))
 
-            pt = ((start + end)/2 if start is not S.NegativeInfinity else
-                (end/2 if end.is_positive else
-                (2*end if end.is_negative else
-                end - 1)))
-            if valid(pt):
-                sol_sets.append(Interval(start, end, True, True))
+            for x in reals:
+                end = x
 
-            if x in singularities:
-                singularities.remove(x)
-            elif include_x:
-                sol_sets.append(FiniteSet(x))
+                if valid(_pt(start, end)):
+                    sol_sets.append(Interval(start, end, True, True))
 
-            start = end
+                if x in singularities:
+                    singularities.remove(x)
+                else:
+                    if x in discontinuities:
+                        discontinuities.remove(x)
+                        _valid = valid(x)
+                    else:  # it's a solution
+                        _valid = include_x
+                    if _valid:
+                        sol_sets.append(FiniteSet(x))
 
-        end = S.Infinity
+                start = end
 
-        # in case start == -oo then there were no solutions so we just
-        # check a point between -oo and oo (e.g. 0) else pick a point
-        # past the last solution (which is start after the end of the
-        # for-loop above
-        pt = (0 if start is S.NegativeInfinity else
-            (start/2 if start.is_negative else
-            (2*start if start.is_positive else
-            start + 1)))
-        if valid(pt):
-            sol_sets.append(Interval(start, end, True, True))
+            end = domain.sup
+            if valid(end) and end.is_finite:
+                sol_sets.append(FiniteSet(end))
 
-        rv = Union(*sol_sets).subs(gen, _gen)
+            if valid(_pt(start, end)):
+                sol_sets.append(Interval.open(start, end))
+
+            rv = Union(*sol_sets).subs(gen, _gen)
 
     return rv if not relational else rv.as_relational(_gen)
+
+
+def _pt(start, end):
+    """Return a point between start and end"""
+    if start.is_infinite and end.is_infinite:
+        pt = S.Zero
+    elif end.is_infinite:
+        pt = start + 1
+    elif start.is_infinite:
+        pt = end - 1
+    else:
+        pt = (start + end)/2
+    return pt
 
 
 def _solve_inequality(ie, s):
@@ -570,7 +655,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
-    And(-3 <= x, x < oo)
+    (-3 <= x) & (x < oo)
 
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
     x >= -2*y + 1

@@ -11,6 +11,13 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
    :members:
 
+Singularity Function
+--------------------
+.. module:: sympy.functions.special.singularity_functions
+
+.. autoclass:: sympy.functions.special.singularity_functions.SingularityFunction
+   :members:
+
 Gamma, Beta and related Functions
 ---------------------------------
 .. module:: sympy.functions.special.gamma_functions

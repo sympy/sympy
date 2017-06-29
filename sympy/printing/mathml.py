@@ -7,7 +7,7 @@ from __future__ import print_function, division
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.alphabets import greeks
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from .printer import Printer
 from .pretty.pretty_symbology import greek_unicode
 from .conventions import split_super_sub, requires_partial
@@ -18,7 +18,7 @@ class MathMLPrinter(Printer):
 
     Whenever possible tries to use Content markup and not Presentation markup.
 
-    References: http://www.w3.org/TR/MathML2/
+    References: https://www.w3.org/TR/MathML3/
     """
     printmethod = "_mathml"
     _default_settings = {
@@ -103,7 +103,7 @@ class MathMLPrinter(Printer):
         coeff, terms = expr.as_coeff_mul()
         if coeff is S.One and len(terms) == 1:
             # XXX since the negative coefficient has been handled, I don't
-            # thing a coeff of 1 can remain
+            # think a coeff of 1 can remain
             return self._print(terms[0])
 
         if self.order != 'old':
@@ -123,12 +123,12 @@ class MathMLPrinter(Printer):
         plusNodes = []
         for arg in args[1:]:
             if _coeff_isneg(arg):
-                #use minus
+                # use minus
                 x = self.dom.createElement('apply')
                 x.appendChild(self.dom.createElement('minus'))
                 x.appendChild(lastProcessed)
                 x.appendChild(self._print(-arg))
-                #invert expression since this is now minused
+                # invert expression since this is now minused
                 lastProcessed = x
                 if(arg == args[-1]):
                     plusNodes.append(lastProcessed)
@@ -147,7 +147,7 @@ class MathMLPrinter(Printer):
 
     def _print_MatrixBase(self, m):
         x = self.dom.createElement('matrix')
-        for i in range(m.lines):
+        for i in range(m.rows):
             x_r = self.dom.createElement('matrixrow')
             for j in range(m.cols):
                 x_r.appendChild(self._print(m[i, j]))
@@ -156,16 +156,16 @@ class MathMLPrinter(Printer):
 
     def _print_Rational(self, e):
         if e.q == 1:
-            #don't divide
+            # don't divide
             x = self.dom.createElement('cn')
             x.appendChild(self.dom.createTextNode(str(e.p)))
             return x
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('divide'))
-        #numerator
+        # numerator
         xnum = self.dom.createElement('cn')
         xnum.appendChild(self.dom.createTextNode(str(e.p)))
-        #denomenator
+        # denominator
         xdenom = self.dom.createElement('cn')
         xdenom.appendChild(self.dom.createTextNode(str(e.q)))
         x.appendChild(xnum)
@@ -306,7 +306,7 @@ class MathMLPrinter(Printer):
         return ci
 
     def _print_Pow(self, e):
-        #Here we use root instead of power if the exponent is the reciprocal of an integer
+        # Here we use root instead of power if the exponent is the reciprocal of an integer
         if e.exp.is_Rational and e.exp.p == 1:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))

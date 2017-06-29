@@ -84,7 +84,14 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    is_Atom = True
     _op_priority = 11  # higher than Expr
+
+    def simplify(self, *a, **kw):
+        return self
+
+    def expand(self, *a, **kw):
+        return self
 
     @property
     def canonical(self):
@@ -319,7 +326,7 @@ class And(LatticeOp, BooleanFunction):
     >>> from sympy.abc import x, y
     >>> from sympy.logic.boolalg import And
     >>> x & y
-    And(x, y)
+    x & y
 
     Notes
     =====
@@ -367,7 +374,7 @@ class And(LatticeOp, BooleanFunction):
         >>> from sympy import And, Symbol
         >>> x = Symbol('x', real=True)
         >>> And(x<2, x>-2).as_set()
-        (-2, 2)
+        Interval.open(-2, 2)
         """
         from sympy.sets.sets import Intersection
         if len(self.free_symbols) == 1:
@@ -392,7 +399,7 @@ class Or(LatticeOp, BooleanFunction):
     >>> from sympy.abc import x, y
     >>> from sympy.logic.boolalg import Or
     >>> x | y
-    Or(x, y)
+    x | y
 
     Notes
     =====
@@ -438,7 +445,7 @@ class Or(LatticeOp, BooleanFunction):
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
         >>> Or(x>2, x<-2).as_set()
-        (-oo, -2) U (2, oo)
+        Union(Interval.open(-oo, -2), Interval.open(2, oo))
         """
         from sympy.sets.sets import Union
         if len(self.free_symbols) == 1:
@@ -471,11 +478,11 @@ class Not(BooleanFunction):
     >>> Not(Or(True, False))
     False
     >>> Not(And(And(True, x), Or(x, False)))
-    Not(x)
+    ~x
     >>> ~x
-    Not(x)
+    ~x
     >>> Not(And(Or(A, B), Or(~A, ~B)))
-    Not(And(Or(A, B), Or(Not(A), Not(B))))
+    ~((A | B) & (~A | ~B))
 
     Notes
     =====
@@ -531,7 +538,7 @@ class Not(BooleanFunction):
         >>> from sympy import Not, Symbol
         >>> x = Symbol('x', real=True)
         >>> Not(x>0).as_set()
-        (-oo, 0]
+        Interval(-oo, 0)
         """
         if len(self.free_symbols) == 1:
             return self.args[0].as_set().complement(S.Reals)
@@ -698,7 +705,7 @@ class Nand(BooleanFunction):
     >>> Nand(True, True)
     False
     >>> Nand(x, y)
-    Not(And(x, y))
+    ~(x & y)
 
     """
     @classmethod
@@ -732,12 +739,43 @@ class Nor(BooleanFunction):
     >>> Nor(False, False)
     True
     >>> Nor(x, y)
-    Not(Or(x, y))
+    ~(x | y)
 
     """
     @classmethod
     def eval(cls, *args):
         return Not(Or(*args))
+
+
+class Xnor(BooleanFunction):
+    """
+    Logical XNOR function.
+
+    Returns False if an odd number of the arguments are True and the rest are
+    False.
+
+    Returns True if an even number of the arguments are True and the rest are
+    False.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import Xnor
+    >>> from sympy import symbols
+    >>> x, y = symbols('x y')
+    >>> Xnor(True, False)
+    False
+    >>> Xnor(True, True)
+    True
+    >>> Xnor(True, False, True, True, False)
+    False
+    >>> Xnor(True, False, True, False)
+    True
+
+    """
+    @classmethod
+    def eval(cls, *args):
+        return Not(Xor(*args))
 
 
 class Implies(BooleanFunction):
@@ -929,6 +967,11 @@ class ITE(BooleanFunction):
             return c
         if b == c:
             return b
+        else:
+            if b == True and c == False:
+                return a
+            if b == False and c == True:
+                return Not(a)
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
@@ -956,9 +999,9 @@ def conjuncts(expr):
     >>> from sympy.logic.boolalg import conjuncts
     >>> from sympy.abc import A, B
     >>> conjuncts(A & B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> conjuncts(A | B)
-    frozenset([Or(A, B)])
+    frozenset({A | B})
 
     """
     return And.make_args(expr)
@@ -973,9 +1016,9 @@ def disjuncts(expr):
     >>> from sympy.logic.boolalg import disjuncts
     >>> from sympy.abc import A, B
     >>> disjuncts(A | B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> disjuncts(A & B)
-    frozenset([And(A, B)])
+    frozenset({A & B})
 
     """
     return Or.make_args(expr)
@@ -992,7 +1035,7 @@ def distribute_and_over_or(expr):
     >>> from sympy.logic.boolalg import distribute_and_over_or, And, Or, Not
     >>> from sympy.abc import A, B, C
     >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
-    And(Or(A, Not(B)), Or(A, Not(C)))
+    (A | ~B) & (A | ~C)
     """
     return _distribute((expr, And, Or))
 
@@ -1010,7 +1053,7 @@ def distribute_or_over_and(expr):
     >>> from sympy.logic.boolalg import distribute_or_over_and, And, Or, Not
     >>> from sympy.abc import A, B, C
     >>> distribute_or_over_and(And(Or(Not(A), B), C))
-    Or(And(B, C), And(C, Not(A)))
+    (B & C) | (C & ~A)
     """
     return _distribute((expr, Or, And))
 
@@ -1041,7 +1084,7 @@ def to_nnf(expr, simplify=True):
     Converts expr to Negation Normal Form.
     A logical expression is in Negation Normal Form (NNF) if it
     contains only And, Or and Not, and Not is applied only to literals.
-    If simpify is True, the result contains no redundant clauses.
+    If simplify is True, the result contains no redundant clauses.
 
     Examples
     ========
@@ -1049,9 +1092,9 @@ def to_nnf(expr, simplify=True):
     >>> from sympy.abc import A, B, C, D
     >>> from sympy.logic.boolalg import Not, Equivalent, to_nnf
     >>> to_nnf(Not((~A & ~B) | (C & D)))
-    And(Or(A, B), Or(Not(C), Not(D)))
+    (A | B) & (~C | ~D)
     >>> to_nnf(Equivalent(A >> B, B >> A))
-    And(Or(A, And(A, Not(B)), Not(B)), Or(And(B, Not(A)), B, Not(A)))
+    (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
     """
     if is_nnf(expr, simplify):
         return expr
@@ -1070,9 +1113,9 @@ def to_cnf(expr, simplify=False):
     >>> from sympy.logic.boolalg import to_cnf
     >>> from sympy.abc import A, B, D
     >>> to_cnf(~(A | B) | D)
-    And(Or(D, Not(A)), Or(D, Not(B)))
+    (D | ~A) & (D | ~B)
     >>> to_cnf((A | B) & (A | ~A), True)
-    Or(A, B)
+    A | B
 
     """
     expr = sympify(expr)
@@ -1102,9 +1145,9 @@ def to_dnf(expr, simplify=False):
     >>> from sympy.logic.boolalg import to_dnf
     >>> from sympy.abc import A, B, C
     >>> to_dnf(B & (A | C))
-    Or(And(A, B), And(B, C))
+    (A & B) | (B & C)
     >>> to_dnf((A & B) | (A & ~B) | (B & C) | (~B & C), True)
-    Or(A, C)
+    A | C
 
     """
     expr = sympify(expr)
@@ -1272,11 +1315,11 @@ def eliminate_implications(expr):
          eliminate_implications
     >>> from sympy.abc import A, B, C
     >>> eliminate_implications(Implies(A, B))
-    Or(B, Not(A))
+    B | ~A
     >>> eliminate_implications(Equivalent(A, B))
-    And(Or(A, Not(B)), Or(B, Not(A)))
+    (A | ~B) & (B | ~A)
     >>> eliminate_implications(Equivalent(A, B, C))
-    And(Or(A, Not(C)), Or(B, Not(A)), Or(C, Not(B)))
+    (A | ~C) & (B | ~A) & (C | ~B)
     """
     return to_nnf(expr)
 
@@ -1317,7 +1360,7 @@ def to_int_repr(clauses, symbols):
 
     >>> from sympy.logic.boolalg import to_int_repr
     >>> from sympy.abc import x, y
-    >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+    >>> to_int_repr([x | y, y], [x, y]) == [{1, 2}, {2}]
     True
 
     """
@@ -1585,7 +1628,7 @@ def SOPform(variables, minterms, dontcares=None):
     ...             [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> SOPform([w, x, y, z], minterms, dontcares)
-    Or(And(Not(w), z), And(y, z))
+    (y & z) | (z & ~w)
 
     References
     ==========
@@ -1637,7 +1680,7 @@ def POSform(variables, minterms, dontcares=None):
     ...             [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> POSform([w, x, y, z], minterms, dontcares)
-    And(Or(Not(w), y), z)
+    z & (y | ~w)
 
     References
     ==========
@@ -1706,12 +1749,12 @@ def simplify_logic(expr, form=None, deep=True):
     >>> from sympy import S
     >>> b = (~x & ~y & ~z) | ( ~x & ~y & z)
     >>> simplify_logic(b)
-    And(Not(x), Not(y))
+    ~x & ~y
 
     >>> S(b)
-    Or(And(Not(x), Not(y), Not(z)), And(Not(x), Not(y), z))
+    (z & ~x & ~y) | (~x & ~y & ~z)
     >>> simplify_logic(_)
-    And(Not(x), Not(y))
+    ~x & ~y
 
     """
 
@@ -1800,7 +1843,7 @@ def bool_map(bool1, bool2):
     >>> function1 = SOPform([x, z, y],[[1, 0, 1], [0, 0, 1]])
     >>> function2 = SOPform([a, b, c],[[1, 0, 1], [1, 0, 0]])
     >>> bool_map(function1, function2)
-    (And(Not(z), y), {y: a, z: b})
+    (y & ~z, {y: a, z: b})
 
     The results are not necessarily unique, but they are canonical. Here,
     ``(w, z)`` could be ``(a, d)`` or ``(d, a)``:
@@ -1808,10 +1851,10 @@ def bool_map(bool1, bool2):
     >>> eq =  Or(And(Not(y), w), And(Not(y), z), And(x, y))
     >>> eq2 = Or(And(Not(c), a), And(Not(c), d), And(b, c))
     >>> bool_map(eq, eq2)
-    (Or(And(Not(y), w), And(Not(y), z), And(x, y)), {w: a, x: b, y: c, z: d})
+    ((x & y) | (w & ~y) | (z & ~y), {w: a, x: b, y: c, z: d})
     >>> eq = And(Xor(a, b), c, And(c,d))
     >>> bool_map(eq, eq.subs(c, x))
-    (And(Or(Not(a), Not(b)), Or(a, b), c, d), {a: a, b: b, c: d, d: x})
+    (c & d & (a | b) & (~a | ~b), {a: a, b: b, c: d, d: x})
 
     """
 

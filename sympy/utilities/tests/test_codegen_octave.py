@@ -4,7 +4,6 @@ from sympy.core.compatibility import StringIO
 from sympy import erf, Integral, Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.printing.codeprinter import Assignment
 from sympy.utilities.codegen import OctaveCodeGen, codegen, make_routine
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
@@ -502,7 +501,7 @@ def test_m_tensor_loops_multiple_contractions():
         '    for j = 1:n\n'
         '      for k = 1:o\n'
         '        for l = 1:p\n'
-        '          y(i) = y(i) + B(j, k, l).*A(i, j, k, l);\n'
+        '          y(i) = A(i, j, k, l).*B(j, k, l) + y(i);\n'
         '        end\n'
         '      end\n'
         '    end\n'

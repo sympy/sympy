@@ -1700,6 +1700,10 @@ def test_div():
     q = f.exquo(g)
     assert q.get_domain().is_ZZ
 
+    f, g = Poly(x+y, x), Poly(2*x+y, x)
+    q, r = f.div(g)
+    assert q.get_domain().is_Frac and r.get_domain().is_Frac
+
 
 def test_gcdex():
     f, g = 2*x, x**2 - 16
@@ -2119,6 +2123,35 @@ def test_compose():
 def test_shift():
     assert Poly(x**2 - 2*x + 1, x).shift(2) == Poly(x**2 + 2*x + 1, x)
 
+def test_transform():
+    # Also test that 3-way unification is done correctly
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1), Poly(x - 1)) == \
+        Poly(4, x) == \
+        cancel((x - 1)**2*(x**2 - 2*x + 1).subs(x, (x + 1)/(x - 1)))
+
+    assert Poly(x**2 - x/2 + 1, x).transform(Poly(x + 1), Poly(x - 1)) == \
+        Poly(3*x**2/2 + S(5)/2, x) == \
+        cancel((x - 1)**2*(x**2 - x/2 + 1).subs(x, (x + 1)/(x - 1)))
+
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + S(1)/2), Poly(x - 1)) == \
+        Poly(S(9)/4, x) == \
+        cancel((x - 1)**2*(x**2 - 2*x + 1).subs(x, (x + S(1)/2)/(x - 1)))
+
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1), Poly(x - S(1)/2)) == \
+        Poly(S(9)/4, x) == \
+        cancel((x - S(1)/2)**2*(x**2 - 2*x + 1).subs(x, (x + 1)/(x - S(1)/2)))
+
+    # Unify ZZ, QQ, and RR
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1.0), Poly(x - S(1)/2)) == \
+        Poly(9/4, x) == \
+        cancel((x - S(1)/2)**2*(x**2 - 2*x + 1).subs(x, (x + 1.0)/(x - S(1)/2)))
+
+    raises(ValueError, lambda: Poly(x*y).transform(Poly(x + 1), Poly(x - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(y + 1), Poly(x - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(x + 1), Poly(y - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(x*y + 1), Poly(x - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(x + 1), Poly(x*y - 1)))
+
 
 def test_sturm():
     f, F = x, Poly(x, domain='QQ')
@@ -2265,7 +2298,7 @@ def test_factor():
 
     assert factor_list(1) == (1, [])
     assert factor_list(6) == (6, [])
-    assert factor_list(sqrt(3), x) == (1, [(3, S.Half)])
+    assert factor_list(sqrt(3), x) == (sqrt(3), [])
     assert factor_list((-1)**x, x) == (1, [(-1, x)])
     assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
     assert factor_list(sqrt(x*y), x) == (1, [(x*y, S.Half)])
@@ -3038,6 +3071,7 @@ def test_GroebnerBasis():
     H = [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
     P = [ Poly(h, x, y) for h in H ]
 
+    assert groebner(F + [0], x, y, order='grevlex') == G
     assert isinstance(G, GroebnerBasis) is True
 
     assert len(G) == 3
@@ -3163,3 +3197,8 @@ def test_factor_terms():
     # issue 7067
     assert factor_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
     assert sqf_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+
+
+def test_issue_11198():
+    assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
+    assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])

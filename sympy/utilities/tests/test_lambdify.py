@@ -2,17 +2,19 @@ from itertools import product
 import math
 
 import mpmath
-
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum)
+    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
+    DotProduct, Eq)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
+from sympy.functions.special.gamma_functions import uppergamma,lowergamma
+
 import sympy
 
 
@@ -20,6 +22,7 @@ MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
 numexpr = import_module('numexpr')
+tensorflow = import_module('tensorflow')
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -116,13 +119,17 @@ def test_mpmath_lambda():
 
 
 @conserve_mpmath_dps
-@XFAIL
 def test_number_precision():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
     f = lambdify(x, sin02, "mpmath")
     prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(0) - sin02 < prec
+
+@conserve_mpmath_dps
+def test_mpmath_precision():
+    mpmath.mp.dps = 100
+    assert str(lambdify((), pi.evalf(100), 'mpmath')()) == str(pi.evalf(100))
 
 #================== Test Translations ==============================
 # We can only check if all translated functions are valid. It has to be checked
@@ -152,6 +159,14 @@ def test_numpy_transl():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 
+def test_tensorflow_transl():
+    if not tensorflow:
+        skip("tensorflow not installed")
+
+    from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
+    for sym, tens in TENSORFLOW_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert tens in tensorflow.__dict__
 
 def test_numpy_translation_abs():
     if not numpy:
@@ -218,7 +233,7 @@ def test_sqrt():
 
 
 def test_trig():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     prec = 1e-11
     assert -prec < d[0] + 1 < prec
@@ -248,7 +263,7 @@ def test_vector_discontinuous():
 
 
 def test_trig_symbolic():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     assert abs(d[0] + 1) < 0.0001
     assert abs(d[1] - 0) < 0.0001
@@ -315,6 +330,21 @@ def test_numpy_transpose():
     f = lambdify((x), A.T, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, 0], [2, 1]]))
 
+def test_numpy_dotproduct():
+    if not numpy:
+        skip("numpy not installed")
+    A = Matrix([x, y, z])
+    f1 = lambdify([x, y, z], DotProduct(A, A), modules='numpy')
+    f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
+    f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='numpy')
+    f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
+
+    assert f1(1, 2, 3) == \
+           f2(1, 2, 3) == \
+           f3(1, 2, 3) == \
+           f4(1, 2, 3) == \
+           numpy.array([14])
+
 def test_numpy_inverse():
     if not numpy:
         skip("numpy not installed.")
@@ -327,10 +357,18 @@ def test_numpy_old_matrix():
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
-    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.matrix}, 'numpy'])
+    f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
+def test_python_div_zero_issue_11306():
+    if not numpy:
+        skip("numpy not installed.")
+    p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
+    f = lambdify([x, y], p, modules='numpy')
+    numpy.seterr(divide='ignore')
+    assert str(float(f(0,1))) == 'inf'
+    numpy.seterr(divide='warn')
 
 def test_issue9474():
     mods = [None, 'math']
@@ -438,6 +476,82 @@ def test_numexpr_userfunctions():
     uf = implemented_function(Function('uf'), lambda x, y : 2*x*y+1)
     func = lambdify((x, y), uf(x, y), modules='numexpr')
     assert numpy.allclose(func(a, b), 2*a*b+1)
+
+def test_tensorflow_basic_math():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.constant(0, dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_placeholders():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
+def test_tensorflow_variables():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.Variable(0, dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    s.run(tensorflow.initialize_all_variables())
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_logical_operations():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Not(And(Or(x, y), y))
+    func = lambdify([x, y], expr, modules="tensorflow")
+    a = tensorflow.constant(False)
+    b = tensorflow.constant(True)
+    s = tensorflow.Session()
+    assert func(a, b).eval(session=s) == 0
+
+def test_tensorflow_piecewise():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Piecewise((0, Eq(x,0)), (-1, x < 0), (1, x > 0))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -1}) == -1
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0
+    assert func(a).eval(session=s, feed_dict={a: 1}) == 1
+
+def test_tensorflow_multi_max():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == 4
+
+def test_tensorflow_multi_min():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Min(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == -2
+
+def test_tensorflow_relational():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = x >= 0
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 1})
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
@@ -641,6 +755,9 @@ def test_issue_2790():
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
 
+def test_issue_12092():
+    f = implemented_function('f', lambda x: x**2)
+    assert f(f(2)).evalf() == Float(16)
 
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
@@ -661,3 +778,10 @@ def test_Indexed():
     i, j = symbols('i j')
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
+
+def test_issue_12173():
+    #test for issue 12173
+    exp1 = lambdify((x, y), uppergamma(x, y),"mpmath")(1, 2)
+    exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
+    assert exp1 == uppergamma(1, 2).evalf()
+    assert exp2 == lowergamma(1, 2).evalf()

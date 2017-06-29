@@ -1,6 +1,6 @@
 from sympy.core import Expr, Symbol, S
 from sympy.core.sympify import _sympify
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.printing.precedence import PRECEDENCE
 
@@ -10,6 +10,8 @@ class BaseScalar(Expr):
     A coordinate symbol/base scalar.
 
     Ideally, users should not instantiate this class.
+
+    Unicode pretty forms in Python 2 should use the `u` prefix.
 
     """
 
@@ -34,7 +36,7 @@ class BaseScalar(Expr):
         # The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
         obj._name = obj.name = name
-        obj._pretty_form = u(pretty_str)
+        obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
 

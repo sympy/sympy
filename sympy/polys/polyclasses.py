@@ -99,6 +99,7 @@ from sympy.polys.densetools import (
     dmp_compose,
     dup_decompose,
     dup_shift,
+    dup_transform,
     dmp_lift)
 
 from sympy.polys.euclidtools import (
@@ -718,6 +719,20 @@ class DMP(PicklableWithSlots, CantSympify):
         """Efficiently compute Taylor shift ``f(x + a)``. """
         if not f.lev:
             return f.per(dup_shift(f.rep, f.dom.convert(a), f.dom))
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def transform(f, p, q):
+        """Evaluate functional transformation ``q**n * f(p/q)``."""
+        if f.lev:
+            raise ValueError('univariate polynomial expected')
+
+        lev, dom, per, P, Q = p.unify(q)
+        lev, dom, per, F, P = f.unify(per(P, dom, lev))
+        lev, dom, per, F, Q = per(F, dom, lev).unify(per(Q, dom, lev))
+
+        if not lev:
+            return per(dup_transform(F, P, Q, dom))
         else:
             raise ValueError('univariate polynomial expected')
 

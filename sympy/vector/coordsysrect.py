@@ -1,11 +1,14 @@
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
+from sympy.core import S
+from sympy.vector.scalar import BaseScalar
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple
+import sympy.vector
+from sympy import simplify
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import sympy.vector
 
 
 class CoordSysCartesian(Basic):
@@ -144,9 +147,11 @@ class CoordSysCartesian(Basic):
         obj._z = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
-        # Assign a Del operator instance
-        from sympy.vector.deloperator import Del
-        obj._delop = Del(obj)
+        obj._h1 = S.One
+        obj._h2 = S.One
+        obj._h3 = S.One
+
+        obj._transformation_eqs = obj._x, obj._y, obj._y
 
         # Assign params
         obj._parent = parent
@@ -170,13 +175,124 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
+    def _connect_to_standard_cartesian(self, curv_coord_type):
+        """
+        Change the type of orthogonal curvilinear system. It could be done
+        by tuple of transformation equations or by choosing one of pre-defined
+        coordinate system.
+
+        Parameters
+        ==========
+
+        :param curv_coord_type: str, tuple
+
+        """
+        if isinstance(curv_coord_type, string_types):
+            self._set_transformation_equations_mapping(curv_coord_type)
+            self._set_lame_coefficient_mapping(curv_coord_type)
+
+        elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 3:
+            self._transformation_eqs = curv_coord_type
+            self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
+
+        elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 2:
+            self._transformation_eqs = \
+            tuple([eq.subs({curv_coord_type[0][0]: self.x,
+                            curv_coord_type[0][1]: self.y,
+                            curv_coord_type[0][2]: self.z}) for eq in curv_coord_type[1]])
+            self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(self._transformation_equations())
+
+        else:
+            raise ValueError("Wrong set of parameter.")
+
+    def _set_transformation_equations_mapping(self, curv_coord_name):
+        """
+        Store information about some default, pre-defined transformation
+        equations.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+        equations_mapping = {
+            'cartesian': (self.x, self.y, self.z),
+            'spherical': (self.x * sin(self.y) * cos(self.z),
+                          self.x * sin(self.y) * sin(self.z),
+                          self.x * cos(self.y)),
+            'cylindrical': (self.x * cos(self.y),
+                            self.x * sin(self.y),
+                            self.z)
+        }
+        if curv_coord_name not in equations_mapping:
+            raise ValueError('Wrong set of parameters.'
+                             'Type of coordinate system is defined')
+        self._transformation_eqs = equations_mapping[curv_coord_name]
+
+    def _set_lame_coefficient_mapping(self, curv_coord_name):
+        """
+        Store information about Lame coefficient, for pre-defined
+        curvilinear coordinate systems. Return tuple with scaling
+        factor.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+
+        coefficient_mapping = {
+            'cartesian': (1, 1, 1),
+            'spherical': (1, self.x, self.x * sin(self.y)),
+            'cylindrical': (1, self.y, 1)
+        }
+        if curv_coord_name not in coefficient_mapping:
+            raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
+        self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
+
+    def _calculate_lame_coefficients(self, equations):
+        """
+        Helper method for set_coordinate_type. It calculates Lame coefficients
+        for given transformations equations.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+
+        h1 = sqrt(diff(equations[0], self.x)**2 +
+                  diff(equations[1], self.x)**2 +
+                  diff(equations[2], self.x)**2)
+
+        h2 = sqrt(diff(equations[0], self.y)**2 +
+                  diff(equations[1], self.y)**2 +
+                  diff(equations[2], self.y)**2)
+
+        h3 = sqrt(diff(equations[0], self.z)**2 +
+                  diff(equations[1], self.z)**2 +
+                  diff(equations[2], self.z)**2)
+        return map(simplify, [h1, h2, h3])
+
     @property
     def origin(self):
         return self._origin
 
     @property
     def delop(self):
-        return self._delop
+        SymPyDeprecationWarning(
+            feature="coord_system.delop has been replaced.",
+            useinstead="Use the Del() class",
+            deprecated_since_version="1.1"
+        ).warn()
+        from sympy.vector.deloperator import Del
+        return Del()
 
     @property
     def i(self):
@@ -207,6 +323,12 @@ class CoordSysCartesian(Basic):
 
     def base_scalars(self):
         return self._x, self._y, self._z
+
+    def lame_coefficients(self):
+        return self._h1, self._h2, self._h3
+
+    def _transformation_equations(self):
+        return self._transformation_eqs[:]
 
     @cacheit
     def rotation_matrix(self, other):
@@ -698,7 +820,7 @@ class CoordSysCartesian(Basic):
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
-                 pretty_scalars=None):
+                 curv_coord_name=None, pretty_scalars=None):
         # Dummy initializer for setting docstring
         pass
 

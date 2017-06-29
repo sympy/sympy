@@ -385,6 +385,7 @@ def test_fraction():
     assert fraction(x*(y + 1)/y**7) == (x*(y + 1), y**7)
 
     assert fraction(exp(-x), exact=True) == (exp(-x), 1)
+    assert fraction((1/(x + y))/2, exact=True) == (1, Mul(2,(x + y), evaluate=False))
 
     assert fraction(x*A/y) == (x*A, y)
     assert fraction(x*A**-1/y) == (x*A**-1, y)
@@ -393,6 +394,8 @@ def test_fraction():
     assert fraction(exp(n)) == (1, exp(-n))
     assert fraction(exp(-n)) == (exp(-n), 1)
 
+    p = symbols('p', positive=True)
+    assert fraction(exp(-p)*log(p), exact=True) == (exp(-p)*log(p), 1)
 
 def test_issue_5615():
     aA, Re, a, b, D = symbols('aA Re a b D')

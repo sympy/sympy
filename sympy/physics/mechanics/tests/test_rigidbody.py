@@ -2,6 +2,7 @@ from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
+from sympy.core.backend import expand
 
 
 def test_rigidbody():
@@ -52,7 +53,7 @@ def test_rigidbody2():
     assert B.angular_momentum(O, N) == omega * b.x - M*v*r*b.z
     B.potential_energy = M * g * h
     assert B.potential_energy == M * g * h
-    assert B.kinetic_energy(N) == (omega**2 + M * v**2) / 2
+    assert expand(2 * B.kinetic_energy(N)) == omega**2 + M * v**2
 
 def test_rigidbody3():
     q1, q2, q3, q4 = dynamicsymbols('q1:5')
