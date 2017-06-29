@@ -1856,8 +1856,6 @@ def get_code_generator(language, project=None, standard=None):
             language = 'C99'
     if isinstance(language, type):
         CodeGenClass = language
-    elif isinstance(language, CodeGen):
-        return language
     else:
         CodeGenClass = {"C": CCodeGen, "C89": C89CodeGen, "C99": C99CodeGen,
                         "F95": FCodeGen, "JULIA": JuliaCodeGen,
@@ -1873,9 +1871,9 @@ def get_code_generator(language, project=None, standard=None):
 #
 
 
-def codegen(name_expr, language, prefix=None, project="project",
+def codegen(name_expr, language=None, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None, standard=None):
+            global_vars=None, standard=None, code_gen=None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -1888,7 +1886,7 @@ def codegen(name_expr, language, prefix=None, project="project",
         considered an output argument.  If expression is an iterable, then
         the routine will have multiple outputs.
 
-    language : string
+    language : string,
         A string that indicates the source code language.  This is case
         insensitive.  Currently, 'C', 'F95' and 'Octave' are supported.
         'Octave' generates code compatible with both Octave and Matlab.
@@ -1925,6 +1923,11 @@ def codegen(name_expr, language, prefix=None, project="project",
     global_vars : iterable, optional
         Sequence of global variables used by the routine.  Variables
         listed here will not show up as function arguments.
+
+    standard : string
+
+    code_gen : CodeGen instance
+        An instance of a CodeGen subclass. Overrides ``language``.
 
     Examples
     ========
@@ -1998,7 +2001,13 @@ def codegen(name_expr, language, prefix=None, project="project",
     """
 
     # Initialize the code generator.
-    code_gen = get_code_generator(language, project, standard)
+    if language is None:
+        if code_gen is None:
+            raise ValueError("Need either language or code_gen")
+    else:
+        if code_gen is not None:
+            raise ValueError("You cannot specify both language and code_gen.")
+        code_gen = get_code_generator(language, project, standard)
 
     if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.
