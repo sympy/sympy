@@ -324,7 +324,7 @@ class FpSubgroup(DefaultPrinting):
 
     def to_FpGroup(self):
         return self.parent.subgroup(C=self.C)
-            
+
 
 ###############################################################################
 #                           COSET TABLE                                       #

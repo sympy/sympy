@@ -31,7 +31,7 @@ class GroupHomomorphism(object):
         '''
         image = self.image()
         vals = [v for v in self.images.values() if not v.is_identity]
-        keys = self.images.keys()
+        keys = list(self.images.keys())
         inverses = {}
         for i, v in enumerate(vals):
             inverses[v] = keys[i]
@@ -75,7 +75,6 @@ class GroupHomomorphism(object):
             self._kernel = self._compute_kernel()
         return self._kernel
 
-
     def _compute_kernel(self):
         from sympy import S
         G = self.domain
@@ -92,8 +91,7 @@ class GroupHomomorphism(object):
                 gens.append(k)
                 K = FpSubgroup(G, gens)
         return K
-        
-            
+
     def image(self):
         '''
         Compute the image of `self`.
@@ -195,7 +193,7 @@ def homomorphism(domain, codomain, gens, images=[]):
     images.extend([codomain.identity]*(len(generators)-len(images)))
     gens.extend([g for g in generators if g not in gens])
     images = dict(zip(gens,images))
-    
+
     if not _check_homomorphism(domain, images, codomain.identity):
         raise ValueError("The given images do not define a homomorphism")
     return GroupHomomorphism(domain, codomain, images)
