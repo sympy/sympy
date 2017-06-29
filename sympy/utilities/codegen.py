@@ -89,10 +89,10 @@ from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import c_code_printers
-from sympy.printing.fcode import fcode, FCodePrinter
-from sympy.printing.julia import julia_code, JuliaCodePrinter
-from sympy.printing.octave import octave_code, OctaveCodePrinter
-from sympy.printing.rust import rust_code, RustCodePrinter
+from sympy.printing.fcode import FCodePrinter
+from sympy.printing.julia import JuliaCodePrinter
+from sympy.printing.octave import OctaveCodePrinter
+from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
@@ -503,6 +503,31 @@ class Result(Variable, ResultBase):
 class CodeGen(object):
     """Abstract class for the code generators."""
 
+    printer = None  # will be set to an instance of a CodePrinter subclass
+
+    def _indent_code(self, codelines):
+        return self.printer.indent_code(codelines)
+
+    def _printer_method_with_settings(self, method, settings=None, *args, **kwargs):
+        settings = settings or {}
+        ori = {k: self.printer._settings[k] for k in settings}
+        for k, v in settings.items():
+            self.printer._settings[k] = v
+        result = getattr(self.printer, method)(*args, **kwargs)
+        for k, v in ori.items():
+            self.printer._settings[k] = v
+        return result
+
+    def _get_symbol(self, s):
+        """Returns the symbol as fcode prints it."""
+        if self.printer._settings['human']:
+            expr_str = self.printer.doprint(s)
+        else:
+            constants, not_supported, expr_str = self.printer.doprint(s)
+            if constants or not_supported:
+                raise ValueError("Failed to print %s" % str(s))
+        return expr_str.strip()
+
     def __init__(self, project="project"):
         """Initialize a code generator.
 
@@ -768,23 +793,17 @@ class CCodeGen(CodeGen):
     interface_extension = "h"
     standard = 'c99'
     preprocessor_extras = []
-    printer_class = None
 
-    def __init__(self, project="project"):
+    def __init__(self, project="project", printer=None):
         super(CCodeGen, self).__init__(project=project)
-
-        if self.printer_class is None:
-            self.printer_class = c_code_printers[self.standard.lower()]
-
-    def _ccode(self, expr, assign_to=None, **settings):
-        return self.printer_class(settings).doprint(expr, assign_to)
+        self.printer = printer or c_code_printers[self.standard.lower()]()
 
     def _get_header(self):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("/" + "*"*78 + '\n')
         tmp = header_comment % {"version": sympy_version,
-            "project": self.project}
+                                "project": self.project}
         for line in tmp.splitlines():
             code_lines.append(" *%s*\n" % line.center(76))
         code_lines.append(" " + "*"*78 + "/\n")
@@ -808,7 +827,7 @@ class CCodeGen(CodeGen):
 
         type_args = []
         for arg in routine.arguments:
-            name = self._ccode(arg.name)
+            name = self.printer.doprint(arg.name)
             if arg.dimensions or isinstance(arg, ResultBase):
                 type_args.append((arg.get_datatype('C'), "*%s" % name))
             else:
@@ -861,14 +880,16 @@ class CCodeGen(CodeGen):
                 assign_to = result.result_var
 
             try:
-                constants, not_c, c_expr = self._ccode(result.expr, human=False,
-                        assign_to=assign_to, dereference=dereference)
+                constants, not_c, c_expr = self._printer_method_with_settings(
+                    'doprint', dict(human=False, dereference=dereference),
+                    result.expr, assign_to=assign_to)
             except AssignmentError:
                 assign_to = result.result_var
                 code_lines.append(
                     "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
-                constants, not_c, c_expr = self._ccode(result.expr, human=False,
-                        assign_to=assign_to, dereference=dereference)
+                constants, not_c, c_expr = self._printer_method_with_settings(
+                    'doprint', dict(human=False, dereference=dereference),
+                    result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
@@ -877,9 +898,6 @@ class CCodeGen(CodeGen):
         if return_val:
             code_lines.append("   return %s;\n" % return_val)
         return code_lines
-
-    def _indent_code(self, codelines):
-        return self.printer_class().indent_code(codelines)
 
     def _get_routine_ending(self, routine):
         return ["}\n"]
@@ -960,12 +978,9 @@ class FCodeGen(CodeGen):
     code_extension = "f90"
     interface_extension = "h"
 
-    def __init__(self, project='project'):
-        CodeGen.__init__(self, project)
-
-    def _get_symbol(self, s):
-        """Returns the symbol as fcode prints it."""
-        return fcode(s).strip()
+    def __init__(self, project='project', printer=None):
+        super(FCodeGen, self).__init__(project)
+        self.printer = printer or FCodePrinter()
 
     def _get_header(self):
         """Writes a common header for the generated files."""
@@ -1089,8 +1104,9 @@ class FCodeGen(CodeGen):
             elif isinstance(result, (OutputArgument, InOutArgument)):
                 assign_to = result.result_var
 
-            constants, not_fortran, f_expr = fcode(result.expr,
-                assign_to=assign_to, source_format='free', human=False)
+            constants, not_fortran, f_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False, source_format='free'),
+                result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
                 t = get_default_datatype(obj)
@@ -1108,8 +1124,8 @@ class FCodeGen(CodeGen):
         return declarations + code_lines
 
     def _indent_code(self, codelines):
-        p = FCodePrinter({'source_format': 'free', 'human': False})
-        return p.indent_code(codelines)
+        return self._printer_method_with_settings(
+            'indent_code', dict(human=False, source_format='free'), codelines)
 
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         # check that symbols are unique with ignorecase
@@ -1175,6 +1191,10 @@ class JuliaCodeGen(CodeGen):
     """
 
     code_extension = "jl"
+
+    def __init__(self, project='project', printer=None):
+        super(JuliaCodeGen, self).__init__(project)
+        self.printer = printer or JuliaCodePrinter()
 
     def routine(self, name, expr, argument_sequence, global_vars):
         """Specialized Routine creation for Julia."""
@@ -1267,10 +1287,6 @@ class JuliaCodeGen(CodeGen):
 
         return Routine(name, arg_list, return_vals, local_vars, global_vars)
 
-    def _get_symbol(self, s):
-        """Print the symbol appropriately."""
-        return julia_code(s).strip()
-
     def _get_header(self):
         """Writes a common header for the generated files."""
         code_lines = []
@@ -1334,8 +1350,8 @@ class JuliaCodeGen(CodeGen):
             else:
                 raise CodeGenError("unexpected object in Routine results")
 
-            constants, not_supported, jl_expr = julia_code(result.expr,
-                assign_to=assign_to, human=False)
+            constants, not_supported, jl_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False), result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
@@ -1384,6 +1400,10 @@ class OctaveCodeGen(CodeGen):
     """
 
     code_extension = "m"
+
+    def __init__(self, project='project', printer=None):
+        super(OctaveCodeGen, self).__init__(project)
+        self.printer = printer or OctaveCodePrinter()
 
     def routine(self, name, expr, argument_sequence, global_vars):
         """Specialized Routine creation for Octave."""
@@ -1475,10 +1495,6 @@ class OctaveCodeGen(CodeGen):
 
         return Routine(name, arg_list, return_vals, local_vars, global_vars)
 
-    def _get_symbol(self, s):
-        """Print the symbol appropriately."""
-        return octave_code(s).strip()
-
     def _get_header(self):
         """Writes a common header for the generated files."""
         code_lines = []
@@ -1552,8 +1568,8 @@ class OctaveCodeGen(CodeGen):
             else:
                 raise CodeGenError("unexpected object in Routine results")
 
-            constants, not_supported, oct_expr = octave_code(result.expr,
-                assign_to=assign_to, human=False)
+            constants, not_supported, oct_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False), result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
@@ -1569,10 +1585,8 @@ class OctaveCodeGen(CodeGen):
         return declarations + code_lines
 
     def _indent_code(self, codelines):
-        # Note that indenting seems to happen twice, first
-        # statement-by-statement by OctavePrinter then again here.
-        p = OctaveCodePrinter({'human': False})
-        return p.indent_code(codelines)
+        return self._printer_method_with_settings(
+            'indent_code', dict(human=False), codelines)
 
     def dump_m(self, routines, f, prefix, header=True, empty=True, inline=True):
         # Note used to call self.dump_code() but we need more control for header
@@ -1622,6 +1636,10 @@ class RustCodeGen(CodeGen):
     """
 
     code_extension = "rs"
+
+    def __init__(self, project="project", printer=None):
+        super(RustCodeGen, self).__init__(project=project)
+        self.printer = printer or RustCodePrinter()
 
     def routine(self, name, expr, argument_sequence, global_vars):
         """Specialized Routine creation for Rust."""
@@ -1740,7 +1758,7 @@ class RustCodeGen(CodeGen):
 
         type_args = []
         for arg in routine.arguments:
-            name = rust_code(arg.name)
+            name = self.printer.doprint(arg.name)
             if arg.dimensions or isinstance(arg, ResultBase):
                 type_args.append(("*%s" % name, arg.get_datatype('Rust')))
             else:
@@ -1790,8 +1808,8 @@ class RustCodeGen(CodeGen):
             else:
                 raise CodeGenError("unexpected object in Routine results")
 
-            constants, not_supported, rs_expr = rust_code(result.expr,
-                assign_to=assign_to, human=False)
+            constants, not_supported, rs_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False), result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
                 declarations.append("const %s: f64 = %s;\n" % (name, value))
@@ -1812,10 +1830,6 @@ class RustCodeGen(CodeGen):
 
         return declarations + code_lines + returns
 
-    def _indent_code(self, codelines):
-        p = RustCodePrinter()
-        return p.indent_code(codelines)
-
     def _get_routine_ending(self, routine):
         return ["}\n"]
 
@@ -1832,7 +1846,7 @@ class RustCodeGen(CodeGen):
 
 
 
-def get_code_generator(language, project, standard=None):
+def get_code_generator(language, project=None, standard=None):
     if language == 'C':
         if standard is None:
             pass
@@ -1842,6 +1856,8 @@ def get_code_generator(language, project, standard=None):
             language = 'C99'
     if isinstance(language, type):
         CodeGenClass = language
+    elif isinstance(language, CodeGen):
+        return language
     else:
         CodeGenClass = {"C": CCodeGen, "C89": C89CodeGen, "C99": C99CodeGen,
                         "F95": FCodeGen, "JULIA": JuliaCodeGen,
@@ -2085,6 +2101,6 @@ def make_routine(name, expr, argument_sequence=None,
     """
 
     # initialize a new code generator
-    code_gen = get_code_generator(language, "nothingElseMatters")
+    code_gen = get_code_generator(language)
 
     return code_gen.routine(name, expr, argument_sequence, global_vars)

@@ -421,12 +421,6 @@ class F2PyCodeWrapper(CodeWrapper):
         return getattr(mod, name)
 
 
-def _get_code_wrapper_class(backend):
-    wrappers = {'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper,
-        'DUMMY': DummyWrapper}
-    return wrappers[backend.upper()]
-
-
 # Here we define a lookup of backends -> tuples of languages. For now, each
 # tuple is of length 1, but if a backend supports more than one language,
 # the most preferable language is listed first.
@@ -505,12 +499,15 @@ def autowrap(
         language = _infer_language(backend)
 
     helpers = [helpers] if helpers else ()
-    flags = flags if flags else ()
     args = list(args) if iterable(args, exclude=set) else args
 
     code_generator = get_code_generator(language, "autowrap")
-    CodeWrapperClass = _get_code_wrapper_class(backend)
-    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
+    CodeWrapperClass = {
+        'F2PY': F2PyCodeWrapper,
+        'CYTHON': CythonCodeWrapper,
+        'DUMMY': DummyWrapper
+    }[backend.upper()]
+    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags if flags else (), verbose)
 
     helps = []
     for name_h, expr_h, args_h in helpers:
