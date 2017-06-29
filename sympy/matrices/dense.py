@@ -20,6 +20,7 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices.matrices import (MatrixBase,
                                      ShapeError, a2idx, classof)
 
+from sympy.core.decorators import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def _iszero(x):
@@ -1280,10 +1281,13 @@ def hessian(f, varlist, constraints=[]):
             out[j, i] = out[i, j]
     return out
 
-
+@deprecated(useinstead="jordan_block", deprecated_since_version="1.1")
 def jordan_cell(eigenval, n):
+    return jordan_block(eigenval, n)
+
+def jordan_block(eigenval, n):
     """
-    Create matrix of Jordan cell kind:
+    Create a Jordan block:
 
     Examples
     ========

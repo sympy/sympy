@@ -2104,7 +2104,7 @@ class MatrixDecompositions(MatrixSubspaces):
 
         if rankcheck:
             SymPyDeprecationWarning(
-                feature="Keyword argument 'rankcheck' is deprecated.",
+                feature="Keyword argument 'rankcheck'",
                 issue=9796,
                 deprecated_since_version="1.1").warn()
             if self.rank() != min(self.rows, self.cols):
