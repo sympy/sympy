@@ -102,18 +102,18 @@ try:
 except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
-from Cython.Distutils import build_ext
+from Cython.Build import cythonize
+cy_opts = {}
 
-
-setup(cmdclass={'build_ext': build_ext},
-      ext_modules=[Extension('wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
-                             include_dirs=[],
-                             library_dirs=[],
-                             libraries=[],
-                             extra_compile_args=['-std=c99'],
-                             extra_link_args=[]
-                            )],
-    )\
+ext_mods = [Extension(
+    'wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+    include_dirs=[],
+    library_dirs=[],
+    libraries=[],
+    extra_compile_args=['-std=c99'],
+    extra_link_args=[]
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """
     temp_dir = tempfile.mkdtemp()
     setup_file_path = os.path.join(temp_dir, 'setup.py')
@@ -128,7 +128,8 @@ setup(cmdclass={'build_ext': build_ext},
                                  library_dirs=['/user/local/lib'],
                                  libraries=['thelib', 'nilib'],
                                  extra_compile_args=['-slow-math'],
-                                 extra_link_args=['-lswamp', '-ltrident']
+                                 extra_link_args=['-lswamp', '-ltrident'],
+                                 cythonize_options={'compiler_directives': {'boundscheck': False}}
                                  )
 
     expected = """\
@@ -138,18 +139,18 @@ try:
 except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
-from Cython.Distutils import build_ext
+from Cython.Build import cythonize
+cy_opts = {'compiler_directives': {'boundscheck': False}}
 
-
-setup(cmdclass={'build_ext': build_ext},
-      ext_modules=[Extension('wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
-                             include_dirs=['/usr/local/include', '/opt/booger/include'],
-                             library_dirs=['/user/local/lib'],
-                             libraries=['thelib', 'nilib'],
-                             extra_compile_args=['-slow-math', '-std=c99'],
-                             extra_link_args=['-lswamp', '-ltrident']
-                            )],
-    )\
+ext_mods = [Extension(
+    'wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+    include_dirs=['/usr/local/include', '/opt/booger/include'],
+    library_dirs=['/user/local/lib'],
+    libraries=['thelib', 'nilib'],
+    extra_compile_args=['-slow-math', '-std=c99'],
+    extra_link_args=['-lswamp', '-ltrident']
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """
     code_gen._prepare_files(routine, build_dir=temp_dir)
     with open(setup_file_path) as f:
@@ -163,19 +164,19 @@ try:
 except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
-from Cython.Distutils import build_ext
+from Cython.Build import cythonize
+cy_opts = {'compiler_directives': {'boundscheck': False}}
 import numpy as np
 
-
-setup(cmdclass={'build_ext': build_ext},
-      ext_modules=[Extension('wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
-                             include_dirs=['/usr/local/include', '/opt/booger/include', np.get_include()],
-                             library_dirs=['/user/local/lib'],
-                             libraries=['thelib', 'nilib'],
-                             extra_compile_args=['-slow-math', '-std=c99'],
-                             extra_link_args=['-lswamp', '-ltrident']
-                            )],
-    )\
+ext_mods = [Extension(
+    'wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+    include_dirs=['/usr/local/include', '/opt/booger/include', np.get_include()],
+    library_dirs=['/user/local/lib'],
+    libraries=['thelib', 'nilib'],
+    extra_compile_args=['-slow-math', '-std=c99'],
+    extra_link_args=['-lswamp', '-ltrident']
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """
 
     code_gen._need_numpy = True
