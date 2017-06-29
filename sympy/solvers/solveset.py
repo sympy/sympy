@@ -10,7 +10,7 @@ This module contains functions to:
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex)
 from sympy.core.relational import Eq
