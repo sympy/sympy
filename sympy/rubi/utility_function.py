@@ -12,7 +12,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
-from sympy import exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper
+from sympy import exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper, Symbol, symbols
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 
@@ -553,7 +553,10 @@ def Exponent(expr, x, *k):
     if expr.is_number:
         return 0
     if not k:
-        return degree(expr, gen = x)
+        if expr.is_polynomial(x):
+            return degree(expr, gen = x)
+        else:
+            return 0
     else:
         lst=[]
         if expr.is_Add:
@@ -821,7 +824,7 @@ def FixSimplify(u):
     return u
 
 def TogetherSimplify(u):
-    return u
+    return simplify(u)
     #return With(Set(v, Together(Simplify(Together(u)))), FixSimplify(v))
 
 def PosAux(u):
@@ -860,8 +863,8 @@ def CoefficientList(u, x):
     else:
         return []
 
-def ReplaceAll(expr, x, substitution):
-    return expr.subs(x, substitution)
+def ReplaceAll(expr, args):
+    return expr.subs(args)
 
 def NormalizeIntegrand(u, x):
     # returns u in a standard form recognizable by integration rules.
@@ -878,12 +881,13 @@ def SimplifyTerm(u, x):
 def ExpandLinearProduct(v, u, a, b, x):
     # If u is a polynomial in x, ExpandLinearProduct[v,u,a,b,x] expands v*u into a sum of terms of the form c*v*(a+b*x)^n.
     if FreeQ([a, b], x) and PolynomialQ(u, x):
-        lst = CoefficientList(ReplaceAll(u, x, (x - a)/b), x)
+        lst = CoefficientList(ReplaceAll(u, {x: (x - a)/b}), x)
         lst = [SimplifyTerm(i, x) for i in lst]
         res = 0
         for k in range(1, len(lst)+1):
             res = res + v*lst[k-1]*(a + b*x)**(k - 1)
         return res
+    return u*v
 
 def GCD(*args):
     return gcd(*args)
@@ -1243,11 +1247,9 @@ def Expon(expr, form, h=None):
     else:
         return Exponent(Together(expr), form)
 
-def ExpandIntegrand(expr, x):
-    w_ = Wild('w')
-    p_ = Wild('p')
+def MergeMonomials(expr, x):
     u_ = Wild('u')
-    v_ = Wild('v')
+    p_ = Wild('p', exclude=[x])
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
     c_ = Wild('c', exclude=[x])
@@ -1255,95 +1257,337 @@ def ExpandIntegrand(expr, x):
     n_ = Wild('n', exclude=[x])
     m_ = Wild('m', exclude=[x])
 
+    # Basis: If  m\[Element]\[DoubleStruckCapitalZ] \[And] b c-a d==0, then (a+b z)^m==b^m/d^m (c+d z)^m
+    pattern = u_*(a_ + b_*x)**m_*(c_ + d_*x)**n_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, m_, c_, d_, n_]
+        if len(keys) == len(match):
+            u, a, b, m, c, d, n = tuple([match[i] for i in keys])
+            if IntegerQ(m) and ZeroQ(b*c - a*d):
+                return u*b**m/d**m*(c + d*x)**(m + n)
+
+    # Basis: If  m/n\[Element]\[DoubleStruckCapitalZ], then z^m (c z^n)^p==(c z^n)^(m/n+p)/c^(m/n)
+    pattern = u_*(a_ + b_*x)**m_*(c_*(a_ + b_*x)**n_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, m_, c_, n_, p_]
+        if len(keys) == len(match):
+            u, a, b, m, c, n, p = tuple([match[i] for i in keys])
+            if IntegerQ(m/n):
+                return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
+    return expr
+
+def PolynomialDivide(p, q, x):
+    return quo(p, q) + rem(p, q)/q
+
+def BinomialQ(u, x, n=None):
+    if ListQ(u):
+        for i in u.args:
+            if Not(BinomialQ(i, x, n)):
+                return False
+        return True
+    return ListQ(BinomialParts(u, x))
+
+def ExpandIntegrand(expr, x, extra=None):
+    w_ = Wild('w')
+    p_ = Wild('p', exclude=[x])
+    q_ = Wild('q', exclude=[x])
+    u_ = Wild('u')
+    v_ = Wild('v')
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x])
+    e_ = Wild('e', exclude=[x])
+    f_ = Wild('f', exclude=[x])
+    g_ = Wild('g', exclude=[x])
+    h_ = Wild('h', exclude=[x])
+    j_ = Wild('j', exclude=[x])
+    n_ = Wild('n', exclude=[x])
+    m_ = Wild('m', exclude=[x])
+    F_ = Wild('F', exclude=[x])
+    k, q, i = symbols('k q i')
+
+    if extra:
+        w = ExpandIntegrand(extra, x)
+        r = NonfreeTerms(w, x)
+        if SumQ(r):
+            result = [expr*FreeTerms(w, x)]
+            for i in r.args:
+                result.append(MergeMonomials(expr*i, x))
+            return r.func(*result)
+        else:
+            return expr*FreeTerms(w, x) + MergeMonomials(expr*r, x)
+
+    # Basis: (a+b x)^m/(c+d x)==(b (a+b x)^(m-1))/d+((a d-b c) (a+b x)^(m-1))/(d (c+d x))
+    pattern = (a_ + b_*x)**m_*f_**(e_*(c_ + d_*x)**n_)/(g_+h_*x)
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, b_, c_, d_, e_, f_, g_, h_, m_, n_]
+        if len(keys) == len(match):
+            a, b, c, d, e, f, g, h, m, n = tuple([match[i] for i in keys])
+            if PositiveIntegerQ(m) and ZeroQ(b*c - a*d):
+                tmp = a*h - b*g
+                return SimplifyTerm(tmp**m/h**m, x)*f**(e*(c + d*x)**n)/(g + h*x) + Sum(SimplifyTerm(b*tmp**(k-1)/h**k, x)*f**(e*(c+d*x)**n)*(a + b*x)**(m-k), (k, 1, m)).doit()
+
+    pattern = u_*(a_ + b_*F_**v_)**m_*(c_ + d_*F_**v_)**n_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, F_, v_, m_, c_, d_, n_]
+        if len(keys) == len(match):
+            u, a, b, F, v, m, c, d, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n) and NegativeQ(n):
+                w = ReplaceAll(ExpandIntegrand((a+b*x)**m*(c + d*x)**n, x), {x: F**v})
+                result = []
+                for i in w.args:
+                    result.append(i*u)
+                return w.func(*result)
+
+    pattern = u_*(a_ + b_*x)**m_*Log(c_*(d_ + e_*x**n_)**p_)
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, m_, c_, d_, e_, n_, p_]
+        if len(keys) == len(match):
+            u, a, b, m, c, d, e, n, p = tuple([match[i] for i in keys])
+            if PolynomialQ(u, x):
+                return ExpandIntegrand(Log(c*(d + e*x**n)**p), x, u*(a + b*x)**m)
+
+    pattern = u_*f_**(e_*(c_ + d_*x)**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, f_, e_, c_, d_, n_]
+        if len(keys) == len(match):
+            u, f, e, c, d, n = tuple([match[i] for i in keys])
+            if PolynomialQ(u,x):
+                if EqQ(n, 1):
+                    return ExpandIntegrand(f**(e*(c + d*x)**n), x, u)
+                else:
+                    return ExpandLinearProduct(f**(e*(c + d*x)**n), u, c, d, x)
+
+    pattern = u_*(a_ + b_*Log(c_*(d_*(e_ + f_*x)**p_)**q_))**n_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, c_, d_, e_, f_, p_, q_, n_]
+        if len(keys) == len(match):
+            u, a, b, c, d, e, f, p, q, n = tuple([match[i] for i in keys])
+            if PolynomialQ(u, x):
+                return ExpandLinearProduct((a + b*Log(c*(d*(e + f*x)**p)**q))**n, u, e, f, x)
+
+    pattern = (a_ + b_*u_**n_ + c_*u_**j_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, b_, u_, n_, c_, j_, p_]
+        if len(keys) == len(match):
+            a, b, u, n, c, j, p = tuple([match[i] for i in keys])
+            if IntegerQ(n) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and NonzeroQ(b**2 - 4*a*c):
+                ReplaceAll(ExpandIntegrand(1/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2),x: u**n})
+
+    pattern = u_**m_*(a_ + b_*u_**n_ + c_*u_**j_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, m_, a_, b_, n_, c_, j_, p_]
+        if len(keys) == len(match):
+            u, m, a, b, n, c, j, p = tuple([match[i] for i in keys])
+            if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0<m<2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
+                return ReplaceAll(ExpandIntegrand(1/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, 2),x: u})
+
+    # Basis: If  q=Sqrt[-a c], then a+c z^2==((-q+c z)(q+c z))/c
+    pattern = (a_ + c_*u_**n_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, c_, u_, n_, p_]
+        if len(keys) == len(match):
+            a, c, u, n, p = tuple([match[i] for i in keys])
+            if IntegerQ(n/2) and NegativeIntegerQ(p):
+                return ReplaceAll(ExpandIntegrand(1/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c,2),x: u**(n/2)})
+
+    pattern = u_**m_*(a_ + c_*u_**n_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, m_, a_, c_, n_, p_]
+        if len(keys) == len(match):
+            u, m, a, c, n, p = tuple([match[i] for i in keys])
+            if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0<m<n and (m != n/2):
+                return ReplaceAll(ExpandIntegrand(1/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, 2), x: u})
+
+    # Basis: 1/(a x^n+b Sqrt[c+d x^(2 n)])==(a x^n-b Sqrt[c+d x^(2 n)])/(-b^2 c+(a^2-b^2 d) x^(2 n))
+    pattern = u_/(a_*x**n_ + b_*Sqrt(c_ + d_*x**j_))
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, n_, b_, c_, d_, j_]
+        if len(keys) == len(match):
+            u, a, n, b, c, d, j = tuple([match[i] for i in keys])
+            if ZeroQ(j - 2*n):
+                return ExpandIntegrand(u*(a*x**n - b*Sqrt(c + d*x**(2*n)))/(-b**2*c + (a**2 - b**2*d)*x**(2*n)), x)
+
+    # Basis: If  q=Sqrt[b^2-4a c] and r=(2 c d-b e)/q, then (d+e z)/(a+b z+c z^2)==(e+r)/(b-q+2 c z)+(e-r)/(b+q+2 c z)*)
+    pattern = (d_ + e_*(f_ + g_*u_**n_))/(a_ + b_*u_**n_ + c_*u_**j_)
+    match = expr.match(pattern)
+    if match:
+        keys = [d_, e_, f_, g_, u_, n_, a_, b_, c_, j_]
+        if len(keys) == len(match):
+            d, e, f, g, u, n, a, b, c, j = tuple([match[i] for i in keys])
+            if ZeroQ(j - 2*n) and NonzeroQ(b*2 - 4*a*c):
+                q = Rt(b**2 - 4*a*c, 2)
+                r = TogetherSimplify((2*c*(d + e*f) - b*e*g)/q)
+                return (e*g + r)/(b - q + 2*c*u**n) + (e*g - r)/(b + q + 2*c*u**n)
+
+    # Basis: If (m|n,p,q)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<p<q<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m + e*z^p + f*z^q)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)) + (e*(r/s)^p)/(-1)^(2*k*(p/n)) + (f*(r/s)^q)/(-1)^(2*k*(q/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+    pattern = (c_ + d_*u_**m_ + e_*u_**p_ + f_*u_**q_)/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [c_, d_, u_, m_, e_, p_, f_, q_, a_, b_, n_]
+        if len(keys) == len(match):
+            c, d, u, m, e, p, f, q, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n, p, q) & 0<m<p<q<n:
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n) + r*f*(r/s)**q*(-1)**(-2*k*q/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k,1,n)).doit()
+
+    # Basis: If (m|n,p)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<p<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m + e*z^p)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)) + (e*(r/s)^p)/(-1)^(2*k*(p/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+    pattern = (c_ + d_*u_**m_ + e_*u_**p_)/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [c_, d_, u_, m_, e_, p_, a_, b_, n_]
+        if len(keys) == len(match):
+            c, d, u, m, e, p, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n, p) & 0<m<p<n:
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
+
     # Basis: (a+b x)^m/(c+d x)==(b (a+b x)^(m-1))/d+((a d-b c) (a+b x)^(m-1))/(d (c+d x))
     pattern = (a_ + b_*x)**m_/(c_ + d_*x)
     match = expr.match(pattern)
     if match:
         keys = [a_, b_, c_, d_, m_]
-        a, b, c, d, m = tuple([match[i] for i in keys])
-        if PositiveIntegerQ(m):
-            if RationalQ(a, b, c, d):
-                return ExpandExpression((a + b*x)**m/(c + d*x), x)
-            else:
-                tmp = a*d - b*c
-                result = SimplifyTerm(tmp**m / d**m, x)/(c + d*x)
-                for k in range(1, m + 1):
-                    result += SimplifyTerm(b*tmp**(k - 1)/d**k, x)*(a + b*x)**(m - k)
-                return result
+        if len(keys) == len(match):
+            a, b, c, d, m = tuple([match[i] for i in keys])
+            if PositiveIntegerQ(m):
+                if RationalQ(a, b, c, d):
+                    return ExpandExpression((a + b*x)**m/(c + d*x), x)
+                else:
+                    tmp = a*d - b*c
+                    result = SimplifyTerm(tmp**m / d**m, x)/(c + d*x)
+                    for k in range(1, m + 1):
+                        result += SimplifyTerm(b*tmp**(k - 1)/d**k, x)*(a + b*x)**(m - k)
+                    return result
+
+    pattern = (c_ + d_*u_**m_)/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [c_, d_, u_, m_, a_, b_, n_]
+        if len(keys) == len(match):
+            c, d, u, m, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m,n) & 0<m<n:
+                # *Basis: If (m|n)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n))/(a*n*(r-(-1)**(2*k/n)*s*u)),(k,1,n)).doit()
+            elif ZeroQ(n - 2*m):
+                # q=Sqrt[-(a/b)], then (c+d z)/(a+b z^2)==-((c-d q)/(2 b q(q+z)))-(c+d q)/(2 b q(q-z))
+                j = n
+                n = m
+                q = Rt(-a/b, 2)
+                return -(c - d*q)/(2*b*q*(q + u**n)) - (c + d*q)/(2*b*q*(q - u**n))
+
+    pattern = 1/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, b_, u_, n_]
+        if len(keys) == len(match):
+            a, b, u, n = tuple([match[i] for i in keys])
+            if n == 3:
+                # Basis: Let r/s=(-(a/b))^(1/3), then  1/(a+b z^3)==r/(3a(r-s z))+(r(2 r+s z))/(3a(r^2+r s z+s^2 z^2))
+                r = Numerator(Rt(-a/b, 3))
+                s = Denominator(Rt(-a/b, 3))
+                return r/(3*a*(r - s*u)) + r*(2*r + s*u)/(3*a*(r**2 + r*s*u + s**2*u**2))
+            elif PositiveIntegerQ(n/4):
+                # Let r/s=Sqrt[-(a/b)], then  1/(a+b z^2)==r/(2a(r-s z))+r/(2a(r+s z))
+                r = Numerator(Rt(-a/b,2))
+                s = Denominator(Rt(-a/b, 2))
+                return r/(2*a*(r - s*u**(n/2))) + r/(2*a*(r + s*u**(n/2)))
+            elif IntegerQ(n) & PositiveQ(n):
+                # Basis: If  n\[Element]SuperPlus[\[DoubleStruckCapitalZ]], let r/s=(-(a/b))^(1/n), then  1/(a + b*z^n) == (r*Sum[1/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum(r/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
 
     # If u is a polynomial in x, ExpandIntegrand[u*(a+b*x)^m,x] expand u*(a+b*x)^m into a sum of terms of the form A*(a+b*x)^n.
     pattern = u_*(a_ + b_*x)**m_
     match = expr.match(pattern)
     if match:
         keys = [u_, a_, b_, m_]
-        u, a, b, m = tuple([match[i] for i in keys])
-        try:
-            w, c, d, p = MatchQ(u, w_*(c_+d_*x)**p_, w_, c_, d_, p_)
-            res = IntegerQ(p) & p > m
-        except: # if not matched
-            res = False
-
-        if PolynomialQ(u, x) and Not(PositiveIntegerQ(m) and res):
-            tmp1 = ExpandLinearProduct((a+b*x)**m, u, a, b, x)
-            if not IntegerQ(m):
-                return tmp1
-            else:
-                tmp2 = ExpandExpression(u*(a+b*x)**m, x)
-                if SumQ(tmp2) and (LeafCount(tmp2) <= LeafCount(tmp1)+2):
-                    return tmp2
-                else:
+        if len(keys) == len(match):
+            u, a, b, m = tuple([match[i] for i in keys])
+            try:
+                w, c, d, p = MatchQ(u, w_*(c_+d_*x)**p_, w_, c_, d_, p_)
+                res = IntegerQ(p) & p > m
+            except: # if not matched
+                res = False
+            if PolynomialQ(u, x) and Not(PositiveIntegerQ(m) and res):
+                tmp1 = ExpandLinearProduct((a+b*x)**m, u, a, b, x)
+                if not IntegerQ(m):
                     return tmp1
-
-    # *Basis: If (m|n)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
-    pattern = (c_ + d_*u_**m_)/(a_ + b_*u_**n_)
-    match = expr.match(pattern)
-    if match:
-        keys = [c_, d_, u_, m_, a_, b_, u_, n_]
-        c, d, u, m, a, b, u, n = tuple([match[i] for i in keys])
-        if IntegersQ[m,n] & 0<m<n:
-            r = Numerator(Rt(-a/b, n))
-            s = Denominator(Rt(-a/b, n))
-            k = 1
-            return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n))/(a*n*(r-(-1)**(2*k/n)*s*u)),(k,1,n))
-
+                else:
+                    tmp2 = ExpandExpression(u*(a+b*x)**m, x)
+                    if SumQ(tmp2) and (LeafCount(tmp2) <= LeafCount(tmp1)+2):
+                        return tmp2
+                    else:
+                        return tmp1
 
     pattern = u_*v_**n_*(a_ + b_*x)**m_
     match = expr.match(pattern)
     if match:
         keys = [u_, v_, n_, a_, b_, m_]
-        u, v, n, a, b, m = tuple([match[i] for i in keys])
-        if NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & RationalQ(m) & (m < -1) & (Exponent(u, x) >= -(n+IntegerPart(m))*Exponent(v, x)):
-            pr = PolynomialQuotientRemainder(u, v**(-n)*(a + b*x)**(-IntegerPart(m)), x)
-            return ExpandIntegrand(pr[0]*(a + b*x)**FractionalPart(m), x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
-        elif NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & (Exponent(u, x) >= -n*Exponent(v, x)):
-            pr = PolynomialQuotientRemainder(u, v**(-n),x)
-            return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
+        if len(keys) == len(match):
+            u, v, n, a, b, m = tuple([match[i] for i in keys])
+            if NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & RationalQ(m) & (m < -1) & (Exponent(u, x) >= -(n+IntegerPart(m))*Exponent(v, x)):
+                pr = PolynomialQuotientRemainder(u, v**(-n)*(a + b*x)**(-IntegerPart(m)), x)
+                return ExpandIntegrand(pr[0]*(a + b*x)**FractionalPart(m), x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
+            elif NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & (Exponent(u, x) >= -n*Exponent(v, x)):
+                pr = PolynomialQuotientRemainder(u, v**(-n),x)
+                return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
 
     # Basis: If  (m|(n-1)/2)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(a/b)^(1/n), then z^m/(a + b*z^n) == (r*(-(r/s))^m*Sum[1/((-1)^(2*k*(m/n))*(r + (-1)^(2*(k/n))*s*z)), {k, 1, n}])/(a*n) == (r*(-(r/s))^m*Sum[(-1)^(2*k*((m + 1)/n))/((-1)^(2*(k/n))*r + s*z), {k, 1, n}])/(a*n)
     pattern = u_**m_/(a_+b_*u_**n_)
     match = expr.match(pattern)
     if match:
-        if IntegerQ(m, n) & 0<m<n & OddQ(n/GCD(m, n)) & PosQ(a/b):
-            g = GCD(m, n)
-            r = Numerator(Rt(a/b, n/GCD(m, n)))
-            s = Denominator(Rt(a/b, n/GCD(m, n)))
-            k = 1
-            if CoprimeQ(m + g, n):
-                return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g))
-            else:
-                return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g))
-        elif IntegersQ(m, n) & 0<m<n:
-            g = GCD(m, n)
-            r = Numerator(Rt(-a/b, n/GCD(m, n)))
-            s = Denominator(Rt(-a/b, n/GCD(m, n)))
-            if n/g == 2:
-                return s/(2*b*(r+s*u^g)) - s/(2*b*(r-s*u^g))
-            else:
-                if CoprimeQ[m+g,n]:
-                    return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g))
+        keys = [u_, m_, a_, b_, n_]
+        if len(keys) == len(match):
+            u, m, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n) & 0 < m < n & OddQ(n/GCD(m, n)) & PosQ(a/b):
+                g = GCD(m, n)
+                r = Numerator(Rt(a/b, n/GCD(m, n)))
+                s = Denominator(Rt(a/b, n/GCD(m, n)))
+                if CoprimeQ(m + g, n):
+                    return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g)).doit()
                 else:
-                    return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g))
+                    return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g)).doit()
+            elif IntegersQ(m, n) & 0<m<n:
+                g = GCD(m, n)
+                r = Numerator(Rt(-a/b, n/GCD(m, n)))
+                s = Denominator(Rt(-a/b, n/GCD(m, n)))
+                if n/g == 2:
+                    return s/(2*b*(r+s*u^g)) - s/(2*b*(r-s*u^g))
+                else:
+                    if CoprimeQ[m+g,n]:
+                        return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g)).doit()
+                    else:
+                        return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g)).doit()
 
+    pattern = u_/v_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, v_]
+        if len(keys) == len(match):
+            u, v = tuple([match[i] for i in keys])
+            if PolynomialQ(u, x) and PolynomialQ(v, x) and BinomialQ(v,x) and (Exponent(u, x) == Exponent(v, x)-1 >= 2):
+                lst = CoefficientList(u, x)
+                return lst[-1]*x**Exponent[u,x]/v + Sum(lst[i]*x**(i-1),(i, 1, Exponent[u,x])).doit()/v
+            elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x)>=Exponent(v, x):
+                return PolynomialDivide(u, v, x)
 
     #return None
     return expr.expand()

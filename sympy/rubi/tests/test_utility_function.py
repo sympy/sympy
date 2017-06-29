@@ -4,8 +4,9 @@ from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, aco
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi
+from sympy.core.evaluate import evaluate
 
-a, b, c, d, e, f, x, y, z = symbols('a b c d e f x y z', real=True, imaginary=False)
+a, b, c, d, e, f, g, h, x, y, z, m, n, p, q = symbols('a b c d e f g h x y z m n p q', real=True, imaginary=False)
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -443,6 +444,7 @@ def test_Exponent():
     assert Exponent(x**2+2*x+1, x) == 2
     assert Exponent(x**3, x, List) == [3]
     assert Exponent(S(1), x) == 0
+    assert Exponent(x**(-3), x) == 0
 
 def test_Expon():
     assert Expon(x**2+2*x+1, x) == 2
@@ -454,6 +456,10 @@ def test_QuadraticQ():
     assert not QuadraticQ(x**2+1+x**3, x)
     assert QuadraticQ(x**2+1+x, x)
     assert not QuadraticQ(x**2, x)
+
+def test_BinomialQ():
+    assert BinomialQ(x**9, x)
+    assert BinomialQ((1 + x)**3, x)
 
 def test_BinomialParts():
     assert BinomialParts(2 + x*(9*x), x) == [2, 9, 2]
@@ -513,8 +519,9 @@ def test_CoefficientList():
     assert CoefficientList(sqrt(x), x) == []
 
 def test_ReplaceAll():
-    assert ReplaceAll(x, x, a) == a
-    assert ReplaceAll(a*x, x, a + b) == a*(a + b)
+    assert ReplaceAll(x, {x: a}) == a
+    assert ReplaceAll(a*x, {x: a + b}) == a*(a + b)
+    assert ReplaceAll(a*x, {a: b, x: a + b}) == b*(a + b)
 
 def test_SimplifyTerm():
     assert SimplifyTerm(a/100 + 100/b*x, x) == a/100 + 100/b*x
@@ -522,9 +529,22 @@ def test_SimplifyTerm():
 def test_ExpandLinearProduct():
     assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
 
+def test_PolynomialDivide():
+    assert PolynomialDivide(x + x**2, x, x) == x + 1
+    assert PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
+
 def test_ExpandIntegrand():
-    #print(ExpandIntegrand((a + b*x)/x**3, x))
-    assert True
+    assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
+    assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18.0/(2*x**2 + 4.0) - 2.0/(2*x**2 + 2.0)
+    assert ExpandIntegrand((-1 + (-1)*x**2 + 2*x**4)**(-2), x) == 1/(4*x**8 - 4*x**6 - 3*x**4 + 2*x**2 + 1)
+    assert ExpandIntegrand((1 - 1*x**2)**(-3), x) == -1/(x**6 - 3.0*x**4 + 3.0*x**2 - 1.0)
+    assert ExpandIntegrand(x**2*(1 - 1*x**6)**(-2), x) == x**2/(x**12 - 2.0*x**6 + 1.0)
+    assert ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (1.0*c - 1.0*d - 1.0*I*e)/(4*I*x + 4.0) + (1.0*c - 1.0*d + 1.0*I*e)/(-4*I*x + 4.0) + (1.0*c + 1.0*d - 1.0*e)/(4*x + 4.0) + (1.0*c + 1.0*d + 1.0*e)/(-4*x + 4.0)
+    assert ExpandIntegrand((a + b*x)**2/(c + d*x), x) == b*(a + b*x)/d + b*(a*d - b*c)/d**2 + (a*d - b*c)**2/(d**2*(c + d*x))
+    assert ExpandIntegrand(x/(a*x**1 + b*Sqrt(c + d*x**2)), x) == a*x**2/(a**2*x**2 - b**2*c - b**2*d*x**2) - b*x*sqrt(c + d*x**2)/(a**2*x**2 - b**2*c - b**2*d*x**2)
+    assert ExpandIntegrand(x**2*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == e**2*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f**2 - 2*e*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f**2 + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)**2/f**2
+    assert ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
+    assert ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x))
 
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
@@ -622,3 +642,7 @@ def test_Coeff():
     assert Coeff(a + b*x + c*x**3, x, 0) == a
     assert Coeff(a + b*x + c*x**3, x, 4) == 0
     assert Coeff(b*x + c*x**3, x, 3) == c
+
+def test_MergeMonomials():
+    assert MergeMonomials(x**2*(1 + 1*x)**3*(1 + 1*x)**n, x) == x**2*(x + 1)**(n + 3)
+    assert MergeMonomials(x**2*(1 + 1*x)**2*(1*(1 + 1*x)**1)**2, x) == x**2*(x + 1)**4
