@@ -69,51 +69,63 @@ def polytope_integrate(poly, expr, **kwargs):
 
     dim_length = len(dims)
     result = {}
-    facet_count = 0
     integral_value = S.Zero
 
-    for term in monoms:
+    for term_count, term in enumerate(monoms):
         monomial, x_degree, y_degree = term
         grad_terms = [[0, 0, 0, 0]] + \
             gradient_terms(monomial, x_degree, y_degree)
-        for hp in hp_params:
+        for facet_count, hp in enumerate(hp_params):
             a, b = hp[0], hp[1]
             x0 = facets[facet_count].points[0]
-            max_degree = x_degree + y_degree
 
-            for i, monomial in enumerate(grad_terms):
+            for i, monom in enumerate(grad_terms):
                 #  Every monomial is a tuple :
                 #  (term, x_degree, y_degree, value over boundary)
-                m, x_d, y_d, _ = monomial
+                m, x_d, y_d, _ = monom
+                value = result.get(m, None)
                 value_over_boundary =\
                     integration_reduction(facets, facet_count, a, b, m,
-                                                  dims, x_d, y_d, y_degree, x0,
-                                                  grad_terms, i)
-                monomial[3] = value_over_boundary
-                value = result.get(m, None)
-                degree = x_d + y_d
-                if value:
-                    result[m] += value_over_boundary *\
-                                    (b / norm(a)) / (dim_length + degree)
-                else:
-                    result[m] = value_over_boundary *\
-                                   (b / norm(a)) / (dim_length + degree)
-            facet_count += 1
+                                          dims, x_d, y_d, y_degree, x0,
+                                          grad_terms, i)
+                monom[3] = value_over_boundary
 
-        for monom in monoms:
-            term = monom[0]
-            if term.is_number:
-                integral_value += result[1] * term
-            else:
-                coeff = LC(term)
-                integral_value += result[term/coeff] * coeff
+                degree = x_d + y_d
+                if value is not None:
+                    if value[1] == term_count:
+                        result[m][0] += value_over_boundary *\
+                                        (b / norm(a)) / (dim_length + degree)
+                else:
+                    result[m] = [value_over_boundary *\
+                                    (b / norm(a)) / (dim_length + degree),
+                                 term_count]
+    for monom in monoms:
+        term = monom[0]
+        if term.is_number:
+            integral_value += result[1][0] * term
+        else:
+            coeff = LC(term)
+            integral_value += result[term/coeff][0] * coeff
 
     return integral_value
 
 
 def integration_reduction(facets, index, a, b, expr,
-                                  dims, x_degree, y_degree, max_y_degree,
-                                  x0, monomial_values, monom_index):
+                          dims, x_degree, y_degree, max_y_degree,
+                          x0, monomial_values, monom_index):
+    """Helper method for polytope_integrate.
+    Returns the value of the input expression evaluated over the
+    polytope facet referenced by a given index.
+    Parameters
+    ===========
+    facets : List of facets of the polytope.
+    index : Index referencing the facet to integrate the expression over.
+    a : Hyperplane parameter denoting direction.
+    b : Hyperplane parameter denoting distance.
+    expr : The expression to integrate over the facet.
+    dims : List of symbols denoting axes.
+    degree : Degree of the homogeneous polynomial.
+    """
     expr = S(expr)
     value = S.Zero
     degree = x_degree + y_degree
