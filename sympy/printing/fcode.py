@@ -84,21 +84,19 @@ class FCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         # leading columns depend on fixed or free format
-        if self._settings['source_format'] == 'fixed':
-            self._lead_code = "      "
-            self._lead_cont = "     @ "
-            self._lead_comment = "C     "
-        elif self._settings['source_format'] == 'free':
-            self._lead_code = ""
-            self._lead_cont = "      "
-            self._lead_comment = "! "
-        else:
-            raise ValueError("Unknown source format: %s" % self._settings[
-                             'source_format'])
         standards = {66, 77, 90, 95, 2003, 2008}
         if self._settings['standard'] not in standards:
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
+
+    @property
+    def _lead(self):
+        if self._settings['source_format'] == 'fixed':
+            return {'code': "      ", 'cont': "     @ ", 'comment': "C     "}
+        elif self._settings['source_format'] == 'free':
+            return {'code': "", 'cont': "      ", 'comment': "! "}
+        else:
+            raise ValueError("Unknown source format: %s" % self._settings['source_format'])
 
     def _rate_index_position(self, p):
         return -p*5
@@ -311,9 +309,9 @@ class FCodePrinter(CodePrinter):
         result = []
         for line in lines:
             if line.startswith('!'):
-                result.append(self._lead_comment + line[1:].lstrip())
+                result.append(self._lead['comment'] + line[1:].lstrip())
             else:
-                result.append(self._lead_code + line)
+                result.append(self._lead['code'] + line)
         return result
 
     def _wrap_fortran(self, lines):
@@ -350,7 +348,7 @@ class FCodePrinter(CodePrinter):
         else:
             trailing = ''
         for line in lines:
-            if line.startswith(self._lead_comment):
+            if line.startswith(self._lead['comment']):
                 # comment line
                 if len(line) > 72:
                     pos = line.rfind(" ", 6, 72)
@@ -365,10 +363,10 @@ class FCodePrinter(CodePrinter):
                             pos = 66
                         hunk = line[:pos]
                         line = line[pos:].lstrip()
-                        result.append("%s%s" % (self._lead_comment, hunk))
+                        result.append("%s%s" % (self._lead['comment'], hunk))
                 else:
                     result.append(line)
-            elif line.startswith(self._lead_code):
+            elif line.startswith(self._lead['code']):
                 # code line
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
@@ -382,7 +380,7 @@ class FCodePrinter(CodePrinter):
                     line = line[pos:].lstrip()
                     if line:
                         hunk += trailing
-                    result.append("%s%s" % (self._lead_cont, hunk))
+                    result.append("%s%s" % (self._lead['cont'], hunk))
             else:
                 result.append(line)
         return result
