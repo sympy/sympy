@@ -628,7 +628,7 @@ def collect_const(expr, *vars, **kwargs):
 
 
 def radsimp(expr, symbolic=True, max_terms=4):
-    """
+    r"""
     Rationalize the denominator by removing square roots.
 
     Note: the expression returned from radsimp must be used with caution

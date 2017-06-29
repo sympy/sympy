@@ -325,7 +325,7 @@ class Order(Expr):
 
     @cacheit
     def contains(self, expr):
-        """
+        r"""
         Return True if expr belongs to Order(self.expr, \*self.variables).
         Return False if self belongs to expr.
         Return None if the inclusion relation cannot be determined

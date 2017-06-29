@@ -1401,7 +1401,7 @@ def _special_diop_DN(D, N):
 
 
 def cornacchia(a, b, m):
-    """
+    r"""
     Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
     Uses the algorithm due to Cornacchia. The method only finds primitive
@@ -1463,7 +1463,7 @@ def cornacchia(a, b, m):
 
 
 def PQa(P_0, Q_0, D):
-    """
+    r"""
     Returns useful information needed to solve the Pell equation.
 
     There are six sequences of integers defined related to the continued
@@ -1523,7 +1523,7 @@ def PQa(P_0, Q_0, D):
 
 
 def diop_bf_DN(D, N, t=symbols("t", integer=True)):
-    """
+    r"""
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
 
     Mainly concerned with the generalized Pell equation which is the case when
@@ -1649,7 +1649,7 @@ def equivalent(u, v, r, s, D, N):
 
 
 def length(P, Q, D):
-    """
+    r"""
     Returns the (length of aperiodic part + length of periodic part) of
     continued fraction representation of `\\frac{P + \sqrt{D}}{Q}`.
 
@@ -2387,7 +2387,7 @@ def sqf_normal(a, b, c, steps=False):
 
 
 def square_factor(a):
-    """
+    r"""
     Returns an integer `c` s.t. `a = c^2k, \ c,k \in Z`. Here `k` is square
     free. `a` can be given as an integer or a dictionary of factors.
 
@@ -2550,7 +2550,7 @@ def descent(A, B):
 
 
 def gaussian_reduce(w, a, b):
-    """
+    r"""
     Returns a reduced solution `(x, z)` to the congruence
     `X^2 - aZ^2 \equiv 0 \ (mod \ b)` so that `x^2 + |a|z^2` is minimal.
 
@@ -2591,7 +2591,7 @@ def gaussian_reduce(w, a, b):
 
 
 def dot(u, v, w, a, b):
-    """
+    r"""
     Returns a special dot product of the vectors `u = (u_{1}, u_{2})` and
     `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
     the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
@@ -2602,7 +2602,7 @@ def dot(u, v, w, a, b):
 
 
 def norm(u, w, a, b):
-    """
+    r"""
     Returns the norm of the vector `u = (u_{1}, u_{2})` under the dot product
     defined by `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}`
     where `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`.
@@ -2612,7 +2612,7 @@ def norm(u, w, a, b):
 
 
 def holzer(x, y, z, a, b, c):
-    """
+    r"""
     Simplify the solution `(x, y, z)` of the equation
     `ax^2 + by^2 = cz^2` with `a, b, c > 0` and `z^2 \geq \mid ab \mid` to
     a new reduced solution `(x', y', z')` such that `z'^2 \leq \mid ab \mid`.
@@ -2740,7 +2740,7 @@ def _diop_general_pythagorean(var, coeff, t):
 
 
 def diop_general_sum_of_squares(eq, limit=1):
-    """
+    r"""
     Solves the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
 
     Returns at most ``limit`` number of solutions.
@@ -2967,7 +2967,7 @@ def prime_as_sum_of_two_squares(p):
 
 
 def sum_of_three_squares(n):
-    """
+    r"""
     Returns a 3-tuple `(a, b, c)` such that `a^2 + b^2 + c^2 = n` and
     `a, b, c \geq 0`.
 
@@ -3046,7 +3046,7 @@ def sum_of_three_squares(n):
 
 
 def sum_of_four_squares(n):
-    """
+    r"""
     Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
 
     Here `a, b, c, d \geq 0`.
