@@ -57,7 +57,7 @@ move(git_people, 10, 5) # Brian Jorgensen
 git_people.insert(11, "*Ulrich Hecht <ulrich.hecht@gmail.com>")
 git_people.pop(12) # Kirill Smelkov
 move(git_people, 12, 32) # Sebastian Krämer
-git_people.insert(35, "*Case Van Horsen <casevh@gmail.com>")
+move(git_people, 227, 35) # Case Van Horsen
 git_people.insert(43, "*Dan <coolg49964@gmail.com>")
 move(git_people, 57, 59) # Aaron Meurer
 move(git_people, 58, 57) # Andrew Docherty
