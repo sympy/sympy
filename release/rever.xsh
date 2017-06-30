@@ -17,12 +17,12 @@ $ACTIVITIES = [
     'mailmap_update',
     'source_tarball',
     'copy_release_files',
+    'compare_tar_against_git',
     'test_tarball27',
     'test_tarball33',
     'test_tarball34',
     'test_tarball35',
     'test_tarball36',
-    'compare_tar_against_git',
     'build_docs',
 
     # 'tag',
