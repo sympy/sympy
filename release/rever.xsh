@@ -5,6 +5,7 @@ $RAISE_SUBPROC_ERROR = True
 
 import os
 import sys
+import unicodedata
 from collections import defaultdict
 from collections.abc import Mapping
 
