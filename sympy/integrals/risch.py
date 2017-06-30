@@ -161,9 +161,8 @@ class DifferentialExtension(object):
     # of the class easily (the memory use doesn't matter too much, since we
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
-    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
-        'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts', 'dummy')
+    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'EXT_K',
+        'EXT_args', 'cases', 'case', 't', 'd', 'newf', 'level', 'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=False):
         """
@@ -516,8 +515,8 @@ class DifferentialExtension(object):
                 darg = darga.as_expr()/dargd.as_expr()
                 self.t = next(self.ts)
                 self.T.append(self.t)
-                self.E_args.append(arg)
-                self.E_K.append(len(self.T) - 1)
+                self.EXT_args.append(arg)
+                self.EXT_K.append('exp')
                 self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
                     self.t, expand=False))
                 if self.dummy:
@@ -570,8 +569,8 @@ class DifferentialExtension(object):
                 darg = darga.as_expr()/dargd.as_expr()
                 self.t = next(self.ts)
                 self.T.append(self.t)
-                self.L_args.append(arg)
-                self.L_K.append(len(self.T) - 1)
+                self.EXT_args.append(arg)
+                self.EXT_K.append('log')
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
                     expand=False))
                 if self.dummy:
@@ -591,11 +590,11 @@ class DifferentialExtension(object):
 
         Used for testing and debugging purposes.
 
-        The attributes are (fa, fd, D, T, Tfuncs, backsubs, E_K, E_args,
-        L_K, L_args).
+        The attributes are (fa, fd, D, T, Tfuncs, backsubs,
+        EXT_K, EXT_args).
         """
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
-            self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
+            self.backsubs, self.EXT_K, self.EXT_args)
 
     # NOTE: this printing doesn't follow the Python's standard
     # eval(repr(DE)) == DE, where DE is the DifferentialExtension object
@@ -631,7 +630,9 @@ class DifferentialExtension(object):
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.level = -1
-        self.L_K, self.E_K, self.L_args, self.E_args = [], [], [], []
+        # for 'primitive', 'hyperexponential', 'hypertangent', 'algebraic'
+        self.EXT_K = []
+        self.EXT_args = []
         if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
