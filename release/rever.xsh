@@ -13,6 +13,9 @@ cd ..
 $ACTIVITIES = [
     # 'version_bump',
     'mailmap_update',
+    'source_tarball',
+    'build_docs',
+
     # 'tag',
 ]
 
