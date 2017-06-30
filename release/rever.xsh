@@ -20,6 +20,8 @@ $ACTIVITIES = [
     # 'tag',
 ]
 
+version = $VERSION
+
 $TAG_PUSH = False
 
 $VERSION_BUMP_PATTERNS = [
@@ -80,7 +82,6 @@ def get_tarball_name(file):
     pdf-orig:          The original name of the pdf file
     pdf:               The name of the pdf file (after renaming)
     """
-    version = $VERSION
     doctypename = defaultdict(str, {'html': 'zip', 'pdf': 'pdf'})
 
     if file in {'source-orig', 'source'}:
