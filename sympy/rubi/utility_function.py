@@ -12,7 +12,8 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
-from sympy import exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper, Symbol, symbols
+from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
+    Symbol, symbols, sqf_list)
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 
@@ -928,8 +929,7 @@ def NumericFactor(u):
                 return -GCD(-m, -n)
             else:
                 return GCD(m, n)
-    else:
-        return S(1)
+    return S(1)
 
 def ExpandExpression(expr, x):
     return expr.expand()
@@ -1288,6 +1288,33 @@ def BinomialQ(u, x, n=None):
                 return False
         return True
     return ListQ(BinomialParts(u, x))
+
+def FactorSquareFreeList(poly):
+    r = sqf_list(poly)
+    result = [[1, 1]]
+    for i in r[1]:
+        result.append(list(i))
+    return result
+
+def PerfectPowerTest(u, x):
+    # If u (x) is equivalent to a polynomial raised to an integer power greater than 1,
+    # PerfectPowerTest[u,x] returns u (x) as an expanded polynomial raised to the power;
+    # else it returns False.
+    if PolynomialQ(u, x):
+        lst = FactorSquareFreeList(u)
+        gcd = 0
+        v = 1
+        if lst[0] == [1, 1]:
+            lst = Rest(lst)
+        for i in lst:
+            gcd = GCD(gcd, i[1])
+        if gcd > 1:
+            for i in lst:
+                v = v*i[0]**(i[1]/gcd)
+            return Expand(v)**gcd
+        else:
+            return False
+    return False
 
 def ExpandIntegrand(expr, x, extra=None):
     w_ = Wild('w')

@@ -410,6 +410,14 @@ def test_EqQ():
     assert EqQ(a, a)
     assert not EqQ(a, b)
 
+def test_FactorSquareFreeList():
+    assert FactorSquareFreeList(x**5-x**3-x**2 + 1) == [[1, 1], [x**3 + 2*x**2 + 2*x + 1, 1], [x - 1, 2]]
+    assert FactorSquareFreeList(x**4 - 2*x**2 + 1) == [[1, 1], [x**2 - 1, 2]]
+
+def test_PerfectPowerTest():
+    assert not PerfectPowerTest(sqrt(x), x)
+    assert not PerfectPowerTest(x**5-x**3-x**2 + 1, x)
+    assert PerfectPowerTest(x**4 - 2*x**2 + 1, x) == (x**2 - 1)**2
 
 def test_Rest():
     assert Rest([2, 3, 5, 7]) == [3, 5, 7]
