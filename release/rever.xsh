@@ -29,7 +29,7 @@ $VERSION_BUMP_PATTERNS = [
 
 @activity
 def mailmap_update():
-    with run_in_conda_env(['python=3.6']):
+    with run_in_conda_env(['python=3.6', 'mpmath']):
         ./bin/mailmap_update.py
 
 @activity
