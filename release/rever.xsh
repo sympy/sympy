@@ -56,9 +56,9 @@ def build_docs():
         make man
 
         cd _build
-        mv html @(tarball_format['html-nozip'])
-        zip -9lr @(tarball_format['html']) @(tarball_format['html-nozip'])
-        cp @(tarball_format['html']) ../../dist/
+        mv html @(html-nozip)
+        zip -9lr @(html) @(html-nozip)
+        cp @(html) ../../dist/
         cd ..
 
         make clean
@@ -66,7 +66,7 @@ def build_docs():
 
         cd _build/latex
         make
-        cp @(tarball_format['pdf-orig']) @("../../../dist/{pdf}".format(**tarball_format))
+        cp @(pdf-orig) @(f"../../../dist/{pdf}")
         cd ..
 
 
@@ -106,10 +106,10 @@ def test_tarball(py_version):
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
-        cp @('/vagrant/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
+        cp @(f'/vagrant/release/{source}') releasetar.tar
         tar xvf releasetar.tar
 
-        cd @("/home/vagrant/{source-orig-notar}".format(**tarball_format))
+        cd @(f"/home/vagrant/{source-orig-notar}")
         python setup.py install
         python -c "import sympy; print(sympy.__version__)"
 
@@ -162,3 +162,5 @@ tarball_name_types = {
     }
 
 tarball_format = {name: get_tarball_name(name) for name in tarball_name_types}
+# Make f-strings work
+globals().update(tarball_format)
