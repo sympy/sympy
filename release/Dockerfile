@@ -6,4 +6,4 @@ WORKDIR /home/sympy/release
 RUN git checkout 1.1
 RUN git pull
 
-ENTRYPOINT ["/opt/conda/envs/sympy-release/bin/rever"]
+ENTRYPOINT ["/opt/conda/bin/rever"]

@@ -29,16 +29,18 @@ $VERSION_BUMP_PATTERNS = [
 
 @activity
 def mailmap_update():
-    ./bin/mailmap_update.py
+    with run_in_conda_env(['python=3.6']):
+        ./bin/mailmap_update.py
 
 @activity
 def source_tarball():
-    # Assumes this is run in Docker and git is already clean
-    ./setup.py sdist --keep-temp
+    with run_in_conda_env(['mpmath', 'python=3.6'], 'sympy-release'):
+        # Assumes this is run in Docker and git is already clean
+        ./setup.py sdist --keep-temp
 
 @activity
 def build_docs():
-    with run_in_conda_env(['sphinx', 'numpy', 'mpmath'],
+    with run_in_conda_env(['sphinx', 'numpy', 'mpmath', 'python=3.6'],
         envname='sympy-release-docs'):
 
         cd doc
