@@ -77,7 +77,7 @@ def build_docs():
         cd _build/latex
         make
         cp @(tarball_format['pdf-orig']) @("../../../dist/{pdf}".format(**tarball_format))
-        cd ..
+        cd ../../../
 
 
 @activity
