@@ -4,6 +4,7 @@ $XONSH_SHOW_TRACEBACK = True
 $RAISE_SUBPROC_ERROR = True
 
 from collections import defaultdict
+from collections.abc import Mapping
 
 from rever.activity import activity
 from rever.conda import run_in_conda_env
@@ -167,8 +168,14 @@ tarball_name_types = {
     }
 
 # Have to make this lazy so that version can be defined.
-class _tarball_format:
+class _tarball_format(Mapping):
     def __getitem__(self, name):
         return get_tarball_name(name)
+
+    def __iter__(self):
+        return iter(tarball_name_types)
+
+    def __len__(self):
+        return len(tarball_name_types)
 
 tarball_format = _tarball_format()
