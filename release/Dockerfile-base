@@ -8,7 +8,7 @@ RUN apt-get update \
 
 RUN conda config --add channels conda-forge
 RUN conda config --set always_yes yes
-RUN conda create -n sympy-release mpmath python=3.6 rever \
+RUN conda create -n sympy-release mpmath python=3.6 rever xonda \
     && conda clean --all
 RUN conda info
 # Important: every command below should run 'source activate sympy-release &&
