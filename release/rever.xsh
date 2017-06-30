@@ -259,6 +259,16 @@ def yellow(text):
 def blue(text):
     return "\033[34m%s\033[0m" % text
 
+def full_path_split(path):
+    """
+    Function to do a full split on a path.
+    """
+    # Based on http://stackoverflow.com/a/13505966/161801
+    rest, tail = os.path.split(path)
+    if not rest or rest == os.path.sep:
+        return (tail,)
+    return full_path_split(rest) + (tail,)
+
 ## TARBALL WHITELISTS
 
 # If a file does not end up in the tarball that should, add it to setup.py if
