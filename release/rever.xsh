@@ -110,7 +110,7 @@ def compare_tar_against_git():
 
     See the bottom of the file for the whitelists.
     """
-    git_lsfiles = set([i.strip() for i in run("git ls-files").split("\n")])
+    git_lsfiles = set([i.strip() for i in $("git ls-files").split("\n")])
     tar_output_orig = set(show_files('source', print_=False).split("\n"))
     tar_output = set()
     for file in tar_output_orig:
