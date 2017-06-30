@@ -260,7 +260,7 @@ before_install:
   - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
         conda config --add channels conda-forge;
         conda config --add channels symengine/label/dev;
-        conda install python-symengine=0.3.0.rc0;
+        conda install python-symengine=0.3.*;
     fi
   - |
     if [[ "${TEST_THEANO}" == "true" ]]; then
