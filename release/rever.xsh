@@ -155,8 +155,7 @@ def print_authors():
     """
     authors, authorcount, newauthorcount = get_authors()
 
-    print(blue("Here are the authors to put at the bottom of the release "
-        "notes.", bold=True))
+    print(blue("Here are the authors to put at the bottom of the release notes."))
     print()
     print("""## Authors
 
@@ -368,7 +367,7 @@ def get_previous_version_tag():
             curcommit = curtag + "^" # The parent of the tagged commit
         else:
             print(blue("Using {tag} as the tag for the previous "
-                "release.".format(tag=curtag), bold=True))
+                "release.".format(tag=curtag)))
             return curtag
     sys.exit(red("Could not find the tag for the previous release."))
 
