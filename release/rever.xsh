@@ -372,6 +372,19 @@ def get_previous_version_tag():
             return curtag
     sys.exit(red("Could not find the tag for the previous release."))
 
+def get_sympy_version(version_cache=[]):
+    """
+    Get the full version of SymPy being released (like 0.7.3.rc1)
+    """
+    if version_cache:
+        return version_cache[0]
+    version = $(python -c "import sympy;print(sympy.__version__)")
+    assert '\n' not in version
+    assert ' ' not in version
+    assert '\t' not in version
+    version_cache.append(version)
+    return version
+
 def get_sympy_short_version():
     """
     Get the short version of SymPy being released, not including any rc tags
