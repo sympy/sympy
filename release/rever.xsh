@@ -330,13 +330,13 @@ def get_authors():
     old_release_tag = get_previous_version_tag()
 
     releaseauthors = set($(git --no-pager log @(old_release_tag + '..') --format="%aN").strip().split('\n'))
-        priorauthors = set($(git --no-pager log @(old_release_tag) --format="%aN").strip().split('\n'))
-        releaseauthors = {name.strip() for name in releaseauthors if name.strip()}
-        priorauthors = {name.strip() for name in priorauthors if name.strip()}
-        newauthors = releaseauthors - priorauthors
-        starred_newauthors = {name + "*" for name in newauthors}
-        authors = releaseauthors - newauthors | starred_newauthors
-        return (sorted(authors, key=lastnamekey), len(releaseauthors), len(newauthors))
+    priorauthors = set($(git --no-pager log @(old_release_tag) --format="%aN").strip().split('\n'))
+    releaseauthors = {name.strip() for name in releaseauthors if name.strip()}
+    priorauthors = {name.strip() for name in priorauthors if name.strip()}
+    newauthors = releaseauthors - priorauthors
+    starred_newauthors = {name + "*" for name in newauthors}
+    authors = releaseauthors - newauthors | starred_newauthors
+    return (sorted(authors, key=lastnamekey), len(releaseauthors), len(newauthors))
 
 def get_previous_version_tag():
     """
