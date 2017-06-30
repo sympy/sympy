@@ -1,5 +1,7 @@
 # -*-mode: python; flycheck-mode: nil -*-
 
+from rever.activity import activity
+
 $ACTIVITIES = [
     'version_bump',
     'mailmap_update',
