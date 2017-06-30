@@ -143,9 +143,10 @@ def compare_tar_against_git():
     for line in sorted(tar_output - git_lsfiles - tarball_whitelist):
         fail = True
         print(line)
+    print()
 
     if fail:
-        sys.exit("Non-whitelisted files found or not found in the tarball")
+        sys.exit(red("Non-whitelisted files found or not found in the tarball"))
 
 # HELPER FUNCTIONS
 
