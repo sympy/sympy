@@ -2,8 +2,12 @@
 
 $XONSH_SHOW_TRACEBACK = True
 
+from collections import defaultdict
+
 from rever.activity import activity
 from rever.conda import run_in_conda_env
+
+
 cd ..
 
 $ACTIVITIES = [
