@@ -15,6 +15,11 @@ $ACTIVITIES = [
     # 'version_bump',
     'mailmap_update',
     'source_tarball',
+    'test_tarball27',
+    'test_tarball33',
+    'test_tarball34',
+    'test_tarball35',
+    'test_tarball36',
     'build_docs',
 
     # 'tag',
@@ -70,7 +75,45 @@ def build_docs():
 def copy_release_files():
     cp dist/* /home/release/
 
+@activity
+def test_tarball27():
+    test_tarball('2.7')
+
+@activity
+def test_tarball33():
+    test_tarball('3.3')
+
+@activity
+def test_tarball34():
+    test_tarball('3.4')
+
+@activity
+def test_tarball35():
+    test_tarball('3.5')
+
+@activity
+def test_tarball36():
+    test_tarball('3.6')
+
 # HELPER FUNCTIONS
+
+def test_tarball(py_version):
+    """
+    Test that the tarball can be unpacked and installed, and that sympy
+    imports in the install.
+    """
+    if py_version not in {'2.7', '3.3', '3.4', '3.5', '3.6'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.3, 3.4, 3.5, or 3.6 not %s" % py_version)
+
+
+    with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
+        cp @('/vagrant/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
+        tar xvf releasetar.tar
+
+        cd @("/home/vagrant/{source-orig-notar}".format(**tarball_format))
+        python setup.py install
+        python -c "import sympy; print(sympy.__version__)"'
+
 
 def get_tarball_name(file):
     """
