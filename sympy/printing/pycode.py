@@ -1,4 +1,5 @@
-from sympy.printing.codeprinter import CodePrinter
+from .precedence import precedence
+from .codeprinter import CodePrinter
 
 _kw_py2and3 = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
@@ -18,9 +19,9 @@ class PythonCodePrinter(CodePrinter):
     language = "Python"
     standard = "python3"
     reserved_words = _kw_py2and3.union(_kw_only_py3)
+    tab = '    '
     _kf = _known_functions
     _operators = {'and': 'and', 'or': 'or', 'not': 'not'}
-    _indentation = '    '
     _default_settings = dict(CodePrinter._default_settings, precision=17)
 
     def __init__(self, settings=None):
@@ -35,19 +36,21 @@ class PythonCodePrinter(CodePrinter):
         return "  # {0}".format(text)
 
     def _print_Mod(self, expr):
-        return self.parenthesize('{0} % {1}'.format(*map(self._print, expr.args)))
+        PREC = precedence(expr)
+        return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
 
     def _print_Piecewise(self, expr):
         lines = []
         for i, (e, c) in enumerate(expr.args):
-            code0 = None
             if i == 0:
                 lines.append("if %s:" % self._print(c))
             elif i == len(expr.args) - 1 and c == True:
                 lines.append('else:')
             else:
-                lines.append('elif %s' % self._print(c))
-            lines.append(_indentation + (code0 or self._print(e)))
+                lines.append('elif %s:' % self._print(c))
+            lines.append(self.tab + 'return ' + self._print(e))
             if i == len(expr.args) - 1 and c != True:
                 lines.append('else:')
-                lines.append(_indentation + "raise NotImplementedError('Unhandled condition')")
+                lines.append('%sraise NotImplementedError("Unhandled condition in: %s")' % (
+                    self.tab, expr))
+        return '\n'.join(lines)

@@ -89,6 +89,10 @@ class LambdaPrinter(PythonCodePrinter):
         ]
         return ''.join(result)
 
+    def _print_NumberSymbol(self, expr):
+        return str(expr)
+
+
 class TensorflowPrinter(LambdaPrinter):
     """
     Tensorflow printer which handles vectorized piecewise functions,
@@ -363,6 +367,9 @@ class MpmathPrinter(LambdaPrinter):
     """
     Lambda printer for mpmath which maintains precision for floats
     """
+    def _print_Integer(self, e):
+        return 'mpf(%d)' % e
+
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
         # the caller of the lambdified function will have set it to sufficient

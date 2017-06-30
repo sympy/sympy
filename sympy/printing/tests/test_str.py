@@ -86,8 +86,8 @@ def test_Dict():
 
 
 def test_Dummy():
-    assert str(d) == "_d"
-    assert str(d + x) == "_d + x"
+    assert str(d) == "d_%d" % d.dummy_index
+    assert str(d + x) == "d_%d + x" % d.dummy_index
 
 
 def test_EulerGamma():
@@ -172,7 +172,7 @@ def test_AccumBounds():
 
 
 def test_Lambda():
-    assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
+    assert str(Lambda(d, d**2)) == "Lambda(d_{0}, d_{0}**2)".format(d.dummy_index)
     # issue 2908
     assert str(Lambda((), 1)) == "Lambda((), 1)"
     assert str(Lambda((), x)) == "Lambda((), x)"
