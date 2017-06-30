@@ -410,6 +410,9 @@ def test_EqQ():
     assert EqQ(a, a)
     assert not EqQ(a, b)
 
+def test_FactorSquareFree():
+    assert FactorSquareFree(x**5 - x**3 - x**2 + 1) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2
+
 def test_FactorSquareFreeList():
     assert FactorSquareFreeList(x**5-x**3-x**2 + 1) == [[1, 1], [x**3 + 2*x**2 + 2*x + 1, 1], [x - 1, 2]]
     assert FactorSquareFreeList(x**4 - 2*x**2 + 1) == [[1, 1], [x**2 - 1, 2]]
@@ -418,6 +421,10 @@ def test_PerfectPowerTest():
     assert not PerfectPowerTest(sqrt(x), x)
     assert not PerfectPowerTest(x**5-x**3-x**2 + 1, x)
     assert PerfectPowerTest(x**4 - 2*x**2 + 1, x) == (x**2 - 1)**2
+
+def test_SquareFreeFactorTest():
+    assert not SquareFreeFactorTest(sqrt(x), x)
+    assert SquareFreeFactorTest(x**5 - x**3 - x**2 + 1, x) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2
 
 def test_Rest():
     assert Rest([2, 3, 5, 7]) == [3, 5, 7]
@@ -438,11 +445,6 @@ def test_ComplexFreeQ():
 def test_FractionalPowerFreeQ():
     assert not FractionalPowerFreeQ(x**(S(2)/3))
     assert FractionalPowerFreeQ(x)
-
-def test_FactorSquareFree():
-    assert FactorSquareFree((x**5 - x**3 - x**2 + 1)*(x+1)**2) == (x - 1)**2*(x + 1)**3*(x**2 + x + 1)
-    assert FactorSquareFree((x**5 - x**3 - x**2 + 1)*(x-1)) == (x - 1)**3*(x**3 + 2*x**2 + 2*x + 1)
-    assert FactorSquareFree(x**5 - x**3 - x**2 + 1) == (x - 1)**2*(x**3 + 2*x**2 + 2*x + 1)
 
 def test_Exponent():
     assert Exponent(x**2+x+1+5, x, List) == [0, 1, 2]
@@ -654,3 +656,33 @@ def test_Coeff():
 def test_MergeMonomials():
     assert MergeMonomials(x**2*(1 + 1*x)**3*(1 + 1*x)**n, x) == x**2*(x + 1)**(n + 3)
     assert MergeMonomials(x**2*(1 + 1*x)**2*(1*(1 + 1*x)**1)**2, x) == x**2*(x + 1)**4
+
+def test_RationalFunctionQ():
+    assert RationalFunctionQ(a, x)
+    assert RationalFunctionQ(x**2, x)
+    assert RationalFunctionQ(x**3 + x**4, x)
+    assert RationalFunctionQ(x**3*S(2), x)
+    assert not RationalFunctionQ(x**3 + x**(0.5), x)
+
+def test_RationalFunctionFactors():
+    assert RationalFunctionFactors(a, x) == a
+    assert RationalFunctionFactors(sqrt(x), x) == 1
+    assert RationalFunctionFactors(x*x**3, x) == x*x**3
+    assert RationalFunctionFactors(x*sqrt(x), x) == 1
+
+def test_NonrationalFunctionFactors():
+    assert NonrationalFunctionFactors(x, x) == 1
+    assert NonrationalFunctionFactors(sqrt(x), x) == sqrt(x)
+    assert NonrationalFunctionFactors(sqrt(x)*log(x), x) == sqrt(x)*log(x)
+
+def test_Reverse():
+    assert Reverse([1, 2, 3]) == [3, 2, 1]
+    assert Reverse(a**b) == b**a
+
+def test_RationalFunctionExponents():
+    assert RationalFunctionExponents(sqrt(x), x) == [0, 0]
+    assert RationalFunctionExponents(a, x) == [0, 0]
+    assert RationalFunctionExponents(x, x) == [1, 0]
+    assert RationalFunctionExponents(x**(-1), x)== [0, 1]
+    assert RationalFunctionExponents(x**(-1)*a, x) == [0, 1]
+    assert RationalFunctionExponents(x**(-1) + a, x) == [1, 1]

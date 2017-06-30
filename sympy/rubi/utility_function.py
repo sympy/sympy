@@ -13,7 +13,7 @@ from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
-    Symbol, symbols, sqf_list)
+    Symbol, symbols, sqf_list, sqf, Max)
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 
@@ -534,12 +534,7 @@ def PolynomialQ(u, x):
     return u.is_polynomial(x)
 
 def FactorSquareFree(u):
-    e = factor(u).args
-    mul_fac = 1
-    for expr in e:
-        if expr.is_Pow:
-            mul_fac = mul_fac*expr
-    return mul_fac*simplify(u/mul_fac)
+    return sqf(u)
 
 def PowerOfLinearQ(expr, x):
     [u, m] = expr.args
@@ -551,7 +546,7 @@ def PowerOfLinearQ(expr, x):
             return LinearQ(u, x)
 
 def Exponent(expr, x, *k):
-    if expr.is_number:
+    if expr.is_number or (not expr.has(x)):
         return 0
     if not k:
         if expr.is_polynomial(x):
@@ -1315,6 +1310,83 @@ def PerfectPowerTest(u, x):
         else:
             return False
     return False
+
+def SquareFreeFactorTest(u, x):
+    # If u (x) can be square free factored, SquareFreeFactorTest[u,x] returns u (x) in
+    # factored form; else it returns False.
+    if PolynomialQ(u, x):
+        v = FactorSquareFree(u)
+        if PowerQ(v) or ProductQ(v):
+            return v
+        return False
+    return False
+
+def RationalFunctionQ(u, x):
+    # If u is a rational function of x, RationalFunctionQ[u,x] returns True; else it returns False.
+    if AtomQ(u) or FreeQ(u, x):
+        return True
+    elif IntegerPowerQ(u):
+        return RationalFunctionQ(u.args[0], x)
+    elif ProductQ(u) or SumQ(u):
+        for i in u.args:
+            if Not(RationalFunctionQ(i, x)):
+                return False
+        return True
+    return False
+
+def RationalFunctionFactors(u, x):
+    # RationalFunctionFactors[u,x] returns the product of the factors of u that are rational functions of x.
+    if ProductQ(u):
+        res = 1
+        for i in u:
+            if RationalFunctionQ(i, x):
+                res *= i
+        return res
+    elif RationalFunctionQ(u, x):
+        return u
+    return S(1)
+
+def NonrationalFunctionFactors(u, x):
+    if ProductQ(u):
+        res = 1
+        for i in u.args:
+            if not RationalFunctionQ(i, x):
+                res *= i
+        return res
+    elif RationalFunctionQ(u, x):
+        return S(1)
+    return u
+
+def Reverse(u):
+    if isinstance(u, list):
+        return list(reversed(u))
+    else:
+        l = list(u.args)
+        return u.func(*list(reversed(l)))
+
+def RationalFunctionExponents(u, x):
+    # (* u is a polynomial or rational function of x. *)
+    # (* RationalFunctionExponents[u,x] returns a list of the exponent of the *)
+    # (* numerator of u and the exponent of the denominator of u. *)
+    if PolynomialQ(u, x):
+        return [Exponent(u, x), 0]
+    elif IntegerPowerQ(u):
+        if PositiveQ(u.args[1]):
+            return u.args[1]*RationalFunctionExponents(u.args[0], x)
+        return  (-u.args[1])*Reverse(RationalFunctionExponents(u.args[0], x))
+    elif ProductQ(u):
+        lst1 = RationalFunctionExponents(First(u), x)
+        lst2 = RationalFunctionExponents(Rest(u), x)
+        return [lst1[0] + lst2[0], lst1[1] + lst2[1]]
+    elif SumQ(u):
+        v = Together(u)
+        if SumQ(v):
+            lst1 = RationalFunctionExponents(First(u), x)
+            lst2 = RationalFunctionExponents(Rest(u), x)
+            return [Max(lst1[0] + lst2[1], lst2[0] + lst1[1]), lst1[1] + lst2[1]]
+        else:
+            return RationalFunctionExponents(v, x)
+    return [0, 0]
 
 def ExpandIntegrand(expr, x, extra=None):
     w_ = Wild('w')
