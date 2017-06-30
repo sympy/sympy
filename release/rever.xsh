@@ -4,6 +4,8 @@ $XONSH_SHOW_TRACEBACK = True
 
 from rever.activity import activity
 
+cd ..
+
 $ACTIVITIES = [
     'version_bump',
     'mailmap_update',
