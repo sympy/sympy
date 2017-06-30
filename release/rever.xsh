@@ -8,7 +8,6 @@ from collections import defaultdict
 from rever.activity import activity
 from rever.conda import run_in_conda_env
 
-
 cd ..
 
 $ACTIVITIES = [
@@ -112,7 +111,7 @@ def test_tarball(py_version):
 
         cd @("/home/vagrant/{source-orig-notar}".format(**tarball_format))
         python setup.py install
-        python -c "import sympy; print(sympy.__version__)"'
+        python -c "import sympy; print(sympy.__version__)"
 
 
 def get_tarball_name(file):
