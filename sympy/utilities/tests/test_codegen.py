@@ -1448,7 +1448,7 @@ def test_custom_codegen():
 
     printer = C99CodePrinter(settings={'user_functions': {'exp': 'fastexp'}})
     gen = C99CodeGen(printer=printer)
-    gen.preprocessor_statements.append('#include "fastexp.h"\n')
+    gen.preprocessor_statements.append('#include "fastexp.h"')
 
     x, y = symbols('x y')
     expr = exp(x + y)

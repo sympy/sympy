@@ -792,7 +792,7 @@ class CCodeGen(CodeGen):
     code_extension = "c"
     interface_extension = "h"
     standard = 'c99'
-    preprocessor_statements = ['#include <math.h>\n']
+    preprocessor_statements = ['#include <math.h>']
 
     def __init__(self, project="project", printer=None):
         super(CCodeGen, self).__init__(project=project)
@@ -837,8 +837,9 @@ class CCodeGen(CodeGen):
 
     def _preprocessor_statements(self, prefix):
         code_lines = []
-        code_lines.append("#include \"%s.h\"\n" % os.path.basename(prefix))
+        code_lines.append('#include "{}.h"'.format(os.path.basename(prefix)))
         code_lines.extend(self.preprocessor_statements)
+        code_lines = ['{}\n'.format(l) for l in code_lines]
         return code_lines
 
     def _get_routine_opening(self, routine):
