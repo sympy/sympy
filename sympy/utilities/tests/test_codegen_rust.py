@@ -42,9 +42,11 @@ def test_simple_code_with_header():
     result, = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0] == "test.rs"
     source = result[1]
+    version_str = "Code generated with sympy %s" % sympy.__version__
+    version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"
-        " *                    Code generated with sympy " + sympy.__version__ + "\n"
+        " *%(version_line)s\n"
         " *\n"
         " *              See http://www.sympy.org/ for more information.\n"
         " *\n"
@@ -54,7 +56,7 @@ def test_simple_code_with_header():
         "    let out1 = z*(x + y);\n"
         "    out1\n"
         "}\n"
-    )
+    ) % {'version_line': version_line}
     assert source == expected
 
 
@@ -288,9 +290,11 @@ def test_multifcns_per_file_w_header():
     result = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0][0] == "foo.rs"
     source = result[0][1];
+    version_str = "Code generated with sympy %s" % sympy.__version__
+    version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"
-        " *                    Code generated with sympy " + sympy.__version__ + "\n"
+        " *%(version_line)s\n"
         " *\n"
         " *              See http://www.sympy.org/ for more information.\n"
         " *\n"
@@ -306,7 +310,7 @@ def test_multifcns_per_file_w_header():
         "    let out2 = 4*y;\n"
         "    (out1, out2)\n"
         "}\n"
-    )
+    ) % {'version_line': version_line}
     assert source == expected
 
 
