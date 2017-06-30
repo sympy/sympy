@@ -297,9 +297,6 @@ class FpSubgroup(DefaultPrinting):
 
     def __contains__(self, g):
         if not g in self.parent:
-            raise ValueError
-        gens = g.contains_generators()
-        if any([g not in self.generators for g in gens]):
             return False
         if self.C is None:
             C = self.parent.coset_enumeration(self.generators)
