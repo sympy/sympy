@@ -7,4 +7,4 @@ cd "$parent_path"
 
 docker build -f Dockerfile-base . -t sympy-release-base
 docker build -f Dockerfile --no-cache . -t sympy-release
-docker run -v "$parent_path/release-$1" sympy-release "$@"
+docker run -v "$parent_path/release-$1":/home/release sympy-release "$@"

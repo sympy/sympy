@@ -66,6 +66,10 @@ def build_docs():
         cd ..
 
 
+@activity
+def copy_release_files():
+    cp dist/* /home/release/
+
 # HELPER FUNCTIONS
 
 def get_tarball_name(file):
