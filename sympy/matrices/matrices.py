@@ -2104,7 +2104,7 @@ class MatrixDecompositions(MatrixSubspaces):
 
         if rankcheck:
             SymPyDeprecationWarning(
-                feature="Keyword argument 'rankcheck' is deprecated.",
+                feature="Keyword argument 'rankcheck'",
                 issue=9796,
                 deprecated_since_version="1.1").warn()
             if self.rank() != min(self.rows, self.cols):
@@ -3137,7 +3137,7 @@ class MatrixBase(MatrixDeprecated, MatrixDecompositions,
             return sol, tau
 
     def inv_mod(self, m):
-        """
+        r"""
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
 
         Method to find the matrix inverse of `K` (mod `m`) implemented in this function:

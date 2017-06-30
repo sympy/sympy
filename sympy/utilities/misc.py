@@ -44,7 +44,7 @@ def rawlines(s):
     >>> from sympy.utilities.misc import rawlines
     >>> from sympy import TableForm
     >>> s = str(TableForm([[1, 10]], headings=(None, ['a', 'bee'])))
-    >>> print(rawlines(s)) # the \\ appears as \ when printed
+    >>> print(rawlines(s))
     (
         'a bee\\n'
         '-----\\n'

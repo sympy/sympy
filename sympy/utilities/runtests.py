@@ -568,7 +568,7 @@ def _test(*paths, **kwargs):
 
 
 def doctest(*paths, **kwargs):
-    """
+    r"""
     Runs doctests in all \*.py files in the sympy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
 
@@ -1386,7 +1386,7 @@ class SymPyDocTests(object):
         self._reporter.leaving_filename()
 
     def get_test_files(self, dir, pat='*.py', init_only=True):
-        """
+        r"""
         Returns the list of \*.py files (default) from which docstrings
         will be tested which are at or below directory ``dir``. By default,
         only those that have an __init__.py in their parent directory
@@ -1633,7 +1633,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
             docstring = obj
 
-            matches = re.findall("line \d+", name)
+            matches = re.findall(r"line \d+", name)
             assert len(matches) == 1, \
                 "string '%s' does not contain lineno " % name
 
@@ -1841,11 +1841,11 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
         if not (optionflags & pdoctest.DONT_ACCEPT_BLANKLINE):
             # Replace <BLANKLINE> in want with a blank line.
-            want = re.sub('(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
+            want = re.sub(r'(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
                           '', want)
             # If a line in got contains only spaces, then remove the
             # spaces.
-            got = re.sub('(?m)^\s*?$', '', got)
+            got = re.sub(r'(?m)^\s*?$', '', got)
             if got == want:
                 return True
 

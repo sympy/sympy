@@ -30,10 +30,19 @@ def test_Symbol():
 
 def test_Dummy():
     assert Dummy() != Dummy()
-    Dummy._count = 0
-    d1 = Dummy()
-    Dummy._count = 0
-    assert d1 == Dummy()
+
+
+def test_Dummy_force_dummy_index():
+    raises(AssertionError, lambda: Dummy(dummy_index=1))
+    assert Dummy('d', dummy_index=2) == Dummy('d', dummy_index=2)
+    assert Dummy('d1', dummy_index=2) != Dummy('d2', dummy_index=2)
+    d1 = Dummy('d', dummy_index=3)
+    d2 = Dummy('d')
+    # might fail if d1 were created with dummy_index >= 10**6
+    assert d1 != d2
+    d3 = Dummy('d', dummy_index=3)
+    assert d1 == d3
+    assert Dummy()._count == Dummy('d', dummy_index=3)._count
 
 
 def test_as_dummy():
@@ -301,7 +310,7 @@ def test_symbols():
     assert sym('aa:ba:b') == '(aaa, aab, aba, abb)'
     assert sym('a:3b') == '(a0b, a1b, a2b)'
     assert sym('a-1:3b') == '(a-1b, a-2b)'
-    assert sym('a:2\,:2' + chr(0)) == '(a0,0%s, a0,1%s, a1,0%s, a1,1%s)' % (
+    assert sym(r'a:2\,:2' + chr(0)) == '(a0,0%s, a0,1%s, a1,0%s, a1,1%s)' % (
         (chr(0),)*4)
     assert sym('x(:a:3)') == '(x(a0), x(a1), x(a2))'
     assert sym('x(:c):1') == '(xa0, xb0, xc0)'
