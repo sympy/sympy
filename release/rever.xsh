@@ -1,6 +1,7 @@
 # -*-mode: python; flycheck-mode: nil -*-
 
 $XONSH_SHOW_TRACEBACK = True
+$RAISE_SUBPROC_ERROR = True
 
 from collections import defaultdict
 
