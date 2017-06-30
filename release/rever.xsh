@@ -70,7 +70,7 @@ def get_tarball_name(file):
     pdf-orig:          The original name of the pdf file
     pdf:               The name of the pdf file (after renaming)
     """
-    version = get_sympy_version()
+    version = $VERSION
     doctypename = defaultdict(str, {'html': 'zip', 'pdf': 'pdf'})
 
     if file in {'source-orig', 'source'}:
