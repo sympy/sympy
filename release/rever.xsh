@@ -119,7 +119,7 @@ def test_tarball(py_version):
 
         cd @("/home/{source-orig-notar}".format(**tarball_format))
         python setup.py install
-        python -c "import sympy; print(sympy.__version__)"
+        python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
 
 
 def get_tarball_name(file):
