@@ -20,4 +20,4 @@ $VERSION_BUMP_PATTERNS = [
 
 @activity
 def mailmap_update():
-    ../bin/mailmap_update.py
+    ./bin/mailmap_update.py
