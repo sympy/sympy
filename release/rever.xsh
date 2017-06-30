@@ -1,5 +1,7 @@
 # -*-mode: python; flycheck-mode: nil -*-
 
+$XONSH_SHOW_TRACEBACK = True
+
 from rever.activity import activity
 
 $ACTIVITIES = [
