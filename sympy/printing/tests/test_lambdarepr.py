@@ -1,4 +1,4 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
 from sympy.utilities.pytest import raises
 
 from sympy.printing.lambdarepr import *
@@ -181,22 +181,40 @@ def test_multiple_sums():
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
 
+class Test(Expr):
+    def _lambda(self, printer):
+        return 'lambda'
+
+    def _tensorflow(self, printer):
+        return 'tensorflow'
+
+    def _numpy(self, printer):
+        return 'numpy'
+
+    def _numexpr(self, printer):
+        return 'numexpr'
+
+    def _mpmath(self, printer):
+        return 'mpmath'
 
 def test_printmethod():
     # In each case, printmethod is called to test
     # its working
 
-    obj = LambdaPrinter()
-    assert obj.printmethod == "_lambda"
+    obj = Test()
+    assert LambdaPrinter().doprint(obj) == 'lambda'
 
-    obj = TensorflowPrinter()
-    assert obj.printmethod == "_tensorflow"
+    assert TensorflowPrinter().doprint(obj) == 'tensorflow'
 
-    obj = NumPyPrinter()
-    assert obj.printmethod == "_numpy"
+    assert NumPyPrinter().doprint(obj) == 'numpy'
 
-    obj = NumExprPrinter()
-    assert obj.printmethod == "_numexpr"
+    assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"
 
-    obj = MpmathPrinter()
-    assert obj.printmethod == "_mpmath"
+    assert MpmathPrinter().doprint(obj) == 'mpmath'
+
+
+
+
+
+
+
