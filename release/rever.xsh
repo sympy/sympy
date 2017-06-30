@@ -12,6 +12,7 @@ cd ..
 
 $ACTIVITIES = [
     # 'version_bump',
+    '_version',
     'mailmap_update',
     'source_tarball',
     'test_tarball27',
@@ -24,7 +25,11 @@ $ACTIVITIES = [
     # 'tag',
 ]
 
-version = ${...}['VERSION']
+# Work around https://github.com/ergs/rever/issues/15
+@activity
+def _version():
+    global version
+    version = $VERSION
 
 $TAG_PUSH = False
 
@@ -161,4 +166,9 @@ tarball_name_types = {
     'pdf',
     }
 
-tarball_format = {name: get_tarball_name(name) for name in tarball_name_types}
+# Have to make this lazy so that version can be defined.
+class _tarball_format:
+    def __getitem__(self, name):
+        return get_tarball_name(name)
+
+tarball_format = _tarball_format()
