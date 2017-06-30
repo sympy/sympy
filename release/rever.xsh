@@ -24,7 +24,7 @@ $ACTIVITIES = [
     # 'tag',
 ]
 
-version = $VERSION
+version = ${...}['VERSION']
 
 $TAG_PUSH = False
 
