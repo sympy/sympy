@@ -10,6 +10,7 @@ RUN conda config --add channels conda-forge
 RUN conda config --set always_yes yes
 RUN conda create -n sympy-release mpmath python=3.6 rever \
     && conda clean --all
+RUN conda info
 # Important: every command below should run 'source activate sympy-release &&
 # <command>' to be run in the conda environment.
 
@@ -17,4 +18,4 @@ RUN git clone git://github.com/sympy/sympy.git
 
 WORKDIR /home/sympy/release
 
-ENTRYPOINT ['/anaconda3/envs/sympy-release/bin/rever']
+ENTRYPOINT ["/opt/conda/envs/sympy-release/bin/rever"]
