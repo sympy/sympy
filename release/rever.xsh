@@ -288,8 +288,13 @@ git_whitelist = {
     '.mailmap',
     # Travis
     '.travis.yml',
+    '.ci/durations.json',
+    '.ci/generate_durations_log.sh',
+    '.ci/parse_durations_log.py',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
+    # Pull request template
+    'PULL_REQUEST_TEMPLATE.md',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
@@ -297,16 +302,17 @@ git_whitelist = {
     'bin/adapt_paths.py',
     'bin/ask_update.py',
     'bin/authors_update.py',
+    'bin/build_doc.sh',
     'bin/coverage_doctest.py',
     'bin/coverage_report.py',
-    'bin/build_doc.sh',
     'bin/deploy_doc.sh',
     'bin/diagnose_imports',
     'bin/doctest',
+    'bin/generate_module_list.py',
     'bin/generate_test_list.py',
     'bin/get_sympy.py',
-    'bin/py.bench',
     'bin/mailmap_update.py',
+    'bin/py.bench',
     'bin/strip_whitespace',
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
@@ -314,6 +320,7 @@ git_whitelist = {
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
+    'bin/test_setup.py',
     'bin/test_travis.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferrably doctested.  See also
@@ -339,11 +346,19 @@ git_whitelist = {
     'release/README.md',
     'release/Vagrantfile',
     'release/fabfile.py',
+    'release/Dockerfile',
+    'release/Dockerfile-base',
+    'release/release.sh',
+    'release/rever.xsh',
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
     # Example on how to use tox to test Sympy. For development.
     'tox.ini.sample',
+    # pytest stuff
+    'conftest.py',
+    # Encrypted deploy key for deploying dev docs to GitHub
+    'github_deploy_key.enc',
     }
 
 # Files that should be in the tarball should not be in git
