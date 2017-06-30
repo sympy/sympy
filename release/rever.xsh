@@ -79,6 +79,7 @@ def build_docs():
 
 @activity
 def copy_release_files():
+    ls dist
     cp dist/* /home/release/
 
 @activity
