@@ -16,6 +16,7 @@ $ACTIVITIES = [
     '_version',
     'mailmap_update',
     'source_tarball',
+    'copy_release_files',
     'test_tarball27',
     'test_tarball33',
     'test_tarball34',
@@ -112,10 +113,10 @@ def test_tarball(py_version):
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
-        cp @('/vagrant/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
+        cp @('/home/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
         tar xvf releasetar.tar
 
-        cd @("/home/vagrant/{source-orig-notar}".format(**tarball_format))
+        cd @("/home/{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__)"
 
