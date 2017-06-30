@@ -150,6 +150,7 @@ class FreeGroup(DefaultPrinting):
             obj.dtype = type("FreeGroupElement", (FreeGroupElement,), {"group": obj})
             obj.symbols = symbols
             obj.generators = obj._generators()
+            obj.relators = tuple()
             obj._gens_set = set(obj.generators)
             for symbol, generator in zip(obj.symbols, obj.generators):
                 if isinstance(symbol, Symbol):

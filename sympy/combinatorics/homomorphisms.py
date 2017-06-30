@@ -101,8 +101,10 @@ class GroupHomomorphism(object):
             values = list(set(self.images.values()))
             if isinstance(self.codomain, PermutationGroup):
                 self._image = self.codomain.subgroup(values)
-            else:
+            elif isinstance(self.codomain, FpGroup):
                 self._image = FpSubgroup(self.codomain, values)
+            else:
+                self._image = FreeSubgroup(self.codomain, values)
         return self._image
 
     def _apply(self, elem):
@@ -174,9 +176,9 @@ def homomorphism(domain, codomain, gens, images=[]):
     '''
     if isinstance(domain, PermutationGroup):
         raise NotImplementedError("Homomorphisms from permutation groups are not currently implemented")
-    elif not isinstance(domain, FpGroup):
+    elif not isinstance(domain, (FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")
-    if not(isinstance(codomain, PermutationGroup) or isinstance(codomain, FpGroup)):
+    if not(isinstance(codomain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The codomain must be a group")
 
     generators = domain.generators
@@ -203,11 +205,14 @@ def _check_homomorphism(domain, images, identity):
     def _image(r):
         if r.is_identity:
             return identity
-        elif len(r) == 1:
-            return images[r]
         else:
-            power = r.array_form[0][1]
-            return images[r[0]]**power*_image(r.subword(abs(power),len(r)))
+            w = identity
+            i = 0
+            while i < len(r):
+                power = r.array_form[i][1]
+                w = w*images[r[i]]**power
+                i += abs(power)
+            return w
 
     if any([not _image(r).is_identity for r in rels]):
         return False
