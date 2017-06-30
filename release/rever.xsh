@@ -374,4 +374,5 @@ tarball_whitelist = {
     'sympy.egg-info/dependency_links.txt',
     'sympy.egg-info/requires.txt',
     'sympy.egg-info/top_level.txt',
+    'sympy.egg-info/not-zip-safe',
     }
