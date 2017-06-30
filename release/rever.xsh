@@ -18,6 +18,7 @@ $ACTIVITIES = [
     '_version',
     'mailmap_update',
     'source_tarball',
+    'build_docs',
     'copy_release_files',
     'compare_tar_against_git',
     'test_tarball27',
@@ -25,7 +26,6 @@ $ACTIVITIES = [
     'test_tarball34',
     'test_tarball35',
     'test_tarball36',
-    'build_docs',
     'print_authors',
     # 'tag',
 ]
