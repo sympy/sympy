@@ -372,6 +372,21 @@ def get_previous_version_tag():
             return curtag
     sys.exit(red("Could not find the tag for the previous release."))
 
+def get_sympy_short_version():
+    """
+    Get the short version of SymPy being released, not including any rc tags
+    (like 0.7.3)
+    """
+    version = get_sympy_version()
+    parts = version.split('.')
+    # Remove rc tags
+    # Handle both 1.0.rc1 and 1.1rc1
+    if not parts[-1].isdigit():
+        if parts[-1][0].isdigit():
+            parts[-1] = parts[-1][0]
+        else:
+            parts.pop(-1)
+    return '.'.join(parts)
 
 ## TARBALL WHITELISTS
 
