@@ -28,6 +28,7 @@ $ACTIVITIES = [
     'test_tarball35',
     'test_tarball36',
     'print_authors',
+    'md5',
     # 'tag',
 ]
 
@@ -172,6 +173,20 @@ Thanks to everyone who contributed to this release!
     for name in authors:
         print("- " + name)
     print()
+
+@activity
+def md5(file='*', print_=True):
+    """
+    Print the md5 sums of the release files
+    """
+    out = $(md5sum @("/home/release/" + file))
+    # Remove the release/ part for printing. Useful for copy-pasting into the
+    # release notes.
+    out = [i.split() for i in out.strip().split('\n')]
+    out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
+    if print_:
+        print(out)
+    return out
 
 # HELPER FUNCTIONS
 
