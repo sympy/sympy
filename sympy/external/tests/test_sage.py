@@ -222,6 +222,17 @@ def test_undefined_function():
     assert bool(sf(sx) == f(x)._sage_())
     #assert bool(f == sympy.sympify(sf))
 
+def test_abstract_function():
+    x,y = sympy.symbols('x y')
+    f = sympy.Function('f')
+    expr =  f(x,y)
+    sexpr = expr._sage_()
+    invexpr = sexpr._sympy_()
+    assert type(sexpr) is sage.symbolic.expression.Expression, "converted expression %r is not sage expression" % sexpr
+    assert invexpr == expr, "inverse coversion %r is not correct " % invexpr
+
+
+
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.
 """
