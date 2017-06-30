@@ -451,7 +451,7 @@ def _validate_backend_language(backend, language):
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
     expr, language=None, backend='f2py', tempdir=None, args=None, flags=None,
-    verbose=False, helpers=None):
+    verbose=False, helpers=None, code_gen=None):
     """Generates python callable binaries based on the math expression.
 
     Parameters
@@ -484,6 +484,8 @@ def autowrap(
         compiled main expression can link to the helper routine. Items should
         be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
         is mandatory to supply an argument sequence to helper routines.
+    code_gen : CodeGen instance
+        An instance of a CodeGen subclass. Overrides ``language``.
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
@@ -501,13 +503,15 @@ def autowrap(
     helpers = [helpers] if helpers else ()
     args = list(args) if iterable(args, exclude=set) else args
 
-    code_generator = get_code_generator(language, "autowrap")
+    if code_gen is None:
+        code_gen = get_code_generator(language, "autowrap")
+
     CodeWrapperClass = {
         'F2PY': F2PyCodeWrapper,
         'CYTHON': CythonCodeWrapper,
         'DUMMY': DummyWrapper
     }[backend.upper()]
-    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags if flags else (), verbose)
+    code_wrapper = CodeWrapperClass(code_gen, tempdir, flags if flags else (), verbose)
 
     helps = []
     for name_h, expr_h, args_h in helpers:
