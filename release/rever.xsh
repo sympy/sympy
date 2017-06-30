@@ -378,7 +378,7 @@ def get_sympy_version(version_cache=[]):
     """
     if version_cache:
         return version_cache[0]
-    version = $(python -c "import sympy;print(sympy.__version__)")
+    version = $(python -c "import sympy;print(sympy.__version__, end='')")
     assert '\n' not in version
     assert ' ' not in version
     assert '\t' not in version
