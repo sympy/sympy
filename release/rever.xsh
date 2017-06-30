@@ -3,6 +3,7 @@
 $XONSH_SHOW_TRACEBACK = True
 $RAISE_SUBPROC_ERROR = True
 
+import os
 from collections import defaultdict
 from collections.abc import Mapping
 
