@@ -7,7 +7,7 @@ from rever.activity import activity
 cd ..
 
 $ACTIVITIES = [
-    'version_bump',
+    # 'version_bump',
     'mailmap_update',
     # 'tag',
 ]
