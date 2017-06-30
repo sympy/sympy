@@ -238,9 +238,9 @@ def show_files(file, print_=True):
     # TODO: Test the unarchived name. See
     # https://github.com/sympy/sympy/issues/7087.
     if file == 'source':
-        ret = $(tar tf @("release/{source}".format(**tarball_format)))
+        ret = $(tar tf @("/home/release/{source}".format(**tarball_format)))
     elif file == 'html':
-        ret = $(unzip -l @("release/{html}".format(**tarball_format)))
+        ret = $(unzip -l @("/home/release/{html}".format(**tarball_format)))
     else:
         raise ValueError(file + " is not valid")
     if print_:
