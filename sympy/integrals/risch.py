@@ -130,12 +130,10 @@ class DifferentialExtension(object):
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - E_K: List of the positions of the exponential extensions in T.
-    - E_args: The arguments of each of the exponentials in E_K.
-    - L_K: List of the positions of the logarithmic extensions in T.
-    - L_args: The arguments of each of the logarithms in L_K.
-    (See the docstrings of is_deriv_k() and is_log_deriv_k_t_radical() for
-    more information on E_K, E_args, L_K, and L_args)
+    - EXT_K: List of extension type, differes from 'cases' only when
+      case is 'primitive'
+    - EXT_args: List of arguments of extensions corresponding to 'EXT_K',
+      will have to think about it when 'algebraic' extensions are introduced.
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
@@ -209,8 +207,6 @@ class DifferentialExtension(object):
             raise ValueError("Either both f and x or a manual extension must "
             "be given.")
 
-        from sympy.integrals.prde import is_deriv_k
-
         if handle_first not in ['log', 'exp']:
             raise ValueError("handle_first must be 'log' or 'exp', not %s." %
                 str(handle_first))
@@ -236,13 +232,6 @@ class DifferentialExtension(object):
                 raise NotImplementedError("Trigonometric extensions are not "
                 "supported (yet!)")
 
-        def update(seq, atoms, func):
-            s = set(seq)
-            new = atoms - s
-            s = atoms.intersection(s)
-            s.update(list(filter(func, new)))
-            return list(s)
-
         exps = set()
         pows = set()
         numpows = set()
@@ -261,131 +250,12 @@ class DifferentialExtension(object):
                     "transcendental extension for %s.  Try using a " % str(f) +
                     "manual extension with the extension flag.")
 
-            # Pre-preparsing.
-            #################
-            # Get all exp arguments, so we can avoid ahead of time doing
-            # something like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
+            exps, pows, numpows, sympows, log_new_extension = \
+                    self._rewrite_pows(exps, pows, numpows, sympows, log_new_extension)
 
-            # Things like sqrt(exp(x)) do not automatically simplify to
-            # exp(x/2), so they will be viewed as algebraic.  The easiest way
-            # to handle this is to convert all instances of (a**b)**Rational
-            # to a**(Rational*b) before doing anything else.  Note that the
-            # _exp_part code can generate terms of this form, so we do need to
-            # do this at each pass (or else modify it to not do that).
-
-            ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
-                if (i.base.is_Pow or i.base.func is exp and i.exp.is_Rational)]
-
-            ratpows_repl = [
-                (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
-            self.backsubs += [(j, i) for i, j in ratpows_repl]
-            self.newf = self.newf.xreplace(dict(ratpows_repl))
-
-            # To make the process deterministic, the args are sorted
-            # so that functions with smaller op-counts are processed first.
-            # Ties are broken with the default_sort_key.
-
-            # XXX Although the method is deterministic no additional work
-            # has been done to guarantee that the simplest solution is
-            # returned and that it would be affected be using different
-            # variables. Though it is possible that this is the case
-            # one should know that it has not been done intentionally, so
-            # further improvements may be possible.
-
-            # TODO: This probably doesn't need to be completely recomputed at
-            # each pass.
-            exps = update(exps, self.newf.atoms(exp),
-                lambda i: i.exp.is_rational_function(*self.T) and
-                i.exp.has(*self.T))
-            pows = update(pows, self.newf.atoms(Pow),
-                lambda i: i.exp.is_rational_function(*self.T) and
-                i.exp.has(*self.T))
-            numpows = update(numpows, set(pows),
-                lambda i: not i.base.has(*self.T))
-            sympows = update(sympows, set(pows) - set(numpows),
-                lambda i: i.base.is_rational_function(*self.T) and
-                not i.exp.is_Integer)
-
-            # The easiest way to deal with non-base E powers is to convert them
-            # into base E, integrate, and then convert back.
-            for i in ordered(pows):
-                old = i
-                new = exp(i.exp*log(i.base))
-                # If exp is ever changed to automatically reduce exp(x*log(2))
-                # to 2**x, then this will break.  The solution is to not change
-                # exp to do that :)
-                if i in sympows:
-                    if i.exp.is_Rational:
-                        raise NotImplementedError("Algebraic extensions are "
-                            "not supported (%s)." % str(i))
-                    # We can add a**b only if log(a) in the extension, because
-                    # a**b == exp(b*log(a)).
-                    basea, based = frac_in(i.base, self.t)
-                    A = is_deriv_k(basea, based, self)
-                    if A is None:
-                        # Nonelementary monomial (so far)
-
-                        # TODO: Would there ever be any benefit from just
-                        # adding log(base) as a new monomial?
-                        # ANSWER: Yes, otherwise we can't integrate x**x (or
-                        # rather prove that it has no elementary integral)
-                        # without first manually rewriting it as exp(x*log(x))
-                        self.newf = self.newf.xreplace({old: new})
-                        self.backsubs += [(new, old)]
-                        log_new_extension = self._log_part([log(i.base)])
-                        exps = update(exps, self.newf.atoms(exp), lambda i:
-                            i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
-                        continue
-                    ans, u, const = A
-                    newterm = exp(i.exp*(log(const) + u))
-                    # Under the current implementation, exp kills terms
-                    # only if they are of the form a*log(x), where a is a
-                    # Number.  This case should have already been killed by the
-                    # above tests.  Again, if this changes to kill more than
-                    # that, this will break, which maybe is a sign that you
-                    # shouldn't be changing that.  Actually, if anything, this
-                    # auto-simplification should be removed.  See
-                    # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
-
-                    self.newf = self.newf.xreplace({i: newterm})
-
-                elif i not in numpows:
-                    continue
-                else:
-                    # i in numpows
-                    newterm = new
-                # TODO: Just put it in self.Tfuncs
-                self.backsubs.append((new, old))
-                self.newf = self.newf.xreplace({old: newterm})
-                exps.append(newterm)
-
-            atoms = self.newf.atoms(log)
-            logs = update(logs, atoms,
-                lambda i: i.args[0].is_rational_function(*self.T) and
-                i.args[0].has(*self.T))
-            symlogs = update(symlogs, atoms,
-                lambda i: i.has(*self.T) and i.args[0].is_Pow and
-                i.args[0].base.is_rational_function(*self.T) and
-                not i.args[0].exp.is_Integer)
-
-            # We can handle things like log(x**y) by converting it to y*log(x)
-            # This will fix not only symbolic exponents of the argument, but any
-            # non-Integer exponent, like log(sqrt(x)).  The exponent can also
-            # depend on x, like log(x**x).
-            for i in ordered(symlogs):
-                # Unlike in the exponential case above, we do not ever
-                # potentially add new monomials (above we had to add log(a)).
-                # Therefore, there is no need to run any is_deriv functions
-                # here.  Just convert log(a**b) to b*log(a) and let
-                # log_new_extension() handle it from there.
-                lbase = log(i.args[0].base)
-                logs.append(lbase)
-                new = i.args[0].exp*lbase
-                self.newf = self.newf.xreplace({i: new})
-                self.backsubs.append((new, i))
-
-            # remove any duplicates
-            logs = sorted(set(logs), key=default_sort_key)
+            # I have made this change 'symlows' (not a typo) to show
+            # that this is currently not tested well
+            logs, symlows = self._rewrite_logs(logs, symlogs)
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
@@ -409,6 +279,146 @@ class DifferentialExtension(object):
         if attr not in self.__slots__:
             raise AttributeError("%s has no attribute %s" % (repr(self), repr(attr)))
         return None
+
+    def _rewrite_pows(self, exps, pows, numpows, sympows, log_new_extension):
+        """
+        Rewrite exps/pows for better processing.
+        """
+        # Pre-preparsing.
+        #################
+        # Get all exp arguments, so we can avoid ahead of time doing
+        # something like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
+
+        # Things like sqrt(exp(x)) do not automatically simplify to
+        # exp(x/2), so they will be viewed as algebraic.  The easiest way
+        # to handle this is to convert all instances of (a**b)**Rational
+        # to a**(Rational*b) before doing anything else.  Note that the
+        # _exp_part code can generate terms of this form, so we do need to
+        # do this at each pass (or else modify it to not do that).
+
+        from sympy.integrals.prde import is_deriv_k
+
+        ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
+            if (i.base.is_Pow or i.base.func is exp and i.exp.is_Rational)]
+
+        ratpows_repl = [
+            (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
+        self.backsubs += [(j, i) for i, j in ratpows_repl]
+        self.newf = self.newf.xreplace(dict(ratpows_repl))
+
+        # To make the process deterministic, the args are sorted
+        # so that functions with smaller op-counts are processed first.
+        # Ties are broken with the default_sort_key.
+
+        # XXX Although the method is deterministic no additional work
+        # has been done to guarantee that the simplest solution is
+        # returned and that it would be affected be using different
+        # variables. Though it is possible that this is the case
+        # one should know that it has not been done intentionally, so
+        # further improvements may be possible.
+
+        # TODO: This probably doesn't need to be completely recomputed at
+        # each pass.
+        exps = _update_set(exps, self.newf.atoms(exp),
+            lambda i: i.exp.is_rational_function(*self.T) and
+            i.exp.has(*self.T))
+        pows = _update_set(pows, self.newf.atoms(Pow),
+            lambda i: i.exp.is_rational_function(*self.T) and
+            i.exp.has(*self.T))
+        numpows = _update_set(numpows, set(pows),
+            lambda i: not i.base.has(*self.T))
+        sympows = _update_set(sympows, set(pows) - set(numpows),
+            lambda i: i.base.is_rational_function(*self.T) and
+            not i.exp.is_Integer)
+
+        # The easiest way to deal with non-base E powers is to convert them
+        # into base E, integrate, and then convert back.
+        for i in ordered(pows):
+            old = i
+            new = exp(i.exp*log(i.base))
+            # If exp is ever changed to automatically reduce exp(x*log(2))
+            # to 2**x, then this will break.  The solution is to not change
+            # exp to do that :)
+            if i in sympows:
+                if i.exp.is_Rational:
+                    raise NotImplementedError("Algebraic extensions are "
+                        "not supported (%s)." % str(i))
+                # We can add a**b only if log(a) in the extension, because
+                # a**b == exp(b*log(a)).
+                basea, based = frac_in(i.base, self.t)
+                A = is_deriv_k(basea, based, self)
+                if A is None:
+                    # Nonelementary monomial (so far)
+
+                    # TODO: Would there ever be any benefit from just
+                    # adding log(base) as a new monomial?
+                    # ANSWER: Yes, otherwise we can't integrate x**x (or
+                    # rather prove that it has no elementary integral)
+                    # without first manually rewriting it as exp(x*log(x))
+                    self.newf = self.newf.xreplace({old: new})
+                    self.backsubs += [(new, old)]
+                    log_new_extension = self._log_part([log(i.base)])
+                    exps = _update_set(exps, self.newf.atoms(exp), lambda i:
+                        i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
+                    continue
+                ans, u, const = A
+                newterm = exp(i.exp*(log(const) + u))
+                # Under the current implementation, exp kills terms
+                # only if they are of the form a*log(x), where a is a
+                # Number.  This case should have already been killed by the
+                # above tests.  Again, if this changes to kill more than
+                # that, this will break, which maybe is a sign that you
+                # shouldn't be changing that.  Actually, if anything, this
+                # auto-simplification should be removed.  See
+                # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
+
+                self.newf = self.newf.xreplace({i: newterm})
+
+            elif i not in numpows:
+                continue
+            else:
+                # i in numpows
+                newterm = new
+            # TODO: Just put it in self.Tfuncs
+            self.backsubs.append((new, old))
+            self.newf = self.newf.xreplace({old: newterm})
+            exps.append(newterm)
+
+        return exps, pows, numpows, sympows, log_new_extension
+
+    def _rewrite_logs(self, logs, symlogs):
+        """
+        Rewrite logs for better processing.
+        """
+        atoms = self.newf.atoms(log)
+        logs = _update_set(logs, atoms,
+            lambda i: i.args[0].is_rational_function(*self.T) and
+            i.args[0].has(*self.T))
+        symlogs = _update_set(symlogs, atoms,
+            lambda i: i.has(*self.T) and i.args[0].is_Pow and
+            i.args[0].base.is_rational_function(*self.T) and
+            not i.args[0].exp.is_Integer)
+
+        # We can handle things like log(x**y) by converting it to y*log(x)
+        # This will fix not only symbolic exponents of the argument, but any
+        # non-Integer exponent, like log(sqrt(x)).  The exponent can also
+        # depend on x, like log(x**x).
+        for i in ordered(symlogs):
+            # Unlike in the exponential case above, we do not ever
+            # potentially add new monomials (above we had to add log(a)).
+            # Therefore, there is no need to run any is_deriv functions
+            # here.  Just convert log(a**b) to b*log(a) and let
+            # log_new_extension() handle it from there.
+            lbase = log(i.args[0].base)
+            logs.append(lbase)
+            new = i.args[0].exp*lbase
+            self.newf = self.newf.xreplace({i: new})
+            self.backsubs.append((new, i))
+
+        # remove any duplicates
+        logs = sorted(set(logs), key=default_sort_key)
+
+        return logs, symlogs
 
     def _auto_attrs(self):
         """
@@ -679,6 +689,14 @@ class DifferentialExtension(object):
         self.d = self.D[self.level]
         self.case = self.cases[self.level]
         return None
+
+
+def _update_set(seq, atoms, func):
+    s = set(seq)
+    s = atoms.intersection(s)
+    new = atoms - s
+    s.update(list(filter(func, new)))
+    return list(s)
 
 
 class DecrementLevel(object):
