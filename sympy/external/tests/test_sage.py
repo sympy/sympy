@@ -228,7 +228,7 @@ def test_abstract_function():
     expr =  f(x,y)
     sexpr = expr._sage_()
     invexpr = sexpr._sympy_()
-    assert type(sexpr) is sage.symbolic.expression.Expression, "converted expression %r is not sage expression" % sexpr
+    assert isinstance(sexpr,sage.symbolic.expression.Expression), "converted expression %r is not sage expression" % sexpr
     assert invexpr == expr, "inverse coversion %r is not correct " % invexpr
 
 
