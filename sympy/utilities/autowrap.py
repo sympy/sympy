@@ -67,14 +67,13 @@ When is this module NOT the best approach?
 
 from __future__ import print_function, division
 
-_doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'), 'modules': ('numpy',)}
-
 import sys
 import os
 import shutil
 import tempfile
 from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
+from warnings import warn
 
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import range, iterable
@@ -83,10 +82,14 @@ from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.utilities.codegen import (make_routine, get_code_generator,
-            OutputArgument, InOutArgument, InputArgument,
-            CodeGenArgumentListError, Result, ResultBase, C99CodeGen)
+                                     OutputArgument, InOutArgument,
+                                     InputArgument, CodeGenArgumentListError,
+                                     Result, ResultBase, C99CodeGen)
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
+
+_doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'),
+                       'modules': ('numpy',)}
 
 
 class CodeWrapError(Exception):
@@ -214,22 +217,26 @@ def %(name)s():
 class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
 
-    setup_template = (
-        "try:\n"
-        "    from setuptools import setup\n"
-        "    from setuptools import Extension\n"
-        "except ImportError:\n"
-        "    from distutils.core import setup\n"
-        "    from distutils.extension import Extension\n"
-        "from Cython.Distutils import build_ext\n"
-        "{np_import}"
-        "\n"
-        "setup(\n"
-        "    cmdclass = {{'build_ext': build_ext}},\n"
-        "    ext_modules = [Extension({ext_args},\n"
-        "                             extra_compile_args=['-std=c99'])],\n"
-        "{np_includes}"
-        "        )")
+    setup_template = """\
+try:
+    from setuptools import setup
+    from setuptools import Extension
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
+from Cython.Build import cythonize
+cy_opts = {cythonize_options}
+{np_import}
+ext_mods = [Extension(
+    {ext_args},
+    include_dirs={include_dirs},
+    library_dirs={library_dirs},
+    libraries={libraries},
+    extra_compile_args={extra_compile_args},
+    extra_link_args={extra_link_args}
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
+"""
 
     pyx_imports = (
         "import numpy as np\n"
@@ -245,16 +252,60 @@ class CythonCodeWrapper(CodeWrapper):
         "{declarations}"
         "{body}")
 
+    std_compile_flag = '-std=c99'
+
     def __init__(self, *args, **kwargs):
-        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
+        """Instantiates a Cython code wrapper.
+
+        The following optional parameters get passed to ``distutils.Extension``
+        for building the Python extension module. Read its documentation to
+        learn more.
+
+        Parameters
+        ==========
+        include_dirs : [list of strings]
+            A list of directories to search for C/C++ header files (in Unix
+            form for portability).
+        library_dirs : [list of strings]
+            A list of directories to search for C/C++ libraries at link time.
+        libraries : [list of strings]
+            A list of library names (not filenames or paths) to link against.
+        extra_compile_args : [list of strings]
+            Any extra platform- and compiler-specific information to use when
+            compiling the source files in 'sources'.  For platforms and
+            compilers where "command line" makes sense, this is typically a
+            list of command-line arguments, but for other platforms it could be
+            anything. Note that the attribute ``std_compile_flag`` will be
+            appended to this list.
+        extra_link_args : [list of strings]
+            Any extra platform- and compiler-specific information to use when
+            linking object files together to create the extension (or to create
+            a new static Python interpreter). Similar interpretation as for
+            'extra_compile_args'.
+        cythonize_options : [dictionary]
+            Keyword arguments passed on to cythonize.
+
+        """
+
+        self._include_dirs = kwargs.pop('include_dirs', [])
+        self._library_dirs = kwargs.pop('library_dirs', [])
+        self._libraries = kwargs.pop('libraries', [])
+        self._extra_compile_args = kwargs.pop('extra_compile_args', [])
+        self._extra_compile_args.append(self.std_compile_flag)
+        self._extra_link_args = kwargs.pop('extra_link_args', [])
+        self._cythonize_options = kwargs.pop('cythonize_options', {})
+
         self._need_numpy = False
+
+        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
 
     @property
     def command(self):
         command = [sys.executable, "setup.py", "build_ext", "--inplace"]
         return command
 
-    def _prepare_files(self, routine):
+    def _prepare_files(self, routine, build_dir=os.curdir):
+        # NOTE : build_dir is used for testing purposes.
         pyxfilename = self.module_name + '.pyx'
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
@@ -266,14 +317,23 @@ class CythonCodeWrapper(CodeWrapper):
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
         if self._need_numpy:
             np_import = 'import numpy as np\n'
-            np_includes = '    include_dirs = [np.get_include()],\n'
+            self._include_dirs.append('np.get_include()')
         else:
             np_import = ''
-            np_includes = ''
-        with open('setup.py', 'w') as f:
-            f.write(self.setup_template.format(ext_args=", ".join(ext_args),
-                                               np_import=np_import,
-                                               np_includes=np_includes))
+
+        with open(os.path.join(build_dir, 'setup.py'), 'w') as f:
+            includes = str(self._include_dirs).replace("'np.get_include()'",
+                                                       'np.get_include()')
+            f.write(self.setup_template.format(
+                ext_args=", ".join(ext_args),
+                np_import=np_import,
+                include_dirs=includes,
+                library_dirs=self._library_dirs,
+                libraries=self._libraries,
+                extra_compile_args=self._extra_compile_args,
+                extra_link_args=self._extra_link_args,
+                cythonize_options=self._cythonize_options
+            ))
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
@@ -302,7 +362,7 @@ class CythonCodeWrapper(CodeWrapper):
 
             # C Function Header Import
             headers.append(self.pyx_header.format(header_file=prefix,
-                    prototype=prototype))
+                                                  prototype=prototype))
 
             # Partition the C function arguments into categories
             py_rets, py_args, py_loc, py_inf = self._partition_args(routine.arguments)
@@ -362,7 +422,8 @@ class CythonCodeWrapper(CodeWrapper):
         # locally in the Cython code.
             if isinstance(arg, (InputArgument, InOutArgument)) and arg.dimensions:
                 dims = [d[1] + 1 for d in arg.dimensions]
-                sym_dims = [(i, d) for (i, d) in enumerate(dims) if isinstance(d, Symbol)]
+                sym_dims = [(i, d) for (i, d) in enumerate(dims) if
+                            isinstance(d, Symbol)]
                 for (i, d) in sym_dims:
                     py_inferred[d] = (arg.name, i)
         for arg in args:
@@ -406,6 +467,20 @@ class CythonCodeWrapper(CodeWrapper):
 class F2PyCodeWrapper(CodeWrapper):
     """Wrapper that uses f2py"""
 
+    def __init__(self, *args, **kwargs):
+
+        ext_keys = ['include_dirs', 'library_dirs', 'libraries',
+                    'extra_compile_args', 'extra_link_args']
+        msg = ('The compilation option kwarg {} is not supported with the f2py '
+               'backend.')
+
+        for k in ext_keys:
+            if k in kwargs.keys():
+                warn(msg.format(k))
+            kwargs.pop(k, None)
+
+        super(F2PyCodeWrapper, self).__init__(*args, **kwargs)
+
     @property
     def command(self):
         filename = self.filename + '.' + self.generator.code_extension
@@ -435,6 +510,7 @@ _lang_lookup = {'CYTHON': ('C99', 'C89', 'C'),
                 'NUMPY': ('C99', 'C89', 'C'),
                 'DUMMY': ('F95',)}     # Dummy here just for testing
 
+
 def _infer_language(backend):
     """For a given backend, return the top choice of language"""
     langs = _lang_lookup.get(backend.upper(), False)
@@ -455,9 +531,8 @@ def _validate_backend_language(backend, language):
 
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
-def autowrap(
-    expr, language=None, backend='f2py', tempdir=None, args=None, flags=None,
-    verbose=False, helpers=None):
+def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
+             flags=None, verbose=False, helpers=None, **kwargs):
     """Generates python callable binaries based on the math expression.
 
     Parameters
@@ -490,7 +565,26 @@ def autowrap(
         compiled main expression can link to the helper routine. Items should
         be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
         is mandatory to supply an argument sequence to helper routines.
+    include_dirs : [string]
+        A list of directories to search for C/C++ header files (in Unix form
+        for portability).
+    library_dirs : [string]
+        A list of directories to search for C/C++ libraries at link time.
+    libraries : [string]
+        A list of library names (not filenames or paths) to link against.
+    extra_compile_args : [string]
+        Any extra platform- and compiler-specific information to use when
+        compiling the source files in 'sources'.  For platforms and compilers
+        where "command line" makes sense, this is typically a list of
+        command-line arguments, but for other platforms it could be anything.
+    extra_link_args : [string]
+        Any extra platform- and compiler-specific information to use when
+        linking object files together to create the extension (or to create a
+        new static Python interpreter).  Similar interpretation as for
+        'extra_compile_args'.
 
+    Examples
+    --------
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
@@ -509,7 +603,8 @@ def autowrap(
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
-    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
+    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose,
+                                    **kwargs)
 
     helps = []
     for name_h, expr_h, args_h in helpers:
@@ -517,7 +612,7 @@ def autowrap(
 
     for name_h, expr_h, args_h in helpers:
         if expr.has(expr_h):
-            name_h = binary_function(name_h, expr_h, backend = 'dummy')
+            name_h = binary_function(name_h, expr_h, backend='dummy')
             expr = expr.subs(expr_h, name_h(*args_h))
     try:
         routine = make_routine('autofunc', expr, args)
@@ -543,6 +638,17 @@ def binary_function(symfunc, expr, **kwargs):
     autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
+    Parameters
+    ----------
+    symfunc : sympy Function
+        The function to bind the callable to.
+    expr : sympy Expression
+        The expression used to generate the function.
+    kwargs : dict
+        Any kwargs accepted by autowrap.
+
+    Examples
+    --------
     >>> from sympy.abc import x, y
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
@@ -662,6 +768,20 @@ if __name__ == "__main__":
 class UfuncifyCodeWrapper(CodeWrapper):
     """Wrapper for Ufuncify"""
 
+    def __init__(self, *args, **kwargs):
+
+        ext_keys = ['include_dirs', 'library_dirs', 'libraries',
+                    'extra_compile_args', 'extra_link_args']
+        msg = ('The compilation option kwarg {} is not supported with the numpy'
+               ' backend.')
+
+        for k in ext_keys:
+            if k in kwargs.keys():
+                warn(msg.format(k))
+            kwargs.pop(k, None)
+
+        super(UfuncifyCodeWrapper, self).__init__(*args, **kwargs)
+
     @property
     def command(self):
         command = [sys.executable, "setup.py", "build_ext", "--inplace"]
@@ -745,7 +865,8 @@ class UfuncifyCodeWrapper(CodeWrapper):
         if (funcname is None) and (len(routines) == 1):
             funcname = routines[0].name
         elif funcname is None:
-            raise ValueError('funcname must be specified for multiple output routines')
+            msg = 'funcname must be specified for multiple output routines'
+            raise ValueError(msg)
         functions = []
         function_creation = []
         ufunc_init = []
@@ -802,15 +923,17 @@ class UfuncifyCodeWrapper(CodeWrapper):
                                                 ind=r_index)
         ufunc_init.append(init_form)
 
-        outcalls = [_ufunc_outcalls.substitute(outnum=i, call_args=call_args,
-                                               funcname=routines[i].name) for i in range(n_out)]
+        outcalls = [_ufunc_outcalls.substitute(
+            outnum=i, call_args=call_args, funcname=routines[i].name) for i in
+            range(n_out)]
 
         body = _ufunc_body.substitute(module=module, funcname=name,
                                       declare_args=declare_args,
                                       declare_steps=declare_steps,
                                       call_args=call_args,
                                       step_increments=step_increments,
-                                      n_types=n_types, types=types, outcalls='\n        '.join(outcalls))
+                                      n_types=n_types, types=types,
+                                      outcalls='\n        '.join(outcalls))
         functions.append(body)
 
         body = '\n\n'.join(functions)
@@ -839,7 +962,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
 def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
-             flags=None, verbose=False, helpers=None):
+             flags=None, verbose=False, helpers=None, **kwargs):
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters
@@ -858,20 +981,24 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         'cython', or 'f2py'.
     tempdir : string, optional
         Path to directory for temporary files. If this argument is supplied,
-        the generated code and the wrapper input files are left intact in the
-        specified path.
+        the generated code and the wrapper input files are left intact in
+        the specified path.
     flags : iterable, optional
-        Additional option flags that will be passed to the backend
+        Additional option flags that will be passed to the backend.
     verbose : bool, optional
-        If True, autowrap will not mute the command line backends. This can be
-        helpful for debugging.
+        If True, autowrap will not mute the command line backends. This can
+        be helpful for debugging.
     helpers : iterable, optional
-        Used to define auxillary expressions needed for the main expr. If the
-        main expression needs to call a specialized function it should be put
-        in the ``helpers`` iterable. Autowrap will then make sure that the
-        compiled main expression can link to the helper routine. Items should
-        be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
-        is mandatory to supply an argument sequence to helper routines.
+        Used to define auxillary expressions needed for the main expr. If
+        the main expression needs to call a specialized function it should
+        be put in the ``helpers`` iterable. Autowrap will then make sure
+        that the compiled main expression can link to the helper routine.
+        Items should be tuples with (<funtion_name>, <sympy_expression>,
+        <arguments>). It is mandatory to supply an argument sequence to
+        helper routines.
+    kwargs : dict
+        These kwargs will be passed to autowrap if the `f2py` or `cython`
+        backend is used and ignored if the `numpy` backend is used.
 
     Note
     ----
@@ -945,9 +1072,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         if len(expr) == 0:
             raise ValueError('Expression iterable has zero length')
         if (len(expr) + len(args)) > maxargs:
-            raise ValueError('Cannot create ufunc with more than {0} total arguments: got {1} in, {2} out'
-                             .format(maxargs, len(args), len(expr)))
-        routines = [make_routine('autofunc{}'.format(idx), exprx, args) for idx, exprx in enumerate(expr)]
+            msg = ('Cannot create ufunc with more than {0} total arguments: '
+                   'got {1} in, {2} out')
+            raise ValueError(msg.format(maxargs, len(args), len(expr)))
+        routines = [make_routine('autofunc{}'.format(idx), exprx, args) for
+                    idx, exprx in enumerate(expr)]
         return code_wrapper.wrap_code(routines, helpers=helps)
     else:
         # Dummies are used for all added expressions to prevent name clashes
@@ -962,4 +1091,4 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         args = [y] + indexed_args + [m]
         args_with_indices = [a[i] for a in indexed_args]
         return autowrap(Eq(y[i], f(*args_with_indices)), language, backend,
-                        tempdir, args, flags, verbose, helpers)
+                        tempdir, args, flags, verbose, helpers, **kwargs)
