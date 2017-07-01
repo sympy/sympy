@@ -526,6 +526,10 @@ def test_DifferentialExtension_all_attrs():
     assert DE.d == Poly(1/x, t1) == DE.D[DE.level]
     assert DE.case == 'primitive'
 
+    # Test methods
+    assert DE.indices('log') == [2]
+    assert DE.indices('exp') == [1]
+
 
 def test_DifferentialExtension_extension_flag():
     raises(ValueError, lambda: DifferentialExtension(extension={'T': [x, t]}))
