@@ -3832,7 +3832,7 @@ def test_sympy__codegen__ffunctions__literal_dp():
     assert _test_args(literal_dp(1))
 
 
-def test_sympy__vector__coordsysrect__CoordSysCartesian():
+def test_sympy__vector__coordsysrect__CoordSys3D():
     from sympy.vector.coordsysrect import CoordSys3D
     assert _test_args(CoordSys3D('C'))
 
