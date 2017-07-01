@@ -986,9 +986,11 @@ def is_deriv_k(fa, fd, DE):
     dfa, dfd = dfa.cancel(dfd, include=True)
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
+    # TODO: probably need to change this later, since 'alg' is also contained
+    # in this now
+    if len(DE.exts) != len(DE.D):
         if [i for i in DE.cases if i == 'tan'] or \
-                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K):
+                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K()):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
 
@@ -996,8 +998,8 @@ def is_deriv_k(fa, fd, DE):
         raise NotImplementedError("Nonelementary extensions not supported "
             "in the structure theorems.")
 
-    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K]
-    L_part = [DE.D[i].as_expr() for i in DE.L_K]
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K()]
+    L_part = [DE.D[i].as_expr() for i in DE.L_K()]
 
     lhs = Matrix([E_part + L_part])
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
@@ -1015,10 +1017,11 @@ def is_deriv_k(fa, fd, DE):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            terms = DE.E_args + [DE.T[i] for i in DE.L_K]
+            terms = ([DE.extargs[i] for i in DE.E_K()] +
+                    [DE.T[i] for i in DE.L_K()])
             ans = list(zip(terms, u))
             result = Add(*[Mul(i, j) for i, j in ans])
-            argterms = [DE.T[i] for i in DE.E_K] + DE.L_args
+            argterms = [DE.T[i] for i in DE.E_K()] + [DE.extargs[i] for i in DE.L_K()]
             l = []
             ld = []
             for i, j in zip(argterms, u):
@@ -1095,9 +1098,9 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         dfa, dfd = fa, fd
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
+    if len(DE.exts) != len(DE.D):
         if [i for i in DE.cases if i == 'tan'] or \
-                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K):
+                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K()):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
 
@@ -1105,8 +1108,8 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         raise NotImplementedError("Nonelementary extensions not supported "
             "in the structure theorems.")
 
-    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K]
-    L_part = [DE.D[i].as_expr() for i in DE.L_K]
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K()]
+    L_part = [DE.D[i].as_expr() for i in DE.L_K()]
 
     lhs = Matrix([E_part + L_part])
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
@@ -1128,13 +1131,13 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         else:
             n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
-            terms = [DE.T[i] for i in DE.E_K] + DE.L_args
+            terms = [DE.T[i] for i in DE.E_K()] + [DE.extargs[i] for i in DE.L_K()]
             ans = list(zip(terms, u))
             result = Mul(*[Pow(i, j) for i, j in ans])
 
             # exp(f) will be the same as result up to a multiplicative
             # constant.  We now find the log of that constant.
-            argterms = DE.E_args + [DE.T[i] for i in DE.L_K]
+            argterms = [DE.extargs[i] for i in DE.E_K()] + [DE.T[i] for i in DE.L_K()]
             const = cancel(fa.as_expr()/fd.as_expr() -
                 Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
 
