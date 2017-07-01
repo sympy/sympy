@@ -765,3 +765,12 @@ def test_NonnumericFactors():
     assert NonnumericFactors(S(3) + I) == S(3) + I
     assert NonnumericFactors((S(1)/3)**(S(1)/3)) == S(1)
     assert NonnumericFactors(log(a)) == log(a)
+
+def test_Prepend():
+    assert Prepend([1, 2, 3], [4, 5]) == [4, 5, 1, 2, 3]
+
+def test_Drop():
+    assert Drop([1, 2 ,3, 4], 2) == [2, 3, 4]
+
+def test_CombineExponents():
+    print(CombineExponents())

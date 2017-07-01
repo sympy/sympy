@@ -1912,3 +1912,34 @@ def NonabsurdNumberFactors(u):
             result *= NonabsurdNumberFactors(i)
         return result
     return NonnumericFactors(u)
+
+def SumSimplerQ(u, v):
+    return u + v
+
+def SimplerQ(u, v):
+    return u
+
+def Prepend(l1, l2):
+    return l2 + l1
+
+def Drop(lst, n):
+    # gives list with its first n elements dropped.
+    return lst[(n-1):]
+
+def CombineExponents(lst):
+    if Length(lst) < 2:
+        return lst
+    elif lst[0][0] == lst[1][0]:
+        return CombineExponents(Prepend(Drop(lst,2),[lst[0][0], lst[0][1] + lst[1][1]]))
+    return Prepend(CombineExponents(Rest(lst)), First(lst))
+
+def FactorAbsurdNumber(m):
+    # (* m must be an absurd number.  FactorAbsurdNumber[m] returns the prime factorization of m *)
+    # (* as list of base-degree pairs where the bases are prime numbers and the degrees are rational. *)
+    if RationalQ(m):
+        return FactorInteger(m)
+    elif PowerQ(m):
+        r = FactorInteger(m.base)
+        return [r[0], r[1]*m.exp]
+    #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
+    return CombineExponents
