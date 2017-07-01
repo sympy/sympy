@@ -1950,12 +1950,12 @@ class MatrixDecompositions(MatrixSubspaces):
 
         >>> from sympy.matrices import Matrix
         >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> A.cholesky()
+        >>> A.cholesky_decomposition()
         Matrix([
         [ 5, 0, 0],
         [ 3, 3, 0],
         [-1, 1, 3]])
-        >>> A.cholesky() * A.cholesky().T
+        >>> A.cholesky_decomposition() * A.cholesky_decomposition().T
         Matrix([
         [25, 15, -5],
         [15, 18,  0],

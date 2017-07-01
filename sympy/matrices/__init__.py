@@ -7,7 +7,7 @@ from .matrices import (DeferredVector, ShapeError, NonSquareMatrixError,
     MatrixBase)
 
 from .dense import (
-    GramSchmidt, Matrix, casoratian, diag, eye, hessian, jordan_cell,
+    GramSchmidt, Matrix, casoratian, diag, eye, hessian, jordan_cell, jordan_block,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
     randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
     zeros)

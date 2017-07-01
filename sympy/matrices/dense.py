@@ -1292,9 +1292,9 @@ def jordan_block(eigenval, n):
     Examples
     ========
 
-    >>> from sympy.matrices import jordan_cell
+    >>> from sympy.matrices import jordan_block
     >>> from sympy.abc import x
-    >>> jordan_cell(x, 4)
+    >>> jordan_block(x, 4)
     Matrix([
     [x, 1, 0, 0],
     [0, x, 1, 0],
