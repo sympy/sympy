@@ -175,17 +175,16 @@ Thanks to everyone who contributed to this release!
     print()
 
 @activity
-def md5(file='*', print_=True):
+def md5():
     """
     Print the md5 sums of the release files
     """
-    out = $(md5sum @("/home/release/" + file))
+    out = $(md5sum /home/release/*)
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
     out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
-    if print_:
-        print(out)
+    print(out)
     return out
 
 # HELPER FUNCTIONS
