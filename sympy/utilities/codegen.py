@@ -792,11 +792,14 @@ class CCodeGen(CodeGen):
     code_extension = "c"
     interface_extension = "h"
     standard = 'c99'
-    preprocessor_statements = ['#include <math.h>']
 
-    def __init__(self, project="project", printer=None):
+    def __init__(self, project="project", printer=None,
+                 preprocessor_statements=None):
         super(CCodeGen, self).__init__(project=project)
         self.printer = printer or c_code_printers[self.standard.lower()]()
+
+        if preprocessor_statements is None:
+            self.preprocessor_statements = ['#include <math.h>']
 
     def _get_header(self):
         """Writes a common header for the generated files."""
