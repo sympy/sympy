@@ -4,7 +4,7 @@ from .operation import *
 from .symbol import VariableSymbol, Integer
 from .constraint import cons, FreeQ
 
-a, b, c, d, e, f, g, h, x, u = map(VariableSymbol, 'abcdefghxu')
+a, b, c, d, e, f, g, h, x, u, p = map(VariableSymbol, 'abcdefghxup')
 n, m = map(VariableSymbol, 'nm')
 zoo = VariableSymbol('zoo')
 

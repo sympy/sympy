@@ -1,6 +1,7 @@
 from matchpy import Constraint, substitute
 from sympy import sympify
 from sympy.logic.boolalg import BooleanTrue
+from .matchpy2sympy import matchpy2sympy
 
 class cons(Constraint):
     def __init__(self, expr, vars):
@@ -12,7 +13,7 @@ class cons(Constraint):
             return self.expr
 
         sub = substitute(self.expr, substitution)
-        res = sympify(str(sub))
+        res = matchpy2sympy(sub)
 
         if isinstance(res, BooleanTrue) or res == True:
             return True
