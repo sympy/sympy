@@ -23,6 +23,7 @@ cd ..
 $ACTIVITIES = [
     # 'version_bump',
     '_version',
+    'checkout_and_pull',
     'mailmap_update',
     'test_sympy',
     'source_tarball',
@@ -53,12 +54,17 @@ $VERSION_BUMP_PATTERNS = [
 
 # ACTIVITIES
 
-@activity
+@activity(deps={'_version'})
+def checkout_and_pull():
+    git checkout @(get_sympy_short_version())
+    git pull
+
+@activity(deps={'checkout_and_pull'})
 def mailmap_update():
     with run_in_conda_env(['python=3.6', 'mpmath']):
         ./bin/mailmap_update.py
 
-@activity
+@activity(deps={'checkout_and_pull'})
 def test_sympy():
     ./setup.py test
 
