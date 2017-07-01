@@ -1,4 +1,6 @@
-from sympy.vector.coordsysrect import CoordSys3D
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+import warnings
+from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, cos, sqrt, pi, ImmutableMatrix as Matrix, \
      symbols, simplify, zeros, expand
@@ -348,3 +350,9 @@ def test_transformation_equations():
     a._connect_to_standard_cartesian((a.x * cos(a.y), a.x * sin(a.y), a.z))
     assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
+
+
+def test_coordsys3d():
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        assert CoordSysCartesian("C") == CoordSys3D("C")

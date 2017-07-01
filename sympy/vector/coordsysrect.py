@@ -10,7 +10,7 @@ from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 
 
-def CoorSysCartesian(name, location=None, rotation_matrix=None,
+def CoordSysCartesian(name, location=None, rotation_matrix=None,
                 parent=None, vector_names=None, variable_names=None):
     SymPyDeprecationWarning(
         feature="CoordSysCartesian",
