@@ -60,7 +60,10 @@ def mailmap_update():
 
 @activity
 def test_sympy():
-    ./setup.py test
+    with run_in_conda_env(['mpmath', 'matplotlib', 'numpy', 'scipy', 'theano',
+        'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'libgcc',
+        'gcc', 'cython', 'tensorflow', 'llvmlite']):
+        ./setup.py test
 
 @activity(deps={'_version', 'mailmap_update', 'test_sympy'})
 def source_tarball():
