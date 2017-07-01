@@ -409,25 +409,11 @@ def get_previous_version_tag():
             return curtag
     sys.exit(red("Could not find the tag for the previous release."))
 
-def get_sympy_version(version_cache=[]):
-    """
-    Get the full version of SymPy being released (like 0.7.3.rc1)
-    """
-    if version_cache:
-        return version_cache[0]
-    version = $(python -c "import sympy;print(sympy.__version__, end='')")
-    assert '\n' not in version
-    assert ' ' not in version
-    assert '\t' not in version
-    version_cache.append(version)
-    return version
-
 def get_sympy_short_version():
     """
     Get the short version of SymPy being released, not including any rc tags
     (like 0.7.3)
     """
-    version = get_sympy_version()
     parts = version.split('.')
     # Remove rc tags
     # Handle both 1.0.rc1 and 1.1rc1
@@ -450,7 +436,6 @@ def _GitHub_release(username=None, user='sympy', token=None,
         error("requests and requests-oauthlib must be installed to upload to GitHub")
 
     release_text = GitHub_release_text()
-    version = get_sympy_version()
     short_version = get_sympy_short_version()
     tag = 'sympy-' + version
     prerelease = short_version != version
@@ -543,8 +528,6 @@ def table():
     sizes_dict = {name: size for size, name in sizes}
 
     table = []
-
-    version = get_sympy_version()
 
     # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
@@ -796,7 +779,6 @@ def check_tag_exists():
     """
     Check if the tag for this release has been uploaded yet.
     """
-    version = get_sympy_version()
     tag = 'sympy-' + version
     all_tags = $(git ls-remote --tags origin)
     return tag in all_tags
