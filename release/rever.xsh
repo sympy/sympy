@@ -57,13 +57,13 @@ def mailmap_update():
     with run_in_conda_env(['python=3.6', 'mpmath']):
         ./bin/mailmap_update.py
 
-@activity
+@activity(deps={'_version', 'mailmap_update'})
 def source_tarball():
     with run_in_conda_env(['mpmath', 'python=3.6'], 'sympy-release'):
         # Assumes this is run in Docker and git is already clean
         ./setup.py sdist --keep-temp
 
-@activity
+@activity(deps={'_version'})
 def build_docs():
     with run_in_conda_env(['sphinx=1.3.1', 'docutils=0.12', 'numpy', 'mpmath'],
         envname='sympy-release-docs'):
@@ -88,32 +88,32 @@ def build_docs():
         cd ../../../
 
 
-@activity
+@activity(deps={'source_tarball', 'build_docs'})
 def copy_release_files():
     ls dist
     cp dist/* /home/release/
 
-@activity
+@activity(deps={'source_tarball'})
 def test_tarball27():
     test_tarball('2.7')
 
-@activity
+@activity(deps={'source_tarball'})
 def test_tarball33():
     test_tarball('3.3')
 
-@activity
+@activity(deps={'source_tarball'})
 def test_tarball34():
     test_tarball('3.4')
 
-@activity
+@activity(deps={'source_tarball'})
 def test_tarball35():
     test_tarball('3.5')
 
-@activity
+@activity(deps={'source_tarball'})
 def test_tarball36():
     test_tarball('3.6')
 
-@activity
+@activity(deps={'source_tarball'})
 def compare_tar_against_git():
     """
     Compare the contents of the tarball against git ls-files
@@ -156,7 +156,7 @@ def compare_tar_against_git():
     if fail:
         sys.exit(red("Non-whitelisted files found or not found in the tarball"))
 
-@activity
+@activity(deps={'source tarball'})
 def print_authors():
     """
     Print authors text to put at the bottom of the release notes
@@ -180,7 +180,7 @@ Thanks to everyone who contributed to this release!
         print("- " + name)
     print()
 
-@activity
+@activity(deps={'source_tarball', 'build_docs'})
 def md5():
     """
     Print the md5 sums of the release files
@@ -197,7 +197,11 @@ def _md5(_print=True):
         print(out)
     return out
 
-@activity
+@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball33', 'test_tarball34', 'test_tarball35', 'test_tarball36'})
+def release():
+    pass
+
+@activity(deps={'release'})
 def GitHub_release():
     _GitHub_release()
 
