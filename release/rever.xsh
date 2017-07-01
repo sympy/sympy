@@ -161,7 +161,7 @@ def compare_tar_against_git():
     if fail:
         sys.exit(red("Non-whitelisted files found or not found in the tarball"))
 
-@activity(deps={'source tarball'})
+@activity(deps={'source_tarball'})
 def print_authors():
     """
     Print authors text to put at the bottom of the release notes
