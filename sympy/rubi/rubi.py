@@ -5,16 +5,18 @@ from .sympy2matchpy import sympy2matchpy
 from sympy.core.sympify import sympify
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core import S
+from .matchpy2sympy import matchpy2sympy
 
 rubi = rubi_object()
 
 def rubi_integrate(expr, var):
     '''
     Main function for Rubi integeration.
+    returns 0 if expr is not integrated
     '''
-
     if expr == None:
-        return None
+        return S(1)
     if isinstance(expr, int) or isinstance(expr, float):
         return expr*var
     elif not expr.has(var): # handle constant expressions
@@ -22,7 +24,7 @@ def rubi_integrate(expr, var):
     elif isinstance(expr, Add): # integrate each is_Add expression indivdually
         args = [rubi_integrate(i, var) for i in expr.args]
         if None in args:
-            return None
+            return S(1)
         return Add(*args)
     elif isinstance(expr, Mul): #seperate out constants in Mul expression
         e = 1
@@ -37,7 +39,7 @@ def rubi_integrate(expr, var):
             if res != None:
                 return c*res
             else:
-                return None
+                return S(1)
 
     if not isinstance(expr, matchpy.Expression):
         expr = Int(sympy2matchpy(expr), sympy2matchpy(var))
@@ -46,6 +48,6 @@ def rubi_integrate(expr, var):
 
     if result == expr:
         #print(('Unable to integrate: {}').format(expr))
-        return None
-
-    return sympify(str(result))
+        return S(1)
+    #print('result: ', result)
+    return matchpy2sympy(result)

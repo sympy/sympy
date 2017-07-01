@@ -1,7 +1,6 @@
 from sympy.core.symbol import symbols
 from sympy.rubi.rubi import rubi_integrate
 from sympy.rubi.utility_function import hypergeom
-#from sympy.rubi.sympy2matchpy import sympy2matchpy
 from sympy.functions import log, sqrt, exp, cos, sin, tan, sec, csc, cot
 from sympy.functions.elementary.hyperbolic import atanh as arctanh
 from sympy.functions.elementary.hyperbolic import asinh as arcsinh
@@ -14,13 +13,12 @@ from sympy.functions.special.elliptic_integrals import elliptic_f as EllipticF
 from sympy import pi as Pi, S
 from sympy import I, simplify
 
-a, b, c, d, e, f, m, n, x, u = symbols('a b c d e f m n x u')
+a, b, c, d, e, f, m, n, x, u = symbols('a b c d e f m n x u', real=True, imaginary=False)
 
 def test_rubi_algebriac_1_2():
     passed = 0
     fail = 0
     matched = 0
-
     '''
     test_algebraic_linear_products_set1 contains: 1 Algebraic functions\1 Linear products\1.2 (a + b x)**m (c + d x)**n
     '''
@@ -1822,15 +1820,17 @@ def test_rubi_algebriac_1_2():
     ]
 
     for t in test:
-        print(t[0], '   ', passed, '    ', fail)
-        try:
+        print(t[0], '   ', passed, '    ', fail, '    ', matched)
+        res = rubi_integrate(t[0], t[1])
+        if res != 1:
+            matched += 1
             res = rubi_integrate(t[0], t[1]).expand() - t[3]
             res = simplify(res)
             if (res == 0) or (not res.has(x)):
                 passed += 1
             else:
                 fail += 1
-        except:
+        else:
             fail += 1
 
     print('passed: ', passed)
