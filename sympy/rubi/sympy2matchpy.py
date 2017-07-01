@@ -14,12 +14,14 @@ get_matchpy_node = {
     "log": Log,
     'Int': Int,
     'Log': Log,
+    'sqrt': Sqrt
 }
 
 def sympy2matchpy(expr):
     '''
     Converts a SymPy expression into a MatchPy expression
     '''
+
     if expr == None:
         return None
     if isinstance(expr, int):
@@ -27,7 +29,7 @@ def sympy2matchpy(expr):
     elif expr.is_Atom:
         if expr.is_Number:
             return Integer(expr)
-        return matchpy.Symbol(str(expr))
+        return VariableSymbol(str(expr))
     elif type(expr).__name__ in get_matchpy_node.keys():
         matchpy_node = get_matchpy_node[type(expr).__name__]
         args = [sympy2matchpy(i) for i in expr.args]

@@ -32,10 +32,6 @@ class Or(Operation):
     arity = Arity.variadic
     one_identity = True
 
-class FreeQ(Operation):
-    name = "FreeQ"
-    arity = Arity.binary
-
 class ZeroQ(Operation):
     name = "ZeroQ"
     arity = Arity.unary

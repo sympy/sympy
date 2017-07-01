@@ -13,9 +13,12 @@ from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
-from sympy import exp, polylog, N, Wild, factor, gcd, Sum
-from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
-
+from sympy.simplify.simplify import nthroot
+from sympy.core.exprtools import factor_terms
+from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
+    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand)
+from mpmath import ellippi, ellipe, ellipf, appellf1
+from sympy.utilities.iterables import flatten
 
 def Int(expr, var):
     from .rubi import rubi_integrate
@@ -64,7 +67,10 @@ def ZeroQ(expr):
         return expr == 0
 
 def NegativeQ(u):
-    return u < 0
+    res = u < 0
+    if not res.is_Relational:
+        return res
+    return False
 
 def NonzeroQ(expr):
     return expr != 0
@@ -81,14 +87,17 @@ def List(*var):
 def Log(e):
     return log(e)
 
+def PositiveQ(var):
+    res = var > 0
+    if not res.is_Relational:
+        return res
+    return False
+
 def PositiveIntegerQ(var):
-    return var.is_Integer and var > 0
+    return var.is_Integer and PositiveQ(var)
 
 def NegativeIntegerQ(var):
-    return var.is_Integer and var < 0
-
-def PositiveQ(var):
-    return var > 0
+    return var.is_Integer and NegativeQ(var)
 
 def IntegerQ(var):
     if isinstance(var, int):
@@ -100,7 +109,7 @@ def IntegersQ(*var):
     return all(IntegerQ(i) for i in var)
 
 def ComplexNumberQ(*var):
-    return all(i.is_complex for i in var)
+    return all((im(i)!=0) for i in var)
 
 def RealNumericQ(u):
     return u.is_real
@@ -112,10 +121,16 @@ def NegativeOrZeroQ(u):
     return u.is_real and u <= 0
 
 def FractionOrNegativeQ(u):
-    return FractionQ(u) or u < 0
+    return FractionQ(u) or NegativeQ(u)
 
+<<<<<<< HEAD
+=======
+def PosQ(var):
+    return PositiveQ(var)
+
+>>>>>>> 66e8a31b2cb67d5209a66db7a319c8d793b2349c
 def NegQ(var):
-    return var < 0
+    return NegativeQ(var)
 
 def Equal(a, b):
     return a == b
@@ -128,15 +143,14 @@ def IntPart(u):
     if ProductQ(u):
         if IntegerQ(First(u)):
             return First(u)*IntPart(Rest(u))
-
-    if IntegerQ(u):
+    elif IntegerQ(u):
         return u
     elif FractionQ(u):
         return IntegerPart(u)
     elif SumQ(u):
         res = 0
         for i in u.args:
-            res += IntPart(u)
+            res += IntPart(i)
         return res
     else:
         return 0
@@ -182,7 +196,7 @@ def First(expr, d=None):
         if isinstance(expr, list):
             return expr[0]
         else:
-            return expr.func(expr.args[0])
+            return expr.args[0]
     except:
         return d
 
@@ -190,7 +204,10 @@ def Rest(expr):
     if isinstance(expr, list):
         return expr[1:]
     else:
-        return expr.func(*expr.args[1:])
+        if SumQ(expr) or ProductQ(expr):
+            return expr.func(*expr.args[1:])
+        else:
+            return expr.args[1]
 
 def SqrtNumberQ(expr):
     # SqrtNumberQ[u] returns True if u^2 is a rational number; else it returns False.
@@ -207,10 +224,10 @@ def SqrtNumberSumQ(u):
     return SumQ(u) & SqrtNumberQ(First(u)) & SqrtNumberQ(Rest(u)) | ProductQ(u) & SqrtNumberQ(First(u)) & SqrtNumberSumQ(Rest(u))
 
 def LinearQ(expr, x):
-    if degree(expr, gen=x) == 1:
-        return True
-    else:
-        return False
+    if expr.is_polynomial(x):
+        if degree(Poly(expr, x), gen=x) == 1:
+            return True
+    return False
 
 def Sqrt(a):
     return sqrt(a)
@@ -218,7 +235,7 @@ def Sqrt(a):
 def ArcCosh(a):
     return acosh(a)
 
-def Coefficient(expr, var, n):
+def Coefficient(expr, var, n=1):
     a = Poly(expr, var)
     if (degree(a) - n) < 0:
         return 0
@@ -229,12 +246,16 @@ def Denominator(var):
     return fraction(var)[1]
 
 def Hypergeometric2F1(a, b, c, z):
-    return hyp2f1(a, b, c, z)
+    return hyperexpand(hyper([a, b], [c], z))
 
 def ArcTan(a):
     return atan(a)
 
 def Not(var):
+    if isinstance(var, bool):
+        return not var
+    elif var.is_Relational:
+        var = False
     return not var
 
 def Simplify(expr):
@@ -281,25 +302,37 @@ def ArcCsch(a):
 
 def LessEqual(*args):
     for i in range(0, len(args) - 1):
-        if args[i] > args[i + 1]:
+        try:
+            if args[i] > args[i + 1]:
+                return False
+        except:
             return False
     return True
 
 def Less(*args):
     for i in range(0, len(args) - 1):
-        if args[i] >= args[i + 1]:
+        try:
+            if args[i] >= args[i + 1]:
+                return False
+        except:
             return False
     return True
 
 def Greater(*args):
     for i in range(0, len(args) - 1):
-        if args[i] <= args[i + 1]:
+        try:
+            if args[i] <= args[i + 1]:
+                return False
+        except:
             return False
     return True
 
 def GreaterEqual(*args):
     for i in range(0, len(args) - 1):
-        if args[i] < args[i + 1]:
+        try:
+            if args[i] < args[i + 1]:
+                return False
+        except:
             return False
     return True
 
@@ -325,7 +358,7 @@ def IntegerPowerQ(u):
     return PowerQ(u) and IntegerQ(u.args[1])
 
 def PositiveIntegerPowerQ(u):
-    return PowerQ(u) and IntegerQ(u.args[1]) and u.args[1]>0
+    return PowerQ(u) and IntegerQ(u.args[1]) and PositiveQ(u.args[1])
 
 def FractionalPowerQ(u):
     return PowerQ(u) & FractionQ(u.args[1])
@@ -453,7 +486,7 @@ def InverseHyperbolicQ(u):
 
 def InverseFunctionQ(u):
     # returns True if u is a call on an inverse function; else returns False.
-    return LogQ(u) or InverseTrigQ(u) and Length(u)<=1 or InverseHyperbolicQ(u) or u.func == polylog
+    return LogQ(u) or InverseTrigQ(u) and Length(u) <= 1 or InverseHyperbolicQ(u) or u.func == polylog
 
 def TrigHyperbolicFreeQ(u, x):
     # If u is free of trig, hyperbolic and calculus functions involving x, TrigHyperbolicFreeQ[u,x] returns true; else it returns False.
@@ -473,7 +506,7 @@ def InverseFunctionFreeQ(u, x):
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) | CalculusQ(u) | u.func == hyp2f1 | u.func == appellf1:
+        if InverseFunctionQ(u) | CalculusQ(u) | u.func == hyper | u.func == appellf1:
             return FreeQ(u, x)
         else:
             for i in u.args:
@@ -529,12 +562,7 @@ def PolynomialQ(u, x):
     return u.is_polynomial(x)
 
 def FactorSquareFree(u):
-    e = factor(u).args
-    mul_fac = 1
-    for expr in e:
-        if expr.is_Pow:
-            mul_fac = mul_fac*expr
-    return mul_fac*simplify(u/mul_fac)
+    return sqf(u)
 
 def PowerOfLinearQ(expr, x):
     u = Wild('u')
@@ -550,8 +578,13 @@ def PowerOfLinearQ(expr, x):
             return LinearQ(Match[u], x)
 
 def Exponent(expr, x, *k):
+    if expr.is_number or (not expr.has(x)):
+        return 0
     if not k:
-        return degree(expr, gen = x)
+        if expr.is_polynomial(x):
+            return degree(expr, gen = x)
+        else:
+            return 0
     else:
         lst=[]
         if expr.is_Add:
@@ -588,7 +621,7 @@ def LinearPairQ(u, v, x):
 
 def BinomialParts(u, x):
     if PolynomialQ(u, x):
-        if Exponent(u, x)>0:
+        if Exponent(u, x) > 0:
             lst = Exponent(u, x, List)
             if len(lst)==1:
                 return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u,x)]
@@ -821,7 +854,7 @@ def FixSimplify(u):
     return u
 
 def TogetherSimplify(u):
-    return u
+    return simplify(u)
     #return With(Set(v, Together(Simplify(Together(u)))), FixSimplify(v))
 
 def PosAux(u):
@@ -860,8 +893,8 @@ def CoefficientList(u, x):
     else:
         return []
 
-def ReplaceAll(expr, x, substitution):
-    return expr.subs(x, substitution)
+def ReplaceAll(expr, args):
+    return expr.subs(args)
 
 def NormalizeIntegrand(u, x):
     # returns u in a standard form recognizable by integration rules.
@@ -878,18 +911,19 @@ def SimplifyTerm(u, x):
 def ExpandLinearProduct(v, u, a, b, x):
     # If u is a polynomial in x, ExpandLinearProduct[v,u,a,b,x] expands v*u into a sum of terms of the form c*v*(a+b*x)^n.
     if FreeQ([a, b], x) and PolynomialQ(u, x):
-        lst = CoefficientList(ReplaceAll(u, x, (x - a)/b), x)
+        lst = CoefficientList(ReplaceAll(u, {x: (x - a)/b}), x)
         lst = [SimplifyTerm(i, x) for i in lst]
         res = 0
         for k in range(1, len(lst)+1):
             res = res + v*lst[k-1]*(a + b*x)**(k - 1)
         return res
+    return u*v
 
 def GCD(*args):
     return gcd(*args)
 
 def ContentFactor(expn):
-    return ContentFactorAux(expn)
+    return factor_terms(expn)
 
 def NumericFactor(u):
     # returns the real numeric factor of u.
@@ -901,11 +935,11 @@ def NumericFactor(u):
         else:
             return S(1)
     elif PowerQ(u):
-        if RationalQ(u.args[0]) and RationalQ(u.args[1]):
-            if u.args[1] > 0:
-                return 1/Denominator(u.args[1])
+        if RationalQ(u.base) and RationalQ(u.exp):
+            if u.exp > 0:
+                return 1/Denominator(u.base)
             else:
-                return 1/(1/Denominator(u.args[1]))
+                return 1/(1/Denominator(u.base))
         else:
             return S(1)
     elif ProductQ(u):
@@ -924,8 +958,37 @@ def NumericFactor(u):
                 return -GCD(-m, -n)
             else:
                 return GCD(m, n)
-    else:
-        return S(1)
+    return S(1)
+
+def NonnumericFactors(u):
+    if NumberQ(u):
+        if ZeroQ(Im(u)):
+            return S(1)
+        elif ZeroQ(Re(u)):
+            return I
+        return u
+    elif PowerQ(u):
+        if RationalQ(u.base) and FractionQ(u.exp):
+            return u/NumericFactor(u)
+        return u
+    elif ProductQ(u):
+        result = 1
+        for i in u.args:
+            result *= NonnumericFactors(i)
+        return result
+    elif SumQ(u):
+        if LeafCount(u) < 50:
+            i = ContentFactor(u)
+            if SumQ(i):
+                return u
+            else:
+                return NonnumericFactors(i)
+        n = NumericFactor(u)
+        result = 0
+        for i in u.args:
+            result += i/n
+        return result
+    return u
 
 def ExpandExpression(expr, x):
     return expr.expand()
@@ -990,34 +1053,35 @@ def RemoveContentAux(expr, x):
         match = expr.match(pattern)
         if match:
             keys = [a_, m_, u_, b_, v_]
-            a, m, u, b, v = tuple([match[i] for i in keys])
-            if IntegersQ(a, b) & (a + b == 0) & RationalQ(m):
-                if m > 0:
-                    return RemoveContentAux(a**(m - 1)*u - v, x)
-                else:
-                    return RemoveContentAux(u - a**(1 - m)*v, x)
+            if len(keys) == len(match):
+                a, m, u, b, v = tuple([match[i] for i in keys])
+                if IntegersQ(a, b) & (a + b == 0) & RationalQ(m):
+                    if m > 0:
+                        return RemoveContentAux(a**(m - 1)*u - v, x)
+                    else:
+                        return RemoveContentAux(u - a**(1 - m)*v, x)
+
 
         pattern = a_**m_*u_ + a_**n_*v_
         match = expr.match(pattern)
         if match:
             keys = [a_, m_, u_, n_, v_]
-            a, m, u, n, v = tuple([match[i] for i in keys])
-            if FreeQ(a, x) & RationalQ(m, n) & (n - m >= 0) & (m != 0):
-                return RemoveContentAux(u + a**(n - m)*v, x)
+            if len(keys) == len(match):
+                a, m, u, n, v = tuple([match[i] for i in keys])
+                if FreeQ(a, x) & RationalQ(m, n) & (n - m >= 0) & (m != 0):
+                    return RemoveContentAux(u + a**(n - m)*v, x)
 
-        '''
         pattern = a_**m_*u_ + a_**n_*v_ + a_**p_*w_
         match = expr.match(pattern)
         if match:
             keys = [a_, m_, u_, n_, v_, p_, w_]
-            a, m, u, n, v, p, w = tuple([match[i] for i in keys])
-            if RationalQ(m, n, p) & (n - m >= 0) & (p - m >= 0):
-                return RemoveContentAux(u + a**(n - m)*v + a**(p - m)*w, x)
-
+            if len(keys) == len(match):
+                a, m, u, n, v, p, w = tuple([match[i] for i in keys])
+                if RationalQ(m, n, p) & (n - m >= 0) & (p - m >= 0):
+                    return RemoveContentAux(u + a**(n - m)*v + a**(p - m)*w, x)
 
         if NegQ(First(expr)):
             return -expr
-        '''
 
     return expr
 
@@ -1153,11 +1217,93 @@ def AlgebraicFunctionQ(u, x, flag=False):
         return True
     return False
 
-def ExpandIntegrand(expr, x):
-    w_ = Wild('w')
-    p_ = Wild('p')
+def Coeff(expr, form, n=1):
+    if n == 1:
+        return Coefficient(Together(expr), form, n)
+    else:
+        coef1 = Coefficient(expr, form, n)
+        coef2 = Coefficient(Together(expr), form, n)
+        if Simplify(coef1 - coef2) == 0:
+            return coef1
+        else:
+            return coef2
+
+def LeadTerm(u):
+    if SumQ(u):
+        return First(u)
+    return u
+
+def RemainingTerms(u):
+    if SumQ(u):
+        return Rest(u)
+    return u
+
+def LeadFactor(u):
+    # returns the leading factor of u.
+    if ComplexNumberQ(u) and Re(u) == 0:
+        if Im(u) == S(1):
+            return u
+        else:
+            return LeadFactor(Im(u))
+    elif ProductQ(u):
+            return LeadFactor(First(u))
+    return u
+
+def RemainingFactors(u):
+    # returns the remaining factors of u.
+    if ComplexNumberQ(u) and Re(u) == 0:
+        if Im(u) == 1:
+            return S(1)
+        else:
+            return I*RemainingFactors(Im(u))
+    elif ProductQ(u):
+        return RemainingFactors(First(u))*Rest(u)
+    return S(1)
+
+def LeadBase(u):
+    # returns the base of the leading factor of u.
+    v = LeadFactor(u)
+    if PowerQ(v):
+        return v.args[0]
+    return v
+
+def LeadDegree(u):
+    # returns the degree of the leading factor of u.
+    v = LeadFactor(u)
+    if PowerQ(v):
+        return v.args[1]
+    return v
+
+def Numer(expr):
+    # returns the numerator of u.
+    if PowerQ(expr):
+        if expr.args[1] < 0:
+            return 1
+    if ProductQ(expr):
+        return Mul(*[Numer(i) for i in expr.args])
+    return Numerator(expr)
+
+def Denom(u):
+    # returns the denominator of u
+    if PowerQ(u):
+        if u.args[1] < 0:
+            return u.args[0]**(-u.args[1])
+    elif ProductQ(u):
+        return Mul(*[Denom(i) for i in u.args])
+    return Denominator(u)
+
+def hypergeom(n, d, z):
+    return hyper(n, d, z)
+
+def Expon(expr, form, h=None):
+    if h:
+        return Exponent(Together(expr), form, h)
+    else:
+        return Exponent(Together(expr), form)
+
+def MergeMonomials(expr, x):
     u_ = Wild('u')
-    v_ = Wild('v')
+    p_ = Wild('p', exclude=[x])
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
     c_ = Wild('c', exclude=[x])
@@ -1165,94 +1311,493 @@ def ExpandIntegrand(expr, x):
     n_ = Wild('n', exclude=[x])
     m_ = Wild('m', exclude=[x])
 
+    # Basis: If  m\[Element]\[DoubleStruckCapitalZ] \[And] b c-a d==0, then (a+b z)^m==b^m/d^m (c+d z)^m
+    pattern = u_*(a_ + b_*x)**m_*(c_ + d_*x)**n_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, m_, c_, d_, n_]
+        if len(keys) == len(match):
+            u, a, b, m, c, d, n = tuple([match[i] for i in keys])
+            if IntegerQ(m) and ZeroQ(b*c - a*d):
+                return u*b**m/d**m*(c + d*x)**(m + n)
+
+    # Basis: If  m/n\[Element]\[DoubleStruckCapitalZ], then z^m (c z^n)^p==(c z^n)^(m/n+p)/c^(m/n)
+    pattern = u_*(a_ + b_*x)**m_*(c_*(a_ + b_*x)**n_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, m_, c_, n_, p_]
+        if len(keys) == len(match):
+            u, a, b, m, c, n, p = tuple([match[i] for i in keys])
+            if IntegerQ(m/n):
+                return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
+    return expr
+
+def PolynomialDivide(p, q, x):
+    return quo(p, q) + rem(p, q)/q
+
+def BinomialQ(u, x, n=None):
+    if ListQ(u):
+        for i in u.args:
+            if Not(BinomialQ(i, x, n)):
+                return False
+        return True
+    return ListQ(BinomialParts(u, x))
+
+def FactorSquareFreeList(poly):
+    r = sqf_list(poly)
+    result = [[1, 1]]
+    for i in r[1]:
+        result.append(list(i))
+    return result
+
+def PerfectPowerTest(u, x):
+    # If u (x) is equivalent to a polynomial raised to an integer power greater than 1,
+    # PerfectPowerTest[u,x] returns u (x) as an expanded polynomial raised to the power;
+    # else it returns False.
+    if PolynomialQ(u, x):
+        lst = FactorSquareFreeList(u)
+        gcd = 0
+        v = 1
+        if lst[0] == [1, 1]:
+            lst = Rest(lst)
+        for i in lst:
+            gcd = GCD(gcd, i[1])
+        if gcd > 1:
+            for i in lst:
+                v = v*i[0]**(i[1]/gcd)
+            return Expand(v)**gcd
+        else:
+            return False
+    return False
+
+def SquareFreeFactorTest(u, x):
+    # If u (x) can be square free factored, SquareFreeFactorTest[u,x] returns u (x) in
+    # factored form; else it returns False.
+    if PolynomialQ(u, x):
+        v = FactorSquareFree(u)
+        if PowerQ(v) or ProductQ(v):
+            return v
+        return False
+    return False
+
+def RationalFunctionQ(u, x):
+    # If u is a rational function of x, RationalFunctionQ[u,x] returns True; else it returns False.
+    if AtomQ(u) or FreeQ(u, x):
+        return True
+    elif IntegerPowerQ(u):
+        return RationalFunctionQ(u.args[0], x)
+    elif ProductQ(u) or SumQ(u):
+        for i in u.args:
+            if Not(RationalFunctionQ(i, x)):
+                return False
+        return True
+    return False
+
+def RationalFunctionFactors(u, x):
+    # RationalFunctionFactors[u,x] returns the product of the factors of u that are rational functions of x.
+    if ProductQ(u):
+        res = 1
+        for i in u.args:
+            if RationalFunctionQ(i, x):
+                res *= i
+        return res
+    elif RationalFunctionQ(u, x):
+        return u
+    return S(1)
+
+def NonrationalFunctionFactors(u, x):
+    if ProductQ(u):
+        res = 1
+        for i in u.args:
+            if not RationalFunctionQ(i, x):
+                res *= i
+        return res
+    elif RationalFunctionQ(u, x):
+        return S(1)
+    return u
+
+def Reverse(u):
+    if isinstance(u, list):
+        return list(reversed(u))
+    else:
+        l = list(u.args)
+        return u.func(*list(reversed(l)))
+
+def RationalFunctionExponents(u, x):
+    # (* u is a polynomial or rational function of x. *)
+    # (* RationalFunctionExponents[u,x] returns a list of the exponent of the *)
+    # (* numerator of u and the exponent of the denominator of u. *)
+    if PolynomialQ(u, x):
+        return [Exponent(u, x), 0]
+    elif IntegerPowerQ(u):
+        if PositiveQ(u.args[1]):
+            return u.args[1]*RationalFunctionExponents(u.args[0], x)
+        return  (-u.args[1])*Reverse(RationalFunctionExponents(u.args[0], x))
+    elif ProductQ(u):
+        lst1 = RationalFunctionExponents(First(u), x)
+        lst2 = RationalFunctionExponents(Rest(u), x)
+        return [lst1[0] + lst2[0], lst1[1] + lst2[1]]
+    elif SumQ(u):
+        v = Together(u)
+        if SumQ(v):
+            lst1 = RationalFunctionExponents(First(u), x)
+            lst2 = RationalFunctionExponents(Rest(u), x)
+            return [Max(lst1[0] + lst2[1], lst2[0] + lst1[1]), lst1[1] + lst2[1]]
+        else:
+            return RationalFunctionExponents(v, x)
+    return [0, 0]
+
+def RationalFunctionExpand(expr, x):
+    u_ = Wild('u')
+    v_ = Wild('v')
+    n_ = Wild('n', exclude=[x])
+    pattern = u_*v_**n_
+    match = expr.match(pattern)
+    if match:
+        print(match)
+        keys = [u_, v_, n_]
+        if len(keys) == len(match):
+            u, v, n = tuple([match[i] for i in keys])
+            if FractionQ(n) and v != x:
+                w = RationalFunctionExpand(u, x)
+                if SumQ(w):
+                    result = 0
+                    for i in w.args:
+                        result += i*v**n
+                    return result
+                else:
+                    return w*v**n
+
+    v = ExpandIntegrand(expr, x)
+    t = False
+
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x])
+    m_ = Wild('m', exclude=[x])
+    p_ = Wild('p', exclude=[x])
+
+    pattern = x**m_*(c_ + d_*x)**p_/(a_ + b_*x**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [m_, c_, d_, p_, a_, b_, n_]
+        if len(keys) == len(match):
+            m, c, d, p, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n) and m == n-1:
+                t = True
+
+    u = expr
+    if v != u and t:
+        return v
+    else:
+        v = ExpandIntegrand(RationalFunctionFactors(u, x), x)
+        w = NonrationalFunctionFactors(u, x)
+        if SumQ(v):
+            result = 0
+            for i in v:
+                result += i*w
+            return result
+
+def ExpandIntegrand(expr, x, extra=None):
+    w_ = Wild('w')
+    p_ = Wild('p', exclude=[x])
+    q_ = Wild('q', exclude=[x])
+    u_ = Wild('u')
+    v_ = Wild('v')
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x])
+    e_ = Wild('e', exclude=[x])
+    f_ = Wild('f', exclude=[x])
+    g_ = Wild('g', exclude=[x])
+    h_ = Wild('h', exclude=[x])
+    j_ = Wild('j', exclude=[x])
+    n_ = Wild('n', exclude=[x])
+    m_ = Wild('m', exclude=[x])
+    F_ = Wild('F', exclude=[x])
+    k, q, i = symbols('k q i')
+
+    if extra:
+        w = ExpandIntegrand(extra, x)
+        r = NonfreeTerms(w, x)
+        if SumQ(r):
+            result = [expr*FreeTerms(w, x)]
+            for i in r.args:
+                result.append(MergeMonomials(expr*i, x))
+            return r.func(*result)
+        else:
+            return expr*FreeTerms(w, x) + MergeMonomials(expr*r, x)
+
+    # Basis: (a+b x)^m/(c+d x)==(b (a+b x)^(m-1))/d+((a d-b c) (a+b x)^(m-1))/(d (c+d x))
+    pattern = (a_ + b_*x)**m_*f_**(e_*(c_ + d_*x)**n_)/(g_+h_*x)
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, b_, c_, d_, e_, f_, g_, h_, m_, n_]
+        if len(keys) == len(match):
+            a, b, c, d, e, f, g, h, m, n = tuple([match[i] for i in keys])
+            if PositiveIntegerQ(m) and ZeroQ(b*c - a*d):
+                tmp = a*h - b*g
+                return SimplifyTerm(tmp**m/h**m, x)*f**(e*(c + d*x)**n)/(g + h*x) + Sum(SimplifyTerm(b*tmp**(k-1)/h**k, x)*f**(e*(c+d*x)**n)*(a + b*x)**(m-k), (k, 1, m)).doit()
+
+    pattern = u_*(a_ + b_*F_**v_)**m_*(c_ + d_*F_**v_)**n_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, F_, v_, m_, c_, d_, n_]
+        if len(keys) == len(match):
+            u, a, b, F, v, m, c, d, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n) and NegativeQ(n):
+                w = ReplaceAll(ExpandIntegrand((a+b*x)**m*(c + d*x)**n, x), {x: F**v})
+                result = []
+                for i in w.args:
+                    result.append(i*u)
+                return w.func(*result)
+
+    pattern = u_*(a_ + b_*x)**m_*Log(c_*(d_ + e_*x**n_)**p_)
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, m_, c_, d_, e_, n_, p_]
+        if len(keys) == len(match):
+            u, a, b, m, c, d, e, n, p = tuple([match[i] for i in keys])
+            if PolynomialQ(u, x):
+                return ExpandIntegrand(Log(c*(d + e*x**n)**p), x, u*(a + b*x)**m)
+
+    pattern = u_*f_**(e_*(c_ + d_*x)**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, f_, e_, c_, d_, n_]
+        if len(keys) == len(match):
+            u, f, e, c, d, n = tuple([match[i] for i in keys])
+            if PolynomialQ(u,x):
+                if EqQ(n, 1):
+                    return ExpandIntegrand(f**(e*(c + d*x)**n), x, u)
+                else:
+                    return ExpandLinearProduct(f**(e*(c + d*x)**n), u, c, d, x)
+
+    pattern = u_*(a_ + b_*Log(c_*(d_*(e_ + f_*x)**p_)**q_))**n_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, c_, d_, e_, f_, p_, q_, n_]
+        if len(keys) == len(match):
+            u, a, b, c, d, e, f, p, q, n = tuple([match[i] for i in keys])
+            if PolynomialQ(u, x):
+                return ExpandLinearProduct((a + b*Log(c*(d*(e + f*x)**p)**q))**n, u, e, f, x)
+
+    pattern = (a_ + b_*u_**n_ + c_*u_**j_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, b_, u_, n_, c_, j_, p_]
+        if len(keys) == len(match):
+            a, b, u, n, c, j, p = tuple([match[i] for i in keys])
+            if IntegerQ(n) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and NonzeroQ(b**2 - 4*a*c):
+                ReplaceAll(ExpandIntegrand(1/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2),x: u**n})
+
+    pattern = u_**m_*(a_ + b_*u_**n_ + c_*u_**j_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, m_, a_, b_, n_, c_, j_, p_]
+        if len(keys) == len(match):
+            u, m, a, b, n, c, j, p = tuple([match[i] for i in keys])
+            if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0<m<2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
+                return ReplaceAll(ExpandIntegrand(1/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, 2),x: u})
+
+    # Basis: If  q=Sqrt[-a c], then a+c z^2==((-q+c z)(q+c z))/c
+    pattern = (a_ + c_*u_**n_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, c_, u_, n_, p_]
+        if len(keys) == len(match):
+            a, c, u, n, p = tuple([match[i] for i in keys])
+            if IntegerQ(n/2) and NegativeIntegerQ(p):
+                return ReplaceAll(ExpandIntegrand(1/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c,2),x: u**(n/2)})
+
+    pattern = u_**m_*(a_ + c_*u_**n_)**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, m_, a_, c_, n_, p_]
+        if len(keys) == len(match):
+            u, m, a, c, n, p = tuple([match[i] for i in keys])
+            if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0<m<n and (m != n/2):
+                return ReplaceAll(ExpandIntegrand(1/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, 2), x: u})
+
+    # Basis: 1/(a x^n+b Sqrt[c+d x^(2 n)])==(a x^n-b Sqrt[c+d x^(2 n)])/(-b^2 c+(a^2-b^2 d) x^(2 n))
+    pattern = u_/(a_*x**n_ + b_*Sqrt(c_ + d_*x**j_))
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, n_, b_, c_, d_, j_]
+        if len(keys) == len(match):
+            u, a, n, b, c, d, j = tuple([match[i] for i in keys])
+            if ZeroQ(j - 2*n):
+                return ExpandIntegrand(u*(a*x**n - b*Sqrt(c + d*x**(2*n)))/(-b**2*c + (a**2 - b**2*d)*x**(2*n)), x)
+
+    # Basis: If  q=Sqrt[b^2-4a c] and r=(2 c d-b e)/q, then (d+e z)/(a+b z+c z^2)==(e+r)/(b-q+2 c z)+(e-r)/(b+q+2 c z)*)
+    pattern = (d_ + e_*(f_ + g_*u_**n_))/(a_ + b_*u_**n_ + c_*u_**j_)
+    match = expr.match(pattern)
+    if match:
+        keys = [d_, e_, f_, g_, u_, n_, a_, b_, c_, j_]
+        if len(keys) == len(match):
+            d, e, f, g, u, n, a, b, c, j = tuple([match[i] for i in keys])
+            if ZeroQ(j - 2*n) and NonzeroQ(b*2 - 4*a*c):
+                q = Rt(b**2 - 4*a*c, 2)
+                r = TogetherSimplify((2*c*(d + e*f) - b*e*g)/q)
+                return (e*g + r)/(b - q + 2*c*u**n) + (e*g - r)/(b + q + 2*c*u**n)
+
+    # Basis: If (m|n,p,q)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<p<q<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m + e*z^p + f*z^q)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)) + (e*(r/s)^p)/(-1)^(2*k*(p/n)) + (f*(r/s)^q)/(-1)^(2*k*(q/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+    pattern = (c_ + d_*u_**m_ + e_*u_**p_ + f_*u_**q_)/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [c_, d_, u_, m_, e_, p_, f_, q_, a_, b_, n_]
+        if len(keys) == len(match):
+            c, d, u, m, e, p, f, q, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n, p, q) & 0<m<p<q<n:
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n) + r*f*(r/s)**q*(-1)**(-2*k*q/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k,1,n)).doit()
+
+    # Basis: If (m|n,p)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<p<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m + e*z^p)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)) + (e*(r/s)^p)/(-1)^(2*k*(p/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+    pattern = (c_ + d_*u_**m_ + e_*u_**p_)/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [c_, d_, u_, m_, e_, p_, a_, b_, n_]
+        if len(keys) == len(match):
+            c, d, u, m, e, p, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n, p) & 0<m<p<n:
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
+
     # Basis: (a+b x)^m/(c+d x)==(b (a+b x)^(m-1))/d+((a d-b c) (a+b x)^(m-1))/(d (c+d x))
     pattern = (a_ + b_*x)**m_/(c_ + d_*x)
     match = expr.match(pattern)
     if match:
         keys = [a_, b_, c_, d_, m_]
-        a, b, c, d, m = tuple([match[i] for i in keys])
-        if PositiveIntegerQ(m):
-            if RationalQ(a, b, c, d):
-                return ExpandExpression((a + b*x)**m/(c + d*x), x)
-            else:
-                tmp = a*d - b*c
-                result = SimplifyTerm(tmp**m / d**m, x)/(c + d*x)
-                for k in range(1, m + 1):
-                    result += SimplifyTerm(b*tmp**(k - 1)/d**k, x)*(a + b*x)**(m - k)
-                return result
+        if len(keys) == len(match):
+            a, b, c, d, m = tuple([match[i] for i in keys])
+            if PositiveIntegerQ(m):
+                if RationalQ(a, b, c, d):
+                    return ExpandExpression((a + b*x)**m/(c + d*x), x)
+                else:
+                    tmp = a*d - b*c
+                    result = SimplifyTerm(tmp**m / d**m, x)/(c + d*x)
+                    for k in range(1, m + 1):
+                        result += SimplifyTerm(b*tmp**(k - 1)/d**k, x)*(a + b*x)**(m - k)
+                    return result
+
+    pattern = (c_ + d_*u_**m_)/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [c_, d_, u_, m_, a_, b_, n_]
+        if len(keys) == len(match):
+            c, d, u, m, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m,n) & 0<m<n:
+                # *Basis: If (m|n)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n))/(a*n*(r-(-1)**(2*k/n)*s*u)),(k,1,n)).doit()
+            elif ZeroQ(n - 2*m):
+                # q=Sqrt[-(a/b)], then (c+d z)/(a+b z^2)==-((c-d q)/(2 b q(q+z)))-(c+d q)/(2 b q(q-z))
+                j = n
+                n = m
+                q = Rt(-a/b, 2)
+                return -(c - d*q)/(2*b*q*(q + u**n)) - (c + d*q)/(2*b*q*(q - u**n))
+
+    pattern = 1/(a_ + b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, b_, u_, n_]
+        if len(keys) == len(match):
+            a, b, u, n = tuple([match[i] for i in keys])
+            if n == 3:
+                # Basis: Let r/s=(-(a/b))^(1/3), then  1/(a+b z^3)==r/(3a(r-s z))+(r(2 r+s z))/(3a(r^2+r s z+s^2 z^2))
+                r = Numerator(Rt(-a/b, 3))
+                s = Denominator(Rt(-a/b, 3))
+                return r/(3*a*(r - s*u)) + r*(2*r + s*u)/(3*a*(r**2 + r*s*u + s**2*u**2))
+            elif PositiveIntegerQ(n/4):
+                # Let r/s=Sqrt[-(a/b)], then  1/(a+b z^2)==r/(2a(r-s z))+r/(2a(r+s z))
+                r = Numerator(Rt(-a/b,2))
+                s = Denominator(Rt(-a/b, 2))
+                return r/(2*a*(r - s*u**(n/2))) + r/(2*a*(r + s*u**(n/2)))
+            elif IntegerQ(n) & PositiveQ(n):
+                # Basis: If  n\[Element]SuperPlus[\[DoubleStruckCapitalZ]], let r/s=(-(a/b))^(1/n), then  1/(a + b*z^n) == (r*Sum[1/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
+                r = Numerator(Rt(-a/b, n))
+                s = Denominator(Rt(-a/b, n))
+                return Sum(r/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
 
     # If u is a polynomial in x, ExpandIntegrand[u*(a+b*x)^m,x] expand u*(a+b*x)^m into a sum of terms of the form A*(a+b*x)^n.
     pattern = u_*(a_ + b_*x)**m_
     match = expr.match(pattern)
     if match:
         keys = [u_, a_, b_, m_]
-        u, a, b, m = tuple([match[i] for i in keys])
-        try:
-            w, c, d, p = MatchQ(u, w_*(c_+d_*x)**p_, w_, c_, d_, p_)
-            res = IntegerQ(p) & p > m
-        except: # if not matched
-            res = False
-
-        if PolynomialQ(u, x) and Not(PositiveIntegerQ(m) and res):
-            tmp1 = ExpandLinearProduct((a+b*x)**m, u, a, b, x)
-            if not IntegerQ(m):
-                return tmp1
-            else:
-                tmp2 = ExpandExpression(u*(a+b*x)**m, x)
-                if SumQ(tmp2) and (LeafCount(tmp2) <= LeafCount(tmp1)+2):
-                    return tmp2
-                else:
+        if len(keys) == len(match):
+            u, a, b, m = tuple([match[i] for i in keys])
+            try:
+                w, c, d, p = MatchQ(u, w_*(c_+d_*x)**p_, w_, c_, d_, p_)
+                res = IntegerQ(p) & p > m
+            except: # if not matched
+                res = False
+            if PolynomialQ(u, x) and Not(PositiveIntegerQ(m) and res):
+                tmp1 = ExpandLinearProduct((a+b*x)**m, u, a, b, x)
+                if not IntegerQ(m):
                     return tmp1
-
-    # *Basis: If (m|n)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
-    pattern = (c_ + d_*u_**m_)/(a_ + b_*u_**n_)
-    match = expr.match(pattern)
-    if match:
-        keys = [c_, d_, u_, m_, a_, b_, u_, n_]
-        c, d, u, m, a, b, u, n = tuple([match[i] for i in keys])
-        if IntegersQ[m,n] & 0<m<n:
-            r = Numerator(Rt(-a/b, n))
-            s = Denominator(Rt(-a/b, n))
-            k = 1
-            return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n))/(a*n*(r-(-1)**(2*k/n)*s*u)),(k,1,n))
-
+                else:
+                    tmp2 = ExpandExpression(u*(a+b*x)**m, x)
+                    if SumQ(tmp2) and (LeafCount(tmp2) <= LeafCount(tmp1)+2):
+                        return tmp2
+                    else:
+                        return tmp1
 
     pattern = u_*v_**n_*(a_ + b_*x)**m_
     match = expr.match(pattern)
     if match:
         keys = [u_, v_, n_, a_, b_, m_]
-        u, v, n, a, b, m = tuple([match[i] for i in keys])
-        if NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & RationalQ(m) & (m < -1) & (Exponent(u, x) >= -(n+IntegerPart(m))*Exponent(v, x)):
-            pr = PolynomialQuotientRemainder(u, v**(-n)*(a + b*x)**(-IntegerPart(m)), x)
-            return ExpandIntegrand(pr[0]*(a + b*x)**FractionalPart(m), x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
-        elif NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & (Exponent(u, x) >= -n*Exponent(v, x)):
-            pr = PolynomialQuotientRemainder(u, v**(-n),x)
-            return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
+        if len(keys) == len(match):
+            u, v, n, a, b, m = tuple([match[i] for i in keys])
+            if NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & RationalQ(m) & (m < -1) & (Exponent(u, x) >= -(n+IntegerPart(m))*Exponent(v, x)):
+                pr = PolynomialQuotientRemainder(u, v**(-n)*(a + b*x)**(-IntegerPart(m)), x)
+                return ExpandIntegrand(pr[0]*(a + b*x)**FractionalPart(m), x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
+            elif NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & (Exponent(u, x) >= -n*Exponent(v, x)):
+                pr = PolynomialQuotientRemainder(u, v**(-n),x)
+                return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
 
     # Basis: If  (m|(n-1)/2)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(a/b)^(1/n), then z^m/(a + b*z^n) == (r*(-(r/s))^m*Sum[1/((-1)^(2*k*(m/n))*(r + (-1)^(2*(k/n))*s*z)), {k, 1, n}])/(a*n) == (r*(-(r/s))^m*Sum[(-1)^(2*k*((m + 1)/n))/((-1)^(2*(k/n))*r + s*z), {k, 1, n}])/(a*n)
     pattern = u_**m_/(a_+b_*u_**n_)
     match = expr.match(pattern)
     if match:
-        if IntegerQ(m, n) & 0<m<n & OddQ(n/GCD(m, n)) & PosQ(a/b):
-            g = GCD(m, n)
-            r = Numerator(Rt(a/b, n/GCD(m, n)))
-            s = Denominator(Rt(a/b, n/GCD(m, n)))
-            k = 1
-            if CoprimeQ(m + g, n):
-                return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g))
-            else:
-                return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g))
-        elif IntegersQ(m, n) & 0<m<n:
-            g = GCD(m, n)
-            r = Numerator(Rt(-a/b, n/GCD(m, n)))
-            s = Denominator(Rt(-a/b, n/GCD(m, n)))
-            if n/g == 2:
-                return s/(2*b*(r+s*u^g)) - s/(2*b*(r-s*u^g))
-            else:
-                if CoprimeQ[m+g,n]:
-                    return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g))
+        keys = [u_, m_, a_, b_, n_]
+        if len(keys) == len(match):
+            u, m, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n) & 0 < m < n & OddQ(n/GCD(m, n)) & PosQ(a/b):
+                g = GCD(m, n)
+                r = Numerator(Rt(a/b, n/GCD(m, n)))
+                s = Denominator(Rt(a/b, n/GCD(m, n)))
+                if CoprimeQ(m + g, n):
+                    return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g)).doit()
                 else:
-                    return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g))
+                    return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g)).doit()
+            elif IntegersQ(m, n) & 0<m<n:
+                g = GCD(m, n)
+                r = Numerator(Rt(-a/b, n/GCD(m, n)))
+                s = Denominator(Rt(-a/b, n/GCD(m, n)))
+                if n/g == 2:
+                    return s/(2*b*(r+s*u^g)) - s/(2*b*(r-s*u^g))
+                else:
+                    if CoprimeQ[m+g,n]:
+                        return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g)).doit()
+                    else:
+                        return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g)).doit()
+
+    pattern = u_/v_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, v_]
+        if len(keys) == len(match):
+            u, v = tuple([match[i] for i in keys])
+            if PolynomialQ(u, x) and PolynomialQ(v, x) and BinomialQ(v,x) and (Exponent(u, x) == Exponent(v, x)-1 >= 2):
+                lst = CoefficientList(u, x)
+                return lst[-1]*x**Exponent[u,x]/v + Sum(lst[i]*x**(i-1),(i, 1, Exponent[u,x])).doit()/v
+            elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x)>=Exponent(v, x):
+                return PolynomialDivide(u, v, x)
 
     #return None
     return expr.expand()
@@ -1668,3 +2213,162 @@ def Drop(lst, n):
     else:
         return lst
     return lst
+
+def PolynomialGCD(f, g):
+    return gcd(f, g)
+
+def PolyGCD(u, v, x):
+    # (* u and v are polynomials in x. *)
+    # (* PolyGCD[u,v,x] returns the factors of the gcd of u and v dependent on x. *)
+    return NonfreeFactors(PolynomialGCD(u, v), x)
+
+def AlgebraicFunctionFactors(u, x, flag=False):
+    # (* AlgebraicFunctionFactors[u,x] returns the product of the factors of u that are algebraic functions of x. *)
+    if ProductQ(u):
+        result = 1
+        for i in u.args:
+            if AlgebraicFunctionQ(i, x, flag):
+                result *= i
+        return result
+    if AlgebraicFunctionQ(u, x, flag):
+        return u
+    return 1
+
+def NonalgebraicFunctionFactors(u, x):
+    # (* NonalgebraicFunctionFactors[u,x] returns the product of the factors of u that are not algebraic functions of x. *)
+    if ProductQ(u):
+        result = 1
+        for i in u.args:
+            if not AlgebraicFunctionQ(i, x):
+                result *= i
+        return result
+    if AlgebraicFunctionQ(u, x):
+        return 1
+    return u
+
+def QuotientOfLinearsP(u, x):
+    if LinearQ(u, x):
+        return True
+    elif SumQ(u):
+        if FreeQ(u.args[0], x):
+            return QuotientOfLinearsP(Rest(u), x)
+    elif LinearQ(Numerator(u), x) and LinearQ(Denominator(u), x):
+        return True
+    elif ProductQ(u):
+        if FreeQ(First(u), x):
+            return QuotientOfLinearsP(Rest(u), x)
+    elif Numerator(u) == 1 and PowerQ(u):
+        return QuotientOfLinearsP(Denominator(u))
+    return u == x or FreeQ(u, x)
+
+def QuotientOfLinearsParts(u, x):
+    # If u is equivalent to an expression of the form (a+b*x)/(c+d*x), QuotientOfLinearsParts[u,x]
+    #	returns the list {a, b, c, d}.
+    if LinearQ(u, x):
+        return [Coefficient(u, x, 0), Coefficient(u, x, 1), 1, 0]
+    elif PowerQ(u):
+        if Numerator(u) == 1:
+            u = Denominator(u)
+            r = QuotientOfLinearsParts(u, x)
+            return [r[2], r[3], r[0], r[1]]
+    elif SumQ(u):
+        a = First(u)
+        if FreeQ(a, x):
+            u = Rest(u)
+            r = QuotientOfLinearsParts(u, x)
+            return [r[0] + a*r[2], r[1] + a*r[3], r[2], r[3]]
+    elif ProductQ(u):
+        a = First(u)
+        if FreeQ(a, x):
+            r = QuotientOfLinearsParts(Rest(u), x)
+            return [a*r[0], a*r[1], r[2], r[3]]
+        a = Numerator(u)
+        d = Denominator(u)
+        if LinearQ(a, x) and LinearQ(d, x):
+            return [Coefficient(a, x, 0), Coefficient(a, x, 1), Coefficient(d, x, 0), Coefficient(d, x, 1)]
+    elif u == x:
+        return [0, 1, 1, 0]
+    elif FreeQ(u, x):
+        return [u, 0, 1, 0]
+    return [u, 0, 1, 0]
+
+def QuotientOfLinearsQ(u, x):
+    # (*QuotientOfLinearsQ[u,x] returns True iff u is equivalent to an expression of the form (a+b x)/(c+d x) where b!=0 and d!=0.*)
+    if ListQ(u):
+        for i in u:
+            if not QuotientOfLinearsQ(i, x):
+                return False
+        return True
+    q = QuotientOfLinearsParts(u, x)
+    return QuotientOfLinearsP(u, x) and NonzeroQ(q[1]) and NonzeroQ(q[3])
+
+def Flatten(l):
+    return flatten(l)
+
+def Sort(u, r=False):
+    return sorted(u, key=lambda x: x.sort_key(), reverse=r)
+
+# (*Definition: A number is absurd if it is a rational number, a positive rational number raised to a fractional power, or a product of absurd numbers.*)
+def AbsurdNumberQ(u):
+    # (* AbsurdNumberQ[u] returns True if u is an absurd number, else it returns False. *)
+    if PowerQ(u):
+        v = u.exp
+        u = u.base
+        return RationalQ(u) and u > 0 and FractionQ(v)
+    elif ProductQ(u):
+        return all(AbsurdNumberQ(i) for i in u.args)
+    return RationalQ(u)
+
+def AbsurdNumberFactors(u):
+    # (* AbsurdNumberFactors[u] returns the product of the factors of u that are absurd numbers. *)
+    if AbsurdNumberQ(u):
+        return u
+    elif ProductQ(u):
+        result = 1
+        for i in u:
+            if AbsurdNumberQ(i):
+                result *= i
+        return result
+    return NumericFactor(u)
+
+def NonabsurdNumberFactors(u):
+    # (* NonabsurdNumberFactors[u] returns the product of the factors of u that are not absurd numbers. *)
+    if AbsurdNumberQ(u):
+        return 1
+    elif ProductQ(u):
+        result = 1
+        for i in u.args:
+            result *= NonabsurdNumberFactors(i)
+        return result
+    return NonnumericFactors(u)
+
+def SumSimplerQ(u, v):
+    return u + v
+
+def SimplerQ(u, v):
+    return u
+
+def Prepend(l1, l2):
+    return l2 + l1
+
+def Drop(lst, n):
+    # gives list with its first n elements dropped.
+    return lst[(n-1):]
+
+def CombineExponents(lst):
+    if Length(lst) < 2:
+        return lst
+    elif lst[0][0] == lst[1][0]:
+        return CombineExponents(Prepend(Drop(lst,2),[lst[0][0], lst[0][1] + lst[1][1]]))
+    return Prepend(CombineExponents(Rest(lst)), First(lst))
+
+def FactorAbsurdNumber(m):
+    # (* m must be an absurd number.  FactorAbsurdNumber[m] returns the prime factorization of m *)
+    # (* as list of base-degree pairs where the bases are prime numbers and the degrees are rational. *)
+    if RationalQ(m):
+        return FactorInteger(m)
+    elif PowerQ(m):
+        r = FactorInteger(m.base)
+        return [r[0], r[1]*m.exp]
+    #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
+    return CombineExponents
