@@ -13,4 +13,8 @@ RUN conda install python=3.6 rever requests requests-oauthlib \
 RUN conda info
 RUN /opt/conda/bin/pip install xonda
 
+# Make matplotlib tests work
+# https://stackoverflow.com/questions/2801882/generating-a-png-with-matplotlib-when-display-is-undefined
+RUN echo "backend : Agg" >> $(python -c 'import matplotlib;print(matplotlib.matplotlib_fname())')
+
 RUN git clone git://github.com/sympy/sympy.git
