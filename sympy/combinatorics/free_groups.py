@@ -861,7 +861,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         s = gen.array_form[0]
         return s[1]*sum([abs(i[1]) for i in self.array_form if i[0] == s[0]])
 
-    def subword(self, from_i, to_j):
+    def subword(self, from_i, to_j, strict=True):
         """
         For an associative word `self` and two positive integers `from_i` and
         `to_j`, `subword` returns the subword of `self` that begins at position
@@ -878,6 +878,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
+        if not strict:
+            from_i = max(from_i, 0)
+            to_j = min(len(self), to_j)
         if from_i < 0 or to_j > len(self):
             raise ValueError("`from_i`, `to_j` must be positive and no greater than "
                     "the length of associative word")
