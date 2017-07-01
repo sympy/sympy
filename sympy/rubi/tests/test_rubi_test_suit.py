@@ -16,6 +16,9 @@ from sympy import I, simplify
 a, b, c, d, e, f, m, n, x, u = symbols('a b c d e f m n x u', real=True, imaginary=False)
 
 def test_rubi_algebriac_1_2():
+    '''
+    Prints <integrand> <number of passed tests> <number of failed tests> <number of integrands matched by MatchPy>
+    '''
     passed = 0
     fail = 0
     matched = 0

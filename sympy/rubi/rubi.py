@@ -13,7 +13,7 @@ rubi = rubi_object()
 def rubi_integrate(expr, var):
     '''
     Main function for Rubi integeration.
-    returns 0 if expr is not integrated
+    Returns 1 if expr is not integrated(this is only temporary, I will remove this later).
     '''
     if expr == None:
         return S(1)
