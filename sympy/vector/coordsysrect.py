@@ -10,16 +10,13 @@ from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 
 
-def CoordSysCartesian(name, location=None, rotation_matrix=None,
-                parent=None, vector_names=None, variable_names=None):
+def CoordSysCartesian(*args, **kwargs):
     SymPyDeprecationWarning(
         feature="CoordSysCartesian",
         useinstead="CoordSys3D",
         deprecated_since_version="1.1"
     ).warn()
-
-    return CoordSys3D(name, location, rotation_matrix,
-                parent, vector_names, variable_names)
+    return CoordSys3D(*args, **kwargs)
 
 
 class CoordSys3D(Basic):
