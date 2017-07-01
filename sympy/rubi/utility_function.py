@@ -12,9 +12,12 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
+from sympy.simplify.simplify import nthroot
+from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand)
-from mpmath import ellippi, ellipe, ellipf, appellf1, nthroot
+from mpmath import ellippi, ellipe, ellipf, appellf1
+from sympy.utilities.iterables import flatten
 
 def Int(expr, var):
     from .rubi import rubi_integrate
@@ -133,15 +136,14 @@ def IntPart(u):
     if ProductQ(u):
         if IntegerQ(First(u)):
             return First(u)*IntPart(Rest(u))
-
-    if IntegerQ(u):
+    elif IntegerQ(u):
         return u
     elif FractionQ(u):
         return IntegerPart(u)
     elif SumQ(u):
         res = 0
         for i in u.args:
-            res += IntPart(u)
+            res += IntPart(i)
         return res
     else:
         return 0
@@ -904,7 +906,7 @@ def GCD(*args):
     return gcd(*args)
 
 def ContentFactor(expn):
-    return ContentFactorAux(expn)
+    return factor_terms(expn)
 
 def NumericFactor(u):
     # returns the real numeric factor of u.
@@ -916,11 +918,11 @@ def NumericFactor(u):
         else:
             return S(1)
     elif PowerQ(u):
-        if RationalQ(u.args[0]) and RationalQ(u.args[1]):
-            if u.args[1] > 0:
-                return 1/Denominator(u.args[1])
+        if RationalQ(u.base) and RationalQ(u.exp):
+            if u.exp > 0:
+                return 1/Denominator(u.base)
             else:
-                return 1/(1/Denominator(u.args[1]))
+                return 1/(1/Denominator(u.base))
         else:
             return S(1)
     elif ProductQ(u):
@@ -940,6 +942,36 @@ def NumericFactor(u):
             else:
                 return GCD(m, n)
     return S(1)
+
+def NonnumericFactors(u):
+    if NumberQ(u):
+        if ZeroQ(Im(u)):
+            return S(1)
+        elif ZeroQ(Re(u)):
+            return I
+        return u
+    elif PowerQ(u):
+        if RationalQ(u.base) and FractionQ(u.exp):
+            return u/NumericFactor(u)
+        return u
+    elif ProductQ(u):
+        result = 1
+        for i in u.args:
+            result *= NonnumericFactors(i)
+        return result
+    elif SumQ(u):
+        if LeafCount(u) < 50:
+            i = ContentFactor(u)
+            if SumQ(i):
+                return u
+            else:
+                return NonnumericFactors(i)
+        n = NumericFactor(u)
+        result = 0
+        for i in u.args:
+            result += i/n
+        return result
+    return u
 
 def ExpandExpression(expr, x):
     return expr.expand()
@@ -1003,41 +1035,36 @@ def RemoveContentAux(expr, x):
         pattern = a_**m_*u_ + b_*v_
         match = expr.match(pattern)
         if match:
-            try:
-                keys = [a_, m_, u_, b_, v_]
+            keys = [a_, m_, u_, b_, v_]
+            if len(keys) == len(match):
                 a, m, u, b, v = tuple([match[i] for i in keys])
                 if IntegersQ(a, b) & (a + b == 0) & RationalQ(m):
                     if m > 0:
                         return RemoveContentAux(a**(m - 1)*u - v, x)
                     else:
                         return RemoveContentAux(u - a**(1 - m)*v, x)
-            except:
-                pass
+
 
         pattern = a_**m_*u_ + a_**n_*v_
         match = expr.match(pattern)
         if match:
-            try:
-                keys = [a_, m_, u_, n_, v_]
+            keys = [a_, m_, u_, n_, v_]
+            if len(keys) == len(match):
                 a, m, u, n, v = tuple([match[i] for i in keys])
                 if FreeQ(a, x) & RationalQ(m, n) & (n - m >= 0) & (m != 0):
                     return RemoveContentAux(u + a**(n - m)*v, x)
-            except:
-                pass
 
-        '''
         pattern = a_**m_*u_ + a_**n_*v_ + a_**p_*w_
         match = expr.match(pattern)
         if match:
             keys = [a_, m_, u_, n_, v_, p_, w_]
-            a, m, u, n, v, p, w = tuple([match[i] for i in keys])
-            if RationalQ(m, n, p) & (n - m >= 0) & (p - m >= 0):
-                return RemoveContentAux(u + a**(n - m)*v + a**(p - m)*w, x)
-
+            if len(keys) == len(match):
+                a, m, u, n, v, p, w = tuple([match[i] for i in keys])
+                if RationalQ(m, n, p) & (n - m >= 0) & (p - m >= 0):
+                    return RemoveContentAux(u + a**(n - m)*v + a**(p - m)*w, x)
 
         if NegQ(First(expr)):
             return -expr
-        '''
 
     return expr
 
@@ -1845,3 +1872,43 @@ def QuotientOfLinearsQ(u, x):
         return True
     q = QuotientOfLinearsParts(u, x)
     return QuotientOfLinearsP(u, x) and NonzeroQ(q[1]) and NonzeroQ(q[3])
+
+def Flatten(l):
+    return flatten(l)
+
+def Sort(u, r=False):
+    return sorted(u, key=lambda x: x.sort_key(), reverse=r)
+
+# (*Definition: A number is absurd if it is a rational number, a positive rational number raised to a fractional power, or a product of absurd numbers.*)
+def AbsurdNumberQ(u):
+    # (* AbsurdNumberQ[u] returns True if u is an absurd number, else it returns False. *)
+    if PowerQ(u):
+        v = u.exp
+        u = u.base
+        return RationalQ(u) and u > 0 and FractionQ(v)
+    elif ProductQ(u):
+        return all(AbsurdNumberQ(i) for i in u.args)
+    return RationalQ(u)
+
+def AbsurdNumberFactors(u):
+    # (* AbsurdNumberFactors[u] returns the product of the factors of u that are absurd numbers. *)
+    if AbsurdNumberQ(u):
+        return u
+    elif ProductQ(u):
+        result = 1
+        for i in u:
+            if AbsurdNumberQ(i):
+                result *= i
+        return result
+    return NumericFactor(u)
+
+def NonabsurdNumberFactors(u):
+    # (* NonabsurdNumberFactors[u] returns the product of the factors of u that are not absurd numbers. *)
+    if AbsurdNumberQ(u):
+        return 1
+    elif ProductQ(u):
+        result = 1
+        for i in u.args:
+            result *= NonabsurdNumberFactors(i)
+        return result
+    return NonnumericFactors(u)
