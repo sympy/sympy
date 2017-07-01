@@ -24,6 +24,7 @@ $ACTIVITIES = [
     # 'version_bump',
     '_version',
     'mailmap_update',
+    'test_sympy',
     'source_tarball',
     'build_docs',
     'copy_release_files',
@@ -57,7 +58,11 @@ def mailmap_update():
     with run_in_conda_env(['python=3.6', 'mpmath']):
         ./bin/mailmap_update.py
 
-@activity(deps={'_version', 'mailmap_update'})
+@activity
+def test_sympy():
+    ./setup.py test
+
+@activity(deps={'_version', 'mailmap_update', 'test_sympy'})
 def source_tarball():
     with run_in_conda_env(['mpmath', 'python=3.6'], 'sympy-release'):
         # Assumes this is run in Docker and git is already clean
@@ -197,7 +202,7 @@ def _md5(_print=True):
         print(out)
     return out
 
-@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball33', 'test_tarball34', 'test_tarball35', 'test_tarball36'})
+@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball33', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
 def release():
     pass
 
