@@ -531,7 +531,7 @@ def table():
 
     This is for pasting into the GitHub releases page. See GitHub_release().
     """
-    tarball_formatter_dict = {**tarball_format}
+    tarball_formatter_dict = dict(tarball_format)
     shortversion = get_sympy_short_version()
 
     tarball_formatter_dict['version'] = shortversion
