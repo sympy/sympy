@@ -241,21 +241,21 @@ def test_autowrap_custom_printer():
         '}\n'
     )
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # write a trivial header file to use in the generated code
-        open(os.path.join(tmpdir, 'shortpi.h'), 'w').write('#define S_PI 3.14')
+    tmpdir = tempfile.mkdtemp()
+    # write a trivial header file to use in the generated code
+    open(os.path.join(tmpdir, 'shortpi.h'), 'w').write('#define S_PI 3.14')
 
-        func = autowrap(expr, backend='cython', tempdir=tmpdir, code_gen=gen)
+    func = autowrap(expr, backend='cython', tempdir=tmpdir, code_gen=gen)
 
-        assert func(4.2) == 3.14 * 4.2
+    assert func(4.2) == 3.14 * 4.2
 
-        # check that the generated code is correct
-        for filename in os.listdir(tmpdir):
-            if filename.startswith('wrapped_code') and filename.endswith('.c'):
-                with open(os.path.join(tmpdir, filename)) as f:
-                    lines = f.readlines()
-                    expected = expected % filename.replace('.c', '.h')
-                    assert ''.join(lines[7:]) == expected
+    # check that the generated code is correct
+    for filename in os.listdir(tmpdir):
+        if filename.startswith('wrapped_code') and filename.endswith('.c'):
+            with open(os.path.join(tmpdir, filename)) as f:
+                lines = f.readlines()
+                expected = expected % filename.replace('.c', '.h')
+                assert ''.join(lines[7:]) == expected
 
 
 # Numpy
