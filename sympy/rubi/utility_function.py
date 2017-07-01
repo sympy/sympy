@@ -13,9 +13,8 @@ from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
-    Symbol, symbols, sqf_list, sqf, Max)
-from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
-
+    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand)
+from mpmath import ellippi, ellipe, ellipf, appellf1, nthroot
 
 def Int(expr, var):
     from .rubi import rubi_integrate
@@ -62,7 +61,7 @@ def ZeroQ(expr):
 
 def NegativeQ(u):
     res = u < 0
-    if not res.is_Rational:
+    if not res.is_Relational:
         return res
     return False
 
@@ -83,7 +82,7 @@ def Log(e):
 
 def PositiveQ(var):
     res = var > 0
-    if not res.is_Rational:
+    if not res.is_Relational:
         return res
     return False
 
@@ -216,10 +215,10 @@ def SqrtNumberSumQ(u):
     return SumQ(u) & SqrtNumberQ(First(u)) & SqrtNumberQ(Rest(u)) | ProductQ(u) & SqrtNumberQ(First(u)) & SqrtNumberSumQ(Rest(u))
 
 def LinearQ(expr, x):
-    if degree(expr, gen=x) == 1:
-        return True
-    else:
-        return False
+    if expr.is_polynomial(x):
+        if degree(Poly(expr, x), gen=x) == 1:
+            return True
+    return False
 
 def Sqrt(a):
     return sqrt(a)
@@ -238,12 +237,16 @@ def Denominator(var):
     return fraction(var)[1]
 
 def Hypergeometric2F1(a, b, c, z):
-    return hyp2f1(a, b, c, z)
+    return hyperexpand(hyper([a, b], [c], z))
 
 def ArcTan(a):
     return atan(a)
 
 def Not(var):
+    if isinstance(var, bool):
+        return not var
+    elif var.is_Relational:
+        var = False
     return not var
 
 def Simplify(expr):
@@ -290,25 +293,37 @@ def ArcCsch(a):
 
 def LessEqual(*args):
     for i in range(0, len(args) - 1):
-        if args[i] > args[i + 1]:
+        try:
+            if args[i] > args[i + 1]:
+                return False
+        except:
             return False
     return True
 
 def Less(*args):
     for i in range(0, len(args) - 1):
-        if args[i] >= args[i + 1]:
+        try:
+            if args[i] >= args[i + 1]:
+                return False
+        except:
             return False
     return True
 
 def Greater(*args):
     for i in range(0, len(args) - 1):
-        if args[i] <= args[i + 1]:
+        try:
+            if args[i] <= args[i + 1]:
+                return False
+        except:
             return False
     return True
 
 def GreaterEqual(*args):
     for i in range(0, len(args) - 1):
-        if args[i] < args[i + 1]:
+        try:
+            if args[i] < args[i + 1]:
+                return False
+        except:
             return False
     return True
 
@@ -478,7 +493,7 @@ def InverseFunctionFreeQ(u, x):
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) | CalculusQ(u) | u.func == hyp2f1 | u.func == appellf1:
+        if InverseFunctionQ(u) | CalculusQ(u) | u.func == hyper | u.func == appellf1:
             return FreeQ(u, x)
         else:
             for i in u.args:
@@ -1338,7 +1353,7 @@ def RationalFunctionFactors(u, x):
     # RationalFunctionFactors[u,x] returns the product of the factors of u that are rational functions of x.
     if ProductQ(u):
         res = 1
-        for i in u:
+        for i in u.args:
             if RationalFunctionQ(i, x):
                 res *= i
         return res
@@ -1387,6 +1402,58 @@ def RationalFunctionExponents(u, x):
         else:
             return RationalFunctionExponents(v, x)
     return [0, 0]
+
+def RationalFunctionExpand(expr, x):
+    u_ = Wild('u')
+    v_ = Wild('v')
+    n_ = Wild('n', exclude=[x])
+    pattern = u_*v_**n_
+    match = expr.match(pattern)
+    if match:
+        print(match)
+        keys = [u_, v_, n_]
+        if len(keys) == len(match):
+            u, v, n = tuple([match[i] for i in keys])
+            if FractionQ(n) and v != x:
+                w = RationalFunctionExpand(u, x)
+                if SumQ(w):
+                    result = 0
+                    for i in w.args:
+                        result += i*v**n
+                    return result
+                else:
+                    return w*v**n
+
+    v = ExpandIntegrand(expr, x)
+    t = False
+
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x])
+    m_ = Wild('m', exclude=[x])
+    p_ = Wild('p', exclude=[x])
+
+    pattern = x**m_*(c_ + d_*x)**p_/(a_ + b_*x**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [m_, c_, d_, p_, a_, b_, n_]
+        if len(keys) == len(match):
+            m, c, d, p, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n) and m == n-1:
+                t = True
+
+    u = expr
+    if v != u and t:
+        return v
+    else:
+        v = ExpandIntegrand(RationalFunctionFactors(u, x), x)
+        w = NonrationalFunctionFactors(u, x)
+        if SumQ(v):
+            result = 0
+            for i in v:
+                result += i*w
+            return result
 
 def ExpandIntegrand(expr, x, extra=None):
     w_ = Wild('w')
@@ -1690,3 +1757,91 @@ def ExpandIntegrand(expr, x, extra=None):
 
     #return None
     return expr.expand()
+
+def PolynomialGCD(f, g):
+    return gcd(f, g)
+
+def PolyGCD(u, v, x):
+    # (* u and v are polynomials in x. *)
+    # (* PolyGCD[u,v,x] returns the factors of the gcd of u and v dependent on x. *)
+    return NonfreeFactors(PolynomialGCD(u, v), x)
+
+def AlgebraicFunctionFactors(u, x, flag=False):
+    # (* AlgebraicFunctionFactors[u,x] returns the product of the factors of u that are algebraic functions of x. *)
+    if ProductQ(u):
+        result = 1
+        for i in u.args:
+            if AlgebraicFunctionQ(i, x, flag):
+                result *= i
+        return result
+    if AlgebraicFunctionQ(u, x, flag):
+        return u
+    return 1
+
+def NonalgebraicFunctionFactors(u, x):
+    # (* NonalgebraicFunctionFactors[u,x] returns the product of the factors of u that are not algebraic functions of x. *)
+    if ProductQ(u):
+        result = 1
+        for i in u.args:
+            if not AlgebraicFunctionQ(i, x):
+                result *= i
+        return result
+    if AlgebraicFunctionQ(u, x):
+        return 1
+    return u
+
+def QuotientOfLinearsP(u, x):
+    if LinearQ(u, x):
+        return True
+    elif SumQ(u):
+        if FreeQ(u.args[0], x):
+            return QuotientOfLinearsP(Rest(u), x)
+    elif LinearQ(Numerator(u), x) and LinearQ(Denominator(u), x):
+        return True
+    elif ProductQ(u):
+        if FreeQ(First(u), x):
+            return QuotientOfLinearsP(Rest(u), x)
+    elif Numerator(u) == 1 and PowerQ(u):
+        return QuotientOfLinearsP(Denominator(u))
+    return u == x or FreeQ(u, x)
+
+def QuotientOfLinearsParts(u, x):
+    # If u is equivalent to an expression of the form (a+b*x)/(c+d*x), QuotientOfLinearsParts[u,x]
+    #	returns the list {a, b, c, d}.
+    if LinearQ(u, x):
+        return [Coefficient(u, x, 0), Coefficient(u, x, 1), 1, 0]
+    elif PowerQ(u):
+        if Numerator(u) == 1:
+            u = Denominator(u)
+            r = QuotientOfLinearsParts(u, x)
+            return [r[2], r[3], r[0], r[1]]
+    elif SumQ(u):
+        a = First(u)
+        if FreeQ(a, x):
+            u = Rest(u)
+            r = QuotientOfLinearsParts(u, x)
+            return [r[0] + a*r[2], r[1] + a*r[3], r[2], r[3]]
+    elif ProductQ(u):
+        a = First(u)
+        if FreeQ(a, x):
+            r = QuotientOfLinearsParts(Rest(u), x)
+            return [a*r[0], a*r[1], r[2], r[3]]
+        a = Numerator(u)
+        d = Denominator(u)
+        if LinearQ(a, x) and LinearQ(d, x):
+            return [Coefficient(a, x, 0), Coefficient(a, x, 1), Coefficient(d, x, 0), Coefficient(d, x, 1)]
+    elif u == x:
+        return [0, 1, 1, 0]
+    elif FreeQ(u, x):
+        return [u, 0, 1, 0]
+    return [u, 0, 1, 0]
+
+def QuotientOfLinearsQ(u, x):
+    # (*QuotientOfLinearsQ[u,x] returns True iff u is equivalent to an expression of the form (a+b x)/(c+d x) where b!=0 and d!=0.*)
+    if ListQ(u):
+        for i in u:
+            if not QuotientOfLinearsQ(i, x):
+                return False
+        return True
+    q = QuotientOfLinearsParts(u, x)
+    return QuotientOfLinearsP(u, x) and NonzeroQ(q[1]) and NonzeroQ(q[3])

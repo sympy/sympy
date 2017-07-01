@@ -82,6 +82,7 @@ def test_ArcCosh():
     assert ArcCosh(x) == acosh(x)
 
 def test_LinearQ():
+    assert not LinearQ(a, x)
     assert LinearQ(3*x + y**2, x)
     assert not LinearQ(3*x + y**2, y)
 
@@ -101,9 +102,7 @@ def test_Denominator():
     assert Denominator(S(4)/5) == 5
 
 def test_Hypergeometric2F1():
-    assert Hypergeometric2F1(2, (1,2), 4, 0.75) == 1.303703703703703703703704
-    assert Hypergeometric2F1(2, (1,2), 4, 1) == 1.6
-    assert Hypergeometric2F1(2, (1,2), 4, 0.25j) == (0.9931169055799728251931672 + 0.06154836525312066938147793j)
+    assert Hypergeometric2F1(1, 2, 3, x) == -2/x - 2*log(-x + 1)/x**2
 
 def test_ArcTan():
     assert ArcTan(x) == atan(x)
@@ -686,3 +685,45 @@ def test_RationalFunctionExponents():
     assert RationalFunctionExponents(x**(-1), x)== [0, 1]
     assert RationalFunctionExponents(x**(-1)*a, x) == [0, 1]
     assert RationalFunctionExponents(x**(-1) + a, x) == [1, 1]
+
+def test_PolynomialGCD():
+    assert PolynomialGCD(x**2 - 1, x**2 - 3*x + 2) == x - 1
+
+def test_PolyGCD():
+    assert PolyGCD(x**2 - 1, x**2 - 3*x + 2, x) == x - 1
+
+def test_AlgebraicFunctionFactors():
+    assert AlgebraicFunctionFactors(sin(x)*x, x) == x
+    assert AlgebraicFunctionFactors(sin(x), x) == 1
+    assert AlgebraicFunctionFactors(x, x) == x
+
+def test_NonalgebraicFunctionFactors():
+    assert NonalgebraicFunctionFactors(sin(x)*x, x) == sin(x)
+    assert NonalgebraicFunctionFactors(sin(x), x) == sin(x)
+    assert NonalgebraicFunctionFactors(x, x) == 1
+
+def test_QuotientOfLinearsP():
+    assert QuotientOfLinearsP((a + b*x)/(x), x)
+    assert QuotientOfLinearsP(x*a, x)
+    assert not QuotientOfLinearsP(x**2*a, x)
+    assert not QuotientOfLinearsP(x**2 + a, x)
+    assert QuotientOfLinearsP(x + a, x)
+    assert QuotientOfLinearsP(x, x)
+    assert QuotientOfLinearsP(1 + x, x)
+
+def test_QuotientOfLinearsParts():
+    assert QuotientOfLinearsParts((b*x)/(c), x) == [0, b/c, 1, 0]
+    assert QuotientOfLinearsParts((b*x)/(c + x), x) == [0, b, c, 1]
+    assert QuotientOfLinearsParts((b*x)/(c + d*x), x) == [0, b, c, d]
+    assert QuotientOfLinearsParts((a + b*x)/(c + d*x), x) == [a, b, c, d]
+    assert QuotientOfLinearsParts(x**2 + a, x) == [a + x**2, 0, 1, 0]
+    assert QuotientOfLinearsParts(a/x, x) == [a, 0, 0, 1]
+    assert QuotientOfLinearsParts(1/x, x) == [1, 0, 0, 1]
+    assert QuotientOfLinearsParts(a*x + 1, x) == [1, a, 1, 0]
+    assert QuotientOfLinearsParts(x, x) == [0, 1, 1, 0]
+    assert QuotientOfLinearsParts(a, x) == [a, 0, 1, 0]
+
+def test_QuotientOfLinearsQ():
+    assert not QuotientOfLinearsQ((a + x), x)
+    assert QuotientOfLinearsQ((a + x)/(x), x)
+    assert QuotientOfLinearsQ((a + b*x)/(x), x)
