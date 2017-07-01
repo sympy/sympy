@@ -640,11 +640,33 @@ class DifferentialExtension(object):
         self.Tfuncs = []
         self.newf = self.f
 
-    def L_K(self):
-        return [i for i in range(len(self.exts)) if self.exts[i] == 'log']
+    def ext_k(self, extension):
+        """
+        Args:
+            extension (str): represents a valid extension type.
 
-    def E_K(self):
-        return [i for i in range(len(self.exts)) if self.exts[i] == 'exp']
+        Returns:
+            list: A list of indices of 'exts' where extension of
+                  type 'extension' is present.
+
+        Examples
+        ========
+
+        >>> from sympy.integrals.risch import DifferentialExtension
+        >>> from sympy import log, exp
+        >>> from sympy.abc import x
+        >>> DE = DifferentialExtension(log(x) + exp(x), x, handle_first='exp')
+        >>> DE.ext_k('log')
+        [2]
+        >>> DE.ext_k('exp')
+        [1]
+
+        """
+        valid_ext = {None, 'log', 'exp', 'tan', 'atan', 'alg'}
+        if extension not in valid_ext:
+            raise ValueError("expected a valid extension type got "
+                    " %s. " % (s))
+        return [i for i, ext in enumerate(self.exts) if ext == extension]
 
     def increment_level(self):
         """
