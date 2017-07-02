@@ -225,7 +225,7 @@ def plot_and_save(name):
         p.save(tmp_file('%s_advanced_integral' % name))
         p._backend.close()
         # Make sure no other warnings were raised
-        assert len(w) == 1
+        assert len(w) == 1, [i.message for i in w]
         assert issubclass(w[-1].category, UserWarning)
         assert "The evaluation of the expression is problematic" in str(w[0].message)
 
