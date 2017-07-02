@@ -1,7 +1,7 @@
-from sympy.vector import CoordSysCartesian, Gradient, Divergence, Curl, VectorZero
+from sympy.vector import CoordSys3D, Gradient, Divergence, Curl, VectorZero
 
 
-R = CoordSysCartesian('R')
+R = CoordSys3D('R')
 s1 = R.x*R.y*R.z
 s2 = R.x + 3*R.y**2
 v1 = R.x*R.i + R.z*R.z*R.j

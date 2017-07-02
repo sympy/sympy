@@ -23,8 +23,8 @@ and basic operations on ``Vector``.
 
 Define a coordinate system
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> Sys = CoordSysCartesian('Sys')
+  >>> from sympy.vector import CoordSys3D
+  >>> Sys = CoordSys3D('Sys')
 
 Define point O to be Sys' origin. We can do this without
 loss of generality
@@ -88,9 +88,9 @@ Solution
 
 Start with a coordinate system
 
-  >>> from sympy.vector import CoordSysCartesian, Del
+  >>> from sympy.vector import CoordSys3D, Del
   >>> delop = Del()
-  >>> C = CoordSysCartesian('C')
+  >>> C = CoordSys3D('C')
 
 The scalar field :math:`f` and the measure numbers of the vector field
 :math:`\vec v` are all functions of the coordinate variables of the
