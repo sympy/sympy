@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# This is the main entrypoint script to do the release. Run it like
+
+#     ./release.sh <branch> <version>
+
+# If the version is the same as the branch you can omit it.
+
+# You may need to run the script with sudo on Linux. The only requirement for
+# the script to work is Docker.
+
 set -e
 set -x
 
