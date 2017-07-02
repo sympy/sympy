@@ -7,30 +7,10 @@ from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
-from sympy.core.decorators import wraps
 
 from tempfile import NamedTemporaryFile
 import os
-import sys
 import warnings
-
-class MockPrint(object):
-
-    def write(self, s):
-        pass
-
-    def flush(self):
-        pass
-
-    encoding = 'utf-8'
-
-def disable_print(func, *args, **kwargs):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        sys.stdout = MockPrint()
-        func(*args, **kwargs)
-        sys.stdout = sys.__stdout__
-    return wrapper
 
 unset_show()
 
@@ -300,8 +280,12 @@ def test_experimental_lambify():
     f = lambdify([x], x + 1)
     assert f(1) == 2
 
-@disable_print
+
 def test_append_issue_7140():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     x = Symbol('x')
     p1 = plot(x)
     p2 = plot(x**2)
