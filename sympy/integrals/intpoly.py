@@ -7,7 +7,6 @@ from sympy.core import S, Symbol
 from sympy.geometry import Segment2D
 from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
-from sympy.core.function import diff
 from sympy.core.expr import Expr
 from sympy.abc import x, y
 
@@ -15,12 +14,18 @@ from sympy.polys.polytools import LC
 from sympy.polys.polytools import gcd_list
 
 
-def gradient_terms(monomial, x_degree, y_degree):
+def gradient_terms(x_degree, y_degree, binomial_power=None):
     terms = []
+    if binomial_power:
+        for x_count in range(0, binomial_power + 1):
+            for y_count in range(0, binomial_power - x_count + 1):
+                terms.append([x**x_count*y**y_count,
+                              x_count, y_count, None])
+        return terms
+
     for x_count in range(0, x_degree + 1):
         for y_count in range(0, y_degree + 1):
-            term = x**x_count*y**y_count
-            terms.append([term, x_count, y_count, None])
+            terms.append([x**x_count*y**y_count, x_count, y_count, None])
     return terms
 
 
@@ -44,12 +49,12 @@ def polytope_integrate(poly, expr, **kwargs):
     1/4
     """
     clockwise = kwargs.get('clockwise', False)
+    max_degree = kwargs.get('max_degree', None)
 
     if clockwise is True and isinstance(poly, Polygon):
         poly = clockwise_sort(poly)
 
     expr = S(expr)
-    dims = (x, y)
 
     if isinstance(poly, Polygon):
         # For Vertex Representation
@@ -65,16 +70,50 @@ def polytope_integrate(poly, expr, **kwargs):
         facets = [Segment2D(intersections[i], intersections[(i + 1) % lints])
                   for i in range(0, lints)]
 
-    monoms = decompose(expr, separate=1)
+    if max_degree is not None:
+        result = {}
+        if not isinstance(expr, list):
+            raise TypeError('Input polynomials must be list of expressions')
+        result_dict = main_integrate(0, facets, hp_params, max_degree)
+        for polys in expr:
+            if not polys in result:
+                if polys is S.Zero:
+                    result[S.Zero] = S.Zero
+                    continue
+                integral_value = S.Zero
+                monoms = decompose(polys, separate=1)
+                for monom in monoms:
+                    term = monom[0]
+                    if term.is_number:
+                        integral_value += result_dict[1][0] * term
+                    else:
+                        coeff = LC(term)
+                        integral_value += result_dict[term / coeff][0] * coeff
+                result[polys] = integral_value
+        return result
 
+    return main_integrate(expr, facets, hp_params)
+
+def main_integrate(expr, facets, hp_params, max_degree=None):
+    dims = (x, y)
+    if max_degree:
+        expr = 0
+    monoms = decompose(expr, separate=1)
     dim_length = len(dims)
     result = {}
     integral_value = S.Zero
 
     for term_count, term in enumerate(monoms):
-        monomial, x_degree, y_degree = term
-        grad_terms = [[0, 0, 0, 0]] + \
-            gradient_terms(monomial, x_degree, y_degree)
+        if max_degree:
+            find_many = True
+            y_degree = max_degree
+            grad_terms = [[0, 0, 0, 0]] + \
+                         gradient_terms(0, 0, max_degree)
+        else:
+            find_many = False
+            monomial, x_degree, y_degree = term
+            grad_terms = [[0, 0, 0, 0]] + \
+                         gradient_terms(x_degree, y_degree)
         for facet_count, hp in enumerate(hp_params):
             a, b = hp[0], hp[1]
             x0 = facets[facet_count].points[0]
@@ -84,35 +123,38 @@ def polytope_integrate(poly, expr, **kwargs):
                 #  (term, x_degree, y_degree, value over boundary)
                 m, x_d, y_d, _ = monom
                 value = result.get(m, None)
-                value_over_boundary =\
+                value_over_boundary = \
                     integration_reduction(facets, facet_count, a, b, m,
                                           dims, x_d, y_d, y_degree, x0,
-                                          grad_terms, i)
+                                          grad_terms, i, find_many)
                 monom[3] = value_over_boundary
 
                 degree = x_d + y_d
                 if value is not None:
                     if value[1] == term_count:
-                        result[m][0] += value_over_boundary *\
+                        result[m][0] += value_over_boundary * \
                                         (b / norm(a)) / (dim_length + degree)
                 else:
-                    result[m] = [value_over_boundary *\
-                                    (b / norm(a)) / (dim_length + degree),
+                    result[m] = [value_over_boundary * \
+                                 (b / norm(a)) / (dim_length + degree),
                                  term_count]
+    if max_degree:
+        return result
+
     for monom in monoms:
         term = monom[0]
         if term.is_number:
             integral_value += result[1][0] * term
         else:
             coeff = LC(term)
-            integral_value += result[term/coeff][0] * coeff
+            integral_value += result[term / coeff][0] * coeff
 
     return integral_value
 
 
 def integration_reduction(facets, index, a, b, expr,
                           dims, x_degree, y_degree, max_y_degree,
-                          x0, monomial_values, monom_index):
+                          x0, monomial_values, monom_index, find_many):
     """Helper method for polytope_integrate.
     Returns the value of the input expression evaluated over the
     polytope facet referenced by a given index.
@@ -137,7 +179,11 @@ def integration_reduction(facets, index, a, b, expr,
     if not expr.is_number:
         a, b = (S(a[0]), S(a[1])), S(b)
 
-        x_index = monom_index - max_y_degree - 1 if x_degree >= 1 else 0
+        if find_many:
+            x_index = monom_index - max_y_degree +\
+                      x_degree - 2 if x_degree >= 1 else 0
+        else:
+            x_index = monom_index - max_y_degree - 1 if x_degree >= 1 else 0
         y_index = monom_index - 1 if y_degree >= 1 else 0
 
         x_value, y_value =\
