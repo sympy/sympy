@@ -16,7 +16,7 @@ from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, sign)
+    Min, Max, sign)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
@@ -2185,9 +2185,9 @@ def NonpositiveFactors(u):
     elif RationalQ(u):
         return Sign(u)
     elif PositiveQ(u):
-        return 1
+        return S(1)
     elif ProductQ(u):
-        res = 1
+        res = S(1)
         for i in u.args:
             res *= NonpositiveFactors(i)
         return res
@@ -2213,3 +2213,20 @@ def PolynomialInAuxQ(u, v, x):
 def PolynomialInQ(u, v, x):
     # If u is a polynomial in v[x], PolynomialInQ[u,v,x] returns True; else it returns False.
     return PolynomialInAuxQ(u, NonfreeFactors(NonfreeTerms(v, x), x), x)
+
+def ExponentInAux(u, v, x):
+    if u == v:
+        return S(1)
+    elif AtomQ(u):
+        return S(0)
+    elif PowerQ(u):
+        if PowerQ(v):
+            if u.base == v.base:
+                return u.exp/v.exp
+        return u.exp*ExponentInAux(u.base, v, x)
+    elif ProductQ(u):
+        return Add(*[ExponentInAux(i, v, x) for i in u.args])
+    return Max(*[ExponentInAux(i, v, x) for i in u.args])
+
+def ExponentIn(u, v, x):
+    return ExponentInAux(u, NonfreeFactors(NonfreeTerms(v, x), x), x)

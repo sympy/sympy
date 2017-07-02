@@ -899,3 +899,11 @@ def test_PolynomialInQ():
     assert PolynomialInQ(1 + v**2, v, x)
     assert PolynomialInQ(1 + a*v**2, v, x)
     assert not PolynomialInQ(sqrt(v), v, x)
+
+
+def test_ExponentIn():
+    v = log(x)
+    assert ExponentIn(S(1), log(x), x) == 0
+    assert ExponentIn(S(1) + v, log(x), x) == 1
+    assert ExponentIn(S(1) + v + v**3, log(x), x) == 3
+    assert ExponentIn(S(2)*sqrt(v)*v**3, log(x), x) == 3.5
