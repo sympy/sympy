@@ -194,7 +194,7 @@ def md5():
     """
     Print the md5 sums of the release files
     """
-    _mdf(_print=True)
+    _md5(_print=True)
 
 def _md5(_print=True):
     out = $(md5sum /home/release/*)
