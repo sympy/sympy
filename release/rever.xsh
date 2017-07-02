@@ -216,7 +216,7 @@ def _md5(print_=True, local=False):
 def release():
     pass
 
-@activity()
+@activity(deps={'_version'})
 def GitHub_release():
     _GitHub_release()
 
