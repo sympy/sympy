@@ -15,5 +15,9 @@ set -x
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 cd "$parent_path"
 
+if [[ -z $2 ]]; then
+    $2=$1
+fi
+
 docker build -f Dockerfile . -t sympy-release
-docker run -v "$parent_path/release-$1":/home/release sympy-release "$@"
+docker run -v "$parent_path/release-$2":/home/release sympy-release "$@"
