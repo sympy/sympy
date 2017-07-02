@@ -838,3 +838,26 @@ def test_FactorInteger():
 def test_FactorAbsurdNumber():
     assert FactorAbsurdNumber(sqrt(S(2))) == [[2, 1/2]]
     assert FactorAbsurdNumber(S(2)) == [(2, 1)]
+
+def test_ContentFactor():
+    assert ContentFactor(a*b + a*c) == a*(b + c)
+
+def test_Order():
+    assert Order(a, b) == 1
+    assert Order(b, a) == -1
+    assert Order(a, a) == 0
+
+def test_FactorOrder():
+    assert FactorOrder(1, 1) == 0
+    assert FactorOrder(1, 2) == -1
+    assert FactorOrder(2, 1) == 1
+    assert FactorOrder(a, b) == 1
+
+def test_Smallest():
+    assert Smallest([2, 1, 3, 4]) == 1
+    assert Smallest(1, 2) == 1
+    assert Smallest(-1, -2) == -2
+
+def test_MostMainFactorPosition():
+    assert MostMainFactorPosition([S(1), S(2), S(3)]) == 2
+    assert MostMainFactorPosition([S(1), S(7), S(3), S(4), S(5)]) == 3

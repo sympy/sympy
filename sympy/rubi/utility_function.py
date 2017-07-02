@@ -15,7 +15,8 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
-    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint)
+    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
+    Min)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
@@ -458,6 +459,8 @@ def NumericQ(u):
 
 def Length(expr):
     # returns number of elements in the experssion
+    if isinstance(expr, list):
+        return len(expr)
     return len(expr.args)
 
 def ListQ(u):
@@ -2101,3 +2104,37 @@ def TrigSimplifyQ(u):
 
 def TrigSimplify(u):
     return trigsimp(u)
+
+def Order(expr1, expr2):
+    if expr1 == expr2:
+        return 0
+    elif expr1.sort_key() > expr2.sort_key():
+        return -1
+    return 1
+
+def FactorOrder(u, v):
+    if u == 1:
+        if v == 1:
+            return 0
+        return -1
+    elif v == 1:
+        return 1
+    return Order(u, v)
+
+def Smallest(num1, num2=None):
+    if num2 == None:
+        lst = num1
+        num = lst[0]
+        for i in Rest(lst):
+            num = Smallest(num, i)
+        return num
+    return Min(num1, num2)
+
+def MostMainFactorPosition(lst):
+    factor = 1
+    num = 1
+    for i in range(0, Length(lst)):
+        if FactorOrder(lst[i], factor) > 0:
+            factor = lst[i]
+            num = i + 1
+    return num
