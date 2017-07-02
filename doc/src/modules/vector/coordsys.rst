@@ -10,7 +10,7 @@ Locating new systems
 ====================
 
 We already know that the ``origin`` property of a
-``CoordSysCartesian`` corresponds to the ``Point`` instance
+``CoordSys3D`` corresponds to the ``Point`` instance
 denoting its origin reference point.
 
 Consider a coordinate system :math:`N`. Suppose we want to define
@@ -23,8 +23,8 @@ would be :math:`(-3, -4, -5)`.
 
 This can be achieved programmatically as follows -
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
   >>> M = N.locate_new('M', 3*N.i + 4*N.j + 5*N.k)
   >>> M.position_wrt(N)
   3*N.i + 4*N.j + 5*N.k
@@ -35,7 +35,7 @@ It is worth noting that :math:`M`'s orientation is the same as that of
 :math:`N`. This means that the rotation matrix of :math: `N` with respect
 to :math:`M`, and also vice versa, is equal to the identity matrix of
 dimensions 3x3.
-The ``locate_new`` method initializes a ``CoordSysCartesian`` that
+The ``locate_new`` method initializes a ``CoordSys3D`` that
 is only translated in space, not re-oriented, relative to the 'parent'
 system.
 
@@ -43,13 +43,13 @@ Orienting new systems
 =====================
 
 Similar to 'locating' new systems, :mod:`sympy.vector` also allows for
-initialization of new ``CoordSysCartesian`` instances that are oriented
+initialization of new ``CoordSys3D`` instances that are oriented
 in user-defined ways with respect to existing systems.
 
 Suppose you have a coordinate system :math:`A`.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> A = CoordSysCartesian('A')
+  >>> from sympy.vector import CoordSys3D
+  >>> A = CoordSys3D('A')
 
 You want to initialize a new coordinate system :math:`B`, that is rotated with
 respect to :math:`A`'s Z-axis by an angle :math:`\theta`.
@@ -66,7 +66,7 @@ The orientation is shown in the diagram below:
 
 There are two ways to achieve this.
 
-Using a method of CoordSysCartesian directly
+Using a method of CoordSys3D directly
 --------------------------------------------
 
 This is the easiest, cleanest, and hence the recommended way of doing
@@ -77,7 +77,7 @@ it.
 This initializes :math:`B` with the required orientation information with
 respect to :math:`A`.
 
-``CoordSysCartesian`` provides the following direct orientation methods
+``CoordSys3D`` provides the following direct orientation methods
 in its API-
 
 1. ``orient_new_axis``
@@ -88,7 +88,7 @@ in its API-
 
 4. ``orient_new_quaternion``
 
-Please look at the ``CoordSysCartesian`` class API given in the docs
+Please look at the ``CoordSys3D`` class API given in the docs
 of this module, to know their functionality and required arguments
 in detail.
 
@@ -193,9 +193,9 @@ in different coordinate systems using the ``express`` function.
 
 For purposes of this section, assume the following initializations-
 
-  >>> from sympy.vector import CoordSysCartesian, express
+  >>> from sympy.vector import CoordSys3D, express
   >>> from sympy.abc import a, b, c
-  >>> N = CoordSysCartesian('N')
+  >>> N = CoordSys3D('N')
   >>> M = N.orient_new_axis('M', a, N.k)
 
 ``Vector`` instances can be expressed in user defined systems using
