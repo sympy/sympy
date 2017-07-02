@@ -129,10 +129,17 @@ class SymPyDeprecationWarning(DeprecationWarning):
                 "version %s. ") % last_supported_version
         if useinstead:
             self.fullMessage += "Use %s instead. " % useinstead
-        if issue:
-            self.fullMessage += ("See "
-                "https://github.com/sympy/sympy/issues/%d for more "
-                "info. ") % issue
+
+        if not issue:
+            raise ValueError("""\
+The issue argument of SymPyDeprecationWarning is required.
+This should be a separate issue with the "Deprecation Removal" label. See
+https://github.com/sympy/sympy/wiki/Deprecating-policy.\
+""")
+
+        self.fullMessage += ("See "
+            "https://github.com/sympy/sympy/issues/%d for more "
+            "info. ") % issue
 
         if value:
             if not isinstance(value, str):
