@@ -106,7 +106,7 @@ from Cython.Build import cythonize
 cy_opts = {}
 
 ext_mods = [Extension(
-    'wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
     include_dirs=[],
     library_dirs=[],
     libraries=[],
@@ -114,7 +114,8 @@ ext_mods = [Extension(
     extra_link_args=[]
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-"""
+""" % {'num': CodeWrapper._module_counter}
+
     temp_dir = tempfile.mkdtemp()
     setup_file_path = os.path.join(temp_dir, 'setup.py')
 
@@ -131,7 +132,6 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                                  extra_link_args=['-lswamp', '-ltrident'],
                                  cythonize_options={'compiler_directives': {'boundscheck': False}}
                                  )
-
     expected = """\
 try:
     from setuptools import setup
@@ -143,7 +143,7 @@ from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'boundscheck': False}}
 
 ext_mods = [Extension(
-    'wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
     include_dirs=['/usr/local/include', '/opt/booger/include'],
     library_dirs=['/user/local/lib'],
     libraries=['thelib', 'nilib'],
@@ -151,7 +151,8 @@ ext_mods = [Extension(
     extra_link_args=['-lswamp', '-ltrident']
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-"""
+""" % {'num': CodeWrapper._module_counter}
+
     code_gen._prepare_files(routine, build_dir=temp_dir)
     with open(setup_file_path) as f:
         setup_text = f.read()
@@ -169,7 +170,7 @@ cy_opts = {'compiler_directives': {'boundscheck': False}}
 import numpy as np
 
 ext_mods = [Extension(
-    'wrapper_module_0', ['wrapper_module_0.pyx', 'wrapped_code_0.c'],
+    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
     include_dirs=['/usr/local/include', '/opt/booger/include', np.get_include()],
     library_dirs=['/user/local/lib'],
     libraries=['thelib', 'nilib'],
@@ -177,7 +178,7 @@ ext_mods = [Extension(
     extra_link_args=['-lswamp', '-ltrident']
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-"""
+""" % {'num': CodeWrapper._module_counter}
 
     code_gen._need_numpy = True
     code_gen._prepare_files(routine, build_dir=temp_dir)
