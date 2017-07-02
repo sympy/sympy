@@ -108,7 +108,7 @@ Define the vector field as ``vfield`` and the scalar field as ``sfield``.
   >>> vfield = v1(C.x, C.y, C.z)*C.i + v2(C.x, C.y, C.z)*C.j + v3(C.x, C.y, C.z)*C.k
   >>> ffield = f(C.x, C.y, C.z)
 
-Construct the expression for the LHS of the equation using ``C.delop``.
+Construct the expression for the LHS of the equation using ``Del()``.
 
   >>> lhs = (delop.dot(ffield * vfield)).doit()
 
