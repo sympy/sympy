@@ -147,11 +147,10 @@ class SymPyDeprecationWarning(DeprecationWarning):
         return '\n%s\n' % filldedent(self.fullMessage)
 
     def warn(self, stacklevel=2):
-        see_above = self.fullMessage
         # the next line is what the user would see after the error is printed
         # if stacklevel was set to 1. If you are writing a wrapper around this,
         # increase the stacklevel accordingly.
-        warnings.warn(see_above, SymPyDeprecationWarning, stacklevel=stacklevel)
+        warnings.warn(self, stacklevel=stacklevel)
 
 # Python by default hides DeprecationWarnings, which we do not want.
 warnings.simplefilter("once", SymPyDeprecationWarning)
