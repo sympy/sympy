@@ -255,6 +255,11 @@ class CodePrinter(StrPrinter):
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
 
+    def _print_Dummy(self, expr):
+        if expr.name.endswith('_%i' % (expr.dummy_index - 1)):
+            return expr.name
+        else: # dummies must be printed as unique symbols
+            return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
