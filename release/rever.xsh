@@ -10,6 +10,7 @@ from collections import defaultdict, OrderedDict
 from collections.abc import Mapping
 from getpass import getpass
 import json
+import glob
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -196,8 +197,11 @@ def md5():
     """
     _md5(_print=True)
 
-def _md5(_print=True):
-    out = $(md5sum /home/release/*)
+def _md5(_print=True, local=False):
+    if local:
+        out = $(md5sum @(release_files()))
+    else:
+        out = $(md5sum /home/release/*)
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
@@ -210,9 +214,14 @@ def _md5(_print=True):
 def release():
     pass
 
-@activity(deps={'release'})
+@activity()
 def GitHub_release():
     _GitHub_release()
+
+@GitHub_release.undoer
+def GitHub_release():
+    # Prevent default undo
+    pass
 
 # HELPER FUNCTIONS
 
@@ -293,6 +302,12 @@ class _tarball_format(Mapping):
         return len(tarball_name_types)
 
 tarball_format = _tarball_format()
+
+def release_files():
+    """
+    Returns the list of local release files
+    """
+    return glob.glob('release/release-' + $VERSION + '/*'
 
 def show_files(file, print_=True):
     """
@@ -505,9 +520,9 @@ def _GitHub_release(username=None, user='sympy', token=None,
 
 def _size(print_=True):
     """
-    Print the sizes of the release files
+    Print the sizes of the release files. Run locally.
     """
-    out = $(du -h /home/release/*)
+    out = $(du -h @(release_files()))
     out = [i.split() for i in out.strip().split('\n')]
     out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
     if print_:
@@ -525,7 +540,7 @@ def table():
 
     tarball_formatter_dict['version'] = shortversion
 
-    md5s = [i.split('\t') for i in _md5(print_=False).split('\n')]
+    md5s = [i.split('\t') for i in _md5(print_=False, local=True).split('\n')]
     md5s_dict = {name: md5 for md5, name in md5s}
 
     sizes = [i.split('\t') for i in _size(print_=False).split('\n')]
