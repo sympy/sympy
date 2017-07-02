@@ -1281,20 +1281,16 @@ def hessian(f, varlist, constraints=[]):
             out[j, i] = out[i, j]
     return out
 
-@deprecated(useinstead="jordan_block", deprecated_since_version="1.1")
 def jordan_cell(eigenval, n):
-    return jordan_block(eigenval, n)
-
-def jordan_block(eigenval, n):
     """
     Create a Jordan block:
 
     Examples
     ========
 
-    >>> from sympy.matrices import jordan_block
+    >>> from sympy.matrices import jordan_cell
     >>> from sympy.abc import x
-    >>> jordan_block(x, 4)
+    >>> jordan_cell(x, 4)
     Matrix([
     [x, 1, 0, 0],
     [0, x, 1, 0],
