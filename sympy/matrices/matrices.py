@@ -21,8 +21,6 @@ from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
-from sympy.core.decorators import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -387,16 +385,8 @@ class MatrixDeterminant(MatrixCommon):
         # sanitize `method`
         method = method.lower()
         if method == "bareis":
-            SymPyDeprecationWarning(
-                feature="Using 'bareis' to compute matrix determinant",
-                useinstead="'bareiss'",
-                issue=12363, deprecated_since_version="1.1").warn()
             method = "bareiss"
         if method == "det_lu":
-            SymPyDeprecationWarning(
-                feature="Using 'det_lu' to compute matrix determinant",
-                useinstead="'lu'",
-                deprecated_since_version="1.1").warn()
             method = "lu"
         if method not in ("bareiss", "berkowitz", "lu"):
             raise ValueError("Determinant method '%s' unrecognized" % method)
@@ -1255,7 +1245,6 @@ class MatrixEigen(MatrixSubspaces):
 
         clear_cache = kwargs.get('clear_cache', True)
         if 'clear_subproducts' in kwargs:
-            SymPyDeprecationWarning(useinstead="clear_cache", deprecated_since_version="1.1")
             clear_cache = kwargs.get('clear_subproducts')
 
         def cleanup():
@@ -1672,14 +1661,13 @@ class MatrixCalculus(MatrixCommon):
         return self.applyfunc(lambda x: x.limit(*args))
 
 
+# https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
 
-    @deprecated(useinstead="charpoly", issue=12389, deprecated_since_version="1.1")
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         return self.charpoly(x=x)
 
-    @deprecated(useinstead="det(method='berkowitz')", issue=12389, deprecated_since_version="1.1")
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method.
 
@@ -1691,7 +1679,6 @@ class MatrixDeprecated(MatrixCommon):
         """
         return self.det(method='berkowitz')
 
-    @deprecated(useinstead="eigenvals", issue=12389, deprecated_since_version="1.1")
     def berkowitz_eigenvals(self, **flags):
         """Computes eigenvalues of a Matrix using Berkowitz method.
 
@@ -1702,7 +1689,6 @@ class MatrixDeprecated(MatrixCommon):
         """
         return self.eigenvals(**flags)
 
-    @deprecated(issue=12389, deprecated_since_version="1.1")
     def berkowitz_minors(self):
         """Computes principal minors using Berkowitz method.
 
@@ -1719,7 +1705,6 @@ class MatrixDeprecated(MatrixCommon):
 
         return tuple(minors)
 
-    @deprecated(issue=12389, deprecated_since_version="1.1")
     def berkowitz(self):
         from sympy.matrices import zeros
         berk = ((1,),)
@@ -1760,15 +1745,12 @@ class MatrixDeprecated(MatrixCommon):
 
         return berk + tuple(map(tuple, polys))
 
-    @deprecated(useinstead="cofactor_matrix", issue=12389, deprecated_since_version="1.1")
     def cofactorMatrix(self, method="berkowitz"):
         return self.cofactor_matrix(method=method)
 
-    @deprecated(useinstead="det(method='bareiss')", issue=12363, deprecated_since_version="1.1")
     def det_bareis(self):
         return self.det(method='bareiss')
 
-    @deprecated(useinstead="det(method='bareiss')", issue=12389, deprecated_since_version="1.1")
     def det_bareiss(self):
         """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
@@ -1788,7 +1770,6 @@ class MatrixDeprecated(MatrixCommon):
         """
         return self.det(method='bareiss')
 
-    @deprecated(useinstead="det(method='lu')", issue=12389, deprecated_since_version="1.1")
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
 
@@ -1810,29 +1791,23 @@ class MatrixDeprecated(MatrixCommon):
         """
         return self.det(method='lu')
 
-    @deprecated(useinstead="jordan_block", issue=12685, deprecated_since_version="1.1")
     def jordan_cell(self, eigenval, n):
         return self.jordan_block(size=n, eigenvalue=eigenval)
 
-    @deprecated(deprecated_since_version="1.1")
     def jordan_cells(self, calc_transformation=True):
         P, J = self.jordan_form()
         return P, J.get_diag_blocks()
 
-    @deprecated(useinstead="minor", issue=12389, deprecated_since_version="1.1")
     def minorEntry(self, i, j, method="berkowitz"):
         return self.minor(i, j, method=method)
 
-    @deprecated(useinstead="minor_submatrix", issue=12389, deprecated_since_version="1.1")
     def minorMatrix(self, i, j):
         return self.minor_submatrix(i, j)
 
-    @deprecated(useinstead="permute", issue=12389, deprecated_since_version="1.1")
     def permuteBkwd(self, perm):
         """Permute the rows of the matrix with the given permutation in reverse."""
         return self.permute_rows(perm, direction='backward')
 
-    @deprecated(useinstead="permute", issue=12389, deprecated_since_version="1.1")
     def permuteFwd(self, perm):
         """Permute the rows of the matrix with the given permutation."""
         return self.permute_rows(perm, direction='forward')
@@ -3143,12 +3118,8 @@ class MatrixBase(MatrixDeprecated,
         """
 
         if rankcheck:
-            SymPyDeprecationWarning(
-                feature="Keyword argument rankcheck is deprecated. "
-                        "Future LUdecomposition_Simple() will complete "
-                        "regardless rank of input matrix.",
-                issue=9796,
-                deprecated_since_version="1.1").warn()
+            # https://github.com/sympy/sympy/issues/9796
+            pass
 
         if self.rows == 0 or self.cols == 0:
             # Define LU decomposition of a matrix with no entries as a matrix

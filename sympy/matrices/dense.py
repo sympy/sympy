@@ -20,9 +20,6 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices.matrices import (MatrixBase,
                                      ShapeError, a2idx, classof)
 
-from sympy.core.decorators import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
@@ -1340,9 +1337,6 @@ def ones(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
     from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
@@ -1469,9 +1463,6 @@ def zeros(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
 
     from .dense import Matrix
 
