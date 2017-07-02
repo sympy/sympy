@@ -22,7 +22,8 @@ First, make sure that you have done the following things
 - Change the version in the release branch in sympy/release.py. If you want to
   do a release candidate, change it to a [PEP
   440](https://www.python.org/dev/peps/pep-0440) compliant version like
-  0.7.3.rc1.
+  0.7.3rc1. Note that setuptools normalizes versions like 0.7.3.rc1 to
+  0.7.3rc1, so there will be errors if you do not use the latter form.
 
 - Change the version in master. This way, any additional changes made in master
   will be shown as coming from the right place. The master release should be
@@ -88,7 +89,7 @@ release` again if you are not sure). Then tag the release with the command
     git tag sympy-VERSION -a
 
 where you should replace `VERSION` with the version (which should be `x.y.z`,
-or `x.y.z.rcn` for the `n`th release candidate. It is very important to follow
+or `x.y.zrcn` for the `n`th release candidate. It is very important to follow
 the tag naming conventions.  The `-a` will cause it to prompt for a tag commit
 message. Just write something like "SymPy VERSION release".
 
