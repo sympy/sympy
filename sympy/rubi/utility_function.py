@@ -2192,3 +2192,24 @@ def NonpositiveFactors(u):
             res *= NonpositiveFactors(i)
         return res
     return u
+
+def PolynomialInAuxQ(u, v, x):
+    if u == v:
+        return True
+    elif AtomQ(u):
+        return u != x
+    elif PowerQ(u):
+        if PowerQ(v):
+            if u.base == v.base:
+                return PositiveIntegerQ(u.exp/v.exp)
+        return PositiveIntegerQ(u.exp) and PolynomialInAuxQ(u.base, v, x)
+    elif SumQ(u) or ProductQ(u):
+        for i in u.args:
+            if Not(PolynomialInAuxQ(i, v, x)):
+                return False
+        return True
+    return False
+
+def PolynomialInQ(u, v, x):
+    # If u is a polynomial in v[x], PolynomialInQ[u,v,x] returns True; else it returns False.
+    return PolynomialInAuxQ(u, NonfreeFactors(NonfreeTerms(v, x), x), x)

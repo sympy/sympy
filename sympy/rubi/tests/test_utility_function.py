@@ -891,3 +891,11 @@ def test_Sign():
     assert Sign(S(0)) == 0
     assert Sign(S(1)) == 1
     assert Sign(-S(1)) == -1
+
+def test_PolynomialInQ():
+    v = log(x)
+    assert PolynomialInQ(S(1), v, x)
+    assert PolynomialInQ(v, v, x)
+    assert PolynomialInQ(1 + v**2, v, x)
+    assert PolynomialInQ(1 + a*v**2, v, x)
+    assert not PolynomialInQ(sqrt(v), v, x)
