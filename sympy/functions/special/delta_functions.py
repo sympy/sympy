@@ -196,7 +196,7 @@ class DiracDelta(Function):
         if fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
 
-    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.1")
+    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
     def simplify(self, x):
         return self.expand(diracdelta=True, wrt=x)
 
