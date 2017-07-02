@@ -12,6 +12,7 @@ from getpass import getpass
 from contextlib import contextmanager
 import json
 import glob
+import stat
 
 import requests
 from requests.auth import HTTPBasicAuth
