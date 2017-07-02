@@ -873,6 +873,7 @@ git_whitelist = {
     'release/Dockerfile-base',
     'release/release.sh',
     'release/rever.xsh',
+    'release/pull_and_run_rever.sh',
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
