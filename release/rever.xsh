@@ -511,7 +511,7 @@ def _GitHub_release(username=None, user='sympy', token=None,
 
         print("Uploading", tarball, end=' ')
         sys.stdout.flush()
-        with open(os.path.join("release", tarball), 'rb') as f:
+        with open(os.path.join('release/release-' + $VERSION, tarball), 'rb') as f:
             result = query_GitHub(urls.release_uploads_url % release_id, username,
                 password=None, token=token, data=f, params=params,
                 headers=headers).json()
