@@ -473,7 +473,7 @@ def _GitHub_release(username=None, user='sympy', token=None,
     # not be sure that the correct commit is tagged.  So we require that the
     # tag exist first.
     if not check_tag_exists():
-        error("The tag for this version has not been pushed yet. Cannot upload the release.")
+        sys.exit(red("The tag for this version has not been pushed yet. Cannot upload the release."))
 
     # See http://developer.github.com/v3/repos/releases/#create-a-release
     # First, create the release
