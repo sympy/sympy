@@ -9,6 +9,7 @@ import unicodedata
 from collections import defaultdict, OrderedDict
 from collections.abc import Mapping
 from getpass import getpass
+from contextlib import contextmanager
 import json
 import glob
 
