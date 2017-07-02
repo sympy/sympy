@@ -5,7 +5,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi
 
-a, b, c, d, e, f, g, h, x, y, z, m, n, p, q = symbols('a b c d e f g h x y z m n p q', real=True, imaginary=False)
+a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, v = symbols('a b c d e f g h x y z m n p q v', real=True, imaginary=False)
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -770,7 +770,9 @@ def test_Prepend():
     assert Prepend([1, 2, 3], [4, 5]) == [4, 5, 1, 2, 3]
 
 def test_Drop():
-    assert Drop([1, 2 ,3, 4], 2) == [2, 3, 4]
+    assert Drop([1, 2, 3, 4, 5, 6], [2, 4]) == [1, 5, 6]
+    assert Drop([1, 2, 3, 4, 5, 6], -3) == [1, 2, 3]
+    assert Drop([1, 2, 3, 4, 5, 6], 2) == [3, 4, 5, 6]
 
 def test_SubstForInverseFunction():
     assert SubstForInverseFunction(x, a, b, x) == b
@@ -805,3 +807,34 @@ def test_FactorNumericGcd():
 
 def test_Apply():
     assert Apply(List, [a, b, c]) == [a, b, c]
+
+def test_TrigSimplify():
+    assert TrigSimplify(a*sin(x)**2 + a*cos(x)**2 + v) == a + v
+    assert TrigSimplify(a*sec(x)**2 - a*tan(x)**2 + v) == a + v
+    assert TrigSimplify(a*csc(x)**2 - a*cot(x)**2 + v) == a + v
+    #assert TrigSimplify((a*cos(x)**2 + b*sin(x)**2 + v)**n) == ((b - a)*Sin(u)**2 + a + v)**n
+    assert TrigSimplify(1 - sin(x)**2) == cos(x)**2
+    assert TrigSimplify(1 - cos(x)**2) == sin(x)**2
+    #assert TrigSimplify(1 + tan(x)**2) == sec(x)**2
+    #assert TrigSimplify(1 + cot(x)**2) == csc(x)**2
+    assert TrigSimplify(-1 + sec(x)**2) == tan(x)**2
+    #assert TrigSimplify(-1 + csc(x)**2) == cot(x)**2
+    #assert TrigSimplify(sin(x)**2/(sqrt(a) - sqrt(a)*cos(x))) == 1/(a - cos(x)/b)
+    #assert TrigSimplify(cos(x)**2/(sqrt(a) - sqrt(a)*sin(x))) == 1/(a - sin(x)/b)
+    # Tan[z]^n/(a+b*Tan[z]^n) == 1/(b+a*Cot[z]^n)
+    # Cot[z]^n/(a+b*Cot[z]^n) == 1/(b+a*Tan[z]^n)
+    # Sec[z]^n/(a+b*Sec[z]^n) == 1/(b+a*Cos[z]^n)
+    # Csc[z]^n/(a+b*Csc[z]^n) == 1/(b+a*Sin[z]^n)
+    # Tan[z]^n/(a+b*Sec[z]^n) == Sin[z]^n/(b+a*Cos[z]^n)
+    # Cot[z]^n/(a+b*Csc[z]^n) == Cos[z]^n/(b+a*Sin[z]^n)
+
+def test_MergeFactors():
+    assert MergeFactors(x, x) == x**2
+    assert MergeFactors(x*y, x) == x**2*y
+
+def test_FactorInteger():
+    assert FactorInteger(2434500) == [(2, 2), (3, 2), (5, 3), (541, 1)]
+
+def test_FactorAbsurdNumber():
+    assert FactorAbsurdNumber(sqrt(S(2))) == [[2, 1/2]]
+    assert FactorAbsurdNumber(S(2)) == [(2, 1)]

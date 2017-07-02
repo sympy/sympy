@@ -15,7 +15,7 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
-    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand)
+    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
@@ -1924,8 +1924,15 @@ def Prepend(l1, l2):
     return l2 + l1
 
 def Drop(lst, n):
-    # gives list with its first n elements dropped.
-    return lst[(n-1):]
+    if isinstance(n, list):
+        lst = lst[:(n[0]-1)] + lst[n[1]:]
+    elif n>0:
+        lst = lst[n:]
+    elif n<0:
+        lst = lst[:-n]
+    else:
+        return lst
+    return lst
 
 def CombineExponents(lst):
     if Length(lst) < 2:
@@ -1934,6 +1941,9 @@ def CombineExponents(lst):
         return CombineExponents(Prepend(Drop(lst,2),[lst[0][0], lst[0][1] + lst[1][1]]))
     return Prepend(CombineExponents(Rest(lst)), First(lst))
 
+def FactorInteger(n, l=None):
+    return sorted(factorint(n, limit=l).items())
+
 def FactorAbsurdNumber(m):
     # (* m must be an absurd number.  FactorAbsurdNumber[m] returns the prime factorization of m *)
     # (* as list of base-degree pairs where the bases are prime numbers and the degrees are rational. *)
@@ -1941,9 +1951,13 @@ def FactorAbsurdNumber(m):
         return FactorInteger(m)
     elif PowerQ(m):
         r = FactorInteger(m.base)
-        return [r[0], r[1]*m.exp]
-    #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
-    return CombineExponents
+        result = []
+        for i in r:
+            result.append([i[0], i[1]*m.exp])
+        return result
+    #CombineExponents[Sort[]]]]
+    #Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]
+    #return CombineExponents(Sort(Flatten()))
 
 def SubstForInverseFunction(*args):
     # (* SubstForInverseFunction[u,v,w,x] returns u with subexpressions equal to v replaced by x
@@ -2040,3 +2054,50 @@ def FactorNumericGcd(u):
         r = Add(*[i/g for i in u.args])
         return g*r
     return u
+
+def MergeableFactorQ(bas, deg, v):
+    # (* MergeableFactorQ[bas,deg,v] returns True iff bas equals the base of a factor of v or bas is a factor of every term of v. *)
+    if bas == v:
+        return RationalQ(deg + S(1)) and (deg + 1>=0 or RationalQ(deg) and deg>0)
+    elif PowerQ(v):
+        if bas == v.base:
+            return RationalQ(deg+v.exp) and (deg+v.exp>=0 or RationalQ(deg) and deg>0)
+        return SumQ(v.base) and IntegerQ(v.exp) and (Not(IntegerQ(deg) or IntegerQ(deg/v.exp))) and MergeableFactorQ(bas, deg/v.exp, v.base)
+    elif ProductQ(v):
+        return MergeableFactorQ(base, deg, First(v)) or MergeableFactorQ(bas, deg, Rest(v))
+    return SumQ(v) and MergeableFactorQ(bas, deg, First(v)) and MergeableFactorQ(bas, deg, Rest(v))
+
+def MergeFactor(bas, deg, v):
+    # (* If MergeableFactorQ[bas,deg,v], MergeFactor[bas,deg,v] return the product of bas^deg and v,
+    # but with bas^deg merged into the factor of v whose base equals bas. *)
+    if bas == v:
+        return bas**(deg + 1)
+    elif PowerQ(v):
+        if bas == v.base:
+            return bas**(deg + b.exp)
+        return MergeFactor(bas, deg/b.exp, v.base**v.exp)
+    elif ProductQ(v):
+        if MergeableFactorQ(bas, deg, First(v)):
+            return MergeFactor(bas, deg, First(v))*Rest(v)
+        return First(v)*MergeFactor(bas, deg, Rest(v))
+    return MergeFactor(bas, deg, First(v) + MergeFactor(bas, deg, Rest(v)))
+
+def MergeFactors(u, v):
+    # (* MergeFactors[u,v] returns the product of u and v, but with the mergeable factors of u merged into v. *)
+    if ProductQ(u):
+        return MergeFactors(Rest(u), MergeFactors(First(u), v))
+    elif PowerQ(u):
+        if MergeableFactorQ(u.base, u.exp, v):
+            return MergeFactor(u.base, u.exp, v)
+        elif RationalQ(u.exp) and u.exp < -1 and MergeableFactorQ(u.base, -S(1), v):
+            return MergeFactors(u.base**(u.exp + 1), MergeFactor(u.base, -S(1), v))
+        return u*v
+    elif MergeableFactorQ(u, S(1), v):
+        return MergeFactor(u, S(1), v)
+    return u*v
+
+def TrigSimplifyQ(u):
+    return u == TrigSimplify(u)
+
+def TrigSimplify(u):
+    return trigsimp(u)
