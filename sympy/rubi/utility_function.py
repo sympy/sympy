@@ -1943,3 +1943,32 @@ def FactorAbsurdNumber(m):
         return [r[0], r[1]*m.exp]
     #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
     return CombineExponents
+
+def SubstForInverseFunction(*args):
+    # (* SubstForInverseFunction[u,v,w,x] returns u with subexpressions equal to v replaced by x
+    # and x replaced by w. *)
+    if len(args) == 3:
+        u, v, x = args[0], args[1], args[2]
+        return SubstForInverseFunction(u, v, (-Coefficient(v.args[0], x, 0) + InverseFunction(Head(v))(x))/Coefficient(v.args[0], x, 1), x)
+    elif len(args) == 4:
+        u, v, w, x = args[0], args[1], args[2], args[3]
+        if AtomQ(u):
+            if u == x:
+                return w
+            return u
+        elif Head(u) == Head(v) and ZeroQ(u.args[0] - v.args[0]):
+            return x
+        res = [SubstForInverseFunction(i, v, w, x) for i in u.args]
+        return u.func(*res)
+
+def SubstForFractionalPower(u, v, n, w, x):
+    # (* SubstForFractionalPower[u,v,n,w,x] returns u with subexpressions equal to v^(m/n) replaced
+    # by x^m and x replaced by w. *)
+    if AtomQ(u):
+        if u == x:
+            return w
+        return u
+    elif FractionalPowerQ(u) and ZeroQ(u.args[0] - v):
+        return x**(n*u.args[1])
+    res = [SubstForFractionalPower(i, v, n, w, x) for i in u.args]
+    return u.func(*res)

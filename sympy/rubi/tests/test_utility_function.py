@@ -772,5 +772,16 @@ def test_Prepend():
 def test_Drop():
     assert Drop([1, 2 ,3, 4], 2) == [2, 3, 4]
 
+def test_SubstForInverseFunction():
+    assert SubstForInverseFunction(x, a, b, x) == b
+    assert SubstForInverseFunction(a, a, b, x) == a
+    assert SubstForInverseFunction(x**a, x**a, b, x) == x
+    assert SubstForInverseFunction(a*x**a, a, b, x) == a*b**a
+
+def test_SubstForFractionalPower():
+    assert SubstForFractionalPower(a, b, n, c, x) == a
+    assert SubstForFractionalPower(x, b, n, c, x) == c
+    assert SubstForFractionalPower(a**(S(1)/2), a, n, b, x) == x**(n/2)
+
 def test_CombineExponents():
-    print(CombineExponents())
+    assert True
