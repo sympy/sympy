@@ -31,7 +31,8 @@ from sympy.core.symbol import Dummy
 from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegralException, DecrementLevel)
+    splitfactor, NonElementaryIntegralException, DecrementLevel,
+    recognize_log_derivative)
 
 # TODO: Add messages to NonElementaryIntegralException errors
 
@@ -170,7 +171,32 @@ def normal_denom(fa, fd, ga, gd, DE):
     return (a, (ba, bd), (ca, cd), h)
 
 
-def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
+def real_imag(ba, bd, gen):
+    """
+    Helper function, to get the real and imaginary part of a rational function
+    evaluated at sqrt(-1) without actually evaluating it at sqrt(-1)
+
+    Separates the even and odd power terms by checking the degree of terms wrt
+    mod 4. Returns a tuple (ba[0], ba[1], bd) where ba[0] is real part
+    of the numerator ba[1] is the imaginary part and bd is the denominator
+    of the rational function.
+    """
+    bd = bd.as_poly(gen).as_dict()
+    ba = ba.as_poly(gen).as_dict()
+    denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
+    denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
+    bd_real = sum(r for r in denom_real)
+    bd_imag = sum(r for r in denom_imag)
+    num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
+    num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
+    ba_real = sum(r for r in num_real)
+    ba_imag = sum(r for r in num_imag)
+    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
+    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+    return (ba[0], ba[1], bd)
+
+
+def special_denom(a, ba, bd, c, DE, case='auto', parametric=False):
     """
     Special part of the denominator.
 
@@ -190,6 +216,8 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     """
     from sympy.integrals.prde import parametric_log_deriv
     # TODO: finish writing this and write tests
+    if not parametric:
+        ca, cd = c
 
     if case == 'auto':
         case = DE.case
@@ -199,15 +227,24 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     elif case == 'tan':
         p = Poly(DE.t**2 + 1, DE.t)
     elif case in ['primitive', 'base']:
-        B = ba.to_field().quo(bd)
-        C = ca.to_field().quo(cd)
-        return (a, B, C, Poly(1, DE.t))
+        # point of diff
+        if parametric:
+            B = ba.quo(bd)
+        else:
+            B = ba.to_field().quo(bd)
+            c = ca.to_field().quo(cd)
+        return (a, B, c, Poly(1, DE.t))
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base'}, not %s." % case)
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
-    nc = order_at(ca, p, DE.t) - order_at(cd, p, DE.t)
+    # point of diff
+    if parametric:
+        nc = min([order_at(ca, p, DE.t) - order_at(cd, p, DE.t)
+            for ca, cd in c])
+    else:
+        nc = order_at(ca, p, DE.t) - order_at(cd, p, DE.t)
 
     n = min(0, nc - min(0, nb))
     if not nb:
@@ -226,30 +263,50 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                         n = min(n, m)
 
         elif case == 'tan':
-            dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
+            dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.
-                alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
-                betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
+                if parametric:
+                    betaa, alphaa, alphad = real_imag(ba, bd*a, DE.t)
+                    betad = alphad
+                    etaa, etad = frac_in(dcoeff, DE.t)
+                    if recognize_log_derivative(2*betaa, betad, DE):
+                        A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                        B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
+                        if A is not None and B is not None:
+                            a, m, z = A
+                            # TODO: Add test
+                            if a == 1:
+                                n = min(n, m/2)
+                else:
+                    alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                    betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                    etaa, etad = frac_in(dcoeff, DE.t)
 
-                if recognize_log_derivative(2*betaa, betad, DE):
-                    A = parametric_log_deriv(alphaa*sqrt(-1)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
-                    if A is not None:
-                       a, m, z = A
-                       if a == 1:
-                           n = min(n, m)
+                    if recognize_log_derivative(2*betaa, betad, DE):
+                        A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                        B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
+                        if A is not None:
+                           a, m, z = A
+                           if a == 1:
+                               n = min(n, m)
+
     N = max(0, -nb, n - nc)
     pN = p**N
     pn = p**-n
 
     A = a*pN
     B = ba*pN.quo(bd) + Poly(n, DE.t)*a*derivation(p, DE).quo(p)*pN
-    C = (ca*pN*pn).quo(cd)
     h = pn
+    # point of diff
+    if parametric:
+        c = [(ca*pN*pn).cancel(cd, include=True) for ca, cd in c]
+        # (a*p**N, (b + n*a*Dp/p)*p**N, g1*p**(N - n), ..., gm*p**(N - n), p**-n)
+    else:
+        c = (ca*pN*pn).quo(cd)
+        # (a*p**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
 
-    # (a*p**N, (b + n*a*Dp/p)*p**N, c*p**(N - n), p**-n)
-    return (A, B, C, h)
+    return (A, B, c, h)
 
 
 def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
@@ -736,7 +793,7 @@ def rischDE(fa, fd, ga, gd, DE):
     """
     _, (fa, fd) = weak_normalizer(fa, fd, DE)
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
-    A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
+    A, B, C, hs = special_denom(a, ba, bd, (ca, cd), DE)
     try:
         # Until this is fully implemented, use oo.  Note that this will almost
         # certainly cause non-termination in spde() (unless A == 1), and

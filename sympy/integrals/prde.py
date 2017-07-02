@@ -32,6 +32,7 @@ from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 from sympy.core.compatibility import reduce, range
 from sympy.utilities.misc import debug
+from sympy.integrals.rde import special_denom
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -61,108 +62,6 @@ def prde_normal_denom(fa, fd, G, DE):
     G = [(c*A).cancel(D, include=True) for A, D in G]
 
     return (a, (ba, bd), G, h)
-
-def real_imag(ba, bd, gen):
-    """
-    Helper function, to get the real and imaginary part of a rational function
-    evaluated at sqrt(-1) without actually evaluating it at sqrt(-1)
-
-    Separates the even and odd power terms by checking the degree of terms wrt
-    mod 4. Returns a tuple (ba[0], ba[1], bd) where ba[0] is real part
-    of the numerator ba[1] is the imaginary part and bd is the denominator
-    of the rational function.
-    """
-    bd = bd.as_poly(gen).as_dict()
-    ba = ba.as_poly(gen).as_dict()
-    denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
-    denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
-    bd_real = sum(r for r in denom_real)
-    bd_imag = sum(r for r in denom_imag)
-    num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
-    num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
-    ba_real = sum(r for r in num_real)
-    ba_imag = sum(r for r in num_imag)
-    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
-    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
-    return (ba[0], ba[1], bd)
-
-
-def prde_special_denom(a, ba, bd, G, DE, case='auto'):
-    """
-    Parametric Risch Differential Equation - Special part of the denominator.
-
-    case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
-    hypertangent, and primitive cases, respectively.  For the hyperexponential
-    (resp. hypertangent) case, given a derivation D on k[t] and a in k[t],
-    b in k<t>, and g1, ..., gm in k(t) with Dt/t in k (resp. Dt/(t**2 + 1) in
-    k, sqrt(-1) not in k), a != 0, and gcd(a, t) == 1 (resp.
-    gcd(a, t**2 + 1) == 1), return the tuple (A, B, GG, h) such that A, B, h in
-    k[t], GG = [gg1, ..., ggm] in k(t)^m, and for any solution c1, ..., cm in
-    Const(k) and q in k<t> of a*Dq + b*q == Sum(ci*gi, (i, 1, m)), r == q*h in
-    k[t] satisfies A*Dr + B*r == Sum(ci*ggi, (i, 1, m)).
-
-    For case == 'primitive', k<t> == k[t], so it returns (a, b, G, 1) in this
-    case.
-    """
-    # TODO: Merge this with the very similar special_denom() in rde.py
-    if case == 'auto':
-        case = DE.case
-
-    if case == 'exp':
-        p = Poly(DE.t, DE.t)
-    elif case == 'tan':
-        p = Poly(DE.t**2 + 1, DE.t)
-    elif case in ['primitive', 'base']:
-        B = ba.quo(bd)
-        return (a, B, G, Poly(1, DE.t))
-    else:
-        raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
-            "'base'}, not %s." % case)
-
-    nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
-    nc = min([order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G])
-    n = min(0, nc - min(0, nb))
-    if not nb:
-        # Possible cancellation.
-        if case == 'exp':
-            dcoeff = DE.d.quo(Poly(DE.t, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
-                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                if A is not None:
-                    a, m, z = A
-                    if a == 1:
-                        n = min(n, m)
-
-        elif case == 'tan':
-            dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
-                betad = alphad
-                etaa, etad = frac_in(dcoeff, DE.t)
-                if recognize_log_derivative(2*betaa, betad, DE):
-                    A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                    B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
-                    if A is not None and B is not None:
-                        a, s, z = A
-                        # TODO: Add test
-                        if a == 1:
-                            n = min(n, s/2)
-
-    N = max(0, -nb)
-    pN = p**N
-    pn = p**-n  # This is 1/h
-
-    A = a*pN
-    B = ba*pN.quo(bd) + Poly(n, DE.t)*a*derivation(p, DE).quo(p)*pN
-    G = [(Ga*pN*pn).cancel(Gd, include=True) for Ga, Gd in G]
-    h = pn
-
-    # (a*p**N, (b + n*a*Dp/p)*p**N, g1*p**(N - n), ..., gm*p**(N - n), p**-n)
-    return (A, B, G, h)
 
 
 def prde_linear_constraints(a, b, G, DE):
@@ -648,7 +547,7 @@ def param_rischDE(fa, fd, G, DE):
     # to solutions z = q/hn of the weakly normalized equation.
     gamma *= hn
 
-    A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
+    A, B, G, hs = special_denom(a, ba, bd, G, DE, parametric=True)
     # Solutions p in k[t] of  A*Dp + B*p = Sum(ci*Gi) correspond
     # to solutions q = p/hs of the previous equation.
     gamma *= hs

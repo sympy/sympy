@@ -1,12 +1,14 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy.integrals.risch import (DifferentialExtension, NonElementaryIntegral,
         derivation, risch_integrate)
-from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
-    prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
+from sympy.integrals.prde import (prde_normal_denom, prde_linear_constraints,
+    constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
     prde_cancel_liouvillian)
+
+from sympy.integrals.rde import special_denom
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
@@ -39,25 +41,25 @@ def test_prde_special_denom():
     bd = Poly(1, t)
     G = [(Poly(t, t), Poly(1, t)), (Poly(t**2, t), Poly(1, t)), (Poly(t**3, t), Poly(1, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
-    assert prde_special_denom(a, ba, bd, G, DE) == \
+    assert special_denom(a, ba, bd, G, DE, parametric=True) == \
         (Poly(t + 1, t), Poly(t**2, t), [(Poly(t, t), Poly(1, t)),
         (Poly(t**2, t), Poly(1, t)), (Poly(t**3, t), Poly(1, t))], Poly(1, t))
     G = [(Poly(t, t), Poly(1, t)), (Poly(1, t), Poly(t, t))]
-    assert prde_special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), G, DE) == \
+    assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), G, DE, parametric=True) == \
         (Poly(1, t), Poly(t**2 - 1, t), [(Poly(t**2, t), Poly(1, t)),
         (Poly(1, t), Poly(1, t))], Poly(t, t))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-2*x*t0, t0)]})
     DE.decrement_level()
     G = [(Poly(t, t), Poly(t**2, t)), (Poly(2*t, t), Poly(t, t))]
-    assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3 + 2, t), G, DE) == \
+    assert special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3 + 2, t), G, DE, parametric=True) == \
         (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t, t), Poly(t**2, t)),
         (Poly(2*t, t), Poly(t, t))], Poly(1, x))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)*2*x, t)]})
     G = [(Poly(t + x, t), Poly(t*x, t)), (Poly(2*t, t), Poly(x**2, x))]
-    assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3, t), G, DE) == \
+    assert special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3, t), G, DE, parametric=True) == \
         (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)),
         (Poly(2*t, t, x), Poly(x**2, t, x))], Poly(1, t))
-    assert prde_special_denom(Poly(t + 1, t), Poly(t**2, t), Poly(t**3, t), G, DE) == \
+    assert special_denom(Poly(t + 1, t), Poly(t**2, t), Poly(t**3, t), G, DE, parametric=True) == \
         (Poly(t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t, x),
         Poly(x**2, t, x))], Poly(1, t))
 
