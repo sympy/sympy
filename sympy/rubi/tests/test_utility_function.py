@@ -861,3 +861,14 @@ def test_Smallest():
 def test_MostMainFactorPosition():
     assert MostMainFactorPosition([S(1), S(2), S(3)]) == 2
     assert MostMainFactorPosition([S(1), S(7), S(3), S(4), S(5)]) == 3
+
+def test_OrderedQ():
+    assert OrderedQ([a, b])
+    assert not OrderedQ([b, a])
+
+def test_MinimumDegree():
+    assert MinimumDegree(S(1), S(2)) == 1
+    assert MinimumDegree(S(1), sqrt(2)) == 1
+    assert MinimumDegree(sqrt(2), S(1)) == 1
+    assert MinimumDegree(sqrt(3), sqrt(2)) == sqrt(2)
+    assert MinimumDegree(sqrt(2), sqrt(2)) == sqrt(2)

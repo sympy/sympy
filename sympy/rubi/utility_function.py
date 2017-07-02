@@ -2138,3 +2138,24 @@ def MostMainFactorPosition(lst):
             factor = lst[i]
             num = i + 1
     return num
+
+def OrderedQ(l):
+    return l == Sort(l)
+
+def MinimumDegree(deg1, deg2):
+    if RationalQ(deg1):
+        if RationalQ(deg2):
+            return Min(deg1, deg2)
+        return deg1
+    elif RationalQ(deg2):
+        return deg2
+
+    deg = Simplify(deg1- deg2)
+
+    if RationalQ(deg):
+        if deg > 0:
+            return deg2
+        return deg1
+    elif OrderedQ([deg1, deg2]):
+        return deg1
+    return deg2
