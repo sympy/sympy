@@ -192,7 +192,7 @@ class TIDS(CantSympify):
 
         return tids
 
-    @deprecated(useinstead="get_indices", deprecated_since_version="0.7.5")
+    @deprecated(useinstead="get_indices", issue=12857, deprecated_since_version="0.7.5")
     def to_indices(self):
         return self.get_indices()
 
@@ -1624,21 +1624,21 @@ class TensorIndexType(Basic):
         return obj
 
     @property
-    @deprecated(useinstead="TensorIndex", deprecated_since_version="1.1")
+    @deprecated(useinstead="TensorIndex", issue=12857, deprecated_since_version="1.1")
     def auto_right(self):
         if not hasattr(self, '_auto_right'):
             self._auto_right = TensorIndex("auto_right", self)
         return self._auto_right
 
     @property
-    @deprecated(useinstead="TensorIndex", deprecated_since_version="1.1")
+    @deprecated(useinstead="TensorIndex", issue=12857, deprecated_since_version="1.1")
     def auto_left(self):
         if not hasattr(self, '_auto_left'):
             self._auto_left = TensorIndex("auto_left", self)
         return self._auto_left
 
     @property
-    @deprecated(useinstead="TensorIndex", deprecated_since_version="1.1")
+    @deprecated(useinstead="TensorIndex", issue=12857, deprecated_since_version="1.1")
     def auto_index(self):
         if not hasattr(self, '_auto_index'):
             self._auto_index = TensorIndex("auto_index", self)
@@ -1849,7 +1849,7 @@ class TensorIndex(Basic):
         return self._name
 
     @property
-    @deprecated(useinstead="tensor_index_type", deprecated_since_version="1.1")
+    @deprecated(useinstead="tensor_index_type", issue=12857, deprecated_since_version="1.1")
     def tensortype(self):
         return self.tensor_index_type
 
