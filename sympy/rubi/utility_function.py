@@ -19,12 +19,6 @@ from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
-def Int(expr, var):
-    from .rubi import rubi_integrate
-    if expr == None:
-        return None
-    return rubi_integrate(expr, var)
-
 def Set(expr, value):
     return {expr: value}
 
@@ -1972,3 +1966,53 @@ def SubstForFractionalPower(u, v, n, w, x):
         return x**(n*u.args[1])
     res = [SubstForFractionalPower(i, v, n, w, x) for i in u.args]
     return u.func(*res)
+
+def SubstForFractionalPowerOfQuotientOfLinears(u, x):
+    # (* If u has a subexpression of the form ((a+b*x)/(c+d*x))^(m/n) where m and n>1 are integers,
+    # SubstForFractionalPowerOfQuotientOfLinears[u,x] returns the list {v,n,(a+b*x)/(c+d*x),b*c-a*d} where v is u
+    # with subexpressions of the form ((a+b*x)/(c+d*x))^(m/n) replaced by x^m and x replaced
+    lst = FractionalPowerOfQuotientOfLinears(u, 1, False, x)
+    if AtomQ(lst) or AtomQ(lst[1]):
+        return False
+    n = lst[0]
+    tmp = lst[1]
+    lst=QuotientOfLinearsParts(tmp, x)
+    a, b, c, d = lst[0], lst[1], lst[2], lst[3]
+    if ZeroQ(d):
+        return False
+    lst = Simplify(x**(n - 1)*SubstForFractionalPower(u, tmp, n, (-a + c*x**n)/(b - d*x**n), x)/(b - d*x**n)**2)
+    return [NonfreeFactors(lst, x), n, tmp, FreeFactors(lst, x)*(b*c - a*d)]
+
+def FractionalPowerOfSquareQ(u):
+    # (* If a subexpression of u is of the form ((v+w)^2)^n where n is a fraction, *)
+    # (* FractionalPowerOfSquareQ[u] returns (v+w)^2; else it returns False. *)
+    if AtomQ(u):
+        return False
+    elif FractionalPowerQ(u):
+        a_ = Wild('a')
+        b_ = Wild('b')
+        c_ = Wild('c')
+        match = u.match(a_*(b_ + c_)**S(2))
+        if match:
+            keys = [a_, b_, c_]
+            if len(keys) == len(match):
+                a, b, c = tuple(match[i] for i in keys)
+                if NonsumQ(a):
+                    return (b + c)**S(2)
+    for i in u.args:
+        tmp = FractionalPowerOfSquareQ(i)
+        if Not(FalseQ(tmp)):
+            return tmp
+    return False
+
+def FractionalPowerSubexpressionQ(u, v, w):
+    # (* If a subexpression of u is of the form w^n where n is a fraction but not equal to v, *)
+    # (* FractionalPowerSubexpressionQ[u,v,w] returns True; else it returns False. *)
+    if AtomQ(u):
+        return False
+    elif FractionalPowerQ(u) and PositiveQ(u.args[0]/w):
+        return Not(u.args[0] == v) and LeafCount(w) < 3*LeafCount(v)
+    for i in u.args:
+        if FractionalPowerSubexpressionQ(i, v, w):
+            return True
+    return False

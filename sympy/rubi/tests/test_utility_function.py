@@ -785,3 +785,14 @@ def test_SubstForFractionalPower():
 
 def test_CombineExponents():
     assert True
+
+def test_FractionalPowerOfSquareQ():
+    assert FractionalPowerOfSquareQ(x) == False
+    assert FractionalPowerOfSquareQ((a + b)**2) == (a + b)**2
+    assert FractionalPowerOfSquareQ((a + b)**2*c) == (a + b)**2
+
+def test_FractionalPowerSubexpressionQ():
+    assert not FractionalPowerSubexpressionQ(x, a, x)
+    assert FractionalPowerSubexpressionQ(x**S(2), a, x)
+    assert FractionalPowerSubexpressionQ(x**S(2)*a, a, x)
+    assert not FractionalPowerSubexpressionQ(b*a, a, x)
