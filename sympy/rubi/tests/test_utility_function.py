@@ -72,6 +72,7 @@ def test_RationalQ():
     assert RationalQ(S(5)/6, S(4)/5)
     assert not RationalQ(Sqrt(1.6))
     assert not RationalQ(Sqrt(1.6), S(5)/6)
+    assert not RationalQ(log(2))
 
 def test_Sqrt():
     assert Sqrt(S(16)) == 4
@@ -872,3 +873,21 @@ def test_MinimumDegree():
     assert MinimumDegree(sqrt(2), S(1)) == 1
     assert MinimumDegree(sqrt(3), sqrt(2)) == sqrt(2)
     assert MinimumDegree(sqrt(2), sqrt(2)) == sqrt(2)
+
+def test_PositiveFactors():
+    assert PositiveFactors(S(0)) == 1
+    assert PositiveFactors(-S(1)) == S(1)
+    assert PositiveFactors(sqrt(2)) == sqrt(2)
+    assert PositiveFactors(-log(2)) == log(2)
+    assert PositiveFactors(sqrt(2)*S(-1)) == sqrt(2)
+
+def test_NonpositiveFactors():
+    assert NonpositiveFactors(S(0)) == 0
+    assert NonpositiveFactors(-S(1)) == -1
+    assert NonpositiveFactors(sqrt(2)) == 1
+    assert NonpositiveFactors(-log(2)) == -1
+
+def test_Sign():
+    assert Sign(S(0)) == 0
+    assert Sign(S(1)) == 1
+    assert Sign(-S(1)) == -1

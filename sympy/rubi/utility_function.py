@@ -16,7 +16,7 @@ from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min)
+    Min, sign)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
@@ -2159,3 +2159,36 @@ def MinimumDegree(deg1, deg2):
     elif OrderedQ([deg1, deg2]):
         return deg1
     return deg2
+
+def PositiveFactors(u):
+    # (* PositiveFactors[u] returns the positive factors of u *)
+    if ZeroQ(u):
+        return S(1)
+    elif RationalQ(u):
+        return Abs(u)
+    elif PositiveQ(u):
+        return u
+    elif ProductQ(u):
+        res = 1
+        for i in u.args:
+            res *= PositiveFactors(i)
+        return res
+    return 1
+
+def Sign(u):
+    return sign(u)
+
+def NonpositiveFactors(u):
+    # (* NonpositiveFactors[u] returns the nonpositive factors of u *)
+    if ZeroQ(u):
+        return u
+    elif RationalQ(u):
+        return Sign(u)
+    elif PositiveQ(u):
+        return 1
+    elif ProductQ(u):
+        res = 1
+        for i in u.args:
+            res *= NonpositiveFactors(i)
+        return res
+    return u
