@@ -195,9 +195,9 @@ def md5():
     """
     Print the md5 sums of the release files
     """
-    _md5(_print=True)
+    _md5(print_=True)
 
-def _md5(_print=True, local=False):
+def _md5(print_=True, local=False):
     if local:
         out = $(md5sum @(release_files()))
     else:
@@ -206,7 +206,7 @@ def _md5(_print=True, local=False):
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
     out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
-    if _print:
+    if print_:
         print(out)
     return out
 
