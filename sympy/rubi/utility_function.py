@@ -14,10 +14,17 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
-from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
+from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
+
+def Int(expr, var):
+    from .rubi import rubi_integrate
+    if expr == None:
+        return None
+    return rubi_integrate(expr, var)
+
 
 def Set(expr, value):
     return {expr: value}
@@ -2016,3 +2023,20 @@ def FractionalPowerSubexpressionQ(u, v, w):
         if FractionalPowerSubexpressionQ(i, v, w):
             return True
     return False
+
+def Apply(f, lst):
+    return f(*lst)
+
+def FactorNumericGcd(u):
+    # (* FactorNumericGcd[u] returns u with the gcd of the numeric coefficients of terms of sums factored out. *)
+    if PowerQ(u):
+        if RationalQ(u.exp):
+            return FactorNumericGcd(u.base)**u.exp
+    elif ProductQ(u):
+        res = [FactorNumericGcd(i) for i in u.args]
+        return Mul(*res)
+    elif SumQ(u):
+        g = GCD(*[NumericFactor(i) for i in u.args])
+        r = Add(*[i/g for i in u.args])
+        return g*r
+    return u
