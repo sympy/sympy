@@ -289,7 +289,8 @@ class CoordSysCartesian(Basic):
         SymPyDeprecationWarning(
             feature="coord_system.delop has been replaced.",
             useinstead="Use the Del() class",
-            deprecated_since_version="1.1"
+            deprecated_since_version="1.1",
+            issue=12858,
         ).warn()
         from sympy.vector.deloperator import Del
         return Del()
