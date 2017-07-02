@@ -56,7 +56,7 @@ def plot_implicit_tests(name):
     with warnings.catch_warnings(record=True) as w:
         plot_and_save(Eq(y, re(cos(x) + I*sin(x))), name=name)
         for i in w: # Same warning may be issued multiple times
-            assert issubclass(w.category, UserWarning)
+            assert issubclass(i.category, UserWarning)
             assert "Adaptive meshing could not be applied" in str(i.message)
 
     with warnings.catch_warnings(record=True) as w:
