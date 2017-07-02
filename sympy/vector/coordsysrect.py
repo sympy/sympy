@@ -189,18 +189,21 @@ class CoordSysCartesian(Basic):
         :param curv_coord_type: str, tuple
 
         """
+
         if isinstance(curv_coord_type, string_types):
+
             self._set_transformation_equations_mapping(curv_coord_type)
             self._set_lame_coefficient_mapping(curv_coord_type)
             if inverse:
                 self._set_inv_trans_equations(curv_coord_type)
 
-        elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 3:
+        elif isinstance(curv_coord_type, (tuple, list, Tuple))\
+                and any(isinstance(i, BaseScalar) for i in curv_coord_type):
             self._transformation_eqs = curv_coord_type
             self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
             if inverse:
                 self._inv_transformation_eqs = self._calculate_inv_transformation_equations(
-                                                self._transformation_eqations())
+                                                self._transformation_equations())
 
         elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 2:
             self._transformation_eqs = \
@@ -210,7 +213,7 @@ class CoordSysCartesian(Basic):
             self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(self._transformation_equations())
             if inverse:
                 self._inv_transformation_eqs = self._calculate_inv_transformation_equations(
-                                                self._transformation_eqations())
+                                                self._transformation_equations())
         else:
             raise ValueError("Wrong set of parameter.")
 
@@ -241,6 +244,18 @@ class CoordSysCartesian(Basic):
         self._transformation_eqs = equations_mapping[curv_coord_name]
 
     def _set_inv_trans_equations(self, curv_coord_name):
+        """
+        Store information about some default, pre-defined inverse
+        transformation equations.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+
         from sympy import acos, atan
         equations_mapping = {
             'cartesian': (self.x, self.y, self.z),
@@ -280,13 +295,25 @@ class CoordSysCartesian(Basic):
         self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
 
     def _calculate_inv_transformation_equations(self, equations):
+        """
+        Helper method for set_coordinate_type. It calculates inverse
+        transformation equations for given transformations equations.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+
         from sympy.core import Dummy
         from sympy.solvers import solve
         x = Dummy('y')
         y = Dummy('x')
         z = Dummy('z')
-        eq = self._transformation_eqs
-        return solve([eq[0] - x, eq[1] - y, eq[2] - z], [self.x, y,z])
+        eq = self._transformation_equations()
+        return tuple(solve([eq[0] - x, eq[1] - y, eq[2] - z], [self.x, self.y, self.z]))
 
     def _calculate_lame_coefficients(self, equations):
         """
@@ -363,6 +390,9 @@ class CoordSysCartesian(Basic):
 
     def _transformation_equations(self):
         return self._transformation_eqs[:]
+
+    def _inverse_transformation_equations(self):
+        return self._inv_transformation_eqs[:]
 
     @cacheit
     def rotation_matrix(self, other):
