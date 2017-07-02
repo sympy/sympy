@@ -307,7 +307,7 @@ def release_files():
     """
     Returns the list of local release files
     """
-    return glob.glob('release/release-' + $VERSION + '/*'
+    return glob.glob('release/release-' + $VERSION + '/*')
 
 def show_files(file, print_=True):
     """
