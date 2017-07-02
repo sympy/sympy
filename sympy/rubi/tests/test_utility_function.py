@@ -799,6 +799,9 @@ def test_FractionalPowerSubexpressionQ():
 
 def test_FactorNumericGcd():
     assert FactorNumericGcd(x**(S(2))) == x**S(2)
-    assert FactorNumericGcd(log(x)) = log(x)
-    assert FactorNumericGcd(log(x)*x)) == x*log(x)
+    assert FactorNumericGcd(log(x)) == log(x)
+    assert FactorNumericGcd(log(x)*x) == x*log(x)
     assert FactorNumericGcd(log(x) + x**S(2)) == log(x) + x**S(2)
+
+def test_Apply():
+    assert Apply(List, [a, b, c]) == [a, b, c]
