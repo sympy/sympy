@@ -665,6 +665,7 @@ def _doctest(*paths, **kwargs):
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
+        "sympy/physics/unitsystems.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:
