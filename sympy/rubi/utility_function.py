@@ -2263,3 +2263,24 @@ def DistributeDegree(u, m):
     elif ProductQ(u):
         return Mul(*[DistributeDegree(i, m) for i in u.args])
     return u**m
+
+def FunctionOfPower(*args):
+    # FunctionOfPower[u,x] returns the gcd of the integer degrees of x in u.
+    if len(args) == 2:
+        return FunctionOfPower(args[0], None, args[1])
+
+    u, n, x = args
+
+    if FreeQ(u, x):
+        return n
+    elif u == x:
+        return S(1)
+    elif PowerQ(u):
+        if u.base == x and IntegerQ(u.exp):
+            if n == None:
+                return u.exp
+            return GCD(n, u.exp)
+    tmp = n
+    for i in u.args:
+        tmp = FunctionOfPower(i, tmp, x)
+    return tmp

@@ -921,3 +921,9 @@ def test_DistributeDegree():
     assert DistributeDegree(x, m) == x**m
     assert DistributeDegree(x**a, m) == x**(a*m)
     assert DistributeDegree(a*b, m) == a**m * b**m
+
+def test_FunctionOfPower():
+    assert FunctionOfPower(a, x) == None
+    assert FunctionOfPower(x, x) == 1
+    assert FunctionOfPower(x**3, x) == 3
+    assert FunctionOfPower(x**3*cos(x**6), x) == 3
