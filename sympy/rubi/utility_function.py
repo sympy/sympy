@@ -2247,3 +2247,9 @@ def PolynomialInSubst(u, v, x):
     # If u is a polynomial in v[x], PolynomialInSubst[u,v,x] returns the polynomial u in x.
     w = NonfreeTerms(v, x)
     return ReplaceAll(PolynomialInSubstAux(u, NonfreeFactors(w, x), x), {x: x - FreeTerms(v, x)/FreeFactors(w, x)})
+
+def Distrib(u, v):
+    # Distrib[u,v] returns the sum of u times each term of v.
+    if SumQ(v):
+        return Add(*[u*i for i in v.args])
+    return u*v

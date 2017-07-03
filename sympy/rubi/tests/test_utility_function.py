@@ -912,3 +912,7 @@ def test_PolynomialInSubst():
     v = log(x)
     assert PolynomialInSubst(S(1) + log(x)**3, log(x), x) == 1 + x**3
     assert PolynomialInSubst(S(1) + log(x), log(x), x) == x + 1
+
+def test_Distrib():
+    assert Distrib(x, a) == x*a
+    assert Distrib(x, a + b) == a*x + b*x
