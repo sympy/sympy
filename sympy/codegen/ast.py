@@ -424,8 +424,8 @@ class Type(Symbol):
     ---------
     name : str
         Either an explicit type: ``intc``, ``intp``, ``int8``, ``int16``,
-        ``int32``, ``int64``, ``uint8``, ``uint16``, ``uint32``, ``uint64,
-        float16``, ``float32``, ``float64``, ``complex64``, ``complex128``,
+        ``int32``, ``int64``, ``uint8``, ``uint16``, ``uint32``, ``uint64``,
+        ``float16``, ``float32``, ``float64``, ``complex64``, ``complex128``,
         ``bool``. Or a type category (precision decided by code-printer): ``integer``,
         ``real`` or ``complex`` (where the latter two are of floating point type).
         If a ``Type`` instance is given, the said instance is returned.
@@ -491,9 +491,9 @@ class Type(Symbol):
             'decimal_dig': 17,  # DBL_DECIMAL_DIG
         },
         'float80': {  # extended precision, usually "long double", even numpy.float128 (!)
-            'max': 1.18973149535723176502e+4932,  # LDBL_MAX
-            'tiny': 3.36210314311209350626e-4932,  # LDBL_MIN, excluding subnormal numbers
-            'eps': 1.08420217248550443401e-19,  # LDBL_EPSILON
+            'max': Float('1.18973149535723176502e+4932'),  # LDBL_MAX
+            'tiny': Float('3.36210314311209350626e-4932'),  # LDBL_MIN, excluding subnormal numbers
+            'eps': Float('1.08420217248550443401e-19'),  # LDBL_EPSILON
             'dig': 18,  # LDBL_DIG
             'decimal_dig': 21,  # LDBL_DECIMAL_DIG
         }
@@ -696,12 +696,17 @@ class Variable(Basic):
     attrs : iterable of Attribute instances
         Will be stored as a FiniteSet.
     type_ : Type (optional)
-        Type of the variable. Inferred from ``symbol`` if not given.
+        Type of the variable.
 
     Examples
     --------
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Variable, Type
+    >>> from sympy.codegen.ast import Variable, float32
+    >>> x = Symbol('x')
+    >>> v = Variable(x, type_=float32)
+
+    One may also construct a ``Variable`` instance with the type deduced from
+    assumptions about the symbol using the ``deduced`` classmethod::
     >>> i = Symbol('i', integer=True)
     >>> v = Variable.deduced(i)
     >>> v.type == Type('integer')
