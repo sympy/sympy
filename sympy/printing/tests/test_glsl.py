@@ -38,23 +38,23 @@ def test_glsl_code_Pow():
 
 
 def test_glsl_code_constants_mathh():
-    assert glsl_code(exp(1)) == "float E = 2.7182818284590452353602874713527;\nE"
-    assert glsl_code(pi) == "float pi = 3.1415926535897932384626433832795;\npi"
+    assert glsl_code(exp(1)) == "float E = 2.71828183;\nE"
+    assert glsl_code(pi) == "float pi = 3.14159265;\npi"
     # assert glsl_code(oo) == "Number.POSITIVE_INFINITY"
     # assert glsl_code(-oo) == "Number.NEGATIVE_INFINITY"
 
 
 def test_glsl_code_constants_other():
-    assert glsl_code(2*GoldenRatio) == "float GoldenRatio = 1.6180339887498948482045868343656;\n2*GoldenRatio"
-    assert glsl_code(2*Catalan) == "float Catalan = 0.91596559417721901505460351493238;\n2*Catalan"
-    assert glsl_code(2*EulerGamma) == "float EulerGamma = 0.5772156649015328606065120900824;\n2*EulerGamma"
+    assert glsl_code(2*GoldenRatio) == "float GoldenRatio = 1.61803399;\n2*GoldenRatio"
+    assert glsl_code(2*Catalan) == "float Catalan = 0.915965594;\n2*Catalan"
+    assert glsl_code(2*EulerGamma) == "float EulerGamma = 0.577215665;\n2*EulerGamma"
 
 
 def test_glsl_code_Rational():
-    assert glsl_code(Rational(3, 7)) == "3/7"
+    assert glsl_code(Rational(3, 7)) == "3.0/7.0"
     assert glsl_code(Rational(18, 9)) == "2"
-    assert glsl_code(Rational(3, -7)) == "-3/7"
-    assert glsl_code(Rational(-3, -7)) == "3/7"
+    assert glsl_code(Rational(3, -7)) == "-3.0/7.0"
+    assert glsl_code(Rational(-3, -7)) == "3.0/7.0"
 
 
 def test_glsl_code_Integer():
@@ -71,7 +71,7 @@ def test_glsl_code_inline_function():
     g = implemented_function('g', Lambda(x, 2*x))
     assert glsl_code(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert glsl_code(g(x)) == "float Catalan = 0.91596559417721901505460351493238;\n2*x/Catalan"
+    assert glsl_code(g(x)) == "float Catalan = 0.915965594;\n2*x/Catalan"
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))

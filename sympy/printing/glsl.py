@@ -47,7 +47,7 @@ class GLSLPrinter(CodePrinter):
 
         'order': None,
         'full_prec': 'auto',
-        'precision': 32,
+        'precision': 9,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -256,6 +256,9 @@ class GLSLPrinter(CodePrinter):
     def _print_int(self, expr):
         return str(float(expr))
 
+    def _print_Rational(self, expr):
+        return "%s.0/%s.0" % (expr.p, expr.q)
+        
     def _print_Add(self, expr, order=None):
         if(self._settings['use_operators']):
             return CodePrinter._print_Add(self,expr,order)
