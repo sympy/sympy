@@ -907,3 +907,8 @@ def test_ExponentIn():
     assert ExponentIn(S(1) + v, log(x), x) == 1
     assert ExponentIn(S(1) + v + v**3, log(x), x) == 3
     assert ExponentIn(S(2)*sqrt(v)*v**3, log(x), x) == 3.5
+
+def test_PolynomialInSubst():
+    v = log(x)
+    assert PolynomialInSubst(S(1) + log(x)**3, log(x), x) == 1 + x**3
+    assert PolynomialInSubst(S(1) + log(x), log(x), x) == x + 1

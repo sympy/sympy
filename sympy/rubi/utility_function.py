@@ -2230,3 +2230,20 @@ def ExponentInAux(u, v, x):
 
 def ExponentIn(u, v, x):
     return ExponentInAux(u, NonfreeFactors(NonfreeTerms(v, x), x), x)
+
+def PolynomialInSubstAux(u, v, x):
+    if u == v:
+        return x
+    elif AtomQ(u):
+        return u
+    elif PowerQ(u):
+        if PowerQ(v):
+            if u.base == v.base:
+                return x**(u.exp/v.exp)
+        return PolynomialInSubstAux(u.base, v, x)**u.exp
+    return u.func(*[PolynomialInSubstAux(i, v, x) for i in u.args])
+
+def PolynomialInSubst(u, v, x):
+    # If u is a polynomial in v[x], PolynomialInSubst[u,v,x] returns the polynomial u in x.
+    w = NonfreeTerms(v, x)
+    return ReplaceAll(PolynomialInSubstAux(u, NonfreeFactors(w, x), x), {x: x - FreeTerms(v, x)/FreeFactors(w, x)})
