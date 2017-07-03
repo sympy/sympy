@@ -206,7 +206,7 @@ class CoordSys3D(Basic):
                 self._set_inv_trans_equations(curv_coord_type)
 
         elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 3:
-            if any(i.atoms(BaseScalar) for i in curv_coord_type):
+            if all(i.atoms(BaseScalar) for i in curv_coord_type):
                 self._transformation_eqs = curv_coord_type
                 self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
                 if inverse:
