@@ -6453,7 +6453,7 @@ def cancel(f, *gens, **args):
     """
     Cancel common factors in a rational function ``f`` returning
     ``p/q`` where ``p`` and ``q`` are fully expanded expressions
-    with no factors in common.
+    (in the generators given) with no factors in common.
 
     If the numerator and denominator of ``f`` are already
     known, they can be sent directly and a tuple giving
@@ -6509,6 +6509,18 @@ def cancel(f, *gens, **args):
     (1, Poly(2, x, domain='ZZ'), Poly(3*x, x, domain='ZZ'))
     >>> cancel((p, q))
     (1, 2, 3*x)
+
+    The state of expansion of the result depends on the generators
+    given:
+
+    >>> n = x**2*(y**2*z - z) - y**2*z + z
+    >>> d = x*(y*z - z) - y*z + z
+    >>> cancel(n/d)
+    x*y + x + y + 1
+    >>> cancel(n/d, y)
+    x + y*(x + 1) + 1
+    >>> cancel(n/d, x)
+    x*(y + 1) + y + 1
 
     Notes
     =====
