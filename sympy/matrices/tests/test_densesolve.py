@@ -1,4 +1,7 @@
-from sympy.matrices.densesolve import LU_solve, rref_solve, cholesky_solve
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from sympy.matrices.densesolve import LU_solve, rref_solve, cholesky_solve
 from sympy import Dummy
 from sympy import QQ
 

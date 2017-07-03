@@ -1,23 +1,22 @@
 import os
 USE_SYMENGINE = os.getenv('USE_SYMENGINE', '0')
+USE_SYMENGINE = USE_SYMENGINE.lower() in ('1', 't', 'true')
 
-if USE_SYMENGINE.lower() in ('1', 't', 'true'):
-    from symengine.sympy_compat import (Symbol, Integer, sympify, S,
+if USE_SYMENGINE:
+    from symengine import (Symbol, Integer, sympify, S,
         SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,
         sin, cos, tan, cot, csc, sec, asin, acos, atan, acot, acsc, asec,
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
-        expand, Function, symbols, var, Add, Mul, Derivative)
-    from symengine.sympy_compat import AppliedUndef
-    #TODO: Fix this
-    from symengine.lib.symengine_wrapper import (Matrix as ImmutableMatrix,
-        MatrixBase)
+        expand, Function, symbols, var, Add, Mul, Derivative,
+        ImmutableMatrix, MatrixBase)
+    from symengine import AppliedUndef
 else:
     from sympy import (Symbol, Integer, sympify, S,
         SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,
         sin, cos, tan, cot, csc, sec, asin, acos, atan, acot, acsc, asec,
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
-        expand, Function, symbols, var, Add, Mul, Derivative)
+        expand, Function, symbols, var, Add, Mul, Derivative,
+        ImmutableMatrix, MatrixBase)
     from sympy.core.function import AppliedUndef
-    from sympy import ImmutableMatrix, MatrixBase

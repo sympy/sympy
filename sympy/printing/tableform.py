@@ -7,7 +7,7 @@ from types import FunctionType
 
 
 class TableForm(object):
-    """
+    r"""
     Create a nice table representation of data.
 
     Examples
@@ -24,10 +24,10 @@ class TableForm(object):
     format (ascii, latex, html, ...).
 
     >>> print(t.as_latex())
-    \\begin{tabular}{l l}
-    $5$ & $7$ \\\\
-    $4$ & $2$ \\\\
-    $10$ & $3$ \\\\
+    \begin{tabular}{l l}
+    $5$ & $7$ \\
+    $4$ & $2$ \\
+    $10$ & $3$ \\
     \end{tabular}
 
     """

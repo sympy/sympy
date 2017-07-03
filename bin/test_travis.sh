@@ -51,7 +51,9 @@ EOF
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
-    cat << EOF | python
+    # -We:invalid makes invalid escape sequences error in Python 3.6. See
+    # -#12028.
+    cat << EOF | python -We:invalid
 print('Testing DOCTESTS')
 import sympy
 if not sympy.doctest():
@@ -117,7 +119,9 @@ EOF
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
-    cat << EOF | python
+    # -We:invalid makes invalid escape sequences error in Python 3.6. See
+    # -#12028.
+    cat << EOF | python -We:invalid
 print('Testing SYMPY, split ${SPLIT}')
 import sympy
 if not sympy.test(split='${SPLIT}'):

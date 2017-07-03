@@ -944,9 +944,8 @@ class Float(Number):
                             feature="Using 'prec=XX' to denote decimal precision",
                             useinstead="'dps=XX' for decimal precision and 'precision=XX' "\
                                               "for binary precision",
-                            value="This is an effort to improve the functionality "\
-                                       "of the Float class. ",
-                            issue=12820).warn()
+                            issue=12820,
+                            deprecated_since_version="1.1").warn()
             dps = prec
 
         if dps is not None and precision is not None:
@@ -1053,8 +1052,7 @@ class Float(Number):
             if precision < num._prec:
                 _mpf_ = mpf_norm(_mpf_, precision)
         else:
-            # XXX: We lose precision here.
-            _mpf_ = mpmath.mpf(num)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=prec)._mpf_
 
         # special cases
         if _mpf_ == _mpf_zero:

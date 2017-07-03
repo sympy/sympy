@@ -184,7 +184,7 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    """Generates simple DE.
+    r"""Generates simple DE.
 
     DE is of the form
 

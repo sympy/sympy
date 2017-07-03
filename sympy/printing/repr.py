@@ -144,6 +144,10 @@ class ReprPrinter(Printer):
 
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
+        # print the dummy_index like it was an assumption
+        if expr.is_Dummy:
+            d['dummy_index'] = expr.dummy_index
+
         if d == {}:
             return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
         else:
