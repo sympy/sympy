@@ -6,7 +6,7 @@ from sympy.core import S
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed)
+    PolificationFailed, CoercionFailed, PolynomialError)
 from sympy.simplify import rcollect
 from sympy.utilities import default_sort_key, postfixes
 
@@ -37,10 +37,7 @@ def solve_poly_system(seq, *gens, **args):
     if len(polys) == len(opt.gens) == 2:
         f, g = polys
 
-        a, b = f.degree_list()
-        c, d = g.degree_list()
-
-        if a <= 2 and b <= 2 and c <= 2 and d <= 2:
+        if all(i <= 2 for i in f.degree_list() + g.degree_list()):
             try:
                 return solve_biquadratic(f, g, opt)
             except SolveFailed:
@@ -83,9 +80,17 @@ def solve_biquadratic(f, g, opt):
     x, y = opt.gens
 
     p = Poly(p, x, expand=False)
-    q = q.ltrim(-1)
-
     p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
+    if not all(y in i.free_symbols for i in p_roots):
+        # then the solution won't depend on y
+        # and this is not a zero-dimensional system
+        raise SolveFailed
+
+    try:
+        q = q.ltrim(-1)
+    except PolynomialError:
+        # q was not univariate
+        raise SolveFailed
     q_roots = list(roots(q).keys())
 
     solutions = []
