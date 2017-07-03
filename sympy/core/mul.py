@@ -12,6 +12,7 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce, range
 from .expr import Expr
+from sympy.utilities.iterables import sift
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -64,7 +65,9 @@ def _unevaluated_Mul(*args):
     False
 
     """
-    args = list(args)
+    sifted = sift(args, lambda x: bool(x.is_commutative))
+    args = sifted[True]
+    nc = sifted[False]
     newargs = []
     ncargs = []
     co = S.One
@@ -84,7 +87,7 @@ def _unevaluated_Mul(*args):
         newargs.insert(0, co)
     if ncargs:
         newargs.append(Mul._from_args(ncargs))
-    return Mul._from_args(newargs)
+    return Mul._from_args(newargs + nc)
 
 
 class Mul(Expr, AssocOp):

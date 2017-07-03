@@ -9,6 +9,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
                    integrate)
 from sympy.core.function import AppliedUndef
+from sympy.core.mul import _unevaluated_Mul
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -1789,3 +1790,8 @@ def test_normal():
     x = symbols('x')
     e = Mul(S.Half, 1 + x, evaluate=False)
     assert e.normal() == e
+
+
+def test__unevaluated_Mul():
+    A, B = symbols('A B', commutative=False)
+    assert _unevaluated_Mul(x, A, B, S(2), A).args == (2, x, A, B, A)
