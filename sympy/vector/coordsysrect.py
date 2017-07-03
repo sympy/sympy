@@ -213,6 +213,32 @@ class CoordSys3D(Basic):
         else:
             raise ValueError("Wrong set of parameter.")
 
+        if not self._check_orthogonality(self._inv_transformation_eqs):
+            raise ValueError("The transformation equation does not create orthogonal coordinate system")
+
+    def _check_orthogonality(self, equations):
+        """
+        Helper method for _connect_to_cartesian. It checks if
+        set of transformation equations create orthogonal curvilinear
+        coordinate system
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+        v1 = self.i*equations[0]
+        v2 = self.j*equations[1]
+        v3 = self.k*equations[2]
+
+        if v1.dot(self.j*equations[1]) == 0 and v2.dot(self.k*equations[2]) == 0\
+            and v3.dot(self.i*equations[0]) == 0:
+            return True
+        else:
+            return False
+
     def _set_transformation_equations_mapping(self, curv_coord_name):
         """
         Store information about some default, pre-defined transformation
