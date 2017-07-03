@@ -187,20 +187,22 @@ def Subst(a, x, y):
 
 def First(expr, d=None):
     # gives the first element if it exists, or d otherwise.
-    try:
-        if isinstance(expr, list):
-            return expr[0]
+    if isinstance(expr, list):
+        return expr[0]
+    else:
+        if SumQ(expr) or ProductQ(expr):
+            l = Sort(expr.args)
+            return l[0]
         else:
             return expr.args[0]
-    except:
-        return d
 
 def Rest(expr):
     if isinstance(expr, list):
         return expr[1:]
     else:
         if SumQ(expr) or ProductQ(expr):
-            return expr.func(*expr.args[1:])
+            l = Sort(expr.args)
+            return expr.func(*l[1:])
         else:
             return expr.args[1]
 
@@ -1251,14 +1253,14 @@ def LeadBase(u):
     # returns the base of the leading factor of u.
     v = LeadFactor(u)
     if PowerQ(v):
-        return v.args[0]
+        return v.base
     return v
 
 def LeadDegree(u):
     # returns the degree of the leading factor of u.
     v = LeadFactor(u)
     if PowerQ(v):
-        return v.args[1]
+        return v.exp
     return v
 
 def Numer(expr):
@@ -1441,7 +1443,6 @@ def RationalFunctionExpand(expr, x):
     pattern = u_*v_**n_
     match = expr.match(pattern)
     if match:
-        print(match)
         keys = [u_, v_, n_]
         if len(keys) == len(match):
             u, v, n = tuple([match[i] for i in keys])
@@ -2284,3 +2285,10 @@ def FunctionOfPower(*args):
     for i in u.args:
         tmp = FunctionOfPower(i, tmp, x)
     return tmp
+
+def DivideDegreesOfFactors(u, n):
+    # DivideDegreesOfFactors[u,n] returns the product of the base of the factors of u raised to
+    # the degree of the factors divided by n.
+    if ProductQ(u):
+        return Mul(*[LeadBase(i)**(LeadDegree(i)/n) for i in u.args])
+    return LeadBase(u)**(LeadDegree(u)/n)
