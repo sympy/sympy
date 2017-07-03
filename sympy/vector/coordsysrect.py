@@ -4,7 +4,8 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.core import S
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple
+from sympy import Matrix
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, simplify
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
@@ -212,6 +213,37 @@ class CoordSys3D(Basic):
 
         else:
             raise ValueError("Wrong set of parameter.")
+
+        if not self._check_orthogonality():
+            raise ValueError("The transformation equation does not create orthogonal coordinate system")
+
+    def _check_orthogonality(self):
+        """
+        Helper method for _connect_to_cartesian. It checks if
+        set of transformation equations create orthogonal curvilinear
+        coordinate system
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+
+        eq = self._transformation_equations()
+
+        v1 = Matrix([diff(eq[0], self.x), diff(eq[1], self.x), diff(eq[2], self.x)])
+        v2 = Matrix([diff(eq[0], self.y), diff(eq[1], self.y), diff(eq[2], self.y)])
+        v3 = Matrix([diff(eq[0], self.z), diff(eq[1], self.z), diff(eq[2], self.z)])
+
+        if any(simplify(i[0]+i[1]+i[2]) == 0 for i in (v1, v2, v3)):
+            return False
+        else:
+            if v1.dot(v2) == 0 and v2.dot(v3) == 0 and v3.dot(v1) == 0:
+                return True
+            else:
+                return False
 
     def _set_transformation_equations_mapping(self, curv_coord_name):
         """
