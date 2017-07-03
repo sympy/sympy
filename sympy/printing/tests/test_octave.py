@@ -145,9 +145,7 @@ def test_Matrices():
     A = Matrix([[1, sin(x/2), abs(x)],
                 [0, 1, pi],
                 [0, exp(1), ceiling(x)]]);
-    expected = ("[1 sin(x/2)  abs(x);\n"
-                "0        1      pi;\n"
-                "0   exp(1) ceil(x)]")
+    expected = "[1 sin(x/2) abs(x); 0 1 pi; 0 exp(1) ceil(x)]"
     assert mcode(A) == expected
     # row and columns
     assert mcode(A[:,0]) == "[1; 0; 0]"
@@ -204,7 +202,7 @@ def test_containers():
     assert mcode(Tuple(*[1, 2, 3])) == "{1, 2, 3}"
     assert mcode((1, x*y, (3, x**2))) == "{1, x.*y, {3, x.^2}}"
     # scalar, matrix, empty matrix and empty list
-    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0;\n0 1 0;\n0 0 1], [], {}}"
+    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0; 0 1 0; 0 0 1], [], {}}"
 
 
 def test_octave_noninline():
@@ -260,7 +258,7 @@ def test_octave_matrix_assign_to():
     A = Matrix([[1, 2, 3]])
     assert mcode(A, assign_to='a') == "a = [1 2 3];"
     A = Matrix([[1, 2], [3, 4]])
-    assert mcode(A, assign_to='A') == "A = [1 2;\n3 4];"
+    assert mcode(A, assign_to='A') == "A = [1 2; 3 4];"
 
 
 def test_octave_matrix_assign_to_more():
