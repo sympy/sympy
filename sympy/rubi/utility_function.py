@@ -2253,3 +2253,13 @@ def Distrib(u, v):
     if SumQ(v):
         return Add(*[u*i for i in v.args])
     return u*v
+
+def DistributeDegree(u, m):
+    # DistributeDegree[u,m] returns the product of the factors of u each raised to the mth degree.
+    if AtomQ(u):
+        return u**m
+    elif PowerQ(u):
+        return u.base**(u.exp*m)
+    elif ProductQ(u):
+        return Mul(*[DistributeDegree(i, m) for i in u.args])
+    return u**m

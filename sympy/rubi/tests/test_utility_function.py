@@ -916,3 +916,8 @@ def test_PolynomialInSubst():
 def test_Distrib():
     assert Distrib(x, a) == x*a
     assert Distrib(x, a + b) == a*x + b*x
+
+def test_DistributeDegree():
+    assert DistributeDegree(x, m) == x**m
+    assert DistributeDegree(x**a, m) == x**(a*m)
+    assert DistributeDegree(a*b, m) == a**m * b**m
