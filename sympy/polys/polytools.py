@@ -614,7 +614,10 @@ class Poly(Expr):
 
     def ltrim(f, gen):
         """
-        Remove dummy generators from the "left" of ``f``.
+        Remove dummy generators from ``f`` that are to the left of
+        specified ``gen`` in the generators as ordered. When ``gen``
+        is an integer, it refers to the generator located at that
+        position within the tuple of generators of ``f``.
 
         Examples
         ========
@@ -624,19 +627,22 @@ class Poly(Expr):
 
         >>> Poly(y**2 + y*z**2, x, y, z).ltrim(y)
         Poly(y**2 + y*z**2, y, z, domain='ZZ')
+        >>> Poly(z, x, y, z).ltrim(-1)
+        Poly(z, z, domain='ZZ')
 
         """
         rep = f.as_dict(native=True)
         j = f._gen_to_level(gen)
+
         terms = {}
 
         for monom, coeff in rep.items():
-            monom = monom[j:]
 
-            if monom not in terms:
-                terms[monom] = coeff
-            else:
+            if any(i for i in monom[:j]):
+                # some generator is used in the portion to be trimmed
                 raise PolynomialError("can't left trim %s" % f)
+
+            terms[monom[j:]] = coeff
 
         gens = f.gens[j:]
 
@@ -658,7 +664,7 @@ class Poly(Expr):
         False
 
         """
-        indices = set([])
+        indices = set()
 
         for gen in gens:
             try:
