@@ -200,19 +200,20 @@ class CoordSys3D(Basic):
         """
 
         if isinstance(curv_coord_type, string_types):
-
             self._set_transformation_equations_mapping(curv_coord_type)
             self._set_lame_coefficient_mapping(curv_coord_type)
             if inverse:
                 self._set_inv_trans_equations(curv_coord_type)
 
-        elif isinstance(curv_coord_type, (tuple, list, Tuple))\
-                and any(isinstance(i, BaseScalar) for i in curv_coord_type):
-            self._transformation_eqs = curv_coord_type
-            self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
-            if inverse:
-                self._inv_transformation_eqs = self._calculate_inv_transformation_equations(
-                                                self._transformation_equations())
+        elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 3:
+            if any(i.atoms(BaseScalar) for i in curv_coord_type):
+                self._transformation_eqs = curv_coord_type
+                self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
+                if inverse:
+                    self._inv_transformation_eqs = self._calculate_inv_transformation_equations(
+                                                    self._transformation_equations())
+            else:
+                raise ValueError("Wrong set of parameter.")
 
         elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 2:
             self._transformation_eqs = \

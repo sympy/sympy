@@ -9,6 +9,7 @@ from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
+from sympy.utilities.pytest import raises
 
 
 x, y, z = symbols('x y z')
@@ -361,6 +362,8 @@ def test_transformation_equations():
     a._connect_to_standard_cartesian((a.x * cos(a.y), a.x * sin(a.y), a.z), inverse=False)
     assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
+
+    raises(ValueError, lambda: a._connect_to_standard_cartesian((x, y, z)))
 
 
 def test_coordsys3d():
