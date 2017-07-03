@@ -89,7 +89,6 @@ def solve_biquadratic(f, g, opt):
     try:
         q = q.ltrim(-1)
     except PolynomialError:
-        # q was not univariate
         raise SolveFailed
     q_roots = list(roots(q).keys())
 
@@ -166,7 +165,7 @@ def solve_generic(polys, opt):
     def _is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
         for monom in f.monoms():
-            if any(m > 0 for m in monom[:-1]):
+            if any(m for m in monom[:-1]):
                 return False
 
         return True
