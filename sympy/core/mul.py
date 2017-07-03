@@ -1766,7 +1766,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         margs = list(factors.args)
         if margs[0].is_Number:
             margs[0] *= coeff
-            if margs[0] == 1:
+            if margs[0] is S.One:
                 margs.pop(0)
         else:
             margs.insert(0, coeff)
