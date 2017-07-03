@@ -14,6 +14,7 @@ def CoordSysCartesian(*args, **kwargs):
     SymPyDeprecationWarning(
         feature="CoordSysCartesian",
         useinstead="CoordSys3D",
+        issue=12865,
         deprecated_since_version="1.1"
     ).warn()
     return CoordSys3D(*args, **kwargs)
@@ -297,6 +298,7 @@ class CoordSys3D(Basic):
         SymPyDeprecationWarning(
             feature="delop operator inside coordinate system",
             useinstead="it as instance Del class",
+            issue=12866,
             deprecated_since_version="1.1"
             ).warn()
         from sympy.vector.deloperator import Del
