@@ -257,7 +257,7 @@ class CodePrinter(StrPrinter):
 
     def _print_Dummy(self, expr):
         if expr.name.endswith('_%i' % (expr.dummy_index - 1)):
-            return expr.name
+            return '_' + expr.name
         else: # dummies must be printed as unique symbols
             return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 

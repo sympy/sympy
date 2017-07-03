@@ -552,7 +552,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     if isiter(args) and any(isiter(i) for i in args):
         from sympy.utilities.iterables import flatten
         import re
-        dum_args = [str(Dummy('_' + str(i))) for i in range(len(args))]
+        dum_args = [str(Dummy(str(i))) for i in range(len(args))]
         iter_args = ','.join([i if isiter(a) else i
             for i, a in zip(dum_args, args)])
         lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
