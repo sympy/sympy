@@ -6397,7 +6397,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
         return result
 
 def _cancel_pq(p, q, *gens, **args):
-    # helper for cancel to handle explicit numerator and denominator
+    """helper for cancel to handle explicit numerator and denominator"""
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
@@ -6415,49 +6415,38 @@ def _cancel_pq(p, q, *gens, **args):
         return c, P, Q
 
 def _cancel(f, *gens, **args):
-    # helper for cancel when it is given an Expr
+    """helper for cancel when it is given an Expr"""
     from sympy.functions.elementary.piecewise import Piecewise
 
     if f.is_Atom:
         return f
 
-    if not isinstance(f, (Add, Mul, Pow)):
-        # `replace` won't enter non-Basic args
-        # `preorder_traversal` will, but it can't replace them
-        # if they are not hashable
-        # so...we use `bottom_up`. This functionality is put here
-        # instead of in cancel b/c arguments might have iterables
-        # but a pure iterable should be handled like
-        # it = map(cancel, it)
-        def F(e):
-            if isinstance(e, (Add, Mul, Pow)):
-                return _cancel(e, *gens, **args)
-            if not isinstance(e, Basic) and iterable(e):
-                # the check against Basic is there because
-                # Basic args will have already been traversed
-                return type(e)([_cancel(i) for i in e])
-            return e
-        from sympy.simplify.simplify import bottom_up
-        return bottom_up(f, F, nonbasic=True)
+    def F(e):
+        if e.is_commutative and not e.has(Piecewise):
+            p, q = e.as_numer_denom()
+            c, P, Q = _cancel_pq(p, q, *gens, **args)
+            # use of as_numer_denom() guarantees that |c| == 1
+            if Q.is_Number:  # keep expr like (x + 1)/2 unevaluated
+                return _keep_coeff(c/Q, P)
+            return c*P/Q  # allow c to distribute
+        else:  # not commutative or has Piecewise
+            if isinstance(e, (Mul, Add)):
+                sifted = sift(e.args, lambda x:
+                    x.is_commutative and not isinstance(x, Piecewise))
+                c, nc = sifted[True], sifted[False] + sifted[None]
+                nc = [_cancel(i, *gens, **args) for i in nc]
+                return e.func(_cancel(e.func._from_args(c), *gens, **args), *nc)
+            else:
+                return e.func(*[_cancel(i, *gens, **args) for i in e.args])
 
-    # f is Mul, Add or Pow, maybe with Piecewise
-    if f.is_commutative and not f.has(Piecewise):
-        p, q = f.as_numer_denom()
-        c, P, Q = _cancel_pq(p, q, *gens, **args)
-        # use of as_numer_denom() guarantees that |c| == 1
-        if Q.is_Number:  # keep expr like (x + 1)/2 unevaluated
-            return _keep_coeff(c/Q, P)
-        return c*P/Q  # allow c to distribute
-    else:  # not commutative or has Piecewise
-        if isinstance(f, (Mul, Add)):
-            sifted = sift(f.args, lambda x:
-                x.is_commutative and not isinstance(x, Piecewise))
-            c, nc = sifted[True], sifted[False] + sifted[None]
-            nc = [_cancel(i, *gens, **args) for i in nc]
-            return f.func(_cancel(f.func._from_args(c), *gens, **args), *nc)
-        else:
-            return f.func(*[_cancel(i, *gens, **args) for i in f.args])
+    # shallow application of F
+    if isinstance(f, (Mul, Add, Pow)):
+        f = F(f)
 
+    # deep application of F
+    f = f.replace(lambda x: isinstance(x, (Mul, Add, Pow)), lambda x: F(x))
+
+    return f
 
 @public
 def cancel(f, *gens, **args):
@@ -6479,6 +6468,9 @@ def cancel(f, *gens, **args):
     numerator and denominator when passing an Expr. The coefficient
     will be +/-1.
 
+    The flag `coeff` can be used to keep a denominator that would
+    otherwise distribute automatically (see examples).
+
     Examples
     ========
 
@@ -6492,9 +6484,15 @@ def cancel(f, *gens, **args):
     sqrt(6)/2
 
     Unless the denominator is 1, the result should always be a
-    fraction (unevaluated, if necessary):
+    fraction (but automatic distribution sometimes distributes
+    this):
 
     >>> cancel(x/2  + y/2)
+    x/2 + y/2
+
+    To prevent that, set `coeff=True`:
+
+    >>> cancel(x/2 + y/2, coeff=True)
     (x + y)/2
 
     If it is desired to get the coefficient, numerator and denominator
@@ -6543,40 +6541,70 @@ def cancel(f, *gens, **args):
 
     # remove this before passing to options or it will complain
     as_tuple = args.pop('tuple', isinstance(f, tuple))
+    coeff = args.pop('coeff', False)
+    if coeff:
+        as_tuple = False
 
     options.allowed_flags(args, ['polys'])
 
-    F = f
-    if not isinstance(F, tuple):
-        F = sympify(f)
+    F = sympify(f)
 
     # argument checking
-    if isinstance(F, tuple):
+    if isinstance(F, Tuple):
         if len(F) != 2:
             raise ValueError(filldedent('''
                 Use a tuple of length 2 to send the numerator and
                 denominator of an expression.'''))
+        F = tuple(F)
     elif not isinstance(F, Expr):
         raise ValueError(filldedent('''
-            expecting tuple (containing the numerator and denominator)
-            or Expr, not %s''' % F))
+            expecting tuple (containing the numerator
+            and denominator) or Expr, not %s''' % F))
 
     # dispatch to helper
     if isinstance(F, tuple):
         p, q = F
         rv = c, n, d = _cancel_pq(p, q, *gens, **args)
         if not as_tuple:
-            rv = _keep_coeff(c, nd)
+            if coeff:
+                rv = _keep_coeff(c, n/d)
+            else:
+                rv = c*n/d
     else:
         F = factor_terms(F, radical=True)
+
+        # Some args might be non-Basic and `replace` won't enter
+        # them; `preorder_traversal` will, but it can't handle
+        # replacements containing them, e.g.
+        # {Piecewise(([1],x<0)):1} raises TypeError. So once at
+        # the outset we handle the non-Basic iterable args of F.
+        # If F itself is a non-Basic iterable like a list, it
+        # should be handled like newlist = map(cancel, List).
+        def handler(e):
+            if not isinstance(e, Basic) and iterable(e):
+                # the check against Basic is there because
+                # Basic args will have already been traversed
+                return type(e)([_cancel(i, *gens, **args) for i in e])
+            return e
+        from sympy.simplify.simplify import bottom_up
+        F = bottom_up(F, handler, nonbasic=True)
+
+        # now procecss the other args
         rv = _cancel(F, *gens, **args)
+        c, nd = rv.as_coeff_Mul()
         if as_tuple:
-            c, nd = rv.as_coeff_Mul()
             n, d = fraction(nd)
             if c.q is not S.One:
                 d *= c.q
                 c *= c.q
-            rv = c, n, d
+            if as_tuple:
+                rv = c, n, d
+            else:
+                rv = _keep_coeff(c, n/d)
+        elif not coeff and nd.is_Add:
+            rv = c*nd
+
+
 
     return rv
 

@@ -2845,7 +2845,9 @@ def test_cancel():
     eq = (x**2/4 - 1)/(x/2 - 1)
     assert cancel(fraction(eq)) == (1, x + 2, 2)
     assert cancel(eq.as_numer_denom()) == (1, x + 2, 2)
-    assert cancel(eq) == _keep_coeff(S.Half, x + 2)
+    assert cancel(eq) == 1 + x/2
+    assert cancel(eq, tuple=True) == (1, x + 2, 2)
+    assert cancel(eq, coeff=True) == _keep_coeff(S.Half, x + 2)
     assert cancel((1/eq).as_numer_denom()) == (1, 2, x + 2)
 
     f = (x**2 - 2)/(x + sqrt(2))
@@ -2942,6 +2944,8 @@ def test_cancel():
     assert nc.is_commutative is None  # if this fails get a new object
     eq = 4*nc
     assert cancel(eq) == eq
+
+    assert cancel((x**2 + x, x + 1), tuple=False) == x
 
 
 def test_issue_11506():

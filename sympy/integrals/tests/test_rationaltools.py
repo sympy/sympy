@@ -67,7 +67,7 @@ def test_ratint():
     g = x**4 - 2*x**3 + 5*x**2 - 4*x + 4
 
     assert ratint(f/g, x) == \
-        x + S(1)/2*x**2 + S(1)/2*log(2 - x + x**2) - (4*x - 9)/(14 - 7*x + 7*x**2) + \
+        x + S(1)/2*x**2 + S(1)/2*log(2 - x + x**2) + (-4*x + 9)/(14 - 7*x + 7*x**2) + \
         13*sqrt(7)*atan(-S(1)/7*sqrt(7) + 2*x*sqrt(7)/7)/49
 
     assert ratint(1/(x**2 + x + 1), x) == \

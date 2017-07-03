@@ -4,7 +4,7 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
+    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction, cancel
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -971,9 +971,8 @@ def test_atom_bug():
 
 def test_limit_bug():
     z = Symbol('z', zero=False)
-    assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
-        (log(z**2) + 2*EulerGamma + 2*log(pi))/(2*z) - \
-        (-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z + log(pi)/z
+    assert cancel(integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi))
+        ) == (log(z) - Ci(pi**2*z) + EulerGamma + 2*log(pi))/z
 
 
 def test_issue_4703():
@@ -1062,7 +1061,7 @@ def test_risch_option():
     # risch=True only allowed on indefinite integrals
     raises(ValueError, lambda: integrate(1/log(x), (x, 0, oo), risch=True))
     assert integrate(exp(-x**2), x, risch=True) == NonElementaryIntegral(exp(-x**2), x)
-    assert integrate(log(1/x)*y, x, y, risch=True) == y**2*(x*log(1/x)/2 + x/2)
+    assert integrate(log(1/x)*y, x, y, risch=True) == y**2*(x*log(1/x) + x)/2
     assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
     # TODO: How to test risch=False?
 
