@@ -162,7 +162,7 @@ class CoordSys3D(Basic):
 
         obj._transformation_eqs = obj._x, obj._y, obj._y
 
-        obj._inv_transformation_eqs = obj._x, obj._y, obj._z
+        obj._inv_transformation_eqs = lambda x, y, z: (x, y, z)
 
         # Assign params
         obj._parent = parent
