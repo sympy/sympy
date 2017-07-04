@@ -2,9 +2,10 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
-from sympy.core import S
+from sympy.core import S, Dummy
+from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan
 import sympy.vector
 from sympy import simplify
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -266,7 +267,6 @@ class CoordSys3D(Basic):
 
         """
 
-        from sympy import acos, atan
         equations_mapping = {
             'cartesian': (self.x, self.y, self.z),
             'spherical': (sqrt(self.x**2 + self.y**2 +self.z**2),
@@ -317,8 +317,6 @@ class CoordSys3D(Basic):
 
         """
 
-        from sympy.core import Dummy
-        from sympy.solvers import solve
         x = Dummy('y')
         y = Dummy('x')
         z = Dummy('z')
