@@ -931,4 +931,11 @@ def test_FunctionOfPower():
 
 def test_DivideDegreesOfFactors():
     assert DivideDegreesOfFactors(a**b, S(3)) == a**(b/3)
-    assert DivideDegreesOfFactors(a**b*c, S(3)) ==a**(b/3)*c**(c/3)
+    assert DivideDegreesOfFactors(a**b*c, S(3)) == a**(b/3)*c**(c/3)
+
+def test_MonomialFactor():
+    assert MonomialFactor(a, x) == [0, a]
+    assert MonomialFactor(x, x) == [1, 1]
+    assert MonomialFactor(x + y, x) == [0, x + y]
+    assert MonomialFactor(log(x), x) == [0, log(x)]
+    assert MonomialFactor(log(x)*x, x) == [1, log(x)]
