@@ -1488,7 +1488,7 @@ def RationalFunctionExpand(expr, x):
             return result
 
 def ExpandIntegrand(expr, x, extra=None):
-    return S(1)
+    return S(3)
     w_ = Wild('w')
     p_ = Wild('p', exclude=[x])
     q_ = Wild('q', exclude=[x])
@@ -2418,7 +2418,7 @@ def ConstantFactor(u, x):
                 return [1, u]
             return [tmp**u.exp, (NonpositiveFactors(lst[0])*lst[1])**u.exp]
     elif ProductQ(u):
-        lst = [ConstantFactor(i, x) for i in u.args]:
+        lst = [ConstantFactor(i, x) for i in u.args]
         return [Mul(*[fist[i] for i in lst]), Mul(*[i[1] for i in lst])]
     elif SumQ(u):
         lst1 = [ConstantFactor(i, x) for i in u.args]
