@@ -11,7 +11,17 @@ from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 
 
-class CoordSysCartesian(Basic):
+def CoordSysCartesian(*args, **kwargs):
+    SymPyDeprecationWarning(
+        feature="CoordSysCartesian",
+        useinstead="CoordSys3D",
+        issue=12865,
+        deprecated_since_version="1.1"
+    ).warn()
+    return CoordSys3D(*args, **kwargs)
+
+
+class CoordSys3D(Basic):
     """
     Represents a coordinate system in 3-D space.
     """
@@ -37,7 +47,7 @@ class CoordSysCartesian(Basic):
             to the parent. In other words, the output of
             new_system.rotation_matrix(parent).
 
-        parent : CoordSysCartesian
+        parent : CoordSys3D
             The coordinate system wrt which the orientation/location
             (or both) is being defined.
 
@@ -68,7 +78,7 @@ class CoordSysCartesian(Basic):
         # If location information is not given, adjust the default
         # location as Vector.zero
         if parent is not None:
-            if not isinstance(parent, CoordSysCartesian):
+            if not isinstance(parent, CoordSys3D):
                 raise TypeError("parent should be a " +
                                 "CoordSysCartesian/None")
             if location is None:
@@ -98,10 +108,10 @@ class CoordSysCartesian(Basic):
         # positioned/oriented wrt different parents, even though
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
-            obj = super(CoordSysCartesian, cls).__new__(
+            obj = super(CoordSys3D, cls).__new__(
                 cls, Symbol(name), location, parent_orient, parent)
         else:
-            obj = super(CoordSysCartesian, cls).__new__(
+            obj = super(CoordSys3D, cls).__new__(
                 cls, Symbol(name), location, parent_orient)
         obj._name = name
 
@@ -290,7 +300,7 @@ class CoordSysCartesian(Basic):
             feature="coord_system.delop has been replaced.",
             useinstead="Use the Del() class",
             deprecated_since_version="1.1",
-            issue=12858,
+            issue=12866,
         ).warn()
         from sympy.vector.deloperator import Del
         return Del()
@@ -353,10 +363,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> A = N.orient_new_axis('A', q1, N.i)
         >>> N.rotation_matrix(A)
         Matrix([
@@ -367,7 +377,7 @@ class CoordSysCartesian(Basic):
         """
 
         from sympy.vector.functions import _path
-        if not isinstance(other, CoordSysCartesian):
+        if not isinstance(other, CoordSys3D):
             raise TypeError(str(other) +
                             " is not a CoordSysCartesian")
         # Handle special cases
@@ -406,8 +416,8 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> N1 = N.locate_new('N1', 10 * N.i)
         >>> N.position_wrt(N1)
         (-10)*N.i
@@ -430,9 +440,9 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import Symbol
-        >>> A = CoordSysCartesian('A')
+        >>> A = CoordSys3D('A')
         >>> q = Symbol('q')
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
@@ -476,18 +486,18 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> A = CoordSysCartesian('A')
+        >>> from sympy.vector import CoordSys3D
+        >>> A = CoordSys3D('A')
         >>> B = A.locate_new('B', 10 * A.i)
         >>> B.origin.position_wrt(A.origin)
         10*A.i
 
         """
 
-        return CoordSysCartesian(name, location=position,
-                                 vector_names=vector_names,
-                                 variable_names=variable_names,
-                                 parent=self)
+        return CoordSys3D(name, location=position,
+                          vector_names=vector_names,
+                          variable_names=variable_names,
+                          parent=self)
 
     def orient_new(self, name, orienters, location=None,
                    vector_names=None, variable_names=None):
@@ -525,10 +535,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         Using an AxisOrienter
 
@@ -575,11 +585,11 @@ class CoordSysCartesian(Basic):
                 else:
                     final_matrix *= orienter.rotation_matrix()
 
-        return CoordSysCartesian(name, rotation_matrix=final_matrix,
-                                 vector_names=vector_names,
-                                 variable_names=variable_names,
-                                 location=location,
-                                 parent=self)
+        return CoordSys3D(name, rotation_matrix=final_matrix,
+                          vector_names=vector_names,
+                          variable_names=variable_names,
+                          location=location,
+                          parent=self)
 
     def orient_new_axis(self, name, angle, axis, location=None,
                         vector_names=None, variable_names=None):
@@ -613,10 +623,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> B = N.orient_new_axis('B', q1, N.i + 2 * N.j)
 
         """
@@ -662,10 +672,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         A 'Body' fixed rotation is described by three angles and
         three body-fixed rotation axes. To orient a coordinate system D
@@ -736,10 +746,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         To orient a coordinate system D with respect to N, each
         sequential rotation is always about N's orthogonal unit vectors.
@@ -804,10 +814,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> B = N.orient_new_quaternion('B', q0, q1, q2, q3)
 
         """
@@ -821,7 +831,7 @@ class CoordSysCartesian(Basic):
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
-                 curv_coord_name=None, pretty_scalars=None):
+                 pretty_scalars=None):
         # Dummy initializer for setting docstring
         pass
 

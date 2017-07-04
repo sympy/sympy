@@ -1269,8 +1269,8 @@ def test_O3():
     assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
 
 def test_O4():
-    from sympy.vector import CoordSysCartesian, Del
-    N = CoordSysCartesian("N")
+    from sympy.vector import CoordSys3D, Del
+    N = CoordSys3D("N")
     delop = Del()
     i, j, k = N.base_vectors()
     x, y, z = N.base_scalars()

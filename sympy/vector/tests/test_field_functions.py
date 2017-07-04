@@ -1,6 +1,6 @@
 from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
@@ -12,7 +12,7 @@ from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential_difference)
 from sympy.utilities.pytest import raises
 
-C = CoordSysCartesian('C')
+C = CoordSys3D('C')
 i, j, k = C.base_vectors()
 x, y, z = C.base_scalars()
 delop = Del()
@@ -226,9 +226,9 @@ def test_scalar_potential_difference():
 
 
 def test_differential_operators_curvilinear_system():
-    A = CoordSysCartesian('A')
+    A = CoordSys3D('A')
     A._set_lame_coefficient_mapping('spherical')
-    B = CoordSysCartesian('B')
+    B = CoordSys3D('B')
     B._set_lame_coefficient_mapping('cylindrical')
     # Test for spherical coordinate system and gradient
     assert gradient(3*A.x + 4*A.y) == 3*A.i + 4/A.x*A.j
