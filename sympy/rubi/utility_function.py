@@ -7,13 +7,12 @@ from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly, quo, rem
-from sympy.simplify.simplify import fraction, simplify, count_ops, factor
+from sympy.simplify.simplify import fraction, simplify, cancel, factor, nthroot
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
-from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand)
@@ -123,12 +122,9 @@ def NegativeOrZeroQ(u):
 def FractionOrNegativeQ(u):
     return FractionQ(u) or NegativeQ(u)
 
-<<<<<<< HEAD
-=======
 def PosQ(var):
     return PositiveQ(var)
 
->>>>>>> 66e8a31b2cb67d5209a66db7a319c8d793b2349c
 def NegQ(var):
     return NegativeQ(var)
 
@@ -383,7 +379,10 @@ def Head(u):
     return u.func
 
 def MemberQ(l, u):
-    return u in l
+    if isinstance(l, list):
+        return u in l
+    else:
+        return u in l.args
 
 def TrigQ(u):
     if AtomQ(u):
@@ -449,10 +448,12 @@ def SinhCoshQ(f):
     return MemberQ([sinh, cosh, sech, csch], Head(f))
 
 def Rt(val, n):
+    if ComplexNumberQ(nthroot(val, n)):
+        return nthroot(val, n)
     if FractionalPart(float(nthroot(val, n))) == 0:
-        return int(nthroot(val, n))
+        return sympify(int(nthroot(val, n)))
     else:
-        return float(nthroot(val, n))
+        return sympify(float(nthroot(val, n)))
 
 def LeafCount(expr):
     return len(list(postorder_traversal(expr)))
@@ -702,8 +703,10 @@ def BinomialParts(u, x):
             return False
     else:
         return False
-# yet todo
+
 def TrinomialParts(u, x):
+    # If u is equivalent to a trinomial of the form a + b*x^n + c*x^(2*n) where n!=0, b!=0 and c!=0, TrinomialParts[u,x] returns the list {a,b,c,n}; else it returns False.
+    u = sympify(u)
     if PolynomialQ(u, x):
         lst = CoefficientList(u, x)
         if len(lst)<3 or EvenQ(sympify(len(lst))) or ZeroQ((len(lst)+1)/2):
@@ -714,7 +717,7 @@ def TrinomialParts(u, x):
     if PowerQ(u):
         if EqQ(u.args[1], 2):
             lst = BinomialParts(u.args[0], x)
-            if not lst and AtomQ(lst) or ZeroQ(lst[0]):
+            if not lst or ZeroQ(lst[0]):
                 return False
             else:
                 return [lst[0]**2, 2*lst[0]*lst[1], lst[1]**2, lst[2]]
@@ -723,21 +726,21 @@ def TrinomialParts(u, x):
     if ProductQ(u):
         if FreeQ(First(u), x):
             lst2 = TrinomialParts(Rest(u), x)
-            if AtomQ(lst2):
+            if not lst2:
                 return False
             else:
                 return [First(u)*lst2[0], First(u)*lst2[1], First(u)*lst2[2], lst2[3]]
         if FreeQ(Rest(u), x):
             lst1 = TrinomialParts(First(u), x)
-            if AtomQ(lst1):
+            if not lst1:
                 return False
             else:
                 return [Rest(u)*lst1[0], Rest(u)*lst1[1], Rest(u)*lst1[2], lst1[3]]
         lst1 = BinomialParts(First(u), x)
-        if AtomQ(lst1):
+        if not lst1:
             return False
         lst2 = BinomialParts(Rest(u), x)
-        if AtomQ(lst2):
+        if not lst2:
             return False
         a = lst1[0]
         b = lst1[1]
@@ -752,29 +755,29 @@ def TrinomialParts(u, x):
     if SumQ(u):
         if FreeQ(First(u), x):
             lst2 = TrinomialParts(Rest(u), x)
-            if AtomQ(lst2):
+            if not lst2:
                 return False
             else:
                 return [First(u)+lst2[0], lst2[1], lst2[2], lst2[3]]
         if FreeQ(Rest(u), x):
             lst1 = TrinomialParts(First(u), x)
-            if AtomQ(lst1):
+            if not lst1:
                 return False
             else:
                 return [Rest(u)+lst1[0], lst1[1], lst1[2], lst1[3]]
         lst1 = TrinomialParts(First(u), x)
-        if AtomQ(lst1):
+        if not lst1:
             lst3 = BinomialParts(First(u), x)
-            if AtomQ(lst3):
+            if not lst3:
                 return False
             lst2 = TrinomialParts(Rest(u), x)
-            if AtomQ(lst2):
+            if not lst2:
                 lst4 = BinomialParts(Rest(u), x)
-                if AtomQ(lst4):
+                if not lst4:
                     return False
-                if EqQ(lst3[3], 2*lst4[3]):
+                if EqQ(lst3[2], 2*lst4[2]):
                     return [lst3[0]+lst4[0], lst4[1], lst3[1], lst4[2]]
-                if EqQ(lst4[3], 2*lst3[3]):
+                if EqQ(lst4[2], 2*lst3[2]):
                     return [lst3[0]+lst4[0], lst3[1], lst4[1], lst3[2]]
                 else:
                     return False
@@ -787,7 +790,7 @@ def TrinomialParts(u, x):
         lst2 = TrinomialParts(Rest(u), x)
         if AtomQ(lst2):
             lst4 = BinomialParts(Rest(u), x)
-            if AtomQ(lst4):
+            if not lst4:
                 return False
             if EqQ(lst4[2], lst1[3]) and NonzeroQ(lst1[1]+lst4[0]):
                 return [lst1[0]+lst4[0], lst1[1]+lst4[1], lst1[2], lst1[3]]
@@ -1936,57 +1939,75 @@ def BinomialDegree(u, x):
 
 def TrinomialDegree(u, x):
     # If u is equivalent to a trinomial of the form a + b*x^n + c*x^(2*n) where n!=0, b!=0 and c!=0, TrinomialDegree[u,x] returns n
-    return TrinomialParts(u, x)[3]
+    t = TrinomialParts(u, x)
+    if t:
+        return t[3]
+    return t
 
 def CancelCommonFactors(u, v):
     # CancelCommonFactors[u,v] returns {u',v'} are the noncommon factors of u and v respectively.
-    if ProductQ(u):
-        if ProductQ(v):
-            if MemberQ(v, First(u)):
-                return CancelCommonFactors(Rest(u), DeleteCases(v, First[u], 1, 1))
-            else:
-                return [First(u)*(CancelCommonFactors(Rest[u], v))[0], (CancelCommonFactors(Rest[u], v))[1]]
-        elif MemberQ(u, v):
-            return [DeleteCases(u, v, 1, 1), 1]
-        else:
-            return[u, v]
-    if ProductQ(v):
-        if MemberQ(v, u):
-            return [1, DeleteCases(v, u, 1, 1)]
-        else:
-            return[u, v]
-    else:
-        return [u, v]
+    com_fac = gcd(u, v)
+    return [cancel(u/com_fac), cancel(v/com_fac)]
 
-def GeneralizedBinomialDegree(u, x):
-    return (GeneralizedBinomialParts(u, x)[2]) - (GeneralizedBinomialParts(u, x)[3])
-# yet todo
-def GeneralizedBinomialParts(expr, x):
-    a = Wild('a', exclude=[x])
-    b = Wild('b', exclude=[x])
-    n = Wild('n', exclude=[x])
-    m = Wild('m', exclude=[x])
-    q = Wild('q', exclude=[x])
-    u = Wild('u')
-    Match = expr.match(a*x**q + b*x**n)
-    if Match and PosQ(Match[q] - Match[n]):
-        return [Match[b], Match[a], Match[q], Match[n]]
+def SimplerIntegrandQ(u, v, x):
+    lst = CancelCommonFactors(u, v)
+    u1 = lst[0]
+    v1 = lst[1]
+    if Head(u1) == Head(v1) and Length(u1) == 1 and Length(v1) == 1:
+        return SimplerIntegrandQ(u1.args[0], v1.args[0], x)
+    if LeafCount(u1)<3/4*LeafCount(v1):
+        return True
+    if RationalFunctionQ(u1, x):
+        if RationalFunctionQ(v1, x):
+            t1 = 0
+            t2 = 0
+            for i in RationalFunctionExponents(u1, x):
+                t1 += i
+            for i in RationalFunctionExponents(v1, x):
+                t2 += i
+            return t1 < t2
+        else:
+            return True
     else:
         return False
-#yet todo
+
+def GeneralizedBinomialDegree(u, x):
+    b = GeneralizedBinomialParts(u, x)
+    if b:
+        return b[2] - b[3]
+
+def GeneralizedBinomialParts(expr, x):
+    expr = Expand(expr)
+    if GeneralizedBinomialMatchQ(expr, x):
+        a = Wild('a', exclude=[x])
+        b = Wild('b', exclude=[x])
+        n = Wild('n', exclude=[x])
+        m = Wild('m', exclude=[x])
+        q = Wild('q', exclude=[x])
+        u = Wild('u')
+        Match = expr.match(a*x**q + b*x**n)
+        if Match and PosQ(Match[q] - Match[n]):
+            return [Match[b], Match[a], Match[q], Match[n]]
+    else:
+        return False
+
 def GeneralizedTrinomialDegree(u, x):
-    return (GeneralizedTrinomialParts(u, x)[3]) - (GeneralizedTrinomialParts(u, x)[4])
+    t = GeneralizedTrinomialParts(u, x)
+    if t:
+        return t[3] - t[4]
 
 def GeneralizedTrinomialParts(expr, x):
-    a = Wild('a', exclude=[x])
-    b = Wild('b', exclude=[x])
-    c = Wild('c', exclude=[x])
-    n = Wild('n', exclude=[x])
-    q = Wild('q', exclude=[x])
-    u = Wild('u')
-    Match = expr.match(a*x**q+b*x**n+c*x**(2*n-q))
-    if Match and expr.is_Add:
-        return [Match[a], Match[b], Match[c], Match[n], Match[q]]
+    expr = Expand(expr)
+    if GeneralizedTrinomialMatchQ(expr, x):
+        a = Wild('a', exclude=[x])
+        b = Wild('b', exclude=[x])
+        c = Wild('c', exclude=[x])
+        n = Wild('n', exclude=[x])
+        q = Wild('q', exclude=[x])
+        u = Wild('u')
+        Match = expr.match(a*x**q+b*x**n+c*x**(2*n-q))
+        if Match and expr.is_Add:
+            return [Match[a], Match[b], Match[c], Match[n], Match[q]]
     else:
         return False
 
@@ -2045,13 +2066,14 @@ def PowerOfLinearMatchQ(u, x):
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
         m = Wild('m', exclude=[x])
-        Match = u.match(a + b*x)**m
-        try:
-            if Match[a] and Match[b] and Match[m]:
+        Match = u.match((a + b*x)**m)
+        if Match and Match[a] and Match[b] and Match[m]:
+            try:
                 return True
-        except KeyError:
+            except KeyError:
+                return False
+        else:
             return False
-
 
 def QuadraticMatchQ(u, x):
     return QuadraticQ(u, x)
@@ -2067,11 +2089,10 @@ def CubicMatchQ(u, x):
         b = Wild('b', exclude=[x])
         c = Wild('c', exclude=[x])
         d = Wild('d', exclude=[x])
-        Match = u.match(a + b*x + c*x**2 + d*x**3)
-        try:
-            if Match[a] and Match[d]:
-                return True
-        except KeyError:
+        Match = Expand(u).match(a + b*x + c*x**2 + d*x**3)
+        if Match and Match[a] and Match[d]:
+            return True
+        else:
             return False
 
 def BinomialMatchQ(u, x):
@@ -2085,10 +2106,9 @@ def BinomialMatchQ(u, x):
         b = Wild('b', exclude=[x])
         n = Wild('n', exclude=[x])
         Match = u.match(a + b*x**n)
-        try:
-            if Match[a] and Match[b] and Match[n]:
-                return True
-        except KeyError:
+        if Match and Match[a] and Match[b] and Match[n]:
+            return True
+        else:
             return False
 
 def TrinomialMatchQ(u, x):
@@ -2102,11 +2122,27 @@ def TrinomialMatchQ(u, x):
         b = Wild('b', exclude=[x])
         n = Wild('n', exclude=[x])
         c = Wild('c', exclude=[x])
-        Match = u.match(a + b*x**n + c*x**(2*n))
-        try:
-            if Match[a] and Match[b] and Match[n] and Match[c]:
-                return True
-        except KeyError:
+        Match = Expand(u).match(a + b*x**n + c*x**(2*n))
+        if Match and Match[a] and Match[b] and Match[n] and Match[c]:
+            return True
+        else:
+            return False
+
+def GeneralizedBinomialMatchQ(u, x):
+    if isinstance(u, list):
+        for i in u:
+            if not GeneralizedBinomialMatchQ(i, x):
+                return False
+        return True
+    else:
+        a = Wild('a', exclude=[x])
+        b = Wild('b', exclude=[x])
+        n = Wild('n', exclude=[x])
+        q = Wild('q', exclude=[x])
+        Match = u.match(a*x**q + b*x**n)
+        if Match and Match[a] and Match[b] and Match[n] and Match[q]:
+            return True
+        else:
             return False
 
 def GeneralizedTrinomialMatchQ(u, x):
@@ -2122,10 +2158,9 @@ def GeneralizedTrinomialMatchQ(u, x):
         c = Wild('c', exclude=[x])
         q = Wild('q', exclude=[x])
         Match = u.match(a*x**q + b*x**n + c*x**(2*n - q))
-        try:
-            if Match[a] and Match[b] and Match[n] and Match[c] and Match[q]:
-                return True
-        except KeyError:
+        if Match and Match[a] and Match[b] and Match[n] and Match[c] and Match[q]:
+            return True
+        else:
             return False
 
 def QuotientOfLinearsMatchQ(u, x):
@@ -2139,20 +2174,21 @@ def QuotientOfLinearsMatchQ(u, x):
         b = Wild('b', exclude=[x])
         d = Wild('d', exclude=[x])
         c = Wild('c', exclude=[x])
-        e = Wild('e', exclude=[x])
+        e = Wild('e')
         Match = u.match(e*(a + b*x)/(c + d*x))
-        try:
-            if Match[a] and Match[b] and Match[c] and Match[d] and Match[e]:
-                return True
-        except KeyError:
+        if Match and Match[a] and Match[b] and Match[c] and Match[d] and Match[e]:
+            return True
+        else:
             return False
 
 def PolynomialTermQ(u, x):
     a = Wild('a', exclude=[x])
     n = Wild('n', exclude=[x])
     Match = u.match(a*x**n)
-    if FreeQ(u, x) or IntegerQ(Match[n]) and Match[n]>0:
+    if Match and IntegerQ(Match[n]) and Match[n]>0:
         return True
+    else:
+        return False
 
 def PolynomialTerms(u, x):
     s = 0
@@ -2169,29 +2205,28 @@ def NonpolynomialTerms(u, x):
     return s
 
 def PseudoBinomialParts(u, x):
-  if PolynomialQ(u, x) and Expon(u, x)>2:
-    n = Expon(u, x)
-    d = Rt(Coefficient(u, x, n), n)
-    c = Coefficient(u, x, n - 1)/(n*d**(n - 1))
-    a = Simplify(u - (c + d*x)**n)
-    if NonzeroQ(a) and FreeQ(a, x):
-      return [a, 1, c, d, n]
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    d = Wild('d', exclude=[x])
+    c = Wild('c', exclude=[x])
+    n = Wild('n', exclude=[x])
+    Match = u.match(a + b*(c + d*x)**n)
+    if Match and Match[n]>2 and Match[a] and Match[b] and Match[c] and Match[d] and Match[n]:
+        return [Match[a], Match[b], Match[c], Match[d], Match[n]]
     else:
         return False
-  else:
-    return False
 
 def NormalizePseudoBinomial(u, x):
     lst = PseudoBinomialParts(u, x)
     if lst:
-        return (lst[0]+lst[1]*(lst[2]+lst[3]*x)**lst[4])
+        return (lst[0] + lst[1]*(lst[2] + lst[3]*x)**lst[4])
 
 def PseudoBinomialPairQ(u, v, x):
     lst1 = PseudoBinomialParts(u, x)
-    if lst1 and AtomQ(lst1):
+    if not lst1:
         return False
     lst2 = PseudoBinomialParts(v, x)
-    if lst2 and AtomQ(lst2):
+    if not lst2:
         return False
     else:
         return Drop(lst1, 2) == Drop(lst2, 2)
@@ -2342,18 +2377,8 @@ def NonabsurdNumberFactors(u):
         return result
     return NonnumericFactors(u)
 
-def SumSimplerQ(u, v):
-    return u + v
-
-def SimplerQ(u, v):
-    return u
-
 def Prepend(l1, l2):
     return l2 + l1
-
-def Drop(lst, n):
-    # gives list with its first n elements dropped.
-    return lst[(n-1):]
 
 def CombineExponents(lst):
     if Length(lst) < 2:
@@ -2372,3 +2397,112 @@ def FactorAbsurdNumber(m):
         return [r[0], r[1]*m.exp]
     #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
     return CombineExponents
+
+def NormalizeIntegrand(u, x):
+    v = NormalizeLeadTermSigns(NormalizeIntegrandAux(u, x))
+    if v == NormalizeLeadTermSigns(u):
+        return u
+    else:
+        return v
+
+def NormalizeIntegrandAux(u, x):
+    l = 0
+    if SumQ(u):
+        for i in u.args:
+            l += NormalizeIntegrandAux(i, x)
+        return l
+    if ProductQ(MergeMonomials(u, x)):
+        for i in MergeMonomials(u, x).args:
+            l += NormalizeIntegrandFactor(i, x)
+        return l
+    else:
+        return NormalizeIntegrandFactor(MergeMonomials(u, x), x)
+
+def NormalizeIntegrandFactor(u, x):
+    m = Wild('m', exclude=[x])
+    a = Wild('a')
+    match = u.match(a**m)
+    if match:
+        bas = NormalizeIntegrandFactorBase(a, x)
+        deg = m
+        if IntegerQ(deg) and SumQ(bas):
+            for i in bas.args:
+                if MapAnd(MonomialQ(i, x)):
+                    mi = MinimumMonomialExponent(bas, x)
+                else:
+                    q = 0
+                    for i in bas.args:
+                        q += x**(mi*deg)*Simplify(i/x**mi)**deg
+                    return q
+        else:
+            return bas**deg
+    else:
+        bas = NormalizeIntegrandFactorBase(u[0], x)
+        deg = u[1]
+        return bas**deg
+    if PowerQ(u) and FreeQ(u[0], x):
+        return u[0]**NormalizeIntegrandFactorBase(u[1], x)
+    bas = NormalizeIntegrandFactorBase(u, x)
+    if SumQ(bas):
+        for i in bas.args:
+            if MapAnd(MonomialQ(i, x)):
+                mi = MinimumMonomialExponent(bas, x)
+                z = 0
+                for j in bas.args:
+                    z += x**mi*j/x**mi
+                return z 
+            else:
+                return bas
+    else:
+        return bas
+
+def NormalizeIntegrandFactorBase(expr, x):
+    m = Wild('m', exclude=[x])
+    u = Wild('u')
+    match = expr.match(x**m*u)
+    if match and SumQ(u):
+        l = 0
+        for i in u.args:
+            l += NormalizeIntegrandFactorBase((x**m*i), x)
+        return l
+    if BinomialQ(u, x):
+        if BinomialMatchQ(u, x):
+            return u
+        else:
+            return ExpandToSum(u, x)
+    elif TrinomialQ(u, x):
+        if TrinomialMatchQ(u, x):
+            return u
+        else:
+            return ExpandToSum(u, x)
+    elif ProductQ(u):
+        l = 0
+        for i in u.args:
+            l += NormalizeIntegrandFactor(i, x)
+        return l
+    elif PolynomialQ(u, x) and Exponent(u, x)<=4:
+        return ExpandToSum(u, x)
+    elif SumQ(u):
+        w = Wild('w')
+        m = Wild('m', exclude=[x])
+        v = TogetherSimplify(u)
+        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v)>LeafCount(u)+2:
+            return UnifySum(u, x)
+        else:
+            return NormalizeIntegrandFactorBase(v, x)
+    else:
+        l = 0
+        for i in u.args:
+            l += NormalizeIntegrandFactor(i, x)
+        return l
+
+def TrinomialQ(u, x):
+    if isinstance(u, list):
+        for i in u:
+            if not TrinomialQ(i, x):
+                return False
+        return True
+    if isinstance(TrinomialParts(u, x), list) and Not(QuadraticQ(u, x)):
+        w = Wild('w')
+        match = u.match(w**2)
+        return match and BinomialQ(match[w], x)
