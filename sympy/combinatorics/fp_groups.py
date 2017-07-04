@@ -8,6 +8,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
+from sympy.combinatorics.rewritingsystem import RewritingSystem
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -70,6 +71,8 @@ class FpGroup(DefaultPrinting):
 
         obj._order = None
         obj._center = None
+
+        obj._rewriting_system = RewritingSystem(obj)
         return obj
 
     def _generators(self):

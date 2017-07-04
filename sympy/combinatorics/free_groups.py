@@ -600,21 +600,37 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             return self.inverse()*other.inverse()*self*other
 
-    def eliminate_words(self, words, _all=False):
+    def eliminate_words(self, words, _all=False, inverse=True):
         '''
         Replace each subword from the dictionary `words` by words[subword].
         If words is a list, replace the words by the identity.
+
         '''
+        #print(words)
+        #print("eliminate",self)
+        again = True
         new = self
         if isinstance(words, dict):
-            for sub in words:
-                new = new.eliminate_word(sub, words[sub], _all=_all)
+            while again:
+                again = False
+                #print("again")
+                for sub in words:
+                    prev = new
+                    new = new.eliminate_word(sub, words[sub], _all=_all, inverse=inverse)
+                    if new != prev:
+                        #print(sub,new,prev)
+                        again = True
         else:
-            for sub in words:
-                new = new.eliminate_word(sub, _all=_all)
+            while again:
+                again = False
+                for sub in words:
+                    prev = new
+                    new = new.eliminate_word(sub, _all=_all, inverse=inverse)
+                    if new != prev:
+                        again = True
         return new
 
-    def eliminate_word(self, gen, by=None, _all=False):
+    def eliminate_word(self, gen, by=None, _all=False, inverse=True):
         """
         For an associative word `self`, a subword `gen`, and an associative
         word `by` (identity by default), return the associative word obtained by
@@ -647,7 +663,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             by = self.group.identity
         if self.is_independent(gen) or gen == by:
             return self
-        if gen == self:
+        if gen == self or gen == by:
             return by
         if gen**-1 == by:
             _all = False
@@ -658,6 +674,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             i = word.subword_index(gen)
             k = 1
         except ValueError:
+            if not inverse:
+                return word
             try:
                 i = word.subword_index(gen**-1)
                 k = -1
