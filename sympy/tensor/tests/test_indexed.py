@@ -14,7 +14,7 @@ def test_Idx_construction():
     assert Idx(i, a) == Idx(i, (0, a - 1))
     assert Idx(i, oo) == Idx(i, (0, oo))
 
-    x = symbols('x')
+    x = symbols('x', integer=False)
     raises(TypeError, lambda: Idx(x))
     raises(TypeError, lambda: Idx(0.5))
     raises(TypeError, lambda: Idx(i, x))
