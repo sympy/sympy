@@ -17,7 +17,7 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
             feature="coord_sys parameter",
             useinstead="do not use it",
             deprecated_since_version="1.1",
-            issue=12858,
+            issue=12884,
         ).warn()
 
     try:
