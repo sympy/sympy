@@ -214,24 +214,24 @@ def poly_linear_constraints(p, d):
 
     return q, M
 
+
 def constant_system(A, u, DE):
     """
     Generate a system for the constant solutions.
 
-    Given a differential field (K, D) with constant field C = Const(K), a Matrix
-    A, and a vector (Matrix) u with coefficients in K, returns the tuple
-    (B, v, s), where B is a Matrix with coefficients in C and v is a vector
-    (Matrix) such that either v has coefficients in C, in which case s is True
-    and the solutions in C of Ax == u are exactly all the solutions of Bx == v,
-    or v has a non-constant coefficient, in which case s is False Ax == u has no
-    constant solution.
+    Given a differential field (K, D) with constant field C = Const(K),
+    a Matrix A, and a vector (Matrix) u with coefficients in K, returns
+    the tuple (B, v), where B is a Matrix with coefficients in C and v
+    is a vector (Matrix) such that either v has coefficients in C, and
+    the solutions in C of Ax == u are exactly all the solutions of
+    Bx == v, or v has a non-constant coefficient, in which case Ax == u
+    has no constant solution.
 
     This algorithm is used both in solving parametric problems and in
-    determining if an element a of K is a derivative of an element of K or the
-    logarithmic derivative of a K-radical using the structure theorem approach.
+    determining if an element of K is a derivative of an element of K
+    or a logarithmic derivative of a K-radical using the structure
+    theorem approach.
 
-    Because Poly does not play well with Matrix yet, this algorithm assumes that
-    all matrix entries are Basic expressions.
     """
     if not A:
         return A, u
@@ -918,14 +918,16 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
-    # TODO: Write the full algorithm using the structure theorems.
-#    try:
-    A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
-#    except NotImplementedError:
-        # Heuristic failed, we have to use the full method.
-        # TODO: This could be implemented more efficiently.
-        # It isn't too worrisome, because the heuristic handles most difficult
-        # cases.
+    """
+    Page, 251 section 7.3
+    """
+    try:
+        A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
+    except NotImplementedError:
+        E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])) for i in DE.indices('exp')]
+        L_part = [DE.D[i] for i in DE.indices('log')]
+
+        A, u = constant_system(lhs, rhs, DE)
     return A
 
 
@@ -1036,6 +1038,13 @@ def is_deriv_k(fa, fd, DE):
             const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l)*Mul(*ld))
 
             return (ans, result, const)
+
+
+def basis_Q(C):
+    """
+    """
+    basis = (S.One,) + tuple([i.as_expr() for i in C.gens])
+    return basis
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
