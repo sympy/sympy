@@ -17,18 +17,6 @@ from sympy.abc import x, y
 from sympy.utilities.pytest import raises, XFAIL
 
 
-def test_is_vertex():
-    pass
-
-
-def test_intersection():
-    pass
-
-
-def test_norm():
-    pass
-
-
 def test_decompose():
     assert decompose(x) == {1: x}
     assert decompose(x**2) == {2: x**2}
@@ -58,14 +46,6 @@ def test_best_origin():
     assert best_origin((1, 1), 2, l4, x ** 3 * y ** 7) == (2, 0)
     assert best_origin((1, 1), 2, l5, x ** 2 * y ** 9) == (0, 2)
     assert best_origin((1, 1), 2, l6, x ** 9 * y ** 2) == (2, 0)
-
-
-def test_hyperplane_parameters():
-    pass
-
-
-def test_integration_reduction():
-    pass
 
 
 def test_polytope_integrate():
@@ -148,6 +128,17 @@ def test_polytope_integrate():
     assert polytope_integrate(fig4, x**2 + x*y + y**2) ==\
         S(180742845225803)/(10**12)
 
+    #  Tests for many polynomials with maximum degree given.
+    tri = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    polys = []
+    expr1 = x**9*y + x**7*y**3 + 2*x**2*y**8
+    expr2 = x**6*y**4 + x**5*y**5 + 2*y**10
+    expr3 = x**10 + x**9*y + x**8*y**2 + x**5*y**5
+    polys.extend((expr1, expr2, expr3))
+    result_dict = polytope_integrate(tri, polys, max_degree=10)
+    assert result_dict[expr1] == 615780107/594
+    assert result_dict[expr2] == 13062161/27
+    assert result_dict[expr3] == 1946257153/924
 
 @XFAIL
 def test_polytopes_intersecting_sides():
