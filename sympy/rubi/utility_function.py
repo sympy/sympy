@@ -16,7 +16,7 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign)
+    Min, Max, sign, E)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
@@ -190,20 +190,22 @@ def Subst(a, x, y):
 
 def First(expr, d=None):
     # gives the first element if it exists, or d otherwise.
-    try:
-        if isinstance(expr, list):
-            return expr[0]
+    if isinstance(expr, list):
+        return expr[0]
+    else:
+        if SumQ(expr) or ProductQ(expr):
+            l = Sort(expr.args)
+            return l[0]
         else:
             return expr.args[0]
-    except:
-        return d
 
 def Rest(expr):
     if isinstance(expr, list):
         return expr[1:]
     else:
         if SumQ(expr) or ProductQ(expr):
-            return expr.func(*expr.args[1:])
+            l = Sort(expr.args)
+            return expr.func(*l[1:])
         else:
             return expr.args[1]
 
@@ -1271,14 +1273,14 @@ def LeadBase(u):
     # returns the base of the leading factor of u.
     v = LeadFactor(u)
     if PowerQ(v):
-        return v.args[0]
+        return v.base
     return v
 
 def LeadDegree(u):
     # returns the degree of the leading factor of u.
     v = LeadFactor(u)
     if PowerQ(v):
-        return v.args[1]
+        return v.exp
     return v
 
 def Numer(expr):
@@ -1461,7 +1463,6 @@ def RationalFunctionExpand(expr, x):
     pattern = u_*v_**n_
     match = expr.match(pattern)
     if match:
-        print(match)
         keys = [u_, v_, n_]
         if len(keys) == len(match):
             u, v, n = tuple([match[i] for i in keys])
@@ -1507,6 +1508,7 @@ def RationalFunctionExpand(expr, x):
             return result
 
 def ExpandIntegrand(expr, x, extra=None):
+    return S(1)
     w_ = Wild('w')
     p_ = Wild('p', exclude=[x])
     q_ = Wild('q', exclude=[x])
@@ -2370,6 +2372,27 @@ def NonabsurdNumberFactors(u):
         return result
     return NonnumericFactors(u)
 
+def SumSimplerAuxQ(u, v):
+    if SumQ(v):
+        return (RationalQ(First(v)) or SumSimplerAuxQ(u,First(v))) and (RationalQ(Rest(v)) or SumSimplerAuxQ(u,Rest(v)))
+    elif SumQ(u):
+        return SumSimplerAuxQ(First(u), v) or SumSimplerAuxQ(Rest(u), v)
+    else:
+        return v!=0 and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)<-1/2 or NumericFactor(u)/NumericFactor(v)==-1/2 and NumericFactor(u)<0)
+
+def SumSimplerQ(u, v):
+    # (* If u+v is simpler than u, SumSimplerQ[u,v] returns True, else it returns False. *)
+    # (* If for every term w of v there is a term of u equal to n*w where n<-1/2, u+v will be simpler than u. *)
+    if RationalQ(u, v):
+        if v==0:
+            return False
+        elif v > 0:
+            return u < -1
+        else:
+            return u >= -v
+    else:
+        return SumSimplerAuxQ(Expand(u), Expand(v))
+
 def Prepend(l1, l2):
     return l2 + l1
 
@@ -2812,3 +2835,156 @@ def Distrib(u, v):
     if SumQ(v):
         return Add(*[u*i for i in v.args])
     return u*v
+
+def DistributeDegree(u, m):
+    # DistributeDegree[u,m] returns the product of the factors of u each raised to the mth degree.
+    if AtomQ(u):
+        return u**m
+    elif PowerQ(u):
+        return u.base**(u.exp*m)
+    elif ProductQ(u):
+        return Mul(*[DistributeDegree(i, m) for i in u.args])
+    return u**m
+
+def FunctionOfPower(*args):
+    # FunctionOfPower[u,x] returns the gcd of the integer degrees of x in u.
+    if len(args) == 2:
+        return FunctionOfPower(args[0], None, args[1])
+
+    u, n, x = args
+
+    if FreeQ(u, x):
+        return n
+    elif u == x:
+        return S(1)
+    elif PowerQ(u):
+        if u.base == x and IntegerQ(u.exp):
+            if n == None:
+                return u.exp
+            return GCD(n, u.exp)
+    tmp = n
+    for i in u.args:
+        tmp = FunctionOfPower(i, tmp, x)
+    return tmp
+
+def DivideDegreesOfFactors(u, n):
+    # DivideDegreesOfFactors[u,n] returns the product of the base of the factors of u raised to
+    # the degree of the factors divided by n.
+    if ProductQ(u):
+        return Mul(*[LeadBase(i)**(LeadDegree(i)/n) for i in u.args])
+    return LeadBase(u)**(LeadDegree(u)/n)
+
+def MonomialFactor(u, x):
+    # MonomialFactor[u,x] returns the list {n,v} where x^n*v==u and n is free of x.
+    if AtomQ(u):
+        if u == x:
+            return [S(1), S(1)]
+        return [S(0), u]
+    elif PowerQ(u):
+        if IntegerQ(u.exp):
+            lst = MonomialFactor(u.base, x)
+            return [lst[0]*u.exp, lst[1]**u.exp]
+        elif u.base == x and FreeQ(u.exp, x):
+            return [u.exp, S(1)]
+        return [S(0), u]
+    elif ProductQ(u):
+        lst1 = MonomialFactor(First(u), x)
+        lst2 = MonomialFactor(Rest(u), x)
+        return [lst1[0] + lst2[0], lst1[1]*lst2[1]]
+    elif SumQ(u):
+        lst = [MonomialFactor(i, x) for i in u.args]
+        deg = lst[0][0]
+        for i in Rest(lst):
+            deg = MinimumDegree(deg, i[0])
+        if ZeroQ(deg) or RationalQ(deg) and deg < 0:
+            return [S(0), u]
+        return [deg, Add(*[x**(i[0] - deg)*i[1] for i in lst])]
+    return [S(0), u]
+
+def FullSimplify(expr):
+    return simplify(expr)
+
+def FunctionOfLinearSubst(u, a, b, x):
+    if FreeQ(u, x):
+        return u
+    elif LinearQ(u, x):
+        tmp = Coefficient(u, x, S(1))
+        if tmp == b:
+            tmp = S(1)
+        else:
+            tmp = tmp/b
+        return Coefficient(u, x, S(0)) - a*tmp + tmp*x
+    elif PowerQ(u) and FreeQ(u.base[0], x):
+        return E**(FullSimplify(FunctionOfLinearSubst(Log(u.base*u.exp, a, b, x))))
+    lst = MonomialFactor(u, x)
+    if ProductQ(u) and NonzeroQ(lst[0]):
+        if RationalQ(LeadFactor(lst[1])) and LeadFactor(lst[1]) < 0:
+            return  -FunctionOfLinearSubst(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x)**lst[0]
+        return FunctionOfLinearSubst(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x)**lst[0]
+    return u.func(*[FunctionOfLinearSubst(i, a, b, x) for i in u.args])
+
+def FunctionOfLinear(*args):
+    # (* If u (x) is equivalent to an expression of the form f (a+b*x) and not the case that a==0 and
+    # b==1, FunctionOfLinear[u,x] returns the list {f (x),a,b}; else it returns False. *)
+    if len(args) == 2:
+        u, x = args
+        lst = FunctionOfLinear(u, False, False, x, False)
+        if AtomQ(lst) or FalseQ(lst[0]) or lst[0] == 0 and lst[1] == 1:
+            return False
+        return [FunctionOfLinearSubst(u, lst[0], lst[1], x), lst[0], lst[1]]
+
+    u, a, b, x, flag = args
+    if FreeQ(u, x):
+        return [a, b]
+    elif CalculusQ(u):
+        return False
+    elif LinearQ(u, x):
+        if FalseQ(a):
+            return [Coefficient(u, x, 0), Coefficient(u, x, 1)]
+        lst = CommonFactors([b, Coefficient(u, x, 1)])
+        if ZeroQ(Coefficient(u, x, 0)) and Not(flag):
+            return [0, lst[0]]
+        elif ZeroQ(b*Coefficient(u, x, 0) - a*Coefficient(u, x, 1)):
+            return [a/lst[1], lst[0]]
+        return [0, 1]
+    elif PowerQ(u) and FreeQ(u.args[0], x):
+        return FunctionOfLinear(log(u.bse*u.exp, a, b, x, False))
+    lst = MonomialFactor(u, x)
+    if ProductQ(u) and NonzeroQ(lst[0]):
+        if False and IntegerQ(lst[0]) and lst[0] != -1 and FreeQ(lst[1], x):
+            if RationalQ(LeadFactor(lst[1])) and LeadFactor(lst[1]) < 0:
+                return FunctionOfLinear(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x, False)
+            return FunctionOfLinear(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x, False)
+    lst = [a, b]
+    for i in u.args:
+        lst = FunctionOfLinear(i, lst[0], lst[1], x, SumQ(u))
+        if AtomQ(lst):
+            return False
+    return lst
+
+def ConstantFactor(u, x):
+    # (* ConstantFactor[u,x] returns a 2-element list of the factors of u[x] free of x and the
+    # factors not free of u[x].  Common constant factors of the terms of sums are also collected. *)
+    if FreeQ(u, x):
+        return [u, 1]
+    elif AtomQ(u):
+        return [1, u]
+    elif PowerQ(u):
+        if FreeQ(u.exp, x):
+            lst = ConstantFactor(u.base, x)
+            if IntegersQ(u.exp):
+                return [lst[0]**u.exp, lst[1]**u.exp]
+            tmp = PositiveFactors(lst[0])
+            if tmp == 1:
+                return [1, u]
+            return [tmp**u.exp, (NonpositiveFactors(lst[0])*lst[1])**u.exp]
+    elif ProductQ(u):
+        lst = [ConstantFactor(i, x) for i in u.args]:
+        return [Mul(*[fist[i] for i in lst]), Mul(*[i[1] for i in lst])]
+    elif SumQ(u):
+        lst1 = [ConstantFactor(i, x) for i in u.args]
+        if SameQ(*[i[1] for i in lst1]):
+            return [Add(*[First[i] for i in lst]), lst1[0, 1]]
+        lst2 = CommonFactors(*[First(i) for i in lst1])
+        return [First(lst2), Add(*[])]
+    return [1, u]

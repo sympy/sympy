@@ -434,7 +434,7 @@ def test_Rest():
 
 def test_First():
     assert First([2, 3, 5, 7]) == 2
-    assert First(y**2) == y
+    assert First(y**S(2)) == y
     assert First(a + b + c) == a
     assert First(a*b*c) == a
 
@@ -707,6 +707,7 @@ def test_LeadFactor():
     assert LeadFactor(a*b*c) == a
     assert LeadFactor(a + b + c) == a + b + c
     assert LeadFactor(b*I) == b
+    assert LeadFactor(c*a**b) == a**b
 
 def test_RemainingFactors():
     assert RemainingFactors(a*b*c) == b*c
@@ -715,11 +716,11 @@ def test_RemainingFactors():
 
 def test_LeadBase():
     assert LeadBase(a**b) == a
-    assert LeadBase(a**b*c) == c
+    assert LeadBase(a**b*c) == a
 
 def test_LeadDegree():
     assert LeadDegree(a**b) == b
-    assert LeadDegree(a**b*c) == c
+    assert LeadDegree(a**b*c) == b
 
 def test_Numer():
     assert Numer(a/b) == a
@@ -853,9 +854,6 @@ def test_NonnumericFactors():
 
 def test_Prepend():
     assert Prepend([1, 2, 3], [4, 5]) == [4, 5, 1, 2, 3]
-
-def test_CombineExponents():
-    print(CombineExponents())
 
 def test_SumSimplerQ():
     assert not SumSimplerQ(S(4 + x),S(3 + x**3))
@@ -1114,3 +1112,25 @@ def test_PolynomialInSubst():
 def test_Distrib():
     assert Distrib(x, a) == x*a
     assert Distrib(x, a + b) == a*x + b*x
+
+def test_DistributeDegree():
+    assert DistributeDegree(x, m) == x**m
+    assert DistributeDegree(x**a, m) == x**(a*m)
+    assert DistributeDegree(a*b, m) == a**m * b**m
+
+def test_FunctionOfPower():
+    assert FunctionOfPower(a, x) == None
+    assert FunctionOfPower(x, x) == 1
+    assert FunctionOfPower(x**3, x) == 3
+    assert FunctionOfPower(x**3*cos(x**6), x) == 3
+
+def test_DivideDegreesOfFactors():
+    assert DivideDegreesOfFactors(a**b, S(3)) == a**(b/3)
+    assert DivideDegreesOfFactors(a**b*c, S(3)) == a**(b/3)*c**(c/3)
+
+def test_MonomialFactor():
+    assert MonomialFactor(a, x) == [0, a]
+    assert MonomialFactor(x, x) == [1, 1]
+    assert MonomialFactor(x + y, x) == [0, x + y]
+    assert MonomialFactor(log(x), x) == [0, log(x)]
+    assert MonomialFactor(log(x)*x, x) == [1, log(x)]

@@ -13,7 +13,10 @@ class cons(Constraint):
             return self.expr
 
         sub = substitute(self.expr, substitution)
-        res = matchpy2sympy(sub)
+        try:
+            res = matchpy2sympy(sub)
+        except:
+            return False
 
         if isinstance(res, BooleanTrue) or res == True:
             return True
