@@ -1,8 +1,9 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises
 import warnings
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
-from sympy import sin, cos, sqrt, pi, ImmutableMatrix as Matrix, \
+from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
      symbols, simplify, zeros, expand
 from sympy.vector.functions import express
 from sympy.vector.point import Point
@@ -351,6 +352,19 @@ def test_transformation_equations():
     assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
 
+
+def test_check_orthogonality():
+    a = CoordSys3D('a')
+    a._connect_to_standard_cartesian((a.x*sin(a.y)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)))
+    assert a._check_orthogonality() is True
+    a._connect_to_standard_cartesian((a.x * cos(a.y), a.x * sin(a.y), a.z))
+    assert a._check_orthogonality() is True
+    a._connect_to_standard_cartesian((cosh(a.x)*cos(a.y), sinh(a.x)*sin(a.y), a.z))
+    assert a._check_orthogonality() is True
+
+    raises(ValueError, lambda: a._connect_to_standard_cartesian((a.x, a.x, a.z)))
+    raises(ValueError, lambda: a._connect_to_standard_cartesian(
+        (a.x*sin(a.y / 2)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y))))
 
 def test_coordsys3d():
     with warnings.catch_warnings():
