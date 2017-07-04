@@ -14,8 +14,9 @@ from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
-from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, hyper,
-    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand)
+from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
+    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
+    Min, Max, sign)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
@@ -24,6 +25,7 @@ def Int(expr, var):
     if expr == None:
         return None
     return rubi_integrate(expr, var)
+
 
 def Set(expr, value):
     return {expr: value}
@@ -469,6 +471,8 @@ def NumericQ(u):
 
 def Length(expr):
     # returns number of elements in the experssion
+    if isinstance(expr, list):
+        return len(expr)
     return len(expr.args)
 
 def ListQ(u):
@@ -2238,17 +2242,6 @@ def PseudoBinomialQ(u, x):
     else:
         return False
 
-def Drop(lst, n):
-    if isinstance(n, list):
-        lst = lst[:(n[0]-1)] + lst[n[1]:]
-    elif n>0:
-        lst = lst[n:]
-    elif n<0:
-        lst = lst[:-n]
-    else:
-        return lst
-    return lst
-
 def PolynomialGCD(f, g):
     return gcd(f, g)
 
@@ -2380,12 +2373,26 @@ def NonabsurdNumberFactors(u):
 def Prepend(l1, l2):
     return l2 + l1
 
+def Drop(lst, n):
+    if isinstance(n, list):
+        lst = lst[:(n[0]-1)] + lst[n[1]:]
+    elif n>0:
+        lst = lst[n:]
+    elif n<0:
+        lst = lst[:-n]
+    else:
+        return lst
+    return lst
+
 def CombineExponents(lst):
     if Length(lst) < 2:
         return lst
     elif lst[0][0] == lst[1][0]:
         return CombineExponents(Prepend(Drop(lst,2),[lst[0][0], lst[0][1] + lst[1][1]]))
     return Prepend(CombineExponents(Rest(lst)), First(lst))
+
+def FactorInteger(n, l=None):
+    return sorted(factorint(n, limit=l).items())
 
 def FactorAbsurdNumber(m):
     # (* m must be an absurd number.  FactorAbsurdNumber[m] returns the prime factorization of m *)
@@ -2506,3 +2513,302 @@ def TrinomialQ(u, x):
         w = Wild('w')
         match = u.match(w**2)
         return match and BinomialQ(match[w], x)
+        result = []
+        for i in r:
+            result.append([i[0], i[1]*m.exp])
+        return result
+    #CombineExponents[Sort[]]]]
+    #Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]
+    #return CombineExponents(Sort(Flatten()))
+
+def SubstForInverseFunction(*args):
+    # (* SubstForInverseFunction[u,v,w,x] returns u with subexpressions equal to v replaced by x
+    # and x replaced by w. *)
+    if len(args) == 3:
+        u, v, x = args[0], args[1], args[2]
+        return SubstForInverseFunction(u, v, (-Coefficient(v.args[0], x, 0) + InverseFunction(Head(v))(x))/Coefficient(v.args[0], x, 1), x)
+    elif len(args) == 4:
+        u, v, w, x = args[0], args[1], args[2], args[3]
+        if AtomQ(u):
+            if u == x:
+                return w
+            return u
+        elif Head(u) == Head(v) and ZeroQ(u.args[0] - v.args[0]):
+            return x
+        res = [SubstForInverseFunction(i, v, w, x) for i in u.args]
+        return u.func(*res)
+
+def SubstForFractionalPower(u, v, n, w, x):
+    # (* SubstForFractionalPower[u,v,n,w,x] returns u with subexpressions equal to v^(m/n) replaced
+    # by x^m and x replaced by w. *)
+    if AtomQ(u):
+        if u == x:
+            return w
+        return u
+    elif FractionalPowerQ(u) and ZeroQ(u.args[0] - v):
+        return x**(n*u.args[1])
+    res = [SubstForFractionalPower(i, v, n, w, x) for i in u.args]
+    return u.func(*res)
+
+def SubstForFractionalPowerOfQuotientOfLinears(u, x):
+    # (* If u has a subexpression of the form ((a+b*x)/(c+d*x))^(m/n) where m and n>1 are integers,
+    # SubstForFractionalPowerOfQuotientOfLinears[u,x] returns the list {v,n,(a+b*x)/(c+d*x),b*c-a*d} where v is u
+    # with subexpressions of the form ((a+b*x)/(c+d*x))^(m/n) replaced by x^m and x replaced
+    lst = FractionalPowerOfQuotientOfLinears(u, 1, False, x)
+    if AtomQ(lst) or AtomQ(lst[1]):
+        return False
+    n = lst[0]
+    tmp = lst[1]
+    lst=QuotientOfLinearsParts(tmp, x)
+    a, b, c, d = lst[0], lst[1], lst[2], lst[3]
+    if ZeroQ(d):
+        return False
+    lst = Simplify(x**(n - 1)*SubstForFractionalPower(u, tmp, n, (-a + c*x**n)/(b - d*x**n), x)/(b - d*x**n)**2)
+    return [NonfreeFactors(lst, x), n, tmp, FreeFactors(lst, x)*(b*c - a*d)]
+
+def FractionalPowerOfSquareQ(u):
+    # (* If a subexpression of u is of the form ((v+w)^2)^n where n is a fraction, *)
+    # (* FractionalPowerOfSquareQ[u] returns (v+w)^2; else it returns False. *)
+    if AtomQ(u):
+        return False
+    elif FractionalPowerQ(u):
+        a_ = Wild('a')
+        b_ = Wild('b')
+        c_ = Wild('c')
+        match = u.match(a_*(b_ + c_)**S(2))
+        if match:
+            keys = [a_, b_, c_]
+            if len(keys) == len(match):
+                a, b, c = tuple(match[i] for i in keys)
+                if NonsumQ(a):
+                    return (b + c)**S(2)
+    for i in u.args:
+        tmp = FractionalPowerOfSquareQ(i)
+        if Not(FalseQ(tmp)):
+            return tmp
+    return False
+
+def FractionalPowerSubexpressionQ(u, v, w):
+    # (* If a subexpression of u is of the form w^n where n is a fraction but not equal to v, *)
+    # (* FractionalPowerSubexpressionQ[u,v,w] returns True; else it returns False. *)
+    if AtomQ(u):
+        return False
+    elif FractionalPowerQ(u) and PositiveQ(u.args[0]/w):
+        return Not(u.args[0] == v) and LeafCount(w) < 3*LeafCount(v)
+    for i in u.args:
+        if FractionalPowerSubexpressionQ(i, v, w):
+            return True
+    return False
+
+def Apply(f, lst):
+    return f(*lst)
+
+def FactorNumericGcd(u):
+    # (* FactorNumericGcd[u] returns u with the gcd of the numeric coefficients of terms of sums factored out. *)
+    if PowerQ(u):
+        if RationalQ(u.exp):
+            return FactorNumericGcd(u.base)**u.exp
+    elif ProductQ(u):
+        res = [FactorNumericGcd(i) for i in u.args]
+        return Mul(*res)
+    elif SumQ(u):
+        g = GCD(*[NumericFactor(i) for i in u.args])
+        r = Add(*[i/g for i in u.args])
+        return g*r
+    return u
+
+def MergeableFactorQ(bas, deg, v):
+    # (* MergeableFactorQ[bas,deg,v] returns True iff bas equals the base of a factor of v or bas is a factor of every term of v. *)
+    if bas == v:
+        return RationalQ(deg + S(1)) and (deg + 1>=0 or RationalQ(deg) and deg>0)
+    elif PowerQ(v):
+        if bas == v.base:
+            return RationalQ(deg+v.exp) and (deg+v.exp>=0 or RationalQ(deg) and deg>0)
+        return SumQ(v.base) and IntegerQ(v.exp) and (Not(IntegerQ(deg) or IntegerQ(deg/v.exp))) and MergeableFactorQ(bas, deg/v.exp, v.base)
+    elif ProductQ(v):
+        return MergeableFactorQ(base, deg, First(v)) or MergeableFactorQ(bas, deg, Rest(v))
+    return SumQ(v) and MergeableFactorQ(bas, deg, First(v)) and MergeableFactorQ(bas, deg, Rest(v))
+
+def MergeFactor(bas, deg, v):
+    # (* If MergeableFactorQ[bas,deg,v], MergeFactor[bas,deg,v] return the product of bas^deg and v,
+    # but with bas^deg merged into the factor of v whose base equals bas. *)
+    if bas == v:
+        return bas**(deg + 1)
+    elif PowerQ(v):
+        if bas == v.base:
+            return bas**(deg + b.exp)
+        return MergeFactor(bas, deg/b.exp, v.base**v.exp)
+    elif ProductQ(v):
+        if MergeableFactorQ(bas, deg, First(v)):
+            return MergeFactor(bas, deg, First(v))*Rest(v)
+        return First(v)*MergeFactor(bas, deg, Rest(v))
+    return MergeFactor(bas, deg, First(v) + MergeFactor(bas, deg, Rest(v)))
+
+def MergeFactors(u, v):
+    # (* MergeFactors[u,v] returns the product of u and v, but with the mergeable factors of u merged into v. *)
+    if ProductQ(u):
+        return MergeFactors(Rest(u), MergeFactors(First(u), v))
+    elif PowerQ(u):
+        if MergeableFactorQ(u.base, u.exp, v):
+            return MergeFactor(u.base, u.exp, v)
+        elif RationalQ(u.exp) and u.exp < -1 and MergeableFactorQ(u.base, -S(1), v):
+            return MergeFactors(u.base**(u.exp + 1), MergeFactor(u.base, -S(1), v))
+        return u*v
+    elif MergeableFactorQ(u, S(1), v):
+        return MergeFactor(u, S(1), v)
+    return u*v
+
+def TrigSimplifyQ(u):
+    return u == TrigSimplify(u)
+
+def TrigSimplify(u):
+    return trigsimp(u)
+
+def Order(expr1, expr2):
+    if expr1 == expr2:
+        return 0
+    elif expr1.sort_key() > expr2.sort_key():
+        return -1
+    return 1
+
+def FactorOrder(u, v):
+    if u == 1:
+        if v == 1:
+            return 0
+        return -1
+    elif v == 1:
+        return 1
+    return Order(u, v)
+
+def Smallest(num1, num2=None):
+    if num2 == None:
+        lst = num1
+        num = lst[0]
+        for i in Rest(lst):
+            num = Smallest(num, i)
+        return num
+    return Min(num1, num2)
+
+def MostMainFactorPosition(lst):
+    factor = 1
+    num = 1
+    for i in range(0, Length(lst)):
+        if FactorOrder(lst[i], factor) > 0:
+            factor = lst[i]
+            num = i + 1
+    return num
+
+def OrderedQ(l):
+    return l == Sort(l)
+
+def MinimumDegree(deg1, deg2):
+    if RationalQ(deg1):
+        if RationalQ(deg2):
+            return Min(deg1, deg2)
+        return deg1
+    elif RationalQ(deg2):
+        return deg2
+
+    deg = Simplify(deg1- deg2)
+
+    if RationalQ(deg):
+        if deg > 0:
+            return deg2
+        return deg1
+    elif OrderedQ([deg1, deg2]):
+        return deg1
+    return deg2
+
+def PositiveFactors(u):
+    # (* PositiveFactors[u] returns the positive factors of u *)
+    if ZeroQ(u):
+        return S(1)
+    elif RationalQ(u):
+        return Abs(u)
+    elif PositiveQ(u):
+        return u
+    elif ProductQ(u):
+        res = 1
+        for i in u.args:
+            res *= PositiveFactors(i)
+        return res
+    return 1
+
+def Sign(u):
+    return sign(u)
+
+def NonpositiveFactors(u):
+    # (* NonpositiveFactors[u] returns the nonpositive factors of u *)
+    if ZeroQ(u):
+        return u
+    elif RationalQ(u):
+        return Sign(u)
+    elif PositiveQ(u):
+        return S(1)
+    elif ProductQ(u):
+        res = S(1)
+        for i in u.args:
+            res *= NonpositiveFactors(i)
+        return res
+    return u
+
+def PolynomialInAuxQ(u, v, x):
+    if u == v:
+        return True
+    elif AtomQ(u):
+        return u != x
+    elif PowerQ(u):
+        if PowerQ(v):
+            if u.base == v.base:
+                return PositiveIntegerQ(u.exp/v.exp)
+        return PositiveIntegerQ(u.exp) and PolynomialInAuxQ(u.base, v, x)
+    elif SumQ(u) or ProductQ(u):
+        for i in u.args:
+            if Not(PolynomialInAuxQ(i, v, x)):
+                return False
+        return True
+    return False
+
+def PolynomialInQ(u, v, x):
+    # If u is a polynomial in v[x], PolynomialInQ[u,v,x] returns True; else it returns False.
+    return PolynomialInAuxQ(u, NonfreeFactors(NonfreeTerms(v, x), x), x)
+
+def ExponentInAux(u, v, x):
+    if u == v:
+        return S(1)
+    elif AtomQ(u):
+        return S(0)
+    elif PowerQ(u):
+        if PowerQ(v):
+            if u.base == v.base:
+                return u.exp/v.exp
+        return u.exp*ExponentInAux(u.base, v, x)
+    elif ProductQ(u):
+        return Add(*[ExponentInAux(i, v, x) for i in u.args])
+    return Max(*[ExponentInAux(i, v, x) for i in u.args])
+
+def ExponentIn(u, v, x):
+    return ExponentInAux(u, NonfreeFactors(NonfreeTerms(v, x), x), x)
+
+def PolynomialInSubstAux(u, v, x):
+    if u == v:
+        return x
+    elif AtomQ(u):
+        return u
+    elif PowerQ(u):
+        if PowerQ(v):
+            if u.base == v.base:
+                return x**(u.exp/v.exp)
+        return PolynomialInSubstAux(u.base, v, x)**u.exp
+    return u.func(*[PolynomialInSubstAux(i, v, x) for i in u.args])
+
+def PolynomialInSubst(u, v, x):
+    # If u is a polynomial in v[x], PolynomialInSubst[u,v,x] returns the polynomial u in x.
+    w = NonfreeTerms(v, x)
+    return ReplaceAll(PolynomialInSubstAux(u, NonfreeFactors(w, x), x), {x: x - FreeTerms(v, x)/FreeFactors(w, x)})
+
+def Distrib(u, v):
+    # Distrib[u,v] returns the sum of u times each term of v.
+    if SumQ(v):
+        return Add(*[u*i for i in v.args])
+    return u*v

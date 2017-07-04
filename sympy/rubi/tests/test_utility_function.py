@@ -5,7 +5,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi
 
-a, b, c, d, e, f, g, h, x, y, z, m, n, p, q = symbols('a b c d e f g h x y z m n p q', real=True, imaginary=False)
+a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, v = symbols('a b c d e f g h x y z m n p q v', real=True, imaginary=False)
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -74,6 +74,7 @@ def test_RationalQ():
     assert RationalQ(S(5)/6, S(4)/5)
     assert not RationalQ(Sqrt(1.6))
     assert not RationalQ(Sqrt(1.6), S(5)/6)
+    assert not RationalQ(log(2))
 
 def test_Sqrt():
     assert Sqrt(S(16)) == 4
@@ -966,3 +967,150 @@ def test_SimplerIntegrandQ():
     assert SimplerIntegrandQ(5, 4*x, x)
     assert not SimplerIntegrandQ(x + 5*x**3, x**2 + 3*x, x)
     assert SimplerIntegrandQ(x + 8, x**2 + 3*x, x)
+
+def test_Drop():
+    assert Drop([1, 2, 3, 4, 5, 6], [2, 4]) == [1, 5, 6]
+    assert Drop([1, 2, 3, 4, 5, 6], -3) == [1, 2, 3]
+    assert Drop([1, 2, 3, 4, 5, 6], 2) == [3, 4, 5, 6]
+
+def test_SubstForInverseFunction():
+    assert SubstForInverseFunction(x, a, b, x) == b
+    assert SubstForInverseFunction(a, a, b, x) == a
+    assert SubstForInverseFunction(x**a, x**a, b, x) == x
+    assert SubstForInverseFunction(a*x**a, a, b, x) == a*b**a
+
+def test_SubstForFractionalPower():
+    assert SubstForFractionalPower(a, b, n, c, x) == a
+    assert SubstForFractionalPower(x, b, n, c, x) == c
+    assert SubstForFractionalPower(a**(S(1)/2), a, n, b, x) == x**(n/2)
+
+def test_CombineExponents():
+    assert True
+
+def test_FractionalPowerOfSquareQ():
+    assert FractionalPowerOfSquareQ(x) == False
+    assert FractionalPowerOfSquareQ((a + b)**2) == (a + b)**2
+    assert FractionalPowerOfSquareQ((a + b)**2*c) == (a + b)**2
+
+def test_FractionalPowerSubexpressionQ():
+    assert not FractionalPowerSubexpressionQ(x, a, x)
+    assert FractionalPowerSubexpressionQ(x**S(2), a, x)
+    assert FractionalPowerSubexpressionQ(x**S(2)*a, a, x)
+    assert not FractionalPowerSubexpressionQ(b*a, a, x)
+
+def test_FactorNumericGcd():
+    assert FactorNumericGcd(x**(S(2))) == x**S(2)
+    assert FactorNumericGcd(log(x)) == log(x)
+    assert FactorNumericGcd(log(x)*x) == x*log(x)
+    assert FactorNumericGcd(log(x) + x**S(2)) == log(x) + x**S(2)
+
+def test_Apply():
+    assert Apply(List, [a, b, c]) == [a, b, c]
+
+def test_TrigSimplify():
+    assert TrigSimplify(a*sin(x)**2 + a*cos(x)**2 + v) == a + v
+    assert TrigSimplify(a*sec(x)**2 - a*tan(x)**2 + v) == a + v
+    assert TrigSimplify(a*csc(x)**2 - a*cot(x)**2 + v) == a + v
+    #assert TrigSimplify((a*cos(x)**2 + b*sin(x)**2 + v)**n) == ((b - a)*Sin(u)**2 + a + v)**n
+    assert TrigSimplify(1 - sin(x)**2) == cos(x)**2
+    assert TrigSimplify(1 - cos(x)**2) == sin(x)**2
+    #assert TrigSimplify(1 + tan(x)**2) == sec(x)**2
+    #assert TrigSimplify(1 + cot(x)**2) == csc(x)**2
+    assert TrigSimplify(-1 + sec(x)**2) == tan(x)**2
+    #assert TrigSimplify(-1 + csc(x)**2) == cot(x)**2
+    #assert TrigSimplify(sin(x)**2/(sqrt(a) - sqrt(a)*cos(x))) == 1/(a - cos(x)/b)
+    #assert TrigSimplify(cos(x)**2/(sqrt(a) - sqrt(a)*sin(x))) == 1/(a - sin(x)/b)
+    # Tan[z]^n/(a+b*Tan[z]^n) == 1/(b+a*Cot[z]^n)
+    # Cot[z]^n/(a+b*Cot[z]^n) == 1/(b+a*Tan[z]^n)
+    # Sec[z]^n/(a+b*Sec[z]^n) == 1/(b+a*Cos[z]^n)
+    # Csc[z]^n/(a+b*Csc[z]^n) == 1/(b+a*Sin[z]^n)
+    # Tan[z]^n/(a+b*Sec[z]^n) == Sin[z]^n/(b+a*Cos[z]^n)
+    # Cot[z]^n/(a+b*Csc[z]^n) == Cos[z]^n/(b+a*Sin[z]^n)
+
+def test_MergeFactors():
+    assert MergeFactors(x, x) == x**2
+    assert MergeFactors(x*y, x) == x**2*y
+
+def test_FactorInteger():
+    assert FactorInteger(2434500) == [(2, 2), (3, 2), (5, 3), (541, 1)]
+
+def test_FactorAbsurdNumber():
+    assert FactorAbsurdNumber(sqrt(S(2))) == [[2, 1/2]]
+    assert FactorAbsurdNumber(S(2)) == [(2, 1)]
+
+def test_ContentFactor():
+    assert ContentFactor(a*b + a*c) == a*(b + c)
+
+def test_Order():
+    assert Order(a, b) == 1
+    assert Order(b, a) == -1
+    assert Order(a, a) == 0
+
+def test_FactorOrder():
+    assert FactorOrder(1, 1) == 0
+    assert FactorOrder(1, 2) == -1
+    assert FactorOrder(2, 1) == 1
+    assert FactorOrder(a, b) == 1
+
+def test_Smallest():
+    assert Smallest([2, 1, 3, 4]) == 1
+    assert Smallest(1, 2) == 1
+    assert Smallest(-1, -2) == -2
+
+def test_MostMainFactorPosition():
+    assert MostMainFactorPosition([S(1), S(2), S(3)]) == 2
+    assert MostMainFactorPosition([S(1), S(7), S(3), S(4), S(5)]) == 3
+
+def test_OrderedQ():
+    assert OrderedQ([a, b])
+    assert not OrderedQ([b, a])
+
+def test_MinimumDegree():
+    assert MinimumDegree(S(1), S(2)) == 1
+    assert MinimumDegree(S(1), sqrt(2)) == 1
+    assert MinimumDegree(sqrt(2), S(1)) == 1
+    assert MinimumDegree(sqrt(3), sqrt(2)) == sqrt(2)
+    assert MinimumDegree(sqrt(2), sqrt(2)) == sqrt(2)
+
+def test_PositiveFactors():
+    assert PositiveFactors(S(0)) == 1
+    assert PositiveFactors(-S(1)) == S(1)
+    assert PositiveFactors(sqrt(2)) == sqrt(2)
+    assert PositiveFactors(-log(2)) == log(2)
+    assert PositiveFactors(sqrt(2)*S(-1)) == sqrt(2)
+
+def test_NonpositiveFactors():
+    assert NonpositiveFactors(S(0)) == 0
+    assert NonpositiveFactors(-S(1)) == -1
+    assert NonpositiveFactors(sqrt(2)) == 1
+    assert NonpositiveFactors(-log(2)) == -1
+
+def test_Sign():
+    assert Sign(S(0)) == 0
+    assert Sign(S(1)) == 1
+    assert Sign(-S(1)) == -1
+
+def test_PolynomialInQ():
+    v = log(x)
+    assert PolynomialInQ(S(1), v, x)
+    assert PolynomialInQ(v, v, x)
+    assert PolynomialInQ(1 + v**2, v, x)
+    assert PolynomialInQ(1 + a*v**2, v, x)
+    assert not PolynomialInQ(sqrt(v), v, x)
+
+
+def test_ExponentIn():
+    v = log(x)
+    assert ExponentIn(S(1), log(x), x) == 0
+    assert ExponentIn(S(1) + v, log(x), x) == 1
+    assert ExponentIn(S(1) + v + v**3, log(x), x) == 3
+    assert ExponentIn(S(2)*sqrt(v)*v**3, log(x), x) == 3.5
+
+def test_PolynomialInSubst():
+    v = log(x)
+    assert PolynomialInSubst(S(1) + log(x)**3, log(x), x) == 1 + x**3
+    assert PolynomialInSubst(S(1) + log(x), log(x), x) == x + 1
+
+def test_Distrib():
+    assert Distrib(x, a) == x*a
+    assert Distrib(x, a + b) == a*x + b*x
