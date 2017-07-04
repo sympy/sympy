@@ -240,7 +240,7 @@ class CoordSys3D(Basic):
         if any(simplify(i[0]+i[1]+i[2]) == 0 for i in (v1, v2, v3)):
             return False
         else:
-            if v1.dot(v2) == 0 and v2.dot(v3) == 0 and v3.dot(v1) == 0:
+            if simplify(v1.dot(v2)) == 0 and simplify(v2.dot(v3)) == 0 and simplify(v3.dot(v1)) == 0:
                 return True
             else:
                 return False
