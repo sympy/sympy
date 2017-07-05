@@ -4,13 +4,12 @@ import warnings
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, zeros, expand, acos, atan, atan2
+     symbols, simplify, zeros, expand, acos, atan2
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-from sympy.utilities.pytest import raises
 
 
 x, y, z = symbols('x y z')
@@ -369,16 +368,16 @@ def test_transformation_equations():
 
 def test_check_orthogonality():
     a = CoordSys3D('a')
-    a._connect_to_standard_cartesian((a.x*sin(a.y)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)))
+    a._connect_to_standard_cartesian((a.x*sin(a.y)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)), inverse=False)
     assert a._check_orthogonality() is True
     a._connect_to_standard_cartesian((a.x * cos(a.y), a.x * sin(a.y), a.z))
     assert a._check_orthogonality() is True
-    a._connect_to_standard_cartesian((cosh(a.x)*cos(a.y), sinh(a.x)*sin(a.y), a.z))
+    a._connect_to_standard_cartesian((cosh(a.x)*cos(a.y), sinh(a.x)*sin(a.y), a.z), inverse=False)
     assert a._check_orthogonality() is True
 
     raises(ValueError, lambda: a._connect_to_standard_cartesian((a.x, a.x, a.z)))
     raises(ValueError, lambda: a._connect_to_standard_cartesian(
-        (a.x*sin(a.y / 2)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y))))
+        (a.x*sin(a.y / 2)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)), inverse=False))
 
 def test_coordsys3d():
     with warnings.catch_warnings():
