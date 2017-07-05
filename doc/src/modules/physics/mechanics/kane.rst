@@ -4,8 +4,8 @@ Kane's Method
 
 The :mod:`~sympy.physics.mechanics.kane` module provides functionality for
 deriving equations of motion using Kane's method [Kane1985]_. This document
-describes Kane's method as used in this module, please refer to Kane's book and
-the source code for the mathematical details of the underlying algorithms.
+describes Kane's method as used in this module, please refer to [Kane1985]_ and the
+source code for the mathematical details of the underlying algorithms.
 
 Structure of Equations
 ======================
@@ -14,13 +14,13 @@ In :mod:`~sympy.physics.mechanics.kane` we describe a multi-body system with 5
 general sets of equations given the:
 
 - :math:`n`: number of generalized coordinates and number of generalized speeds
-- :math:`\mathbf{q}` : vector of generalized coordinates where :math:`\mathbf{q} \in \mathbb{R}^n`
-- :math:`o` : number of holonomic constraint equations
-- :math:`\mathbf{u}` : vector of generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^n`
-- :math:`m` : number of non-holonomic constraint equations
+- :math:`M` : number of holonomic constraint equations
+- :math:`m` : number of nonholonomic constraint equations
 - :math:`p` : number of independent generalized speeds, i.e. :math:`n-m`
-- :math:`\mathbf{u}_r` : dependent generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^m`
-- :math:`\mathbf{u}_s` : independent generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^p`
+- :math:`\mathbf{q}` : vector of generalized coordinates where :math:`\mathbf{q} \in \mathbb{R}^n`
+- :math:`\mathbf{u}` : vector of generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^n`
+- :math:`\mathbf{u}_r` : dependent generalized speeds where :math:`\mathbf{u}_r \in \mathbb{R}^m`
+- :math:`\mathbf{u}_s` : independent generalized speeds where :math:`\mathbf{u}_s \in \mathbb{R}^p`
 
 The equations are then as follows:
 
@@ -29,9 +29,9 @@ The equations are then as follows:
    .. math::
       \mathbf{f}_h(\mathbf{q}, t) = 0 \quad
       \mathrm{where} \quad
-      \mathbf{f}_h \in \mathbb{R}^o
+      \mathbf{f}_h \in \mathbb{R}^M
 
-2. Non-holonomic constraints
+2. Nonholonomic constraints
 
    .. math::
       \mathbf{M}_{n}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{n}(\mathbf{q}, t) = 0 \quad
@@ -40,25 +40,36 @@ The equations are then as follows:
       \mathrm{,\ }
       \mathbf{f}_{n} \in \mathbb{R}^m
 
+   or
+
+   .. math::
+      \mathbf{M}_{nr}(\mathbf{q}, t) \mathbf{u}_r + \mathbf{M}_{ns}(\mathbf{q}, t) \mathbf{u}_s + \mathbf{f}_{n}(\mathbf{q}, t) = 0 \quad
+      \mathrm{where} \quad
+      \mathbf{M}_{nr} \in \mathbb{R}^{m \times m}
+      \mathrm{,\ }
+      \mathbf{M}_{ns} \in \mathbb{R}^{m \times p}
+      \mathrm{,\ }
+      \mathbf{f}_{n} \in \mathbb{R}^m
+
 3. Kinematic differential equations
 
    .. math::
-      \mathbf{M}_{\dot{q}}(\mathbf{q}, t) \dot{\mathbf{q}} + \mathbf{M}_{u}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{\dot{q}}(\mathbf{q}, t) = 0 \quad
+      \mathbf{M}_{k\dot{q}}(\mathbf{q}, t) \dot{\mathbf{q}} + \mathbf{M}_{ku}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{k}(\mathbf{q}, t) = 0 \quad
       \mathrm{where} \quad
-      \mathbf{M}_{\dot{q}} \in \mathbb{R}^{n \times n}
+      \mathbf{M}_{k\dot{q}} \in \mathbb{R}^{n \times n}
       \mathrm{,\ }
-      \mathbf{M}_{u} \in \mathbb{R}^{n \times n}
+      \mathbf{M}_{ku} \in \mathbb{R}^{n \times n}
       \mathrm{,\ }
-      \mathbf{f}_{\dot{q}} \in \mathbb{R}^n
+      \mathbf{f}_{k} \in \mathbb{R}^n
 
 4. Dynamic differential equations
 
    .. math::
-      \mathbf{M}_{\dot{u}}(\mathbf{q}, t) \dot{\mathbf{u}}_s + \mathbf{f}_{\dot{u}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
+      \mathbf{M}_{d}(\mathbf{q}, t) \dot{\mathbf{u}}_s + \mathbf{f}_{d}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
       \mathrm{where} \quad
-      \mathbf{M}_{\dot{u}} \in \mathbb{R}^{p \times p}
+      \mathbf{M}_{d} \in \mathbb{R}^{p \times p}
       \mathrm{,\ }
-      \mathbf{f}_{\dot{u}} \in \mathbb{R}^p
+      \mathbf{f}_{d} \in \mathbb{R}^p
 
 5. Differentiated non-holonomic equations
 
@@ -69,6 +80,17 @@ The equations are then as follows:
       \mathrm{,\ }
       \mathbf{f}_{\dot{n}} \in \mathbb{R}^m
 
+   or
+
+   .. math::
+      \mathbf{M}_{\dot{n}r}(\mathbf{q}, t) \dot{\mathbf{u}}_r + \mathbf{M}_{\dot{n}s}(\mathbf{q}, t) \dot{\mathbf{u}}_s + \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
+      \mathrm{where} \quad
+      \mathbf{M}_{\dot{n}r} \in \mathbb{R}^{m \times m}
+      \mathrm{,\ }
+      \mathbf{M}_{\dot{n}s} \in \mathbb{R}^{m \times p}
+      \mathrm{,\ }
+      \mathbf{f}_{\dot{n}} \in \mathbb{R}^m
+
 Equation sets 1 through 3 are provided by the analyst, where as the sets 4 and
 5 are computed by the :class:`~sympy.physics.mechanics.kane.KanesMethod` class.
 
@@ -76,14 +98,14 @@ Holonomic Constraint Equations
 ------------------------------
 
 The first set of equations describes the configuration constraints which are
-typically non-linear in the generalized coordinates. For the purposes of
+generally non-linear in the generalized coordinates. For the purposes of
 forming the non-linear equations of motion, these are additional equations that
-must be satisfied along with the other equations.
+must be satisfied along with the other equations. Note that
 :class:`~sympy.physics.mechanics.kane.KanesMethod` only uses the holonomic
 constraints if the equations are linearized. It is assumed that the equations
-are not solvable for the dependent coordinate(s) [1]_.
+are not easily solvable for the dependent coordinate(s) [1]_.
 
-These equations should be passed to
+The left hand side equations should be passed to
 :class:`~sympy.physics.mechanics.kane.KanesMethod` on initialization, e.g.::
 
    >>> KanesMethod(..., configuration_constraints=(expr_0, expr_1, ...), ...)
@@ -93,15 +115,15 @@ where the constraint expressions are equivalent to zero.
 .. [1] The equations can be either linear or non-linear in the coordinates. It
    is recommended that the user analytically solve for the independent
    generalized coordinates if possible before passing them to
-   :py:class:`KanesMethod`.  If you are able to easily solve a holonomic
+   :py:class:`KanesMethod`. If you are able to easily solve a holonomic
    constraint, you should consider redefining your problem in terms of a
    smaller set of coordinates. Alternatively, the time-differentiated holonomic
    constraints can be supplied.
 
-Non-Holonomic Constraint Equations
-----------------------------------
+Nonholonomic Constraint Equations
+---------------------------------
 
-The second set of equations describe the non-holonomic constraints, otherwise
+The second set of equations describe the nonholonomic constraints, otherwise
 known as velocity constraints, that are linear in the generalized speeds. There
 are fewer equations than generalized speeds, and thus describe the relationship
 between the dependent and independent generalized speeds. There are :math:`m`
@@ -112,23 +134,15 @@ the dependent and independent speeds:
 
 .. math::
    \mathbf{u} = [\mathbf{u}_r, \mathbf{u}_s]^T \\
-   \mathbf{u}_r = -\mathbf{M}_{n}(\mathbf{q}, t)^{-1} \mathbf{f}_{n}(\mathbf{q}, \mathbf{u}_s, t)
+   \mathbf{u}_r = -\mathbf{M}_{nr}(\mathbf{q}, t)^{-1} \mathbf{f}_{ns}(\mathbf{q}, \mathbf{u}_s, t)
 
-
-.. math::
-   \mathbf{M}_{n}(\mathbf{q}, t) \mathbf{u}_r + \mathbf{f}_{n}(\mathbf{q}, \mathbf{u}_s, t) = 0 \quad
-   \mathrm{where} \quad
-   \mathbf{M}_{n} \in \mathbb{R}^{m \times m}
-   \mathrm{,\ }
-   \mathbf{f}_{n} \in \mathbb{R}^m
-
-The non-holonomic constraint expressions should be passed directly to the
+These nonholonomic constraint expressions should be passed directly to the
 :class:`~sympy.physics.mechanics.kane.KanesMethod` class as such::
 
    >>> KanesMethod(..., velocity_constraints=(expr_0, expr_1), ...)
 
 where each expression is one entry of the left hand side of the second set of
-equations.
+equations above.
 
 Kinematic Differential Equations
 --------------------------------
@@ -138,25 +152,28 @@ describe the relationship between the generalized speeds and the derivatives of
 the generalized coordinates. These are defined by the analyst and can reduce
 the length of the final equations of motion if chosen carefully [Mitiguy1996]_.
 The simplest and always valid choice is :math:`\mathbf{u} = \dot{\mathbf{q}}`.
-These equations define the additional equations needed to transform the second
-order equations of motion into first order form.
+These equations are needed to transform the second order equations of motion
+into first order form.
 
 These are passed into :class:`~sympy.physics.mechanics.kane.KanesMethod` class
 as such::
 
    >>> KanesMethod(..., kd_eqs=(expr_0, expr_1), ...)
 
-where each expression is equal to zero.
+where each expression the left hand side of the above equations.
 
-The ``kindiff()`` method of the
-:class:`~sympy.physics.mechanics.kane.KanesMethod` class returns a dictionary
-with expressions for derivatives of the generalized coordinates.
+The :meth:`~sympy.physics.mechanics.kane.KanesMethod.kindiff`` method returns a dictionary
+with expressions for derivatives of the generalized coordinates, i.e.:
+
+.. math::
+
+   \dot{\mathbf{q}} = -\mathbf{M}_{k\dot{q}}(\mathbf{q}, t)^{-1}\left[\mathbf{M}_{ku}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{k}(\mathbf{q}, t)\right]
 
 Dynamic Differential Equations
 ------------------------------
 
-The fourth equation is the dynamical differential equation. This equation is
-linear in the derivatives of the generalized speeds and is equivalent to Kane's
+The fourth set of equations are the dynamical differential equations. These equations are
+linear in the derivatives of the generalized speeds and are initially provided as Kane's
 :math:`\mathbf{F}_r + \mathbf{F}_r^* = 0`. These equations are the primary
 result from executing the
 :meth:`~sympy.physics.mechanics.kane.KanesMethod.kanes_equation` method::
@@ -164,23 +181,21 @@ result from executing the
    >>> kane = KanesMethod(...)
    >>> fr, frstar = kane.kanes_equations(bodies, loads)
 
-If there are no motion constraints :math:`\mathbf{M}_{\dot{u}}` is the
-holonomic mass matrix and is accessed with::
+Kane's equations are linear in :math:`\dot{\mathbf{u}}_s`. The coefficient mass matrix, :math:`\mathbf{M}_{d}`, can be accessed with::
 
    >>> kane.mass_matrix
 
-and :math:`-\mathbf{f}_{\dot{u}}` can be accessed with::
+and the forcing function, :math:`-\mathbf{f}_{d}`, can be accessed with::
 
    >>> kane.forcing
 
 Note the negative sign.
 
-Derivative of the Non-holonomic Constraint Equations
-----------------------------------------------------
+Derivative of the Nonholonomic Constraint Equations
+---------------------------------------------------
 
-The fifth equation is the derivative of the non-holonomic constraints. This can
-be used to augment the independent dynamical equations if it is desired to
-solve for the dependent generalized speeds.
+The fifth set of equations are the derivatives of the nonholonomic constraints. These can
+be used to augment the independent dynamic equations if it is desired to solve for the dependent generalized speeds.
 
 These can be optionally passed into
 :class:`~sympy.physics.mechanics.kane.KanesMethod` as::
@@ -193,23 +208,23 @@ computed from the provided velocity constraints.
 Accessing the Variables and the Equations
 -----------------------------------------
 
-For a non-holonomic system with :math:`n` total speeds and :math:`m` motion
-constraints, we will get :math:`n - m` equations. The
+For a nonholonomic system with :math:`n` speeds and :math:`m` motion
+constraints, we will get :math:`p = n - m` dynamic equations. The
 :class:`~sympy.physics.mechanics.KanesMethod` class organizes the equations in
 the following fashion:
 
 .. math::
   \mathbf{M}(\mathbf{q}, t) &=
    \begin{bmatrix}
-     \mathbf{M}_{\dot{u}}(\mathbf{q}, t) & \mathbf{0}_{m \times p} \\
-     \mathbf{0}_{p \times m} & \mathbf{M}_{\dot{n}}(\mathbf{q}, t) \end{bmatrix}\\
+     \mathbf{M}_{d}(\mathbf{q}, t) & \mathbf{0}_{m \times p} \\
+     \mathbf{0}_{p \times m} & \mathbf{M}_{\dot{n}r}(\mathbf{q}, t) \end{bmatrix}\\
 
 .. math::
 
   \mathbf{f}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) &=
    \begin{bmatrix}
-  - \mathbf{f}_{\dot{u}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) \\
-  - \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t)
+  - \mathbf{f}_{d}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) \\
+  - \mathbf{f}_{\dot{n}s}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t)
   \end{bmatrix}\\
 
 such that
@@ -223,12 +238,12 @@ Each component is accessed as such::
    >>> kane = KanesMethod(...)
    >>> kane.kanes_equations(bodies, loads)
    >>> kane.mass_matrix
-   >>> kane.u
+   >>> kane.u.diff()
    >>> kane.forcing
 
 where the total equation is::
 
-   >>> Equality(kane.mass_matrix * kane.u, kane.forcing)
+   >>> Equality(kane.mass_matrix * kane.u.diff(), kane.forcing)
 
 Additionally, :class:`~sympy.physics.mechanics.KanesMethod` provides the
 combined dynamic and kinematic equations:
@@ -237,14 +252,14 @@ combined dynamic and kinematic equations:
   \tilde{\mathbf{M}}(\mathbf{q}, t) &=
    \begin{bmatrix}
      \mathbf{M}(\mathbf{q}, t) & \mathbf{0}_{n \times n} \\
-     \mathbf{0}_{n \times n} & \mathbf{M}_{\dot{q}}(\mathbf{q}, t) \end{bmatrix}\\
+     \mathbf{0}_{n \times n} & \mathbf{M}_{k\dot{q}}(\mathbf{q}, t) \end{bmatrix}\\
 
 .. math::
 
   \tilde{\mathbf{f}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) &=
    \begin{bmatrix}
      \mathbf{f}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) \\
-     - \mathbf{M}_{u}(\mathbf{q}, t) \mathbf{u} - \mathbf{f}_{\dot{q}}(\mathbf{q}, t)
+     - \mathbf{M}_{ku}(\mathbf{q}, t) \mathbf{u} - \mathbf{f}_{k}(\mathbf{q}, t)
   \end{bmatrix}\\
 
 Each component is accessed as such::
@@ -252,13 +267,13 @@ Each component is accessed as such::
    >>> kane = KanesMethod(...)
    >>> kane.kanes_equations(bodies, loads)
    >>> kane.mass_matrix_full
-   >>> kane.u
-   >>> kane.q
+   >>> kane.u.diff()
+   >>> kane.q.diff()
    >>> kane.forcing_full
 
 where the total equation is::
 
-   >>> Equality(kane.mass_matrix_full * kane.q.col_join(kane.u).diff(), kane.forcing_full)
+   >>> Equality(kane.mass_matrix_full * kane.u.col_join(kane.q).diff(), kane.forcing_full)
 
 Simple Example
 ==============
