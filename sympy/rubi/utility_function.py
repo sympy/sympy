@@ -2609,3 +2609,46 @@ def FunctionOfCoshQ(u, v, x):
             return FunctionOfCoshQ(Sinh(v)*lst[1], v, x)
         return all(FunctionOfCoshQ(i, v, x) for i in u.args)
     return all(FunctionOfCoshQ(i, v, x) for i in u.args)
+
+def OddHyperbolicPowerQ(u, v, x):
+    if SinhQ(u) or CoshQ(u) or SechQ(u) or CschQ(u):
+        return OddQuotientQ(u.args[0], v)
+    if PowerQ(u):
+        return Odd(u.args[1]) and OddHyperbolicPowerQ(u.base, v, x)
+    if ProductQ(u):
+        if Not(Eq(FreeFactors(u, x), 1)):
+            return OddHyperbolicPowerQ(NonfreeFactors(u, x), v, x)
+        lst = []
+        for i in u.args:
+            if Not(FunctionOfTanhQ(i, v, x)):
+                lst.append(i)
+        if lst == []:
+            return True
+        return Length(lst)==1 and OddHyperbolicPowerQ(lst[0], v, x)
+    if SumQ(u):
+        return All(OddHyperbolicPowerQ(i, v, x) for i in u.args)
+    return False
+
+def FunctionOfTanhQ(u, v, x):
+    #(* If u is a function of the form f[Tanh[v],Coth[v]] where f is independent of x,
+    # FunctionOfTanhQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+        return TanhQ(u) or CothQ(u) or EvenQuotientQ(u.args[0], v)
+    elif PowerQ(u):
+        if EvenQ(u.args[1]) and HyperbolicQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+            return True
+        elif EvenQ(u.args[1]) and SumQ(u.args[0]):
+            return FunctionOfTanhQ(Expand(u.args[0]**2, v, x))
+    if ProductQ(u):
+        lst = []
+        for i in u.args:
+            if Not(FunctionOfTanhQ(i, v, x)):
+                lst.append(i)
+        if lst == []:
+            return True
+        return Length(lst)==2 and OddHyperbolicPowerQ(lst[0], v, x) and OddHyperbolicPowerQ(lst[1], v, x)
+    return all(FunctionOfTanhQ(i, v, x) for i in u.args)

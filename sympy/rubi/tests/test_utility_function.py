@@ -998,3 +998,13 @@ def test_FunctionOfCoshQ():
     assert FunctionOfCoshQ(cos(cosh(v)), v, x)
     assert FunctionOfCoshQ(cosh(v), v, x)
     assert FunctionOfCoshQ(cosh(v)*cos(cosh(v)), v, x)
+
+def test_FunctionOfTanhQ():
+    v = log(x)
+    t = Tanh(v)
+    c = Coth(v)
+    assert FunctionOfTanhQ(t, v, x)
+    assert FunctionOfTanhQ(c, v, x)
+    assert FunctionOfTanhQ(t + c, v, x)
+    assert FunctionOfTanhQ(t*c, v, x)
+    assert not FunctionOfTanhQ(sin(x), v, x)
