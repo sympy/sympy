@@ -7,7 +7,7 @@ from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
+from sympy.combinatorics.free_groups import FgGroupElement, free_group, zero_mul_simp
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -58,9 +58,10 @@ class FpGroup(DefaultPrinting):
             return fr_grp
         obj = object.__new__(cls)
         obj.free_group = fr_grp
-        obj.relators = relators
-        obj.generators = obj._generators()
+        obj.symbols = fr_grp.symbols
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
+        obj.generators = obj._generators()
+        obj.relators = [obj._fp_rewrite(r) for r in relators]
 
         # CosetTable instance on identity subgroup
         obj._coset_table = None
@@ -73,7 +74,31 @@ class FpGroup(DefaultPrinting):
         return obj
 
     def _generators(self):
-        return self.free_group.generators
+        gens = [self.dtype(((s, 1),)) for s in self.symbols]
+        return tuple(gens)
+
+    def _fp_rewrite(self, w):
+        '''
+        Rewrite the word `w` from `self.free_group` in terms of
+        the generators of `self`.
+
+        '''
+        if w.group == self:
+            return w
+        elif w.group != self.free_group:
+            raise ValueError("%s is not an element of the group" % str(w))
+        s = self.identity
+        for i in range(len(w)):
+            s = s*self.dtype(w[i].array_form)
+        return s
+
+    @property
+    def identity(self):
+        '''
+        Return the identity element.
+
+        '''
+        return self.dtype()
 
     def subgroup(self, gens, C=None):
         '''
@@ -81,10 +106,9 @@ class FpGroup(DefaultPrinting):
         Reidemeister-Schreier algorithm
 
         '''
-        if not all([isinstance(g, FreeGroupElement) for g in gens]):
-            raise ValueError("Generators must be `FreeGroupElement`s")
-        if not all([g.group == self.free_group for g in gens]):
-                raise ValueError("Given generators are not members of the group")
+        if not all([isinstance(g, FgGroupElement) for g in gens]):
+            raise ValueError("Generators must be `FgGroupElement`s")
+        gens = [self._fp_rewrite(g) for g in gens]
         g, rels = reidemeister_presentation(self, gens, C=C)
         g = FpGroup(g[0].group, rels)
         return g
@@ -200,7 +224,7 @@ class FpGroup(DefaultPrinting):
         rels = list(self.generators)
         rels.extend(self.relators)
         if not s:
-            rand = self.free_group.identity
+            rand = self.identity
             i = 0
             while (rand in rels or rand**-1 in rels or rand.is_identity
                    or rand in rels) and i<10:
@@ -238,7 +262,7 @@ class FpGroup(DefaultPrinting):
 
     def random_element(self):
         import random
-        r = self.free_group.identity
+        r = self.identity
         for i in range(random.randint(2,3)):
             r = r*random.choice(self.generators)**random.choice([1,-1])
         return r
@@ -326,7 +350,7 @@ class CosetTable(DefaultPrinting):
         if not max_cosets:
             max_cosets = CosetTable.coset_table_max_limit
         self.fp_group = fp_grp
-        self.subgroup = subgroup
+        self.subgroup = [fp_grp._fp_rewrite(s) for s in subgroup]
         self.coset_table_max_limit = max_cosets
         # "p" is setup independent of Ω and n
         self.p = [0]
@@ -778,6 +802,7 @@ class CosetTable(DefaultPrinting):
         subgroup generator.
 
         """
+        word = self.fp_group._fp_rewrite(word)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         table = self.table
@@ -820,6 +845,7 @@ class CosetTable(DefaultPrinting):
         scan, scan_and_fill
 
         """
+        word = self.fp_group._fp_rewrite(word)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         table = self.table
@@ -1184,6 +1210,7 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None):
 
     """
     # 1. Initialize a coset table C for < X|R >
+    Y = [fp_grp._fp_rewrite(y) for y in Y]
     C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
     R = fp_grp.relators
     A_dict = C.A_dict
@@ -1221,6 +1248,7 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None):
 
     """
     # Initialize a coset table C for < X|R >
+    Y = [fp_grp._fp_rewrite(y) for y in Y]
     C = CosetTable(fp_grp, Y)
     X = fp_grp.generators
     R = fp_grp.relators
@@ -1297,6 +1325,7 @@ def low_index_subgroups(G, N, Y=[]):
     [[1, 1, 0, 0], [0, 0, 1, 1]]
 
     """
+    Y = [G._fp_rewrite(y) for y in Y]
     C = CosetTable(G, [])
     R = G.relators
     # length chosen for the length of the short relators
@@ -1580,6 +1609,7 @@ def rewrite(C, alpha, w):
     x_4*y_2*x_3*x_1*x_2*y_4*x_5
 
     """
+    w = C.fp_group._fp_rewrite(w)
     v = C._schreier_free_group.identity
     for i in range(len(w)):
         x_i = w[i]
@@ -1787,6 +1817,7 @@ def reidemeister_presentation(fp_grp, H, C=None):
     ((x_0,), (x_0**6,))
 
     """
+    H = [fp_grp._fp_rewrite(h) for h in H]
     if not C:
         C = coset_enumeration_r(fp_grp, H)
     C.compress(); C.standardize()
@@ -1818,5 +1849,12 @@ def reidemeister_presentation(fp_grp, H, C=None):
 
     return C.schreier_generators, C.reidemeister_relators
 
+class FpGroupElement(FgGroupElement):
 
-FpGroupElement = FreeGroupElement
+    def reduce(self):
+        #to be implemented once the rewriting systems are added
+        raise NotImplementedError
+
+    def __eq__(self, oth):
+        #this will be different with rewriting systems
+        return super(FpGroupElement, self).__eq__(oth)

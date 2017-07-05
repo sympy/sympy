@@ -146,7 +146,7 @@ class FreeGroup(DefaultPrinting):
             obj = object.__new__(cls)
             obj._hash = _hash
             obj._rank = rank
-            # dtype method is used to create new instances of FreeGroupElement
+            # dtype method is used to create new instances of FgGroupElement
             obj.dtype = type("FreeGroupElement", (FreeGroupElement,), {"group": obj})
             obj.symbols = symbols
             obj.generators = obj._generators()
@@ -184,7 +184,7 @@ class FreeGroup(DefaultPrinting):
 
     def __contains__(self, i):
         """Return True if ``i`` is contained in FreeGroup."""
-        if not isinstance(i, FreeGroupElement):
+        if not isinstance(i, FgGroupElement):
             raise TypeError("FreeGroup contains only FreeGroupElement as elements "
                         ", not elements of type %s" % type(i))
         group = i.group
@@ -335,14 +335,13 @@ class FreeGroup(DefaultPrinting):
 
 
 ############################################################################
-#                          FreeGroupElement                                #
+#                          FgGroupElement                                  #
 ############################################################################
 
-
-class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
-    """Used to create elements of FreeGroup. It can not be used directly to
-    create a free group element. It is called by the `dtype` method of the
-    `FreeGroup` class.
+class FgGroupElement(CantSympify, DefaultPrinting, tuple):
+    """Used to create elements of FreeGroup (`FreeGroupElement`) or FpGroup
+    (`FpGroupElement`). It can not be used directly to create a free group
+    element. It is called by the `dtype` method of the associated group.
 
     """
     is_assoc_word = True
@@ -380,7 +379,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Since elements (i.e. words) don't commute, the indexing of tuple
         makes that property to stay.
 
-        The structure in ``array_form`` of ``FreeGroupElement`` is of form:
+        The structure in ``array_form`` of ``FgGroupElement`` is of form:
 
         ``( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )``
 
@@ -405,7 +404,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     @property
     def letter_form(self):
         """
-        The letter representation of a ``FreeGroupElement`` is a tuple
+        The letter representation of a ``FgGroupElement`` is a tuple
         of generator symbols, with each entry corresponding to a group
         generator. Inverses of the generators are represented by
         negative generator symbols.
@@ -455,7 +454,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     @property
     def ext_rep(self):
-        """This is called the External Representation of ``FreeGroupElement``
+        """This is called the External Representation of ``FgGroupElement``
         """
         return tuple(flatten(self.array_form))
 
@@ -465,8 +464,6 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def __str__(self):
         if self.is_identity:
             return "<identity>"
-
-        symbols = self.group.symbols
         str_form = ""
         array_form = self.array_form
         for i in range(len(array_form)):
@@ -554,7 +551,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def inverse(self):
         """
-        Returns the inverse of a ``FreeGroupElement`` element
+        Returns the inverse of a ``FgGroupElement`` element
 
         Examples
         ========
@@ -572,7 +569,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return group.dtype(r)
 
     def order(self):
-        """Find the order of a ``FreeGroupElement``.
+        """Find the order of a ``FgGroupElement``.
 
         Examples
         ========
@@ -595,7 +592,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         group = self.group
         if not isinstance(other, group.dtype):
-            raise ValueError("commutator of only FreeGroupElement of the same "
+            raise ValueError("commutator of only FgGroupElement of the same "
                     "FreeGroup exists")
         else:
             return self.inverse()*other.inverse()*self*other
@@ -1253,3 +1250,5 @@ def zero_mul_simp(l, index):
         if l[index][1] == 0:
             del l[index]
             index -= 1
+
+FreeGroupElement = FgGroupElement
