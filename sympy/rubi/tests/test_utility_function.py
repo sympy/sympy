@@ -944,3 +944,24 @@ def test_FunctionOfInverseLinear():
     assert FunctionOfInverseLinear((x)/(a + b*x), x) == [a, b]
     assert FunctionOfInverseLinear((c + d*x)/(a + b*x), x) == [a, b]
     assert not FunctionOfInverseLinear(1/(a + b*x), x)
+
+def test_PureFunctionOfSinhQ():
+    v = log(x)
+    f = sinh(v)
+    assert PureFunctionOfSinhQ(f, v, x)
+    assert not PureFunctionOfSinhQ(cosh(v), v, x)
+    assert PureFunctionOfSinhQ(f**2, v, x)
+
+def test_PureFunctionOfTanhQ():
+    v = log(x)
+    f = tanh(v)
+    assert PureFunctionOfTanhQ(f, v, x)
+    assert not PureFunctionOfTanhQ(cosh(v), v, x)
+    assert PureFunctionOfTanhQ(f**2, v, x)
+
+def test_PureFunctionOfCoshQ():
+    v = log(x)
+    f = cosh(v)
+    assert PureFunctionOfCoshQ(f, v, x)
+    assert not PureFunctionOfCoshQ(sinh(v), v, x)
+    assert PureFunctionOfCoshQ(f**2, v, x)

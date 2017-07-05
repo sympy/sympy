@@ -2461,3 +2461,45 @@ def FunctionOfInverseLinear(*args):
         if AtomQ(tmp):
             return False
     return tmp
+
+def PureFunctionOfSinhQ(u, v, x):
+    # (* If u is a pure function of Sinh[v] and/or Csch[v], PureFunctionOfSinhQ[u,v,x] returns True;
+    # else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+        return SinhQ(u) or CschQ(u)
+    for i in u.args:
+        if Not(PureFunctionOfSinhQ(i, v, x)):
+            return False
+    return True
+
+def PureFunctionOfTanhQ(u, v , x):
+    # (* If u is a pure function of Tanh[v] and/or Coth[v], PureFunctionOfTanhQ[u,v,x] returns True;
+    # else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+        return TanhQ(u) or CothQ(u)
+    for i in u.args:
+        if Not(PureFunctionOfTanhQ(i, v, x)):
+            return False
+    return True
+
+def PureFunctionOfCoshQ(u, v, x):
+    # (* If u is a pure function of Cosh[v] and/or Sech[v], PureFunctionOfCoshQ[u,v,x] returns True;
+    # else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+        return CoshQ(u) or SechQ(u)
+    for i in u.args:
+        if Not(PureFunctionOfCoshQ(i, v, x)):
+            return False
+    return True
