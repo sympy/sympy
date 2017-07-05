@@ -26,7 +26,6 @@ def Int(expr, var):
         return None
     return rubi_integrate(expr, var)
 
-
 def Set(expr, value):
     return {expr: value}
 
@@ -361,7 +360,9 @@ def FractionalPowerQ(u):
     return PowerQ(u) & FractionQ(u.args[1])
 
 def AtomQ(expr):
-    if isinstance(expr, list):
+    if expr in [None, True, False]: # [None, True, False] are atoms in mathematica
+        return True
+    elif isinstance(expr, list):
         for e in expr:
             if not e.is_Atom:
                 return False
@@ -1835,7 +1836,7 @@ def QuotientOfLinearsP(u, x):
         if FreeQ(First(u), x):
             return QuotientOfLinearsP(Rest(u), x)
     elif Numerator(u) == 1 and PowerQ(u):
-        return QuotientOfLinearsP(Denominator(u))
+        return QuotientOfLinearsP(Denominator(u), x)
     return u == x or FreeQ(u, x)
 
 def QuotientOfLinearsParts(u, x):
@@ -2427,3 +2428,36 @@ def ConstantFactor(u, x):
         lst2 = CommonFactors(*[First(i) for i in lst1])
         return [First(lst2), Add(*[])]
     return [1, u]
+
+def CalculusQ(u):
+    return False
+
+def FunctionOfInverseLinear(*args):
+    # (* If u is a function of an inverse linear binomial of the form 1/(a+b*x),
+    # FunctionOfInverseLinear[u,x] returns the list {a,b}; else it returns False. *)
+    if len(args) == 2:
+        u, x = args
+        return FunctionOfInverseLinear(u, None, x)
+    u, lst, x = args
+
+    if FreeQ(u, x):
+        return lst
+    elif u == x:
+        return False
+    elif QuotientOfLinearsQ(u, x):
+        tmp = Drop(QuotientOfLinearsParts(u, x), 2)
+        if tmp[1] == 0:
+            return False
+        elif lst == None:
+            return tmp
+        elif ZeroQ(lst[0]*tmp[1] - lst[1]*tmp[0]):
+            return lst
+        return False
+    elif CalculusQ(u):
+        return False
+    tmp = lst
+    for i in u.args:
+        tmp = FunctionOfInverseLinear(i, tmp, x)
+        if AtomQ(tmp):
+            return False
+    return tmp

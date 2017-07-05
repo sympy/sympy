@@ -939,3 +939,8 @@ def test_MonomialFactor():
     assert MonomialFactor(x + y, x) == [0, x + y]
     assert MonomialFactor(log(x), x) == [0, log(x)]
     assert MonomialFactor(log(x)*x, x) == [1, log(x)]
+
+def test_FunctionOfInverseLinear():
+    assert FunctionOfInverseLinear((x)/(a + b*x), x) == [a, b]
+    assert FunctionOfInverseLinear((c + d*x)/(a + b*x), x) == [a, b]
+    assert not FunctionOfInverseLinear(1/(a + b*x), x)
