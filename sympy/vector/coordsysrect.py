@@ -5,7 +5,7 @@ from sympy.core.cache import cacheit
 from sympy.core import S, Dummy
 from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan2
 import sympy.vector
 from sympy import simplify
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -271,9 +271,9 @@ class CoordSys3D(Basic):
             'cartesian': (self.x, self.y, self.z),
             'spherical': (sqrt(self.x**2 + self.y**2 +self.z**2),
                           acos((self.z) / sqrt(self.x**2 + self.y**2 + self.z**2)),
-                          atan(self.y / self.x)),
+                          atan2(self.y, self.x)),
             'cylindrical': (sqrt(self.x**2 + self.y**2),
-                            atan(self.y / self.x),
+                            atan2(self.y, self.x),
                             self.z)
         }
         if curv_coord_name not in equations_mapping:
