@@ -2652,3 +2652,28 @@ def FunctionOfTanhQ(u, v, x):
             return True
         return Length(lst)==2 and OddHyperbolicPowerQ(lst[0], v, x) and OddHyperbolicPowerQ(lst[1], v, x)
     return all(FunctionOfTanhQ(i, v, x) for i in u.args)
+
+def FunctionOfTanhWeight(u, v, x):
+    # (* u is a function of the form f[Tanh[v],Coth[v]] where f is independent of x.
+    # FunctionOfTanhWeight[u,v,x] returns a nonnegative number if u is best considered a function
+    # of Tanh[v]; else it returns a negative number. *)
+    if AtomQ(u):
+        return S(0)
+    elif CalculusQ(u):
+        return S(0)
+    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+        if TanhQ(u) and ZeroQ(u.args[0] - v):
+            return S(1)
+        elif CothQ(u) and ZeroQ(u.args[0] - v):
+            return S(-1)
+        return S(0)
+    elif PowerQ(u):
+        if EvenQ(u.exp) and HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+            if TanhQ(u.base) or CoshQ(u.base) or SechQ(u.base):
+                return S(1)
+            return S(-1)
+    if ProductQ(u):
+        if all(FunctionOfTanhQ(i, v, x) for i in u.args):
+            return Add(*[FunctionOfTanhWeight(i, v, x) for i in u.args])
+        return S(0)
+    return Add(*[FunctionOfTanhWeight(i, v, x) for i in u.args])

@@ -1008,3 +1008,15 @@ def test_FunctionOfTanhQ():
     assert FunctionOfTanhQ(t + c, v, x)
     assert FunctionOfTanhQ(t*c, v, x)
     assert not FunctionOfTanhQ(sin(x), v, x)
+
+def test_FunctionOfTanhWeight():
+    v = log(x)
+    t = Tanh(v)
+    c = Coth(v)
+    assert FunctionOfTanhWeight(x, v, x) == 0
+    assert FunctionOfTanhWeight(sinh(v), v, x) == 0
+    assert FunctionOfTanhWeight(tanh(v), v, x) == 1
+    assert FunctionOfTanhWeight(coth(v), v, x) == -1
+    assert FunctionOfTanhWeight(t**2, v, x) == 1
+    assert FunctionOfTanhWeight(sinh(v)**2, v, x) == -1
+    assert FunctionOfTanhWeight(coth(v)*sinh(v)**2, v, x) == -2
