@@ -296,6 +296,24 @@ def ArcCsc(a):
 def ArcCsch(a):
     return acsch(a)
 
+def Sinh(u):
+    return sinh(u)
+
+def Tanh(u):
+    return tanh(u)
+
+def Cosh(u):
+    return cosh(u)
+
+def Sech(u):
+    return sech(u)
+
+def Csch(u):
+    return csch(u)
+
+def Coth(u):
+    return coth(u)
+
 def LessEqual(*args):
     for i in range(0, len(args) - 1):
         try:
@@ -1489,7 +1507,6 @@ def RationalFunctionExpand(expr, x):
             return result
 
 def ExpandIntegrand(expr, x, extra=None):
-    return S(3)
     w_ = Wild('w')
     p_ = Wild('p', exclude=[x])
     q_ = Wild('q', exclude=[x])
@@ -1789,8 +1806,10 @@ def ExpandIntegrand(expr, x, extra=None):
             elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x)>=Exponent(v, x):
                 return PolynomialDivide(u, v, x)
 
-    #return None
-    return expr.expand()
+    r = expr.expand()
+    if r != expr:
+        return r
+    return S(2)
 
 def PolynomialGCD(f, g):
     return gcd(f, g)
@@ -2501,5 +2520,72 @@ def PureFunctionOfCoshQ(u, v, x):
         return CoshQ(u) or SechQ(u)
     for i in u.args:
         if Not(PureFunctionOfCoshQ(i, v, x)):
+            return False
+    return True
+
+def IntegerQuotientQ(u, v):
+    # (* If u/v is an integer, IntegerQuotientQ[u,v] returns True; else it returns False. *)
+    return IntegerQ(Simplify(u/v))
+
+def OddQuotientQ(u, v):
+    # (* If u/v is odd, OddQuotientQ[u,v] returns True; else it returns False. *)
+    return OddQ(Simplify(u/v))
+
+def EvenQuotientQ(u, v):
+    # (* If u/v is even, EvenQuotientQ[u,v] returns True; else it returns False. *)
+    return EvenQ(Simplify(u/v))
+
+def FindTrigFactor(func1, func2, u, v, flag):
+    # (* If func[w]^m is a factor of u where m is odd and w is an integer multiple of v,
+    # FindTrigFactor[func1,func2,u,v,True] returns the list {w,u/func[w]^n}; else it returns False. *)
+    # (* If func[w]^m is a factor of u where m is odd and w is an integer multiple of v not equal to v,
+    # FindTrigFactor[func1,func2,u,v,False] returns the list {w,u/func[w]^n}; else it returns False. *)
+    if u == 1:
+        return False
+    elif (Head(LeadBase(u)) == func1 or Head(LeadBase(u)) == func2) and OddQ(LeadDegree(u)) and IntegerQuotientQ(LeadBase(u).args[0], v) and (flag or NonzeroQ(LeadBase(u).args[0] - v)):
+        return [LeadBase[u].args[0], RemainingFactors(u)]
+    lst = FindTrigFactor(func1, func2, RemainingFactors(u), v, flag)
+    if AtomQ(lst):
+        return False
+    return [lst[0], LeadFactor(u)*lst[1]]
+
+def FunctionOfSinhQ(u, v, x):
+    # (* If u is a function of Sinh[v], FunctionOfSinhQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+        if OddQuotientQ(u.args[0], v):
+            # (* Basis: If m odd, Sinh[m*v]^n is a function of Sinh[v]. *)
+            return SinhQ(u) or CschQ(u)
+        # (* Basis: If m even, Cos[m*v]^n is a function of Sinh[v]. *)
+        return CoshQ(u) or SechQ(u)
+    elif IntegerPowerQ(u) and HyperbolicQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+        if EvenQ(u.args[1]):
+            # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Sinh[v]. *)
+            return True
+        return FunctionOfSinhQ(u.args[0], v, x)
+    elif ProductQ(u):
+        if CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
+            return FunctionOfSinhQ(Drop(u, 2), v, x)
+        lst = FindTrigFactor(Sinh, Csch, u, v, False)
+        if ListQ(lst) and EvenQuotientQ(lst[0], v):
+            # (* Basis: If m even and n odd, Sinh[m*v]^n == Cosh[v]*u where u is a function of Sinh[v]. *)
+            return FunctionOfSinhQ(Cosh(v)*lst[1], v, x)
+        lst = FindTrigFactor(Cosh, Sech, u, v, False)
+        if ListQ(lst) and OddQuotientQ(lst[0], v):
+            # (* Basis: If m odd and n odd, Cosh[m*v]^n == Cosh[v]*u where u is a function of Sinh[v]. *)
+            return FunctionOfSinhQ(Cosh(v)*lst[1], v, x)
+        lst = FindTrigFactor(Tanh, Coth, u, v, True)
+        if ListQ(lst):
+            # (* Basis: If m integer and n odd, Tanh[m*v]^n == Cosh[v]*u where u is a function of Sinh[v]. *)
+            return FunctionOfSinhQ(Cosh(v)*lst[1], v, x)
+        for i in u.args:
+            if Not(FunctionOfSinhQ(i, v, x)):
+                return False
+        return True
+    for i in u.args:
+        if Not(FunctionOfSinhQ(i, v, x)):
             return False
     return True

@@ -965,3 +965,30 @@ def test_PureFunctionOfCoshQ():
     assert PureFunctionOfCoshQ(f, v, x)
     assert not PureFunctionOfCoshQ(sinh(v), v, x)
     assert PureFunctionOfCoshQ(f**2, v, x)
+
+def test_IntegerQuotientQ():
+    u = S(2)*sin(x)
+    v = sin(x)
+    assert IntegerQuotientQ(u, v)
+    assert IntegerQuotientQ(u, u)
+    assert not IntegerQuotientQ(S(1), S(2))
+
+def test_OddQuotientQ():
+    u = S(3)*sin(x)
+    v = sin(x)
+    assert OddQuotientQ(u, v)
+    assert OddQuotientQ(u, u)
+    assert not OddQuotientQ(S(1), S(2))
+
+def test_EvenQuotientQ():
+    u = S(2)*sin(x)
+    v = sin(x)
+    assert EvenQuotientQ(u, v)
+    assert not EvenQuotientQ(u, u)
+    assert not EvenQuotientQ(S(1), S(2))
+
+def test_FunctionOfSinhQ():
+    v = log(x)
+    assert FunctionOfSinhQ(cos(sinh(v)), v, x)
+    assert FunctionOfSinhQ(sinh(v), v, x)
+    assert FunctionOfSinhQ(sinh(v)*cos(sinh(v)), v, x)
