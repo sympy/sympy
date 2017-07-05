@@ -2581,11 +2581,31 @@ def FunctionOfSinhQ(u, v, x):
         if ListQ(lst):
             # (* Basis: If m integer and n odd, Tanh[m*v]^n == Cosh[v]*u where u is a function of Sinh[v]. *)
             return FunctionOfSinhQ(Cosh(v)*lst[1], v, x)
-        for i in u.args:
-            if Not(FunctionOfSinhQ(i, v, x)):
-                return False
-        return True
-    for i in u.args:
-        if Not(FunctionOfSinhQ(i, v, x)):
-            return False
-    return True
+        return all(FunctionOfSinhQ(i, v, x) for i in u.args)
+    return all(FunctionOfSinhQ(i, v, x) for i in u.args)
+
+def FunctionOfCoshQ(u, v, x):
+    #(* If u is a function of Cosh[v], FunctionOfCoshQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+        # (* Basis: If m integer, Cosh[m*v]^n is a function of Cosh[v]. *)
+        return CoshQ(u) or SechQ(u)
+    elif IntegerPowerQ(u) and HyperbolicQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+        if EvenQ(u.args[1]):
+            # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Cosh[v]. *)
+            return True
+        return FunctionOfCoshQ(u.args[0], v, x)
+    elif ProductQ(u):
+        lst = FindTrigFactor(Sinh, Csch, u, v, False)
+        if ListQ(lst):
+            # (* Basis: If m integer and n odd, Sinh[m*v]^n == Sinh[v]*u where u is a function of Cosh[v]. *)
+            return FunctionOfCoshQ(Sinh(v)*lst[1], v, x)
+        lst = FindTrigFactor(Tanh, Coth, u, v, True)
+        if ListQ(lst):
+            # (* Basis: If m integer and n odd, Tanh[m*v]^n == Sinh[v]*u where u is a function of Cosh[v]. *)
+            return FunctionOfCoshQ(Sinh(v)*lst[1], v, x)
+        return all(FunctionOfCoshQ(i, v, x) for i in u.args)
+    return all(FunctionOfCoshQ(i, v, x) for i in u.args)

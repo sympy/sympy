@@ -992,3 +992,9 @@ def test_FunctionOfSinhQ():
     assert FunctionOfSinhQ(cos(sinh(v)), v, x)
     assert FunctionOfSinhQ(sinh(v), v, x)
     assert FunctionOfSinhQ(sinh(v)*cos(sinh(v)), v, x)
+
+def test_FunctionOfCoshQ():
+    v = log(x)
+    assert FunctionOfCoshQ(cos(cosh(v)), v, x)
+    assert FunctionOfCoshQ(cosh(v), v, x)
+    assert FunctionOfCoshQ(cosh(v)*cos(cosh(v)), v, x)
