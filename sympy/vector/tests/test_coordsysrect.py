@@ -3,7 +3,7 @@ import warnings
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, cos, sqrt, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, zeros, expand, acos, atan
+     symbols, simplify, zeros, expand, acos, atan, atan2
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
@@ -326,12 +326,12 @@ def test_transformation_equations():
     assert a.lame_coefficients() == (1, a.x, a.x * sin(a.y))
     assert a._inverse_transformation_equations() == (sqrt(a.x**2 + a.y**2 +a.z**2),
                           acos((a.z) / sqrt(a.x**2 + a.y**2 + a.z**2)),
-                          atan(a.y / a.x))
+                          atan2(a.y, a.x))
     a._connect_to_standard_cartesian('cylindrical')
     assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert a.lame_coefficients() == (1, a.y, 1)
     assert a._inverse_transformation_equations() == (sqrt(a.x**2 + a.y**2),
-                            atan(a.y / a.x), a.z)
+                            atan2(a.y, a.x), a.z)
     a._connect_to_standard_cartesian('cartesian')
     assert a._transformation_equations() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
