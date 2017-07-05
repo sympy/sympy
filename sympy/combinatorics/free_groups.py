@@ -606,19 +606,15 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         If words is a list, replace the words by the identity.
 
         '''
-        #print(words)
-        #print("eliminate",self)
         again = True
         new = self
         if isinstance(words, dict):
             while again:
                 again = False
-                #print("again")
                 for sub in words:
                     prev = new
                     new = new.eliminate_word(sub, words[sub], _all=_all, inverse=inverse)
                     if new != prev:
-                        #print(sub,new,prev)
                         again = True
         else:
             while again:
@@ -663,7 +659,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             by = self.group.identity
         if self.is_independent(gen) or gen == by:
             return self
-        if gen == self or gen == by:
+        if gen == self:
             return by
         if gen**-1 == by:
             _all = False
