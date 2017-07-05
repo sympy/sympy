@@ -2677,3 +2677,14 @@ def FunctionOfTanhWeight(u, v, x):
             return Add(*[FunctionOfTanhWeight(i, v, x) for i in u.args])
         return S(0)
     return Add(*[FunctionOfTanhWeight(i, v, x) for i in u.args])
+
+def FunctionOfHyperbolicQ(u, v, x):
+    # (* If u (x) is equivalent to a function of the form f (Sinh[v],Cosh[v],Tanh[v],Coth[v],Sech[v],Csch[v])
+    # where f is independent of x, FunctionOfHyperbolicQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+        return True
+    return all(FunctionOfHyperbolicQ(i, v, x) for i in u.args)

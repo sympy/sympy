@@ -1020,3 +1020,11 @@ def test_FunctionOfTanhWeight():
     assert FunctionOfTanhWeight(t**2, v, x) == 1
     assert FunctionOfTanhWeight(sinh(v)**2, v, x) == -1
     assert FunctionOfTanhWeight(coth(v)*sinh(v)**2, v, x) == -2
+
+def test_FunctionOfHyperbolicQ():
+    v = log(x)
+    s = Sinh(v)
+    t = Tanh(v)
+    assert not FunctionOfHyperbolicQ(x, v, x)
+    assert FunctionOfHyperbolicQ(s + t, v, x)
+    assert FunctionOfHyperbolicQ(sinh(t), v, x)
