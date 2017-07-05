@@ -810,7 +810,7 @@ def test_subgroup_presentations():
     assert str(p1) == "((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))"
 
     H = f.subgroup(H)
-    gens = [H._fp_rewrite(p) for p in p1[0]]
+    gens = tuple([H._fp_rewrite(p) for p in p1[0]])
     rels = [H._fp_rewrite(p) for p in p1[1]]
     assert (H.generators, H.relators) == (gens, rels)
 

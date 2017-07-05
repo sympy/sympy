@@ -33,7 +33,7 @@ def free_group(symbols):
     >>> x**2*y**-1
     x**2*y**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_groups.FgGroupElement'>
+    <class 'sympy.combinatorics.free_groups.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -57,7 +57,7 @@ def xfree_group(symbols):
     >>> y**2*x**-2*z**-1
     y**2*x**-2*z**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_groups.FgGroupElement'>
+    <class 'sympy.combinatorics.free_groups.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -81,7 +81,7 @@ def vfree_group(symbols):
     >>> x**2*y**-2*z
     x**2*y**-2*z
     >>> type(_)
-    <class 'sympy.combinatorics.free_groups.FgGroupElement'>
+    <class 'sympy.combinatorics.free_groups.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -94,7 +94,7 @@ def _parse_symbols(symbols):
         return tuple()
     if isinstance(symbols, string_types):
         return _symbols(symbols, seq=True)
-    elif isinstance(symbols, Expr or FgGroupElement):
+    elif isinstance(symbols, Expr or FreeGroupElement):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, string_types) for s in symbols):
@@ -147,7 +147,7 @@ class FreeGroup(DefaultPrinting):
             obj._hash = _hash
             obj._rank = rank
             # dtype method is used to create new instances of FgGroupElement
-            obj.dtype = type("FgGroupElement", (FgGroupElement,), {"group": obj})
+            obj.dtype = type("FreeGroupElement", (FreeGroupElement,), {"group": obj})
             obj.symbols = symbols
             obj.generators = obj._generators()
             obj._gens_set = set(obj.generators)
@@ -185,7 +185,7 @@ class FreeGroup(DefaultPrinting):
     def __contains__(self, i):
         """Return True if ``i`` is contained in FreeGroup."""
         if not isinstance(i, FgGroupElement):
-            raise TypeError("FreeGroup contains only FgGroupElement as elements "
+            raise TypeError("FreeGroup contains only FreeGroupElement as elements "
                         ", not elements of type %s" % type(i))
         group = i.group
         return self == group
@@ -318,7 +318,7 @@ class FreeGroup(DefaultPrinting):
         True
 
         """
-        if not isinstance(g, FgGroupElement):
+        if not isinstance(g, FreeGroupElement):
             return False
         elif self != g.group:
             return False
@@ -338,11 +338,10 @@ class FreeGroup(DefaultPrinting):
 #                          FgGroupElement                                  #
 ############################################################################
 
-
 class FgGroupElement(CantSympify, DefaultPrinting, tuple):
-    """Used to create elements of FreeGroup. It can not be used directly to
-    create a free group element. It is called by the `dtype` method of the
-    `FreeGroup` class.
+    """Used to create elements of FreeGroup (`FreeGroupElement`) or FpGroup
+    (`FpGroupElement`). It can not be used directly to create a free group
+    element. It is called by the `dtype` method of the associated group.
 
     """
     is_assoc_word = True
@@ -1251,3 +1250,5 @@ def zero_mul_simp(l, index):
         if l[index][1] == 0:
             del l[index]
             index -= 1
+
+FreeGroupElement = FgGroupElement

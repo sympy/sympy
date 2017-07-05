@@ -59,7 +59,7 @@ class FpGroup(DefaultPrinting):
         obj = object.__new__(cls)
         obj.free_group = fr_grp
         obj.symbols = fr_grp.symbols
-        obj.dtype = type("FgGroupElement", (FgGroupElement,), {"group": obj})
+        obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
         obj.generators = obj._generators()
         obj.relators = [obj._fp_rewrite(r) for r in relators]
 
@@ -75,17 +75,14 @@ class FpGroup(DefaultPrinting):
 
     def _generators(self):
         gens = [self.dtype(((s, 1),)) for s in self.symbols]
-        return gens
+        return tuple(gens)
 
     def _fp_rewrite(self, w):
         '''
         Rewrite the word `w` from `self.free_group` in terms of
-        the generators of `self`. If `w` is not in `self.free_group`
-        or `self`, don't do anything.
+        the generators of `self`.
 
         '''
-        # this could probably be replaced by a homomorphism
-        # from the free group
         if w.group == self:
             return w
         elif w.group != self.free_group:
@@ -1851,3 +1848,13 @@ def reidemeister_presentation(fp_grp, H, C=None):
     C.reidemeister_relators = tuple(C._reidemeister_relators)
 
     return C.schreier_generators, C.reidemeister_relators
+
+class FpGroupElement(FgGroupElement):
+
+    def reduce(self):
+        #to be implemented once the rewriting systems are added
+        raise NotImplementedError
+
+    def __eq__(self, oth):
+        #this will be different with rewriting systems
+        return super(FpGroupElement, self).__eq__(oth)
