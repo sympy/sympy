@@ -14,6 +14,7 @@ import json
 import glob
 import stat
 import configparser
+import time
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -229,6 +230,11 @@ def GitHub_release():
 @activity(deps={'_version'})
 def update_docs():
     _update_docs()
+
+
+@activity(deps={'_version'})
+def update_sympy_org():
+    _update_sympy_org()
 
 # HELPER FUNCTIONS
 
@@ -893,6 +899,60 @@ def _update_docs(docs_location=None):
 
     cd @(release_dir)
     cd ..
+
+def _update_sympy_org(website_location=None):
+    """
+    Update sympy.org
+
+    This just means adding an entry to the news section.
+    """
+    website_location = website_location or get_location("sympy.github.com")
+
+    release_dir = os.path.abspath(os.path.expanduser(os.path.join(os.path.curdir, 'release')))
+
+    cd @(website_location)
+
+    # Check that the website directory is clean
+    git diff --exit-code > /dev/null
+    git diff --cached --exit-code > /dev/null
+
+    git pull
+
+    release_date = time.gmtime(os.path.getctime(os.path.join("release",
+        tarball_formatter()['source'])))
+    release_year = str(release_date.tm_year)
+    release_month = str(release_date.tm_mon)
+    release_day = str(release_date.tm_mday)
+    version = version
+
+    with open(os.path.join(website_location, "templates", "index.html"), 'r') as f:
+        lines = f.read().split('\n')
+        # We could try to use some html parser, but this way is easier
+        try:
+            news = lines.index(r"    <h3>{% trans %}News{% endtrans %}</h3>")
+        except ValueError:
+            error("index.html format not as expected")
+        lines.insert(news + 2,  # There is a <p> after the news line. Put it
+            # after that.
+            r"""        <span class="date">{{ datetime(""" + release_year + """, """ + release_month + """, """ + release_day + """) }}</span> {% trans v='""" + version + """' %}Version {{ v }} released{% endtrans %} (<a href="https://github.com/sympy/sympy/wiki/Release-Notes-for-""" + version + """">{% trans %}changes{% endtrans %}</a>)<br/>
+    </p><p>""")
+
+    with open(os.path.join(website_location, "templates", "index.html"), 'w') as f:
+        print("Updating index.html template")
+        f.write('\n'.join(lines))
+
+    print("Generating website pages")
+    ./generate
+
+    print("Committing")
+    git commit -a -m @('Add {version} to the news'.format(version=version))
+
+    print("Pushing")
+    git push origin
+
+    cd @(release_dir)
+    cd ..
+
 
 ## TARBALL WHITELISTS
 
