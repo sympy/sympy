@@ -1057,9 +1057,9 @@ def base_Q(G):
     K = AlgebraicField(QQ, *G.domain.gens)
     trans_nums = list(set(G.gens) - set([G.gen]))
     expr_args = G.as_expr().args
-    pow_num = [(i.match(num**s*t), num) for num in trans_nums for i in expr_args]
     # T = [t1, t2, ..., tn]
-    T = set([num**power[s] for power, num in pow_num if power is not None])
+    T = set([num**(i.as_coeff_exponent(num)[1])
+        for num in trans_nums for i in expr_args])
     cons = T.union(set(K.gens))
     return sfield(list(cons), extension=True)
 
