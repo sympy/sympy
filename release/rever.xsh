@@ -923,7 +923,6 @@ def _update_sympy_org(website_location=None):
     release_year = str(release_date.tm_year)
     release_month = str(release_date.tm_mon)
     release_day = str(release_date.tm_mday)
-    version = version
 
     with open(os.path.join(website_location, "templates", "index.html"), 'r') as f:
         lines = f.read().split('\n')
