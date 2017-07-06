@@ -13,6 +13,7 @@ from contextlib import contextmanager
 import json
 import glob
 import stat
+import configparser
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -820,7 +821,7 @@ def get_location(location):
     Read/save a location from the configuration file.
     """
     locations_file = os.path.expanduser('~/.sympy/sympy-locations')
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(locations_file)
     the_location = config.has_option("Locations", location) and config.get("Locations", location)
     if not the_location:
