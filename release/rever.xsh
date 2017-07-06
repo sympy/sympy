@@ -847,6 +847,9 @@ def _update_docs(docs_location=None):
 
     print("Docs location:", docs_location)
 
+    current_version = version
+    previous_version = get_previous_version_tag().lstrip('sympy-')
+
     cd @(docs_location)
 
     # Check that the docs directory is clean
@@ -855,8 +858,6 @@ def _update_docs(docs_location=None):
 
     # See the README of the docs repo. We have to remove the old redirects,
     # move in the new docs, and create redirects.
-    current_version = version
-    previous_version = get_previous_version_tag().lstrip('sympy-')
     print("Removing redirects from previous version")
     rm -r @(previous_version)
     print("Moving previous latest docs to old version")
@@ -886,6 +887,7 @@ def _update_docs(docs_location=None):
     print("Pushing")
     git push origin
 
+    cd -
 
 ## TARBALL WHITELISTS
 
