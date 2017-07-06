@@ -352,7 +352,11 @@ class CoordSys3D(Basic):
         y = Dummy('y')
         z = Dummy('z')
         eq = self._transformation_equations()
-        return tuple(solve([eq[0] - x, eq[1] - y, eq[2] - z], [self.x, self.y, self.z]))
+        try:
+            solved = solve([eq[0] - x, eq[1] - y, eq[2] - z], [x, y, z], dict=True)[0]
+            return solved[x], solved[y], solved[z]
+        except:
+            raise ValueError('Wrong set of parameters.')
 
     def _calculate_lame_coefficients(self, equations):
         """
