@@ -860,6 +860,8 @@ def _update_docs(docs_location=None):
     git diff --exit-code > /dev/null
     git diff --cached --exit-code > /dev/null
 
+    git pull
+
     # See the README of the docs repo. We have to remove the old redirects,
     # move in the new docs, and create redirects.
     print("Removing redirects from previous version")
