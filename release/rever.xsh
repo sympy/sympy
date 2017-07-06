@@ -851,7 +851,8 @@ def _update_docs(docs_location=None):
     previous_version = get_previous_version_tag().lstrip('sympy-')
 
     release_dir = os.path.abspath(os.path.expanduser(os.path.join(os.path.curdir, 'release')))
-    docs_zip = os.path.abspath(os.path.join(release_dir, get_tarball_name('html')))
+    docs_zip = os.path.abspath(os.path.join(release_dir, 'release-' + version,
+        get_tarball_name('html')))
 
     cd @(docs_location)
 
