@@ -921,13 +921,15 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
     Page, 251 section 7.3
     """
-    try:
-        A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
-    except NotImplementedError:
-        E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])) for i in DE.indices('exp')]
-        L_part = [DE.D[i] for i in DE.indices('log')]
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i]))
+            for i in DE.indices('exp')]
+    L_part = [DE.D[i] for i in DE.indices('log')]
 
-        A, u = constant_system(lhs, rhs, DE)
+    lhs = Matrix([L_part + E_part])
+    f = fa/fd
+    rhs = Matrix([f])
+
+    A, u = constant_system(lhs, rhs, DE)
     return A
 
 
@@ -1040,11 +1042,23 @@ def is_deriv_k(fa, fd, DE):
             return (ans, result, const)
 
 
-def basis_Q(C):
+# where C is a constant field
+# C = K(t1, ..., tn)
+# first find `K`, where `K` is an instance of `AlgebraicField`.
+def base_Q(G):
     """
+    >>> Poly(x**2 + sqrt(2)*x + sqrt(3)*x**4*pi**2 + pi*x**5, x, pi, extension=True)
+    >>> base_Q(r)
+    ({1, pi, pi**2}, QQ<sqrt(2) + sqrt(3)>)
+
     """
-    basis = (S.One,) + tuple([i.as_expr() for i in C.gens])
-    return basis
+    K = AlgebraicField(QQ, *G.domain.gens)
+    # T = [t1, t2, ..., tn]
+    trans_nums = list(set(G.gens) - set([G.gen]))
+    expr_args = G.as_expr().args
+    pow_num = [(i.match(num**s*t), num) for num in trans_nums for i in expr_args]
+    T = set([num**power[s] for power, num in pow_num if power is not None])
+    return T, K
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
