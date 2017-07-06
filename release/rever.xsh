@@ -919,7 +919,7 @@ def _update_sympy_org(website_location=None):
     git pull
 
     release_date = time.gmtime(os.path.getctime(os.path.join("release",
-        tarball_formatter()['source'])))
+        tarball_format['source'])))
     release_year = str(release_date.tm_year)
     release_month = str(release_date.tm_mon)
     release_day = str(release_date.tm_mday)
