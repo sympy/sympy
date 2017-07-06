@@ -310,13 +310,8 @@ class OctaveCodePrinter(CodePrinter):
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
             return self._print(A[0, 0])
-        elif A.rows == 1:
-            return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
-        elif A.cols == 1:
-            # note .table would unnecessarily equispace the rows
-            return "[%s]" % "; ".join([self._print(a) for a in A])
-        return "[%s]" % A.table(self, rowstart='', rowend='',
-                                rowsep=';\n', colsep=' ')
+        return "[%s]" % "; ".join(" ".join([self._print(a) for a in A[r, :]])
+                                  for r in range(A.rows))
 
 
     def _print_SparseMatrix(self, A):
