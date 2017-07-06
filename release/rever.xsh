@@ -838,7 +838,7 @@ def get_location(location):
 
     return os.path.abspath(os.path.expanduser(the_location))
 
-def update_docs(docs_location=None):
+def _update_docs(docs_location=None):
     """
     Update the docs hosted at docs.sympy.org
     """
