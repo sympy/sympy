@@ -382,7 +382,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     sin(x)
     >>> sqrt(5) #doctest: +SKIP
       ___
-    \/ 5
+    \\/ 5
     >>> init_session(pretty_print=False) #doctest: +SKIP
     >>> sqrt(5) #doctest: +SKIP
     sqrt(5)

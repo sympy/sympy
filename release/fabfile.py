@@ -546,6 +546,8 @@ def table():
     
     version = get_sympy_version()
 
+    version = get_sympy_version()
+
     # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
     # anything else I've tried.

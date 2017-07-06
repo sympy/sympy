@@ -57,7 +57,7 @@ move(git_people, 10, 5) # Brian Jorgensen
 git_people.insert(11, "*Ulrich Hecht <ulrich.hecht@gmail.com>")
 git_people.pop(12) # Kirill Smelkov
 move(git_people, 12, 32) # Sebastian Krämer
-git_people.insert(35, "*Case Van Horsen <casevh@gmail.com>")
+move(git_people, 227, 35) # Case Van Horsen
 git_people.insert(43, "*Dan <coolg49964@gmail.com>")
 move(git_people, 57, 59) # Aaron Meurer
 move(git_people, 58, 57) # Andrew Docherty
@@ -77,13 +77,13 @@ running `./bin/authors_update.py`.
 """
 header_extra = """There are a total of {authors_count} authors.\n""".format(authors_count=len(git_people))
 
-fd = open(os.path.realpath(os.path.join(__file__, os.path.pardir,
-    os.path.pardir, "AUTHORS")), "w")
-fd.write(header)
-fd.write(header_extra)
-fd.write("\n")
-fd.write("\n".join(git_people).encode("utf8"))
-fd.write("\n")
+with open(os.path.realpath(os.path.join(__file__, os.path.pardir,
+                                        os.path.pardir, "AUTHORS")), "w") as fd:
+    fd.write(header)
+    fd.write(header_extra)
+    fd.write("\n")
+    fd.write("\n".join(git_people).encode("utf8"))
+    fd.write("\n")
 
 print(blue("""
 Please make sure that there are no duplicates in the new AUTHORS, then commit

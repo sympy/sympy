@@ -562,7 +562,7 @@ def rs_series_inversion(p, x, prec):
     return r
 
 def _coefficient_t(p, t):
-    """Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
+    r"""Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
     i, j = t
     R = p.ring
     expv1 = [0]*R.ngens
@@ -575,7 +575,7 @@ def _coefficient_t(p, t):
     return p1
 
 def rs_series_reversion(p, x, n, y):
-    """
+    r"""
     Reversion of a series.
 
     ``p`` is a series with ``O(x**n)`` of the form `p = a*x + f(x)`
@@ -788,7 +788,7 @@ def rs_integrate(p, x):
     return p1
 
 def rs_fun(p, f, *args):
-    """
+    r"""
     Function of a multivariate series computed by substitution.
 
     The case with f method name is used to compute `rs\_tan` and `rs\_nth\_root`
@@ -843,7 +843,7 @@ def rs_fun(p, f, *args):
     return p1
 
 def mul_xin(p, i, n):
-    """
+    r"""
     Return `p*x_i**n`.
 
     `x\_i` is the ith variable in ``p``.
@@ -1081,7 +1081,7 @@ def rs_LambertW(p, x, prec):
         raise NotImplementedError
 
 def _exp1(p, x, prec):
-    """Helper function for `rs\_exp`. """
+    r"""Helper function for `rs\_exp`. """
     R = p.ring
     p1 = R(1)
     for precx in _giant_steps(prec):
@@ -1264,7 +1264,7 @@ def rs_asin(p, x, prec):
         raise NotImplementedError
 
 def _tan1(p, x, prec):
-    """
+    r"""
     Helper function of `rs\_tan`.
 
     Return the series expansion of tan of a univariate series using Newton's
@@ -1524,7 +1524,7 @@ def rs_cos(p, x, prec):
     return rs_series_from_list(p, c, x, prec)
 
 def rs_cos_sin(p, x, prec):
-    """
+    r"""
     Return the tuple `(rs\_cos(p, x, prec)`, `rs\_sin(p, x, prec))`.
 
     Is faster than calling rs_cos and rs_sin separately
@@ -1661,7 +1661,7 @@ def rs_cosh(p, x, prec):
     return (t + t1)/2
 
 def _tanh(p, x, prec):
-    """
+    r"""
     Helper function of `rs\_tanh`
 
     Return the series expansion of tanh of a univariate series using Newton's

@@ -1469,7 +1469,7 @@ class EvalfMixin(object):
 
 
 def N(x, n=15, **options):
-    """
+    r"""
     Calls x.evalf(n, \*\*options).
 
     Both .n() and N() are equivalent to .evalf(); use the one that you like better.

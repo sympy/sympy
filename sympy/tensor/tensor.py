@@ -4188,7 +4188,6 @@ class TensMul(TensExpr):
             if not isinstance(arg, TensExpr):
                 continue
             assert isinstance(arg, Tensor)
-        pass
 
     def substitute_indices(self, *index_tuples):
         return substitute_indices(self, *index_tuples)

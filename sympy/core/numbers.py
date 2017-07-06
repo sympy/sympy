@@ -543,8 +543,6 @@ class Number(AtomicExpr):
                 return val
             else:
                 raise ValueError('String "%s" does not denote a Number' % obj)
-            if isinstance(obj, Number):
-                return obj
         msg = "expected str|int|long|float|Decimal|Number object but got %r"
         raise TypeError(msg % type(obj).__name__)
 
@@ -944,10 +942,11 @@ class Float(Number):
         if prec is not None:
             SymPyDeprecationWarning(
                             feature="Using 'prec=XX' to denote decimal precision",
-                            useinstead="'dps=XX' to denote decimal and 'precision=XX' "\
+                            useinstead="'dps=XX' for decimal precision and 'precision=XX' "\
                                               "for binary precision",
-                            value="This is an effort to improve functionality "\
-                                       "of Float class. ").warn()
+                            value="This is an effort to improve the functionality "\
+                                       "of the Float class. ",
+                            issue=12820).warn()
             dps = prec
 
         if dps is not None and precision is not None:
@@ -1054,8 +1053,7 @@ class Float(Number):
             if precision < num._prec:
                 _mpf_ = mpf_norm(_mpf_, precision)
         else:
-            # XXX: We lose precision here.
-            _mpf_ = mpmath.mpf(num)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=prec)._mpf_
 
         # special cases
         if _mpf_ == _mpf_zero:
