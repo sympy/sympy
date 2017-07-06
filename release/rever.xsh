@@ -225,6 +225,10 @@ def GitHub_release():
     # Prevent default undo
     pass
 
+@activity(deps={'_version'})
+def update_docs():
+    _update_docs()
+
 # HELPER FUNCTIONS
 
 def test_tarball(py_version):
@@ -810,6 +814,77 @@ descriptions = OrderedDict([
 the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.''',),
     ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
     ])
+
+def get_location(location):
+    """
+    Read/save a location from the configuration file.
+    """
+    locations_file = os.path.expanduser('~/.sympy/sympy-locations')
+    config = ConfigParser.SafeConfigParser()
+    config.read(locations_file)
+    the_location = config.has_option("Locations", location) and config.get("Locations", location)
+    if not the_location:
+        the_location = input("Where is the SymPy {location} directory? ".format(location=location))
+        if not config.has_section("Locations"):
+            config.add_section("Locations")
+        config.set("Locations", location, the_location)
+        save = raw_input("Save this to file [yes]? ")
+        if save.lower().strip() in ['', 'y', 'yes']:
+            print("saving to ", locations_file)
+            with open(locations_file, 'w') as f:
+                config.write(f)
+    else:
+        print("Reading {location} location from config".format(location=location))
+
+    return os.path.abspath(os.path.expanduser(the_location))
+
+def update_docs(docs_location=None):
+    """
+    Update the docs hosted at docs.sympy.org
+    """
+    docs_location = docs_location or get_location("docs")
+
+    print("Docs location:", docs_location)
+
+    cd @(docs_location)
+
+    # Check that the docs directory is clean
+    git diff --exit-code > /dev/null
+    git diff --cached --exit-code > /dev/null
+
+    # See the README of the docs repo. We have to remove the old redirects,
+    # move in the new docs, and create redirects.
+    current_version = get_sympy_version()
+    previous_version = get_previous_version_tag().lstrip('sympy-')
+    print("Removing redirects from previous version")
+    rm -r @(previous_version)
+    print("Moving previous latest docs to old version")
+    mv latest @(previous_version)
+
+    print("Unzipping docs into repo")
+    release_dir = os.path.abspath(os.path.expanduser(os.path.join(os.path.curdir, 'release')))
+    docs_zip = os.path.abspath(os.path.join(release_dir, get_tarball_name('html')))
+    unzip @(docs_zip) > /dev/null
+    mv @(get_tarball_name('html-nozip')) @(version)
+
+    print("Writing new version to releases.txt")
+    with open(os.path.join(docs_location, "releases.txt"), 'a') as f:
+        f.write("{version}:SymPy {version}\n".format(version=current_version))
+
+    print("Generating indexes")
+    ./generate_indexes.py
+    mv @(current_version) latest
+
+    print("Generating redirects")
+    ./generate_redirects.py latest @(current_version)
+
+    print("Committing")
+    git add -A @(version) latest
+    git commit -a -m @('Updating docs to {version}'.format(version=current_version))
+
+    print("Pushing")
+    git push origin
+
 
 ## TARBALL WHITELISTS
 
