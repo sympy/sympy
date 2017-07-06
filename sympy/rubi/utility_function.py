@@ -2688,3 +2688,23 @@ def FunctionOfHyperbolicQ(u, v, x):
     elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         return True
     return all(FunctionOfHyperbolicQ(i, v, x) for i in u.args)
+
+def SmartNumerator(expr):
+    if PowerQ(expr):
+        n = expr.exp
+        u = expr.base
+        if RationalQ(n) and n < 0:
+            return SmartDenominator(u**(-n))
+    elif ProductQ(expr):
+        return Mul(*[SmartNumerator(i) for i in expr.args])
+    return Numerator(expr)
+
+def SmartDenominator(expr):
+    if PowerQ(expr):
+        u = expr.base
+        n = expr.exp
+        if RationalQ(n) and n < 0:
+            return SmartNumerator(u**(-n))
+    elif ProductQ(expr):
+        return Mul(*[SmartDenominator(i) for i in expr.args])
+    return Denominator(expr)

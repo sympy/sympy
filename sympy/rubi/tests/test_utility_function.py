@@ -1028,3 +1028,11 @@ def test_FunctionOfHyperbolicQ():
     assert not FunctionOfHyperbolicQ(x, v, x)
     assert FunctionOfHyperbolicQ(s + t, v, x)
     assert FunctionOfHyperbolicQ(sinh(t), v, x)
+
+def test_SmartNumerator():
+    assert SmartNumerator(x**(-2)) == 1
+    assert SmartNumerator(x**(2)*a) == x**2*a
+
+def test_SmartDenominator():
+    assert SmartDenominator(x**(-2)) == x**2
+    assert SmartDenominator(x**(-2)*1/S(3)) == x**2*3
