@@ -1052,13 +1052,16 @@ def base_Q(G):
     ({1, pi, pi**2}, QQ<sqrt(2) + sqrt(3)>)
 
     """
+    from sympy import sfield, AlgebraicField
+
     K = AlgebraicField(QQ, *G.domain.gens)
-    # T = [t1, t2, ..., tn]
     trans_nums = list(set(G.gens) - set([G.gen]))
     expr_args = G.as_expr().args
     pow_num = [(i.match(num**s*t), num) for num in trans_nums for i in expr_args]
+    # T = [t1, t2, ..., tn]
     T = set([num**power[s] for power, num in pow_num if power is not None])
-    return T, K
+    cons = T.union(set(K.gens))
+    return sfield(list(cons), extension=True)
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
