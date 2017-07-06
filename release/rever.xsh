@@ -850,6 +850,9 @@ def _update_docs(docs_location=None):
     current_version = version
     previous_version = get_previous_version_tag().lstrip('sympy-')
 
+    release_dir = os.path.abspath(os.path.expanduser(os.path.join(os.path.curdir, 'release')))
+    docs_zip = os.path.abspath(os.path.join(release_dir, get_tarball_name('html')))
+
     cd @(docs_location)
 
     # Check that the docs directory is clean
@@ -864,8 +867,6 @@ def _update_docs(docs_location=None):
     mv latest @(previous_version)
 
     print("Unzipping docs into repo")
-    release_dir = os.path.abspath(os.path.expanduser(os.path.join(os.path.curdir, 'release')))
-    docs_zip = os.path.abspath(os.path.join(release_dir, get_tarball_name('html')))
     unzip @(docs_zip) > /dev/null
     mv @(get_tarball_name('html-nozip')) @(version)
 
@@ -887,7 +888,8 @@ def _update_docs(docs_location=None):
     print("Pushing")
     git push origin
 
-    cd -
+    cd @(release_dir)
+    cd ..
 
 ## TARBALL WHITELISTS
 
