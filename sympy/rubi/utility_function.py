@@ -2772,3 +2772,28 @@ def SubstForTrig(u, sin , cos, v, x):
     if ProductQ(u) and CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
         return sin(x)/2*SubstForTrig(Drop(u, 2), sin, cos, v, x)
     return u.func(*[SubstForTrig(i, sin, cos, v, x) for i in u.args])
+
+def SubstForHyperbolic(u, sinh, cosh, v, x):
+    # (* u (v) is an expression of the form f (Sinh[v],Cosh[v],Tanh[v],Coth[v],Sech[v],Csch[v]). *)
+    # (* SubstForHyperbolic[u,sinh,cosh,v,x] returns the expression
+	# f (sinh,cosh,sinh/cosh,cosh/sinh,1/cosh,1/sinh). *)
+    if AtomQ(u):
+        return u
+    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+        if u.args[0] == v or ZeroQ(u.args[0] - v):
+            if SinhQ(u):
+                return sinh(x)
+            elif CoshQ(u):
+                return cosh(x)
+            elif TanhQ(u):
+                return sinh(x)/cosh(x)
+            elif CothQ(u):
+                return cosh(x)/sinh(x)
+            if SechQ(u):
+                return 1/cosh(x)
+            return 1/sinh(x)
+        r = ReplaceAll(TrigExpand(Head(u)(Simplify(u.args[0]/v)*x)), {x: v})
+        return r.func(*[SubstForHyperbolic(i, sinh, cosh, v, x) for i in r.args])
+    elif ProductQ(u) and CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
+        return sinh(x)/2*SubstForHyperbolic(Drop(u, 2), sinh, cosh, v, x)
+    return u.func(*[SubstForHyperbolic(i, sinh, cosh, v, x) for i in u.args])

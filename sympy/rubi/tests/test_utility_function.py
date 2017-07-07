@@ -1052,3 +1052,11 @@ def test_SubstForTrig():
     assert SubstForTrig(t, sin, cos, v, x) == sin(x)/cos(x)
     assert SubstForTrig(sin(2*v), sin, cos, v, x) == 2*sin(x)*cos(x)
     assert SubstForTrig(s*t, sin, cos, v, x) == sin(x)**2/cos(x)
+
+def test_SubstForHyperbolic():
+    v = log(x)
+    s, c, t = sinh(v), cosh(v), tanh(v)
+    assert SubstForHyperbolic(s, sinh, cosh, v, x) == sinh(x)
+    assert SubstForHyperbolic(t, sinh, cosh, v, x) == sinh(x)/cosh(x)
+    assert SubstForHyperbolic(sinh(2*v), sinh, cosh, v, x) == 2*sinh(x)*cosh(x)
+    assert SubstForHyperbolic(s*t, sinh, cosh, v, x) == sinh(x)**2/cosh(x)
