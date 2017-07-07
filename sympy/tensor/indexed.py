@@ -579,7 +579,7 @@ class Idx(Expr):
                 raise ValueError(filldedent("""
                     Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
-                if not (bound.is_integer != False or abs(bound) is S.Infinity):
+                if bound.is_integer is False:
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
