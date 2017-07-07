@@ -4195,7 +4195,8 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
         return self._new(self.rows, self.cols, self._mat)
 
     def cross(self, b):
-        r"""Return the cross product of ``self`` and ``b`` relaxing the condition
+        r"""
+        Return the cross product of ``self`` and ``b`` relaxing the condition
         of compatible dimensions: if each has 3 elements, a matrix of the
         same type and shape as ``self`` will be returned. If ``b`` has the same
         shape as ``self`` then common identities for the cross product (like
