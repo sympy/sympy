@@ -2033,7 +2033,7 @@ def RaisedCosine(name, mu, s):
     /   /pi*(-mu + z)\
     |cos|------------| + 1
     |   \     s      /
-    <---------------------  for And(z <= mu + s, mu - s <= z)
+    <---------------------  for And(z >= mu - s, z <= mu + s)
     |         2*s
     |
     \          0                        otherwise
@@ -2300,7 +2300,7 @@ def Triangular(name, a, b, c):
     |(-a + b)*(-a + c)
     |
     |       2
-    |     ------              for z = c
+    |     ------              for c = z
     <     -a + b
     |
     |   2*b - 2*z

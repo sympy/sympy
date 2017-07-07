@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple
-from sympy.core.relational import Equality, Relational
+from sympy.core import Basic, S, Function, diff, Tuple, Dummy
+from sympy.core.relational import Equality, Relational, _canonical
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not, Or,
     true, false)
+from sympy.utilities.iterables import cartes
 from sympy.core.compatibility import default_sort_key, range
 
 
@@ -117,52 +118,161 @@ class Piecewise(Function):
             return r
 
     @classmethod
-    def eval(cls, *args):
-        # Check for situations where we can evaluate the Piecewise object.
-        # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
-        # 2) Hit a true condition -> return that expr
-        # 3) Remove false conditions, if no conditions left -> raise ValueError
-        all_conds_evaled = True    # Do all conds eval to a bool?
-        piecewise_again = False    # Should we pass args to Piecewise again?
-        non_false_ecpairs = []
-        or1 = Or(*[cond for (_, cond) in args if cond != true])
+    def eval(cls, *_args):
+        """Either return a modified version of the args or, if no
+        modifications were made, return None.
+
+        Modifications that are made here:
+        1) relationals are made canonical
+        2) any False conditions are dropped
+        3) any repeat of a previous condition is ignored
+        3) any args past one with a true condition are dropped
+
+        If there are no args left, an empty Piecewise will be returned.
+        If there is a single arg with a True condition, its
+        corresponding expression will be returned.
+        """
+
+        if not _args:
+            return
+
+        if len(_args) == 1 and _args[0][-1] == True:
+            return _args[0][0]
+
+        newargs = []  # the unevaluated conditions
+        current_cond = set()  # the conditions up to a given e, c pair
+        # make conditions canonical
+        args = []
+        for e, c in _args:
+            if not c.is_Atom and not isinstance(c, Relational):
+                free = c.free_symbols
+                if len(free) == 1:
+                    funcs = [i for i in c.atoms(Function)
+                        if not isinstance(i, Boolean)]
+                    if len(funcs) == 1 and len(
+                            c.xreplace({list(funcs)[0]: Dummy()}
+                            ).free_symbols) == 1:
+                        # we can treat function like a symbol
+                        free = funcs
+                    _c = c
+                    x = free.pop()
+                    try:
+                        c = c.as_set().as_relational(x)
+                    except NotImplementedError:
+                        pass
+                    else:
+                        reps = {}
+                        for i in c.atoms(Relational):
+                            ic = i.canonical
+                            if ic.rhs in (S.Infinity, S.NegativeInfinity):
+                                if not _c.has(ic.rhs):
+                                    # don't accept introduction of
+                                    # new Relationals with +/-oo
+                                    reps[i] = S.true
+                                elif ('=' not in ic.rel_op and
+                                        c.xreplace({x: i.rhs}) !=
+                                        _c.xreplace({x: i.rhs})):
+                                    reps[i] = Relational(
+                                        i.lhs, i.rhs, i.rel_op + '=')
+                        c = c.xreplace(reps)
+            args.append((e, _canonical(c)))
+
         for expr, cond in args:
             # Check here if expr is a Piecewise and collapse if one of
             # the conds in expr matches cond. This allows the collapsing
-            # of Piecewise((Piecewise(x,x<0),x<0)) to Piecewise((x,x<0)).
+            # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).
             # This is important when using piecewise_fold to simplify
             # multiple Piecewise instances having the same conds.
             # Eventually, this code should be able to collapse Piecewise's
             # having different intervals, but this will probably require
             # using the new assumptions.
             if isinstance(expr, Piecewise):
-                or2 = Or(*[c for (_, c) in expr.args if c != true])
-                for e, c in expr.args:
-                    # Don't collapse if cond is "True" as this leads to
-                    # incorrect simplifications with nested Piecewises.
-                    if c == cond and (or1 == or2 or cond != true):
-                        expr = e
-                        piecewise_again = True
-            cond_eval = cls.__eval_cond(cond)
-            if cond_eval is None:
-                all_conds_evaled = False
-            elif cond_eval:
-                if all_conds_evaled:
-                    return expr
-            if len(non_false_ecpairs) != 0:
-                if non_false_ecpairs[-1].cond == cond:
-                    continue
-                elif non_false_ecpairs[-1].expr == expr:
-                    newcond = Or(cond, non_false_ecpairs[-1].cond)
-                    if isinstance(newcond, (And, Or)):
-                        newcond = distribute_and_over_or(newcond)
-                    non_false_ecpairs[-1] = ExprCondPair(expr, newcond)
-                    continue
-            non_false_ecpairs.append(ExprCondPair(expr, cond))
-        if len(non_false_ecpairs) != len(args) or piecewise_again:
-            return cls(*non_false_ecpairs)
+                unmatching = []
+                for i, (e, c) in enumerate(expr.args):
+                    if c in current_cond:
+                        # this would already have triggered
+                        continue
+                    if c == cond:
+                        if c != True:
+                            # nothing past this condition will ever
+                            # trigger and only those args before this
+                            # that didn't match a previous condition
+                            # could possibly trigger
+                            if unmatching:
+                                expr = Piecewise(*(
+                                    unmatching + [(e, c)]))
+                            else:
+                                expr = e
+                        break
+                    else:
+                        unmatching.append((e, c))
 
-        return None
+            # check for condition repeats
+            got = False
+            # -- if an And contains a condition that was
+            #    already encountered, then the And will be
+            #    False: if the previous condition was False
+            #    then the And will be False and if the previous
+            #    condition is True then then we wouldn't get to
+            #    this point. In either case, we can skip this condition.
+            for i in ([cond] +
+                    (list(cond.args) if isinstance(cond, And) else
+                    [])):
+                if i in current_cond:
+                    got = True
+                    break
+            if got:
+                continue
+
+            # -- if not(c) is already in current_cond then c is
+            #    a redundant condition in an And. This does not
+            #    apply to Or, however: (e1, c), (e2, Or(~c, d))
+            #    is not (e1, c), (e2, d) because if c and d are
+            #    both False this would give no results when the
+            #    true answer should be (e2, True)
+            if isinstance(cond, And):
+                nonredundant = []
+                for c in cond.args:
+                    if (isinstance(c, Relational) and
+                            (~c).canonical in current_cond):
+                        continue
+                    nonredundant.append(c)
+                cond = cond.func(*nonredundant)
+            elif isinstance(cond, Relational):
+                if (~cond).canonical in current_cond:
+                    cond = S.true
+
+            current_cond.add(cond)
+
+            # collect successive e,c pairs when exprs or cond match
+            if newargs:
+                if newargs[-1].expr == expr:
+                    orcond = Or(cond, newargs[-1].cond)
+                    if isinstance(orcond, (And, Or)):
+                        orcond = distribute_and_over_or(orcond)
+                    newargs[-1] = ExprCondPair(expr, orcond)
+                    continue
+                elif newargs[-1].cond == cond:
+                    orexpr = Or(expr, newargs[-1].expr)
+                    if isinstance(orexpr, (And, Or)):
+                        orexpr = distribute_and_over_or(orexpr)
+                    newargs[-1] == ExprCondPair(orexpr, cond)
+                    continue
+
+            newargs.append(ExprCondPair(expr, cond))
+
+        # some conditions may have been redundant
+        missing = len(newargs) != len(_args)
+        # some conditions may have changed
+        same = all(a == b for a, b in zip(newargs, _args))
+        # if either change happened we return the expr with the
+        # updated args
+        if not newargs:
+            raise ValueError(filldedent('''
+There are no conditions (or none that are not trivially false) to
+define an expression.'''))
+        if missing or not same:
+            return cls(*newargs)
 
     def doit(self, **hints):
         """
@@ -195,9 +305,11 @@ class Piecewise(Function):
     def _eval_evalf(self, prec):
         return self.func(*[(e.evalf(prec), c) for e, c in self.args])
 
-    def _eval_integral(self, x):
+    def _eval_integral(self, x, **kwargs):
         from sympy.integrals import integrate
-        return self.func(*[(integrate(e, x), c) for e, c in self.args])
+        return self.func(*[(integrate(e, x, **kwargs), c) for e, c in self.args])
+
+    piecewise_integrate = _eval_integral
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
@@ -531,7 +643,7 @@ def piecewise_fold(expr):
     >>> from sympy.abc import x
     >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
     >>> piecewise_fold(x*p)
-    Piecewise((x**2, x < 1), (x, 1 <= x))
+    Piecewise((x**2, x < 1), (x, True))
 
     See Also
     ========
@@ -540,33 +652,22 @@ def piecewise_fold(expr):
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
-    new_args = list(map(piecewise_fold, expr.args))
-    if expr.func is ExprCondPair:
-        return ExprCondPair(*new_args)
-    piecewise_args = []
-    for n, arg in enumerate(new_args):
-        if isinstance(arg, Piecewise):
-            piecewise_args.append(n)
-    if len(piecewise_args) > 0:
-        n = piecewise_args[0]
-        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n + 1:])), c)
-                    for e, c in new_args[n].args]
-        if isinstance(expr, Boolean):
-            # If expr is Boolean, we must return some kind of PiecewiseBoolean.
-            # This is constructed by means of Or, And and Not.
-            # piecewise_fold(0 < Piecewise( (sin(x), x<0), (cos(x), True)))
-            # can't return Piecewise((0 < sin(x), x < 0), (0 < cos(x), True))
-            # but instead Or(And(x < 0, 0 < sin(x)), And(0 < cos(x), Not(x<0)))
-            other = True
-            rtn = False
-            for e, c in new_args:
-                rtn = Or(rtn, And(other, c, e))
-                other = And(other, Not(c))
-            if len(piecewise_args) > 1:
-                return piecewise_fold(rtn)
-            return rtn
-        if len(piecewise_args) > 1:
-            return piecewise_fold(Piecewise(*new_args))
-        return Piecewise(*new_args)
+    if isinstance(expr, (ExprCondPair, Piecewise)):
+        new_args = []
+        for e, c in expr.args:
+            if not isinstance(e, Piecewise):
+                e = piecewise_fold(e)
+            if isinstance(e, Piecewise):
+                new_args.extend([(piecewise_fold(ei), And(ci, c)) for ei, ci in e.args])
+            else:
+                new_args.append((e, c))
     else:
-        return expr.func(*new_args)
+        new_args = []
+        folded = list(map(piecewise_fold, expr.args))
+        for ec in cartes(*[
+                (i.args if isinstance(i, Piecewise) else
+                 [(i, S.true)]) for i in folded]):
+            e, c = zip(*ec)
+            new_args.append((expr.func(*e), And(*c)))
+    rv = Piecewise(*new_args)
+    return rv

@@ -221,7 +221,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), (-oo, oo), True
 
-    if not F.is_Piecewise:
+    if not F.is_Piecewise:  # XXX can this work if integration gives continuous result now?
         raise IntegralTransformError('Mellin', f, 'could not compute integral')
 
     F, cond = F.args[0]
@@ -1109,7 +1109,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, -re(a) < 1)
+    (s**(-a)*gamma(a + 1)/s, 0, -1 < re(a))
 
     See Also
     ========

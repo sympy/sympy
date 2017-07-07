@@ -20,6 +20,16 @@ __all__ = (
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
 
+def _canonical(cond):
+    # return a condition in which all relationals are canonical
+    try:
+        reps = dict([(r, r.canonical)
+            for r in cond.atoms(Relational)])
+        return cond.xreplace(reps)
+    except AttributeError:
+        return cond
+
+
 class Relational(Boolean, Expr, EvalfMixin):
     """Base class for all relation types.
 
@@ -106,8 +116,12 @@ class Relational(Boolean, Expr, EvalfMixin):
             3) Gt/Ge changed to Lt/Le;
             4) Lt/Le are unchanged;
             5) Eq and Ne get ordered args.
+            6) superficial negative signs are cleared
         """
         r = self
+        rneg = r.func(-r.rhs, -r.lhs, evaluate=False)
+        if rneg.count_ops() < r.count_ops():
+            r = rneg
         if r.func in (Ge, Gt):
             r = r.reversed
         elif r.func in (Lt, Le):
@@ -118,10 +132,13 @@ class Relational(Boolean, Expr, EvalfMixin):
             raise NotImplementedError
         if r.lhs.is_Number and not r.rhs.is_Number:
             r = r.reversed
-        elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
+        elif (r.rhs.is_Symbol or r.rhs.is_Function) and not (
+                r.lhs.is_Symbol or r.lhs.is_Function):
             r = r.reversed
         if _coeff_isneg(r.lhs):
-            r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
+            nl = -r.lhs
+            if nl.is_Symbol or nl.is_Function:
+                r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
         return r
 
     def equals(self, other, failing_expression=False):

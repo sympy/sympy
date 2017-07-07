@@ -1,12 +1,12 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
-    log, cos, sin)
+    log, cos, sin, re)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne)
+                                   Gt, Ge, Ne, _canonical)
 from sympy.sets.sets import Interval, FiniteSet
 
 x, y, z, t = symbols('x,y,z,t')
@@ -646,6 +646,26 @@ def test_canonical():
     assert (-x < 1).canonical == (x > -1)
     assert isreversed(-x > y)
 
+    r = x**2 > -y/x
+    c = r.canonical
+    assert c.canonical == c and c.rel_op == '<'
+    r = -x**2 > y/x
+    c = r.canonical
+    assert c.canonical == c and c.rel_op == '<'
+    r = -x**2 > -y/x
+    assert r.canonical == (x**2 < y/x)
+    r = y/x > -x**2
+    c = r.canonical
+    assert c.canonical == c and c.rel_op == '<'
+
+    a, b = re(x), 1
+    for f in (Gt, Lt):
+        for s in (-1, 1):
+            for t in (-1, 1):
+                assert f(s*a, t*b).canonical.lhs == re(x)
+
+    assert (-y+1 <= -y).canonical == (y <= y - 1)
+
 
 @XFAIL
 def test_issue_8444():
@@ -709,6 +729,7 @@ def test_issue_10633():
     assert Eq(False, True) == False
     assert Eq(True, True) == True
     assert Eq(False, False) == True
+
 
 def test_issue_10927():
     x = symbols('x')
