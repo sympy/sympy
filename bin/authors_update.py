@@ -12,9 +12,17 @@ from __future__ import print_function
 import os
 import sys
 
-from fabric.api import local, env
-from fabric.colors import yellow, blue, green, red
-from fabric.utils import error
+if sys.version_info < (3, 6):
+    sys.exit("This script requires Python 3.6 or newer")
+
+from subprocess import run, PIPE
+from collections import OrderedDict
+
+def yellow(text):
+    return "\033[33m%s\033[0m" % text
+
+def blue(text):
+    return "\033[34m%s\033[0m" % text
 
 mailmap_update_path = os.path.abspath(__file__)
 mailmap_update_dir = os.path.dirname(mailmap_update_path)
@@ -24,21 +32,16 @@ sympy_dir = os.path.join(sympy_top, 'sympy')
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
-from sympy.utilities.misc import filldedent
+git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
 
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
+git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
 
-git_command = """git log --topo-order --reverse --format="%aN <%aE>" | awk ' !x[$0]++'"""
-
-git_people = unicode(local(git_command, capture=True), 'utf-8').strip().split("\n")
+# Remove duplicates, keeping the original order
+git_people = list(OrderedDict.fromkeys(git_people))
 
 from distutils.version import LooseVersion
 
-git_ver = local('git --version', capture=True)[12:]
+git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
 if LooseVersion(git_ver) < LooseVersion('1.8.4.2'):
     print(yellow("Please use a newer git version >= 1.8.4.2"))
 
@@ -82,7 +85,7 @@ with open(os.path.realpath(os.path.join(__file__, os.path.pardir,
     fd.write(header)
     fd.write(header_extra)
     fd.write("\n")
-    fd.write("\n".join(git_people).encode("utf8"))
+    fd.write("\n".join(git_people))
     fd.write("\n")
 
 print(blue("""

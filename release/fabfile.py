@@ -543,8 +543,6 @@ def table():
     sizes_dict = {name: size for size, name in sizes}
 
     table = []
-    
-    version = get_sympy_version()
 
     version = get_sympy_version()
 

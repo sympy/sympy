@@ -944,9 +944,8 @@ class Float(Number):
                             feature="Using 'prec=XX' to denote decimal precision",
                             useinstead="'dps=XX' for decimal precision and 'precision=XX' "\
                                               "for binary precision",
-                            value="This is an effort to improve the functionality "\
-                                       "of the Float class. ",
-                            issue=12820).warn()
+                            issue=12820,
+                            deprecated_since_version="1.1").warn()
             dps = prec
 
         if dps is not None and precision is not None:

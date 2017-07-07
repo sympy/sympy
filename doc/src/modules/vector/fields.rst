@@ -76,7 +76,7 @@ The Del operator
 The Del, or 'Nabla' operator - written as :math:`\mathbf{\nabla}` is
 commonly known as the vector differential operator. Depending on its
 usage in a mathematical expression, it may denote the gradient of a
-scalar field, or the divergence of a vector field, or the curl of a
+scalar field, the divergence of a vector field, or the curl of a
 vector field.
 
 Essentially, :math:`\mathbf{\nabla}` is not technically an 'operator',
@@ -84,20 +84,19 @@ but a convenient mathematical notation to denote any one of the
 aforementioned field operations.
 
 In :mod:`sympy.vector`, :math:`\mathbf{\nabla}` has been implemented
-as the ``delop`` property of the ``CoordSys3D`` class.
-Hence, assuming ``C`` is a coordinate system, the
-:math:`\mathbf{\nabla}` operator corresponding to the vector
-differentials wrt ``C``'s coordinate variables and basis vectors
-would be accessible as ``C.delop``.
+as the ``Del()``  class. The instance of this class is independent of
+coordinate system. Hence, the :math:`\mathbf{\nabla}` operator would
+be accessible as ``Del()``.
 
-Given below is an example of usage of the ``delop`` object.
+Given below is an example of usage of the ``Del()`` class.
 
   >>> from sympy.vector import CoordSys3D, Del
   >>> C = CoordSys3D('C')
   >>> delop = Del()
   >>> gradient_field = delop(C.x*C.y*C.z)
   >>> gradient_field
-  (Derivative(C.x*C.y*C.z, C.x))*C.i + (Derivative(C.x*C.y*C.z, C.y))*C.j + (Derivative(C.x*C.y*C.z, C.z))*C.k
+  (Derivative(C.x*C.y*C.z, C.x))*C.i + (Derivative(C.x*C.y*C.z, C.y))*C.j
+  + (Derivative(C.x*C.y*C.z, C.z))*C.k
 
 The above expression can be evaluated using the SymPy ``doit()``
 routine.
@@ -136,7 +135,7 @@ where :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
 Computing the curl of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
-One, by using the ``delop`` property
+One, by using the ``Del()`` class
 
   >>> from sympy.vector import CoordSys3D, Del
   >>> C = CoordSys3D('C')
@@ -174,7 +173,7 @@ where :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
 Computing the divergence of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
-One, by using the ``delop`` property
+One, by using the ``Del()`` class
 
   >>> from sympy.vector import CoordSys3D, Del
   >>> C = CoordSys3D('C')
@@ -208,7 +207,7 @@ denoted by :math:`\nabla f` is given by -
 Computing the divergence of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
-One, by using the ``delop`` property
+One, by using the ``Del()`` class
 
   >>> from sympy.vector import CoordSys3D, Del
   >>> C = CoordSys3D('C')
@@ -238,8 +237,7 @@ velocity :math:`v`. It is represented mathematically as:
 :math:`(\vec v \cdot \nabla) \, \mathbf{F}(x)`.
 
 Directional derivatives of vector and scalar fields can be computed in
-:mod:`sympy.vector` using the ``delop`` property of
-``CoordSys3D``.
+:mod:`sympy.vector` using the ``Del()`` class
 
   >>> from sympy.vector import CoordSys3D, Del
   >>> C = CoordSys3D('C')
@@ -251,6 +249,11 @@ Directional derivatives of vector and scalar fields can be computed in
   C.x*C.y + C.x*C.z + C.y*C.z
   >>> (vel & delop)(vector_field)
   (C.x*C.y + C.x*C.z + C.y*C.z)*C.i
+
+Or by using the dedicated function
+  >>> from sympy.vector import directional_derivative
+  >>> directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k)
+  C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
 
 Conservative and Solenoidal fields
 ==================================

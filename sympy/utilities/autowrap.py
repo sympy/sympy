@@ -496,12 +496,6 @@ class F2PyCodeWrapper(CodeWrapper):
         return getattr(mod, name)
 
 
-def _get_code_wrapper_class(backend):
-    wrappers = {'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper,
-        'DUMMY': DummyWrapper}
-    return wrappers[backend.upper()]
-
-
 # Here we define a lookup of backends -> tuples of languages. For now, each
 # tuple is of length 1, but if a backend supports more than one language,
 # the most preferable language is listed first.
@@ -532,7 +526,7 @@ def _validate_backend_language(backend, language):
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
-             flags=None, verbose=False, helpers=None, **kwargs):
+             flags=None, verbose=False, helpers=None, code_gen=None, **kwargs):
     """Generates python callable binaries based on the math expression.
 
     Parameters
@@ -565,6 +559,8 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         compiled main expression can link to the helper routine. Items should
         be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
         is mandatory to supply an argument sequence to helper routines.
+    code_gen : CodeGen instance
+        An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
         A list of directories to search for C/C++ header files (in Unix form
         for portability).
@@ -593,18 +589,24 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     -1.0
     """
     if language:
-        _validate_backend_language(backend, language)
+        if not isinstance(language, type):
+            _validate_backend_language(backend, language)
     else:
         language = _infer_language(backend)
 
     helpers = [helpers] if helpers else ()
-    flags = flags if flags else ()
     args = list(args) if iterable(args, exclude=set) else args
 
-    code_generator = get_code_generator(language, "autowrap")
-    CodeWrapperClass = _get_code_wrapper_class(backend)
-    code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose,
-                                    **kwargs)
+    if code_gen is None:
+        code_gen = get_code_generator(language, "autowrap")
+
+    CodeWrapperClass = {
+        'F2PY': F2PyCodeWrapper,
+        'CYTHON': CythonCodeWrapper,
+        'DUMMY': DummyWrapper
+    }[backend.upper()]
+    code_wrapper = CodeWrapperClass(code_gen, tempdir, flags if flags else (),
+                                    verbose, **kwargs)
 
     helps = []
     for name_h, expr_h, args_h in helpers:
@@ -1026,11 +1028,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> f(np.arange(5), 3)
     array([  3.,   4.,   7.,  12.,  19.])
 
-    For the F2Py and Cython backends, inputs are required to be equal length
-    1-dimensional arrays. The F2Py backend will perform type conversion, but
+    For the 'f2py' and 'cython' backends, inputs are required to be equal length
+    1-dimensional arrays. The 'f2py' backend will perform type conversion, but
     the Cython backend will error if the inputs are not of the expected type.
 
-    >>> f_fortran = ufuncify((x, y), y + x**2, backend='F2Py')
+    >>> f_fortran = ufuncify((x, y), y + x**2, backend='f2py')
     >>> f_fortran(1, 2)
     array([ 3.])
     >>> f_fortran(np.array([1, 2, 3]), np.array([1.0, 2.0, 3.0]))
