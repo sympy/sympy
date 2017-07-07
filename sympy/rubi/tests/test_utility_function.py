@@ -1036,3 +1036,11 @@ def test_SmartNumerator():
 def test_SmartDenominator():
     assert SmartDenominator(x**(-2)) == x**2
     assert SmartDenominator(x**(-2)*1/S(3)) == x**2*3
+
+def test_SubstForAux():
+    v = log(x)
+    assert SubstForAux(v, v, x) == x
+    assert SubstForAux(v**2, v, x) == x**2
+    assert SubstForAux(x, v, x) == x
+    assert SubstForAux(v**2, v**4, x) == sqrt(x)
+    assert SubstForAux(v**2*v, v, x) == x**3

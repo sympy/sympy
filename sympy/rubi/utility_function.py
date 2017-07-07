@@ -2708,3 +2708,26 @@ def SmartDenominator(expr):
     elif ProductQ(expr):
         return Mul(*[SmartDenominator(i) for i in expr.args])
     return Denominator(expr)
+
+def SubstForAux(u, v, x):
+    # (* u is a function of v.  SubstForAux[u,v,x] returns u with v replaced by x. *)
+    if u == v:
+        return x
+    elif AtomQ(u):
+        if PowerQ(v):
+            if FreeQ(v.exp, x) and ZeroQ(u - v.base):
+                return x**(Simplify(1/v.exp))
+        return u
+    elif PowerQ(u):
+        if FreeQ(u.exp, x):
+            if ZeroQ(u.base - v):
+                return x**(u.exp)
+            elif PowerQ(v):
+                if FreeQ(v.exp, x) and ZeroQ(u.base - v.base):
+                    return x**Simplify(u.exp/v.exp)
+            return SubstForAux(u.base, v, x)**u.exp
+    if ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
+        return FreeFactors(u, x)*SubstForAux(NonfreeFactors(u, x), v, x)
+    elif ProductQ(u) and ProductQ(v):
+        return SubstForAux(First(u), First(v), x)
+    return u.func(*[SubstForAux(i, v, x) for i in u.args])
