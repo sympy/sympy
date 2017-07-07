@@ -16,7 +16,7 @@ from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E)
+    Min, Max, sign, E, expand_trig)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.utilities.iterables import flatten
 
@@ -2731,3 +2731,44 @@ def SubstForAux(u, v, x):
     elif ProductQ(u) and ProductQ(v):
         return SubstForAux(First(u), First(v), x)
     return u.func(*[SubstForAux(i, v, x) for i in u.args])
+
+def ActivateTrig(u):
+    return u
+
+def ExpandTrig(*args):
+    if len(args) == 2:
+        u, x = args
+        return ActivateTrig(ExpandIntegrand(u, x))
+    u, v, x = args
+    w = ExpandTrig(v, x)
+    z = ActivateTrig(u)
+    if SumQ(w):
+        return w.func(*[z*i for i in w.args])
+    return z*w
+
+def TrigExpand(u):
+    return expand_trig(u)
+
+def SubstForTrig(u, sin , cos, v, x):
+    # (* u (v) is an expression of the form f (Sin[v],Cos[v],Tan[v],Cot[v],Sec[v],Csc[v]). *)
+    # (* SubstForTrig[u,sin,cos,v,x] returns the expression f (sin,cos,sin/cos,cos/sin,1/cos,1/sin). *)
+    if AtomQ(u):
+        return u
+    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+        if u.args[0] == v or ZeroQ(u.args[0] - v):
+            if SinQ(u):
+                return sin(x)
+            elif CosQ(u):
+                return cos(x)
+            elif TanQ(u):
+                return sin(x)/cos(x)
+            elif CotQ(u):
+                return cos(x)/sin(x)
+            elif SecQ(u):
+                return 1/cos(x)
+            return 1/sin(x)
+        r = ReplaceAll(TrigExpand(Head(u)(Simplify(u.args[0]/v*x))), {x: v})
+        return r.func(*[SubstForTrig(i, sin, cos, v, x) for i in r.args])
+    if ProductQ(u) and CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
+        return sin(x)/2*SubstForTrig(Drop(u, 2), sin, cos, v, x)
+    return u.func(*[SubstForTrig(i, sin, cos, v, x) for i in u.args])

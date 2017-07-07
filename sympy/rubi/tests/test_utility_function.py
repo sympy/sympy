@@ -1044,3 +1044,11 @@ def test_SubstForAux():
     assert SubstForAux(x, v, x) == x
     assert SubstForAux(v**2, v**4, x) == sqrt(x)
     assert SubstForAux(v**2*v, v, x) == x**3
+
+def test_SubstForTrig():
+    v = log(x)
+    s, c, t = sin(v), cos(v), tan(v)
+    assert SubstForTrig(s, sin, cos, v, x) == sin(x)
+    assert SubstForTrig(t, sin, cos, v, x) == sin(x)/cos(x)
+    assert SubstForTrig(sin(2*v), sin, cos, v, x) == 2*sin(x)*cos(x)
+    assert SubstForTrig(s*t, sin, cos, v, x) == sin(x)**2/cos(x)
