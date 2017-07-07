@@ -2797,3 +2797,6 @@ def SubstForHyperbolic(u, sinh, cosh, v, x):
     elif ProductQ(u) and CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
         return sinh(x)/2*SubstForHyperbolic(Drop(u, 2), sinh, cosh, v, x)
     return u.func(*[SubstForHyperbolic(i, sinh, cosh, v, x) for i in u.args])
+
+def InertTrigFreeQ(u):
+    return FreeQ(u, sin) and FreeQ(u, cos) and FreeQ(u, tan) and FreeQ(u, cot) and FreeQ(u, sec) and FreeQ(u, csc)
