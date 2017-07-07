@@ -1,23 +1,33 @@
+"""
+Module to implement integration of uni/bivariate polynomials over
+2D Polytopes(Polygons).
+
+Uses evaluation techniques as described in Chin et al(2015)[1]
+
+References
+===========
+[1] : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
+"""
+
 from __future__ import print_function, division
 
 from functools import cmp_to_key
 
-from sympy.core import S, Symbol
+from sympy.core import S, diff, Expr, Symbol
 
-from sympy.geometry import Segment2D
-from sympy.geometry.polygon import Polygon
-from sympy.geometry.point import Point
-from sympy.core.expr import Expr
+from sympy.geometry import Segment2D, Polygon, Point
 from sympy.abc import x, y
-from sympy.core.function import diff
 
-from sympy.polys.polytools import LC
-from sympy.polys.polytools import gcd_list
+from sympy.polys.polytools import LC, gcd_list, degree_list
 
 
 def polytope_integrate(poly, expr, **kwargs):
-    """Pre-processes the input data for integrating
-    univariate/bivariate polynomials over 2-Polytopes.
+    """Integrates homogeneous functions over polytopes.
+
+    This function accepts the polytope in `poly` (currently only polygons are
+    implemented) and the function in `expr` (currently only
+    univariate/bivariate polynomials are implemented) and returns the exact
+    integral of `expr` over `poly`.
     Parameters
     ==========
     poly : The input Polygon.
@@ -26,16 +36,19 @@ def polytope_integrate(poly, expr, **kwargs):
     Optional Parameters:
     clockwise : Binary value to sort input points of the polygon clockwise.
     max_degree : The maximum degree of any monomial of the input polynomial.
-    Example
-    =======
+    Examples
+    ========
     >>> from sympy.abc import x, y
     >>> from sympy.geometry.polygon import Polygon
     >>> from sympy.geometry.point import Point
     >>> from sympy.integrals.intpoly import polytope_integrate
-    >>> poly = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
+    >>> polygon = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
+    >>> polys = [1, x, y, x*y, x**2*y, x*y**2]
     >>> expr = x*y
-    >>> polytope_integrate(poly, expr)
+    >>> polytope_integrate(polygon, expr)
     1/4
+    >>> polytope_integrate(polygon, polys, max_degree=3)
+    {1: 1, x: 1/2, y: 1/2, x*y: 1/4, x*y**2: 1/6, x**2*y: 1/6}
     """
     clockwise = kwargs.get('clockwise', False)
     max_degree = kwargs.get('max_degree', None)
@@ -65,12 +78,12 @@ def polytope_integrate(poly, expr, **kwargs):
             raise TypeError('Input polynomials must be list of expressions')
         result_dict = main_integrate(0, facets, hp_params, max_degree)
         for polys in expr:
-            if not polys in result:
+            if polys not in result:
                 if polys is S.Zero:
                     result[S.Zero] = S.Zero
                     continue
                 integral_value = S.Zero
-                monoms = decompose(polys, separate=1)
+                monoms = decompose(polys, separate=True)
                 for monom in monoms:
                     if monom.is_number:
                         integral_value += result_dict[1] * monom
@@ -82,11 +95,11 @@ def polytope_integrate(poly, expr, **kwargs):
 
     return main_integrate(expr, facets, hp_params)
 
+
 def main_integrate(expr, facets, hp_params, max_degree=None):
-    """Function to translate the problem of integrating
-    univariate/bivariate polynomials over a 2-Polytope to integrating over
-    it's boundary facets. This is done using Generalized Stokes Theorem and
-    Euler Theorem.
+    """Function to translate the problem of integrating univariate/bivariate
+    polynomials over a 2-Polytope to integrating over it's boundary facets.
+    This is done using Generalized Stokes Theorem and Euler Theorem.
 
     Parameters
     ===========
@@ -96,6 +109,17 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
 
     Optional Parameters:
     max_degree : The maximum degree of any monomial of the input polynomial.
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import main_integrate,\
+    hyperplane_parameters
+    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy.geometry.point import Point
+    >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    >>> facets = triangle.sides
+    >>> hp_params = hyperplane_parameters(triangle)
+    >>> main_integrate(x**2 + y**2, facets, hp_params)
+    325/6
     """
     dims = (x, y)
     dim_length = len(dims)
@@ -105,7 +129,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     if max_degree:
         y_degree = max_degree
         grad_terms = [[0, 0, 0, 0]] + \
-                     gradient_terms(max_degree)
+            gradient_terms(max_degree)
 
         for facet_count, hp in enumerate(hp_params):
             a, b = hp[0], hp[1]
@@ -120,8 +144,8 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                     value_over_boundary = S.Zero
                 else:
                     value_over_boundary = \
-                        integration_reduction_dynamic(facets, facet_count, a, b,
-                                                      m, dims, x_d, y_d,
+                        integration_reduction_dynamic(facets, facet_count, a,
+                                                      b, m, dims, x_d, y_d,
                                                       y_degree, x0,
                                                       grad_terms, i)
                 monom[3] = value_over_boundary
@@ -135,25 +159,26 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
         return result
     else:
         polynomials = decompose(expr)
-        for degree in polynomials:
+        for deg in polynomials:
             poly_contribute = S.Zero
             facet_count = 0
             for hp in hp_params:
-                value_over_boundary = integration_reduction(facets, facet_count,
+                value_over_boundary = integration_reduction(facets,
+                                                            facet_count,
                                                             hp[0], hp[1],
-                                                            polynomials[degree],
-                                                            dims, degree)
+                                                            polynomials[deg],
+                                                            dims, deg)
                 poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
                 facet_count += 1
-            poly_contribute /= (dim_length + degree)
+            poly_contribute /= (dim_length + deg)
             integral_value += poly_contribute
     return integral_value
 
 
 def integration_reduction(facets, index, a, b, expr, dims, degree):
-    """Helper method for polytope_integrate.
-    Returns the value of the input expression evaluated over the
-    polytope facet referenced by a given index.
+    """Helper method for main_integrate. Returns the value of the input
+    expression evaluated over the polytope facet referenced by a given index.
+
     Parameters
     ===========
     facets : List of facets of the polytope.
@@ -163,6 +188,17 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     expr : The expression to integrate over the facet.
     dims : List of symbols denoting axes.
     degree : Degree of the homogeneous polynomial.
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import integration_reduction,\
+    hyperplane_parameters
+    >>> from sympy.geometry.point import Point
+    >>> from sympy.geometry.polygon import Polygon
+    >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    >>> facets = triangle.sides
+    >>> a, b = hyperplane_parameters(triangle)[0]
+    >>> integration_reduction(facets, 0, a, b, 1, (x, y), 0)
+    5
     """
     if expr == S.Zero:
         return expr
@@ -199,6 +235,15 @@ def left_integral(m, index, facets, x0, expr, gens):
     x0 : First point on facet referenced by index.
     expr : Input polynomial
     gens : Generators which generate the polynomial
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import left_integral
+    >>> from sympy.geometry.point import Point
+    >>> from sympy.geometry.polygon import Polygon
+    >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    >>> facets = triangle.sides
+    >>> left_integral(3, 0, facets, facets[0].points[0], 1, (x, y))
+    5
     """
     value = S.Zero
     for j in range(0, m):
@@ -222,9 +267,10 @@ def left_integral(m, index, facets, x0, expr, gens):
                     value += distance_origin * expr
     return value
 
+
 def integration_reduction_dynamic(facets, index, a, b, expr,
-                          dims, x_degree, y_degree, max_y_degree,
-                          x0, monomial_values, monom_index):
+                                  dims, x_degree, y_degree, max_y_degree,
+                                  x0, monomial_values, monom_index):
     """The same integration_reduction function which uses a dynamic
     programming approach to compute terms by using the values of the integral
     the gradient of previous terms.
@@ -242,6 +288,21 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
     x0 : First point on facets[index]
     monomial_values : List of monomial values constituting the polynomial
     monom_index : Index of monomial whose integration is being found.
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import integration_reduction_dynamic,\
+    hyperplane_parameters, gradient_terms
+    >>> from sympy.geometry.point import Point
+    >>> from sympy.geometry.polygon import Polygon
+    >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    >>> facets = triangle.sides
+    >>> a, b = hyperplane_parameters(triangle)[0]
+    >>> x0 = facets[0].points[0]
+    >>> monomial_values = [[0, 0, 0, 0], [1, 0, 0, 5],\
+                           [y, 0, 1, 15], [x, 1, 0, None]]
+    >>> integration_reduction_dynamic(facets, 0, a, b, x, (x, y), 1, 0, 1, x0,\
+                                      monomial_values, 3)
+    25/2
     """
     expr = S(expr)
     value = S.Zero
@@ -255,7 +316,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
         a, b = (S(a[0]), S(a[1])), S(b)
 
         x_index = monom_index - max_y_degree + \
-                  x_degree - 2 if x_degree >= 1 else 0
+            x_degree - 2 if x_degree >= 1 else 0
         y_index = monom_index - 1 if y_degree >= 1 else 0
 
         x_value, y_value =\
@@ -268,7 +329,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
     return value/(len(dims) + degree - 1)
 
 
-def gradient_terms(binomial_power=None):
+def gradient_terms(binomial_power=0):
     """Returns a list of all the possible
     monomials between 0 and y**binomial_power
 
@@ -277,7 +338,7 @@ def gradient_terms(binomial_power=None):
     binomial_power : Power upto which terms are generated.
 
     Examples
-    ===========
+    ========
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import gradient_terms
     >>> gradient_terms(2)
@@ -300,10 +361,17 @@ def hyperplane_parameters(poly):
     Parameters
     ==========
     poly : The input Polygon
+
+    Examples
+    ========
+    >>> from sympy.geometry.point import Point
+    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy.integrals.intpoly import hyperplane_parameters
+    >>> hyperplane_parameters(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)))
+    [((0, 1), 3), ((1, -2), -1), ((-2, -1), -3)]
     """
-    params = []
-    vertices = list(poly.vertices)
-    vertices.append(vertices[0])  # Close the polygon.
+    vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon.
+    params = [None] * (len(vertices) - 1)
     for i in range(len(vertices) - 1):
         v1 = vertices[i]
         v2 = vertices[i + 1]
@@ -316,7 +384,7 @@ def hyperplane_parameters(poly):
 
         b = S(b)/factor
         a = (S(a1)/factor, S(a2)/factor)
-        params.append((a, b))
+        params[i] = (a, b)
 
     return params
 
@@ -353,10 +421,10 @@ def best_origin(a, b, lineseg, expr):
         in the last case.
     Examples
     ========
-    >>> from sympy.integrals.intpoly import *
+    >>> from sympy.integrals.intpoly import best_origin
     >>> from sympy.abc import x, y
-    >>> from sympy.geometry.line import *
-    >>> from sympy.geometry.point import *
+    >>> from sympy.geometry.line import Segment2D
+    >>> from sympy.geometry.point import Point
     >>> l = Segment2D(Point(0, 3), Point(1, 1))
     >>> expr = x**3*y**7
     >>> best_origin((2, 1), 3, l, expr)
@@ -467,7 +535,7 @@ def best_origin(a, b, lineseg, expr):
     return x0
 
 
-def decompose(expr, separate=0):
+def decompose(expr, separate=False):
     """Decomposes an input polynomial into homogeneous ones of
     smaller or equal degree.
     Returns a dictionary with keys as the degree of the smaller
@@ -477,44 +545,42 @@ def decompose(expr, separate=0):
     expr : Polynomial(SymPy expression)
 
     Optional Parameters :
+
+    separate : If True then simply return a list of the constituent monomials
+               If not then break up the polynomial into constituent homogeneous
+               polynomials.
     Examples
     ========
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import decompose
     >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5)
     {1: x + y, 2: x**2 + x*y, 5: x**3*y**2 + y**5}
+    >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5, True)
+    [x, y, x**2, y**5, x*y, x**3*y**2]
     """
     expr = S(expr)
-    if separate:
-        monoms = []
-    else:
-        poly_dict = {}
+    poly_dict = {}
 
     if isinstance(expr, Expr) and not expr.is_number:
-        if expr.is_Add:
-            for monomial in expr.args:
-                degree = 0
-                if monomial.is_Pow:
-                    degree += monomial.args[1]
-                else:
-                    term_type = len(monomial.args)
-                    if term_type == 0:
-                        if monomial.is_Symbol:
-                            degree += 1
-                    for univariate in monomial.args:
-                        term_type = len(univariate.args)
-                        if term_type == 0 and univariate.is_Symbol:
-                            degree += 1
-                        elif term_type == 2:
-                            degree += univariate.args[1]
-                if separate:
-                    monoms.append(monomial)
-                else:
-                    if degree in poly_dict:
-                        poly_dict[degree] += monomial
+        if expr.is_Symbol:
+            poly_dict[1] = expr
+        elif expr.is_Add:
+            symbols = expr.atoms(Symbol)
+            degrees = [(sum(degree_list(monom, *symbols)), monom)
+                       for monom in expr.args]
+            if separate:
+                return [monom[1] for monom in degrees]
+            else:
+                for monom in degrees:
+                    degree, term = monom
+                    if poly_dict.get(degree):
+                        poly_dict[degree] += term
                     else:
-                        poly_dict[degree] = monomial
-        elif expr.is_Mul:
+                        poly_dict[degree] = term
+        elif expr.is_Pow:
+            _, degree = expr.args
+            poly_dict[degree] = expr
+        else:  # Now expr can only be of `Mul` type
             degree = 0
             for term in expr.args:
                 term_type = len(term.args)
@@ -522,28 +588,12 @@ def decompose(expr, separate=0):
                     degree += 1
                 elif term_type == 2:
                     degree += term.args[1]
-            if separate:
-                monoms.append(expr)
-            else:
-                poly_dict[degree] = expr
-        elif expr.is_Pow:
-            if separate:
-                monoms.append(expr)
-            else:
-                poly_dict[expr.args[1]] = expr
-        else:
-            if separate:
-                monoms.append(expr)
-            else:
-                poly_dict[1] = expr
+            poly_dict[degree] = expr
     else:
-        if separate:
-            monoms.append(expr)
-        else:
-            poly_dict[0] = expr
+        poly_dict[0] = expr
 
     if separate:
-        return monoms
+        return list(poly_dict.values())
     return poly_dict
 
 
@@ -573,27 +623,27 @@ def clockwise_sort(poly):
                    sum(map(lambda vertex: vertex.y, poly.vertices)) / n)
 
     def compareTo(a, b):
-        if a.x - center.x >= 0 and b.x - center.x < 0:
-            return -1
-        elif a.x - center.x < 0 and b.x - center.x >= 0:
-            return 1
-        elif a.x - center.x == 0 and b.x - center.x == 0:
-            if a.y - center.y >= 0 or b.y - center.y >= 0:
-                return -1 if a.y > b.y else 1
-            return -1 if b.y > a.y else 1
+        if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
+            return S(-1)
+        elif a.x - center.x < S.Zero and b.x - center.x >= S.Zero:
+            return S(1)
+        elif a.x - center.x == S.Zero and b.x - center.x == S.Zero:
+            if a.y - center.y >= S.Zero or b.y - center.y >= S.Zero:
+                return S(-1) if a.y > b.y else S(1)
+            return S(-1) if b.y > a.y else S(1)
 
         det = (a.x - center.x) * (b.y - center.y) -\
               (b.x - center.x) * (a.y - center.y)
-        if det < 0:
-            return -1
-        elif det > 0:
-            return 1
+        if det < S.Zero:
+            return S(-1)
+        elif det > S.Zero:
+            return S(1)
 
         first = (a.x - center.x) * (a.x - center.x) +\
                 (a.y - center.y) * (a.y - center.y)
         second = (b.x - center.x) * (b.x - center.x) +\
                  (b.y - center.y) * (b.y - center.y)
-        return -1 if first > second else 1
+        return S(-1) if first > second else S(1)
 
     return Polygon(*sorted(vertices, key=cmp_to_key(compareTo)))
 
@@ -613,18 +663,13 @@ def norm(point):
     sqrt(53)
 
     """
-    h = 0
     half = S(1)/2
     if isinstance(point, tuple):
-        h = (point[0] ** 2 + point[1] ** 2) ** half
+        return (point[0] ** 2 + point[1] ** 2) ** half
     elif isinstance(point, Point):
-        h = (point.x ** 2 + point.y ** 2) ** half
+        return (point.x ** 2 + point.y ** 2) ** half
     elif isinstance(point, dict):
-        s = 0
-        for i in point.values():
-            s += i ** 2
-        h = s**half
-    return h
+        return sum(i**2 for i in point.values()) ** half
 
 
 def intersection(lineseg_1, lineseg_2):
@@ -661,8 +706,6 @@ def intersection(lineseg_1, lineseg_2):
         b1, b2 = S(lineseg_1[1]), S(lineseg_2[1])
 
         denom = a1x * a2y - a2x * a1y
-        x_num = (b1 * a2y - b2 * a1y)
-        y_num = (b2 * a1x - b1 * a2x)
         if denom:
             return (S(b1 * a2y - b2 * a1y) / denom,
                     S(b2 * a1x - b1 * a2x) / denom)
@@ -683,6 +726,17 @@ def is_vertex(ent):
     Parameter
     =========
     ent : Denotes a geometric entity representing a point
+
+    Examples
+    ========
+    >>> from sympy.geometry.point import Point
+    >>> from sympy.integrals.intpoly import is_vertex
+    >>> is_vertex((2, 3))
+    True
+    >>> is_vertex((2, 3, 6))
+    True
+    >>> is_vertex(Point(2, 3))
+    True
     """
     if isinstance(ent, tuple):
         if len(ent) in [2, 3]:

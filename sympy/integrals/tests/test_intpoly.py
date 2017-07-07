@@ -4,10 +4,8 @@ from sympy import sqrt
 
 from sympy.core import S
 
-from sympy.integrals.intpoly import (is_vertex, intersection, norm,
-                                     decompose, best_origin,
-                                     hyperplane_parameters,
-                                     integration_reduction, polytope_integrate)
+from sympy.integrals.intpoly import (decompose, best_origin,
+                                     polytope_integrate)
 
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
@@ -27,6 +25,16 @@ def test_decompose():
     assert decompose(x**2 + 3*y*x) == {2: x**2 + 3*x*y}
     assert decompose(9*x**2 + y + 4*x + x**3 + y**2*x + 3) ==\
         {0: 3, 1: 4*x + y, 2: 9*x**2, 3: x**3 + x*y**2}
+
+    assert decompose(x, True) == [x]
+    assert decompose(x ** 2, True) == [x ** 2]
+    assert decompose(x * y, True) == [x * y]
+    assert decompose(x + y, True) == [x, y]
+    assert decompose(x ** 2 + y, True) == [y, x ** 2]
+    assert decompose(8 * x ** 2 + 4 * y + 7, True) == [7, 4*y, 8*x**2]
+    assert decompose(x ** 2 + 3 * y * x, True) == [x ** 2, 3 * x * y]
+    assert decompose(9 * x ** 2 + y + 4 * x + x ** 3 + y ** 2 * x + 3, True) == \
+           [3, y, x**3, 4*x, 9*x**2, x*y**2]
 
 
 def test_best_origin():
@@ -140,8 +148,12 @@ def test_polytope_integrate():
     assert result_dict[expr2] == 13062161/27
     assert result_dict[expr3] == 1946257153/924
 
+
 @XFAIL
 def test_polytopes_intersecting_sides():
+    #  Intersecting polygons not implemented yet in SymPy. Will be implemented
+    #  soon. As of now, the intersection point will have to be manually
+    #  supplied by user.
     fig5 = Polygon(Point(-4.165, -0.832), Point(-3.668, 1.568),
                    Point(-3.266, 1.279), Point(-1.090, -2.080),
                    Point(3.313, -0.683), Point(3.033, -4.845),
