@@ -2,9 +2,10 @@
 from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
+from weakref import WeakSet
 
-class _cache(list):
-    """ List of cached functions """
+class _cache(WeakSet):
+    """ Set of cached functions """
 
     def print_cache(self):
         """print cache info"""
@@ -106,7 +107,7 @@ except ImportError:
             update_wrapper(wrapper, func)
             wrapper.__wrapped__ = cfunc.__wrapped__
 
-            CACHE.append(wrapper)
+            CACHE.update([wrapper])
             return wrapper
 
         return func_wrapper
@@ -136,7 +137,7 @@ else:
         def func_wrapper(func):
 
             cfunc = fastcache.clru_cache(maxsize, typed=True, unhashable='ignore')(func)
-            CACHE.append(cfunc)
+            CACHE.update([func])
             return cfunc
 
         return func_wrapper
