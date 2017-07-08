@@ -778,6 +778,7 @@ def test_Drop():
     assert Drop([1, 2, 3, 4, 5, 6], [2, 4]) == [1, 5, 6]
     assert Drop([1, 2, 3, 4, 5, 6], -3) == [1, 2, 3]
     assert Drop([1, 2, 3, 4, 5, 6], 2) == [3, 4, 5, 6]
+    assert Drop(a*b*c, 1) == b*c
 
 def test_SubstForInverseFunction():
     assert SubstForInverseFunction(x, a, b, x) == b
@@ -1069,3 +1070,8 @@ def test_SubstForFractionalPowerOfLinear():
     assert not SubstForFractionalPowerOfLinear(u, x)
     assert SubstForFractionalPowerOfLinear(u**(S(2)), x) == [x**2, 1, a + b*x, 1/b]
     assert SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]
+
+def test_InverseFunctionOfLinear():
+    u = a + b*x
+    assert InverseFunctionOfLinear(log(u)*sin(x), x) == log(u)
+    assert InverseFunctionOfLinear(log(u), x) == log(u)

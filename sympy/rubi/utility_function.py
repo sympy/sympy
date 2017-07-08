@@ -2070,15 +2070,17 @@ def Prepend(l1, l2):
     return l2 + l1
 
 def Drop(lst, n):
-    if isinstance(n, list):
-        lst = lst[:(n[0]-1)] + lst[n[1]:]
-    elif n>0:
-        lst = lst[n:]
-    elif n<0:
-        lst = lst[:-n]
-    else:
+    if isinstance(lst, list):
+        if isinstance(n, list):
+            lst = lst[:(n[0]-1)] + lst[n[1]:]
+        elif n > 0:
+            lst = lst[n:]
+        elif n < 0:
+            lst = lst[:-n]
+        else:
+            return lst
         return lst
-    return lst
+    return lst.func(*[i for i in Drop(list(lst.args), n)])
 
 def CombineExponents(lst):
     if Length(lst) < 2:
@@ -2934,3 +2936,16 @@ def FractionalPowerOfLinear(u, n, v, x):
         if AtomQ(lst):
             return False
     return lst
+
+def InverseFunctionOfLinear(u, x):
+    # (* If u has a subexpression of the form g[a+b*x] where g is an inverse function,
+    # InverseFunctionOfLinear[u,x] returns g[a+b*x]; else it returns False. *)
+    if AtomQ(u) or CalculusQ(u) or FreeQ(u, x):
+        return False
+    elif InverseFunctionQ(u) and LinearQ(u.args[0], x):
+        return u
+    for i in u.args:
+        tmp = InverseFunctionOfLinear(i, x)
+        if Not(AtomQ(tmp)):
+            return tmp
+    return False
