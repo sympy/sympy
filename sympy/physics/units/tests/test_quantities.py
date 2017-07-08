@@ -6,8 +6,8 @@ from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, 
 from sympy.physics.units import convert_to, find_unit
 
 from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
-    quart, inch, coulomb, millimeter, steradian, second, mile, centimeter, hour
-from sympy.physics.units.dimensions import length, time, charge
+    quart, inch, coulomb, millimeter, steradian, second, mile, centimeter, hour, kilogram, pressure, temperature, energy
+from sympy.physics.units.dimensions import Dimension, length, time, charge, mass
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.utilities.pytest import raises
@@ -236,3 +236,17 @@ def test_sum_of_incompatible_quantities():
     assert expr in Basic._constructor_postprocessor_mapping
     for i in expr.args:
         assert i in Basic._constructor_postprocessor_mapping
+
+
+def test_quantity_postprocessing():
+    q1 = Quantity('q1', length*pressure**2*temperature/time)
+    q2 = Quantity('q2', energy*pressure*temperature/(length**2*time))
+    assert q1 + q2
+    q = q1 + q2
+    Dq = Dimension(Quantity.get_dimensional_expr(q))
+    assert Dimension.get_dimensional_dependencies(Dq) == {
+        'length': -1,
+        'mass': 2,
+        'temperature': 1,
+        'time': -5,
+    }

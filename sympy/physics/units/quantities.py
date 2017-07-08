@@ -152,7 +152,9 @@ def _Quantity_constructor_postprocessor_Add(expr):
     # expressions like `meter + second` to be created.
 
     deset = {
-        tuple(Dimension(Quantity.get_dimensional_expr(i)).get_dimensional_dependencies().items())
+        tuple(sorted(Dimension(
+            Quantity.get_dimensional_expr(i)
+        ).get_dimensional_dependencies().items()))
         for i in expr.args
         if i.free_symbols == set()  # do not raise if there are symbols
                     # (free symbols could contain the units corrections)
