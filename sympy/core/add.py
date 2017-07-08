@@ -509,9 +509,10 @@ class Add(Expr, AssocOp):
                 im_I.append(a*S.ImaginaryUnit)
             else:
                 return
-        if self.func(*nz).is_zero:
+        b = self.func(*nz)
+        if b.is_zero:
             return fuzzy_not(self.func(*im_I).is_zero)
-        elif self.func(*nz).is_zero is False:
+        elif b.is_zero is False:
             return False
 
     def _eval_is_zero(self):
@@ -539,12 +540,15 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if self.func(*nz).is_zero:
+        if len(nz) == len(self.args):
+            return None
+        b = self.func(*nz)
+        if b.is_zero:
             if not im_or_z and not im:
                 return True
             if im and not im_or_z:
                 return False
-        if self.func(*nz).is_zero is False:
+        if b.is_zero is False:
             return False
 
     def _eval_is_odd(self):
@@ -576,6 +580,8 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
+                if s == self:
+                    return None
                 if s.is_positive and a.is_nonnegative:
                     return True
                 if len(self.free_symbols) == 1:
@@ -629,6 +635,8 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
+                    if s == self:
+                        return None
                     if s.is_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
@@ -644,6 +652,8 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
+                    if s == self:
+                        return None
                     if s.is_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
@@ -660,6 +670,8 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
+                if s == self:
+                    return None
                 if s.is_negative and a.is_nonpositive:
                     return True
                 if len(self.free_symbols) == 1:
