@@ -1303,7 +1303,7 @@ def test_issue_6060():
     )
     y = Symbol('y')
     assert solve(absxm3 - y, x) == [
-        Piecewise((-y + 3, y > 0), (S.NaN, True)),
+        Piecewise((-y + 3, -y < 0), (S.NaN, True)),
         Piecewise((y + 3, 0 <= y), (S.NaN, True))
     ]
     y = Symbol('y', positive=True)
