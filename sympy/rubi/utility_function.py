@@ -2949,3 +2949,20 @@ def InverseFunctionOfLinear(u, x):
         if Not(AtomQ(tmp)):
             return tmp
     return False
+
+def InertTrigQ(*args):
+    if len(args) == 1:
+        f = args[0]
+        l = [sin,cos,tan,cot,sec,csc]
+        return any(Head(f) == i for i in l)
+    elif len(args) == 2:
+        f, g = args
+        if f == g:
+            return InertTrigQ(f)
+        return InertReciprocalQ(f, g) or InertReciprocalQ(g, f)
+    else:
+        f, g, h = args
+        return InertTrigQ(g, f) and InertTrigQ(g, h)
+
+def InertReciprocalQ(f, g):
+    return (f.func == sin and g.func == csc) or (f.func == cos and g.func == sec) or (f.func == tan and g.func == cot)

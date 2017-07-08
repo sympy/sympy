@@ -1075,3 +1075,11 @@ def test_InverseFunctionOfLinear():
     u = a + b*x
     assert InverseFunctionOfLinear(log(u)*sin(x), x) == log(u)
     assert InverseFunctionOfLinear(log(u), x) == log(u)
+
+def test_InertTrigQ():
+    s = sin(x)
+    c = cos(x)
+    assert not InertTrigQ(sin(x), csc(x), cos(h))
+    assert InertTrigQ(sin(x), csc(x))
+    assert not InertTrigQ(s, c)
+    assert InertTrigQ(c)
