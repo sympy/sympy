@@ -3,7 +3,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
-from sympy import I, E, pi
+from sympy import I, E, pi, pprint
 
 a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, v = symbols('a b c d e f g h x y z m n p q v', real=True, imaginary=False)
 
@@ -540,10 +540,13 @@ def test_ExpandLinearProduct():
 def test_PolynomialDivide():
     assert PolynomialDivide(x + x**2, x, x) == x + 1
     assert PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
+    assert PolynomialDivide((a + b*x)**3, x**3, x) == a**3/x**3 + 3*a**2*b/x**2 + 3*a*b**2/x + b**3
+    assert PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
 
 def test_ExpandIntegrand():
     assert True
     '''
+    assert ExpandIntegrand(1/(x*(a + b*x)**2), x) == -b/(a**3 + 2*a**2*b*x + a*b**2*x**2) - b/(a**3 + a**2*b*x) + 1/(a**2*x)
     assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
     assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18.0/(2*x**2 + 4.0) - 2.0/(2*x**2 + 2.0)
     assert ExpandIntegrand((-1 + (-1)*x**2 + 2*x**4)**(-2), x) == 1/(4*x**8 - 4*x**6 - 3*x**4 + 2*x**2 + 1)
@@ -1060,3 +1063,9 @@ def test_SubstForHyperbolic():
     assert SubstForHyperbolic(t, sinh, cosh, v, x) == sinh(x)/cosh(x)
     assert SubstForHyperbolic(sinh(2*v), sinh, cosh, v, x) == 2*sinh(x)*cosh(x)
     assert SubstForHyperbolic(s*t, sinh, cosh, v, x) == sinh(x)**2/cosh(x)
+
+def test_SubstForFractionalPowerOfLinear():
+    u = a + b*x
+    assert not SubstForFractionalPowerOfLinear(u, x)
+    assert SubstForFractionalPowerOfLinear(u**(S(2)), x) == [x**2, 1, a + b*x, 1/b]
+    assert SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]

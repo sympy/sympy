@@ -16,8 +16,9 @@ from sympy.simplify.simplify import nthroot
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E, expand_trig)
+    Min, Max, sign, E, expand_trig, poly, apart, lcm)
 from mpmath import ellippi, ellipe, ellipf, appellf1
+from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 
 def Int(expr, var):
@@ -381,10 +382,7 @@ def AtomQ(expr):
     if expr in [None, True, False]: # [None, True, False] are atoms in mathematica
         return True
     elif isinstance(expr, list):
-        for e in expr:
-            if not e.is_Atom:
-                return False
-        return True
+        return all(AtomQ(i) for i in expr)
     else:
         return expr.is_Atom
 
@@ -906,7 +904,7 @@ def ReplaceAll(expr, args):
 
 def NormalizeIntegrand(u, x):
     # returns u in a standard form recognizable by integration rules.
-    return u
+    return u.expand()
 
 def SimplifyTerm(u, x):
     v = Simplify(u)
@@ -998,8 +996,106 @@ def NonnumericFactors(u):
         return result
     return u
 
-def ExpandExpression(expr, x):
-    return expr.expand()
+def MakeAssocList(u, x, alst=[]):
+    # (* MakeAssocList[u,x,alst] returns an association list of gensymed symbols with the nonatomic
+    # parameters of a u that are not integer powers, products or sums. *)
+    if AtomQ(u):
+        return alst
+    elif IntegerPowerQ(u):
+        return MakeAssocList(u.args[0], x, alst)
+    elif ProductQ(u) or SumQ(u):
+        return MakeAssocList(Rest(u), x, MakeAssocList(First(u), x, alst))
+    elif FreeQ(u, x):
+        tmp = []
+        for i in alst:
+            if i.args[1] == u:
+                tmp.append(i)
+                break
+        if tmp == []:
+            # Append[alst,{Unique["Rubi"],u}],
+            alst.append(u)
+        return alst
+    return alst
+
+def GensymSubst(u, x, alst):
+    # (* GensymSubst[u,x,alst] returns u with the kernels in alst free of x replaced by gensymed names. *)
+    if AtomQ(u):
+        return u
+    elif IntegerPowerQ(u):
+        return GensymSubst(u.args[0], x, alst)**u.exp
+    elif ProductQ(u) or SumQ(u):
+        return u.func(*[GensymSubst(i, x, alst) for i in u.args])
+    elif FreeQ(u, x):
+        tmp = []
+        for i in alst:
+            if i.args[1] == u:
+                tmp.append(i)
+                break
+        if tmp == []:
+            return u
+        return tmp[0][0]
+    return u
+
+def KernelSubst(u, x, alst):
+    # (* KernelSubst[u,x,alst] returns u with the gensymed names in alst replaced by kernels free of x. *)
+    if AtomQ(u):
+        tmp = []
+        for i in alst:
+            if i.args[0] == u:
+                tmp.append(i)
+                break
+        if tmp == []:
+            return u
+        return tmp[0][1]
+    elif IntegerPowerQ(u):
+        tmp = KernelSubst(u.base, x, alst)
+        if u.args[1] < 0 and ZeroQ(tmp):
+            return 'Indeterminate'
+        return tmp**u.exp
+    elif ProductQ(u) or SumQ(u):
+        return u.func(*[KernelSubst(i, x, alst) for i in u.args])
+    return u
+
+def ExpandExpression(u, x):
+    if AlgebraicFunctionQ(u, x) and Not(RationalFunctionQ(u, x)):
+        v = ExpandAlgebraicFunction(u, x)
+    else:
+        v = S(0)
+    if SumQ(v):
+        return ExpandCleanup(v, x)
+    v = SmartApart(u, x)
+    if SumQ(v):
+        return ExpandCleanup(v, x)
+    v = SmartApart(RationalFunctionFactors(u, x), x, x)
+    if SumQ(v):
+        w = NonrationalFunctionFactors(u, x)
+        return ExpandCleanup(v.func(*[i*w for i in v.args]), x)
+    v = Expand(u, x)
+    if SumQ(v):
+        return ExpandCleanup(v, x)
+    v = Expand(u)
+    if SumQ(v):
+        return ExpandCleanup(v, x)
+    return SimplifyTerm(u, x)
+
+def Apart(u, x):
+    return apart(u, x)
+
+def SmartApart(*args):
+    if len(args) == 2:
+        u, x = args
+        alst = MakeAssocList(u, x)
+        tmp = KernelSubst(Apart(GensymSubst(u, x, alst), x), x, alst)
+        if tmp == 'Indeterminate':
+            return u
+        return tmp
+
+    u, v, x = args
+    alst = MakeAssocList(u, x)
+    tmp = KernelSubst(Apart(GensymSubst(u, x, alst), x), x, alst)
+    if tmp == 'Indeterminate':
+        return u
+    return tmp
 
 def MatchQ(expr, pattern, *var):
     # returns the matched arguments after matching pattern with expression
@@ -1341,7 +1437,9 @@ def MergeMonomials(expr, x):
     return expr
 
 def PolynomialDivide(p, q, x):
-    return quo(p, q) + rem(p, q)/q
+    p = poly(p, x)
+    q = poly(q, x)
+    return (quo(p, q) + (rem(p, q)/q).expand()).as_expr()
 
 def BinomialQ(u, x, n=None):
     if ListQ(u):
@@ -1598,7 +1696,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, b, u, n, c, j, p = tuple([match[i] for i in keys])
             if IntegerQ(n) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and NonzeroQ(b**2 - 4*a*c):
-                ReplaceAll(ExpandIntegrand(1/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2),x: u**n})
+                ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2),x: u**n})
 
     pattern = u_**m_*(a_ + b_*u_**n_ + c_*u_**j_)**p_
     match = expr.match(pattern)
@@ -1607,7 +1705,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, m, a, b, n, c, j, p = tuple([match[i] for i in keys])
             if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0<m<2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
-                return ReplaceAll(ExpandIntegrand(1/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, 2),x: u})
+                return ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, 2),x: u})
 
     # Basis: If  q=Sqrt[-a c], then a+c z^2==((-q+c z)(q+c z))/c
     pattern = (a_ + c_*u_**n_)**p_
@@ -1617,7 +1715,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, c, u, n, p = tuple([match[i] for i in keys])
             if IntegerQ(n/2) and NegativeIntegerQ(p):
-                return ReplaceAll(ExpandIntegrand(1/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c,2),x: u**(n/2)})
+                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c,2),x: u**(n/2)})
 
     pattern = u_**m_*(a_ + c_*u_**n_)**p_
     match = expr.match(pattern)
@@ -1626,7 +1724,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, m, a, c, n, p = tuple([match[i] for i in keys])
             if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0<m<n and (m != n/2):
-                return ReplaceAll(ExpandIntegrand(1/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, 2), x: u})
+                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, 2), x: u})
 
     # Basis: 1/(a x^n+b Sqrt[c+d x^(2 n)])==(a x^n-b Sqrt[c+d x^(2 n)])/(-b^2 c+(a^2-b^2 d) x^(2 n))
     pattern = u_/(a_*x**n_ + b_*Sqrt(c_ + d_*x**j_))
@@ -1719,7 +1817,7 @@ def ExpandIntegrand(expr, x, extra=None):
                 # Basis: Let r/s=(-(a/b))^(1/3), then  1/(a+b z^3)==r/(3a(r-s z))+(r(2 r+s z))/(3a(r^2+r s z+s^2 z^2))
                 r = Numerator(Rt(-a/b, 3))
                 s = Denominator(Rt(-a/b, 3))
-                return r/(3*a*(r - s*u)) + r*(2*r + s*u)/(3*a*(r**2 + r*s*u + s**2*u**2))
+                return r/(S(3)*a*(r - s*u)) + r*(2*r + s*u)/(3*a*(r**2 + r*s*u + s**2*u**2))
             elif PositiveIntegerQ(n/4):
                 # Let r/s=Sqrt[-(a/b)], then  1/(a+b z^2)==r/(2a(r-s z))+r/(2a(r+s z))
                 r = Numerator(Rt(-a/b,2))
@@ -1730,6 +1828,33 @@ def ExpandIntegrand(expr, x, extra=None):
                 r = Numerator(Rt(-a/b, n))
                 s = Denominator(Rt(-a/b, n))
                 return Sum(r/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
+
+    # Basis: If  (m|(n-1)/2)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(a/b)^(1/n), then z^m/(a + b*z^n) == (r*(-(r/s))^m*Sum[1/((-1)^(2*k*(m/n))*(r + (-1)^(2*(k/n))*s*z)), {k, 1, n}])/(a*n) == (r*(-(r/s))^m*Sum[(-1)^(2*k*((m + 1)/n))/((-1)^(2*(k/n))*r + s*z), {k, 1, n}])/(a*n)
+    pattern = u_**m_/(a_+b_*u_**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, m_, a_, b_, n_]
+        if len(keys) == len(match):
+            u, m, a, b, n = tuple([match[i] for i in keys])
+            if IntegersQ(m, n) & 0 < m < n & OddQ(n/GCD(m, n)) & PosQ(a/b):
+                g = GCD(m, n)
+                r = Numerator(Rt(a/b, n/GCD(m, n)))
+                s = Denominator(Rt(a/b, n/GCD(m, n)))
+                if CoprimeQ(m + g, n):
+                    return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g)).doit()
+                else:
+                    return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g)).doit()
+            elif IntegersQ(m, n) & 0<m<n:
+                g = GCD(m, n)
+                r = Numerator(Rt(-a/b, n/GCD(m, n)))
+                s = Denominator(Rt(-a/b, n/GCD(m, n)))
+                if n/g == 2:
+                    return s/(2*b*(r+s*u^g)) - s/(2*b*(r-s*u^g))
+                else:
+                    if CoprimeQ[m+g,n]:
+                        return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g)).doit()
+                    else:
+                        return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g)).doit()
 
     # If u is a polynomial in x, ExpandIntegrand[u*(a+b*x)^m,x] expand u*(a+b*x)^m into a sum of terms of the form A*(a+b*x)^n.
     pattern = u_*(a_ + b_*x)**m_
@@ -1767,48 +1892,25 @@ def ExpandIntegrand(expr, x, extra=None):
                 pr = PolynomialQuotientRemainder(u, v**(-n),x)
                 return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
 
-    # Basis: If  (m|(n-1)/2)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(a/b)^(1/n), then z^m/(a + b*z^n) == (r*(-(r/s))^m*Sum[1/((-1)^(2*k*(m/n))*(r + (-1)^(2*(k/n))*s*z)), {k, 1, n}])/(a*n) == (r*(-(r/s))^m*Sum[(-1)^(2*k*((m + 1)/n))/((-1)^(2*(k/n))*r + s*z), {k, 1, n}])/(a*n)
-    pattern = u_**m_/(a_+b_*u_**n_)
-    match = expr.match(pattern)
-    if match:
-        keys = [u_, m_, a_, b_, n_]
-        if len(keys) == len(match):
-            u, m, a, b, n = tuple([match[i] for i in keys])
-            if IntegersQ(m, n) & 0 < m < n & OddQ(n/GCD(m, n)) & PosQ(a/b):
-                g = GCD(m, n)
-                r = Numerator(Rt(a/b, n/GCD(m, n)))
-                s = Denominator(Rt(a/b, n/GCD(m, n)))
-                if CoprimeQ(m + g, n):
-                    return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g)).doit()
-                else:
-                    return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g)).doit()
-            elif IntegersQ(m, n) & 0<m<n:
-                g = GCD(m, n)
-                r = Numerator(Rt(-a/b, n/GCD(m, n)))
-                s = Denominator(Rt(-a/b, n/GCD(m, n)))
-                if n/g == 2:
-                    return s/(2*b*(r+s*u^g)) - s/(2*b*(r-s*u^g))
-                else:
-                    if CoprimeQ[m+g,n]:
-                        return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g)).doit()
-                    else:
-                        return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g)).doit()
-
     pattern = u_/v_
     match = expr.match(pattern)
     if match:
         keys = [u_, v_]
         if len(keys) == len(match):
-            u, v = tuple([match[i] for i in keys])
+            u, v = Numerator(expr), Denominator(expr)
             if PolynomialQ(u, x) and PolynomialQ(v, x) and BinomialQ(v,x) and (Exponent(u, x) == Exponent(v, x)-1 >= 2):
                 lst = CoefficientList(u, x)
-                return lst[-1]*x**Exponent[u,x]/v + Sum(lst[i]*x**(i-1),(i, 1, Exponent[u,x])).doit()/v
-            elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x)>=Exponent(v, x):
+                result = lst[-1]*x**Exponent(u,x)/v
+                for i in range(1, Exponent(u,x) + 1):
+                    result += lst[i]*x**S(i-1)/v
+            elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x) >= Exponent(v, x):
                 return PolynomialDivide(u, v, x)
 
-    r = expr.expand()
+    r = ExpandExpression(expr, x)
+
     if r != expr:
         return r
+
     return S(2)
 
 def PolynomialGCD(f, g):
@@ -2391,7 +2493,6 @@ def FunctionOfLinear(*args):
         if AtomQ(lst) or FalseQ(lst[0]) or lst[0] == 0 and lst[1] == 1:
             return False
         return [FunctionOfLinearSubst(u, lst[0], lst[1], x), lst[0], lst[1]]
-
     u, a, b, x, flag = args
     if FreeQ(u, x):
         return [a, b]
@@ -2800,3 +2901,36 @@ def SubstForHyperbolic(u, sinh, cosh, v, x):
 
 def InertTrigFreeQ(u):
     return FreeQ(u, sin) and FreeQ(u, cos) and FreeQ(u, tan) and FreeQ(u, cot) and FreeQ(u, sec) and FreeQ(u, csc)
+
+def LCM(a, b):
+    return lcm(a, b)
+
+def SubstForFractionalPowerOfLinear(u, x):
+    # (* If u has a subexpression of the form (a+b*x)^(m/n) where m and n>1 are integers,
+    # SubstForFractionalPowerOfLinear[u,x] returns the list {v,n,a+b*x,1/b} where v is u
+    # with subexpressions of the form (a+b*x)^(m/n) replaced by x^m and x replaced
+    # by -a/b+x^n/b, and all times x^(n-1); else it returns False. *)
+    lst = FractionalPowerOfLinear(u, S(1), False, x)
+    if AtomQ(lst) or FalseQ(lst[1]):
+        return False
+    n = lst[0]
+    a = Coefficient(lst[1], x, 0)
+    b = Coefficient(lst[1], x, 1)
+    tmp = Simplify(x**(n-1)*SubstForFractionalPower(u, lst[1], n, -a/b + x**n/b, x))
+    return [NonfreeFactors(tmp, x), n, lst[1], FreeFactors(tmp, x)/b]
+
+def FractionalPowerOfLinear(u, n, v, x):
+    # (* If u has a subexpression of the form (a+b*x)^(m/n),
+    # FractionalPowerOfLinear[u,1,False,x] returns {n,a+b*x}; else it returns False. *)
+    if AtomQ(u) or FreeQ(u, x):
+        return [n, v]
+    elif CalculusQ(u):
+        return False
+    elif FractionalPowerQ(u) and LinearQ(u.args[0], x) and (FalseQ(v) or ZeroQ(u.args[0] - v)):
+        return [LCM(Denominator(u.exp), n), u.base]
+    lst = [n, v]
+    for i in u.args:
+        lst = FractionalPowerOfLinear(i, lst[0], lst[1], x)
+        if AtomQ(lst):
+            return False
+    return lst
