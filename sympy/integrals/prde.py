@@ -922,7 +922,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     Page, 251 section 7.3
     """
 
-    C, K = base_Q(DE.D)
+    C, K, trans_consts = base_Q(DE.D)
     # trans_consts be t1, ..., tn
     E_part = [frac_in(DE.D[i].quo(Poly(DE.T[i], DE.T[i])),
         trans_consts) for i in DE.indices('exp')]
@@ -1061,21 +1061,33 @@ def base_Q(G):
 
     """
     from sympy import sfield, AlgebraicField, QQ
-    consts = set()
+    # algebracic constants
     algebraic_consts = set()
+    # transcendental constants that are algebraically
+    # independent
+    alg_ind_trans_consts = set()
 
     for poly in G:
         trans_consts = list(set(poly.gens) - set([poly.gen]))
         expr_args = poly.as_expr().args
         # T = [t1, t2, ..., tn]
+        # obtaining algebraically independent
+        # for ex. if π and π^2 both are in poly.as_expr() then
+        # both should be added
         T = set([num**(i.as_coeff_exponent(num)[1])
             for num in trans_consts for i in expr_args])
-        consts.update(T.union(set(poly.domain.gens)))
-        algebraic_consts.update(poly.domain.gens)
+        # algebraically independent transcendental constants
+        alg_ind_trans_consts.update(T)
+        if isinstance(poly.domain, AlgebraicField):
+            algebraic_consts.update(poly.domain.gens)
 
-    C = sfield(list(consts) extension=True)
-    K = AlgebraicField(QQ, *algebraic_consts)
-    return C, K
+    consts = alg_ind_trans_consts.union(algebraic_consts)
+    C = sfield(list(consts), extension=True)
+    if algebraic_consts:
+        K = AlgebraicField(QQ, *algebraic_consts)
+    else:
+        K = QQ
+    return C, K, alg_ind_trans_consts
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
