@@ -2984,3 +2984,59 @@ def DeactivateTrigAux(u, x):
         return u
     elif TrigQ(u) and LinearQ(u.args[0], x):
         v = ExpandToSum(u.args[0], x)
+
+def DeactivateTrigAux(u, x):
+    if AtomQ(u):
+        return u
+    elif TrigQ(u) and LinearQ(u.args[0], x):
+        v = ExpandToSum(u.args[0], x)
+        if SinQ(u):
+            return sin(v)
+        elif CosQ(u):
+            return cos(v)
+        elif TanQ(u):
+            return tan(u)
+        elif CotQ(u):
+            return cot(v)
+        elif SecQ(u):
+            return csc(v)
+        return csc(v)
+    elif HyperbolicQ(u) and LinearQ(u.args[0], x):
+        v = ExpandToSum(I*u.args[0], x)
+        if SinhQ(u):
+            return -I*sin(v)
+        elif CoshQ(u):
+            return cos(v)
+        elif TanhQ(u):
+            return -I*tan(v)
+        elif CothQ(u):
+            I*cot(v)
+        elif SechQ(u):
+            return sec(v)
+        return I*csc(v)
+    return u.func(*[DeactivateTrigAux(i, x) for i in u.args])
+
+def PowerOfInertTrigSumQ(u, func, x):
+    p_ = Wild('p', exclude=[x])
+    q_ = Wild('q', exclude=[x])
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x])
+    n_ = Wild('n', exclude=[x])
+    w_ = Wild('w')
+
+    pattern = (a_ + b_*(c_*func(w_))**p_)**n_
+    match = u.match(pattern)
+    if match:
+        keys = [a_, b_, c_, n_, p_, w_]
+        if len(keys) == len(match):
+            return True
+
+    pattern = (a_ + b_*(d_*func(w_))**p_ + c_*(d_*func(w_))**q_)**n_
+    match = u.match(pattern)
+    if match:
+        keys = [a_, b_, c_, d_, n_, p_, q_, w_]
+        if len(keys) == len(match):
+            return True
+    return False

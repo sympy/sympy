@@ -3,7 +3,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
-from sympy import I, E, pi, pprint
+from sympy import I, E, pi, pprint, hyper
 
 a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, v = symbols('a b c d e f g h x y z m n p q v', real=True, imaginary=False)
 
@@ -101,7 +101,7 @@ def test_Denominator():
     assert Denominator(S(4)/5) == 5
 
 def test_Hypergeometric2F1():
-    assert Hypergeometric2F1(1, 2, 3, x) == -2/x - 2*log(-x + 1)/x**2
+    assert Hypergeometric2F1(1, 2, 3, x) == hyper((1, 2), (3,), x)
 
 def test_ArcTan():
     assert ArcTan(x) == atan(x)
@@ -1083,3 +1083,8 @@ def test_InertTrigQ():
     assert InertTrigQ(sin(x), csc(x))
     assert not InertTrigQ(s, c)
     assert InertTrigQ(c)
+
+def test_PowerOfInertTrigSumQ():
+    func = sin
+    assert PowerOfInertTrigSumQ((1 + S(2)*(S(3)*func(x**2))**S(5))**3, func, x)
+    assert PowerOfInertTrigSumQ((1 + 2*(S(3)*func(x**2))**3 + 4*(S(5)*func(x**2))**S(3))**2, func, x)
