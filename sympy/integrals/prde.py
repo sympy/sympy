@@ -919,7 +919,20 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
+    >>> fa, fd = Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t)
+    >>> wa, wd = Poly(-1, t), Poly(x*t**2, t)
+    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'exts': [None, 'log']})
+    >>> parametric_log_deriv(fa, fd, wa, wd, DE)
+    (Matrix([
+    [1, 0],
+    [0, 1]
+    ]), Matrix([
+    [-(10*t**4*x + 2*t**3*x - 10*t**2*x - 24*t*x)/(10*t + 1)],
+    [(2*t**2*x + 4*t*x)/(10*t + 1)]]))
+
     Page, 251 section 7.3
+
     """
 
     C, K, trans_consts = base_Q(DE.D)
@@ -937,7 +950,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     rhs = Matrix([f])
 
     A, u = constant_system(lhs, rhs, DE)
-    return A
+    return A, u
 
 
 def is_deriv_k(fa, fd, DE):
@@ -1068,7 +1081,7 @@ def base_Q(G):
     alg_ind_trans_consts = set()
 
     for poly in G:
-        trans_consts = list(set(poly.gens) - set([poly.gen]))
+        trans_consts = list(set(poly.gens))
         expr_args = poly.as_expr().args
         # T = [t1, t2, ..., tn]
         # obtaining algebraically independent
@@ -1087,7 +1100,7 @@ def base_Q(G):
         K = AlgebraicField(QQ, *algebraic_consts)
     else:
         K = QQ
-    return C, K, alg_ind_trans_consts
+    return C, K, list(alg_ind_trans_consts)
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
