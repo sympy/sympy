@@ -23,7 +23,8 @@ from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.solvers import solve
 
-from sympy.polys import Poly, lcm, cancel, sqf_list
+from sympy.polys import (AlgebraicField, Poly, QQ, cancel, lcm,
+        sqf_list, sfield)
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -943,7 +944,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
             for i in DE.indices('log')]
     f = frac_in((fa, fd), trans_consts)
     L_E_part = L_part + E_part
-    lcm_lhs = reduce(lambda x, y: lcm(x, y), [den for num, den in L_E_part])
+    lcm_lhs = reduce(lambda x, y: lcm(x, y), [den for num, den in L_E_part], S(1))
     L_E_part = [i*lcm_lhs/j for i, j in L_E_part]
 
     lhs = Matrix([L_E_part])
@@ -1073,7 +1074,6 @@ def base_Q(G):
      QQ<sqrt(2) + sqrt(3)>)
 
     """
-    from sympy import sfield, AlgebraicField, QQ
     # algebracic constants
     algebraic_consts = set()
     # transcendental constants that are algebraically
@@ -1081,16 +1081,15 @@ def base_Q(G):
     alg_ind_trans_consts = set()
 
     for poly in G:
-        trans_consts = list(set(poly.gens))
-        expr_args = poly.as_expr().args
+        monoms = poly.as_expr().args
         # T = [t1, t2, ..., tn]
         # obtaining algebraically independent
         # for ex. if π and π^2 both are in poly.as_expr() then
         # both should be added
-        T = set([num**(i.as_coeff_exponent(num)[1])
-            for num in trans_consts for i in expr_args])
+        T = set([num**(monom.as_coeff_exponent(num)[1])
+            for num in poly.gens for monom in monoms])
         # algebraically independent transcendental constants
-        alg_ind_trans_consts.update(T)
+        alg_ind_trans_consts.update(T.union([poly.gen]))
         if isinstance(poly.domain, AlgebraicField):
             algebraic_consts.update(poly.domain.gens)
 
