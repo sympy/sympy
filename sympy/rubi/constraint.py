@@ -1,7 +1,7 @@
 from matchpy import Constraint, substitute
 from sympy import sympify
 from sympy.logic.boolalg import BooleanTrue
-from .matchpy2sympy import matchpy2sympy
+from sympy.rubi.matchpy2sympy import matchpy2sympy
 
 class cons(Constraint):
     def __init__(self, expr, vars):
@@ -9,10 +9,12 @@ class cons(Constraint):
         self.vars = frozenset(v.name for v in vars)
 
     def __call__(self, substitution):
+
         if isinstance(self.expr, bool): #handle rules without constraints
             return self.expr
 
         sub = substitute(self.expr, substitution)
+
         try:
             res = matchpy2sympy(sub)
         except:
