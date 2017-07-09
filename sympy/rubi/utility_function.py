@@ -243,7 +243,8 @@ def Denominator(var):
     return fraction(var)[1]
 
 def Hypergeometric2F1(a, b, c, z):
-    return hyperexpand(hyper([a, b], [c], z))
+    #return hyperexpand(hyper([a, b], [c], z))
+    return hyper([a, b], [c], z)
 
 def ArcTan(a):
     return atan(a)
@@ -2966,3 +2967,20 @@ def InertTrigQ(*args):
 
 def InertReciprocalQ(f, g):
     return (f.func == sin and g.func == csc) or (f.func == cos and g.func == sec) or (f.func == tan and g.func == cot)
+
+def ActivateTrig(u):
+    return u
+
+def DeactivateTrig(u, x):
+    # (* u is a function of trig functions of a linear function of x. *)
+    # (* DeactivateTrig[u,x] returns u with the trig functions replaced with inert trig functions. *)
+    return FixInertTrigFunction(DeactivateTrigAux(u, x), x)
+
+def FixInertTrigFunction(u, x):
+    return u
+
+def DeactivateTrigAux(u, x):
+    if AtomQ(u):
+        return u
+    elif TrigQ(u) and LinearQ(u.args[0], x):
+        v = ExpandToSum(u.args[0], x)
