@@ -54,12 +54,9 @@ class RewritingSystem(object):
             return ValueError("Too many rules were defined.")
 
         if w1 < w2:
-            s1 = w1
-            w1 = w2
-            w2 = s1
+            w1, w2 = w2, w1
 
-        s1 = w1
-        s2 = w2
+        s1, s2 = w1, w2
 
         # The following is the equivalent of checking
         # s1 for overlaps with the implicit reductions
@@ -127,9 +124,7 @@ class RewritingSystem(object):
             len1 = len(r1)
             len2 = len(r2)
             result = []
-            j = 0
-            while j < len1 + len2 - 1:
-                j += 1
+            for j in range(1, len1 + len2 - 1):
                 if (r1.subword(len1 - j, len1 + len2 - j, strict=False)
                        == r2.subword(j - len1, j, strict=False)):
                     a = r1.subword(0, len1-j, strict=False)
@@ -157,6 +152,8 @@ class RewritingSystem(object):
             # preceding ones. there is probably a better way
             # to handle this
             for r2 in lhs:
+                if r1 == r2:
+                    continue
                 overlaps = _overlaps(r1, r2)
                 if not overlaps:
                     continue
