@@ -905,7 +905,7 @@ def ReplaceAll(expr, args):
 
 def NormalizeIntegrand(u, x):
     # returns u in a standard form recognizable by integration rules.
-    return u.expand()
+    return u
 
 def SimplifyTerm(u, x):
     v = Simplify(u)
@@ -1227,7 +1227,6 @@ def NonfreeTerms(u, x):
     else:
         return 0
 
-
 def ExpandAlgebraicFunction(expr, x):
     if ProductQ(expr):
         u_ = Wild('u', exclude=[x])
@@ -1237,26 +1236,28 @@ def ExpandAlgebraicFunction(expr, x):
         match = expr.match(pattern)
         if match:
             keys = [u_, v_]
-            u, v = tuple([match[i] for i in keys])
-            if SumQ(v):
-                u, v = v, u
-            if not FreeQ(u, x) and SumQ(u):
-                result = 0
-                for i in u.args:
-                    result += i*v
-                return result
+            if len(keys) == len(match):
+                u, v = tuple([match[i] for i in keys])
+                if SumQ(v):
+                    u, v = v, u
+                if not FreeQ(u, x) and SumQ(u):
+                    result = 0
+                    for i in u.args:
+                        result += i*v
+                    return result
 
         pattern = u_**n_*v_
         match = expr.match(pattern)
         if match:
             keys = [u_, n_, v_]
-            u, n, v = tuple([match[i] for i in keys])
-            if PositiveIntegerQ(n) and SumQ(u):
-                w = Expand(u**n)
-                result = 0
-                for i in w.args:
-                    result += i*v
-                return result
+            if len(keys) == len(match):
+                u, n, v = tuple([match[i] for i in keys])
+                if PositiveIntegerQ(n) and SumQ(u):
+                    w = Expand(u**n)
+                    result = 0
+                    for i in w.args:
+                        result += i*v
+                    return result
 
     return expr
 
@@ -1437,10 +1438,16 @@ def MergeMonomials(expr, x):
                 return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
     return expr
 
-def PolynomialDivide(p, q, x):
-    p = poly(p, x)
-    q = poly(q, x)
-    return (quo(p, q) + (rem(p, q)/q).expand()).as_expr()
+def PolynomialDivide(p_, q_, x):
+    p = poly(p_, x)
+    q = poly(q_, x)
+    quotient = quo(p, q).as_expr()
+    remainder = rem(p, q).as_expr()
+    result = quotient
+    if SumQ(remainder):
+        for i in remainder.args:
+            result += i/q_
+    return result
 
 def BinomialQ(u, x, n=None):
     if ListQ(u):
@@ -1902,8 +1909,8 @@ def ExpandIntegrand(expr, x, extra=None):
             if PolynomialQ(u, x) and PolynomialQ(v, x) and BinomialQ(v,x) and (Exponent(u, x) == Exponent(v, x)-1 >= 2):
                 lst = CoefficientList(u, x)
                 result = lst[-1]*x**Exponent(u,x)/v
-                for i in range(1, Exponent(u,x) + 1):
-                    result += lst[i]*x**S(i-1)/v
+                for i in range(0, Exponent(u,x) + 1):
+                    result += lst[i-1]*x**S(i-1)/v
             elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x) >= Exponent(v, x):
                 return PolynomialDivide(u, v, x)
 
@@ -1912,7 +1919,7 @@ def ExpandIntegrand(expr, x, extra=None):
     if r != expr:
         return r
 
-    return S(2)
+    return expr.expand()
 
 def PolynomialGCD(f, g):
     return gcd(f, g)
@@ -3039,4 +3046,33 @@ def PowerOfInertTrigSumQ(u, func, x):
         keys = [a_, b_, c_, d_, n_, p_, q_, w_]
         if len(keys) == len(match):
             return True
+    return False
+
+def PiecewiseLinearQ(*args):
+    # (* If the derivative of u wrt x is a constant wrt x, PiecewiseLinearQ[u,x] returns True;
+    # else it returns False. *)
+    if len(args) == 3:
+        u, v, x = args
+        return PiecewiseLinearQ(u, x) and PiecewiseLinearQ(v, x)
+
+    u, x = args
+    if LinearQ(u, x):
+        return True
+
+    c_ = Wild('c', exclude=[x])
+    F_ = Wild('F', exclude=[x])
+    v_ = Wild('v')
+
+    match = u.match(Log(c_*F_**v_))
+    if match:
+        if len(match) == 3:
+            if LinearQ(v, x):
+                return True
+
+    v = u.args[0].args[0].args[0]
+    if LinearQ(v, x):
+        F, G = u.args[0].func, u.args[0].args[0].func
+        if MemberQ([[atanh, tanh], [atanh, coth], [acoth, coth], [acoth, tanh], [atan, tan], [atan, cot], [acot, cot], [acot, tan]], [F, G]):
+            return True
+
     return False

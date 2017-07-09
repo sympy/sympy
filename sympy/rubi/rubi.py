@@ -42,6 +42,6 @@ def rubi_integrate(expr, var):
     result = rubi.replace(expr)
 
     if result == expr:
-        raise NotImplementedError('Unable to intergate {}'.format(matchpy2sympy(expr)))
+        raise NotImplementedError('Unable to intergate {}'.format(expr))
 
     return matchpy2sympy(result)
