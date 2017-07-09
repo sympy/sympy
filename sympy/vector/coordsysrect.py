@@ -2,10 +2,10 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
-from sympy.core import S
+from sympy.core import S, Dummy
+from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
-from sympy import Matrix
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, simplify
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan2, simplify
 import sympy.vector
 from sympy import simplify
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -164,6 +164,8 @@ class CoordSys3D(Basic):
 
         obj._transformation_eqs = obj._x, obj._y, obj._y
 
+        obj._inv_transformation_eqs = lambda x, y, z: (x, y, z)
+
         # Assign params
         obj._parent = parent
         if obj._parent is not None:
@@ -186,7 +188,7 @@ class CoordSys3D(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
-    def _connect_to_standard_cartesian(self, curv_coord_type):
+    def _connect_to_standard_cartesian(self, curv_coord_type, inverse=True):
         """
         Change the type of orthogonal curvilinear system. It could be done
         by tuple of transformation equations or by choosing one of pre-defined
@@ -198,13 +200,22 @@ class CoordSys3D(Basic):
         :param curv_coord_type: str, tuple
 
         """
+
         if isinstance(curv_coord_type, string_types):
             self._set_transformation_equations_mapping(curv_coord_type)
             self._set_lame_coefficient_mapping(curv_coord_type)
+            if inverse:
+                self._set_inv_trans_equations(curv_coord_type)
 
         elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 3:
-            self._transformation_eqs = curv_coord_type
-            self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
+            if all(i.atoms(BaseScalar) for i in curv_coord_type):
+                self._transformation_eqs = curv_coord_type
+                self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(curv_coord_type)
+                if inverse:
+                    self._inv_transformation_eqs = self._calculate_inv_transformation_equations(
+                                                    self._transformation_equations())
+            else:
+                raise ValueError("Wrong set of parameter.")
 
         elif isinstance(curv_coord_type, (tuple, list, Tuple)) and len(curv_coord_type) == 2:
             self._transformation_eqs = \
@@ -212,7 +223,9 @@ class CoordSys3D(Basic):
                             curv_coord_type[0][1]: self.y,
                             curv_coord_type[0][2]: self.z}) for eq in curv_coord_type[1]])
             self._h1, self._h2, self._h3 = self._calculate_lame_coefficients(self._transformation_equations())
-
+            if inverse:
+                self._inv_transformation_eqs = self._calculate_inv_transformation_equations(
+                                                self._transformation_equations())
         else:
             raise ValueError("Wrong set of parameter.")
 
@@ -273,6 +286,33 @@ class CoordSys3D(Basic):
                              'Type of coordinate system is defined')
         self._transformation_eqs = equations_mapping[curv_coord_name]
 
+    def _set_inv_trans_equations(self, curv_coord_name):
+        """
+        Store information about some default, pre-defined inverse
+        transformation equations.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+
+        equations_mapping = {
+            'cartesian': (self.x, self.y, self.z),
+            'spherical': (sqrt(self.x**2 + self.y**2 +self.z**2),
+                          acos((self.z) / sqrt(self.x**2 + self.y**2 + self.z**2)),
+                          atan2(self.y, self.x)),
+            'cylindrical': (sqrt(self.x**2 + self.y**2),
+                            atan2(self.y, self.x),
+                            self.z)
+        }
+        if curv_coord_name not in equations_mapping:
+            raise ValueError('Wrong set of parameters.'
+                             'Type of coordinate system is defined')
+        self._inv_transformation_eqs = equations_mapping[curv_coord_name]
+
     def _set_lame_coefficient_mapping(self, curv_coord_name):
         """
         Store information about Lame coefficient, for pre-defined
@@ -295,6 +335,29 @@ class CoordSys3D(Basic):
         if curv_coord_name not in coefficient_mapping:
             raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
         self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
+
+    def _calculate_inv_transformation_equations(self, equations):
+        """
+        Helper method for set_coordinate_type. It calculates inverse
+        transformation equations for given transformations equations.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+
+        x = Dummy('x')
+        y = Dummy('y')
+        z = Dummy('z')
+        eq = self._transformation_equations()
+        try:
+            solved = solve([eq[0] - x, eq[1] - y, eq[2] - z], [x, y, z], dict=True)[0]
+            return solved[x], solved[y], solved[z]
+        except:
+            raise ValueError('Wrong set of parameters.')
 
     def _calculate_lame_coefficients(self, equations):
         """
@@ -372,6 +435,9 @@ class CoordSys3D(Basic):
 
     def _transformation_equations(self):
         return self._transformation_eqs[:]
+
+    def _inverse_transformation_equations(self):
+        return self._inv_transformation_eqs[:]
 
     @cacheit
     def rotation_matrix(self, other):
