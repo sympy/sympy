@@ -462,7 +462,7 @@ class LatexPrinter(Printer):
             base, p, q = self.parenthesize(expr.base, PRECEDENCE['Pow']), expr.exp.p, expr.exp.q
             #fixes issue #12886, adds parentheses before superscripts raised to powers
             if '^' in base and expr.base.is_Symbol:
-                base="(%s)"%base
+                base = r"\left(%s\right)" % base
             if expr.base.is_Function:
                 return self._print(expr.base, "%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
@@ -487,7 +487,7 @@ class LatexPrinter(Printer):
                 #fixes issue #12886, adds parentheses before superscripts raised to powers
                 base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
                 if '^' in base and expr.base.is_Symbol:
-                    base="(%s)"%base
+                    base = r"\left(%s\right)" % base
                 exp = self._print(expr.exp)
 
                 return tex % (base, exp)
