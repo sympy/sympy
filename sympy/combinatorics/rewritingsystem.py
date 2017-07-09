@@ -124,7 +124,7 @@ class RewritingSystem(object):
             len1 = len(r1)
             len2 = len(r2)
             result = []
-            for j in range(1, len1 + len2 - 1):
+            for j in range(1, len1 + len2):
                 if (r1.subword(len1 - j, len1 + len2 - j, strict=False)
                        == r2.subword(j - len1, j, strict=False)):
                     a = r1.subword(0, len1-j, strict=False)
