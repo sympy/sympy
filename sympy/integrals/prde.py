@@ -921,12 +921,19 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
     Page, 251 section 7.3
     """
-    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i]))
-            for i in DE.indices('exp')]
-    L_part = [DE.D[i] for i in DE.indices('log')]
 
-    lhs = Matrix([L_part + E_part])
-    f = fa/fd
+    C, K = base_Q(DE.D)
+    # trans_consts be t1, ..., tn
+    E_part = [frac_in(DE.D[i].quo(Poly(DE.T[i], DE.T[i])),
+        trans_consts) for i in DE.indices('exp')]
+    L_part = [frac_in(DE.D[i], trans_consts)
+            for i in DE.indices('log')]
+    f = frac_in((fa, fd), trans_consts)
+    L_E_part = L_part + E_part
+    lcm_lhs = reduce(lambda x, y: lcm(x, y), [den for num, den in L_E_part])
+    L_E_part = [i*lcm_lhs/j for i, j in L_E_part]
+
+    lhs = Matrix([L_E_part])
     rhs = Matrix([f])
 
     A, u = constant_system(lhs, rhs, DE)
@@ -1042,26 +1049,33 @@ def is_deriv_k(fa, fd, DE):
             return (ans, result, const)
 
 
-# where C is a constant field
-# C = K(t1, ..., tn)
-# first find `K`, where `K` is an instance of `AlgebraicField`.
 def base_Q(G):
     """
-    >>> Poly(x**2 + sqrt(2)*x + sqrt(3)*x**4*pi**2 + pi*x**5, x, pi, extension=True)
-    >>> base_Q(r)
-    ({1, pi, pi**2}, QQ<sqrt(2) + sqrt(3)>)
+    >>> G = [Poly(x**2*sqrt(2) + x, x, extension=True),
+            Poly(x**2*sqrt(3) + 1, x, extension=True)]
+    >>> base_Q(G)
+    ((Rational function field in  over QQ<sqrt(2) + sqrt(3)> with lex order,
+      [ANP([1/2, 0, -9/2, 0], [1, 0, -10, 0, 1], QQ)/ANP([1], [1, 0, -10, 0, 1], QQ),
+          -ANP([-1/2, 0, 11/2, 0], [1, 0, -10, 0, 1], QQ)/ANP([1], [1, 0, -10, 0, 1], QQ)]),
+     QQ<sqrt(2) + sqrt(3)>)
 
     """
-    from sympy import sfield, AlgebraicField
+    from sympy import sfield, AlgebraicField, QQ
+    consts = set()
+    algebraic_consts = set()
 
-    K = AlgebraicField(QQ, *G.domain.gens)
-    trans_nums = list(set(G.gens) - set([G.gen]))
-    expr_args = G.as_expr().args
-    # T = [t1, t2, ..., tn]
-    T = set([num**(i.as_coeff_exponent(num)[1])
-        for num in trans_nums for i in expr_args])
-    cons = T.union(set(K.gens))
-    return sfield(list(cons), extension=True)
+    for poly in G:
+        trans_consts = list(set(poly.gens) - set([poly.gen]))
+        expr_args = poly.as_expr().args
+        # T = [t1, t2, ..., tn]
+        T = set([num**(i.as_coeff_exponent(num)[1])
+            for num in trans_consts for i in expr_args])
+        consts.update(T.union(set(poly.domain.gens)))
+        algebraic_consts.update(poly.domain.gens)
+
+    C = sfield(list(consts) extension=True)
+    K = AlgebraicField(QQ, *algebraic_consts)
+    return C, K
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
