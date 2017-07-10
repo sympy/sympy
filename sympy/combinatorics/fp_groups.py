@@ -104,7 +104,11 @@ class FpGroup(DefaultPrinting):
         where in fact `word1 == word2`)
 
         '''
-        return self.reduce(word1*word2**-1) == self.free_group.identity
+        if self.reduce(word1*word2**-1) == self.free_group.identity:
+            return True
+        elif self._rewriting_system.is_confluent():
+            return False
+        return None
 
     def subgroup(self, gens, C=None):
         '''
