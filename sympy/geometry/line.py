@@ -2121,10 +2121,12 @@ class Segment2D(LinearEntity2D, Segment):
         p2 = Point(p2, dim=2)
         if p1 == p2:
             return p1
-        if (p1.x > p2.x) == True:
-            p1, p2 = p2, p1
-        elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
-            p1, p2 = p2, p1
+        dir = kwargs.get('dir', False)
+        if not dir:
+            if (p1.x > p2.x) == True:
+                p1, p2 = p2, p1
+            elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
+                p1, p2 = p2, p1
         return LinearEntity2D.__new__(cls, p1, p2, **kwargs)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):

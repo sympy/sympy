@@ -29,7 +29,7 @@ def test_polygon():
     # 2 "remove folded" tests
     assert Polygon(a, Point(3, 0), b, c) == t
     assert Polygon(a, b, Point(3, -1), b, c) == t
-    raises(GeometryError, lambda: Polygon((0, 0), (1, 0), (0, 1), (1, 1)))
+
     # remove multiple collinear points
     assert Polygon(Point(-4, 15), Point(-11, 15), Point(-15, 15),
         Point(-15, 33/5), Point(-15, -87/10), Point(-15, -15),
@@ -402,3 +402,23 @@ def test_intersection():
     assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) == [Point(-5/7, 6/7),
                                                                                     Segment(Point2D(0, 1), Point(1, 0))]
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
+
+
+def test_intersecting_polygons():
+    poly1 = Polygon(Point(0, 0), Point(1, 0), Point(0, 1), Point(1, 1))
+    assert poly1.vertices == [Point2D(0, 0), Point2D(1, 0),
+                              Point2D(S(1)/2, S(1)/2), Point2D(0, 1),
+                              Point2D(1, 1), Point2D(S(1)/2, S(1)/2)]
+
+    poly2 = Polygon(Point(0, -3), Point(-1, -2), Point(2, 0), Point(-1, 2),
+                    Point(0, 3))
+    poly3 = Polygon(Point(0, -3), Point(-1, -2), Point(2, 0), Point(-1, 2),
+                    Point(0, 3), ignore_int=True)
+
+    assert poly2.vertices == [Point2D(0, -3), Point2D(-1, -2),
+                              Point2D(0, -4/3), Point2D(2, 0),
+                              Point2D(0, 4/3), Point2D(-1, 2),
+                              Point2D(0, 3), Point2D(0, 4/3),
+                              Point2D(0, -4/3)]
+    assert poly3.vertices == [Point2D(0, -3), Point2D(-1, -2),Point2D(2, 0),
+                              Point2D(-1, 2), Point2D(0, 3)]

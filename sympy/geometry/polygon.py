@@ -81,16 +81,20 @@ class Polygon(GeometrySet):
     >>> Polygon(p1, p2, p5)
     Segment2D(Point2D(0, 0), Point2D(3, 0))
 
-    While the sides of a polygon are not allowed to cross implicitly, they
-    can do so explicitly. For example, a polygon shaped like a Z with the top
-    left connecting to the bottom right of the Z must have the point in the
-    middle of the Z explicitly given:
+    Both implicit and explicit intersections are allowed. For example,
+    consider a polygon shaped like a Z with the top left connecting to the
+    bottom right of the Z. The point in the middle of the Z may or may not be
+    explicitly given. However it should be noted that not all characteristics
+    of the implicit case be accurate(such as area):
 
     >>> mid = Point(1, 1)
     >>> Polygon((0, 2), (2, 2), mid, (0, 0), (2, 0), mid).area
     0
     >>> Polygon((0, 2), (2, 2), mid, (2, 0), (0, 0), mid).area
     -2
+    >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
+    0
+
 
     When the the keyword `n` is used to define the number of sides of the
     Polygon then a RegularPolygon is created and the other arguments are
@@ -122,6 +126,8 @@ class Polygon(GeometrySet):
             elif len(args) == 3:  # center, radius, rotation
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
+
+        ignore_int = kwargs.get('ignore_int', False)
 
         vertices = [Point(a, dim=2, **kwargs) for a in args]
 
@@ -164,41 +170,40 @@ class Polygon(GeometrySet):
         else:
             return Point(*vertices, **kwargs)
 
-        # reject polygons that have intersecting sides unless the
-        # intersection is a shared point or a generalized intersection.
-        # A self-intersecting polygon is easier to detect than a
-        # random set of segments since only those sides that are not
-        # part of the convex hull can possibly intersect with other
-        # sides of the polygon...but for now we use the n**2 algorithm
-        # and check if any side intersects with any preceding side,
-        # excluding the ones it is connected to
         try:
             convex = rv.is_convex()
         except ValueError:
             convex = True
-        if not convex:
-            sides = rv.sides
-            for i, si in enumerate(sides):
-                pts = si.args
+        if not convex and not ignore_int:
+            sides = {}
+            for i, side in enumerate(rv.directed_sides(True)):
+                sides[i] = [side]
+            for i in sides:
                 # exclude the sides connected to si
-                for j in range(1 if i == len(sides) - 1 else 0, i - 1):
-                    sj = sides[j]
-                    if sj.p1 not in pts and sj.p2 not in pts:
-                        hit = si.intersection(sj)
-                        if not hit:
-                            continue
-                        hit = hit[0]
-                        # don't complain unless the intersection is definite;
-                        # if there are symbols present then the intersection
-                        # might not occur; this may not be necessary since if
-                        # the convex test passed, this will likely pass, too.
-                        # But we are about to raise an error anyway so it
-                        # won't matter too much.
-                        if all(i.is_number for i in hit.args):
-                            raise GeometryError(
-                                "Polygon has intersecting sides.")
-
+                for j in range((i + 2) % len(sides), (i - 1) % len(sides) if i != 1 else len(sides)):
+                    si = sides[i]
+                    for i_index, segment_i in enumerate(si):
+                        pts = segment_i.args
+                        sj = sides[j]
+                        for j_index, segment_j in enumerate(sj):
+                            if segment_j.p1 not in pts and segment_j.p2 not in pts:
+                                hit = segment_i.intersection(segment_j)
+                                if hit:
+                                    hit = hit[0]
+                                    sides[i][i_index:i_index + 1] =\
+                                        [Segment(pts[0], hit, dir=True),
+                                         Segment(hit, pts[1], dir=True)]
+                                    sides[j][j_index:j_index + 1] =\
+                                        [Segment(segment_j.p1, hit, dir=True),
+                                         Segment(hit, segment_j.p2, dir=True)]
+                                    break
+            vertices = []
+            for key in sides:
+                for side in sides[key]:
+                    vertices.append(side.p1)
+            return GeometryEntity.__new__(cls, *vertices, **kwargs)
         return rv
+
 
     @property
     def area(self):
@@ -387,6 +392,52 @@ class Polygon(GeometrySet):
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
         return Point(simplify(A*cx), simplify(A*cy))
+
+
+    def directed_sides(self, dir=False):
+        """The line segments that form the sides of the polygon.
+
+        Returns
+        =======
+
+        sides : list of sides
+            Each side is a Segment.
+
+        Notes
+        =====
+
+        Depending on the value of `dir` (that refers to direction)
+        the Segments that represent the sides can be directed
+        or undirected line segments.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point, sympy.geometry.line.Segment
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.directed_sides(True)
+        [Segment2D(Point2D(0, 0), Point2D(1, 0)),
+        Segment2D(Point2D(1, 0), Point2D(5, 1)),
+        Segment2D(Point2D(5, 1), Point2D(0, 1)),
+        Segment2D(Point2D(0, 1), Point2D(0, 0))]
+        >>> poly.directed_sides()
+        [Segment2D(Point2D(0, 0), Point2D(1, 0)),
+        Segment2D(Point2D(1, 0), Point2D(5, 1)),
+        Segment2D(Point2D(0, 1), Point2D(5, 1)),
+        Segment2D(Point2D(0, 0), Point2D(0, 1))]
+
+        """
+        res = []
+        args = self.vertices
+        for i in range(-len(args), 0):
+            res.append(Segment(args[i], args[i + 1], dir=dir))
+        return res
 
     @property
     def sides(self):
