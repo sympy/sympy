@@ -58,4 +58,4 @@ def test_constructor_postprocessors1(SymbolInMulOnce, SymbolRemovesOtherSymbols)
     assert (3*w).args == (3, w)
     assert 3*a*w**2 == 3*w**2
     assert 3*a*x**3*w**2 == 3*w**2
-    assert (w + x).args == (x, w)
+    assert set((w + x).args) == set((x, w))
