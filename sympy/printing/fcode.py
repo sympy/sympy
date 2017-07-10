@@ -437,7 +437,7 @@ class FCodePrinter(CodePrinter):
 
 
 def fcode(expr, assign_to=None, **settings):
-    """Converts an expr to a string of c code
+    """Converts an expr to a string of fortran code
 
     Parameters
     ==========
