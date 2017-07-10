@@ -542,9 +542,12 @@ def test_PolynomialDivide():
     assert PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
     assert PolynomialDivide((a + b*x)**3, x**3, x) == a**3/x**3 + 3*a**2*b/x**2 + 3*a*b**2/x + b**3
     assert PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
+    assert PolynomialDivide(x**6, (a + b*x)**2, x) == -5*a**6/(b**6*(a + b*x)**2) - 6*a**5*x/(b**5*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_ExpandIntegrand():
     assert True
+    assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
+    assert ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
     '''
     assert ExpandIntegrand(1/(x*(a + b*x)**2), x) == -b/(a**3 + 2*a**2*b*x + a*b**2*x**2) - b/(a**3 + a**2*b*x) + 1/(a**2*x)
     assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
@@ -559,6 +562,7 @@ def test_ExpandIntegrand():
     assert ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
     assert ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x))
     '''
+
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
@@ -667,6 +671,11 @@ def test_RationalFunctionQ():
     assert RationalFunctionQ(x**3 + x**4, x)
     assert RationalFunctionQ(x**3*S(2), x)
     assert not RationalFunctionQ(x**3 + x**(0.5), x)
+    assert not RationalFunctionQ(x**(S(2)/3)*(a + b*x)**2, x)
+
+def test_Apart():
+    assert Apart(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
+    assert Apart(x**(S(2)/3)*(a + b*x)**2, x) == x**(S(2)/3)*(a + b*x)**2
 
 def test_RationalFunctionFactors():
     assert RationalFunctionFactors(a, x) == a

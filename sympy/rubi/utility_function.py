@@ -1071,7 +1071,7 @@ def ExpandExpression(u, x):
     if SumQ(v):
         w = NonrationalFunctionFactors(u, x)
         return ExpandCleanup(v.func(*[i*w for i in v.args]), x)
-    v = Expand(u, x)
+    v = Expand(u)
     if SumQ(v):
         return ExpandCleanup(v, x)
     v = Expand(u)
@@ -1080,7 +1080,9 @@ def ExpandExpression(u, x):
     return SimplifyTerm(u, x)
 
 def Apart(u, x):
-    return apart(u, x)
+    if RationalFunctionQ(u, x):
+        return apart(u, x)
+    return u
 
 def SmartApart(*args):
     if len(args) == 2:
