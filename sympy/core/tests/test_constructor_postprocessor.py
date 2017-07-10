@@ -1,3 +1,5 @@
+import pytest
+
 from sympy import Symbol, Mul, symbols, Basic
 
 
@@ -24,13 +26,22 @@ class SymbolRemovesOtherSymbols(Symbol):
     # Test class for a symbol that removes other symbols in `Mul`.
     pass
 
-
 Basic._constructor_postprocessor_mapping[SymbolRemovesOtherSymbols] = {
     "Mul": [_postprocess_SymbolRemovesOtherSymbols],
 }
 
+class SubclassSymbolInMulOnce(SymbolInMulOnce):
+    pass
 
-def test_constructor_postprocessors1():
+class SubclassSymbolRemovesOtherSymbols(SymbolRemovesOtherSymbols):
+    pass
+
+
+@pytest.mark.parametrize('SymbolInMulOnce', (
+    SymbolInMulOnce, SubclassSymbolInMulOnce))
+@pytest.mark.parametrize('SymbolRemovesOtherSymbols', (
+    SymbolRemovesOtherSymbols, SubclassSymbolRemovesOtherSymbols))
+def test_constructor_postprocessors1(SymbolInMulOnce, SymbolRemovesOtherSymbols):
     a = symbols("a")
     x = SymbolInMulOnce("x")
     y = SymbolInMulOnce("y")
