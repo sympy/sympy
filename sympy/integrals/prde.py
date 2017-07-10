@@ -987,7 +987,7 @@ def is_deriv_k(fa, fd, DE):
 
     """
     # Compute Df/f
-    dfa, dfd = fd*(fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd**2*fa
+    dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd*fa
     dfa, dfd = dfa.cancel(dfd, include=True)
 
     # Our assumption here is that each monomial is recursively transcendental
