@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 from __future__ import print_function, division
 
 from .add import Add
-from .assumptions import ManagedProperties
+from .assumptions import ManagedProperties, _assume_defined
 from .basic import Basic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered
@@ -315,7 +315,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
 
 class Function(Application, Expr):
-    """Base class for applied mathematical functions.
+    """
+    Base class for applied mathematical functions.
 
     It also serves as a constructor for undefined function classes.
 
@@ -339,6 +340,16 @@ class Function(Application, Expr):
     Derivative(f(x), x)
     >>> g.diff(x)
     Derivative(g(x), x)
+
+    Assumptions can be passed to Function.
+
+    >>> f_real = Function('f', real=True)
+    >>> f_real(x).is_real
+    True
+
+    Note that assumptions on a function are unrelated to the assumptions on
+    the variable it is called on. If you want to add a relationship, subclass
+    Function and define the appropriate ``_eval_is_assumption`` methods.
 
     In the following example Function is used as a base class for
     ``my_func`` that represents a mathematical function *my_func*. Suppose
@@ -383,6 +394,7 @@ class Function(Application, Expr):
     ...     nargs = (1, 2)
     ...
     >>>
+
     """
 
     @property
@@ -777,6 +789,11 @@ class UndefinedFunction(FunctionClass):
     """
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
         __dict__ = __dict__ or {}
+        # Allow Function('f', real=True)
+        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        # You can add other attributes, although they do have to be hashable
+        # (but seriously, if you want to add anything other than assumptions,
+        # just subclass Function)
         __dict__.update(kwargs)
         # Save these for __eq__
         __dict__.update({'_extra_kwargs': kwargs})
