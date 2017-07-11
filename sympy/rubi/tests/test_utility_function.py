@@ -3,7 +3,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
-from sympy import I, E, pi
+from sympy import I, E, pi, pprint, hyper
 
 a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, v = symbols('a b c d e f g h x y z m n p q v', real=True, imaginary=False)
 
@@ -86,6 +86,7 @@ def test_LinearQ():
     assert not LinearQ(a, x)
     assert LinearQ(3*x + y**2, x)
     assert not LinearQ(3*x + y**2, y)
+    assert not LinearQ(S(3), x)
 
 def test_Sqrt():
     assert Sqrt(x) == sqrt(x)
@@ -103,7 +104,7 @@ def test_Denominator():
     assert Denominator(S(4)/5) == 5
 
 def test_Hypergeometric2F1():
-    assert Hypergeometric2F1(1, 2, 3, x) == -2/x - 2*log(-x + 1)/x**2
+    assert Hypergeometric2F1(1, 2, 3, x) == hyper((1, 2), (3,), x)
 
 def test_ArcTan():
     assert ArcTan(x) == atan(x)
@@ -296,6 +297,8 @@ def test_Head():
 def test_MemberQ():
     assert MemberQ([a, b, c], b)
     assert MemberQ([sin, cos, log, tan], Head(sin(x)))
+    assert MemberQ([[sin, cos], [tan, cot]], [sin, cos])
+    assert not MemberQ([[sin, cos], [tan, cot]], [sin, tan])
 
 def test_TrigQ():
     assert TrigQ(sin(x))
@@ -544,17 +547,26 @@ def test_ExpandLinearProduct():
     assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
 
 def test_PolynomialDivide():
+    assert PolynomialDivide((a*c - b*c*x)**2, (a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
     assert PolynomialDivide(x + x**2, x, x) == x + 1
     assert PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
+    assert PolynomialDivide((a + b*x)**3, x**3, x) == a**3/x**3 + 3*a**2*b/x**2 + 3*a*b**2/x + b**3
+    assert PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
+    assert PolynomialDivide(x**6, (a + b*x)**2, x) == -5*a**6/(b**6*(a + b*x)**2) - 6*a**5*x/(b**5*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_ExpandIntegrand():
     assert True
+    #assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
+    #assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
+    #assert ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
+    #assert ExpandIntegrand(1/(x*(a + b*x)**2), x) == -b/(a*(a + b*x)**2) - b/(a**2*(a + b*x)) + 1/(a**2*x)
+    #assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
+    #assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18/(2*x**2 + 4) - 2/(2*x**2 + 2)
+
     '''
-    assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
-    assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18.0/(2*x**2 + 4.0) - 2.0/(2*x**2 + 2.0)
-    assert ExpandIntegrand((-1 + (-1)*x**2 + 2*x**4)**(-2), x) == 1/(4*x**8 - 4*x**6 - 3*x**4 + 2*x**2 + 1)
-    assert ExpandIntegrand((1 - 1*x**2)**(-3), x) == -1/(x**6 - 3.0*x**4 + 3.0*x**2 - 1.0)
-    assert ExpandIntegrand(x**2*(1 - 1*x**6)**(-2), x) == x**2/(x**12 - 2.0*x**6 + 1.0)
+    #print(ExpandIntegrand((1 - 1*x**2)**(-3), x))
+    #assert ExpandIntegrand((1 - 1*x**2)**(-3), x) == -1/(x**6 - 3.0*x**4 + 3.0*x**2 - 1.0)
+    #assert ExpandIntegrand(x**2*(1 - 1*x**6)**(-2), x) == x**2/(x**12 - 2.0*x**6 + 1.0)
     assert ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (1.0*c - 1.0*d - 1.0*I*e)/(4*I*x + 4.0) + (1.0*c - 1.0*d + 1.0*I*e)/(-4*I*x + 4.0) + (1.0*c + 1.0*d - 1.0*e)/(4*x + 4.0) + (1.0*c + 1.0*d + 1.0*e)/(-4*x + 4.0)
     assert ExpandIntegrand((a + b*x)**2/(c + d*x), x) == b*(a + b*x)/d + b*(a*d - b*c)/d**2 + (a*d - b*c)**2/(d**2*(c + d*x))
     assert ExpandIntegrand(x/(a*x**1 + b*Sqrt(c + d*x**2)), x) == a*x**2/(a**2*x**2 - b**2*c - b**2*d*x**2) - b*x*sqrt(c + d*x**2)/(a**2*x**2 - b**2*c - b**2*d*x**2)
@@ -562,6 +574,7 @@ def test_ExpandIntegrand():
     assert ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
     assert ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x))
     '''
+
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
@@ -748,6 +761,11 @@ def test_RationalFunctionQ():
     assert RationalFunctionQ(x**3 + x**4, x)
     assert RationalFunctionQ(x**3*S(2), x)
     assert not RationalFunctionQ(x**3 + x**(0.5), x)
+    assert not RationalFunctionQ(x**(S(2)/3)*(a + b*x)**2, x)
+
+def test_Apart():
+    assert Apart(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
+    assert Apart(x**(S(2)/3)*(a + b*x)**2, x) == x**(S(2)/3)*(a + b*x)**2
 
 def test_RationalFunctionFactors():
     assert RationalFunctionFactors(a, x) == a
@@ -970,6 +988,7 @@ def test_Drop():
     assert Drop([1, 2, 3, 4, 5, 6], [2, 4]) == [1, 5, 6]
     assert Drop([1, 2, 3, 4, 5, 6], -3) == [1, 2, 3]
     assert Drop([1, 2, 3, 4, 5, 6], 2) == [3, 4, 5, 6]
+    assert Drop(a*b*c, 1) == b*c
 
 def test_SubstForInverseFunction():
     assert SubstForInverseFunction(x, a, b, x) == b
@@ -1194,3 +1213,179 @@ def test_UnifySum():
 def test_ExpandLinearProduct():
     assert ExpandLinearProduct(2, x**2 + 6 + 3*x, 3, 5, x) == 18*x/5 + 2*(5*x + 3)**2/25 + 282/25
     assert ExpandLinearProduct(1, x**2, 3, 5, x) == -6*x/5 + (5*x + 3)**2/25 - 9/25
+
+def test_FunctionOfInverseLinear():
+    assert FunctionOfInverseLinear((x)/(a + b*x), x) == [a, b]
+    assert FunctionOfInverseLinear((c + d*x)/(a + b*x), x) == [a, b]
+    assert not FunctionOfInverseLinear(1/(a + b*x), x)
+
+def test_PureFunctionOfSinhQ():
+    v = log(x)
+    f = sinh(v)
+    assert PureFunctionOfSinhQ(f, v, x)
+    assert not PureFunctionOfSinhQ(cosh(v), v, x)
+    assert PureFunctionOfSinhQ(f**2, v, x)
+
+def test_PureFunctionOfTanhQ():
+    v = log(x)
+    f = tanh(v)
+    assert PureFunctionOfTanhQ(f, v, x)
+    assert not PureFunctionOfTanhQ(cosh(v), v, x)
+    assert PureFunctionOfTanhQ(f**2, v, x)
+
+def test_PureFunctionOfCoshQ():
+    v = log(x)
+    f = cosh(v)
+    assert PureFunctionOfCoshQ(f, v, x)
+    assert not PureFunctionOfCoshQ(sinh(v), v, x)
+    assert PureFunctionOfCoshQ(f**2, v, x)
+
+def test_IntegerQuotientQ():
+    u = S(2)*sin(x)
+    v = sin(x)
+    assert IntegerQuotientQ(u, v)
+    assert IntegerQuotientQ(u, u)
+    assert not IntegerQuotientQ(S(1), S(2))
+
+def test_OddQuotientQ():
+    u = S(3)*sin(x)
+    v = sin(x)
+    assert OddQuotientQ(u, v)
+    assert OddQuotientQ(u, u)
+    assert not OddQuotientQ(S(1), S(2))
+
+def test_EvenQuotientQ():
+    u = S(2)*sin(x)
+    v = sin(x)
+    assert EvenQuotientQ(u, v)
+    assert not EvenQuotientQ(u, u)
+    assert not EvenQuotientQ(S(1), S(2))
+
+def test_FunctionOfSinhQ():
+    v = log(x)
+    assert FunctionOfSinhQ(cos(sinh(v)), v, x)
+    assert FunctionOfSinhQ(sinh(v), v, x)
+    assert FunctionOfSinhQ(sinh(v)*cos(sinh(v)), v, x)
+
+def test_FunctionOfCoshQ():
+    v = log(x)
+    assert FunctionOfCoshQ(cos(cosh(v)), v, x)
+    assert FunctionOfCoshQ(cosh(v), v, x)
+    assert FunctionOfCoshQ(cosh(v)*cos(cosh(v)), v, x)
+
+def test_FunctionOfTanhQ():
+    v = log(x)
+    t = Tanh(v)
+    c = Coth(v)
+    assert FunctionOfTanhQ(t, v, x)
+    assert FunctionOfTanhQ(c, v, x)
+    assert FunctionOfTanhQ(t + c, v, x)
+    assert FunctionOfTanhQ(t*c, v, x)
+    assert not FunctionOfTanhQ(sin(x), v, x)
+
+def test_FunctionOfTanhWeight():
+    v = log(x)
+    t = Tanh(v)
+    c = Coth(v)
+    assert FunctionOfTanhWeight(x, v, x) == 0
+    assert FunctionOfTanhWeight(sinh(v), v, x) == 0
+    assert FunctionOfTanhWeight(tanh(v), v, x) == 1
+    assert FunctionOfTanhWeight(coth(v), v, x) == -1
+    assert FunctionOfTanhWeight(t**2, v, x) == 1
+    assert FunctionOfTanhWeight(sinh(v)**2, v, x) == -1
+    assert FunctionOfTanhWeight(coth(v)*sinh(v)**2, v, x) == -2
+
+def test_FunctionOfHyperbolicQ():
+    v = log(x)
+    s = Sinh(v)
+    t = Tanh(v)
+    assert not FunctionOfHyperbolicQ(x, v, x)
+    assert FunctionOfHyperbolicQ(s + t, v, x)
+    assert FunctionOfHyperbolicQ(sinh(t), v, x)
+
+def test_SmartNumerator():
+    assert SmartNumerator(x**(-2)) == 1
+    assert SmartNumerator(x**(2)*a) == x**2*a
+
+def test_SmartDenominator():
+    assert SmartDenominator(x**(-2)) == x**2
+    assert SmartDenominator(x**(-2)*1/S(3)) == x**2*3
+
+def test_SubstForAux():
+    v = log(x)
+    assert SubstForAux(v, v, x) == x
+    assert SubstForAux(v**2, v, x) == x**2
+    assert SubstForAux(x, v, x) == x
+    assert SubstForAux(v**2, v**4, x) == sqrt(x)
+    assert SubstForAux(v**2*v, v, x) == x**3
+
+def test_SubstForTrig():
+    v = log(x)
+    s, c, t = sin(v), cos(v), tan(v)
+    assert SubstForTrig(s, sin, cos, v, x) == sin(x)
+    assert SubstForTrig(t, sin, cos, v, x) == sin(x)/cos(x)
+    assert SubstForTrig(sin(2*v), sin, cos, v, x) == 2*sin(x)*cos(x)
+    assert SubstForTrig(s*t, sin, cos, v, x) == sin(x)**2/cos(x)
+
+def test_SubstForHyperbolic():
+    v = log(x)
+    s, c, t = sinh(v), cosh(v), tanh(v)
+    assert SubstForHyperbolic(s, sinh, cosh, v, x) == sinh(x)
+    assert SubstForHyperbolic(t, sinh, cosh, v, x) == sinh(x)/cosh(x)
+    assert SubstForHyperbolic(sinh(2*v), sinh, cosh, v, x) == 2*sinh(x)*cosh(x)
+    assert SubstForHyperbolic(s*t, sinh, cosh, v, x) == sinh(x)**2/cosh(x)
+
+def test_SubstForFractionalPowerOfLinear():
+    u = a + b*x
+    assert not SubstForFractionalPowerOfLinear(u, x)
+    assert SubstForFractionalPowerOfLinear(u**(S(2)), x) == [x**2, 1, a + b*x, 1/b]
+    assert SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]
+
+def test_InverseFunctionOfLinear():
+    u = a + b*x
+    assert InverseFunctionOfLinear(log(u)*sin(x), x) == log(u)
+    assert InverseFunctionOfLinear(log(u), x) == log(u)
+
+def test_InertTrigQ():
+    s = sin(x)
+    c = cos(x)
+    assert not InertTrigQ(sin(x), csc(x), cos(h))
+    assert InertTrigQ(sin(x), csc(x))
+    assert not InertTrigQ(s, c)
+    assert InertTrigQ(c)
+
+def test_PowerOfInertTrigSumQ():
+    func = sin
+    assert PowerOfInertTrigSumQ((1 + S(2)*(S(3)*func(x**2))**S(5))**3, func, x)
+    assert PowerOfInertTrigSumQ((1 + 2*(S(3)*func(x**2))**3 + 4*(S(5)*func(x**2))**S(3))**2, func, x)
+
+def test_PiecewiseLinearQ():
+    assert PiecewiseLinearQ(a + b*x, x)
+    assert not PiecewiseLinearQ(Log(c*sin(a)**S(3)), x)
+    assert not PiecewiseLinearQ(x**3, x)
+    assert PiecewiseLinearQ(atanh(tanh(a + b*x)), x)
+    assert PiecewiseLinearQ(tanh(atanh(a + b*x)), x)
+    assert not PiecewiseLinearQ(coth(atanh(a + b*x)), x)
+
+def test_KnownTrigIntegrandQ():
+    func = sin(a + b*x)
+    assert KnownTrigIntegrandQ([sin], S(1), x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m, x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m*(1 + 2*func), x)
+    assert KnownTrigIntegrandQ([sin], a + c*func**2, x)
+    assert KnownTrigIntegrandQ([sin], a + b*func + c*func**2, x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m*(c + d*func**2), x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m*(c + d*func + e*func**2), x)
+    assert not KnownTrigIntegrandQ([cos], (a + b*func)**m, x)
+
+def test_KnownSineIntegrandQ():
+    assert KnownSineIntegrandQ((a + b*sin(a + b*x))**m, x)
+
+def test_KnownTangentIntegrandQ():
+    assert KnownTangentIntegrandQ((a + b*tan(a + b*x))**m, x)
+
+def test_KnownCotangentIntegrandQ():
+    assert KnownCotangentIntegrandQ((a + b*cot(a + b*x))**m, x)
+
+def test_KnownSecantIntegrandQ():
+    assert KnownSecantIntegrandQ((a + b*sec(a + b*x))**m, x)

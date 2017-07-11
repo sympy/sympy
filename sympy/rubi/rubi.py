@@ -6,25 +6,23 @@ from sympy.core.sympify import sympify
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core import S
-from .matchpy2sympy import matchpy2sympy
+from sympy.rubi.matchpy2sympy import matchpy2sympy
 
 rubi = rubi_object()
 
 def rubi_integrate(expr, var):
     '''
     Main function for Rubi integeration.
-    Returns 1 if expr is not integrated(this is only temporary, I will remove this later).
+    Raises NotImplementedError Error if expression is not integrated
     '''
     if expr == None:
-        return S(1)
+        return None
     if isinstance(expr, int) or isinstance(expr, float):
         return expr*var
     elif not expr.has(var): # handle constant expressions
         return expr*var
     elif isinstance(expr, Add): # integrate each is_Add expression indivdually
         args = [rubi_integrate(i, var) for i in expr.args]
-        if None in args:
-            return S(1)
         return Add(*args)
     elif isinstance(expr, Mul): #seperate out constants in Mul expression
         e = 1
@@ -36,10 +34,7 @@ def rubi_integrate(expr, var):
                 c = c*i
         if c != 1:
             res = rubi_integrate(e, var)
-            if res != None:
-                return c*res
-            else:
-                return S(1)
+            return c*rubi_integrate(e, var)
 
     if not isinstance(expr, matchpy.Expression):
         expr = Int(sympy2matchpy(expr), sympy2matchpy(var))
@@ -47,7 +42,6 @@ def rubi_integrate(expr, var):
     result = rubi.replace(expr)
 
     if result == expr:
-        #print(('Unable to integrate: {}').format(expr))
-        return S(1)
-    #print('result: ', result)
+        raise NotImplementedError('Unable to intergate {}'.format(expr))
+
     return matchpy2sympy(result)
