@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from sympy import S
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.coset_table import (CosetTable,
                     coset_enumeration_r, coset_enumeration_c)
@@ -16,12 +15,7 @@ References
 Mathematics of Computation, Vol. 27, No. 123. (Jul., 1973), pp. 463-490.
 "Implementation and Analysis of the Todd-Coxeter Algorithm"
 
-[3] PROC. SECOND  INTERNAT. CONF. THEORY OF GROUPS, CANBERRA 1973,
-pp. 347-356. "A Reidemeister-Schreier program" by George Havas.
-http://staff.itee.uq.edu.au/havas/1973cdhw.pdf
-
 """
-
 
 def test_scan_1():
     # Example 5.1 from [1]
