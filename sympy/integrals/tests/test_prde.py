@@ -74,7 +74,7 @@ def test_prde_linear_constraints():
         ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix(0, 3, []))
     G = [(Poly(2*x, t), Poly(t, t)), (Poly(-x, t), Poly(t, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    prde_linear_constraints(Poly(1, t), Poly(0, t), G, DE) == \
+    assert prde_linear_constraints(Poly(1, t), Poly(0, t), G, DE) == \
         ((Poly(0, t), Poly(0, t)), Matrix([[2*x, -x]]))
 
 
