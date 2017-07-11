@@ -778,6 +778,8 @@ class UndefinedFunction(FunctionClass):
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
         __dict__ = __dict__ or {}
         __dict__.update(kwargs)
+        # Save these for __eq__
+        __dict__.update({'_extra_kwargs': kwargs})
         __dict__['__module__'] = None # For pickling
         ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         return ret
@@ -785,8 +787,15 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
-                                         (s.class_key() == o.class_key()))
+    _extra_kwargs = {}
+
+    def __hash__(self):
+        return hash((self.class_key(), frozenset(self._extra_kwargs)))
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and
+            self.class_key() == other.class_key() and
+            self._extra_kwargs == other._extra_kwargs)
 
 class WildFunction(Function, AtomicExpr):
     """

@@ -303,8 +303,6 @@ class Basic(with_metaclass(ManagedProperties)):
         if self is other:
             return True
 
-        from .function import AppliedUndef
-
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
             if isinstance(self, Pow) and self.exp == 1:
@@ -316,11 +314,7 @@ class Basic(with_metaclass(ManagedProperties)):
             except SympifyError:
                 return False    # sympy != other
 
-            if isinstance(self, AppliedUndef) and isinstance(other,
-                                                             AppliedUndef):
-                if self.class_key() != other.class_key():
-                    return False
-            elif type(self) is not type(other):
+            if type(self) != type(other):
                 return False
 
         return self._hashable_content() == other._hashable_content()
