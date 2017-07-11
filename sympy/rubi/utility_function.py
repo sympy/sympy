@@ -926,10 +926,6 @@ def CoefficientList(u, x):
 def ReplaceAll(expr, args):
     return expr.subs(args)
 
-def NormalizeIntegrand(u, x):
-    # returns u in a standard form recognizable by integration rules.
-    return u
-
 def ExpandLinearProduct(v, u, a, b, x):
     # If u is a polynomial in x, ExpandLinearProduct[v,u,a,b,x] expands v*u into a sum of terms of the form c*v*(a+b*x)^n.
     if FreeQ([a, b], x) and PolynomialQ(u, x):
@@ -1928,7 +1924,6 @@ def ExpandIntegrand(expr, x, extra=None):
                 for i in range(0, Exponent(u,x) + 1):
                     result += lst[i-1]*x**S(i-1)/v
             elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x) >= Exponent(v, x):
-                #print('111', u, v)
                 return PolynomialDivide(u, v, x)
 
     r = ExpandExpression(expr, x)
@@ -3126,7 +3121,6 @@ def NormalizeLeadTermSigns(u):
     if lst[0] == 1:
         return lst[1]
     else:
-        print(lst[1])
         return AbsorbMinusSign(lst[1])
 
 def AbsorbMinusSign(expr, *x):
@@ -3143,10 +3137,12 @@ def AbsorbMinusSign(expr, *x):
                 k *= i
         return k
     match = expr.match(u*v**m)
-    if match and SumQ(match[v]) and OddQ(match[m]):
-        return match[u]*(-match[v])**match[m]
-    else:
-        return -expr
+    if match:
+        if len(match) == 3:
+            if SumQ(match[v]) and OddQ(match[m]):
+                return match[u]*(-match[v])**match[m]
+
+    return -expr
 # yet todo
 def NormalizeSumFactors(u):
     if AtomQ(u):
