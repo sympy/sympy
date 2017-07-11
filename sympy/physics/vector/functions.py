@@ -14,7 +14,15 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
            'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
-           'init_vprinting']
+           'init_vprinting', 'TIME']
+
+
+# NOTE : By default this is the symbol declaration used for time in functions
+# in the sympy.physics.vector and sympy.physics.mechanics packages. It can be
+# overidden by importing the module and changing the symbol, e.g.:
+# from sympy.physics.vector import functions
+# functions.TIME = Symbol('tau')
+TIME = Symbol('t', real=True)
 
 
 def cross(vec1, vec2):
@@ -569,12 +577,13 @@ def partial_velocity(vel_list, u_list, frame):
         list_of_pvlists += [pvlist]
     return list_of_pvlists
 
+
 class __dynamicsymbols_class(object):
     """The class used to manage the dynamicsymbols time symbol attribute.
     """
 
     def __init__(self):
-        self.__time_symbol = Symbol('t', real=True)
+        self.__time_symbol = TIME
         self._str = '\''
 
     def _get_time_symbol(self):
