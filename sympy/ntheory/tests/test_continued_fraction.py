@@ -1,9 +1,12 @@
-from sympy import S, pi, GoldenRatio as phi, sqrt
+from sympy import GoldenRatio as phi
+from sympy import S, pi, sqrt
 from sympy.ntheory.continued_fraction import \
-    (continued_fraction_periodic as cf_p,
-     continued_fraction_iterator as cf_i,
-     continued_fraction_convergents as cf_c,
-     continued_fraction_reduce as cf_r)
+    continued_fraction_convergents as cf_c
+from sympy.ntheory.continued_fraction import \
+    continued_fraction_iterator as cf_i
+from sympy.ntheory.continued_fraction import \
+    continued_fraction_periodic as cf_p
+from sympy.ntheory.continued_fraction import continued_fraction_reduce as cf_r
 from sympy.utilities.pytest import raises
 
 
