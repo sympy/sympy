@@ -1111,3 +1111,26 @@ def test_PiecewiseLinearQ():
     assert PiecewiseLinearQ(atanh(tanh(a + b*x)), x)
     assert PiecewiseLinearQ(tanh(atanh(a + b*x)), x)
     assert not PiecewiseLinearQ(coth(atanh(a + b*x)), x)
+
+def test_KnownTrigIntegrandQ():
+    func = sin(a + b*x)
+    assert KnownTrigIntegrandQ([sin], S(1), x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m, x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m*(1 + 2*func), x)
+    assert KnownTrigIntegrandQ([sin], a + c*func**2, x)
+    assert KnownTrigIntegrandQ([sin], a + b*func + c*func**2, x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m*(c + d*func**2), x)
+    assert KnownTrigIntegrandQ([sin], (a + b*func)**m*(c + d*func + e*func**2), x)
+    assert not KnownTrigIntegrandQ([cos], (a + b*func)**m, x)
+
+def test_KnownSineIntegrandQ():
+    assert KnownSineIntegrandQ((a + b*sin(a + b*x))**m, x)
+
+def test_KnownTangentIntegrandQ():
+    assert KnownTangentIntegrandQ((a + b*tan(a + b*x))**m, x)
+
+def test_KnownCotangentIntegrandQ():
+    assert KnownCotangentIntegrandQ((a + b*cot(a + b*x))**m, x)
+
+def test_KnownSecantIntegrandQ():
+    assert KnownSecantIntegrandQ((a + b*sec(a + b*x))**m, x)

@@ -3086,3 +3086,65 @@ def PiecewiseLinearQ(*args):
     except:
         pass
     return False
+
+def KnownTrigIntegrandQ(lst, u, x):
+    if u == 1:
+        return True
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    func_ = Wild('func')
+    m_ = Wild('m', exclude=[x])
+    A_ = Wild('A', exclude=[x])
+    B_ = Wild('B', exclude=[x])
+    C_ = Wild('C', exclude=[x])
+    F_ = Wild('F')
+
+    match = u.match((a_ + b_*func_)**m_)
+    if match:
+        func = match[func_]
+        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+            return True
+
+    match = u.match((a_ + b_*func_)**m_*(A_ + B_*func_))
+    if match:
+        func = match[func_]
+        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+            return True
+
+    match = u.match(A_ + C_*func_**2)
+    if match:
+        func = match[func_]
+        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+            return True
+
+    match = u.match(A_ + B_*func_ + C_*func_**2)
+    if match:
+        func = match[func_]
+        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+            return True
+
+    match = u.match((a_ + b_*func_)**m_*(A_ + C_*func_**2))
+    if match:
+        func = match[func_]
+        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+            return True
+
+    match = u.match((a_ + b_*func_)**m_*(A_ + B_*func_ + C_*func_**2))
+    if match:
+        func = match[func_]
+        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+            return True
+
+    return False
+
+def KnownSineIntegrandQ(u, x):
+    return KnownTrigIntegrandQ([sin, cos], u, x)
+
+def KnownTangentIntegrandQ(u, x):
+    return KnownTrigIntegrandQ([tan], u, x)
+
+def KnownCotangentIntegrandQ(u, x):
+    return KnownTrigIntegrandQ([cot], u, x)
+
+def KnownSecantIntegrandQ(u, x):
+    return KnownTrigIntegrandQ([sec, csc], u, x)
