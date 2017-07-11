@@ -7,7 +7,8 @@ from sympy.polys.polyoptions import build_options
 
 from sympy.core.exprtools import decompose_power, decompose_power_rat
 
-from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
+from sympy.core import (S, Add, Mul, Pow, Expr,
+    expand_mul, expand_multinomial)
 
 from sympy.core.compatibility import range
 
@@ -348,10 +349,9 @@ def _dict_from_expr(expr, opt):
                 and expr.base.is_Add)
 
     if opt.expand is not False:
-        try:
-            expr = expr.expand()
-        except AttributeError:
-            raise PolynomialError('expression must support expand method')
+        if not isinstance(expr, Expr):
+            raise PolynomialError('expression must be of type Expr')
+        expr = expr.expand()
         # TODO: Integrate this into expand() itself
         while any(_is_expandable_pow(i) or i.is_Mul and
             any(_is_expandable_pow(j) for j in i.args) for i in

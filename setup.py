@@ -40,8 +40,11 @@ mpmath_version = '0.19'
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
+extra_kwargs = {}
+
 try:
     from setuptools import setup, Command
+    extra_kwargs['zip_safe'] = False
 except ImportError:
     from distutils.core import setup, Command
 
@@ -107,8 +110,8 @@ modules = [
     'sympy.physics.mechanics',
     'sympy.physics.optics',
     'sympy.physics.quantum',
-    'sympy.physics.unitsystems',
-    'sympy.physics.unitsystems.systems',
+    'sympy.physics.units',
+    'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
     'sympy.plotting.intervalmath',
@@ -291,7 +294,7 @@ tests = [
     'sympy.physics.optics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
-    'sympy.physics.unitsystems.tests',
+    'sympy.physics.units.tests',
     'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
@@ -366,5 +369,6 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             ],
-          install_requires=['mpmath>=%s' % mpmath_version]
+          install_requires=['mpmath>=%s' % mpmath_version],
+          **extra_kwargs
           )

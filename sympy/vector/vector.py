@@ -3,7 +3,7 @@ from sympy.core import S, Pow, Symbol
 from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
@@ -29,8 +29,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.components
         {C.i: 3, C.j: 4, C.k: 5}
@@ -73,8 +73,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D, Del
+        >>> C = CoordSys3D('C')
+        >>> delop = Del()
         >>> C.i.dot(C.j)
         0
         >>> C.i & C.i
@@ -82,7 +83,7 @@ class Vector(BasisDependent):
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.dot(C.k)
         5
-        >>> (C.i & C.delop)(C.x*C.y*C.z)
+        >>> (C.i & delop)(C.x*C.y*C.z)
         C.y*C.z
         >>> d = C.i.outer(C.i)
         >>> C.i.dot(d)
@@ -108,14 +109,20 @@ class Vector(BasisDependent):
         # Check if the other is a del operator
         if isinstance(other, Del):
             def directional_derivative(field):
-                field = express(field, other.system, variables=True)
-                out = self.dot(other._i) * df(field, other._x)
-                out += self.dot(other._j) * df(field, other._y)
-                out += self.dot(other._k) * df(field, other._z)
-                if out == 0 and isinstance(field, Vector):
-                    out = Vector.zero
-                return out
-
+                from sympy.vector.operators import _get_coord_sys_from_expr
+                coord_sys = _get_coord_sys_from_expr(field)
+                if coord_sys is not None:
+                    field = express(field, coord_sys, variables=True)
+                    out = self.dot(coord_sys._i) * df(field, coord_sys._x)
+                    out += self.dot(coord_sys._j) * df(field, coord_sys._y)
+                    out += self.dot(coord_sys._k) * df(field, coord_sys._z)
+                    if out == 0 and isinstance(field, Vector):
+                        out = Vector.zero
+                    return out
+                elif isinstance(field, Vector) :
+                    return Vector.zero
+                else:
+                    return S(0)
             return directional_derivative
 
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):
@@ -151,8 +158,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> C.i.cross(C.j)
         C.k
         >>> C.i ^ C.i
@@ -230,8 +237,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> N.i.outer(N.j)
         (N.i|N.j)
 
@@ -260,9 +267,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector.coordsysrect import CoordSysCartesian
+        >>> from sympy.vector.coordsysrect import CoordSys3D
         >>> from sympy.vector.vector import Vector, BaseVector
-        >>> C = CoordSysCartesian('C')
+        >>> C = CoordSys3D('C')
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k
         >>> v2 = 3*i + 4*j
@@ -293,14 +300,14 @@ class Vector(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The system wrt which the matrix form is to be computed
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> from sympy.abc import a, b, c
         >>> v = a*C.i + b*C.j + c*C.k
         >>> v.to_matrix(C)
@@ -319,15 +326,15 @@ class Vector(BasisDependent):
         The constituents of this vector in different coordinate systems,
         as per its definition.
 
-        Returns a dict mapping each CoordSysCartesian to the corresponding
+        Returns a dict mapping each CoordSys3D to the corresponding
         constituent Vector.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> R1 = CoordSysCartesian('R1')
-        >>> R2 = CoordSysCartesian('R2')
+        >>> from sympy.vector import CoordSys3D
+        >>> R1 = CoordSys3D('R1')
+        >>> R2 = CoordSys3D('R2')
         >>> v = R1.i + R2.i
         >>> v.separate() == {R1: R1.i, R2: R2.i}
         True
@@ -356,8 +363,8 @@ class BaseVector(Vector, AtomicExpr):
         # Verify arguments
         if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
-        if not isinstance(system, CoordSysCartesian):
-            raise TypeError("system should be a CoordSysCartesian")
+        if not isinstance(system, CoordSys3D):
+            raise TypeError("system should be a CoordSys3D")
         # Initialize an object
         obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
                                              system, Symbol(pretty_str),
