@@ -23,59 +23,99 @@ at: http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Modifications:
-1.Once the nth digit is selected the number of digits of working
-precision is calculated to ensure that the 14 Hexadecimal representation
-of that region is accurate. This was found empirically to be
-int((math.log10(n//1000))+18). This was found by searching for a value
-of working precision for the n = 0 and n = 1 then n was increased until
-the result was less precise, therefore increased again this was repeated
-for increasing n and an effective fit was found between n and the
-working precision value.
 
-2. The while loop to evaluate whether the series has converged has be
-replaced with a fixed for loop, that option was selected because in a
-very large number of cases the loop converged to a point where no
-difference can be detected in less than 15 iterations. (done for more
-accurate memory and time banking).
+1.Once the nth digit and desired number of digits is selected, the
+number of digits of working precision is calculated to ensure that
+the hexadecimal digits returned are accurate. This is calculated as
 
-3. output hex string constrained to 14 characters (accuracy assured to be
-n = 10**7)
+    int(math.log(start + prec)/math.log(16) + prec + 3)
+    ---------------------------------------   --------
+                      /                          /
+    number of hex digits           additional digits
+
+This was checked by the following code which completed without
+errors (and dig are the digits included in the test_bbp.py file):
+
+    for i in range(0,1000):
+     for j in range(1,1000):
+      a, b = pi_hex_digits(i, j), dig[i:i+j]
+      if a != b:
+        print('%s\n%s'%(a,b))
+
+Deceasing the additional digits by 1 generated errors, so '3' is
+the smallest additional precision needed to calculate the above
+loop without errors. The following trailing 10 digits were also
+checked to be accurate (and the times were slightly faster with
+some of the constant modifications that were made):
+
+    >> from time import time
+    >> t=time();pi_hex_digits(10**2-10 + 1, 10), time()-t
+    ('e90c6cc0ac', 0.0)
+    >> t=time();pi_hex_digits(10**4-10 + 1, 10), time()-t
+    ('26aab49ec6', 0.17100000381469727)
+    >> t=time();pi_hex_digits(10**5-10 + 1, 10), time()-t
+    ('a22673c1a5', 4.7109999656677246)
+    >> t=time();pi_hex_digits(10**6-10 + 1, 10), time()-t
+    ('9ffd342362', 59.985999822616577)
+    >> t=time();pi_hex_digits(10**7-10 + 1, 10), time()-t
+    ('c1a42e06a1', 689.51800012588501)
+
+2. The while loop to evaluate whether the series has converged quits
+when the addition amount `dt` has dropped to zero.
+
+3. the formatting string to convert the decimal to hexidecimal is
+calculated for the given precision.
 
 4. pi_hex_digits(n) changed to have coefficient to the formula in an
 array (perhaps just a matter of preference).
 
 '''
+
 from __future__ import print_function, division
 
 import math
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, as_int
 
 
-def _series(j, n):
+def _series(j, n, prec=14):
 
     # Left sum from the bbp algorithm
     s = 0
-    D = _dn(n)
+    D = _dn(n, prec)
+    D4 = 4 * D
+    k = 0
+    d = 8 * k + j
     for k in range(n + 1):
-        r = 8*k + j
-        s += (pow(16, n - k, r) << 4 * D) // r
+        s += (pow(16, n - k, d) << D4) // d
+        d += 8
 
-    # Right sum. should iterate to infinty, but now just iterates to the point where
-    # one iterations change is beyond the resolution of the data type used
+    # Right sum iterates to infinity for full precision, but we
+    # stop at the point where one iteration is beyond the precision
+    # specified.
 
     t = 0
-    for k in range(n + 1, n + 15):
-        xp = int(16**(n - k) * 16**D)
-        t += xp // (8 * k + j)
+    k = n + 1
+    e = 4*(D + n - k)
+    d = 8 * k + j
+    while True:
+        dt = (1 << e) // d
+        if not dt:
+            break
+        t += dt
+        # k += 1
+        e -= 4
+        d += 8
     total = s + t
 
     return total
 
 
-def pi_hex_digits(n):
-    """Returns a string containing 14 digits after the nth value of pi in hex
-       The decimal has been taken out of the number, so
-       n = 0[0] = 3 # First digit of pi in hex, 3
+def pi_hex_digits(n, prec=14):
+    """Returns a string containing ``prec`` (default 14) digits
+    starting at the nth digit of pi in hex. Counting of digits
+    starts at 0 and the decimal is not counted, so for n = 0 the
+    returned value starts with 3; n = 1 corresponds to the first
+    digit past the decimal point (which in hex is 2).
 
     Examples
     ========
@@ -83,9 +123,19 @@ def pi_hex_digits(n):
     >>> from sympy.ntheory.bbp_pi import pi_hex_digits
     >>> pi_hex_digits(0)
     '3243f6a8885a30'
-    >>> pi_hex_digits(10)
-    '5a308d313198a2'
+    >>> pi_hex_digits(0, 3)
+    '324'
+
+    References
+    ==========
+
+    .. [1] http://www.numberworld.org/digits/Pi/
     """
+    n, prec = as_int(n), as_int(prec)
+    if n < 0:
+        raise ValueError('n cannot be negative')
+    if prec == 0:
+        return ''
 
     # main of implementation arrays holding formulae coefficients
     n -= 1
@@ -93,18 +143,19 @@ def pi_hex_digits(n):
     j = [1, 4, 5, 6]
 
     #formulae
-    x = + (a[0]*_series(j[0], n)
-         - a[1]*_series(j[1], n)
-         - a[2]*_series(j[2], n)
-         - a[3]*_series(j[3], n)) & (16**(_dn(n)) - 1)
+    D = _dn(n, prec)
+    x = + (a[0]*_series(j[0], n, prec)
+         - a[1]*_series(j[1], n, prec)
+         - a[2]*_series(j[2], n, prec)
+         - a[3]*_series(j[3], n, prec)) & (16**D - 1)
 
-    s = ("%014x" % x)
-    #s is constrained between 0 and 14
-    return s[:14]
+    s = ("%0" + "%ix" % prec) % (x // 16**(D - prec))
+    return s
 
 
-def _dn(n):
+def _dn(n, prec):
     # controller for n dependence on precision
-    if (n < 1000):
-        return 16
-    return int(math.log10(n//1000) + 18)
+    # n = starting digit index
+    # prec = the number of total digits to compute
+    n += 1  # because we subtract 1 for _series
+    return int(math.log(n + prec)/math.log(16) + prec + 3)

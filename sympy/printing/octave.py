@@ -14,26 +14,38 @@ from __future__ import print_function, division
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
-from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence
+from sympy.codegen.ast import Assignment
+from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
 # List of known functions.  First, those that have the same name in
 # SymPy and Octave.   This is almost certainly incomplete!
-known_fcns_src1 = ["sin", "cos", "tan", "asin", "acos", "atan", "atan2",
-                   "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
-                   "log", "exp", "erf", "gamma", "sign", "floor", "csc",
-                   "sec", "cot", "coth", "acot", "acoth", "erfc",
-                   "besselj", "bessely", "besseli", "besselk",
-                   "erfinv", "erfcinv", "factorial" ]
+known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
+                   "asin", "acos", "acot", "atan", "atan2", "asec", "acsc",
+                   "sinh", "cosh", "tanh", "coth", "csch", "sech",
+                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
+                   "erfc", "erfi", "erf", "erfinv", "erfcinv",
+                   "besseli", "besselj", "besselk", "bessely",
+                   "exp", "factorial", "floor", "fresnelc", "fresnels",
+                   "gamma", "log", "polylog", "sign", "zeta"]
+
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
+    "Chi": "coshint",
+    "Ci": "cosint",
     "conjugate": "conj",
     "DiracDelta": "dirac",
     "Heaviside": "heaviside",
+    "laguerre": "laguerreL",
+    "li": "logint",
+    "loggamma": "gammaln",
+    "polygamma": "psi",
+    "Shi": "sinhint",
+    "Si": "sinint",
 }
 
 
@@ -298,13 +310,8 @@ class OctaveCodePrinter(CodePrinter):
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
             return self._print(A[0, 0])
-        elif A.rows == 1:
-            return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
-        elif A.cols == 1:
-            # note .table would unnecessarily equispace the rows
-            return "[%s]" % "; ".join([self._print(a) for a in A])
-        return "[%s]" % A.table(self, rowstart='', rowend='',
-                                rowsep=';\n', colsep=' ')
+        return "[%s]" % "; ".join(" ".join([self._print(a) for a in A[r, :]])
+                                  for r in range(A.rows))
 
 
     def _print_SparseMatrix(self, A):
@@ -333,7 +340,8 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '(%s, %s)' % (expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):
@@ -368,6 +376,21 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
+
+
+    def _print_uppergamma(self, expr):
+        return "gammainc(%s, %s, 'upper')" % (self._print(expr.args[1]),
+                                              self._print(expr.args[0]))
+
+
+    def _print_lowergamma(self, expr):
+        return "gammainc(%s, %s, 'lower')" % (self._print(expr.args[1]),
+                                              self._print(expr.args[0]))
+
+
+    def _print_sinc(self, expr):
+        #Note: Divide by pi because Octave implements normalized sinc function.
+        return "sinc(%s)" % self._print(expr.args[0]/S.Pi)
 
 
     def _print_hankel1(self, expr):
@@ -409,6 +432,12 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_airybiprime(self, expr):
         return "airy(3, %s)" % self._print(expr.args[0])
+
+
+    def _print_LambertW(self, expr):
+        # argument order is reversed
+        args = ", ".join([self._print(x) for x in reversed(expr.args)])
+        return "lambertw(" + args + ")"
 
 
     def _print_Piecewise(self, expr):

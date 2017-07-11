@@ -69,7 +69,7 @@ Fr* from the body list, compute the mass matrix and forcing terms, then solve
 for the u dots (time derivatives of the generalized speeds). ::
 
   >>> KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
-  >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
+  >>> (fr, frstar) = KM.kanes_equations(BodyList, ForceList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
   >>> rhs = MM.inv() * forcing

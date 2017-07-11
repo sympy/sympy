@@ -13,7 +13,10 @@ __all__ = ['TWave']
 from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
     symbols, Derivative, atan2)
 from sympy.core.expr import Expr
-from sympy.physics.units import c
+from sympy.physics.units import speed_of_light, meter, second
+
+
+c = speed_of_light.convert_to(meter/second)
 
 
 class TWave(Expr):
@@ -68,7 +71,7 @@ class TWave(Expr):
     >>> w3.phase
     atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))
     >>> w3.speed
-    299792458*m/(n*s)
+    299792458*meter/(second*n)
     >>> w3.angular_velocity
     2*pi*f
 
@@ -149,7 +152,7 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.wavelength
-        299792458*m/(f*n*s)
+        299792458*meter/(second*f*n)
         """
         return c/(self._frequency*self._n)
 
@@ -201,7 +204,7 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.speed
-        299792458*m/(n*s)
+        299792458*meter/(second*n)
         """
         return self.wavelength*self._frequency
 
@@ -235,7 +238,7 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.wavenumber
-        pi*f*n*s/(149896229*m)
+        pi*second*f*n/(149896229*meter)
         """
         return 2*pi/self.wavelength
 

@@ -1465,7 +1465,7 @@ def gf_irred_p_rabin(f, p, K):
 
     x = [K.one, K.zero]
 
-    indices = set([ n//d for d in factorint(n) ])
+    indices = { n//d for d in factorint(n) }
 
     b = gf_frobenius_monomial_base(f, p, K)
     h = b[1]

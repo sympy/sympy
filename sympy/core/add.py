@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from functools import cmp_to_key
 
 from .basic import Basic
-from .compatibility import cmp_to_key, reduce, is_sequence, range
-from .logic import _fuzzy_group, fuzzy_or, fuzzy_not, fuzzy_and
+from .compatibility import reduce, is_sequence, range
+from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
@@ -90,6 +91,7 @@ class Add(Expr, AssocOp):
 
         """
         from sympy.calculus.util import AccumBounds
+        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -138,6 +140,10 @@ class Add(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
+                coeff = o.__add__(coeff)
+                continue
+
+            elif isinstance(o, MatrixExpr):
                 coeff = o.__add__(coeff)
                 continue
 
@@ -332,21 +338,41 @@ class Add(Expr, AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number:
-            if len(args) == 1:
-                return coeff, args[0]
-            else:
-                return coeff, self._new_rawargs(*args)
-        else:
-            return S.Zero, self
+        if coeff.is_Number and not rational or coeff.is_Rational:
+            return coeff, self._new_rawargs(*args)
+        return S.Zero, self
 
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
     # issue 5524.
+
+    def _eval_power(self, e):
+        if e.is_Rational and self.is_number:
+            from sympy.core.evalf import pure_complex
+            from sympy.core.mul import _unevaluated_Mul
+            from sympy.core.exprtools import factor_terms
+            from sympy.core.function import expand_multinomial
+            from sympy.functions.elementary.complexes import sign
+            from sympy.functions.elementary.miscellaneous import sqrt
+            ri = pure_complex(self)
+            if ri:
+                r, i = ri
+                if e.q == 2:
+                    D = sqrt(r**2 + i**2)
+                    if D.is_Rational:
+                        # (r, i, D) is a Pythagorean triple
+                        root = sqrt(factor_terms((D - r)/2))**e.p
+                        return root*expand_multinomial((
+                            # principle value
+                            (D + r)/abs(i) + sign(i)*S.ImaginaryUnit)**e.p)
+                elif e == -1:
+                    return _unevaluated_Mul(
+                        r - i*S.ImaginaryUnit,
+                        1/(r**2 + i**2))
 
     @cacheit
     def _eval_derivative(self, s):
@@ -489,6 +515,10 @@ class Add(Expr, AssocOp):
             return False
 
     def _eval_is_zero(self):
+        if self.is_commutative is False:
+            # issue 10528: there is no way to know if a nc symbol
+            # is zero or not
+            return
         nz = []
         z = 0
         im_or_z = False
@@ -677,6 +707,9 @@ class Add(Expr, AssocOp):
 
     def _eval_subs(self, old, new):
         if not old.is_Add:
+            if old is S.Infinity and -old in self.args:
+                # foo - oo is foo + (-oo) internally
+                return self.xreplace({-old: -new})
             return None
 
         coeff_self, terms_self = self.as_coeff_Add()
@@ -909,7 +942,7 @@ class Add(Expr, AssocOp):
             terms.insert(0, c)
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self. If radical is True (default is False) then
         common radicals will be removed and included as a factor of the
@@ -930,7 +963,14 @@ class Add(Expr, AssocOp):
         See docstring of Expr.as_content_primitive for more examples.
         """
         con, prim = self.func(*[_keep_coeff(*a.as_content_primitive(
-            radical=radical)) for a in self.args]).primitive()
+            radical=radical, clear=clear)) for a in self.args]).primitive()
+        if not clear and not con.is_Integer and prim.is_Add:
+            con, d = con.as_numer_denom()
+            _p = prim/d
+            if any(a.as_coeff_Mul()[0].is_Integer for a in _p.args):
+                prim = _p
+            else:
+                con /= d
         if radical and prim.is_Add:
             # look for common radicals that can be removed
             args = prim.args
@@ -982,6 +1022,22 @@ class Add(Expr, AssocOp):
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
         return self.func(*[dd(a, n, step) for a in self.args])
+
+    @property
+    def _mpc_(self):
+        """
+        Convert self to an mpmath mpc if possible
+        """
+        from sympy.core.numbers import I, Float
+        re_part, rest = self.as_coeff_Add()
+        im_part, imag_unit = rest.as_coeff_Mul()
+        if not imag_unit == I:
+            # ValueError may seem more reasonable but since it's a @property,
+            # we need to use AttributeError to keep from confusing things like
+            # hasattr.
+            raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
+
+        return (Float(re_part)._mpf_, Float(im_part)._mpf_)
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

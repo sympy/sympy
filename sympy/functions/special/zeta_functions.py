@@ -244,7 +244,7 @@ class polylog(Function):
     >>> polylog(s, 1)
     zeta(s)
     >>> polylog(s, -1)
-    dirichlet_eta(s)
+    -dirichlet_eta(s)
 
     If :math:`s` is a negative integer, :math:`0` or :math:`1`, the
     polylogarithm can be expressed using elementary functions. This can be
@@ -274,7 +274,7 @@ class polylog(Function):
         if z == 1:
             return zeta(s)
         elif z == -1:
-            return dirichlet_eta(s)
+            return -dirichlet_eta(s)
         elif z == 0:
             return 0
 
@@ -433,10 +433,7 @@ class zeta(Function):
             elif z is S.Infinity:
                 return S.One
             elif z is S.Zero:
-                if a.is_negative:
-                    return S.Half - a - 1
-                else:
-                    return S.Half - a
+                return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
             elif z.is_Integer:
@@ -462,6 +459,11 @@ class zeta(Function):
 
     def _eval_rewrite_as_lerchphi(self, s, a=1):
         return lerchphi(1, s, a)
+
+    def _eval_is_finite(self):
+        arg_is_one = (self.args[0] - 1).is_zero
+        if arg_is_one is not None:
+            return not arg_is_one
 
     def fdiff(self, argindex=1):
         if len(self.args) == 2:

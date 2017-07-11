@@ -5,7 +5,7 @@ from .sympify import sympify, SympifyError
 from .cache import cacheit
 from .basic import Basic, Atom, preorder_traversal
 from .singleton import S
-from .expr import Expr, AtomicExpr
+from .expr import Expr, AtomicExpr, UnevaluatedExpr
 from .symbol import Symbol, Wild, Dummy, symbols, var
 from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
     RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \

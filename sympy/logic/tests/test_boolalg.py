@@ -1,3 +1,5 @@
+from __future__ import division
+
 from sympy.assumptions.ask import Q
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality
@@ -7,7 +9,7 @@ from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
-    POSform, SOPform, Xor, conjuncts, disjuncts,
+    POSform, SOPform, Xor, Xnor, conjuncts, disjuncts,
     distribute_or_over_and, distribute_and_over_or,
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
@@ -144,6 +146,24 @@ def test_Nor():
     assert Nor(True, True, True) is false
     assert Nor(True, True, A) is false
     assert Nor(True, False, A) is false
+
+def test_Xnor():
+
+    assert Xnor() is true
+    assert Xnor(A) == ~A
+    assert Xnor(A, A) is true
+    assert Xnor(True, A, A) is false
+    assert Xnor(A, A, A, A, A) == ~A
+    assert Xnor(True) is false
+    assert Xnor(False) is true
+    assert Xnor(True, True ) is true
+    assert Xnor(True, False) is false
+    assert Xnor(False, False) is true
+    assert Xnor(True, A) == A
+    assert Xnor(False, A) == ~A
+    assert Xnor(True, False, False) is false
+    assert Xnor(True, False, A) == A
+    assert Xnor(False, False, A) == ~A
 
 
 def test_Implies():
@@ -346,19 +366,19 @@ def test_eliminate_implications():
 
 
 def test_conjuncts():
-    assert conjuncts(A & B & C) == set([A, B, C])
-    assert conjuncts((A | B) & C) == set([A | B, C])
-    assert conjuncts(A) == set([A])
-    assert conjuncts(True) == set([True])
-    assert conjuncts(False) == set([False])
+    assert conjuncts(A & B & C) == {A, B, C}
+    assert conjuncts((A | B) & C) == {A | B, C}
+    assert conjuncts(A) == {A}
+    assert conjuncts(True) == {True}
+    assert conjuncts(False) == {False}
 
 
 def test_disjuncts():
-    assert disjuncts(A | B | C) == set([A, B, C])
-    assert disjuncts((A | B) & C) == set([(A | B) & C])
-    assert disjuncts(A) == set([A])
-    assert disjuncts(True) == set([True])
-    assert disjuncts(False) == set([False])
+    assert disjuncts(A | B | C) == {A, B, C}
+    assert disjuncts((A | B) & C) == {(A | B) & C}
+    assert disjuncts(A) == {A}
+    assert disjuncts(True) == {True}
+    assert disjuncts(False) == {False}
 
 
 def test_distribute():
@@ -480,6 +500,9 @@ def test_ITE():
     B = True
     assert ITE(And(A, B), B, C) == C
     assert ITE(Or(A, False), And(B, True), False) is false
+    x = symbols('x')
+    assert ITE(x, A, B) == Not(x)
+    assert ITE(x, B, A) == x
 
 
 def test_ITE_diff():
@@ -536,7 +559,7 @@ def test_true_false():
 
     assert hash(true) == hash(True)
     assert hash(false) == hash(False)
-    assert len(set([true, True])) == len(set([false, False])) == 1
+    assert len({true, True}) == len({false, False}) == 1
 
     assert isinstance(true, BooleanAtom)
     assert isinstance(false, BooleanAtom)
@@ -652,6 +675,8 @@ def test_true_false():
         assert ITE(F, F, T) is true
         assert ITE(F, F, F) is false
 
+    assert all(i.simplify(1, 2) is i for i in (S.true, S.false))
+
 
 def test_bool_as_set():
     x = symbols('x')
@@ -725,3 +750,36 @@ def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
     assert list(truth_table(x >> y, [x, y], input=False)) == [True, True, False, True]
+
+
+def test_issue_8571():
+    x = symbols('x')
+    for t in (S.true, S.false):
+        raises(TypeError, lambda: +t)
+        raises(TypeError, lambda: -t)
+        raises(TypeError, lambda: abs(t))
+        # use int(bool(t)) to get 0 or 1
+        raises(TypeError, lambda: int(t))
+
+        for o in [S.Zero, S.One, x]:
+            for _ in range(2):
+                raises(TypeError, lambda: o + t)
+                raises(TypeError, lambda: o - t)
+                raises(TypeError, lambda: o % t)
+                raises(TypeError, lambda: o*t)
+                raises(TypeError, lambda: o/t)
+                raises(TypeError, lambda: o**t)
+                o, t = t, o  # do again in reversed order
+
+
+def test_expand_relational():
+    n = symbols('n', negative=True)
+    p, q = symbols('p q', positive=True)
+    r = ((n + q*(-n/q + 1))/(q*(-n/q + 1)) < 0)
+    assert r is not S.false
+    assert r.expand() is S.false
+    assert (q > 0).expand() is S.true
+
+def test_issue_12717():
+    assert S.true.is_Atom == True
+    assert S.false.is_Atom == True

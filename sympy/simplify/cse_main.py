@@ -229,23 +229,22 @@ def opt_cse(exprs, order='canonical'):
                     # over them, to allow recursive matches
 
                     diff_i = func_args[i].difference(com_args)
-                    func_args[i] = diff_i | set([com_func])
+                    func_args[i] = diff_i | {com_func}
                     if diff_i:
                         opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
                                                   evaluate=False)
 
                     diff_j = func_args[j].difference(com_args)
-                    func_args[j] = diff_j | set([com_func])
+                    func_args[j] = diff_j | {com_func}
                     opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
                                               evaluate=False)
 
                     for k in range(j + 1, len(func_args)):
                         if not com_args.difference(func_args[k]):
                             diff_k = func_args[k].difference(com_args)
-                            func_args[k] = diff_k | set([com_func])
+                            func_args[k] = diff_k | {com_func}
                             opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
                                                       evaluate=False)
-
     # split muls into commutative
     comutative_muls = set()
     for m in muls:
@@ -267,7 +266,7 @@ def opt_cse(exprs, order='canonical'):
     return opt_subs
 
 
-def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
+def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     """Perform raw CSE on expression tree, taking opt_subs into account.
 
     Parameters
@@ -283,6 +282,8 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     order : string, 'none' or 'canonical'
         The order by which Mul and Add arguments are processed. For large
         expressions where speed is a concern, use the setting order='none'.
+    ignore : iterable of Symbols
+        Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
     from sympy.matrices.expressions import MatrixExpr, MatrixSymbol, MatMul, MatAdd
 
@@ -307,8 +308,12 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
 
         else:
             if expr in seen_subexp:
-                to_eliminate.add(expr)
-                return
+                for ign in ignore:
+                    if ign in expr.free_symbols:
+                        break
+                else:
+                    to_eliminate.add(expr)
+                    return
 
             seen_subexp.add(expr)
 
@@ -394,11 +399,23 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
             reduced_e = e
         reduced_exprs.append(reduced_e)
 
+    # don't allow hollow nesting
+    # e.g if p = [b + 2*d + e + f, b + 2*d + f + g, a + c + d + f + g]
+    # and R, C = cse(p) then
+    #     R = [(x0, d + f), (x1, b + d)]
+    #     C = [e + x0 + x1, g + x0 + x1, a + c + d + f + g]
+    # but the args of C[-1] should not be `(a + c, d + f + g)`
+    for i in range(len(exprs)):
+        F = reduced_exprs[i].func
+        if not (F is Mul or F is Add):
+            continue
+        if any(isinstance(a, F) for a in reduced_exprs[i].args):
+            reduced_exprs[i] = F(*reduced_exprs[i].args)
     return replacements, reduced_exprs
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical'):
+        order='canonical', ignore=()):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -427,6 +444,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         ordering will be faster but dependent on expressions hashes, thus
         machine dependent and variable. For large expressions where speed is a
         concern, use the setting order='none'.
+    ignore : iterable of Symbols
+        Substitutions containing any Symbol from ``ignore`` will be ignored.
 
     Returns
     =======
@@ -463,6 +482,11 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     >>> isinstance(_[1][-1], SparseMatrix)
     True
+
+    The user may disallow substitutions containing certain symbols:
+    >>> cse([y**2*(x + 1), 3*y**2*(x + 1)], ignore=(y,))
+    ([(x0, x + 1)], [x0*y**2, 3*x0*y**2])
+
     """
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
@@ -508,7 +532,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     # Main CSE algorithm.
     replacements, reduced_exprs = tree_cse(reduced_exprs, symbols, opt_subs,
-                                           order)
+                                           order, ignore)
 
     # Postprocess the expressions to return the expressions to canonical form.
     exprs = copy

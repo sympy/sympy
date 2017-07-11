@@ -18,6 +18,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     is_IntegerRing = is_ZZ = True
     is_Numerical = True
+    is_PID = True
 
     has_assoc_Ring = True
     has_assoc_Field = True
@@ -28,7 +29,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         return QQ
 
     def algebraic_field(self, *extension):
-        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """
+        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         return self.get_field().algebraic_field(*extension)
 
     def from_AlgebraicField(K1, a, K0):

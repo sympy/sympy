@@ -88,6 +88,22 @@ def test_issue_7663():
     e = '2*(x+1)'
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
 
+def test_issue_10560():
+    inputs = {
+        '4*-3' : '(-3)*4',
+        '-4*3' : '(-4)*3',
+    }
+    for text, result in inputs.items():
+        assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
+
+def test_issue_10773():
+    inputs = {
+    '-10/5': '(-10)/5',
+    '-10/-5' : '(-10)/(-5)',
+    }
+    for text, result in inputs.items():
+        assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
+
 
 def test_split_symbols():
     transformations = standard_transformations + \

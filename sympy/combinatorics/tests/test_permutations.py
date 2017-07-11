@@ -1,11 +1,13 @@
 from itertools import permutations
 
 from sympy.core.compatibility import range
+from sympy.core.symbol import Symbol
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
 from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
+a = Symbol('a', integer=True)
 
 
 def test_Permutation():
@@ -29,7 +31,7 @@ def test_Permutation():
 
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
-    assert len(set([p, p])) == 1
+    assert len({p, p}) == 1
     r = Permutation([1, 3, 2, 0, 4, 6, 5])
     ans = Permutation(_af_rmuln(*[w.array_form for w in (p, q, r)])).array_form
     assert rmul(p, q, r).array_form == ans
@@ -107,7 +109,7 @@ def test_Permutation():
     raises(ValueError, lambda: p.commutator(Permutation([])))
 
     assert len(p.atoms()) == 7
-    assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
+    assert q.atoms() == {0, 1, 2, 3, 4, 5, 6}
 
     assert p.inversion_vector() == [2, 4, 1, 3, 1, 0]
     assert q.inversion_vector() == [3, 1, 2, 2, 0, 1]
@@ -215,6 +217,52 @@ def test_Permutation():
     assert b.cycle_structure == {2: 1, 3: 1, 1: 2}
 
 
+def test_Permutation_subclassing():
+    # Subclass that adds permutation application on iterables
+    class CustomPermutation(Permutation):
+        def __call__(self, *i):
+            try:
+                return super(CustomPermutation, self).__call__(*i)
+            except TypeError:
+                pass
+
+            try:
+                perm_obj = i[0]
+                return [self._array_form[j] for j in perm_obj]
+            except Exception:
+                raise TypeError('unrecognized argument')
+
+        def __eq__(self, other):
+            if isinstance(other, Permutation):
+                return self._hashable_content() == other._hashable_content()
+            else:
+                return super(CustomPermutation, self).__eq__(other)
+
+        def __hash__(self):
+            return super(CustomPermutation, self).__hash__()
+
+    p = CustomPermutation([1, 2, 3, 0])
+    q = Permutation([1, 2, 3, 0])
+
+    assert p == q
+    raises(TypeError, lambda: q([1, 2]))
+    assert [2, 3] == p([1, 2])
+
+    assert type(p * q) == CustomPermutation
+    assert type(q * p) == Permutation  # True because q.__mul__(p) is called!
+
+    # Run all tests for the Permutation class also on the subclass
+    def wrapped_test_Permutation():
+        # Monkeypatch the class definition in the globals
+        globals()['__Perm'] = globals()['Permutation']
+        globals()['Permutation'] = CustomPermutation
+        test_Permutation()
+        globals()['Permutation'] = globals()['__Perm']  # Restore
+        del globals()['__Perm']
+
+    wrapped_test_Permutation()
+
+
 def test_josephus():
     assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
     assert Permutation.josephus(1, 5, 1).is_Identity
@@ -255,7 +303,7 @@ def test_ranking():
         a = a.next_lex()
         b = b.next_trotterjohnson()
     assert a == b is None
-    assert set([tuple(a) for a in l]) == set([tuple(a) for a in tj])
+    assert {tuple(a) for a in l} == {tuple(a) for a in tj}
 
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[6], [5], [0, 1, 2, 3, 4]])
@@ -337,17 +385,17 @@ def test_args():
     assert Permutation([[1], [4, 2]], size=1) == Permutation([0, 1, 4, 3, 2])
     assert Permutation(
         [[1], [4, 2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
+    assert Permutation([[0, 1], [0, 2]]) == Permutation(0, 1, 2)
     assert Permutation([], size=3) == Permutation([0, 1, 2])
     assert Permutation(3).list(5) == [0, 1, 2, 3, 4]
     assert Permutation(3).list(-1) == []
     assert Permutation(5)(1, 2).list(-1) == [0, 2, 1]
     assert Permutation(5)(1, 2).list() == [0, 2, 1, 3, 4, 5]
-    raises(TypeError, lambda: Permutation([1, 2], [0]))
+    raises(ValueError, lambda: Permutation([1, 2], [0]))
            # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0]))
            # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1, 1, 0]))
-    raises(ValueError, lambda: Permutation([[1], [1, 2]]))
     raises(ValueError, lambda: Permutation([4, 5], size=10))  # where are 0-3?
     # but this is ok because cycles imply that only those listed moved
     assert Permutation(4, 5) == Permutation([0, 1, 2, 3, 5, 4])
@@ -364,6 +412,8 @@ def test_Cycle():
     raises(ValueError, lambda: Cycle().list())
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
+    assert Cycle(3).list(2) == [0, 1]
+    assert Cycle(3).list(6) == [0, 1, 2, 3, 4, 5]
     assert Permutation(Cycle(1, 2), size=4) == \
         Permutation([0, 2, 1, 3])
     assert str(Cycle(1, 2)(4, 5)) == '(1 2)(4 5)'
@@ -371,9 +421,12 @@ def test_Cycle():
     assert Cycle(Permutation(list(range(3)))) == Cycle()
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
-    raises(TypeError, lambda: Cycle((1, 2)))
+    assert Cycle().size == 0
+    raises(ValueError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})
+    raises(ValueError, lambda: Cycle(4)[a])
+    raises(ValueError, lambda: Cycle(2, -4, 3))
 
     # check round-trip
     p = Permutation([[1, 2], [4, 3]], size=5)
@@ -384,3 +437,31 @@ def test_from_sequence():
     assert Permutation.from_sequence('SymPy') == Permutation(4)(0, 1, 3)
     assert Permutation.from_sequence('SymPy', key=lambda x: x.lower()) == \
         Permutation(4)(0, 2)(1, 3)
+
+
+def test_printing_cyclic():
+    Permutation.print_cyclic = True
+    p1 = Permutation([0, 2, 1])
+    assert repr(p1) == 'Permutation(1, 2)'
+    assert str(p1) == '(1 2)'
+    p2 = Permutation()
+    assert repr(p2) == 'Permutation()'
+    assert str(p2) == '()'
+    p3 = Permutation([1, 2, 0, 3])
+    assert repr(p3) == 'Permutation(3)(0, 1, 2)'
+
+
+def test_printing_non_cyclic():
+    Permutation.print_cyclic = False
+    p1 = Permutation([0, 1, 2, 3, 4, 5])
+    assert repr(p1) == 'Permutation([], size=6)'
+    assert str(p1) == 'Permutation([], size=6)'
+    p2 = Permutation([0, 1, 2])
+    assert repr(p2) == 'Permutation([0, 1, 2])'
+    assert str(p2) == 'Permutation([0, 1, 2])'
+
+    p3 = Permutation([0, 2, 1])
+    assert repr(p3) == 'Permutation([0, 2, 1])'
+    assert str(p3) == 'Permutation([0, 2, 1])'
+    p4 = Permutation([0, 1, 3, 2, 4, 5, 6, 7])
+    assert repr(p4) == 'Permutation([0, 1, 3, 2], size=8)'

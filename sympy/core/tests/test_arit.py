@@ -260,7 +260,7 @@ def test_pow_im():
 
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
-    assert set((Float(1) * pi * x).args) == set([Float(1), pi, x])
+    assert set((Float(1) * pi * x).args) == {Float(1), pi, x}
 
 
 def test_ncmul():
@@ -288,7 +288,7 @@ def test_ncmul():
     assert A/(1 + A) == A/(1 + A)
 
     assert set((A + B + 2*(A + B)).args) == \
-        set([A, B, 2*(A + B)])
+        {A, B, 2*(A + B)}
 
 
 def test_ncpow():
@@ -1255,12 +1255,19 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False, complex=True)
+    nr = Symbol('nr', real=False, complex=True)  # e.g. I or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i*nr).is_real is None
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
+
+    ni = Symbol('ni', imaginary=False, complex=True)  # e.g. 2 or 1 + I
+    a = Symbol('a', real=True, nonzero=True)
+    b = Symbol('b', real=True)
+    assert (i*ni).is_real is False
+    assert (a*ni).is_real is None
+    assert (b*ni).is_real is None
 
 
 def test_Mul_hermitian_antihermitian():
@@ -1596,6 +1603,9 @@ def test_Mod():
     assert Mod(n, 2) == 0
     n = Symbol('n', odd=True)
     assert Mod(n, 2) == 1
+
+    # issue 10963
+    assert (x**6000%400).args[1] == 400
 
 
 def test_Mod_is_integer():

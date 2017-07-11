@@ -742,7 +742,7 @@ def test_Pow_is_algebraic():
     x = Symbol('x')
     assert (a**r).is_algebraic
     assert (a**x).is_algebraic is None
-    assert (na**r).is_algebraic is False
+    assert (na**r).is_algebraic is None
     assert (ia**r).is_algebraic
     assert (ia**ib).is_algebraic is False
 
@@ -752,6 +752,13 @@ def test_Pow_is_algebraic():
     assert Pow(2, sqrt(2), evaluate=False).is_algebraic is False
 
     assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
+
+    # issue 8649
+    t = Symbol('t', real=True, transcendental=True)
+    n = Symbol('n', integer=True)
+    assert (t**n).is_algebraic is None
+    assert (t**n).is_integer is None
+
 
 def test_Mul_is_prime():
     from sympy import Mul

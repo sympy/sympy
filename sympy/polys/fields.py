@@ -105,12 +105,13 @@ class FracField(DefaultPrinting):
         domain = ring.domain
         order = ring.order
 
-        _hash = hash((cls.__name__, symbols, ngens, domain, order))
-        obj = _field_cache.get(_hash)
+        _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
+        obj = _field_cache.get(_hash_tuple)
 
         if obj is None:
             obj = object.__new__(cls)
-            obj._hash = _hash
+            obj._hash_tuple = _hash_tuple
+            obj._hash = hash(_hash_tuple)
             obj.ring = ring
             obj.dtype = type("FracElement", (FracElement,), {"field": obj})
             obj.symbols = symbols
@@ -130,7 +131,7 @@ class FracField(DefaultPrinting):
                     if not hasattr(obj, name):
                         setattr(obj, name, generator)
 
-            _field_cache[_hash] = obj
+            _field_cache[_hash_tuple] = obj
 
         return obj
 
@@ -145,10 +146,12 @@ class FracField(DefaultPrinting):
         return self._hash
 
     def __eq__(self, other):
-        return self is other
+        return isinstance(other, FracField) and \
+            (self.symbols, self.ngens, self.domain, self.order) == \
+            (other.symbols, other.ngens, other.domain, other.order)
 
     def __ne__(self, other):
-        return self is not other
+        return not self.__eq__(other)
 
     def raw_new(self, numer, denom=None):
         return self.dtype(numer, denom)
@@ -166,7 +169,7 @@ class FracField(DefaultPrinting):
         except CoercionFailed:
             domain = self.domain
 
-            if not domain.has_Field and domain.has_assoc_Field:
+            if not domain.is_Field and domain.has_assoc_Field:
                 ring = self.ring
                 ground_field = domain.get_field()
                 element = ground_field.convert(element)
@@ -217,7 +220,7 @@ class FracField(DefaultPrinting):
                 try:
                     return domain.convert(expr)
                 except CoercionFailed:
-                    if not domain.has_Field and domain.has_assoc_Field:
+                    if not domain.is_Field and domain.has_assoc_Field:
                         return domain.get_field().convert(expr)
                     else:
                         raise
@@ -293,7 +296,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 
     def __eq__(f, g):
-        if isinstance(g, f.field.dtype):
+        if isinstance(g, FracElement) and f.field == g.field:
             return f.numer == g.numer and f.denom == g.denom
         else:
             return f.numer == g and f.denom == f.field.ring.one
@@ -338,7 +341,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         try:
             element = domain.convert(element)
         except CoercionFailed:
-            if not domain.has_Field and domain.has_assoc_Field:
+            if not domain.is_Field and domain.has_assoc_Field:
                 ground_field = domain.get_field()
 
                 try:

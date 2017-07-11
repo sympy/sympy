@@ -16,7 +16,9 @@ PRECEDENCE = {
     "Pow": 60,
     "Func": 70,
     "Not": 100,
-    "Atom": 1000
+    "Atom": 1000,
+    "BitwiseOr": 36,
+    "BitwiseAnd": 38
 }
 
 # A dictionary assigning precedence values to certain classes. These values are
@@ -38,7 +40,9 @@ PRECEDENCE_VALUES = {
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
     "MatPow": PRECEDENCE["Pow"],
-    "HadamardProduct": PRECEDENCE["Mul"]
+    "HadamardProduct": PRECEDENCE["Mul"],
+    "Equality": PRECEDENCE["Mul"],
+    "Unequality": PRECEDENCE["Mul"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -91,6 +95,10 @@ def precedence_FracElement(item):
         return PRECEDENCE["Mul"]
 
 
+def precedence_UnevaluatedExpr(item):
+    return precedence(item.args[0])
+
+
 PRECEDENCE_FUNCTIONS = {
     "Integer": precedence_Integer,
     "Mul": precedence_Mul,
@@ -98,6 +106,7 @@ PRECEDENCE_FUNCTIONS = {
     "Float": precedence_Float,
     "PolyElement": precedence_PolyElement,
     "FracElement": precedence_FracElement,
+    "UnevaluatedExpr": precedence_UnevaluatedExpr,
 }
 
 
@@ -118,3 +127,21 @@ def precedence(item):
         elif n in PRECEDENCE_VALUES:
             return PRECEDENCE_VALUES[n]
     return PRECEDENCE["Atom"]
+
+
+def precedence_traditional(item):
+    """
+    Returns the precedence of a given object according to the traditional rules
+    of mathematics. This is the precedence for the LaTeX and pretty printer.
+    """
+    # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
+    # the precedence of Atom for other printers:
+    from sympy import Integral, Sum, Product, Limit, Derivative
+    from sympy.core.expr import UnevaluatedExpr
+
+    if isinstance(item, (Integral, Sum, Product, Limit, Derivative)):
+        return PRECEDENCE["Mul"]
+    elif isinstance(item, UnevaluatedExpr):
+        return precedence_traditional(item.args[0])
+    else:
+        return precedence(item)

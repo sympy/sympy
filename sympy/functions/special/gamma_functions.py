@@ -95,7 +95,7 @@ class gamma(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return gamma(self.args[0])*polygamma(0, self.args[0])
+            return self.func(self.args[0])*polygamma(0, self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -143,7 +143,7 @@ class gamma(Function):
                 x = Dummy('x')
                 n = arg.p // arg.q
                 p = arg.p - n*arg.q
-                return gamma(x + n)._eval_expand_func().subs(x, Rational(p, arg.q))
+                return self.func(x + n)._eval_expand_func().subs(x, Rational(p, arg.q))
 
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
@@ -152,7 +152,7 @@ class gamma(Function):
                 tail = (coeff - intpart,) + tail
                 coeff = intpart
             tail = arg._new_rawargs(*tail, reeval=False)
-            return gamma(tail)*RisingFactorial(tail, coeff)
+            return self.func(tail)*RisingFactorial(tail, coeff)
 
         return self.func(*self.args)
 
@@ -182,7 +182,7 @@ class gamma(Function):
         if not (x0.is_Integer and x0 <= 0):
             return super(gamma, self)._eval_nseries(x, n, logx)
         t = self.args[0] - x0
-        return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
+        return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
     def _latex(self, printer, exp=None):
         if len(self.args) != 1:

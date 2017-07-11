@@ -454,7 +454,7 @@ class MinMaxBase(Expr, LatticeOp):
         return Add(*l)
 
     def evalf(self, prec=None, **options):
-        return self.func(*[a.evalf(prec, options) for a in self.args])
+        return self.func(*[a.evalf(prec, **options) for a in self.args])
     n = evalf
 
     _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
@@ -522,7 +522,7 @@ class Max(MinMaxBase, Application):
     3
     >>> Max(p, -2)
     p
-    >>> Max(x, y)                   #doctest: +SKIP
+    >>> Max(x, y)
     Max(x, y)
     >>> Max(x, y) == Max(y, x)
     True

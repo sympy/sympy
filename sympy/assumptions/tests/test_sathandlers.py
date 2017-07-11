@@ -16,12 +16,12 @@ def test_class_handler_registry():
     fact1 = Equivalent(Q.is_true, AllArgs(Q.is_true))
     fact2 = Equivalent(Q.is_true, AnyArgs(Q.is_true))
 
-    my_handler_registry[Mul] = set([fact1])
-    my_handler_registry[Expr] = set([fact2])
+    my_handler_registry[Mul] = {fact1}
+    my_handler_registry[Expr] = {fact2}
 
     assert my_handler_registry[Basic] == set()
-    assert my_handler_registry[Expr] == set([fact2])
-    assert my_handler_registry[Mul] == set([fact1, fact2])
+    assert my_handler_registry[Expr] == {fact2}
+    assert my_handler_registry[Mul] == {fact1, fact2}
 
 
 def test_UnevaluatedOnFree():

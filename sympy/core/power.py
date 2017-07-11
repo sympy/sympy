@@ -12,9 +12,19 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
 from .logic import fuzzy_bool, fuzzy_not
 from .compatibility import as_int, range
 from .evaluate import global_evaluate
+from sympy.utilities.iterables import sift
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
-from sympy.utilities.iterables import sift
+
+from math import sqrt as _sqrt
+
+
+
+def isqrt(n):
+    """Return the largest integer less than or equal to sqrt(n)."""
+    if n < 17984395633462800708566937239552:
+        return int(_sqrt(n))
+    return integer_nthroot(int(n), 2)[0]
 
 
 def integer_nthroot(y, n):
@@ -23,14 +33,27 @@ def integer_nthroot(y, n):
     and a boolean indicating whether the result is exact (that is,
     whether x**n == y).
 
+    Examples
+    ========
+
     >>> from sympy import integer_nthroot
-    >>> integer_nthroot(16,2)
+    >>> integer_nthroot(16, 2)
     (4, True)
-    >>> integer_nthroot(26,2)
+    >>> integer_nthroot(26, 2)
     (5, False)
 
+    To simply determine if a number is a perfect square, the is_square
+    function should be used:
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(26)
+    False
+
+    See Also
+    ========
+    sympy.ntheory.primetest.is_square
     """
-    y, n = int(y), int(n)
+    y, n = as_int(y), as_int(n)
     if y < 0:
         raise ValueError("y must be nonnegative")
     if n < 1:
@@ -73,7 +96,7 @@ def integer_nthroot(y, n):
     while t > y:
         x -= 1
         t = x**n
-    return x, t == y
+    return int(x), t == y  # int converts long to int if possible
 
 
 class Pow(Expr):
@@ -205,6 +228,9 @@ class Pow(Expr):
                 if obj is not None:
                     return obj
         obj = Expr.__new__(cls, b, e)
+        obj = cls._exec_constructor_postprocessors(obj)
+        if not isinstance(obj, Pow):
+            return obj
         obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
 
@@ -220,16 +246,17 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
-    def _eval_refine(self):
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions.ask import ask, Q
         b, e = self.as_base_exp()
-        if e.is_integer and _coeff_isneg(b):
-            if e.is_even:
+        if ask(Q.integer(e), assumptions) and _coeff_isneg(b):
+            if ask(Q.even(e), assumptions):
                 return Pow(-b, e)
-            elif e.is_odd:
+            elif ask(Q.odd(e), assumptions):
                 return -Pow(-b, e)
 
     def _eval_power(self, other):
-        from sympy import Abs, arg, exp, floor, im, log, re, sign, refine
+        from sympy import Abs, arg, exp, floor, im, log, re, sign
         b, e = self.as_base_exp()
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
@@ -264,7 +291,7 @@ class Pow(Expr):
                 # floor(S.Half - e*arg(b)/2/pi) == 0
 
                 # handle -1 as special case
-                if (e == -1) == True:
+                if e == -1:
                     # floor arg. is 1/2 + arg(b)/2/pi
                     if _half(other):
                         if b.is_negative is True:
@@ -273,17 +300,17 @@ class Pow(Expr):
                             return Pow(b.conjugate()/Abs(b)**2, other)
                 elif e.is_even:
                     if b.is_real:
-                        b = refine(abs(b))
+                        b = abs(b)
                     if b.is_imaginary:
-                        b = refine(abs(im(b)))*S.ImaginaryUnit
+                        b = abs(im(b))*S.ImaginaryUnit
 
-                if (abs(e) < 1) == True or (e == 1) == True:
+                if (abs(e) < 1) == True or e == 1:
                     s = 1  # floor = 0
                 elif b.is_nonnegative:
                     s = 1  # floor = 0
                 elif re(b).is_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
-                elif fuzzy_not(im(b).is_zero) and (abs(e) == 2) == True:
+                elif fuzzy_not(im(b).is_zero) and abs(e) == 2:
                     s = 1  # floor = 0
                 elif _half(other):
                     s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
@@ -564,6 +591,12 @@ class Pow(Expr):
         if old == self.base:
             return new**self.exp._subs(old, new)
 
+        # issue 10829: (4**x - 3*y + 2).subs(2**x, y) -> y**2 - 3*y + 2
+        if old.func is self.func and self.exp == old.exp:
+            l = log(self.base, old.base)
+            if l.is_Number:
+                return Pow(new, l)
+
         if old.func is self.func and self.base == old.base:
             if self.exp.is_Add is False:
                 ct1 = self.exp.as_independent(Symbol, as_Add=False)
@@ -645,6 +678,8 @@ class Pow(Expr):
             expanded = expand_complex(self)
             if expanded != self:
                 return c(expanded)
+        if self.is_real:
+            return self
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import transpose
@@ -703,6 +738,9 @@ class Pow(Expr):
             nc = [Mul(*nc)]
 
         # sift the commutative bases
+        sifted = sift(cargs, lambda x: x.is_real)
+        maybe_real = sifted[True] + sifted[None]
+        other = sifted[False]
         def pred(x):
             if x is S.ImaginaryUnit:
                 return S.ImaginaryUnit
@@ -711,9 +749,9 @@ class Pow(Expr):
                 return True
             if polar is None:
                 return fuzzy_bool(x.is_nonnegative)
-        sifted = sift(cargs, pred)
+        sifted = sift(maybe_real, pred)
         nonneg = sifted[True]
-        other = sifted[None]
+        other += sifted[None]
         neg = sifted[False]
         imag = sifted[S.ImaginaryUnit]
         if imag:
@@ -1027,6 +1065,8 @@ class Pow(Expr):
         if self.base.is_zero or (self.base - 1).is_zero:
             return True
         elif self.exp.is_rational:
+            if self.base.is_algebraic is False:
+                return self.exp.is_nonzero
             return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
@@ -1193,7 +1233,7 @@ class Pow(Expr):
                     dn = 0
 
                 terms = [1/prefactor]
-                for m in range(1, ceiling((n - dn)/l*cf)):
+                for m in range(1, ceiling((n - dn + 1)/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -1357,7 +1397,7 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1401,8 +1441,8 @@ class Pow(Expr):
         """
 
         b, e = self.as_base_exp()
-        b = _keep_coeff(*b.as_content_primitive(radical=radical))
-        ce, pe = e.as_content_primitive(radical=radical)
+        b = _keep_coeff(*b.as_content_primitive(radical=radical, clear=clear))
+        ce, pe = e.as_content_primitive(radical=radical, clear=clear)
         if b.is_Rational:
             #e
             #= ce*pe
@@ -1426,7 +1466,7 @@ class Pow(Expr):
         e = _keep_coeff(ce, pe)
         # b**e = (h*t)**e = h**e*t**e = c*m*t**e
         if e.is_Rational and b.is_Mul:
-            h, t = b.as_content_primitive(radical=radical)  # h is positive
+            h, t = b.as_content_primitive(radical=radical, clear=clear)  # h is positive
             c, m = self.func(h, e).as_coeff_Mul()  # so c is positive
             m, me = m.as_base_exp()
             if m is S.One or me == e:  # probably always true

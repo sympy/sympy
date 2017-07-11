@@ -148,7 +148,7 @@ class Order(Expr):
                 variables = list(map(sympify, args))
                 point = [S.Zero]*len(variables)
 
-        if not all(isinstance(v, Symbol) for v in variables):
+        if not all(v.is_Symbol for v in variables):
             raise TypeError('Variables are not symbols, got %s' % variables)
 
         if len(list(uniq(variables))) != len(variables):
@@ -181,8 +181,8 @@ class Order(Expr):
             if any(p != point[0] for p in point):
                 raise NotImplementedError
             if point[0] is S.Infinity:
-                s = dict([(k, 1/Dummy()) for k in variables])
-                rs = dict([(1/v, 1/k) for k, v in s.items()])
+                s = {k: 1/Dummy() for k in variables}
+                rs = {1/v: 1/k for k, v in s.items()}
             elif point[0] is not S.Zero:
                 s = dict((k, Dummy() + point[0]) for k in variables)
                 rs = dict((v - point[0], k - point[0]) for k, v in s.items())
@@ -325,7 +325,7 @@ class Order(Expr):
 
     @cacheit
     def contains(self, expr):
-        """
+        r"""
         Return True if expr belongs to Order(self.expr, \*self.variables).
         Return False if self belongs to expr.
         Return None if the inclusion relation cannot be determined
@@ -356,7 +356,7 @@ class Order(Expr):
                 return all([x in self.args[1:] for x in expr.args[1:]])
             if expr.expr.is_Add:
                 return all([self.contains(x) for x in expr.expr.args])
-            if self.expr.is_Add:
+            if self.expr.is_Add and point == S.Zero:
                 return any([self.func(x, *self.args[1:]).contains(expr)
                             for x in self.expr.args])
             if self.variables and expr.variables:
@@ -368,6 +368,17 @@ class Order(Expr):
                 common_symbols = expr.variables
             if not common_symbols:
                 return None
+            if (self.expr.is_Pow and self.expr.base.is_Symbol
+                and self.expr.exp.is_positive):
+                if expr.expr.is_Pow and self.expr.base == expr.expr.base:
+                    return not (self.expr.exp-expr.expr.exp).is_positive
+                if expr.expr.is_Mul:
+                    for arg in expr.expr.args:
+                        if (arg.is_Pow and self.expr.base == arg.base
+                            and (expr.expr/arg).is_number):
+                            r = (self.expr.exp-arg.exp).is_positive
+                            if not (r is None):
+                                return not r
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
@@ -384,6 +395,17 @@ class Order(Expr):
                     if r != l:
                         return
             return r
+        if (self.expr.is_Pow and self.expr.base.is_Symbol
+            and self.expr.exp.is_positive):
+            if expr.is_Pow and self.expr.base == expr.base:
+                return not (self.expr.exp-expr.exp).is_positive
+            if expr.is_Mul:
+                for arg in expr.args:
+                    if (arg.is_Pow and self.expr.base == arg.base
+                        and (expr/arg).is_number):
+                        r = (self.expr.exp-arg.exp).is_positive
+                        if not (r is None):
+                            return not r
         obj = self.func(expr, *self.args[1:])
         return self.contains(obj)
 

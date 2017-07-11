@@ -1,9 +1,10 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix
+from sympy import Symbol, Rational, SparseMatrix, diff
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import MutableSparseNDimArray
+from sympy.utilities.pytest import raises
 
 
 def test_ndim_array_initiation():
@@ -11,6 +12,7 @@ def test_ndim_array_initiation():
     assert len(arr_with_one_element) == 1
     assert arr_with_one_element[0] == 23
     assert arr_with_one_element.rank() == 1
+    raises(ValueError, lambda: arr_with_one_element[1])
 
     arr_with_symbol_element = MutableDenseNDimArray([Symbol('x')])
     assert len(arr_with_symbol_element) == 1
@@ -22,6 +24,7 @@ def test_ndim_array_initiation():
     assert len(vector) == number5
     assert vector.shape == (number5,)
     assert vector.rank() == 1
+    raises(ValueError, lambda: arr_with_one_element[5])
 
     vector = MutableSparseNDimArray.zeros(number5)
     assert len(vector) == number5
@@ -33,6 +36,9 @@ def test_ndim_array_initiation():
     assert len(n_dim_array) == 3 * 3 * 3 * 3
     assert n_dim_array.shape == (3, 3, 3, 3)
     assert n_dim_array.rank() == 4
+    raises(ValueError, lambda: n_dim_array[0, 0, 0, 3])
+    raises(ValueError, lambda: n_dim_array[3, 0, 0, 0])
+    raises(ValueError, lambda: n_dim_array[3**4])
 
     array_shape = (3, 3, 3, 3)
     sparse_array = MutableSparseNDimArray.zeros(*array_shape)
@@ -137,6 +143,10 @@ def test_ndim_array_converting():
         assert dense_array[i] == matrix[i]
     assert matrix.shape == dense_array.shape
 
+    assert MutableDenseNDimArray(matrix) == dense_array
+    assert MutableDenseNDimArray(matrix.as_immutable()) == dense_array
+    assert MutableDenseNDimArray(matrix.as_mutable()) == dense_array
+
     sparse_array = MutableSparseNDimArray([1, 2, 3, 4], (2, 2))
     alist = sparse_array.tolist()
 
@@ -148,6 +158,10 @@ def test_ndim_array_converting():
     for i in range(len(sparse_array)):
         assert sparse_array[i] == matrix[i]
     assert matrix.shape == sparse_array.shape
+
+    assert MutableSparseNDimArray(matrix) == sparse_array
+    assert MutableSparseNDimArray(matrix.as_immutable()) == sparse_array
+    assert MutableSparseNDimArray(matrix.as_mutable()) == sparse_array
 
 
 def test_converting_functions():
@@ -213,6 +227,9 @@ def test_arithmetic():
     assert type(a) == type(b) == type(c1) == type(c2) == type(d1) == type(d2) \
         == type(e1) == type(e2) == type(e3) == type(f1)
 
+    z0 = -a
+    assert z0 == MutableDenseNDimArray([-3 for i in range(9)], (3, 3))
+
 
 def test_higher_dimenions():
     m3 = MutableDenseNDimArray(range(10, 34), (2, 3, 4))
@@ -264,7 +281,9 @@ def test_diff():
     from sympy.abc import x, y, z
     md = MutableDenseNDimArray([[x, y], [x*z, x*y*z]])
     assert md.diff(x) == MutableDenseNDimArray([[1, 0], [z, y*z]])
+    assert diff(md, x) == MutableDenseNDimArray([[1, 0], [z, y*z]])
 
     sd = MutableSparseNDimArray(md)
     assert sd == MutableSparseNDimArray([x, y, x*z, x*y*z], (2, 2))
     assert sd.diff(x) == MutableSparseNDimArray([[1, 0], [z, y*z]])
+    assert diff(sd, x) == MutableSparseNDimArray([[1, 0], [z, y*z]])

@@ -44,7 +44,7 @@ gen_raise_re = re.compile(
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 test_ok_def_re = re.compile(r'^def\s+test_.*:$')
-test_file_re = re.compile(r'.*test_.*\.py$')
+test_file_re = re.compile(r'.*[/\\]test_.*\.py$')
 
 
 def tab_in_leading(s):

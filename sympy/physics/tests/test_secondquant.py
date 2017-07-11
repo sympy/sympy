@@ -92,7 +92,7 @@ def test_create():
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -104,7 +104,7 @@ def test_annihilate():
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
     assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n - 1])
     o = B(n)
@@ -258,7 +258,7 @@ def test_create_f():
     o = Fd(i)
     assert isinstance(o, CreateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Fd(1)
     assert o.apply_operator(FKet([n])) == FKet([1, n])
     assert o.apply_operator(FKet([n])) == -FKet([n, 1])
@@ -281,7 +281,7 @@ def test_annihilate_f():
     o = F(i)
     assert isinstance(o, AnnihilateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = F(1)
     assert o.apply_operator(FKet([1, n])) == FKet([n])
     assert o.apply_operator(FKet([n, 1])) == -FKet([n])
@@ -302,7 +302,7 @@ def test_create_b():
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -314,7 +314,7 @@ def test_annihilate_b():
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
 
 
@@ -457,6 +457,29 @@ def test_contraction():
     assert restr.is_only_below_fermi
     restr = evaluate_deltas(contraction(F(p), Fd(q)))
     assert restr.is_only_above_fermi
+
+
+def test_evaluate_deltas():
+    i, j, k = symbols('i,j,k')
+
+    r = KroneckerDelta(i, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+
+    r = KroneckerDelta(1, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(1, k)
+
+    r = KroneckerDelta(j, 2) * KroneckerDelta(k, j)
+    assert evaluate_deltas(r) == KroneckerDelta(2, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(i, j) * KroneckerDelta(j, 1)
+    assert evaluate_deltas(r) == 0
+
+    r = (KroneckerDelta(0, i) * KroneckerDelta(0, j)
+         * KroneckerDelta(1, j) * KroneckerDelta(1, j))
+    assert evaluate_deltas(r) == 0
 
 
 def test_Tensors():

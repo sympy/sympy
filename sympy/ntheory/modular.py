@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import igcdex, igcd
 from sympy.core.mul import prod
-from sympy.core.sympify import sympify
 from sympy.core.compatibility import as_int, reduce
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ

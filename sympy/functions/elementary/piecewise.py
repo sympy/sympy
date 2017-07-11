@@ -504,9 +504,6 @@ class Piecewise(Function):
         if cond == True:
             return True
         if isinstance(cond, Equality):
-            if checksol(cond, {}, minimal=True):
-                # the equality is trivially solved
-                return True
             diff = cond.lhs - cond.rhs
             if diff.is_commutative:
                 return diff.is_zero

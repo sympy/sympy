@@ -33,7 +33,7 @@ The definition of rolling without slip necessitates that the velocity of the
 contact point is zero; as part of bringing the constraint forces into evidence,
 we have to introduce speeds at this point, which will by definition always be
 zero. They are normal to the ground, along the path which the disc is rolling,
-and along the ground in an perpendicular direction. ::
+and along the ground in a perpendicular direction. ::
 
   >>> C = Point('C')
   >>> C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x) + u6 * Y.z)
@@ -52,7 +52,7 @@ represent the constraint forces in those directions. ::
 
   >>> KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
   ...           u_auxiliary=[u4, u5, u6])
-  >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
+  >>> (fr, frstar) = KM.kanes_equations(BodyList, ForceList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
   >>> rhs = MM.inv() * forcing

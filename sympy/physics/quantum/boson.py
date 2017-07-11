@@ -1,6 +1,5 @@
 """Bosonic quantum operators."""
 
-from sympy.core.compatibility import u
 from sympy import Mul, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
@@ -121,7 +120,7 @@ class BosonOp(Operator):
         if self.is_annihilation:
             return pform
         else:
-            return pform**prettyForm(u('\N{DAGGER}'))
+            return pform**prettyForm(u'\N{DAGGER}')
 
 
 class BosonFockKet(Ket):

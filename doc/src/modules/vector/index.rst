@@ -2,9 +2,9 @@
 Vector Module
 =============
 
-The vector module provides tools for basic vector math 
-and differential calculus with respect to 3D Cartesian coordinate 
-systems. This documentation provides an overview of all the 
+The vector module provides tools for basic vector math
+and differential calculus with respect to 3D Cartesian coordinate
+systems. This documentation provides an overview of all the
 features offered, and relevant API.
 
 

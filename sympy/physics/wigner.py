@@ -33,7 +33,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from __future__ import print_function, division
 
-from sympy import (Integer, pi, sqrt, sympify, Expr, Dummy, S, Sum, Ynm,
+from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm,
         Function)
 from sympy.core.compatibility import range
 

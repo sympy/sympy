@@ -133,6 +133,10 @@ def test_meijer():
     assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
 
+    # test exceptions
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((oo,), (2, 0)), x))
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((1,), (2, 0)), x))
+
     # differentiation
     g = meijerg((randcplx(),), (randcplx() + 2*I,), Tuple(),
                 (randcplx(), randcplx()), z)

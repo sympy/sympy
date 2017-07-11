@@ -241,6 +241,12 @@ asech
 .. autoclass:: sympy.functions.elementary.hyperbolic.asech
    :members:
 
+acsch
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.acsch
+   :members:
+
 sympy.functions.elementary.integers
 ===================================
 
