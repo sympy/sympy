@@ -1,18 +1,11 @@
 """Tests for tools and arithmetics for monomials of distributed polynomials. """
 
-from sympy.polys.monomials import (
-    itermonomials, monomial_count,
-    monomial_mul, monomial_div,
-    monomial_gcd, monomial_lcm,
-    monomial_max, monomial_min,
-    monomial_divides,
-    Monomial,
-)
-
-from sympy.polys.polyerrors import ExactQuotientFailed
-
 from sympy.abc import a, b, c, x, y, z
 from sympy.core import S
+from sympy.polys.monomials import Monomial, itermonomials, monomial_count, \
+    monomial_div, monomial_divides, monomial_gcd, monomial_lcm, monomial_max, \
+    monomial_min, monomial_mul
+from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities.pytest import raises
 
 

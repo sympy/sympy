@@ -1,9 +1,10 @@
 """Tools for arithmetic error propogation."""
-from __future__ import print_function, division
-from itertools import repeat, combinations
+from __future__ import division, print_function
 
-from sympy import S, Symbol, Add, Mul, simplify, Pow, exp
-from sympy.stats.symbolic_probability import RandomSymbol, Variance, Covariance
+from itertools import combinations, repeat
+
+from sympy import Add, Mul, Pow, S, Symbol, exp, simplify
+from sympy.stats.symbolic_probability import Covariance, RandomSymbol, Variance
 
 _arg0_or_var = lambda var: var.args[0] if len(var.args) > 0 else var
 

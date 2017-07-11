@@ -1,10 +1,10 @@
-from __future__ import print_function, division
-
-from sympy.core import Basic
-from sympy.core.compatibility import iterable, as_int, range
-from sympy.utilities.iterables import flatten
+from __future__ import division, print_function
 
 from collections import defaultdict
+
+from sympy.core import Basic
+from sympy.core.compatibility import as_int, iterable, range
+from sympy.utilities.iterables import flatten
 
 
 class Prufer(Basic):

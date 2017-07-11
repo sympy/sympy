@@ -1,14 +1,15 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from textwrap import dedent
 
-from sympy.core import S, Mul, Tuple, sympify
+from sympy.core import Mul, S, Tuple, sympify
 from sympy.core.compatibility import exec_, iterable, range
-from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
+
 
 @public
 def itermonomials(variables, degree):

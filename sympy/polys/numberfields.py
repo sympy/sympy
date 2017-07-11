@@ -1,57 +1,35 @@
 """Computational algebraic field theory. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (
-    S, Rational, AlgebraicNumber,
-    Add, Mul, sympify, Dummy, expand_mul, I, pi
-)
+from mpmath import mp, pslq
 
-from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.trigonometric import cos, sin
-
-from sympy.polys.polytools import (
-    Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
-    degree, poly_from_expr, parallel_poly_from_expr, lcm
-)
-
-from sympy.polys.polyerrors import (
-    IsomorphismFailed,
-    CoercionFailed,
-    NotAlgebraic,
-    GeneratorsError,
-)
-
-from sympy.polys.rootoftools import CRootOf
-
-from sympy.polys.specialpolys import cyclotomic_poly
-
-from sympy.polys.polyutils import dict_from_expr, expr_from_dict
-
-from sympy.polys.domains import ZZ, QQ
-
-from sympy.polys.orthopolys import dup_chebyshevt
-
-from sympy.polys.rings import ring
-
-from sympy.polys.ring_series import rs_compose_add
-
-from sympy.printing.lambdarepr import LambdaPrinter
-
-from sympy.utilities import (
-    numbered_symbols, variations, lambdify, public, sift
-)
-
+from sympy import Add, AlgebraicNumber, Dummy, I, Mul, Rational, S, \
+    expand_mul, pi, sympify
+from sympy.core.compatibility import range, reduce
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
-from sympy.simplify.radsimp import _split_gcd
-from sympy.simplify.simplify import _is_sum_surds
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
-from mpmath import pslq, mp
-
-from sympy.core.compatibility import reduce
-from sympy.core.compatibility import range
+from sympy.polys.domains import QQ, ZZ
+from sympy.polys.orthopolys import dup_chebyshevt
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, \
+    IsomorphismFailed, NotAlgebraic
+from sympy.polys.polytools import Poly, PurePoly, degree, factor_list, \
+    groebner, invert, lcm, parallel_poly_from_expr, poly_from_expr, \
+    resultant, sqf_norm
+from sympy.polys.polyutils import dict_from_expr, expr_from_dict
+from sympy.polys.ring_series import rs_compose_add
+from sympy.polys.rings import ring
+from sympy.polys.rootoftools import CRootOf
+from sympy.polys.specialpolys import cyclotomic_poly
+from sympy.printing.lambdarepr import LambdaPrinter
+from sympy.simplify.radsimp import _split_gcd
+from sympy.simplify.simplify import _is_sum_surds
+from sympy.utilities import lambdify, numbered_symbols, public, sift, \
+    variations
 
 
 def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):

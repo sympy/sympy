@@ -1,9 +1,10 @@
 """Tests for real and complex root isolation and refinement algorithms. """
 
-from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ, EX
+from sympy.polys.domains import EX, QQ, ZZ
 from sympy.polys.polyerrors import DomainError, RefinementFailed
+from sympy.polys.rings import ring
 from sympy.utilities.pytest import raises
+
 
 def test_dup_sturm():
     R, x = ring("x", QQ)

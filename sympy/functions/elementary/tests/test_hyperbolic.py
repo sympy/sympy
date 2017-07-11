@@ -1,7 +1,7 @@
-from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
-    coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
-    Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul
-
+from sympy import E, I, Integer, O, Rational, S, Symbol, acos, acosh, acoth, \
+    acsch, asech, asin, asinh, atanh, cos, cosh, cot, coth, csch, exp, \
+    expand_mul, log, nan, oo, pi, sec, sech, sin, sinh, sqrt, symbols, tan, \
+    tanh, zoo
 from sympy.utilities.pytest import raises
 
 

@@ -1,10 +1,9 @@
-from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
-    sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
-    Derivative)
+from sympy import Derivative, E, Eq, I, Integer, O, Piecewise, PoleError, \
+    Rational, Symbol, acosh, acoth, asin, asinh, atanh, ceiling, cos, cosh, \
+    cot, coth, exp, floor, limit, ln, log, pi, sign, sin, sinh, sqrt, \
+    symbols, tan, tanh
 from sympy.abc import x, y, z
-
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_simple_1():

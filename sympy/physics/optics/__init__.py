@@ -11,25 +11,23 @@ __all__ = []
 #    determine which names are imported when
 #    "from sympy.physics.optics import *" is done.
 
-from . import waves
+from . import gaussopt, medium, utils, waves
+from .gaussopt import BeamParameter, CurvedMirror, CurvedRefraction, \
+    FlatMirror, FlatRefraction, FreeSpace, GeometricRay, RayTransferMatrix, \
+    ThinLens, conjugate_gauss_beams, gaussian_conj, geometric_conj_ab, \
+    geometric_conj_af, geometric_conj_bf, rayleigh2waist, waist2rayleigh
+from .medium import Medium
+from .utils import deviation, hyperfocal_distance, lens_formula, \
+    lens_makers_formula, mirror_formula, refraction_angle
 from .waves import TWave
+
 __all__.extend(waves.__all__)
 
 
-from . import gaussopt
-from .gaussopt import (RayTransferMatrix, FreeSpace, FlatRefraction,
-    CurvedRefraction, FlatMirror, CurvedMirror, ThinLens, GeometricRay,
-    BeamParameter, waist2rayleigh, rayleigh2waist, geometric_conj_ab,
-    geometric_conj_af, geometric_conj_bf, gaussian_conj, conjugate_gauss_beams)
 __all__.extend(gaussopt.__all__)
 
 
-from . import medium
-from .medium import Medium
 __all__.extend(medium.__all__)
 
 
-from . import utils
-from .utils import (refraction_angle, deviation, lens_makers_formula,
-    mirror_formula, lens_formula, hyperfocal_distance)
 __all__.extend(utils.__all__)

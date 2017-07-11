@@ -1,6 +1,6 @@
-from sympy.printing.codeprinter import CodePrinter
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
+from sympy.printing.codeprinter import CodePrinter
 from sympy.utilities.pytest import raises
 
 

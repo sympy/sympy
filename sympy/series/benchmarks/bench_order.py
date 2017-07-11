@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, O, Add
+from sympy import Add, O, Symbol
 
 x = Symbol('x')
 l = list(x**i for i in range(1000))

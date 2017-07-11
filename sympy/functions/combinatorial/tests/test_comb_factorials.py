@@ -1,7 +1,6 @@
-from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
-                   rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, Product, Mul, Piecewise, Mod,
-                   Eq, sqrt, Poly)
+from sympy import Eq, EulerGamma, Mod, Mul, O, Piecewise, Poly, Product, S, \
+    Symbol, binomial, expand_func, factorial, factorial2, ff, gamma, nan, oo, \
+    pi, polygamma, rf, simplify, sqrt, symbols, zoo
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.utilities.pytest import XFAIL, raises

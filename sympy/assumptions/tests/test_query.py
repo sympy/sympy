@@ -1,24 +1,23 @@
-from sympy.abc import t, w, x, y, z, n, k, m, p, i
-from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
-        remove_handler)
-from sympy.assumptions.assume import global_assumptions
+from sympy.abc import i, k, m, n, p, t, w, x, y, z
+from sympy.assumptions import AssumptionsContext, Q, ask, register_handler, \
+    remove_handler
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
+from sympy.assumptions.assume import assuming, global_assumptions
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
-from sympy.core.numbers import (I, Integer, Rational, oo, pi)
-from sympy.core.singleton import S
+from sympy.core.numbers import I, Integer, Rational, oo, pi
 from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.complexes import (Abs, im, re, sign)
-from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.complexes import Abs, im, re, sign
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (
-    acos, acot, asin, atan, cos, cot, sin, tan)
-from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
-from sympy.utilities.pytest import XFAIL, slow, raises
-from sympy.assumptions.assume import assuming
+from sympy.functions.elementary.trigonometric import acos, acot, asin, atan, \
+    cos, cot, sin, tan
+from sympy.logic.boolalg import And, Equivalent, Implies, Xor, to_cnf
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 
 def test_int_1():

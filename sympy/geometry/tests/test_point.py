@@ -1,15 +1,16 @@
 from __future__ import division
 
-from sympy import I, Rational, Symbol, pi, sqrt
-from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
-from sympy.geometry.entity import rotate, scale, translate
-from sympy.matrices import Matrix
-from sympy.utilities.iterables import subsets, permutations, cartes
-from sympy.utilities.pytest import raises
-
+import sys
 import traceback
 import warnings
-import sys
+
+from sympy import I, Rational, Symbol, pi, sqrt
+from sympy.geometry import Line, Line3D, Plane, Point, Point2D, Point3D
+from sympy.geometry.entity import rotate, scale, translate
+from sympy.matrices import Matrix
+from sympy.utilities.iterables import cartes, permutations, subsets
+from sympy.utilities.pytest import raises
+
 
 # make warnings show tracebacks
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):

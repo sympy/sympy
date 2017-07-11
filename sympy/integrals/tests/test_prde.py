@@ -1,17 +1,15 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy.integrals.risch import (DifferentialExtension, NonElementaryIntegral,
-        derivation, risch_integrate)
-from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
-    prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
-    prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
-    is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
-    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
-    prde_cancel_liouvillian)
-
+from sympy import I, Poly, S, exp, integrate, log, pi, symbols
+from sympy.abc import n, t, x, y
+from sympy.integrals.prde import constant_system, is_deriv_k, \
+    is_log_deriv_k_t_radical, is_log_deriv_k_t_radical_in_field, \
+    limited_integrate, limited_integrate_reduce, param_poly_rischDE, \
+    param_rischDE, parametric_log_deriv_heu, prde_cancel_liouvillian, \
+    prde_linear_constraints, prde_no_cancel_b_large, prde_no_cancel_b_small, \
+    prde_normal_denom, prde_spde, prde_special_denom
+from sympy.integrals.risch import DifferentialExtension, \
+    NonElementaryIntegral, derivation, risch_integrate
 from sympy.polys.polymatrix import PolyMatrix as Matrix
-
-from sympy import Poly, S, symbols, integrate, log, I, pi, exp
-from sympy.abc import x, t, n, y
 
 t0, t1, t2, t3, k = symbols('t:4 k')
 

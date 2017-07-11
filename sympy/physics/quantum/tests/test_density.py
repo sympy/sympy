@@ -1,18 +1,18 @@
-from sympy import symbols, S, log
+from sympy import S, log, symbols
 from sympy.core.trace import Tr
 from sympy.external import import_module
+from sympy.functions import sqrt
+from sympy.physics.quantum.cartesian import PxKet, PxOp, XKet, XOp
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.density import Density, entropy, fidelity
-from sympy.physics.quantum.state import Ket, TimeDepKet
+from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.physics.quantum.spin import JzKet
-from sympy.physics.quantum.operator import OuterProduct
-from sympy.functions import sqrt
-from sympy.utilities.pytest import raises, slow
-from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
+from sympy.physics.quantum.state import Ket, TimeDepKet
 from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.utilities.pytest import raises, slow
 
 
 def test_eval_args():

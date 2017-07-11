@@ -1,17 +1,17 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.logic.boolalg import And
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range, PY3
+from sympy.core.compatibility import PY3, as_int, range, with_metaclass
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda, _coeff_isneg
-from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Dummy, symbols, Wild
-from sympy.core.sympify import _sympify, sympify, converter
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet, imageset)
+from sympy.core.singleton import S, Singleton
+from sympy.core.symbol import Dummy, Wild, symbols
+from sympy.core.sympify import _sympify, converter, sympify
+from sympy.logic.boolalg import And
 from sympy.sets.conditionset import ConditionSet
+from sympy.sets.sets import EmptySet, FiniteSet, Intersection, Interval, Set, \
+    Union, imageset
 from sympy.utilities.misc import filldedent, func_name
 
 

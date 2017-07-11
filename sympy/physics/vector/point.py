@@ -1,7 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 from sympy.core.compatibility import range
-from .vector import Vector, _check_vector
+
 from .frame import _check_frame
+from .vector import Vector, _check_vector
 
 __all__ = ['Point']
 

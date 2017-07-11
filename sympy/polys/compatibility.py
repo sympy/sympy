@@ -1,225 +1,78 @@
 """Compatibility interface between dense and sparse polys. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.densearith import dup_add_term
-from sympy.polys.densearith import dmp_add_term
-from sympy.polys.densearith import dup_sub_term
-from sympy.polys.densearith import dmp_sub_term
-from sympy.polys.densearith import dup_mul_term
-from sympy.polys.densearith import dmp_mul_term
-from sympy.polys.densearith import dup_add_ground
-from sympy.polys.densearith import dmp_add_ground
-from sympy.polys.densearith import dup_sub_ground
-from sympy.polys.densearith import dmp_sub_ground
-from sympy.polys.densearith import dup_mul_ground
-from sympy.polys.densearith import dmp_mul_ground
-from sympy.polys.densearith import dup_quo_ground
-from sympy.polys.densearith import dmp_quo_ground
-from sympy.polys.densearith import dup_exquo_ground
-from sympy.polys.densearith import dmp_exquo_ground
-from sympy.polys.densearith import dup_lshift
-from sympy.polys.densearith import dup_rshift
-from sympy.polys.densearith import dup_abs
-from sympy.polys.densearith import dmp_abs
-from sympy.polys.densearith import dup_neg
-from sympy.polys.densearith import dmp_neg
-from sympy.polys.densearith import dup_add
-from sympy.polys.densearith import dmp_add
-from sympy.polys.densearith import dup_sub
-from sympy.polys.densearith import dmp_sub
-from sympy.polys.densearith import dup_add_mul
-from sympy.polys.densearith import dmp_add_mul
-from sympy.polys.densearith import dup_sub_mul
-from sympy.polys.densearith import dmp_sub_mul
-from sympy.polys.densearith import dup_mul
-from sympy.polys.densearith import dmp_mul
-from sympy.polys.densearith import dup_sqr
-from sympy.polys.densearith import dmp_sqr
-from sympy.polys.densearith import dup_pow
-from sympy.polys.densearith import dmp_pow
-from sympy.polys.densearith import dup_pdiv
-from sympy.polys.densearith import dup_prem
-from sympy.polys.densearith import dup_pquo
-from sympy.polys.densearith import dup_pexquo
-from sympy.polys.densearith import dmp_pdiv
-from sympy.polys.densearith import dmp_prem
-from sympy.polys.densearith import dmp_pquo
-from sympy.polys.densearith import dmp_pexquo
-from sympy.polys.densearith import dup_rr_div
-from sympy.polys.densearith import dmp_rr_div
-from sympy.polys.densearith import dup_ff_div
-from sympy.polys.densearith import dmp_ff_div
-from sympy.polys.densearith import dup_div
-from sympy.polys.densearith import dup_rem
-from sympy.polys.densearith import dup_quo
-from sympy.polys.densearith import dup_exquo
-from sympy.polys.densearith import dmp_div
-from sympy.polys.densearith import dmp_rem
-from sympy.polys.densearith import dmp_quo
-from sympy.polys.densearith import dmp_exquo
-from sympy.polys.densearith import dup_max_norm
-from sympy.polys.densearith import dmp_max_norm
-from sympy.polys.densearith import dup_l1_norm
-from sympy.polys.densearith import dmp_l1_norm
-from sympy.polys.densearith import dup_expand
-from sympy.polys.densearith import dmp_expand
-from sympy.polys.densebasic import dup_LC
-from sympy.polys.densebasic import dmp_LC
-from sympy.polys.densebasic import dup_TC
-from sympy.polys.densebasic import dmp_TC
-from sympy.polys.densebasic import dmp_ground_LC
-from sympy.polys.densebasic import dmp_ground_TC
-from sympy.polys.densebasic import dup_degree
-from sympy.polys.densebasic import dmp_degree
-from sympy.polys.densebasic import dmp_degree_in
-from sympy.polys.densebasic import dmp_to_dict
-from sympy.polys.densetools import dup_integrate
-from sympy.polys.densetools import dmp_integrate
-from sympy.polys.densetools import dmp_integrate_in
-from sympy.polys.densetools import dup_diff
-from sympy.polys.densetools import dmp_diff
-from sympy.polys.densetools import dmp_diff_in
-from sympy.polys.densetools import dup_eval
-from sympy.polys.densetools import dmp_eval
-from sympy.polys.densetools import dmp_eval_in
-from sympy.polys.densetools import dmp_eval_tail
-from sympy.polys.densetools import dmp_diff_eval_in
-from sympy.polys.densetools import dup_trunc
-from sympy.polys.densetools import dmp_trunc
-from sympy.polys.densetools import dmp_ground_trunc
-from sympy.polys.densetools import dup_monic
-from sympy.polys.densetools import dmp_ground_monic
-from sympy.polys.densetools import dup_content
-from sympy.polys.densetools import dmp_ground_content
-from sympy.polys.densetools import dup_primitive
-from sympy.polys.densetools import dmp_ground_primitive
-from sympy.polys.densetools import dup_extract
-from sympy.polys.densetools import dmp_ground_extract
-from sympy.polys.densetools import dup_real_imag
-from sympy.polys.densetools import dup_mirror
-from sympy.polys.densetools import dup_scale
-from sympy.polys.densetools import dup_shift
-from sympy.polys.densetools import dup_transform
-from sympy.polys.densetools import dup_compose
-from sympy.polys.densetools import dmp_compose
-from sympy.polys.densetools import dup_decompose
-from sympy.polys.densetools import dmp_lift
-from sympy.polys.densetools import dup_sign_variations
-from sympy.polys.densetools import dup_clear_denoms
-from sympy.polys.densetools import dmp_clear_denoms
-from sympy.polys.densetools import dup_revert
-from sympy.polys.euclidtools import dup_half_gcdex
-from sympy.polys.euclidtools import dmp_half_gcdex
-from sympy.polys.euclidtools import dup_gcdex
-from sympy.polys.euclidtools import dmp_gcdex
-from sympy.polys.euclidtools import dup_invert
-from sympy.polys.euclidtools import dmp_invert
-from sympy.polys.euclidtools import dup_euclidean_prs
-from sympy.polys.euclidtools import dmp_euclidean_prs
-from sympy.polys.euclidtools import dup_primitive_prs
-from sympy.polys.euclidtools import dmp_primitive_prs
-from sympy.polys.euclidtools import dup_inner_subresultants
-from sympy.polys.euclidtools import dup_subresultants
-from sympy.polys.euclidtools import dup_prs_resultant
-from sympy.polys.euclidtools import dup_resultant
-from sympy.polys.euclidtools import dmp_inner_subresultants
-from sympy.polys.euclidtools import dmp_subresultants
-from sympy.polys.euclidtools import dmp_prs_resultant
-from sympy.polys.euclidtools import dmp_zz_modular_resultant
-from sympy.polys.euclidtools import dmp_zz_collins_resultant
-from sympy.polys.euclidtools import dmp_qq_collins_resultant
-from sympy.polys.euclidtools import dmp_resultant
-from sympy.polys.euclidtools import dup_discriminant
-from sympy.polys.euclidtools import dmp_discriminant
-from sympy.polys.euclidtools import dup_rr_prs_gcd
-from sympy.polys.euclidtools import dup_ff_prs_gcd
-from sympy.polys.euclidtools import dmp_rr_prs_gcd
-from sympy.polys.euclidtools import dmp_ff_prs_gcd
-from sympy.polys.euclidtools import dup_zz_heu_gcd
-from sympy.polys.euclidtools import dmp_zz_heu_gcd
-from sympy.polys.euclidtools import dup_qq_heu_gcd
-from sympy.polys.euclidtools import dmp_qq_heu_gcd
-from sympy.polys.euclidtools import dup_inner_gcd
-from sympy.polys.euclidtools import dmp_inner_gcd
-from sympy.polys.euclidtools import dup_gcd
-from sympy.polys.euclidtools import dmp_gcd
-from sympy.polys.euclidtools import dup_rr_lcm
-from sympy.polys.euclidtools import dup_ff_lcm
-from sympy.polys.euclidtools import dup_lcm
-from sympy.polys.euclidtools import dmp_rr_lcm
-from sympy.polys.euclidtools import dmp_ff_lcm
-from sympy.polys.euclidtools import dmp_lcm
-from sympy.polys.euclidtools import dmp_content
-from sympy.polys.euclidtools import dmp_primitive
-from sympy.polys.euclidtools import dup_cancel
-from sympy.polys.euclidtools import dmp_cancel
-from sympy.polys.factortools import dup_trial_division
-from sympy.polys.factortools import dmp_trial_division
-from sympy.polys.factortools import dup_zz_mignotte_bound
-from sympy.polys.factortools import dmp_zz_mignotte_bound
-from sympy.polys.factortools import dup_zz_hensel_step
-from sympy.polys.factortools import dup_zz_hensel_lift
-from sympy.polys.factortools import dup_zz_zassenhaus
-from sympy.polys.factortools import dup_zz_irreducible_p
-from sympy.polys.factortools import dup_cyclotomic_p
-from sympy.polys.factortools import dup_zz_cyclotomic_poly
-from sympy.polys.factortools import dup_zz_cyclotomic_factor
-from sympy.polys.factortools import dup_zz_factor_sqf
-from sympy.polys.factortools import dup_zz_factor
-from sympy.polys.factortools import dmp_zz_wang_non_divisors
-from sympy.polys.factortools import dmp_zz_wang_lead_coeffs
-from sympy.polys.factortools import dup_zz_diophantine
-from sympy.polys.factortools import dmp_zz_diophantine
-from sympy.polys.factortools import dmp_zz_wang_hensel_lifting
-from sympy.polys.factortools import dmp_zz_wang
-from sympy.polys.factortools import dmp_zz_factor
-from sympy.polys.factortools import dup_ext_factor
-from sympy.polys.factortools import dmp_ext_factor
-from sympy.polys.factortools import dup_gf_factor
-from sympy.polys.factortools import dmp_gf_factor
-from sympy.polys.factortools import dup_factor_list
-from sympy.polys.factortools import dup_factor_list_include
-from sympy.polys.factortools import dmp_factor_list
-from sympy.polys.factortools import dmp_factor_list_include
-from sympy.polys.factortools import dup_irreducible_p
-from sympy.polys.factortools import dmp_irreducible_p
-from sympy.polys.rootisolation import dup_sturm
-from sympy.polys.rootisolation import dup_root_upper_bound
-from sympy.polys.rootisolation import dup_root_lower_bound
-from sympy.polys.rootisolation import dup_step_refine_real_root
-from sympy.polys.rootisolation import dup_inner_refine_real_root
-from sympy.polys.rootisolation import dup_outer_refine_real_root
-from sympy.polys.rootisolation import dup_refine_real_root
-from sympy.polys.rootisolation import dup_inner_isolate_real_roots
-from sympy.polys.rootisolation import dup_inner_isolate_positive_roots
-from sympy.polys.rootisolation import dup_inner_isolate_negative_roots
-from sympy.polys.rootisolation import dup_isolate_real_roots_sqf
-from sympy.polys.rootisolation import dup_isolate_real_roots
-from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.polys.rootisolation import dup_count_real_roots
-from sympy.polys.rootisolation import dup_count_complex_roots
-from sympy.polys.rootisolation import dup_isolate_complex_roots_sqf
-from sympy.polys.rootisolation import dup_isolate_all_roots_sqf
-from sympy.polys.rootisolation import dup_isolate_all_roots
-
-from sympy.polys.sqfreetools import (
-    dup_sqf_p, dmp_sqf_p, dup_sqf_norm, dmp_sqf_norm, dup_gf_sqf_part, dmp_gf_sqf_part,
-    dup_sqf_part, dmp_sqf_part, dup_gf_sqf_list, dmp_gf_sqf_list, dup_sqf_list,
-    dup_sqf_list_include, dmp_sqf_list, dmp_sqf_list_include, dup_gff_list, dmp_gff_list)
-
-from sympy.polys.galoistools import (
-    gf_degree, gf_LC, gf_TC, gf_strip, gf_from_dict,
-    gf_to_dict, gf_from_int_poly, gf_to_int_poly, gf_neg, gf_add_ground, gf_sub_ground,
-    gf_mul_ground, gf_quo_ground, gf_add, gf_sub, gf_mul, gf_sqr, gf_add_mul, gf_sub_mul,
-    gf_expand, gf_div, gf_rem, gf_quo, gf_exquo, gf_lshift, gf_rshift, gf_pow, gf_pow_mod,
-    gf_gcd, gf_lcm, gf_cofactors, gf_gcdex, gf_monic, gf_diff, gf_eval, gf_multi_eval,
-    gf_compose, gf_compose_mod, gf_trace_map, gf_random, gf_irreducible, gf_irred_p_ben_or,
-    gf_irred_p_rabin, gf_irreducible_p, gf_sqf_p, gf_sqf_part, gf_Qmatrix,
-    gf_berlekamp, gf_ddf_zassenhaus, gf_edf_zassenhaus, gf_ddf_shoup, gf_edf_shoup,
-    gf_zassenhaus, gf_shoup, gf_factor_sqf, gf_factor)
-
+from sympy.polys.densearith import dmp_abs, dmp_add, dmp_add_ground, \
+    dmp_add_mul, dmp_add_term, dmp_div, dmp_expand, dmp_exquo, \
+    dmp_exquo_ground, dmp_ff_div, dmp_l1_norm, dmp_max_norm, dmp_mul, \
+    dmp_mul_ground, dmp_mul_term, dmp_neg, dmp_pdiv, dmp_pexquo, dmp_pow, \
+    dmp_pquo, dmp_prem, dmp_quo, dmp_quo_ground, dmp_rem, dmp_rr_div, \
+    dmp_sqr, dmp_sub, dmp_sub_ground, dmp_sub_mul, dmp_sub_term, dup_abs, \
+    dup_add, dup_add_ground, dup_add_mul, dup_add_term, dup_div, dup_expand, \
+    dup_exquo, dup_exquo_ground, dup_ff_div, dup_l1_norm, dup_lshift, \
+    dup_max_norm, dup_mul, dup_mul_ground, dup_mul_term, dup_neg, dup_pdiv, \
+    dup_pexquo, dup_pow, dup_pquo, dup_prem, dup_quo, dup_quo_ground, \
+    dup_rem, dup_rr_div, dup_rshift, dup_sqr, dup_sub, dup_sub_ground, \
+    dup_sub_mul, dup_sub_term
+from sympy.polys.densebasic import dmp_degree, dmp_degree_in, dmp_ground_LC, \
+    dmp_ground_TC, dmp_LC, dmp_TC, dmp_to_dict, dup_degree, dup_LC, dup_TC
+from sympy.polys.densetools import dmp_clear_denoms, dmp_compose, dmp_diff, \
+    dmp_diff_eval_in, dmp_diff_in, dmp_eval, dmp_eval_in, dmp_eval_tail, \
+    dmp_ground_content, dmp_ground_extract, dmp_ground_monic, \
+    dmp_ground_primitive, dmp_ground_trunc, dmp_integrate, dmp_integrate_in, \
+    dmp_lift, dmp_trunc, dup_clear_denoms, dup_compose, dup_content, \
+    dup_decompose, dup_diff, dup_eval, dup_extract, dup_integrate, \
+    dup_mirror, dup_monic, dup_primitive, dup_real_imag, dup_revert, \
+    dup_scale, dup_shift, dup_sign_variations, dup_transform, dup_trunc
+from sympy.polys.euclidtools import dmp_cancel, dmp_content, \
+    dmp_discriminant, dmp_euclidean_prs, dmp_ff_lcm, dmp_ff_prs_gcd, dmp_gcd, \
+    dmp_gcdex, dmp_half_gcdex, dmp_inner_gcd, dmp_inner_subresultants, \
+    dmp_invert, dmp_lcm, dmp_primitive, dmp_primitive_prs, dmp_prs_resultant, \
+    dmp_qq_collins_resultant, dmp_qq_heu_gcd, dmp_resultant, dmp_rr_lcm, \
+    dmp_rr_prs_gcd, dmp_subresultants, dmp_zz_collins_resultant, \
+    dmp_zz_heu_gcd, dmp_zz_modular_resultant, dup_cancel, dup_discriminant, \
+    dup_euclidean_prs, dup_ff_lcm, dup_ff_prs_gcd, dup_gcd, dup_gcdex, \
+    dup_half_gcdex, dup_inner_gcd, dup_inner_subresultants, dup_invert, \
+    dup_lcm, dup_primitive_prs, dup_prs_resultant, dup_qq_heu_gcd, \
+    dup_resultant, dup_rr_lcm, dup_rr_prs_gcd, dup_subresultants, \
+    dup_zz_heu_gcd
+from sympy.polys.factortools import dmp_ext_factor, dmp_factor_list, \
+    dmp_factor_list_include, dmp_gf_factor, dmp_irreducible_p, \
+    dmp_trial_division, dmp_zz_diophantine, dmp_zz_factor, \
+    dmp_zz_mignotte_bound, dmp_zz_wang, dmp_zz_wang_hensel_lifting, \
+    dmp_zz_wang_lead_coeffs, dmp_zz_wang_non_divisors, dup_cyclotomic_p, \
+    dup_ext_factor, dup_factor_list, dup_factor_list_include, dup_gf_factor, \
+    dup_irreducible_p, dup_trial_division, dup_zz_cyclotomic_factor, \
+    dup_zz_cyclotomic_poly, dup_zz_diophantine, dup_zz_factor, \
+    dup_zz_factor_sqf, dup_zz_hensel_lift, dup_zz_hensel_step, \
+    dup_zz_irreducible_p, dup_zz_mignotte_bound, dup_zz_zassenhaus
+from sympy.polys.galoistools import gf_add, gf_add_ground, gf_add_mul, \
+    gf_berlekamp, gf_cofactors, gf_compose, gf_compose_mod, gf_ddf_shoup, \
+    gf_ddf_zassenhaus, gf_degree, gf_diff, gf_div, gf_edf_shoup, \
+    gf_edf_zassenhaus, gf_eval, gf_expand, gf_exquo, gf_factor, \
+    gf_factor_sqf, gf_from_dict, gf_from_int_poly, gf_gcd, gf_gcdex, \
+    gf_irred_p_ben_or, gf_irred_p_rabin, gf_irreducible, gf_irreducible_p, \
+    gf_LC, gf_lcm, gf_lshift, gf_monic, gf_mul, gf_mul_ground, gf_multi_eval, \
+    gf_neg, gf_pow, gf_pow_mod, gf_Qmatrix, gf_quo, gf_quo_ground, gf_random, \
+    gf_rem, gf_rshift, gf_shoup, gf_sqf_p, gf_sqf_part, gf_sqr, gf_strip, \
+    gf_sub, gf_sub_ground, gf_sub_mul, gf_TC, gf_to_dict, gf_to_int_poly, \
+    gf_trace_map, gf_zassenhaus
+from sympy.polys.rootisolation import dup_count_complex_roots, \
+    dup_count_real_roots, dup_inner_isolate_negative_roots, \
+    dup_inner_isolate_positive_roots, dup_inner_isolate_real_roots, \
+    dup_inner_refine_real_root, dup_isolate_all_roots, \
+    dup_isolate_all_roots_sqf, dup_isolate_complex_roots_sqf, \
+    dup_isolate_real_roots, dup_isolate_real_roots_list, \
+    dup_isolate_real_roots_sqf, dup_outer_refine_real_root, \
+    dup_refine_real_root, dup_root_lower_bound, dup_root_upper_bound, \
+    dup_step_refine_real_root, dup_sturm
+from sympy.polys.sqfreetools import dmp_gf_sqf_list, dmp_gf_sqf_part, \
+    dmp_gff_list, dmp_sqf_list, dmp_sqf_list_include, dmp_sqf_norm, \
+    dmp_sqf_p, dmp_sqf_part, dup_gf_sqf_list, dup_gf_sqf_part, dup_gff_list, \
+    dup_sqf_list, dup_sqf_list_include, dup_sqf_norm, dup_sqf_p, \
+    dup_sqf_part
 from sympy.utilities import public
+
 
 @public
 class IPolys(object):

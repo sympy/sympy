@@ -1,8 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from . import rl
 from .core import do_one, exhaust, switch
 from .traverse import top_down
+
 
 def subs(d, **kwargs):
     """ Full simultaneous exact substitution

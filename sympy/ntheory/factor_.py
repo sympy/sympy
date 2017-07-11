@@ -1,22 +1,23 @@
 """
 Integer factorization
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import random
 import math
+import random
 
-from .primetest import isprime
-from .generate import sieve, primerange, nextprime
 from sympy.core import sympify
+from sympy.core.compatibility import SYMPY_INTS, as_int, range
 from sympy.core.evalf import bitcount
-from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import igcd, ilcm, Rational
-from sympy.core.power import integer_nthroot, Pow
-from sympy.core.mul import Mul
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
-from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.logic import fuzzy_and
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational, igcd, ilcm
+from sympy.core.power import Pow, integer_nthroot
+from sympy.core.singleton import S
+
+from .generate import nextprime, primerange, sieve
+from .primetest import isprime
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]

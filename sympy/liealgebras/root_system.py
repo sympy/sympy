@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from .cartan_type import CartanType
 from sympy.core import Basic
 from sympy.core.compatibility import range
+
+from .cartan_type import CartanType
+
 
 class RootSystem(Basic):
     """Represent the root system of a simple Lie algebra

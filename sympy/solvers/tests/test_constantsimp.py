@@ -3,11 +3,10 @@ If the arbitrary constant class from issue 4435 is ever implemented, this
 should serve as a set of test cases.
 """
 
-from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
-                   S, sin, sinh, sqrt, Symbol)
+from sympy import Eq, Function, I, Integral, Pow, S, Symbol, acos, cos, cosh, \
+    exp, log, sin, sinh, sqrt
 from sympy.solvers.ode import constant_renumber, constantsimp
 from sympy.utilities.pytest import XFAIL
-
 
 x = Symbol('x')
 y = Symbol('y')

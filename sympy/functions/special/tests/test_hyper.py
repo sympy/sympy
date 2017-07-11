@@ -1,12 +1,11 @@
-from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo, Derivative, gamma, O)
+from sympy import Derivative, I, O, S, Tuple, cos, exp, gamma, hyper, log, \
+    meijerg, oo, pi, sqrt, symbols
+from sympy.abc import k, x, z
 from sympy.series.limits import limit
-from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises, slow
-from sympy.utilities.randtest import (
-    random_complex_number as randcplx,
-    verify_numerically as tn,
-    test_derivative_numerically as td)
+from sympy.utilities.randtest import random_complex_number as randcplx
+from sympy.utilities.randtest import test_derivative_numerically as td
+from sympy.utilities.randtest import verify_numerically as tn
 
 
 def test_TupleParametersBase():

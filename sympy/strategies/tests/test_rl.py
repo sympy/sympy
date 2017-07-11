@@ -1,6 +1,7 @@
-from sympy.strategies.rl import (rm_id, glom, flatten, unpack, sort, distribute,
-        subs, rebuild)
 from sympy import Basic
+from sympy.strategies.rl import distribute, flatten, glom, rebuild, rm_id, \
+    sort, subs, unpack
+
 
 def test_rm_id():
     rmzeros = rm_id(lambda x: x == 0)

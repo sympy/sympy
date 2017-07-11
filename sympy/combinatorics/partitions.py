@@ -1,13 +1,13 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from collections import defaultdict
 
 from sympy.core import Basic, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key, range
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.sets.sets import FiniteSet
-from sympy.utilities.iterables import has_dups, flatten, group
-
-from collections import defaultdict
+from sympy.utilities.iterables import flatten, group, has_dups
 
 
 class Partition(FiniteSet):

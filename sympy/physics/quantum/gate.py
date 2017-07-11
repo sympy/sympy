@@ -13,27 +13,24 @@ Medium Term Todo:
   format. This should also use the matrix slots.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from itertools import chain
 import random
+from itertools import chain
 
-from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
+from sympy import Add, I, Integer, Mul, Pow, Tuple, sqrt
+from sympy.core.compatibility import is_sequence, range, unicode
 from sympy.core.numbers import Number
-from sympy.core.compatibility import is_sequence, unicode, range
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
-
+from sympy.matrices.matrices import MatrixBase
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
-from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
-from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
-                                            HermitianOperator)
-from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
-
-from sympy.matrices.matrices import MatrixBase
-
+from sympy.physics.quantum.matrixutils import matrix_eye, matrix_tensor_product
+from sympy.physics.quantum.operator import HermitianOperator, Operator, \
+    UnitaryOperator
+from sympy.physics.quantum.qexpr import QuantumError
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.utilities import default_sort_key
 
 __all__ = [

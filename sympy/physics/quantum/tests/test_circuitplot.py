@@ -1,7 +1,7 @@
-from sympy.physics.quantum.circuitplot import labeller, render_label, Mz, CreateOneQubitGate,\
-     CreateCGate
-from sympy.physics.quantum.gate import CNOT, H, SWAP, CGate, S, T
 from sympy.external import import_module
+from sympy.physics.quantum.circuitplot import CreateCGate, \
+    CreateOneQubitGate, Mz, labeller, render_label
+from sympy.physics.quantum.gate import CNOT, SWAP, CGate, H, S, T
 from sympy.utilities.pytest import skip
 
 mpl = import_module('matplotlib')

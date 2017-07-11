@@ -1,6 +1,7 @@
-from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ
 from sympy.polys.heuristicgcd import heugcd
+from sympy.polys.rings import ring
+
 
 def test_heugcd_univariate_integers():
     R, x = ring("x", ZZ)

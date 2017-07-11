@@ -10,14 +10,12 @@
     refactoring.
 """
 
-from __future__ import print_function, division
-
-from sympy.core.function import Function
-from sympy.functions import exp, Piecewise
-from sympy.tensor.indexed import Idx, Indexed
-
+from __future__ import division, print_function
 
 from sympy.core.compatibility import reduce
+from sympy.core.function import Function
+from sympy.functions import Piecewise, exp
+from sympy.tensor.indexed import Idx, Indexed
 
 
 class IndexConformanceException(Exception):

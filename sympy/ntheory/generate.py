@@ -2,16 +2,15 @@
 Generating and counting primes.
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import random
-from bisect import bisect
-# Using arrays for sieving instead of lists greatly reduces
-# memory consumption
 from array import array as _array
+from bisect import bisect
+
+from sympy.core.compatibility import as_int, range
 
 from .primetest import isprime
-from sympy.core.compatibility import as_int, range
 
 
 def _arange(a, b):

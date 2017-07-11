@@ -1,14 +1,16 @@
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types, range
-from sympy.core.cache import cacheit
-from sympy.core import S, Dummy
-from sympy.solvers import solve
-from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan2, simplify
 import sympy.vector
-from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
-                                    SpaceOrienter, QuaternionOrienter)
+from sympy import ImmutableMatrix as Matrix
+from sympy import Symbol, Tuple, acos, atan2, cos, diff, eye, simplify, sin, \
+    sqrt, trigsimp
+from sympy.core import Dummy, S
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import range, string_types
+from sympy.solvers import solve
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.vector.orienters import AxisOrienter, BodyOrienter, Orienter, \
+    QuaternionOrienter, SpaceOrienter
+from sympy.vector.scalar import BaseScalar
 
 
 def CoordSysCartesian(*args, **kwargs):

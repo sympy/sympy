@@ -1,17 +1,16 @@
-from __future__ import print_function, division
-
-from sympy.core import Add, Mul, Pow, S, sympify
-from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
-from sympy.core.compatibility import default_sort_key, string_types
-from sympy.core.function import Lambda
-from sympy.core.mul import _keep_coeff
-from sympy.core.symbol import Symbol
-from sympy.printing.str import StrPrinter
-from sympy.printing.precedence import precedence
+from __future__ import division, print_function
 
 # Backwards compatibility
 from sympy.codegen.ast import Assignment
+from sympy.core import Add, Mul, Pow, S, sympify
+from sympy.core.basic import Basic
+from sympy.core.compatibility import default_sort_key, string_types
+from sympy.core.containers import Tuple
+from sympy.core.function import Lambda
+from sympy.core.mul import _keep_coeff
+from sympy.core.symbol import Symbol
+from sympy.printing.precedence import precedence
+from sympy.printing.str import StrPrinter
 
 
 class AssignmentError(Exception):

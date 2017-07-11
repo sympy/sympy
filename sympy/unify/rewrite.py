@@ -1,12 +1,12 @@
 """ Functions to support rewriting of SymPy expressions """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.unify.usympy import unify
-from sympy.unify.usympy import rebuild
-from sympy.strategies.tools import subs
 from sympy import Expr
 from sympy.assumptions import ask
+from sympy.strategies.tools import subs
+from sympy.unify.usympy import rebuild, unify
+
 
 def rewriterule(source, target, variables=(), condition=None, assume=None):
     """ Rewrite rule

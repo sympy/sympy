@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from __future__ import print_function, division
-from sympy.core.compatibility import range
+from __future__ import division, print_function
 
 from random import random
-from sympy import factor, I, Integer, pi, simplify, sin, sqrt, Symbol, sympify
-from sympy.abc import x, y, z
 from timeit import default_timer as clock
+
+from sympy import I, Integer, Symbol, factor, pi, simplify, sin, sqrt, sympify
+from sympy.abc import x, y, z
+from sympy.core.compatibility import range
 
 
 def bench_R1():

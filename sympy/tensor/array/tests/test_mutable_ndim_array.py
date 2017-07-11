@@ -1,8 +1,8 @@
 from copy import copy
 
-from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, diff
+from sympy import Rational, SparseMatrix, Symbol, diff
 from sympy.matrices import Matrix
+from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
 from sympy.tensor.array.sparse_ndim_array import MutableSparseNDimArray
 from sympy.utilities.pytest import raises
 

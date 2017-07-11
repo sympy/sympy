@@ -1,29 +1,29 @@
 """Formal Power Series"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
-from sympy import oo, zoo, nan
-from sympy.core.expr import Expr
+from sympy import nan, oo, zoo
 from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.function import Derivative, Function
-from sympy.core.singleton import S
-from sympy.core.sympify import sympify
-from sympy.core.symbol import Wild, Dummy, symbols, Symbol
-from sympy.core.relational import Eq
-from sympy.core.numbers import Rational
 from sympy.core.compatibility import iterable
-from sympy.sets.sets import Interval
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative, Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol, Wild, symbols
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
+from sympy.functions.elementary.integers import ceiling, floor, frac
+from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.integers import floor, frac, ceiling
-from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.series.limits import Limit
+from sympy.series.order import Order
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
-from sympy.series.order import Order
-from sympy.series.limits import Limit
+from sympy.sets.sets import Interval
 
 
 def rational_algorithm(f, x, k, order=4, full=False):

@@ -1,12 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
-
-from sympy.functions.elementary.miscellaneous import sqrt
-
+from sympy.core import S, cacheit, sympify
+from sympy.core.function import ArgumentIndexError, Function, _coeff_isneg
+from sympy.functions.combinatorial.factorials import RisingFactorial, factorial
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def _rewrite_hyperbolics_as_exp(expr):

@@ -1,9 +1,7 @@
-from sympy import (
-    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
-    Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
-    Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol, S
-)
+from sympy import Abs, And, Basic, Eq, Function, I, Integral, Interval, Max, \
+    Min, Not, Or, Piecewise, Rational, S, Symbol, adjoint, conjugate, cos, \
+    diff, exp, expand, integrate, lambdify, log, oo, pi, piecewise_fold, \
+    solve, symbols, transpose
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
 

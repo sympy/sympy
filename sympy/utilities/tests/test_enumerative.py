@@ -1,9 +1,6 @@
 from sympy.core.compatibility import range, zip_longest
-from sympy.utilities.enumerative import (
-    list_visitor,
-    MultisetPartitionTraverser,
-    multiset_partitions_taocp
-    )
+from sympy.utilities.enumerative import MultisetPartitionTraverser, \
+    list_visitor, multiset_partitions_taocp
 from sympy.utilities.iterables import _set_partitions
 from sympy.utilities.pytest import slow
 

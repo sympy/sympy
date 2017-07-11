@@ -1,8 +1,8 @@
-from sympy.core import Expr, Symbol, S
-from sympy.core.sympify import _sympify
+from sympy.core import Expr, S, Symbol
 from sympy.core.compatibility import range
-from sympy.printing.pretty.stringpict import prettyForm
+from sympy.core.sympify import _sympify
 from sympy.printing.precedence import PRECEDENCE
+from sympy.printing.pretty.stringpict import prettyForm
 
 
 class BaseScalar(Expr):

@@ -1,20 +1,20 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Symbol, Dummy, sympify
+from sympy.core import Dummy, Symbol, sympify
 from sympy.core.compatibility import iterable
-from sympy.sets import Interval
-from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.sets.sets import FiniteSet, Union
-from sympy.sets.fancysets import ImageSet
+from sympy.core.relational import Eq, Ge, Lt, Relational
 from sympy.core.singleton import S
-
 from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
+from sympy.sets import Interval
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.sets import FiniteSet, Union
 from sympy.utilities.misc import filldedent
+
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.

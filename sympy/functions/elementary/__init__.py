@@ -1,6 +1,2 @@
-from . import complexes
-from . import exponential
-from . import hyperbolic
-from . import integers
-from . import trigonometric
-from . import miscellaneous
+from . import complexes, exponential, hyperbolic, integers, miscellaneous, \
+    trigonometric

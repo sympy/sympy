@@ -1,7 +1,7 @@
-from sympy.core import symbols, S
+from sympy.core import S, symbols
 from sympy.functions import adjoint, conjugate, transpose
-from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
-from sympy.matrices import eye, Matrix
+from sympy.matrices import Matrix, eye
+from sympy.matrices.expressions import Adjoint, MatrixSymbol, Transpose, trace
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 A = MatrixSymbol('A', n, m)

@@ -1,7 +1,8 @@
-from sympy.stats import Poisson, Beta
-from sympy.stats.rv import pspace, ProductPSpace, density
+from sympy import Eq, Symbol
+from sympy.stats import Beta, Poisson
 from sympy.stats.drv_types import PoissonDistribution
-from sympy import Symbol, Eq
+from sympy.stats.rv import ProductPSpace, density, pspace
+
 
 def test_density():
     x = Symbol('x')

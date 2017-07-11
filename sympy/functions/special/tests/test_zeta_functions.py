@@ -1,8 +1,9 @@
-from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
-                   zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes)
-from sympy.utilities.randtest import (test_derivative_numerically as td,
-                      random_complex_number as randcplx, verify_numerically as tn)
+from sympy import Float, I, O, Rational, S, Symbol, dirichlet_eta, exp, \
+    exp_polar, expand_func, lerchphi, log, nan, pi, polar_lift, polylog, \
+    sqrt, stieltjes, zeta, zoo
+from sympy.utilities.randtest import random_complex_number as randcplx
+from sympy.utilities.randtest import test_derivative_numerically as td
+from sympy.utilities.randtest import verify_numerically as tn
 
 x = Symbol('x')
 a = Symbol('a')

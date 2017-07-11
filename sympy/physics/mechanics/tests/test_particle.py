@@ -1,5 +1,5 @@
 from sympy import symbols
-from sympy.physics.mechanics import Point, Particle, ReferenceFrame
+from sympy.physics.mechanics import Particle, Point, ReferenceFrame
 
 
 def test_particle():

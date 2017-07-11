@@ -1,11 +1,9 @@
+from sympy import Q, refine
 from sympy.core import S, symbols
-from sympy.matrices import eye, Matrix, ShapeError
-from sympy.matrices.expressions import (
-    Identity, MatrixExpr, MatrixSymbol, Determinant,
-    det, ZeroMatrix, Transpose
-)
+from sympy.matrices import Matrix, ShapeError, eye
+from sympy.matrices.expressions import Determinant, Identity, MatrixExpr, \
+    MatrixSymbol, Transpose, ZeroMatrix, det
 from sympy.utilities.pytest import raises
-from sympy import refine, Q
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)

@@ -1,7 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Basic, Symbol, symbols, lambdify
-from util import interpolate, rinterpolate, create_bounds, update_bounds
+from util import create_bounds, interpolate, rinterpolate, update_bounds
+
+from sympy import Basic, Symbol, lambdify, symbols
 from sympy.core.compatibility import range
 
 

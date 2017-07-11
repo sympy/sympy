@@ -1,6 +1,6 @@
-from sympy.physics.quantum import Dagger, AntiCommutator, qapply
-from sympy.physics.quantum.fermion import FermionOp
-from sympy.physics.quantum.fermion import FermionFockKet, FermionFockBra
+from sympy.physics.quantum import AntiCommutator, Dagger, qapply
+from sympy.physics.quantum.fermion import FermionFockBra, FermionFockKet, \
+    FermionOp
 
 
 def test_fermionoperator():

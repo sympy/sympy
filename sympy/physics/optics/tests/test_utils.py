@@ -1,15 +1,13 @@
 from __future__ import division
 
-from sympy.physics.optics.utils import (refraction_angle, deviation,
-    lens_makers_formula, mirror_formula, lens_formula,
-    hyperfocal_distance)
-from sympy.physics.optics.medium import Medium
-from sympy.physics.units import e0
-
-from sympy import symbols, sqrt, Matrix, oo
-from sympy.geometry.point import Point3D
+from sympy import Matrix, oo, sqrt, symbols
 from sympy.geometry.line import Ray3D
 from sympy.geometry.plane import Plane
+from sympy.geometry.point import Point3D
+from sympy.physics.optics.medium import Medium
+from sympy.physics.optics.utils import deviation, hyperfocal_distance, \
+    lens_formula, lens_makers_formula, mirror_formula, refraction_angle
+from sympy.physics.units import e0
 
 
 def test_refraction_angle():

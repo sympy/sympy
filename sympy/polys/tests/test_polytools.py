@@ -1,67 +1,33 @@
 """Tests for user-friendly public interface to polynomial functions. """
 
-from sympy.polys.polytools import (
-    Poly, PurePoly, poly,
-    parallel_poly_from_expr,
-    degree, degree_list,
-    LC, LM, LT,
-    pdiv, prem, pquo, pexquo,
-    div, rem, quo, exquo,
-    half_gcdex, gcdex, invert,
-    subresultants,
-    resultant, discriminant,
-    terms_gcd, cofactors,
-    gcd, gcd_list,
-    lcm, lcm_list,
-    trunc,
-    monic, content, primitive,
-    compose, decompose,
-    sturm,
-    gff_list, gff,
-    sqf_norm, sqf_part, sqf_list, sqf,
-    factor_list, factor,
-    intervals, refine_root, count_roots,
-    real_roots, nroots, ground_roots,
-    nth_power_roots_poly,
-    cancel, reduced, groebner,
-    GroebnerBasis, is_zero_dimensional,
-    _torational_factor_list,
-    to_rational_coeffs)
-
-from sympy.polys.polyerrors import (
-    MultivariatePolynomialError,
-    ExactQuotientFailed,
-    PolificationFailed,
-    ComputationFailed,
-    UnificationFailed,
-    RefinementFailed,
-    GeneratorsNeeded,
-    GeneratorsError,
-    PolynomialError,
-    CoercionFailed,
-    DomainError,
-    OptionError,
-    FlagError)
-
-from sympy.polys.polyclasses import DMP
-
-from sympy.polys.fields import field
-from sympy.polys.domains import FF, ZZ, QQ, RR, EX
-from sympy.polys.domains.realfield import RealField
-from sympy.polys.orderings import lex, grlex, grevlex
-
-from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
-    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
-
+from sympy import Derivative, Eq, Expr, Float, I, Integer, MatrixSymbol, Mul, \
+    Piecewise, Rational, S, Symbol, Tuple, diff, exp, expand, im, oo, pi, re, \
+    rootof, sin, sqrt, tanh
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.polys.domains import EX, FF, QQ, RR, ZZ
+from sympy.polys.domains.realfield import RealField
+from sympy.polys.fields import field
+from sympy.polys.orderings import grevlex, grlex, lex
+from sympy.polys.polyclasses import DMP
+from sympy.polys.polyerrors import CoercionFailed, ComputationFailed, \
+    DomainError, ExactQuotientFailed, FlagError, GeneratorsError, \
+    GeneratorsNeeded, MultivariatePolynomialError, OptionError, \
+    PolificationFailed, PolynomialError, RefinementFailed, UnificationFailed
+from sympy.polys.polytools import LC, LM, LT, GroebnerBasis, Poly, PurePoly, \
+    _torational_factor_list, cancel, cofactors, compose, content, \
+    count_roots, decompose, degree, degree_list, discriminant, div, exquo, \
+    factor, factor_list, gcd, gcd_list, gcdex, gff, gff_list, groebner, \
+    ground_roots, half_gcdex, intervals, invert, is_zero_dimensional, lcm, \
+    lcm_list, monic, nroots, nth_power_roots_poly, parallel_poly_from_expr, \
+    pdiv, pexquo, poly, pquo, prem, primitive, quo, real_roots, reduced, \
+    refine_root, rem, resultant, sqf, sqf_list, sqf_norm, sqf_part, sturm, \
+    subresultants, terms_gcd, to_rational_coeffs, trunc
 from sympy.simplify import simplify
+from sympy.utilities.pytest import XFAIL, raises
 
-from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
-from sympy import MatrixSymbol
 
 def _epsilon_eq(a, b):
     for x, y in zip(a, b):

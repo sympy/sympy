@@ -1,24 +1,19 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
-from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
-    powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
-    acos, root)
+import mpmath
 
+from sympy import ZZ, I, Interval, Piecewise, Rational, S, Symbol, Wild, \
+    acos, cos, exp, im, pi, powsimp, re, root, sin, sqrt, symbols
+from sympy.core.compatibility import range
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
-
-from sympy.polys.polyroots import (root_factors, roots_linear,
-    roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, preprocess_roots, roots)
-
 from sympy.polys.orthopolys import legendre_poly
+from sympy.polys.polyroots import preprocess_roots, root_factors, roots, \
+    roots_binomial, roots_cubic, roots_cyclotomic, roots_linear, \
+    roots_quadratic, roots_quartic
 from sympy.polys.polyutils import _nsort
-
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
-from sympy.core.compatibility import range
-import mpmath
-
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
 

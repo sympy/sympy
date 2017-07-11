@@ -1,19 +1,11 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
-from sympy import Poly, S, Rational as Q
+from sympy import Rational as Q
+from sympy import Poly, S
+from sympy.abc import a, b, x
+from sympy.polys.orthopolys import chebyshevt_poly, chebyshevu_poly, \
+    gegenbauer_poly, hermite_poly, jacobi_poly, laguerre_poly, legendre_poly
 from sympy.utilities.pytest import raises
-
-from sympy.polys.orthopolys import (
-    jacobi_poly,
-    gegenbauer_poly,
-    chebyshevt_poly,
-    chebyshevu_poly,
-    hermite_poly,
-    legendre_poly,
-    laguerre_poly,
-)
-
-from sympy.abc import x, a, b
 
 
 def test_jacobi_poly():

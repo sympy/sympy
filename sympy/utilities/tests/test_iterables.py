@@ -1,26 +1,24 @@
 from __future__ import print_function
+
 from textwrap import dedent
 
-from sympy import (
-    symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
-    factorial, true)
-from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
+from sympy import Basic, Dummy, Integral, Matrix, Tuple, default_sort_key, \
+    factorial, symbols, true
+from sympy.combinatorics import Permutation, RGS_enum, RGS_unrank
 from sympy.core.compatibility import range
-from sympy.utilities.iterables import (
-    _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
-    flatten, generate_bell, generate_derangements, generate_involutions,
-    generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions,
-    multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
-    permutations, postfixes, postorder_traversal, prefixes, reshape,
-    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
-    unflatten, uniq, variations, ordered_partitions)
-from sympy.utilities.enumerative import (
-    factoring_visitor, multiset_partitions_taocp )
-
 from sympy.core.singleton import S
-from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
+from sympy.functions.elementary.piecewise import ExprCondPair, Piecewise
+from sympy.utilities.enumerative import factoring_visitor, \
+    multiset_partitions_taocp
+from sympy.utilities.iterables import _partition, _set_partitions, \
+    binary_partitions, bracelets, capture, cartes, common_prefix, \
+    common_suffix, dict_merge, filter_symbols, flatten, generate_bell, \
+    generate_derangements, generate_involutions, generate_oriented_forest, \
+    group, has_dups, kbins, minlex, multiset, multiset_combinations, \
+    multiset_partitions, multiset_permutations, necklaces, numbered_symbols, \
+    ordered, ordered_partitions, partitions, permutations, postfixes, \
+    postorder_traversal, prefixes, reshape, rotate_left, rotate_right, runs, \
+    sift, subsets, take, topological_sort, unflatten, uniq, variations
 from sympy.utilities.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')

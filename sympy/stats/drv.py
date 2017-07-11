@@ -1,10 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum)
-from sympy.solvers.solveset import solveset
-from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
+
+from sympy import Basic, Dummy, Lambda, Piecewise, S, Sum, cacheit, \
+    summation, symbols, sympify
+from sympy.solvers.solveset import solveset
+from sympy.stats.rv import NamedArgsMixin, SingleDomain, SinglePSpace
+
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     """ Discrete distribution of a single variable

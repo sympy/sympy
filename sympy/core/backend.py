@@ -1,4 +1,5 @@
 import os
+
 USE_SYMENGINE = os.getenv('USE_SYMENGINE', '0')
 USE_SYMENGINE = USE_SYMENGINE.lower() in ('1', 't', 'true')
 

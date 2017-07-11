@@ -1,12 +1,12 @@
 """This module implements tools for integrating rational functions. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import S, Symbol, symbols, I, log, atan, \
-    roots, RootSum, Lambda, cancel, Dummy
-
-from sympy.polys import Poly, resultant, ZZ
+from sympy import Dummy, I, Lambda, RootSum, S, Symbol, atan, cancel, log, \
+    roots, symbols
 from sympy.core.compatibility import range
+from sympy.polys import ZZ, Poly, resultant
+
 
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.

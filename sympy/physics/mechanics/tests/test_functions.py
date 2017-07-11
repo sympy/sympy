@@ -1,11 +1,8 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros
-from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
-                                     RigidBody, Vector)
-from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
-                                     inertia, inertia_of_point_mass,
-                                     kinetic_energy, linear_momentum,
-                                     outer, potential_energy, msubs,
-                                     find_dynamicsymbols)
+from sympy.core.backend import Matrix, cos, pi, sin, symbols, tan, zeros
+from sympy.physics.mechanics import Particle, Point, ReferenceFrame, \
+    RigidBody, Vector, angular_momentum, dynamicsymbols, find_dynamicsymbols, \
+    inertia, inertia_of_point_mass, kinetic_energy, linear_momentum, msubs, \
+    outer, potential_energy
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')

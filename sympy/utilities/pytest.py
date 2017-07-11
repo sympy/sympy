@@ -1,10 +1,10 @@
 """py.test hacks to support XFAIL/XPASS"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import sys
 import functools
 import os
+import sys
 
 from sympy.core.compatibility import get_function_name
 

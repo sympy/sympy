@@ -1,7 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from pyglet.gl import *
 from plot_mode_base import PlotModeBase
+from pyglet.gl import *
+
 from sympy.core import S
 from sympy.core.compatibility import range
 

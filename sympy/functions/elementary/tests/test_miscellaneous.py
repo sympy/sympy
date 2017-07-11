@@ -1,15 +1,14 @@
 import itertools as it
 
 from sympy.core.function import Function
-from sympy.core.numbers import I, oo, Rational
+from sympy.core.numbers import I, Rational, oo
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
-                                                      Max, real_root)
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.miscellaneous import Max, Min, cbrt, \
+    real_root, root, sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
-
 from sympy.utilities.pytest import raises
 
 

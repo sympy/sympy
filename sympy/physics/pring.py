@@ -1,5 +1,6 @@
-from __future__ import print_function, division
-from sympy import sqrt, exp, S, pi, I
+from __future__ import division, print_function
+
+from sympy import I, S, exp, pi, sqrt
 from sympy.physics.quantum.constants import hbar
 
 

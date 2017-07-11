@@ -1,9 +1,7 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix, \
-     simplify
-from sympy.vector import (CoordSys3D, Vector, Dyadic,
-                          DyadicAdd, DyadicMul, DyadicZero,
-                          BaseDyadic, express)
-
+from sympy import ImmutableMatrix as Matrix
+from sympy import cos, pi, simplify, sin, symbols
+from sympy.vector import BaseDyadic, CoordSys3D, Dyadic, DyadicAdd, \
+    DyadicMul, DyadicZero, Vector, express
 
 A = CoordSys3D('A')
 

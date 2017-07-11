@@ -8,11 +8,12 @@ ode_order
 _desolve
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.function import Derivative, AppliedUndef
+from sympy.core.function import AppliedUndef, Derivative
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
+
 
 def _preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation

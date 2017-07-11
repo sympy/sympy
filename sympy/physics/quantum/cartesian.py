@@ -6,15 +6,15 @@ TODO:
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
+from sympy import DiracDelta, I, Interval, S, exp, pi, sqrt
 from sympy.core.compatibility import range
-
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
-from sympy.physics.quantum.operator import DifferentialOperator, HermitianOperator
-from sympy.physics.quantum.state import Ket, Bra, State
+from sympy.physics.quantum.operator import DifferentialOperator, \
+    HermitianOperator
+from sympy.physics.quantum.state import Bra, Ket, State
 
 __all__ = [
     'XOp',

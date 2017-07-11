@@ -1,25 +1,24 @@
 """Tools for manipulating of large commutative expressions. """
 
-from __future__ import print_function, division
-
-from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS, range
-from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.power import Pow
-from sympy.core.basic import Basic, preorder_traversal
-from sympy.core.expr import Expr
-from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer, Number, I
-from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
-from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.containers import Tuple, Dict
-from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered)
+from __future__ import division, print_function
 
 from collections import defaultdict
 
+from sympy.core.add import Add
+from sympy.core.basic import Basic, preorder_traversal
+from sympy.core.compatibility import SYMPY_INTS, is_sequence, iterable, range
+from sympy.core.containers import Dict, Tuple
+from sympy.core.coreerrors import NonCommutativeExpression
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul, _keep_coeff
+from sympy.core.numbers import I, Integer, Number, Rational
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import common_prefix, common_suffix, ordered, \
+    variations
 
 _eps = Dummy(positive=True)
 

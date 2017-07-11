@@ -5,12 +5,13 @@
 """
 
 from __future__ import division
-from sympy.physics.units import second, meter, kilogram, ampere
+
+from sympy import Symbol, sqrt, sympify
+from sympy.physics.units import ampere, e0, kilogram, meter, second, \
+    speed_of_light, u0
 
 __all__ = ['Medium']
 
-from sympy import Symbol, sympify, sqrt
-from sympy.physics.units import speed_of_light, u0, e0
 
 
 c = speed_of_light.convert_to(meter/second)

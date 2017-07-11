@@ -1,14 +1,10 @@
 """Tests for Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
-from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ, RR
 from sympy.core.compatibility import range
-
-from sympy.polys.specialpolys import (
-    f_polys,
-    dmp_fateman_poly_F_1,
-    dmp_fateman_poly_F_2,
-    dmp_fateman_poly_F_3)
+from sympy.polys.domains import QQ, RR, ZZ
+from sympy.polys.rings import ring
+from sympy.polys.specialpolys import dmp_fateman_poly_F_1, \
+    dmp_fateman_poly_F_2, dmp_fateman_poly_F_3, f_polys
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 

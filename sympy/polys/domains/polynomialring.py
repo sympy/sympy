@@ -1,12 +1,12 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
-
+from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
+
 
 @public
 class PolynomialRing(Ring, CompositeDomain):

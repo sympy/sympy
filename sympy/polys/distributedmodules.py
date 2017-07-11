@@ -26,18 +26,16 @@ The main reference for this file is [SCA],
 "A Singular Introduction to Commutative Algebra".
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from itertools import permutations
 
-from sympy.polys.monomials import (
-    monomial_mul, monomial_lcm, monomial_div, monomial_deg
-)
-
-from sympy.polys.polytools import Poly
-from sympy.polys.polyutils import parallel_dict_from_expr
 from sympy import S, sympify
 from sympy.core.compatibility import range
+from sympy.polys.monomials import monomial_deg, monomial_div, monomial_lcm, \
+    monomial_mul
+from sympy.polys.polytools import Poly
+from sympy.polys.polyutils import parallel_dict_from_expr
 
 # Additional monomial tools.
 

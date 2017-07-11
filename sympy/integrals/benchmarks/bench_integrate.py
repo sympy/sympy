@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import integrate, Symbol, sin
+from sympy import Symbol, integrate, sin
 
 x = Symbol('x')
 

@@ -1,18 +1,11 @@
-from sympy import (
-    symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, Integral, S,
-    sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
-    erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-    gamma, uppergamma,
-    Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
-    fresnels, fresnelc,
-    hyper, meijerg)
-
-from sympy.functions.special.error_functions import _erfs, _eis
-
+from sympy import E1, Abs, Chi, Ci, Ei, EulerGamma, Float, I, Integral, Li, \
+    O, S, Shi, Si, Symbol, conjugate, cos, cosh, diff, erf, erf2, erf2inv, \
+    erfc, erfcinv, erfi, erfinv, exp, exp_polar, expand, expand_func, expint, \
+    fresnelc, fresnels, gamma, gruntz, hyper, im, integrate, li, limit, log, \
+    meijerg, nan, oo, pi, polar_lift, re, sin, sinc, sinh, sqrt, symbols, \
+    uppergamma
 from sympy.core.function import ArgumentIndexError
-
+from sympy.functions.special.error_functions import _eis, _erfs
 from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x,y,z')

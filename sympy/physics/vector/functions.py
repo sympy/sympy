@@ -1,14 +1,15 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
-                                Function, S, Symbol)
 from sympy import integrate, trigsimp
+from sympy.core.backend import Function, Matrix, S, Symbol, cos, diff, sin, \
+    symbols, sympify
 from sympy.core.compatibility import reduce
-from .vector import Vector, _check_vector
-from .frame import CoordinateSym, _check_frame
-from .dyadic import Dyadic
-from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 from sympy.utilities.iterables import iterable
+
+from .dyadic import Dyadic
+from .frame import CoordinateSym, _check_frame
+from .printing import init_vprinting, vlatex, vpprint, vprint, vsprint
+from .vector import Vector, _check_vector
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',

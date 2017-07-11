@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.symbol import Dummy
 from sympy.core.compatibility import range
+from sympy.core.symbol import Dummy
 from sympy.utilities.lambdify import lambdify
 
 

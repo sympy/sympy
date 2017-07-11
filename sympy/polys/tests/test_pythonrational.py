@@ -3,6 +3,7 @@
 from sympy.polys.domains import PythonRational as QQ
 from sympy.utilities.pytest import raises
 
+
 def test_PythonRational__init__():
     assert QQ(0).p == 0
     assert QQ(0).q == 1

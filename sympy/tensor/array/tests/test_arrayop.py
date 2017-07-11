@@ -1,15 +1,12 @@
+import itertools
 import random
 
-import itertools
-
+from sympy import adjoint, conjugate, cos, exp, log, sin, symbols, transpose
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
+from sympy.tensor.array import Array, NDimArray, derive_by_array, \
+    permutedims, tensorcontraction, tensorproduct
 from sympy.utilities.pytest import raises
-
-from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate
-from sympy.tensor.array import Array, NDimArray
-
-from sympy.tensor.array import tensorproduct, tensorcontraction, derive_by_array, permutedims
 
 
 def test_tensorproduct():

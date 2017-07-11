@@ -41,18 +41,19 @@ Look at rs_sin and rs_series for further reference.
 
 """
 
-from sympy.polys.domains import QQ, EX
-from sympy.polys.rings import PolyElement, ring, sring
-from sympy.polys.polyerrors import DomainError
-from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
-                                   monomial_ldiv)
-from mpmath.libmp.libintmath import ifac
-from sympy.core import PoleError, Function, Expr
-from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int, range
-from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
-from mpmath.libmp.libintmath import giant_steps
 import math
+
+from mpmath.libmp.libintmath import giant_steps, ifac
+
+from sympy.core import Expr, Function, PoleError
+from sympy.core.compatibility import as_int, range
+from sympy.core.numbers import Rational, igcd
+from sympy.functions import atan, atanh, ceiling, cos, exp, log, sin, tan, tanh
+from sympy.polys.domains import EX, QQ
+from sympy.polys.monomials import monomial_div, monomial_ldiv, monomial_min, \
+    monomial_mul
+from sympy.polys.polyerrors import DomainError
+from sympy.polys.rings import PolyElement, ring, sring
 
 
 def _invert_monoms(p1):

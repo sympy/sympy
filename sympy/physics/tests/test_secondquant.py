@@ -1,18 +1,13 @@
-from sympy.physics.secondquant import (
-    Dagger, Bd, VarBosonicBasis, BBra, B, BKet, FixedBosonicBasis,
-    matrix_rep, apply_operators, InnerProduct, Commutator, KroneckerDelta,
-    AnnihilateBoson, CreateBoson, BosonicOperator,
-    F, Fd, FKet, BosonState, CreateFermion, AnnihilateFermion,
-    evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
-    PermutationOperator, simplify_index_permutations,
-    _sort_anticommuting_fermions, _get_ordered_dummies,
-    substitute_dummies
-)
-
-from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
-                   Symbol, symbols)
-
+from sympy import Dummy, Function, I, Rational, Sum, Symbol, expand, \
+    simplify, sqrt, symbols
 from sympy.core.compatibility import range
+from sympy.physics.secondquant import NO, AnnihilateBoson, AnnihilateFermion, \
+    AntiSymmetricTensor, B, BBra, Bd, BKet, BosonicOperator, BosonState, \
+    Commutator, CreateBoson, CreateFermion, Dagger, F, Fd, FixedBosonicBasis, \
+    FKet, InnerProduct, KroneckerDelta, PermutationOperator, VarBosonicBasis, \
+    _get_ordered_dummies, _sort_anticommuting_fermions, apply_operators, \
+    contraction, evaluate_deltas, matrix_rep, simplify_index_permutations, \
+    substitute_dummies, wicks
 from sympy.utilities.pytest import XFAIL, slow
 
 

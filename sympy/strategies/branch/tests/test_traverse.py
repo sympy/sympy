@@ -1,6 +1,7 @@
 from sympy import Basic
-from sympy.strategies.branch.traverse import top_down, sall
 from sympy.strategies.branch.core import do_one, identity
+from sympy.strategies.branch.traverse import sall, top_down
+
 
 def inc(x):
     if isinstance(x, int):

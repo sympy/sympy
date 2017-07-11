@@ -1,4 +1,4 @@
-from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
+from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.utilities.pytest import raises
 
 

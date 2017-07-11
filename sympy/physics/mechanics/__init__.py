@@ -11,38 +11,34 @@ __all__ = []
 #    determine which names are imported when
 #    "from sympy.physics.mechanics import *" is done.
 
-from . import kane
-from .kane import *
-__all__.extend(kane.__all__)
-
-from . import rigidbody
-from .rigidbody import *
-__all__.extend(rigidbody.__all__)
-
-from . import functions
-from .functions import *
-__all__.extend(functions.__all__)
-
-from . import particle
-from .particle import *
-__all__.extend(particle.__all__)
-
-from . import lagrange
-from .lagrange import *
-__all__.extend(lagrange.__all__)
-
 from sympy.physics import vector
 from sympy.physics.vector import *
+
+from . import body, functions, kane, lagrange, linearize, particle, \
+    rigidbody, system
+from .body import *
+from .functions import *
+from .kane import *
+from .lagrange import *
+from .linearize import *
+from .particle import *
+from .rigidbody import *
+from .system import *
+
+__all__.extend(kane.__all__)
+
+__all__.extend(rigidbody.__all__)
+
+__all__.extend(functions.__all__)
+
+__all__.extend(particle.__all__)
+
+__all__.extend(lagrange.__all__)
+
 __all__.extend(vector.__all__)
 
-from . import linearize
-from .linearize import *
 __all__.extend(linearize.__all__)
 
-from . import body
-from .body import *
 __all__.extend(body.__all__)
 
-from . import system
-from .system import *
 __all__.extend(system.__all__)

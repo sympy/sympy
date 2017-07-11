@@ -11,6 +11,14 @@
 
 from __future__ import division
 
+from sympy import Limit, Matrix, Symbol, acos, oo, sqrt, sympify
+from sympy.core.compatibility import is_sequence
+from sympy.geometry.line import Ray3D
+from sympy.geometry.plane import Plane
+from sympy.geometry.util import intersection
+
+from .medium import Medium
+
 __all__ = ['refraction_angle',
            'deviation',
            'lens_makers_formula',
@@ -19,12 +27,6 @@ __all__ = ['refraction_angle',
            'hyperfocal_distance'
            ]
 
-from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit
-from sympy.core.compatibility import is_sequence
-from sympy.geometry.line import Ray3D
-from sympy.geometry.util import intersection
-from sympy.geometry.plane import Plane
-from .medium import Medium
 
 
 def refraction_angle(incident, medium1, medium2, normal=None, plane=None):

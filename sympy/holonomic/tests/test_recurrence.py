@@ -1,5 +1,5 @@
-from sympy.holonomic.recurrence import RecurrenceOperators, RecurrenceOperator
-from sympy import symbols, ZZ, QQ
+from sympy import QQ, ZZ, symbols
+from sympy.holonomic.recurrence import RecurrenceOperator, RecurrenceOperators
 
 
 def test_RecurrenceOperator():

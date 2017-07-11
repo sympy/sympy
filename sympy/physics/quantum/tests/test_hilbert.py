@@ -1,9 +1,7 @@
-from sympy.physics.quantum.hilbert import (
-    HilbertSpace, ComplexSpace, L2, FockSpace, TensorProductHilbertSpace,
-    DirectSumHilbertSpace, TensorPowerHilbertSpace
-)
-
-from sympy import Interval, oo, Symbol, sstr, srepr
+from sympy import Interval, Symbol, oo, srepr, sstr
+from sympy.physics.quantum.hilbert import L2, ComplexSpace, \
+    DirectSumHilbertSpace, FockSpace, HilbertSpace, TensorPowerHilbertSpace, \
+    TensorProductHilbertSpace
 
 
 def test_hilbert_space():

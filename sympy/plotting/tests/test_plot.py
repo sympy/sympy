@@ -1,16 +1,16 @@
-from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
-                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise)
-from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
-                            plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import unset_show
-from sympy.utilities import lambdify as lambdify_
-from sympy.utilities.pytest import skip, raises
-from sympy.plotting.experimental_lambdify import lambdify
-from sympy.external import import_module
-
-from tempfile import NamedTemporaryFile
 import os
 import warnings
+from tempfile import NamedTemporaryFile
+
+from sympy import I, Integral, LambertW, Max, Piecewise, Sum, Symbol, cos, \
+    exp_polar, log, meijerg, oo, pi, sin, sqrt
+from sympy.external import import_module
+from sympy.plotting import plot, plot3d, plot3d_parametric_line, \
+    plot3d_parametric_surface, plot_parametric
+from sympy.plotting.experimental_lambdify import lambdify
+from sympy.plotting.plot import unset_show
+from sympy.utilities import lambdify as lambdify_
+from sympy.utilities.pytest import raises, skip
 
 unset_show()
 

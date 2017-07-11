@@ -2,15 +2,16 @@
 A MathML printer.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import sympify, S, Mul
-from sympy.core.function import _coeff_isneg
+from sympy import Mul, S, sympify
 from sympy.core.alphabets import greeks
 from sympy.core.compatibility import range
-from .printer import Printer
+from sympy.core.function import _coeff_isneg
+
+from .conventions import requires_partial, split_super_sub
 from .pretty.pretty_symbology import greek_unicode
-from .conventions import split_super_sub, requires_partial
+from .printer import Printer
 
 
 class MathMLPrinter(Printer):

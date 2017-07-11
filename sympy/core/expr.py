@@ -1,15 +1,24 @@
-from __future__ import print_function, division
-
-from .sympify import sympify, _sympify, SympifyError
-from .basic import Basic, Atom
-from .singleton import S
-from .evalf import EvalfMixin, pure_complex
-from .decorators import _sympifyit, call_highest_priority
-from .cache import cacheit
-from .compatibility import reduce, as_int, default_sort_key, range
-from mpmath.libmp import mpf_log, prec_to_dps
+from __future__ import division, print_function
 
 from collections import defaultdict
+
+from mpmath.libmp import mpf_log, prec_to_dps
+
+from .add import Add
+from .basic import Atom, Basic
+from .cache import cacheit
+from .compatibility import as_int, default_sort_key, range, reduce
+from .decorators import _sympifyit, call_highest_priority
+from .evalf import EvalfMixin, pure_complex
+from .exprtools import factor_terms
+from .function import Derivative, Function
+from .mod import Mod
+from .mul import Mul
+from .numbers import Integer, Rational
+from .power import Pow
+from .singleton import S
+from .sympify import SympifyError, _sympify, sympify
+
 
 class Expr(Basic, EvalfMixin):
     """
@@ -3371,12 +3380,3 @@ def _n2(a, b):
         dif = (a - b).evalf(2)
         if dif.is_comparable:
             return dif
-
-
-from .mul import Mul
-from .add import Add
-from .power import Pow
-from .function import Derivative, Function
-from .mod import Mod
-from .exprtools import factor_terms
-from .numbers import Integer, Rational

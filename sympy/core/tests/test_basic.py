@@ -4,15 +4,14 @@ of Basic or Atom."""
 import collections
 import sys
 
-from sympy.core.basic import Basic, Atom, preorder_traversal
+from sympy import Lambda, Q, cos, gamma, sin
+from sympy.core import I, pi
+from sympy.core.basic import Atom, Basic, preorder_traversal
+from sympy.core.compatibility import default_sort_key, with_metaclass
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
-from sympy.core.compatibility import default_sort_key, with_metaclass
-
-from sympy import sin, Lambda, Q, cos, gamma
 from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import raises
-from sympy.core import I, pi
 
 b1 = Basic()
 b2 = Basic(b1)

@@ -1,21 +1,21 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.add import Add
-from sympy.core.basic import sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.numbers import igcdex, Rational, pi
+from sympy.core.basic import cacheit, sympify
+from sympy.core.compatibility import range
+from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.logic import fuzzy_not
+from sympy.core.numbers import Rational, igcdex, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Wild
-from sympy.core.logic import fuzzy_not
-from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
-from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
-from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.combinatorial.factorials import RisingFactorial, factorial
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction, acoth, \
+    asinh, atanh, cosh, coth, sinh, tanh
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh,
-    coth, HyperbolicFunction, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.compatibility import range
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################

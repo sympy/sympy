@@ -1,7 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 import collections
 
 from sympy import Basic
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative
+from sympy.core.numbers import Integer
+from sympy.core.sympify import sympify
 
 
 class NDimArray(object):
@@ -405,9 +410,3 @@ class ImmutableNDimArray(NDimArray, Basic):
 
     def __hash__(self):
         return Basic.__hash__(self)
-
-
-from sympy.core.numbers import Integer
-from sympy.core.sympify import sympify
-from sympy.core.function import Derivative
-from sympy.core.expr import Expr

@@ -25,27 +25,28 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import oo, S, pi, Expr
+from sympy.core import Expr, S, oo, pi
+from sympy.core.add import Add
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import range
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
-from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.compatibility import range
-from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
-from sympy.simplify import hyperexpand, powdenest, collect
-from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction, \
+    _rewrite_hyperbolics_as_exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-from sympy.functions.elementary.hyperbolic import \
-    _rewrite_hyperbolics_as_exp, HyperbolicFunction
+from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.hyper import meijerg
+from sympy.logic.boolalg import And, BooleanAtom, Or
+from sympy.simplify import collect, hyperexpand, powdenest
+from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import multiset_partitions, ordered
 from sympy.utilities.misc import debug as _debug
-from sympy.utilities import default_sort_key
+from sympy.utilities.timeutils import timethis
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -278,7 +279,6 @@ def _create_lookup_table(table):
 # First some helper functions.
 ####################################################################
 
-from sympy.utilities.timeutils import timethis
 timeit = timethis('meijerg')
 
 

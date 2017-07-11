@@ -1,7 +1,7 @@
 import sympy.physics.mechanics.models as models
-from sympy.core.backend import (cos, sin, Matrix, symbols, zeros)
 from sympy import simplify
-from sympy.physics.mechanics import (dynamicsymbols)
+from sympy.core.backend import Matrix, cos, sin, symbols, zeros
+from sympy.physics.mechanics import dynamicsymbols
 
 
 def test_multi_mass_spring_damper_inputs():

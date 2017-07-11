@@ -1,14 +1,14 @@
 """ Tools for doing common subexpression elimination.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple
-from sympy.core.singleton import S
-from sympy.core.function import _coeff_isneg
-from sympy.core.exprtools import factor_terms
+from sympy.core import Add, Basic, Mul, Pow, Symbol, Tuple, sympify
 from sympy.core.compatibility import iterable, range
-from sympy.utilities.iterables import filter_symbols, \
-    numbered_symbols, sift, topological_sort, ordered
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import _coeff_isneg
+from sympy.core.singleton import S
+from sympy.utilities.iterables import filter_symbols, numbered_symbols, \
+    ordered, sift, topological_sort
 
 from . import cse_opts
 

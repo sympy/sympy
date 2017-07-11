@@ -1,5 +1,6 @@
-from .cache import clear_cache
 from contextlib import contextmanager
+
+from .cache import clear_cache
 
 
 class _global_evaluate(list):

@@ -1,11 +1,12 @@
-import sympy
-import tempfile
 import os
+import tempfile
 import warnings
-from sympy import symbols, Eq
+
+import sympy
+from sympy import Eq, symbols
 from sympy.external import import_module
-from sympy.tensor import IndexedBase, Idx
-from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
+from sympy.tensor import Idx, IndexedBase
+from sympy.utilities.autowrap import CodeWrapError, autowrap, ufuncify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import skip
 

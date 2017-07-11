@@ -1,6 +1,6 @@
-from sympy import Q, ask, Symbol
-from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
-        Trace, MatrixSlice, Determinant)
+from sympy import Q, Symbol, ask
+from sympy.matrices.expressions import Determinant, Identity, MatrixSlice, \
+    MatrixSymbol, Trace, ZeroMatrix
 from sympy.matrices.expressions.factorizations import LofLU
 from sympy.utilities.pytest import XFAIL
 

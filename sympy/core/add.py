@@ -1,16 +1,19 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 from functools import cmp_to_key
 
+from sympy.core.numbers import Rational
+
 from .basic import Basic
-from .compatibility import reduce, is_sequence, range
-from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
-from .singleton import S
-from .operations import AssocOp
 from .cache import cacheit
-from .numbers import ilcm, igcd
+from .compatibility import is_sequence, range, reduce
 from .expr import Expr
+from .logic import _fuzzy_group, fuzzy_not, fuzzy_or
+from .mul import Mul, _keep_coeff, prod
+from .numbers import igcd, ilcm
+from .operations import AssocOp
+from .singleton import S
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -1038,6 +1041,3 @@ class Add(Expr, AssocOp):
             raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
 
         return (Float(re_part)._mpf_, Float(im_part)._mpf_)
-
-from .mul import Mul, _keep_coeff, prod
-from sympy.core.numbers import Rational

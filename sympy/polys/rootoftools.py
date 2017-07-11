@@ -1,41 +1,29 @@
 """Implementation of RootOf class and related tools. """
 
-from __future__ import print_function, division
-
-from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
-        sympify, Rational, Dummy)
-from sympy.core.cache import cacheit
-from sympy.core.function import AppliedUndef
-from sympy.functions.elementary.miscellaneous import root as _root
-
-from sympy.polys.polytools import Poly, PurePoly, factor
-from sympy.polys.rationaltools import together
-from sympy.polys.polyfuncs import symmetrize, viete
-
-from sympy.polys.rootisolation import (
-    dup_isolate_complex_roots_sqf,
-    dup_isolate_real_roots_sqf)
-
-from sympy.polys.polyroots import (
-    roots_linear, roots_quadratic, roots_binomial,
-    preprocess_roots, roots)
-
-from sympy.polys.polyerrors import (
-    MultivariatePolynomialError,
-    GeneratorsNeeded,
-    PolynomialError,
-    DomainError)
-
-from sympy.polys.domains import QQ
-
-from mpmath import mpf, mpc, findroot, workprec
-from mpmath.libmp.libmpf import prec_to_dps
-
-from sympy.utilities import lambdify, public
-
-from sympy.core.compatibility import range
+from __future__ import division, print_function
 
 from math import log as mathlog
+
+from mpmath import findroot, mpc, mpf, workprec
+from mpmath.libmp.libmpf import prec_to_dps
+
+from sympy.core import Add, Dummy, Expr, Float, I, Integer, Lambda, Rational, \
+    S, symbols, sympify
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import range
+from sympy.core.function import AppliedUndef
+from sympy.functions.elementary.miscellaneous import root as _root
+from sympy.polys.domains import QQ
+from sympy.polys.polyerrors import DomainError, GeneratorsNeeded, \
+    MultivariatePolynomialError, PolynomialError
+from sympy.polys.polyfuncs import symmetrize, viete
+from sympy.polys.polyroots import preprocess_roots, roots, roots_binomial, \
+    roots_linear, roots_quadratic
+from sympy.polys.polytools import Poly, PurePoly, factor
+from sympy.polys.rationaltools import together
+from sympy.polys.rootisolation import dup_isolate_complex_roots_sqf, \
+    dup_isolate_real_roots_sqf
+from sympy.utilities import lambdify, public
 
 __all__ = ['CRootOf']
 

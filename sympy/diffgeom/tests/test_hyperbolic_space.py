@@ -12,11 +12,11 @@ It has constant negative scalar curvature = -2
 
 https://en.wikipedia.org/wiki/Poincare_half-plane_model
 '''
-from sympy import diag
-from sympy.diffgeom import (twoform_to_matrix,
-                            metric_to_Christoffel_1st, metric_to_Christoffel_2nd,
-                            metric_to_Riemann_components, metric_to_Ricci_components)
 import sympy.diffgeom.rn
+from sympy import diag
+from sympy.diffgeom import metric_to_Christoffel_1st, \
+    metric_to_Christoffel_2nd, metric_to_Ricci_components, \
+    metric_to_Riemann_components, twoform_to_matrix
 from sympy.tensor.array import ImmutableDenseNDimArray
 
 

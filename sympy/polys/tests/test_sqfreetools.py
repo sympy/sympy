@@ -1,9 +1,8 @@
 """Tests for square-free decomposition algorithms and related tools. """
 
+from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.rings import ring
-from sympy.polys.domains import FF, ZZ, QQ
 from sympy.polys.specialpolys import f_polys
-
 from sympy.utilities.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()

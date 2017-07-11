@@ -1,6 +1,8 @@
-from .cartan_type import Standard_Cartan
-from sympy.matrices import eye
 from sympy.core.compatibility import range
+from sympy.matrices import eye
+
+from .cartan_type import Standard_Cartan
+
 
 class TypeD(Standard_Cartan):
 

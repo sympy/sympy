@@ -1,35 +1,30 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import math
 
-from sympy.core.symbol import Dummy, Symbol, symbols
-from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered
-from sympy.core.mul import expand_2arg, Mul
-from sympy.core.power import Pow
-from sympy.core.relational import Eq
-from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, igcd, comp
+from sympy.core import I, S, pi
+from sympy.core.compatibility import ordered, range, reduce
 from sympy.core.exprtools import factor_terms
 from sympy.core.logic import fuzzy_not
-
-from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
+from sympy.core.mul import Mul, expand_2arg
+from sympy.core.numbers import Rational, comp, igcd
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.symbol import Dummy, Symbol, symbols
+from sympy.core.sympify import sympify
+from sympy.functions import Piecewise, acos, cos, exp, im, sqrt
 from sympy.functions.elementary.miscellaneous import root
-
-from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
-from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
-    DomainError)
+from sympy.ntheory import divisors, isprime, nextprime
+from sympy.polys.polyerrors import DomainError, GeneratorsNeeded, \
+    PolynomialError
 from sympy.polys.polyquinticconst import PolyQuintic
+from sympy.polys.polytools import Poly, cancel, discriminant, factor, gcd_list
 from sympy.polys.rationaltools import together
-
-from sympy.simplify import simplify, powsimp
+from sympy.polys.specialpolys import cyclotomic_poly
+from sympy.simplify import powsimp, simplify
 from sympy.utilities import public
-
-from sympy.core.compatibility import reduce, range
 
 
 def roots_linear(f):

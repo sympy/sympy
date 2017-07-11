@@ -1,21 +1,17 @@
-from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
-                        Tuple, Symbol)
-from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
-from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
-                             sinc)
-from sympy.utilities.pytest import raises
-from sympy.utilities.lambdify import implemented_function
-from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
-                            HadamardProduct, SparseMatrix)
-from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
-                                            besselk, hankel1, hankel2, airyai,
-                                            airybi, airyaiprime, airybiprime)
-from sympy.functions.special.gamma_functions import (lowergamma, uppergamma)
-from sympy.utilities.pytest import XFAIL
-from sympy.core.compatibility import range
-
-from sympy import octave_code
 from sympy import octave_code as mcode
+from sympy.core import Catalan, EulerGamma, Function, GoldenRatio, Integer, \
+    Lambda, Rational, S, Symbol, Tuple, oo, pi, symbols
+from sympy.core.compatibility import range
+from sympy.functions import LambertW, Piecewise, ceiling, cos, exp, sin, \
+    sinc, sqrt
+from sympy.functions.special.bessel import airyai, airyaiprime, airybi, \
+    airybiprime, besseli, besselj, besselk, bessely, hankel1, hankel2, jn, \
+    yn
+from sympy.functions.special.gamma_functions import lowergamma, uppergamma
+from sympy.matrices import HadamardProduct, Identity, Matrix, MatrixSymbol, \
+    SparseMatrix, eye
+from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import XFAIL, raises
 
 x, y, z = symbols('x,y,z')
 

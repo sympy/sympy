@@ -1,9 +1,9 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, pi, sqrt, oo
+from sympy import Dummy, Rational, S, Symbol, oo, pi, sqrt
 from sympy.core.compatibility import range
-from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
-                            Triangle, intersection)
+from sympy.geometry import Circle, Ellipse, GeometryError, Line, Point, \
+    Polygon, Ray, RegularPolygon, Segment, Triangle, intersection
 from sympy.integrals.integrals import Integral
 from sympy.utilities.pytest import raises, slow
 

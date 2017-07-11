@@ -1,7 +1,6 @@
-from sympy.functions import bspline_basis_set
+from sympy import Interval, Piecewise, Rational, symbols
 from sympy.core.compatibility import range
-from sympy import Piecewise, Interval
-from sympy import symbols, Rational
+from sympy.functions import bspline_basis_set
 
 x, y = symbols('x,y')
 

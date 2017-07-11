@@ -1,12 +1,9 @@
-from sympy.concrete.guess import (
-            find_simple_recurrence_vector,
-            find_simple_recurrence,
-            rationalize,
-            guess_generating_function_rational,
-            guess_generating_function
-        )
-from sympy import (Function, Symbol, sympify, Rational,
-                   fibonacci, factorial, exp)
+from sympy import Function, Rational, Symbol, exp, factorial, fibonacci, \
+    sympify
+from sympy.concrete.guess import find_simple_recurrence, \
+    find_simple_recurrence_vector, guess_generating_function, \
+    guess_generating_function_rational, rationalize
+
 
 def test_find_simple_recurrence_vector():
     assert find_simple_recurrence_vector(

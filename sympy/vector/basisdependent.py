@@ -1,9 +1,12 @@
-from sympy.simplify import simplify as simp, trigsimp as tsimp
-from sympy.core.decorators import call_highest_priority, _sympifyit
+from sympy import diff as df
+from sympy import factor as fctr
+from sympy import Integral
+from sympy.core import Add, Mul, S, count_ops
 from sympy.core.assumptions import StdFactKB
-from sympy import factor as fctr, diff as df, Integral
-from sympy.core import S, Add, Mul, count_ops
+from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.core.expr import Expr
+from sympy.simplify import simplify as simp
+from sympy.simplify import trigsimp as tsimp
 
 
 class BasisDependent(Expr):

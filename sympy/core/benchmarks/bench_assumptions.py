@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Symbol, Integer
+from sympy.core import Integer, Symbol
 
 x = Symbol('x')
 i3 = Integer(3)

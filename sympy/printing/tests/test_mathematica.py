@@ -1,10 +1,9 @@
-from sympy.core import (S, pi, oo, symbols, Function,
-                        Rational, Integer, Tuple, Derivative)
-from sympy.integrals import Integral
-from sympy.concrete import Sum
-from sympy.functions import exp, sin, cos
-
 from sympy import mathematica_code as mcode
+from sympy.concrete import Sum
+from sympy.core import Derivative, Function, Integer, Rational, S, Tuple, oo, \
+    pi, symbols
+from sympy.functions import cos, exp, sin
+from sympy.integrals import Integral
 
 x, y, z = symbols('x,y,z')
 f = Function('f')

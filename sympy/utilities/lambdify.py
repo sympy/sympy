@@ -3,14 +3,14 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from functools import wraps
 import inspect
 import textwrap
+from functools import wraps
 
-from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins)
+from sympy.core.compatibility import NotIterable, builtins, exec_, \
+    is_sequence, iterable, range, string_types
 from sympy.utilities.decorator import doctest_depends_on
 
 # These are the namespaces the lambda functions will use.

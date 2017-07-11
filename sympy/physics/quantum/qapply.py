@@ -4,17 +4,16 @@ Todo:
 * Sometimes the final result needs to be expanded, we should do this by hand.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Add, Mul, Pow, sympify, S
+from sympy import Add, Mul, Pow, S, sympify
 from sympy.core.compatibility import range
-
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.operator import OuterProduct, Operator
-from sympy.physics.quantum.state import State, KetBase, BraBase, Wavefunction
+from sympy.physics.quantum.operator import Operator, OuterProduct
+from sympy.physics.quantum.state import BraBase, KetBase, State, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
 __all__ = [

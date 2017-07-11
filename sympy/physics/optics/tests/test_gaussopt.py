@@ -1,10 +1,9 @@
-from sympy import atan2, factor, Float, I, Matrix, N, oo, pi, sqrt, symbols
-
-from sympy.physics.optics import (BeamParameter, CurvedMirror,
-  CurvedRefraction, FlatMirror, FlatRefraction, FreeSpace, GeometricRay,
-  RayTransferMatrix, ThinLens, conjugate_gauss_beams,
-  gaussian_conj, geometric_conj_ab, geometric_conj_af, geometric_conj_bf,
-  rayleigh2waist, waist2rayleigh)
+from sympy import Float, I, Matrix, N, atan2, factor, oo, pi, sqrt, symbols
+from sympy.physics.optics import BeamParameter, CurvedMirror, \
+    CurvedRefraction, FlatMirror, FlatRefraction, FreeSpace, GeometricRay, \
+    RayTransferMatrix, ThinLens, conjugate_gauss_beams, gaussian_conj, \
+    geometric_conj_ab, geometric_conj_af, geometric_conj_bf, rayleigh2waist, \
+    waist2rayleigh
 
 
 def streq(a, b):

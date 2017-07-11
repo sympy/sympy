@@ -1,12 +1,15 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+import re
 import sys
-sys._running_pytest = True
 from distutils.version import LooseVersion as V
 
 import pytest
+
 from sympy.core.cache import clear_cache
-import re
+
+sys._running_pytest = True
+
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 

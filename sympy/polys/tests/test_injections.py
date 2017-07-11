@@ -1,8 +1,8 @@
 """Tests for functions that inject symbols into the global namespace. """
 
-from sympy.polys.rings import vring
-from sympy.polys.fields import vfield
 from sympy.polys.domains import QQ
+from sympy.polys.fields import vfield
+from sympy.polys.rings import vring
 from sympy.utilities.pytest import raises
 
 # make r1 with call-depth = 1

@@ -1,16 +1,16 @@
-from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
-    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
-
-from sympy.codegen import For, Assignment
+from sympy import Add, Catalan, Dummy, E, Eq, EulerGamma, Float, Function, \
+    GoldenRatio, I, Integer, Integral, Lambda, Piecewise, Range, Rational, S, \
+    atan2, conjugate, cos, diff, exp, factorial, gamma, log, pi, sign, sin, \
+    sqrt, symbols
+from sympy.codegen import Assignment, For
+from sympy.core.compatibility import range
 from sympy.core.relational import Relational
-from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
-from sympy.printing.fcode import fcode, FCodePrinter
-from sympy.tensor import IndexedBase, Idx
+from sympy.logic.boolalg import And, Equivalent, Not, Or, Xor
+from sympy.matrices import Matrix, MatrixSymbol
+from sympy.printing.fcode import FCodePrinter, fcode
+from sympy.tensor import Idx, IndexedBase
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
-from sympy.matrices import Matrix, MatrixSymbol
 
 
 def test_printmethod():

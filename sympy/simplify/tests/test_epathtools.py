@@ -1,10 +1,9 @@
 """Tests for tools for manipulation of expressions using paths. """
 
-from sympy.simplify.epathtools import epath, EPath
+from sympy import E, cos, sin
+from sympy.abc import t, x, y, z
+from sympy.simplify.epathtools import EPath, epath
 from sympy.utilities.pytest import raises
-
-from sympy import sin, cos, E
-from sympy.abc import x, y, z, t
 
 
 def test_epath_select():

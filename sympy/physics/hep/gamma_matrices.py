@@ -25,11 +25,10 @@
     metric(LorentzIndex,LorentzIndex)
 
 """
-from sympy import S, Mul, eye, trace
-from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
-    TensMul, TensAdd, tensor_mul, Tensor, tensorhead
+from sympy import Mul, S, eye, trace
 from sympy.core.compatibility import range
-
+from sympy.tensor.tensor import TensAdd, TensMul, Tensor, TensorIndex, \
+    TensorIndexType, tensor_mul, tensorhead
 
 # DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
 

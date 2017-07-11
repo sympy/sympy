@@ -1,8 +1,8 @@
-from sympy import symbols, Derivative, Integral, exp, cos, oo, Function
+from sympy import Derivative, Function, Integral, cos, exp, oo, symbols
+from sympy.functions.combinatorial.numbers import bell
 from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
-from sympy.functions.combinatorial.numbers import bell
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import requires_partial, split_super_sub
 
 
 def test_super_sub():

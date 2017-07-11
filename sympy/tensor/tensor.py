@@ -29,15 +29,16 @@ If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from collections import defaultdict
 import itertools
+from collections import defaultdict
+
 from sympy import Matrix, Rational, prod
-from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
-    bsgs_direct_product, canonicalize, riemann_bsgs
-from sympy.core import Basic, sympify, Add, S
-from sympy.core.compatibility import string_types, reduce, range
+from sympy.combinatorics.tensor_can import bsgs_direct_product, canonicalize, \
+    get_symmetric_group_sgs, riemann_bsgs
+from sympy.core import Add, Basic, S, sympify
+from sympy.core.compatibility import range, reduce, string_types
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols

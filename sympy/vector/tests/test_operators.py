@@ -1,5 +1,4 @@
-from sympy.vector import CoordSys3D, Gradient, Divergence, Curl, VectorZero
-
+from sympy.vector import CoordSys3D, Curl, Divergence, Gradient, VectorZero
 
 R = CoordSys3D('R')
 s1 = R.x*R.y*R.z

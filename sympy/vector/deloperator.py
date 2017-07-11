@@ -1,7 +1,7 @@
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core import Basic
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.vector.operators import curl, divergence, gradient
 from sympy.vector.vector import Vector
-from sympy.vector.operators import gradient, divergence, curl
 
 
 class Del(Basic):

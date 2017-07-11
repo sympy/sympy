@@ -1,9 +1,10 @@
 import warnings
+
+from sympy import QQ, Dummy
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from sympy.matrices.densesolve import LU_solve, rref_solve, cholesky_solve
-from sympy import Dummy
-from sympy import QQ
 
 def test_LU_solve():
     x, y, z = Dummy('x'), Dummy('y'), Dummy('z')

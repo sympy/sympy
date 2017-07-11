@@ -1,9 +1,10 @@
 """Implementaton of :class:`CharacteristicZero` class. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.polys.domains.domain import Domain
 from sympy.utilities import public
+
 
 @public
 class CharacteristicZero(Domain):

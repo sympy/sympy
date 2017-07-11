@@ -1,7 +1,7 @@
 from sympy import I, symbols
 from sympy.physics.paulialgebra import Pauli
-from sympy.utilities.pytest import XFAIL
 from sympy.physics.quantum import TensorProduct
+from sympy.utilities.pytest import XFAIL
 
 sigma1 = Pauli(1)
 sigma2 = Pauli(2)

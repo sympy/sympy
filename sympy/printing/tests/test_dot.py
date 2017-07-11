@@ -1,7 +1,8 @@
-from sympy.printing.dot import (purestr, styleof, attrprint, dotnode,
-        dotedges, dotprint)
-from sympy import Symbol, Integer, Basic, Expr, srepr
+from sympy import Basic, Expr, Integer, Symbol, srepr
 from sympy.abc import x
+from sympy.printing.dot import attrprint, dotedges, dotnode, dotprint, \
+    purestr, styleof
+
 
 def test_purestr():
     assert purestr(Symbol('x')) == "Symbol(x)"

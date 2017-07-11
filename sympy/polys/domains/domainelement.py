@@ -1,8 +1,9 @@
 """Trait for implementing domain elements. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.utilities import public
+
 
 @public
 class DomainElement(object):

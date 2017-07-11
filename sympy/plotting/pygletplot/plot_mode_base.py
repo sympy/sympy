@@ -1,13 +1,15 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from pyglet.gl import *
-from plot_mode import PlotMode
-from threading import Thread, Event, RLock
+import warnings
+from threading import Event, RLock, Thread
+from time import sleep
+
 from color_scheme import ColorScheme
+from plot_mode import PlotMode
+from pyglet.gl import *
+
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
-from time import sleep
-import warnings
 
 
 class PlotModeBase(PlotMode):

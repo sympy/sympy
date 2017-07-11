@@ -2,11 +2,10 @@
 A few practical conventions common to all printers.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import re
 import collections
-
+import re
 
 _name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
 

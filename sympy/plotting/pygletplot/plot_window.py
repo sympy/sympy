@@ -1,12 +1,11 @@
-from __future__ import print_function, division
-
-from pyglet.gl import *
-from managed_window import ManagedWindow
-
-from plot_camera import PlotCamera
-from plot_controller import PlotController
+from __future__ import division, print_function
 
 from time import clock
+
+from managed_window import ManagedWindow
+from plot_camera import PlotCamera
+from plot_controller import PlotController
+from pyglet.gl import *
 
 
 class PlotWindow(ManagedWindow):

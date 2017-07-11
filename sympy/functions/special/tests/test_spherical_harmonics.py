@@ -1,5 +1,5 @@
-from sympy import Symbol, sqrt, pi, sin, cos, cot, exp, I, diff, conjugate
-from sympy.functions.special.spherical_harmonics import Ynm, Znm, Ynm_c
+from sympy import I, Symbol, conjugate, cos, cot, diff, exp, pi, sin, sqrt
+from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
 
 
 def test_Ynm():

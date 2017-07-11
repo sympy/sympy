@@ -9,16 +9,14 @@ References
 [1] : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from functools import cmp_to_key
 
-from sympy.core import S, diff, Expr, Symbol
-
-from sympy.geometry import Segment2D, Polygon, Point
 from sympy.abc import x, y
-
-from sympy.polys.polytools import LC, gcd_list, degree_list
+from sympy.core import Expr, S, Symbol, diff
+from sympy.geometry import Point, Polygon, Segment2D
+from sympy.polys.polytools import LC, degree_list, gcd_list
 
 
 def polytope_integrate(poly, expr, **kwargs):

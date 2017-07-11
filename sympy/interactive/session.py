@@ -1,11 +1,12 @@
 """Tools for setting up interactive sessions. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from distutils.version import LooseVersion as V
 
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
+
 
 preexec_source = """\
 from __future__ import division

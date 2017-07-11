@@ -1,14 +1,17 @@
-from __future__ import print_function, division
-from mpmath.libmp import (fzero,
-    from_man_exp, from_int, from_rational,
-    fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
-    mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos,
-    mpf_sin)
-from sympy.core.numbers import igcd
+from __future__ import division, print_function
+
 import math
+
+from mpmath.libmp import bitcount, fhalf, fone, from_int, from_man_exp, \
+    from_rational, fzero, mpf_add, mpf_cos, mpf_cosh_sinh, mpf_div, mpf_mul, \
+    mpf_pi, mpf_sin, mpf_sqrt, mpf_sub, pi_fixed, to_int, to_str
+
 from sympy.core.compatibility import range
-from .residue_ntheory import (_sqrt_mod_prime_power,
-    legendre_symbol, jacobi_symbol, is_quad_residue)
+from sympy.core.numbers import igcd
+
+from .residue_ntheory import _sqrt_mod_prime_power, is_quad_residue, \
+    jacobi_symbol, legendre_symbol
+
 
 def _pre():
     maxn = 10**5

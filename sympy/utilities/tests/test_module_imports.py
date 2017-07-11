@@ -16,12 +16,13 @@ separate, pristine Python process.
 
 from __future__ import print_function
 
+import inspect
 import subprocess
 import sys
 from os.path import abspath, dirname, join, normpath
-import inspect
 
 from sympy.utilities.pytest import XFAIL
+
 
 @XFAIL
 def test_module_imports_are_direct():

@@ -1,13 +1,11 @@
 """The commutator: [A,B] = A*B - B*A."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import S, Expr, Mul, Add
-from sympy.printing.pretty.stringpict import prettyForm
-
+from sympy import Add, Expr, Mul, S
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import Operator
-
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'Commutator'

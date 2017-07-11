@@ -1,12 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import sys
 from time import time
 
-from sympy.ntheory.residue_ntheory import (discrete_log,
-        _discrete_log_trial_mul, _discrete_log_shanks_steps,
-        _discrete_log_pollard_rho, _discrete_log_pohlig_hellman)
-
+from sympy.ntheory.residue_ntheory import _discrete_log_pohlig_hellman, \
+    _discrete_log_pollard_rho, _discrete_log_shanks_steps, \
+    _discrete_log_trial_mul, discrete_log
 
 # Cyclic group (Z/pZ)* with p prime, order p - 1 and generator g
 data_set_1 = [

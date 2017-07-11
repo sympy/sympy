@@ -1,13 +1,12 @@
-from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
+from sympy.core import Eq, Float, Function, I, Integer, Mul, Pow, Rational, \
+    Symbol
 from sympy.functions import exp, factorial, sin
 from sympy.logic import And
+from sympy.parsing.sympy_parser import TokenError, convert_equals_signs, \
+    implicit_multiplication, parse_expr, rationalize, split_symbols, \
+    standard_transformations
 from sympy.series import Limit
 from sympy.utilities.pytest import raises
-
-from sympy.parsing.sympy_parser import (
-    parse_expr, standard_transformations, rationalize, TokenError,
-    split_symbols, implicit_multiplication, convert_equals_signs,
-)
 
 
 def test_sympy_parser():

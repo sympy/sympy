@@ -1,23 +1,14 @@
 """Tests for the implementation of RootOf class and related tools. """
 
-from sympy.polys.polytools import Poly
-from sympy.polys.rootoftools import rootof, RootOf, CRootOf, RootSum
-
-from sympy.polys.polyerrors import (
-    MultivariatePolynomialError,
-    GeneratorsNeeded,
-    PolynomialError,
-)
-
-from sympy import (
-    S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly
-)
-
-from sympy.utilities.pytest import raises
+from sympy import Eq, Float, Function, I, Lambda, Rational, S, exp, \
+    legendre_poly, log, solve, sqrt, tan
+from sympy.abc import a, b, r, x, y, z
 from sympy.core.compatibility import range
-
-from sympy.abc import a, b, x, y, z, r
+from sympy.polys.polyerrors import GeneratorsNeeded, \
+    MultivariatePolynomialError, PolynomialError
+from sympy.polys.polytools import Poly
+from sympy.polys.rootoftools import CRootOf, RootOf, RootSum, rootof
+from sympy.utilities.pytest import raises
 
 
 def test_CRootOf___new__():

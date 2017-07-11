@@ -1,17 +1,16 @@
-from sympy.core.compatibility import range, PY3
-from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
-                                  ComplexRegion)
-from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
-                             Intersection)
-from sympy.simplify.simplify import simplify
-from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye)
-from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import x, y, z, t
-
 import itertools
 
+from sympy import Abs, Basic, I, Lambda, Rational, S, Symbol, Tuple, cos, \
+    exp, eye, log, oo, pi, sin, sqrt, symbols, tan
+from sympy.abc import t, x, y, z
+from sympy.core.compatibility import PY3, range
+from sympy.sets.fancysets import ComplexRegion, ImageSet, Range, \
+    normalize_theta_set
+from sympy.sets.sets import EmptySet, FiniteSet, Intersection, Interval, \
+    Union, imageset
+from sympy.simplify.simplify import simplify
+from sympy.utilities.iterables import cartes
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_naturals():

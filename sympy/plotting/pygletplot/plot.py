@@ -1,9 +1,19 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from os import getcwd, listdir
+from threading import RLock
+from time import sleep
+
+from plot_axes import PlotAxes
+from plot_mode import PlotMode
+from plot_object import PlotObject
+from plot_window import PlotWindow
+from util import parse_option_string
 
 from sympy import Integer
 from sympy.core.compatibility import is_sequence
-
-from threading import RLock
+from sympy.geometry.entity import GeometryEntity
+from sympy.utilities.decorator import doctest_depends_on
 
 # it is sufficient to import "pyglet" here once
 try:
@@ -12,18 +22,9 @@ except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
-from plot_object import PlotObject
-from plot_axes import PlotAxes
-from plot_window import PlotWindow
-from plot_mode import PlotMode
 
-from time import sleep
-from os import getcwd, listdir
-from util import parse_option_string
 
-from sympy.geometry.entity import GeometryEntity
 
-from sympy.utilities.decorator import doctest_depends_on
 
 @doctest_depends_on(modules=('pyglet',))
 class PygletPlot(object):

@@ -82,16 +82,17 @@ References
 [Xypic] http://xy-pic.sourceforge.net/
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Dict, Symbol
-from sympy.sets import FiniteSet
-from sympy.categories import (CompositeMorphism, IdentityMorphism,
-                              NamedMorphism, Diagram)
-from sympy.utilities import default_sort_key
 from itertools import chain
+
+from sympy.categories import CompositeMorphism, Diagram, IdentityMorphism, \
+    NamedMorphism
+from sympy.core import Dict, Symbol
 from sympy.core.compatibility import iterable, range
 from sympy.printing import latex
+from sympy.sets import FiniteSet
+from sympy.utilities import default_sort_key
 from sympy.utilities.decorator import doctest_depends_on
 
 

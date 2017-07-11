@@ -1,12 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import S
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import And
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
+from sympy.sets.sets import EmptySet, FiniteSet, Intersection, Interval, Set, \
+    Union
 from sympy.utilities.iterables import sift
 
 

@@ -5,13 +5,15 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.function import AppliedUndef
-from .printer import Printer
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps, repr_dps
+
 from sympy.core.compatibility import range
+from sympy.core.function import AppliedUndef
+
+from .printer import Printer
 
 
 class ReprPrinter(Printer):

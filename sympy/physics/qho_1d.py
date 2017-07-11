@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, pi, Rational
-from sympy.functions import hermite, sqrt, exp, factorial, Abs
+from sympy.core import Rational, S, pi
+from sympy.functions import Abs, exp, factorial, hermite, sqrt
 from sympy.physics.quantum.constants import hbar
 
 

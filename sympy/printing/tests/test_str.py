@@ -1,23 +1,21 @@
 from __future__ import division
 
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne)
+from sympy import Abs, AccumBounds, Catalan, Complement, Derivative, Dict, \
+    Dummy, E, Eq, Equivalent, EulerGamma, FiniteSet, Float, Function, \
+    GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, Matrix, \
+    MatrixSymbol, Ne, O, Pow, Rational, Rel, S, SparseMatrix, Sum, Symbol, \
+    SymmetricDifference, Tuple, UnevaluatedExpr, Wild, WildFunction, Xor, \
+    cos, exp, factor, factorial, factorial2, false, nan, oo, pi, sin, sqrt, \
+    subfactorial, summation, symbols, true, zeta, zoo
 from sympy.core import Expr
-from sympy.physics.units import second, joule
-from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
-from sympy.geometry import Point, Circle
-
-from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
-
-from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
-from sympy import MatrixSymbol
+from sympy.geometry import Circle, Point
+from sympy.physics.units import joule, second
+from sympy.polys import QQ, ZZ, Poly, RootSum, field, grlex, groebner, lex, \
+    ring, rootof
+from sympy.printing import StrPrinter, sstr, sstrrepr
+from sympy.utilities.pytest import raises
 
 x, y, z, w = symbols('x,y,z,w')
 d = Dummy('d')

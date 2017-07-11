@@ -4,17 +4,19 @@
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).
 
+import io
 import os
 import re
 import warnings
-import io
 
-from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq, log)
-
+from sympy import Basic, Eq, Interval, Lambda, S, exp, log, oo, pi, sin, \
+    sqrt, symbols
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, SKIP
+from sympy.matrices.expressions import MatrixSymbol
+from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import SKIP, XFAIL
 
 x, y, z = symbols('x,y,z')
 
@@ -639,9 +641,7 @@ def test_sympy__sets__contains__Contains():
 # STATS
 
 
-from sympy.stats.crv_types import NormalDistribution
 nd = NormalDistribution(0, 1)
-from sympy.stats.frv_types import DieDistribution
 die = DieDistribution(6)
 
 
@@ -2304,7 +2304,6 @@ def test_sympy__matrices__expressions__fourier__IDFT():
     from sympy import S
     assert _test_args(IDFT(S(2)))
 
-from sympy.matrices.expressions import MatrixSymbol
 X = MatrixSymbol('X', 10, 10)
 
 def test_sympy__matrices__expressions__factorizations__LofLU():

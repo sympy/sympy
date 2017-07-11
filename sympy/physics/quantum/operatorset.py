@@ -14,14 +14,14 @@ TODO List:
 - Update the dictionary with a complete list of state-operator pairs
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.physics.quantum.cartesian import (XOp, YOp, ZOp, XKet, PxOp, PxKet,
-                                             PositionKet3D)
+from sympy.physics.quantum.cartesian import PositionKet3D, PxKet, PxOp, XKet, \
+    XOp, YOp, ZOp
 from sympy.physics.quantum.operator import Operator
-from sympy.physics.quantum.state import StateBase, BraBase, Ket
-from sympy.physics.quantum.spin import (JxOp, JyOp, JzOp, J2Op, JxKet, JyKet,
-                                        JzKet)
+from sympy.physics.quantum.spin import J2Op, JxKet, JxOp, JyKet, JyOp, JzKet, \
+    JzOp
+from sympy.physics.quantum.state import BraBase, Ket, StateBase
 
 __all__ = [
     'operators_to_state',

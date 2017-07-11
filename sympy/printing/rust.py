@@ -31,11 +31,11 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, numbers, Rational, Float, Lambda
-from sympy.core.compatibility import string_types, range
-from sympy.printing.codeprinter import CodePrinter, Assignment
+from sympy.core import Float, Lambda, Rational, S, numbers
+from sympy.core.compatibility import range, string_types
+from sympy.printing.codeprinter import Assignment, CodePrinter
 from sympy.printing.precedence import precedence
 
 # Rust's methods for integer and float can be found at here :

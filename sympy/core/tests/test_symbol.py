@@ -1,7 +1,5 @@
-from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
-)
-
+from sympy import Dummy, GreaterThan, I, LessThan, Rational, \
+    StrictGreaterThan, StrictLessThan, Symbol, Wild, pi, symbols, sympify
 from sympy.utilities.pytest import raises
 
 

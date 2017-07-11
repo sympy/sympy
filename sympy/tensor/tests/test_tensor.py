@@ -1,18 +1,18 @@
 from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic
+from sympy.core import Basic, Rational, S, Symbol
+from sympy.core.compatibility import range
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.pretty import pretty
 from sympy.tensor.array import Array
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
-    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
-    riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
-    TensorManager, TensExpr, TIDS
+from sympy.tensor.tensor import TIDS, TensAdd, TensExpr, TensMul, \
+    TensorIndex, TensorIndexType, TensorManager, TensorSymmetry, TensorType, \
+    get_symmetric_group_sgs, riemann_cyclic, riemann_cyclic_replace, \
+    tensor_indices, tensor_mul, tensorhead, tensorsymmetry
 from sympy.utilities.pytest import raises, skip
-from sympy.core.compatibility import range
 
 
 def _is_equal(arg1, arg2):

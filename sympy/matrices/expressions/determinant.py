@@ -1,6 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Basic, Expr, S, sympify
+from sympy.assumptions.ask import Q, ask
+from sympy.assumptions.refine import handlers_dict
+
 from .matexpr import ShapeError
 
 
@@ -53,8 +56,6 @@ def det(matexpr):
     return Determinant(matexpr).doit()
 
 
-from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
 
 
 def refine_Determinant(expr, assumptions):

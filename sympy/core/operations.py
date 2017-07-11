@@ -1,11 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
-from sympy.core.logic import fuzzy_and
 from sympy.core.evaluate import global_evaluate
+from sympy.core.logic import fuzzy_and
+from sympy.core.sympify import _sympify, sympify
 
 
 class AssocOp(Basic):

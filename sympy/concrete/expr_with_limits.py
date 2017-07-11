@@ -1,20 +1,20 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.add import Add
+from sympy.core.compatibility import is_sequence, range
+from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.relational import Equality
-from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, range
-from sympy.core.containers import Tuple
 from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.matrices import Matrix
+from sympy.sets.sets import Interval
+from sympy.tensor.indexed import Idx
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
-from sympy.matrices import Matrix
-from sympy.tensor.indexed import Idx
 
 
 def _process_limits(*symbols):

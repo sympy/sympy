@@ -1,8 +1,8 @@
+from sympy import Q, refine
 from sympy.core import symbols
-from sympy.matrices.expressions import MatrixSymbol, Inverse
-from sympy.matrices import eye, Identity, ShapeError
+from sympy.matrices import Identity, ShapeError, eye
+from sympy.matrices.expressions import Inverse, MatrixSymbol
 from sympy.utilities.pytest import raises
-from sympy import refine, Q
 
 n, m, l = symbols('n m l', integer=True)
 A = MatrixSymbol('A', n, m)

@@ -105,14 +105,15 @@ matrix element ``M[i, j]`` as in the following diagram::
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import collections
 
+from sympy.core import Expr, S, Symbol, Tuple, sympify
+from sympy.core.compatibility import NotIterable, is_sequence, range, \
+    string_types
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
 
 
 class IndexException(Exception):

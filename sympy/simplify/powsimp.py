@@ -1,17 +1,17 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
-from sympy.core.function import expand_log, count_ops
-from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
-from sympy.core.compatibility import ordered, default_sort_key, reduce
+from sympy.core import Add, Basic, Dummy, Mul, Pow, S, expand_mul, \
+    factor_terms, sympify
+from sympy.core.compatibility import default_sort_key, ordered, reduce
+from sympy.core.function import count_ops, expand_log
+from sympy.core.mul import _keep_coeff, prod
 from sympy.core.numbers import Integer, Rational
-from sympy.core.mul import prod, _keep_coeff
 from sympy.core.rules import Transform
-from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
-from sympy.polys import lcm, gcd
+from sympy.functions import exp, exp_polar, log, polarify, root, unpolarify
 from sympy.ntheory.factor_ import multiplicity
-
+from sympy.polys import gcd, lcm
 
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):

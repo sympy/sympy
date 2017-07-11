@@ -1,23 +1,22 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy import expand
 from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import integer_types, is_sequence, iterable, \
+    ordered, range, with_metaclass
+from sympy.core.containers import Tuple
+from sympy.core.decorators import call_highest_priority
+from sympy.core.evaluate import global_evaluate
 from sympy.core.mul import Mul
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.compatibility import (range, integer_types, with_metaclass,
-                                      is_sequence, iterable, ordered)
-from sympy.core.decorators import call_highest_priority
-from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
-from sympy.core.containers import Tuple
-from sympy.core.evaluate import global_evaluate
-from sympy.polys import lcm, factor
-from sympy.sets.sets import Interval, Intersection
-from sympy.utilities.iterables import flatten
-from sympy.tensor.indexed import Idx
+from sympy.polys import factor, lcm
+from sympy.sets.sets import Intersection, Interval
 from sympy.simplify import simplify
-from sympy import expand
-
+from sympy.tensor.indexed import Idx
+from sympy.utilities.iterables import flatten
 
 ###############################################################################
 #                            SEQUENCES                                        #

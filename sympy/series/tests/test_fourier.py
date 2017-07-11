@@ -1,5 +1,5 @@
-from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational,
-                   oo, fourier_series, Add)
+from sympy import Add, Piecewise, Rational, cos, fourier_series, oo, pi, sin, \
+    sinc, symbols
 from sympy.series.fourier import FourierSeries
 from sympy.utilities.pytest import raises
 

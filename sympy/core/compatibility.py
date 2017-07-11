@@ -3,10 +3,17 @@ Reimplementations of constructs introduced in later versions of Python than
 we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import operator
-from collections import defaultdict
+import sys
+# lru_cache compatible with py2.6->py3.2 copied directly from
+#   http://code.activestate.com/
+#   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
+from collections import defaultdict, namedtuple
+from functools import update_wrapper
+from threading import RLock
+
 from sympy.external import import_module
 
 """
@@ -61,7 +68,6 @@ Metaclasses:
                 pass
 """
 
-import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
@@ -684,12 +690,6 @@ if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
 
 
-# lru_cache compatible with py2.6->py3.2 copied directly from
-#   http://code.activestate.com/
-#   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
-from collections import namedtuple
-from functools import update_wrapper
-from threading import RLock
 
 _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
 

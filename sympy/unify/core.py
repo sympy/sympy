@@ -16,10 +16,11 @@ A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.utilities.iterables import kbins
 from sympy.core.compatibility import range
+from sympy.utilities.iterables import kbins
+
 
 class Compound(object):
     """ A little class to represent an interior node in the tree

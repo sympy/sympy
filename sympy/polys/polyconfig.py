@@ -1,6 +1,6 @@
 """Configuration utilities for polynomial manipulation algorithms. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from contextlib import contextmanager
 

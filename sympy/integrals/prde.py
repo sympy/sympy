@@ -14,23 +14,20 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S, oo
-
-from sympy.matrices import zeros, eye
+from sympy.core import Add, Dummy, Mul, Pow, S, ilcm, oo
+from sympy.core.compatibility import range, reduce
+from sympy.integrals.rde import bound_degree, order_at, order_at_oo, \
+    solve_poly_rde, spde, weak_normalizer
+from sympy.integrals.risch import DecrementLevel, \
+    NonElementaryIntegralException, derivation, frac_in, gcdex_diophantine, \
+    recognize_log_derivative, residue_reduce, residue_reduce_derivation, \
+    splitfactor
+from sympy.matrices import eye, zeros
+from sympy.polys import Poly, cancel, lcm, sqf_list
 from sympy.polys.polymatrix import PolyMatrix as Matrix
-
 from sympy.solvers import solve
-
-from sympy.polys import Poly, lcm, cancel, sqf_list
-
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    NonElementaryIntegralException, residue_reduce, splitfactor,
-    residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
-from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree, spde, solve_poly_rde)
-from sympy.core.compatibility import reduce, range
 from sympy.utilities.misc import debug
 
 

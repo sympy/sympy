@@ -1,13 +1,12 @@
-from __future__ import print_function, division
-import functools
+from __future__ import division, print_function
 
+import functools
 import itertools
 
+from sympy import Basic, Dict, S, Tuple
 from sympy.core.sympify import _sympify
-
-from sympy import S, Dict, Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
-from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
+from sympy.tensor.array.ndim_array import ImmutableNDimArray, NDimArray
 
 
 class SparseNDimArray(NDimArray):

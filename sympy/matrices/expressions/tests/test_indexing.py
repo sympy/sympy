@@ -1,5 +1,5 @@
-from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix,
-        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
+from sympy import BlockMatrix, Identity, ImmutableMatrix, MatPow, \
+    MatrixSymbol, Sum, ZeroMatrix, eye, symbols
 from sympy.utilities.pytest import raises
 
 k, l, m, n = symbols('k l m n', integer=True)

@@ -1,12 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import oo, Tuple
-
-from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.logic.inference import satisfiable
-from sympy.logic.boolalg import And
 from sympy.assumptions.ask_generated import get_known_facts_cnf
+from sympy.assumptions.assume import AppliedPredicate, global_assumptions
 from sympy.assumptions.sathandlers import fact_registry
+from sympy.core import Tuple, oo
+from sympy.logic.boolalg import And
+from sympy.logic.inference import satisfiable
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,

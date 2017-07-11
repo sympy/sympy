@@ -9,13 +9,13 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import S, Symbol
-from sympy.core.numbers import I
-from sympy.polys.polytools import Poly
 from sympy.core.evalf import N
+from sympy.core.numbers import I
 from sympy.functions import sqrt
+from sympy.polys.polytools import Poly
 from sympy.utilities import public
 
 x = Symbol('x')

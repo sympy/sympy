@@ -67,13 +67,12 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr).
 """
 
-from __future__ import print_function, division
-
-from sympy import Basic, Add
-
-from sympy.core.core import BasicMeta
+from __future__ import division, print_function
 
 from functools import cmp_to_key
+
+from sympy import Add, Basic
+from sympy.core.core import BasicMeta
 
 
 class Printer(object):

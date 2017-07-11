@@ -1,18 +1,20 @@
 from __future__ import division
 
-from sympy import Rational, Float, S, Symbol, cos, oo, pi, simplify, sin, sqrt, symbols, acos
+import sys
+import traceback
+import warnings
+
+from sympy import Float, Rational, S, Symbol, acos, cos, oo, pi, simplify, \
+    sin, sqrt, symbols
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, GeometryError, Line, Point, Ray, Segment, Triangle, intersection, Point3D, Line3D,
-                            Ray3D, Segment3D, Point2D, Line2D)
+from sympy.geometry import Circle, GeometryError, Line, Line2D, Line3D, \
+    Point, Point2D, Point3D, Ray, Ray3D, Segment, Segment3D, Triangle, \
+    intersection
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises, slow
-
-import traceback
-import warnings
-import sys
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)

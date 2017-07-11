@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.backend import sympify
-from sympy.physics.vector import Point, ReferenceFrame, Dyadic
+from sympy.physics.vector import Dyadic, Point, ReferenceFrame
 
 __all__ = ['RigidBody']
 

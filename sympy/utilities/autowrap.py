@@ -65,28 +65,27 @@ When is this module NOT the best approach?
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import sys
 import os
 import shutil
+import sys
 import tempfile
-from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
+from subprocess import STDOUT, CalledProcessError, check_output
 from warnings import warn
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range, iterable
+from sympy.core.compatibility import iterable, range
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
-from sympy.utilities.codegen import (make_routine, get_code_generator,
-                                     OutputArgument, InOutArgument,
-                                     InputArgument, CodeGenArgumentListError,
-                                     Result, ResultBase, C99CodeGen)
-from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.codegen import C99CodeGen, CodeGenArgumentListError, \
+    InOutArgument, InputArgument, OutputArgument, Result, ResultBase, \
+    get_code_generator, make_routine
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.lambdify import implemented_function
 
 _doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'),
                        'modules': ('numpy',)}

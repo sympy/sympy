@@ -1,13 +1,13 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import sys
 import os
 import re as _re
-from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, range
+import sys
+from textwrap import dedent, fill
 
+from sympy.core.compatibility import get_function_name, range
 
 
 class Undecidable(ValueError):

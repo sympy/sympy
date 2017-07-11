@@ -71,10 +71,11 @@ array (perhaps just a matter of preference).
 
 '''
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import math
-from sympy.core.compatibility import range, as_int
+
+from sympy.core.compatibility import as_int, range
 
 
 def _series(j, n, prec=14):

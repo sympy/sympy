@@ -1,11 +1,10 @@
-from sympy.core import (
-    Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, symbols, oo, zoo)
-from sympy.core.tests.test_evalf import NS
+from sympy.core import Basic, Float, I, Integer, Mul, Number, Pow, Rational, \
+    S, Symbol, nan, oo, pi, symbols, zoo
 from sympy.core.function import expand_multinomial
-from sympy.functions.elementary.miscellaneous import sqrt, cbrt
+from sympy.core.tests.test_evalf import NS
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.functions.elementary.miscellaneous import cbrt, sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.series.order import O
 from sympy.utilities.pytest import XFAIL
 

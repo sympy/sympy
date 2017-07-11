@@ -1,6 +1,7 @@
-from sympy.strategies.tools import subs, typed
-from sympy.strategies.rl import rm_id
 from sympy import Basic
+from sympy.strategies.rl import rm_id
+from sympy.strategies.tools import subs, typed
+
 
 def test_subs():
     from sympy import symbols

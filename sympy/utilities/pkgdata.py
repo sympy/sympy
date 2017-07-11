@@ -17,10 +17,11 @@ getResource to its get_data implementation and return it as a file-like
 object (such as StringIO).
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import sys
 import os
+import sys
+
 from sympy.core.compatibility import cStringIO as StringIO
 
 

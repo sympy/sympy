@@ -1,15 +1,16 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import random
 from collections import defaultdict
 
-from sympy.core import Basic
-from sympy.core.compatibility import is_sequence, reduce, range, as_int
-from sympy.utilities.iterables import (flatten, has_variety, minlex,
-    has_dups, runs)
-from sympy.polys.polytools import lcm
-from sympy.matrices import zeros
 from mpmath.libmp.libintmath import ifac
+
+from sympy.core import Basic
+from sympy.core.compatibility import as_int, is_sequence, range, reduce
+from sympy.matrices import zeros
+from sympy.polys.polytools import lcm
+from sympy.utilities.iterables import flatten, has_dups, has_variety, minlex, \
+    runs
 
 
 def _af_rmul(a, b):

@@ -1,9 +1,9 @@
 """Inference in propositional logic"""
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
 from sympy.core.compatibility import ordered
 from sympy.core.sympify import sympify
+from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
 
 
 def literal_symbol(literal):

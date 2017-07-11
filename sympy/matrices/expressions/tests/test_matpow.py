@@ -1,8 +1,8 @@
-from sympy.utilities.pytest import raises
-from sympy.core import symbols, pi, S
-from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix, ZeroMatrix
-from sympy.matrices.expressions import MatPow, MatAdd, MatMul
+from sympy.core import S, pi, symbols
+from sympy.matrices import Identity, ImmutableMatrix, MatrixSymbol, ZeroMatrix
+from sympy.matrices.expressions import MatAdd, MatMul, MatPow
 from sympy.matrices.expressions.matexpr import ShapeError
+from sympy.utilities.pytest import raises
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)

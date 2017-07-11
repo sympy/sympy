@@ -1,18 +1,19 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Add, S, sympify, oo, pi, Dummy
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core import Add, Dummy, S, oo, pi, sympify
+from sympy.core.compatibility import range
+from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.compatibility import range
-from .zeta_functions import zeta
-from .error_functions import erf, erfc
+from sympy.functions.combinatorial.factorials import RisingFactorial, \
+    factorial, rf
+from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.combinatorial.numbers import bernoulli, harmonic
-from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 
+from .error_functions import erf, erfc
+from .zeta_functions import zeta
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################

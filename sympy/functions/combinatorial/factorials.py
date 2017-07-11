@@ -1,19 +1,17 @@
-from __future__ import print_function, division
-
-from sympy.core import S, sympify, Dummy, Mod
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer, pi
-from sympy.core.relational import Eq
-
-from sympy.ntheory import sieve
+from __future__ import division, print_function
 
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, range, HAS_GMPY
+from sympy.core import Dummy, Mod, S, sympify
 from sympy.core.cache import cacheit
-
+from sympy.core.compatibility import HAS_GMPY, range, reduce
+from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.logic import fuzzy_and
+from sympy.core.numbers import Integer, pi
+from sympy.core.relational import Eq
+from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
+
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """

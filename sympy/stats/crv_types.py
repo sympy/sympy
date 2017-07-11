@@ -42,17 +42,17 @@ Weibull
 WignerSemicircle
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic)
-from sympy import beta as beta_fn
-from sympy import cos, exp, besseli
-from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
-        ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check
 import random
+
+from sympy import beta as beta_fn
+from sympy import Abs, And, Basic, Dummy, Eq, Interval, Lambda, Piecewise, S, \
+    Sum, besseli, binomial, cos, exp, factorial, floor, gamma, log, pi, sqrt, \
+    sympify
+from sympy.stats.crv import ContinuousDistributionHandmade, \
+    SingleContinuousDistribution, SingleContinuousPSpace
+from sympy.stats.rv import _value_check
 
 oo = S.Infinity
 

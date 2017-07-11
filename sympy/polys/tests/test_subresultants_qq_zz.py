@@ -1,13 +1,12 @@
-from sympy import var, sturm, subresultants, prem, pquo
+from sympy import pquo, prem, sturm, subresultants, var
 from sympy.matrices import Matrix, eye
-from sympy.polys.subresultants_qq_zz import (sylvester, bezout,
-    subresultants_bezout, modified_subresultants_bezout,
-    process_bezout_output, backward_eye,
-    sturm_pg, sturm_q, sturm_amv, euclid_pg, euclid_q,
-    euclid_amv, modified_subresultants_pg, subresultants_pg,
-    subresultants_amv_q, quo_z, rem_z, subresultants_amv,
-    modified_subresultants_amv, subresultants_rem,
-    subresultants_vv, subresultants_vv_2)
+from sympy.polys.subresultants_qq_zz import backward_eye, bezout, euclid_amv, \
+    euclid_pg, euclid_q, modified_subresultants_amv, \
+    modified_subresultants_bezout, modified_subresultants_pg, \
+    process_bezout_output, quo_z, rem_z, sturm_amv, sturm_pg, sturm_q, \
+    subresultants_amv, subresultants_amv_q, subresultants_bezout, \
+    subresultants_pg, subresultants_rem, subresultants_vv, \
+    subresultants_vv_2, sylvester
 
 
 def test_sylvester():

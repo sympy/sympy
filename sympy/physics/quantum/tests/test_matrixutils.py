@@ -1,14 +1,11 @@
 from random import randint
 
-from sympy import Matrix, zeros, ones, Integer
-
-from sympy.physics.quantum.matrixutils import (
-    to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
-    matrix_to_zero, matrix_zeros, numpy_ndarray, scipy_sparse_matrix
-)
+from sympy import Integer, Matrix, ones, zeros
 from sympy.core.compatibility import range
-
 from sympy.external import import_module
+from sympy.physics.quantum.matrixutils import matrix_tensor_product, \
+    matrix_to_zero, matrix_zeros, numpy_ndarray, scipy_sparse_matrix, \
+    to_numpy, to_scipy_sparse, to_sympy
 from sympy.utilities.pytest import skip
 
 m = Matrix([[1, 2], [3, 4]])

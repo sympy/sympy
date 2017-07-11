@@ -186,33 +186,31 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
-from sympy.simplify.simplify import bottom_up
-from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
-from sympy.functions.elementary.hyperbolic import (
-    cosh, sinh, tanh, coth, HyperbolicFunction)
+from sympy import SYMPY_DEBUG
+from sympy.core.add import Add
+from sympy.core.basic import S
 from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
+from sympy.core.exprtools import Factors, factor_terms, gcd_terms
 from sympy.core.function import expand_mul
-from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import I, pi
+from sympy.core.power import Pow
 from sympy.core.symbol import Dummy
-from sympy.core.exprtools import Factors, gcd_terms, factor_terms
-from sympy.core.basic import S
-from sympy.core.numbers import pi, I
-from sympy.strategies.tree import greedy
-from sympy.strategies.core import identity, debug
-from sympy.polys.polytools import factor
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction, cosh, \
+    coth, sinh, tanh
+from sympy.functions.elementary.trigonometric import TrigonometricFunction, \
+    cos, cot, csc, sec, sin, sqrt, tan
 from sympy.ntheory.factor_ import perfect_power
-
-from sympy import SYMPY_DEBUG
-
+from sympy.polys.polytools import factor
+from sympy.simplify.simplify import bottom_up
+from sympy.strategies.core import debug, identity
+from sympy.strategies.tree import greedy
 
 # ================== Fu-like tools ===========================
 

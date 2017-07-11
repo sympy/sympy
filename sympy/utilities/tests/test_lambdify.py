@@ -1,22 +1,19 @@
-from itertools import product
 import math
+from itertools import product
 
 import mpmath
-from sympy.utilities.pytest import XFAIL, raises
-from sympy import (
-    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq)
-from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.pytest import skip
-from sympy.utilities.decorator import conserve_mpmath_dps
-from sympy.external import import_module
-from sympy.functions.special.gamma_functions import uppergamma,lowergamma
 
 import sympy
-
+from sympy import ITE, Abs, And, DotProduct, Eq, Float, Function, I, \
+    IndexedBase, Integral, Lambda, Matrix, Max, Min, Not, Or, Piecewise, \
+    Rational, Sum, acos, acosh, cos, diff, exp, false, floor, lambdify, oo, \
+    pi, sin, sqrt, symbols, tan, true
+from sympy.external import import_module
+from sympy.functions.special.gamma_functions import lowergamma, uppergamma
+from sympy.printing.lambdarepr import LambdaPrinter
+from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import XFAIL, raises, skip
 
 MutableDenseMatrix = Matrix
 

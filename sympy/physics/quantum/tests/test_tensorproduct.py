@@ -1,14 +1,12 @@
-from sympy import I, symbols, Matrix
-
+from sympy import I, Matrix, symbols
+from sympy.core.trace import Tr
 from sympy.physics.quantum.commutator import Commutator as Comm
-from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.density import Density
+from sympy.physics.quantum.operator import OuterProduct
+from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.tensorproduct import TensorProduct as TP
 from sympy.physics.quantum.tensorproduct import tensor_product_simp
-from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.qubit import Qubit, QubitBra
-from sympy.physics.quantum.operator import OuterProduct
-from sympy.physics.quantum.density import Density
-from sympy.core.trace import Tr
 
 A, B, C = symbols('A,B,C', commutative=False)
 x = symbols('x')

@@ -1,8 +1,9 @@
-from sympy.core.basic import Basic
-from sympy import (sympify, eye, sin, cos, rot_axis1, rot_axis2,
-                   rot_axis3, ImmutableMatrix as Matrix, Symbol)
-from sympy.core.cache import cacheit
 import sympy.vector
+from sympy import ImmutableMatrix as Matrix
+from sympy import Symbol, cos, eye, rot_axis1, rot_axis2, rot_axis3, sin, \
+    sympify
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
 
 
 class Orienter(Basic):

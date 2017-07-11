@@ -1,6 +1,11 @@
-from sympy.external import import_module
-from sympy.utilities.pytest import raises, SKIP
+import sympy
+from sympy import S
+from sympy.abc import x, y, z
 from sympy.core.compatibility import range
+from sympy.external import import_module
+from sympy.printing.theanocode import dim_handling, theano_code, \
+    theano_function
+from sympy.utilities.pytest import SKIP, raises
 
 theano = import_module('theano')
 if theano:
@@ -12,12 +17,7 @@ else:
     #bin/test will not execute any tests now
     disabled = True
 
-import sympy
-from sympy import S
 sy = sympy
-from sympy.abc import x, y, z
-from sympy.printing.theanocode import (theano_code, dim_handling,
-        theano_function)
 
 def fgraph_of(*exprs):
     """ Transform SymPy expressions into Theano Computation """

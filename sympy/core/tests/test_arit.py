@@ -1,14 +1,12 @@
 from __future__ import division
 
-from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
-        sign, im, nan, Dummy, factorial, comp, refine
-)
+from sympy import Add, Basic, Dummy, Float, I, Integer, Max, Mod, Mul, Pow, \
+    Rational, S, Symbol, comp, cos, exp, factorial, im, log, nan, oo, pi, re, \
+    refine, sign, sin, sqrt, symbols, sympify
 from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
-
 
 a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)

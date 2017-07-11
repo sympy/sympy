@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.singleton import S
-from sympy.core.numbers import igcd, igcdex, mod_inverse
-from sympy.core.power import isqrt
+from random import Random, randint
+
 from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
-from .primetest import isprime
-from .factor_ import factorint, trailing, totient, multiplicity
-from random import randint, Random
+from sympy.core.numbers import igcd, igcdex, mod_inverse
+from sympy.core.power import isqrt
+from sympy.core.singleton import S
 
+from .factor_ import factorint, multiplicity, totient, trailing
+from .primetest import isprime
 
 
 def n_order(a, n):

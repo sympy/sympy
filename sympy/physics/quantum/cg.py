@@ -4,15 +4,15 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
-                   symbols, sympify, Wild)
+from sympy import Add, Eq, Expr, Mul, Piecewise, Pow, Sum, Wild, expand, \
+    sqrt, symbols, sympify
 from sympy.core.compatibility import range
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
-
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
+from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, \
+    wigner_9j
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 __all__ = [
     'CG',

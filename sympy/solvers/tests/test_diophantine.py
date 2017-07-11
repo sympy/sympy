@@ -1,27 +1,23 @@
-from sympy import (Add, factor_list, igcd, Matrix, Mul, S, simplify,
-    Symbol, symbols, Eq, pi, factorint, oo, powsimp)
-from sympy.core.function import _mexpand
+from sympy import Add, Eq, Matrix, Mul, S, Symbol, factor_list, factorint, \
+    igcd, oo, pi, powsimp, simplify, symbols
 from sympy.core.compatibility import range
+from sympy.core.function import _mexpand
 from sympy.functions.elementary.trigonometric import sin
-from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
-    diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
-    reconstruct, partition, power_representation,
-    prime_as_sum_of_two_squares, square_factor, sum_of_four_squares,
-    sum_of_three_squares, transformation_to_DN, transformation_to_normal,
-    classify_diop, base_solution_linear, cornacchia, sqf_normal,
-    diop_ternary_quadratic_normal, _diop_ternary_quadratic_normal,
-    gaussian_reduce, holzer,diop_general_pythagorean,
-    _diop_general_sum_of_squares, _nint_or_floor, _odd, _even,
-    _remove_gcd, check_param, parametrize_ternary_quadratic,
-    diop_ternary_quadratic, diop_linear, diop_quadratic,
-    diop_general_sum_of_squares, sum_of_powers, sum_of_squares,
-    diop_general_sum_of_even_powers, _can_do_sum_of_squares)
+from sympy.solvers.diophantine import _can_do_sum_of_squares, \
+    _diop_general_sum_of_squares, _diop_ternary_quadratic_normal, _even, \
+    _nint_or_floor, _odd, _remove_gcd, base_solution_linear, check_param, \
+    classify_diop, cornacchia, descent, diop_bf_DN, diop_DN, \
+    diop_general_pythagorean, diop_general_sum_of_even_powers, \
+    diop_general_sum_of_squares, diop_linear, diop_quadratic, diop_solve, \
+    diop_ternary_quadratic, diop_ternary_quadratic_normal, diophantine, \
+    divisible, equivalent, find_DN, gaussian_reduce, holzer, ldescent, \
+    length, parametrize_ternary_quadratic, partition, power_representation, \
+    prime_as_sum_of_two_squares, reconstruct, sqf_normal, square_factor, \
+    sum_of_four_squares, sum_of_powers, sum_of_squares, sum_of_three_squares, \
+    transformation_to_DN, transformation_to_normal
 from sympy.utilities import default_sort_key
-
-from sympy.utilities.pytest import slow, raises, XFAIL
-from sympy.utilities.iterables import (
-        permute_signs,
-        signed_permutations)
+from sympy.utilities.iterables import permute_signs, signed_permutations
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z = symbols(
     "a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z", integer=True)

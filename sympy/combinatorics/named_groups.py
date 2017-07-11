@@ -1,9 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
+from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
+from sympy.core.compatibility import range
 
 _af_new = Permutation._af_new
 

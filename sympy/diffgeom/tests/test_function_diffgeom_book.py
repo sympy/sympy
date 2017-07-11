@@ -1,9 +1,9 @@
+from sympy.core import Derivative, Function, symbols
+from sympy.diffgeom import Differential, WedgeProduct, intcurve_series
 from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r
-from sympy.diffgeom import intcurve_series, Differential, WedgeProduct
-from sympy.core import symbols, Function, Derivative
-from sympy.simplify import trigsimp, simplify
-from sympy.functions import sqrt, atan2, sin, cos
+from sympy.functions import atan2, cos, sin, sqrt
 from sympy.matrices import Matrix
+from sympy.simplify import simplify, trigsimp
 
 # Most of the functionality is covered in the
 # test_functional_diffgeom_ch* tests which are based on the

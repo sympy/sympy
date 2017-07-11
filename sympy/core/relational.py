@@ -1,14 +1,14 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 from .basic import S
 from .compatibility import ordered
-from .expr import Expr
 from .evalf import EvalfMixin
+from .evaluate import global_evaluate
+from .expr import Expr
 from .function import _coeff_isneg
 from .sympify import _sympify
-from .evaluate import global_evaluate
-
-from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',

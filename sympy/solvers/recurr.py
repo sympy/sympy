@@ -46,25 +46,25 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function       -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
-from sympy.core.singleton import S
-from sympy.core.numbers import Rational, I
-from sympy.core.symbol import Symbol, Wild, Dummy
-from sympy.core.relational import Equality
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core import sympify
-
-from sympy.simplify import simplify, hypersimp, hypersimilar
-from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
-from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
-from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
+from sympy.core import sympify
+from sympy.core.add import Add
 from sympy.core.compatibility import default_sort_key, range
+from sympy.core.mul import Mul
+from sympy.core.numbers import I, Rational
+from sympy.core.relational import Equality
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.functions import FallingFactorial, RisingFactorial, binomial, \
+    factorial
+from sympy.matrices import Matrix, casoratian
+from sympy.polys import Poly, gcd, lcm, quo, resultant, roots
+from sympy.simplify import hypersimilar, hypersimp, simplify
+from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.utilities.iterables import numbered_symbols
 
 

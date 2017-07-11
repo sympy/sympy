@@ -1,23 +1,15 @@
 """High-level polynomials manipulation functions. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.polytools import (
-    poly_from_expr, parallel_poly_from_expr, Poly)
-from sympy.polys.polyoptions import allowed_flags
-
-from sympy.polys.specialpolys import (
-    symmetric_poly, interpolating_poly)
-
-from sympy.polys.polyerrors import (
-    PolificationFailed, ComputationFailed,
-    MultivariatePolynomialError, OptionError)
-
-from sympy.utilities import numbered_symbols, take, public
-
-from sympy.core import S, Basic, Add, Mul, symbols
-
+from sympy.core import Add, Basic, Mul, S, symbols
 from sympy.core.compatibility import range
+from sympy.polys.polyerrors import ComputationFailed, \
+    MultivariatePolynomialError, OptionError, PolificationFailed
+from sympy.polys.polyoptions import allowed_flags
+from sympy.polys.polytools import Poly, parallel_poly_from_expr, poly_from_expr
+from sympy.polys.specialpolys import interpolating_poly, symmetric_poly
+from sympy.utilities import numbered_symbols, public, take
 
 
 @public

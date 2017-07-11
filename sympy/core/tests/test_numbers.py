@@ -1,21 +1,20 @@
 import decimal
-from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
-                   S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin, fibonacci, RealField)
+
+import mpmath
+from mpmath import mpf
+
+from sympy import AlgebraicNumber, Catalan, E, EulerGamma, Float, Ge, \
+    GoldenRatio, Gt, I, Integer, Le, Lt, Mul, Number, Pow, Rational, \
+    RealField, S, Symbol, Tuple, cos, exp, factorial, fibonacci, latex, log, \
+    nan, oo, pi, simplify, sin, sqrt, zoo
 from sympy.core.compatibility import long
-from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
-    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
+from sympy.core.numbers import _intcache, comp, igcd, igcd2, igcd_lehmer, \
+    igcdex, ilcm, mod_inverse, mpf_norm, seterr
+from sympy.core.power import integer_nthroot, isqrt
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
-
-from mpmath import mpf
-import mpmath
-
-
 
 t = Symbol('t', real=False)
 

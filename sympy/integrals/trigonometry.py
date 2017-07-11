@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy.core import Dummy, Eq, Integer, Rational, S, Wild, cacheit
 from sympy.core.compatibility import range
-from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, Piecewise
+from sympy.functions import Piecewise, binomial, cos, sin
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 

@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (Basic, Expr, Symbol, Integer, Rational, Float,
-    default_sort_key, Add, Mul)
+from sympy import Add, Basic, Expr, Float, Integer, Mul, Rational, Symbol, \
+    default_sort_key
 
 __all__ = ['dotprint']
 

@@ -1,7 +1,8 @@
 from __future__ import division
 
-from sympy import Dummy, S, Symbol, pi, sqrt, asin
-from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
+from sympy import Dummy, S, Symbol, asin, pi, sqrt
+from sympy.geometry import Line, Line3D, Plane, Point, Point3D, Ray, Ray3D, \
+    Segment, Segment3D
 from sympy.geometry.util import are_coplanar
 from sympy.utilities.pytest import raises, slow
 

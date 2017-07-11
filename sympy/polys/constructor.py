@@ -1,13 +1,13 @@
 """Tools for constructing domains for expressions. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.polyutils import parallel_dict_from_basic
-from sympy.polys.polyoptions import build_options
-from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.polys.domains.realfield import RealField
-from sympy.utilities import public
 from sympy.core import sympify
+from sympy.polys.domains import EX, QQ, RR, ZZ
+from sympy.polys.domains.realfield import RealField
+from sympy.polys.polyoptions import build_options
+from sympy.polys.polyutils import parallel_dict_from_basic
+from sympy.utilities import public
 
 
 def _construct_simple(coeffs, opt):

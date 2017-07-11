@@ -1,26 +1,21 @@
-from sympy import (
-    Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
-    Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
-    erfcinv, exp, im, log, pi, re, sec, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt)
-
+from sympy import Abs, And, Derivative, Dummy, E, Eq, Float, Function, Gt, I, \
+    Integral, LambertW, Lt, Matrix, Mul, Or, Piecewise, Poly, Q, Rational, S, \
+    SparseMatrix, Symbol, Tuple, Wild, acos, arg, asin, ask, atan, atan2, \
+    atanh, cbrt, cos, cosh, diff, erf, erfc, erfcinv, erfinv, exp, im, log, \
+    nsolve, oo, pi, re, root, sec, simplify, sin, sinh, solve, solve_linear, \
+    sqrt, sstr, symbols, sympify, tan, tanh
+from sympy.abc import a, b, c, d, h, k, m, p, q, t, x, y, z
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
-from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
-    solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms
-
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
-
-from sympy.utilities.pytest import slow, XFAIL, SKIP, raises, skip, ON_TRAVIS
+from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
+    solve_undetermined_coeffs
+from sympy.solvers.solvers import _invert, _ispow, _simple_dens, \
+    check_assumptions, checksol, denoms, det_minor, det_perm, det_quick, \
+    posify, unrad
+from sympy.utilities.pytest import ON_TRAVIS, SKIP, XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
-
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
 
 def NS(e, n=15, **options):

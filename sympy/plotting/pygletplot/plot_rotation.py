@@ -1,12 +1,15 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from math import acos as _acos
+from math import sqrt as _sqrt
+
+from pyglet.gl import *
 
 try:
     from pyglet.gl.gl import c_float
 except ImportError:
     pass
 
-from pyglet.gl import *
-from math import sqrt as _sqrt, acos as _acos
 
 
 def cross(a, b):

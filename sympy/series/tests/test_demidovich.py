@@ -1,5 +1,5 @@
-from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
-    pi, asin, together, root
+from sympy import Rational, Symbol, asin, cos, exp, limit, log, oo, pi, root, \
+    sin, sqrt, tan, together
 
 # Numbers listed with the tests refer to problem numbers in the book
 # "Anti-demidovich, problemas resueltos, Ed. URSS"

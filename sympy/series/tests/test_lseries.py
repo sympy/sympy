@@ -1,4 +1,4 @@
-from sympy import sin, cos, exp, tanh, E, S, Order
+from sympy import E, Order, S, cos, exp, sin, tanh
 from sympy.abc import x, y
 
 

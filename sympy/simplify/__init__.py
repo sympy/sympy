@@ -4,28 +4,17 @@ for example:
 the expression E**(pi*I) will be converted into -1
 the expression (x+x)**2 will be converted into 4*x**2
 """
-from .simplify import (simplify, hypersimp, hypersimilar,
-    logcombine, separatevars, posify, besselsimp,
-    signsimp, bottom_up, nsimplify)
-
-from .fu import FU, fu
-
-from .sqrtdenest import sqrtdenest
-
-from .cse_main import cse
-
-from .traversaltools import use
-
-from .epathtools import epath, EPath
-
-from .hyperexpand import hyperexpand
-
-from .radsimp import collect, rcollect, radsimp, collect_const, fraction, numer, denom
-
-from .trigsimp import trigsimp, exptrigsimp
-
-from .powsimp import powsimp, powdenest
-
 from .combsimp import combsimp
-
+from .cse_main import cse
+from .epathtools import EPath, epath
+from .fu import FU, fu
+from .hyperexpand import hyperexpand
+from .powsimp import powdenest, powsimp
+from .radsimp import collect, collect_const, denom, fraction, numer, radsimp, \
+    rcollect
 from .ratsimp import ratsimp, ratsimpmodprime
+from .simplify import besselsimp, bottom_up, hypersimilar, hypersimp, \
+    logcombine, nsimplify, posify, separatevars, signsimp, simplify
+from .sqrtdenest import sqrtdenest
+from .traversaltools import use
+from .trigsimp import exptrigsimp, trigsimp

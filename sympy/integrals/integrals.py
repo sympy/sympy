@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
@@ -11,18 +11,18 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol, Wild)
+from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.sympify import sympify
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.matrices import MatrixBase
-from sympy.utilities.misc import filldedent
-from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign
+from sympy.functions import Piecewise, sign, sqrt
 from sympy.functions.elementary.exponential import log
+from sympy.integrals.manualintegrate import manualintegrate
+from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.integrals.trigonometry import trigintegrate
+from sympy.matrices import MatrixBase
+from sympy.polys import Poly, PolynomialError
 from sympy.series import limit
 from sympy.series.order import Order
+from sympy.utilities.misc import filldedent
 
 
 class Integral(AddWithLimits):

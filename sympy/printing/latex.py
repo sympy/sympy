@@ -2,31 +2,29 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import itertools
-
-from sympy.core import S, Add, Symbol, Mod
-from sympy.core.function import _coeff_isneg
-from sympy.core.sympify import SympifyError
-from sympy.core.alphabets import greeks
-from sympy.core.operations import AssocOp
-from sympy.core.containers import Tuple
-from sympy.logic.boolalg import true
-
-## sympy.printing imports
-from sympy.printing.precedence import precedence_traditional
-from .printer import Printer
-from .conventions import split_super_sub, requires_partial
-from .precedence import precedence, PRECEDENCE
+import re
 
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
+from sympy.core import Add, Mod, S, Symbol
+from sympy.core.alphabets import greeks
 from sympy.core.compatibility import default_sort_key, range
+from sympy.core.containers import Tuple
+from sympy.core.function import _coeff_isneg
+from sympy.core.operations import AssocOp
+from sympy.core.sympify import SympifyError
+from sympy.logic.boolalg import true
+## sympy.printing imports
+from sympy.printing.precedence import precedence_traditional
 from sympy.utilities.iterables import has_variety
 
-import re
+from .conventions import requires_partial, split_super_sub
+from .precedence import PRECEDENCE, precedence
+from .printer import Printer
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands

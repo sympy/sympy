@@ -1,17 +1,11 @@
 """Tests for high-level polynomials manipulation functions. """
 
-from sympy.polys.polyfuncs import (
-    symmetrize, horner, interpolate, rational_interpolate, viete,
-)
-
-from sympy.polys.polyerrors import (
-    MultivariatePolynomialError,
-)
-
 from sympy import symbols
-from sympy.utilities.pytest import raises
-
 from sympy.abc import a, b, c, d, e, x, y, z
+from sympy.polys.polyerrors import MultivariatePolynomialError
+from sympy.polys.polyfuncs import horner, interpolate, rational_interpolate, \
+    symmetrize, viete
+from sympy.utilities.pytest import raises
 
 
 def test_symmetrize():

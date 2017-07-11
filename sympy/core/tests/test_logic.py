@@ -1,5 +1,5 @@
-from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
-    fuzzy_or, _fuzzy_group, _torf)
+from sympy.core.logic import And, Logic, Not, Or, _fuzzy_group, _torf, \
+    fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.utilities.pytest import raises
 
 T = True

@@ -1,8 +1,8 @@
 """ Unit tests for Hyper_Function"""
-from sympy.core import symbols, Dummy, Tuple, S
+from sympy.core import Dummy, S, Tuple, symbols
 from sympy.functions import hyper
-
 from sympy.simplify.hyperexpand import Hyper_Function
+
 
 def test_attrs():
     a, b = symbols('a, b', cls=Dummy)

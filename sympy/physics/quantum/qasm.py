@@ -20,8 +20,10 @@ __all__ = [
     'Qasm',
     ]
 
-from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS, SWAP, S, T,CPHASE
 from sympy.physics.quantum.circuitplot import Mz
+from sympy.physics.quantum.gate import CNOT, CPHASE, SWAP, CGate, CGateS, H, \
+    S, T, X, Z
+
 
 def read_qasm(lines):
     return Qasm(*lines.splitlines())

@@ -1,7 +1,6 @@
-from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
-    I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    Wild, pi, meijerg
-)
+from sympy import Add, Derivative, Float, Function, I, Integer, Mul, Poly, \
+    Rational, S, Symbol, Wild, abc, cos, diff, exp, log, meijerg, oo, pi, \
+    sin, sqrt, symbols
 from sympy.utilities.pytest import XFAIL
 
 

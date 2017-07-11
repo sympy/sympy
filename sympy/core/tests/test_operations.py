@@ -1,8 +1,8 @@
 from sympy import Integer, S
-from sympy.core.operations import LatticeOp
-from sympy.utilities.pytest import raises
-from sympy.core.sympify import SympifyError
 from sympy.core.add import Add
+from sympy.core.operations import LatticeOp
+from sympy.core.sympify import SympifyError
+from sympy.utilities.pytest import raises
 
 # create the simplest possible Lattice class
 

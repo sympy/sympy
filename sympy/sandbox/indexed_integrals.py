@@ -1,5 +1,5 @@
+from sympy import Dummy, Integral, Tuple, sympify
 from sympy.tensor import Indexed
-from sympy import Integral, Dummy, sympify, Tuple
 
 
 class IndexedIntegral(Integral):

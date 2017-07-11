@@ -1,8 +1,8 @@
-from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
-    S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function, Add)
-from sympy.utilities.pytest import raises
+from sympy import Add, Function, I, Integral, O, Order, Rational, S, Symbol, \
+    conjugate, cos, exp, expand, ln, log, nan, oo, pi, sin, sqrt, symbols, \
+    transpose
 from sympy.abc import w, x, y, z
+from sympy.utilities.pytest import raises
 
 
 def test_caching_bug():

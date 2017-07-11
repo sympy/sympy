@@ -1,16 +1,22 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from functools import wraps
 
-from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
-from sympy.core.decorators import call_highest_priority
+from sympy.core import Basic, Eq, Expr, Integer, S, Symbol, Tuple
 from sympy.core.compatibility import range
+from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError, sympify
-from sympy.functions import conjugate, adjoint
+from sympy.functions import adjoint, conjugate
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
+
+from .inverse import Inverse
+from .matadd import MatAdd
+from .matmul import MatMul
+from .matpow import MatPow
+from .transpose import Transpose
 
 
 def _sympifyit(arg, retval=None):
@@ -551,9 +557,3 @@ class ZeroMatrix(MatrixExpr):
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
-
-from .matmul import MatMul
-from .matadd import MatAdd
-from .matpow import MatPow
-from .transpose import Transpose
-from .inverse import Inverse

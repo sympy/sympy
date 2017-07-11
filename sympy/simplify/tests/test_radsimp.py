@@ -1,13 +1,11 @@
-from sympy import (
-    sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
-    collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
-    Mul, radsimp, diff, root, Symbol, Rational, exp)
-
+from sympy import Add, Derivative, Function, I, Mul, O, Rational, S, Symbol, \
+    Wild, collect, collect_const, cos, diff, exp, factor, fraction, log, \
+    radsimp, rcollect, root, sin, sqrt, symbols
+from sympy.abc import a, b, c, d, e, f, g, h, i, k, t, x, y, z
 from sympy.core.mul import _unevaluated_Mul as umul
-from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, fraction_expand
+from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, \
+    fraction_expand
 from sympy.utilities.pytest import XFAIL
-
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
 
 def test_radsimp():

@@ -6,52 +6,53 @@ See also http://math.unm.edu/~wester/cas_review.html for detailed output of
 each tested system.
 """
 
-from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
-    product, binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
-    npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
-    I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
-    bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
-    im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
-    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
-    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
-    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
-    ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
-    continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
-    continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
-    powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol, Intersection, Union, EmptySet, Interval)
+from itertools import islice, takewhile
 
 import mpmath
-from sympy.functions.combinatorial.numbers import stirling
-from sympy.functions.special.zeta_functions import zeta
-from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
-from sympy.utilities.iterables import partitions
-from mpmath import mpi, mpc
-from sympy.matrices import Matrix, GramSchmidt, eye
-from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
-from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
-from sympy.physics.quantum import Commutator
+from mpmath import mpc, mpi
+
+from sympy import continued_fraction_convergents as cf_c
+from sympy import continued_fraction_iterator as cf_i
+from sympy import continued_fraction_periodic as cf_p
+from sympy import continued_fraction_reduce as cf_r
+from sympy import ZZ, AlgebraicNumber, And, Derivative, DiracDelta, Dummy, E, \
+    EmptySet, Eq, EulerGamma, FiniteSet, Function, I, Intersection, Interval, \
+    Lambda, LambertW, Le, Lt, Mul, N, Ne, O, Or, Piecewise, Poly, Q, \
+    Rational, S, Subs, Symbol, Union, acot, apart, asin, asinh, ask, \
+    assoc_legendre, atan, bernoulli, besselj, binomial, ceiling, chebyshevt, \
+    combsimp, cos, cosh, cot, csc, diff, elliptic_e, elliptic_f, exp, expand, \
+    expand_func, factor, factorial, factorial2, factorint, fibonacci, floor, \
+    gamma, gcd, hessian, hyper, hyperexpand, igcd, im, legendre_poly, limit, \
+    log, logcombine, nan, npartitions, oo, pi, polygamma, polylog, powdenest, \
+    powsimp, primerange, product, radsimp, re, refine, residue, resultant, \
+    rf, sec, series, sign, simplify, sin, sinh, solve, sqrt, sqrtdenest, \
+    symbols, tan, tanh, totient, trigsimp, wronskian, zoo
 from sympy.assumptions import assuming
-from sympy.polys.rings import vring
-from sympy.polys.fields import vfield
-from sympy.polys.solvers import solve_lin_sys
 from sympy.concrete import Sum
 from sympy.concrete.products import Product
-from sympy.integrals import integrate
-from sympy.integrals.transforms import laplace_transform,\
-    inverse_laplace_transform, LaplaceTransform, fourier_transform,\
-    mellin_transform
-from sympy.functions.special.error_functions import erf
-from sympy.functions.special.delta_functions import Heaviside
-from sympy.solvers.recurr import rsolve
-from sympy.solvers.solveset import solveset, solveset_real, linsolve
-from sympy.solvers.ode import dsolve
-from sympy.core.relational import Equality
 from sympy.core.compatibility import range
-from itertools import islice, takewhile
+from sympy.core.relational import Equality
+from sympy.functions.combinatorial.numbers import stirling
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.zeta_functions import zeta
+from sympy.integrals import integrate
+from sympy.integrals.deltafunctions import deltaintegrate
+from sympy.integrals.transforms import LaplaceTransform, fourier_transform, \
+    inverse_laplace_transform, laplace_transform, mellin_transform
+from sympy.matrices import GramSchmidt, Matrix, eye
+from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
+from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
+from sympy.physics.quantum import Commutator
+from sympy.polys.fields import vfield
+from sympy.polys.rings import vring
+from sympy.polys.solvers import solve_lin_sys
 from sympy.series.fourier import fourier_series
-
+from sympy.solvers.ode import dsolve
+from sympy.solvers.recurr import rsolve
+from sympy.solvers.solveset import linsolve, solveset, solveset_real
+from sympy.utilities.iterables import partitions
+from sympy.utilities.pytest import ON_TRAVIS, SKIP, XFAIL, skip, slow
 
 R = Rational
 x, y, z = symbols('x y z')

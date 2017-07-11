@@ -1,11 +1,12 @@
-from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup,\
-    CyclicGroup
-from sympy.combinatorics.testutil import _verify_bsgs, _cmp_perm_lists,\
-    _naive_list_centralizer, _verify_centralizer,\
-    _verify_normal_closure
-from sympy.combinatorics.permutations import Permutation
-from sympy.combinatorics.perm_groups import PermutationGroup
 from random import shuffle
+
+from sympy.combinatorics.named_groups import AlternatingGroup, CyclicGroup, \
+    SymmetricGroup
+from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.permutations import Permutation
+from sympy.combinatorics.testutil import _cmp_perm_lists, \
+    _naive_list_centralizer, _verify_bsgs, _verify_centralizer, \
+    _verify_normal_closure
 
 
 def test_cmp_perm_lists():

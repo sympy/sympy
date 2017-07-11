@@ -1,6 +1,7 @@
-from sympy import Symbol, Function, Derivative as D, Eq, cos, sin
-from sympy.utilities.pytest import raises
+from sympy import Derivative as D
+from sympy import Eq, Function, Symbol, cos, sin
 from sympy.calculus.euler import euler_equations as euler
+from sympy.utilities.pytest import raises
 
 
 def test_euler_interface():

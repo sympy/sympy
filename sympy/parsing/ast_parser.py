@@ -20,14 +20,15 @@ to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from ast import Call, Load, Name, NodeTransformer, Str, Tuple, \
+    fix_missing_locations, parse
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import exec_
 from sympy.core.sympify import SympifyError
 
-from ast import parse, NodeTransformer, Call, Name, Load, \
-    fix_missing_locations, Str, Tuple
 
 class Transform(NodeTransformer):
 

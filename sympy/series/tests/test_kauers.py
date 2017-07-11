@@ -1,9 +1,6 @@
-from sympy.series.kauers import finite_diff
-from sympy.series.kauers import finite_diff_kauers
-from sympy.abc import x, y, z, m, n, w
-from sympy import sin, cos
-from sympy import pi
-from sympy import Sum
+from sympy import Sum, cos, pi, sin
+from sympy.abc import m, n, w, x, y, z
+from sympy.series.kauers import finite_diff, finite_diff_kauers
 
 
 def test_finite_diff():

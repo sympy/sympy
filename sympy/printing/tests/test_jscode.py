@@ -1,12 +1,12 @@
-from sympy.core import pi, oo, symbols, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
-from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
-from sympy.utilities.pytest import raises
-from sympy.printing.jscode import JavascriptCodePrinter
-from sympy.utilities.lambdify import implemented_function
-from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import Matrix, MatrixSymbol
-
 from sympy import jscode
+from sympy.core import Catalan, Dummy, EulerGamma, GoldenRatio, Integer, \
+    Lambda, Rational, oo, pi, symbols
+from sympy.functions import Abs, Piecewise, ceiling, cos, exp, sin, sqrt
+from sympy.matrices import Matrix, MatrixSymbol
+from sympy.printing.jscode import JavascriptCodePrinter
+from sympy.tensor import Idx, IndexedBase
+from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x,y,z')
 

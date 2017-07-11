@@ -1,12 +1,11 @@
 """The anti-commutator: ``{A,B} = A*B + B*A``."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import S, Expr, Mul, Integer
-from sympy.printing.pretty.stringpict import prettyForm
-
-from sympy.physics.quantum.operator import Operator
+from sympy import Expr, Integer, Mul, S
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.operator import Operator
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'AntiCommutator'

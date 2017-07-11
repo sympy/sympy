@@ -1,9 +1,6 @@
+from sympy import I, Implies, MatrixSymbol, Q, Rational, assuming, pi, symbols
 from sympy.assumptions.satask import satask
-
-from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational
-
-from sympy.utilities.pytest import raises, XFAIL
-
+from sympy.utilities.pytest import XFAIL, raises
 
 x, y, z = symbols('x y z')
 

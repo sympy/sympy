@@ -1,5 +1,5 @@
-from sympy.matrices.sparsetools import _doktocsr, _csrtodok
 from sympy import SparseMatrix
+from sympy.matrices.sparsetools import _csrtodok, _doktocsr
 
 
 def test_doktocsr():

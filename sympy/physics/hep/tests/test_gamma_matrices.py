@@ -1,9 +1,9 @@
-from sympy import Matrix
-
-from sympy.tensor.tensor import tensor_indices, tensorhead, TensExpr
-from sympy import eye
-from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
-    kahane_simplify, gamma_trace, _simplify_single_line, simplify_gamma_expression
+from sympy import Matrix, eye
+from sympy.physics.hep.gamma_matrices import GammaMatrix as G
+from sympy.physics.hep.gamma_matrices import LorentzIndex, \
+    _simplify_single_line, gamma_trace, kahane_simplify, \
+    simplify_gamma_expression
+from sympy.tensor.tensor import TensExpr, tensor_indices, tensorhead
 
 
 def _is_tensor_eq(arg1, arg2):

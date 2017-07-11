@@ -9,13 +9,13 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Derivative, Expr, Integer, oo, Mul, expand, Add
-from sympy.printing.pretty.stringpict import prettyForm
+from sympy import Add, Derivative, Expr, Integer, Mul, expand, oo
+from sympy.matrices import eye
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
-from sympy.matrices import eye
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'Operator',

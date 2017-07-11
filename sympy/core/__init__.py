@@ -1,32 +1,30 @@
 """Core module. Provides the basic operations needed in sympy.
 """
 
-from .sympify import sympify, SympifyError
-from .cache import cacheit
-from .basic import Basic, Atom, preorder_traversal
-from .singleton import S
-from .expr import Expr, AtomicExpr, UnevaluatedExpr
-from .symbol import Symbol, Wild, Dummy, symbols, var
-from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
-    RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
-    AlgebraicNumber, comp, mod_inverse
-from .power import Pow, integer_nthroot
-from .mul import Mul, prod
 from .add import Add
-from .mod import Mod
-from .relational import ( Rel, Eq, Ne, Lt, Le, Gt, Ge,
-    Equality, GreaterThan, LessThan, Unequality, StrictGreaterThan,
-    StrictLessThan )
-from .multidimensional import vectorize
-from .function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
-    Function, Subs, expand, PoleError, count_ops, \
-    expand_mul, expand_log, expand_func, \
-    expand_trig, expand_complex, expand_multinomial, nfloat, \
-    expand_power_base, expand_power_exp
-from .evalf import PrecisionExhausted, N
-from .containers import Tuple, Dict
-from .exprtools import gcd_terms, factor_terms, factor_nc
+from .basic import Atom, Basic, preorder_traversal
+from .cache import cacheit
+from .containers import Dict, Tuple
+from .evalf import N, PrecisionExhausted
 from .evaluate import evaluate
+from .expr import AtomicExpr, Expr, UnevaluatedExpr
+from .exprtools import factor_nc, factor_terms, gcd_terms
+from .function import Derivative, Function, FunctionClass, Lambda, PoleError, \
+    Subs, WildFunction, count_ops, diff, expand, expand_complex, expand_func, \
+    expand_log, expand_mul, expand_multinomial, expand_power_base, \
+    expand_power_exp, expand_trig, nfloat
+from .mod import Mod
+from .mul import Mul, prod
+from .multidimensional import vectorize
+from .numbers import AlgebraicNumber, E, Float, I, Integer, Number, \
+    NumberSymbol, Rational, RealNumber, comp, igcd, ilcm, mod_inverse, nan, \
+    oo, pi, seterr, zoo
+from .power import Pow, integer_nthroot
+from .relational import Eq, Equality, Ge, GreaterThan, Gt, Le, LessThan, Lt, \
+    Ne, Rel, StrictGreaterThan, StrictLessThan, Unequality
+from .singleton import S
+from .symbol import Dummy, Symbol, Wild, symbols, var
+from .sympify import SympifyError, sympify
 
 # expose singletons
 Catalan = S.Catalan

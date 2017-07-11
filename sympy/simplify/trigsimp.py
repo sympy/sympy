@@ -1,28 +1,23 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
+from sympy.core import Add, Basic, Dummy, Expr, FunctionClass, Mul, S, Wild, \
+    expand, expand_mul, factor_terms, igcd, symbols, sympify
 from sympy.core.cache import cacheit
-from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
-    Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
-from sympy.core.compatibility import reduce, iterable
+from sympy.core.compatibility import iterable, reduce
+from sympy.core.function import _mexpand, count_ops
 from sympy.core.numbers import I, Integer
-from sympy.core.function import count_ops, _mexpand
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.functions import cos, cosh, cot, coth, exp, sin, sinh, tan, tanh
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
-
-from sympy.strategies.core import identity
-from sympy.strategies.tree import greedy
-
-from sympy.polys import Poly
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.polys import Poly, cancel, factor, parallel_poly_from_expr
+from sympy.polys.domains import ZZ
 from sympy.polys.polyerrors import PolificationFailed
 from sympy.polys.polytools import groebner
-from sympy.polys.domains import ZZ
-from sympy.polys import factor, cancel, parallel_poly_from_expr
-
+from sympy.strategies.core import identity
+from sympy.strategies.tree import greedy
 from sympy.utilities.misc import debug
-
 
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",

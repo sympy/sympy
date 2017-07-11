@@ -1,11 +1,11 @@
-from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs)
-from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds)
-from sympy.core import Add, Mul, Pow
-from sympy.sets.sets import Interval, FiniteSet, Complement, Union
-from sympy.utilities.pytest import raises
+from sympy import Abs, E, S, Symbol, cos, cot, csc, exp, log, oo, pi, sec, \
+    sin, sqrt, tan, zoo
 from sympy.abc import x
+from sympy.calculus.util import AccumBounds, continuous_domain, \
+    function_range, lcim, not_empty_in, periodicity
+from sympy.core import Add, Mul, Pow
+from sympy.sets.sets import Complement, FiniteSet, Interval, Union
+from sympy.utilities.pytest import raises
 
 a = Symbol('a', real=True)
 

@@ -1,8 +1,9 @@
 from __future__ import division
 
+from sympy import Float, Rational, Symbol
+
 #this module tests that sympy works with true division turned on
 
-from sympy import Rational, Symbol, Float
 
 
 def test_truediv():

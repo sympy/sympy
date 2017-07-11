@@ -1,22 +1,22 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import ask, Q
-from sympy.core import Basic, Add, sympify
+from sympy import Q, ask
+from sympy.core import Add, Basic, sympify
 from sympy.core.compatibility import range
-from sympy.strategies import typed, exhaust, condition, do_one, unpack
+from sympy.functions.elementary.complexes import im, re
+from sympy.matrices import Matrix, ShapeError
+from sympy.matrices.expressions.determinant import Determinant, det
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matexpr import Identity, MatrixExpr, ZeroMatrix
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.transpose import Transpose, transpose
+from sympy.strategies import condition, do_one, exhaust, typed, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 
-from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
-from sympy.matrices.expressions.matmul import MatMul
-from sympy.matrices.expressions.matadd import MatAdd
-from sympy.matrices.expressions.transpose import Transpose, transpose
-from sympy.matrices.expressions.trace import Trace
-from sympy.matrices.expressions.determinant import det, Determinant
-from sympy.matrices.expressions.slice import MatrixSlice
-from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, ShapeError
-from sympy.functions.elementary.complexes import re, im
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices

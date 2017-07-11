@@ -1,14 +1,11 @@
-from sympy import (Add, conjugate, diff, I, Integer, Mul, oo, pi, Pow,
-                   Rational, sin, sqrt, Symbol, symbols, sympify)
-from sympy.utilities.pytest import raises
-
+from sympy import Add, I, Integer, Mul, Pow, Rational, Symbol, conjugate, \
+    diff, oo, pi, sin, sqrt, symbols, sympify
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.qexpr import QExpr
-from sympy.physics.quantum.state import (
-    Ket, Bra, TimeDepKet, TimeDepBra,
-    KetBase, BraBase, StateBase, Wavefunction
-)
 from sympy.physics.quantum.hilbert import HilbertSpace
+from sympy.physics.quantum.qexpr import QExpr
+from sympy.physics.quantum.state import Bra, BraBase, Ket, KetBase, \
+    StateBase, TimeDepBra, TimeDepKet, Wavefunction
+from sympy.utilities.pytest import raises
 
 x, y, t = symbols('x,y,t')
 

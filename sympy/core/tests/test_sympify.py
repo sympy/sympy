@@ -1,22 +1,19 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range)
-from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
-from sympy.core.decorators import _sympifyit
-from sympy.external import import_module
-from sympy.utilities.pytest import raises, XFAIL, skip
-from sympy.utilities.decorator import conserve_mpmath_dps
-from sympy.geometry import Point, Line
-from sympy.functions.combinatorial.factorials import factorial, factorial2
-from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import exec_, HAS_GMPY, PY3
-from sympy.sets import FiniteSet, EmptySet
-from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy.external import import_module
-
 import mpmath
 
+from sympy import Abs, Add, Float, Function, I, Integer, Interval, Lambda, \
+    Matrix, Mul, N, Or, Poly, Pow, Range, Rational, S, Symbol, Tuple, cos, \
+    exp, false, log, pi, sin, sqrt, srepr, true
+from sympy.abc import _clash, _clash1, _clash2, x, y
+from sympy.core.compatibility import HAS_GMPY, PY3, exec_
+from sympy.core.decorators import _sympifyit
+from sympy.core.sympify import SympifyError, _sympify, kernS, sympify
+from sympy.external import import_module
+from sympy.functions.combinatorial.factorials import factorial, factorial2
+from sympy.geometry import Line, Point
+from sympy.sets import EmptySet, FiniteSet
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.pytest import XFAIL, raises, skip
 
 numpy = import_module('numpy')
 

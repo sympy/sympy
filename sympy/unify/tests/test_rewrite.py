@@ -1,8 +1,8 @@
-from sympy.unify.rewrite import rewriterule
-from sympy import sin, Basic, Symbol, S
+from sympy import Basic, S, Symbol, sin
 from sympy.abc import x, y
-from sympy.strategies.rl import rebuild
 from sympy.assumptions import Q
+from sympy.strategies.rl import rebuild
+from sympy.unify.rewrite import rewriterule
 
 p, q = Symbol('p'), Symbol('q')
 

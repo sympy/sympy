@@ -1,42 +1,35 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
-from sympy.core import (Basic, S, Add, Mul, Pow,
-    Symbol, sympify, expand_mul, expand_func,
-    Function, Dummy, Expr, factor_terms,
-    symbols, expand_power_exp)
-from sympy.core.compatibility import (iterable,
-    ordered, range, as_int)
-from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
-from sympy.core.rules import Transform
+import mpmath
+
+from sympy.core import Add, Basic, Dummy, Expr, Function, Mul, Pow, S, \
+    Symbol, expand_func, expand_mul, expand_power_exp, factor_terms, symbols, \
+    sympify
+from sympy.core.compatibility import as_int, iterable, ordered, range
 from sympy.core.evaluate import global_evaluate
-from sympy.functions import (
-    gamma, exp, sqrt, log, exp_polar, piecewise_fold)
+from sympy.core.function import _coeff_isneg, _mexpand, count_ops, expand_log
+from sympy.core.numbers import Float, I, Integer, Rational, pi
+from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
+from sympy.functions import exp, exp_polar, gamma, log, piecewise_fold, sqrt
+from sympy.functions.combinatorial.factorials import CombinatorialFunction
+from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.functions.combinatorial.factorials import CombinatorialFunction
-from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
-
-from sympy.utilities.iterables import has_variety
-
-from sympy.simplify.radsimp import radsimp, fraction
-from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.simplify.powsimp import powsimp
-from sympy.simplify.cse_opts import sub_pre, sub_post
-from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.functions.special.bessel import besseli, besselj, besselk, \
+    bessely, jn
+from sympy.polys import cancel, factor, together
 from sympy.simplify.combsimp import combsimp
-
-from sympy.polys import (together, cancel, factor)
-
-
-import mpmath
-
+from sympy.simplify.cse_opts import sub_post, sub_pre
+from sympy.simplify.powsimp import powsimp
+from sympy.simplify.radsimp import fraction, radsimp
+from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.simplify.trigsimp import exptrigsimp, trigsimp
+from sympy.utilities.iterables import has_variety
 
 
 def separatevars(expr, symbols=[], dict=False, force=False):

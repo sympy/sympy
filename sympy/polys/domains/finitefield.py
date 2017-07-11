@@ -1,14 +1,14 @@
 """Implementation of :class:`FiniteField` class. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.polys.domains.field import Field
-from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
-
+from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+
 
 @public
 class FiniteField(Field, SimpleDomain):

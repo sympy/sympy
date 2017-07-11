@@ -1,11 +1,11 @@
 """
 AskHandlers related to order relations: positive, negative, etc.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
-from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
+from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 
 
 class AskNegativeHandler(CommonHandler):

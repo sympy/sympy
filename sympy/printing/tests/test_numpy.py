@@ -1,10 +1,11 @@
-from sympy import Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt, sqrt
-from sympy.abc import x, i, j, a, b, c, d
-from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
-from sympy.printing.lambdarepr import NumPyPrinter
-
-from sympy.utilities.pytest import skip
+from sympy import Equality, Mod, Piecewise, Sum, Unequality, cbrt, lambdify, \
+    sqrt
+from sympy.abc import a, b, c, d, i, j, x
+from sympy.codegen.cfunctions import Cbrt, Sqrt, exp2, expm1, hypot, log1p, \
+    log2, log10
 from sympy.external import import_module
+from sympy.printing.lambdarepr import NumPyPrinter
+from sympy.utilities.pytest import skip
 
 np = import_module('numpy')
 

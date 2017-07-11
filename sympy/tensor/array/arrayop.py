@@ -1,9 +1,7 @@
+import collections
 import itertools
 
-import collections
-
 from sympy import S, Tuple, diff
-
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 

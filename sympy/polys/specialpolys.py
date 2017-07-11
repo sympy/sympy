@@ -1,36 +1,22 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core import Add, Dummy, Mul, Symbol, symbols, sympify
+from sympy.core.compatibility import range
 from sympy.core.singleton import S
-
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.ntheory import nextprime
+from sympy.polys.densearith import dmp_add_term, dmp_mul, dmp_neg, dmp_sqr
+from sympy.polys.densebasic import dmp_ground, dmp_one, dmp_raise, dmp_zero, \
+    dup_from_raw_dict, dup_random
+from sympy.polys.domains import ZZ
+from sympy.polys.factortools import dup_zz_cyclotomic_poly
+from sympy.polys.polyclasses import DMP
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
-
-from sympy.polys.polyclasses import DMP
-
-from sympy.polys.densebasic import (
-    dmp_zero, dmp_one, dmp_ground,
-    dup_from_raw_dict, dmp_raise, dup_random
-)
-
-from sympy.polys.densearith import (
-    dmp_add_term, dmp_neg, dmp_mul, dmp_sqr
-)
-
-from sympy.polys.factortools import (
-    dup_zz_cyclotomic_poly
-)
-
-from sympy.polys.domains import ZZ
-
-from sympy.ntheory import nextprime
-
-from sympy.utilities import subsets, public
-
-from sympy.core.compatibility import range
+from sympy.polys.rings import ring
+from sympy.utilities import public, subsets
 
 
 @public
@@ -265,7 +251,6 @@ def dmp_fateman_poly_F_3(n, K):
 
 # A few useful polynomials from Wang's paper ('78).
 
-from sympy.polys.rings import ring
 
 def _f_0():
     R, x, y, z = ring("x,y,z", ZZ)

@@ -1,4 +1,4 @@
-from sympy import sin, cos, exp, cot, I, symbols
+from sympy import I, cos, cot, exp, sin, symbols
 
 x, y, z, n = symbols('x,y,z,n')
 

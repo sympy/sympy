@@ -12,31 +12,32 @@ Goals:
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import os
-import sys
-import platform
-import inspect
-import traceback
-import pdb
-import re
-import linecache
-import time
-from fnmatch import fnmatch
-from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
-from doctest import DocTestFinder, DocTestRunner
+import inspect
+import linecache
+import os
+import pdb
+import platform
 import random
-import subprocess
+import re
 import signal
 import stat
+import subprocess
+import sys
+import time
+import traceback
+from collections import namedtuple
+from doctest import DocTestFinder, DocTestRunner
+from fnmatch import fnmatch
+from timeit import default_timer as clock
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, range
-from sympy.utilities.misc import find_executable
+from sympy.core.compatibility import PY3, exec_, range, string_types
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import find_executable
 
 IS_WINDOWS = (os.name == 'nt')
 
@@ -898,7 +899,6 @@ def split_list(l, split, density=None):
     higher_frac = density_inv(i / t)
     return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
-from collections import namedtuple
 SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 
 

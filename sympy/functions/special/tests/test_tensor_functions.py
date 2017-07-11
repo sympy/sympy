@@ -1,9 +1,7 @@
-from sympy import (
-    adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
-    symbols, transpose,
-)
+from sympy import Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol, adjoint, \
+    conjugate, symbols, transpose
 from sympy.core.compatibility import range
-from sympy.physics.secondquant import evaluate_deltas, F
+from sympy.physics.secondquant import F, evaluate_deltas
 
 x, y = symbols('x y')
 

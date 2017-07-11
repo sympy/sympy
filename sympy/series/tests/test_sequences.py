@@ -1,6 +1,6 @@
-from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
-                   SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
-                   fibonacci)
+from sympy import EmptySequence, Idx, Indexed, Interval, S, SeqAdd, \
+    SeqFormula, SeqMul, SeqPer, Tuple, fibonacci, oo, sequence, sqrt, \
+    symbols
 from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises
 

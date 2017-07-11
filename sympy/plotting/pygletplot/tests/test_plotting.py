@@ -1,3 +1,4 @@
+from sympy import cos, sin, symbols
 from sympy.external.importtools import import_module
 
 disabled = False
@@ -9,7 +10,6 @@ if not pyglet_gl or not pyglet_window:
     disabled = True
 
 
-from sympy import symbols, sin, cos
 x, y, z = symbols('x, y, z')
 
 

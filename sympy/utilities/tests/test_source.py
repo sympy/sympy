@@ -1,4 +1,4 @@
-from sympy.utilities.source import get_mod_func, get_class
+from sympy.utilities.source import get_class, get_mod_func
 
 
 def test_get_mod_func():

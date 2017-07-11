@@ -22,26 +22,27 @@ if you care at all about performance. A new backend instance is initialized
 every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import inspect
-from collections import Callable
-import warnings
 import sys
+import warnings
+from collections import Callable
 
-from sympy import sympify, Expr, Tuple, Dummy, Symbol
-from sympy.external import import_module
+from sympy import Dummy, Expr, Symbol, Tuple, sympify
 from sympy.core.compatibility import range
+from sympy.external import import_module
+# Backend specific imports - textplot
+from sympy.plotting.textplot import textplot
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
-from .experimental_lambdify import (vectorized_lambdify, lambdify)
+
+from .experimental_lambdify import lambdify, vectorized_lambdify
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
 # the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
 
-# Backend specific imports - textplot
-from sympy.plotting.textplot import textplot
 
 # Global variable
 # Set to False when running tests / doctests so that the plots don't show.

@@ -1,8 +1,8 @@
 """Tests for low-level linear systems solver. """
 
-from sympy.polys.rings import ring
+from sympy.polys.domains import QQ, ZZ
 from sympy.polys.fields import field
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.rings import ring
 from sympy.polys.solvers import solve_lin_sys
 
 

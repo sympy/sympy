@@ -1,22 +1,20 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
-
-from sympy.core.evaluate import global_evaluate
-from sympy.core.compatibility import iterable, ordered, default_sort_key
-from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
-from sympy.core.numbers import Rational
-from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.mul import _keep_coeff, _unevaluated_Mul
-from sympy.core.function import _mexpand
+from sympy.core import Add, Derivative, Mul, Pow, S, expand_mul, \
+    expand_power_base, symbols, sympify
 from sympy.core.add import _unevaluated_Add
-from sympy.functions import exp, sqrt, log
+from sympy.core.compatibility import default_sort_key, iterable, ordered
+from sympy.core.evaluate import global_evaluate
+from sympy.core.exprtools import Factors, gcd_terms
+from sympy.core.function import _mexpand
+from sympy.core.mul import _keep_coeff, _unevaluated_Mul
+from sympy.core.numbers import Rational
+from sympy.functions import exp, log, sqrt
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
-
-
 
 
 def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_term=True):

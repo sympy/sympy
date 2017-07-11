@@ -1,16 +1,16 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.utilities import dict_merge
-from sympy.utilities.iterables import iterable
-from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
-                                  Point, dynamicsymbols)
-from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
-                                           init_vprinting)
+from sympy import simplify
+from sympy.core.backend import AppliedUndef, Derivative, Matrix, Mul, S, cos, \
+    sin, sympify, tan
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import simplify
-from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
-                                tan, AppliedUndef, S)
+from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector, \
+    dynamicsymbols
+from sympy.physics.vector.printing import init_vprinting, vlatex, vpprint, \
+    vprint, vsprint
+from sympy.utilities import dict_merge
+from sympy.utilities.iterables import iterable
 
 __all__ = ['inertia',
            'inertia_of_point_mass',

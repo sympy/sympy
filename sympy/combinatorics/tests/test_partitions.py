@@ -1,9 +1,8 @@
+from sympy.combinatorics.partitions import IntegerPartition, Partition, \
+    RGS_enum, RGS_rank, RGS_unrank, random_integer_partition
 from sympy.core.compatibility import range
-from sympy.combinatorics.partitions import (Partition, IntegerPartition,
-                                            RGS_enum, RGS_unrank, RGS_rank,
-                                            random_integer_partition)
-from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import default_sort_key, partitions
+from sympy.utilities.pytest import raises
 
 
 def test_partition():

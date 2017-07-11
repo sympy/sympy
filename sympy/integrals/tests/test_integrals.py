@@ -1,18 +1,16 @@
-from sympy import (
-    Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos, sinh,
-    cosh, tanh, Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma,
-    Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
-    LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
-    sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
-)
+from sympy import Abs, Add, And, Ci, Derivative, DiracDelta, E, Eq, \
+    EulerGamma, Expr, Function, I, Integral, Interval, Lambda, LambertW, \
+    Matrix, Ne, O, Piecewise, Poly, Rational, S, SingularityFunction, Sum, \
+    Symbol, Tuple, acos, acosh, asin, asinh, atan, cos, cosh, diff, erf, \
+    erfi, exp, factor, im, integrate, log, meijerg, nan, oo, pi, polar_lift, \
+    re, simplify, sin, sinh, sqrt, sstr, symbols, sympify, tan, tanh, \
+    trigsimp
+from sympy.core.compatibility import range
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.utilities.randtest import verify_numerically
-
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)

@@ -1,16 +1,18 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
+from sympy.core import basic as _
+# /cyclic/
+from sympy.core import Add, Dummy, Mul, S, Symbol, sympify
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef)
+from sympy.core.function import AppliedUndef, ArgumentIndexError, Derivative, \
+    Function
+from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi
+from sympy.core.relational import Eq
+from sympy.functions.elementary.exponential import exp, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.expr import Expr
-from sympy.core.relational import Eq
-from sympy.core.logic import fuzzy_not
-from sympy.functions.elementary.exponential import exp, exp_polar
 from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
@@ -1160,7 +1162,5 @@ def unpolarify(eq, subs={}, exponents_only=False):
 
 
 
-# /cyclic/
-from sympy.core import basic as _
 _.abs_ = Abs
 del _

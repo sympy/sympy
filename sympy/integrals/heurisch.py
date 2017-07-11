@@ -1,36 +1,28 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from itertools import permutations
 
 from sympy.core.add import Add
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, sympify
+from sympy.core.compatibility import ordered, reduce
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
-from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-
-from sympy.functions import exp, sin, cos, tan, cot, asin, atan
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
-from sympy.functions import sqrt, erf, erfi, li, Ei
-from sympy.functions import besselj, bessely, besseli, besselk
-from sympy.functions import hankel1, hankel2, jn, yn
+from sympy.core.symbol import Dummy, Wild
+from sympy.functions import Ei, acosh, asin, asinh, atan, besseli, besselj, \
+    besselk, bessely, cos, cosh, cot, coth, erf, erfi, exp, hankel1, hankel2, \
+    jn, li, log, sin, sinh, sqrt, tan, tanh, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
-
 from sympy.logic.boolalg import And
-from sympy.utilities.iterables import uniq
-
-from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys import PolynomialError, cancel, factor, gcd, lcm, quo
+from sympy.polys.constructor import construct_domain
 from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
-
 from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
-from sympy.polys.constructor import construct_domain
-
-from sympy.core.compatibility import reduce, ordered
+from sympy.utilities.iterables import uniq
 
 
 def components(f, x):

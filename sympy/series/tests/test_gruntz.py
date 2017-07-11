@@ -1,7 +1,8 @@
-from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
+from sympy import E, Ei, EulerGamma, I, Integer, Rational, S, Symbol, acot, \
+    atan, cancel, cos, digamma, erf, exp, gamma, log, loggamma, oo, pi, sin, \
+    sqrt, zeta
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
-from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
+from sympy.series.gruntz import compare, gruntz, mrv, mrv_leadterm, rewrite, \
     sign
 from sympy.utilities.pytest import XFAIL, skip, slow
 

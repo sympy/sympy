@@ -2,16 +2,17 @@
 This module contains query handlers responsible for calculus queries:
 infinitesimal, bounded, etc.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.logic.boolalg import conjuncts
+from functools import partial
+
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
-from sympy.matrices.expressions import MatMul, MatrixExpr
-from sympy.core.logic import fuzzy_and
-from sympy.utilities.iterables import sift
 from sympy.core import Basic
-from functools import partial
+from sympy.core.logic import fuzzy_and
+from sympy.logic.boolalg import conjuncts
+from sympy.matrices.expressions import MatMul, MatrixExpr
+from sympy.utilities.iterables import sift
 
 
 def _Factorization(predicate, expr, assumptions):

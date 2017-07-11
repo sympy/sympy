@@ -47,12 +47,13 @@ http://en.wikipedia.org/wiki/Propositional_formula
 http://en.wikipedia.org/wiki/Inference_rule
 http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 
-from .logic import Logic, And, Or, Not
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import range, string_types
+
+from .logic import And, Logic, Not, Or
 
 
 def _base_fact(atom):

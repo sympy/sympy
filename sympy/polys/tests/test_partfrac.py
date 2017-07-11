@@ -1,16 +1,12 @@
 """Tests for algorithms for partial fraction decomposition of rational
 functions. """
 
-from sympy.polys.partfrac import (
-    apart_undetermined_coeffs,
-    apart,
-    apart_list, assemble_partfrac_list
-)
-
-from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
-                   Symbol, Dummy, factor, together, sqrt, Expr, Rational)
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.abc import x, y, a, b, c
+from sympy import Dummy, E, Eq, Expr, I, Lambda, Matrix, Poly, Rational, \
+    RootSum, S, Symbol, factor, pi, sqrt, together
+from sympy.abc import a, b, c, x, y
+from sympy.polys.partfrac import apart, apart_list, \
+    apart_undetermined_coeffs, assemble_partfrac_list
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_apart():

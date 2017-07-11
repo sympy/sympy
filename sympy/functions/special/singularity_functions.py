@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core import S, sympify, oo, diff
+from sympy.core import S, diff, oo, sympify
+from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import im

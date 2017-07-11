@@ -1,8 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.rings import ring
+from sympy.polys.domains import QQ, ZZ
 from sympy.polys.fields import field
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.rings import ring
 from sympy.polys.solvers import solve_lin_sys
 
 # Expected times on 3.4 GHz i7:

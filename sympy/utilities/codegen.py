@@ -79,24 +79,23 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import os
 import textwrap
 
 from sympy import __version__ as sympy_version
-from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence, StringIO, string_types
-from sympy.printing.codeprinter import AssignmentError
+from sympy.core import Basic, Equality, Expr, Function, S, Symbol, Tuple
+from sympy.core.compatibility import StringIO, is_sequence, string_types
+from sympy.matrices import ImmutableMatrix, MatrixBase, MatrixExpr, \
+    MatrixSlice, MatrixSymbol
 from sympy.printing.ccode import c_code_printers
+from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
-                            MatrixExpr, MatrixSlice)
-
 
 __all__ = [
     # description of routines

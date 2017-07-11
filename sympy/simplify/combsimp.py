@@ -1,15 +1,13 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Function, S, Mul, Pow, Add
-from sympy.core.compatibility import ordered, default_sort_key
-from sympy.functions.combinatorial.factorials import binomial, CombinatorialFunction, factorial
-from sympy.functions import gamma, sqrt, sin
-from sympy.polys import factor, cancel
-
+from sympy.core import Add, Function, Mul, Pow, S
+from sympy.core.compatibility import default_sort_key, ordered
+from sympy.functions import gamma, sin, sqrt
+from sympy.functions.combinatorial.factorials import CombinatorialFunction, \
+    binomial, factorial
+from sympy.polys import cancel, factor
+from sympy.utilities.iterables import sift, uniq
 from sympy.utilities.timeutils import timethis
-from sympy.utilities.iterables import sift
-from sympy.utilities.iterables import uniq
-
 
 
 @timethis('combsimp')

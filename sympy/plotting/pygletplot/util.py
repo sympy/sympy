@@ -1,13 +1,15 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from pyglet.gl import *
+
+from sympy.core import S
+from sympy.core.compatibility import range
 
 try:
     from pyglet.gl.gl import c_float
 except ImportError:
     pass
 
-from pyglet.gl import *
-from sympy.core import S
-from sympy.core.compatibility import range
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):

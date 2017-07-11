@@ -1,10 +1,11 @@
 """Test modules.py code."""
 
-from sympy.polys.agca.modules import FreeModule, ModuleOrder, FreeModulePolyRing
-from sympy.polys import CoercionFailed, QQ, lex, grlex, ilex, ZZ
-from sympy.abc import x, y, z
-from sympy.utilities.pytest import raises
 from sympy import S
+from sympy.abc import x, y, z
+from sympy.polys import QQ, ZZ, CoercionFailed, grlex, ilex, lex
+from sympy.polys.agca.modules import FreeModule, FreeModulePolyRing, \
+    ModuleOrder
+from sympy.utilities.pytest import raises
 
 
 def test_FreeModuleElement():

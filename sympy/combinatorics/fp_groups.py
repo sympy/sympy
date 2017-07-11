@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """Finitely Presented Groups and its algorithms. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from bisect import bisect_left
+from itertools import chain, product
+
+from sympy.combinatorics.free_groups import FreeGroupElement, free_group, \
+    zero_mul_simp
+from sympy.core import Mod, Symbol
 from sympy.core.basic import Basic
-from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
-
-from itertools import chain, product
-from bisect import bisect_left
 
 
 @public

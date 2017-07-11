@@ -1,6 +1,6 @@
-from sympy import residue, Symbol, Function, sin, S, I, exp, log, pi, factorial
+from sympy import Function, I, S, Symbol, exp, factorial, log, pi, residue, sin
+from sympy.abc import a, s, x, z
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import x, z, a, s
 
 
 def test_basic1():

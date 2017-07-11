@@ -8,14 +8,15 @@ Features:
 References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
-from heapq import heappush, heappop
+from heapq import heappop, heappush
 
-from sympy.core.compatibility import range
 from sympy import default_sort_key, ordered
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
+from sympy.core.compatibility import range
+from sympy.logic.boolalg import _find_predicates, conjuncts, to_cnf, \
+    to_int_repr
 
 
 def dpll_satisfiable(expr, all_models=False):

@@ -1,12 +1,13 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from math import cos as p_cos
+from math import sin as p_sin
 
 from plot_curve import PlotCurve
 from plot_surface import PlotSurface
 
-from sympy import pi, lambdify
-from sympy.functions import sin, cos
-from math import sin as p_sin
-from math import cos as p_cos
+from sympy import lambdify, pi
+from sympy.functions import cos, sin
 
 
 def float_vec3(f):

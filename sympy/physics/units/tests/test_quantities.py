@@ -2,14 +2,15 @@
 
 from __future__ import division
 
-from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols, Basic
+from sympy import Abs, Add, Basic, Number, Rational, S, Symbol, diff, \
+    integrate, sqrt, symbols
 from sympy.physics.units import convert_to, find_unit
-
-from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
-    quart, inch, coulomb, millimeter, steradian, second, mile, centimeter, hour
-from sympy.physics.units.dimensions import length, time, charge
-from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.definitions import amu, au, centimeter, coulomb, \
+    day, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter, minute, \
+    quart, s, second, speed_of_light, steradian
+from sympy.physics.units.dimensions import charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
+from sympy.physics.units.quantities import Quantity
 from sympy.utilities.pytest import raises
 
 k = PREFIXES["k"]

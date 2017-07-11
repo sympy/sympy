@@ -1,9 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import Basic
 from sympy.functions import adjoint, conjugate
-from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.transpose import transpose
 
 
 class Adjoint(MatrixExpr):

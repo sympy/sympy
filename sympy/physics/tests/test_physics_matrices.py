@@ -1,5 +1,6 @@
-from sympy.physics.matrices import msigma, mgamma, minkowski_tensor, pat_matrix, mdft
-from sympy import zeros, eye, I, Matrix, sqrt, Rational
+from sympy import I, Matrix, Rational, eye, sqrt, zeros
+from sympy.physics.matrices import mdft, mgamma, minkowski_tensor, msigma, \
+    pat_matrix
 
 
 def test_parallel_axis_theorem():

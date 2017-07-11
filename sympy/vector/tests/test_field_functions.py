@@ -1,16 +1,15 @@
-from sympy.core.function import Derivative
-from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSys3D
-from sympy.simplify import simplify
-from sympy.core.symbol import symbols
+from sympy import cos, sin
 from sympy.core import S
-from sympy import sin, cos
-from sympy.vector.operators import curl, divergence, gradient
-from sympy.vector.deloperator import Del
-from sympy.vector.functions import (is_conservative, is_solenoidal,
-                                    scalar_potential, directional_derivative,
-                                    scalar_potential_difference)
+from sympy.core.function import Derivative
+from sympy.core.symbol import symbols
+from sympy.simplify import simplify
 from sympy.utilities.pytest import raises
+from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.deloperator import Del
+from sympy.vector.functions import directional_derivative, is_conservative, \
+    is_solenoidal, scalar_potential, scalar_potential_difference
+from sympy.vector.operators import curl, divergence, gradient
+from sympy.vector.vector import Vector
 
 C = CoordSys3D('C')
 i, j, k = C.base_vectors()

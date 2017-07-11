@@ -1,11 +1,12 @@
 """Definitions of monomial orderings. """
 
-from __future__ import print_function, division
-
-__all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
+from __future__ import division, print_function
 
 from sympy.core import Symbol
 from sympy.core.compatibility import iterable
+
+__all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
+
 
 class MonomialOrder(object):
     """Base class for monomial orderings. """

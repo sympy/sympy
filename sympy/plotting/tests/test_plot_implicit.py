@@ -1,10 +1,11 @@
 import warnings
-from sympy import (plot_implicit, cos, Symbol, symbols, Eq, sin, re, And, Or, exp, I,
-                   tan, pi)
-from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile
-from sympy.utilities.pytest import skip
+
+from sympy import And, Eq, I, Or, Symbol, cos, exp, pi, plot_implicit, re, \
+    sin, symbols, tan
 from sympy.external import import_module
+from sympy.plotting.plot import unset_show
+from sympy.utilities.pytest import skip
 
 #Set plots not to show
 unset_show()

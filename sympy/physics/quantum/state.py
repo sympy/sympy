@@ -1,12 +1,12 @@
 """Dirac notation for states."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
-                   Tuple)
+from sympy import Expr, Function, Tuple, cacheit, conjugate, integrate, oo, \
+    sqrt
 from sympy.core.compatibility import range
-from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
+from sympy.printing.pretty.stringpict import stringPict
 
 __all__ = [
     'KetBase',

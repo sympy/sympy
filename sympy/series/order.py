@@ -1,12 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
-from sympy.core import Add, Mul, expand_power_base, expand_log
+from sympy.core import Add, Dummy, Expr, Mul, Rational, S, Symbol, \
+    expand_log, expand_power_base, sympify
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
-from sympy.utilities.iterables import uniq
 from sympy.sets.sets import Complement
+from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):

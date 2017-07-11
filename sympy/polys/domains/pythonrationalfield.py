@@ -1,12 +1,13 @@
 """Implementation of :class:`PythonRationalField` class. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, \
+    SymPyRational
 from sympy.polys.domains.rationalfield import RationalField
-from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPyRational
-
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+
 
 @public
 class PythonRationalField(RationalField):

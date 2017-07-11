@@ -1,7 +1,7 @@
-from sympy.physics.pring import wavefunction, energy
+from sympy import I, exp, integrate, pi, simplify, sqrt
+from sympy.abc import m, r, x
 from sympy.core.compatibility import range
-from sympy import pi, integrate, sqrt, exp, simplify, I
-from sympy.abc import m, x, r
+from sympy.physics.pring import energy, wavefunction
 from sympy.physics.quantum.constants import hbar
 
 

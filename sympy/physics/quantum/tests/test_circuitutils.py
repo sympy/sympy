@@ -1,11 +1,10 @@
-from sympy import Symbol, Integer, Mul
-from sympy.utilities import numbered_symbols
-from sympy.physics.quantum.gate import X, Y, Z, H, CNOT, CGate
+from sympy import Integer, Mul, Symbol
+from sympy.physics.quantum.circuitutils import convert_to_real_indices, \
+    convert_to_symbolic_indices, find_subcircuit, flatten_ids, kmp_table, \
+    random_insert, random_reduce, replace_subcircuit
+from sympy.physics.quantum.gate import CNOT, CGate, H, X, Y, Z
 from sympy.physics.quantum.identitysearch import bfs_identity_search
-from sympy.physics.quantum.circuitutils import (kmp_table, find_subcircuit,
-        replace_subcircuit, convert_to_symbolic_indices,
-        convert_to_real_indices, random_reduce, random_insert,
-        flatten_ids)
+from sympy.utilities import numbered_symbols
 from sympy.utilities.pytest import slow
 
 

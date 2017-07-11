@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import eye, zeros, Integer
+from sympy import Integer, eye, zeros
 
 i3 = Integer(3)
 M = eye(100)

@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, Integer, sympify
+from sympy import Integer, Symbol, sympify
 from sympy.core.compatibility import range
 
 

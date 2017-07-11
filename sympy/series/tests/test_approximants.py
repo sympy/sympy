@@ -1,7 +1,6 @@
+from sympy import binomial, fibonacci, lucas, symbols
 from sympy.core.compatibility import range
-
 from sympy.series import approximants
-from sympy import lucas, fibonacci, symbols, binomial
 
 
 def test_approximants():

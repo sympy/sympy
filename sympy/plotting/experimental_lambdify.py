@@ -10,11 +10,14 @@ ever support anything else than sympy expressions (no Matrices, dictionaries
 and so on).
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import re
-from sympy import Symbol, NumberSymbol, I, zoo, oo
+import warnings
+
+from sympy import I, NumberSymbol, Symbol, oo, zoo
 from sympy.core.compatibility import exec_
+from sympy.external import import_module
 from sympy.utilities.iterables import numbered_symbols
 
 #  We parse the expression string into a tree that identifies functions. Then
@@ -73,8 +76,6 @@ from sympy.utilities.iterables import numbered_symbols
 # args) tree and creating the namespace at the same time. That actually sounds
 # good.
 
-from sympy.external import import_module
-import warnings
 
 #TODO debuging output
 

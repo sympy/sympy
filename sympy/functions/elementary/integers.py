@@ -1,13 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.singleton import S
-from sympy.core.function import Function
 from sympy.core import Add
-from sympy.core.evalf import get_integer_part, PrecisionExhausted
+from sympy.core.evalf import PrecisionExhausted, get_integer_part
+from sympy.core.function import Function
 from sympy.core.numbers import Integer
-from sympy.core.relational import Gt, Lt, Ge, Le
+from sympy.core.relational import Ge, Gt, Le, Lt
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################

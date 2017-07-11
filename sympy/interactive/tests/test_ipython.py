@@ -1,10 +1,9 @@
 """Tests of tools for setting up interactive IPython sessions. """
 
-from sympy.interactive.session import (init_ipython_session,
-    enable_automatic_symbols, enable_automatic_int_sympification)
-
-from sympy.core import Symbol, Rational, Integer
+from sympy.core import Integer, Rational, Symbol
 from sympy.external import import_module
+from sympy.interactive.session import enable_automatic_int_sympification, \
+    enable_automatic_symbols, init_ipython_session
 
 # TODO: The code below could be made more granular with something like:
 #

@@ -38,37 +38,30 @@ Examples
 
 __all__ = []
 
-from . import rv_interface
-from .rv_interface import (
-    cdf, covariance, density, dependent, E, given, independent, P, pspace,
-    random_symbols, sample, sample_iter, skewness, std, variance, where,
-    correlation, moment, cmoment, smoment, sampling_density,
-)
+from . import crv_types, drv_types, frv_types, rv_interface, \
+    symbolic_probability
+from .crv_types import Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, \
+    ChiNoncentral, ChiSquared, ContinuousRV, Dagum, Erlang, Exponential, \
+    FDistribution, FisherZ, Frechet, Gamma, GammaInverse, Gompertz, Gumbel, \
+    Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell, Nakagami, Normal, \
+    Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT, \
+    Triangular, Uniform, UniformSum, VonMises, Weibull, WignerSemicircle
+from .drv_types import Geometric, Poisson
+from .frv_types import Bernoulli, Binomial, Coin, Die, DiscreteUniform, \
+    FiniteRV, Hypergeometric, Rademacher
+from .rv_interface import E, P, cdf, cmoment, correlation, covariance, \
+    density, dependent, given, independent, moment, pspace, random_symbols, \
+    sample, sample_iter, sampling_density, skewness, smoment, std, variance, \
+    where
+from .symbolic_probability import Covariance, Expectation, Probability, \
+    Variance
+
 __all__.extend(rv_interface.__all__)
 
-from . import frv_types
-from .frv_types import (
-    Bernoulli, Binomial, Coin, Die, DiscreteUniform, FiniteRV, Hypergeometric,
-    Rademacher,
-)
 __all__.extend(frv_types.__all__)
 
-from . import crv_types
-from .crv_types import (
-    ContinuousRV,
-    Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
-    Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
-    GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
-    Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
-    ShiftedGompertz, StudentT, Triangular, Uniform, UniformSum, VonMises,
-    Weibull, WignerSemicircle
-)
 __all__.extend(crv_types.__all__)
 
-from . import drv_types
-from .drv_types import (Geometric, Poisson)
 __all__.extend(drv_types.__all__)
 
-from . import symbolic_probability
-from .symbolic_probability import Probability, Expectation, Variance, Covariance
 __all__.extend(symbolic_probability.__all__)

@@ -1,7 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy import I, S, exp, sqrt
 from sympy.matrices.expressions import MatrixExpr
-from sympy import S, I, sqrt, exp
+
 
 class DFT(MatrixExpr):
     """ Discrete Fourier Transform """

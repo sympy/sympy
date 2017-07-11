@@ -1,9 +1,10 @@
-from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase
-from sympy.abc import x, y, n, k
-from sympy.utilities.pytest import raises
+from sympy import Derivative, E, Function, IndexedBase, Integer, Integral, O, \
+    S, Subs, Sum, Symbol, cos, exp, log, oo, pi, series, sin, sqrt, symbols
+from sympy.abc import k, n, x, y
 from sympy.core.compatibility import range
+from sympy.series.acceleration import richardson, shanks
 from sympy.series.gruntz import calculate_series
+from sympy.utilities.pytest import raises
 
 
 def test_sin():
@@ -135,8 +136,6 @@ def test_issue_3978():
             x*Subs(Derivative(TestF(x), x), (x,), (0,)) + \
             x**2*Subs(Derivative(TestF(x), x, x), (x,), (0,))/2 + O(x**3)
 
-from sympy.series.acceleration import richardson, shanks
-from sympy import Sum, Integer
 
 
 def test_acceleration():

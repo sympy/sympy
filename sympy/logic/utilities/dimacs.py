@@ -4,11 +4,12 @@ www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+import re
 
 from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or
-import re
 
 
 def load(s):

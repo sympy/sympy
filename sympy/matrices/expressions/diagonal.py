@@ -1,8 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.matrices.expressions import MatrixExpr
-from sympy.core import S, Eq, Ge
+from sympy.core import Eq, Ge, S
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.expressions import MatrixExpr
 
 
 class DiagonalMatrix(MatrixExpr):

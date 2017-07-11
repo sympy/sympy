@@ -1,9 +1,9 @@
 """Simple tools for timing functions' execution, when IPython is not available. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import timeit
 import math
+import timeit
 
 from sympy.core.compatibility import range
 

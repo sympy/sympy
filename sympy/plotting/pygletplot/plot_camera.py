@@ -1,10 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from pyglet.gl import *
 from plot_rotation import get_spherical_rotatation
-from util import get_model_matrix
-from util import screen_to_model, model_to_screen
-from util import vec_subs
+from pyglet.gl import *
+from util import get_model_matrix, model_to_screen, screen_to_model, vec_subs
 
 
 class PlotCamera(object):

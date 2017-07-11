@@ -1,11 +1,10 @@
 """Tests for tools for constructing domains for expressions. """
 
-from sympy.polys.constructor import construct_domain
-from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.polys.domains.realfield import RealField
-
-from sympy import S, sqrt, sin, Float, E, GoldenRatio, pi, Catalan
+from sympy import Catalan, E, Float, GoldenRatio, S, pi, sin, sqrt
 from sympy.abc import x, y
+from sympy.polys.constructor import construct_domain
+from sympy.polys.domains import EX, QQ, RR, ZZ
+from sympy.polys.domains.realfield import RealField
 
 
 def test_construct_domain():

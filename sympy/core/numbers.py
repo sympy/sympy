@@ -1,34 +1,39 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import decimal
 import fractions
 import math
-import warnings
 import re as regex
+import warnings
 from collections import defaultdict
 
-from .containers import Tuple
-from .sympify import converter, sympify, _sympify, SympifyError
-from .singleton import S, Singleton
-from .expr import Expr, AtomicExpr
-from .decorators import _sympifyit
-from .cache import cacheit, clear_cache
-from .logic import fuzzy_not
-from sympy.core.compatibility import (
-    as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
-    SYMPY_INTS, int_info)
 import mpmath
 import mpmath.libmp as mlib
-from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
-from mpmath.libmp.libmpf import (
-    finf as _mpf_inf, fninf as _mpf_ninf,
-    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
-    prec_to_dps)
-from sympy.utilities.misc import debug, filldedent
-from .evaluate import global_evaluate
+from mpmath.libmp import mpf_e, mpf_pi, mpf_pow, phi_fixed
+from mpmath.libmp.libmpf import _normalize as mpf_normalize
+from mpmath.libmp.libmpf import finf as _mpf_inf
+from mpmath.libmp.libmpf import fnan as _mpf_nan
+from mpmath.libmp.libmpf import fninf as _mpf_ninf
+from mpmath.libmp.libmpf import fzero as _mpf_zero
+from mpmath.libmp.libmpf import prec_to_dps
 
+from sympy.core.compatibility import HAS_GMPY, SYMPY_INTS, as_int, int_info, \
+    integer_types, long, string_types, with_metaclass
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import debug, filldedent
+
+from .add import Add
+from .cache import cacheit, clear_cache
+from .containers import Tuple
+from .decorators import _sympifyit
+from .evaluate import global_evaluate
+from .expr import AtomicExpr, Expr
+from .logic import fuzzy_not
+from .mul import Mul
+from .power import Pow, integer_nthroot
+from .singleton import S, Singleton
+from .sympify import SympifyError, _sympify, converter, sympify
 
 rnd = mlib.round_nearest
 
@@ -3862,8 +3867,5 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1] = S.NegativeOne
 
-from .power import Pow, integer_nthroot
-from .mul import Mul
 Mul.identity = One()
-from .add import Add
 Add.identity = Zero()

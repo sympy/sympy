@@ -1,11 +1,8 @@
 from sympy import I, Mul
-from sympy.physics.quantum import (Dagger, Commutator, AntiCommutator, qapply,
-                                   Operator)
-from sympy.physics.quantum.pauli import (SigmaOpBase, SigmaX, SigmaY, SigmaZ,
-                                         SigmaMinus, SigmaPlus,
-                                         qsimplify_pauli)
-from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
-
+from sympy.physics.quantum import AntiCommutator, Commutator, Dagger, \
+    Operator, qapply
+from sympy.physics.quantum.pauli import SigmaMinus, SigmaOpBase, SigmaPlus, \
+    SigmaX, SigmaY, SigmaZ, SigmaZBra, SigmaZKet, qsimplify_pauli
 
 sx, sy, sz = SigmaX(), SigmaY(), SigmaZ()
 sx1, sy1, sz1 = SigmaX(1), SigmaY(1), SigmaZ(1)

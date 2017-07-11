@@ -1,4 +1,4 @@
-from sympy import Symbol, Dummy, Rational, exp
+from sympy import Dummy, Rational, Symbol, exp
 
 
 def test_equal():

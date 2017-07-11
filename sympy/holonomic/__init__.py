@@ -6,6 +6,7 @@ conversions such as converting holonomic functions to a different form and the
 other way around.
 """
 
-from .holonomic import (DifferentialOperator, HolonomicFunction, DifferentialOperators,
-    from_hyper, from_meijerg, expr_to_holonomic)
-from .recurrence import RecurrenceOperators, RecurrenceOperator, HolonomicSequence
+from .holonomic import DifferentialOperator, DifferentialOperators, \
+    HolonomicFunction, expr_to_holonomic, from_hyper, from_meijerg
+from .recurrence import HolonomicSequence, RecurrenceOperator, \
+    RecurrenceOperators

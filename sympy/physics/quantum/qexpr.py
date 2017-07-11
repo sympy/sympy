@@ -1,15 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Expr, sympify, Symbol, Matrix
-from sympy.printing.pretty.stringpict import prettyForm
-from sympy.core.containers import Tuple
+from sympy import Expr, Matrix, Symbol, sympify
 from sympy.core.compatibility import is_sequence, string_types
-
+from sympy.core.containers import Tuple
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.matrixutils import (
-    numpy_ndarray, scipy_sparse_matrix,
-    to_sympy, to_numpy, to_scipy_sparse
-)
+from sympy.physics.quantum.matrixutils import numpy_ndarray, \
+    scipy_sparse_matrix, to_numpy, to_scipy_sparse, to_sympy
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'QuantumError',

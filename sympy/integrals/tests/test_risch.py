@@ -1,18 +1,18 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Eq, Piecewise, factor, expand_log, cancel,
-    expand, diff, pi)
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
-    derivation, splitfactor, splitfactor_sqf, canonical_representation,
-    hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
-    integrate_primitive, integrate_hyperexponential_polynomial,
-    integrate_hyperexponential, integrate_hypertangent_polynomial,
-    integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
-    risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
-    recognize_derivative, laurent_series)
+from sympy import Eq, Function, I, Lambda, Piecewise, Poly, S, Symbol, \
+    cancel, diff, exp, expand, expand_log, factor, log, pi, sin, sqrt, \
+    symbols, tan
+from sympy.abc import a, nu, t, x, y, z
+from sympy.integrals.risch import DecrementLevel, DifferentialExtension, \
+    NonElementaryIntegral, as_poly_1t, canonical_representation, derivation, \
+    frac_in, gcdex_diophantine, hermite_reduce, integer_powers, \
+    integrate_hyperexponential, integrate_hyperexponential_polynomial, \
+    integrate_hypertangent_polynomial, integrate_nonlinear_no_specials, \
+    integrate_primitive, laurent_series, polynomial_reduce, \
+    recognize_derivative, recognize_log_derivative, residue_reduce, \
+    residue_reduce_to_basic, risch_integrate, splitfactor, splitfactor_sqf
 from sympy.utilities.pytest import raises
 
-from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
 i = Symbol('i')
 

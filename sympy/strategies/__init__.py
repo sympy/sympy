@@ -23,11 +23,9 @@ strategies.traverse   - strategies that traverse a SymPy tree
 strategies.tools      - some conglomerate strategies that do depend on SymPy
 """
 
-from . import rl
-from . import traverse
-from .rl import rm_id, unpack, flatten, sort, glom, distribute, rebuild
-from .util import new
-from .core import (condition, debug, chain, null_safe, do_one, exhaust,
-        minimize, tryit)
+from . import branch, rl, traverse
+from .core import chain, condition, debug, do_one, exhaust, minimize, \
+    null_safe, tryit
+from .rl import distribute, flatten, glom, rebuild, rm_id, sort, unpack
 from .tools import canon, typed
-from . import branch
+from .util import new

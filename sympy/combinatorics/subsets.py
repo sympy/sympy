@@ -1,9 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from itertools import combinations
 
-from sympy.core import Basic
 from sympy.combinatorics.graycode import GrayCode
+from sympy.core import Basic
 from sympy.core.compatibility import range
 
 

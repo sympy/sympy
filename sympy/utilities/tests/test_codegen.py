@@ -1,16 +1,15 @@
 import warnings
-from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
+
+from sympy import Equality, Integral, erf
+from sympy.core import Catalan, Dummy, Eq, Lambda, pi, symbols
 from sympy.core.compatibility import StringIO
-from sympy import erf, Integral
-from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.utilities.codegen import (
-    codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
-    CodeGenError, FCodeGen, CodeGenArgumentListError, OutputArgument,
-    InOutArgument)
+from sympy.utilities.codegen import C89CodeGen, C99CodeGen, CCodeGen, \
+    CodeGenArgumentListError, CodeGenError, FCodeGen, InOutArgument, \
+    InputArgument, OutputArgument, codegen, make_routine
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import raises
 
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen

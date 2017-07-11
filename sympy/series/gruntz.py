@@ -116,20 +116,19 @@ And check manually which line is wrong. Then go to the source code and
 debug this function to figure out the exact problem.
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
-from sympy.functions import log, exp
-from sympy.series.order import Order
-from sympy.simplify.powsimp import powsimp, powdenest
 from sympy import cacheit
-
+from sympy.core import Basic, Dummy, I, Mul, S, Symbol, Wild, oo
 from sympy.core.compatibility import reduce
-
+from sympy.functions import exp, log
+from sympy.series.order import Order
+from sympy.simplify.powsimp import powdenest, powsimp
+from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
+
 timeit = timethis('gruntz')
 
-from sympy.utilities.misc import debug_decorator as debug
 
 
 def compare(a, b, x):

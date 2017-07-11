@@ -28,6 +28,7 @@ Useful functions:
     expression expressed in another unit.
 
 """
+# isort:skip_file
 
 from sympy.core.compatibility import string_types
 from .dimensions import Dimension, DimensionSystem

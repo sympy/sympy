@@ -6,9 +6,10 @@ Do NOT manually edit this file.
 Instead, run ./bin/ask_update.py.
 """
 
+from sympy.assumptions.ask import Q
 from sympy.core.cache import cacheit
 from sympy.logic.boolalg import And, Not, Or
-from sympy.assumptions.ask import Q
+
 
 # -{ Known facts in Conjunctive Normal Form }-
 @cacheit

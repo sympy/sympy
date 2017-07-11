@@ -1,19 +1,19 @@
 """Fourier Series"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import pi, oo
-from sympy.core.expr import Expr
+from sympy import oo, pi
 from sympy.core.add import Add
-from sympy.core.sympify import sympify
-from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.trigonometric import sin, cos, sinc
-from sympy.sets.sets import Interval
-from sympy.series.series_class import SeriesBase
+from sympy.core.expr import Expr
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.series.sequences import SeqFormula
+from sympy.series.series_class import SeriesBase
+from sympy.sets.sets import Interval
 
 
 def fourier_cos_seq(func, limits, n):

@@ -1,4 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+import ctypes
+
+from sympy import IndexedBase, S
+from sympy.external import import_module
+from sympy.printing.printer import Printer
+from sympy.utilities.decorator import doctest_depends_on
 
 '''
 Use llvmlite to create executable functions from Sympy expressions
@@ -6,12 +13,7 @@ Use llvmlite to create executable functions from Sympy expressions
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
 
-import ctypes
 
-from sympy.external import import_module
-from sympy.printing.printer import Printer
-from sympy import S, IndexedBase
-from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')
 if llvmlite:

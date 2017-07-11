@@ -1,34 +1,19 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
-    pi, cos, sin, exp)
-
-from sympy.utilities.pytest import raises, slow
-from sympy.core.compatibility import range
-
-from sympy.polys.numberfields import (
-    minimal_polynomial,
-    primitive_element,
-    is_isomorphism_possible,
-    field_isomorphism_pslq,
-    field_isomorphism,
-    to_number_field,
-    AlgebraicNumber,
-    isolate, IntervalPrinter,
-)
-
-from sympy.polys.polyerrors import (
-    IsomorphismFailed,
-    NotAlgebraic,
-    GeneratorsError,
-)
-
-from sympy.polys.polyclasses import DMP
-from sympy.polys.domains import QQ
-from sympy.polys.rootoftools import rootof
-from sympy.polys.polytools import degree
-
+from sympy import I, Poly, Rational, S, Symbol, Tuple, cos, exp, expand, oo, \
+    pi, sin, sqrt
 from sympy.abc import x, y, z
+from sympy.core.compatibility import range
+from sympy.polys.domains import QQ
+from sympy.polys.numberfields import AlgebraicNumber, IntervalPrinter, \
+    field_isomorphism, field_isomorphism_pslq, is_isomorphism_possible, \
+    isolate, minimal_polynomial, primitive_element, to_number_field
+from sympy.polys.polyclasses import DMP
+from sympy.polys.polyerrors import GeneratorsError, IsomorphismFailed, \
+    NotAlgebraic
+from sympy.polys.polytools import degree
+from sympy.polys.rootoftools import rootof
+from sympy.utilities.pytest import raises, slow
 
 Q = Rational
 

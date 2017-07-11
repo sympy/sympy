@@ -1,2 +1,2 @@
-from .products import product, Product
-from .summations import summation, Sum
+from .products import Product, product
+from .summations import Sum, summation

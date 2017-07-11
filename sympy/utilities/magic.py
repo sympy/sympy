@@ -1,6 +1,7 @@
 """Functions that involve magic. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 
 def pollute(names, objects):
     """Pollute the global namespace with symbols -> objects mapping. """

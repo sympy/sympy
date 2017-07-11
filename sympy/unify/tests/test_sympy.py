@@ -1,9 +1,10 @@
-from sympy import Add, Basic, symbols, Symbol
+from sympy import Add, Basic, Symbol, symbols
+from sympy.abc import n, x, y, z
 from sympy.unify.core import Compound, Variable
-from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
-        is_commutative)
-from sympy.abc import x, y, z, n
+from sympy.unify.usympy import construct, deconstruct, is_associative, \
+    is_commutative, unify
 from sympy.utilities.pytest import XFAIL
+
 
 def test_deconstruct():
     expr     = Basic(1, 2, 3)

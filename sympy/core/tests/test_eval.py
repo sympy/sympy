@@ -1,4 +1,4 @@
-from sympy import Symbol, Function, exp, sqrt, Rational, I, cos, tan
+from sympy import Function, I, Rational, Symbol, cos, exp, sqrt, tan
 from sympy.utilities.pytest import XFAIL
 
 

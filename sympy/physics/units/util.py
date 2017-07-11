@@ -8,10 +8,10 @@ from __future__ import division
 
 import collections
 
-from sympy.physics.units.quantities import Quantity
-from sympy import Add, Mul, Pow, Function, Rational, Tuple, sympify
+from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
 from sympy.core.compatibility import reduce
 from sympy.physics.units.dimensions import Dimension
+from sympy.physics.units.quantities import Quantity
 
 
 def dim_simplify(expr):

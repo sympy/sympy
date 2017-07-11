@@ -1,10 +1,9 @@
-from sympy.matrices.expressions.slice import MatrixSlice
-from sympy.matrices.expressions import MatrixSymbol
 from sympy.abc import a, b, c, d, k, l, m, n
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.assumptions import Q, assuming
 from sympy.functions.elementary.integers import floor
-from sympy.assumptions import assuming, Q
-
+from sympy.matrices.expressions import MatrixSymbol
+from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.utilities.pytest import XFAIL, raises
 
 X = MatrixSymbol('X', n, m)
 Y = MatrixSymbol('Y', m, k)
