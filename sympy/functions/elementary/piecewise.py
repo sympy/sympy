@@ -540,7 +540,51 @@ def piecewise_fold(expr):
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
-    new_args = list(map(piecewise_fold, expr.args))
+
+    new_args = []
+    if isinstance(expr, (ExprCondPair, Piecewise)):
+        for e, c in expr.args:
+            if not isinstance(e, Piecewise):
+                e = piecewise_fold(e)
+            if isinstance(e, Piecewise):
+                new_args.extend([(piecewise_fold(ei), And(ci, c)) for ei, ci in e.args])
+            else:
+                new_args.append((e, c))
+    else:
+        from sympy.utilities.iterables import cartes
+        folded = list(map(piecewise_fold, expr.args))
+        for ec in cartes(*[
+                (i.args if isinstance(i, Piecewise) else
+                 [(i, S.true)]) for i in folded]):
+            e, c = zip(*ec)
+            new_args.append((expr.func(*e), And(*c)))
+
+    return Piecewise(*new_args)
+
+
+def piecewise_fold_old(expr):
+    """
+    Takes an expression containing a piecewise function and returns the
+    expression in piecewise form.
+
+    Examples
+    ========
+
+    >>> from sympy import Piecewise, sympify as S
+    >>> from sympy.functions.elementary.piecewise import piecewise_fold_old
+    >>> from sympy.abc import x
+    >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
+    >>> piecewise_fold_old(x*p)
+    Piecewise((x**2, x < 1), (x, 1 <= x))
+
+    See Also
+    ========
+
+    Piecewise
+    """
+    if not isinstance(expr, Basic) or not expr.has(Piecewise):
+        return expr
+    new_args = list(map(piecewise_fold_old, expr.args))
     if expr.func is ExprCondPair:
         return ExprCondPair(*new_args)
     piecewise_args = []
@@ -554,7 +598,7 @@ def piecewise_fold(expr):
         if isinstance(expr, Boolean):
             # If expr is Boolean, we must return some kind of PiecewiseBoolean.
             # This is constructed by means of Or, And and Not.
-            # piecewise_fold(0 < Piecewise( (sin(x), x<0), (cos(x), True)))
+            # piecewise_fold_old(0 < Piecewise( (sin(x), x<0), (cos(x), True)))
             # can't return Piecewise((0 < sin(x), x < 0), (0 < cos(x), True))
             # but instead Or(And(x < 0, 0 < sin(x)), And(0 < cos(x), Not(x<0)))
             other = True
@@ -563,10 +607,10 @@ def piecewise_fold(expr):
                 rtn = Or(rtn, And(other, c, e))
                 other = And(other, Not(c))
             if len(piecewise_args) > 1:
-                return piecewise_fold(rtn)
+                return piecewise_fold_old(rtn)
             return rtn
         if len(piecewise_args) > 1:
-            return piecewise_fold(Piecewise(*new_args))
+            return piecewise_fold_old(Piecewise(*new_args))
         return Piecewise(*new_args)
     else:
         return expr.func(*new_args)
