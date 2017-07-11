@@ -285,7 +285,7 @@ def test_julia_matrix_elements():
     assert julia_code(A[0, 0]**2 + A[0, 1] + A[0, 2]) == "x.^2 + x.*y + 2"
     A = MatrixSymbol('AA', 1, 3)
     assert julia_code(A) == "AA"
-    assert julia_code(A[0,0]**2 + sin(A[0,1]) + A[0,2]) == \
+    assert julia_code(A[0, 0]**2 + sin(A[0,1]) + A[0,2]) == \
            "sin(AA[1,2]) + AA[1,1].^2 + AA[1,3]"
     assert julia_code(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
 
@@ -362,3 +362,16 @@ def test_specfun():
     assert julia_code(hankel2(n, x)) == 'hankelh2(n, x)'
     assert julia_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
     assert julia_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(julia_code(A[0, 0]) == "A[1,1]")
+    assert(julia_code(3 * A[0, 0]) == "3*A[1,1]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(julia_code(F) == "((-1)*B + A)[1,1]")

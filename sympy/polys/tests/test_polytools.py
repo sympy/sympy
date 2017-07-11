@@ -3202,3 +3202,8 @@ def test_factor_terms():
 def test_issue_11198():
     assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
     assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])
+
+def test_Poly_precision():
+    # Make sure Poly doesn't lose precision
+    p = Poly(pi.evalf(100)*x)
+    assert p.as_expr() == pi.evalf(100)*x

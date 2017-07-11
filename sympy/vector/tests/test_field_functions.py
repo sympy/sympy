@@ -1,80 +1,79 @@
 from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
-from sympy.vector.functions import (curl, divergence, gradient,
-                                    is_conservative, is_solenoidal,
+from sympy.vector.operators import curl, divergence, gradient
+from sympy.vector.deloperator import Del
+from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
                                     scalar_potential_difference)
 from sympy.utilities.pytest import raises
 
-C = CoordSysCartesian('C')
+C = CoordSys3D('C')
 i, j, k = C.base_vectors()
 x, y, z = C.base_scalars()
-delop = C.delop
+delop = Del()
 a, b, c, q = symbols('a b c q')
 
-def test_del_operator():
 
-    #Tests for curl
-    assert (delop ^ Vector.zero ==
-            (Derivative(0, C.y) - Derivative(0, C.z))*C.i +
-            (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
-            (Derivative(0, C.x) - Derivative(0, C.y))*C.k)
+def test_del_operator():
+    # Tests for curl
+
+    assert delop ^ Vector.zero == Vector.zero
     assert ((delop ^ Vector.zero).doit() == Vector.zero ==
-            curl(Vector.zero, C))
+            curl(Vector.zero))
     assert delop.cross(Vector.zero) == delop ^ Vector.zero
     assert (delop ^ i).doit() == Vector.zero
-    assert delop.cross(2*y**2*j, doit = True) == Vector.zero
+    assert delop.cross(2*y**2*j, doit=True) == Vector.zero
     assert delop.cross(2*y**2*j) == delop ^ 2*y**2*j
     v = x*y*z * (i + j + k)
     assert ((delop ^ v).doit() ==
             (-x*y + x*z)*i + (x*y - y*z)*j + (-x*z + y*z)*k ==
-            curl(v, C))
+            curl(v))
     assert delop ^ v == delop.cross(v)
     assert (delop.cross(2*x**2*j) ==
             (Derivative(0, C.y) - Derivative(2*C.x**2, C.z))*C.i +
             (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
             (-Derivative(0, C.y) + Derivative(2*C.x**2, C.x))*C.k)
-    assert (delop.cross(2*x**2*j, doit = True) == 4*x*k ==
-            curl(2*x**2*j, C))
+    assert (delop.cross(2*x**2*j, doit=True) == 4*x*k ==
+            curl(2*x**2*j))
 
     #Tests for divergence
-    assert delop & Vector.zero == S(0) == divergence(Vector.zero, C)
+    assert delop & Vector.zero == S(0) == divergence(Vector.zero)
     assert (delop & Vector.zero).doit() == S(0)
     assert delop.dot(Vector.zero) == delop & Vector.zero
     assert (delop & i).doit() == S(0)
-    assert (delop & x**2*i).doit() == 2*x == divergence(x**2*i, C)
-    assert (delop.dot(v, doit = True) == x*y + y*z + z*x ==
-            divergence(v, C))
+    assert (delop & x**2*i).doit() == 2*x == divergence(x**2*i)
+    assert (delop.dot(v, doit=True) == x*y + y*z + z*x ==
+            divergence(v))
     assert delop & v == delop.dot(v)
-    assert delop.dot(1/(x*y*z) * (i + j + k), doit = True) == \
+    assert delop.dot(1/(x*y*z) * (i + j + k), doit=True) == \
            - 1 / (x*y*z**2) - 1 / (x*y**2*z) - 1 / (x**2*y*z)
     v = x*i + y*j + z*k
     assert (delop & v == Derivative(C.x, C.x) +
             Derivative(C.y, C.y) + Derivative(C.z, C.z))
-    assert delop.dot(v, doit = True) == 3 == divergence(v, C)
+    assert delop.dot(v, doit=True) == 3 == divergence(v)
     assert delop & v == delop.dot(v)
     assert simplify((delop & v).doit()) == 3
 
     #Tests for gradient
-    assert (delop.gradient(0, doit = True) == Vector.zero ==
-            gradient(0, C))
+    assert (delop.gradient(0, doit=True) == Vector.zero ==
+            gradient(0))
     assert delop.gradient(0) == delop(0)
     assert (delop(S(0))).doit() == Vector.zero
     assert (delop(x) == (Derivative(C.x, C.x))*C.i +
             (Derivative(C.x, C.y))*C.j + (Derivative(C.x, C.z))*C.k)
-    assert (delop(x)).doit() == i == gradient(x, C)
+    assert (delop(x)).doit() == i == gradient(x)
     assert (delop(x*y*z) ==
             (Derivative(C.x*C.y*C.z, C.x))*C.i +
             (Derivative(C.x*C.y*C.z, C.y))*C.j +
             (Derivative(C.x*C.y*C.z, C.z))*C.k)
-    assert (delop.gradient(x*y*z, doit = True) ==
+    assert (delop.gradient(x*y*z, doit=True) ==
             y*z*i + z*x*j + x*y*k ==
-            gradient(x*y*z, C))
+            gradient(x*y*z))
     assert delop(x*y*z) == delop.gradient(x*y*z)
     assert (delop(2*x**2)).doit() == 4*x*i
     assert ((delop(a*sin(y) / x)).doit() ==
@@ -118,33 +117,33 @@ def test_product_rules():
     u = x**2*i + 4*j - y**2*z*k
     v = 4*i + x*y*z*k
 
-    #First product rule
-    lhs = delop(f * g, doit = True)
+    # First product rule
+    lhs = delop(f * g, doit=True)
     rhs = (f * delop(g) + g * delop(f)).doit()
     assert simplify(lhs) == simplify(rhs)
 
-    #Second product rule
+    # Second product rule
     lhs = delop(u & v).doit()
     rhs = ((u ^ (delop ^ v)) + (v ^ (delop ^ u)) + \
           ((u & delop)(v)) + ((v & delop)(u))).doit()
     assert simplify(lhs) == simplify(rhs)
 
-    #Third product rule
+    # Third product rule
     lhs = (delop & (f*v)).doit()
     rhs = ((f * (delop & v)) + (v & (delop(f)))).doit()
     assert simplify(lhs) == simplify(rhs)
 
-    #Fourth product rule
+    # Fourth product rule
     lhs = (delop & (u ^ v)).doit()
     rhs = ((v & (delop ^ u)) - (u & (delop ^ v))).doit()
     assert simplify(lhs) == simplify(rhs)
 
-    #Fifth product rule
+    # Fifth product rule
     lhs = (delop ^ (f * v)).doit()
     rhs = (((delop(f)) ^ v) + (f * (delop ^ v))).doit()
     assert simplify(lhs) == simplify(rhs)
 
-    #Sixth product rule
+    # Sixth product rule
     lhs = (delop ^ (u ^ v)).doit()
     rhs = ((u * (delop & v) - v * (delop & u) +
            (v & delop)(u) - (u & delop)(v))).doit()
@@ -153,9 +152,9 @@ def test_product_rules():
 
 P = C.orient_new_axis('P', q, C.k)
 scalar_field = 2*x**2*y*z
-grad_field = gradient(scalar_field, C)
+grad_field = gradient(scalar_field)
 vector_field = y**2*i + 3*x*j + 5*y*z*k
-curl_field = curl(vector_field, C)
+curl_field = curl(vector_field)
 
 
 def test_conservative():
@@ -224,3 +223,29 @@ def test_scalar_potential_difference():
     assert (scalar_potential_difference(grad_field, P, P.origin,
                                         genericpointP).simplify() ==
             potential_diff_P.simplify())
+
+
+def test_differential_operators_curvilinear_system():
+    A = CoordSys3D('A')
+    A._set_lame_coefficient_mapping('spherical')
+    B = CoordSys3D('B')
+    B._set_lame_coefficient_mapping('cylindrical')
+    # Test for spherical coordinate system and gradient
+    assert gradient(3*A.x + 4*A.y) == 3*A.i + 4/A.x*A.j
+    assert gradient(3*A.x*A.z + 4*A.y) == 3*A.z*A.i + 4/A.x*A.j + (3/sin(A.y))*A.k
+    assert gradient(0*A.x + 0*A.y+0*A.z) == Vector.zero
+    assert gradient(A.x*A.y*A.z) == A.y*A.z*A.i + A.z*A.j + (A.y/sin(A.y))*A.k
+    # Test for spherical coordinate system and divergence
+    assert divergence(A.x * A.i + A.y * A.j + A.z * A.k) == \
+           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 3 + 1/(sin(A.y)*A.x)
+    assert divergence(3*A.x*A.z*A.i + A.y*A.j + A.x*A.y*A.z*A.k) == \
+           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 9*A.z + A.y/sin(A.y)
+    assert divergence(Vector.zero) == 0
+    assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
+    # Test for cylindrical coordinate system and divergence
+    assert divergence(B.x*B.i + B.y*B.j + B.z*B.k) == 2 + 1/B.y
+    assert divergence(B.x*B.j + B.z*B.k) == 1
+    # Test for spherical coordinate system and divergence
+    assert curl(A.x*A.i + A.y*A.j + A.z*A.k) == \
+           (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + A.y/A.x*A.k
+    assert curl(A.x*A.j + A.z*A.k) == (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + 2*A.k

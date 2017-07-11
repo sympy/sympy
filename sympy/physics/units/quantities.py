@@ -7,7 +7,7 @@ Physical quantities.
 from __future__ import division
 
 from sympy.core.compatibility import string_types
-from sympy import sympify, Mul, Pow, S, Symbol, Add, AtomicExpr
+from sympy import sympify, Mul, Pow, S, Symbol, Add, AtomicExpr, Basic
 from sympy.physics.units import Dimension
 from sympy.physics.units import dimensions
 from sympy.physics.units.prefixes import Prefix
@@ -144,3 +144,26 @@ class Quantity(AtomicExpr):
     @property
     def free_symbols(self):
         return set([])
+
+
+def _Quantity_constructor_postprocessor_Add(expr):
+    # Construction postprocessor for the addition,
+    # checks for dimension mismatches of the addends, thus preventing
+    # expressions like `meter + second` to be created.
+
+    deset = {
+        tuple(Dimension(Quantity.get_dimensional_expr(i)).get_dimensional_dependencies().items())
+        for i in expr.args
+        if i.free_symbols == set()  # do not raise if there are symbols
+                    # (free symbols could contain the units corrections)
+        and not i.is_number
+    }
+    # If `deset` has more than one element, then some dimensions do not
+    # match in the sum:
+    if len(deset) > 1:
+        raise ValueError("summation of quantities of incompatible dimensions")
+    return expr
+
+Basic._constructor_postprocessor_mapping[Quantity] = {
+    "Add" : [_Quantity_constructor_postprocessor_Add],
+}

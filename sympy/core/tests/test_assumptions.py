@@ -759,6 +759,10 @@ def test_Pow_is_algebraic():
     assert (t**n).is_algebraic is None
     assert (t**n).is_integer is None
 
+    assert (pi**3).is_algebraic is False
+    r = Symbol('r', zero=True)
+    assert (pi**r).is_algebraic is True
+
 
 def test_Mul_is_prime():
     from sympy import Mul

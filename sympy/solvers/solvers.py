@@ -365,7 +365,7 @@ def check_assumptions(expr, against=None, **assumptions):
 
 
 def solve(f, *symbols, **flags):
-    """
+    r"""
     Algebraically solves equations and systems of equations.
 
     Currently supported are:
@@ -878,15 +878,11 @@ def solve(f, *symbols, **flags):
             for fi in f:
                 pot = preorder_traversal(fi)
                 for p in pot:
-                    if not (p.is_number or p.is_Add or p.is_Mul) or \
-                            isinstance(p, AppliedUndef):
+                    if isinstance(p, AppliedUndef):
                         flags['dict'] = True  # better show symbols
                         symbols.add(p)
                         pot.skip()  # don't go any deeper
         symbols = list(symbols)
-        # supply dummy symbols so solve(3) behaves like solve(3, x)
-        for i in range(len(f) - len(symbols)):
-            symbols.append(Dummy())
 
         ordered_symbols = False
     elif len(symbols) == 1 and iterable(symbols[0]):
@@ -2576,12 +2572,15 @@ def _tsolve(eq, sym, **flags):
             if llhs.is_Add:
                 return _solve(llhs - log(rhs), sym, **flags)
 
-        elif lhs.is_Function and len(lhs.args) == 1 and lhs.func in multi_inverses:
-            # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
-            soln = []
-            for i in multi_inverses[lhs.func](rhs):
-                soln.extend(_solve(lhs.args[0] - i, sym, **flags))
-            return list(ordered(soln))
+        elif lhs.is_Function and len(lhs.args) == 1:
+            if lhs.func in multi_inverses:
+                # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
+                soln = []
+                for i in multi_inverses[lhs.func](rhs):
+                    soln.extend(_solve(lhs.args[0] - i, sym, **flags))
+                return list(ordered(soln))
+            elif lhs.func == LambertW:
+                return _solve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:

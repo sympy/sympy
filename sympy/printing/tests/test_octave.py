@@ -145,9 +145,7 @@ def test_Matrices():
     A = Matrix([[1, sin(x/2), abs(x)],
                 [0, 1, pi],
                 [0, exp(1), ceiling(x)]]);
-    expected = ("[1 sin(x/2)  abs(x);\n"
-                "0        1      pi;\n"
-                "0   exp(1) ceil(x)]")
+    expected = "[1 sin(x/2) abs(x); 0 1 pi; 0 exp(1) ceil(x)]"
     assert mcode(A) == expected
     # row and columns
     assert mcode(A[:,0]) == "[1; 0; 0]"
@@ -204,7 +202,7 @@ def test_containers():
     assert mcode(Tuple(*[1, 2, 3])) == "{1, 2, 3}"
     assert mcode((1, x*y, (3, x**2))) == "{1, x.*y, {3, x.^2}}"
     # scalar, matrix, empty matrix and empty list
-    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0;\n0 1 0;\n0 0 1], [], {}}"
+    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0; 0 1 0; 0 0 1], [], {}}"
 
 
 def test_octave_noninline():
@@ -260,7 +258,7 @@ def test_octave_matrix_assign_to():
     A = Matrix([[1, 2, 3]])
     assert mcode(A, assign_to='a') == "a = [1 2 3];"
     A = Matrix([[1, 2], [3, 4]])
-    assert mcode(A, assign_to='A') == "A = [1 2;\n3 4];"
+    assert mcode(A, assign_to='A') == "A = [1 2; 3 4];"
 
 
 def test_octave_matrix_assign_to_more():
@@ -288,7 +286,7 @@ def test_octave_matrix_elements():
     assert mcode(A[0, 0]**2 + A[0, 1] + A[0, 2]) == "x.^2 + x.*y + 2"
     A = MatrixSymbol('AA', 1, 3)
     assert mcode(A) == "AA"
-    assert mcode(A[0,0]**2 + sin(A[0,1]) + A[0,2]) == \
+    assert mcode(A[0, 0]**2 + sin(A[0,1]) + A[0,2]) == \
            "sin(AA(1, 2)) + AA(1, 1).^2 + AA(1, 3)"
     assert mcode(sum(A)) == "AA(1, 1) + AA(1, 2) + AA(1, 3)"
 
@@ -377,3 +375,16 @@ def test_specfun():
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
     assert octave_code(LambertW(x)) == 'lambertw(x)'
     assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert mcode(A[0, 0]) == "A(1, 1)"
+    assert mcode(3 * A[0, 0]) == "3*A(1, 1)"
+
+    F = C[0, 0].subs(C, A - B)
+    assert mcode(F) == "((-1)*B + A)(1, 1)"

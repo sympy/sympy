@@ -1554,7 +1554,7 @@ def antidivisor_count(n):
 
 
 class totient(Function):
-    """
+    r"""
     Calculate the Euler totient function phi(n)
 
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
@@ -1597,7 +1597,7 @@ class totient(Function):
 
 
 class reduced_totient(Function):
-    """
+    r"""
     Calculate the Carmichael reduced totient function lambda(n)
 
     ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
@@ -1645,7 +1645,7 @@ class reduced_totient(Function):
 
 
 class divisor_sigma(Function):
-    """
+    r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
 
     ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
@@ -1711,7 +1711,7 @@ class divisor_sigma(Function):
 
 
 def core(n, t=2):
-    """
+    r"""
     Calculate core(n,t) = `core_t(n)` of a positive integer n
 
     ``core_2(n)`` is equal to the squarefree part of n
@@ -1808,7 +1808,7 @@ def digits(n, b=10):
 
 
 class udivisor_sigma(Function):
-    """
+    r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
 
     ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``

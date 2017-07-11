@@ -18,7 +18,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -129,7 +129,6 @@ class C89CodePrinter(CodePrinter):
     def __init__(self, settings={}):
         super(C89CodePrinter, self).__init__(settings)
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
-        self._dereference = set(settings.get('dereference', []))
 
     def _rate_index_position(self, p):
         return p*5
@@ -244,12 +243,12 @@ class C89CodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
+        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+            strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
         name = super(C89CodePrinter, self)._print_Symbol(expr)
-        if expr in self._dereference:
+        if expr in self._settings['dereference']:
             return '(*{0})'.format(name)
         else:
             return name
