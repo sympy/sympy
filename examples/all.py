@@ -171,9 +171,9 @@ def run_example(example, reporter=None):
         else:
             mod.main()
         return True
-    except KeyboardInterrupt as e:
+    except (KeyboardInterrupt, SystemExit) as e:
         raise e
-    except:
+    except Exception:
         if reporter:
             reporter.write("[FAIL]", "Red", align="right")
         traceback.print_exc()

@@ -651,7 +651,7 @@ def test_I12():
     try:
         # This should fail or return nan or something.
         diff((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x)
-    except:
+    except (ZeroDivisionError, Exception):
         assert True
     else:
         assert False, "taking the derivative with a fraction equivalent to 0/0 should fail"
