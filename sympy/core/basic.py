@@ -303,13 +303,8 @@ class Basic(with_metaclass(ManagedProperties)):
         if self is other:
             return True
 
-        from .function import AppliedUndef, UndefinedFunction as UndefFunc
+        from .function import AppliedUndef
 
-        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
-            if self.class_key() == other.class_key():
-                return True
-            else:
-                return False
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
             if isinstance(self, Pow) and self.exp == 1:
