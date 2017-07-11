@@ -21,11 +21,11 @@ from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 
-def Int(expr, var):
+def Int(expr, var, showsteps=False):
     from .rubi import rubi_integrate
     if expr == None:
         return None
-    return rubi_integrate(expr, var)
+    return rubi_integrate(expr, var, showsteps)
 
 def Set(expr, value):
     return {expr: value}
@@ -3124,7 +3124,7 @@ def NormalizeLeadTermSigns(u):
                 t *= lst[1]
             else:
                 t *= AbsorbMinusSign(lst[1])
-        return t  
+        return t
     else:
         lst = SignOfFactor(u)
     if lst[0] == 1:
@@ -3350,8 +3350,8 @@ def ExpandTrig(u, *x):
         return ExpandIntegrand(u, x)
 
 def SmartApart(u, *x):
-    # SmartApart(u, *x) returns the partial fraction expansion of u wrt x, avoiding the 
-    # strange behavior in the built-in Apart function that rationalizes denominators 
+    # SmartApart(u, *x) returns the partial fraction expansion of u wrt x, avoiding the
+    # strange behavior in the built-in Apart function that rationalizes denominators
     # involving fractional powers resulting in hard to integrate expressions.
     if v in x:
         alst = MakeAssocList(u, x)
@@ -3383,7 +3383,7 @@ def MakeAssocList(u, x, alst=None):
     else:
         return alst
 
-def GensymSubst(u, x, alst): 
+def GensymSubst(u, x, alst):
     if AtomQ(u):
         return u
     if IntegerPowerQ(u):
@@ -3442,7 +3442,7 @@ def UnifyTerm(term, lst, x):
     else:
         return Prepend(UnifyTerm(term, Rest(lst), x), [First(lst)])
 
-def ExpandLinearProduct(v, u, a, b, x):  
+def ExpandLinearProduct(v, u, a, b, x):
     lst = CoefficientList(u.subs(x, (x-a)/b), x)
     s = 0
     for k in range(1, Length(lst)+1):

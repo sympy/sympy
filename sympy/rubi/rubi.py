@@ -10,7 +10,7 @@ from sympy.rubi.matchpy2sympy import matchpy2sympy
 
 rubi = rubi_object()
 
-def rubi_integrate(expr, var):
+def rubi_integrate(expr, var, showsteps=False):
     '''
     Main function for Rubi integeration.
     Raises NotImplementedError Error if expression is not integrated
@@ -38,6 +38,16 @@ def rubi_integrate(expr, var):
 
     if not isinstance(expr, matchpy.Expression):
         expr = Int(sympy2matchpy(expr), sympy2matchpy(var))
+
+    if showsteps:
+        matches = rubi.matcher.match(expr)
+        for _ in matches._match(rubi.matcher.root):
+            for pattern_index in matches.patterns:
+                renaming = rubi.matcher.pattern_vars[pattern_index]
+                substitution = matches.substitution.rename({renamed: original for original, renamed in renaming.items()})
+                pattern = rubi.matcher.patterns[pattern_index][0]
+                print('{} matched with {}'.format(pattern , substitution))
+                print()
 
     result = rubi.replace(expr)
 
