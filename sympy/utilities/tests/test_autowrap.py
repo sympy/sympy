@@ -239,6 +239,18 @@ def test_autowrap_store_files():
         shutil.rmtree(tmp)
 
 
+def test_autowrap_store_files_issue_gh12939():
+    x, y = symbols('x y')
+    tmp = './tmp'
+    try:
+        f = autowrap(x + y, backend='dummy', tempdir=tmp)
+        assert f() == str(x + y)
+        assert os.access(tmp, os.F_OK)
+    finally:
+        shutil.rmtree(tmp)
+
+
+
 def test_binary_function():
     x, y = symbols('x y')
     f = binary_function('f', x + y, backend='dummy')
