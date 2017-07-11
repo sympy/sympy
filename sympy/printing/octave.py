@@ -16,7 +16,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
 # List of known functions.  First, those that have the same name in
@@ -310,13 +310,8 @@ class OctaveCodePrinter(CodePrinter):
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
             return self._print(A[0, 0])
-        elif A.rows == 1:
-            return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
-        elif A.cols == 1:
-            # note .table would unnecessarily equispace the rows
-            return "[%s]" % "; ".join([self._print(a) for a in A])
-        return "[%s]" % A.table(self, rowstart='', rowend='',
-                                rowsep=';\n', colsep=' ')
+        return "[%s]" % "; ".join(" ".join([self._print(a) for a in A[r, :]])
+                                  for r in range(A.rows))
 
 
     def _print_SparseMatrix(self, A):
@@ -345,7 +340,8 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '(%s, %s)' % (expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):

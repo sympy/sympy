@@ -1193,7 +1193,14 @@ def test_sincos_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in range(1, (n + 1)//2 + 1):
+            # The vertices `exp(i*pi/n)` of a regular `n`-gon can
+            # be expressed by means of nested square roots if and
+            # only if `n` is a product of Fermat primes, `p`, and
+            # powers of 2, `t'. The code aims to check all vertices
+            # not belonging to an `m`-gon for `m < n`(`gcd(i, n) == 1`).
+            # For large `n` this makes the test too slow, therefore
+            # the vertices are limited to those of index `i < 10`.
+            for i in range(1, min((n + 1)//2 + 1, 10)):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     s1 = sin(x).rewrite(sqrt)
@@ -1267,7 +1274,7 @@ def test_tancot_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in range(1, (n + 1)//2 + 1):
+            for i in range(1, min((n + 1)//2 + 1, 10)):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     if  2*i != n and 3*i != 2*n:

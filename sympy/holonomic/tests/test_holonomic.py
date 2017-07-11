@@ -389,8 +389,8 @@ def test_evalf_rk4():
 
     # close to the exact solution 1.09861228866811
     # imaginary part also close to zero
-    s = '1.09861574485151 + 1.36082967699958e-7*I'
-    assert sstr(p.evalf(r)[-1]) == s
+    s = '1.098616 + 1.36083e-7*I'
+    assert sstr(p.evalf(r)[-1].n(7)) == s
 
     # sin(x)
     p = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])

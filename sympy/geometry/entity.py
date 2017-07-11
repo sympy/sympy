@@ -285,13 +285,17 @@ class GeometryEntity(Basic):
         elif isinstance(o, Ray) or isinstance(o, Line):
             return False
         elif isinstance(o, Ellipse):
-            return self.encloses_point(o.center) and not self.intersection(o) and self.encloses_point(Point(o.center.x+o.hradius,o.center.y))
+            return self.encloses_point(o.center) and \
+                self.encloses_point(
+                Point(o.center.x + o.hradius, o.center.y)) and \
+                not self.intersection(o)
         elif isinstance(o, Polygon):
             if isinstance(o, RegularPolygon):
                 if not self.encloses_point(o.center):
                     return False
             return all(self.encloses_point(v) for v in o.vertices)
         raise NotImplementedError()
+
     def equals(self, o):
         return self == o
 

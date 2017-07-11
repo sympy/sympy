@@ -5,6 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+from functools import wraps
 import inspect
 import textwrap
 
@@ -55,7 +56,7 @@ MPMATH_TRANSLATIONS = {
     #"uppergamma":"upper_gamma",
     "LambertW": "lambertw",
     "MutableDenseMatrix": "matrix",
-    "ImmutableMatrix": "matrix",
+    "ImmutableDenseMatrix": "matrix",
     "conjugate": "conj",
     "dirichlet_eta": "altzeta",
     "Ei": "ei",
@@ -85,7 +86,6 @@ NUMPY_TRANSLATIONS = {
     "ImmutableSparseMatrix": "array",
     "Matrix": "array",
     "MutableDenseMatrix": "array",
-    "ImmutableMatrix": "array",
     "ImmutableDenseMatrix": "array",
 }
 
@@ -214,13 +214,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
     by default. As of release 1.0 ``numpy.array`` is the default.
-    To get the old default behavior you must pass in ``[{'ImmutableMatrix':
+    To get the old default behavior you must pass in ``[{'ImmutableDenseMatrix':
     numpy.matrix}, 'numpy']`` to the ``modules`` kwarg.
 
     >>> from sympy import lambdify, Matrix
     >>> from sympy.abc import x, y
     >>> import numpy
-    >>> array2mat = [{'ImmutableMatrix': numpy.matrix}, 'numpy']
+    >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
     >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
     >>> f(1, 2)
     matrix([[1],
@@ -436,6 +436,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # This is a fix for gh-11306.
     if module_provided and _module_present('numpy',namespaces):
         def array_wrap(funcarg):
+            @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
                 return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
             return wrapper

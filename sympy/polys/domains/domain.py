@@ -12,6 +12,7 @@ from sympy.polys.orderings import lex
 from sympy.polys.polyutils import _unify_gens
 
 from sympy.utilities import default_sort_key, public
+from sympy.core.decorators import deprecated
 
 @public
 class Domain(object):
@@ -21,8 +22,8 @@ class Domain(object):
     zero = None
     one = None
 
-    has_Ring = False
-    has_Field = False
+    is_Ring = False
+    is_Field = False
 
     has_assoc_Ring = False
     has_assoc_Field = False
@@ -42,11 +43,22 @@ class Domain(object):
 
     is_Simple = False
     is_Composite = False
+    is_PID = False
 
     has_CharacteristicZero = False
 
     rep = None
     alias = None
+
+    @property
+    @deprecated(useinstead="is_Field", issue=12723, deprecated_since_version="1.1")
+    def has_Field(self):
+        return self.is_Field
+
+    @property
+    @deprecated(useinstead="is_Ring", issue=12723, deprecated_since_version="1.1")
+    def has_Ring(self):
+        return self.is_Ring
 
     def __init__(self):
         raise NotImplementedError
@@ -270,7 +282,7 @@ class Domain(object):
 
             if ((K0.is_FractionField and K1.is_PolynomialRing or
                  K1.is_FractionField and K0.is_PolynomialRing) and
-                 (not K0_ground.has_Field or not K1_ground.has_Field) and domain.has_Field):
+                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field):
                 domain = domain.get_ring()
 
             if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
@@ -385,7 +397,7 @@ class Domain(object):
         return FractionField(self, *symbols, **kwargs)
 
     def algebraic_field(self, *extension):
-        """Returns an algebraic field, i.e. `K(\\alpha, \ldots)`. """
+        r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
         raise DomainError("can't create algebraic field over %s" % self)
 
     def inject(self, *symbols):
