@@ -124,9 +124,6 @@ def NegativeOrZeroQ(u):
 def FractionOrNegativeQ(u):
     return FractionQ(u) or NegativeQ(u)
 
-def PosQ(var):
-    return PositiveQ(var)
-
 def NegQ(var):
     return NegativeQ(var)
 
@@ -585,15 +582,17 @@ def PowerOfLinearQ(expr, x):
             return LinearQ(Match[u], x)
 
 def Exponent(expr, x, *k):
-    if expr.is_number or (not expr.has(x)):
-        return 0
     if not k:
+        if S(expr).is_number or (not expr.has(x)):
+            return 0
         if expr.is_polynomial(x):
             return degree(expr, gen = x)
         else:
             return 0
     else:
         lst=[]
+        if S(expr).is_number or (not expr.has(x)):
+            return [0]
         if expr.is_Add:
             for t in expr.args:
                 if t.is_Pow:
@@ -908,14 +907,6 @@ def ReplaceAll(expr, args):
 def NormalizeIntegrand(u, x):
     # returns u in a standard form recognizable by integration rules.
     return u
-
-def SimplifyTerm(u, x):
-    v = Simplify(u)
-    w = Together(v)
-    if LeafCount(v) < LeafCount(w):
-        return NormalizeIntegrand(v, x)
-    else:
-        return NormalizeIntegrand(w, x)
 
 def ExpandLinearProduct(v, u, a, b, x):
     # If u is a polynomial in x, ExpandLinearProduct[v,u,a,b,x] expands v*u into a sum of terms of the form c*v*(a+b*x)^n.
@@ -1872,18 +1863,6 @@ def SimplerQ(u, v):
     else:
         return Not(OrderedQ([v,u]))
 
-def OrderedQ(lst):
-    k = len(lst)
-    for i in range(k):
-        for j in range(i, k):
-            if lst[i].is_number and lst[j].is_number and lst[i]>lst[j]:
-                return False
-            if not lst[i].is_number and lst[j].is_number:
-                return False
-            if not lst[i].is_number and not lst[j].is_number and LeafCount(lst[i])>LeafCount(lst[j]):
-                return False
-    return True
-
 def SimplerSqrtQ(u, v):
     # If Rt(u, 2) is simpler than Rt(v, 2), SimplerSqrtQ(u, v) returns True, else it returns False.  SimplerSqrtQ(u, u) returns False
     if NegativeQ(v) and Not(NegativeQ(u)):
@@ -2428,104 +2407,6 @@ def FactorAbsurdNumber(m):
     #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
     return CombineExponents
 
-def NormalizeIntegrand(u, x):
-    v = NormalizeLeadTermSigns(NormalizeIntegrandAux(u, x))
-    if v == NormalizeLeadTermSigns(u):
-        return u
-    else:
-        return v
-
-def NormalizeIntegrandAux(u, x):
-    l = 0
-    if SumQ(u):
-        for i in u.args:
-            l += NormalizeIntegrandAux(i, x)
-        return l
-    if ProductQ(MergeMonomials(u, x)):
-        for i in MergeMonomials(u, x).args:
-            l += NormalizeIntegrandFactor(i, x)
-        return l
-    else:
-        return NormalizeIntegrandFactor(MergeMonomials(u, x), x)
-
-def NormalizeIntegrandFactor(u, x):
-    m = Wild('m', exclude=[x])
-    a = Wild('a')
-    match = u.match(a**m)
-    if match:
-        bas = NormalizeIntegrandFactorBase(a, x)
-        deg = m
-        if IntegerQ(deg) and SumQ(bas):
-            for i in bas.args:
-                if MapAnd(MonomialQ(i, x)):
-                    mi = MinimumMonomialExponent(bas, x)
-                else:
-                    q = 0
-                    for i in bas.args:
-                        q += x**(mi*deg)*Simplify(i/x**mi)**deg
-                    return q
-        else:
-            return bas**deg
-    else:
-        bas = NormalizeIntegrandFactorBase(u[0], x)
-        deg = u[1]
-        return bas**deg
-    if PowerQ(u) and FreeQ(u[0], x):
-        return u[0]**NormalizeIntegrandFactorBase(u[1], x)
-    bas = NormalizeIntegrandFactorBase(u, x)
-    if SumQ(bas):
-        for i in bas.args:
-            if MapAnd(MonomialQ(i, x)):
-                mi = MinimumMonomialExponent(bas, x)
-                z = 0
-                for j in bas.args:
-                    z += x**mi*j/x**mi
-                return z 
-            else:
-                return bas
-    else:
-        return bas
-
-def NormalizeIntegrandFactorBase(expr, x):
-    m = Wild('m', exclude=[x])
-    u = Wild('u')
-    match = expr.match(x**m*u)
-    if match and SumQ(u):
-        l = 0
-        for i in u.args:
-            l += NormalizeIntegrandFactorBase((x**m*i), x)
-        return l
-    if BinomialQ(u, x):
-        if BinomialMatchQ(u, x):
-            return u
-        else:
-            return ExpandToSum(u, x)
-    elif TrinomialQ(u, x):
-        if TrinomialMatchQ(u, x):
-            return u
-        else:
-            return ExpandToSum(u, x)
-    elif ProductQ(u):
-        l = 0
-        for i in u.args:
-            l += NormalizeIntegrandFactor(i, x)
-        return l
-    elif PolynomialQ(u, x) and Exponent(u, x)<=4:
-        return ExpandToSum(u, x)
-    elif SumQ(u):
-        w = Wild('w')
-        m = Wild('m', exclude=[x])
-        v = TogetherSimplify(u)
-        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v)>LeafCount(u)+2:
-            return UnifySum(u, x)
-        else:
-            return NormalizeIntegrandFactorBase(v, x)
-    else:
-        l = 0
-        for i in u.args:
-            l += NormalizeIntegrandFactor(i, x)
-        return l
-
 def TrinomialQ(u, x):
     if isinstance(u, list):
         for i in u:
@@ -2979,7 +2860,7 @@ def ConstantFactor(u, x):
                 return [1, u]
             return [tmp**u.exp, (NonpositiveFactors(lst[0])*lst[1])**u.exp]
     elif ProductQ(u):
-        lst = [ConstantFactor(i, x) for i in u.args]:
+        lst = [ConstantFactor(i, x) for i in u.args]
         return [Mul(*[fist[i] for i in lst]), Mul(*[i[1] for i in lst])]
     elif SumQ(u):
         lst1 = [ConstantFactor(i, x) for i in u.args]
@@ -2988,3 +2869,441 @@ def ConstantFactor(u, x):
         lst2 = CommonFactors(*[First(i) for i in lst1])
         return [First(lst2), Add(*[])]
     return [1, u]
+
+def NormalizeIntegrand(u, x):
+    v = NormalizeLeadTermSigns(NormalizeIntegrandAux(u, x))
+    if v == NormalizeLeadTermSigns(u):
+        return u
+    else:
+        return v
+
+def NormalizeIntegrandAux(u, x):
+    if SumQ(u):
+        l = 0
+        for i in u.args:
+            l += NormalizeIntegrandAux(i, x)
+        return l
+    if ProductQ(MergeMonomials(u, x)):
+        l = 1
+        for i in MergeMonomials(u, x).args:
+            l *= NormalizeIntegrandFactor(i, x)
+        return l
+    else:
+        return NormalizeIntegrandFactor(MergeMonomials(u, x), x)
+
+def NormalizeIntegrandFactor(u, x):
+    m = Wild('m', exclude=[x])
+    a = Wild('a')
+    match = u.match(a**m)
+    if match:
+        a = match[a]
+        m = match[m]
+        bas = NormalizeIntegrandFactorBase(a, x)
+        deg = m
+        if IntegerQ(deg) and SumQ(bas):
+            if all(MonomialQ(i, x) for i in bas.args):
+                mi = MinimumMonomialExponent(bas, x)
+                q = 0
+                for i in bas.args:
+                    q += Simplify(i/x**mi)
+                return x**(mi*deg)*q**deg
+            else:
+                return bas**deg
+        else:
+            return bas**deg
+    else:
+        bas = NormalizeIntegrandFactorBase(u.args[0], x)
+        deg = u.args[1]
+        return bas**deg
+    if PowerQ(u) and FreeQ(u.args[0], x):
+        return u.args[0]**NormalizeIntegrandFactorBase(u.args[1], x)
+    bas = NormalizeIntegrandFactorBase(u, x)
+    if SumQ(bas):
+        for i in bas.args:
+            if MapAnd(MonomialQ(i, x)):
+                mi = MinimumMonomialExponent(bas, x)
+                z = 0
+                for j in bas.args:
+                    z += j/x**mi
+                return x**mi*z
+            else:
+                return bas
+    else:
+        return bas
+
+def NormalizeIntegrandFactorBase(expr, x):
+    m = Wild('m', exclude=[x])
+    u = Wild('u')
+    match = expr.match(x**m*u)
+    if match and SumQ(u):
+        l = 0
+        for i in u.args:
+            l += NormalizeIntegrandFactorBase((x**m*i), x)
+        return l
+    if BinomialQ(expr, x):
+        if BinomialMatchQ(expr, x):
+            return expr
+        else:
+            return ExpandToSum(expr, x)
+    elif TrinomialQ(expr, x):
+        if TrinomialMatchQ(expr, x):
+            return expr
+        else:
+            return ExpandToSum(expr, x)
+    elif ProductQ(expr):
+        l = 1
+        for i in expr.args:
+            l *= NormalizeIntegrandFactor(i, x)
+        return l
+    elif PolynomialQ(expr, x) and Exponent(expr, x)<=4:
+        return ExpandToSum(expr, x)
+    elif SumQ(expr):
+        w = Wild('w')
+        m = Wild('m', exclude=[x])
+        v = TogetherSimplify(expr)
+        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v)>LeafCount(expr)+2:
+            return UnifySum(expr, x)
+        else:
+            return NormalizeIntegrandFactorBase(v, x)
+    else:
+        l = 0
+        for i in expr.args:
+            l += NormalizeIntegrandFactor(i, x)
+        return l
+
+def NormalizeTogether(u):
+    return NormalizeLeadTermSigns(Together(u))
+
+def NormalizeLeadTermSigns(u):
+    if ProductQ(u):
+        t = 1
+        for i in u.args:
+            lst = SignOfFactor(i)
+            if lst[0] == 1:
+                t *= lst[1]
+            else:
+                t *= AbsorbMinusSign(lst[1])
+        return t  
+    else:
+        lst = SignOfFactor(u)
+    if lst[0] == 1:
+        return lst[1]
+    else:
+        print(lst[1])
+        return AbsorbMinusSign(lst[1])
+
+def AbsorbMinusSign(expr, *x):
+    m = Wild('m', exclude=[x])
+    u = Wild('u')
+    v = Wild('v')
+    if expr.is_Mul:
+        k = 1
+        for i in expr.args:
+            match = i.match(u*v**m)
+            if match and SumQ(match[v]) and OddQ(match[m]):
+                k *= match[u]*(-match[v])**match[m]
+            else:
+                k *= i
+        return k
+    match = expr.match(u*v**m)
+    if match and SumQ(match[v]) and OddQ(match[m]):
+        return match[u]*(-match[v])**match[m]
+    else:
+        return -expr
+# yet todo
+def NormalizeSumFactors(u):
+    if AtomQ(u):
+        return u
+    if ProductQ(u):
+        k = 1
+        for i in u.args:
+            k *= NormalizeSumFactors(i)
+        return SignOfFactor(k)[0]*SignOfFactor(k)[1]
+    else:
+        k = 0
+        for i in u.args:
+            k += NormalizeSumFactors(i)
+        return k
+
+def SignOfFactor(u):
+    if RationalQ(u) and u<0 or SumQ(u) and NumericFactor(First(u))<0:
+        return [-1, -u]
+    elif IntegerPowerQ(u) and SumQ(u.args[0]) and NumericFactor(First(u.args[0]))<0:
+        return [(-1)**u.args[1], (-u.args[0])**u.args[1]]
+    elif ProductQ(u):
+        k = 1
+        h = 1
+        for i in u.args:
+            k *= SignOfFactor(i)[0]
+            h *= SignOfFactor(i)[1]
+        return [k, h]
+    else:
+        return [1, u]
+
+def NormalizePowerOfLinear(u, x):
+    v = FactorSquareFree(u)
+    if PowerQ(v) and LinearQ(v.args[0], x) and FreeQ(v.args[1], x):
+        return ExpandToSum(v.args[0], x)**v.args[1]
+    else:
+        return ExpandToSum(v, x)
+
+def SimplifyIntegrand(u, x):
+    v = NormalizeLeadTermSigns(NormalizeIntegrandAux(Simplify(u), x))
+    if LeafCount(v) < 4/5*LeafCount(u):
+        return v
+    if v != NormalizeLeadTermSigns(u):
+        return v
+    else:
+        return u
+
+def SimplifyTerm(u, x):
+    v = Simplify(u)
+    w = Together(v)
+    if LeafCount(v) < LeafCount(w):
+        return NormalizeIntegrand(v, x)
+    else:
+        return NormalizeIntegrand(w, x)
+
+def TogetherSimplify(u):
+    v = Together(Simplify(Together(u)))
+    return FixSimplify(v)
+
+# yet todo
+def SmartSimplify(u):
+    v = Simplify(u)
+    w = factor(v)
+    if LeafCount(w)<LeafCount(v):
+        v = w
+    if Not(FalseQ(w= FractionalPowerOfSquareQ(v))) and FractionalPowerSubexpressionQ(u, w, Expand(w)):
+        v = SubstForExpn(v, w, Expand(w))
+    else:
+        v = FactorNumericGcd(v)
+
+def SubstForExpn(u, v, w):
+    if u == v:
+        return w
+    if AtomQ(u):
+        return u
+    else:
+        k = 0
+        for i in u.args:
+            k +=  SubstForExpn(i, v, w)
+        return k
+
+# yet todo
+'''
+def Simp(u, x):
+    return NormalizeSumFactors(SimpHelp(u,x))
+
+def SimpHelp(expr, x):
+    m = Wild('m', exclude=[x])
+    a = Wild('a')
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x])
+    d = Wild('d', exclude=[x])
+    n = Wild('n', exclude=[x])
+    p = Wild('p', exclude=[x])
+    u = Wild('u')
+    v = Wild('v')
+    w = Wild('w')
+    Match = expr.match(E**(u*(v*Log(a) + w)))
+    if Match:
+        u, v, a, w = tuple([Match[i] for i in keys])
+        return a**(u*v)*SimpHelp(E**(u*w), x)
+        SimpHelp(u,x) :=
+    if AtomQ(expr):
+        return expr
+    if Head(u)==If or Head(u)==Int or HeldFormQ(u),
+        return u
+    if FreeQ(u, x):
+        v = SmartSimplify(u)
+        if LeafCount(v)<=LeafCount(u):
+            return v
+        else:
+            return u
+    if ProductQ(u):
+        if EqQ(First(u), 1/2) and MatchQ(Rest(u),a+n*Pi+b*v /; FreeQ({a,b},x) && Not(FreeQ(v,x)) && EqQ(n^2,1/4)),
+            if MatchQ(Rest(u),n*Pi+b*v /; FreeQ(b,x) && Not(FreeQ(v,x)) && EqQ(n^2,1/4)),
+                Map(Function(1/2*#),Rest(u)),
+            if MatchQ(Rest(u),m*a+n*Pi+p*b*v /; FreeQ({a,b},x) && Not(FreeQ(v,x)) && IntegersQ(m/2,p/2)),
+                Map(Function(1/2*#),Rest(u)),
+            u)),
+        {v=FreeFactors(u,x),w=NonfreeFactors(u,x)},
+        v=NumericFactor(v)*SmartSimplify(NonnumericFactors(v)*x^2)/x^2;
+        w=if ProductQ(w), Map(Function(SimpHelp(#,x)),w), SimpHelp(w,x));
+        w=FactorNumericGcd(w);
+        v=MergeFactors(v,w);
+        if ProductQ(v),
+            Map(Function(SimpFixFactor(#,x)),v),
+        v))),
+    if SumQ(u),
+        if MatchQ(u,a+n*Pi+b*x /; FreeQ({a,b},x) && EqQ(n^2,1/16)),
+            u,
+        if PolynomialQ(u,x) && Exponent(u,x)<=0,
+            SimpHelp(Coefficient(u,x,0),x),
+        if PolynomialQ(u,x) && Exponent(u,x)==1 && Coefficient(u,x,0)===0,
+            SimpHelp(Coefficient(u,x,1),x)*x,
+        {v=0,w=0},
+        Scan(Function(if FreeQ(#,x),v=#+v,w=#+w)),u);
+        v=SmartSimplify(v);
+        w=if SumQ(w), Map(Function(SimpHelp(#,x)),w), SimpHelp(w,x));
+        v+w)))),
+    Map(Function(SimpHelp(#,x)),u))))))
+
+'''
+
+def ExpandToSum(u, *x):
+    if len(x) == 1:
+        x = x[0]
+        expr = 0
+        if S(u).is_polynomial(x):
+            for t in Exponent(u, x, List):
+                expr += Coeff(u, x, t)*x**t
+            return expr
+        if BinomialQ(u, x):
+            i = BinomialParts(u, x)
+            expr += i[0] + i[1]*x**i[2]
+            return expr
+        if TrinomialQ(u, x):
+            i = TrinomialParts(u, x)
+            expr += i[0] + i[1]*x**i[3] + i[2]*x**(2*i[3])
+            return expr
+        if GeneralizedBinomialMatchQ(u, x):
+            i = GeneralizedBinomialParts(u, x)
+            expr += i[0]*x**i[3] + i[1]*x**i[2]
+            return expr
+        if GeneralizedTrinomialMatchQ(u, x):
+            i = GeneralizedTrinomialParts(u, x)
+            expr += i[0]*x**i[4] + i[1]*x**i[3] + i[2]*x**(2*i[3]-i[4])
+            return expr
+        else:
+            print("Warning: Unrecognized expression for expansion")
+            return Expand(u)
+    else:
+        v = x[0]
+        x = x[1]
+        w = ExpandToSum(v, x)
+        r = NonfreeTerms(w, x)
+        if SumQ(r):
+            k = u*FreeTerms(w, x)
+            for i in r.args:
+                k += MergeMonomials(u*i, x)
+            return k
+        else:
+            return u*FreeTerms(w, x) + MergeMonomials(u*r, x)
+
+def ExpandTrig(u, *x):
+    if len(x) == 2:
+        v = x[0]
+        x = x[1]
+        w = ExpandTrig(v, x)
+        if SumQ(w):
+            t = 0
+            for i in w.args:
+                t += u*i
+            return t
+        else:
+            return u*w
+    else:
+        x = x[0]
+        return ExpandIntegrand(u, x)
+
+def SmartApart(u, *x):
+    # SmartApart(u, *x) returns the partial fraction expansion of u wrt x, avoiding the 
+    # strange behavior in the built-in Apart function that rationalizes denominators 
+    # involving fractional powers resulting in hard to integrate expressions.
+    if v in x:
+        alst = MakeAssocList(u, x)
+        tmp = KernelSubst(Apart(GensymSubst(u, x, alst), v), x, alst)
+        if tmp == S.NaN:
+            return u
+        else:
+            return tmp
+    else:
+        alst = MakeAssocList(u, x)
+        tmp = KernelSubst(Apart(GensymSubst(u, x, alst), x, alst))
+        if tmp == S.NaN:
+            return u
+        else:
+            return tmp
+
+def MakeAssocList(u, x, alst=None):
+    if AtomQ(u):
+        return alst
+    if IntegerPowerQ(u):
+        return MakeAssocList(u.args[1], x, alst)
+    if ProductQ(u) or SumQ(u):
+        return MakeAssocList(Rest(u), x, MakeAssocList(First(u), x, alst))
+    if FreeQ(u, x):
+        tmp = Select(alst, Function(i[2]==u),1)
+        if tmp==[]:
+            alst += ["Rubi", u]
+        return alst
+    else:
+        return alst
+
+def GensymSubst(u, x, alst): 
+    if AtomQ(u):
+        return u
+    if IntegerPowerQ(u):
+        return GensymSubst(u.args[1], x, alst)**u.args[2]
+    if ProductQ(u) or SumQ(u):
+        return Map(Function(GensymSubst(x,alst),u))
+    if FreeQ(u, x):
+        tmp = Select(alst, Function())#[2]===u),1)}:
+        if tmp==[]:
+            return u
+        else:
+            return tmp[1, 1]
+    else:
+        return u
+
+
+def KernelSubst(u, x, alst):
+    # KernelSubst(u,x,alst) returns u withthe gensymed names in alst replaced by kernels free of x.
+    if AtomQ(u):
+        tmp=Select(alst,Function())#[1]===u),1)}:
+        if tmp == []:
+            return u
+        tmp[1, 2]
+    if IntegerPowerQ(u):
+        tmp = KernelSubst(u.args[1], x, alst)
+        if u.args[2]<0 and ZeroQ(tmp):
+            return S.NaN
+        tmp**u.args[2]
+    if ProductQ(u) or SumQ(u):
+        Map(Function(KernelSubst()))#,x,alst],u):u)
+
+def UnifySum(u, x):
+    if SumQ(u):
+        t = 0
+        lst = []
+        for i in u.args:
+            lst += [i]
+        for j in UnifyTerms(lst, x):
+            t += j
+        return t
+    else:
+        return SimplifyTerm(u, x)
+
+def UnifyTerms(lst, x):
+    if lst==[]:
+        return lst
+    else:
+        return UnifyTerm(First(lst), UnifyTerms(Rest(lst), x), x)
+
+def UnifyTerm(term, lst, x):
+    if lst==[]:
+        return [term]
+    tmp = Simplify(First(lst)/term)
+    if FreeQ(tmp, x):
+        return Prepend(Rest(lst), [(1+tmp)*term])
+    else:
+        return Prepend(UnifyTerm(term, Rest(lst), x), [First(lst)])
+
+def ExpandLinearProduct(v, u, a, b, x):  
+    lst = CoefficientList(u.subs(x, (x-a)/b), x)
+    s = 0
+    for k in range(1, Length(lst)+1):
+        s += v*lst[k-1]*(a + b*x)**(k-1)
+    return s
