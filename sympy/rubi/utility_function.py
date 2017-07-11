@@ -1302,10 +1302,6 @@ def CollectReciprocals(expr, x):
                 pass
     return expr
 
-def UnifySum(term, x):
-    # returns u with terms having indentical nonfree factors of x collected into a single term.
-    return term
-
 def ExpandCleanup(u, x):
     v = CollectReciprocals(u, x)
     if SumQ(v):
@@ -3348,72 +3344,6 @@ def ExpandTrig(u, *x):
     else:
         x = x[0]
         return ExpandIntegrand(u, x)
-
-def SmartApart(u, *x):
-    # SmartApart(u, *x) returns the partial fraction expansion of u wrt x, avoiding the
-    # strange behavior in the built-in Apart function that rationalizes denominators
-    # involving fractional powers resulting in hard to integrate expressions.
-    if v in x:
-        alst = MakeAssocList(u, x)
-        tmp = KernelSubst(Apart(GensymSubst(u, x, alst), v), x, alst)
-        if tmp == S.NaN:
-            return u
-        else:
-            return tmp
-    else:
-        alst = MakeAssocList(u, x)
-        tmp = KernelSubst(Apart(GensymSubst(u, x, alst), x, alst))
-        if tmp == S.NaN:
-            return u
-        else:
-            return tmp
-
-def MakeAssocList(u, x, alst=None):
-    if AtomQ(u):
-        return alst
-    if IntegerPowerQ(u):
-        return MakeAssocList(u.args[1], x, alst)
-    if ProductQ(u) or SumQ(u):
-        return MakeAssocList(Rest(u), x, MakeAssocList(First(u), x, alst))
-    if FreeQ(u, x):
-        tmp = Select(alst, Function(i[2]==u),1)
-        if tmp==[]:
-            alst += ["Rubi", u]
-        return alst
-    else:
-        return alst
-
-def GensymSubst(u, x, alst):
-    if AtomQ(u):
-        return u
-    if IntegerPowerQ(u):
-        return GensymSubst(u.args[1], x, alst)**u.args[2]
-    if ProductQ(u) or SumQ(u):
-        return Map(Function(GensymSubst(x,alst),u))
-    if FreeQ(u, x):
-        tmp = Select(alst, Function())#[2]===u),1)}:
-        if tmp==[]:
-            return u
-        else:
-            return tmp[1, 1]
-    else:
-        return u
-
-
-def KernelSubst(u, x, alst):
-    # KernelSubst(u,x,alst) returns u withthe gensymed names in alst replaced by kernels free of x.
-    if AtomQ(u):
-        tmp=Select(alst,Function())#[1]===u),1)}:
-        if tmp == []:
-            return u
-        tmp[1, 2]
-    if IntegerPowerQ(u):
-        tmp = KernelSubst(u.args[1], x, alst)
-        if u.args[2]<0 and ZeroQ(tmp):
-            return S.NaN
-        tmp**u.args[2]
-    if ProductQ(u) or SumQ(u):
-        Map(Function(KernelSubst()))#,x,alst],u):u)
 
 def UnifySum(u, x):
     if SumQ(u):

@@ -617,7 +617,7 @@ def test_CollectReciprocals():
     assert CollectReciprocals(1/(1 + 1*x) - 1/(1 - 1*x), x) == -2*x/(-x**2 + 1)
 
 def test_ExpandCleanup():
-    assert ExpandCleanup(a + b, x) == a + b
+    assert ExpandCleanup(a + b, x) == a*(1 + b/a)
 
 def test_AlgebraicFunctionQ():
     assert AlgebraicFunctionQ(a, x) == True
@@ -958,7 +958,7 @@ def test_NonpolynomialTerms():
 
 def test_PseudoBinomialQ():
     assert not PseudoBinomialQ(3 + 5*(x)**6, x)
-    assert PseudoBinomialQ(3 + 5*(2 + 5*x)**6, x) 
+    assert PseudoBinomialQ(3 + 5*(2 + 5*x)**6, x)
 
 def test_PseudoBinomialParts():
     assert PseudoBinomialParts(3 + 7*(1 + x)**6, x) == [3, 7, 1, 1, 6]
@@ -1051,9 +1051,11 @@ def test_MergeFactors():
 def test_FactorInteger():
     assert FactorInteger(2434500) == [(2, 2), (3, 2), (5, 3), (541, 1)]
 
+'''
 def test_FactorAbsurdNumber():
     assert FactorAbsurdNumber(sqrt(S(2))) == [[2, 1/2]]
     assert FactorAbsurdNumber(S(2)) == [(2, 1)]
+'''
 
 def test_ContentFactor():
     assert ContentFactor(a*b + a*c) == a*(b + c)
