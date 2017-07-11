@@ -107,12 +107,12 @@ def test_legendre():
     assert legendre(10, 0) != 0
     assert legendre(11, 0) == 0
 
+    f = S(3)/7
     assert roots(legendre(4, x), x) == {
-        sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
-        -sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
-        sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
-        -sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
-    }
+        -sqrt(2*sqrt(30)/35 + f): 1,
+        sqrt(-2*sqrt(30)/35 + f): 1,
+        -sqrt(-2*sqrt(30)/35 + f): 1,
+        sqrt(2*sqrt(30)/35 + f): 1}
 
     n = Symbol("n")
 

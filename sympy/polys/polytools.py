@@ -3,15 +3,17 @@
 from __future__ import print_function, division
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Pow
 )
 
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
 from sympy.core.basic import preorder_traversal
+from sympy.core.numbers import igcd
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import Derivative
 
 from sympy.logic.boolalg import BooleanAtom
@@ -45,7 +47,8 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group, sift, public
+from sympy.utilities import group, sift, public, flatten
+from sympy.utilities.misc import filldedent
 
 import sympy.polys
 import mpmath
@@ -6373,7 +6376,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
     (x**2 - x + 1)**2
 
     >>> R_f = [ (r**2).expand() for r in roots(f) ]
-    >>> R_g = roots(g).keys()
+    >>> R_g = [ i.expand() for i in roots(g).keys() ]
 
     >>> set(R_f) == set(R_g)
     True
@@ -6393,84 +6396,229 @@ def nth_power_roots_poly(f, n, *gens, **args):
     else:
         return result
 
+def _cancel_pq(p, q, *gens, **args):
+    """helper for cancel to handle explicit numerator and denominator"""
+    try:
+        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
+    except PolificationFailed:
+        return S.One, p, q
+    else:
+        c, P, Q = F.cancel(G)
+        if c.is_Rational and c.q != 1:
+            Q *= c.q
+            c = c.p
+
+        if not opt.polys:
+            P = P.as_expr()
+            Q = Q.as_expr()
+
+        return c, P, Q
+
+def _cancel(f, *gens, **args):
+    """helper for cancel when it is given an Expr"""
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    if f.is_Atom:
+        return f
+
+    def F(e):
+        if e.is_commutative and not e.has(Piecewise):
+            p, q = e.as_numer_denom()
+            c, P, Q = _cancel_pq(p, q, *gens, **args)
+            # use of as_numer_denom() guarantees that |c| == 1
+            if Q.is_Number:  # keep expr like (x + 1)/2 unevaluated
+                return _keep_coeff(c/Q, P)
+            return c*P/Q  # allow c to distribute
+        else:  # not commutative or has Piecewise
+            if isinstance(e, (Mul, Add)):
+                sifted = sift(e.args, lambda x:
+                    x.is_commutative and not isinstance(x, Piecewise))
+                c, nc = sifted[True], sifted[False] + sifted[None]
+                nc = [_cancel(i, *gens, **args) for i in nc]
+                return e.func(_cancel(e.func._from_args(c), *gens, **args), *nc)
+            else:
+                return e.func(*[_cancel(i, *gens, **args) for i in e.args])
+
+    # shallow application of F
+    if isinstance(f, (Mul, Add, Pow)):
+        f = F(f)
+
+    # deep application of F
+    f = f.replace(lambda x: isinstance(x, (Mul, Add, Pow)), lambda x: F(x))
+
+    return f
 
 @public
 def cancel(f, *gens, **args):
     """
-    Cancel common factors in a rational function ``f``.
+    Cancel common factors in a rational function ``f`` returning
+    ``p/q`` where ``p`` and ``q`` are fully expanded expressions
+    (in the generators given) with no factors in common.
+
+    If the numerator and denominator of ``f`` are already
+    known, they can be sent directly and a tuple giving
+    the coefficient, numerator and denominator will
+    be returned. If either is a Poly instance, the numerator
+    and denominator returned will also be Poly instances, else
+    they will be Expr instances. To force the result to be one
+    or the other, use the flag `polys` and set it to True/False
+    to obtain Poly/Expr.
+
+    The flag `tuple` can be used to get a tuple of the coefficient,
+    numerator and denominator when passing an Expr. The coefficient
+    will be +/-1.
+
+    The flag `coeff` can be used to keep a denominator that would
+    otherwise distribute automatically (see examples).
 
     Examples
     ========
 
-    >>> from sympy import cancel, sqrt, Symbol
-    >>> from sympy.abc import x
+    >>> from sympy import cancel, sqrt, Symbol, Poly
+    >>> from sympy.abc import x, y
     >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
     (2*x + 2)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
+
+    Unless the denominator is 1, the result should always be a
+    fraction (but automatic distribution sometimes distributes
+    this):
+
+    >>> cancel(x/2  + y/2)
+    x/2 + y/2
+
+    To prevent that, set `coeff=True`:
+
+    >>> cancel(x/2 + y/2, coeff=True)
+    (x + y)/2
+
+    If it is desired to get the coefficient, numerator and denominator
+    back individually, set the flag `tuple` to True:
+
+    >>> cancel(_, tuple=True)
+    (1, x + y, 2)
+
+    If it is important to remove any gcd from the expression then
+    an Expr (or tuple of Exprs) should be passed:
+
+    >>> p, q = 2*x + 4, 3*x**2 + 6*x
+    >>> cancel((Poly(p), q))
+    (1, Poly(2, x, domain='ZZ'), Poly(3*x, x, domain='ZZ'))
+    >>> cancel((p, q))
+    (1, 2, 3*x)
+
+    The state of expansion of the result depends on the generators
+    given:
+
+    >>> n = x**2*(y**2*z - z) - y**2*z + z
+    >>> d = x*(y*z - z) - y*z + z
+    >>> cancel(n/d)
+    x*y + x + y + 1
+    >>> cancel(n/d, y)
+    x + y*(x + 1) + 1
+    >>> cancel(n/d, x)
+    x*(y + 1) + y + 1
+
+    Notes
+    =====
+
+    The coefficient is returned to be consistent with the Poly.cancel
+    method. Because of how expressions are processed, this will never
+    be anything other than +/-1 (though it may be a Float). If the
+    Poly.cancel method is used directly, then the coefficient is the
+    Rational ratio of the integers cleared from the denominators of
+    p and q:
+
+    >>> from sympy.polys import Poly
+    >>> def poly_cancel_coeff(p, q):
+    ...     return Poly(p).cancel(Poly(q))[0]
+
+    >>> poly_cancel_coeff(x/2, x/4) == (1/2)/(1/4)
+    True
+
+    Coefficients in the numerators of p and q are not removed but any
+    common factor between p and q will be removed. And if there were no
+    integers cleared from the denominators of p and q then the
+    coefficient will be 1:
+
+    >>> poly_cancel_coeff(2*x, 4*x)
+    1
+    >>> poly_cancel_coeff(2*x/7, 4*x/3)
+    3/7
     """
-    from sympy.core.exprtools import factor_terms
-    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.simplify.radsimp import fraction
+
+    # remove this before passing to options or it will complain
+    as_tuple = args.pop('tuple', isinstance(f, tuple))
+    coeff = args.pop('coeff', False)
+    if coeff:
+        as_tuple = False
+
     options.allowed_flags(args, ['polys'])
 
-    f = sympify(f)
+    F = sympify(f)
 
-    if not isinstance(f, (tuple, Tuple)):
-        if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
-            return f
-        f = factor_terms(f, radical=True)
-        p, q = f.as_numer_denom()
+    # argument checking
+    if isinstance(F, Tuple):
+        if len(F) != 2:
+            raise ValueError(filldedent('''
+                Use a tuple of length 2 to send the numerator and
+                denominator of an expression.'''))
+        F = tuple(F)
+    elif not isinstance(F, Expr):
+        raise ValueError(filldedent('''
+            expecting tuple (containing the numerator
+            and denominator) or Expr, not %s''' % F))
 
-    elif len(f) == 2:
-        p, q = f
-    elif isinstance(f, Tuple):
-        return factor_terms(f)
+    # dispatch to helper
+    if isinstance(F, tuple):
+        p, q = F
+        rv = c, n, d = _cancel_pq(p, q, *gens, **args)
+        if not as_tuple:
+            if coeff:
+                rv = _keep_coeff(c, n/d)
+            else:
+                rv = c*n/d
     else:
-        raise ValueError('unexpected argument: %s' % f)
+        F = factor_terms(F, radical=True)
 
-    try:
-        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
-    except PolificationFailed:
-        if not isinstance(f, (tuple, Tuple)):
-            return f
-        else:
-            return S.One, p, q
-    except PolynomialError as msg:
-        if f.is_commutative and not f.has(Piecewise):
-            raise PolynomialError(msg)
-        # Handling of noncommutative and/or piecewise expressions
-        if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
-            c, nc = sifted[True], sifted[False]
-            nc = [cancel(i) for i in nc]
-            return f.func(cancel(f.func._from_args(c)), *nc)
-        else:
-            reps = []
-            pot = preorder_traversal(f)
-            next(pot)
-            for e in pot:
-                # XXX: This should really skip anything that's not Expr.
-                if isinstance(e, (tuple, Tuple, BooleanAtom)):
-                    continue
-                try:
-                    reps.append((e, cancel(e)))
-                    pot.skip()  # this was handled successfully
-                except NotImplementedError:
-                    pass
-            return f.xreplace(dict(reps))
+        # Some args might be non-Basic and `replace` won't enter
+        # them; `preorder_traversal` will, but it can't handle
+        # replacements containing them, e.g.
+        # {Piecewise(([1],x<0)):1} raises TypeError. So once at
+        # the outset we handle the non-Basic iterable args of F.
+        # If F itself is a non-Basic iterable like a list, it
+        # should be handled like newlist = map(cancel, List).
+        def handler(e):
+            if not isinstance(e, Basic) and iterable(e):
+                # the check against Basic is there because
+                # Basic args will have already been traversed
+                return type(e)([_cancel(i, *gens, **args) for i in e])
+            return e
+        from sympy.simplify.simplify import bottom_up
+        F = bottom_up(F, handler, nonbasic=True)
 
-    c, P, Q = F.cancel(G)
+        # now procecss the other args
+        rv = _cancel(F, *gens, **args)
+        c, nd = rv.as_coeff_Mul()
+        if as_tuple:
+            n, d = fraction(nd)
+            if c.q is not S.One:
+                d *= c.q
+                c *= c.q
+            if as_tuple:
+                rv = c, n, d
+            else:
+                rv = _keep_coeff(c, n/d)
+        elif not coeff and nd.is_Add:
+            rv = c*nd
 
-    if not isinstance(f, (tuple, Tuple)):
-        return c*(P.as_expr()/Q.as_expr())
-    else:
-        if not opt.polys:
-            return c, P.as_expr(), Q.as_expr()
-        else:
-            return c, P, Q
 
+
+    return rv
 
 @public
 def reduced(f, G, *gens, **args):

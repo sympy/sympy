@@ -51,12 +51,14 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
-    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
+    Derivative, exp, sin, tanh, expand, oo, I, pi, re, im, rootof,
+    Eq, Tuple, Expr, diff, log, fraction)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
+from sympy.stats import Variance
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.simplify import simplify
 
@@ -2814,10 +2816,21 @@ def test_cancel():
 
     assert cancel(oo) == oo
 
-    assert cancel((2, 3)) == (1, 2, 3)
+    raises(ValueError, lambda: cancel((1, 2, 3)))  # too long
+    # sending a tuple is a special case to be used with care;
+    # it represents (numer, denom) of an expression and should.
+    # To cancel items in a list, iterate over the items or use map.
+    raises(ValueError, lambda: cancel([x]))
 
+    # if there is no generator, the (p, q) must be sympified
+    pq = Tuple(1, 2).args
+    assert cancel(pq) == (1, 1, 2)
+    # these are fine
     assert cancel((1, 0), x) == (1, 1, 0)
     assert cancel((0, 1), x) == (1, 0, 1)
+
+    # PolificationFailed raises for this case
+    assert cancel((2 + 2*x)/(1 + x)) == 2
 
     f, g, p, q = 4*x**2 - 4, 2*x - 2, 2*x + 2, 1
     F, G, P, Q = [ Poly(u, x) for u in (f, g, p, q) ]
@@ -2825,10 +2838,17 @@ def test_cancel():
     assert F.cancel(G) == (1, P, Q)
     assert cancel((f, g)) == (1, p, q)
     assert cancel((f, g), x) == (1, p, q)
-    assert cancel((f, g), (x,)) == (1, p, q)
+    assert cancel((f, g), *(x,)) == (1, p, q)
     assert cancel((F, G)) == (1, P, Q)
     assert cancel((f, g), polys=True) == (1, P, Q)
     assert cancel((F, G), polys=False) == (1, p, q)
+    eq = (x**2/4 - 1)/(x/2 - 1)
+    assert cancel(fraction(eq)) == (1, x + 2, 2)
+    assert cancel(eq.as_numer_denom()) == (1, x + 2, 2)
+    assert cancel(eq) == 1 + x/2
+    assert cancel(eq, tuple=True) == (1, x + 2, 2)
+    assert cancel(eq, coeff=True) == _keep_coeff(S.Half, x + 2)
+    assert cancel((1/eq).as_numer_denom()) == (1, 2, x + 2)
 
     f = (x**2 - 2)/(x + sqrt(2))
 
@@ -2839,8 +2859,6 @@ def test_cancel():
 
     assert cancel(f) == f
     assert cancel(f, greedy=False) == x + sqrt(2)
-
-    assert cancel((x**2/4 - 1, x/2 - 1)) == (S(1)/2, x + 2, 1)
 
     assert cancel((x**2 - y)/(x - y)) == 1/(x - y)*(x**2 - y)
 
@@ -2896,26 +2914,46 @@ def test_cancel():
 
     # issue 7022
     A = Symbol('A', commutative=False)
-    p1 = Piecewise((A*(x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
+    rat = (x**2 - 1)/(x + 1)
+    p1 = Piecewise((A*rat, x > 1), ((x + 2)/(x**2 + 2*x), True))
     p2 = Piecewise((A*(x - 1), x > 1), (1/x, True))
     assert cancel(p1) == p2
     assert cancel(2*p1) == 2*p2
     assert cancel(1 + p1) == 1 + p2
-    assert cancel((x**2 - 1)/(x + 1)*p1) == (x - 1)*p2
-    assert cancel((x**2 - 1)/(x + 1) + p1) == (x - 1) + p2
-    p3 = Piecewise(((x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
+    assert cancel(rat*p1) == (x - 1)*p2
+    assert cancel(rat + p1) == (x - 1) + p2
+    p3 = Piecewise((rat, x > 1), ((x + 2)/(x**2 + 2*x), True))
     p4 = Piecewise(((x - 1), x > 1), (1/x, True))
     assert cancel(p3) == p4
     assert cancel(2*p3) == 2*p4
     assert cancel(1 + p3) == 1 + p4
-    assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
-    assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
+    assert cancel(rat*p3) == (x - 1)*p4
+    assert cancel(rat + p3) == (x - 1) + p4
+    assert cancel(Piecewise((rat, rat > 1))
+        ) == Piecewise((x - 1, x - 1 > 1))
+    assert cancel(Piecewise(([rat], x > 1))
+        ) == Piecewise(([x - 1], x > 1))
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
+
+    nc = Variance(x)
+    assert nc.is_commutative is None  # if this fails get a new object
+    eq = 4*nc
+    assert cancel(eq) == eq
+
+    assert cancel((x**2 + x, x + 1), tuple=False) == x
+
+
+def test_issue_11506():
+    f = (exp(x) + 1)/exp(x)
+    e = f.expand()
+    assert cancel(e) == f
+    assert cancel(log(e)) == log(f)
+
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
@@ -3155,7 +3193,9 @@ def test_keep_coeff():
     assert _keep_coeff(S(1), x) == x
     assert _keep_coeff(S(-1), x) == -x
     assert _keep_coeff(S(1.0), x) == 1.0*x
+    assert _keep_coeff(S(1.0), 1.*x) == 1.0*x
     assert _keep_coeff(S(-1.0), x) == -1.0*x
+    assert _keep_coeff(S(-1.0), -1.*x) == 1.0*x
     assert _keep_coeff(S(1), 2*x) == 2*x
     assert _keep_coeff(S(2), x/2) == x
     assert _keep_coeff(S(2), sin(x)) == 2*sin(x)
@@ -3203,7 +3243,20 @@ def test_issue_11198():
     assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
     assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])
 
+
 def test_Poly_precision():
     # Make sure Poly doesn't lose precision
     p = Poly(pi.evalf(100)*x)
     assert p.as_expr() == pi.evalf(100)*x
+
+
+@XFAIL
+def test_gcd_extraction():
+    p, q = Poly(x**2/4 - 1), Poly(x/2 - 1)
+    pq = p.cancel(q)
+    qp = q.cancel(p)
+    p, q = [Poly(i) for i in (p/q).as_expr().as_numer_denom()]
+    assert p.as_expr() == 2*x**2 - 8
+    assert q.as_expr() == 4*x - 8
+    assert p.cancel(q) == pq  # same as cancel((p,q))
+    assert q.cancel(p) == qp
