@@ -176,7 +176,7 @@ class Polygon(GeometrySet):
             convex = True
         if not convex and not ignore_int:
             sides = {}
-            for i, side in enumerate(rv.directed_sides(True)):
+            for i, side in enumerate(rv.directed_sides):
                 sides[i] = [side]
             for i in sides:
                 # exclude the sides connected to si
@@ -393,22 +393,15 @@ class Polygon(GeometrySet):
             cy += v*(y1 + y2)
         return Point(simplify(A*cx), simplify(A*cy))
 
-
-    def directed_sides(self, dir=False):
-        """The line segments that form the sides of the polygon.
+    @property
+    def directed_sides(self):
+        """The directed line segments that form the sides of the polygon.
 
         Returns
         =======
 
-        sides : list of sides
+        sides : list of sides with direction as supplied by user.
             Each side is a Segment.
-
-        Notes
-        =====
-
-        Depending on the value of `dir` (that refers to direction)
-        the Segments that represent the sides can be directed
-        or undirected line segments.
 
         See Also
         ========
@@ -421,22 +414,17 @@ class Polygon(GeometrySet):
         >>> from sympy import Point, Polygon
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
-        >>> poly.directed_sides(True)
+        >>> poly.directed_sides
         [Segment2D(Point2D(0, 0), Point2D(1, 0)),
         Segment2D(Point2D(1, 0), Point2D(5, 1)),
         Segment2D(Point2D(5, 1), Point2D(0, 1)),
         Segment2D(Point2D(0, 1), Point2D(0, 0))]
-        >>> poly.directed_sides()
-        [Segment2D(Point2D(0, 0), Point2D(1, 0)),
-        Segment2D(Point2D(1, 0), Point2D(5, 1)),
-        Segment2D(Point2D(0, 1), Point2D(5, 1)),
-        Segment2D(Point2D(0, 0), Point2D(0, 1))]
 
         """
         res = []
         args = self.vertices
         for i in range(-len(args), 0):
-            res.append(Segment(args[i], args[i + 1], dir=dir))
+            res.append(Segment(args[i], args[i + 1], dir=True))
         return res
 
     @property

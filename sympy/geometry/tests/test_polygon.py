@@ -404,7 +404,7 @@ def test_intersection():
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
 
 
-def test_intersecting_polygons():
+def test_implicit_intersections():
     poly1 = Polygon(Point(0, 0), Point(1, 0), Point(0, 1), Point(1, 1))
     assert poly1.vertices == [Point2D(0, 0), Point2D(1, 0),
                               Point2D(S(1)/2, S(1)/2), Point2D(0, 1),
@@ -422,3 +422,6 @@ def test_intersecting_polygons():
                               Point2D(0, -4/3)]
     assert poly3.vertices == [Point2D(0, -3), Point2D(-1, -2),Point2D(2, 0),
                               Point2D(-1, 2), Point2D(0, 3)]
+
+    assert len(Polygon((0, 2), (1, 0), (2, 2), (3, 0), (4, 2), (4, 1),
+                       (0, 1)).sides) == 15

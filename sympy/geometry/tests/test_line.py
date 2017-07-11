@@ -684,3 +684,9 @@ def test_issue_2941():
     # midline intersection
     c, d = (-2, -3), (-2, 0)
     _check()
+
+
+def test_directed_segments():
+    assert Segment((1, 0), (0, 0), dir=True).points ==\
+                                        (Point2D(1, 0), Point2D(0, 0))
+    assert Segment((1, 0), (0, 0)).points == (Point2D(0, 0), Point2D(1, 0))
