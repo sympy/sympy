@@ -102,7 +102,6 @@ class Quantity(AtomicExpr):
 
     @staticmethod
     def _collect_factor_and_dimension(expr):
-
         if isinstance(expr, Quantity):
             return expr.scale_factor, expr.dimension
         elif isinstance(expr, Mul):
@@ -117,9 +116,15 @@ class Quantity(AtomicExpr):
             factor, dim = Quantity._collect_factor_and_dimension(expr.base)
             return factor ** expr.exp, dim ** expr.exp
         elif isinstance(expr, Add):
-            raise NotImplementedError
+            factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
+            for addend in expr.args[1:]:
+                addend_factor, addend_dim = \
+                    Quantity._collect_factor_and_dimension(addend)
+                assert dim == addend_dim
+                factor += addend_factor
+            return factor, dim
         else:
-            return 1, 1
+            return expr, 1
 
     def convert_to(self, other):
         """
