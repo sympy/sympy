@@ -716,8 +716,8 @@ def test_minpoly_fraction_field():
         Poly(z**2*y**2 - x, y)
 
     # this is (sqrt(1 + x**3)/x).integrate(x).diff(x) - sqrt(1 + x**3)/x
-    a = sqrt(x)/sqrt(1 + x**(-3)) - sqrt(x**3 + 1)/x + 1/(x**(S(5)/2)* \
-        (1 + x**(-3))**(S(3)/2)) + 1/(x**(S(11)/2)*(1 + x**(-3))**(S(3)/2))
+    a = sqrt(x)/sqrt(1 + x**(-3)) - sqrt(x**3 + 1)/x + 1/(x**(S(5)/2)*
+                                                          (1 + x**(-3))**(S(3)/2)) + 1/(x**(S(11)/2)*(1 + x**(-3))**(S(3)/2))
 
     assert minimal_polynomial(a, y) == y
 

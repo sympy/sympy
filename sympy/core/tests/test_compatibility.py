@@ -58,8 +58,8 @@ def test_iterable():
 
 def test_ordered():
     # Issue 7210 - this had been failing with python2/3 problems
-    assert (list(ordered([{1:3, 2:4, 9:10}, {1:3}])) == \
-               [{1: 3}, {1: 3, 2: 4, 9: 10}])
+    assert (list(ordered([{1:3, 2:4, 9:10}, {1:3}])) ==
+            [{1: 3}, {1: 3, 2: 4, 9: 10}])
     # warnings should not be raised for identical items
     l = [1, 1]
     assert list(ordered(l, warn=True)) == l
