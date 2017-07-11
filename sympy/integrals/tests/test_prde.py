@@ -9,8 +9,9 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_cancel_liouvillian)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
+from sympy.polys import sfield, AlgebraicField, QQ
 
-from sympy import Poly, S, symbols, integrate, log, I, pi, exp
+from sympy import Poly, S, symbols, integrate, log, I, pi, exp, sqrt
 from sympy.abc import x, t, n, y
 
 t0, t1, t2, t3, k = symbols('t:4 k')
@@ -306,3 +307,20 @@ def test_parametric_log_deriv():
     assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
     Poly(-1, t), Poly(x*t**2, t), DE) == \
         (2, 6, t*x**5)
+
+
+def test_basis_Q():
+    G1 = [Poly(sqrt(5)*x**4 + sqrt(2)*x**2 + pi, x, pi, extension=True),
+            Poly(sqrt(3)*x**3 + x*E**4, x, E, extension=True)]
+
+    assert basis_Q(G1) == (sfield([x, E, pi, sqrt(2) + sqrt(3)], extension=True),
+            AlgebraicField(QQ, sqrt(2) + sqrt(3)), [x, pi, E])
+
+    G2 = [Poly(x**2*sqrt(3) + pi**2*x**3 + E**3*x + x),
+            Poly(x**2 + pi*sqrt(5) + x, x)]
+
+    assert basis_Q(G2) ==  (sfield([x, pi, E, sqrt(3) + sqrt(5)], extension=True),
+            AlgebraicField(QQ, sqrt(3) + sqrt(5)), [x, pi, E])
+
+    G3 = [Poly(x**2 + E, x), Poly(x**3 + sqrt(3)*x, x)]
+    assert basis_Q(G3) == (sfield([x, E, pi]), QQ, [x, E, pi])
