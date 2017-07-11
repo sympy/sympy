@@ -1,12 +1,13 @@
 """Constants (like hbar) related to quantum mechanics."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+import mpmath.libmp as mlib
+
+from sympy.core.compatibility import with_metaclass
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
-from sympy.core.compatibility import with_metaclass
 from sympy.printing.pretty.stringpict import prettyForm
-import mpmath.libmp as mlib
 
 #-----------------------------------------------------------------------------
 # Constants

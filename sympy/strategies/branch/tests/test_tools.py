@@ -1,5 +1,5 @@
-from sympy.strategies.branch.tools import canon
 from sympy import Basic
+from sympy.strategies.branch.tools import canon
 
 
 def posdec(x):

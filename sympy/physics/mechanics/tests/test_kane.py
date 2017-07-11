@@ -1,12 +1,11 @@
 import warnings
 
-from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
-                                zeros)
 from sympy import simplify
+from sympy.core.backend import Matrix, S, cos, expand, sin, sqrt, symbols, \
+    tan, zeros
+from sympy.physics.mechanics import KanesMethod, Particle, Point, \
+    ReferenceFrame, RigidBody, dot, dynamicsymbols, inertia
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                     RigidBody, KanesMethod, inertia, Particle,
-                                     dot)
 
 
 def test_one_dof():

@@ -2,9 +2,10 @@
 
 This file assumes knowledge of Basic and little else.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.utilities.iterables import sift
+
 from .util import new
 
 # Functions that create rules

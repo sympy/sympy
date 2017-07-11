@@ -1,18 +1,16 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from itertools import permutations
 
-from sympy.matrices import Matrix
-from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
-from sympy.core.compatibility import range
-from sympy.core.numbers import Zero
-from sympy.solvers import solve
-from sympy.functions import factorial
-from sympy.simplify import simplify
-from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
-
-
+from sympy.core import Add, Basic, Dummy, Expr, Function, Mul, Pow, Tuple, \
+    diff, symbols, sympify
+from sympy.core.compatibility import range, reduce
+from sympy.core.numbers import Zero
+from sympy.functions import factorial
+from sympy.matrices import Matrix
+from sympy.simplify import simplify
+from sympy.solvers import solve
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point, literal field
 # TODO too often one needs to call doit or simplify on the output, check the

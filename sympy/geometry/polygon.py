@@ -1,7 +1,9 @@
 from __future__ import division, print_function
 
+import warnings
+
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, range, ordered
+from sympy.core.compatibility import as_int, ordered, range
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -12,13 +14,11 @@ from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_dups, has_variety, uniq
 
-from .entity import GeometryEntity, GeometrySet
-from .point import Point
 from .ellipse import Circle
+from .entity import GeometryEntity, GeometrySet
 from .line import Line, Segment
+from .point import Point
 from .util import _symbol
-
-import warnings
 
 
 class Polygon(GeometrySet):

@@ -1,15 +1,14 @@
-from sympy.core import (S, pi, oo, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign)
-from sympy.logic import ITE
-from sympy.utilities.pytest import raises
-from sympy.printing.rust import RustCodePrinter
-from sympy.utilities.lambdify import implemented_function
-from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import Matrix, MatrixSymbol
-
 from sympy import rust_code
+from sympy.core import Catalan, Dummy, Eq, EulerGamma, GoldenRatio, Integer, \
+    Lambda, Rational, S, oo, pi, symbols
+from sympy.functions import Abs, Piecewise, ceiling, cos, exp, gamma, sign, \
+    sin, sqrt
+from sympy.logic import ITE
+from sympy.matrices import Matrix, MatrixSymbol
+from sympy.printing.rust import RustCodePrinter
+from sympy.tensor import Idx, IndexedBase
+from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x,y,z')
 

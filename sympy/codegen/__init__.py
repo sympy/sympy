@@ -1,1 +1,1 @@
-from .ast import Assignment, aug_assign, CodeBlock, For
+from .ast import Assignment, CodeBlock, For, aug_assign

@@ -4,27 +4,26 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import collections
+from types import FunctionType
+
+from sympy.assumptions.refine import refine
 from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Atom, Basic
+from sympy.core.compatibility import NotIterable, as_int, default_sort_key, \
+    is_sequence, range, reduce, string_types
+from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol
 from sympy.core.function import count_ops
 from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
-
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
-from sympy.utilities.iterables import flatten
 from sympy.functions import Abs
-from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.assumptions.refine import refine
-from sympy.core.decorators import call_highest_priority
-
-from types import FunctionType
+from sympy.simplify import simplify as _simplify
+from sympy.simplify import nsimplify, signsimp
+from sympy.utilities.iterables import flatten
 
 
 class MatrixError(Exception):

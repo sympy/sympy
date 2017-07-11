@@ -1,19 +1,18 @@
-from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild
+from sympy import I, Integer, Mul, Wild, exp, pi, sqrt, symbols
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-
-from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
-        CNOT, IdentityGate, H, X, Y, S, T, Z, SwapGate, gate_simp, gate_sort,
-        CNotGate, TGate, HadamardGate, PhaseGate, UGate, CGate)
-from sympy.physics.quantum.commutator import Commutator
-from sympy.physics.quantum.anticommutator import AntiCommutator
-from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qubit import Qubit, IntQubit, qubit_to_matrix, \
-    matrix_to_qubit
-from sympy.physics.quantum.matrixutils import matrix_to_zero
-from sympy.physics.quantum.matrixcache import sqrt2_inv
 from sympy.physics.quantum import Dagger
+from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.commutator import Commutator
+from sympy.physics.quantum.gate import CNOT, CGate, CNotGate, H, \
+    HadamardGate, IdentityGate, PhaseGate, S, SwapGate, T, TGate, UGate, X, \
+    XGate, Y, YGate, Z, ZGate, gate_simp, gate_sort, random_circuit
+from sympy.physics.quantum.matrixcache import sqrt2_inv
+from sympy.physics.quantum.matrixutils import matrix_to_zero
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.qubit import IntQubit, Qubit, matrix_to_qubit, \
+    qubit_to_matrix
+from sympy.physics.quantum.represent import represent
 
 
 def test_gate():

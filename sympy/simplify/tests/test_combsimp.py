@@ -1,9 +1,7 @@
-from sympy import (
-    Rational, combsimp, factorial, gamma, binomial, Symbol, pi, S,
-    sin, exp, powsimp, sqrt, sympify, FallingFactorial, RisingFactorial,
-    simplify, symbols, cos, rf)
-
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy import FallingFactorial, Rational, RisingFactorial, S, Symbol, \
+    binomial, combsimp, cos, exp, factorial, gamma, pi, powsimp, rf, \
+    simplify, sin, sqrt, symbols, sympify
+from sympy.abc import a, b, c, d, e, f, g, h, i, k, t, x, y, z
 
 
 def test_combsimp():

@@ -4,21 +4,17 @@ from sympy.assumptions.ask import Q
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, symbols)
-from sympy.sets.sets import (EmptySet, Interval, Union)
+from sympy.core.symbol import Dummy, symbols
+from sympy.logic.boolalg import ITE, And, Boolean, BooleanAtom, Equivalent, \
+    Implies, Nand, Nor, Not, Or, POSform, SOPform, Xnor, Xor, bool_map, \
+    conjuncts, disjuncts, distribute_and_over_or, distribute_or_over_and, \
+    eliminate_implications, false, integer_to_term, is_cnf, is_dnf, \
+    is_literal, is_nnf, simplify_logic, term_to_integer, to_cnf, to_dnf, \
+    to_int_repr, to_nnf, true, truth_table
+from sympy.sets.sets import EmptySet, Interval, Union
 from sympy.simplify.simplify import simplify
-from sympy.logic.boolalg import (
-    And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
-    POSform, SOPform, Xor, Xnor, conjuncts, disjuncts,
-    distribute_or_over_and, distribute_and_over_or,
-    eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
-    to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal, term_to_integer, integer_to_term,
-    truth_table)
-
-from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
-
+from sympy.utilities.pytest import XFAIL, raises
 
 A, B, C, D= symbols('A,B,C,D')
 

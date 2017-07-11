@@ -1,22 +1,17 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from collections import defaultdict
-from itertools import (
-    combinations, combinations_with_replacement, permutations,
-    product, product as cartes
-)
 import random
+from collections import defaultdict
+from itertools import product as cartes
+from itertools import combinations, combinations_with_replacement, permutations
 from operator import gt
 
 from sympy.core import Basic
-
 # this is the logical location of these functions
-from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, range
-)
-
-from sympy.utilities.enumerative import (
-    multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+from sympy.core.compatibility import as_int, default_sort_key, is_sequence, \
+    iterable, ordered, range
+from sympy.utilities.enumerative import MultisetPartitionTraverser, \
+    list_visitor, multiset_partitions_taocp
 
 
 def flatten(iterable, levels=None, cls=None):

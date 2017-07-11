@@ -1,12 +1,11 @@
-from sympy.core import Lambda, S, symbols
 from sympy.concrete import Sum
+from sympy.core import Lambda, S, symbols
 from sympy.functions import adjoint, conjugate, transpose
-from sympy.matrices import eye, Matrix, ShapeError, ImmutableMatrix
-from sympy.matrices.expressions import (
-    Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
-    ZeroMatrix, trace, MatPow, MatAdd, MatMul
-)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.matrices import ImmutableMatrix, Matrix, ShapeError, eye
+from sympy.matrices.expressions import Adjoint, FunctionMatrix, Identity, \
+    MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace, ZeroMatrix, \
+    trace
+from sympy.utilities.pytest import XFAIL, raises
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)

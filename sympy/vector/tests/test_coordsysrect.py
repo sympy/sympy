@@ -1,16 +1,17 @@
+import warnings
+
+from sympy import ImmutableMatrix as Matrix
+from sympy import acos, atan2, cos, cosh, expand, pi, simplify, sin, sinh, \
+    sqrt, symbols, zeros
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
-import warnings
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
-from sympy.vector.scalar import BaseScalar
-from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, zeros, expand, acos, atan2
 from sympy.vector.functions import express
+from sympy.vector.orienters import AxisOrienter, BodyOrienter, \
+    QuaternionOrienter, SpaceOrienter
 from sympy.vector.point import Point
+from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector
-from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
-                                    SpaceOrienter, QuaternionOrienter)
-
 
 x, y, z = symbols('x y z')
 a, b, c, q = symbols('a b c q')

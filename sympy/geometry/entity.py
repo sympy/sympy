@@ -22,9 +22,9 @@ R3 are currently the only ambient spaces implemented.
 
 from __future__ import division, print_function
 
+from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
-from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye

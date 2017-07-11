@@ -1,14 +1,14 @@
 """Implementation of :class:`ExpressionDomain` class. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy.core import SympifyError, sympify
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.domains.characteristiczero import CharacteristicZero
-
-from sympy.core import sympify, SympifyError
-from sympy.utilities import public
 from sympy.polys.polyutils import PicklableWithSlots
+from sympy.utilities import public
+
 
 @public
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):

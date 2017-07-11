@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises, USE_PYTEST
+from sympy.utilities.pytest import USE_PYTEST, raises
 
 if USE_PYTEST:
     import py.test

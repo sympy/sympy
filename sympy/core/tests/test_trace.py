@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, Tuple
+from sympy import Matrix, Tuple, symbols
 from sympy.core.trace import Tr
 from sympy.utilities.pytest import raises
 

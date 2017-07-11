@@ -2,20 +2,18 @@
 # sympy/test_external/test_autowrap
 
 import os
-import tempfile
 import shutil
-import warnings
 import tempfile
+import warnings
 
-from sympy.core import symbols, Eq
+from sympy.core import Eq, symbols
 from sympy.core.compatibility import StringIO
+from sympy.utilities.autowrap import CodeWrapper, CythonCodeWrapper, \
+    UfuncifyCodeWrapper, autowrap, binary_function, ufuncify
+from sympy.utilities.codegen import C99CodeGen, CCodeGen, \
+    CodeGenArgumentListError, make_routine
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
-from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
-from sympy.utilities.codegen import (
-    CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
-)
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):

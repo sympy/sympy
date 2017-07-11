@@ -1,12 +1,8 @@
-from sympy import (
-    symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
-    cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
-    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise)
-
+from sympy import E, I, Matrix, Piecewise, S, Subs, Symbol, cos, cosh, cot, \
+    coth, count_ops, diff, exp, expand, exptrigsimp, integrate, log, pi, rad, \
+    simplify, sin, sinh, sqrt, symbols, tan, tanh, trigsimp
+from sympy.abc import a, b, c, d, e, f, g, h, i, k, t, x, y, z
 from sympy.utilities.pytest import XFAIL
-
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
-
 
 
 def test_trigsimp1():

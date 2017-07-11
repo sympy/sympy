@@ -1,10 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.backend import diff, zeros, Matrix, eye, sympify
-from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
-                                               _f_list_parser)
+from sympy.core.backend import Matrix, diff, eye, sympify, zeros
+from sympy.physics.mechanics.functions import _f_list_parser, \
+    find_dynamicsymbols, msubs
 from sympy.physics.mechanics.linearize import Linearizer
+from sympy.physics.vector import ReferenceFrame, dynamicsymbols
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import iterable
 

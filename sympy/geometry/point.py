@@ -21,22 +21,21 @@ from __future__ import division, print_function
 
 import warnings
 
-from sympy.core import S, sympify, Expr
-from sympy.core.numbers import Number
-from sympy.core.compatibility import iterable, is_sequence, as_int
-from sympy.core.containers import Tuple
-from sympy.simplify import nsimplify, simplify
-from sympy.geometry.exceptions import GeometryError
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.complexes import im
-from sympy.matrices import Matrix
-from sympy.core.relational import Eq
-from sympy.core.numbers import Float
-from sympy.core.evaluate import global_evaluate
+from sympy.core import Expr, S, sympify
 from sympy.core.add import Add
+from sympy.core.compatibility import as_int, is_sequence, iterable
+from sympy.core.containers import Tuple
+from sympy.core.evaluate import global_evaluate
+from sympy.core.numbers import Float, Number
+from sympy.core.relational import Eq
+from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.geometry.exceptions import GeometryError
+from sympy.matrices import Matrix
 from sympy.sets import FiniteSet
+from sympy.simplify import nsimplify, simplify
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent, func_name, Undecidable
+from sympy.utilities.misc import Undecidable, filldedent, func_name
 
 from .entity import GeometryEntity
 

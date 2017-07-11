@@ -17,19 +17,19 @@ SymPy is case sensitive. The implementation below does not care and leaves
 the responsibility for generating properly cased Fortran code to the user.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import string
 
-from sympy.core import S, Add, N
-from sympy.core.compatibility import string_types, range
+from sympy.codegen.ast import Assignment
+from sympy.codegen.ffunctions import cmplx, dsign, isign, literal_dp, merge
+from sympy.core import Add, N, S
+from sympy.core.compatibility import range, string_types
 from sympy.core.function import Function
 from sympy.core.relational import Eq
-from sympy.sets import Range
-from sympy.codegen.ast import Assignment
-from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.precedence import PRECEDENCE, precedence
+from sympy.sets import Range
 
 known_functions = {
     "sin": "sin",

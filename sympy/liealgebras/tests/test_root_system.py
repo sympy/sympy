@@ -2,6 +2,7 @@ from sympy.liealgebras.root_system import RootSystem
 from sympy.liealgebras.type_a import TypeA
 from sympy.matrices import Matrix
 
+
 def test_root_system():
     c = RootSystem("A3")
     assert c.cartan_type == TypeA(3)

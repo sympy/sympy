@@ -1,17 +1,17 @@
 """Rational number type based on Python integers. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import operator
 
-from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.domains.domainelement import DomainElement
-
 from sympy.core.compatibility import integer_types
+from sympy.core.numbers import Integer, Rational
 from sympy.core.sympify import converter
-from sympy.core.numbers import Rational, Integer
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.polyutils import PicklableWithSlots
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+
 
 @public
 class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):

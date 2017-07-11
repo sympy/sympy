@@ -1,16 +1,16 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys import Poly, RootSum, cancel, factor
-from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyoptions import allowed_flags, set_defaults
-from sympy.polys.polyerrors import PolynomialError
-
-from sympy.core import S, Add, sympify, Function, Lambda, Dummy
+from sympy.core import Add, Dummy, Function, Lambda, S, sympify
 from sympy.core.basic import preorder_traversal
-from sympy.utilities import numbered_symbols, take, xthreaded, public
 from sympy.core.compatibility import range
+from sympy.polys import Poly, RootSum, cancel, factor
+from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polyoptions import allowed_flags, set_defaults
+from sympy.polys.polytools import parallel_poly_from_expr
+from sympy.utilities import numbered_symbols, public, take, xthreaded
+
 
 @xthreaded
 @public

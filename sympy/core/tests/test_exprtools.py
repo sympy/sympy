@@ -1,16 +1,14 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
-                   Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
-                   root, exp, cos, sin, oo, Dummy, log)
-from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc,
-                                  _monotonic_sign)
+from sympy import Add, Basic, Dict, Dummy, I, Integral, Interval, Mul, O, S, \
+    Sum, Symbol, Tuple, collect, cos, exp, log, oo, root, simplify, sin, \
+    sqrt, symbols
+from sympy.abc import a, b, t, x, y, z
+from sympy.core.exprtools import Factors, Term, _gcd_terms, _monotonic_sign, \
+    decompose_power, factor_nc, factor_terms, gcd_terms
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 from sympy.utilities.pytest import raises
-
-from sympy.abc import a, b, t, x, y, z
 
 
 def test_decompose_power():

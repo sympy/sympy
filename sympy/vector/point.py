@@ -1,10 +1,10 @@
-from sympy.core.compatibility import range
+from sympy import Symbol
 from sympy.core.basic import Basic
-from sympy.vector.vector import Vector
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import range
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import _path
-from sympy import Symbol
-from sympy.core.cache import cacheit
+from sympy.vector.vector import Vector
 
 
 class Point(Basic):

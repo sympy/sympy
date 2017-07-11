@@ -1,10 +1,11 @@
 """Implementation of :class:`Field` class. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.polys.domains.ring import Ring
-from sympy.polys.polyerrors import NotReversible, DomainError
+from sympy.polys.polyerrors import DomainError, NotReversible
 from sympy.utilities import public
+
 
 @public
 class Field(Ring):

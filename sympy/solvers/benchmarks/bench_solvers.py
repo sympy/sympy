@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import zeros, eye, Symbol, solve_linear_system
+from sympy import Symbol, eye, solve_linear_system, zeros
 from sympy.core.compatibility import range
 
 N = 8

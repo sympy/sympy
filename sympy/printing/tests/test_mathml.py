@@ -1,8 +1,7 @@
-from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
-    tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix
-from sympy.printing.mathml import mathml, MathMLPrinter
-
+from sympy import E, Eq, EulerGamma, Float, Ge, GoldenRatio, I, Integer, \
+    Integral, Limit, Lt, Matrix, Ne, Rational, Sum, Symbol, acos, acosh, \
+    asin, asinh, atan, atanh, cos, cosh, diff, oo, pi, sin, sinh, tan, tanh
+from sympy.printing.mathml import MathMLPrinter, mathml
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')

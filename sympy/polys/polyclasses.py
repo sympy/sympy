@@ -1,13 +1,41 @@
 """OO layer for several polynomial representations. """
 
-from __future__ import print_function, division
-
-from sympy.core.sympify import CantSympify
-
-from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.polyerrors import CoercionFailed, NotReversible
+from __future__ import division, print_function
 
 from sympy import oo
+from sympy.core.sympify import CantSympify
+from sympy.polys.densearith import dmp_abs, dmp_add, dmp_add_ground, \
+    dmp_add_mul, dmp_div, dmp_exquo, dmp_exquo_ground, dmp_l1_norm, \
+    dmp_max_norm, dmp_mul, dmp_mul_ground, dmp_neg, dmp_pdiv, dmp_pexquo, \
+    dmp_pow, dmp_pquo, dmp_prem, dmp_quo, dmp_quo_ground, dmp_rem, dmp_sqr, \
+    dmp_sub, dmp_sub_ground, dmp_sub_mul, dup_add, dup_mul, dup_neg, dup_pow, \
+    dup_rem, dup_sub
+from sympy.polys.densebasic import dmp_convert, dmp_deflate, dmp_degree_in, \
+    dmp_degree_list, dmp_eject, dmp_exclude, dmp_from_dict, dmp_from_sympy, \
+    dmp_ground, dmp_ground_LC, dmp_ground_nth, dmp_ground_p, dmp_ground_TC, \
+    dmp_inject, dmp_list_terms, dmp_negative_p, dmp_normal, dmp_one, \
+    dmp_one_p, dmp_permute, dmp_slice_in, dmp_terms_gcd, dmp_to_dict, \
+    dmp_to_tuple, dmp_validate, dmp_zero_p, dup_convert, dup_degree, \
+    dup_from_dict, dup_LC, dup_normal, dup_strip, dup_TC
+from sympy.polys.densetools import dmp_clear_denoms, dmp_compose, \
+    dmp_diff_in, dmp_eval_in, dmp_ground_content, dmp_ground_monic, \
+    dmp_ground_primitive, dmp_ground_trunc, dmp_integrate_in, dmp_lift, \
+    dup_decompose, dup_revert, dup_shift, dup_transform
+from sympy.polys.euclidtools import dmp_cancel, dmp_discriminant, dmp_gcd, \
+    dmp_inner_gcd, dmp_lcm, dmp_resultant, dmp_subresultants, dup_gcdex, \
+    dup_half_gcdex, dup_invert
+from sympy.polys.factortools import dmp_factor_list, dmp_factor_list_include, \
+    dmp_irreducible_p, dup_cyclotomic_p
+from sympy.polys.polyerrors import CoercionFailed, NotReversible, \
+    PolynomialError, UnificationFailed
+from sympy.polys.polyutils import PicklableWithSlots
+from sympy.polys.rootisolation import dup_count_complex_roots, \
+    dup_count_real_roots, dup_isolate_all_roots, dup_isolate_all_roots_sqf, \
+    dup_isolate_real_roots, dup_isolate_real_roots_sqf, dup_refine_real_root, \
+    dup_sturm
+from sympy.polys.sqfreetools import dmp_sqf_list, dmp_sqf_list_include, \
+    dmp_sqf_norm, dmp_sqf_p, dmp_sqf_part, dup_gff_list
+
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -37,105 +65,6 @@ class GenericPoly(PicklableWithSlots):
             return coeff, factors
         else:
             return factors
-
-from sympy.polys.densebasic import (
-    dmp_validate,
-    dup_normal, dmp_normal,
-    dup_convert, dmp_convert,
-    dmp_from_sympy,
-    dup_strip,
-    dup_degree, dmp_degree_in,
-    dmp_degree_list,
-    dmp_negative_p,
-    dup_LC, dmp_ground_LC,
-    dup_TC, dmp_ground_TC,
-    dmp_ground_nth,
-    dmp_one, dmp_ground,
-    dmp_zero_p, dmp_one_p, dmp_ground_p,
-    dup_from_dict, dmp_from_dict,
-    dmp_to_dict,
-    dmp_deflate,
-    dmp_inject, dmp_eject,
-    dmp_terms_gcd,
-    dmp_list_terms, dmp_exclude,
-    dmp_slice_in, dmp_permute,
-    dmp_to_tuple,)
-
-from sympy.polys.densearith import (
-    dmp_add_ground,
-    dmp_sub_ground,
-    dmp_mul_ground,
-    dmp_quo_ground,
-    dmp_exquo_ground,
-    dmp_abs,
-    dup_neg, dmp_neg,
-    dup_add, dmp_add,
-    dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
-    dmp_sqr,
-    dup_pow, dmp_pow,
-    dmp_pdiv,
-    dmp_prem,
-    dmp_pquo,
-    dmp_pexquo,
-    dmp_div,
-    dup_rem, dmp_rem,
-    dmp_quo,
-    dmp_exquo,
-    dmp_add_mul, dmp_sub_mul,
-    dmp_max_norm,
-    dmp_l1_norm)
-
-from sympy.polys.densetools import (
-    dmp_clear_denoms,
-    dmp_integrate_in,
-    dmp_diff_in,
-    dmp_eval_in,
-    dup_revert,
-    dmp_ground_trunc,
-    dmp_ground_content,
-    dmp_ground_primitive,
-    dmp_ground_monic,
-    dmp_compose,
-    dup_decompose,
-    dup_shift,
-    dup_transform,
-    dmp_lift)
-
-from sympy.polys.euclidtools import (
-    dup_half_gcdex, dup_gcdex, dup_invert,
-    dmp_subresultants,
-    dmp_resultant,
-    dmp_discriminant,
-    dmp_inner_gcd,
-    dmp_gcd,
-    dmp_lcm,
-    dmp_cancel)
-
-from sympy.polys.sqfreetools import (
-    dup_gff_list,
-    dmp_sqf_p,
-    dmp_sqf_norm,
-    dmp_sqf_part,
-    dmp_sqf_list, dmp_sqf_list_include)
-
-from sympy.polys.factortools import (
-    dup_cyclotomic_p, dmp_irreducible_p,
-    dmp_factor_list, dmp_factor_list_include)
-
-from sympy.polys.rootisolation import (
-    dup_isolate_real_roots_sqf,
-    dup_isolate_real_roots,
-    dup_isolate_all_roots_sqf,
-    dup_isolate_all_roots,
-    dup_refine_real_root,
-    dup_count_real_roots,
-    dup_count_complex_roots,
-    dup_sturm)
-
-from sympy.polys.polyerrors import (
-    UnificationFailed,
-    PolynomialError)
 
 
 def init_normal_DMP(rep, lev, dom):

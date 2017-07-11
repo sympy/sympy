@@ -1,5 +1,6 @@
 from sympy.liealgebras.dynkin_diagram import DynkinDiagram
 
+
 def test_DynkinDiagram():
     c = DynkinDiagram("A3")
     diag = "0---0---0\n1   2   3"

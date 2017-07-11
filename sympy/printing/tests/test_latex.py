@@ -1,41 +1,37 @@
-from sympy import (
-    Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
-    FiniteSet, Float, FourierTransform, Function, IndexedBase, Integral,
-    Interval, InverseCosineTransform, InverseFourierTransform,
-    InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
-    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
-    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
-    RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
-    assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
-    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
-    exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
-    hyper, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
-    meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr)
-
-
-from sympy.ntheory.factor_ import udivisor_sigma
-
+from sympy import ZZ, Abs, AccumBounds, Add, Chi, Ci, Complement, \
+    ComplexRegion, ConditionSet, Contains, CosineTransform, Dict, Ei, Eq, \
+    Equivalent, FallingFactorial, FiniteSet, Float, FourierTransform, \
+    Function, ImageSet, IndexedBase, Integral, Interval, \
+    InverseCosineTransform, InverseFourierTransform, InverseLaplaceTransform, \
+    InverseMellinTransform, InverseSineTransform, Lambda, LaplaceTransform, \
+    Limit, Matrix, MatrixSymbol, Max, MellinTransform, Min, Mod, Mul, Not, \
+    Order, Piecewise, Poly, Pow, Product, Range, Rational, RisingFactorial, \
+    RootSum, S, SeqAdd, SeqFormula, SeqMul, SeqPer, Shi, Si, SineTransform, \
+    SingularityFunction, Subs, Sum, Symbol, SymmetricDifference, Tuple, \
+    UnevaluatedExpr, Union, Wild, Ynm, Znm, arg, asin, assoc_laguerre, \
+    assoc_legendre, binomial, catalan, ceiling, chebyshevt, chebyshevu, \
+    conjugate, cos, cot, coth, diff, dirichlet_eta, divisor_sigma, \
+    elliptic_e, elliptic_f, elliptic_k, elliptic_pi, exp, expint, factorial, \
+    factorial2, false, field, floor, fourier_series, fps, gamma, gegenbauer, \
+    hermite, hyper, im, jacobi, laguerre, legendre, lerchphi, log, \
+    lowergamma, meijerg, oo, pi, polar_lift, polylog, primenu, primeomega, \
+    re, reduced_totient, ring, root, rootof, sin, sqrt, subfactorial, \
+    symbols, tan, totient, true, uppergamma, zeta
 from sympy.abc import mu, tau
-from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary)
-from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
-                                MutableSparseNDimArray, MutableDenseNDimArray)
-from sympy.tensor.array import tensorproduct
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy.core.compatibility import range
+from sympy.core.trace import Tr
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.ntheory.factor_ import udivisor_sigma
 from sympy.physics.quantum import Commutator, Operator
-from sympy.core.trace import Tr
-from sympy.core.compatibility import range
-from sympy.combinatorics.permutations import Cycle, Permutation
-from sympy import MatrixSymbol
+from sympy.printing.latex import greek_letters_set, latex, \
+    tex_greek_dictionary, translate
+from sympy.tensor.array import ImmutableDenseNDimArray, \
+    ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray, \
+    tensorproduct
+from sympy.utilities.pytest import XFAIL, raises
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)

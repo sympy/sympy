@@ -1,12 +1,11 @@
-from __future__ import print_function, division
-
-from pyglet.gl import *
-from pyglet import font
+from __future__ import division, print_function
 
 from plot_object import PlotObject
-from util import strided_range, billboard_matrix
-from util import get_direction_vectors
-from util import dot_product, vec_sub, vec_mag
+from pyglet import font
+from pyglet.gl import *
+from util import billboard_matrix, dot_product, get_direction_vectors, \
+    strided_range, vec_mag, vec_sub
+
 from sympy.core import S
 from sympy.core.compatibility import is_sequence, range
 

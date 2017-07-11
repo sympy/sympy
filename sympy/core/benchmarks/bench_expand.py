@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import symbols, I
+from sympy.core import I, symbols
 
 x, y, z = symbols('x,y,z')
 

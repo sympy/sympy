@@ -16,16 +16,16 @@ match, add the key and call to the antiderivative function to integral_steps.
 To enable simple substitutions, add the match to find_substitutions.
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import namedtuple
 
 import sympy
-
 from sympy.core.compatibility import reduce
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.strategies.core import switch, do_one, null_safe, condition
+from sympy.strategies.core import condition, do_one, null_safe, switch
+
 
 def Rule(name, props=""):
     # GOTCHA: namedtuple class name not considered!

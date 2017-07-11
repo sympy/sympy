@@ -1,22 +1,20 @@
 from __future__ import division
 
-from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
-                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
-                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate)
-from sympy.core.function import AppliedUndef
+from sympy import Add, Basic, Derivative, DiracDelta, Dummy, E, Float, \
+    Function, Heaviside, I, Integer, Integral, Max, Mul, Number, \
+    NumberSymbol, O, Piecewise, Poly, Pow, Rational, S, Si, Sum, Symbol, \
+    Tuple, UnevaluatedExpr, Wild, WildFunction, apart, cancel, collect, \
+    combsimp, cos, default_sort_key, diff, exp, exp_polar, expand, factor, \
+    factorial, gamma, integrate, log, nan, nsimplify, oo, pi, powsimp, \
+    radsimp, ratsimp, refine, simplify, sin, sqrt, symbols, sympify, tan, \
+    together, trigsimp, zoo
+from sympy.abc import a, b, c, n, t, u, x, y, z
 from sympy.core.compatibility import range
+from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 from sympy.series.formal import FormalPowerSeries
-
-from sympy.utilities.pytest import raises, XFAIL
-
-from sympy.abc import a, b, c, n, t, u, x, y, z
+from sympy.utilities.pytest import XFAIL, raises
 
 
 class DummyNumber(object):

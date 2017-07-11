@@ -1,11 +1,10 @@
 import warnings
 
+from sympy import simplify, solve, trigsimp
+from sympy.core.backend import Matrix, cos, pi, sin, symbols, tan, zeros
 from sympy.core.compatibility import range
-from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
-from sympy import trigsimp, simplify, solve
-from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
-                                     inertia, inertia_of_point_mass,
-                                     Point, ReferenceFrame, RigidBody)
+from sympy.physics.mechanics import KanesMethod, Point, ReferenceFrame, \
+    RigidBody, cross, dot, dynamicsymbols, inertia, inertia_of_point_mass
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 

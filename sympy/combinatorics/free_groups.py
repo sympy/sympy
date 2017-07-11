@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, as_int, string_types
-from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol, symbols as _symbols
-from sympy.core.sympify import CantSympify
 from mpmath import isint
+
+from sympy import sign
 from sympy.core import S
+from sympy.core.basic import Basic
+from sympy.core.compatibility import as_int, is_sequence, string_types
+from sympy.core.expr import Expr
+from sympy.core.symbol import symbols as _symbols
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import CantSympify
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.utilities.magic import pollute
-from sympy import sign
 
 
 @public

@@ -1,12 +1,12 @@
 """Solvers of systems of polynomial equations. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import S
 from sympy.polys import Poly, groebner, roots
+from sympy.polys.polyerrors import CoercionFailed, ComputationFailed, \
+    PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed)
 from sympy.simplify import rcollect
 from sympy.utilities import default_sort_key, postfixes
 

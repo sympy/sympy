@@ -1,6 +1,7 @@
 """ Common Exceptions for `holonomic` module. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 
 class BaseHolonomicError(Exception):
 

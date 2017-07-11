@@ -1,13 +1,13 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import deque
 from random import randint
 
+from sympy import Basic, Integer, Mul, Number, Pow
 from sympy.core.compatibility import range
 from sympy.external import import_module
-from sympy import Mul, Basic, Number, Pow, Integer
-from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.represent import represent
 
 __all__ = [
     # Public interfaces

@@ -1,8 +1,6 @@
-from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify, integrate
-
-from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
-
-from sympy.abc import a, b, x, t
+from sympy import I, Poly, S, atan, integrate, log, simplify, sqrt, symbols
+from sympy.abc import a, b, t, x
+from sympy.integrals.rationaltools import log_to_atan, ratint, ratint_logpart
 
 half = S(1)/2
 

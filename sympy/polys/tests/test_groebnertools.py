@@ -1,22 +1,16 @@
 """Tests for Groebner bases. """
 
-from sympy.polys.groebnertools import (
-    groebner, sig, sig_key,
-    lbp, lbp_key, critical_pair,
-    cp_key, is_rewritable_or_comparable,
-    Sign, Polyn, Num, s_poly, f5_reduce,
-    groebner_lcm, groebner_gcd,
-)
-
-from sympy.polys.fglmtools import _representing_matrices
-from sympy.polys.orderings import lex, grlex
-
-from sympy.polys.rings import ring, xring
-from sympy.polys.domains import ZZ, QQ
-
-from sympy.utilities.pytest import slow
-from sympy.polys import polyconfig as config
 from sympy.core.compatibility import range
+from sympy.polys import polyconfig as config
+from sympy.polys.domains import QQ, ZZ
+from sympy.polys.fglmtools import _representing_matrices
+from sympy.polys.groebnertools import Num, Polyn, Sign, cp_key, \
+    critical_pair, f5_reduce, groebner, groebner_gcd, groebner_lcm, \
+    is_rewritable_or_comparable, lbp, lbp_key, s_poly, sig, sig_key
+from sympy.polys.orderings import grlex, lex
+from sympy.polys.rings import ring, xring
+from sympy.utilities.pytest import slow
+
 
 def _do_test_groebner():
     R, x,y = ring("x,y", QQ, lex)

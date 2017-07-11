@@ -1,20 +1,18 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from functools import wraps
 
-from sympy import S, pi, I, Rational, Wild, cacheit, sympify
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.power import Pow
+from sympy import I, Rational, S, Wild, cacheit, pi, sympify
 from sympy.core.compatibility import range
+from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.power import Pow
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
-from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.miscellaneous import sqrt, root
-from sympy.functions.elementary.complexes import re, im
+from sympy.functions.elementary.complexes import Abs, im, re
+from sympy.functions.elementary.miscellaneous import root, sqrt
+from sympy.functions.elementary.trigonometric import cos, cot, csc, sin
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn as fn
-
 
 # TODO
 # o Scorer functions G1 and G2

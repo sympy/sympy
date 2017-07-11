@@ -1,9 +1,9 @@
 from itertools import permutations
 
+from sympy.combinatorics.permutations import Cycle, Permutation, _af_parity, \
+    _af_rmul, _af_rmuln
 from sympy.core.compatibility import range
 from sympy.core.symbol import Symbol
-from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_rmul, _af_rmuln, Cycle)
 from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul

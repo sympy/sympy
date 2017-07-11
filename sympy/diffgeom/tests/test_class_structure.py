@@ -1,5 +1,5 @@
-from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
-from sympy import symbols, Function
+from sympy import Function, symbols
+from sympy.diffgeom import CoordSystem, Manifold, Patch, Point
 
 m = Manifold('m', 2)
 p = Patch('p', m)

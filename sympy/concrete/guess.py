@@ -1,14 +1,14 @@
 """Various algorithms for helping identifying numbers and sequences."""
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy import Integer, Product, Rational, denom, exp, floor, integrate, \
+    lcm, product, symbols, sympify
+from sympy.core import Function, Symbol
+from sympy.core.compatibility import range
+from sympy.core.numbers import Zero
+from sympy.polys.polyfuncs import rational_interpolate as rinterp
 from sympy.utilities import public
 
-from sympy.core.compatibility import range
-from sympy.core import Function, Symbol
-from sympy.core.numbers import Zero
-from sympy import (sympify, floor, lcm, denom, Integer, Rational,
-                   exp, integrate, symbols, Product, product)
-from sympy.polys.polyfuncs import rational_interpolate as rinterp
 
 @public
 def find_simple_recurrence_vector(l):

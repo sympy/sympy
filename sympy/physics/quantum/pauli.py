@@ -1,10 +1,9 @@
 """Pauli operators and states"""
 
-from sympy import I, Mul, Add, Pow, exp, Integer
-from sympy.physics.quantum import Operator, Ket, Bra
-from sympy.physics.quantum import ComplexSpace
-from sympy.matrices import Matrix
+from sympy import Add, I, Integer, Mul, Pow, exp
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices import Matrix
+from sympy.physics.quantum import Bra, ComplexSpace, Ket, Operator
 
 __all__ = [
     'SigmaX', 'SigmaY', 'SigmaZ', 'SigmaMinus', 'SigmaPlus', 'SigmaZKet',

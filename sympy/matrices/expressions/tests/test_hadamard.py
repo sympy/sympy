@@ -1,8 +1,7 @@
 from sympy.core import symbols
-from sympy.utilities.pytest import raises
-
-from sympy.matrices import ShapeError, MatrixSymbol
+from sympy.matrices import MatrixSymbol, ShapeError
 from sympy.matrices.expressions import HadamardProduct, hadamard_product
+from sympy.utilities.pytest import raises
 
 n, m, k = symbols('n,m,k')
 Z = MatrixSymbol('Z', n, n)

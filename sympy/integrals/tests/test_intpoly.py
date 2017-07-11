@@ -1,18 +1,13 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import sqrt
-
-from sympy.core import S
-
-from sympy.integrals.intpoly import (decompose, best_origin,
-                                     polytope_integrate)
-
-from sympy.geometry.line import Segment2D
-from sympy.geometry.polygon import Polygon
-from sympy.geometry.point import Point
 from sympy.abc import x, y
-
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.core import S
+from sympy.geometry.line import Segment2D
+from sympy.geometry.point import Point
+from sympy.geometry.polygon import Polygon
+from sympy.integrals.intpoly import best_origin, decompose, polytope_integrate
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_decompose():

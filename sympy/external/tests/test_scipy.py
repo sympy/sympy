@@ -5,6 +5,7 @@
 # Python (without scipy). Here we test everything, that a user may need when
 # using SymPy with SciPy
 
+from sympy import jn_zeros
 from sympy.external import import_module
 
 scipy = import_module('scipy')
@@ -12,7 +13,6 @@ if not scipy:
     #bin/test will not execute any tests now
     disabled = True
 
-from sympy import jn_zeros
 
 
 def eq(a, b, tol=1e-6):

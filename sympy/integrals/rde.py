@@ -20,18 +20,17 @@ k[t].
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from operator import mul
 
 from sympy.core import oo
 from sympy.core.compatibility import reduce
 from sympy.core.symbol import Dummy
-
-from sympy.polys import Poly, gcd, ZZ, cancel
-
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegralException, DecrementLevel)
+from sympy.integrals.risch import DecrementLevel, \
+    NonElementaryIntegralException, derivation, frac_in, gcdex_diophantine, \
+    splitfactor
+from sympy.polys import ZZ, Poly, cancel, gcd
 
 # TODO: Add messages to NonElementaryIntegralException errors
 

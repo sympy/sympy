@@ -13,13 +13,13 @@ from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.solvers import solve, linsolve
-from sympy.utilities.misc import filldedent
+from sympy.solvers import linsolve, solve
 from sympy.utilities.iterables import uniq
+from sympy.utilities.misc import filldedent
 
 from .entity import GeometryEntity
+from .line import Line, Line3D, LinearEntity3D, Ray, Ray3D, Segment, Segment3D
 from .point import Point, Point3D
-from .line import Line, Ray, Segment, Line3D, LinearEntity3D, Ray3D, Segment3D
 
 
 class Plane(GeometryEntity):

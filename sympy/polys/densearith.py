@@ -1,18 +1,14 @@
 """Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.densebasic import (
-    dup_slice,
-    dup_LC, dmp_LC,
-    dup_degree, dmp_degree,
-    dup_strip, dmp_strip,
-    dmp_zero_p, dmp_zero,
-    dmp_one_p, dmp_one,
-    dmp_ground, dmp_zeros)
-
-from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
 from sympy.core.compatibility import range
+from sympy.polys.densebasic import dmp_degree, dmp_ground, dmp_LC, dmp_one, \
+    dmp_one_p, dmp_strip, dmp_zero, dmp_zero_p, dmp_zeros, dup_degree, \
+    dup_LC, dup_slice, dup_strip
+from sympy.polys.polyerrors import ExactQuotientFailed, \
+    PolynomialDivisionFailed
+
 
 def dup_add_term(f, c, i, K):
     """

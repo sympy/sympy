@@ -1,9 +1,9 @@
-from sympy import sqrt, Matrix
-from sympy.physics.quantum.represent import represent
+from sympy import Matrix, sqrt
+from sympy.physics.quantum.grover import OracleGate, WGate, apply_grover, \
+    grover_iteration, superposition_basis
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import IntQubit
-from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
-        OracleGate, grover_iteration, WGate)
+from sympy.physics.quantum.represent import represent
 
 
 def return_one_on_two(qubits):

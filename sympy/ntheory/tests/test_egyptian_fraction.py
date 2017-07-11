@@ -1,6 +1,6 @@
+from sympy.core.add import Add
 from sympy.core.numbers import Rational
 from sympy.ntheory.egyptian_fraction import egyptian_fraction
-from sympy.core.add import Add
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import random_complex_number
 

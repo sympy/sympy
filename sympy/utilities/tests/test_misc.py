@@ -1,5 +1,6 @@
 from sympy.core.compatibility import unichr
-from sympy.utilities.misc import translate, replace
+from sympy.utilities.misc import replace, translate
+
 
 def test_translate():
     abc = 'abc'

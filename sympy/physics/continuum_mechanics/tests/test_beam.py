@@ -1,6 +1,6 @@
 from sympy import Symbol, symbols
-from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction
+from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')

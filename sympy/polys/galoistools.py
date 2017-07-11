@@ -1,17 +1,18 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from math import ceil as _ceil
+from math import sqrt as _sqrt
 from random import uniform
-from math import ceil as _ceil, sqrt as _sqrt
 
 from sympy.core.compatibility import SYMPY_INTS, range
 from sympy.core.mul import prod
-from sympy.polys.polyutils import _sort_factors
+from sympy.ntheory import factorint
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.polyutils import _sort_factors
 
-from sympy.ntheory import factorint
 
 def gf_crt(U, M, K=None):
     """

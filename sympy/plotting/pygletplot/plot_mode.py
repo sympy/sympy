@@ -1,11 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject
 from util import parse_option_string
-from sympy.geometry.entity import GeometryEntity
+
+from sympy import Symbol, sympify
 from sympy.core.compatibility import is_sequence, range
+from sympy.geometry.entity import GeometryEntity
 
 
 class PlotMode(PlotObject):

@@ -1,24 +1,24 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.concrete.gosper import gosper_sum
+from sympy.core.add import Add
+from sympy.core.compatibility import range
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.core.add import Add
-from sympy.calculus.singularities import is_decreasing
-from sympy.concrete.gosper import gosper_sum
-from sympy.functions.special.zeta_functions import zeta
+from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.zeta_functions import zeta
 from sympy.logic.boolalg import And
-from sympy.polys import apart, PolynomialError
+from sympy.polys import PolynomialError, apart
 from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.core.compatibility import range
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):

@@ -1,8 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.matrices.expressions.matexpr  import MatrixExpr
-from sympy import Tuple, Basic
+from sympy import Basic, Tuple
 from sympy.functions.elementary.integers import floor
+from sympy.matrices.expressions.matexpr import MatrixExpr
+
 
 def normalize(i, parentsize):
     if isinstance(i, slice):

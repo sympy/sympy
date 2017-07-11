@@ -1,17 +1,18 @@
 """Module for querying SymPy objects about assumptions."""
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy.assumptions.ask_generated import get_known_facts_cnf, \
+    get_known_facts_dict
+from sympy.assumptions.assume import AppliedPredicate, Predicate, \
+    global_assumptions
 from sympy.core import sympify
 from sympy.core.cache import cacheit
-from sympy.core.relational import Relational
-from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-    BooleanFunction, BooleanAtom)
-from sympy.logic.inference import satisfiable
-from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate)
 from sympy.core.decorators import deprecated
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import And, BooleanAtom, BooleanFunction, \
+    Equivalent, Implies, Not, Or, to_cnf
+from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
-
 
 # Deprecated predicates should be added to this list
 deprecated_predicates = [
@@ -1524,6 +1525,3 @@ def get_known_facts():
         Implies(Q.integer_elements, Q.real_elements),
         Implies(Q.real_elements, Q.complex_elements),
     )
-
-from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_known_facts_cnf)

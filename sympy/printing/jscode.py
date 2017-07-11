@@ -7,14 +7,13 @@ Math object where possible.
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S
 from sympy.codegen.ast import Assignment
+from sympy.core import S
+from sympy.core.compatibility import range, string_types
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence, PRECEDENCE
-from sympy.core.compatibility import string_types, range
-
+from sympy.printing.precedence import PRECEDENCE, precedence
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
 # Used in JavascriptCodePrinter._print_Function(self)

@@ -1,7 +1,6 @@
-from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo, exp, log, S)
+from sympy import Function, Product, Rational, S, Sum, Symbol, cos, exp, \
+    factorial, log, oo, product, rf, simplify, sqrt, symbols
 from sympy.utilities.pytest import raises
-from sympy import simplify
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')

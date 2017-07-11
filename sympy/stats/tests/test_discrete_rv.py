@@ -1,8 +1,9 @@
-from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-        Poisson)
-from sympy.abc import x
 from sympy import S, Sum
-from sympy.stats import E, variance, density
+from sympy.abc import x
+from sympy.stats import E, density, variance
+from sympy.stats.drv_types import GeometricDistribution, Poisson, \
+    PoissonDistribution
+
 
 def test_PoissonDistribution():
     l = 3

@@ -1,9 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import Mul
-from sympy.functions import DiracDelta, Heaviside
 from sympy.core.compatibility import default_sort_key
 from sympy.core.singleton import S
+from sympy.functions import DiracDelta, Heaviside
 
 
 def change_mul(node, x):

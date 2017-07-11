@@ -1,18 +1,17 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.add import Add
 from sympy.core.compatibility import ordered, range
-from sympy.core.function import expand_log
+from sympy.core.function import _mexpand, expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.exponential import LambertW, exp, log
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polytools import Poly, factor
-from sympy.core.function import _mexpand
-from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
-from sympy.solvers.solvers import solve, _invert
+from sympy.simplify.simplify import separatevars
+from sympy.solvers.solvers import _invert, solve
 
 
 def _filtered_gens(poly, symbol):

@@ -1,16 +1,16 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy import solve_linear_system_LU
+from sympy.core.backend import Matrix, diff, eye, zeros
 from sympy.core.compatibility import range
-from sympy.utilities import default_sort_key
-from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
-                                  partial_velocity)
+from sympy.physics.mechanics.functions import _f_list_parser, \
+    find_dynamicsymbols, msubs
+from sympy.physics.mechanics.linearize import Linearizer
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
-                                               _f_list_parser)
-from sympy.physics.mechanics.linearize import Linearizer
+from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
+    partial_velocity
+from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 

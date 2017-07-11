@@ -3,13 +3,12 @@ Primality testing
 
 """
 
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range, as_int
-from sympy.core.numbers import Float
+from __future__ import division, print_function
 
 from mpmath.libmp import bitcount as _bitlength
 
+from sympy.core.compatibility import as_int, range
+from sympy.core.numbers import Float
 
 
 def _int_tuple(*i):

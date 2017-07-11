@@ -1,22 +1,22 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from random import randrange, choice
+from itertools import islice
 from math import log
+from random import choice, randrange
 
+from sympy.combinatorics import Permutation
+from sympy.combinatorics.permutations import Cycle, _af_commutes_with, \
+    _af_invert, _af_pow, _af_rmul, _af_rmuln
+from sympy.combinatorics.util import _base_ordering, _check_cycles_alt_sym, \
+    _distribute_gens_by_base, _handle_precomputed_bsgs, \
+    _orbits_transversals_from_bsgs, _strip, _strip_af, \
+    _strong_gens_from_distr
 from sympy.core import Basic
 from sympy.core.compatibility import range
-from sympy.combinatorics import Permutation
-from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_rmul, _af_rmuln, _af_pow, Cycle)
-from sympy.combinatorics.util import (_check_cycles_alt_sym,
-    _distribute_gens_by_base, _orbits_transversals_from_bsgs,
-    _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
-    _strip, _strip_af)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.utilities.randtest import _randrange
-from itertools import islice
 
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new

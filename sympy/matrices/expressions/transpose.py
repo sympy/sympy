@@ -1,9 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Basic
+from sympy.assumptions.ask import Q, ask
+from sympy.assumptions.refine import handlers_dict
 from sympy.functions import adjoint, conjugate
-
 from sympy.matrices.expressions.matexpr import MatrixExpr
+
 
 class Transpose(MatrixExpr):
     """
@@ -75,8 +77,6 @@ def transpose(expr):
     return Transpose(expr).doit()
 
 
-from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
 
 
 def refine_Transpose(expr, assumptions):

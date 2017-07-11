@@ -1,8 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.numbers import igcdex, igcd
-from sympy.core.mul import prod
 from sympy.core.compatibility import as_int, reduce
+from sympy.core.mul import prod
+from sympy.core.numbers import igcd, igcdex
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2

@@ -1,10 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.combinatorics.permutations import Permutation
-from sympy.utilities.iterables import variations, rotate_left
+from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
-from sympy.core.compatibility import range
+from sympy.utilities.iterables import rotate_left, variations
 
 
 def symmetric(n):

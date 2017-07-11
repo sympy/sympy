@@ -1,13 +1,11 @@
 """Tests of monomial orderings. """
 
-from sympy.polys.orderings import (
-    monomial_key, lex, grlex, grevlex, ilex, igrlex,
-    LexOrder, InverseOrder, ProductOrder, build_product_order,
-)
-
-from sympy.abc import x, y, z, t
+from sympy.abc import t, x, y, z
 from sympy.core import S
+from sympy.polys.orderings import InverseOrder, LexOrder, ProductOrder, \
+    build_product_order, grevlex, grlex, igrlex, ilex, lex, monomial_key
 from sympy.utilities.pytest import raises
+
 
 def test_lex_order():
     assert lex((1, 2, 3)) == (1, 2, 3)

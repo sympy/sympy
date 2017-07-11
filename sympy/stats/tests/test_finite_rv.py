@@ -1,16 +1,15 @@
-from sympy.core.compatibility import range
-from sympy import (FiniteSet, S, Symbol, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, KroneckerDelta)
+from sympy import And, Dict, Eq, FiniteSet, KroneckerDelta, Or, S, Symbol, \
+    Tuple, binomial, cancel, cos, simplify, sqrt, symbols, sympify
+from sympy.abc import i, p, x
 from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
-    density, where, FiniteRV, pspace, cdf,
-    correlation, moment, cmoment, smoment)
+from sympy.stats import Bernoulli, Binomial, Coin, Die, DiscreteUniform, E, \
+    FiniteRV, Hypergeometric, P, Rademacher, cdf, cmoment, correlation, \
+    covariance, density, moment, pspace, sample, skewness, smoment, variance, \
+    where
 from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises, slow
-from sympy.abc import p, x, i
 
 oo = S.Infinity
 

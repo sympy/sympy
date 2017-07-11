@@ -1,7 +1,7 @@
 """Tests that the IPython printing module is properly loaded. """
 
-from sympy.interactive.session import init_ipython_session
 from sympy.external import import_module
+from sympy.interactive.session import init_ipython_session
 from sympy.utilities.pytest import raises
 
 # run_cell was added in IPython 0.11

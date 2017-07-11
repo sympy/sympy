@@ -1,11 +1,11 @@
-from sympy.utilities.pytest import raises
-from sympy import (symbols, Function, Integer, Matrix, Abs,
-    Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
-    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild)
+from sympy import Abs, AlgebraicNumber, Dummy, Float, Function, \
+    ImmutableDenseMatrix, Integer, Matrix, Rational, S, Symbol, Wild, \
+    WildFunction, false, ones, root, sin, sqrt, symbols, true
 from sympy.core.compatibility import exec_
-from sympy.geometry import Point, Ellipse
+from sympy.geometry import Ellipse, Point
+from sympy.polys import QQ, ZZ, field, grlex, lex, ring
 from sympy.printing import srepr
-from sympy.polys import ring, field, ZZ, QQ, lex, grlex
+from sympy.utilities.pytest import raises
 
 x, y = symbols('x,y')
 

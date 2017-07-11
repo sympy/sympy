@@ -1,13 +1,11 @@
-from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
-    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
-    log, cos, sin)
+from sympy import And, Eq, Float, Function, I, Implies, Not, Or, Rational, S, \
+    Symbol, Xor, cos, log, nan, oo, pi, simplify, sin, sqrt, symbols, zoo
 from sympy.core.compatibility import range
-from sympy.core.relational import (Relational, Equality, Unequality,
-                                   GreaterThan, LessThan, StrictGreaterThan,
-                                   StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne)
-from sympy.sets.sets import Interval, FiniteSet
+from sympy.core.relational import Eq, Equality, Ge, GreaterThan, Gt, Le, \
+    LessThan, Lt, Ne, Rel, Relational, StrictGreaterThan, StrictLessThan, \
+    Unequality
+from sympy.sets.sets import FiniteSet, Interval
+from sympy.utilities.pytest import XFAIL, raises
 
 x, y, z, t = symbols('x,y,z,t')
 

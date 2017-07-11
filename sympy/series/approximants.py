@@ -1,10 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.utilities import public
-
-from sympy.core.compatibility import range
 from sympy import Integer
 from sympy.core import Symbol
+from sympy.core.compatibility import range
+from sympy.utilities import public
+
 
 @public
 def approximants(l, X=Symbol('x'), simplify=False):

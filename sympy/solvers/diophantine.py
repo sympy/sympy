@@ -1,12 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core.add import Add
 from sympy.core.compatibility import as_int, is_sequence, range
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Rational
-from sympy.core.numbers import igcdex, ilcm, igcd
+from sympy.core.numbers import Rational, igcd, igcdex, ilcm
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -15,8 +14,8 @@ from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
-from sympy.ntheory.factor_ import (
-    divisors, factorint, multiplicity, perfect_power)
+from sympy.ntheory.factor_ import divisors, factorint, multiplicity, \
+    perfect_power
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.primetest import is_square, isprime
 from sympy.ntheory.residue_ntheory import sqrt_mod
@@ -27,8 +26,6 @@ from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
-
-
 
 # these are imported with 'from sympy.solvers.diophantine import *
 __all__ = ['diophantine', 'classify_diop']

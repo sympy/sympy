@@ -3,37 +3,35 @@
 TODO:
 * Address Issue 2251, printing of spin states
 """
+from sympy import Add, Derivative, Function, Integer, Interval, Matrix, Mul, \
+    Pow, Rational, S, Symbol, Tuple, oo, symbols
+from sympy.core.compatibility import u_decode as u
+from sympy.core.compatibility import exec_
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.cg import CG, Wigner3j, Wigner6j, Wigner9j
 from sympy.physics.quantum.commutator import Commutator
-from sympy.physics.quantum.constants import hbar
+# Imports used in srepr strings
+from sympy.physics.quantum.constants import HBar, hbar
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.gate import CGate, CNotGate, IdentityGate, UGate, XGate
-from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace, HilbertSpace, L2
+from sympy.physics.quantum.gate import CGate, CNotGate, IdentityGate, UGate, \
+    XGate
+from sympy.physics.quantum.hilbert import L2, ComplexSpace, \
+    DirectSumHilbertSpace, FockSpace, HilbertSpace, TensorPowerHilbertSpace, \
+    TensorProductHilbertSpace
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.operator import Operator, OuterProduct, DifferentialOperator
+from sympy.physics.quantum.operator import DifferentialOperator, Operator, \
+    OuterProduct
 from sympy.physics.quantum.qexpr import QExpr
-from sympy.physics.quantum.qubit import Qubit, IntQubit
-from sympy.physics.quantum.spin import Jz, J2, JzBra, JzBraCoupled, JzKet, JzKetCoupled, Rotation, WignerD
+from sympy.physics.quantum.qubit import IntQubit, Qubit
+from sympy.physics.quantum.sho1d import RaisingOp
+from sympy.physics.quantum.spin import J2, J2Op, Jz, JzBra, JzBraCoupled, \
+    JzKet, JzKetCoupled, JzOp, Rotation, WignerD
 from sympy.physics.quantum.state import Bra, Ket, TimeDepBra, TimeDepKet
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.sho1d import RaisingOp
-
-from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
-from sympy.core.compatibility import exec_
-from sympy.utilities.pytest import XFAIL
-
-# Imports used in srepr strings
-from sympy.physics.quantum.constants import HBar
-from sympy.physics.quantum.hilbert import DirectSumHilbertSpace, TensorProductHilbertSpace, TensorPowerHilbertSpace
-from sympy.physics.quantum.spin import JzOp, J2Op
-from sympy import Add, Integer, Mul, Rational, Tuple
-
 from sympy.printing import srepr
-from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.latex import latex
-
-from sympy.core.compatibility import u_decode as u
+from sympy.printing.pretty import pretty as xpretty
+from sympy.utilities.pytest import XFAIL
 
 MutableDenseMatrix = Matrix
 

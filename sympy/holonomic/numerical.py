@@ -1,9 +1,10 @@
 """Numerical Methods for Holonomic Functions"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from mpmath import mp
 
 from sympy.core.sympify import sympify
-from mpmath import mp
 from sympy.holonomic.holonomic import DMFsubs
 
 

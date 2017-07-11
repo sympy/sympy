@@ -1,8 +1,7 @@
 from sympy.core import S
-from sympy.integrals.quadrature import (gauss_legendre, gauss_laguerre,
-                                        gauss_hermite, gauss_gen_laguerre,
-                                        gauss_chebyshev_t, gauss_chebyshev_u,
-                                        gauss_jacobi, gauss_lobatto)
+from sympy.integrals.quadrature import gauss_chebyshev_t, gauss_chebyshev_u, \
+    gauss_gen_laguerre, gauss_hermite, gauss_jacobi, gauss_laguerre, \
+    gauss_legendre, gauss_lobatto
 
 
 def test_legendre():

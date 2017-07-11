@@ -1,13 +1,15 @@
 from __future__ import division
+
 import warnings
 
-from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
+from sympy import Abs, Float, Rational, S, Symbol, cos, oo, pi, sqrt
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
-                            convex_hull, intersection, Line)
+from sympy.geometry import Circle, Ellipse, GeometryError, Line, Point, \
+    Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar, \
+    convex_hull, intersection
+from sympy.geometry.polygon import deg, rad
 from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
-from sympy.geometry.polygon import rad, deg
 
 
 def feq(a, b):

@@ -12,16 +12,16 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, DiracDelta, sympify)
-from sympy.core.relational import Relational
-from sympy.core.compatibility import string_types
-from sympy.logic.boolalg import Boolean
-from sympy.solvers.solveset import solveset
-from sympy.sets.sets import FiniteSet, ProductSet, Intersection
+from sympy import Add, And, Basic, DiracDelta, Eq, Equality, Expr, Lambda, S, \
+    Symbol, Tuple, lambdify, sympify
 from sympy.abc import x
+from sympy.core.compatibility import string_types
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import Boolean
+from sympy.sets.sets import FiniteSet, Intersection, ProductSet
+from sympy.solvers.solveset import solveset
 
 
 class RandomDomain(Basic):

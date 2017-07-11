@@ -14,15 +14,14 @@ Todo:
 * Write some tests/examples!
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Mul
-from sympy.core.compatibility import range
-from sympy.external import import_module
-from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
-from sympy.core.core import BasicMeta
 from sympy.core.assumptions import ManagedProperties
-
+from sympy.core.compatibility import range
+from sympy.core.core import BasicMeta
+from sympy.external import import_module
+from sympy.physics.quantum.gate import CGate, CGateS, Gate, OneQubitGate
 
 __all__ = [
     'CircuitPlot',

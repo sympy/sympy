@@ -1,7 +1,6 @@
 from sympy.core.numbers import Integer, Rational
 
 
-
 def continued_fraction_periodic(p, q, d=0):
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.

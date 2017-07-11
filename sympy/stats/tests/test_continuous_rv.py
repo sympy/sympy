@@ -1,29 +1,21 @@
 from __future__ import division
-from sympy.stats import (P, E, where, density, variance, covariance, skewness,
-                         given, pspace, cdf, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy,
-                         Chi, ChiSquared,
-                         ChiNoncentral, Dagum, Erlang, Exponential,
-                         FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
-                         LogNormal, Maxwell, Nakagami, Normal, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
-                         StudentT, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle, correlation,
-                         moment, cmoment, smoment)
 
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
-                   Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func)
-
-
+from sympy import Abs, And, Eq, Integral, Interval, N, Piecewise, S, Sum, \
+    Symbol, besseli, beta, binomial, cos, erf, erfc, exp, expand_func, \
+    factorial, floor, gamma, log, lowergamma, pi, simplify, sin, sqrt, \
+    symbols
+from sympy.core.compatibility import range
+from sympy.stats import Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, \
+    ChiNoncentral, ChiSquared, ContinuousRV, Dagum, E, Erlang, Exponential, \
+    FDistribution, FisherZ, Frechet, Gamma, GammaInverse, Gompertz, Gumbel, \
+    Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell, Nakagami, Normal, P, \
+    Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT, \
+    Triangular, Uniform, UniformSum, VonMises, Weibull, WignerSemicircle, \
+    cdf, cmoment, correlation, covariance, density, given, moment, pspace, \
+    sample, skewness, smoment, variance, where
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.rv import ProductPSpace
-
-from sympy.utilities.pytest import raises, XFAIL, slow
-
-from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 oo = S.Infinity
 

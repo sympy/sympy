@@ -1,15 +1,13 @@
-from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range)
 from mpmath import mpi
 
+from sympy import And, Complement, Contains, E, EmptySet, Eq, FiniteSet, \
+    Float, Ge, GreaterThan, Gt, I, ImageSet, Intersection, Interval, Lambda, \
+    Le, LessThan, Lt, Matrix, Max, Min, Or, Piecewise, Pow, ProductSet, \
+    Range, S, Set, Sum, Symbol, SymmetricDifference, Union, cos, false, \
+    imageset, nan, oo, pi, rootof, signsimp, sin, sqrt, sympify, true
+from sympy.abc import m, n, x, y, z
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import raises, XFAIL
-
-from sympy.abc import x, y, z, m, n
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_imageset():

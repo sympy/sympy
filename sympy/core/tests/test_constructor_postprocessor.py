@@ -1,4 +1,4 @@
-from sympy import Symbol, Mul, symbols, Basic
+from sympy import Basic, Mul, Symbol, symbols
 
 
 class SymbolInMulOnce(Symbol):

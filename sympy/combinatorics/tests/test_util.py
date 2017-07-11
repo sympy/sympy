@@ -1,12 +1,12 @@
-from sympy.core.compatibility import range
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
-    AlternatingGroup
+from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, \
+    SymmetricGroup
 from sympy.combinatorics.permutations import Permutation
-from sympy.combinatorics.util import _check_cycles_alt_sym, _strip,\
-    _distribute_gens_by_base, _strong_gens_from_distr,\
-    _orbits_transversals_from_bsgs, _handle_precomputed_bsgs, _base_ordering,\
-    _remove_gens
 from sympy.combinatorics.testutil import _verify_bsgs
+from sympy.combinatorics.util import _base_ordering, _check_cycles_alt_sym, \
+    _distribute_gens_by_base, _handle_precomputed_bsgs, \
+    _orbits_transversals_from_bsgs, _remove_gens, _strip, \
+    _strong_gens_from_distr
+from sympy.core.compatibility import range
 
 
 def test_check_cycles_alt_sym():

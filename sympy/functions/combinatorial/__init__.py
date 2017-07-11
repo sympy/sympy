@@ -1,2 +1,1 @@
-from . import factorials
-from . import numbers
+from . import factorials, numbers

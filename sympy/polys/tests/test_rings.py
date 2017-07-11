@@ -2,17 +2,17 @@
 
 from operator import add, mul
 
-from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
-from sympy.polys.fields import field, FracField
-from sympy.polys.domains import ZZ, QQ, RR, FF, EX
-from sympy.polys.orderings import lex, grlex
-from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, \
-    ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
-
-from sympy.utilities.pytest import raises
+from sympy import oo, pi, sqrt
 from sympy.core import Symbol, symbols
-from sympy.core.compatibility import reduce, range
-from sympy import sqrt, pi, oo
+from sympy.core.compatibility import range, reduce
+from sympy.polys.domains import EX, FF, QQ, RR, ZZ
+from sympy.polys.fields import FracField, field
+from sympy.polys.orderings import grlex, lex
+from sympy.polys.polyerrors import CoercionFailed, ExactQuotientFailed, \
+    GeneratorsError, GeneratorsNeeded, MultivariatePolynomialError
+from sympy.polys.rings import PolyElement, PolyRing, ring, sring, xring
+from sympy.utilities.pytest import raises
+
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")

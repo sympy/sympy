@@ -1,8 +1,7 @@
-from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                    RigidBody, LagrangesMethod, Particle,
-                                    inertia, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, simplify, Function, \
-        Derivative, Matrix
+from sympy import Derivative, Function, Matrix, cos, pi, simplify, sin, \
+    symbols, tan
+from sympy.physics.mechanics import LagrangesMethod, Lagrangian, Particle, \
+    Point, ReferenceFrame, RigidBody, dynamicsymbols, inertia
 
 
 def test_disc_on_an_incline_plane():

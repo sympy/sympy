@@ -1,14 +1,14 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Dummy, pi
-from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.trigonometric import sin, cos
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.special.gamma_functions import gamma
-from sympy.polys.orthopolys import (legendre_poly, laguerre_poly,
-                                    hermite_poly, jacobi_poly)
-from sympy.polys.rootoftools import RootOf
+from sympy.core import Dummy, S, pi
 from sympy.core.compatibility import range
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.gamma_functions import gamma
+from sympy.polys.orthopolys import hermite_poly, jacobi_poly, laguerre_poly, \
+    legendre_poly
+from sympy.polys.rootoftools import RootOf
 
 
 def gauss_legendre(n, n_digits):

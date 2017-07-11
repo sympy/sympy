@@ -1,25 +1,8 @@
 """Tests for noncommutative symbols and expressions."""
 
-from sympy import (
-    adjoint,
-    cancel,
-    collect,
-    combsimp,
-    conjugate,
-    cos,
-    expand,
-    factor,
-    posify,
-    radsimp,
-    ratsimp,
-    rcollect,
-    sin,
-    simplify,
-    symbols,
-    transpose,
-    trigsimp,
-    I,
-)
+from sympy import I, adjoint, cancel, collect, combsimp, conjugate, cos, \
+    expand, factor, posify, radsimp, ratsimp, rcollect, simplify, sin, \
+    symbols, transpose, trigsimp
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 

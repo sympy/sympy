@@ -1,18 +1,19 @@
-from sympy.polys.domains import QQ, EX, RR
-from sympy.polys.rings import ring
-from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
-    rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
-    rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
-    rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
-    rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
-from sympy.core.symbol import symbols
-from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
-    tanh, log, sqrt)
-from sympy.core.numbers import Rational
 from sympy.core import expand
+from sympy.core.compatibility import range
+from sympy.core.numbers import Rational
+from sympy.core.symbol import symbols
+from sympy.functions import asin, atan, atanh, cos, cot, exp, log, sin, sqrt, \
+    tan, tanh
+from sympy.polys.domains import EX, QQ, RR
+from sympy.polys.ring_series import _has_constant_term, _invert_monoms, \
+    _tan1, rs_asin, rs_atan, rs_atanh, rs_compose_add, rs_cos, rs_cos_sin, \
+    rs_cosh, rs_cot, rs_exp, rs_fun, rs_hadamard_exp, rs_integrate, \
+    rs_is_puiseux, rs_LambertW, rs_log, rs_mul, rs_newton, rs_nth_root, \
+    rs_pow, rs_series, rs_series_from_list, rs_series_inversion, \
+    rs_series_reversion, rs_sin, rs_sinh, rs_square, rs_tan, rs_tanh, \
+    rs_trunc
+from sympy.polys.rings import ring
+from sympy.utilities.pytest import raises
 
 
 def is_close(a, b):

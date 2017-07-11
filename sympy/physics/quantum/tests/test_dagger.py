@@ -1,7 +1,6 @@
-from sympy import I, Matrix, symbols, conjugate, Expr, Integer
-
-from sympy.physics.quantum.dagger import adjoint, Dagger
+from sympy import Expr, I, Integer, Matrix, conjugate, symbols
 from sympy.external import import_module
+from sympy.physics.quantum.dagger import Dagger, adjoint
 from sympy.utilities.pytest import skip
 
 

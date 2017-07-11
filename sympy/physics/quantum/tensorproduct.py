@@ -1,22 +1,18 @@
 """Abstract tensor product."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify
+from sympy import Add, Expr, Matrix, Mul, Pow, sympify
 from sympy.core.compatibility import range
 from sympy.core.trace import Tr
-from sympy.printing.pretty.stringpict import prettyForm
-
-from sympy.physics.quantum.qexpr import QuantumError
-from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
-from sympy.physics.quantum.state import Ket, Bra
-from sympy.physics.quantum.matrixutils import (
-    numpy_ndarray,
-    scipy_sparse_matrix,
-    matrix_tensor_product
-)
+from sympy.physics.quantum.commutator import Commutator
+from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.matrixutils import matrix_tensor_product, \
+    numpy_ndarray, scipy_sparse_matrix
+from sympy.physics.quantum.qexpr import QuantumError
+from sympy.physics.quantum.state import Bra, Ket
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'TensorProduct',

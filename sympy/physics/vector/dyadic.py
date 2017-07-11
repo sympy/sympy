@@ -1,7 +1,8 @@
-from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
+from sympy.core.backend import ImmutableMatrix as Matrix
+from sympy.core.backend import Add, sympify
 from sympy.core.compatibility import unicode
-from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
-                       VectorStrPrinter)
+
+from .printing import VectorLatexPrinter, VectorPrettyPrinter, VectorStrPrinter
 
 __all__ = ['Dyadic']
 

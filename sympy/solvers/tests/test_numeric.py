@@ -1,10 +1,12 @@
-from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
-    symbols, Float, I)
 from mpmath import mnorm, mpf
+
+from sympy import Eq, Float, I, Integral, Matrix, Piecewise, Symbol, pi, sin, \
+    sqrt, symbols
 from sympy.solvers import nsolve
-from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.pytest import XFAIL, raises
+
 
 @XFAIL
 def test_nsolve_fail():

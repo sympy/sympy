@@ -3,7 +3,7 @@ This module implements the Residue function and related tools for working
 with residues.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import sympify
 from sympy.utilities.timeutils import timethis

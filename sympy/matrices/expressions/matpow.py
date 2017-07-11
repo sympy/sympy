@@ -1,10 +1,12 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
-from sympy.core.sympify import _sympify
-from sympy.core.compatibility import range
-from sympy.matrices import MatrixBase
 from sympy.core import S
+from sympy.core.compatibility import range
+from sympy.core.sympify import _sympify
+from sympy.matrices import MatrixBase
+
+from .matexpr import Identity, MatrixExpr, ShapeError, ZeroMatrix
+from .matmul import MatMul
 
 
 class MatPow(MatrixExpr):
@@ -73,6 +75,3 @@ class MatPow(MatrixExpr):
         elif exp is S.One:
             return base
         return MatPow(base, exp)
-
-
-from .matmul import MatMul

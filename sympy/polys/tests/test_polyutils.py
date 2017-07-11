@@ -1,25 +1,12 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
-    Eq, Integral, exp, Mul)
-from sympy.utilities.pytest import raises
-
-from sympy.polys.polyutils import (
-    _nsort,
-    _sort_gens,
-    _unify_gens,
-    _analyze_gens,
-    _sort_factors,
-    parallel_dict_from_expr,
-    dict_from_expr,
-)
-
-from sympy.polys.polyerrors import (
-    GeneratorsNeeded,
-    PolynomialError,
-)
-
+from sympy import Eq, Integer, Integral, Mul, S, cos, exp, pi, sin, sqrt, \
+    symbols
 from sympy.polys.domains import ZZ
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.polys.polyutils import _analyze_gens, _nsort, _sort_factors, \
+    _sort_gens, _unify_gens, dict_from_expr, parallel_dict_from_expr
+from sympy.utilities.pytest import raises
 
 x, y, z, p, q, r, s, t, u, v, w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 A, B = symbols('A,B', commutative=False)

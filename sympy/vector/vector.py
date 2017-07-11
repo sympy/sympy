@@ -1,11 +1,13 @@
+from sympy import ImmutableMatrix as Matrix
+from sympy import diff as df
+from sympy import sqrt
+from sympy.core import Pow, S, Symbol
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, Symbol
-from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
-from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
+from sympy.core.expr import AtomicExpr
+from sympy.vector.basisdependent import BasisDependent, BasisDependentAdd, \
+    BasisDependentMul, BasisDependentZero
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
-                                         BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
 
 

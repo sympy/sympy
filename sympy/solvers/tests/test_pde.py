@@ -1,10 +1,9 @@
-from sympy import (Derivative as D, Eq, exp, sin,
-    Function, Symbol, symbols, cos, log)
+from sympy import Derivative as D
+from sympy import Eq, Function, Symbol, cos, exp, log, sin, symbols
 from sympy.core import S
-from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
-    pdsolve, classify_pde, checkpdesol)
+from sympy.solvers.pde import checkpdesol, classify_pde, pde_separate, \
+    pde_separate_add, pde_separate_mul, pdsolve
 from sympy.utilities.pytest import raises
-
 
 a, b, c, x, y = symbols('a b c x y')
 

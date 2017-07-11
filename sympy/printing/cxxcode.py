@@ -1,9 +1,12 @@
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
+from functools import wraps
+
+from .ccode import C89CodePrinter, C99CodePrinter
+
 """
 C++ code printer
 """
-from functools import wraps
-from .ccode import C89CodePrinter, C99CodePrinter
 
 
 # from http://en.cppreference.com/w/cpp/keyword

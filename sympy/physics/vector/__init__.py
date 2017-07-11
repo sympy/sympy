@@ -11,30 +11,25 @@ __all__ = []
 #    determine which names are imported when
 #    "from sympy.physics.vector import *" is done.
 
-from . import frame
+from . import dyadic, fieldfunctions, frame, functions, point, printing, vector
+from .dyadic import *
+from .fieldfunctions import *
 from .frame import *
+from .functions import *
+from .point import *
+from .printing import *
+from .vector import *
+
 __all__.extend(frame.__all__)
 
-from . import dyadic
-from .dyadic import *
 __all__.extend(dyadic.__all__)
 
-from . import vector
-from .vector import *
 __all__.extend(vector.__all__)
 
-from . import point
-from .point import *
 __all__.extend(point.__all__)
 
-from . import functions
-from .functions import *
 __all__.extend(functions.__all__)
 
-from . import printing
-from .printing import *
 __all__.extend(printing.__all__)
 
-from . import fieldfunctions
-from .fieldfunctions import *
 __all__.extend(fieldfunctions.__all__)

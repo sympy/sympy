@@ -1,9 +1,9 @@
-from os import walk, sep, pardir
-from os.path import split, join, abspath, exists, isfile
-from glob import glob
-import re
-import random
 import ast
+import random
+import re
+from glob import glob
+from os import pardir, sep, walk
+from os.path import abspath, exists, isfile, join, split
 
 from sympy.core.compatibility import PY3
 

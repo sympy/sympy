@@ -1,46 +1,21 @@
 """Tests for dense recursive polynomials' arithmetics. """
 
-from sympy.polys.densebasic import (
-    dup_normal, dmp_normal,
-)
-
-from sympy.polys.densearith import (
-    dup_add_term, dmp_add_term,
-    dup_sub_term, dmp_sub_term,
-    dup_mul_term, dmp_mul_term,
-    dup_add_ground, dmp_add_ground,
-    dup_sub_ground, dmp_sub_ground,
-    dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground,
-    dup_exquo_ground, dmp_exquo_ground,
-    dup_lshift, dup_rshift,
-    dup_abs, dmp_abs,
-    dup_neg, dmp_neg,
-    dup_add, dmp_add,
-    dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
-    dup_sqr, dmp_sqr,
-    dup_pow, dmp_pow,
-    dup_add_mul, dmp_add_mul,
-    dup_sub_mul, dmp_sub_mul,
-    dup_pdiv, dup_prem, dup_pquo, dup_pexquo,
-    dmp_pdiv, dmp_prem, dmp_pquo, dmp_pexquo,
-    dup_rr_div, dmp_rr_div,
-    dup_ff_div, dmp_ff_div,
-    dup_div, dup_rem, dup_quo, dup_exquo,
-    dmp_div, dmp_rem, dmp_quo, dmp_exquo,
-    dup_max_norm, dmp_max_norm,
-    dup_l1_norm, dmp_l1_norm,
-    dup_expand, dmp_expand,
-)
-
-from sympy.polys.polyerrors import (
-    ExactQuotientFailed,
-)
-
+from sympy.polys.densearith import dmp_abs, dmp_add, dmp_add_ground, \
+    dmp_add_mul, dmp_add_term, dmp_div, dmp_expand, dmp_exquo, \
+    dmp_exquo_ground, dmp_ff_div, dmp_l1_norm, dmp_max_norm, dmp_mul, \
+    dmp_mul_ground, dmp_mul_term, dmp_neg, dmp_pdiv, dmp_pexquo, dmp_pow, \
+    dmp_pquo, dmp_prem, dmp_quo, dmp_quo_ground, dmp_rem, dmp_rr_div, \
+    dmp_sqr, dmp_sub, dmp_sub_ground, dmp_sub_mul, dmp_sub_term, dup_abs, \
+    dup_add, dup_add_ground, dup_add_mul, dup_add_term, dup_div, dup_expand, \
+    dup_exquo, dup_exquo_ground, dup_ff_div, dup_l1_norm, dup_lshift, \
+    dup_max_norm, dup_mul, dup_mul_ground, dup_mul_term, dup_neg, dup_pdiv, \
+    dup_pexquo, dup_pow, dup_pquo, dup_prem, dup_quo, dup_quo_ground, \
+    dup_rem, dup_rr_div, dup_rshift, dup_sqr, dup_sub, dup_sub_ground, \
+    dup_sub_mul, dup_sub_term
+from sympy.polys.densebasic import dmp_normal, dup_normal
+from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.specialpolys import f_polys
-from sympy.polys.domains import FF, ZZ, QQ
-
 from sympy.utilities.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]

@@ -1,5 +1,11 @@
 # conceal the implicit import from the code quality tester
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+import sys
+from time import time
+
+from sympy.abc import t, x, y
+from sympy.core.cache import clear_cache
 
 exec("from sympy import *")
 
@@ -10,7 +16,6 @@ IFT = inverse_fourier_transform
 ILT = inverse_laplace_transform
 IMT = inverse_mellin_transform
 
-from sympy.abc import t, x, y
 nu, beta, rho = symbols('nu beta rho')
 
 apos, bpos, cpos, dpos, posk, p = symbols('a b c d k p', positive=True)
@@ -229,9 +234,6 @@ bench = [
     'integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True)'
 ]
 
-from time import time
-from sympy.core.cache import clear_cache
-import sys
 
 timings = []
 

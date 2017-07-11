@@ -1,10 +1,8 @@
-from sympy.matrices.dense import Matrix
-from sympy.polys.polymatrix import PolyMatrix
-from sympy.polys import Poly
-
-from sympy import S, ZZ, QQ, EX
-
+from sympy import EX, QQ, ZZ, S
 from sympy.abc import x
+from sympy.matrices.dense import Matrix
+from sympy.polys import Poly
+from sympy.polys.polymatrix import PolyMatrix
 
 
 def test_polymatrix():

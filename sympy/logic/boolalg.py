@@ -1,19 +1,19 @@
 """
 Boolean algebra module for SymPy
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import defaultdict
 from itertools import combinations, product
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
+from sympy.core.compatibility import as_int, ordered, range, with_metaclass
+from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application, Derivative
-from sympy.core.compatibility import ordered, range, with_metaclass, as_int
-from sympy.core.sympify import converter, _sympify, sympify
-from sympy.core.singleton import Singleton, S
+from sympy.core.singleton import S, Singleton
+from sympy.core.sympify import _sympify, converter, sympify
 
 
 class Boolean(Basic):

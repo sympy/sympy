@@ -1,5 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 from sympy.matrices import diag
+
 
 '''
 Functions returning normal forms of matrices

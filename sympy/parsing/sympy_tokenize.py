@@ -22,17 +22,18 @@ are the same, except instead of generating tokens, tokeneater is a callback
 function to which the 5 fields described above are passed as 5 arguments,
 each time a new token is found."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+import re
+import string
+import token
+from token import *
 
 __author__ = 'Ka-Ping Yee <ping@lfw.org>'
 __credits__ = \
     'GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, Skip Montanaro, Raymond Hettinger'
 
-import string
-import re
-from token import *
 
-import token
 __all__ = [x for x in dir(token) if x[0] != '_'] + ["COMMENT", "tokenize",
            "generate_tokens", "NL", "untokenize"]
 del token

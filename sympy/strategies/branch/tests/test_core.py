@@ -1,7 +1,7 @@
-from sympy.strategies.branch.core import (exhaust, debug, multiplex,
-        condition, notempty, chain, onaction, sfilter, yieldify, do_one,
-        identity)
 from sympy.core.compatibility import get_function_name, range
+from sympy.strategies.branch.core import chain, condition, debug, do_one, \
+    exhaust, identity, multiplex, notempty, onaction, sfilter, yieldify
+
 
 def posdec(x):
     if x > 0:

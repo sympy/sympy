@@ -1,58 +1,25 @@
 """Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
-from __future__ import print_function, division
-
-from sympy.polys.densebasic import (
-    dup_strip, dmp_raise,
-    dmp_zero, dmp_one, dmp_ground,
-    dmp_one_p, dmp_zero_p,
-    dmp_zeros,
-    dup_degree, dmp_degree, dmp_degree_in,
-    dup_LC, dmp_LC, dmp_ground_LC,
-    dmp_multi_deflate, dmp_inflate,
-    dup_convert, dmp_convert,
-    dmp_apply_pairs)
-
-from sympy.polys.densearith import (
-    dup_sub_mul,
-    dup_neg, dmp_neg,
-    dmp_add,
-    dmp_sub,
-    dup_mul, dmp_mul,
-    dmp_pow,
-    dup_div, dmp_div,
-    dup_rem,
-    dup_quo, dmp_quo,
-    dup_prem, dmp_prem,
-    dup_mul_ground, dmp_mul_ground,
-    dmp_mul_term,
-    dup_quo_ground, dmp_quo_ground,
-    dup_max_norm, dmp_max_norm)
-
-from sympy.polys.densetools import (
-    dup_clear_denoms, dmp_clear_denoms,
-    dup_diff, dmp_diff,
-    dup_eval, dmp_eval, dmp_eval_in,
-    dup_trunc, dmp_ground_trunc,
-    dup_monic, dmp_ground_monic,
-    dup_primitive, dmp_ground_primitive,
-    dup_extract, dmp_ground_extract)
-
-from sympy.polys.galoistools import (
-    gf_int, gf_crt)
-
-from sympy.polys.polyerrors import (
-    MultivariatePolynomialError,
-    HeuristicGCDFailed,
-    HomomorphismFailed,
-    NotInvertible,
-    DomainError)
-
-from sympy.polys.polyconfig import query
-
-from sympy.ntheory import nextprime
+from __future__ import division, print_function
 
 from sympy.core.compatibility import range
+from sympy.ntheory import nextprime
+from sympy.polys.densearith import dmp_add, dmp_div, dmp_max_norm, dmp_mul, \
+    dmp_mul_ground, dmp_mul_term, dmp_neg, dmp_pow, dmp_prem, dmp_quo, \
+    dmp_quo_ground, dmp_sub, dup_div, dup_max_norm, dup_mul, dup_mul_ground, \
+    dup_neg, dup_prem, dup_quo, dup_quo_ground, dup_rem, dup_sub_mul
+from sympy.polys.densebasic import dmp_apply_pairs, dmp_convert, dmp_degree, \
+    dmp_degree_in, dmp_ground, dmp_ground_LC, dmp_inflate, dmp_LC, \
+    dmp_multi_deflate, dmp_one, dmp_one_p, dmp_raise, dmp_zero, dmp_zero_p, \
+    dmp_zeros, dup_convert, dup_degree, dup_LC, dup_strip
+from sympy.polys.densetools import dmp_clear_denoms, dmp_diff, dmp_eval, \
+    dmp_eval_in, dmp_ground_extract, dmp_ground_monic, dmp_ground_primitive, \
+    dmp_ground_trunc, dup_clear_denoms, dup_diff, dup_eval, dup_extract, \
+    dup_monic, dup_primitive, dup_trunc
+from sympy.polys.galoistools import gf_crt, gf_int
+from sympy.polys.polyconfig import query
+from sympy.polys.polyerrors import DomainError, HeuristicGCDFailed, \
+    HomomorphismFailed, MultivariatePolynomialError, NotInvertible
 
 
 def dup_half_gcdex(f, g, K):

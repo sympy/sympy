@@ -1,12 +1,12 @@
-from sympy import (
-    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
-    polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta,conjugate)
+from sympy import EulerGamma, I, O, Rational, S, Symbol, conjugate, cos, erf, \
+    erfc, exp, exp_polar, expand_func, factorial, gamma, harmonic, log, \
+    loggamma, lowergamma, nan, oo, pi, polygamma, sin, sqrt, uppergamma, \
+    zeta, zoo
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.randtest import (test_derivative_numerically as td,
-                                      random_complex_number as randcplx,
-                                      verify_numerically as tn)
 from sympy.utilities.pytest import raises
+from sympy.utilities.randtest import random_complex_number as randcplx
+from sympy.utilities.randtest import test_derivative_numerically as td
+from sympy.utilities.randtest import verify_numerically as tn
 
 x = Symbol('x')
 y = Symbol('y')

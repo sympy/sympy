@@ -1,8 +1,7 @@
 from __future__ import division
 
-from sympy import Rational, oo, sqrt
-from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
-from sympy import Circle, Ellipse
+from sympy import Circle, Ellipse, Line, Parabola, Point, Point2D, Rational, \
+    Ray2D, Segment2D, oo, sqrt
 from sympy.utilities.pytest import raises
 
 

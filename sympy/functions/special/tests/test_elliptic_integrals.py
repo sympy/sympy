@@ -1,11 +1,13 @@
-from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
-    atanh, hyper, meijerg, O)
-from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
-    elliptic_f as F, elliptic_e as E, elliptic_pi as P)
-from sympy.utilities.randtest import (test_derivative_numerically as td,
-                                      random_complex_number as randcplx,
-                                      verify_numerically as tn)
-from sympy.abc import z, m, n
+from sympy import I, O, S, Symbol, atanh, gamma, hyper, meijerg, oo, pi, sin, \
+    sqrt, tan, zoo
+from sympy.abc import m, n, z
+from sympy.functions.special.elliptic_integrals import elliptic_e as E
+from sympy.functions.special.elliptic_integrals import elliptic_f as F
+from sympy.functions.special.elliptic_integrals import elliptic_k as K
+from sympy.functions.special.elliptic_integrals import elliptic_pi as P
+from sympy.utilities.randtest import random_complex_number as randcplx
+from sympy.utilities.randtest import test_derivative_numerically as td
+from sympy.utilities.randtest import verify_numerically as tn
 
 i = Symbol('i', integer=True)
 j = Symbol('k', integer=True, positive=True)

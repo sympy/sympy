@@ -1,7 +1,7 @@
-from sympy import exp, integrate, oo, Rational, pi, S, simplify, sqrt, Symbol
+from sympy import Rational, S, Symbol, exp, integrate, oo, pi, simplify, sqrt
+from sympy.abc import m, omega, x
 from sympy.core.compatibility import range
-from sympy.abc import omega, m, x
-from sympy.physics.qho_1d import psi_n, E_n, coherent_state
+from sympy.physics.qho_1d import E_n, coherent_state, psi_n
 from sympy.physics.quantum.constants import hbar
 
 nu = m * omega / hbar

@@ -1,20 +1,20 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+import collections
 import copy
 from collections import defaultdict
 
+from sympy.core.compatibility import as_int, is_sequence, range
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 
-from .matrices import MatrixBase, ShapeError, a2idx
 from .dense import Matrix
-import collections
+from .matrices import MatrixBase, ShapeError, a2idx
 
 
 class SparseMatrix(MatrixBase):

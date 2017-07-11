@@ -1,5 +1,5 @@
+from sympy import Idx, IndexedBase, cos, sin, symbols
 from sympy.sandbox.indexed_integrals import IndexedIntegral
-from sympy import IndexedBase, Idx, symbols, sin, cos
 
 
 def test_indexed_integrals():

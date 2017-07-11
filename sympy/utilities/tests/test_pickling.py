@@ -1,35 +1,69 @@
-import sys
-import inspect
 import copy
+import inspect
 import pickle
+import sys
 import warnings
 
-from sympy.physics.units import meter
-
-from sympy.utilities.pytest import XFAIL
-
-from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicMeta
-from sympy.core.singleton import SingletonRegistry
-from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
-        Rational, Float)
-from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
-        StrictGreaterThan, StrictLessThan, Unequality)
+#================== polys =======================
+from sympy import QQ, ZZ, Poly, S, lex, symbols
+#================== concrete ==================
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
 from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
+from sympy.core.basic import Atom, Basic
+from sympy.core.compatibility import HAS_GMPY
+from sympy.core.core import BasicMeta
 from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
     WildFunction
-from sympy.sets.sets import Interval
+#==================== logic =====================
+from sympy.core.logic import Logic
+from sympy.core.mul import Mul
 from sympy.core.multidimensional import vectorize
-
-from sympy.core.compatibility import HAS_GMPY
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-from sympy import symbols, S
-
+from sympy.core.numbers import E, Float, I, Integer, Rational, nan, oo, pi, zoo
+from sympy.core.power import Pow
+from sympy.core.relational import Equality, GreaterThan, LessThan, \
+    Relational, StrictGreaterThan, StrictLessThan, Unequality
+from sympy.core.singleton import SingletonRegistry
+from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.external import import_module
+#================== functions ===================
+from sympy.functions import Abs, DiracDelta, Eijk, FallingFactorial, \
+    Heaviside, LambertW, Piecewise, RisingFactorial, Ynm, Znm, acos, acosh, \
+    acot, acoth, arg, asin, asinh, assoc_legendre, atan, atan2, atanh, bell, \
+    bernoulli, binomial, ceiling, chebyshevt, chebyshevt_root, chebyshevu, \
+    chebyshevu_root, conjugate, cos, cosh, cot, coth, dirichlet_eta, erf, \
+    exp, factorial, ff, fibonacci, floor, gamma, harmonic, hermite, im, \
+    legendre, ln, log, loggamma, lowergamma, lucas, polygamma, re, rf, sign, \
+    sin, sinh, sqrt, tan, tanh, uppergamma, zeta
+from sympy.geometry.ellipse import Circle, Ellipse
+#================== geometry ====================
+from sympy.geometry.entity import GeometryEntity
+from sympy.geometry.line import Line, LinearEntity, Ray, Segment
+from sympy.geometry.point import Point
+from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle
+#================== integrals ====================
+from sympy.integrals.integrals import Integral
+#================== matrices ====================
+from sympy.matrices import Matrix, SparseMatrix
+#================== ntheory =====================
+from sympy.ntheory.generate import Sieve
+#================== physics =====================
+from sympy.physics.paulialgebra import Pauli
+from sympy.physics.units import Unit, meter
+#================== printing ====================
+from sympy.printing.latex import LatexPrinter
+from sympy.printing.mathml import MathMLPrinter
+from sympy.printing.pretty.pretty import PrettyPrinter
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.printer import Printer
+from sympy.printing.python import PythonPrinter
+#================== series ======================
+from sympy.series.limits import Limit
+from sympy.series.order import Order
+from sympy.sets.sets import Interval
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import XFAIL
+
 cloudpickle = import_module('cloudpickle')
 
 excluded_attrs = set(['_assumptions', '_mhash'])
@@ -185,17 +219,6 @@ def test_Singletons():
             assert func(obj) is obj
 
 
-#================== functions ===================
-from sympy.functions import (Piecewise, lowergamma, acosh,
-        chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
-        Heaviside, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
-        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ynm,
-        cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, factorial, asinh, acoth, Znm,
-        cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
-        conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
-        RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
-        polygamma, exp)
 
 
 def test_functions():
@@ -221,12 +244,6 @@ def test_functions():
     for cls in others:
         check(cls)
 
-#================== geometry ====================
-from sympy.geometry.entity import GeometryEntity
-from sympy.geometry.point import Point
-from sympy.geometry.ellipse import Circle, Ellipse
-from sympy.geometry.line import Line, LinearEntity, Ray, Segment
-from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle
 
 
 def test_geometry():
@@ -242,8 +259,6 @@ def test_geometry():
             RegularPolygon(p1, 4, 5), Triangle, Triangle(p1, p2, p3)):
         check(c, check_attr=False)
 
-#================== integrals ====================
-from sympy.integrals.integrals import Integral
 
 
 def test_integrals():
@@ -251,33 +266,24 @@ def test_integrals():
     for c in (Integral, Integral(x)):
         check(c)
 
-#==================== logic =====================
-from sympy.core.logic import Logic
 
 
 def test_logic():
     for c in (Logic, Logic(1)):
         check(c)
 
-#================== matrices ====================
-from sympy.matrices import Matrix, SparseMatrix
 
 
 def test_matrices():
     for c in (Matrix, Matrix([1, 2, 3]), SparseMatrix, SparseMatrix([[1, 2], [3, 4]])):
         check(c)
 
-#================== ntheory =====================
-from sympy.ntheory.generate import Sieve
 
 
 def test_ntheory():
     for c in (Sieve, Sieve()):
         check(c)
 
-#================== physics =====================
-from sympy.physics.paulialgebra import Pauli
-from sympy.physics.units import Unit
 
 
 def test_physics():
@@ -335,8 +341,6 @@ def test_plotting2():
     check(Plot(1, visible=False))
     check(PlotAxes())
 
-#================== polys =======================
-from sympy import Poly, ZZ, QQ, lex
 
 def test_pickling_polys_polytools():
     from sympy.polys.polytools import Poly, PurePoly, GroebnerBasis
@@ -621,13 +625,6 @@ def test_pickling_polys_rootoftools():
     for c in (RootSum, RootSum(f, exp)):
         check(c)
 
-#================== printing ====================
-from sympy.printing.latex import LatexPrinter
-from sympy.printing.mathml import MathMLPrinter
-from sympy.printing.pretty.pretty import PrettyPrinter
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
-from sympy.printing.printer import Printer
-from sympy.printing.python import PythonPrinter
 
 
 def test_printing():
@@ -646,9 +643,6 @@ def test_printing1():
 def test_printing2():
     check(PrettyPrinter())
 
-#================== series ======================
-from sympy.series.limits import Limit
-from sympy.series.order import Order
 
 
 def test_series():
@@ -657,9 +651,6 @@ def test_series():
     for c in (Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
 
-#================== concrete ==================
-from sympy.concrete.products import Product
-from sympy.concrete.summations import Sum
 
 
 def test_concrete():

@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
+from sympy import Float, S, assoc_laguerre, exp, factorial, sqrt
 
 
 def R_nl(n, l, r, Z=1):

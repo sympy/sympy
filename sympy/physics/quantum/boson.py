@@ -1,10 +1,9 @@
 """Bosonic quantum operators."""
 
-from sympy import Mul, Integer, exp, sqrt, conjugate
-from sympy.physics.quantum import Operator
-from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
+from sympy import Integer, Mul, conjugate, exp, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
-
+from sympy.physics.quantum import Bra, FockSpace, HilbertSpace, \
+    IdentityOperator, Ket, Operator
 
 __all__ = [
     'BosonOp',

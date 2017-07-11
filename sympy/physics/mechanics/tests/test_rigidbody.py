@@ -1,8 +1,7 @@
 from sympy import symbols
-from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
-from sympy.physics.mechanics import dynamicsymbols, outer, inertia
-from sympy.physics.mechanics import inertia_of_point_mass
 from sympy.core.backend import expand
+from sympy.physics.mechanics import Dyadic, Point, ReferenceFrame, RigidBody, \
+    dynamicsymbols, inertia, inertia_of_point_mass, outer
 
 
 def test_rigidbody():

@@ -1,8 +1,8 @@
 """Strategies to Traverse a Tree."""
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.strategies.util import basic_fns
 from sympy.strategies.core import chain, do_one
+from sympy.strategies.util import basic_fns
 
 
 def top_down(rule, fns=basic_fns):

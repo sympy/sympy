@@ -1,12 +1,12 @@
 
-from sympy import TableForm, S
-from sympy.printing.latex import latex
+from textwrap import dedent
+
+from sympy import S, TableForm
 from sympy.abc import x
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
+from sympy.printing.latex import latex
 from sympy.utilities.pytest import raises
-
-from textwrap import dedent
 
 
 def test_TableForm():

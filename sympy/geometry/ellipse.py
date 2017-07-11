@@ -8,28 +8,29 @@ Contains
 
 from __future__ import division, print_function
 
+import random
+
 from sympy.core import S, pi, sympify
+from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import range, ordered
 from sympy.core.symbol import Dummy
-from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
-from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
+from sympy.geometry.line import Line2D, LinearEntity3D, Ray2D, Segment2D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
+from sympy.simplify import simplify, trigsimp
 from sympy.solvers import solve
-from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
+from .point import Point, Point2D, Point3D
+from .polygon import Polygon
 from .util import _symbol, idiff
-
-import random
 
 
 class Ellipse(GeometrySet):
@@ -1527,6 +1528,3 @@ class Circle(Ellipse):
         6
         """
         return abs(self.radius)
-
-
-from .polygon import Polygon

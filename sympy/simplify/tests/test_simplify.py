@@ -1,18 +1,16 @@
-from sympy import (
-    Abs, acos, Add, atan, Basic, binomial, besselsimp, collect,cos, cosh, cot,
-    coth, count_ops, Derivative, diff, E, Eq, erf, exp, exp_polar, expand,
-    expand_multinomial, factor, factorial, Float, fraction, Function,
-    gamma, GoldenRatio, hyper, hypersimp, I, Integral, integrate, log,
-    logcombine, Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise,
-    posify, rad, Rational, root, S, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo,
-    Sum, Lt, sign)
+from sympy import Abs, Add, Basic, Derivative, E, Eq, Float, Function, \
+    GoldenRatio, I, Integral, Lt, Matrix, MatrixSymbol, Mul, O, Piecewise, \
+    Rational, S, Sum, Symbol, acos, atan, besselsimp, binomial, collect, cos, \
+    cosh, cot, coth, count_ops, diff, erf, exp, exp_polar, expand, \
+    expand_multinomial, factor, factorial, fraction, gamma, hyper, hypersimp, \
+    integrate, log, logcombine, nsimplify, oo, pi, posify, rad, root, \
+    separatevars, sign, signsimp, simplify, sin, sinh, solve, sqrt, symbols, \
+    sympify, tan, tanh, zoo
+from sympy.abc import a, b, c, d, e, f, g, h, i, k, t, x, y, z
+from sympy.core.compatibility import range
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import nthroot
 from sympy.utilities.pytest import XFAIL, slow
-from sympy.core.compatibility import range
-
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
 
 def test_issue_7263():

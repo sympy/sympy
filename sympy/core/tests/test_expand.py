@@ -1,13 +1,11 @@
-from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
-    cos, sin, Mul, Pow, O)
-from sympy.simplify.radsimp import expand_numer
-from sympy.core.function import expand, expand_multinomial, expand_power_base
+from sympy import Rational as R
+from sympy import I, Mul, O, Pow, S, Symbol, cos, exp, log, pi, sin, sqrt
+from sympy.abc import x, y, z
 from sympy.core.compatibility import range
-
+from sympy.core.function import expand, expand_multinomial, expand_power_base
+from sympy.simplify.radsimp import expand_numer
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import verify_numerically
-
-from sympy.abc import x, y, z
 
 
 def test_expand_no_log():

@@ -1,13 +1,12 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, symbols, oo, I
-from sympy.integrals.risch import (DifferentialExtension,
-    NonElementaryIntegralException)
-from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
-    no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
-
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.abc import x, t, z, n
+from sympy import I, Poly, S, oo, symbols
+from sympy.abc import n, t, x, z
+from sympy.integrals.rde import bound_degree, cancel_exp, cancel_primitive, \
+    no_cancel_equal, normal_denom, order_at, order_at_oo, rischDE, \
+    solve_poly_rde, spde, special_denom, weak_normalizer
+from sympy.integrals.risch import DifferentialExtension, \
+    NonElementaryIntegralException
+from sympy.utilities.pytest import XFAIL, raises
 
 t0, t1, t2, k = symbols('t:3 k')
 

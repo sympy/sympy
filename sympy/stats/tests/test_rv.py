@@ -1,15 +1,16 @@
 from __future__ import unicode_literals
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta)
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, variance, covariance,
-        skewness, density, given, independent, dependent, where, pspace,
-        random_symbols, sample)
-from sympy.stats.rv import (ProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, PSpace)
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import range
+
+from sympy import And, Basic, DiracDelta, EmptySet, Eq, FiniteSet, Interval, \
+    S, Sum, Symbol, Tuple, cos, erf, exp, integrate, oo, simplify, sin, sqrt, \
+    symbols
 from sympy.abc import x
+from sympy.core.compatibility import range
+from sympy.stats import Die, E, Exponential, FiniteRV, Normal, P, covariance, \
+    density, dependent, given, independent, pspace, random_symbols, sample, \
+    skewness, variance, where
+from sympy.stats.rv import Density, NamedArgsMixin, ProductPSpace, PSpace, \
+    RandomSymbol, rs_swap
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_where():

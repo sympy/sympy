@@ -1,6 +1,6 @@
-from sympy import exp, integrate, oo, S, simplify, sqrt, symbols
+from sympy import S, exp, integrate, oo, simplify, sqrt, symbols
 from sympy.core.compatibility import range
-from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac
+from sympy.physics.hydrogen import E_nl, E_nl_dirac, R_nl
 from sympy.utilities.pytest import raises
 
 n, r, Z = symbols('n r Z')

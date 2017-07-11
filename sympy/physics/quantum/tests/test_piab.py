@@ -1,9 +1,9 @@
 """Tests for piab.py"""
 
-from sympy import Interval, pi, S, sin, sqrt, symbols
+from sympy import Interval, S, pi, sin, sqrt, symbols
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.physics.quantum import L2, qapply, hbar, represent
-from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
+from sympy.physics.quantum import L2, hbar, qapply, represent
+from sympy.physics.quantum.piab import L, PIABBra, PIABHamiltonian, PIABKet, m
 
 i, j, n, x = symbols('i j n x')
 

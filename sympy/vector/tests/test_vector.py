@@ -1,9 +1,10 @@
+from sympy import ImmutableMatrix as Matrix
+from sympy import Derivative, Function, Integral, cos, diff, integrate, pi, \
+    sin, sqrt, symbols
 from sympy.simplify import simplify, trigsimp
-from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
-     sin, cos, Function, Integral, Derivative, diff, integrate
-from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
-     VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.vector import BaseVector, Vector, VectorAdd, VectorMul, \
+    VectorZero
 
 C = CoordSys3D('C')
 

@@ -8,6 +8,7 @@ as a SymPy function for symbolic manipulation.
 from sympy.core.function import Function
 from sympy.core.numbers import Float
 
+
 class FFunction(Function):
     _required_standard = 77
 

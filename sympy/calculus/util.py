@@ -1,13 +1,13 @@
-from sympy import Order, S, log, limit, lcm_list, pi, Abs
-from sympy.core.basic import Basic
+from sympy import Abs, Order, S, lcm_list, limit, log, pi
 from sympy.core import Add, Mul, Pow
-from sympy.logic.boolalg import And
+from sympy.core.basic import Basic
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
-from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
-                             Complement, EmptySet)
-from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.logic.boolalg import And
+from sympy.sets.sets import Complement, EmptySet, FiniteSet, Intersection, \
+    Interval, Union
 from sympy.utilities import filldedent
 
 

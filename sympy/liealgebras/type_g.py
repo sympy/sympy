@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
+
+from .cartan_type import Standard_Cartan
+
 
 class TypeG(Standard_Cartan):
 

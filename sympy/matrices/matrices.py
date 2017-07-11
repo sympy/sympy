@@ -1,31 +1,30 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import collections
-from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
-from sympy.core.expr import Expr
-from sympy.core.power import Pow
-from sympy.core.symbol import Symbol, Dummy, symbols
-from sympy.core.numbers import Integer, ilcm, Float
-from sympy.core.singleton import S
-from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
-
-from sympy.polys import PurePoly, roots, cancel, gcd
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
-from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import Abs, exp, factorial
-from sympy.printing import sstr
-from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.assumptions.refine import refine
-from sympy.core.decorators import call_highest_priority
-
 from types import FunctionType
 
-from .common import (a2idx, classof, MatrixError, ShapeError,
-        NonSquareMatrixError, MatrixCommon)
+from sympy.assumptions.refine import refine
+from sympy.core.add import Add
+from sympy.core.basic import Atom, Basic
+from sympy.core.compatibility import NotIterable, as_int, default_sort_key, \
+    is_sequence, range, reduce, string_types
+from sympy.core.decorators import call_highest_priority
+from sympy.core.expr import Expr
+from sympy.core.numbers import Float, Integer, ilcm
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol, symbols
+from sympy.core.sympify import sympify
+from sympy.functions import Abs, exp, factorial
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
+from sympy.polys import PurePoly, cancel, gcd, roots
+from sympy.printing import sstr
+from sympy.simplify import simplify as _simplify
+from sympy.simplify import nsimplify, signsimp
+from sympy.utilities.iterables import flatten, numbered_symbols
+
+from .common import MatrixCommon, MatrixError, NonSquareMatrixError, \
+    ShapeError, a2idx, classof
 
 
 def _iszero(x):

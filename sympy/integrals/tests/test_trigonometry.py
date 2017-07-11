@@ -1,5 +1,5 @@
 from sympy.core import Eq, Rational, Symbol
-from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
+from sympy.functions import Piecewise, cos, cot, csc, log, sec, sin, tan
 from sympy.integrals.trigonometry import trigintegrate
 
 x = Symbol('x')

@@ -1,17 +1,14 @@
 """Tools for polynomial factorization routines in characteristic zero. """
 
-from sympy.polys.rings import ring, xring
-from sympy.polys.domains import FF, ZZ, QQ, RR, EX
-
-from sympy.polys import polyconfig as config
-from sympy.polys.polyerrors import DomainError
-from sympy.polys.polyclasses import ANP
-from sympy.polys.specialpolys import f_polys, w_polys
-
-from sympy import nextprime, sin, sqrt, I
-from sympy.utilities.pytest import raises
-
+from sympy import I, nextprime, sin, sqrt
 from sympy.core.compatibility import range
+from sympy.polys import polyconfig as config
+from sympy.polys.domains import EX, FF, QQ, RR, ZZ
+from sympy.polys.polyclasses import ANP
+from sympy.polys.polyerrors import DomainError
+from sympy.polys.rings import ring, xring
+from sympy.polys.specialpolys import f_polys, w_polys
+from sympy.utilities.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 w_1, w_2 = w_polys()

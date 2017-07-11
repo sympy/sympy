@@ -1,23 +1,26 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from math import log as _log
-
-from .sympify import _sympify
-from .cache import cacheit
-from .singleton import S
-from .expr import Expr
-from .evalf import PrecisionExhausted
-from .function import (_coeff_isneg, expand_complex, expand_multinomial,
-    expand_mul)
-from .logic import fuzzy_bool, fuzzy_not
-from .compatibility import as_int, range
-from .evaluate import global_evaluate
-from sympy.utilities.iterables import sift
+from math import sqrt as _sqrt
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
-from math import sqrt as _sqrt
+from sympy.utilities.iterables import sift
 
+from .add import Add
+from .cache import cacheit
+from .compatibility import as_int, range
+from .evalf import PrecisionExhausted
+from .evaluate import global_evaluate
+from .expr import Expr
+from .function import _coeff_isneg, expand_complex, expand_mul, \
+    expand_multinomial
+from .logic import fuzzy_bool, fuzzy_not
+from .mul import Mul, _keep_coeff
+from .numbers import Integer
+from .singleton import S
+from .symbol import Dummy, Symbol, symbols
+from .sympify import _sympify
 
 
 def isqrt(n):
@@ -1506,9 +1509,3 @@ class Pow(Expr):
         if e.has(n) and not b.has(n):
             new_e = e.subs(n, n + step)
             return (b**(new_e - e) - 1) * self
-
-
-from .add import Add
-from .numbers import Integer
-from .mul import Mul, _keep_coeff
-from .symbol import Symbol, Dummy, symbols

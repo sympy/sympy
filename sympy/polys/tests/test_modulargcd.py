@@ -1,15 +1,9 @@
-from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ, AlgebraicField
-from sympy.polys.modulargcd import (
-    modgcd_univariate,
-    modgcd_bivariate,
-    _chinese_remainder_reconstruction_multivariate,
-    modgcd_multivariate,
-    _to_ZZ_poly,
-    _to_ANP_poly,
-    func_field_modgcd,
-    _func_field_modgcd_m)
 from sympy import sqrt
+from sympy.polys.domains import QQ, ZZ, AlgebraicField
+from sympy.polys.modulargcd import _chinese_remainder_reconstruction_multivariate, \
+    _func_field_modgcd_m, _to_ANP_poly, _to_ZZ_poly, func_field_modgcd, \
+    modgcd_bivariate, modgcd_multivariate, modgcd_univariate
+from sympy.polys.rings import ring
 
 
 def test_modgcd_univariate_integers():

@@ -1,8 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
-from sympy.core.compatibility import range, iterable
-from sympy.sets import Set, FiniteSet, EmptySet
+from sympy.core import Basic, Dict, S, Symbol, Tuple, sympify
+from sympy.core.compatibility import iterable, range
+from sympy.sets import EmptySet, FiniteSet, Set
 
 
 class Class(Set):

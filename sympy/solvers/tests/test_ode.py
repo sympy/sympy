@@ -1,15 +1,14 @@
 from __future__ import division
 
-
-from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
-    Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, rootof, S, simplify, sin, sqrt, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly)
-from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
-    classify_ode, classify_sysode, constant_renumber, constantsimp,
-    homogeneous_order, infinitesimals, checkinfsol, checksysodesol)
+from sympy import Derivative, Dummy, Eq, Function, I, Integral, LambertW, O, \
+    Piecewise, Poly, Rational, S, Symbol, acos, acosh, asin, asinh, atan, \
+    cos, diff, dsolve, erf, erfi, exp, log, pi, rootof, simplify, sin, sinh, \
+    sqrt, symbols, tan
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
+from sympy.solvers.ode import _undetermined_coefficients_match, checkinfsol, \
+    checkodesol, checksysodesol, classify_ode, classify_sysode, \
+    constant_renumber, constantsimp, homogeneous_order, infinitesimals
+from sympy.utilities.pytest import ON_TRAVIS, XFAIL, raises, skip, slow
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 x, y, z = symbols('x:z', real=True)

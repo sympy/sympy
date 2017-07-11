@@ -1,8 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from pyglet.window import key
-from pyglet.window.mouse import LEFT, RIGHT, MIDDLE
-from util import get_direction_vectors, get_basis_vectors
+from pyglet.window.mouse import LEFT, MIDDLE, RIGHT
+from util import get_basis_vectors, get_direction_vectors
 
 
 class PlotController(object):

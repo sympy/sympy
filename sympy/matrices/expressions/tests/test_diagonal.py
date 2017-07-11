@@ -1,8 +1,7 @@
+from sympy import KroneckerDelta, Q, Symbol, ask
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf
-from sympy import Symbol, ask, Q, KroneckerDelta
 from sympy.utilities.pytest import raises
-
 
 n = Symbol('n')
 m = Symbol('m')

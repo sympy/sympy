@@ -1,8 +1,9 @@
 from copy import copy
 
-from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, Dict, diff, symbols, Indexed, IndexedBase
+from sympy import Dict, Indexed, IndexedBase, Rational, SparseMatrix, Symbol, \
+    diff, symbols
 from sympy.matrices import Matrix
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
 from sympy.utilities.pytest import raises
 

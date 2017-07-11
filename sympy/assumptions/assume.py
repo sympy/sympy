@@ -1,11 +1,13 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 import inspect
+from contextlib import contextmanager
+
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
-from contextlib import contextmanager
 
 
 class AssumptionsContext(set):

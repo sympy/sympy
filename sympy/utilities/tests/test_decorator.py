@@ -1,9 +1,7 @@
-from sympy.utilities.decorator import threaded, xthreaded
-
 from sympy import Eq, Matrix
-
 from sympy.abc import x, y
 from sympy.core.decorators import wraps
+from sympy.utilities.decorator import threaded, xthreaded
 
 
 def test_threaded():

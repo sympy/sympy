@@ -1,11 +1,11 @@
 """ Linear Solver for Holonomic Functions"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy import S
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.core.symbol import Symbol, Dummy, symbols
-from sympy import S
 
 
 class NewMatrix(MutableDenseMatrix):

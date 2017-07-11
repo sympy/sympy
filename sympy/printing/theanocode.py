@@ -1,13 +1,13 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 import inspect
 import sys
-
-from sympy.external import import_module
-
-from sympy.printing.printer import Printer
-from sympy.core.compatibility import range
-import sympy
 from functools import partial
+
+import sympy
+from sympy.core.compatibility import range
+from sympy.external import import_module
+from sympy.printing.printer import Printer
 
 theano = import_module('theano')
 if theano:

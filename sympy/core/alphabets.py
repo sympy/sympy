@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 greeks = ('alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
                     'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',

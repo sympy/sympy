@@ -9,13 +9,15 @@ complete source code files.
 
 """
 
-from __future__ import print_function, division
-from sympy.core import Mul, Pow, S, Rational
-from sympy.core.compatibility import string_types, range
-from sympy.core.mul import _keep_coeff
-from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence, PRECEDENCE
+from __future__ import division, print_function
+
 from re import search
+
+from sympy.core import Mul, Pow, Rational, S
+from sympy.core.compatibility import range, string_types
+from sympy.core.mul import _keep_coeff
+from sympy.printing.codeprinter import Assignment, CodePrinter
+from sympy.printing.precedence import PRECEDENCE, precedence
 
 # List of known functions.  First, those that have the same name in
 # SymPy and Julia. This is almost certainly incomplete!

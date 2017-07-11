@@ -1,40 +1,21 @@
 
-from sympy.polys.galoistools import (
-    gf_crt, gf_crt1, gf_crt2, gf_int,
-    gf_degree, gf_strip, gf_trunc, gf_normal,
-    gf_from_dict, gf_to_dict,
-    gf_from_int_poly, gf_to_int_poly,
-    gf_neg, gf_add_ground, gf_sub_ground, gf_mul_ground,
-    gf_add, gf_sub, gf_add_mul, gf_sub_mul, gf_mul, gf_sqr,
-    gf_div, gf_rem, gf_quo, gf_exquo,
-    gf_lshift, gf_rshift, gf_expand,
-    gf_pow, gf_pow_mod,
-    gf_gcdex, gf_gcd, gf_lcm, gf_cofactors,
-    gf_LC, gf_TC, gf_monic,
-    gf_eval, gf_multi_eval,
-    gf_compose, gf_compose_mod,
-    gf_trace_map,
-    gf_diff,
-    gf_irreducible, gf_irreducible_p,
-    gf_irred_p_ben_or, gf_irred_p_rabin,
-    gf_sqf_list, gf_sqf_part, gf_sqf_p,
-    gf_Qmatrix, gf_Qbasis,
-    gf_ddf_zassenhaus, gf_ddf_shoup,
-    gf_edf_zassenhaus, gf_edf_shoup,
-    gf_berlekamp,
-    gf_factor_sqf, gf_factor,
-    gf_value, linear_congruence, csolve_prime, gf_csolve,
-    gf_frobenius_map, gf_frobenius_monomial_base
-)
-
-from sympy.polys.polyerrors import (
-    ExactQuotientFailed,
-)
-
+from sympy import nextprime, pi
 from sympy.polys import polyconfig as config
-
 from sympy.polys.domains import ZZ
-from sympy import pi, nextprime
+from sympy.polys.galoistools import csolve_prime, gf_add, gf_add_ground, \
+    gf_add_mul, gf_berlekamp, gf_cofactors, gf_compose, gf_compose_mod, \
+    gf_crt, gf_crt1, gf_crt2, gf_csolve, gf_ddf_shoup, gf_ddf_zassenhaus, \
+    gf_degree, gf_diff, gf_div, gf_edf_shoup, gf_edf_zassenhaus, gf_eval, \
+    gf_expand, gf_exquo, gf_factor, gf_factor_sqf, gf_frobenius_map, \
+    gf_frobenius_monomial_base, gf_from_dict, gf_from_int_poly, gf_gcd, \
+    gf_gcdex, gf_int, gf_irred_p_ben_or, gf_irred_p_rabin, gf_irreducible, \
+    gf_irreducible_p, gf_LC, gf_lcm, gf_lshift, gf_monic, gf_mul, \
+    gf_mul_ground, gf_multi_eval, gf_neg, gf_normal, gf_pow, gf_pow_mod, \
+    gf_Qbasis, gf_Qmatrix, gf_quo, gf_rem, gf_rshift, gf_sqf_list, gf_sqf_p, \
+    gf_sqf_part, gf_sqr, gf_strip, gf_sub, gf_sub_ground, gf_sub_mul, gf_TC, \
+    gf_to_dict, gf_to_int_poly, gf_trace_map, gf_trunc, gf_value, \
+    linear_congruence
+from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities.pytest import raises
 
 

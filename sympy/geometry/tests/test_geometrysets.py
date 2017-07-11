@@ -1,8 +1,8 @@
 from __future__ import division
 
 from sympy import Rational, Symbol
-from sympy.geometry import Circle, Line, Point, Polygon, Segment, Parabola
-from sympy.sets import FiniteSet, Union, Intersection, EmptySet
+from sympy.geometry import Circle, Line, Parabola, Point, Polygon, Segment
+from sympy.sets import EmptySet, FiniteSet, Intersection, Union
 
 
 def test_booleans():

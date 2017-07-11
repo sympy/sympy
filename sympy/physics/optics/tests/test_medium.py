@@ -1,10 +1,9 @@
 from __future__ import division
 
-from sympy import sqrt, simplify
-from sympy.physics.optics import Medium
+from sympy import simplify, sqrt
 from sympy.abc import epsilon, mu
-from sympy.physics.units import speed_of_light, u0, e0, m, kg, s, A
-
+from sympy.physics.optics import Medium
+from sympy.physics.units import A, e0, kg, m, s, speed_of_light, u0
 
 c = speed_of_light.convert_to(m/s)
 e0 = e0.convert_to(A**2*s**4/(kg*m**3))

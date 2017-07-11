@@ -1,6 +1,6 @@
-from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatPow, MatMul
-from sympy.matrices import eye, ImmutableMatrix
 from sympy import Basic
+from sympy.matrices import ImmutableMatrix, eye
+from sympy.matrices.expressions import MatAdd, MatMul, MatPow, MatrixSymbol
 
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 2)

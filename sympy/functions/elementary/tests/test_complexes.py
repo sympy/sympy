@@ -1,9 +1,9 @@
-from sympy import (
-    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
-    Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
-    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda)
+from sympy import Abs, DiracDelta, E, Expr, Function, FunctionMatrix, \
+    Heaviside, I, ImmutableMatrix, ImmutableSparseMatrix, Integral, Interval, \
+    Lambda, Matrix, MatrixSymbol, Piecewise, Rational, S, SparseMatrix, \
+    Symbol, adjoint, arg, atan2, comp, conjugate, cos, exp, exp_polar, \
+    expand, im, log, nan, oo, pi, re, sign, sin, sqrt, symbols, transpose, \
+    zoo
 from sympy.utilities.pytest import XFAIL, raises
 
 

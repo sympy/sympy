@@ -1,11 +1,10 @@
-from sympy import exp, I, Matrix, pi, sqrt, Symbol
-
+from sympy import I, Matrix, Symbol, exp, pi, sqrt
 from sympy.core.compatibility import range
-from sympy.physics.quantum.qft import QFT, IQFT, RkGate
-from sympy.physics.quantum.gate import (ZGate, SwapGate, HadamardGate, CGate,
-                                        PhaseGate, TGate)
-from sympy.physics.quantum.qubit import Qubit
+from sympy.physics.quantum.gate import CGate, HadamardGate, PhaseGate, \
+    SwapGate, TGate, ZGate
 from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.qft import IQFT, QFT, RkGate
+from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.represent import represent
 
 

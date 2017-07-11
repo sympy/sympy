@@ -7,8 +7,9 @@ References
 - http://mathworld.wolfram.com/KroneckerDelta.html
 
 """
-from __future__ import print_function, division
-from sympy.core import Add, Mul, S, Dummy
+from __future__ import division, print_function
+
+from sympy.core import Add, Dummy, Mul, S
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, range
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold

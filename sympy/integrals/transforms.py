@@ -1,19 +1,20 @@
 """ Integral Transforms """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy import cos, pi, sin, sqrt
 from sympy.core import S
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import range, reduce
 from sympy.core.function import Function
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
-from sympy.integrals import integrate, Integral
+from sympy.integrals import Integral, integrate
 from sympy.integrals.meijerint import _dummy
-from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
-from sympy.simplify import simplify
-from sympy.utilities import default_sort_key
+from sympy.logic.boolalg import And, Or, conjuncts, disjuncts, to_cnf
 from sympy.matrices.matrices import MatrixBase
-
+from sympy.simplify import simplify
+from sympy.solvers.inequalities import _solve_inequality
+from sympy.utilities import default_sort_key
 
 ##########################################################################
 # Helpers / Utilities
@@ -161,7 +162,6 @@ class IntegralTransform(Function):
     def _eval_rewrite_as_Integral(self, *args):
         return self.as_integral
 
-from sympy.solvers.inequalities import _solve_inequality
 
 
 def _simplify(expr, doit):
@@ -1437,7 +1437,6 @@ def inverse_fourier_transform(F, k, x, **hints):
 # Fourier Sine and Cosine Transform
 ##########################################################################
 
-from sympy import sin, cos, sqrt, pi
 
 
 @_noconds_(True)

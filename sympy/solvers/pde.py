@@ -32,26 +32,24 @@ more information on each (run help(pde)):
     variable coefficients.
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+import operator
 from itertools import combinations_with_replacement
-from sympy.simplify import simplify
+
 from sympy.core import Add, S
-from sympy.core.compatibility import (reduce, is_sequence, range)
-from sympy.core.function import Function, expand, AppliedUndef, Subs
-from sympy.core.relational import Equality, Eq
+from sympy.core.compatibility import is_sequence, range, reduce
+from sympy.core.function import AppliedUndef, Function, Subs, expand
+from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral
+from sympy.simplify import simplify
+from sympy.simplify.radsimp import collect
+from sympy.solvers.deutils import _desolve, _preprocess, ode_order
+from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import has_dups
 from sympy.utilities.misc import filldedent
-
-from sympy.solvers.deutils import _preprocess, ode_order, _desolve
-from sympy.solvers.solvers import solve
-from sympy.simplify.radsimp import collect
-
-import operator
-
 
 allhints = (
     "1st_linear_constant_coeff_homogeneous",

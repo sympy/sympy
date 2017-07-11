@@ -1,16 +1,14 @@
-from sympy import (
-    Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
-    factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod)
+from sympy import Abs, And, Catalan, Derivative, E, Eq, EulerGamma, Function, \
+    I, Idx, Indexed, IndexedBase, Integral, KroneckerDelta, Le, Ne, Or, \
+    Piecewise, Product, Rational, S, Sum, Symbol, binomial, cos, exp, \
+    factorial, gamma, harmonic, log, nan, oo, pi, prod, product, simplify, \
+    sin, sqrt, summation, symbols, sympify, zeta
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
-from sympy.utilities.pytest import XFAIL, raises
-from sympy import simplify
-from sympy.matrices import Matrix
-from sympy.core.mod import Mod
 from sympy.core.compatibility import range
+from sympy.core.mod import Mod
+from sympy.matrices import Matrix
+from sympy.utilities.pytest import XFAIL, raises
 
 n = Symbol('n', integer=True)
 

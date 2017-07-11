@@ -1,14 +1,12 @@
-from itertools import product
 import warnings
+from itertools import product
 
-from sympy import S, symbols, Function, exp
+from sympy import Function, S, exp, symbols
+from sympy.calculus.finite_diff import apply_finite_diff, as_finite_diff, \
+    differentiate_finite, finite_diff_weights
 from sympy.core.compatibility import range
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
-from sympy.calculus.finite_diff import (
-    apply_finite_diff, differentiate_finite, finite_diff_weights,
-    as_finite_diff
-)
 
 
 def test_apply_finite_diff():

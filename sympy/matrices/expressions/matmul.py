@@ -1,15 +1,17 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify, Add
+from sympy.assumptions.ask import Q, ask
+from sympy.assumptions.refine import handlers_dict
+from sympy.core import Add, Basic, Mul, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
+from sympy.matrices.expressions.matexpr import Identity, MatrixExpr, \
+    ShapeError, ZeroMatrix
 from sympy.matrices.expressions.transpose import transpose
-from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
-        do_one, new)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix)
 from sympy.matrices.matrices import MatrixBase
+from sympy.strategies import do_one, exhaust, flatten, new, rm_id, typed, \
+    unpack
 
 
 class MatMul(MatrixExpr):
@@ -247,8 +249,6 @@ def only_squares(*matrices):
     return out
 
 
-from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
 
 
 def refine_MatMul(expr, assumptions):

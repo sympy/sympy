@@ -1,7 +1,11 @@
 """ Caching facility for SymPy """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from distutils.version import LooseVersion as V
+from functools import update_wrapper
+
+from sympy.core.compatibility import lru_cache
+
 
 class _cache(list):
     """ List of cached functions """
@@ -40,8 +44,6 @@ CACHE = _cache()
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-from sympy.core.compatibility import lru_cache
-from functools import update_wrapper
 
 try:
     import fastcache

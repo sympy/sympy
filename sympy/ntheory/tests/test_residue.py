@@ -1,14 +1,14 @@
 from collections import defaultdict
+
 from sympy import Symbol
 from sympy.core.compatibility import range
-
-from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
-    primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, mobius, discrete_log
-from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
-    _discrete_log_trial_mul, _discrete_log_shanks_steps, \
-    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
+from sympy.ntheory import discrete_log, is_nthpow_residue, is_primitive_root, \
+    is_quad_residue, jacobi_symbol, legendre_symbol, mobius, n_order, \
+    nthroot_mod, primerange, primitive_root, quadratic_residues, sqrt_mod, \
+    sqrt_mod_iter, totient
+from sympy.ntheory.residue_ntheory import _discrete_log_pohlig_hellman, \
+    _discrete_log_pollard_rho, _discrete_log_shanks_steps, \
+    _discrete_log_trial_mul, _primitive_root_prime_iter
 from sympy.polys.domains import ZZ
 from sympy.utilities.pytest import raises
 

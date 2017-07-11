@@ -1,8 +1,7 @@
 from itertools import product
 
-from sympy import (ImmutableMatrix, Matrix, eye, zeros, S, Equality,
-        Unequality, ImmutableSparseMatrix, SparseMatrix, sympify,
-        integrate)
+from sympy import Equality, ImmutableMatrix, ImmutableSparseMatrix, Matrix, \
+    S, SparseMatrix, Unequality, eye, integrate, sympify, zeros
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 

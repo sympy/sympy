@@ -1,7 +1,6 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify
-from sympy.utilities.pytest import raises
-
+from sympy import Interval, Matrix, Piecewise, Sum, lambdify, sin, symbols
 from sympy.printing.lambdarepr import lambdarepr
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols("x,y,z")
 i, a, b = symbols("i,a,b")

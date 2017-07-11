@@ -1,27 +1,24 @@
-from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
-    Mul, S, Pow, sieve, Symbol, summation, Dummy,
-    factorial as fac)
-from sympy.core.numbers import Integer, Rational
+from sympy import factorial as fac
+from sympy import Dummy, Mul, Pow, S, Sieve, Symbol, binomial_coefficients, \
+    binomial_coefficients_list, sieve, summation
 from sympy.core.compatibility import long, range
-
-from sympy.ntheory import (isprime, n_order, is_primitive_root,
-    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient,
-    factorint, primefactors, divisors, randprime, nextprime, prevprime,
-    primerange, primepi, prime, pollard_rho, perfect_power, multiplicity,
-    trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
-    factorrat, reduced_totient)
-from sympy.ntheory.factor_ import (smoothness, smoothness_p,
-    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega)
-from sympy.ntheory.generate import cycle_length
-from sympy.ntheory.multinomial import (
-    multinomial_coefficients, multinomial_coefficients_iterator)
+from sympy.core.numbers import Integer, Rational
+from sympy.ntheory import divisor_count, divisor_sigma, divisors, factorint, \
+    factorrat, is_primitive_root, is_quad_residue, isprime, jacobi_symbol, \
+    legendre_symbol, multiplicity, n_order, nextprime, npartitions, \
+    perfect_power, pollard_pm1, pollard_rho, prevprime, prime, primefactors, \
+    primepi, primerange, primorial, randprime, reduced_totient, totient, \
+    trailing
 from sympy.ntheory.bbp_pi import pi_hex_digits
+from sympy.ntheory.factor_ import antidivisor_count, antidivisors, core, \
+    digits, primenu, primeomega, smoothness, smoothness_p, udivisor_count, \
+    udivisor_sigma, udivisors
+from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
-
-from sympy.utilities.pytest import raises, slow
-
+from sympy.ntheory.multinomial import multinomial_coefficients, \
+    multinomial_coefficients_iterator
 from sympy.utilities.iterables import capture
+from sympy.utilities.pytest import raises, slow
 
 
 def fac_multiplicity(n, p):

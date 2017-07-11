@@ -1,15 +1,13 @@
 """Implementaton of :class:`GMPYRationalField` class. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy.polys.domains.groundtypes import GMPYRational, SymPyRational, \
+    gmpy_denom, gmpy_factorial, gmpy_numer, gmpy_qdiv
 from sympy.polys.domains.rationalfield import RationalField
-from sympy.polys.domains.groundtypes import (
-    GMPYRational, SymPyRational,
-    gmpy_numer, gmpy_denom, gmpy_factorial, gmpy_qdiv,
-)
-
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+
 
 @public
 class GMPYRationalField(RationalField):

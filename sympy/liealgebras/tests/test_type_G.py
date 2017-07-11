@@ -2,6 +2,7 @@
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
 
+
 def test_type_G():
     c = CartanType("G2")
     m = Matrix(2, 2, [2, -1, -3, 2])

@@ -1,7 +1,8 @@
 from sympy.core import Rational
 from sympy.core.compatibility import range
-from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
+
+from .cartan_type import Standard_Cartan
 
 
 class TypeF(Standard_Cartan):

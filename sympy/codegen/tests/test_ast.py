@@ -1,12 +1,10 @@
-from sympy import (symbols, MatrixSymbol, Matrix, IndexedBase, Idx, Range,
-    Tuple, sin)
+from sympy import Idx, IndexedBase, Matrix, MatrixSymbol, Range, Tuple, sin, \
+    symbols
+from sympy.codegen.ast import AddAugmentedAssignment, Assignment, CodeBlock, \
+    DivAugmentedAssignment, For, ModAugmentedAssignment, \
+    MulAugmentedAssignment, SubAugmentedAssignment, aug_assign
 from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
-
-
-from sympy.codegen.ast import (Assignment, aug_assign, CodeBlock, For,
-    AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
-    DivAugmentedAssignment, ModAugmentedAssignment)
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
 n = symbols("n", integer=True)

@@ -1,5 +1,5 @@
-from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan, Symbol)
+from sympy import Abs, Expr, I, Q, Rational, S, Symbol, atan, atan2, exp, \
+    nan, pi, refine, sqrt
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise

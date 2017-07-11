@@ -1,11 +1,11 @@
 """Recurrence Operators"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import symbols, Symbol, S
-from sympy.printing import sstr
+from sympy import S, Symbol, symbols
 from sympy.core.compatibility import range
 from sympy.core.sympify import sympify
+from sympy.printing import sstr
 
 
 def RecurrenceOperators(base, generator):

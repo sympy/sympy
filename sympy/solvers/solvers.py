@@ -12,49 +12,48 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, range)
-from sympy.core.sympify import sympify
-from sympy.core import S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
-from sympy.core.exprtools import factor_terms
-from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
-                          Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          Function, expand_power_exp, Lambda, _mexpand)
-from sympy.integrals.integrals import Integral
-from sympy.core.numbers import ilcm, Float
-from sympy.core.relational import Relational, Ge
-from sympy.core.logic import fuzzy_not
-from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.core.basic import preorder_traversal
-
-from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
-                             Abs, re, im, arg, sqrt, atan2)
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-                                                      HyperbolicFunction)
-from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom, logcombine)
-from sympy.simplify.sqrtdenest import sqrt_depth
-from sympy.simplify.fu import TR1
-from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, factor, Poly, together, degree
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
-from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
-
-from sympy.utilities.lambdify import lambdify
-from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import uniq, generate_bell, flatten
-from sympy.utilities.decorator import conserve_mpmath_dps
+import warnings
+from collections import defaultdict
+from types import GeneratorType
 
 from mpmath import findroot
 
-from sympy.solvers.polysys import solve_poly_system
+from sympy.core import Add, Dummy, Equality, Expr, Mul, Pow, S, Symbol
+from sympy.core.basic import preorder_traversal
+from sympy.core.compatibility import default_sort_key, is_sequence, iterable, \
+    ordered, range
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import AppliedUndef, Derivative, Function, Lambda, \
+    UndefinedFunction, _mexpand, expand_log, expand_mul, expand_multinomial, \
+    expand_power_exp, nfloat
+from sympy.core.logic import fuzzy_not
+from sympy.core.numbers import Float, ilcm
+from sympy.core.relational import Ge, Relational
+from sympy.core.sympify import sympify
+from sympy.functions import Abs, LambertW, acos, arg, asin, atan, atan2, cos, \
+    exp, im, log, re, sin, sqrt, tan
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
+from sympy.functions.elementary.trigonometric import HyperbolicFunction, \
+    TrigonometricFunction
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And, BooleanAtom, Or
+from sympy.matrices import Matrix, zeros
+from sympy.polys import Poly, cancel, degree, factor, roots, together
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.simplify import collect, denom, logcombine, nsimplify, posify, \
+    powdenest, powsimp, simplify
+from sympy.simplify.fu import TR1
+from sympy.simplify.sqrtdenest import sqrt_depth
+from sympy.solvers.bivariate import _filtered_gens, _solve_lambert, \
+    bivariate_type
 from sympy.solvers.inequalities import reduce_inequalities
-
-from types import GeneratorType
-from collections import defaultdict
-import warnings
+from sympy.solvers.polysys import solve_poly_system
+from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.iterables import flatten, generate_bell, uniq
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.misc import filldedent
 
 
 def _ispow(e):
@@ -3390,6 +3389,3 @@ def unrad(eq, *syms, **flags):
         eq, cov = neq
     eq, cov = _canonical(eq, cov)
     return eq, cov
-
-from sympy.solvers.bivariate import (
-    bivariate_type, _solve_lambert, _filtered_gens)

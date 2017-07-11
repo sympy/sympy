@@ -2,27 +2,26 @@ import collections
 import random
 import warnings
 
-from sympy import (
-    Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, tan, sstr, diff)
-from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
-    _simplify)
-from sympy.matrices import (
-    GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
-    SparseMatrix, casoratian, diag, eye, hessian,
-    matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, range
-from sympy.core import Tuple
-from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.solvers import solve
-from sympy.assumptions import Q
-
+from sympy import Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, \
+    PurePoly, Rational, S, Symbol, cos, diff, exp, oo, pi, signsimp, \
+    simplify, sin, sqrt, sstr, symbols, sympify, tan, trigsimp
 from sympy.abc import a, b, c, d, x, y, z
+from sympy.assumptions import Q
+from sympy.core import Tuple
+from sympy.core.compatibility import iterable, long, range
+from sympy.matrices import GramSchmidt, ImmutableDenseMatrix, \
+    ImmutableMatrix, ImmutableSparseMatrix, Matrix, MutableDenseMatrix, \
+    SparseMatrix, casoratian, diag, eye, hessian, \
+    matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2, \
+    rot_axis3, wronskian, zeros
+from sympy.matrices.matrices import DeferredVector, MatrixError, \
+    NonSquareMatrixError, ShapeError, _find_reasonable_pivot_naive, \
+    _simplify
+from sympy.solvers import solve
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import capture, flatten
+from sympy.utilities.pytest import XFAIL, raises, skip, slow
+
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)

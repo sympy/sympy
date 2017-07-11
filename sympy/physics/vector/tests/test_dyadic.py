@@ -1,6 +1,6 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix
+from sympy import ImmutableMatrix as Matrix
+from sympy import cos, pi, sin, symbols
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
-
 
 Vector.simp = True
 A = ReferenceFrame('A')

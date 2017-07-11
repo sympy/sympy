@@ -1,11 +1,11 @@
 import warnings
 
+from sympy import Matrix, acos, cos, evalf, pi, sin, sqrt, symbols
 from sympy.core.compatibility import range
-from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
-from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
-                                     KanesMethod, RigidBody, Point, dot, msubs)
+from sympy.physics.mechanics import KanesMethod, Point, ReferenceFrame, \
+    RigidBody, dot, dynamicsymbols, inertia, msubs
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import slow, ON_TRAVIS, skip
+from sympy.utilities.pytest import ON_TRAVIS, skip, slow
 
 
 @slow

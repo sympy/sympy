@@ -7,31 +7,29 @@ This module contains functions to:
 
     - solve a system of Non Linear Equations with N variables and M equations
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.calculus.util import continuous_domain, periodicity
+from sympy.core import Dummy, Equality, Expr, Mul, Pow, S, Wild, pi
+from sympy.core.compatibility import default_sort_key, ordered
+from sympy.core.function import Lambda, expand_complex
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import simplify, fraction, trigsimp
-from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
-                             acos, asin, acsc, asec, arg,
-                             piecewise_fold)
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-                                                      HyperbolicFunction)
+from sympy.core.sympify import sympify
+from sympy.functions import Abs, acos, acsc, arg, asec, asin, cos, cot, csc, \
+    exp, log, piecewise_fold, sec, sin, tan
 from sympy.functions.elementary.miscellaneous import real_root
-from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union, ConditionSet, ImageSet, Complement)
+from sympy.functions.elementary.trigonometric import HyperbolicFunction, \
+    TrigonometricFunction
 from sympy.matrices import Matrix
-from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf)
-from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens
-from sympy.solvers.polysys import solve_poly_system
+from sympy.polys import Poly, PolynomialError, RootOf, degree, roots, together
+from sympy.sets import Complement, ConditionSet, EmptySet, FiniteSet, \
+    ImageSet, Intersection, Interval, Union, imageset
+from sympy.simplify.simplify import fraction, simplify, trigsimp
 from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.solvers.polysys import solve_poly_system
+from sympy.solvers.solvers import _simple_dens, checksol, denoms, unrad
 from sympy.utilities import filldedent
-from sympy.calculus.util import periodicity, continuous_domain
-from sympy.core.compatibility import ordered, default_sort_key
 
 
 def _invert(f_x, y, x, domain=S.Complexes):

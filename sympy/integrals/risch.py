@@ -23,31 +23,27 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import real_roots, default_sort_key
+from types import GeneratorType
+
+from sympy import default_sort_key, real_roots
 from sympy.abc import z
+from sympy.core.compatibility import ordered, range, reduce
 from sympy.core.function import Lambda
-from sympy.core.numbers import ilcm, oo
 from sympy.core.mul import Mul
+from sympy.core.numbers import ilcm, oo
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, ordered, range
-from sympy.integrals.heurisch import _symbols
-
-from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
-    Piecewise, sin, tan)
-
-from sympy.functions import sinh, cosh, tanh, coth
+from sympy.core.symbol import Dummy, Symbol
+from sympy.functions import Piecewise, acos, acot, asin, atan, cos, cosh, \
+    cot, coth, exp, log, sin, sinh, tan, tanh
 from sympy.integrals import Integral, integrate
-
-from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
-
+from sympy.integrals.heurisch import _symbols
+from sympy.polys import DomainError, Poly, PolynomialError, RootSum, cancel, \
+    gcd, reduced
 from sympy.utilities.iterables import numbered_symbols
-
-from types import GeneratorType
 
 
 def integer_powers(exprs):

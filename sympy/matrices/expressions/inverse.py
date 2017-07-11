@@ -1,8 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from sympy.assumptions.ask import Q, ask
+from sympy.assumptions.refine import handlers_dict
+from sympy.core import Basic, S
 from sympy.core.sympify import _sympify
-from sympy.core import S, Basic
-
 from sympy.matrices.expressions.matexpr import ShapeError
 from sympy.matrices.expressions.matpow import MatPow
 
@@ -64,8 +65,6 @@ class Inverse(MatPow):
             return self.arg.inverse()
 
 
-from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
 
 
 def refine_Inverse(expr, assumptions):

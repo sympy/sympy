@@ -1,11 +1,10 @@
 """Implementation of :class:`QuotientRing` class."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.domains.ring import Ring
-from sympy.polys.polyerrors import NotReversible, CoercionFailed
 from sympy.polys.agca.modules import FreeModuleQuotientRing
-
+from sympy.polys.domains.ring import Ring
+from sympy.polys.polyerrors import CoercionFailed, NotReversible
 from sympy.utilities import public
 
 # TODO

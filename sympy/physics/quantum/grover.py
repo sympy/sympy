@@ -8,16 +8,16 @@ Todo:
 * Implement _represent_ZGate in OracleGate
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import floor, pi, sqrt, sympify, eye
+from sympy import eye, floor, pi, sqrt, sympify
 from sympy.core.compatibility import range
 from sympy.core.numbers import NegativeOne
-from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qexpr import QuantumError
+from sympy.physics.quantum.gate import Gate
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
-from sympy.physics.quantum.gate import Gate
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.qubit import IntQubit
 
 __all__ = [

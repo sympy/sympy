@@ -1,27 +1,26 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from itertools import product
 
-from sympy.core.sympify import (_sympify, sympify, converter,
-    SympifyError)
+from mpmath import mpf, mpi
+
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.singleton import Singleton, S
+from sympy.core.compatibility import PY3, iterable, ordered, range, \
+    with_metaclass
 from sympy.core.evalf import EvalfMixin
-from sympy.core.numbers import Float
-from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3)
 from sympy.core.evaluate import global_evaluate
+from sympy.core.expr import Expr
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.singleton import S, Singleton
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.sympify import SympifyError, _sympify, converter, sympify
+from sympy.logic.boolalg import And, Not, Or, false, true
 from sympy.sets.contains import Contains
-from sympy.utilities.misc import func_name, filldedent
-
-from mpmath import mpi, mpf
-from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import subsets
+from sympy.utilities.misc import filldedent, func_name
 
 
 class Set(Basic):

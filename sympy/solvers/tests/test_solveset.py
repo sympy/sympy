@@ -1,33 +1,23 @@
-from sympy import (
-    Abs, Dummy, Eq, Gt, Function, Mod,
-    LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sec, sqrt, symbols,
-    tan, tanh, atan2, arg,
-    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
-    oo)
-
+from sympy import Abs, Dummy, E, EmptySet, Eq, Function, Gt, I, Intersection, \
+    Interval, Lambda, LambertW, Matrix, Mod, Piecewise, Poly, Rational, S, \
+    Symbol, Union, acos, acot, acsc, arg, asec, asin, atan, atan2, atanh, \
+    cos, cot, csc, erf, erfc, erfcinv, erfinv, exp, imageset, log, oo, pi, \
+    sec, sin, sinh, sqrt, symbols, tan, tanh
+from sympy.core.containers import Dict
 from sympy.core.function import nfloat
 from sympy.core.relational import Unequality as Ne
 from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-
-from sympy.polys.rootoftools import CRootOf
-
-from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
-
-from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
-from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
-from sympy.core.containers import Dict
-
-from sympy.solvers.solveset import (
-    solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
-    linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars)
-
+from sympy.polys.rootoftools import CRootOf
+from sympy.sets import Complement, ConditionSet, FiniteSet, ImageSet
+from sympy.solvers.solveset import _is_finite_with_finite_vars, \
+    _is_function_class_equation, domain_check, invert_complex, invert_real, \
+    linear_eq_to_matrix, linsolve, nonlinsolve, solve_decomposition, \
+    solveset, solveset_complex, solveset_real, solvify, substitution
+from sympy.utilities.pytest import SKIP, XFAIL, raises, skip, slow
+from sympy.utilities.randtest import verify_numerically as tn
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)

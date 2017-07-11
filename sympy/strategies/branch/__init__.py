@@ -1,4 +1,4 @@
 from . import traverse
-from .core import (condition, debug, multiplex, exhaust, notempty,
-        chain, onaction, sfilter, yieldify, do_one, identity)
+from .core import chain, condition, debug, do_one, exhaust, identity, \
+    multiplex, notempty, onaction, sfilter, yieldify
 from .tools import canon

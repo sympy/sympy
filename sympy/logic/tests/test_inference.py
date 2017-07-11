@@ -1,15 +1,14 @@
 """For more tests on satisfiability, see test_dimacs"""
 
-from sympy import symbols, Q
+from sympy import Q, symbols
 from sympy.core.compatibility import range
-from sympy.logic.boolalg import And, Implies, Equivalent, true, false
-from sympy.logic.inference import literal_symbol, \
-     pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
-    find_pure_symbol, find_unit_clause, unit_propagate, \
-    find_pure_symbol_int_repr, find_unit_clause_int_repr, \
-    unit_propagate_int_repr
+    find_pure_symbol, find_pure_symbol_int_repr, find_unit_clause, \
+    find_unit_clause_int_repr, unit_propagate, unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
+from sympy.logic.boolalg import And, Equivalent, Implies, false, true
+from sympy.logic.inference import PropKB, entails, literal_symbol, pl_true, \
+    satisfiable, valid
 from sympy.utilities.pytest import raises
 
 

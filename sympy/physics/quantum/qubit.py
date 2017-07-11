@@ -6,25 +6,23 @@ Todo:
 * Update tests.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate
+from mpmath.libmp.libintmath import bitcount
+
+from sympy import Add, Integer, Mul, Pow, conjugate, log
 from sympy.core.basic import sympify
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import range, string_types
 from sympy.matrices import Matrix, zeros
-from sympy.printing.pretty.stringpict import prettyForm
-
 from sympy.physics.quantum.hilbert import ComplexSpace
-from sympy.physics.quantum.state import Ket, Bra, State
-
+from sympy.physics.quantum.matrixutils import numpy_ndarray, \
+    scipy_sparse_matrix
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.matrixutils import (
-    numpy_ndarray, scipy_sparse_matrix
-)
-from mpmath.libmp.libintmath import bitcount
+from sympy.physics.quantum.state import Bra, Ket, State
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'Qubit',

@@ -2,30 +2,30 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import math
 
 import mpmath.libmp as libmp
-from mpmath import (
-    make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
-from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
-        fnan, fnone, fone, fzero, mpf_abs, mpf_add,
-        mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
-        mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
-        mpf_sqrt, normalize, round_nearest, to_int, to_str)
+from mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadosc, quadts, \
+    workprec
 from mpmath.libmp import bitcount as mpmath_bitcount
+from mpmath.libmp import fhalf, fnan, fnone, fone, from_int, from_man_exp, \
+    from_rational, fzero, mpf_abs, mpf_add, mpf_atan, mpf_atan2, mpf_cmp, \
+    mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, mpf_neg, mpf_pi, \
+    mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, normalize, \
+    round_nearest, to_int, to_str
 from mpmath.libmp.backend import MPZ
+from mpmath.libmp.gammazeta import mpf_bernoulli
 from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-from mpmath.libmp.gammazeta import mpf_bernoulli
-
-from .compatibility import SYMPY_INTS, range
-from .sympify import sympify
-from .singleton import S
 
 from sympy.utilities.iterables import is_sequence
+
+from .compatibility import SYMPY_INTS, range
+from .singleton import S
+from .sympify import sympify
 
 LG10 = math.log(10, 2)
 rnd = round_nearest

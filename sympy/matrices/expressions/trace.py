@@ -1,7 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Basic, Expr, sympify
 from sympy.matrices.matrices import MatrixBase
+
 from .matexpr import ShapeError
 
 

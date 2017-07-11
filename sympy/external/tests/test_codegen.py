@@ -23,14 +23,14 @@
 
 from __future__ import print_function
 
-from sympy.abc import x, y, z
-from sympy.utilities.pytest import skip
-from sympy.utilities.codegen import codegen, make_routine, get_code_generator
-import sys
 import os
-import tempfile
 import subprocess
+import sys
+import tempfile
 
+from sympy.abc import x, y, z
+from sympy.utilities.codegen import codegen, get_code_generator, make_routine
+from sympy.utilities.pytest import skip
 
 # templates for the main program that will test the generated code.
 

@@ -1,38 +1,32 @@
 # -*- coding: utf-8 -*-
-from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
-    Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
-    Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
-    Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
-    groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps,
-    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
-from sympy.core.expr import UnevaluatedExpr
-
-from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
-    Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
-    euler, exp, expint, factorial, factorial2, floor, hyper, log,
-    lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
-    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
-
-from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
-    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
-
-from sympy.printing.pretty import pretty as xpretty
-from sympy.printing.pretty import pprint
-
-from sympy.physics.units import joule
-from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
-                                MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
-
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.trace import Tr
-
+from sympy import FF, QQ, RR, ZZ, Add, And, Basic, Complement, Contains, \
+    Derivative, Dict, Eq, Equivalent, EulerGamma, FiniteSet, Function, Ge, \
+    GoldenRatio, Gt, I, Implies, Integral, Intersection, Interval, Lambda, \
+    Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or, Pow, Product, \
+    Range, Rational, Ray, RootSum, S, Segment, SeqAdd, SeqFormula, SeqMul, \
+    SeqPer, SingularityFunction, Subs, Sum, Symbol, Trace, Tuple, Union, Xor, \
+    conjugate, fourier_series, fps, grlex, groebner, ilex, oo, pi, rootof, \
+    symbols
+from sympy.codegen.ast import AddAugmentedAssignment, Assignment, \
+    DivAugmentedAssignment, ModAugmentedAssignment, MulAugmentedAssignment, \
+    SubAugmentedAssignment
 from sympy.core.compatibility import u_decode as u
 from sympy.core.compatibility import range
+from sympy.core.expr import UnevaluatedExpr
+from sympy.core.trace import Tr
+from sympy.functions import Abs, Chi, Ci, DiracDelta, Ei, KroneckerDelta, \
+    Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos, elliptic_e, \
+    elliptic_f, elliptic_k, elliptic_pi, euler, exp, expint, factorial, \
+    factorial2, floor, hyper, log, lowergamma, meijerg, sin, sqrt, \
+    subfactorial, tan, uppergamma
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+from sympy.physics.units import joule
+from sympy.printing.pretty import pretty as xpretty
+from sympy.printing.pretty import pprint
+from sympy.tensor.array import ImmutableDenseNDimArray, \
+    ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray, \
+    tensorproduct
+from sympy.utilities.pytest import XFAIL, raises
 
 a, b, x, y, z, k, n = symbols('a,b,x,y,z,k,n')
 th = Symbol('theta')

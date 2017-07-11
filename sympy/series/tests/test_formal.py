@@ -1,10 +1,9 @@
-from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
-                   Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul)
-from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
-                                 rational_independent, simpleDE, exp_re,
-                                 hyper_re)
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy import Add, Derivative, Function, I, Integral, Mul, O, Rational, \
+    S, Sum, acos, acosh, airyai, asech, asin, atan, cos, erf, exp, factorial, \
+    fps, gamma, log, oo, pi, sin, sqrt, symbols
+from sympy.series.formal import FormalPowerSeries, exp_re, hyper_re, \
+    rational_algorithm, rational_independent, simpleDE
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 x, y, z = symbols('x y z')
 n, m, k = symbols('n m k', integer=True)

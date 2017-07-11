@@ -1,9 +1,9 @@
-from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
-    DifferentialOperators, from_hyper, from_meijerg, expr_to_holonomic)
-from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr, Symbol,
-    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si, asinh)
-from sympy import ZZ, QQ, RR
+from sympy import QQ, RR, ZZ, Ci, EulerGamma, I, O, S, Si, Symbol, asinh, \
+    besselj, cos, cosh, erf, erfc, exp, hyper, hyperexpand, log, meijerg, pi, \
+    sin, sqrt, sstr, symbols
+from sympy.holonomic import DifferentialOperator, DifferentialOperators, \
+    HolonomicFunction, expr_to_holonomic, from_hyper, from_meijerg
+from sympy.holonomic.recurrence import HolonomicSequence, RecurrenceOperators
 
 
 def test_DifferentialOperator():

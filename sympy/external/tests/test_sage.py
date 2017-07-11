@@ -19,7 +19,9 @@ import os
 import re
 import sys
 
+import sympy
 from sympy.external import import_module
+from sympy.utilities.pytest import XFAIL
 
 sage = import_module('sage.all', __import__kwargs={'fromlist': ['all']})
 if not sage:
@@ -30,9 +32,7 @@ if sys.version_info[0] == 3:
     # Sage does not support Python 3 currently
     disabled = True
 
-import sympy
 
-from sympy.utilities.pytest import XFAIL
 
 
 def check_expression(expr, var_symbols, only_from_sympy=False):

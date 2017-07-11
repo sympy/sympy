@@ -1,5 +1,5 @@
-from sympy.core.decorators import deprecated
 from sympy.core.core import BasicMeta, Registry, all_classes
+from sympy.core.decorators import deprecated
 
 
 class ClassRegistry(Registry):

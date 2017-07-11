@@ -9,9 +9,9 @@ References
 .. [1] http://en.wikipedia.org/wiki/Pauli_matrices
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, I, Mul, Pow, Add
+from sympy import Add, I, Mul, Pow, Symbol
 from sympy.physics.quantum import TensorProduct
 
 __all__ = ['evaluate_pauli_product']

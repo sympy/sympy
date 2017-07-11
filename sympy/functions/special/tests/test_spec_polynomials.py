@@ -1,11 +1,10 @@
-from sympy import (
-    Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
-    cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,
-    legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
-    laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
-
+from sympy import Derivative, Dummy, Rational, RisingFactorial, S, Symbol, \
+    assoc_laguerre, assoc_legendre, binomial, chebyshevt, chebyshevt_root, \
+    chebyshevu, chebyshevu_root, conjugate, cos, diff, factorial, gamma, \
+    gegenbauer, hermite, hyper, jacobi, jacobi_normalized, laguerre, \
+    laguerre_poly, legendre, oo, pi, roots, sqrt, zoo
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
 

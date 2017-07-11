@@ -1,7 +1,6 @@
 from sympy.core.backend import symbols
-from sympy.physics.mechanics import dynamicsymbols
-from sympy.physics.mechanics import ReferenceFrame, Point, Particle
-from sympy.physics.mechanics import LagrangesMethod, Lagrangian
+from sympy.physics.mechanics import LagrangesMethod, Lagrangian, Particle, \
+    Point, ReferenceFrame, dynamicsymbols
 
 ### This test asserts that a system with more than one external forces
 ### is acurately formed with Lagrange method (see issue #8626)

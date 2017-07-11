@@ -1,18 +1,17 @@
-from sympy import (Derivative, diff, Function, Integer, Mul, pi, sin, Symbol,
-                   symbols)
-from sympy.physics.quantum.qexpr import QExpr
+from sympy import Derivative, Function, Integer, Mul, Symbol, diff, pi, sin, \
+    symbols
+from sympy.core.trace import Tr
+from sympy.matrices import eye
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
-from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
-                                            HermitianOperator, OuterProduct,
-                                            DifferentialOperator,
-                                            IdentityOperator)
-from sympy.physics.quantum.state import Ket, Bra, Wavefunction
+from sympy.physics.quantum.operator import DifferentialOperator, \
+    HermitianOperator, IdentityOperator, Operator, OuterProduct, \
+    UnitaryOperator
 from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.represent import represent
-from sympy.core.trace import Tr
-from sympy.physics.quantum.spin import JzKet, JzBra
-from sympy.matrices import eye
+from sympy.physics.quantum.spin import JzBra, JzKet
+from sympy.physics.quantum.state import Bra, Ket, Wavefunction
 
 
 class CustomKet(Ket):

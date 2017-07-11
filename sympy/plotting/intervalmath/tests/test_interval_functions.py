@@ -1,11 +1,9 @@
 from __future__ import division
 
 from sympy.external import import_module
-from sympy.plotting.intervalmath import (
-    Abs, acos, acosh, And, asin, asinh, atan, atanh, ceil, cos, cosh,
-    exp, floor, imax, imin, interval, log, log10, Or, sin, sinh, sqrt,
-    tan, tanh,
-)
+from sympy.plotting.intervalmath import Abs, And, Or, acos, acosh, asin, \
+    asinh, atan, atanh, ceil, cos, cosh, exp, floor, imax, imin, interval, \
+    log, log10, sin, sinh, sqrt, tan, tanh
 
 np = import_module('numpy')
 if not np:

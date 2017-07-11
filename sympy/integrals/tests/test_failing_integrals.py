@@ -2,16 +2,12 @@
 
 from __future__ import division
 
-from sympy import (
-    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,
-    tan, S, log, gamma, sinh,
-)
-
-from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
-
-from sympy.abc import x, k, c, y, R, b, h, a, m
-
 import signal
+
+from sympy import Integral, S, cos, exp, gamma, integrate, log, oo, pi, sign, \
+    sin, sinh, sqrt, tan
+from sympy.abc import R, a, b, c, h, k, m, x, y
+from sympy.utilities.pytest import ON_TRAVIS, SKIP, XFAIL, skip, slow
 
 
 class TimeOutError(Exception):

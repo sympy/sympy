@@ -1,7 +1,8 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from sympy.utilities import default_sort_key
 
 from .str import StrPrinter
-from sympy.utilities import default_sort_key
 
 
 class LambdaPrinter(StrPrinter):

@@ -1,10 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
+from threading import Lock, Thread
+
+from pyglet.clock import Clock
 from pyglet.gl import *
 from pyglet.window import Window
-from pyglet.clock import Clock
-
-from threading import Thread, Lock
 
 gl_lock = Lock()
 

@@ -4,15 +4,14 @@ singularity functions in mechanics.
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Symbol, diff
-from sympy.solvers import linsolve
-from sympy.printing import sstr
+from sympy.core import S, Symbol, diff, sympify
 from sympy.functions import SingularityFunction
-from sympy.core import sympify
 from sympy.integrals import integrate
+from sympy.printing import sstr
 from sympy.series import limit
+from sympy.solvers import linsolve
 
 
 class Beam(object):

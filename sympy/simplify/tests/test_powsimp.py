@@ -1,9 +1,7 @@
-from sympy import (
-    symbols, powsimp, symbols, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
-    S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
-    Rational)
-
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy import Dummy, E, Function, I, MatrixSymbol, Mul, Rational, S, \
+    Symbol, exp, gamma, hyper, log, pi, powdenest, powsimp, root, simplify, \
+    sin, sqrt, symbols
+from sympy.abc import a, b, c, d, e, f, g, h, i, k, t, x, y, z
 
 
 def test_powsimp():

@@ -12,10 +12,11 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import range, string_types
+
+from .pretty_symbology import hobj, pretty_use_unicode, vobj, xobj, xsym
 
 
 class stringPict(object):

@@ -1,9 +1,8 @@
-from sympy import S, Symbol, sin, cos
-from sympy.physics.vector import ReferenceFrame, Vector, Point, \
-     dynamicsymbols
-from sympy.physics.vector.fieldfunctions import divergence, \
-     gradient, curl, is_conservative, is_solenoidal, \
-     scalar_potential, scalar_potential_difference
+from sympy import S, Symbol, cos, sin
+from sympy.physics.vector import Point, ReferenceFrame, Vector, dynamicsymbols
+from sympy.physics.vector.fieldfunctions import curl, divergence, gradient, \
+    is_conservative, is_solenoidal, scalar_potential, \
+    scalar_potential_difference
 from sympy.utilities.pytest import raises
 
 R = ReferenceFrame('R')

@@ -1,7 +1,9 @@
 from sympy.concrete import Sum
-from sympy.concrete.delta import deltaproduct as dp, deltasummation as ds
-from sympy.core import Eq, S, symbols, oo
-from sympy.functions import KroneckerDelta as KD, Piecewise, piecewise_fold
+from sympy.concrete.delta import deltaproduct as dp
+from sympy.concrete.delta import deltasummation as ds
+from sympy.core import Eq, S, oo, symbols
+from sympy.functions import KroneckerDelta as KD
+from sympy.functions import Piecewise, piecewise_fold
 from sympy.logic import And
 
 i, j, k, l, m = symbols("i j k l m", integer=True, finite=True)

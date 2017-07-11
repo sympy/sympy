@@ -7,7 +7,14 @@
 
 from __future__ import division
 
+import mpmath
+
+import sympy
+from sympy import Float, Integer, Matrix, Rational, Symbol, lambdify, \
+    list2numpy, matrix2numpy, sin, symarray, symbols
+from sympy.abc import x, y, z
 from sympy.external import import_module
+from sympy.utilities.decorator import conserve_mpmath_dps
 
 numpy = import_module('numpy')
 if numpy:
@@ -17,13 +24,7 @@ else:
     disabled = True
 
 
-from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
-        Matrix, lambdify, symarray, symbols, Integer)
-import sympy
 
-import mpmath
-from sympy.abc import x, y, z
-from sympy.utilities.decorator import conserve_mpmath_dps
 
 
 # first, systematically check, that all operations are implemented and don't

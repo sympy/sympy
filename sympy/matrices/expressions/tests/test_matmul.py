@@ -1,12 +1,12 @@
-from sympy.core import I, symbols, Basic
+from sympy import Q, refine
+from sympy.core import Basic, I, symbols
 from sympy.functions import adjoint, transpose
-from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
-        eye, ImmutableMatrix)
-from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
-from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
-        MatMul, xxinv, any_zeros, unpack, only_squares)
+from sympy.matrices import Identity, ImmutableMatrix, Inverse, Matrix, \
+    MatrixSymbol, ZeroMatrix, eye
+from sympy.matrices.expressions import Adjoint, MatPow, Transpose, det
+from sympy.matrices.expressions.matmul import MatMul, any_zeros, \
+    factor_in_front, only_squares, remove_ids, unpack, xxinv
 from sympy.strategies import null_safe
-from sympy import refine, Q
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)

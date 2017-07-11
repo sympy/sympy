@@ -1,15 +1,14 @@
-from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
-        log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
-        E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy import Derivative, Dummy, E, Eq, Expr, Float, Function, I, Lambda, \
+    O, Rational, S, Subs, Sum, Symbol, Tuple, acos, cos, diff, exp, expand, \
+    expint, im, log, loggamma, nfloat, pi, polygamma, re, sin, sqrt, symbols
 from sympy.abc import t, w, x, y, z
+from sympy.core.cache import clear_cache
+from sympy.core.compatibility import range
 from sympy.core.function import PoleError, _mexpand
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
-from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, raises
 
 f, g, h = symbols('f g h', cls=Function)
 

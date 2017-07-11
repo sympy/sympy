@@ -6,13 +6,14 @@ combinatorial polynomials.
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.singleton import S
 from sympy.core import Rational
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.functions.combinatorial.factorials import binomial, factorial, RisingFactorial
+from sympy.functions.combinatorial.factorials import RisingFactorial, \
+    binomial, factorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
@@ -20,16 +21,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
-
-from sympy.polys.orthopolys import (
-    jacobi_poly,
-    gegenbauer_poly,
-    chebyshevt_poly,
-    chebyshevu_poly,
-    laguerre_poly,
-    hermite_poly,
-    legendre_poly
-)
+from sympy.polys.orthopolys import chebyshevt_poly, chebyshevu_poly, \
+    gegenbauer_poly, hermite_poly, jacobi_poly, laguerre_poly, legendre_poly
 
 _x = Dummy('x')
 

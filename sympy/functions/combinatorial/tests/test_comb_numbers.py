@@ -1,17 +1,13 @@
 import string
 
-from sympy import (
-    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
-    expand_func, diff, EulerGamma, cancel, re, im, Product)
-from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi,
-    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
-    sin, cos, cot, zeta)
-
+from sympy import Dummy, EulerGamma, I, Product, Rational, S, Sum, Symbol, \
+    cancel, diff, expand_func, im, oo, pi, re, symbols
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, raises
-
 from sympy.core.numbers import GoldenRatio
+from sympy.functions import bell, bernoulli, binomial, catalan, cos, cot, \
+    digamma, euler, factorial, fibonacci, gamma, genocchi, harmonic, hyper, \
+    log, lucas, polygamma, sin, sqrt, trigamma, zeta
+from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
 

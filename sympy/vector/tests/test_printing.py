@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from sympy import Integral, latex, Function
 from sympy import pretty as xpretty
-from sympy.vector import CoordSys3D, Vector, express
+from sympy import Function, Integral, latex
 from sympy.abc import a, b, c
 from sympy.core.compatibility import u_decode as u
 from sympy.utilities.pytest import XFAIL
+from sympy.vector import CoordSys3D, Vector, express
+
 
 def pretty(expr):
     """ASCII pretty-printing"""

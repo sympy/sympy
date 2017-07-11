@@ -29,36 +29,37 @@ There are three types of functions implemented in SymPy:
     (x,)
 
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from .add import Add
-from .assumptions import ManagedProperties
-from .basic import Basic
-from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered
-from .decorators import _sympifyit
-from .expr import Expr, AtomicExpr
-from .numbers import Rational, Float
-from .operations import LatticeOp
-from .rules import Transform
-from .singleton import S
-from .sympify import sympify
-
-from sympy.core.containers import Tuple, Dict
-from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, range
-from sympy.utilities import default_sort_key
-from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import uniq
-from sympy.core.evaluate import global_evaluate
-
+import collections
+import inspect
 import sys
 
 import mpmath
 import mpmath.libmp as mlib
 
-import inspect
-import collections
+from sympy.core.compatibility import range, string_types, with_metaclass
+from sympy.core.containers import Dict, Tuple
+from sympy.core.evaluate import global_evaluate
+from sympy.core.logic import fuzzy_and
+from sympy.core.symbol import Dummy, Symbol
+from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import uniq
+from sympy.utilities.misc import filldedent
+
+from .add import Add
+from .assumptions import ManagedProperties
+from .basic import Basic
+from .cache import cacheit
+from .compatibility import as_int, is_sequence, iterable, ordered
+from .decorators import _sympifyit
+from .expr import AtomicExpr, Expr
+from .numbers import Float, Rational
+from .operations import LatticeOp
+from .rules import Transform
+from .singleton import S
+from .sympify import sympify
+
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -2643,6 +2644,3 @@ def nfloat(expr, n=15, exponent=False):
     return rv.xreplace(Transform(
         lambda x: x.func(*nfloat(x.args, n, exponent)),
         lambda x: isinstance(x, Function)))
-
-
-from sympy.core.symbol import Dummy, Symbol

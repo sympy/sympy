@@ -1,7 +1,8 @@
-from sympy.core.backend import (diff, expand, sin, cos, sympify,
-                   eye, symbols, ImmutableMatrix as Matrix, MatrixBase)
-from sympy import (trigsimp, solve, Symbol, Dummy)
-from sympy.core.compatibility import string_types, range
+from sympy import Dummy, Symbol, solve, trigsimp
+from sympy.core.backend import ImmutableMatrix as Matrix
+from sympy.core.backend import MatrixBase, cos, diff, expand, eye, sin, \
+    symbols, sympify
+from sympy.core.compatibility import range, string_types
 from sympy.physics.vector.vector import Vector, _check_vector
 
 __all__ = ['CoordinateSym', 'ReferenceFrame']

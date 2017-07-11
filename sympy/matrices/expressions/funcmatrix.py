@@ -1,9 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from sympy import Basic, sympify
+from sympy.functions.elementary.complexes import im, re
+from sympy.matrices import Matrix
 
 from .matexpr import MatrixExpr
-from sympy import Basic, sympify
-from sympy.matrices import Matrix
-from sympy.functions.elementary.complexes import re, im
+
 
 class FunctionMatrix(MatrixExpr):
     """

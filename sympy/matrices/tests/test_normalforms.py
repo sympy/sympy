@@ -1,9 +1,10 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, Poly
-from sympy.polys.solvers import RawMatrix as Matrix
+from sympy import Poly, Symbol
 from sympy.matrices.normalforms import invariant_factors, smith_normal_form
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import QQ, ZZ
+from sympy.polys.solvers import RawMatrix as Matrix
+
 
 def test_smith_normal():
     m = Matrix([[12, 6, 4,8],[3,9,6,12],[2,16,14,28],[20,10,10,20]])

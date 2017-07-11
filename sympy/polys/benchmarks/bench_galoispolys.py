@@ -1,11 +1,11 @@
 """Benchmarks for polynomials over Galois fields. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.polys.galoistools import gf_from_dict, gf_factor_sqf
-from sympy.polys.domains import ZZ
-from sympy import pi, nextprime
+from sympy import nextprime, pi
 from sympy.core.compatibility import range
+from sympy.polys.domains import ZZ
+from sympy.polys.galoistools import gf_factor_sqf, gf_from_dict
 
 
 def gathen_poly(n, p, K):

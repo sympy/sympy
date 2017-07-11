@@ -1,34 +1,36 @@
 """Sparse polynomial rings. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from operator import add, mul, lt, le, gt, ge
+from operator import add, ge, gt, le, lt, mul
 from types import GeneratorType
 
+from sympy.core.compatibility import is_sequence, range, reduce, string_types
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.numbers import igcd, oo
+from sympy.core.symbol import symbols as _symbols
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
-from sympy.core.compatibility import is_sequence, reduce, string_types, range
 from sympy.ntheory.multinomial import multinomial_coefficients
-from sympy.polys.monomials import MonomialOps
-from sympy.polys.orderings import lex
-from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
-from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
-                                   _parallel_dict_from_expr)
-from sympy.polys.polyerrors import (
-    CoercionFailed, GeneratorsError,
-    ExactQuotientFailed, MultivariatePolynomialError)
+from sympy.polys.constructor import construct_domain
+from sympy.polys.densebasic import dmp_from_dict, dmp_to_dict
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.polyoptions import (Domain as DomainOpt,
-                                     Order as OrderOpt, build_options)
-from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
-from sympy.polys.constructor import construct_domain
+from sympy.polys.heuristicgcd import heugcd
+from sympy.polys.monomials import MonomialOps
+from sympy.polys.orderings import lex
+from sympy.polys.polyerrors import CoercionFailed, ExactQuotientFailed, \
+    GeneratorsError, MultivariatePolynomialError
+from sympy.polys.polyoptions import Domain as DomainOpt
+from sympy.polys.polyoptions import Order as OrderOpt
+from sympy.polys.polyoptions import build_options
+from sympy.polys.polyutils import _dict_reorder, _parallel_dict_from_expr, \
+    expr_from_dict
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
+
 
 @public
 def ring(symbols, domain, order=lex):

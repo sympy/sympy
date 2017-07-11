@@ -8,19 +8,19 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
-        NamedArgsMixin)
-from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
-        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S)
-from sympy.solvers.solveset import solveset
-from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.polys.polyerrors import PolynomialError
 import random
+
+from sympy import And, Basic, Dummy, Integral, Intersection, Interval, \
+    Lambda, Mul, Or, Piecewise, S, cacheit, integrate, oo, symbols, sympify
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.polys.polyerrors import PolynomialError
+from sympy.solvers.inequalities import reduce_rational_inequalities
+from sympy.solvers.solveset import solveset
+from sympy.stats.rv import ConditionalDomain, NamedArgsMixin, ProductDomain, \
+    ProductPSpace, PSpace, RandomDomain, SingleDomain, SinglePSpace, \
+    random_symbols
 
 
 class ContinuousDomain(RandomDomain):

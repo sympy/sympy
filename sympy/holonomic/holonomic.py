@@ -3,31 +3,32 @@ This module implements Holonomic Functions and
 various operations on them.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
-    solve, limit, Float, nsimplify, gamma)
-from sympy.printing import sstr
-from sympy.core.compatibility import range, ordered
-from sympy.functions.combinatorial.factorials import binomial, factorial
+from sympy import Dummy, Float, I, Order, S, Symbol, diff, gamma, limit, \
+    meijerint, nsimplify, rf, solve
+from sympy.core.compatibility import ordered, range
+from sympy.core.numbers import Infinity, NaN, NegativeInfinity
 from sympy.core.sympify import sympify
-from sympy.simplify.hyperexpand import hyperexpand
+from sympy.functions.combinatorial.factorials import binomial, factorial
+from sympy.functions.elementary.exponential import exp, exp_polar
 from sympy.functions.special.hyper import hyper, meijerg
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity
+from sympy.integrals.meijerint import _mytype
 from sympy.matrices import Matrix
-from sympy.functions.elementary.exponential import exp_polar, exp
-
-from .linearsolver import NewMatrix
-from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
-from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,
-    SingularityError, NotHolonomicError)
-
-from sympy.polys.rings import PolyElement
-from sympy.polys.fields import FracElement
-from sympy.polys.domains import QQ, ZZ, RR
+from sympy.polys.domains import QQ, RR, ZZ
 from sympy.polys.domains.pythonrational import PythonRational
+from sympy.polys.fields import FracElement
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
+from sympy.polys.rings import PolyElement
+from sympy.printing import sstr
+from sympy.simplify.hyperexpand import hyperexpand
+
+from .holonomicerrors import NotHolonomicError, NotHyperSeriesError, \
+    NotPowerSeriesError, SingularityError
+from .linearsolver import NewMatrix
+from .recurrence import HolonomicSequence, RecurrenceOperator, \
+    RecurrenceOperators
 
 
 def DifferentialOperators(base, generator):
@@ -2286,7 +2287,6 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
 x_1 = Dummy('x_1')
 _lookup_table = None
 domain_for_table = None
-from sympy.integrals.meijerint import _mytype
 
 
 def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, initcond=True):

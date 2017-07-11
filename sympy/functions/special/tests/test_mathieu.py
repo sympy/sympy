@@ -1,6 +1,5 @@
-from sympy import (sqrt, sin, cos, diff, conjugate,
-                   mathieus, mathieuc, mathieusprime, mathieucprime)
-
+from sympy import conjugate, cos, diff, mathieuc, mathieucprime, mathieus, \
+    mathieusprime, sin, sqrt
 from sympy.abc import a, q, z
 
 

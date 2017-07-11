@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from sympy import symbols, sin, cos, sqrt, Function
+from sympy import Function, cos, sin, sqrt, symbols
 from sympy.core.compatibility import u_decode as u
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols
-from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint)
+from sympy.physics.vector.printing import VectorLatexPrinter, vpprint
 
 # TODO : Figure out how to make the pretty printing tests readable like the
 # ones in sympy.printing.pretty.tests.test_printing.

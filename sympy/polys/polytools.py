@@ -1,62 +1,38 @@
 """User-friendly public interface to polynomial functions. """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
-)
-
-from sympy.core.mul import _keep_coeff
-from sympy.core.symbol import Symbol
-from sympy.core.basic import preorder_traversal
-from sympy.core.relational import Relational
-from sympy.core.sympify import sympify
-from sympy.core.decorators import _sympifyit
-from sympy.core.function import Derivative
-
-from sympy.logic.boolalg import BooleanAtom
-
-from sympy.polys.polyclasses import DMP
-
-from sympy.polys.polyutils import (
-    basic_from_dict,
-    _sort_gens,
-    _unify_gens,
-    _dict_reorder,
-    _dict_from_expr,
-    _parallel_dict_from_expr,
-)
-
-from sympy.polys.rationaltools import together
-from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.polys.groebnertools import groebner as _groebner
-from sympy.polys.fglmtools import matrix_fglm
-from sympy.polys.monomials import Monomial
-from sympy.polys.orderings import monomial_key
-
-from sympy.polys.polyerrors import (
-    OperationNotSupported, DomainError,
-    CoercionFailed, UnificationFailed,
-    GeneratorsNeeded, PolynomialError,
-    MultivariatePolynomialError,
-    ExactQuotientFailed,
-    PolificationFailed,
-    ComputationFailed,
-    GeneratorsError,
-)
-
-from sympy.utilities import group, sift, public
-
-import sympy.polys
 import mpmath
 from mpmath.libmp.libhyper import NoConvergence
 
-from sympy.polys.domains import FF, QQ, ZZ
-from sympy.polys.constructor import construct_domain
-
-from sympy.polys import polyoptions as options
-
+import sympy.polys
+from sympy.core import Add, Basic, Dummy, Expr, I, Integer, Mul, S, Tuple
+from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable, range
+from sympy.core.decorators import _sympifyit
+from sympy.core.function import Derivative
+from sympy.core.mul import _keep_coeff
+from sympy.core.relational import Relational
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.logic.boolalg import BooleanAtom
+from sympy.polys import polyoptions as options
+from sympy.polys.constructor import construct_domain
+from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.fglmtools import matrix_fglm
+from sympy.polys.groebnertools import groebner as _groebner
+from sympy.polys.monomials import Monomial
+from sympy.polys.orderings import monomial_key
+from sympy.polys.polyclasses import DMP
+from sympy.polys.polyerrors import CoercionFailed, ComputationFailed, \
+    DomainError, ExactQuotientFailed, GeneratorsError, GeneratorsNeeded, \
+    MultivariatePolynomialError, OperationNotSupported, PolificationFailed, \
+    PolynomialError, UnificationFailed
+from sympy.polys.polyutils import _dict_from_expr, _dict_reorder, \
+    _parallel_dict_from_expr, _sort_gens, _unify_gens, basic_from_dict
+from sympy.polys.rationaltools import together
+from sympy.polys.rootisolation import dup_isolate_real_roots_list
+from sympy.utilities import group, public, sift
 
 
 @public

@@ -1,8 +1,9 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+import os
+import tempfile
 
 from sympy.printing.mathml import mathml
-import tempfile
-import os
 
 
 def print_gtk(x, start_viewer=True):

@@ -16,8 +16,8 @@ from __future__ import division
 
 import collections
 
+from sympy import Integer, Matrix, S, Symbol, sympify
 from sympy.core.compatibility import reduce, string_types
-from sympy import sympify, Integer, Matrix, Symbol, S
 from sympy.core.expr import Expr
 
 

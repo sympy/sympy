@@ -1,8 +1,10 @@
 from __future__ import division
 
-from sympy import Symbol, sqrt, Derivative
-from sympy.geometry import Point, Point2D, Polygon, Segment, convex_hull, intersection, centroid
-from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
+from sympy import Derivative, Symbol, sqrt
+from sympy.geometry import Point, Point2D, Polygon, Segment, centroid, \
+    convex_hull, intersection
+from sympy.geometry.util import _ordered_points, closest_points, \
+    farthest_points, idiff
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
 

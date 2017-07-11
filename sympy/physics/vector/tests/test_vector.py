@@ -1,8 +1,8 @@
-from sympy import symbols, pi, sin, cos, ImmutableMatrix as Matrix
-from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
+from sympy import ImmutableMatrix as Matrix
+from sympy import cos, pi, sin, symbols
 from sympy.abc import x, y, z
+from sympy.physics.vector import ReferenceFrame, Vector, dot, dynamicsymbols
 from sympy.utilities.pytest import raises
-
 
 Vector.simp = True
 A = ReferenceFrame('A')

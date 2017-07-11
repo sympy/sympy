@@ -8,13 +8,13 @@ using the functions defined in math.h where possible.
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S
-from sympy.core.compatibility import string_types, range
 from sympy.codegen.ast import Assignment
+from sympy.core import S
+from sympy.core.compatibility import range, string_types
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.precedence import PRECEDENCE, precedence
 from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).

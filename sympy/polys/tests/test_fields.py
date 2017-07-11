@@ -1,13 +1,13 @@
 """Test sparse rational functions. """
 
-from sympy.polys.fields import field, sfield, FracField
-from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ
+from sympy import Rational, exp, log, sqrt
+from sympy.core import E, symbols
+from sympy.polys.domains import QQ, ZZ
+from sympy.polys.fields import FracField, field, sfield
 from sympy.polys.orderings import lex
+from sympy.polys.rings import ring
+from sympy.utilities.pytest import XFAIL, raises
 
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core import symbols, E
-from sympy import sqrt, Rational, exp, log
 
 def test_FracField___init__():
     F1 = FracField("x,y", ZZ, lex)

@@ -1,9 +1,8 @@
-from sympy.core.compatibility import (default_sort_key, as_int, ordered,
-    iterable, NotIterable)
+from sympy.abc import x
+from sympy.core.compatibility import NotIterable, as_int, default_sort_key, \
+    iterable, ordered
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
-
-from sympy.abc import x
 
 
 def test_default_sort_key():

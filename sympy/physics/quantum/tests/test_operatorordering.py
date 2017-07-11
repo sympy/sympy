@@ -1,8 +1,8 @@
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.fermion import FermionOp
-from sympy.physics.quantum.operatorordering import (normal_order,
-                                                 normal_ordered_form)
+from sympy.physics.quantum.operatorordering import normal_order, \
+    normal_ordered_form
 
 
 def test_normal_order():

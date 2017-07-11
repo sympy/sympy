@@ -1,12 +1,14 @@
 from __future__ import division
+
 import warnings
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt
-from sympy import solve, simplify
-from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
-    dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
-    LagrangesMethod
-from sympy.utilities.pytest import slow
+
+from sympy import simplify, solve
+from sympy.core.backend import Matrix, atan, cos, sin, sqrt, symbols
+from sympy.physics.mechanics import KanesMethod, LagrangesMethod, Lagrangian, \
+    Particle, Point, ReferenceFrame, RigidBody, cross, dot, dynamicsymbols, \
+    inertia
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import slow
 
 
 @slow

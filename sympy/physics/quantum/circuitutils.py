@@ -1,11 +1,11 @@
 """Primitive circuit operations on quantum circuits."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
-from sympy.utilities import numbered_symbols
+from sympy import Mul, Symbol, Tuple, default_sort_key, sympify
 from sympy.core.compatibility import reduce
 from sympy.physics.quantum.gate import Gate
+from sympy.utilities import numbered_symbols
 
 __all__ = [
     'kmp_table',

@@ -1,11 +1,10 @@
-from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
-        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
-        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
-        AccumBounds)
+from sympy import AccumBounds, E, FiniteSet, Float, Heaviside, I, Matrix, \
+    Mul, O, Pow, Product, Rational, S, Symbol, acos, acot, acoth, acsc, arg, \
+    asec, asin, asinh, atan, atan2, atanh, cancel, conjugate, cos, cosh, cot, \
+    coth, csc, diff, exp, gcd, im, jn, log, nan, oo, pi, re, sec, series, \
+    simplify, sin, sinc, sinh, sqrt, symbols, tan, tanh, zoo
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)

@@ -1,11 +1,11 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Matrix, I, Expr, Integer
+from sympy import Expr, I, Integer, Matrix
 from sympy.core.compatibility import range
-from sympy.matrices import eye, zeros
 from sympy.external import import_module
+from sympy.matrices import eye, zeros
 
 __all__ = [
     'numpy_ndarray',

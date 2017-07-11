@@ -1,22 +1,18 @@
 from random import randrange
 
-from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
-                       MeijerShiftA, MeijerShiftB, MeijerShiftC, MeijerShiftD,
-                       MeijerUnShiftA, MeijerUnShiftB, MeijerUnShiftC,
-                       MeijerUnShiftD,
-                       ReduceOrder, reduce_order, apply_operators,
-                       devise_plan, make_derivative_operator, Formula,
-                       hyperexpand, Hyper_Function, G_Function,
-                       reduce_order_meijer,
-                       build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, Tuple
-from sympy.abc import z, a, b, c
-from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy import I, Piecewise, Rational, S, Tuple, asin, atanh, besseli, \
+    cos, erf, exp, exp_polar, gamma, hyper, log, lowergamma, meijerg, pi, \
+    sin, sqrt
+from sympy.abc import a, b, c, z
 from sympy.core.compatibility import range
-
-from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf, exp_polar, Rational)
+from sympy.simplify.hyperexpand import Formula, G_Function, Hyper_Function, \
+    MeijerShiftA, MeijerShiftB, MeijerShiftC, MeijerShiftD, MeijerUnShiftA, \
+    MeijerUnShiftB, MeijerUnShiftC, MeijerUnShiftD, ReduceOrder, ShiftA, \
+    ShiftB, UnShiftA, UnShiftB, apply_operators, \
+    build_hypergeometric_formula, devise_plan, hyperexpand, \
+    make_derivative_operator, reduce_order, reduce_order_meijer
+from sympy.utilities.pytest import ON_TRAVIS, XFAIL, raises, skip, slow
+from sympy.utilities.randtest import verify_numerically as tn
 
 
 def test_branch_bug():

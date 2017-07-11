@@ -1,10 +1,8 @@
-from sympy import S, Integral, sin, cos, pi, sqrt, symbols
+from sympy import Integral, S, cos, pi, sin, sqrt, symbols
 from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector
-from sympy.physics.vector.functions import (cross, dot, express,
-                                            time_derivative,
-                                            kinematic_equations, outer,
-                                            partial_velocity,
-                                            get_motion_params, dynamicsymbols)
+from sympy.physics.vector.functions import cross, dot, dynamicsymbols, \
+    express, get_motion_params, kinematic_equations, outer, partial_velocity, \
+    time_derivative
 from sympy.utilities.pytest import raises
 
 Vector.simp = True

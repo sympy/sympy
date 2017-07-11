@@ -5,15 +5,12 @@ Authors:
 * Matt Curry
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Basic, Interval, oo, sympify
-from sympy.core.compatibility import range
-from sympy.printing.pretty.stringpict import prettyForm
-
+from sympy.core.compatibility import range, reduce
 from sympy.physics.quantum.qexpr import QuantumError
-
-from sympy.core.compatibility import reduce
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'HilbertSpaceError',

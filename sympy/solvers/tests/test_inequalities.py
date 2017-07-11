@@ -1,20 +1,17 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
-                   Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
-from sympy.solvers.inequalities import (reduce_inequalities,
-                                        solve_poly_inequality as psolve,
-                                        reduce_rational_inequalities,
-                                        solve_univariate_inequality as isolve,
-                                        reduce_abs_inequality)
+from sympy import Abs, And, Dummy, Eq, FiniteSet, Function, Ge, Gt, Integral, \
+    Interval, Le, Lt, Ne, Or, Poly, PurePoly, S, Sum, Symbol, Union, cos, \
+    exp, log, oo, pi, root, sin, sqrt, tan
+from sympy.abc import x, y
 from sympy.polys.rootoftools import rootof
+from sympy.solvers.inequalities import solve_poly_inequality as psolve
+from sympy.solvers.inequalities import solve_univariate_inequality as isolve
+from sympy.solvers.inequalities import reduce_abs_inequality, \
+    reduce_inequalities, reduce_rational_inequalities
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.abc import x, y
-
-from sympy.utilities.pytest import raises, slow, XFAIL
-
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 inf = oo.evalf()
 

@@ -1,10 +1,10 @@
+from sympy.core import S, sympify
 from sympy.core.expr import Expr
-from sympy.core import  sympify, S
-from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector
-from sympy.vector.scalar import BaseScalar
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.scalar import BaseScalar
+from sympy.vector.vector import Vector
 
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):

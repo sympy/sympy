@@ -1,14 +1,14 @@
-from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
-    DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
-from sympy.combinatorics.permutations import Permutation
-from sympy.utilities.pytest import skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
-from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
-from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
+from sympy.combinatorics.named_groups import AbelianGroup, AlternatingGroup, \
+    CyclicGroup, DihedralGroup, RubikGroup, SymmetricGroup
+from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.permutations import Permutation
+from sympy.combinatorics.polyhedron import tetrahedron as Tetra
+from sympy.combinatorics.polyhedron import cube
+from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer, \
     _verify_normal_closure
-from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, raises, skip
 
 rmul = Permutation.rmul
 

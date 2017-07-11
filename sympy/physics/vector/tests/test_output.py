@@ -1,5 +1,5 @@
 from sympy import S
-from sympy.physics.vector import Vector, ReferenceFrame, Dyadic
+from sympy.physics.vector import Dyadic, ReferenceFrame, Vector
 from sympy.utilities.pytest import raises
 
 Vector.simp = True

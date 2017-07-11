@@ -1,7 +1,6 @@
-from sympy import symbols, exp, Function
-from sympy.stats.symbolic_probability import (RandomSymbol, Variance,
-        Covariance)
+from sympy import Function, exp, symbols
 from sympy.stats.error_prop import variance_prop
+from sympy.stats.symbolic_probability import Covariance, RandomSymbol, Variance
 
 
 def test_variance_prop():

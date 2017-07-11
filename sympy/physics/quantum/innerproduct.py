@@ -1,11 +1,11 @@
 """Symbolic inner product."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy import Expr, conjugate
-from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.state import KetBase, BraBase
+from sympy.physics.quantum.state import BraBase, KetBase
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'InnerProduct'

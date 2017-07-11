@@ -1,16 +1,16 @@
 
-from sympy.external import import_module
-from sympy.utilities.pytest import raises
 import ctypes
 
+import sympy
+from sympy.abc import a, b, n
+from sympy.external import import_module
+from sympy.utilities.pytest import raises
 
 if import_module('llvmlite'):
     import sympy.printing.llvmjitcode as g
 else:
     disabled = True
 
-import sympy
-from sympy.abc import a, b, n
 
 
 # copied from numpy.isclose documentation

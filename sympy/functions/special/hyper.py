@@ -1,16 +1,16 @@
 """Hypergeometric and Meijer G-functions"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
-from sympy.core.function import Function, Derivative, ArgumentIndexError
+from sympy.core import I, Mod, S, ilcm, oo, pi, zoo
+from sympy.core.compatibility import range, reduce
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import reduce, range
+from sympy.core.function import ArgumentIndexError, Derivative, Function
 from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
+from sympy.functions import acosh, acoth, asin, asinh, atan, atanh, cos, \
+    cosh, exp, log, sin, sinh, sqrt
 
-from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth)
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):

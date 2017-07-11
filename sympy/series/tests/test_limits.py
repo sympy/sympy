@@ -1,21 +1,19 @@
 from itertools import product as cartes
 
-from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
-    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float)
-
+from sympy import EulerGamma, Float, Function, I, Integral, Limit, Rational, \
+    S, Sum, Symbol, atan, binomial, ceiling, cos, cot, exp, floor, frac, \
+    gamma, integrate, limit, log, oo, pi, sign, simplify, sin, sqrt, \
+    subfactorial, symbols, tan
+from sympy.abc import k, x, y, z
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.core.numbers import GoldenRatio
-from sympy.functions.combinatorial.numbers import fibonacci
 
-from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
 
 

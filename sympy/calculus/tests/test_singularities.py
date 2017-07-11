@@ -1,15 +1,10 @@
-from sympy import Symbol, exp, log, oo, S, I, sqrt
-from sympy.calculus.singularities import (
-    singularities,
-    is_increasing,
-    is_strictly_increasing,
-    is_decreasing,
-    is_strictly_decreasing,
-    is_monotonic
-)
-from sympy.sets import Interval, FiniteSet
-from sympy.utilities.pytest import XFAIL
+from sympy import I, S, Symbol, exp, log, oo, sqrt
 from sympy.abc import x, y
+from sympy.calculus.singularities import is_decreasing, is_increasing, \
+    is_monotonic, is_strictly_decreasing, is_strictly_increasing, \
+    singularities
+from sympy.sets import FiniteSet, Interval
+from sympy.utilities.pytest import XFAIL
 
 
 def test_singularities():

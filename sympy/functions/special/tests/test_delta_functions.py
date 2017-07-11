@@ -1,15 +1,10 @@
-from sympy import (
-    adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo, SingularityFunction
-)
-
-from sympy.utilities.pytest import raises
-
+from sympy import DiracDelta, Eq, Heaviside, I, Piecewise, S, \
+    SingularityFunction, Symbol, adjoint, conjugate, nan, oo, pi, sign, sqrt, \
+    symbols, transpose
 from sympy.core.function import ArgumentIndexError
-
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 from sympy.utilities.misc import filldedent
+from sympy.utilities.pytest import raises
 
 x, y = symbols('x y')
 i = symbols('t', nonzero=True)

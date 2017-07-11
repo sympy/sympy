@@ -11,20 +11,17 @@ Todo:
 * Fix the printing of Rk gates in plotting.
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
+from sympy import Expr, I, Integer, Matrix, Symbol, exp, pi
 from sympy.core.compatibility import range
 from sympy.functions import sqrt
-
-from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qexpr import QuantumError, QExpr
 from sympy.matrices import eye
+from sympy.physics.quantum.gate import CGate, Gate, HadamardGate, \
+    OneQubitGate, PhaseGate, SwapGate, TGate, ZGate
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.qexpr import QExpr, QuantumError
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
-
-from sympy.physics.quantum.gate import (
-    Gate, HadamardGate, SwapGate, OneQubitGate, CGate, PhaseGate, TGate, ZGate
-)
 
 __all__ = [
     'QFT',

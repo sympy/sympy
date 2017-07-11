@@ -1,11 +1,12 @@
 from __future__ import division
-from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-        abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify, zoo, Subs, RootOf, AccumBounds)
+
+from sympy import AccumBounds, Add, Basic, Derivative, Dict, Eq, Float, \
+    Function, I, Integer, Lambda, Mul, Piecewise, Rational, RootOf, S, Subs, \
+    Symbol, Tuple, Wild, abc, atan2, cos, cot, cse, exp, factor, log, \
+    nsimplify, oo, pi, sin, sqrt, symbols, tan, zoo
+from sympy.abc import x, y, z
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
-from sympy.abc import x, y, z
 
 
 def test_subs():

@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import S, Add, Expr, Basic
 from sympy.assumptions import Q, ask
+from sympy.core import Add, Basic, Expr, S
 
 
 def refine(expr, assumptions=True):

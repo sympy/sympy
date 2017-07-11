@@ -1,9 +1,7 @@
-from sympy import symbols, Integer
-
-from sympy.physics.quantum.dagger import Dagger
+from sympy import Integer, symbols
 from sympy.physics.quantum.anticommutator import AntiCommutator as AComm
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import Operator
-
 
 a, b, c = symbols('a,b,c')
 A, B, C, D = symbols('A,B,C,D', commutative=False)

@@ -1,6 +1,7 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
-from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, log, Symbol, pi
+from sympy import Poly, S, Symbol, binomial, exp, factorial, gamma, log, pi, \
+    simplify, sqrt
 from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 

@@ -1,15 +1,12 @@
-from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum
-
-from sympy.core import S, symbols, Add, Mul
-from sympy.functions import transpose, sin, cos, sqrt
-from sympy.simplify import simplify
-from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
-        MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
-        SparseMatrix, Transpose, Adjoint)
+from sympy import And, KroneckerDelta, Piecewise, Sum, diff
+from sympy.core import Add, Mul, S, symbols
+from sympy.functions import cos, sin, sqrt, transpose
+from sympy.matrices import Adjoint, Identity, ImmutableMatrix, Inverse, \
+    MatAdd, MatMul, MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, \
+    SparseMatrix, Transpose, ZeroMatrix
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.simplify import simplify
 from sympy.utilities.pytest import raises
-
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 x = symbols('x')

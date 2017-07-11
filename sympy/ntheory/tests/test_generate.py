@@ -1,8 +1,8 @@
 from sympy import Sieve, sieve
 from sympy.core.compatibility import range
-
-from sympy.ntheory import isprime, totient, randprime, nextprime, prevprime, \
-    primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
+from sympy.ntheory import composite, compositepi, isprime, nextprime, \
+    prevprime, prime, primepi, primerange, primorial, randprime, \
+    reduced_totient, totient
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.utilities.pytest import raises

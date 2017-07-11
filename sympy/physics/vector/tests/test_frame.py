@@ -1,6 +1,7 @@
-from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
-from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
-                                  dynamicsymbols, time_derivative, express)
+from sympy import ImmutableMatrix as Matrix
+from sympy import cos, eye, pi, sin, zeros
+from sympy.physics.vector import CoordinateSym, ReferenceFrame, Vector, \
+    dynamicsymbols, express, time_derivative
 
 Vector.simp = True
 

@@ -1,20 +1,22 @@
 import warnings
-from sympy.core import (pi, oo, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, loggamma, sign, Max, Min)
-from sympy.sets import Range
-from sympy.logic import ITE
-from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
-from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
-from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import Matrix, MatrixSymbol
 
 from sympy import ccode
+from sympy.codegen import Assignment, For, aug_assign
+from sympy.codegen.cfunctions import Cbrt, Sqrt, exp2, expm1, fma, hypot, \
+    log1p, log2, log10
+from sympy.core import Catalan, Dummy, Eq, EulerGamma, GoldenRatio, Integer, \
+    Lambda, Rational, nan, oo, pi, symbols
+from sympy.functions import Abs, Max, Min, Piecewise, ceiling, cos, exp, \
+    gamma, loggamma, sign, sin, sqrt
+from sympy.logic import ITE
+from sympy.matrices import Matrix, MatrixSymbol
+from sympy.printing.ccode import C89CodePrinter, C99CodePrinter, \
+    CCodePrinter, get_math_macros
+from sympy.sets import Range
+from sympy.tensor import Idx, IndexedBase
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x,y,z')
 

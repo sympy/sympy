@@ -1,6 +1,7 @@
 from sympy.liealgebras.weyl_group import WeylGroup
 from sympy.matrices import Matrix
 
+
 def test_weyl_group():
     c = WeylGroup("A3")
     assert c.matrix_form('r1*r2') == Matrix([[0, 0, 1, 0], [1, 0, 0, 0],

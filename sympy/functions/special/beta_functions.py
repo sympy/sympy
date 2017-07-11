@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.core.function import ArgumentIndexError, Function
+from sympy.functions.special.gamma_functions import digamma, gamma
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################

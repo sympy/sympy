@@ -1,22 +1,19 @@
 """Tests for sho1d.py"""
 
-from sympy import Integer, Symbol, sqrt, I, S
+from sympy import I, Integer, S, Symbol, sqrt
 from sympy.core.compatibility import range
-from sympy.physics.quantum import Dagger
-from sympy.physics.quantum.constants import hbar
-from sympy.physics.quantum import Commutator
-from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.cartesian import X, Px
-from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.physics.quantum.hilbert import ComplexSpace
-from sympy.physics.quantum.represent import represent
 from sympy.external import import_module
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.physics.quantum import Commutator, Dagger
+from sympy.physics.quantum.cartesian import Px, X
+from sympy.physics.quantum.constants import hbar
+from sympy.physics.quantum.hilbert import ComplexSpace
+from sympy.physics.quantum.innerproduct import InnerProduct
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.sho1d import Hamiltonian, LoweringOp, NumberOp, \
+    RaisingOp, SHOBra, SHOKet
 from sympy.utilities.pytest import skip
-
-from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
-                                        SHOKet, SHOBra,
-                                        Hamiltonian, NumberOp)
 
 ad = RaisingOp('a')
 a = LoweringOp('a')

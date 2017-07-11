@@ -23,20 +23,22 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from .plot import BaseSeries, Plot
-from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
-from .intervalmath import interval
-from sympy.core.relational import (Equality, GreaterThan, LessThan,
-                Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Symbol, Dummy
+import warnings
+
+from sympy import Dummy, Eq, Symbol, Tuple, sympify
+from sympy.core.relational import Equality, GreaterThan, LessThan, \
+    Relational, StrictGreaterThan, StrictLessThan
 from sympy.external import import_module
 from sympy.logic.boolalg import BooleanFunction
 from sympy.polys.polyutils import _sort_gens
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import flatten
-import warnings
+
+from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
+from .intervalmath import interval
+from .plot import BaseSeries, Plot
 
 
 class ImplicitSeries(BaseSeries):

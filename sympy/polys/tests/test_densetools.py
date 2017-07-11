@@ -1,53 +1,26 @@
 """Tests for dense recursive polynomials' tools. """
 
-from sympy.polys.densebasic import (
-    dup_normal, dmp_normal,
-    dup_from_raw_dict,
-    dmp_convert, dmp_swap,
-)
-
-from sympy.polys.densearith import dmp_mul_ground
-
-from sympy.polys.densetools import (
-    dup_clear_denoms, dmp_clear_denoms,
-    dup_integrate, dmp_integrate, dmp_integrate_in,
-    dup_diff, dmp_diff, dmp_diff_in,
-    dup_eval, dmp_eval, dmp_eval_in,
-    dmp_eval_tail, dmp_diff_eval_in,
-    dup_trunc, dmp_trunc, dmp_ground_trunc,
-    dup_monic, dmp_ground_monic,
-    dup_content, dmp_ground_content,
-    dup_primitive, dmp_ground_primitive,
-    dup_extract, dmp_ground_extract,
-    dup_real_imag,
-    dup_mirror, dup_scale, dup_shift,
-    dup_transform,
-    dup_compose, dmp_compose,
-    dup_decompose,
-    dmp_lift,
-    dup_sign_variations,
-    dup_revert, dmp_revert,
-)
-
-from sympy.polys.polyclasses import ANP
-
-from sympy.polys.polyerrors import (
-    MultivariatePolynomialError,
-    ExactQuotientFailed,
-    NotReversible,
-    DomainError,
-)
-
-from sympy.polys.specialpolys import f_polys
-
-from sympy.polys.domains import FF, ZZ, QQ, EX
-from sympy.polys.rings import ring
-
-from sympy import S, I, sin
-from sympy.core.compatibility import long
-
+from sympy import I, S, sin
 from sympy.abc import x
-
+from sympy.core.compatibility import long
+from sympy.polys.densearith import dmp_mul_ground
+from sympy.polys.densebasic import dmp_convert, dmp_normal, dmp_swap, \
+    dup_from_raw_dict, dup_normal
+from sympy.polys.densetools import dmp_clear_denoms, dmp_compose, dmp_diff, \
+    dmp_diff_eval_in, dmp_diff_in, dmp_eval, dmp_eval_in, dmp_eval_tail, \
+    dmp_ground_content, dmp_ground_extract, dmp_ground_monic, \
+    dmp_ground_primitive, dmp_ground_trunc, dmp_integrate, dmp_integrate_in, \
+    dmp_lift, dmp_revert, dmp_trunc, dup_clear_denoms, dup_compose, \
+    dup_content, dup_decompose, dup_diff, dup_eval, dup_extract, \
+    dup_integrate, dup_mirror, dup_monic, dup_primitive, dup_real_imag, \
+    dup_revert, dup_scale, dup_shift, dup_sign_variations, dup_transform, \
+    dup_trunc
+from sympy.polys.domains import EX, FF, QQ, ZZ
+from sympy.polys.polyclasses import ANP
+from sympy.polys.polyerrors import DomainError, ExactQuotientFailed, \
+    MultivariatePolynomialError, NotReversible
+from sympy.polys.rings import ring
+from sympy.polys.specialpolys import f_polys
 from sympy.utilities.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]

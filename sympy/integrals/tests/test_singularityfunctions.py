@@ -1,5 +1,5 @@
+from sympy import Function, SingularityFunction, symbols
 from sympy.integrals.singularityfunctions import singularityintegrate
-from sympy import SingularityFunction, symbols, Function
 
 x, a, n, y = symbols('x a n y')
 f = Function('f')

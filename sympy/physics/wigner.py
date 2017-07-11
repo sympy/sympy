@@ -31,10 +31,9 @@ AUTHORS:
 
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm,
-        Function)
+from sympy import Dummy, Function, Integer, S, Sum, Ynm, pi, sqrt, sympify
 from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively

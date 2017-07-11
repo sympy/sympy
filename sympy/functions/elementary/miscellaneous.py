@@ -1,22 +1,23 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.add import Add
+from sympy.core.compatibility import as_int, range, with_metaclass
 from sympy.core.containers import Tuple
-from sympy.core.operations import LatticeOp, ShortCircuit
-from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
+from sympy.core.function import Application, ArgumentIndexError, Lambda
+from sympy.core.logic import _torf, fuzzy_and, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
+from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
+from sympy.core.rules import Transform
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
-from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int, with_metaclass, range
-from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And
+
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """

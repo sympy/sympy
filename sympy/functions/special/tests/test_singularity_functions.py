@@ -1,10 +1,6 @@
-from sympy import (
-    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol, diff,
-    Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
-    Derivative, Float
-)
-
-
+from sympy import Derivative, DiracDelta, Eq, Float, Heaviside, I, Piecewise, \
+    SingularityFunction, Symbol, adjoint, conjugate, diff, nan, oo, pi, \
+    symbols, transpose
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 

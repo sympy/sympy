@@ -1,23 +1,12 @@
 """Tests for functions for generating interesting polynomials. """
 
-from sympy import Poly, ZZ, symbols
-from sympy.utilities.pytest import raises
-
-from sympy.polys.specialpolys import (
-    swinnerton_dyer_poly,
-    cyclotomic_poly,
-    symmetric_poly,
-    random_poly,
-    interpolating_poly,
-    fateman_poly_F_1,
-    dmp_fateman_poly_F_1,
-    fateman_poly_F_2,
-    dmp_fateman_poly_F_2,
-    fateman_poly_F_3,
-    dmp_fateman_poly_F_3,
-)
-
+from sympy import ZZ, Poly, symbols
 from sympy.abc import x, y, z
+from sympy.polys.specialpolys import cyclotomic_poly, dmp_fateman_poly_F_1, \
+    dmp_fateman_poly_F_2, dmp_fateman_poly_F_3, fateman_poly_F_1, \
+    fateman_poly_F_2, fateman_poly_F_3, interpolating_poly, random_poly, \
+    swinnerton_dyer_poly, symmetric_poly
+from sympy.utilities.pytest import raises
 
 
 def test_swinnerton_dyer_poly():

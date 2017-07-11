@@ -1,5 +1,5 @@
 from sympy import Symbol
-from sympy.codegen.ffunctions import isign, dsign, cmplx, kind, literal_dp
+from sympy.codegen.ffunctions import cmplx, dsign, isign, kind, literal_dp
 from sympy.printing.fcode import fcode
 
 

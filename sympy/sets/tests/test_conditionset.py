@@ -1,5 +1,5 @@
-from sympy.sets import (ConditionSet, Intersection, FiniteSet, EmptySet, Union)
-from sympy import (Symbol, Eq, S, Abs, sin, pi, Lambda, Interval, And, Mod)
+from sympy import Abs, And, Eq, Interval, Lambda, Mod, S, Symbol, pi, sin
+from sympy.sets import ConditionSet, EmptySet, FiniteSet, Intersection, Union
 
 x = Symbol('x')
 

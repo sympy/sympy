@@ -1,14 +1,13 @@
 """1D quantum particle in a box."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Symbol, pi, sqrt, sin, Interval, S
-
-from sympy.physics.quantum.operator import HermitianOperator
-from sympy.physics.quantum.state import Ket, Bra
-from sympy.physics.quantum.constants import hbar
+from sympy import Interval, S, Symbol, pi, sin, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
+from sympy.physics.quantum.operator import HermitianOperator
+from sympy.physics.quantum.state import Bra, Ket
 
 m = Symbol('m')
 L = Symbol('L')

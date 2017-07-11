@@ -1,19 +1,19 @@
-from sympy.core import (pi, oo, Symbol, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign, Max)
-from sympy.sets import Range
-from sympy.logic import ITE
-from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises
-from sympy.printing.rcode import RCodePrinter
-from sympy.utilities.lambdify import implemented_function
-from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import Matrix, MatrixSymbol
-
-from sympy import rcode
 from difflib import Differ
 from pprint import pprint
+
+from sympy import rcode
+from sympy.codegen import Assignment, For, aug_assign
+from sympy.core import Catalan, Dummy, Eq, EulerGamma, GoldenRatio, Integer, \
+    Lambda, Rational, Symbol, oo, pi, symbols
+from sympy.functions import Abs, Max, Piecewise, ceiling, cos, exp, gamma, \
+    sign, sin, sqrt
+from sympy.logic import ITE
+from sympy.matrices import Matrix, MatrixSymbol
+from sympy.printing.rcode import RCodePrinter
+from sympy.sets import Range
+from sympy.tensor import Idx, IndexedBase
+from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x,y,z')
 

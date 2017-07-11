@@ -1,9 +1,8 @@
 """Tools for applying functions to specified parts of expressions. """
 
-from sympy.simplify.traversaltools import use
-
-from sympy import expand, factor, I
+from sympy import I, expand, factor
 from sympy.abc import x, y
+from sympy.simplify.traversaltools import use
 
 
 def test_use():

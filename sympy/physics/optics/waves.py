@@ -6,14 +6,15 @@ This module has all the classes and functions related to waves in optics.
 * TWave
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from sympy import Derivative, S, Symbol, atan2, cos, pi, sin, sqrt, symbols, \
+    sympify
+from sympy.core.expr import Expr
+from sympy.physics.units import meter, second, speed_of_light
 
 __all__ = ['TWave']
 
-from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
-    symbols, Derivative, atan2)
-from sympy.core.expr import Expr
-from sympy.physics.units import speed_of_light, meter, second
 
 
 c = speed_of_light.convert_to(meter/second)

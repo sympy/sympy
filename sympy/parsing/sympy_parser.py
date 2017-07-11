@@ -1,20 +1,18 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from __future__ import print_function, division
-
-from .sympy_tokenize import \
-    generate_tokens, untokenize, TokenError, \
-    NUMBER, STRING, NAME, OP, ENDMARKER
-
-from keyword import iskeyword
+from __future__ import division, print_function
 
 import ast
 import re
 import unicodedata
+from keyword import iskeyword
 
 import sympy
-from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic
+from sympy.core.compatibility import StringIO, exec_
+
+from .sympy_tokenize import ENDMARKER, NAME, NUMBER, OP, STRING, TokenError, \
+    generate_tokens, untokenize
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 

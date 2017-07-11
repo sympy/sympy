@@ -1,24 +1,26 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import os
-from os.path import join
-import tempfile
-import shutil
 import io
+import os
+import shutil
+import tempfile
 from io import BytesIO
+from os.path import join
+
+from sympy.core.compatibility import u_decode, unicode
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import find_executable
+
+from .latex import latex
 
 try:
     from subprocess import STDOUT, CalledProcessError, check_output
 except ImportError:
     pass
 
-from sympy.core.compatibility import unicode, u_decode
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.misc import find_executable
-from .latex import latex
 
-from sympy.utilities.decorator import doctest_depends_on
 
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))

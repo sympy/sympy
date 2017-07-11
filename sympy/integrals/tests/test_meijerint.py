@@ -1,15 +1,15 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
-                   exp_polar, polygamma, hyper, log, expand_func)
-from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
-        meijerint_indefinite, _inflate_g, _create_lookup_table,
-        meijerint_definite, meijerint_inversion)
+from sympy import I, Integral, S, cos, cosh, erf, erfc, exp, exp_polar, \
+    expand_func, gamma, hyper, hyperexpand, integrate, log, meijerg, oo, pi, \
+    polygamma, simplify, sin, sinc, sqrt
+from sympy.abc import a, b, c, d, s, t, x, y, z
+from sympy.core.compatibility import range
+from sympy.integrals.meijerint import _create_lookup_table, _inflate_g, \
+    _rewrite1, _rewrite_single, meijerint_definite, meijerint_indefinite, \
+    meijerint_inversion
 from sympy.utilities import default_sort_key
 from sympy.utilities.pytest import slow
-from sympy.utilities.randtest import (verify_numerically,
-        random_complex_number as randcplx)
-from sympy.core.compatibility import range
-from sympy.abc import x, y, a, b, c, d, s, t, z
+from sympy.utilities.randtest import random_complex_number as randcplx
+from sympy.utilities.randtest import verify_numerically
 
 
 def test_rewrite_single():

@@ -1,8 +1,7 @@
-from sympy import diff, integrate, S
+from sympy import S, diff, integrate
 from sympy.physics.vector import Vector, express
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import _check_vector
-
 
 __all__ = ['curl', 'divergence', 'gradient', 'is_conservative',
            'is_solenoidal', 'scalar_potential',

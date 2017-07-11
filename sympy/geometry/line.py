@@ -19,22 +19,21 @@ Segment3D
 from __future__ import division, print_function
 
 from sympy.core import S, sympify
-from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan)
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.logic.boolalg import And
-from sympy.simplify.simplify import simplify
-from sympy.geometry.exceptions import GeometryError
 from sympy.core.decorators import deprecated
-from sympy.sets import Intersection
+from sympy.core.relational import Eq
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
+from sympy.functions.elementary.trigonometric import acos, tan
+from sympy.geometry.exceptions import GeometryError
+from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
+from sympy.sets import Intersection
+from sympy.simplify.simplify import simplify
+from sympy.utilities.misc import Undecidable
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from .util import _symbol
-from sympy.utilities.misc import Undecidable
-
-
 
 
 class LinearEntity(GeometrySet):

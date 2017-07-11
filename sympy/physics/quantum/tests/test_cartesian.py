@@ -1,13 +1,10 @@
 """Tests for cartesian.py"""
 
-from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi
-
-from sympy.physics.quantum import qapply, represent, L2, Dagger
-from sympy.physics.quantum import Commutator, hbar
-from sympy.physics.quantum.cartesian import (
-    XOp, YOp, ZOp, PxOp, X, Y, Z, Px, XKet, XBra, PxKet, PxBra,
-    PositionKet3D, PositionBra3D
-)
+from sympy import DiracDelta, I, Interval, S, exp, pi, sqrt, symbols
+from sympy.physics.quantum import L2, Commutator, Dagger, hbar, qapply, \
+    represent
+from sympy.physics.quantum.cartesian import PositionBra3D, PositionKet3D, Px, \
+    PxBra, PxKet, PxOp, X, XBra, XKet, XOp, Y, YOp, Z, ZOp
 from sympy.physics.quantum.operator import DifferentialOperator
 
 x, y, z, x_1, x_2, x_3, y_1, z_1 = symbols('x,y,z,x_1,x_2,x_3,y_1,z_1')

@@ -4,9 +4,8 @@
 """This module contains some sample symbolic models used for testing and
 examples."""
 
-# Internal imports
-from sympy.core import backend as sm
 import sympy.physics.mechanics as me
+from sympy.core import backend as sm
 
 
 def multi_mass_spring_damper(n=1, apply_gravity=False,

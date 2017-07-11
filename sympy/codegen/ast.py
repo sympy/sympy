@@ -22,14 +22,14 @@ AST Type Tree
      |--->For
 """
 
-from __future__ import print_function, division
-
+from __future__ import division, print_function
 
 from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
-from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.utilities.iterables import iterable
+
 
 class Assignment(Relational):
     """

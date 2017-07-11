@@ -1,12 +1,15 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from itertools import combinations_with_replacement
-from sympy.core import symbols, Add, Dummy
+
+from sympy.core import Add, Dummy, symbols
 from sympy.core.numbers import Rational
-from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
+from sympy.polys import ComputationFailed, Poly, cancel, \
+    parallel_poly_from_expr, reduced
 from sympy.polys.monomials import Monomial, monomial_div
 from sympy.polys.polyerrors import PolificationFailed
 from sympy.utilities.misc import debug
+
 
 def ratsimp(expr):
     """

@@ -1,10 +1,10 @@
-from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.scalar import BaseScalar
-from sympy.vector.vector import Vector, BaseVector
-from sympy.vector.operators import gradient, curl, divergence
-from sympy import diff, integrate, S, simplify
+from sympy import S, diff, integrate, simplify
 from sympy.core import sympify
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.dyadic import Dyadic
+from sympy.vector.operators import curl, divergence, gradient
+from sympy.vector.scalar import BaseScalar
+from sympy.vector.vector import BaseVector, Vector
 
 
 def express(expr, system, system2=None, variables=False):

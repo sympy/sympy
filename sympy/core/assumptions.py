@@ -150,15 +150,13 @@ References
 .. [11] http://en.wikipedia.org/wiki/Algebraic_number
 
 """
-from __future__ import print_function, division
-
-from sympy.core.facts import FactRules, FactKB
-from sympy.core.core import BasicMeta
-from sympy.core.compatibility import integer_types
-
+from __future__ import division, print_function
 
 from random import shuffle
 
+from sympy.core.compatibility import integer_types
+from sympy.core.core import BasicMeta
+from sympy.core.facts import FactKB, FactRules
 
 _assume_rules = FactRules([
 

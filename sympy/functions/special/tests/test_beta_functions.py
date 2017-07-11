@@ -1,4 +1,4 @@
-from sympy import (Symbol, gamma, expand_func, beta, digamma, diff)
+from sympy import Symbol, beta, diff, digamma, expand_func, gamma
 
 
 def test_beta():

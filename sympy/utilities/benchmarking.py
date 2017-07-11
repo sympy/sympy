@@ -1,18 +1,18 @@
 """benchmarking through py.test"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+import timeit
+from inspect import getsource
+from math import ceil as _ceil
+from math import floor as _floor
+from math import log10
 
 import py
 from py.__.test.item import Item
 from py.__.test.terminal.terminal import TerminalSession
 
-from math import ceil as _ceil, floor as _floor, log10
-import timeit
-
-from inspect import getsource
-
 from sympy.core.compatibility import exec_, range
-
 
 # from IPython.Magic.magic_timeit
 units = ["s", "ms", "us", "ns"]

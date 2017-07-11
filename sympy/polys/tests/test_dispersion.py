@@ -1,4 +1,4 @@
-from sympy.core import Symbol, S, oo
+from sympy.core import S, Symbol, oo
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import poly
 from sympy.polys.dispersion import dispersion, dispersionset

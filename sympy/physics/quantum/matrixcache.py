@@ -1,12 +1,10 @@
 """A cache for storing small matrices in multiple formats."""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy import Matrix, I, Pow, Rational, exp, pi
-
-from sympy.physics.quantum.matrixutils import (
-    to_sympy, to_numpy, to_scipy_sparse
-)
+from sympy import I, Matrix, Pow, Rational, exp, pi
+from sympy.physics.quantum.matrixutils import to_numpy, to_scipy_sparse, \
+    to_sympy
 
 
 class MatrixCache(object):

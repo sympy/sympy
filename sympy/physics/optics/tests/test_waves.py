@@ -1,10 +1,9 @@
-from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
-    Function, simplify, I, atan2)
+from sympy import Derivative, Function, I, Symbol, atan2, cos, pi, simplify, \
+    sin, sqrt, symbols
 from sympy.abc import epsilon, mu
 from sympy.functions.elementary.exponential import exp
-from sympy.physics.units import speed_of_light, m, s
 from sympy.physics.optics import TWave
-
+from sympy.physics.units import m, s, speed_of_light
 
 c = speed_of_light.convert_to(m/s)
 

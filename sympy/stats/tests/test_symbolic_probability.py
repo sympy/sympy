@@ -1,7 +1,7 @@
-from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
-from sympy.stats import Normal, Poisson, variance
-from sympy.stats.rv import probability, expectation
-from sympy.stats import Covariance, Variance, Probability, Expectation
+from sympy import Eq, Integral, Mul, Sum, oo, sin, symbols
+from sympy.stats import Covariance, Expectation, Normal, Poisson, \
+    Probability, Variance, variance
+from sympy.stats.rv import expectation, probability
 
 
 def test_literal_probability():

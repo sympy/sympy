@@ -1,18 +1,15 @@
 """Tests for options manager for :class:`Poly` and public API functions. """
 
-from sympy.polys.polyoptions import (
-    Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,
-    Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
-    Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
-
-from sympy.polys.orderings import lex
-from sympy.polys.domains import FF, GF, ZZ, QQ, EX
-
-from sympy.polys.polyerrors import OptionError, GeneratorsError
-
-from sympy import Integer, Symbol, I, sqrt
-from sympy.utilities.pytest import raises
+from sympy import I, Integer, Symbol, sqrt
 from sympy.abc import x, y, z
+from sympy.polys.domains import EX, FF, GF, QQ, ZZ
+from sympy.polys.orderings import lex
+from sympy.polys.polyerrors import GeneratorsError, OptionError
+from sympy.polys.polyoptions import All, Auto, Domain, Expand, Extension, \
+    Field, Formal, Frac, Gaussian, Gen, Gens, Greedy, Include, Method, \
+    Modulus, Options, Order, Polys, Sort, Split, Strict, Symbols, Symmetric, \
+    Wrt
+from sympy.utilities.pytest import raises
 
 
 def test_Options_clone():

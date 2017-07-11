@@ -1,7 +1,7 @@
-from sympy import Symbol, Integer
-from sympy.physics.quantum.qexpr import QExpr, _qsympify_sequence
-from sympy.physics.quantum.hilbert import HilbertSpace
+from sympy import Integer, Symbol
 from sympy.core.containers import Tuple
+from sympy.physics.quantum.hilbert import HilbertSpace
+from sympy.physics.quantum.qexpr import QExpr, _qsympify_sequence
 
 x = Symbol('x')
 y = Symbol('y')

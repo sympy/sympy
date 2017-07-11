@@ -1,20 +1,18 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 from collections import MutableMapping, defaultdict
 
-from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
-from sympy.core.numbers import ImaginaryUnit
-from sympy.core.sympify import _sympify
-from sympy.core.rules import Transform
-from sympy.core.logic import fuzzy_or, fuzzy_and
-from sympy.matrices.expressions import MatMul
-
-from sympy.functions.elementary.complexes import Abs
-
 from sympy.assumptions.ask import Q
-from sympy.assumptions.assume import Predicate, AppliedPredicate
-from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
-    BooleanFunction, Not)
+from sympy.assumptions.assume import AppliedPredicate, Predicate
+from sympy.core import Add, Integer, Mul, Number, NumberSymbol, Pow
+from sympy.core.logic import fuzzy_and, fuzzy_or
+from sympy.core.numbers import ImaginaryUnit
+from sympy.core.rules import Transform
+from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import Abs
+from sympy.logic.boolalg import And, BooleanFunction, Equivalent, Implies, \
+    Not, Or
+from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 

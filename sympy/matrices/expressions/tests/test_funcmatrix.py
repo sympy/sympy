@@ -1,4 +1,4 @@
-from sympy import (symbols, FunctionMatrix, MatrixExpr, Lambda, Matrix)
+from sympy import FunctionMatrix, Lambda, Matrix, MatrixExpr, symbols
 
 
 def test_funcmatrix():

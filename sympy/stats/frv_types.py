@@ -12,14 +12,14 @@ Binomial
 Hypergeometric
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.compatibility import as_int, range
-from sympy.core.logic import fuzzy_not, fuzzy_and
-from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
+from sympy import Basic, Dict, Dummy, Integer, KroneckerDelta, Rational, S, \
+    binomial, cacheit, sympify
 from sympy.concrete.summations import Sum
-from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic, KroneckerDelta, Dummy)
+from sympy.core.compatibility import as_int, range
+from sympy.core.logic import fuzzy_and, fuzzy_not
+from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
         'Binomial', 'Hypergeometric']

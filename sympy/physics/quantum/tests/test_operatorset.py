@@ -1,21 +1,11 @@
-from sympy.physics.quantum.operatorset import (
-    operators_to_state, state_to_operators
-)
-
-from sympy.physics.quantum.cartesian import (
-    XOp, XKet, PxOp, PxKet, XBra, PxBra
-)
-
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.cartesian import PxBra, PxKet, PxOp, XBra, XKet, XOp
 from sympy.physics.quantum.operator import Operator
-from sympy.physics.quantum.spin import (
-    JxKet, JyKet, JzKet, JxBra, JyBra, JzBra,
-    JxOp, JyOp, JzOp, J2Op
-)
-
-from sympy.utilities.pytest import raises
-
-from sympy.utilities.pytest import XFAIL
+from sympy.physics.quantum.operatorset import operators_to_state, \
+    state_to_operators
+from sympy.physics.quantum.spin import J2Op, JxBra, JxKet, JxOp, JyBra, \
+    JyKet, JyOp, JzBra, JzKet, JzOp
+from sympy.physics.quantum.state import Bra, Ket
+from sympy.utilities.pytest import XFAIL, raises
 
 
 @XFAIL

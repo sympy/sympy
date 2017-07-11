@@ -1,11 +1,11 @@
 """Limits of sequences"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.sympify import sympify
-from sympy.core.singleton import S
 from sympy.core.add import Add
 from sympy.core.function import PoleError
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.series.limits import Limit
 
 
