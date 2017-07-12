@@ -520,7 +520,7 @@ class DifferentialExtension(object):
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
-                self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
+                self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
                         dict((exp(exparg), self.t**p) for exparg, p in others))
                 new_extension = True
@@ -574,7 +574,7 @@ class DifferentialExtension(object):
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
-                self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
+                self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True
 

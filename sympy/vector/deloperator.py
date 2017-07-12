@@ -15,7 +15,8 @@ class Del(Basic):
             SymPyDeprecationWarning(
                 feature="delop operator inside coordinate system",
                 useinstead="it as instance Del class",
-                deprecated_since_version="1.1"
+                deprecated_since_version="1.1",
+                issue=12866,
             ).warn()
         obj = super(Del, cls).__new__(cls)
         obj._name = "delop"

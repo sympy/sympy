@@ -662,6 +662,10 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/galgebra.py", # raises ImportError
+        "sympy/matrices/densearith.py", # raises deprecation warning
+        "sympy/matrices/densesolve.py", # raises deprecation warning
+        "sympy/matrices/densetools.py", # raises deprecation warning
+        "sympy/physics/unitsystems.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:

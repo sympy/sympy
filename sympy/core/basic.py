@@ -420,9 +420,6 @@ class Basic(with_metaclass(ManagedProperties)):
            If one or more types are given, the results will contain only
            those types of atoms.
 
-           Examples
-           ========
-
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
            {x, y}
