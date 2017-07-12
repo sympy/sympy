@@ -814,6 +814,9 @@ class UndefinedFunction(FunctionClass):
             self.class_key() == other.class_key() and
             self._extra_kwargs == other._extra_kwargs)
 
+    def __ne__(self, other):
+        return not self == other
+
 class WildFunction(Function, AtomicExpr):
     """
     A WildFunction function matches any function (with its arguments).
