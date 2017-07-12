@@ -807,7 +807,7 @@ class UndefinedFunction(FunctionClass):
     _extra_kwargs = {}
 
     def __hash__(self):
-        return hash((self.class_key(), frozenset(self._extra_kwargs)))
+        return hash((self.class_key(), frozenset(self._extra_kwargs.items())))
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
