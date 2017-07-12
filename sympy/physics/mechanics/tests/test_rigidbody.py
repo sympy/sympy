@@ -6,7 +6,7 @@ from sympy.core.backend import expand
 
 
 def test_rigidbody():
-    m, m2, v1, v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
+    m, m2, v1, v2, v3, omega = symbols('m m2 v1 v2 v3 omega', real=True)
     A = ReferenceFrame('A')
     A2 = ReferenceFrame('A2')
     P = Point('P')
@@ -57,8 +57,8 @@ def test_rigidbody2():
 
 def test_rigidbody3():
     q1, q2, q3, q4 = dynamicsymbols('q1:5')
-    p1, p2, p3 = symbols('p1:4')
-    m = symbols('m')
+    p1, p2, p3 = symbols('p1:4', real=True)
+    m = symbols('m', real=True)
 
     A = ReferenceFrame('A')
     B = A.orientnew('B', 'axis', [q1, A.x])

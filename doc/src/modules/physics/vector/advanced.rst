@@ -129,7 +129,7 @@ printing derivatives. ::
   >>> q1 = dynamicsymbols('q1')
   >>> q1
   q1(t)
-  >>> dynamicsymbols._t = symbols('T')
+  >>> dynamicsymbols.t = symbols('T')
   >>> q2 = dynamicsymbols('q2')
   >>> q2
   q2(T)
@@ -142,7 +142,7 @@ printing derivatives. ::
   >>> vprint(q1d)
   q1d
   >>> dynamicsymbols._str = '\''
-  >>> dynamicsymbols._t = symbols('t')
+  >>> dynamicsymbols.t = symbols('t')
 
 
 Note that only dynamic symbols created after the change are different. The same
