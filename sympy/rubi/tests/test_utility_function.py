@@ -618,6 +618,7 @@ def test_CollectReciprocals():
 
 def test_ExpandCleanup():
     assert ExpandCleanup(a + b, x) == a*(1 + b/a)
+    #print(ExpandCleanup( b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x), x))
 
 def test_AlgebraicFunctionQ():
     assert AlgebraicFunctionQ(a, x) == True
@@ -1180,7 +1181,6 @@ def test_NormalizeLeadTermSigns():
     assert NormalizeLeadTermSigns((-x + 3)*(x**2 + 3)) == (-x + 3)*(x**2 + 3)
     assert NormalizeLeadTermSigns(x + 3) == x + 3
 
-#def test_NormalizeSumFactor():
 def test_SignOfFactor():
     assert SignOfFactor(S(-x + 3)) == [1, -x + 3]
     assert SignOfFactor(S(-x)) == [-1, x]
@@ -1391,3 +1391,22 @@ def test_KnownCotangentIntegrandQ():
 
 def test_KnownSecantIntegrandQ():
     assert KnownSecantIntegrandQ((a + b*sec(a + b*x))**m, x)
+
+def test_TryPureTanSubst():
+    assert TryPureTanSubst(atan(c*(a + b*tan(a + b*x))), x)
+    assert TryPureTanSubst(atanh(c*(a + b*cot(a + b*x))), x)
+    assert not TryPureTanSubst(tan(c*(a + b*cot(a + b*x))), x)
+
+def test_TryPureTanhSubst():
+    assert not TryPureTanhSubst(log(x), x)
+    assert not TryPureTanhSubst(sin(x), x)
+    assert not TryPureTanhSubst(atanh(a*tanh(x)), x)
+    assert TryPureTanhSubst((a + b*x)**S(2), x)
+
+def test_TryTanhSubst():
+    assert not TryTanhSubst(log(x), x)
+    assert not TryTanhSubst(a*(b + c)**3, x)
+    assert not TryTanhSubst(1/(a + b*sinh(x)**S(3)), x)
+    assert not TryTanhSubst(sinh(S(3)*x)*cosh(S(4)*x), x)
+    assert not TryTanhSubst(a*(b*sech(x)**3)**c, x)
+    # assert TryTanhSubst(x, x) # giving wrong result due to sympys .match()

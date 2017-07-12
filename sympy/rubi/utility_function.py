@@ -243,7 +243,6 @@ def Denominator(var):
     return fraction(var)[1]
 
 def Hypergeometric2F1(a, b, c, z):
-    #return hyperexpand(hyper([a, b], [c], z))
     return hyper([a, b], [c], z)
 
 def ArcTan(a):
@@ -1230,7 +1229,7 @@ def FreeTerms(u, x):
 def NonfreeTerms(u, x):
     # returns the sum of the terms of u free of x.
     if SumQ(u):
-        result = 0
+        result = S(0)
         for i in u.args:
             if not FreeQ(i, x):
                 result += i
@@ -1238,7 +1237,7 @@ def NonfreeTerms(u, x):
     elif not FreeQ(u, x):
         return u
     else:
-        return 0
+        return S(0)
 
 def ExpandAlgebraicFunction(expr, x):
     if ProductQ(expr):
@@ -1624,11 +1623,9 @@ def RationalFunctionExpand(expr, x):
             return result
 
 def ExpandIntegrand(expr, x, extra=None):
-    w_ = Wild('w')
+    w_, u_, v_ = map(Wild, 'wuv')
     p_ = Wild('p', exclude=[x])
     q_ = Wild('q', exclude=[x])
-    u_ = Wild('u')
-    v_ = Wild('v')
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
     c_ = Wild('c', exclude=[x])
@@ -3956,3 +3953,88 @@ def KnownCotangentIntegrandQ(u, x):
 
 def KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
+
+def TryPureTanSubst(u, x):
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    G_ = Wild('G')
+
+    F = u.func
+    try:
+        if MemberQ([atan, acot, atanh, acoth], F):
+            match = u.args[0].match(c_*(a_ + b_*G_))
+            if match:
+                if len(match) == 4:
+                    G = match[G_]
+                    if MemberQ([tan, cot, tanh, coth], G.func):
+                        if LinearQ(G.args[0], x):
+                            return True
+    except:
+        pass
+
+    return False
+
+def TryTanhSubst(u, x):
+    if u.func == log:
+        return False
+    elif not FalseQ(FunctionOfLinear(u, x)):
+        return False
+
+    a_ = Wild('a', exclude=[x])
+    m_ = Wild('m', exclude=[x])
+    p_ = Wild('p', exclude=[x])
+    r_, s_, t_, n_, b_, f_, g_ = map(Wild, 'rstnbfg')
+
+    match = u.match(r_*(s_ + t_)**n_)
+    if match:
+        if len(match) == 4:
+            r, s, t, n = [match[i] for i in [r_, s_, t_, n_]]
+            if IntegerQ(n) and PositiveQ(n):
+                return False
+
+    match = u.match(1/(a_ + b_*f_**n_))
+    if match:
+        if len(match) == 4:
+            a, b, f, n = [match[i] for i in [a_, b_, f_, n_]]
+            if SinhCoshQ(f) and IntegerQ(n) and n > 2:
+                return False
+
+    match = u.match(f_*g_)
+    if match:
+        if len(match) == 2:
+            f, g = match[f_], match[g_]
+            if SinhCoshQ(f) and SinhCoshQ(g):
+                if IntegersQ(f.args[0]/x, g.args[0]/x):
+                    return False
+
+    match = u.match(r_*(a_*s_**m_)**p_)
+    if match:
+        if len(match) == 5:
+            r, a, s, m, p = [match[i] for i in [r_, a_, s_, m_, p_]]
+            if Not(m==2 and (s == Sech(x) or s == Csch(x))):
+                return False
+
+    if u != ExpandIntegrand(u, x):
+        return False
+
+    return True
+
+def TryPureTanhSubst(u, x):
+    F = u.func
+    a_ = Wild('a', exclude=[x])
+    G_ = Wild('G')
+
+    if F == log:
+        return False
+
+    match = u.args[0].match(a_*G_)
+    if match and len(match) == 2:
+        G = match[G_].func
+        if MemberQ([atanh, acoth], F) and MemberQ([tanh, coth], G):
+            return False
+
+    if u != ExpandIntegrand(u, x):
+        return False
+
+    return True
