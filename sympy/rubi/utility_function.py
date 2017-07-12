@@ -1483,6 +1483,20 @@ def TrinomialQ(u, x):
 
     return ListQ(TrinomialParts(u,x)) and Not(QuadraticQ(u, x)) and Not(check)
 
+def GeneralizedBinomialQ(u, x):
+    # (* If u is equivalent to an expression of the form a*x^q+b*x^n where n, q and b are not 0, *)
+    # (* GeneralizedBinomialQ[u,x] returns True; else it returns False. *)
+    if ListQ(u):
+        return all(GeneralizedBinomialQ(i, x) for i in u)
+    return ListQ(GeneralizedBinomialParts(u, x))
+
+def GeneralizedTrinomialQ(u, x):
+    # (* If u is equivalent to an expression of the form a*x^q+b*x^n+c*x^(2*n-q) where n, q, b and c are not 0, *)
+    # (* GeneralizedTrinomialQ[u,x] returns True; else it returns False. *)
+    if ListQ(u):
+        return all(GeneralizedTrinomialQ(i, x) for i in u)
+    return ListQ(GeneralizedTrinomialParts(u, x))
+
 def FactorSquareFreeList(poly):
     r = sqf_list(poly)
     result = [[1, 1]]

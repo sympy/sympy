@@ -1414,3 +1414,11 @@ def test_TryTanhSubst():
     assert not TryTanhSubst(sinh(S(3)*x)*cosh(S(4)*x), x)
     assert not TryTanhSubst(a*(b*sech(x)**3)**c, x)
     # assert TryTanhSubst(x, x) # giving wrong result due to sympys .match()
+
+def test_GeneralizedBinomialQ():
+    assert GeneralizedBinomialQ(a*x**q + b*x**n, x)
+    assert not GeneralizedBinomialQ(a*x**q, x)
+
+def test_GeneralizedTrinomialQ():
+    assert GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
+    assert not GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
