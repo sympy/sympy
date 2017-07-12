@@ -1467,6 +1467,22 @@ def BinomialQ(u, x, n=None):
         return True
     return ListQ(BinomialParts(u, x))
 
+def TrinomialQ(u, x):
+    # * If u is equivalent to an expression of the form a+b*x^n+c*x^(2*n) where n, b and c are not 0, *)
+    # (* TrinomialQ[u,x] returns True; else it returns False. *)
+    if ListQ(u):
+        for i in u.args:
+            if Not(TrinomialQ(i, x, n)):
+                return False
+        return True
+
+    check = False
+    if PowerQ(u):
+        if u.exp == 2 and BinomialQ(u.base, x):
+            check = True
+
+    return ListQ(TrinomialParts(u,x)) and Not(QuadraticQ(u, x)) and Not(check)
+
 def FactorSquareFreeList(poly):
     r = sqf_list(poly)
     result = [[1, 1]]
@@ -2536,24 +2552,6 @@ def FactorAbsurdNumber(m):
         return [r[0], r[1]*m.exp]
     #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
     return CombineExponents
-
-def TrinomialQ(u, x):
-    if isinstance(u, list):
-        for i in u:
-            if not TrinomialQ(i, x):
-                return False
-        return True
-    if isinstance(TrinomialParts(u, x), list) and Not(QuadraticQ(u, x)):
-        w = Wild('w')
-        match = u.match(w**2)
-        return match and BinomialQ(match[w], x)
-        result = []
-        for i in r:
-            result.append([i[0], i[1]*m.exp])
-        return result
-    #CombineExponents[Sort[]]]]
-    #Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]
-    #return CombineExponents(Sort(Flatten()))
 
 def SubstForInverseFunction(*args):
     # (* SubstForInverseFunction[u,v,w,x] returns u with subexpressions equal to v replaced by x

@@ -658,7 +658,11 @@ def test_SimplerQ():
     assert not SimplerQ(x**2, x)
     assert SimplerQ(2*x, x + 2 + 6*x**3)
 
-def  test_GeneralizedTrinomialParts():
+def test_TrinomialQ():
+    assert TrinomialQ((7 + 2*x**6 + 3*x**12), x)
+    assert not TrinomialQ(x**2, x)
+
+def test_GeneralizedTrinomialParts():
     assert GeneralizedTrinomialParts((7 + 2*x**6 + 3*x**12), x) == [3, 2, 7, 6, 12]
     assert GeneralizedTrinomialParts(x**2 + x**3 + x**4, x) == [1, 1, 1, 3, 4]
 
