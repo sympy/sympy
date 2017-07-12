@@ -80,7 +80,6 @@ Using the acceleration level methods can result in shorted expressions at this
 point, which will result in shorter expressions later (such as when forming
 Kane's equations).
 
-
 Advanced Interfaces
 ===================
 
@@ -148,6 +147,9 @@ printing derivatives. ::
 Note that only dynamic symbols created after the change are different. The same
 is not true for the `._str` attribute; this affects the printing output only,
 so dynamic symbols created before or after will print the same way.
+
+The default symbol for time can also be accessed and changed with the
+``get_time()`` and ``set_time()`` functions.
 
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and

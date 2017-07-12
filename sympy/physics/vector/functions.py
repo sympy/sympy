@@ -14,7 +14,19 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
            'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
-           'init_vprinting']
+           'init_vprinting', 'get_time', 'set_time']
+
+
+def get_time():
+    """Returns the symbol used for time dependence in the physics vectors and
+    dyadics."""
+    return dynamicsymbols.t
+
+
+def set_time(sym=Symbol('t', real=True)):
+    """Sets the symbol used for time dependence in the physics vectors and
+    dyadics."""
+    dynamicsymbols.t = sym
 
 
 def cross(vec1, vec2):
@@ -572,32 +584,33 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
 
     return vec_partials
 
-class __dynamicsymbols_class(object):
+
+class _dynamicsymbols_class(object):
     """The class used to manage the dynamicsymbols time symbol attribute.
     """
 
     def __init__(self):
-        self.__time_symbol = Symbol('t', real=True)
+        self._time_symbol = Symbol('t', real=True)
         self._str = '\''
 
     def _get_time_symbol(self):
-        return self.__time_symbol
+        return self._time_symbol
 
     def _set_time_symbol(self, value):
-        self.__time_symbol = value
+        self._time_symbol = value
 
     def _get_time_symbol_dep(self):
         SymPyDeprecationWarning(
                 feature="Attribute sympy.physics.vector.dynamicsymbols._t",
                 useinstead="attribute sympy.physics.vector.dynamicsymbols.t",
-                deprecated_since_version="0.7.7").warn()
+                deprecated_since_version="1.1.0").warn()
         return self._get_time_symbol()
 
     def _set_time_symbol_dep(self, value):
         SymPyDeprecationWarning(
                 feature="Attribute sympy.physics.vector.dynamicsymbols._t",
                 useinstead="attribute sympy.physics.vector.dynamicsymbols.t",
-                deprecated_since_version="0.7.7").warn()
+                deprecated_since_version="1.1.0").warn()
         return self._set_time_symbol(value)
 
     t = property(_get_time_symbol, _set_time_symbol)
@@ -630,12 +643,12 @@ class __dynamicsymbols_class(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols, get_time
         >>> from sympy import diff, Symbol
         >>> q1 = dynamicsymbols('q1')
         >>> q1
         q1(t)
-        >>> diff(q1, Symbol('t', real=True))
+        >>> diff(q1, get_time())
         Derivative(q1(t), t)
         >>> q1d = dynamicsymbols('q1', level=1)
         >>> q1d
@@ -649,20 +662,23 @@ class __dynamicsymbols_class(object):
             >>> dynamicsymbols.t #doctest: +SKIP
             t
 
-        It can be changed by simply overriding the attribute::
+        It can be changed by overriding the attribute::
 
             >>> dynamicsymbols.t = symbols('T', real=False) #doctest: +SKIP
+
+        The functions ``get_time()`` and ``set_time`` can also be used to do
+        this.
 
         """
         kwargs.pop('cls', None)
 
         esses = symbols(names, cls=Function, real=real, **kwargs)
 
-        t = self.__time_symbol
+        t = self._time_symbol
 
         if iterable(esses):
             return tuple([reduce(diff, [t] * level, e(t)) for e in esses])
         else:
             return reduce(diff, [t] * level, esses(t))
 
-dynamicsymbols = __dynamicsymbols_class()
+dynamicsymbols = _dynamicsymbols_class()
