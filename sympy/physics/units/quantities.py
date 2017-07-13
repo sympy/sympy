@@ -6,10 +6,10 @@ Physical quantities.
 
 from __future__ import division
 
+from sympy import Add, AtomicExpr, Basic, Function, Mul, Pow, S, Symbol, \
+    sympify
 from sympy.core.compatibility import string_types
-from sympy import sympify, Mul, Pow, S, Symbol, Add, AtomicExpr, Basic
-from sympy.physics.units import Dimension
-from sympy.physics.units import dimensions
+from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.prefixes import Prefix
 
 
@@ -123,6 +123,9 @@ class Quantity(AtomicExpr):
                 assert dim == addend_dim
                 factor += addend_factor
             return factor, dim
+        elif isinstance(expr, Function):
+            fds = [Quantity._collect_factor_and_dimension(arg) for arg in expr.args]
+            return expr.func(*(f[0] for f in fds)), expr.func(*(d[1] for d in fds))
         else:
             return expr, 1
 

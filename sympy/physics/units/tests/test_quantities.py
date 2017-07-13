@@ -2,14 +2,16 @@
 
 from __future__ import division
 
-from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols, Basic
-from sympy.physics.units import convert_to, find_unit
-
-from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
-    quart, inch, coulomb, millimeter, steradian, second, mile, centimeter, hour
-from sympy.physics.units.dimensions import length, time, charge
-from sympy.physics.units.quantities import Quantity
+from sympy import Abs, Add, Basic, Number, Rational, S, Symbol, diff, exp, \
+    integrate, log, sqrt, symbols
+from sympy.physics.units import convert_to, find_unit, amount_of_substance, \
+    volume
+from sympy.physics.units.definitions import amu, au, centimeter, coulomb, day, \
+    foot, grams, hour, inch, kg, km, m, meter, mile, millimeter, minute, mole, \
+    quart, s, second, speed_of_light, steradian
+from sympy.physics.units.dimensions import charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
+from sympy.physics.units.quantities import Quantity
 from sympy.utilities.pytest import raises
 
 k = PREFIXES["k"]
@@ -246,3 +248,18 @@ def test_factor_and_dimension():
     x, y = symbols('x y')
     assert (x + y/100, length) == Quantity._collect_factor_and_dimension(
         x*m + y*centimeter)
+
+    cH = Quantity('cH', amount_of_substance/volume)
+    pH = -log(cH)
+
+    assert (1, volume/amount_of_substance) == Quantity._collect_factor_and_dimension(
+        exp(pH))
+
+    v_w1 = Quantity('v_w1', length/time, 1.5*meter/second)
+    v_w2 = Quantity('v_w2', length/time, 2*meter/second)
+    expr = Abs(v_w1/2 - v_w2)
+    assert (1.25000000000000, length/time) == \
+        Quantity._collect_factor_and_dimension(expr)
+
+    expr = v_w1 - Abs(v_w1)
+    assert (0, 1) == Quantity._collect_factor_and_dimension(expr)
