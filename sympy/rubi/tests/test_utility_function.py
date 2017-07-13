@@ -1422,3 +1422,6 @@ def test_GeneralizedBinomialQ():
 def test_GeneralizedTrinomialQ():
     assert GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
     assert not GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
+
+def test_SubstForFractionalPowerOfQuotientOfLinears():
+    assert SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(b - d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]

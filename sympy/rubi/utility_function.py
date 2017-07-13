@@ -1602,6 +1602,8 @@ def RationalFunctionExponents(u, x):
     return [0, 0]
 
 def RationalFunctionExpand(expr, x):
+    # (* u is a polynomial or rational function of x. *)
+    # (* RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors. *)
     u_ = Wild('u')
     v_ = Wild('v')
     n_ = Wild('n', exclude=[x])
@@ -1614,10 +1616,7 @@ def RationalFunctionExpand(expr, x):
             if FractionQ(n) and v != x:
                 w = RationalFunctionExpand(u, x)
                 if SumQ(w):
-                    result = 0
-                    for i in w.args:
-                        result += i*v**n
-                    return result
+                    return Add(*[i*v**n for i in w.args])
                 else:
                     return w*v**n
 
@@ -1643,14 +1642,12 @@ def RationalFunctionExpand(expr, x):
     u = expr
     if v != u and t:
         return v
-    else:
-        v = ExpandIntegrand(RationalFunctionFactors(u, x), x)
-        w = NonrationalFunctionFactors(u, x)
-        if SumQ(v):
-            result = 0
-            for i in v:
-                result += i*w
-            return result
+
+    v = ExpandIntegrand(RationalFunctionFactors(u, x), x)
+    w = NonrationalFunctionFactors(u, x)
+    if SumQ(v):
+        return Add(*[i*w for i in v.args])
+    return v*w
 
 def ExpandIntegrand(expr, x, extra=None):
     w_, u_, v_ = map(Wild, 'wuv')
@@ -2605,12 +2602,28 @@ def SubstForFractionalPowerOfQuotientOfLinears(u, x):
         return False
     n = lst[0]
     tmp = lst[1]
-    lst=QuotientOfLinearsParts(tmp, x)
+    lst = QuotientOfLinearsParts(tmp, x)
     a, b, c, d = lst[0], lst[1], lst[2], lst[3]
     if ZeroQ(d):
         return False
     lst = Simplify(x**(n - 1)*SubstForFractionalPower(u, tmp, n, (-a + c*x**n)/(b - d*x**n), x)/(b - d*x**n)**2)
     return [NonfreeFactors(lst, x), n, tmp, FreeFactors(lst, x)*(b*c - a*d)]
+
+def FractionalPowerOfQuotientOfLinears(u, n, v, x):
+    # (* If u has a subexpression of the form ((a+b*x)/(c+d*x))^(m/n),
+    # FractionalPowerOfQuotientOfLinears[u,1,False,x] returns {n,(a+b*x)/(c+d*x)}; else it returns False. *)
+    if AtomQ(u) or FreeQ(u, x):
+        return [n, v]
+    elif CalculusQ(u):
+        return False
+    elif FractionalPowerQ(u) and QuotientOfLinearsQ(u.args[0], x) and Not(LinearQ(u.args[0], x)) and (FalseQ(v) or ZeroQ(u.args[0] - v)):
+        return [LCM(Denominator(u.exp), n), u.base]
+    lst = [n, v]
+    for i in u.args:
+        lst = FractionalPowerOfQuotientOfLinears(i, lst[0], lst[1],x)
+        if AtomQ(lst):
+            return False
+    return lst
 
 def FractionalPowerOfSquareQ(u):
     # (* If a subexpression of u is of the form ((v+w)^2)^n where n is a fraction, *)
