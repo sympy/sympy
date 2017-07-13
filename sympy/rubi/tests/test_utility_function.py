@@ -1425,3 +1425,8 @@ def test_GeneralizedTrinomialQ():
 
 def test_SubstForFractionalPowerOfQuotientOfLinears():
     assert SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(b - d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]
+
+def test_SubstForFractionalPowerQ():
+    assert SubstForFractionalPowerQ(x, sin(x), x)
+    assert SubstForFractionalPowerQ(x**2, sin(x), x)
+    assert not SubstForFractionalPowerQ(x**(S(3)/2), sin(x), x)

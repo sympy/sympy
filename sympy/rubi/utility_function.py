@@ -2625,6 +2625,22 @@ def FractionalPowerOfQuotientOfLinears(u, n, v, x):
             return False
     return lst
 
+def SubstForFractionalPowerQ(u, v, x):
+    # (* If the substitution x=v^(1/n) will not complicate algebraic subexpressions of u,
+    # SubstForFractionalPowerQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u) or FreeQ(u, x):
+        return True
+    elif FractionalPowerQ(u):
+        return SubstForFractionalPowerAuxQ(u, v, x)
+    return all(SubstForFractionalPowerQ(i, v, x) for i in u.args)
+
+def SubstForFractionalPowerAuxQ(u, v, x):
+    if AtomQ(u):
+        return False
+    elif FractionalPowerQ(u) and ZeroQ(u.args[0] - v):
+        return True
+    return any(SubstForFractionalPowerAuxQ(i, v, x) for i in u.args)
+
 def FractionalPowerOfSquareQ(u):
     # (* If a subexpression of u is of the form ((v+w)^2)^n where n is a fraction, *)
     # (* FractionalPowerOfSquareQ[u] returns (v+w)^2; else it returns False. *)
