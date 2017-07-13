@@ -1686,7 +1686,7 @@ def ExpandIntegrand(expr, x, extra=None):
                 tmp = a*h - b*g
                 return SimplifyTerm(tmp**m/h**m, x)*f**(e*(c + d*x)**n)/(g + h*x) + Sum(SimplifyTerm(b*tmp**(k-1)/h**k, x)*f**(e*(c+d*x)**n)*(a + b*x)**(m-k), (k, 1, m)).doit()
 
-    #print('1')
+    #`('1')
     pattern = u_*(a_ + b_*F_**v_)**m_*(c_ + d_*F_**v_)**n_
     match = expr.match(pattern)
     if match:
@@ -3121,7 +3121,7 @@ def NormalizeIntegrandFactorBase(expr, x):
             return UnifySum(expr, x)
         else:
             return NormalizeIntegrandFactorBase(v, x)
-    else: 
+    else:
         return expr
 
 def NormalizeTogether(u):
@@ -3233,68 +3233,6 @@ def SubstForExpn(u, v, w):
         for i in u.args:
             k +=  SubstForExpn(i, v, w)
         return k
-
-# yet todo
-'''
-def Simp(u, x):
-    return NormalizeSumFactors(SimpHelp(u,x))
-
-def SimpHelp(expr, x):
-    m = Wild('m', exclude=[x])
-    a = Wild('a')
-    b = Wild('b', exclude=[x])
-    c = Wild('c', exclude=[x])
-    d = Wild('d', exclude=[x])
-    n = Wild('n', exclude=[x])
-    p = Wild('p', exclude=[x])
-    u = Wild('u')
-    v = Wild('v')
-    w = Wild('w')
-    Match = expr.match(E**(u*(v*Log(a) + w)))
-    if Match:
-        u, v, a, w = tuple([Match[i] for i in keys])
-        return a**(u*v)*SimpHelp(E**(u*w), x)
-        SimpHelp(u,x) :=
-    if AtomQ(expr):
-        return expr
-    if Head(u)==If or Head(u)==Int or HeldFormQ(u),
-        return u
-    if FreeQ(u, x):
-        v = SmartSimplify(u)
-        if LeafCount(v)<=LeafCount(u):
-            return v
-        else:
-            return u
-    if ProductQ(u):
-        if EqQ(First(u), 1/2) and MatchQ(Rest(u),a+n*Pi+b*v /; FreeQ({a,b},x) && Not(FreeQ(v,x)) && EqQ(n^2,1/4)),
-            if MatchQ(Rest(u),n*Pi+b*v /; FreeQ(b,x) && Not(FreeQ(v,x)) && EqQ(n^2,1/4)),
-                Map(Function(1/2*#),Rest(u)),
-            if MatchQ(Rest(u),m*a+n*Pi+p*b*v /; FreeQ({a,b},x) && Not(FreeQ(v,x)) && IntegersQ(m/2,p/2)),
-                Map(Function(1/2*#),Rest(u)),
-            u)),
-        {v=FreeFactors(u,x),w=NonfreeFactors(u,x)},
-        v=NumericFactor(v)*SmartSimplify(NonnumericFactors(v)*x^2)/x^2;
-        w=if ProductQ(w), Map(Function(SimpHelp(#,x)),w), SimpHelp(w,x));
-        w=FactorNumericGcd(w);
-        v=MergeFactors(v,w);
-        if ProductQ(v),
-            Map(Function(SimpFixFactor(#,x)),v),
-        v))),
-    if SumQ(u),
-        if MatchQ(u,a+n*Pi+b*x /; FreeQ({a,b},x) && EqQ(n^2,1/16)),
-            u,
-        if PolynomialQ(u,x) && Exponent(u,x)<=0,
-            SimpHelp(Coefficient(u,x,0),x),
-        if PolynomialQ(u,x) && Exponent(u,x)==1 && Coefficient(u,x,0)===0,
-            SimpHelp(Coefficient(u,x,1),x)*x,
-        {v=0,w=0},
-        Scan(Function(if FreeQ(#,x),v=#+v,w=#+w)),u);
-        v=SmartSimplify(v);
-        w=if SumQ(w), Map(Function(SimpHelp(#,x)),w), SimpHelp(w,x));
-        v+w)))),
-    Map(Function(SimpHelp(#,x)),u))))))
-
-'''
 
 def ExpandToSum(u, *x):
     if len(x) == 1:
@@ -3965,45 +3903,6 @@ def ExpandTrigReduce(u, v, x):
     else:
             return u*w
 
-'''
-def ExpandTrigReduce(u.*F(n+v.)^m., x):
-    # This is necessary,  because TrigReduce expands Sinh(n+v) and Cosh(n+v) to exponential form if n is a number.
-    ({nn}:
-    ExpandTrigReduce(u*F(nn+v)^m, x) /. nn->n)/;
-MemberQ({Sinh, Cosh}, F) && IntegerQ(m) && RationalQ(n)
-
-ExpandTrigReduce(u, x):
-    ExpandTrigReduceAux(u, x)
-
-
-ExpandTrigReduceAux(u, x):
-    ({v=Expand(TrigReduce(u))}:
-    if SumQ(v):
-        (Function(NormalizeTrig(#, x)), v):
-    NormalizeTrig(v, x)))
-
-
-NormalizeTrig(a.*F(u)^n., x):
-    a*F(ExpandToSum(u, x))^n /;
-FreeQ({F, a, n}, x) && PolynomialQ(u, x) && Exponent(u, x)>0
-
-NormalizeTrig(u, x): u
-
-
-(* ::Subsection::Closed:: *)
-(*ExpandTrigToExp(u, v, x)*)
-
-
-Clear(ExpandTrigToExp);
-
-ExpandTrigToExp(u, x): ExpandTrigToExp(1, u, x)
-
-
-def ExpandTrigToExp(u, v, x):
-    ({w=TrigToExp(v)}:
-    w=if SumQ(w),  (Function(SimplifyIntegrand(u*#, x)), w),  SimplifyIntegrand(u*w, x));
-    ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x), x))
-'''
 
 def TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])
@@ -4089,3 +3988,29 @@ def TryPureTanhSubst(u, x):
         return False
 
     return True
+
+def AbsurdNumberGCD(*seq):
+    # (* m, n, ... must be absurd numbers.  AbsurdNumberGCD[m,n,...] returns the gcd of m, n, ... *)
+    lst = list(seq)
+    if Length(lst) == 1:
+        return First(lst)
+    return AbsurdNumberGCDList(FactorAbsurdNumber(First(lst)), FactorAbsurdNumber(AbsurdNumberGCD(*Rest(lst))))
+
+def AbsurdNumberGCDList(lst1, lst2):
+    # (* lst1 and lst2 must be absurd number prime factorization lists. *)
+    # (* AbsurdNumberGCDList[lst1,lst2] returns the gcd of the absurd numbers represented by lst1 and lst2. *)
+    if lst1 == []:
+        return Mul(*[i[0]**Min(i[1],0) for i in lst2])
+    elif lst2 == []:
+        return Mul(*[i[0]**Min(i[1],0) for i in lst1])
+    elif lst1[0][0] == lst2[0][0]:
+        if lst1[0][1] <= lst2[0][1]:
+            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(Rest(lst1), Rest(lst2))
+        return lst1[0][0]**lst2[0][1]*AbsurdNumberGCDList(Rest(lst1), Rest(lst2))
+    elif lst1[0][0] < lst2[0][0]:
+        if lst1[0][1] < 0:
+            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(Rest(lst1), lst2)
+        return AbsurdNumberGCDList(Rest(lst1), lst2)
+    elif lst2[0][1] < 0:
+        return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, Rest(lst2))
+    return AbsurdNumberGCDList(lst1, Rest(lst2))
