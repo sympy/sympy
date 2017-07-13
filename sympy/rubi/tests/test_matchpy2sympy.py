@@ -3,7 +3,7 @@ from sympy.rubi.symbol import VariableSymbol, Integer
 from sympy.rubi.operation import List, LinearQ, Add, Mul, Pow, PosQ
 from sympy import symbols, S, I
 
-a, b, x = symbols('a b x')
+a, b, x = symbols('a b x', real=True, imaginary=False)
 def test_matchpy2sympy():
     expr = VariableSymbol('a')
     assert matchpy2sympy(expr) == a

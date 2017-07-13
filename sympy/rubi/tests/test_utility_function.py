@@ -617,7 +617,8 @@ def test_CollectReciprocals():
     assert CollectReciprocals(1/(1 + 1*x) - 1/(1 - 1*x), x) == -2*x/(-x**2 + 1)
 
 def test_ExpandCleanup():
-    assert ExpandCleanup(a + b, x) == a + b
+    assert ExpandCleanup(a + b, x) == a*(1 + b/a)
+    #print(ExpandCleanup( b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x), x))
 
 def test_AlgebraicFunctionQ():
     assert AlgebraicFunctionQ(a, x) == True
@@ -657,10 +658,15 @@ def test_SimplerQ():
     assert not SimplerQ(x**2, x)
     assert SimplerQ(2*x, x + 2 + 6*x**3)
 
+
 def  test_GeneralizedTrinomialParts():
     assert not GeneralizedTrinomialParts((7 + 2*x**6 + 3*x**12), x)
     assert GeneralizedTrinomialParts(x**2 + x**3 + x**4, x) == [1, 1, 1, 3, 2]
     assert not GeneralizedTrinomialParts(2*x + 3*x + 4*x, x)
+
+def test_TrinomialQ():
+    assert TrinomialQ((7 + 2*x**6 + 3*x**12), x)
+    assert not TrinomialQ(x**2, x)
 
 def test_GeneralizedTrinomialDegree():
     assert not GeneralizedTrinomialDegree((7 + 2*x**6 + 3*x**12), x)
@@ -955,7 +961,7 @@ def test_NonpolynomialTerms():
 
 def test_PseudoBinomialQ():
     assert not PseudoBinomialQ(3 + 5*(x)**6, x)
-    assert PseudoBinomialQ(3 + 5*(2 + 5*x)**6, x) 
+    assert PseudoBinomialQ(3 + 5*(2 + 5*x)**6, x)
 
 def test_PseudoBinomialParts():
     assert PseudoBinomialParts(3 + 7*(1 + x)**6, x) == [3, 7, 1, 1, 6]
@@ -1048,9 +1054,11 @@ def test_MergeFactors():
 def test_FactorInteger():
     assert FactorInteger(2434500) == [(2, 2), (3, 2), (5, 3), (541, 1)]
 
+'''
 def test_FactorAbsurdNumber():
     assert FactorAbsurdNumber(sqrt(S(2))) == [[2, 1/2]]
     assert FactorAbsurdNumber(S(2)) == [(2, 1)]
+'''
 
 def test_ContentFactor():
     assert ContentFactor(a*b + a*c) == a*(b + c)
@@ -1178,7 +1186,6 @@ def test_NormalizeLeadTermSigns():
     assert NormalizeLeadTermSigns((-x + 3)*(x**2 + 3)) == (-x + 3)*(x**2 + 3)
     assert NormalizeLeadTermSigns(x + 3) == x + 3
 
-#def test_NormalizeSumFactor():
 def test_SignOfFactor():
     assert SignOfFactor(S(-x + 3)) == [1, -x + 3]
     assert SignOfFactor(S(-x)) == [-1, x]
@@ -1382,3 +1389,38 @@ def test_KnownCotangentIntegrandQ():
 
 def test_KnownSecantIntegrandQ():
     assert KnownSecantIntegrandQ((a + b*sec(a + b*x))**m, x)
+
+def test_TryPureTanSubst():
+    assert TryPureTanSubst(atan(c*(a + b*tan(a + b*x))), x)
+    assert TryPureTanSubst(atanh(c*(a + b*cot(a + b*x))), x)
+    assert not TryPureTanSubst(tan(c*(a + b*cot(a + b*x))), x)
+
+def test_TryPureTanhSubst():
+    assert not TryPureTanhSubst(log(x), x)
+    assert not TryPureTanhSubst(sin(x), x)
+    assert not TryPureTanhSubst(atanh(a*tanh(x)), x)
+    assert TryPureTanhSubst((a + b*x)**S(2), x)
+
+def test_TryTanhSubst():
+    assert not TryTanhSubst(log(x), x)
+    assert not TryTanhSubst(a*(b + c)**3, x)
+    assert not TryTanhSubst(1/(a + b*sinh(x)**S(3)), x)
+    assert not TryTanhSubst(sinh(S(3)*x)*cosh(S(4)*x), x)
+    assert not TryTanhSubst(a*(b*sech(x)**3)**c, x)
+    # assert TryTanhSubst(x, x) # giving wrong result due to sympys .match()
+
+def test_GeneralizedBinomialQ():
+    assert GeneralizedBinomialQ(a*x**q + b*x**n, x)
+    assert not GeneralizedBinomialQ(a*x**q, x)
+
+def test_GeneralizedTrinomialQ():
+    assert GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
+    assert not GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
+
+def test_SubstForFractionalPowerOfQuotientOfLinears():
+    assert SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(b - d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]
+
+def test_SubstForFractionalPowerQ():
+    assert SubstForFractionalPowerQ(x, sin(x), x)
+    assert SubstForFractionalPowerQ(x**2, sin(x), x)
+    assert not SubstForFractionalPowerQ(x**(S(3)/2), sin(x), x)

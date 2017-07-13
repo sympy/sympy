@@ -62,7 +62,7 @@ def matchpy2sympy(expr):
         name = expr.name
         if name == 'I':
             return I
-        return Symbol(expr.name, real=True, imaginary=False)
+        return Symbol(name, real=True, imaginary=False)
     elif isinstance(expr, Integer):
         return S(expr.name)
     args = [matchpy2sympy(i) for i in expr.operands]

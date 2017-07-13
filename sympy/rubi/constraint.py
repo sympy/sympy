@@ -43,6 +43,8 @@ class cons(Constraint):
     def __hash__(self):
         return hash((self.vars, self.expr))
 
+    def __str__(self):
+        return str(self.expr)
 
 class FreeQ(Constraint):
     def __init__(self, expr, var):
@@ -67,3 +69,6 @@ class FreeQ(Constraint):
 
     def __hash__(self):
         return hash((self.expr, self.var))
+
+    def __str__(self):
+        return str('FreeQ({}, {})'.format(self.expr, self.var))

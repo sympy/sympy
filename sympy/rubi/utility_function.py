@@ -21,11 +21,11 @@ from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 
-def Int(expr, var):
+def Int(expr, var, showsteps=False):
     from .rubi import rubi_integrate
     if expr == None:
         return None
-    return rubi_integrate(expr, var)
+    return rubi_integrate(expr, var, showsteps)
 
 def Set(expr, value):
     return {expr: value}
@@ -243,7 +243,6 @@ def Denominator(var):
     return fraction(var)[1]
 
 def Hypergeometric2F1(a, b, c, z):
-    #return hyperexpand(hyper([a, b], [c], z))
     return hyper([a, b], [c], z)
 
 def ArcTan(a):
@@ -1227,7 +1226,7 @@ def FreeTerms(u, x):
 def NonfreeTerms(u, x):
     # returns the sum of the terms of u free of x.
     if SumQ(u):
-        result = 0
+        result = S(0)
         for i in u.args:
             if not FreeQ(i, x):
                 result += i
@@ -1235,7 +1234,7 @@ def NonfreeTerms(u, x):
     elif not FreeQ(u, x):
         return u
     else:
-        return 0
+        return S(0)
 
 def ExpandAlgebraicFunction(expr, x):
     if ProductQ(expr):
@@ -1294,10 +1293,6 @@ def CollectReciprocals(expr, x):
             except:
                 pass
     return expr
-
-def UnifySum(term, x):
-    # returns u with terms having indentical nonfree factors of x collected into a single term.
-    return term
 
 def ExpandCleanup(u, x):
     v = CollectReciprocals(u, x)
@@ -1469,6 +1464,36 @@ def BinomialQ(u, x, n=None):
         return True
     return ListQ(BinomialParts(u, x))
 
+def TrinomialQ(u, x):
+    # * If u is equivalent to an expression of the form a+b*x^n+c*x^(2*n) where n, b and c are not 0, *)
+    # (* TrinomialQ[u,x] returns True; else it returns False. *)
+    if ListQ(u):
+        for i in u.args:
+            if Not(TrinomialQ(i, x, n)):
+                return False
+        return True
+
+    check = False
+    if PowerQ(u):
+        if u.exp == 2 and BinomialQ(u.base, x):
+            check = True
+
+    return ListQ(TrinomialParts(u,x)) and Not(QuadraticQ(u, x)) and Not(check)
+
+def GeneralizedBinomialQ(u, x):
+    # (* If u is equivalent to an expression of the form a*x^q+b*x^n where n, q and b are not 0, *)
+    # (* GeneralizedBinomialQ[u,x] returns True; else it returns False. *)
+    if ListQ(u):
+        return all(GeneralizedBinomialQ(i, x) for i in u)
+    return ListQ(GeneralizedBinomialParts(u, x))
+
+def GeneralizedTrinomialQ(u, x):
+    # (* If u is equivalent to an expression of the form a*x^q+b*x^n+c*x^(2*n-q) where n, q, b and c are not 0, *)
+    # (* GeneralizedTrinomialQ[u,x] returns True; else it returns False. *)
+    if ListQ(u):
+        return all(GeneralizedTrinomialQ(i, x) for i in u)
+    return ListQ(GeneralizedTrinomialParts(u, x))
+
 def FactorSquareFreeList(poly):
     r = sqf_list(poly)
     result = [[1, 1]]
@@ -1574,6 +1599,8 @@ def RationalFunctionExponents(u, x):
     return [0, 0]
 
 def RationalFunctionExpand(expr, x):
+    # (* u is a polynomial or rational function of x. *)
+    # (* RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors. *)
     u_ = Wild('u')
     v_ = Wild('v')
     n_ = Wild('n', exclude=[x])
@@ -1586,10 +1613,7 @@ def RationalFunctionExpand(expr, x):
             if FractionQ(n) and v != x:
                 w = RationalFunctionExpand(u, x)
                 if SumQ(w):
-                    result = 0
-                    for i in w.args:
-                        result += i*v**n
-                    return result
+                    return Add(*[i*v**n for i in w.args])
                 else:
                     return w*v**n
 
@@ -1615,21 +1639,17 @@ def RationalFunctionExpand(expr, x):
     u = expr
     if v != u and t:
         return v
-    else:
-        v = ExpandIntegrand(RationalFunctionFactors(u, x), x)
-        w = NonrationalFunctionFactors(u, x)
-        if SumQ(v):
-            result = 0
-            for i in v:
-                result += i*w
-            return result
+
+    v = ExpandIntegrand(RationalFunctionFactors(u, x), x)
+    w = NonrationalFunctionFactors(u, x)
+    if SumQ(v):
+        return Add(*[i*w for i in v.args])
+    return v*w
 
 def ExpandIntegrand(expr, x, extra=None):
-    w_ = Wild('w')
+    w_, u_, v_ = map(Wild, 'wuv')
     p_ = Wild('p', exclude=[x])
     q_ = Wild('q', exclude=[x])
-    u_ = Wild('u')
-    v_ = Wild('v')
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
     c_ = Wild('c', exclude=[x])
@@ -1925,7 +1945,6 @@ def ExpandIntegrand(expr, x, extra=None):
                 for i in range(0, Exponent(u,x) + 1):
                     result += lst[i-1]*x**S(i-1)/v
             elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x) >= Exponent(v, x):
-                #print('111', u, v)
                 return PolynomialDivide(u, v, x)
 
     r = ExpandExpression(expr, x)
@@ -2541,24 +2560,6 @@ def FactorAbsurdNumber(m):
     #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
     return CombineExponents
 
-def TrinomialQ(u, x):
-    if isinstance(u, list):
-        for i in u:
-            if not TrinomialQ(i, x):
-                return False
-        return True
-    if isinstance(TrinomialParts(u, x), list) and Not(QuadraticQ(u, x)):
-        w = Wild('w')
-        match = u.match(w**2)
-        return match and BinomialQ(match[w], x)
-        result = []
-        for i in r:
-            result.append([i[0], i[1]*m.exp])
-        return result
-    #CombineExponents[Sort[]]]]
-    #Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]
-    #return CombineExponents(Sort(Flatten()))
-
 def SubstForInverseFunction(*args):
     # (* SubstForInverseFunction[u,v,w,x] returns u with subexpressions equal to v replaced by x
     # and x replaced by w. *)
@@ -2597,12 +2598,44 @@ def SubstForFractionalPowerOfQuotientOfLinears(u, x):
         return False
     n = lst[0]
     tmp = lst[1]
-    lst=QuotientOfLinearsParts(tmp, x)
+    lst = QuotientOfLinearsParts(tmp, x)
     a, b, c, d = lst[0], lst[1], lst[2], lst[3]
     if ZeroQ(d):
         return False
     lst = Simplify(x**(n - 1)*SubstForFractionalPower(u, tmp, n, (-a + c*x**n)/(b - d*x**n), x)/(b - d*x**n)**2)
     return [NonfreeFactors(lst, x), n, tmp, FreeFactors(lst, x)*(b*c - a*d)]
+
+def FractionalPowerOfQuotientOfLinears(u, n, v, x):
+    # (* If u has a subexpression of the form ((a+b*x)/(c+d*x))^(m/n),
+    # FractionalPowerOfQuotientOfLinears[u,1,False,x] returns {n,(a+b*x)/(c+d*x)}; else it returns False. *)
+    if AtomQ(u) or FreeQ(u, x):
+        return [n, v]
+    elif CalculusQ(u):
+        return False
+    elif FractionalPowerQ(u) and QuotientOfLinearsQ(u.args[0], x) and Not(LinearQ(u.args[0], x)) and (FalseQ(v) or ZeroQ(u.args[0] - v)):
+        return [LCM(Denominator(u.exp), n), u.base]
+    lst = [n, v]
+    for i in u.args:
+        lst = FractionalPowerOfQuotientOfLinears(i, lst[0], lst[1],x)
+        if AtomQ(lst):
+            return False
+    return lst
+
+def SubstForFractionalPowerQ(u, v, x):
+    # (* If the substitution x=v^(1/n) will not complicate algebraic subexpressions of u,
+    # SubstForFractionalPowerQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u) or FreeQ(u, x):
+        return True
+    elif FractionalPowerQ(u):
+        return SubstForFractionalPowerAuxQ(u, v, x)
+    return all(SubstForFractionalPowerQ(i, v, x) for i in u.args)
+
+def SubstForFractionalPowerAuxQ(u, v, x):
+    if AtomQ(u):
+        return False
+    elif FractionalPowerQ(u) and ZeroQ(u.args[0] - v):
+        return True
+    return any(SubstForFractionalPowerAuxQ(i, v, x) for i in u.args)
 
 def FractionalPowerOfSquareQ(u):
     # (* If a subexpression of u is of the form ((v+w)^2)^n where n is a fraction, *)
@@ -3103,13 +3136,12 @@ def NormalizeLeadTermSigns(u):
                 t *= lst[1]
             else:
                 t *= AbsorbMinusSign(lst[1])
-        return t  
+        return t
     else:
         lst = SignOfFactor(u)
     if lst[0] == 1:
         return lst[1]
     else:
-        print(lst[1])
         return AbsorbMinusSign(lst[1])
 
 def AbsorbMinusSign(expr, *x):
@@ -3117,10 +3149,12 @@ def AbsorbMinusSign(expr, *x):
     u = Wild('u')
     v = Wild('v')
     match = expr.match(u*v**m)
-    if match and SumQ(match[v]) and OddQ(match[m]):
-        return match[u]*(-match[v])**match[m]
-    else:
-        return -expr
+    if match:
+        if len(match) == 3:
+            if SumQ(match[v]) and OddQ(match[m]):
+                return match[u]*(-match[v])**match[m]
+
+    return -expr
 # yet todo
 def NormalizeSumFactors(u):
     if AtomQ(u):
@@ -3970,3 +4004,88 @@ def ExpandTrigToExp(u, v, x):
     w=if SumQ(w),  (Function(SimplifyIntegrand(u*#, x)), w),  SimplifyIntegrand(u*w, x));
     ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x), x))
 '''
+
+def TryPureTanSubst(u, x):
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x])
+    G_ = Wild('G')
+
+    F = u.func
+    try:
+        if MemberQ([atan, acot, atanh, acoth], F):
+            match = u.args[0].match(c_*(a_ + b_*G_))
+            if match:
+                if len(match) == 4:
+                    G = match[G_]
+                    if MemberQ([tan, cot, tanh, coth], G.func):
+                        if LinearQ(G.args[0], x):
+                            return True
+    except:
+        pass
+
+    return False
+
+def TryTanhSubst(u, x):
+    if u.func == log:
+        return False
+    elif not FalseQ(FunctionOfLinear(u, x)):
+        return False
+
+    a_ = Wild('a', exclude=[x])
+    m_ = Wild('m', exclude=[x])
+    p_ = Wild('p', exclude=[x])
+    r_, s_, t_, n_, b_, f_, g_ = map(Wild, 'rstnbfg')
+
+    match = u.match(r_*(s_ + t_)**n_)
+    if match:
+        if len(match) == 4:
+            r, s, t, n = [match[i] for i in [r_, s_, t_, n_]]
+            if IntegerQ(n) and PositiveQ(n):
+                return False
+
+    match = u.match(1/(a_ + b_*f_**n_))
+    if match:
+        if len(match) == 4:
+            a, b, f, n = [match[i] for i in [a_, b_, f_, n_]]
+            if SinhCoshQ(f) and IntegerQ(n) and n > 2:
+                return False
+
+    match = u.match(f_*g_)
+    if match:
+        if len(match) == 2:
+            f, g = match[f_], match[g_]
+            if SinhCoshQ(f) and SinhCoshQ(g):
+                if IntegersQ(f.args[0]/x, g.args[0]/x):
+                    return False
+
+    match = u.match(r_*(a_*s_**m_)**p_)
+    if match:
+        if len(match) == 5:
+            r, a, s, m, p = [match[i] for i in [r_, a_, s_, m_, p_]]
+            if Not(m==2 and (s == Sech(x) or s == Csch(x))):
+                return False
+
+    if u != ExpandIntegrand(u, x):
+        return False
+
+    return True
+
+def TryPureTanhSubst(u, x):
+    F = u.func
+    a_ = Wild('a', exclude=[x])
+    G_ = Wild('G')
+
+    if F == log:
+        return False
+
+    match = u.args[0].match(a_*G_)
+    if match and len(match) == 2:
+        G = match[G_].func
+        if MemberQ([atanh, acoth], F) and MemberQ([tanh, coth], G):
+            return False
+
+    if u != ExpandIntegrand(u, x):
+        return False
+
+    return True
