@@ -27,7 +27,9 @@ reserved['C++11'] = reserved['C++98'][:] + [
     'alignas', 'alignof', 'char16_t', 'char32_t', 'constexpr', 'decltype',
     'noexcept', 'nullptr', 'static_assert', 'thread_local'
 ]
-reserved['C++17'] = []
+reserved['C++17'] = reserved['C++11'][:] - [
+    'register'
+] 
 # TM TS: atomic_cancel, atomic_commit, atomic_noexcept, synchronized
 # concepts TS: concept, requires
 # module TS: import, module
