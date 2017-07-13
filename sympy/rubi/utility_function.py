@@ -603,6 +603,7 @@ def PowerOfLinearQ(expr, x):
             return LinearQ(Match[u], x)
 
 def Exponent(expr, x, *k):
+    expr = Expand(S(expr))
     if not k:
         if S(expr).is_number or (not expr.has(x)):
             return 0
@@ -611,26 +612,22 @@ def Exponent(expr, x, *k):
         else:
             return 0
     else:
-        lst=[]
         if S(expr).is_number or (not expr.has(x)):
             return [0]
         if expr.is_Add:
+            lst = []
+            k = 1
             for t in expr.args:
-                if t.is_Pow:
-                    lst = lst + [t.args[1]]
-                if t.is_Mul:
-                    if t.args[1].is_Pow:
-                        lst = lst + [(t.args[1]).args[1]]
-                    if AtomQ(t.args[1]):
-                        lst = lst + [1]
-                if t.is_Number:
-                    lst = lst + [0]
-                if AtomQ(t) and not t.is_Number:
-                    lst = lst + [1]
+                if t.has(x):
+                    lst += [degree(t, gen = x)]
+                else:
+                    if k == 1:
+                        lst += [0]
+                        k += 1
+            lst.sort()
             return lst
         else:
             return [degree(expr, gen = x)]
-
 
 def QuadraticQ(u, x):
     # QuadraticQ(u, x) returns True iff u is a polynomial of degree 2 and not a monomial of the form a x^2
@@ -2144,10 +2141,9 @@ def GeneralizedTrinomialParts(expr, x):
         c = Wild('c', exclude=[x])
         n = Wild('n', exclude=[x])
         q = Wild('q', exclude=[x])
-        u = Wild('u')
         Match = expr.match(a*x**q+b*x**n+c*x**(2*n-q))
         if Match and expr.is_Add:
-            return [Match[a], Match[b], Match[c], Match[n], Match[q]]
+            return [Match[c], Match[b], Match[a], Match[n], 2*Match[n]-Match[q]]
     else:
         return False
 
@@ -2280,7 +2276,7 @@ def GeneralizedBinomialMatchQ(u, x):
         n = Wild('n', exclude=[x])
         q = Wild('q', exclude=[x])
         Match = u.match(a*x**q + b*x**n)
-        if Match and Match[a] and Match[b] and Match[n] and Match[q]:
+        if Match and len(Match) == 4 and Match[q] != 0 and Match[n] != 0:
             return True
         else:
             return False
@@ -2298,7 +2294,7 @@ def GeneralizedTrinomialMatchQ(u, x):
         c = Wild('c', exclude=[x])
         q = Wild('q', exclude=[x])
         Match = u.match(a*x**q + b*x**n + c*x**(2*n - q))
-        if Match and Match[a] and Match[b] and Match[n] and Match[c] and Match[q]:
+        if Match and len(Match) == 5 and 2*Match[n] - Match[q] != 0 and Match[n] != 0:
             return True
         else:
             return False
@@ -2316,7 +2312,7 @@ def QuotientOfLinearsMatchQ(u, x):
         c = Wild('c', exclude=[x])
         e = Wild('e')
         Match = u.match(e*(a + b*x)/(c + d*x))
-        if Match and Match[a] and Match[b] and Match[c] and Match[d] and Match[e]:
+        if Match and len(Match) == 5:
             return True
         else:
             return False
@@ -3062,14 +3058,9 @@ def NormalizeIntegrandAux(u, x):
         return NormalizeIntegrandFactor(MergeMonomials(u, x), x)
 
 def NormalizeIntegrandFactor(u, x):
-    m = Wild('m', exclude=[x])
-    a = Wild('a')
-    match = u.match(a**m)
-    if match:
-        a = match[a]
-        m = match[m]
-        bas = NormalizeIntegrandFactorBase(a, x)
-        deg = m
+    if PowerQ(u) and FreeQ(u.args[1], x):
+        bas = NormalizeIntegrandFactorBase(u.args[0], x)
+        deg = u.args[1]
         if IntegerQ(deg) and SumQ(bas):
             if all(MonomialQ(i, x) for i in bas.args):
                 mi = MinimumMonomialExponent(bas, x)
@@ -3081,23 +3072,18 @@ def NormalizeIntegrandFactor(u, x):
                 return bas**deg
         else:
             return bas**deg
-    else:
-        bas = NormalizeIntegrandFactorBase(u.args[0], x)
-        deg = u.args[1]
-        return bas**deg
     if PowerQ(u) and FreeQ(u.args[0], x):
         return u.args[0]**NormalizeIntegrandFactorBase(u.args[1], x)
     bas = NormalizeIntegrandFactorBase(u, x)
     if SumQ(bas):
-        for i in bas.args:
-            if MapAnd(MonomialQ(i, x)):
-                mi = MinimumMonomialExponent(bas, x)
-                z = 0
-                for j in bas.args:
-                    z += j/x**mi
-                return x**mi*z
-            else:
-                return bas
+        if all(MonomialQ(i, x) for i in bas.args):
+            mi = MinimumMonomialExponent(bas, x)
+            z = 0
+            for j in bas.args:
+                z += j/x**mi
+            return x**mi*z
+        else:
+            return bas
     else:
         return bas
 
@@ -3135,11 +3121,8 @@ def NormalizeIntegrandFactorBase(expr, x):
             return UnifySum(expr, x)
         else:
             return NormalizeIntegrandFactorBase(v, x)
-    else:
-        l = 0
-        for i in expr.args:
-            l += NormalizeIntegrandFactor(i, x)
-        return l
+    else: 
+        return expr
 
 def NormalizeTogether(u):
     return NormalizeLeadTermSigns(Together(u))
@@ -3165,15 +3148,6 @@ def AbsorbMinusSign(expr, *x):
     m = Wild('m', exclude=[x])
     u = Wild('u')
     v = Wild('v')
-    if expr.is_Mul:
-        k = 1
-        for i in expr.args:
-            match = i.match(u*v**m)
-            if match and SumQ(match[v]) and OddQ(match[m]):
-                k *= match[u]*(-match[v])**match[m]
-            else:
-                k *= i
-        return k
     match = expr.match(u*v**m)
     if match:
         if len(match) == 3:
@@ -3239,7 +3213,6 @@ def TogetherSimplify(u):
     v = Together(Simplify(Together(u)))
     return FixSimplify(v)
 
-# yet todo
 def SmartSimplify(u):
     v = Simplify(u)
     w = factor(v)
@@ -3363,22 +3336,6 @@ def ExpandToSum(u, *x):
         else:
             return u*FreeTerms(w, x) + MergeMonomials(u*r, x)
 
-def ExpandTrig(u, *x):
-    if len(x) == 2:
-        v = x[0]
-        x = x[1]
-        w = ExpandTrig(v, x)
-        if SumQ(w):
-            t = 0
-            for i in w.args:
-                t += u*i
-            return t
-        else:
-            return u*w
-    else:
-        x = x[0]
-        return ExpandIntegrand(u, x)
-
 def UnifySum(u, x):
     if SumQ(u):
         t = 0
@@ -3405,13 +3362,6 @@ def UnifyTerm(term, lst, x):
         return Prepend(Rest(lst), [(1+tmp)*term])
     else:
         return Prepend(UnifyTerm(term, Rest(lst), x), [First(lst)])
-
-def ExpandLinearProduct(v, u, a, b, x):
-    lst = CoefficientList(u.subs(x, (x-a)/b), x)
-    s = 0
-    for k in range(1, Length(lst)+1):
-        s += v*lst[k-1]*(a + b*x)**(k-1)
-    return s
 
 def CalculusQ(u):
     return False
@@ -3994,6 +3944,66 @@ def KnownCotangentIntegrandQ(u, x):
 
 def KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
+
+def ExpandTrigExpand(u, F, v, m, n, x):
+    w = Expand(TrigExpand(F.subs(x, n*x))**m, x).subs(x, v)
+    if SumQ(w):
+        t = 0
+        for i in w.args:
+            t += u*i
+        return t
+    else:
+        return u*w
+
+def ExpandTrigReduce(u, v, x):
+    w = ExpandTrigReduce(v, x)
+    if SumQ(w):
+        t = 0
+        for i in w.args:
+            t += u*i
+        return t
+    else:
+            return u*w
+
+'''
+def ExpandTrigReduce(u.*F(n+v.)^m., x):
+    # This is necessary,  because TrigReduce expands Sinh(n+v) and Cosh(n+v) to exponential form if n is a number.
+    ({nn}:
+    ExpandTrigReduce(u*F(nn+v)^m, x) /. nn->n)/;
+MemberQ({Sinh, Cosh}, F) && IntegerQ(m) && RationalQ(n)
+
+ExpandTrigReduce(u, x):
+    ExpandTrigReduceAux(u, x)
+
+
+ExpandTrigReduceAux(u, x):
+    ({v=Expand(TrigReduce(u))}:
+    if SumQ(v):
+        (Function(NormalizeTrig(#, x)), v):
+    NormalizeTrig(v, x)))
+
+
+NormalizeTrig(a.*F(u)^n., x):
+    a*F(ExpandToSum(u, x))^n /;
+FreeQ({F, a, n}, x) && PolynomialQ(u, x) && Exponent(u, x)>0
+
+NormalizeTrig(u, x): u
+
+
+(* ::Subsection::Closed:: *)
+(*ExpandTrigToExp(u, v, x)*)
+
+
+Clear(ExpandTrigToExp);
+
+ExpandTrigToExp(u, x): ExpandTrigToExp(1, u, x)
+
+
+def ExpandTrigToExp(u, v, x):
+    ({w=TrigToExp(v)}:
+    w=if SumQ(w),  (Function(SimplifyIntegrand(u*#, x)), w),  SimplifyIntegrand(u*w, x));
+    ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x), x))
+'''
 
 def TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])
