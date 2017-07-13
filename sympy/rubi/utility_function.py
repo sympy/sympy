@@ -3121,7 +3121,7 @@ def NormalizeIntegrandFactorBase(expr, x):
             return UnifySum(expr, x)
         else:
             return NormalizeIntegrandFactorBase(v, x)
-    else: 
+    else:
         return expr
 
 def NormalizeTogether(u):

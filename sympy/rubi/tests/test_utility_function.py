@@ -540,9 +540,6 @@ def test_ReplaceAll():
     assert ReplaceAll(a*x, {x: a + b}) == a*(a + b)
     assert ReplaceAll(a*x, {a: b, x: a + b}) == b*(a + b)
 
-def test_SimplifyTerm():
-    assert SimplifyTerm(a/100 + 100/b*x, x) == a/100 + 100/b*x
-
 def test_ExpandLinearProduct():
     assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
 
@@ -1199,6 +1196,7 @@ def test_SimplifyIntegrand():
     assert SimplifyIntegrand(x**2 + 3 + (x**6) + 6, x) == x**6 + x**2 + 9
 
 def test_SimplifyTerm():
+    assert SimplifyTerm(a**2/b**2, x) == a**2/b**2
     assert SimplifyTerm(-6*x/5 + (5*x + 3)**2/25 - 9/25, x) == x**2
 
 def test_togetherSimplify():
@@ -1397,7 +1395,7 @@ def test_TryPureTanSubst():
 
 def test_TryPureTanhSubst():
     assert not TryPureTanhSubst(log(x), x)
-    assert not TryPureTanhSubst(sin(x), x)
+    assert TryPureTanhSubst(sin(x), x)
     assert not TryPureTanhSubst(atanh(a*tanh(x)), x)
     assert TryPureTanhSubst((a + b*x)**S(2), x)
 
@@ -1414,7 +1412,7 @@ def test_GeneralizedBinomialQ():
     assert not GeneralizedBinomialQ(a*x**q, x)
 
 def test_GeneralizedTrinomialQ():
-    assert GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
+    assert GeneralizedTrinomialQ(x**2 + x**3 + x**4, x)
     assert not GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
 
 def test_SubstForFractionalPowerOfQuotientOfLinears():
