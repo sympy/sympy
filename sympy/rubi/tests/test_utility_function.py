@@ -1155,6 +1155,7 @@ def test_NormalizeIntegrand():
     assert NormalizeIntegrand((x**2 + 8), x) == x**2 + 8
     assert NormalizeIntegrand((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
     assert NormalizeIntegrand(a**2*(a + b*x)**2, x) == a**2*(a + b*x)**2
+    assert NormalizeIntegrand(b**2/(a**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2)
 
 def test_NormalizeIntegrandAux():
     assert NormalizeIntegrandAux((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
