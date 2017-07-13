@@ -76,22 +76,16 @@ def solve_biquadratic(f, g, opt):
     if len(G) != 2:
         raise SolveFailed
 
-    p, q = G
     x, y = opt.gens
+    p, q = G
+    if not p.gcd(q).as_expr().is_constant(x, y):
+        # not 0-dimensional
+        raise SolveFailed
 
     p = Poly(p, x, expand=False)
-    p_roots = roots(p)
-    k, m = list(zip(*p_roots.items()))
-    if sum(m) == 1 and (y not in k[0].free_symbols
-            and y in p.free_symbols):
-        # this is not a zero-dimensional system
-        raise SolveFailed
-    p_roots = [ rcollect(expr, y) for expr in p_roots.keys() ]
+    p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
 
-    try:
-        q = q.ltrim(-1)
-    except PolynomialError:
-        raise SolveFailed
+    q = q.ltrim(-1)
     q_roots = list(roots(q).keys())
 
     solutions = []

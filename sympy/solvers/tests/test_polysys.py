@@ -53,10 +53,10 @@ def test_solve_biquadratic():
 
     f_1 = (x - 1)**2 + (y - 1)**2 - r**2
     f_2 = (x - 2)**2 + (y - 2)**2 - r**2
-
-    assert solve_poly_system([f_1, f_2], x, y) == \
-        [(S(3)/2 - sqrt(-1 + 2*r**2)/2, S(3)/2 + sqrt(-1 + 2*r**2)/2),
-         (S(3)/2 + sqrt(-1 + 2*r**2)/2, S(3)/2 - sqrt(-1 + 2*r**2)/2)]
+    s = sqrt(2*r**2 - 1)
+    a = (3 - s)/2
+    b = (3 + s)/2
+    assert solve_poly_system([f_1, f_2], x, y) == [(a, b), (b, a)]
 
     f_1 = (x - 1)**2 + (y - 2)**2 - r**2
     f_2 = (x - 1)**2 + (y - 1)**2 - r**2
