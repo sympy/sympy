@@ -308,7 +308,7 @@ def build_docs():
         with virtualenv(venv):
             with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
-                run("make html-errors")
+                run("make html")
                 run("make man")
                 with cd("/home/vagrant/repos/sympy/doc/_build"):
                     run("mv html {html-nozip}".format(**tarball_formatter()))

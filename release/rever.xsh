@@ -84,7 +84,7 @@ def build_docs():
 
         cd doc
         make clean
-        make html-errors
+        make html
         make man
 
         cd _build
