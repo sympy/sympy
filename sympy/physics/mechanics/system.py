@@ -424,7 +424,7 @@ class SymbolicSystem(object):
         constants = set()
         for expr in eom_expressions:
             constants = constants.union(expr.free_symbols)
-        constants.remove(dynamicsymbols._t)
+        constants.remove(dynamicsymbols.t)
 
         return tuple(constants)
 
