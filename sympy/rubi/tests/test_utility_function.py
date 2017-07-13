@@ -450,11 +450,11 @@ def test_FractionalPowerFreeQ():
     assert FractionalPowerFreeQ(x)
 
 def test_Exponent():
-    assert Exponent(x**2+x+1+5, x, List) == [0, 1, 2]
-    assert Exponent(x**2+x+1, x, List) == [0, 1, 2]
-    assert Exponent(x**2+2*x+1, x, List) == [0, 2, 1]
-    assert Exponent(x**3+x+1, x) == 3
-    assert Exponent(x**2+2*x+1, x) == 2
+    assert Exponent(x**2 + x + 1 + 5, x, List) == [0, 1, 2]
+    assert Exponent(x**2 + x + 1, x, List) == [0, 1, 2]
+    assert Exponent(x**2 + 2*x + 1, x, List) == [0, 1, 2]
+    assert Exponent(x**3 + x + 1, x) == 3
+    assert Exponent(x**2 + 2*x + 1, x) == 2
     assert Exponent(x**3, x, List) == [3]
     assert Exponent(S(1), x) == 0
     assert Exponent(x**(-3), x) == 0
@@ -472,7 +472,7 @@ def test_QuadraticQ():
 
 def test_BinomialQ():
     assert BinomialQ(x**9, x)
-    assert BinomialQ((1 + x)**3, x)
+    assert not BinomialQ((1 + x)**3, x)
 
 def test_BinomialParts():
     assert BinomialParts(2 + x*(9*x), x) == [2, 9, 2]
@@ -652,18 +652,19 @@ def test_LinearMatchQ():
     assert not LinearMatchQ(3*x**2, x)
 
 def test_SimplerQ():
-    assert not SimplerQ(2*x, x + 2)
+    assert SimplerQ(2*x, x + 2)
     assert SimplerQ(2, x)
     assert not SimplerQ(x**2, x)
     assert SimplerQ(2*x, x + 2 + 6*x**3)
 
 def  test_GeneralizedTrinomialParts():
-    assert GeneralizedTrinomialParts((7 + 2*x**6 + 3*x**12), x) == [3, 2, 7, 6, 12]
-    assert GeneralizedTrinomialParts(x**2 + x**3 + x**4, x) == [1, 1, 1, 3, 4]
+    assert not GeneralizedTrinomialParts((7 + 2*x**6 + 3*x**12), x)
+    assert GeneralizedTrinomialParts(x**2 + x**3 + x**4, x) == [1, 1, 1, 3, 2]
+    assert not GeneralizedTrinomialParts(2*x + 3*x + 4*x, x)
 
 def test_GeneralizedTrinomialDegree():
-    assert  GeneralizedTrinomialDegree((7 + 2*x**6 + 3*x**12), x) == -6
-    assert GeneralizedTrinomialDegree(x**2 + x**3 + x**4, x) == -1
+    assert not GeneralizedTrinomialDegree((7 + 2*x**6 + 3*x**12), x)
+    assert GeneralizedTrinomialDegree(x**2 + x**3 + x**4, x) == 1
 
 def test_GeneralizedBinomialParts():
     assert GeneralizedBinomialParts(3*x*(3 + x**6), x) == [9, 3, 7, 1]
@@ -683,11 +684,6 @@ def test_LinearPairQ():
     assert LinearPairQ(6*x + 4, 3*x + 2, x)
     assert not LinearPairQ(6*x, 3*x + 2, x)
     assert LinearPairQ(6*x, 3*x, x)
-
-def test_SimplerQ():
-    assert SimplerQ(2*x, x + 2 + 6*x**3)
-    assert not SimplerQ(2*x, x + 2)
-    assert SimplerQ(2, x)
 
 def test_SimplerSqrtQ():
     assert SimplerSqrtQ(S(4), S(16))
@@ -931,9 +927,10 @@ def test_PowerOfLinearMatchQ():
     assert PowerOfLinearMatchQ(S(6 + 3*x)**3, x)
 
 def test_GeneralizedTrinomialMatchQ():
-    assert GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**12, x)
-    assert GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**3, x)
+    assert not GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**12, x)
+    assert not GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**3, x)
     assert not GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**5, x)
+    assert GeneralizedTrinomialMatchQ(x**2 + x**3 + x**4, x)
 
 def test_QuotientOfLinearsMatchQ():
     assert QuotientOfLinearsMatchQ((1 + x)*(3 + 4*x**2)/(2 + 4*x), x)
@@ -1157,6 +1154,7 @@ def test_MonomialFactor():
 def test_NormalizeIntegrand():
     assert NormalizeIntegrand((x**2 + 8), x) == x**2 + 8
     assert NormalizeIntegrand((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
+    assert NormalizeIntegrand(a**2*(a + b*x)**2, x) == a**2*(a + b*x)**2
 
 def test_NormalizeIntegrandAux():
     assert NormalizeIntegrandAux((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
@@ -1167,12 +1165,13 @@ def test_NormalizeIntegrandFactor():
     assert NormalizeIntegrandFactor((x**2 + 8), x) == x**2 + 8
 
 def tset_NormalizeIntegrandFactorBase():
-    assert NormalizeIntegrandFactorBase((x**2 + 8)**3, x) == x**6
+    assert NormalizeIntegrandFactorBase((x**2 + 8)**3, x) == (x**2 + 8)**3
     assert NormalizeIntegrandFactorBase((x**2 + 8), x) == x**2 + 8
+    assert NormalizeIntegrandFactorBase(a**2*(a + b*x)**2, x) == a**2*(a + b*x)**2
 
 def test_AbsorbMinusSign():
-    assert AbsorbMinusSign((x + 2)**5*(x + 3)**5) == (-x - 3)**5*(-x - 2)**5
-    assert  AbsorbMinusSign((x + 2)**5*(x + 3)**2) == (-x - 2)**5*(x + 3)**2
+    assert AbsorbMinusSign((x + 2)**5*(x + 3)**5) == (-x - 3)**5*(x + 2)**5
+    assert  AbsorbMinusSign((x + 2)**5*(x + 3)**2) == -(x + 2)**5*(x + 3)**2
 
 def test_NormalizeLeadTermSigns():
     assert NormalizeLeadTermSigns((-x + 3)*(x**2 + 3)) == (-x + 3)*(x**2 + 3)
@@ -1201,18 +1200,11 @@ def test_ExpandToSum():
     assert ExpandToSum(S(x**2 + 3*x + 3), x**3 + 3, x) == x**3*(x**2 + 3*x + 3) + 3*x**2 + 9*x + 9
     assert ExpandToSum(x**3 + 6, x) == x**3 + 6
     assert ExpandToSum(S(x**2 + 3*x + 3)*3, x) == 3*x**2 + 9*x + 9
-
-def test_expandTrig():
-    # depends on ExpandIntegrand()
-    assert ExpandTrig(sin(x) + 6, cos(x), x) == sin(x) + 6
+    assert ExpandToSum((a + b*x), x) == a + b*x
 
 def test_UnifySum():
     assert UnifySum((3 + x + 6*x**3 + sin(x)), x) == 6*x**3 + x + sin(x) + 3
     assert UnifySum((3 + x + 6*x**3)*3, x) == 18*x**3 + 3*x + 9
-
-def test_ExpandLinearProduct():
-    assert ExpandLinearProduct(2, x**2 + 6 + 3*x, 3, 5, x) == 18*x/5 + 2*(5*x + 3)**2/25 + 282/25
-    assert ExpandLinearProduct(1, x**2, 3, 5, x) == -6*x/5 + (5*x + 3)**2/25 - 9/25
 
 def test_FunctionOfInverseLinear():
     assert FunctionOfInverseLinear((x)/(a + b*x), x) == [a, b]
