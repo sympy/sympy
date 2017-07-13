@@ -111,7 +111,7 @@ class GLSLPrinter(CodePrinter):
         A = mat.transpose() if mat_transpose != column_vector else mat
 
         if A.cols == 1:
-            return str(A[0]);
+            return self._print(A[0]);
         if A.rows <= 4 and A.cols <= 4 and glsl_types:
             if A.rows == 1:
                 return 'vec%s%s' % (A.cols, A.table(self,rowstart='(',rowend=')'))
@@ -148,17 +148,34 @@ class GLSLPrinter(CodePrinter):
         return ((i, j) for i in range(cols) for j in range(rows))
 
     def _print_MatrixElement(self, expr):
+        # print('begin _print_MatrixElement')
         nest = self._settings['mat_nested'];
+        glsl_types = self._settings['glsl_types'];
         mat_transpose = self._settings['mat_transpose'];
         if mat_transpose:
             cols,rows = expr.parent.shape
+            i,j = expr.j,expr.i
         else:
             rows,cols = expr.parent.shape
+            i,j = expr.i,expr.j
         pnt = self._print(expr.parent)
-        if (rows <= 4 and cols <=4) or nest:
-            return "%s[%s][%s]" % (pnt, expr.i, expr.j)
-        elif (cols == 1 or rows == 1) and (not nest):
-            return "{0}[{1}]".format(pnt, expr.i + expr.j*rows)
+        if glsl_types and ((rows <= 4 and cols <=4) or nest):
+            # print('end _print_MatrixElement case A',nest,glsl_types)
+            return "%s[%s][%s]" % (pnt, i, j)
+        else:
+            # print('end _print_MatrixElement case B',nest,glsl_types)
+            return "{0}[{1}]".format(pnt, i + j*rows)
+
+    def _print_list(self, expr):
+        l = ', '.join(self._print(item) for item in expr)
+        glsl_types = self._settings['glsl_types']
+        if len(expr) <= 4 and glsl_types:
+            return 'vec%s(%s)' % (len(expr),l)
+        else:
+            return 'float[%s](%s)' % (len(expr),l)
+
+    _print_tuple = _print_list
+    _print_Tuple = _print_list
 
     def _get_loop_opening_ending(self, indices):
         open_lines = []
@@ -314,7 +331,7 @@ def glsl_code(expr,assign_to=None,**settings):
         types.  The printer will instead use arrays (or nested arrays).
         [default=True]
     mat_nested: bool, optional
-        GLSL version 4.3 and above support nested arrays.  Set this to ``True``
+        GLSL version 4.3 and above support nested arrays (arrays of arrays).  Set this to ``True``
         to render matrices as nested arrays.
         [default=False]
     mat_separator: str, optional
