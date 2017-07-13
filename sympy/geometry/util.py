@@ -625,14 +625,14 @@ def idiff(eq, y, x, n=1):
         dydx = dydx.diff(x)
 
 
-def intersection(*entities):
+def intersection(*entities, union= False):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
     ==========
 
     entities : sequence of GeometryEntity
-
+    union    : If pairwise intersections have to be included or not
     Returns
     =======
 
@@ -656,7 +656,11 @@ def intersection(*entities):
     simplified internally.
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
-
+    
+    if union is set as false, it will return a list of points through
+    which all entities pass. 
+    If union is true, it will give a list of all points of intersection.
+    (pairwise intersections)
     See Also
     ========
 
@@ -680,15 +684,42 @@ def intersection(*entities):
     >>> intersection(c, l2)
     [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
      Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
-
+    >>> v1 = Line((1,0),(1,1))
+    >>> v2 = Line((2,0),(2,1))
+    >>> h = Line((0,0), slope=0)
+    >>> len(intersection(v1,h))
+    1
+    >>> len(intersection(v1,v2,h, union = False))
+    0
+    >>> len(intersection(v1,v2,h,union= True))
+    2
     """
     from .entity import GeometryEntity
     from .point import Point
 
-    if len(entities) <= 1:
-        return []
+    if union == False:
 
-    # entities may be an immutable tuple
+        if len(entities) <= 1:
+            return []
+
+        # entities may be an immutable tuple
+        entities = list(entities)
+        for i, e in enumerate(entities):
+            if not isinstance(e, GeometryEntity):
+                try:
+                    entities[i] = Point(e)
+                except NotImplementedError:
+                    raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+
+        res = entities[0].intersection(entities[1])
+        for entity in entities[2:]:
+            newres = []
+            for x in res:
+                newres.extend(x.intersection(entity))
+            res = newres
+        return res
+
+    ans = []
     entities = list(entities)
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
@@ -696,11 +727,13 @@ def intersection(*entities):
                 entities[i] = Point(e)
             except NotImplementedError:
                 raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
-
-    res = entities[0].intersection(entities[1])
-    for entity in entities[2:]:
-        newres = []
-        for x in res:
-            newres.extend(x.intersection(entity))
-        res = newres
-    return res
+    for j in range(0, len(entities)):
+        for k in range(j + 1, len(entities)):
+            if len(intersection(entities[j], entities[k])) is not 0:
+                ans.append(intersection(entities[j], entities[k]))
+                   
+    temp = []
+    for element in ans:
+        if element not in temp:
+            temp.append(element)
+    return temp
