@@ -20,8 +20,6 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices.matrices import (MatrixBase,
                                      ShapeError, a2idx, classof)
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
@@ -948,7 +946,7 @@ def rot_axis1(theta):
 
 @doctest_depends_on(modules=('numpy',))
 def symarray(prefix, shape, **kwargs):  # pragma: no cover
-    """Create a numpy ndarray of symbols (as an object array).
+    r"""Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
     non-empty prefix if you want your symbols to be unique for different output
@@ -1280,10 +1278,9 @@ def hessian(f, varlist, constraints=[]):
             out[j, i] = out[i, j]
     return out
 
-
 def jordan_cell(eigenval, n):
     """
-    Create matrix of Jordan cell kind:
+    Create a Jordan block:
 
     Examples
     ========
@@ -1340,9 +1337,6 @@ def ones(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
     from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
@@ -1469,9 +1463,6 @@ def zeros(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
 
     from .dense import Matrix
 

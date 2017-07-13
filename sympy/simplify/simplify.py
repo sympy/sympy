@@ -14,6 +14,7 @@ from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
     gamma, exp, sqrt, log, exp_polar, piecewise_fold)
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
@@ -1156,7 +1157,8 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
+def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
+    rational_conversion='base10'):
     """
     Find a simple representation for a number or, if there are free symbols or
     if rational=True, then replace Floats with their Rational equivalents. If
@@ -1178,6 +1180,10 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     (this is useful to find simpler numbers when the tolerance
     is set low).
 
+    When converting to rational, if rational_conversion='base10' (the default), then
+    convert floats to rationals using their base-10 (string) representation.
+    When rational_conversion='exact' it uses the exact, base-2 representation.
+
     Examples
     ========
 
@@ -1190,6 +1196,11 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)
     22/7
+
+    >>> nsimplify(0.333333333333333, rational=True, rational_conversion='exact')
+    6004799503160655/18014398509481984
+    >>> nsimplify(0.333333333333333, rational=True)
+    1/3
 
     See Also
     ========
@@ -1207,7 +1218,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
-        return _real_to_rational(expr, tolerance)
+        return _real_to_rational(expr, tolerance, rational_conversion)
 
     # SymPy's default tolerance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if None
@@ -1270,7 +1281,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             im = nsimplify_real(im)
     except ValueError:
         if rational is None:
-            return _real_to_rational(expr)
+            return _real_to_rational(expr, rational_conversion=rational_conversion)
         return expr
 
     rv = re + im*S.ImaginaryUnit
@@ -1278,49 +1289,66 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     # return the value, else return the Rational representation
     if rv != expr or rational is False:
         return rv
-    return _real_to_rational(expr)
+    return _real_to_rational(expr, rational_conversion=rational_conversion)
 
 
-def _real_to_rational(expr, tolerance=None):
+def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     """
     Replace all reals in expr with rationals.
 
-    >>> from sympy import nsimplify
+    >>> from sympy import Rational
+    >>> from sympy.simplify.simplify import _real_to_rational
     >>> from sympy.abc import x
 
-    >>> nsimplify(.76 + .1*x**.5, rational=True)
+    >>> _real_to_rational(.76 + .1*x**.5)
     sqrt(x)/10 + 19/25
 
+    If rational_conversion='base10', this uses the base-10 string. If
+    rational_conversion='exact', the exact, base-2 representation is used.
+
+    >>> _real_to_rational(0.333333333333333, rational_conversion='exact')
+    6004799503160655/18014398509481984
+    >>> _real_to_rational(0.333333333333333)
+    1/3
+
     """
+    expr = _sympify(expr)
     inf = Float('inf')
     p = expr
     reps = {}
     reduce_num = None
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
-    for float in p.atoms(Float):
-        key = float
+    for fl in p.atoms(Float):
+        key = fl
         if reduce_num is not None:
-            r = Rational(float).limit_denominator(reduce_num)
+            r = Rational(fl).limit_denominator(reduce_num)
         elif (tolerance is not None and tolerance >= 1 and
-                float.is_Integer is False):
-            r = Rational(tolerance*round(float/tolerance)
+                fl.is_Integer is False):
+            r = Rational(tolerance*round(fl/tolerance)
                 ).limit_denominator(int(tolerance))
         else:
-            r = nsimplify(float, rational=False)
+            if rational_conversion == 'exact':
+                r = Rational(fl)
+                reps[key] = r
+                continue
+            elif rational_conversion != 'base10':
+                raise ValueError("rational_conversion must be 'base10' or 'exact'")
+
+            r = nsimplify(fl, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
-            if float and not r:
-                r = Rational(float)
+            if fl and not r:
+                r = Rational(fl)
             elif not r.is_Rational:
-                if float == inf or float == -inf:
+                if fl == inf or fl == -inf:
                     r = S.ComplexInfinity
-                elif float < 0:
-                    float = -float
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = -Rational(str(float/d))*d
-                elif float > 0:
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = Rational(str(float/d))*d
+                elif fl < 0:
+                    fl = -fl
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = -Rational(str(fl/d))*d
+                elif fl > 0:
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = Rational(str(fl/d))*d
                 else:
                     r = Integer(0)
         reps[key] = r

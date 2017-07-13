@@ -493,7 +493,7 @@ class PrettyPrinter(Printer):
             lines = []
             if use_ascii:
                 lines.append("_"*(w) + ' ')
-                lines.append("\%s`" % (' '*(w - 1)))
+                lines.append(r"\%s`" % (' '*(w - 1)))
                 for i in range(1, d):
                     lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
                 if more:
@@ -1633,7 +1633,7 @@ class PrettyPrinter(Printer):
 
     def _print_Complement(self, u):
 
-        delimiter = ' \ '
+        delimiter = r' \ '
 
         return self._print_seq(u.args, None, None, delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection

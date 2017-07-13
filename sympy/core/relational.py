@@ -98,30 +98,32 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     @property
     def canonical(self):
-        """Return a canonical form of the relational.
+        """Return a canonical form of the relational by putting a
+        Number on the rhs else ordering the args. No other
+        simplification is attempted.
 
-        The rules for the canonical form, in order of decreasing priority are:
-            1) Number on right if left is not a Number;
-            2) Symbol on the left;
-            3) Gt/Ge changed to Lt/Le;
-            4) Lt/Le are unchanged;
-            5) Eq and Ne get ordered args.
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> x < 2
+        x < 2
+        >>> _.reversed.canonical
+        x < 2
+        >>> (-y < x).canonical
+        x > -y
+        >>> (-y > x).canonical
+        x < -y
         """
+        args = self.args
         r = self
-        if r.func in (Ge, Gt):
+        if r.rhs.is_Number:
+            if r.lhs.is_Number and r.lhs > r.rhs:
+                r = r.reversed
+        elif r.lhs.is_Number:
             r = r.reversed
-        elif r.func in (Lt, Le):
-            pass
-        elif r.func in (Eq, Ne):
-            r = r.func(*ordered(r.args), evaluate=False)
-        else:
-            raise NotImplemented
-        if r.lhs.is_Number and not r.rhs.is_Number:
+        elif tuple(ordered(args)) != args:
             r = r.reversed
-        elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
-            r = r.reversed
-        if _coeff_isneg(r.lhs):
-            r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
         return r
 
     def equals(self, other, failing_expression=False):

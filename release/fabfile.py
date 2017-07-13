@@ -543,7 +543,7 @@ def table():
     sizes_dict = {name: size for size, name in sizes}
 
     table = []
-    
+
     version = get_sympy_version()
 
     # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not

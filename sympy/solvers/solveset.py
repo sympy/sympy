@@ -35,7 +35,7 @@ from sympy.core.compatibility import ordered, default_sort_key
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
-    """
+    r"""
     Reduce the complex valued equation ``f(x) = y`` to a set of equations
     ``{g(x) = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is
     a simpler function than ``f(x)``.  The return value is a tuple ``(g(x),
@@ -771,7 +771,7 @@ def _solveset(f, symbol, domain, _check=False):
 
 
 def solveset(f, symbol=None, domain=S.Complexes):
-    """Solves a given inequality or equation with set as output
+    r"""Solves a given inequality or equation with set as output
 
     Parameters
     ==========

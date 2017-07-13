@@ -462,20 +462,20 @@ class Piecewise(Function):
     def _eval_transpose(self):
         return self.func(*[(e.transpose(), c) for e, c in self.args])
 
-    def _eval_template_is_attr(self, is_attr, when_multiple=None):
+    def _eval_template_is_attr(self, is_attr):
         b = None
         for expr, _ in self.args:
             a = getattr(expr, is_attr)
             if a is None:
-                return None
+                return
             if b is None:
                 b = a
             elif b is not a:
-                return when_multiple
+                return
         return b
 
     _eval_is_finite = lambda self: self._eval_template_is_attr(
-        'is_finite', when_multiple=False)
+        'is_finite')
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
     _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
     _eval_is_imaginary = lambda self: self._eval_template_is_attr(
@@ -489,13 +489,13 @@ class Piecewise(Function):
     _eval_is_nonpositive = lambda self: self._eval_template_is_attr(
         'is_nonpositive')
     _eval_is_nonzero = lambda self: self._eval_template_is_attr(
-        'is_nonzero', when_multiple=True)
+        'is_nonzero')
     _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
     _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
     _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
     _eval_is_zero = lambda self: self._eval_template_is_attr(
-        'is_zero', when_multiple=False)
+        'is_zero')
 
     @classmethod
     def __eval_cond(cls, cond):
