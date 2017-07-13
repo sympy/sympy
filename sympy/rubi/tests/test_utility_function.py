@@ -1396,7 +1396,7 @@ def test_TryPureTanhSubst():
     assert not TryPureTanhSubst(log(x), x)
     assert TryPureTanhSubst(sin(x), x)
     assert not TryPureTanhSubst(atanh(a*tanh(x)), x)
-    assert TryPureTanhSubst((a + b*x)**S(2), x)
+    assert not TryPureTanhSubst((a + b*x)**S(2), x)
 
 def test_TryTanhSubst():
     assert not TryTanhSubst(log(x), x)
