@@ -4079,3 +4079,29 @@ def TryPureTanhSubst(u, x):
         return False
 
     return True
+
+def AbsurdNumberGCD(*seq):
+    # (* m, n, ... must be absurd numbers.  AbsurdNumberGCD[m,n,...] returns the gcd of m, n, ... *)
+    lst = list(seq)
+    if Length(lst) == 1:
+        return First(lst)
+    return AbsurdNumberGCDList(FactorAbsurdNumber(First(lst)), FactorAbsurdNumber(AbsurdNumberGCD(*Rest(lst))))
+
+def AbsurdNumberGCDList(lst1, lst2):
+    # (* lst1 and lst2 must be absurd number prime factorization lists. *)
+    # (* AbsurdNumberGCDList[lst1,lst2] returns the gcd of the absurd numbers represented by lst1 and lst2. *)
+    if lst1 == []:
+        return Mul(*[i[0]**Min(i[1],0) for i in lst2])
+    elif lst2 == []:
+        return Mul(*[i[0]**Min(i[1],0) for i in lst1])
+    elif lst1[0][0] == lst2[0][0]:
+        if lst1[0][1] <= lst2[0][1]:
+            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(Rest(lst1), Rest(lst2))
+        return lst1[0][0]**lst2[0][1]*AbsurdNumberGCDList(Rest(lst1), Rest(lst2))
+    elif lst1[0][0] < lst2[0][0]:
+        if lst1[0][1] < 0:
+            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(Rest(lst1), lst2)
+        return AbsurdNumberGCDList(Rest(lst1), lst2)
+    elif lst2[0][1] < 0:
+        return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, Rest(lst2))
+    return AbsurdNumberGCDList(lst1, Rest(lst2))

@@ -1428,5 +1428,12 @@ def test_SubstForFractionalPowerOfQuotientOfLinears():
 
 def test_SubstForFractionalPowerQ():
     assert SubstForFractionalPowerQ(x, sin(x), x)
-    assert SubstForFractionalPowerQ(x**2, sin(x), x)
+    assert not SubstForFractionalPowerQ(x**2, sin(x), x)
     assert not SubstForFractionalPowerQ(x**(S(3)/2), sin(x), x)
+    assert SubstForFractionalPowerQ(sin(x)**(S(3)/2), sin(x), x)
+
+def test_AbsurdNumberGCD():
+    assert True
+    assert AbsurdNumberGCD(S(4)) == 4
+    assert AbsurdNumberGCD(S(4), S(8), S(12)) == 4
+    assert AbsurdNumberGCD(S(2), S(3), S(12)) == 1
