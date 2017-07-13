@@ -17,6 +17,7 @@ from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
+from sympy import MatrixSymbol
 
 x, y, z, w = symbols('x,y,z,w')
 d = Dummy('d')
@@ -757,3 +758,16 @@ def test_UnevaluatedExpr():
     a, b = symbols("a b")
     expr1 = 2*UnevaluatedExpr(a+b)
     assert str(expr1) == "2*(a + b)"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(str(A[0, 0]) == "A[0, 0]")
+    assert(str(3 * A[0, 0]) == "3*A[0, 0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert str(F) == "((-1)*B + A)[0, 0]"

@@ -25,7 +25,7 @@ def test_all_classes_are_tested():
     sympy_path = os.path.abspath(path)
     prefix = os.path.split(sympy_path)[0] + os.sep
 
-    re_cls = re.compile("^class ([A-Za-z][A-Za-z0-9_]*)\s*\(", re.MULTILINE)
+    re_cls = re.compile(r"^class ([A-Za-z][A-Za-z0-9_]*)\s*\(", re.MULTILINE)
 
     modules = {}
 
@@ -3832,9 +3832,9 @@ def test_sympy__codegen__ffunctions__literal_dp():
     assert _test_args(literal_dp(1))
 
 
-def test_sympy__vector__coordsysrect__CoordSysCartesian():
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    assert _test_args(CoordSysCartesian('C'))
+def test_sympy__vector__coordsysrect__CoordSys3D():
+    from sympy.vector.coordsysrect import CoordSys3D
+    assert _test_args(CoordSys3D('C'))
 
 
 def test_sympy__vector__point__Point():
@@ -3868,15 +3868,15 @@ def test_sympy__vector__basisdependent__BasisDependentZero():
 
 def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
 
 
 def test_sympy__vector__vector__VectorAdd():
     from sympy.vector.vector import VectorAdd, VectorMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     from sympy.abc import a, b, c, x, y, z
     v1 = a*C.i + b*C.j + c*C.k
     v2 = x*C.i + y*C.j + z*C.k
@@ -3886,8 +3886,8 @@ def test_sympy__vector__vector__VectorAdd():
 
 def test_sympy__vector__vector__VectorMul():
     from sympy.vector.vector import VectorMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     from sympy.abc import a
     assert _test_args(VectorMul(a, C.i))
 
@@ -3911,22 +3911,22 @@ def test_sympy__vector__dyadic__Dyadic():
 
 def test_sympy__vector__dyadic__BaseDyadic():
     from sympy.vector.dyadic import BaseDyadic
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(BaseDyadic(C.i, C.j))
 
 
 def test_sympy__vector__dyadic__DyadicMul():
     from sympy.vector.dyadic import BaseDyadic, DyadicMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(DyadicMul(3, BaseDyadic(C.i, C.j)))
 
 
 def test_sympy__vector__dyadic__DyadicAdd():
     from sympy.vector.dyadic import BaseDyadic, DyadicAdd
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(2 * DyadicAdd(BaseDyadic(C.i, C.i),
                                     BaseDyadic(C.i, C.j)))
 
@@ -3938,9 +3938,28 @@ def test_sympy__vector__dyadic__DyadicZero():
 
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(Del(C))
+    assert _test_args(Del())
+
+
+def test_sympy__vector__operators__Curl():
+    from sympy.vector.operators import Curl
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(Curl(C.i))
+
+
+def test_sympy__vector__operators__Divergence():
+    from sympy.vector.operators import Divergence
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(Divergence(C.i))
+
+
+def test_sympy__vector__operators__Gradient():
+    from sympy.vector.operators import Gradient
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(Gradient(C.x))
 
 
 def test_sympy__vector__orienters__Orienter():
@@ -3955,8 +3974,8 @@ def test_sympy__vector__orienters__ThreeAngleOrienter():
 
 def test_sympy__vector__orienters__AxisOrienter():
     from sympy.vector.orienters import AxisOrienter
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(AxisOrienter(x, C.i))
 
 
@@ -3978,9 +3997,10 @@ def test_sympy__vector__orienters__QuaternionOrienter():
 
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
+
 
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j

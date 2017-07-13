@@ -15,6 +15,7 @@ python:
   - 3.3
   - 3.4
   - 3.5
+  - 3.6
 
 matrix:
   include:
@@ -25,6 +26,7 @@ matrix:
         - TEST_THEANO="true"
         - TEST_ASCII="true"
         - TEST_AUTOWRAP="true"
+        - TEST_SYMENGINE="true"
       addons:
         apt:
           packages:
@@ -40,6 +42,7 @@ matrix:
         - TEST_THEANO="true"
         - TEST_ASCII="true"
         - TEST_AUTOWRAP="true"
+        - TEST_SYMENGINE="true"
       addons:
         apt:
           packages:
@@ -92,9 +95,6 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
-    - python: 3.5
-      env:
-        - TEST_SYMENGINE="true"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
@@ -258,8 +258,8 @@ before_install:
     fi
   - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
         conda config --add channels conda-forge;
-        conda config --add channels symengine;
-        conda install python-symengine=0.2.0;
+        conda config --add channels symengine/label/dev;
+        conda install python-symengine=0.3.*;
     fi
   - |
     if [[ "${TEST_THEANO}" == "true" ]]; then
@@ -306,7 +306,7 @@ script:
   - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-        doctr deploy --deploy-repo sympy/sympy_doc --gh-pages-docs dev --command './generate_indexes.py';
+        doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
     fi
 notifications:
   email: false

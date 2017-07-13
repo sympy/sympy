@@ -20,12 +20,21 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices.matrices import (MatrixBase,
                                      ShapeError, a2idx, classof)
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
+
+def _compare_sequence(a, b):
+    """Compares the elements of a list/tuple `a`
+    and a list/tuple `b`.  `_compare_sequence((1,2), [1, 2])`
+    is True, whereas `(1,2) == [1, 2]` is False"""
+    if type(a) is type(b):
+        # if they are the same type, compare directly
+        return a == b
+    # there is no overhead for calling `tuple` on a
+    # tuple
+    return tuple(a) == tuple(b)
 
 class DenseMatrix(MatrixBase):
 
@@ -40,9 +49,9 @@ class DenseMatrix(MatrixBase):
             if self.shape != other.shape:
                 return False
             if isinstance(other, Matrix):
-                return self._mat == other._mat
+                return _compare_sequence(self._mat,  other._mat)
             elif isinstance(other, MatrixBase):
-                return self._mat == Matrix(other)._mat
+                return _compare_sequence(self._mat, Matrix(other)._mat)
         except AttributeError:
             return False
 
@@ -143,6 +152,13 @@ class DenseMatrix(MatrixBase):
         # sparse matrices have a higher priority
         mat = [a + b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+
+    def _eval_extract(self, rowsList, colsList):
+        mat = self._mat
+        cols = self.cols
+        indices = (i * cols + j for i in rowsList for j in colsList)
+        return self._new(len(rowsList), len(colsList),
+                         list(mat[i] for i in indices), copy=False)
 
     def _eval_matrix_mul(self, other):
         from sympy import Add
@@ -259,6 +275,11 @@ class DenseMatrix(MatrixBase):
     def _eval_scalar_rmul(self, other):
         mat = [a*other for a in self._mat]
         return self._new(self.rows, self.cols, mat, copy=False)
+
+    def _eval_tolist(self):
+        mat = list(self._mat)
+        cols = self.cols
+        return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
 
     def _LDLdecomposition(self):
         """Helper function of LDLdecomposition.
@@ -925,7 +946,7 @@ def rot_axis1(theta):
 
 @doctest_depends_on(modules=('numpy',))
 def symarray(prefix, shape, **kwargs):  # pragma: no cover
-    """Create a numpy ndarray of symbols (as an object array).
+    r"""Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
     non-empty prefix if you want your symbols to be unique for different output
@@ -1257,10 +1278,9 @@ def hessian(f, varlist, constraints=[]):
             out[j, i] = out[i, j]
     return out
 
-
 def jordan_cell(eigenval, n):
     """
-    Create matrix of Jordan cell kind:
+    Create a Jordan block:
 
     Examples
     ========
@@ -1317,9 +1337,6 @@ def ones(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
     from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
@@ -1446,9 +1463,6 @@ def zeros(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
-                                useinstead="cols",
-                                deprecated_since_version="1.1")
 
     from .dense import Matrix
 

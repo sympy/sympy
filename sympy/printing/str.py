@@ -237,7 +237,8 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '[%s, %s]' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
@@ -701,7 +702,7 @@ class StrPrinter(Printer):
         return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
-        return ' \ '.join(self._print(set) for set in expr.args)
+        return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
         return "%s" % expr.name

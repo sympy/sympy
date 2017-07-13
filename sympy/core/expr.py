@@ -346,9 +346,9 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' has no free symbols.
-        It will be faster than `if not self.free_symbols`, however, since
-        `is_number` will fail as soon as it hits a free symbol.
+        """Returns True if ``self`` has no free symbols.
+        It will be faster than ``if not self.free_symbols``, however, since
+        ``is_number`` will fail as soon as it hits a free symbol.
 
         Examples
         ========
@@ -1086,7 +1086,7 @@ class Expr(Basic, EvalfMixin):
         Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
-        >>> A, B = symbols('A B', commutative=False)
+        >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
@@ -1928,10 +1928,17 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def normal(self):
+        from .mul import _unevaluated_Mul
         n, d = self.as_numer_denom()
         if d is S.One:
             return n
-        return n/d
+        if d.is_Number:
+            if d is S.One:
+                return n
+            else:
+                return _unevaluated_Mul(n, 1/d)
+        else:
+            return n/d
 
     def extract_multiplicatively(self, c):
         """Return None if it's not possible to make self in the form
@@ -2286,7 +2293,7 @@ class Expr(Basic, EvalfMixin):
         return False
 
     def is_polynomial(self, *syms):
-        """
+        r"""
         Return True if self is a polynomial in syms and False otherwise.
 
         This checks if self is an exact polynomial in syms.  This function

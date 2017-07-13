@@ -35,6 +35,7 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy import MatrixSymbol
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -856,9 +857,9 @@ def test_mode():
 
 def test_latex_Piecewise():
     p = Piecewise((x, x < 1), (x**2, True))
-    assert latex(p) == "\\begin{cases} x & \\text{for}\: x < 1 \\\\x^{2} &" \
+    assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 1 \\\\x^{2} &" \
                        " \\text{otherwise} \\end{cases}"
-    assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\: x \\lt 1 \\\\x^{2} &" \
+    assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\\: x \\lt 1 \\\\x^{2} &" \
                                   " \\text{otherwise} \\end{cases}"
     p = Piecewise((x, x < 0), (0, x >= 0))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &" \
@@ -945,11 +946,11 @@ def test_latex_NDimArray():
 def test_latex_mul_symbol():
     assert latex(4*4**x, mul_symbol='times') == "4 \\times 4^{x}"
     assert latex(4*4**x, mul_symbol='dot') == "4 \\cdot 4^{x}"
-    assert latex(4*4**x, mul_symbol='ldot') == "4 \,.\, 4^{x}"
+    assert latex(4*4**x, mul_symbol='ldot') == r"4 \,.\, 4^{x}"
 
     assert latex(4*x, mul_symbol='times') == "4 \\times x"
     assert latex(4*x, mul_symbol='dot') == "4 \\cdot x"
-    assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
+    assert latex(4*x, mul_symbol='ldot') == r"4 \,.\, x"
 
 
 def test_latex_issue_4381():
@@ -1212,10 +1213,10 @@ def test_categories():
     assert latex(id_A1) == "id:A_{1}\\rightarrow A_{1}"
     assert latex(f2*f1) == "f_{2}\\circ f_{1}:A_{1}\\rightarrow A_{3}"
 
-    assert latex(K1) == "\mathbf{K_{1}}"
+    assert latex(K1) == r"\mathbf{K_{1}}"
 
     d = Diagram()
-    assert latex(d) == "\emptyset"
+    assert latex(d) == r"\emptyset"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
     assert latex(d) == r"\left \{ f_{2}\circ f_{1}:A_{1}" \
@@ -1593,3 +1594,16 @@ def test_latex_UnevaluatedExpr():
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
     assert latex(he + 1) == r"1 + \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert latex(A[0, 0]) == r"A_{0, 0}"
+    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
+
+    F = C[0, 0].subs(C, A - B)
+    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"

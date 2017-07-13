@@ -5,10 +5,11 @@ from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff)
-from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector, _MinimalMatrix, MatrixShaping,
-    MatrixProperties, MatrixOperations, MatrixArithmetic, MatrixDeterminant,
-    MatrixReductions, MatrixSpecial, MatrixSubspaces, MatrixEigen)
+from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError,
+    _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
+    MatrixSpecial)
+from sympy.matrices.matrices import (DeferredVector, MatrixDeterminant,
+    MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -84,6 +85,9 @@ class SubspaceOnlyMatrix(_MinimalMatrix, MatrixSubspaces):
     pass
 
 class EigenOnlyMatrix(_MinimalMatrix, MatrixEigen):
+    pass
+
+class CalculusOnlyMatrix(_MinimalMatrix, MatrixCalculus):
     pass
 
 
@@ -215,6 +219,7 @@ def test_hstack():
                 [6,  7,  8, 6,  7,  8, 6,  7,  8],
                 [9, 10, 11, 9, 10, 11, 9, 10, 11]])
     raises(ShapeError, lambda: m.hstack(m, m2))
+    assert Matrix.hstack() == Matrix()
 
 def test_vstack():
     m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
@@ -234,6 +239,7 @@ def test_vstack():
                                 [6,  7,  8],
                                 [9, 10, 11]])
     raises(ShapeError, lambda: m.vstack(m, m2))
+    assert Matrix.vstack() == Matrix()
 
 
 # PropertiesOnlyMatrix tests
@@ -1159,3 +1165,160 @@ def test_nullspace():
     # make sure the null space is really gets zeroed
     assert all(e.is_zero for e in m*basis[0])
     assert all(e.is_zero for e in m*basis[1])
+
+
+# EigenOnlyMatrix tests
+def test_eigenvals():
+    M = EigenOnlyMatrix([[0, 1, 1],
+                [1, 0, 0],
+                [1, 1, 1]])
+    assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
+
+    # if we cannot factor the char poly, we raise an error
+    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
+    raises(MatrixError, lambda: m.eigenvals())
+
+def test_eigenvects():
+    M = EigenOnlyMatrix([[0, 1, 1],
+                [1, 0, 0],
+                [1, 1, 1]])
+    vecs = M.eigenvects()
+    for val, mult, vec_list in vecs:
+        assert len(vec_list) == 1
+        assert M*vec_list[0] == val*vec_list[0]
+
+def test_left_eigenvects():
+    M = EigenOnlyMatrix([[0, 1, 1],
+                [1, 0, 0],
+                [1, 1, 1]])
+    vecs = M.left_eigenvects()
+    for val, mult, vec_list in vecs:
+        assert len(vec_list) == 1
+        assert vec_list[0]*M == val*vec_list[0]
+
+def test_diagonalize():
+    m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
+    raises(MatrixError, lambda: m.diagonalize(reals_only=True))
+    P, D = m.diagonalize()
+    assert D.is_diagonal()
+    assert D == Matrix([
+                 [-I, 0],
+                 [ 0, I]])
+
+    # make sure we use floats out if floats are passed in
+    m = EigenOnlyMatrix(2, 2, [0, .5, .5, 0])
+    P, D = m.diagonalize()
+    assert all(isinstance(e, Float) for e in D.values())
+    assert all(isinstance(e, Float) for e in P.values())
+
+    _, D2 = m.diagonalize(reals_only=True)
+    assert D == D2
+
+def test_is_diagonalizable():
+    a, b, c = symbols('a b c')
+    m = EigenOnlyMatrix(2, 2, [a, c, c, b])
+    assert m.is_symmetric()
+    assert m.is_diagonalizable()
+    assert not EigenOnlyMatrix(2, 2, [1, 1, 0, 1]).is_diagonalizable()
+
+    m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
+    assert m.is_diagonalizable()
+    assert not m.is_diagonalizable(reals_only=True)
+
+def test_jordan_form():
+    m = Matrix(3, 2, [-3, 1, -3, 20, 3, 10])
+    raises(NonSquareMatrixError, lambda: m.jordan_form())
+
+    # the next two tests test the cases where the old
+    # algorithm failed due to the fact that the block structure can
+    # *NOT* be determined  from algebraic and geometric multiplicity alone
+    # This can be seen most easily when one lets compute the J.c.f. of a matrix that
+    # is in J.c.f already.
+    m = EigenOnlyMatrix(4, 4, [2, 1, 0, 0,
+                    0, 2, 1, 0,
+                    0, 0, 2, 0,
+                    0, 0, 0, 2
+    ])
+    P, J = m.jordan_form()
+    assert m == J
+
+    m = EigenOnlyMatrix(4, 4, [2, 1, 0, 0,
+                    0, 2, 0, 0,
+                    0, 0, 2, 1,
+                    0, 0, 0, 2
+    ])
+    P, J = m.jordan_form()
+    assert m == J
+
+    A = Matrix([[ 2,  4,  1,  0],
+                [-4,  2,  0,  1],
+                [ 0,  0,  2,  4],
+                [ 0,  0, -4,  2]])
+    P, J = A.jordan_form()
+    assert simplify(P*J*P.inv()) == A
+
+    assert EigenOnlyMatrix(1,1,[1]).jordan_form() == (Matrix([1]), Matrix([1]))
+    assert EigenOnlyMatrix(1,1,[1]).jordan_form(calc_transform=False) == Matrix([1])
+
+    # make sure if we cannot factor the characteristic polynomial, we raise an error
+    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
+    raises(MatrixError, lambda: m.jordan_form())
+
+    # make sure that if the input has floats, the output does too
+    m = Matrix([
+        [                0.6875, 0.125 + 0.1875*sqrt(3)],
+        [0.125 + 0.1875*sqrt(3),                 0.3125]])
+    P, J = m.jordan_form()
+    assert all(isinstance(x, Float) or x == 0 for x in P)
+    assert all(isinstance(x, Float) or x == 0 for x in J)
+
+def test_singular_values():
+    x = Symbol('x', real=True)
+
+    A = EigenOnlyMatrix([[0, 1*I], [2, 0]])
+    # if singular values can be sorted, they should be in decreasing order
+    assert A.singular_values() == [2, 1]
+
+    A = eye(3)
+    A[1, 1] = x
+    A[2, 2] = 5
+    vals = A.singular_values()
+    # since Abs(x) cannot be sorted, test set equality
+    assert set(vals) == set([5, 1, Abs(x)])
+
+    A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
+    vals = [sv.trigsimp() for sv in A.singular_values()]
+    assert vals == [S(1), S(1)]
+
+
+# CalculusOnlyMatrix tests
+def test_diff():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [x, y])
+    assert m.diff(x) == Matrix(2, 1, [1, 0])
+
+def test_integrate():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [x, y])
+    assert m.integrate(x) == Matrix(2, 1, [x**2/2, y*x])
+
+def test_jacobian2():
+    rho, phi = symbols("rho,phi")
+    X = CalculusOnlyMatrix(3, 1, [rho*cos(phi), rho*sin(phi), rho**2])
+    Y = CalculusOnlyMatrix(2, 1, [rho, phi])
+    J = Matrix([
+        [cos(phi), -rho*sin(phi)],
+        [sin(phi),  rho*cos(phi)],
+        [   2*rho,             0],
+    ])
+    assert X.jacobian(Y) == J
+
+    m = CalculusOnlyMatrix(2, 2, [1, 2, 3, 4])
+    m2 = CalculusOnlyMatrix(4, 1, [1, 2, 3, 4])
+    raises(TypeError, lambda: m.jacobian(Matrix([1,2])))
+    raises(TypeError, lambda: m2.jacobian(m))
+
+def test_limit():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [1/x, y])
+    assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])

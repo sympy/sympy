@@ -12,6 +12,7 @@ from sympy.simplify import simplify
 from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
 
+
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point, literal field
 # TODO too often one needs to call doit or simplify on the output, check the
@@ -574,6 +575,9 @@ class BaseVectorField(Expr):
         if covariant_order(scalar_field) or contravariant_order(scalar_field):
             raise ValueError('Only scalar fields can be supplied as arguments to vector fields.')
 
+        if scalar_field is None:
+            return self
+
         base_scalars = list(scalar_field.atoms(BaseScalarField))
 
         # First step: e_x(x+r**2) -> e_x(x) + 2*r*e_x(r)
@@ -789,10 +793,10 @@ class TensorProduct(Expr):
     """Tensor product of forms.
 
     The tensor product permits the creation of multilinear functionals (i.e.
-    higher order tensors) out of lower order forms (e.g. 1-forms). However, the
-    higher tensors thus created lack the interesting features provided by the
-    other type of product, the wedge product, namely they are not antisymmetric
-    and hence are not form fields.
+    higher order tensors) out of lower order fields (e.g. 1-forms and vector
+    fields). However, the higher tensors thus created lack the interesting
+    features provided by the other type of product, the wedge product, namely
+    they are not antisymmetric and hence are not form fields.
 
     Examples
     ========
@@ -810,6 +814,11 @@ class TensorProduct(Expr):
     0
     >>> TensorProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
     x**2
+    >>> TensorProduct(R2.e_x, R2.e_y)(R2.x**2, R2.y**2)
+    4*x*y
+    >>> TensorProduct(R2.e_y, R2.dx)(R2.y)
+    dx
+
 
     You can nest tensor products.
 
@@ -833,14 +842,12 @@ class TensorProduct(Expr):
 
     """
     def __new__(cls, *args):
-        if any(contravariant_order(a) for a in args):
-            raise ValueError('A vector field was supplied as an argument to TensorProduct.')
-        scalar = Mul(*[m for m in args if covariant_order(m) == 0])
-        forms = [m for m in args if covariant_order(m)]
-        if forms:
-            if len(forms) == 1:
-                return scalar*forms[0]
-            return scalar*super(TensorProduct, cls).__new__(cls, *forms)
+        scalar = Mul(*[m for m in args if covariant_order(m) + contravariant_order(m) == 0])
+        multifields = [m for m in args if covariant_order(m) + contravariant_order(m)]
+        if multifields:
+            if len(multifields) == 1:
+                return scalar*multifields[0]
+            return scalar*super(TensorProduct, cls).__new__(cls, *multifields)
         else:
             return scalar
 
@@ -848,25 +855,25 @@ class TensorProduct(Expr):
         super(TensorProduct, self).__init__()
         self._args = args
 
-    def __call__(self, *v_fields):
-        """Apply on a list of vector_fields.
+    def __call__(self, *fields):
+        """Apply on a list of fields.
 
-        If the number of vector fields supplied is not equal to the order of
-        the form field the list of arguments is padded with ``None``'s.
+        If the number of input fields supplied is not equal to the order of
+        the tensor product field, the list of arguments is padded with ``None``'s.
 
         The list of arguments is divided in sublists depending on the order of
         the forms inside the tensor product. The sublists are provided as
         arguments to these forms and the resulting expressions are given to the
         constructor of ``TensorProduct``.
         """
-        tot_order = covariant_order(self)
-        tot_args = len(v_fields)
+        tot_order = covariant_order(self) + contravariant_order(self)
+        tot_args = len(fields)
         if tot_args != tot_order:
-            v_fields = list(v_fields) + [None]*(tot_order - tot_args)
-        orders = [covariant_order(f) for f in self._args]
+            fields = list(fields) + [None]*(tot_order - tot_args)
+        orders = [covariant_order(f) + contravariant_order(f) for f in self._args]
         indices = [sum(orders[:i + 1]) for i in range(len(orders) - 1)]
-        v_fields = [v_fields[i:j] for i, j in zip([0] + indices, indices + [None])]
-        multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, v_fields)]
+        fields = [fields[i:j] for i, j in zip([0] + indices, indices + [None])]
+        multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, fields)]
         return TensorProduct(*multipliers)
 
     def _latex(self, printer, *args):
@@ -896,6 +903,8 @@ class WedgeProduct(TensorProduct):
     -1
     >>> WedgeProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
     x**2
+    >>> WedgeProduct(R2.e_x,R2.e_y)(R2.y,None)
+    -e_x
 
     You can nest wedge products.
 
@@ -906,15 +915,15 @@ class WedgeProduct(TensorProduct):
     """
     # TODO the calculation of signatures is slow
     # TODO you do not need all these permutations (neither the prefactor)
-    def __call__(self, *vector_fields):
+    def __call__(self, *fields):
         """Apply on a list of vector_fields.
 
         The expression is rewritten internally in terms of tensor products and evaluated."""
-        orders = (covariant_order(e) for e in self.args)
+        orders = (covariant_order(e) + contravariant_order(e) for e in self.args)
         mul = 1/Mul(*(factorial(o) for o in orders))
-        perms = permutations(vector_fields)
+        perms = permutations(fields)
         perms_par = (Permutation(
-            p).signature() for p in permutations(list(range(len(vector_fields)))))
+            p).signature() for p in permutations(list(range(len(fields)))))
         tensor_prod = TensorProduct(*self.args)
         return mul*Add(*[tensor_prod(*p[0])*p[1] for p in zip(perms, perms_par)])
 
@@ -1340,6 +1349,8 @@ def contravariant_order(expr, _strict=False):
         return 0
     elif isinstance(expr, BaseVectorField):
         return 1
+    elif isinstance(expr, TensorProduct):
+        return sum(contravariant_order(a) for a in expr.args)
     elif not _strict or expr.atoms(BaseScalarField):
         return 0
     else:  # If it does not contain anything related to the diffgeom module and it is _strict

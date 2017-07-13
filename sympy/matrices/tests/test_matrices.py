@@ -1,5 +1,6 @@
 import collections
 import random
+import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
@@ -14,8 +15,10 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
 from sympy.core.compatibility import long, iterable, range
+from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.solvers import solve
 from sympy.assumptions import Q
 
@@ -33,7 +36,7 @@ def test_args():
         assert m.rows == 3 and type(m.rows) is int
         assert m.cols == 2 and type(m.cols) is int
         if not c % 2:
-            assert type(m._mat) is list
+            assert type(m._mat) in (list, tuple, Tuple)
         else:
             assert type(m._smat) is dict
 
@@ -220,14 +223,14 @@ def test_power():
         [0, 0, b**n]])
 
     A = Matrix([[1, 0], [1, 7]])
-    assert A._matrix_pow_by_jordan_blocks(3) == A._matrix_pow_by_recursion(3)
+    assert A._matrix_pow_by_jordan_blocks(3) == A._eval_pow_by_recursion(3)
     A = Matrix([[2]])
     assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(10) == \
-        A._matrix_pow_by_recursion(10)
+        A._eval_pow_by_recursion(10)
 
     # testing a matrix that cannot be jordan blocked issue 11766
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
+    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(10))
 
     # test issue 11964
     raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
@@ -1632,10 +1635,6 @@ def test_jordan_form():
     Jmust = Matrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
     P, J = m.jordan_form()
     assert Jmust == J
-    P, Jcells = m.jordan_cells()
-    # same here see 1456ff
-    assert Jcells[1] == Matrix(1, 1, [2])
-    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
 
     # complexity: all of eigenvalues are equal
     m = Matrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
@@ -1676,27 +1675,6 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert Jmust == J
 
-    # the following tests are new and include (some) test the cases where the old
-    # algorithm failed due to the fact that the block structure can
-    # *NOT* be determined  from algebraic and geometric multiplicity alone
-    # This can be seen most easily when one lets compute the J.c.f. of a matrix that
-    # is in J.c.f already.
-    m = Matrix(4, 4, [2, 1, 0, 0,
-                    0, 2, 1, 0,
-                    0, 0, 2, 0,
-                    0, 0, 0, 2
-    ])
-    P, J = m.jordan_form()
-    assert m == J
-
-    m = Matrix(4, 4, [2, 1, 0, 0,
-                    0, 2, 0, 0,
-                    0, 0, 2, 1,
-                    0, 0, 0, 2
-    ])
-    P, J = m.jordan_form()
-    assert m == J
-
 
 def test_jordan_form_complex_issue_9274():
     A = Matrix([[ 2,  4,  1,  0],
@@ -1723,12 +1701,16 @@ def test_issue_10220():
                 [0, 1, 1, 0],
                 [0, 0, 1, 1],
                 [0, 0, 0, 1]])
-    P, C = M.jordan_cells()
+    P, J = M.jordan_form()
     assert P == Matrix([[0, 1, 0, 1],
                         [1, 0, 0, 0],
                         [0, 1, 0, 0],
                         [0, 0, 1, 0]])
-    assert len(C) == 2
+    assert J == Matrix([
+                        [1, 1, 0, 0],
+                        [0, 1, 1, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
 
 
 def test_Matrix_berkowitz_charpoly():
@@ -2144,23 +2126,6 @@ def test_matrix_norm():
                 dif = simplify((alpha*X).norm(order) -
                     (abs(alpha) * X.norm(order)))
                 assert dif == 0
-
-
-def test_singular_values():
-    x = Symbol('x', real=True)
-
-    A = Matrix([[0, 1*I], [2, 0]])
-    assert A.singular_values() == [2, 1]
-
-    A = eye(3)
-    A[1, 1] = x
-    A[2, 2] = 5
-    vals = A.singular_values()
-    assert 1 in vals and 5 in vals and abs(x) in vals
-
-    A = Matrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
-    vals = [sv.trigsimp() for sv in A.singular_values()]
-    assert vals == [S(1), S(1)]
 
 
 def test_condition_number():
@@ -2965,3 +2930,14 @@ def test_as_real_imag():
         a,b = kls(m3).as_real_imag()
         assert list(a) == list(m1)
         assert list(b) == list(m1)
+
+def test_deprecated():
+    # Maintain tests for deprecated functions.  We must capture
+    # the deprecation warnings.  When the deprecated functionality is
+    # removed, the corresponding tests should be removed.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+        P, Jcells = m.jordan_cells()
+        assert Jcells[1] == Matrix(1, 1, [2])
+        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])

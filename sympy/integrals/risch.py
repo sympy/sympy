@@ -47,6 +47,9 @@ from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, Do
 
 from sympy.utilities.iterables import numbered_symbols
 
+from types import GeneratorType
+
+
 def integer_powers(exprs):
     """
     Rewrites a list of expressions as integer multiples of each other.
@@ -127,12 +130,8 @@ class DifferentialExtension(object):
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - E_K: List of the positions of the exponential extensions in T.
-    - E_args: The arguments of each of the exponentials in E_K.
-    - L_K: List of the positions of the logarithmic extensions in T.
-    - L_args: The arguments of each of the logarithms in L_K.
-    (See the docstrings of is_deriv_k() and is_log_deriv_k_t_radical() for
-    more information on E_K, E_args, L_K, and L_args)
+    - exts:
+    - extargs:
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
@@ -158,8 +157,8 @@ class DifferentialExtension(object):
     # of the class easily (the memory use doesn't matter too much, since we
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
-    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
-        'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
+    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs',
+        'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=False):
@@ -513,15 +512,15 @@ class DifferentialExtension(object):
                 darg = darga.as_expr()/dargd.as_expr()
                 self.t = next(self.ts)
                 self.T.append(self.t)
-                self.E_args.append(arg)
-                self.E_K.append(len(self.T) - 1)
+                self.extargs.append(arg)
+                self.exts.append('exp')
                 self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
                     self.t, expand=False))
                 if self.dummy:
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
-                self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
+                self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
                         dict((exp(exparg), self.t**p) for exparg, p in others))
                 new_extension = True
@@ -567,15 +566,15 @@ class DifferentialExtension(object):
                 darg = darga.as_expr()/dargd.as_expr()
                 self.t = next(self.ts)
                 self.T.append(self.t)
-                self.L_args.append(arg)
-                self.L_K.append(len(self.T) - 1)
+                self.extargs.append(arg)
+                self.exts.append('log')
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
                     expand=False))
                 if self.dummy:
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
-                self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
+                self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True
 
@@ -588,22 +587,37 @@ class DifferentialExtension(object):
 
         Used for testing and debugging purposes.
 
-        The attributes are (fa, fd, D, T, Tfuncs, backsubs, E_K, E_args,
-        L_K, L_args).
+        The attributes are (fa, fd, D, T, Tfuncs, backsubs,
+        exts, extargs).
         """
-        # XXX: This might be easier to read as a dict or something
-        # Maybe a named tuple.
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
-            self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
+            self.backsubs, self.exts, self.extargs)
 
+    # NOTE: this printing doesn't follow the Python's standard
+    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object
+    # , also this printing is supposed to contain all the important
+    # attributes of a DifferentialExtension object
     def __repr__(self):
-        return 'DifferentialExtension(extension=dict(fa=%s, fd=%s, D=%s))' % \
-                (self.fa, self.fd, self.D)
+        # no need to have GeneratorType object printed in it
+        r = [(attr, getattr(self, attr)) for attr in self.__slots__
+                if not isinstance(getattr(self, attr), GeneratorType)]
+        return self.__class__.__name__ + '(dict(%r))' % (r)
 
+    # fancy printing of DifferentialExtension object
     def __str__(self):
-        return "{'fa': %s, 'fd': %s, 'D': %s, 'T': %s, 'Tfuncs': %s, " \
-            "'backsubs': %s, 'E_K': %s, 'E_args': %s, 'L_K': %s, 'L_args': %s}" % \
-            (tuple(self._important_attrs[i] for i in range(10)))
+        return (self.__class__.__name__ + '({fa=%s, fd=%s, D=%s})' %
+                (self.fa, self.fd, self.D))
+
+    # should only be used for debugging purposes, internally
+    # f1 = f2 = log(x) at different places in code execution
+    # may return D1 != D2 as True, since 'level' or other attribute
+    # may differ
+    def __eq__(self, other):
+        for attr in self.__class__.__slots__:
+            d1, d2 = getattr(self, attr), getattr(other, attr)
+            if not (isinstance(d1, GeneratorType) or d1 == d2):
+                return False
+        return True
 
     def reset(self):
         """
@@ -613,7 +627,8 @@ class DifferentialExtension(object):
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.level = -1
-        self.L_K, self.E_K, self.L_args, self.E_args = [], [], [], []
+        self.exts = [None]
+        self.extargs = [None]
         if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
@@ -624,6 +639,30 @@ class DifferentialExtension(object):
         self.backsubs = []
         self.Tfuncs = []
         self.newf = self.f
+
+    def indices(self, extension):
+        """
+        Args:
+            extension (str): represents a valid extension type.
+
+        Returns:
+            list: A list of indices of 'exts' where extension of
+                  type 'extension' is present.
+
+        Examples
+        ========
+
+        >>> from sympy.integrals.risch import DifferentialExtension
+        >>> from sympy import log, exp
+        >>> from sympy.abc import x
+        >>> DE = DifferentialExtension(log(x) + exp(x), x, handle_first='exp')
+        >>> DE.indices('log')
+        [2]
+        >>> DE.indices('exp')
+        [1]
+
+        """
+        return [i for i, ext in enumerate(self.exts) if ext == extension]
 
     def increment_level(self):
         """
@@ -1288,9 +1327,10 @@ def integrate_primitive_polynomial(p, DE):
             aa, ad = frac_in(a, DE.t)
 
             try:
-                (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-                if len(c) != 1:
-                    raise ValueError("Length of c should  be 1")
+                rv = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
+                if rv is None:
+                    raise NonElementaryIntegralException
+                (ba, bd), c = rv
             except NonElementaryIntegralException:
                 return (q, p, False)
 
@@ -1679,7 +1719,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     result = S(0)
     for case in reversed(DE.cases):
-        if not DE.fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
+        if not fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
             DE.decrement_level()
             fa, fd = frac_in((fa, fd), DE.t)
             continue

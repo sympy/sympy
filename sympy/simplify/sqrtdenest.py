@@ -236,6 +236,18 @@ def _sqrtdenest0(expr):
         else:
             n, d = [_sqrtdenest0(i) for i in (n, d)]
             return n/d
+
+    if isinstance(expr, Add):
+        cs = []
+        args = []
+        for arg in expr.args:
+            c, a = arg.as_coeff_Mul()
+            cs.append(c)
+            args.append(a)
+
+        if all(c.is_Rational for c in cs) and all(is_sqrt(arg) for arg in args):
+            return _sqrt_ratcomb(cs, args)
+
     if isinstance(expr, Expr):
         args = expr.args
         if args:
@@ -608,3 +620,47 @@ def _denester(nested, av0, h, max_depth_level):
                     return sqrt(nested[-1]), [0]*len(nested)
                 FR, s = root(_mexpand(R), 4), sqrt(s2)
                 return _mexpand(s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)), f
+
+
+def _sqrt_ratcomb(cs, args):
+    """Denest rational combinations of radicals.
+
+    Based on section 5 of [1].
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.sqrtdenest import sqrtdenest
+    >>> z = sqrt(1+sqrt(3)) + sqrt(3+3*sqrt(3)) - sqrt(10+6*sqrt(3))
+    >>> sqrtdenest(z)
+    0
+    """
+    from sympy.simplify.radsimp import radsimp
+
+    # check if there exists a pair of sqrt that can be denested
+    def find(a):
+        n = len(a)
+        for i in range(n - 1):
+            for j in range(i + 1, n):
+                s1 = a[i].base
+                s2 = a[j].base
+                p = _mexpand(s1 * s2)
+                s = sqrtdenest(sqrt(p))
+                if s != sqrt(p):
+                    return s, i, j
+
+    indices = find(args)
+    if indices is None:
+        return Add(*[c * arg for c, arg in zip(cs, args)])
+
+    s, i1, i2 = indices
+
+    c2 = cs.pop(i2)
+    args.pop(i2)
+    a1 = args[i1]
+
+    # replace a2 by s/a1
+    cs[i1] += radsimp(c2 * s / a1.base)
+
+    return _sqrt_ratcomb(cs, args)

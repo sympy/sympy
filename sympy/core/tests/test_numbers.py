@@ -2,7 +2,7 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin, fibonacci)
+                   AlgebraicNumber, simplify, sin, fibonacci, RealField)
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
@@ -545,6 +545,12 @@ def test_float_mpf():
     mpmath.mp.dps = 15
 
     assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
+
+def test_Float_RealElement():
+    repi = RealField(dps=100)(pi.evalf(100))
+    # We still have to pass the precision because Float doesn't know what
+    # RealElement is, but make sure it keeps full precision from the result.
+    assert Float(repi, 100) == pi.evalf(100)
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))

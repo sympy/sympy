@@ -83,7 +83,7 @@ def test_apart_extension():
 
     f = x/((x - 2)*(x + I))
 
-    assert factor(together(apart(f))) == f
+    assert factor(together(apart(f)).expand()) == f
 
 
 def test_apart_full():

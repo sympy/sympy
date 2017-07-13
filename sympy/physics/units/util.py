@@ -45,22 +45,12 @@ def dim_simplify(expr):
     raise ValueError("Cannot be simplifed: %s", expr)
 
 
-def _get_dimension_of_expr(expr):
-    if isinstance(expr, Mul):
-        return Mul.fromiter(_get_dimension_of_expr(i) for i in expr.args)
-    elif isinstance(expr, Pow):
-        return _get_dimension_of_expr(expr.base)**expr.exp
-    elif isinstance(expr, Quantity):
-        return expr.dimension.name
-    return 1
-
-
 def _get_conversion_matrix_for_expr(expr, target_units):
     from sympy import Matrix
 
     expr_dim = Dimension(Quantity.get_dimensional_expr(expr))
     dim_dependencies = expr_dim.get_dimensional_dependencies(mark_dimensionless=True)
-    target_dims = [Dimension(_get_dimension_of_expr(x)) for x in target_units]
+    target_dims = [Dimension(Quantity.get_dimensional_expr(x)) for x in target_units]
     canon_dim_units = {i for x in target_dims for i in x.get_dimensional_dependencies(mark_dimensionless=True)}
     canon_expr_units = {i for i in dim_dependencies}
 
