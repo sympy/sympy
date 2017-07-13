@@ -78,7 +78,7 @@ def solve_biquadratic(f, g, opt):
 
     x, y = opt.gens
     p, q = G
-    if not p.gcd(q).as_expr().is_constant(x, y):
+    if not p.gcd(q).is_ground:
         # not 0-dimensional
         raise SolveFailed
 
