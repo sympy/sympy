@@ -1422,16 +1422,6 @@ def MergeMonomials(expr, x):
     n_ = Wild('n', exclude=[x])
     m_ = Wild('m', exclude=[x])
 
-    # Basis: If  m\[Element]\[DoubleStruckCapitalZ] \[And] b c-a d==0, then (a+b z)^m==b^m/d^m (c+d z)^m
-    pattern = u_*(a_ + b_*x)**m_*(c_ + d_*x)**n_
-    match = expr.match(pattern)
-    if match:
-        keys = [u_, a_, b_, m_, c_, d_, n_]
-        if len(keys) == len(match):
-            u, a, b, m, c, d, n = tuple([match[i] for i in keys])
-            if IntegerQ(m) and ZeroQ(b*c - a*d):
-                return u*b**m/d**m*(c + d*x)**(m + n)
-
     # Basis: If  m/n\[Element]\[DoubleStruckCapitalZ], then z^m (c z^n)^p==(c z^n)^(m/n+p)/c^(m/n)
     pattern = u_*(a_ + b_*x)**m_*(c_*(a_ + b_*x)**n_)**p_
     match = expr.match(pattern)
@@ -1441,6 +1431,16 @@ def MergeMonomials(expr, x):
             u, a, b, m, c, n, p = tuple([match[i] for i in keys])
             if IntegerQ(m/n):
                 return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
+
+    # Basis: If  m\[Element]\[DoubleStruckCapitalZ] \[And] b c-a d==0, then (a+b z)^m==b^m/d^m (c+d z)^m
+    pattern = u_*(a_ + b_*x)**m_*(c_ + d_*x)**n_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, a_, b_, m_, c_, d_, n_]
+        if len(keys) == len(match):
+            u, a, b, m, c, d, n = tuple([match[i] for i in keys])
+            if IntegerQ(m) and ZeroQ(b*c - a*d):
+                return u*b**m/d**m*(c + d*x)**(m + n)
     return expr
 
 def PolynomialDivide(p_, q_, x):
