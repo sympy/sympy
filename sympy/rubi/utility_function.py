@@ -4014,3 +4014,103 @@ def AbsurdNumberGCDList(lst1, lst2):
     elif lst2[0][1] < 0:
         return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, Rest(lst2))
     return AbsurdNumberGCDList(lst1, Rest(lst2))
+
+def Map2(f, lst1, lst2):
+    result = []
+    for i in range(0, len(lst1)):
+        result.append(f(lst1[i], lst2[i]))
+    return result
+
+def ConstantFactor(u, x):
+    # (* ConstantFactor[u,x] returns a 2-element list of the factors of u[x] free of x and the
+    # factors not free of u[x].  Common constant factors of the terms of sums are also collected. *)
+    if FreeQ(u, x):
+        return [u, S(1)]
+    elif AtomQ(u):
+        return [S(1), u]
+    elif PowerQ(u):
+        if FreeQ(u.exp, x):
+            lst = ConstantFactor(u.base, x)
+            if IntegerQ(u.exp):
+                return [lst[0]**u.exp, lst[1]**u.exp]
+            tmp = PositiveFactors(lst[0])
+            if tmp == 1:
+                return [S(1), u]
+            return [tmp**u.exp, (NonpositiveFactors(lst[0])*lst[1])**u.exp]
+    elif ProductQ(u):
+        lst = [ConstantFactor(i, x) for i in u.args]
+        return [Mul(*[First(i) for i in lst]), Mul(*[i[1] for i in lst])]
+    elif SumQ(u):
+        lst1 = [ConstantFactor(i, x) for i in u.args]
+        if SameQ(*[i[1] for i in lst1]):
+            return [Add(*[First[i] for i in lst]), lst1[0, 1]]
+        lst2 = CommonFactors(*[First(i) for i in lst1])
+          #{First[lst2],Apply[Plus,Map2[Times,Rest[lst2],Map[Function[i[[2]]],lst1]]]}
+        return [First(lst2), Add(*Map2(Rest(lst2), [i[2] for i in lst1]))]
+    return [S(1), u]
+
+def SameQ(*args):
+    for i in range(0, len(args) - 1):
+        if args[i] != args[i+1]:
+            return False
+    return True
+
+def CommonFactors(lst):
+    # (* If lst is a list of n terms, CommonFactors[lst] returns a n+1-element list whose first
+    # element is the product of the factors common to all terms of lst, and whose remaining
+    # elements are quotients of each term divided by the common factor. *)
+    lst1 = [NonabsurdNumberFactors(i) for i in lst]
+    lst2 = [AbsurdNumberFactors(i) for i in lst]
+    num = AbsurdNumberGCD(*lst2)
+    common = num
+    lst2 = [i/num for i in lst2]
+    while (True):
+        lst3 = [LeadFactor(i) for i in lst1]
+        if SameQ(*lst3):
+            common = common*lst3[0]
+            lst1 = [RemainingFactors(i) for i in lst1]
+            #return lst1
+        elif (all((LogQ(i) and IntegerQ(First(i)) and First(i)>0) for i in lst3) and
+            all(RationalQ(i) for i in [FullSimplify(j/First(lst3)) for j in lst3])):
+            lst4 = [FullSimplify(j/First(lst3)) for j in lst3]
+            num = GCD(*lst4)
+            common = common*Log((First(lst3)[0])**num)
+            lst2 = [lst2[i]*lst4[i]/num for i in range(0, len(lst2))]
+            lst1 = [RemainingFactors(i) for i in lst1]
+            #return lst1
+        lst4 = [LeadDegree(i) for i in lst1]
+        if SameQ(*[LeadBase(i) for i in lst1]) and RationalQ(*lst4):
+            num = Smallest(lst4)
+            base = LeadBase(lst1[0])
+            if num != 0:
+                common = common*base**num
+            lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
+            lst1 = [RemainingFactors(i) for i in lst1]
+            #return lst1
+        elif (Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
+            NonzeroQ(lst1[0] - 1) and IntegerQ(lst4[0]) and FractionQ(lst4[1])):
+            num = Min(lst4)
+            bse = LeadBase(lst1[1])
+            if num != 0:
+                common = common*base**num
+            lst2 = [lst2[0]*(-1)**lst4[0], lst2[1]]
+            lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
+            lst1 = [RemainingFactors(i) for i in lst1]
+            #return lst1
+        elif (Length(lst1) == 2 and ZeroQ(lst1[0] + LeadBase(lst1[1])) and
+            NonzeroQ(lst1[1] - 1) and IntegerQ(lst1[1]) and FractionQ(lst4[0])):
+            num = Min(lst4)
+            base = LeadBase(lst1[0])
+            if num != 0:
+                common = common*base**num
+            lst2 = [lst2[0], lst2[1]*(-1)**lst4[1]]
+            lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
+            lst1 = [RemainingFactors(i) for i in lst1]
+            return lst1
+
+        num = MostMainFactorPosition(lst3)
+        lst2 = ReplacePart(lst2, lst3[num-1]*lst2[num-1], num)
+        lst1 = ReplacePart(lst1, RemainingFactors(lst1[num-1]), num)
+        #return lst1
+        if all(i==1 for i in lst1):
+            return Prepend(lst2, common)

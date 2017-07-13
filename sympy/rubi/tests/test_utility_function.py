@@ -1430,3 +1430,18 @@ def test_AbsurdNumberGCD():
     assert AbsurdNumberGCD(S(4)) == 4
     assert AbsurdNumberGCD(S(4), S(8), S(12)) == 4
     assert AbsurdNumberGCD(S(2), S(3), S(12)) == 1
+
+def test_SameQ():
+    assert SameQ(1, 1, 1)
+    assert not SameQ(1, 1, 2)
+
+def test_Map2():
+    assert Map2(Add, [a, b, c], [x, y, z]) == [a + x, b + y, c + z]
+
+def test_ConstantFactor():
+    assert ConstantFactor(a, x) == [a, 1]
+    assert ConstantFactor(x, x) == [1, x]
+    assert ConstantFactor(x**S(2), x) == [1, x**2]
+    assert ConstantFactor(x**(S(1)/3), x) == [1, x**(1/3)]
+    assert ConstantFactor(a*x**3, x) == [a, x**3]
+    #print(ConstantFactor(a + x, x))
