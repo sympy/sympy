@@ -262,6 +262,10 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     stabilizers
     ``transversals_only`` - a flag switching between returning only the
     transversals/ both orbits and transversals
+    ``slp`` - if ``True``, return a list of dictionaries containing the
+              generator presentations of the elements of the transversals,
+              i.e. the list of indices of generators from `strong_gens_distr[i]`
+              such that their product is the relevant transversal element
 
     Examples
     ========

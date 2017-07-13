@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup
-from sympy.combinatorics.free_groups import FreeGroupElement
+from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
 from sympy.combinatorics.perm_groups import PermutationGroup
 
 class GroupHomomorphism(object):
@@ -30,11 +30,12 @@ class GroupHomomorphism(object):
 
         '''
         image = self.image()
-        vals = [v for v in self.images.values() if not v.is_identity]
-        keys = list(self.images.keys())
         inverses = {}
-        for i, v in enumerate(vals):
-            inverses[v] = keys[i]
+        for k in list(self.images.keys()):
+            v = self.images[k]
+            if not (v in inverses
+                    or v.is_identity):
+                inverses[v] = k
         gens = image.strong_gens
         for g in gens:
             if g in inverses or g.is_identity:
@@ -164,21 +165,22 @@ class GroupHomomorphism(object):
 
 def homomorphism(domain, codomain, gens, images=[]):
     '''
-    Create (if possible) a group homomorphism from the group `domain` to the group
-    `codomain` defined by the images of the domain's generators `gens`. `gens` and
-    `images` can be either lists or tuples of equal sizes. If `gens` is a proper subset
-    of the group's generators, the unspecified generators will be mapped to the identity.
-    If the images are not specified, a trivial homomorphism will be created.
+    Create (if possible) a group homomorphism from the group `domain`
+    to the group `codomain` defined by the images of the domain's
+    generators `gens`. `gens` and `images` can be either lists or tuples
+    of equal sizes. If `gens` is a proper subset of the group's generators,
+    the unspecified generators will be mapped to the identity. If the
+    images are not specified, a trivial homomorphism will be created.
 
-    If the given images of the generators do not define a homomorphism, an exception
-    is raised.
+    If the given images of the generators do not define a homomorphism,
+    an exception is raised.
 
     '''
     if isinstance(domain, PermutationGroup):
         raise NotImplementedError("Homomorphisms from permutation groups are not currently implemented")
     elif not isinstance(domain, (FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")
-    if not(isinstance(codomain, (PermutationGroup, FpGroup, FreeGroup)):
+    if not isinstance(codomain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The codomain must be a group")
 
     generators = domain.generators
@@ -210,7 +212,10 @@ def _check_homomorphism(domain, images, identity):
             i = 0
             while i < len(r):
                 power = r.array_form[i][1]
-                w = w*images[r[i]]**power
+                if r[i] in images:
+                    w = w*images[r[i]]**power
+                else:
+                    w = w*images[r[i]**-1]**power
                 i += abs(power)
             return w
 

@@ -1095,7 +1095,7 @@ class PermutationGroup(Basic):
     def generator_product(self, g):
         '''
         Return a list of strong generators `[s1, ..., sn]`
-        s.t `g = s1*...*sn`.
+        s.t `g = sn*...*s1`.
 
         '''
         if g in self.strong_gens:
@@ -3512,8 +3512,8 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
 
     If `slp` is `True`, a dictionary `{beta: slp_beta}` is returned
     for `\beta \in Orb` where `slp_beta` is a list of indices of the
-    generators in `generators` s.t. if `slp = [i_1 ... i_n]`
-    `g_\beta = generators[i_1]*...*generators[i_n]`.
+    generators in `generators` s.t. if `slp_beta = [i_1 ... i_n]`
+    `g_\beta = generators[i_n]*...*generators[i_1]`.
 
     Examples
     ========

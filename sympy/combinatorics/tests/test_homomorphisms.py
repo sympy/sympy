@@ -1,6 +1,6 @@
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.grouphomomorphism import homomorphism
+from sympy.combinatorics.homomorphisms import homomorphism
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup
@@ -27,3 +27,6 @@ def test_homomorphism():
     T = homomorphism(G, P, [a], [Permutation(0, 1, 2, 3)])
     assert T.image().order() == 4
     assert T(T.invert(Permutation(0, 2)(1, 3))) == Permutation(0, 2)(1, 3)
+
+    T = homomorphism(F, AlternatingGroup(4), F.generators, [c])
+    assert T.invert(c**2) == a**2

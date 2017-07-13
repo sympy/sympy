@@ -7,7 +7,8 @@ from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
+from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
+                                                free_group, zero_mul_simp)
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -284,9 +285,10 @@ class FpGroup(DefaultPrinting):
 
 class FpSubgroup(DefaultPrinting):
     '''
-    The class implementing a subgroup of an FpGroup (only finite index subgroups are
-    supported at this point). This is to be used if one wishes to check if an element
-    of the original group belongs to the subgroup
+    The class implementing a subgroup of an FpGroup or a FreeGroup
+    (only finite index subgroups are supported at this point). This
+    is to be used if one wishes to check if an element of the original
+    group belongs to the subgroup
 
     '''
     def __init__(self, G, gens):
@@ -296,11 +298,13 @@ class FpSubgroup(DefaultPrinting):
         self.C = None
 
     def __contains__(self, g):
-        if not g in self.parent:
+        gens = [s for s in g.contains_generators()]
+        if any([s not in self.generators for s in gens]):
             return False
+        elif isinstance(self.parent, FreeGroup):
+            return True
         if self.C is None:
             C = self.parent.coset_enumeration(self.generators)
-            C.compress()
             self.C = C
         i = 0
         C = self.C
@@ -313,13 +317,17 @@ class FpSubgroup(DefaultPrinting):
         # will always be finite - otherwise coset enumeration doesn't terminate
         if not self.generators:
             return 1
+        if isinstance(self.parent, FreeGroup):
+            return S.Infinity
         if self.C is None:
             C = self.parent.coset_enumeration(self.generators)
-            C.compress()
             self.C = C
         return self.parent.order()/len(self.C.table)
 
     def to_FpGroup(self):
+        if isinstance(self.parent, FreeGroup):
+            gen_syms = [('x_%d'%i) for i in range(len(self.generators))]
+            return free_group(', '.join(gen_syms))[0]
         return self.parent.subgroup(C=self.C)
 
 
