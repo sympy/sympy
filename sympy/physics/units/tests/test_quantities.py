@@ -236,3 +236,13 @@ def test_sum_of_incompatible_quantities():
     assert expr in Basic._constructor_postprocessor_mapping
     for i in expr.args:
         assert i in Basic._constructor_postprocessor_mapping
+
+
+def test_factor_and_dimension():
+    assert (1001, length) == Quantity._collect_factor_and_dimension(meter + km)
+    assert (2, length/time) == Quantity._collect_factor_and_dimension(
+        meter/second + 36*km/(10*hour))
+
+    x, y = symbols('x y')
+    assert (x + y/100, length) == Quantity._collect_factor_and_dimension(
+        x*m + y*centimeter)
