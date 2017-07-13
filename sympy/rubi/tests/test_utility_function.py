@@ -753,6 +753,7 @@ def test_Coeff():
 def test_MergeMonomials():
     assert MergeMonomials(x**2*(1 + 1*x)**3*(1 + 1*x)**n, x) == x**2*(x + 1)**(n + 3)
     assert MergeMonomials(x**2*(1 + 1*x)**2*(1*(1 + 1*x)**1)**2, x) == x**2*(x + 1)**4
+    assert MergeMonomials(b**2/a**3, x) == b**2/a**3
 
 def test_RationalFunctionQ():
     assert RationalFunctionQ(a, x)
@@ -1412,7 +1413,7 @@ def test_GeneralizedBinomialQ():
     assert not GeneralizedBinomialQ(a*x**q, x)
 
 def test_GeneralizedTrinomialQ():
-    assert GeneralizedTrinomialQ(x**2 + x**3 + x**4, x)
+    assert not GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
     assert not GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
 
 def test_SubstForFractionalPowerOfQuotientOfLinears():
