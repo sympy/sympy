@@ -552,25 +552,21 @@ def test_PolynomialDivide():
     assert PolynomialDivide(x**6, (a + b*x)**2, x) == -5*a**6/(b**6*(a + b*x)**2) - 6*a**5*x/(b**5*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_ExpandIntegrand():
-    assert True
-    #assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
-    #assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
-    #assert ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
-    #assert ExpandIntegrand(1/(x*(a + b*x)**2), x) == -b/(a*(a + b*x)**2) - b/(a**2*(a + b*x)) + 1/(a**2*x)
-    #assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
-    #assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18/(2*x**2 + 4) - 2/(2*x**2 + 2)
-
-    '''
+    #print(ExpandIntegrand(x/(a*x**1 + b*Sqrt(c + d*x**2)), x))
     #print(ExpandIntegrand((1 - 1*x**2)**(-3), x))
-    #assert ExpandIntegrand((1 - 1*x**2)**(-3), x) == -1/(x**6 - 3.0*x**4 + 3.0*x**2 - 1.0)
-    #assert ExpandIntegrand(x**2*(1 - 1*x**6)**(-2), x) == x**2/(x**12 - 2.0*x**6 + 1.0)
-    assert ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (1.0*c - 1.0*d - 1.0*I*e)/(4*I*x + 4.0) + (1.0*c - 1.0*d + 1.0*I*e)/(-4*I*x + 4.0) + (1.0*c + 1.0*d - 1.0*e)/(4*x + 4.0) + (1.0*c + 1.0*d + 1.0*e)/(-4*x + 4.0)
+    #print(ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)))
+    assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
+    assert simplify(ExpandIntegrand(x**2*(1 - 1*x**2)**(-2), x) - (1/(S(2)*(x**2 - 1)) + 1/(S(4)*(x + 1)**2) + 1/(S(4)*(x - 1)**2))) == 0
+    assert ExpandIntegrand((a + x)**2, x) == a**2 + 2*a*x + x**2
+    assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
+    assert ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
+    assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
+    assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18/(2*x**2 + 4) - 2/(2*x**2 + 2)
+    assert ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (c - d - I*e)/(4*I*x + 4) + (c - d + I*e)/(-4*I*x + 4) + (c + d - e)/(4*x + 4) + (c + d + e)/(-4*x + 4)
     assert ExpandIntegrand((a + b*x)**2/(c + d*x), x) == b*(a + b*x)/d + b*(a*d - b*c)/d**2 + (a*d - b*c)**2/(d**2*(c + d*x))
-    assert ExpandIntegrand(x/(a*x**1 + b*Sqrt(c + d*x**2)), x) == a*x**2/(a**2*x**2 - b**2*c - b**2*d*x**2) - b*x*sqrt(c + d*x**2)/(a**2*x**2 - b**2*c - b**2*d*x**2)
     assert ExpandIntegrand(x**2*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == e**2*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f**2 - 2*e*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f**2 + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)**2/f**2
     assert ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
     assert ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x))
-    '''
 
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
@@ -614,8 +610,9 @@ def test_CollectReciprocals():
     assert CollectReciprocals(1/(1 + 1*x) - 1/(1 - 1*x), x) == -2*x/(-x**2 + 1)
 
 def test_ExpandCleanup():
+    #print(ExpandCleanup(-1/(S(8)*q**3*(q + x)**3) + 1/(S(8)*q**3*(-q + x)**3) - S(3)/(16*q**4*(q + x)**2) - S(3)/(16*q**4*(-q + x)**2) - S(3)/(16*q**5*(q + x)) + S(3)/(16*q**5*(-q + x)), x))
     assert ExpandCleanup(a + b, x) == a*(1 + b/a)
-    #print(ExpandCleanup( b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x), x))
+    assert ExpandCleanup(b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
 
 def test_AlgebraicFunctionQ():
     assert AlgebraicFunctionQ(a, x) == True
@@ -1162,6 +1159,7 @@ def test_NormalizeIntegrand():
     assert NormalizeIntegrand((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
     assert NormalizeIntegrand(a**2*(a + b*x)**2, x) == a**2*(a + b*x)**2
     assert NormalizeIntegrand(b**2/(a**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2)
+    #print(NormalizeIntegrand(6*q/(-16*q**7 + 16*q**5*x**2), x))
 
 def test_NormalizeIntegrandAux():
     assert NormalizeIntegrandAux((x**2 + 3*x)**2, x) == x**2*(x + 3)**2

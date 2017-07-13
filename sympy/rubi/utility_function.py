@@ -1686,7 +1686,6 @@ def ExpandIntegrand(expr, x, extra=None):
                 tmp = a*h - b*g
                 return SimplifyTerm(tmp**m/h**m, x)*f**(e*(c + d*x)**n)/(g + h*x) + Sum(SimplifyTerm(b*tmp**(k-1)/h**k, x)*f**(e*(c+d*x)**n)*(a + b*x)**(m-k), (k, 1, m)).doit()
 
-    #`('1')
     pattern = u_*(a_ + b_*F_**v_)**m_*(c_ + d_*F_**v_)**n_
     match = expr.match(pattern)
     if match:
@@ -1737,7 +1736,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, b, u, n, c, j, p = tuple([match[i] for i in keys])
             if IntegerQ(n) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and NonzeroQ(b**2 - 4*a*c):
-                ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2),x: u**n})
+                ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2), x: u**n})
     #print('6')
     pattern = u_**m_*(a_ + b_*u_**n_ + c_*u_**j_)**p_
     match = expr.match(pattern)
@@ -1756,6 +1755,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, c, u, n, p = tuple([match[i] for i in keys])
             if IntegerQ(n/2) and NegativeIntegerQ(p):
+                #print('here', {q: Rt(-a*c,2),x: u**(n/2)}, S(1)/c**p, (-q + c*x)**p*(q + c*x)**p)
                 return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c,2),x: u**(n/2)})
     #print('8')
     pattern = u_**m_*(a_ + c_*u_**n_)**p_
@@ -1909,7 +1909,7 @@ def ExpandIntegrand(expr, x, extra=None):
                 res = IntegerQ(p) & p > m
             except: # if not matched
                 res = False
-            if PolynomialQ(u, x) and Not(PositiveIntegerQ(m) and res):
+            if PolynomialQ(u, x) and Not(PositiveIntegerQ(m) and res) and (u != 1):
                 tmp1 = ExpandLinearProduct((a+b*x)**m, u, a, b, x)
                 if not IntegerQ(m):
                     return tmp1
@@ -3259,7 +3259,7 @@ def ExpandToSum(u, *x):
             expr += i[0]*x**i[4] + i[1]*x**i[3] + i[2]*x**(2*i[3]-i[4])
             return expr
         else:
-            print("Warning: Unrecognized expression for expansion")
+            #print("Warning: Unrecognized expression for expansion")
             return Expand(u)
     else:
         v = x[0]
