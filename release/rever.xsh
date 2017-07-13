@@ -79,7 +79,7 @@ def source_tarball():
 
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx=1.3.1', 'docutils=0.12', 'numpy', 'mpmath'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath'],
         envname='sympy-release-docs'):
 
         cd doc
