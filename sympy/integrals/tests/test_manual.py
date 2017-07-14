@@ -1,12 +1,13 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, symbols, Rational,
-                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand)
+                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
+                   Function)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     _parts_rule
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
-
+f = Function('f')
 
 def test_find_substitutions():
     assert find_substitutions((cot(x)**2 + 1)**2*csc(x)**2*cot(x)**2, x, u) == \
@@ -182,7 +183,7 @@ def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
         pi * ((x**2 + 2*x + 3))
     assert manualintegrate(Derivative(x**2 + 2*x + 3, y), x) == \
-        x * Derivative(x**2 + 2*x + 3, y)
+        Derivative(x**3/3 + x**2 + 3*x, y)
     assert manualintegrate(Derivative(sin(x), x, x, y, x), x) == \
         Derivative(sin(x), x, x, y)
 
@@ -316,5 +317,11 @@ def test_issue_10847():
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
 
-def test_constant_independent_of_symbol():
+def test_issue_12899():
+    assert manualintegrate(f(x,y).diff(x),y) == Derivative(Integral(f(x,y),y),x)
+    assert manualintegrate(f(x,y).diff(y).diff(x),y) == Derivative(f(x,y),x)
+
+
+
+def test_constant_independeint_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
