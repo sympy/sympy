@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import symbols
-from sympy.physics.units.prefixes import PREFIXES, prefix_unit
+from sympy.physics.units.prefixes import PREFIXES, prefix_unit, kilo, kibi
 
 
 def test_prefix_operations():
@@ -29,3 +29,8 @@ def test_prefix_unit():
     prefs = prefix_unit(m, pref)
     assert set(prefs) == set(res)
     assert set(map(lambda x: x.abbrev, prefs)) == set(symbols("mm,cm,dm"))
+
+
+def test_bases():
+    assert kilo.base == 10
+    assert kibi.base == 2
