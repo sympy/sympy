@@ -623,7 +623,7 @@ def idiff(eq, y, x, n=1):
         derivs[dydx] = yp
         eq = dydx - yp
         dydx = dydx.diff(x)
-
+        
 
 def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
@@ -632,7 +632,7 @@ def intersection(*entities, **kwargs):
     ==========
 
     entities : sequence of GeometryEntity
-    union    : Either True or False.
+
     Returns
     =======
 
@@ -656,9 +656,6 @@ def intersection(*entities, **kwargs):
     simplified internally.
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
-    
-    Default value of union is false.
-    When union is true, it gives all pairwise intersection points.
     See Also
     ========
 
@@ -686,9 +683,9 @@ def intersection(*entities, **kwargs):
     """
     from .entity import GeometryEntity
     from .point import Point
-    union = kwargs.pop('union', False)
+    pairwise = kwargs.pop('union', False)
 
-    if union == False:
+    if pairwise == False:
 
         if len(entities) <= 1:
             return []
@@ -722,7 +719,6 @@ def intersection(*entities, **kwargs):
         for k in range(j + 1, len(entities)):
             if len(intersection(entities[j], entities[k])) is not 0:
                 ans.append(intersection(entities[j], entities[k]))
-                   
     temp = []
     for element in ans:
         if element not in temp:
