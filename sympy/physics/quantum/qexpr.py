@@ -171,6 +171,10 @@ class QExpr(Expr):
             return self.args
 
     @property
+    def name(self):
+        return str(self.label)
+
+    @property
     def is_symbolic(self):
         return True
 
