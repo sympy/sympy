@@ -2485,8 +2485,8 @@ def AbsurdNumberFactors(u):
     if AbsurdNumberQ(u):
         return u
     elif ProductQ(u):
-        result = 1
-        for i in u:
+        result = S(1)
+        for i in u.args:
             if AbsurdNumberQ(i):
                 result *= i
         return result
@@ -2495,7 +2495,7 @@ def AbsurdNumberFactors(u):
 def NonabsurdNumberFactors(u):
     # (* NonabsurdNumberFactors[u] returns the product of the factors of u that are not absurd numbers. *)
     if AbsurdNumberQ(u):
-        return 1
+        return S(1)
     elif ProductQ(u):
         result = 1
         for i in u.args:
@@ -2525,6 +2525,8 @@ def SumSimplerQ(u, v):
         return SumSimplerAuxQ(Expand(u), Expand(v))
 
 def Prepend(l1, l2):
+    if not isinstance(l2, list):
+        return [l2] + l1
     return l2 + l1
 
 def Drop(lst, n):
@@ -2761,14 +2763,6 @@ def Smallest(num1, num2=None):
         return num
     return Min(num1, num2)
 
-def MostMainFactorPosition(lst):
-    factor = 1
-    num = 1
-    for i in range(0, Length(lst)):
-        if FactorOrder(lst[i], factor) > 0:
-            factor = lst[i]
-            num = i + 1
-    return num
 
 def OrderedQ(l):
     return l == Sort(l)
@@ -3009,14 +3003,14 @@ def FunctionOfLinear(*args):
         if AtomQ(lst):
             return False
     return lst
-
+'''
 def ConstantFactor(u, x):
     # (* ConstantFactor[u,x] returns a 2-element list of the factors of u[x] free of x and the
     # factors not free of u[x].  Common constant factors of the terms of sums are also collected. *)
     if FreeQ(u, x):
-        return [u, 1]
+        return [u, S(1)]
     elif AtomQ(u):
-        return [1, u]
+        return [S(1), u]
     elif PowerQ(u):
         if FreeQ(u.exp, x):
             lst = ConstantFactor(u.base, x)
@@ -3024,18 +3018,19 @@ def ConstantFactor(u, x):
                 return [lst[0]**u.exp, lst[1]**u.exp]
             tmp = PositiveFactors(lst[0])
             if tmp == 1:
-                return [1, u]
+                return [S(1), u]
             return [tmp**u.exp, (NonpositiveFactors(lst[0])*lst[1])**u.exp]
     elif ProductQ(u):
         lst = [ConstantFactor(i, x) for i in u.args]
-        return [Mul(*[fist[i] for i in lst]), Mul(*[i[1] for i in lst])]
+        return [Mul(*[Fist[i] for i in lst]), Mul(*[i[1] for i in lst])]
     elif SumQ(u):
         lst1 = [ConstantFactor(i, x) for i in u.args]
         if SameQ(*[i[1] for i in lst1]):
-            return [Add(*[First[i] for i in lst]), lst1[0, 1]]
+            return [Add(*[First[i] for i in lst]), lst1[S(0), S(1)]]
         lst2 = CommonFactors(*[First(i) for i in lst1])
         return [First(lst2), Add(*[])]
-    return [1, u]
+    return [S(1), u]
+'''
 
 def NormalizeIntegrand(u, x):
     v = NormalizeLeadTermSigns(NormalizeIntegrandAux(u, x))
@@ -3904,7 +3899,6 @@ def ExpandTrigReduce(u, v, x):
     else:
             return u*w
 
-
 def TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
@@ -4044,10 +4038,9 @@ def ConstantFactor(u, x):
     elif SumQ(u):
         lst1 = [ConstantFactor(i, x) for i in u.args]
         if SameQ(*[i[1] for i in lst1]):
-            return [Add(*[First[i] for i in lst]), lst1[0, 1]]
-        lst2 = CommonFactors(*[First(i) for i in lst1])
-          #{First[lst2],Apply[Plus,Map2[Times,Rest[lst2],Map[Function[i[[2]]],lst1]]]}
-        return [First(lst2), Add(*Map2(Rest(lst2), [i[2] for i in lst1]))]
+            return [Add(*[i[0] for i in lst]), lst1[0][1]]
+        lst2 = CommonFactors([First(i) for i in lst1])
+        return [First(lst2), Add(*Map2(Mul, Rest(lst2), [i[1] for i in lst1]))]
     return [S(1), u]
 
 def SameQ(*args):
@@ -4055,6 +4048,10 @@ def SameQ(*args):
         if args[i] != args[i+1]:
             return False
     return True
+
+def ReplacePart(lst, a, b):
+    lst[b] = a
+    return lst
 
 def CommonFactors(lst):
     # (* If lst is a list of n terms, CommonFactors[lst] returns a n+1-element list whose first
@@ -4067,18 +4064,17 @@ def CommonFactors(lst):
     lst2 = [i/num for i in lst2]
     while (True):
         lst3 = [LeadFactor(i) for i in lst1]
+
         if SameQ(*lst3):
             common = common*lst3[0]
             lst1 = [RemainingFactors(i) for i in lst1]
-            #return lst1
-        elif (all((LogQ(i) and IntegerQ(First(i)) and First(i)>0) for i in lst3) and
+        elif (all((LogQ(i) and IntegerQ(First(i)) and First(i) > 0) for i in lst3) and
             all(RationalQ(i) for i in [FullSimplify(j/First(lst3)) for j in lst3])):
             lst4 = [FullSimplify(j/First(lst3)) for j in lst3]
             num = GCD(*lst4)
             common = common*Log((First(lst3)[0])**num)
             lst2 = [lst2[i]*lst4[i]/num for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
-            #return lst1
         lst4 = [LeadDegree(i) for i in lst1]
         if SameQ(*[LeadBase(i) for i in lst1]) and RationalQ(*lst4):
             num = Smallest(lst4)
@@ -4087,17 +4083,15 @@ def CommonFactors(lst):
                 common = common*base**num
             lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
-            #return lst1
         elif (Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
             NonzeroQ(lst1[0] - 1) and IntegerQ(lst4[0]) and FractionQ(lst4[1])):
             num = Min(lst4)
-            bse = LeadBase(lst1[1])
+            base = LeadBase(lst1[1])
             if num != 0:
                 common = common*base**num
             lst2 = [lst2[0]*(-1)**lst4[0], lst2[1]]
             lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
-            #return lst1
         elif (Length(lst1) == 2 and ZeroQ(lst1[0] + LeadBase(lst1[1])) and
             NonzeroQ(lst1[1] - 1) and IntegerQ(lst1[1]) and FractionQ(lst4[0])):
             num = Min(lst4)
@@ -4107,11 +4101,18 @@ def CommonFactors(lst):
             lst2 = [lst2[0], lst2[1]*(-1)**lst4[1]]
             lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
-            return lst1
-
-        num = MostMainFactorPosition(lst3)
-        lst2 = ReplacePart(lst2, lst3[num-1]*lst2[num-1], num)
-        lst1 = ReplacePart(lst1, RemainingFactors(lst1[num-1]), num)
-        #return lst1
+        else:
+            num = MostMainFactorPosition(lst3)
+            lst2 = ReplacePart(lst2, lst3[num]*lst2[num], num)
+            lst1 = ReplacePart(lst1, RemainingFactors(lst1[num]), num)
         if all(i==1 for i in lst1):
             return Prepend(lst2, common)
+
+def MostMainFactorPosition(lst):
+    factor = S(1)
+    num = 0
+    for i in range(0, Length(lst)):
+        if FactorOrder(lst[i], factor) > 0:
+            factor = lst[i]
+            num = i
+    return num

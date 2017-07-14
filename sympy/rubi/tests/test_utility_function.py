@@ -717,6 +717,7 @@ def test_LeadFactor():
     assert LeadFactor(a + b + c) == a + b + c
     assert LeadFactor(b*I) == b
     assert LeadFactor(c*a**b) == a**b
+    assert LeadFactor(S(2)) == S(2)
 
 def test_RemainingFactors():
     assert RemainingFactors(a*b*c) == b*c
@@ -1075,8 +1076,8 @@ def test_Smallest():
     assert Smallest(-1, -2) == -2
 
 def test_MostMainFactorPosition():
-    assert MostMainFactorPosition([S(1), S(2), S(3)]) == 2
-    assert MostMainFactorPosition([S(1), S(7), S(3), S(4), S(5)]) == 3
+    assert MostMainFactorPosition([S(1), S(2), S(3)]) == 1
+    assert MostMainFactorPosition([S(1), S(7), S(3), S(4), S(5)]) == 2
 
 def test_OrderedQ():
     assert OrderedQ([a, b])
@@ -1448,3 +1449,18 @@ def test_RationalFunctionExpand():
     assert RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x - x/(2*x**2 + 1) - 2 + 2/(2*x**2 + 1)
     assert RationalFunctionExpand((a + b*x + c*x**4)*log(x)**3, x) == a*log(x)**3 + b*x*log(x)**3 + c*x**4*log(x)**3
     assert RationalFunctionExpand(a + b*x + c*x**4, x) == a + b*x + c*x**4
+
+def test_ConstantFactor():
+    assert ConstantFactor(a + a*x**3, x) == [a, x**3 + 1]
+    assert ConstantFactor(a, x) == [a, 1]
+    assert ConstantFactor(x, x) == [1, x]
+    assert ConstantFactor(x**S(3), x) == [1, x**3]
+    assert ConstantFactor(x**(S(3)/2), x) == [1, x**(3/2)]
+    assert ConstantFactor(a*x**3, x) == [a, x**3]
+    assert ConstantFactor(a + x**3, x) == [1, a + x**3]
+
+def test_CommonFactors():
+    assert CommonFactors([a, a, a]) == [a, 1, 1, 1]
+    assert CommonFactors([x*S(2), x**S(3)*S(2), sin(x)*x*S(2)]) == [2, x, x**3, x*sin(x)]
+    assert CommonFactors([x, x**S(3), sin(x)*x]) == [1, x, x**3, x*sin(x)]
+    assert CommonFactors([S(2), S(4), S(6)]) == [2, 1, 2, 3]
