@@ -207,7 +207,7 @@ def test_m_output_arg_mixed_unordered():
 
 
 def test_m_piecewise_():
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True), evaluate=False)
     name_expr = ("pwtest", pw)
     result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]

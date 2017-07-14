@@ -4,10 +4,9 @@ from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
 from sympy.solvers.inequalities import (reduce_inequalities,
-                                        solve_poly_inequality as psolve,
-                                        reduce_rational_inequalities,
-                                        solve_univariate_inequality as isolve,
-                                        reduce_abs_inequality)
+    solve_poly_inequality as psolve, reduce_rational_inequalities,
+    solve_univariate_inequality as isolve, reduce_abs_inequality,
+    _solve_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -289,6 +288,10 @@ def test_solve_univariate_inequality():
 
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
+    c1 = Dummy("c1", positive=True)
+    raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
+    n = Dummy('n', negative=True)
+    assert isolve(n/c1 > -2, c1) == (-n/2 < c1)
 
 
 def test_trig_inequalities():
@@ -375,3 +378,26 @@ def test_issue_10671_12466():
     assert solveset((1/x).diff(x) < 0, x, i) == i
     assert solveset((log(x - 6)/x) <= 0, x, S.Reals) == \
         Interval.Lopen(6, 7)
+
+
+def test__solve_inequality():
+    for op in (Gt, Lt, Le, Ge, Eq, Ne):
+        assert _solve_inequality(op(x, 1), x).lhs == x
+        assert _solve_inequality(op(S.One, x), x).lhs == x
+    # don't get tricked by symbol on right: solve it
+    assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
+    ie = Eq(S.One, y)
+    assert _solve_inequality(ie, x) == ie
+    a = Symbol('a', positive=True)
+    assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)
+
+
+def test__pt():
+    from sympy.solvers.inequalities import _pt
+    assert _pt(-oo, oo) == 0
+    assert _pt(S(1), S(3)) == 2
+    assert _pt(S(1), oo) == _pt(oo, S(1)) == 2
+    assert _pt(S(1), -oo) == _pt(-oo, S(1)) == S.Half
+    assert _pt(x, oo) == _pt(oo, x) == x + 1
+    assert _pt(x, -oo) == _pt(-oo, x) == x - 1
+    raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S(1)))

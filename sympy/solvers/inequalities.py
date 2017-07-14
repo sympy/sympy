@@ -9,6 +9,7 @@ from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
 from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
+from sympy.core.function import expand_mul
 
 from sympy.functions import Abs
 from sympy.logic import And
@@ -445,7 +446,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
     # real.
-    d = Dummy(real=True)
+    d = Dummy(real=True) if gen.is_real is None else gen
     expr = expr.subs(gen, d)
     _gen = gen
     gen = d
@@ -481,10 +482,15 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 domain = Interval(0, period, False, True)
 
         if rv is None:
-            solns = solvify(e, gen, domain)
+            n, d = e.as_numer_denom()
+            if gen not in n.free_symbols and len(e.free_symbols) > 1:
+                solns = None
+            else:
+                solns = solvify(e, gen, domain)
             if solns is None:
-                raise NotImplementedError(filldedent('''The inequality cannot be
-                    solved using solve_univariate_inequality.'''))
+                raise NotImplementedError(filldedent('''
+The inequality cannot be
+solved using solve_univariate_inequality.'''))
             singularities = []
             for d in denoms(expr, gen):
                 singularities.extend(solvify(d, gen, domain))
@@ -496,7 +502,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             def valid(x):
                 v = e.subs(gen, x)
                 try:
-                    r = expr.func(v, 0)
+                    r = expand_mul(expr.func(v, 0))
                 except TypeError:
                     r = S.false
                 if r in (S.true, S.false):
@@ -507,7 +513,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     v = v.n(2)
                     if v.is_comparable:
                         return expr.func(v, 0)
-                    return S.false
+                    raise NotImplementedError(
+                        'relationship did not evaluate: %s' % r)
 
             try:
                 discontinuities = set(domain.boundary -
@@ -517,7 +524,21 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     discontinuities))).intersection(
                     Interval(domain.inf, domain.sup,
                     domain.inf not in domain, domain.sup not in domain))
-                reals = _nsort(critical_points, separated=True)[0]
+                if all(r.is_number for r in critical_points):
+                    reals = _nsort(critical_points, separated=True)[0]
+                else:
+                    from sympy.utilities.iterables import sift
+                    sifted = sift(critical_points, lambda x: x.is_real)
+                    if sifted[None]:
+                        # there were some roots that weren't known
+                        # to be real
+                        raise NotImplementedError
+                    try:
+                        reals = sifted[True]
+                        if len(reals) > 1:
+                            reals = list(sorted(reals))
+                    except TypeError:
+                        raise NotImplementedError
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 
@@ -560,30 +581,61 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
 def _pt(start, end):
     """Return a point between start and end"""
-    if start.is_infinite and end.is_infinite:
-        pt = S.Zero
-    elif end.is_infinite:
-        pt = start + 1
-    elif start.is_infinite:
-        pt = end - 1
-    else:
+    if not start.is_infinite and not end.is_infinite:
         pt = (start + end)/2
+    elif start.is_infinite and end.is_infinite:
+        pt = S.Zero
+    else:
+        if (start.is_infinite and start.is_positive is None or
+                end.is_infinite and end.is_positive is None):
+            raise ValueError('cannot proceed with unsigned infinite values')
+        if (end.is_infinite and end.is_negative or
+                start.is_infinite and start.is_positive):
+            start, end = end, start
+        if end.is_infinite:
+            if start.is_positive:
+                pt = start*2
+            elif start.is_negative:
+                pt = start*S.Half
+            else:
+                pt = start + 1
+        elif start.is_infinite:
+            if end.is_positive:
+                pt = end*S.Half
+            elif end.is_negative:
+                pt = end*2
+            else:
+                pt = end - 1
     return pt
 
 
-def _solve_inequality(ie, s):
+def _solve_inequality(ie, s, linear=False):
     """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. """
-    expr = ie.lhs - ie.rhs
+        univariate inequalities. If linear is True, only return an
+        inequality with the symbol isolated on the lhs if the
+        expression is linear."""
+    if s not in ie.free_symbols:
+        return ie
+    if ie.rhs == s:
+        ie = ie.reversed
+    if ie.lhs == s and s not in ie.rhs.free_symbols:
+        return ie
+    expr = ie.lhs - ie.rhs  # XXX don't we have to watch for cancellation of non-real terms?
     try:
         p = Poly(expr, s)
+        if p.degree() == 0:
+            return ie.func(p.as_expr(), 0)
         if p.degree() != 1:
+            if linear:
+                return ie
             raise NotImplementedError
     except (PolynomialError, NotImplementedError):
+        # nonlinear solution attempt
         try:
             return reduce_rational_inequalities([[ie]], s)
         except PolynomialError:
             return solve_univariate_inequality(ie, s)
+    # linear solution
     a, b = p.all_coeffs()
     if a.is_positive or ie.rel_op in ('!=', '=='):
         return ie.func(s, -b/a)

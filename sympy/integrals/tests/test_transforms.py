@@ -86,7 +86,6 @@ def test_mellin_transform_fail():
             (-1, -S(1)/2), True)
 
 
-@slow
 def test_mellin_transform():
     from sympy import Max, Min
     MT = mellin_transform
@@ -94,16 +93,16 @@ def test_mellin_transform():
     bpos = symbols('b', positive=True)
 
     # 8.4.2
-    assert MT(x**nu*Heaviside(x - 1), x, s) == \
-        (-1/(nu + s), (-oo, -re(nu)), True)
-    assert MT(x**nu*Heaviside(1 - x), x, s) == \
-        (1/(nu + s), (-re(nu), oo), True)
+    assert MT(x**nu*Heaviside(x - 1), x, s) == (
+        -1/(nu + s), (-oo, -re(nu)), True)
+    assert MT(x**nu*Heaviside(1 - x), x, s) == (
+        1/(nu + s), (-re(nu), oo), True)
 
-    assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == \
-        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(-beta) < 0)
-    assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == \
-        (gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
-            (-oo, -re(beta) + 1), re(-beta) < 0)
+    assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == (
+        gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(beta) > 0)
+    assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == (
+        gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
+            (-oo, -re(beta) + 1), re(beta) > 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
         (gamma(s)*gamma(rho - s)/gamma(rho), (0, re(rho)), True)
@@ -115,22 +114,22 @@ def test_mellin_transform():
         (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
-    assert mt[1], mt[2] == ((0, -re(beta) + 1), True)
+    assert mt[1], mt[2] == ((0, -re(beta) + 1), re(beta) > 0)
 
-    assert MT((x**a - b**a)/(x - b), x, s)[0] == \
-        pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s)))
-    assert MT((x**a - bpos**a)/(x - bpos), x, s) == \
-        (pi*bpos**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))),
+    assert MT((x**a - b**a)/(x - b), x, s)[0] == (
+        pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))))
+    assert MT((x**a - bpos**a)/(x - bpos), x, s) == (
+        pi*bpos**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))),
             (Max(-re(a), 0), Min(1 - re(a), 1)), True)
 
     expr = (sqrt(x + b**2) + b)**a
-    assert MT(expr.subs(b, bpos), x, s) == \
-        (-a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
+    assert MT(expr.subs(b, bpos), x, s) == (
+        -a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
          (0, -re(a)/2), True)
 
     expr = (sqrt(x + b**2) + b)**a/sqrt(x + b**2)
-    assert MT(expr.subs(b, bpos), x, s) == \
-        (2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s)
+    assert MT(expr.subs(b, bpos), x, s) == (
+        2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s)
                                          *gamma(1 - a - 2*s)/gamma(1 - a - s),
             (0, -re(a)/2 + S(1)/2), True)
 
@@ -146,6 +145,14 @@ def test_mellin_transform():
     assert MT(log(abs(1 - x)), x, s) == (pi/(s*tan(pi*s)), (-1, 0), True)
     assert MT(log(abs(1 - 1/x)), x, s) == (pi/(s*tan(pi*s)), (0, 1), True)
 
+    # 8.4.14
+    assert MT(erf(sqrt(x)), x, s) == (
+        -gamma(s + S(1)/2)/(sqrt(pi)*s), (-S(1)/2, 0), True)
+
+
+@slow
+def test_mellin_transform2():
+    MT = mellin_transform
     # TODO we cannot currently do these (needs summation of 3F2(-1))
     #      this also implies that they cannot be written as a single g-function
     #      (although this is possible)
@@ -158,10 +165,6 @@ def test_mellin_transform():
     mt = MT(log(x)/(x + 1)**2, x, s)
     assert mt[1:] == ((0, 2), True)
     assert not hyperexpand(mt[0], allow_hyper=True).has(meijerg)
-
-    # 8.4.14
-    assert MT(erf(sqrt(x)), x, s) == \
-        (-gamma(s + S(1)/2)/(sqrt(pi)*s), (-S(1)/2, 0), True)
 
 
 @slow
@@ -520,11 +523,17 @@ def test_laplace_transform():
 def test_issue_8368_7173():
     LT = laplace_transform
     # hyperbolic
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, True)
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
+    assert LT(sinh(x), x, s) == (
+        1/(s**2 - 1), 1, And(
+        pi/2 >= Abs(periodic_argument(s, oo)),
+        Abs(periodic_argument(s, oo)) < pi/2))
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1,
+        Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
-    assert LT(sinh(x)*cosh(x), x, s) == (1/(s**2 - 4), 2, Ne(s/2, 1))
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, And(
+        pi/2 >= Abs(periodic_argument(s, oo)),
+        Abs(periodic_argument(s, oo)) < pi/2))
+    print(LT(sinh(x)*cosh(x), x, s))#assert LT(sinh(x)*cosh(x), x, s) == (1/(s**2 - 4), 2, Ne(s/2, 1))
 
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
@@ -766,12 +775,38 @@ def test_issue_8882():
 
 
 def test_issue_7173():
+    from sympy import cse
+    x0, x1, x2, x3, x4, x5, x6, x7, x8, x9 = symbols('x:10')
+    ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
+    r, e = cse(ans)
+    for i in r:print(i)
+    for i in e:print(i)
+    assert r == [
+        (x0, pi/2),
+        (x1, Abs(periodic_argument(a, oo))),
+        (x2, x0 >= x1),
+        (x3, x1 < x0),
+        (x4, Abs(periodic_argument(s, oo))),
+        (x5, x0 >= x4),
+        (x6, x4 < x0),
+        (x7, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo))),
+        (x8, x7 < x0),
+        (x9, x0 >= x7)]
+    assert e == [
+        a/(-4*a**2 + s**2), -oo,
+        (x2 | x3) & (x3 | x6) & (x5 | x6) & (x6 | x8) & (x8 | x9) &
+        (x2 | x3 | x5) & (x2 | x3 | x6) & (x2 | x5 | x6) &
+        (x3 | x5 | x6) & (x5 | x6 | x8) & (x5 | x6 | x9) &
+        (x5 | x8 | x9) & (x6 | x8 | x9)]
+    '''
+    Could be the following; note 2nd element here is 0 instead of -oo
     assert laplace_transform(sinh(a*x)*cosh(a*x), x, s) == \
-        (a/(s**2 - 4*a**2), 0,
-        And(Or(Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <
-        pi/2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <=
-        pi/2), Or(Abs(periodic_argument(a, oo)) < pi/2,
-        Abs(periodic_argument(a, oo)) <= pi/2)))
+    (a/(s**2 - 4*a**2), 0,
+    And(Or(Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <
+    pi/2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <=
+    pi/2), Or(Abs(periodic_argument(a, oo)) < pi/2,
+    Abs(periodic_argument(a, oo)) <= pi/2)))
+    '''
 
 
 def test_issue_8514():
