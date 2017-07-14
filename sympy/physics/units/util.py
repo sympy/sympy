@@ -25,24 +25,8 @@ def dim_simplify(expr):
     dimension without being a dimension. This is necessary to avoid strange
     behavior when Add(L, L) be transformed into Mul(2, L).
     """
-
-    if isinstance(expr, Dimension):
-        return expr
-
-    if isinstance(expr, Pow):
-        return dim_simplify(expr.base)**dim_simplify(expr.exp)
-    elif isinstance(expr, Function):
-        return dim_simplify(expr.args[0])
-    elif isinstance(expr, Add):
-        if (all(isinstance(arg, Dimension) for arg in expr.args) or
-            all(arg.is_dimensionless for arg in expr.args if isinstance(arg, Dimension))):
-            return reduce(lambda x, y: x.add(y), expr.args)
-        else:
-            raise ValueError("Dimensions cannot be added: %s" % expr)
-    elif isinstance(expr, Mul):
-        return Dimension(Mul(*[dim_simplify(i).name for i in expr.args if isinstance(i, Dimension)]))
-
-    raise ValueError("Cannot be simplifed: %s", expr)
+    _, expr = Quantity._collect_factor_and_dimension(expr)
+    return expr
 
 
 def _get_conversion_matrix_for_expr(expr, target_units):

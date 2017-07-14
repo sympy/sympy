@@ -124,12 +124,20 @@ class Quantity(AtomicExpr):
             for addend in expr.args[1:]:
                 addend_factor, addend_dim = \
                     Quantity._collect_factor_and_dimension(addend)
-                assert dim == addend_dim
+                if dim != addend_dim:
+                    raise TypeError(
+                        'Dimension of "{0}" is {1}, '
+                        'but it should be {2}'.format(
+                            addend, addend_dim.name, dim.name))
                 factor += addend_factor
             return factor, dim
         elif isinstance(expr, Function):
-            fds = [Quantity._collect_factor_and_dimension(arg) for arg in expr.args]
-            return expr.func(*(f[0] for f in fds)), expr.func(*(d[1] for d in fds))
+            fds = [Quantity._collect_factor_and_dimension(
+                arg) for arg in expr.args]
+            return (expr.func(*(f[0] for f in fds)),
+                    expr.func(*(d[1] for d in fds)))
+        elif isinstance(expr, Dimension):
+            return 1, expr
         else:
             return expr, Dimension(1)
 

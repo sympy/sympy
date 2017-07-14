@@ -116,16 +116,17 @@ def test_add_sub():
 
 
 def test_check_unit_consistency():
-    return  # TODO remove
     u = Quantity("u", length, 10)
     v = Quantity("v", length, 5)
     w = Quantity("w", time, 2)
 
-    # TODO: no way of checking unit consistency:
-    #raises(ValueError, lambda: check_unit_consistency(u + w))
-    #raises(ValueError, lambda: check_unit_consistency(u - w))
-    #raises(TypeError, lambda: check_unit_consistency(u + 1))
-    #raises(TypeError, lambda: check_unit_consistency(u - 1))
+    def check_unit_consistency(expr):
+        Quantity._collect_factor_and_dimension(expr)
+
+    raises(ValueError, lambda: check_unit_consistency(u + w))
+    raises(ValueError, lambda: check_unit_consistency(u - w))
+    raises(TypeError, lambda: check_unit_consistency(u + 1))
+    raises(TypeError, lambda: check_unit_consistency(u - 1))
 
 
 def test_mul_div():
