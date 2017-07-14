@@ -1601,9 +1601,9 @@ def RationalFunctionExponents(u, x):
 def RationalFunctionExpand(expr, x):
     # (* u is a polynomial or rational function of x. *)
     # (* RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors. *)
-    u_ = Wild('u')
+    u_ = Wild('u', exclude=[1])
     v_ = Wild('v')
-    n_ = Wild('n', exclude=[x])
+    n_ = Wild('n', exclude=[x, 1, -1])
     pattern = u_*v_**n_
     match = expr.match(pattern)
     if match:
@@ -1620,15 +1620,16 @@ def RationalFunctionExpand(expr, x):
     v = ExpandIntegrand(expr, x)
     t = False
 
-    a_ = Wild('a', exclude=[x])
+    a_ = Wild('a', exclude=[x, 0])
     b_ = Wild('b', exclude=[x])
-    c_ = Wild('c', exclude=[x])
+    c_ = Wild('c', exclude=[x, 0])
     d_ = Wild('d', exclude=[x])
     m_ = Wild('m', exclude=[x])
-    p_ = Wild('p', exclude=[x])
+    p_ = Wild('p', exclude=[x, 1])
 
     pattern = x**m_*(c_ + d_*x)**p_/(a_ + b_*x**n_)
     match = expr.match(pattern)
+
     if match:
         keys = [m_, c_, d_, p_, a_, b_, n_]
         if len(keys) == len(match):
@@ -1877,7 +1878,7 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [u_, m_, a_, b_, n_]
         if len(keys) == len(match):
             u, m, a, b, n = tuple([match[i] for i in keys])
-            if IntegersQ(m, n) & 0 < m < n & OddQ(n/GCD(m, n)) & PosQ(a/b):
+            if IntegersQ(m, n) and 0 < m < n and OddQ(n/GCD(m, n)) and PosQ(a/b):
                 g = GCD(m, n)
                 r = Numerator(Rt(a/b, n/GCD(m, n)))
                 s = Denominator(Rt(a/b, n/GCD(m, n)))
@@ -1885,7 +1886,7 @@ def ExpandIntegrand(expr, x, extra=None):
                     return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g)).doit()
                 else:
                     return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g)).doit()
-            elif IntegersQ(m, n) & 0<m<n:
+            elif IntegersQ(m, n) and 0<m<n:
                 g = GCD(m, n)
                 r = Numerator(Rt(-a/b, n/GCD(m, n)))
                 s = Denominator(Rt(-a/b, n/GCD(m, n)))

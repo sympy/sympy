@@ -1443,3 +1443,8 @@ def test_ConstantFactor():
     assert ConstantFactor(x**(S(1)/3), x) == [1, x**(1/3)]
     assert ConstantFactor(a*x**3, x) == [a, x**3]
     #print(ConstantFactor(a + x, x))
+
+def test_RationalFunctionExpand():
+    assert RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x - x/(2*x**2 + 1) - 2 + 2/(2*x**2 + 1)
+    assert RationalFunctionExpand((a + b*x + c*x**4)*log(x)**3, x) == a*log(x)**3 + b*x*log(x)**3 + c*x**4*log(x)**3
+    assert RationalFunctionExpand(a + b*x + c*x**4, x) == a + b*x + c*x**4
