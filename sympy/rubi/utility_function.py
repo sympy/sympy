@@ -3003,34 +3003,6 @@ def FunctionOfLinear(*args):
         if AtomQ(lst):
             return False
     return lst
-'''
-def ConstantFactor(u, x):
-    # (* ConstantFactor[u,x] returns a 2-element list of the factors of u[x] free of x and the
-    # factors not free of u[x].  Common constant factors of the terms of sums are also collected. *)
-    if FreeQ(u, x):
-        return [u, S(1)]
-    elif AtomQ(u):
-        return [S(1), u]
-    elif PowerQ(u):
-        if FreeQ(u.exp, x):
-            lst = ConstantFactor(u.base, x)
-            if IntegersQ(u.exp):
-                return [lst[0]**u.exp, lst[1]**u.exp]
-            tmp = PositiveFactors(lst[0])
-            if tmp == 1:
-                return [S(1), u]
-            return [tmp**u.exp, (NonpositiveFactors(lst[0])*lst[1])**u.exp]
-    elif ProductQ(u):
-        lst = [ConstantFactor(i, x) for i in u.args]
-        return [Mul(*[Fist[i] for i in lst]), Mul(*[i[1] for i in lst])]
-    elif SumQ(u):
-        lst1 = [ConstantFactor(i, x) for i in u.args]
-        if SameQ(*[i[1] for i in lst1]):
-            return [Add(*[First[i] for i in lst]), lst1[S(0), S(1)]]
-        lst2 = CommonFactors(*[First(i) for i in lst1])
-        return [First(lst2), Add(*[])]
-    return [S(1), u]
-'''
 
 def NormalizeIntegrand(u, x):
     v = NormalizeLeadTermSigns(NormalizeIntegrandAux(u, x))
