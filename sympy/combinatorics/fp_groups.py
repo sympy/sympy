@@ -202,13 +202,16 @@ class FpGroup(DefaultPrinting):
         rels = list(self.generators)
         rels.extend(self.relators)
         if not s:
-            rand = self.free_group.identity
-            i = 0
-            while (rand in rels or rand**-1 in rels or rand.is_identity
-                   or rand in rels) and i<10:
-                rand = self.random_element()
-                i += 1
-            s = [gen, rand] + [g for g in self.generators if g != gen]
+            if len(self.generators) == 2:
+                s = [gen] + [g for g in self.generators if g != gen]
+            else:
+                rand = self.free_group.identity
+                i = 0
+                while ((rand in rels or rand**-1 in rels or rand.is_identity)
+                        and i<10):
+                    rand = self.random_element()
+                    i += 1
+                s = [gen, rand] + [g for g in self.generators if g != gen]
         mid = (len(s)+1)//2
         half1 = s[:mid]
         half2 = s[mid:]
@@ -230,6 +233,7 @@ class FpGroup(DefaultPrinting):
                     continue
         if not C:
             return None, None
+        C.compress()
         return half, C
 
     def most_frequent_generator(self):
@@ -553,11 +557,11 @@ def reidemeister_relators(C):
     # replace order 1 generators by identity element in reidemeister relators
     for i in range(len(rels)):
         w = rels[i]
-        for gen in order_1_gens:
-            w = w.eliminate_word(gen, identity)
+        w = w.eliminate_words(order_1_gens, _all=True)
         rels[i] = w
 
-    C._schreier_generators = [i for i in C._schreier_generators if i not in order_1_gens]
+    C._schreier_generators = [i for i in C._schreier_generators
+                    if not (i in order_1_gens or i**-1 in order_1_gens)]
 
     # Tietze transformation 1 i.e TT_1
     # remove cyclic conjugate elements from relators
@@ -638,7 +642,7 @@ def elimination_technique_1(C):
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
-                chi = (bk*fw).identity_cyclic_reduction()
+                chi = bk*fw
                 redundant_gens[gen] = chi**(-1*k)
                 used_gens.update(chi.contains_generators())
                 redundant_rels.append(rel)
@@ -829,12 +833,11 @@ def reidemeister_presentation(fp_grp, H, C=None):
     g = free_group(syms)[0]
     subs = dict(zip(syms,g.generators))
     C._schreier_generators = g.generators
-    for j in range(len(C._reidemeister_relators)):
-        r = C._reidemeister_relators[j]
+    for j, r in enumerate(C._reidemeister_relators):
         a = r.array_form
         rel = g.identity
-        for i in range(len(a)):
-            rel = rel*subs[a[i][0]]**a[i][1]
+        for sym, p in a:
+            rel = rel*subs[sym]**p
         C._reidemeister_relators[j] = rel
 
     C.schreier_generators = tuple(C._schreier_generators)
