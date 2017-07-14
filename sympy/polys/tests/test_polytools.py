@@ -468,6 +468,8 @@ def test_Poly_free_symbols():
     assert Poly(x**2 + sin(y*z)).free_symbols == {x, y, z}
     assert Poly(x**2 + sin(y*z), x).free_symbols == {x, y, z}
     assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == {x, y, z}
+    assert Poly(1 + x + x**2, x, y, z).free_symbols == {x}
+    assert Poly(x + sin(y), z).free_symbols == {x, y}
 
 
 def test_PurePoly_free_symbols():
@@ -851,9 +853,10 @@ def test_Poly_reorder():
 def test_Poly_ltrim():
     f = Poly(y**2 + y*z**2, x, y, z).ltrim(y)
     assert f.as_expr() == y**2 + y*z**2 and f.gens == (y, z)
+    assert Poly(x*y - x, z, x, y).ltrim(1) == Poly(x*y - x, x, y)
 
     raises(PolynomialError, lambda: Poly(x*y**2 + y**2, x, y).ltrim(y))
-
+    raises(PolynomialError, lambda: Poly(x*y - x, x, y).ltrim(-1))
 
 def test_Poly_has_only_gens():
     assert Poly(x*y + 1, x, y, z).has_only_gens(x, y) is True
