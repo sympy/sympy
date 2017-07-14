@@ -381,9 +381,7 @@ def FractionalPowerQ(u):
 def AtomQ(expr):
     expr = sympify(expr)
     if isinstance(expr, list):
-        for e in expr:
-            if not e.is_Atom:
-                return False
+        return False
     if expr in [None, True, False]: # [None, True, False] are atoms in mathematica
         return True
     elif isinstance(expr, list):
@@ -2951,7 +2949,7 @@ def FunctionOfLinearSubst(u, a, b, x):
     if FreeQ(u, x):
         return u
     elif LinearQ(u, x):
-        tmp = Coefficient(u, x, S(1))
+        tmp = Coefficient(u, x, 1)
         if tmp == b:
             tmp = S(1)
         else:
@@ -2972,7 +2970,7 @@ def FunctionOfLinear(*args):
     if len(args) == 2:
         u, x = args
         lst = FunctionOfLinear(u, False, False, x, False)
-        if AtomQ(lst) or FalseQ(lst[0]) or lst[0] == 0 and lst[1] == 1:
+        if AtomQ(lst) or FalseQ(lst[0]) or (lst[0] == 0 and lst[1] == 1):
             return False
         return [FunctionOfLinearSubst(u, lst[0], lst[1], x), lst[0], lst[1]]
     u, a, b, x, flag = args
@@ -2990,13 +2988,14 @@ def FunctionOfLinear(*args):
             return [a/lst[1], lst[0]]
         return [0, 1]
     elif PowerQ(u) and FreeQ(u.args[0], x):
-        return FunctionOfLinear(log(u.bse*u.exp, a, b, x, False))
+        return FunctionOfLinear(log(u.base)*u.exp, a, b, x, False)
     lst = MonomialFactor(u, x)
     if ProductQ(u) and NonzeroQ(lst[0]):
         if False and IntegerQ(lst[0]) and lst[0] != -1 and FreeQ(lst[1], x):
             if RationalQ(LeadFactor(lst[1])) and LeadFactor(lst[1]) < 0:
                 return FunctionOfLinear(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x, False)
             return FunctionOfLinear(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x, False)
+        return False
     lst = [a, b]
     for i in u.args:
         lst = FunctionOfLinear(i, lst[0], lst[1], x, SumQ(u))

@@ -1464,3 +1464,9 @@ def test_CommonFactors():
     assert CommonFactors([x*S(2), x**S(3)*S(2), sin(x)*x*S(2)]) == [2, x, x**3, x*sin(x)]
     assert CommonFactors([x, x**S(3), sin(x)*x]) == [1, x, x**3, x*sin(x)]
     assert CommonFactors([S(2), S(4), S(6)]) == [2, 1, 2, 3]
+
+def test_FunctionOfLinear():
+    f = sin(a + b*x)
+    assert FunctionOfLinear(f, x) == [sin(x), a, b]
+    assert FunctionOfLinear(a + b*x, x) == [x, a, b]
+    assert not FunctionOfLinear(a, x)
