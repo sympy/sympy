@@ -888,8 +888,12 @@ def derivative_rule(integral):
         if integral.symbol in diff_variables:
             return DerivativeRule(*integral)
         else:
-            return ParameterDerivativeRule(integral_steps(undifferentiated_function, integral.symbol),
-                                           diff_variables, integrand, integral.symbol)
+            substep = integral_steps(undifferentiated_function,
+                                     integral.symbol)
+            return ParameterDerivativeRule(substep,
+                                           diff_variables,
+                                           integrand,
+                                           integral.symbol)
     else:
         return ConstantRule(integral.integrand, *integral)
 
@@ -1163,12 +1167,9 @@ def eval_derivativerule(integrand, symbol):
     if len(integrand.args) == 2:
         return integrand.args[0]
     else:
-        # we are removing the last occurence of symbol
-        # from the list of differentiating variables
-        diff_vars = tuple(reversed(integrand.args[1:]))
-        symbol_index = diff_vars.index(symbol)
-        diff_vars_symbol_removed = diff_vars[:symbol_index] + diff_vars[symbol_index + 1:]
-        return sympy.Derivative(integrand.args[0], *(reversed(diff_vars_symbol_removed)))
+        new_diff_vars = list(integrand.args[1:])
+        new_diff_vars.remove(symbol)
+        return sympy.Derivative(integrand.args[0], *(new_diff_vars))
 
 @evaluates(ParameterDerivativeRule)
 def eval_paramderivrule(substep, diff_vars, integrand, symbol):

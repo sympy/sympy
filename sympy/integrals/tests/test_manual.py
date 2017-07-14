@@ -184,7 +184,7 @@ def test_manualintegrate_derivative():
         pi * ((x**2 + 2*x + 3))
     assert manualintegrate(Derivative(x**2 + 2*x + 3, y), x) == \
         Derivative(x**3/3 + x**2 + 3*x, y)
-    assert manualintegrate(Derivative(sin(x), x, x, y, x), x) == \
+    assert manualintegrate(Derivative(sin(x), x, x, x, y), x) == \
         Derivative(sin(x), x, x, y)
 
 
