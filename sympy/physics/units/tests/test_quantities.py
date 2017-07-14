@@ -9,7 +9,7 @@ from sympy.physics.units import convert_to, find_unit, amount_of_substance, \
 from sympy.physics.units.definitions import amu, au, centimeter, coulomb, day, \
     foot, grams, hour, inch, kg, km, m, meter, mile, millimeter, minute, mole, \
     quart, s, second, speed_of_light, steradian
-from sympy.physics.units.dimensions import charge, length, time
+from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
 from sympy.utilities.pytest import raises
@@ -241,6 +241,7 @@ def test_sum_of_incompatible_quantities():
 
 
 def test_factor_and_dimension():
+    assert (3000, Dimension(1)) == Quantity._collect_factor_and_dimension(3000)
     assert (1001, length) == Quantity._collect_factor_and_dimension(meter + km)
     assert (2, length/time) == Quantity._collect_factor_and_dimension(
         meter/second + 36*km/(10*hour))
@@ -262,4 +263,8 @@ def test_factor_and_dimension():
         Quantity._collect_factor_and_dimension(expr)
 
     expr = v_w1 - Abs(v_w1)
-    assert (0, 1) == Quantity._collect_factor_and_dimension(expr)
+    assert (0, Dimension(1)) == Quantity._collect_factor_and_dimension(expr)
+
+    expr = 2.5*second/meter*v_w1 - 3000
+    assert (-2996.25000000000, Dimension(1)) == \
+        Quantity._collect_factor_and_dimension(expr)

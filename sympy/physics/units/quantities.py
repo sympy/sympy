@@ -102,11 +102,12 @@ class Quantity(AtomicExpr):
 
     @staticmethod
     def _collect_factor_and_dimension(expr):
+        """Return tuple with factor expression and dimension expression."""
         if isinstance(expr, Quantity):
             return expr.scale_factor, expr.dimension
         elif isinstance(expr, Mul):
             factor = 1
-            dimension = 1
+            dimension = Dimension(1)
             for arg in expr.args:
                 arg_factor, arg_dim = Quantity._collect_factor_and_dimension(arg)
                 factor *= arg_factor
@@ -127,7 +128,7 @@ class Quantity(AtomicExpr):
             fds = [Quantity._collect_factor_and_dimension(arg) for arg in expr.args]
             return expr.func(*(f[0] for f in fds)), expr.func(*(d[1] for d in fds))
         else:
-            return expr, 1
+            return expr, Dimension(1)
 
     def convert_to(self, other):
         """
