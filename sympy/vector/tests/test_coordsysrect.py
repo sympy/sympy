@@ -390,3 +390,12 @@ def test_rotation_trans_equations():
     assert a._rotation_trans_equations() == (a.x, a.y, a.z)
     b = a.orient_new_axis('b', 0, -a.k)
     assert b._rotation_trans_equations() == (b.x, b.y, b.z)
+
+
+def test_transformation_composition():
+    a = CoordSys3D('a')
+    assert a._transformation_composition() == (a.x, a.y, a.z)
+    from sympy import symbols
+    q0 = symbols('q0')
+    b = a.orient_new_axis('b', q0, a.k)
+    assert b._transformation_composition() == (sin(q0)*b.y + cos(q0)*b.x, -sin(q0)*b.x + cos(q0)*b.y, b.z)
