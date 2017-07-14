@@ -66,6 +66,7 @@ matrix:
             - texlive-xetex
             - texlive-fonts-recommended
             - texlive-latex-extra
+            - latexmk
             - lmodern
             - librsvg2-bin
             - imagemagick
