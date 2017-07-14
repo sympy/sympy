@@ -46,7 +46,7 @@ from sympy.integrals.integrals import Integral
 from sympy.utilities.iterables import has_dups
 from sympy.utilities.misc import filldedent
 
-from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+from sympy.solvers.deutils import _find_func, _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
 from sympy.simplify.radsimp import collect
 
@@ -162,16 +162,21 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     Eq(f(x, y), F(3*x - 2*y)*exp(-2*x/13 - 3*y/13))
 
     """
-
     given_hint = hint  # hint given by the user.
 
     if not solvefun:
         solvefun = Function('F')
 
+    # preprocess the equation and find func if not given
+    if isinstance(eq, Equality):
+        eq = eq.lhs - eq.rhs
+    if func is None:
+        func = _find_func(eq)
+    eq = _preprocess(eq, func)
+
     # See the docstring of _desolve for more details.
-    hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, type='pde', **kwargs)
-    eq = hints.pop('eq', False)
+    hints = _desolve(eq, func, hint=hint, simplify=True,
+        classifier=classify_pde, **kwargs)
     all_ = hints.pop('all', False)
 
     if all_:
@@ -184,7 +189,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
             'default': gethints['default']})
         for hint in hints:
             try:
-                rv = _helper_simplify(eq, hint, hints[hint]['func'],
+                rv = _helper_simplify(eq, hint, func,
                     hints[hint]['order'], hints[hint][hint], solvefun)
             except NotImplementedError as detail:
                 failed_hints[hint] = detail
@@ -194,8 +199,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return pdedict
 
     else:
-        return _helper_simplify(eq, hints['hint'],
-            hints['func'], hints['order'], hints[hints['hint']], solvefun)
+        return _helper_simplify(eq, hints['hint'], func,
+            hints['order'], hints[hints['hint']], solvefun)
 
 
 def _helper_simplify(eq, hint, func, order, match, solvefun):
@@ -275,15 +280,16 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         raise NotImplementedError("Right now only partial "
             "differential equations of two variables are supported")
 
-    if prep or func is None:
-        prep, func_ = _preprocess(eq, func)
-        if func is None:
-            func = func_
-
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return classify_pde(eq.lhs - eq.rhs, func)
         eq = eq.lhs
+
+    if func is None:
+        func = _find_func(eq)
+        prep = True
+    if prep:
+        eq = _preprocess(eq, func)
 
     f = func.func
     x = func.args[0]
@@ -389,6 +395,9 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+classify_pde.kind = 'PDE'
+classify_pde.solve_func = 'pdsolve'
+classify_pde.allhints = allhints
 
 
 def checkpdesol(pde, sol, func=None, solve_for_func=True):
@@ -439,7 +448,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     # If no function is given, try finding the function present.
     if func is None:
         try:
-            _, func = _preprocess(pde.lhs)
+            func = _find_func(pde.lhs)
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]

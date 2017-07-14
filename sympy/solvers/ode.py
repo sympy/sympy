@@ -266,7 +266,7 @@ from sympy.solvers import solve
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+from sympy.solvers.deutils import _find_func, _preprocess, ode_order, _desolve
 
 #: This is a list of hints in the order that they should be preferred by
 #: :py:meth:`~sympy.solvers.ode.classify_ode`. In general, hints earlier in the
@@ -619,12 +619,18 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     else:
         given_hint = hint  # hint given by the user
 
+        # preprocess the equation and find func if not given
+        if isinstance(eq, Equality):
+            eq = eq.lhs - eq.rhs
+        if func is None:
+            func = _find_func(eq)
+        eq = _preprocess(eq, func)
+
         # See the docstring of _desolve for more details.
-        hints = _desolve(eq, func=func,
-            hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
+        hints = _desolve(eq, func, classifier=classify_ode,
+            hint=hint, simplify=True, xi=xi, eta=eta, ics=ics,
             x0=x0, n=n, **kwargs)
 
-        eq = hints.pop('eq', eq)
         all_ = hints.pop('all', False)
         if all_:
             retdict = {}
@@ -633,12 +639,11 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             orderedhints = gethints['ordered_hints']
             for hint in hints:
                 try:
-                    rv = _helper_simplify(eq, hint, hints[hint], simplify)
+                    rv = _helper_simplify(eq, func, hint, hints[hint], simplify)
                 except NotImplementedError as detail:
                     failed_hints[hint] = detail
                 else:
                     retdict[hint] = rv
-            func = hints[hint]['func']
 
             retdict['best'] = min(list(retdict.values()), key=lambda x:
                 ode_sol_simplicity(x, func, trysolving=not simplify))
@@ -656,9 +661,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
-            return _helper_simplify(eq, hint, hints, simplify)
+            return _helper_simplify(eq, func, hint, hints, simplify)
 
-def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
+def _helper_simplify(eq, func, hint, match, simplify=True, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
@@ -670,7 +675,6 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
         solvefunc = globals()['ode_' + hint]
-    func = r['func']
     order = r['order']
     match = r[hint]
 
@@ -816,10 +820,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
-    if prep or func is None:
-        eq, func_ = _preprocess(eq, func)
-        if func is None:
-            func = func_
+    if func is None:
+        func = _find_func(eq)
+        prep = True
+    if prep:
+        eq = _preprocess(eq, func)
     x = func.args[0]
     f = func.func
     y = Dummy('y')
@@ -1279,6 +1284,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+classify_ode.kind = 'ODE'
+classify_ode.solve_func = 'dsolve'
+classify_ode.allhints = allhints
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
@@ -2218,7 +2226,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         ode = Eq(ode, 0)
     if func is None:
         try:
-            _, func = _preprocess(ode.lhs)
+            func = _find_func(ode.lhs)
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
@@ -5202,7 +5210,8 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
     if not func:
-        eq, func = _preprocess(eq)
+        func = _find_func(eq)
+        eq = _preprocess(eq, func)
     variables = func.args
     if len(variables) != 1:
         raise ValueError("ODE's have only one independent variable")
@@ -5535,7 +5544,8 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
     if not func:
-        eq, func = _preprocess(eq)
+        func = _find_func(eq)
+        eq = _preprocess(eq, func)
     variables = func.args
     if len(variables) != 1:
         raise ValueError("ODE's have only one independent variable")
