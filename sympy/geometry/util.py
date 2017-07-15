@@ -14,7 +14,7 @@ from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve
 from sympy.core.compatibility import (
-    is_sequence, range, string_types)
+    is_sequence, range, string_types, ordered)
 from .point import Point, Point2D
 
 
@@ -623,7 +623,9 @@ def idiff(eq, y, x, n=1):
         derivs[dydx] = yp
         eq = dydx - yp
         dydx = dydx.diff(x)
-def intersection(*entities, **kwargs):
+
+    
+    def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
@@ -681,28 +683,13 @@ def intersection(*entities, **kwargs):
     """
     from .entity import GeometryEntity
     from .point import Point
+
     pairwise = kwargs.pop('pairwise', False)
+
     if len(entities) <= 1:
         return []
-    if not pairwise:
 
-        # entities may be an immutable tuple
-        entities = list(entities)
-        for i, e in enumerate(entities):
-            if not isinstance(e, GeometryEntity):
-                try:
-                    entities[i] = Point(e)
-                except NotImplementedError:
-                    raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
-
-        res = entities[0].intersection(entities[1])
-        for entity in entities[2:]:
-            newres = []
-            for x in res:
-                newres.extend(x.intersection(entity))
-            res = newres
-        return res
-    ans = []
+    # entities may be an immutable tuple
     entities = list(entities)
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
@@ -710,9 +697,20 @@ def intersection(*entities, **kwargs):
                 entities[i] = Point(e)
             except NotImplementedError:
                 raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+
+    if not pairwise:
+        # find the intersection common for all objects
+        res = entities[0].intersection(entities[1])
+        for entity in entities[2:]:
+            newres = []
+            for x in res:
+                newres.extend(x.intersection(entity))
+            res = newres
+        return res
+ 
+    # find all pairwise intersections
+    ans = []
     for j in range(0, len(entities)):
         for k in range(j + 1, len(entities)):
             ans.extend(intersection(entities[j], entities[k]))
-    ans_set = set(ans)
-    ans = list(ans_set)
-    return ans
+    return list(ordered(set(ans)))
