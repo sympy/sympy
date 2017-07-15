@@ -623,7 +623,7 @@ def idiff(eq, y, x, n=1):
         derivs[dydx] = yp
         eq = dydx - yp
         dydx = dydx.diff(x)
- def intersection(*entities, **kwargs):
+def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
