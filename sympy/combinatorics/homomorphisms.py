@@ -79,13 +79,14 @@ class GroupHomomorphism(object):
     def _compute_kernel(self):
         from sympy import S
         G = self.domain
-        if G.order() == S.Infinity:
+        G_order = G.order()
+        if G_order == S.Infinity:
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
         gens = []
         K = FpSubgroup(G, gens)
         i = self.image().order()
-        while K.order()*i != G.order():
+        while K.order()*i != G_order:
             r = G.random_element()
             k = r*self.invert(self(r))
             if not k in K:
@@ -209,9 +210,10 @@ def _check_homomorphism(domain, images, identity):
             return identity
         else:
             w = identity
+            r_arr = r.array_form
             i = 0
             while i < len(r):
-                power = r.array_form[i][1]
+                power = r_arr[i][1]
                 if r[i] in images:
                     w = w*images[r[i]]**power
                 else:

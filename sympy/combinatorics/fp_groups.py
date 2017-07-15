@@ -297,26 +297,57 @@ class FpSubgroup(DefaultPrinting):
         super(FpSubgroup,self).__init__()
         self.parent = G
         self.generators = list(set([g for g in gens if g != G.identity]))
+        self._min_words = None #for use in __contains__
         self.C = None
 
     def __contains__(self, g):
-        gens = [s for s in g.contains_generators()]
-        if any([s not in self.generators for s in gens]):
+        if self._min_words is None:
+            gens = self.generators[:]
+            gens.extend([e**-1 for e in gens])
+            for i, w1 in enumerate(gens):
+                for w2 in gens[i+1:]:
+                    if w2**-1 == w1:
+                        continue
+                    if w2[len(w2)-1]**-1 == w1[0] and w2*w1 not in gens:
+                        gens.append(w2*w1)
+                    if w2[0]**-1 == w1[len(w1)-1] and w1*w2 not in gens:
+                        gens.append(w1*w2)
+            self._min_words = gens
+ 
+        min_words = self._min_words
+        known = {} #to keep track of words
+
+        def _word_break(w):
+            if len(w) == 0:
+                return True
+            i = 0
+            while i < len(w):
+                i += 1
+                prefix = w.subword(0, i)
+                if prefix not in min_words:
+                    continue
+                rest = w.subword(i, len(w))
+                if rest not in known:
+                    known[rest] = _word_break(rest)
+                if known[rest]:
+                    return True
             return False
-        elif isinstance(self.parent, FreeGroup):
+
+        if _word_break(g):
             return True
-        if self.C is None:
-            C = self.parent.coset_enumeration(self.generators)
-            self.C = C
-        i = 0
-        C = self.C
-        for j in range(len(g)):
-            i = C.table[i][C.A_dict[g[j]]]
-        return i == 0
+        elif isinstance(self.parent, FreeGroup):
+            return False
+        else:
+            if self.C is None:
+                C = self.parent.coset_enumeration(self.generators)
+                self.C = C
+            i = 0
+            C = self.C
+            for j in range(len(g)):
+                i = C.table[i][C.A_dict[g[j]]]
+            return i == 0
 
     def order(self):
-        # This is valid because `len(self.C.table)` (the index of the subgroup)
-        # will always be finite - otherwise coset enumeration doesn't terminate
         if not self.generators:
             return 1
         if isinstance(self.parent, FreeGroup):
@@ -324,6 +355,8 @@ class FpSubgroup(DefaultPrinting):
         if self.C is None:
             C = self.parent.coset_enumeration(self.generators)
             self.C = C
+        # This is valid because `len(self.C.table)` (the index of the subgroup)
+        # will always be finite - otherwise coset enumeration doesn't terminate
         return self.parent.order()/len(self.C.table)
 
     def to_FpGroup(self):

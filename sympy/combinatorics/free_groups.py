@@ -135,6 +135,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
+    relators = tuple()
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))
@@ -150,7 +151,6 @@ class FreeGroup(DefaultPrinting):
             obj.dtype = type("FreeGroupElement", (FreeGroupElement,), {"group": obj})
             obj.symbols = symbols
             obj.generators = obj._generators()
-            obj.relators = tuple()
             obj._gens_set = set(obj.generators)
             for symbol, generator in zip(obj.symbols, obj.generators):
                 if isinstance(symbol, Symbol):
