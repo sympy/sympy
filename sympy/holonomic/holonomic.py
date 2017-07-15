@@ -391,7 +391,7 @@ class HolonomicFunction(object):
     format:
     :math:`{s0: [C_0, C_1, ...], s1: [C^1_0, C^1_1, ...], ...}`
     where s0, s1, ... are the roots of indicial equation and vectors
-    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intial
+    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding initial
     terms of the associated power series. See Examples below.
 
     Examples
