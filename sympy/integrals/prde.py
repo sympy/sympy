@@ -971,9 +971,9 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
             return [zero]*(n - len(rep)) + rep
 
         # replace each row of Kmat with n rows of Qmat
-        Qmat = [zip(*[pad(a.rep) for a in row]) for row in Kmat]
+        Qmat = Matrix([zip(*[pad(a.rep) for a in row]) for row in Kmat])
     else:
-        Qmat = Kmat
+        Qmat = Matrix(Kmat)
 
 
 def is_deriv_k(fa, fd, DE):
