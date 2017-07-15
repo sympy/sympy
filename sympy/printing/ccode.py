@@ -129,7 +129,6 @@ class C89CodePrinter(CodePrinter):
     def __init__(self, settings={}):
         super(C89CodePrinter, self).__init__(settings)
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
-        self._dereference = set(settings.get('dereference', []))
 
     def _rate_index_position(self, p):
         return p*5
@@ -249,7 +248,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Symbol(self, expr):
         name = super(C89CodePrinter, self)._print_Symbol(expr)
-        if expr in self._dereference:
+        if expr in self._settings['dereference']:
             return '(*{0})'.format(name)
         else:
             return name

@@ -5604,27 +5604,30 @@ def gff_list(f, *gens, **args):
     """
     Compute a list of greatest factorial factors of ``f``.
 
+    Note that the input to ff() and rf() should be Poly instances to use the
+    definitions here.
+
     Examples
     ========
 
-    >>> from sympy import gff_list, ff
+    >>> from sympy import gff_list, ff, Poly
     >>> from sympy.abc import x
 
-    >>> f = x**5 + 2*x**4 - x**3 - 2*x**2
+    >>> f = Poly(x**5 + 2*x**4 - x**3 - 2*x**2, x)
 
     >>> gff_list(f)
-    [(x, 1), (x + 2, 4)]
+    [(Poly(x, x, domain='ZZ'), 1), (Poly(x + 2, x, domain='ZZ'), 4)]
 
-    >>> (ff(x, 1)*ff(x + 2, 4)).expand() == f
+    >>> (ff(Poly(x), 1)*ff(Poly(x + 2), 4)).expand() == f
     True
 
-    >>> f = x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
-        1401*x**6 + 1090*x**5 + 2715*x**4 - 6720*x**3 - 1092*x**2 + 5040*x
+    >>> f = Poly(x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
+        1401*x**6 + 1090*x**5 + 2715*x**4 - 6720*x**3 - 1092*x**2 + 5040*x, x)
 
     >>> gff_list(f)
-    [(x**3 + 7, 2), (x**2 + 5*x, 3)]
+    [(Poly(x**3 + 7, x, domain='ZZ'), 2), (Poly(x**2 + 5*x, x, domain='ZZ'), 3)]
 
-    >>> ff(x**3 + 7, 2)*ff(x**2 + 5*x, 3) == f
+    >>> ff(Poly(x**3 + 7, x), 2)*ff(Poly(x**2 + 5*x, x), 3) == f
     True
 
     """

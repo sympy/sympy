@@ -536,7 +536,7 @@ A  \
 """\
                     /d            \\\n\
 DifferentialOperator|--(f(x)),f(x)|\n\
-                    \dx           /\
+                    \\dx           /\
 """
     ucode_str = \
 u("""\
@@ -809,7 +809,7 @@ def test_big_expr():
                  |/                                   +\\         |                                 \n\
     2  / +    +\\ <|                    /d            \\ |   +    +>                                 \n\
 /J \\ x \\A  + B /*||DifferentialOperator|--(f(x)),f(x)| | ,A  + B |*(<1,0| + <1,1|)*(|0,0> + |1,-1>)\n\
-\\ z/             \\\\                    \dx           / /         /                                 \
+\\ z/             \\\\                    \\dx           / /         /                                 \
 """
     ucode_str = \
 u("""\
@@ -867,7 +867,7 @@ u("""\
     ascii_str = \
 """\
 // 1    2\\    x2\\   / 2    \\\n\
-\\\\C  x C / + F  / x \L  + H/\
+\\\\C  x C / + F  / x \\L  + H/\
 """
     ucode_str = \
 u("""\

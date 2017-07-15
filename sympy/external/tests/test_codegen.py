@@ -227,8 +227,8 @@ def fortranize_double_constants(code_string):
     Replaces every literal float with literal doubles
     """
     import re
-    pattern_exp = re.compile('\d+(\.)?\d*[eE]-?\d+')
-    pattern_float = re.compile('\d+\.\d*(?!\d*d)')
+    pattern_exp = re.compile(r'\d+(\.)?\d*[eE]-?\d+')
+    pattern_float = re.compile(r'\d+\.\d*(?!\d*d)')
 
     def subs_exp(matchobj):
         return re.sub('[eE]', 'd', matchobj.group(0))

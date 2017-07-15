@@ -417,7 +417,7 @@ as_finite_diff = deprecated(
 def differentiate_finite(expr, *symbols,
                          # points=1, x0=None, wrt=None, evaluate=True, #Py2:
                          **kwargs):
-    """ Differentiate expr and replace Derivatives with finite differences.
+    r""" Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
     ==========
@@ -457,8 +457,7 @@ def differentiate_finite(expr, *symbols,
     >>> differentiate_finite(f(x) + sin(x), x, 2, evaluate=True)
     -2*f(x) + f(x - 1) + f(x + 1) - sin(x)
     >>> differentiate_finite(f(x, y), x, y)
-    f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + \
-f(x + 1/2, y + 1/2)
+    f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + f(x + 1/2, y + 1/2)
 
     """
     # Key-word only arguments only available in Python 3
