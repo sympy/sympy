@@ -1295,9 +1295,6 @@ def integrate(*args, **kwargs):
     conds = kwargs.pop('conds', 'piecewise')
     risch = kwargs.pop('risch', None)
     manual = kwargs.pop('manual', None)
-
-
-
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
