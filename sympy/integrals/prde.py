@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Algorithms for solving Parametric Risch Differential Equations.
 
@@ -959,7 +960,13 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     # each monomial corresponds to a row in the matrix
     # of entries in 'K' giving the relations.
     # The elements of F correspond to the columns
+    # 'Kmat' is a "matrix" (pythonically a nested list) with
+    # entries in field 'K'
     Kmat = [[num._get_coeff(m) for num in nums] for m in monoms]
+
+    # In order to get only rational solutions the matrix with
+    # entries in field 'K' must be replaced with another one with
+    # rational entries (i.e field Q).
 
     # K ≠ ZZ(...) and K ≠ QQ
     if K.is_Algebraic:
@@ -968,10 +975,16 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
         zero = QQ.zero
 
         def pad(rep):
+            """
+            Fill the missing part with zeros.
+            """
             return [zero]*(n - len(rep)) + rep
 
-        # replace each row of Kmat with n rows of Qmat
-        Qmat = Matrix([zip(*[pad(a.rep) for a in row]) for row in Kmat])
+        # replace each row of 'Kmat' with n rows of 'Qmat'
+        Qmat = []
+        for row in Kmat:
+            Qmat.extend(zip(*[pad(a.rep) for a in row]))
+        Qmat = Matrix(Qmat)
     else:
         Qmat = Matrix(Kmat)
 
