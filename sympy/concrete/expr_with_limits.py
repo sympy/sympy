@@ -361,8 +361,6 @@ class AddWithLimits(ExprWithLimits):
                 cls(rhs, *symbols, **assumptions))
         if isinstance(function, Piecewise):
             function = piecewise_fold(function)
-        else:
-            print('yes')
 
         if function is S.NaN:
             return S.NaN
