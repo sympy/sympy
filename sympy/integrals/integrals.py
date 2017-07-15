@@ -402,6 +402,9 @@ class Integral(AddWithLimits):
         if isinstance(function, MatrixBase):
             return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
 
+        if isinstance(function, FormalPowerSeries):
+            return function.integrate(self.limits)
+
         # There is no trivial answer, so continue
 
         undone_limits = []
@@ -1289,12 +1292,7 @@ def integrate(*args, **kwargs):
     risch = kwargs.pop('risch', None)
     manual = kwargs.pop('manual', None)
 
-    if isinstance(args[0], FormalPowerSeries):
-        return args[0].integrate(*args[1:])
 
-    if not isinstance(args[0], FormalPowerSeries):
-        if any(map(lambda x: isinstance(x, FormalPowerSeries), args[0].args)):
-            raise NotImplementedError()
 
     integral = Integral(*args, **kwargs)
 

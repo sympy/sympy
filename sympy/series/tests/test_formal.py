@@ -495,5 +495,3 @@ def test_fps__operations():
     fi = f2.integrate(x)
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)
-
-    raises(NotImplementedError, lambda: integrate(x*fi, x))
