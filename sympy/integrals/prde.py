@@ -945,6 +945,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
 
     # find a field containing all the fractions
     FF, gens = sfield(F, extension=True)
+    K = FF.domain
 
     denom = gens[0].denom
     for gen in gens[1: ]:
@@ -958,7 +959,21 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     # each monomial corresponds to a row in the matrix
     # of entries in 'K' giving the relations.
     # The elements of F correspond to the columns
-    t = [[num._get_coeff(m) for num in nums] for m in monoms]
+    Kmat = [[num._get_coeff(m) for num in nums] for m in monoms]
+
+    # K ≠ ZZ(...) and K ≠ QQ
+    if K.is_Algebraic:
+        # 'Kmat' is not the same as 'Qmat'
+        n = K.mod.degree()
+        zero = QQ.zero
+
+        def pad(rep):
+            return [zero]*(n - len(rep)) + rep
+
+        # replace each row of Kmat with n rows of Qmat
+        Qmat = [zip(*[pad(a.rep) for a in row]) for row in Kmat]
+    else:
+        Qmat = Kmat
 
 
 def is_deriv_k(fa, fd, DE):
