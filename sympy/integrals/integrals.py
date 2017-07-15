@@ -372,6 +372,7 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
+        print(self.limits)
         if not hints.get('integrals', True):
             return self
 
@@ -403,7 +404,10 @@ class Integral(AddWithLimits):
             return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
 
         if isinstance(function, FormalPowerSeries):
-            return function.integrate(self.limits)
+            if any(len(xab) > 1 for xab in self.limits):
+                return function.integrate(self.limits[0])
+            else:
+                return function.integrate(self.limits[0][0])
 
         # There is no trivial answer, so continue
 
