@@ -23,6 +23,7 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.functions.elementary.exponential import log
 from sympy.series import limit
 from sympy.series.order import Order
+from sympy.series.formal import FormalPowerSeries
 
 
 class Integral(AddWithLimits):
@@ -752,7 +753,6 @@ class Integral(AddWithLimits):
             except (ValueError, PolynomialError):
                 pass
 
-
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
         # It is important to make this check first, otherwise the other code
@@ -1288,6 +1288,14 @@ def integrate(*args, **kwargs):
     conds = kwargs.pop('conds', 'piecewise')
     risch = kwargs.pop('risch', None)
     manual = kwargs.pop('manual', None)
+
+    if isinstance(args[0], FormalPowerSeries):
+        return args[0].integrate(*args[1:])
+
+    if not isinstance(args[0], FormalPowerSeries):
+        if any(map(lambda x: isinstance(x, FormalPowerSeries), args[0].args)):
+            raise NotImplementedError()
+
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
