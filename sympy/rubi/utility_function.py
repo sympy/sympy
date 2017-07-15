@@ -1412,11 +1412,11 @@ def Expon(expr, form, h=None):
 
 def MergeMonomials(expr, x):
     u_ = Wild('u')
-    p_ = Wild('p', exclude=[x])
+    p_ = Wild('p', exclude=[x, 1, 0])
     a_ = Wild('a', exclude=[x])
-    b_ = Wild('b', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
     c_ = Wild('c', exclude=[x])
-    d_ = Wild('d', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
     n_ = Wild('n', exclude=[x])
     m_ = Wild('m', exclude=[x])
 
@@ -4087,3 +4087,100 @@ def MostMainFactorPosition(lst):
             factor = lst[i]
             num = i
     return num
+
+SbaseS, SexponS = None, None
+SexponFlagS = False
+def FunctionOfExponentialQ(u, x):
+    # (* FunctionOfExponentialQ[u,x] returns True iff u is a function of F^v where F is a constant and v is linear in x, *)
+    # (* and such an exponential explicitly occurs in u (i.e. not just implicitly in hyperbolic functions). *)
+    SbaseS, SexponS = None, None
+    SexponFlagS = False
+    return FunctionOfExponentialTest(u, x) and SexponFlagS
+
+def FunctionOfExponential(u, x):
+    # (* u is a function of F^v where v is linear in x.  FunctionOfExponential[u,x] returns F^v. *)
+    SbaseS, SexponS = None, None
+    SexponFlagS = False
+    FunctionOfExponentialTest(u, x)
+    return SbaseS**SexponS
+
+def FunctionOfExponentialFunction(u, x):
+    # (* u is a function of F^v where v is linear in x.  FunctionOfExponentialFunction[u,x] returns u with F^v replaced by x. *)
+    SbaseS, SexponS = None, None
+    SexponFlagS = False
+    FunctionOfExponentialTest(u, x)
+    return SimplifyIntegrand(FunctionOfExponentialFunctionAux(u, x), x)
+
+def FunctionOfExponentialFunctionAux(u, x):
+    # (* u is a function of F^v where v is linear in x, and the fluid variables $base$=F and $expon$=v. *)
+    # (* FunctionOfExponentialFunctionAux[u,x] returns u with F^v replaced by x. *)
+    if AtomQ(u):
+        return u
+    elif PowerQ(u) and FreeQ(u.args[0], x) and LinearQ(u.args[1], x):
+        if ZeroQ(Coefficient(SexponS, x, 0)):
+            return u.base**Coefficient(u.exp, x, 0)*x**FullSimplify(log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
+        return x**FullSimplify(log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
+    elif HyperbolicQ(u) and LinearQ(u.args[0], x):
+        tmp = x**FullSimplify(Coefficient(u.args[0], x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
+        if SinhQ(u):
+            return tmp/2 - 1/(2*tmp)
+        elif CoshQ(u):
+            return tmp/2 + 1/(2*tmp)
+        elif TanhQ(u):
+            return (tmp - 1/tmp)/(tmp + 1/tmp)
+        elif CothQ(u):
+            return (tmp + 1/tmp)/(tmp - 1/tmp)
+        elif SechQ(u):
+            return 2/(tmp + 1/tmp)
+        return 2/(tmp - 1/tmp)
+    elif PowerQ(u) and FreeQ(u.args[0], x) and SumQ(u.args[1]):
+        return FunctionOfExponentialFunctionAux(u.base**First(u.exp), x)*FunctionOfExponentialFunctionAux(u.base*Rest(u.exp), x)
+    return u.func(FunctionOfExponentialFunctionAux(i, x) for i in u.args)
+
+def FunctionOfExponentialTest(u, x):
+    # (* FunctionOfExponentialTest[u,x] returns True iff u is a function of F^v where F is a constant and v is linear in x. *)
+    # (* Before it is called, the fluid variables $base$ and $expon$ should be set to Null and $exponFlag$ to False. *)
+    # (* If u is a function of F^v, $base$ and $expon$ are set to F and v, respectively. *)
+    # (* If an explicit exponential occurs in u, $exponFlag$ is set to True. *)
+    if FreeQ(u, x):
+        return True
+    elif u == x or CalculusQ(u):
+        return False
+    elif PowerQ(u) and FreeQ(u.args[0], x) and LinearQ(u.args[1], x):
+        SexponFlagS = True
+        return FunctionOfExponentialTestAux(u.base, u.exp, x)
+    elif HyperbolicQ(u) and LinearQ(u.args[0], x):
+        return FunctionOfExponentialTestAux(E, u.args[0], x)
+    elif PowerQ(u) and FreeQ(u.args[0], x) and SumQ(u.args[1]):
+        return FunctionOfExponentialTest(u.base**First(u.exp), x) and FunctionOfExponentialTest(u.base**Rest(u.exp), x)
+    return all(FunctionOfExponentialTest(i, x) for i in u.args)
+
+def FunctionOfExponentialTestAux(base, expon, x):
+    if SbaseS == None:
+        SbaseS = base
+        SexponS = expon
+        return True
+    tmp = FullSimplify(Log(base)*Coefficient(expon, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
+    if Not(RationalQ(tmp)):
+        return False
+    elif ZeroQ(Coefficient(SexponS, x, 0)) or NonzeroQ(tmp - FullSimplify(Log(base)*Coefficient(expon, x, 0)/(Log(SbaseS)*Coefficient(SexponS, x, 0)))):
+        if PositiveIntegerQ(base, SbaseS) and base<SbaseS:
+            SbaseS = base
+            SexponS = expon
+            tmp = 1/tmp
+        SexponS = Coefficient(SexponS, x, 1)*x/Denominator(tmp)
+        if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
+            SexponS = -SexponS
+            return True
+        else:
+            return True
+
+        if PositiveIntegerQ(base, SbaseS) and base < SbaseS:
+            SbaseS = base
+            SexponS = expon
+            tmp = 1/tmp
+    SexponS = SexponS/Denominator(tmp)
+    if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
+        SexponS = -SexponS
+        return True
+    return True
