@@ -84,7 +84,9 @@ class ExprWithLimits(Expr):
             rhs = function.rhs
             return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
-        function = piecewise_fold(function)
+        if isinstance(function, Piecewise):
+            function = piecewise_fold(function)
+
 
         if function is S.NaN:
             return S.NaN
