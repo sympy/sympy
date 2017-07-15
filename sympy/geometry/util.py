@@ -623,7 +623,7 @@ def idiff(eq, y, x, n=1):
         derivs[dydx] = yp
         eq = dydx - yp
         dydx = dydx.diff(x)
-def intersection(*entities, **kwargs):
+ def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
@@ -681,12 +681,10 @@ def intersection(*entities, **kwargs):
     """
     from .entity import GeometryEntity
     from .point import Point
-    pairwise = kwargs.pop('union', False)
-
-    if pairwise == False:
-
-        if len(entities) <= 1:
-            return []
+    pairwise = kwargs.pop('pairwise', False)
+    if len(entities) <= 1:
+        return []
+    if not pairwise:
 
         # entities may be an immutable tuple
         entities = list(entities)
@@ -704,7 +702,6 @@ def intersection(*entities, **kwargs):
                 newres.extend(x.intersection(entity))
             res = newres
         return res
-
     ans = []
     entities = list(entities)
     for i, e in enumerate(entities):
@@ -715,10 +712,7 @@ def intersection(*entities, **kwargs):
                 raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
     for j in range(0, len(entities)):
         for k in range(j + 1, len(entities)):
-            if len(intersection(entities[j], entities[k])) is not 0:
-                ans.append(intersection(entities[j], entities[k]))
-    temp = []
-    for element in ans:
-        if element not in temp:
-            temp.append(element)
-    return temp
+            ans.extend(intersection(entities[j], entities[k]))
+    ans_set = set(ans)
+    ans = list(ans_set)
+    return ans
