@@ -28,6 +28,7 @@ from sympy.polys.domains import QQ, ZZ, RR
 from sympy.polys.domains.pythonrational import PythonRational
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
+from sympy.polys.polytools import Poly
 
 
 def DifferentialOperators(base, generator):
@@ -932,7 +933,7 @@ class HolonomicFunction(object):
         if not isinstance(other, HolonomicFunction):
             other = sympify(other)
 
-            if not other.is_constant():
+            if other.has(self.x):
                 raise NotImplementedError(" Can't multiply a HolonomicFunction and expressions/functions.")
 
             if not self._have_init_cond():
@@ -942,7 +943,7 @@ class HolonomicFunction(object):
                 y1 = []
 
                 for j in y0:
-                    y1.append(j * other)
+                    y1.append((Poly.new(j, self.x) * other).rep)
 
                 return HolonomicFunction(ann_self, self.x, self.x0, y1)
 
@@ -1128,6 +1129,23 @@ class HolonomicFunction(object):
         return self.__div__(other)
 
     def __pow__(self, n):
+        if self.annihilator.order <= 1:
+            ann = self.annihilator
+            parent = ann.parent
+
+            if self.y0 is None:
+                y0 = None
+            else:
+                y0 = [list(self.y0)[0] ** n]
+
+            p0 = ann.listofpoly[0]
+            p1 = ann.listofpoly[1]
+
+            p0 = (Poly.new(p0, self.x) * n).rep
+
+            sol = [parent.base.to_sympy(i) for i in [p0, p1]]
+            dd = DifferentialOperator(sol, parent)
+            return HolonomicFunction(dd, self.x, self.x0, y0)
         if n < 0:
             raise NotHolonomicError("Negative Power on a Holonomic Function")
         if n == 0:
