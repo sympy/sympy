@@ -4093,11 +4093,13 @@ SexponFlagS = False
 def FunctionOfExponentialQ(u, x):
     # (* FunctionOfExponentialQ[u,x] returns True iff u is a function of F^v where F is a constant and v is linear in x, *)
     # (* and such an exponential explicitly occurs in u (i.e. not just implicitly in hyperbolic functions). *)
+    global SbaseS, SexponS, SexponFlagS
     SbaseS, SexponS = None, None
     SexponFlagS = False
     return FunctionOfExponentialTest(u, x) and SexponFlagS
 
 def FunctionOfExponential(u, x):
+    global SbaseS, SexponS, SexponFlagS
     # (* u is a function of F^v where v is linear in x.  FunctionOfExponential[u,x] returns F^v. *)
     SbaseS, SexponS = None, None
     SexponFlagS = False
@@ -4105,6 +4107,7 @@ def FunctionOfExponential(u, x):
     return SbaseS**SexponS
 
 def FunctionOfExponentialFunction(u, x):
+    global SbaseS, SexponS, SexponFlagS
     # (* u is a function of F^v where v is linear in x.  FunctionOfExponentialFunction[u,x] returns u with F^v replaced by x. *)
     SbaseS, SexponS = None, None
     SexponFlagS = False
@@ -4114,6 +4117,7 @@ def FunctionOfExponentialFunction(u, x):
 def FunctionOfExponentialFunctionAux(u, x):
     # (* u is a function of F^v where v is linear in x, and the fluid variables $base$=F and $expon$=v. *)
     # (* FunctionOfExponentialFunctionAux[u,x] returns u with F^v replaced by x. *)
+    global SbaseS, SexponS, SexponFlagS
     if AtomQ(u):
         return u
     elif PowerQ(u) and FreeQ(u.args[0], x) and LinearQ(u.args[1], x):
@@ -4135,13 +4139,14 @@ def FunctionOfExponentialFunctionAux(u, x):
         return 2/(tmp - 1/tmp)
     elif PowerQ(u) and FreeQ(u.args[0], x) and SumQ(u.args[1]):
         return FunctionOfExponentialFunctionAux(u.base**First(u.exp), x)*FunctionOfExponentialFunctionAux(u.base*Rest(u.exp), x)
-    return u.func(FunctionOfExponentialFunctionAux(i, x) for i in u.args)
+    return u.func(*[FunctionOfExponentialFunctionAux(i, x) for i in u.args])
 
 def FunctionOfExponentialTest(u, x):
     # (* FunctionOfExponentialTest[u,x] returns True iff u is a function of F^v where F is a constant and v is linear in x. *)
     # (* Before it is called, the fluid variables $base$ and $expon$ should be set to Null and $exponFlag$ to False. *)
     # (* If u is a function of F^v, $base$ and $expon$ are set to F and v, respectively. *)
     # (* If an explicit exponential occurs in u, $exponFlag$ is set to True. *)
+    global SbaseS, SexponS, SexponFlagS
     if FreeQ(u, x):
         return True
     elif u == x or CalculusQ(u):
@@ -4156,6 +4161,7 @@ def FunctionOfExponentialTest(u, x):
     return all(FunctionOfExponentialTest(i, x) for i in u.args)
 
 def FunctionOfExponentialTestAux(base, expon, x):
+    global SbaseS, SexponS, SexponFlagS
     if SbaseS == None:
         SbaseS = base
         SexponS = expon

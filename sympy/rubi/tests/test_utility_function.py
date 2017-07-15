@@ -1470,3 +1470,15 @@ def test_FunctionOfLinear():
     assert FunctionOfLinear(f, x) == [sin(x), a, b]
     assert FunctionOfLinear(a + b*x, x) == [x, a, b]
     assert not FunctionOfLinear(a, x)
+
+def test_FunctionOfExponentialQ():
+    assert FunctionOfExponentialQ(a**(a + b*x), x)
+    assert FunctionOfExponentialQ(a**(b*x), x)
+    assert not FunctionOfExponentialQ(a**sin(a + b*x), x)
+
+def test_FunctionOfExponential():
+    assert FunctionOfExponential(a**(a + b*x), x)
+
+def test_FunctionOfExponentialFunction():
+    assert FunctionOfExponentialFunction(a**(a + b*x), x) == x
+    assert FunctionOfExponentialFunction(S(2)*a**(a + b*x), x) == 2*x
