@@ -83,6 +83,7 @@ latex: $(PDFFILES)
 	mkdir -p _build/latex _build/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) _build/latex
 	sed -i .bak "s/pdflatex/xelatex/g" _build/latex/Makefile
+	sed -i .bak "s/latexmk/latexmk -xelatex/g" _build/latex/Makefile
 	@echo
 	@echo "Build finished; the LaTeX files are in _build/latex."
 	@echo "Run \`make all' in that directory to run these through xelatex."
