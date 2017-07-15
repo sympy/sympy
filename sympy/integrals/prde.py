@@ -945,7 +945,8 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
             F.append(DE.D[i].as_expr())
 
     # find a field containing all the fractions
-    FF, gens = sfield(F, extension=True)
+    # 'field=True' covers the non-algebraic case
+    FF, gens = sfield(F, field=True)
     K = FF.domain
 
     denom = gens[0].denom
@@ -987,6 +988,8 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
         Qmat = Matrix(Qmat)
     else:
         Qmat = Matrix(Kmat)
+
+    V = Qmat.nullspace()
 
 
 def is_deriv_k(fa, fd, DE):
