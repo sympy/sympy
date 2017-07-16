@@ -942,7 +942,7 @@ def linear_relations_in_Q(F):
     >>> from sympy.integrals.prde import linear_relations_in_Q
     >>> F = [-1/x, sqrt(3), (sqrt(3)*y + sqrt(2))/(y + sqrt(2)*x)]
     >>> linear_relations_in_Q(F)
-    [Matrix([[-1/4, 0, 0]]), Matrix([[0, -1/2, 0]]), Matrix([[0, 0, -1/4]])]
+    []
 
     """
     # find a field containing all the fractions
@@ -992,7 +992,7 @@ def linear_relations_in_Q(F):
         # 'Kmat' is the same of 'Qmat'
         Qmat = Matrix(Kmat)
 
-    V = Qmat.rowspace()
+    V = Qmat.nullspace()
     return V
 
 
@@ -1008,7 +1008,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
 
     """
 
-    F = []
+    F = [cancel(fa/fd)]
     for i, ext in enumerate(DE.exts):
         if ext == 'exp':
             F.append(DE.D[i]/DE.T[i])
