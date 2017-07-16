@@ -428,7 +428,7 @@ class Function(Application, Expr):
         if not evaluate or not isinstance(result, cls):
             return result
 
-        if len(result.args) > 0:
+        if result.args:
             pr = max(cls._should_evalf(a) for a in result.args)
             pr2 = min(cls._should_evalf(a) for a in result.args)
             if pr2 > 0:
