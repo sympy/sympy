@@ -70,88 +70,58 @@ While looking for the method, it follows these steps:
     As fall-back ``self.emptyPrinter`` will be called with the expression. If
     not defined in the Printer subclass this will be the same as ``str(expr)``.
 
-Example of Custom Printer and Custom Printing Method
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example of Custom Printer
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _printer_example:
 
-This example shows how you can define a custom Printer and a custom printing method
-for your custom SymPy object. See the code below::
+In the example below, we have a printer which prints derivative of a function
+in a shorter form. See the code below::
 
-    from sympy import Basic, Function, Symbol
-    from sympy.printing.printer import Printer
-    from sympy.printing.latex import print_latex
-    from sympy.core.basic import Basic
+    from sympy import Symbol
+    from sympy.printing.latex import LatexPrinter, print_latex
+    from sympy.core.function import UndefinedFunction, Function
 
-    class MyBasic(Basic):
-        \"\"\" Our custom SymPy object. You can also subclass sympy.core.Expr
-        or sympy.core.Function. Both of them are subclasses of Basic.
+
+    class MyLatexPrinter(LatexPrinter):
+        \"\"\"Print derivative of a function of symbols in a shorter form.
         \"\"\"
-
-        def __init__(self, text):
-            self.text = text
-
-        def __str__(self):
-            return self.text
-
-        def _latex(self, printer=None):
-            # This is the printmethod of LatexPrinter.
-            return self.text
-
-    class MyPrinter(Printer):
-        \"\"\" Our custom Printer. \"\"\"
-
-        # This method is called for every SymPy object when we call doprint()
-        # on the printer.
-        printmethod = '_myprinter'
-
         def _print_Derivative(self, expr):
-            # expr.args == (x(t), t)
-            # expr.args[0] == x(t)
-            # expr.args[0].func == x
-            return str(expr.args[0].func) + \"'\" * len(expr.args[1:])
+            function, *vars = expr.args
+            if not isinstance(type(function), UndefinedFunction) or \\
+               not all(isinstance(i, Symbol) for i in vars):
+                return super()._print_Derivative(expr)
 
-        def _print_MyBasic(self, expr):
-            # Since MyBasic does not implement _myprinter method, this method
-            # will be called instead.
-            return str(expr).upper()
+            return "{}_{{{}}}".format(
+                self._print(Symbol(function.func.__name__)),
+                            ''.join(self._print(i) for i in vars))
 
-    def my_printer(expr):
+
+    def print_my_latex(expr):
         \"\"\" Most of the printers define their own wrappers for print().
-        These wrappers usually take printer settings. Our printer does not have
+        These wrappers usually takes printer settings. Our printer does not have
         any settings.
         \"\"\"
-        print(MyPrinter().doprint(expr))
+        print(MyLatexPrinter().doprint(expr))
 
-    t = Symbol('t')
-    x = Function('x')(t)
-    dxdt = x.diff(t)
-    d2xdt2 = dxdt.diff(t)
 
-    ex = MyBasic('My expression on steroids.')
+    y = Symbol("y")
+    x = Symbol("x")
+    f = Function("f")
+    expr = f(x, y).diff(x, y)
 
-    print(d2xdt2)
-    my_printer(d2xdt2)
-
-    print(dxdt)
-    my_printer(dxdt)
-
-    print(ex)
-    my_printer(ex)
-
-    # This is the wrapper of print() for LatexPrinter.
-    print_latex(ex)
+    # Print the expression using the normal latex printer and our custom
+    # printer.
+    print_latex(expr)
+    print_my_latex(expr)
 
 The output of the code above is::
 
-    Derivative(x(t), t, t)
-    x''
-    Derivative(x(t), t)
-    x'
-    My expression on steroids.
-    MY EXPRESSION ON STEROIDS.
-    My expression on steroids.
+    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left (x,y \\right )}
+    f_{xy}
 
+Example of Custom Printing Method
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 """
 
 from __future__ import print_function, division
