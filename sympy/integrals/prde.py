@@ -920,10 +920,14 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
 def linear_relations_in_Q(F):
     """
+    Given a system of one linear equation for the ri's with
+    coefficients in field 'F', obtain a system with coefficients in
+    field 'QQ' with the same constant solutions.
+
     Parameters
     ==========
 
-    F: A list of expressions (not necessarily Poly)
+    F: A list of expressions
 
     Returns
     =======
@@ -933,13 +937,22 @@ def linear_relations_in_Q(F):
     Examples
     ========
 
+    >>> from sympy import sqrt
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.prde import linear_relations_in_Q
+    >>> F = [-1/x, sqrt(3), (sqrt(3)*y + sqrt(2))/(y + sqrt(2)*x)]
+    >>> linear_relations_in_Q(F)
+    [Matrix([[-1/4, 0, 0]]), Matrix([[0, -1/2, 0]]), Matrix([[0, 0, -1/4]])]
+
     """
     # find a field containing all the fractions
     # 'field=True' covers the non-algebraic case
     FF, gens = sfield(F, field=True, extension=True)
     K = FF.domain
 
-    denom = reduce(lambda i, j: i.lcm(j), [gen.denom for gen in gens])
+    denom = gens[0].denom
+    for gen in gens[1: ]:
+        denom = denom.lcm(gen.denom)
 
     nums = [denom.exquo(f.denom)*f.numer for f in gens]
     monoms = set()
@@ -979,6 +992,9 @@ def linear_relations_in_Q(F):
         # 'Kmat' is the same of 'Qmat'
         Qmat = Matrix(Kmat)
 
+    V = Qmat.rowspace()
+    return V
+
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
@@ -987,12 +1003,6 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     >>> DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
         'exts': [None, 'log']})
     >>> parametric_log_deriv(fa, fd, wa, wd, DE)
-    (Matrix([
-    [1, 0],
-    [0, 1]
-    ]), Matrix([
-    [-(10*t**4*x + 2*t**3*x - 10*t**2*x - 24*t*x)/(10*t + 1)],
-    [(2*t**2*x + 4*t*x)/(10*t + 1)]]))
 
     Page, 251 section 7.3
 
@@ -1005,9 +1015,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
         elif ext == 'log':
             F.append(DE.D[i].as_expr())
 
-    rels = linear_relations_in_Q(F)
-
-    V = Qmat.nullspace()
+    rat_linear_rels = linear_relations_in_Q(F)
 
 
 def is_deriv_k(fa, fd, DE):
