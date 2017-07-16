@@ -24,8 +24,7 @@ from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.solvers import solve
 
-from sympy.polys import (AlgebraicField, Poly, QQ, cancel, lcm,
-        sqf_list, sfield)
+from sympy.polys import Poly, QQ, cancel, lcm, sfield
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -919,6 +918,68 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     return (Q*N, Q*M, v)
 
 
+def linear_relations_in_Q(F):
+    """
+    Parameters
+    ==========
+
+    F: A list of expressions (not necessarily Poly)
+
+    Returns
+    =======
+
+    The rational linear relations
+
+    Examples
+    ========
+
+    """
+    # find a field containing all the fractions
+    # 'field=True' covers the non-algebraic case
+    FF, gens = sfield(F, field=True, extension=True)
+    K = FF.domain
+
+    denom = reduce(lambda i, j: i.lcm(j), [gen.denom for gen in gens])
+
+    nums = [denom.exquo(f.denom)*f.numer for f in gens]
+    monoms = set()
+    for num in nums:
+        monoms.update(num.monoms())
+
+    # each monomial corresponds to a row in the matrix
+    # of entries in 'K' giving the relations.
+    # The elements of F correspond to the columns
+    # 'Kmat' is a "matrix" (pythonically a nested list) with
+    # entries in field 'K'
+    Kmat = [[num._get_coeff(m) for num in nums] for m in monoms]
+
+    # In order to get only rational solutions the matrix with
+    # entries in field 'K' must be replaced with another one with
+    # rational entries (i.e field Q).
+
+    # K ≠ QQ
+    if K != QQ:
+        # 'Kmat' is not the same as 'Qmat'
+        n = K.mod.degree()
+        zero = QQ.zero
+
+        def pad(rep):
+            """
+            Fill the missing part with zeros.
+            """
+            return [zero]*(n - len(rep)) + rep
+
+        # replace each row of 'Kmat' with n rows of 'Qmat'
+        Qmat = []
+        for row in Kmat:
+            Qmat.extend(zip(*[pad(a.rep) for a in row]))
+        Qmat = Matrix(Qmat)
+    # K = QQ
+    else:
+        # 'Kmat' is the same of 'Qmat'
+        Qmat = Matrix(Kmat)
+
+
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
     >>> fa, fd = Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t)
@@ -944,50 +1005,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
         elif ext == 'log':
             F.append(DE.D[i].as_expr())
 
-    # find a field containing all the fractions
-    # 'field=True' covers the non-algebraic case
-    FF, gens = sfield(F, field=True)
-    K = FF.domain
-
-    denom = gens[0].denom
-    for gen in gens[1: ]:
-        denom = denom.lcm(gen.denom)
-
-    nums = [denom.exquo(f.denom)*f.numer for f in gens]
-    monoms = set()
-    for num in nums:
-        monoms.update(num.monoms())
-
-    # each monomial corresponds to a row in the matrix
-    # of entries in 'K' giving the relations.
-    # The elements of F correspond to the columns
-    # 'Kmat' is a "matrix" (pythonically a nested list) with
-    # entries in field 'K'
-    Kmat = [[num._get_coeff(m) for num in nums] for m in monoms]
-
-    # In order to get only rational solutions the matrix with
-    # entries in field 'K' must be replaced with another one with
-    # rational entries (i.e field Q).
-
-    # K ≠ ZZ(...) and K ≠ QQ
-    if K.is_Algebraic:
-        # 'Kmat' is not the same as 'Qmat'
-        n = K.mod.degree()
-        zero = QQ.zero
-
-        def pad(rep):
-            """
-            Fill the missing part with zeros.
-            """
-            return [zero]*(n - len(rep)) + rep
-
-        # replace each row of 'Kmat' with n rows of 'Qmat'
-        Qmat = []
-        for row in Kmat:
-            Qmat.extend(zip(*[pad(a.rep) for a in row]))
-        Qmat = Matrix(Qmat)
-    else:
-        Qmat = Matrix(Kmat)
+    rels = linear_relations_in_Q(F)
 
     V = Qmat.nullspace()
 
