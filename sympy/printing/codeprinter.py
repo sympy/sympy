@@ -256,10 +256,10 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
 
     def _print_Dummy(self, expr):
-        if expr.name.endswith('_%i' % (expr.dummy_index - 1)):
+        if expr.name.startswith('Dummy_'):
             return '_' + expr.name
-        else: # dummies must be printed as unique symbols
-            return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
+        else:
+            return '%s_%d' % (expr.name, expr.dummy_index)
 
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
