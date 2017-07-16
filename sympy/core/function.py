@@ -428,10 +428,11 @@ class Function(Application, Expr):
         if not evaluate or not isinstance(result, cls):
             return result
 
-        pr = max(cls._should_evalf(a) for a in result.args)
-        pr2 = min(cls._should_evalf(a) for a in result.args)
-        if pr2 > 0:
-            return result.evalf(mlib.libmpf.prec_to_dps(pr))
+        if len(result.args) > 0:
+            pr = max(cls._should_evalf(a) for a in result.args)
+            pr2 = min(cls._should_evalf(a) for a in result.args)
+            if pr2 > 0:
+                return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
     @classmethod
