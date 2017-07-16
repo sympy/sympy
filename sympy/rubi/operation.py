@@ -20,7 +20,8 @@ class Add(Operation):
 
 class Pow(Operation):
     name = "Pow"
-    arity = Arity.binary
+    arity = Arity.variadic
+    one_identity = True
 
 class And(Operation):
     name = "And"
