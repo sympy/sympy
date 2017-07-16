@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from functools import wraps
+
 from sympy.core import Add, Mul, Pow, S, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -12,6 +14,20 @@ from sympy.printing.precedence import precedence
 
 # Backwards compatibility
 from sympy.codegen.ast import Assignment
+
+
+def prints_statement(method):
+    """ Decorator for methods printing statements (as opposed to expressions) """
+
+    @wraps(method)
+    def wrapper(self, expr):
+        if self._settings['enable_statements']:
+            return method(self, expr)
+        else:
+            raise ValueError("The code-printer setting 'enable_statements' is False,\n"
+                             "but %s generates a statement in the chosen language." %
+                             type(expr))
+    return wrapper
 
 
 class AssignmentError(Exception):
@@ -34,7 +50,8 @@ class CodePrinter(StrPrinter):
     _default_settings = {'order': None,
                          'full_prec': 'auto',
                          'error_on_reserved': False,
-                         'reserved_word_suffix': '_'}
+                         'reserved_word_suffix': '_',
+                         'enable_statements': False}
 
     def __init__(self, settings=None):
 
@@ -258,6 +275,7 @@ class CodePrinter(StrPrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
+    @prints_statement
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -333,8 +351,7 @@ class CodePrinter(StrPrinter):
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
         # is registered and evaluated
-        self._number_symbols.add((expr,
-            self._print(expr.evalf(self._settings["precision"]))))
+        self._number_symbols.add((expr, expr))
         return str(expr)
 
     def _print_Dummy(self, expr):

@@ -57,24 +57,25 @@ class FCodePrinter(CodePrinter):
     printmethod = "_fcode"
     language = "Fortran"
 
+    type_mappings = {
+        Type('intc'): ('integer(c_int)', {'iso_c_binding': 'c_int'}),
+        float32: ('real(4)', None),
+        float64: ('real(8)', None),
+        complex64: ('complex(4)', None),
+        complex128: ('complex(8)', None),
+        Type('integer'): ('integer', None),
+        Type('bool'): ('logical', None)
+    }
+
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
-        'type_mappings': {
-            Type('intc'): ('integer(c_int)', {'iso_c_binding': 'c_int'}),
-            float32: ('real(4)', None),
-            float64: ('real(8)', None),
-            complex64: ('complex(4)', None),
-            complex128: ('complex(8)', None),
-            Type('integer'): ('integer', None),
-            Type('bool'): ('logical', None)
-        }
     }
 
     _operators = {
@@ -337,7 +338,7 @@ class FCodePrinter(CodePrinter):
             type_ = self._get_precision_type()
         if type_.name == 'complex':
             type_ = {float32: complex64, float64: complex128}[self._get_precision_type()]
-        type_str, module_uses = self._settings['type_mappings'].get(type_, type_.name)
+        type_str, module_uses = self.type_mappings.get(type_, type_.name)
         if module_uses:
             for k, v in module_uses:
                 self.module_uses[k].add(v)
@@ -512,7 +513,8 @@ def fcode(expr, assign_to=None, **settings):
         ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
         line-wrapping, or for expressions that generate multi-line statements.
     precision : integer, optional
-        The precision for numbers such as pi [default=15].
+        DEPRECATED. Use type_mappings instead. The precision for numbers such
+        as pi [default=17]. 
     user_functions : dict, optional
         A dictionary where keys are ``FunctionClass`` instances and values are
         their string representations. Alternatively, the dictionary value can

@@ -20,10 +20,11 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Type, Variable,
-    float32, float64, float80, complex64, complex128
+    Assignment, Pointer, Type, Variable, real, complex_, integer, bool_,
+    float32, float64, float80, complex64, complex128, intc, value_const,
+    Declaration
 )
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, prints_statement
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
@@ -145,31 +146,53 @@ class C89CodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
+        'enable_statements': True,
         'contract': True,
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-        'type_mappings': {
-            Type('intc'): ('int', None),
-            float32: ('float', None),
-            float64: ('double', None),
-            Type('integer'): ('int', None),
-            Type('bool'): ('bool', {'stdbool.h'})
-        },
-        'type_suffixes': {
-            float32: 'f',
-            float64: '',
-            float80: 'l'
-        }
+    }
+
+    type_aliases = {
+        real: float64,
+        complex_: complex128,
+        integer: intc
+    }
+
+    type_mappings = {
+        real: 'double',
+        intc: 'int',
+        float32: 'float',
+        float64: 'double',
+        integer: 'int',
+        bool_: 'bool',
+    }
+
+    type_headers = {
+        bool_: {'stdbool.h'}
+    }
+
+    type_suffixes = {
+        float32: 'f',
+        float64: '',
+        float80: 'l'
     }
 
     _ns = ''  # namespace, C++ uses 'std::'
     _kf = known_functions_C89  # known_functions-dict to copy
 
     def __init__(self, settings={}):
+        self.type_aliases = dict(chain(self.type_aliases.items(),
+                                       settings.pop('type_aliases', {}).items()))
+        self.type_mappings = dict(chain(self.type_mappings.items(),
+                                        settings.pop('type_mappings', {}).items()))
+        self.type_headers = dict(chain(self.type_headers.items(),
+                                       settings.pop('type_headers', {}).items()))
+        self.type_suffixes = dict(chain(self.type_suffixes.items(),
+                                        settings.pop('type_suffixes', {}).items()))
         super(C89CodePrinter, self).__init__(settings)
         self.known_functions = self._kf.copy()
         self.known_functions.update(**settings.get('user_functions', {}))
@@ -187,7 +210,10 @@ class C89CodePrinter(CodePrinter):
         return "// {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "double const {0} = {1};".format(name, value)
+        type_ = self.type_aliases[real]
+        var = Variable(name, {value_const}, type_)
+        decl = Declaration(var, value.evalf(type_['decimal_dig']))
+        return self._get_statement(self._print(decl))
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -200,7 +226,7 @@ class C89CodePrinter(CodePrinter):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
         PREC = precedence(expr)
-        suffix = self._get_precision_suffix()
+        suffix = self._get_suffix()
         if expr.exp == -1:
             return '1.0%s/%s' % (suffix.upper(), self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
@@ -213,7 +239,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        suffix = self._get_precision_suffix().upper()
+        suffix = self._get_suffix().upper()
         return '%d.0%s/%d.0%s' % (p, suffix, q, suffix)
 
     def _print_Indexed(self, expr):
@@ -316,12 +342,15 @@ class C89CodePrinter(CodePrinter):
             (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
         return self._print(_piecewise)
 
+    @prints_statement
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         op = expr.rel_op
         rhs_code = self._print(expr.rhs)
-        return "{0} {1} {2};".format(lhs_code, op, rhs_code)
+        return self._get_statement("{0} {1} {2}".format(
+            *map(self._print, [lhs_code, op, rhs_code])))
 
+    @prints_statement
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
@@ -381,32 +410,14 @@ class C89CodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-    def _get_precision_type(self):
-        typ = self._settings['precision']
-        if not isinstance(typ, Type):
-            if typ <= Type.default_limits['float32']['dig']:
-                typ = float32
-            elif typ <= Type.default_limits['float64']['dig']:
-                typ = float64
-            elif typ <= Type.default_limits['float80']['dig']:
-                typ = float80
-            else:
-                raise NotImplementedError("Need a higher precision datatype.")
-        return typ
-
-    def _get_precision_suffix(self):
-        return self._settings['type_suffixes'].get(self._get_precision_type(), '')
+    def _get_suffix(self):
+        return self.type_suffixes[self.type_aliases[real]]
 
     def _print_Type(self, type_):
-        if type_.name == 'real':  # precision-dependent data type
-            type_ = self._get_precision_type()
-        if type_.name == 'complex':
-            type_ = {float32: complex64, float64: complex128}[self._get_precision_type()]
-        type_str, headers = self._settings['type_mappings'].get(type_, (type_.name, None))
-        if headers:
-            self.headers.update(headers)
-        return type_str
+        self.headers.update(self.type_headers.get(type_, set()))
+        return self.type_mappings.get(type_, type_.name)
 
+    @prints_statement
     def _print_Declaration(self, expr):
         from sympy.codegen.cfunctions import restrict
         var, val = expr.variable, expr.value
@@ -428,7 +439,7 @@ class C89CodePrinter(CodePrinter):
             raise NotImplementedError("Unknown type of var: %s" % type(var))
         if val is not None:
             result += ' = %s' % self._print(val)
-        return '%s;' % result
+        return self._get_statement(result)
 
     def _print_Variable(self, expr):
         return self._print(expr.symbol)
@@ -437,7 +448,7 @@ class C89CodePrinter(CodePrinter):
         return self._print(expr.symbol)
 
     def _print_Float(self, flt):
-        suffix = self._get_precision_suffix().upper()
+        suffix = self._get_suffix().upper()
         num = super(C89CodePrinter, self)._print_Float(flt)
         if 'e' not in num and '.' not in num:
             num += '.0'
@@ -490,17 +501,13 @@ class CCodePrinter(_C9XCodePrinter, C89CodePrinter):
 class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     standard = 'C99'
     reserved_words = set(reserved_words + reserved_words_c99)
+    type_mappings=dict(chain(C89CodePrinter.type_mappings.items(), {
+            Type('complex64'): ('float complex', {'complex.h'}),
+            Type('complex128'): ('double complex', {'complex.h'}),
+        }.items()
+    ))
     _kf = known_functions_C99  # known_functions-dict to copy
-    _default_settings = dict(
-        C89CodePrinter._default_settings,
-        type_mappings=dict(chain(
-            C89CodePrinter._default_settings['type_mappings'].items(),
-            {
-                Type('complex64'): ('float complex', {'complex.h'}),
-                Type('complex128'): ('double complex', {'complex.h'}),
-            }.items()
-        ))
-    )
+
     # functions with versions with 'f' and 'l' suffixes:
     _prec_funcs = ('fabs fmod remainder remquo fma fmax fmin fdim nan exp exp2'
                    ' expm1 log log10 log2 log1p pow sqrt cbrt hypot sin cos tan'
@@ -529,7 +536,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
                     break
             else:
                 raise ValueError("No matching printer")
-        suffix = self._get_precision_suffix() if self._ns + known in self._prec_funcs else ''
+        suffix = self._get_suffix() if self._ns + known in self._prec_funcs else ''
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:

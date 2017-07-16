@@ -10,7 +10,10 @@ from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
-from sympy.codegen.ast import Type, Declaration, Pointer, Variable, value_const, pointer_const
+from sympy.codegen.ast import (
+    Type, Declaration, Pointer, Variable, value_const, pointer_const,
+    real, float32, float64, float80
+)
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, restrict
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -44,7 +47,7 @@ def test_ccode_Pow():
         "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
     assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0/3.0)'
-    assert ccode(x**Rational(2, 3), precision=18) == 'powl(x, 2.0L/3.0L)'
+    assert ccode(x**Rational(2, 3), type_aliases={real: float80}) == 'powl(x, 2.0L/3.0L)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
                    (lambda base, exp: not exp.is_integer, "pow")]
     assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
@@ -594,9 +597,9 @@ def test_C99CodePrinter():
 
 def test_C99CodePrinter__precision():
     n = symbols('n', integer=True)
-    f32_printer = C99CodePrinter({'precision': Type('float32')})
-    f64_printer = C99CodePrinter({'precision': Type('float64')})
-    f80_printer = C99CodePrinter({'precision': Type('float80')})
+    f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
+    f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
+    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
     assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
     assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1)'
     assert f80_printer.doprint(sin(x+2.1)) == 'sinl(x + 2.1L)'

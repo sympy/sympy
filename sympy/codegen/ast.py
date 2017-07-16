@@ -29,6 +29,7 @@ from __future__ import print_function, division
 
 from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify, sympify
@@ -412,7 +413,7 @@ class For(Basic):
         return self._args[2]
 
 
-class Type(Symbol):
+class Type(Basic):
     """ Represents a type.
 
     The naming is a super-set of NumPy naming, see [1]_. Type has a classmethod
@@ -471,42 +472,32 @@ class Type(Symbol):
     """
     __slots__ = ['name']
 
-    default_limits = {  # IEE754 data when applicable
-        'int32': {  # usually the fastest integer typ (and hence 'int' on most systems)
-            'max': 2**31 - 1,  # INT_MAX
-            'min': -2**31  # INT_MIN
-        },
-        'float32': {
-            'max': 3.40282347e+38,  # FLT_MAX
-            'tiny': 1.17549435e-38,  # FLT_MIN, excluding subnormal numbers
-            'eps': 1.1920929e-07,  # FLT_EPSILON
-            'dig': 6,  # FLT_DIG
-            'decimal_dig': 9,  # FLT_DECIMAL_DIG
-        },
-        'float64': {
-            'max': 1.79769313486231571e+308,  # DBL_MAX
-            'tiny': 2.22507385850720138e-308,  # DBL_MIN, excluding subnormal numbers
-            'eps': 2.22044604925031308e-16,  # DBL_EPSILON
-            'dig': 15,  # DBL_DIG
-            'decimal_dig': 17,  # DBL_DECIMAL_DIG
-        },
-        'float80': {  # extended precision, usually "long double", even numpy.float128 (!)
-            'max': Float('1.18973149535723176502e+4932'),  # LDBL_MAX
-            'tiny': Float('3.36210314311209350626e-4932'),  # LDBL_MIN, excluding subnormal numbers
-            'eps': Float('1.08420217248550443401e-19'),  # LDBL_EPSILON
-            'dig': 18,  # LDBL_DIG
-            'decimal_dig': 21,  # LDBL_DECIMAL_DIG
-        }
-    }
-    default_limits['complex64'] = default_limits['float32']
-    default_limits['complex128'] = default_limits['float64']
-
     default_precision_targets = {}
 
-    def __new__(cls, name):
-        if isinstance(name, Type):
-            return name
-        return Symbol.__new__(cls, name)
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
+            return args[0]
+        args = args + tuple([kwargs[k] for k in cls.__slots__])
+        return cls.__xnew_cahced_(cls, *args)
+
+    def __new_stage2__(cls, *args):
+        obj = Basic.__new__(cls, *args)
+        for attr, arg in zip(self.__slots__, args):
+            setattr(obj, attr, arg)
+        return obj
+
+    __xnew_cached_ = staticmethod(cacheit(__new_stage2__))
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        for attr in self.__slots__:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+        return True
+
+    def __hash__(self):
+        return hash(tuple([getattr(self, attr) for attr in self.__slots__]))
 
     @classmethod
     def from_expr(cls, expr):
@@ -519,11 +510,11 @@ class Type(Symbol):
 
         Examples
         --------
-        >>> from sympy.codegen.ast import Type
-        >>> Type.from_expr(2) == Type('integer')
+        >>> from sympy.codegen.ast import Type, integer, complex_
+        >>> Type.from_expr(2) == integer
         True
         >>> from sympy import Symbol
-        >>> Type.from_expr(Symbol('z', complex=True)) == Type('complex')
+        >>> Type.from_expr(Symbol('z', complex=True)) == complex_
         True
 
         Raises
@@ -557,15 +548,15 @@ class Type(Symbol):
         limits : dict
             Values given by ``limits.h``, x86/IEEE754 defaults if not given.
             Default: :attr:`default_limits`.
-        precision_targets : dict
-            Maps substitutions for Type.name, e.g. {'integer': 'int64', 'real': 'float32'}
+        type_aliases : dict
+            Maps substitutions for Type, e.g. {integer: int64, real: float32}
 
         Examples
         --------
-        >>> from sympy.codegen.ast import Type
-        >>> Type('integer').cast_check(3.0) == 3
+        >>> from sympy.codegen.ast import Type, integer, float32
+        >>> Type(integer).cast_check(3.0) == 3
         True
-        >>> Type('float32').cast_check(1e-40)  # doctest: +ELLIPSIS
+        >>> Type(float32).cast_check(1e-40)  # doctest: +ELLIPSIS
         Traceback (most recent call last):
           ...
         ValueError: Minimum value for data type bigger than new value.
@@ -651,23 +642,67 @@ class Type(Symbol):
 
         return new_val
 
+class IntType(Type):
+    __slots__ = ['name', 'bits']
+
+class SignedIntType(IntType):
+    @property
+    def min(self):
+        return -2**(self.bits-1)
+
+    @property
+    def max(self):
+        return 2**(self.bits-1) - 1
+
+class UnsignedIntType(IntType):
+    @property
+    def min(self):
+        return 0
+
+    @property
+    def max(self):
+        return 2**self.bits - 1
+
+class FloatType(Type):
+    __slots__ = ['name', 'bits', 'max', 'tiny', 'eps', 'dig', 'decimal_dig']
+
+
 # NumPy types:
 intc = Type('intc')
 intp = Type('intp')
-int8 = Type('int8')
-int16 = Type('int16')
-int32 = Type('int32')
-int64 = Type('int64')
-uint8 = Type('uint8')
-uint16 = Type('uint16')
-uint32 = Type('uint32')
-uint64 = Type('uint64')
+int8 = SignedIntType('int8', 8)
+int16 = SignedIntType('int16', 16)
+int32 = SignedIntType('int32', 32)
+int64 = SignedIntType('int64', 64)
+uint8 = UnsignedIntType('uint8', 8)
+uint16 = UnsignedIntType('uint16', 16)
+uint32 = UnsignedIntType('uint32', 32
+uint64 = UnsignedIntType('uint64', 64)
 float16 = Type('float16')
-float32 = Type('float32')
-float64 = Type('float64')
-float80 = Type('float80')
-complex64 = Type('complex64')
-complex128 = Type('complex128')
+float32 = Type(
+    'float32', 32,
+    max=Float('3.40282347e+38'),
+    tiny=Float('1.17549435e-38'),
+    eps=Float('1.1920929e-07'),
+    dig=6, decimal_dig=9
+)
+float64 = Type(
+    'float64', 64,
+    max=Float('1.79769313486231571e+308'),
+    tiny=Float('2.22507385850720138e-308'),
+    eps=Float('2.22044604925031308e-16'),
+    dig=15, decimal_dig=17
+)
+float80 = Type(
+    'float80', 80,
+    max=Float('1.18973149535723176502e+4932'),
+    tiny=Float('3.36210314311209350626e-4932'),
+    eps=Float('1.08420217248550443401e-19'),
+    dig=18, decimal_dig=21
+)
+complex64 = Type('complex64', 64, *float32.args[2:])
+complex128 = Type('complex128', 128, *float64.args[2:])
+
 # Generic types (precision may be chosen by code printers):
 real = Type('real')
 integer = Type('integer')
