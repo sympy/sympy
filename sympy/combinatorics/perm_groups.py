@@ -3538,9 +3538,6 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
             temp = gen[x]
             if used[temp] == False:
                 slp_dict[temp] = [gens.index(gen)] + px_slp
-                w = list(range(degree))
-                for s in slp_dict[temp]:
-                    w = _af_rmul(w,gens[s])
                 tr.append((temp, _af_rmul(gen, px)))
                 used[temp] = True
     if pairs:
