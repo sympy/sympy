@@ -1,5 +1,3 @@
-import sympy
-import matchpy
 from sympy.rubi.symbol import VariableSymbol, Integer
 from sympy.rubi.utility_function import (Int, ZeroQ, NonzeroQ, List, Log, RemoveContent,
     PositiveIntegerQ, NegativeIntegerQ, PositiveQ, IntegerQ, PosQ, NegQ, FracPart,

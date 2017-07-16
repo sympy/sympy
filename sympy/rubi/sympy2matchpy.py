@@ -1,8 +1,6 @@
 '''
 Contains Sympy to MatchPy converter function.
 '''
-
-import matchpy
 from .operation import *
 from sympy.core import sympify
 from .symbol import VariableSymbol, Integer

@@ -10,8 +10,7 @@ from sympy.functions.elementary.trigonometric import asin as arcsin
 from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.functions.special.elliptic_integrals import elliptic_e as EllipticE
 from sympy.functions.special.elliptic_integrals import elliptic_f as EllipticF
-from sympy import pi as Pi, S
-from sympy import I, simplify
+from sympy import pi as Pi, S, hyper, I, simplify, exp_polar
 import signal
 
 a, b, c, d, e, f, m, n, x, u = symbols('a b c d e f m n x u', real=True, imaginary=False)
@@ -23,7 +22,8 @@ def test_rubi_algebriac_1_2():
     passed = 0
     fail = 0
     matched = 0
-    failed = []
+    unmatched = []
+    matched_but_failed = []
     '''
     test_algebraic_linear_products_set1 contains: 1 Algebraic functions\1 Linear products\1.2 (a + b x)**m (c + d x)**n
     '''
@@ -1825,7 +1825,7 @@ def test_rubi_algebriac_1_2():
     ]
 
     #test = [
-    #    [S(1)/((a + b*x)**(S(3)/S(2))*(c + d*x)**(S(1)/S(6))), x, S(5), - S(2)*(c + d*x)**(S(5)/S(6))/((b*c - a*d)*sqrt(a + b*x)) - S(2)*d*(c + d*x)**(S(1)/S(6))*(S(1) + sqrt(S(3)))*sqrt(a - b*c/d + b*(c + d*x)/d)/(b**(S(2)/S(3))*(b*c - a*d)*((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))) - S(2)*S(3)**(S(1)/S(4))*(c + d*x)**(S(1)/S(6))*((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)))*sqrt(cos(arccos(((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) - sqrt(S(3))))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))))**S(2))/cos(arccos(((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) - sqrt(S(3))))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))))*EllipticE(sin(arccos(((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) - sqrt(S(3))))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3)))))), sqrt(S(1)/S(4)*(S(2) + sqrt(S(3)))))*sqrt(((b*c - a*d)**(S(2)/S(3)) + b**(S(1)/S(3))*(b*c - a*d)**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)) + b**(S(2)/S(3))*(c + d*x)**(S(2)/S(3)))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))**S(2))/(b**(S(2)/S(3))*(b*c - a*d)**(S(2)/S(3))*sqrt(a - b*c/d + b*(c + d*x)/d)*sqrt( - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))**S(2))) - (c + d*x)**(S(1)/S(6))*((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)))*sqrt(cos(arccos(((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) - sqrt(S(3))))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))))**S(2))/cos(arccos(((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) - sqrt(S(3))))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))))*EllipticF(sin(arccos(((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) - sqrt(S(3))))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3)))))), sqrt(S(1)/S(4)*(S(2) + sqrt(S(3)))))*(S(1) - sqrt(S(3)))*sqrt(((b*c - a*d)**(S(2)/S(3)) + b**(S(1)/S(3))*(b*c - a*d)**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)) + b**(S(2)/S(3))*(c + d*x)**(S(2)/S(3)))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))**S(2))/(S(3)**(S(1)/S(4))*b**(S(2)/S(3))*(b*c - a*d)**(S(2)/S(3))*sqrt(a - b*c/d + b*(c + d*x)/d)*sqrt( - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)))/((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3))*(S(1) + sqrt(S(3))))**S(2)))],
+    #    [S(1)/(x**S(2)*(a + b*x)**S(2)), x, S(2), ( - S(1))/(a**S(2)*x) - b/(a**S(2)*(a + b*x)) - S(2)*b*log(x)/a**S(3) + S(2)*b*log(a + b*x)/a**S(3)],
     #]
 
     def signal_handler(signum, frame):
@@ -1834,20 +1834,37 @@ def test_rubi_algebriac_1_2():
     for t in test:
         print(t[0], '   ', passed, '    ', fail, '    ', matched)
         signal.signal(signal.SIGALRM, signal_handler)
-        signal.alarm(120)
+        signal.alarm(30)
         try:
-            res = rubi_integrate(t[0], t[1]).expand()
+            result = rubi_integrate(t[0], t[1])
             matched += 1
-            z = simplify(res - t[3].expand())
-            if (z == 0) or (not z.has(x)):
+            #'''
+            res = result.expand()
+            zero = simplify(res - t[3].expand())
+            if (zero == 0) or (not zero.has(x)):
                 passed += 1
-            elif simplify(z.diff(t[1])) == 0:
+            elif simplify(zero.diff(t[1])) == 0:
                 passed += 1
+            elif (result - t[3]).has(hyper):
+                #dres = (result - t[3]).diff(t[1])
+                #args = dres.free_symbols
+                token = True
+                #for i in range(1, 6):
+                #    sub = dict((s, i) for s in args)
+                #    if not abs(dres.subs(sub).n()) < S(10)**(-100):
+                #        matched_but_failed.append(t[0])
+                #        fail += 1
+                #        token = False
+                #        break
+                if token:
+                    passed += 1
+
             else:
-                failed.append(t[0])
+                matched_but_failed.append(t[0])
                 fail += 1
+            #'''
         except:
-            failed.append(t[0])
+            unmatched.append(t[0])
             fail += 1
         signal.alarm(0)
 
@@ -1855,3 +1872,11 @@ def test_rubi_algebriac_1_2():
     print('passed: ', passed)
     print('failed: ', fail)
     print('matched: ', matched)
+
+    f = open("unmatched.txt","w")
+    f.write(str(unmatched))
+    f.close()
+
+    f = open("matched_but_failed.txt","w")
+    f.write(str(matched_but_failed))
+    f.close()

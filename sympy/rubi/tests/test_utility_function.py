@@ -1441,7 +1441,6 @@ def test_SubstForFractionalPowerQ():
     assert SubstForFractionalPowerQ(sin(x)**(S(3)/2), sin(x), x)
 
 def test_AbsurdNumberGCD():
-    assert True
     assert AbsurdNumberGCD(S(4)) == 4
     assert AbsurdNumberGCD(S(4), S(8), S(12)) == 4
     assert AbsurdNumberGCD(S(2), S(3), S(12)) == 1
