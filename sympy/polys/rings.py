@@ -194,15 +194,16 @@ class PolyRing(DefaultPrinting, IPolys):
         domain = DomainOpt.preprocess(domain)
         order = OrderOpt.preprocess(order)
 
-        _hash = hash((cls.__name__, symbols, ngens, domain, order))
-        obj = _ring_cache.get(_hash)
+        _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
+        obj = _ring_cache.get(_hash_tuple)
 
         if obj is None:
             if domain.is_Composite and set(symbols) & set(domain.symbols):
                 raise GeneratorsError("polynomial ring and it's ground domain share generators")
 
             obj = object.__new__(cls)
-            obj._hash = _hash
+            obj._hash_tuple = _hash_tuple
+            obj._hash = hash(_hash_tuple)
             obj.dtype = type("PolyElement", (PolyElement,), {"ring": obj})
             obj.symbols = symbols
             obj.ngens = ngens
@@ -248,7 +249,7 @@ class PolyRing(DefaultPrinting, IPolys):
                     if not hasattr(obj, name):
                         setattr(obj, name, generator)
 
-            _ring_cache[_hash] = obj
+            _ring_cache[_hash_tuple] = obj
 
         return obj
 
@@ -280,10 +281,12 @@ class PolyRing(DefaultPrinting, IPolys):
         return self._hash
 
     def __eq__(self, other):
-        return self is other
+        return isinstance(other, PolyRing) and \
+            (self.symbols, self.domain, self.ngens, self.order) == \
+            (other.symbols, other.domain, other.ngens, other.order)
 
     def __ne__(self, other):
-        return self is not other
+        return not self.__eq__(other)
 
     def clone(self, symbols=None, domain=None, order=None):
         return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
@@ -654,7 +657,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         if not p2:
             return not p1
-        elif isinstance(p2, p1.ring.dtype):
+        elif isinstance(p2, PolyElement) and p2.ring == p1.ring:
             return dict.__eq__(p1, p2)
         elif len(p1) > 1:
             return False

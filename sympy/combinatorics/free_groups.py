@@ -703,7 +703,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         0
 
         """
-        return sum([abs(j) for (i, j) in self])
+        return sum(abs(j) for (i, j) in self)
 
     def __eq__(self, other):
         """

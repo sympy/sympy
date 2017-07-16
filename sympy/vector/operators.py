@@ -1,6 +1,6 @@
 from sympy.core.expr import Expr
 from sympy.core import  sympify, S
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Vector
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -16,11 +16,12 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
         SymPyDeprecationWarning(
             feature="coord_sys parameter",
             useinstead="do not use it",
-            deprecated_since_version="1.1"
+            deprecated_since_version="1.1",
+            issue=12884,
         ).warn()
 
     try:
-        coord_sys = list(expr.atoms(CoordSysCartesian))
+        coord_sys = list(expr.atoms(CoordSys3D))
         if len(coord_sys) == 1:
             return coord_sys[0]
         else:
@@ -36,8 +37,8 @@ class Gradient(Expr):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, Gradient
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, Gradient
+    >>> R = CoordSys3D('R')
     >>> s = R.x*R.y*R.z
     >>> Gradient(s)
     Gradient(R.x*R.y*R.z)
@@ -61,8 +62,8 @@ class Divergence(Expr):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, Divergence
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, Divergence
+    >>> R = CoordSys3D('R')
     >>> v = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
     >>> Divergence(v)
     Divergence(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
@@ -86,8 +87,8 @@ class Curl(Expr):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, Curl
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, Curl
+    >>> R = CoordSys3D('R')
     >>> v = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
     >>> Curl(v)
     Curl(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
@@ -115,7 +116,7 @@ def curl(vect, coord_sys=None, doit=True):
     vect : Vector
         The vector operand
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to calculate the gradient in.
         Deprecated since version 1.1
 
@@ -127,8 +128,8 @@ def curl(vect, coord_sys=None, doit=True):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, curl
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, curl
+    >>> R = CoordSys3D('R')
     >>> v1 = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
     >>> curl(v1)
     0
@@ -170,7 +171,7 @@ def divergence(vect, coord_sys=None, doit=True):
     vector : Vector
         The vector operand
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to calculate the gradient in
         Deprecated since version 1.1
 
@@ -182,8 +183,8 @@ def divergence(vect, coord_sys=None, doit=True):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, divergence
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, divergence
+    >>> R = CoordSys3D('R')
     >>> v1 = R.x*R.y*R.z * (R.i+R.j+R.k)
 
     >>> divergence(v1)
@@ -220,7 +221,7 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     scalar_field : SymPy Expr
         The scalar field to compute the gradient of
 
-    coord_sys : CoordSysCartesian
+    coord_sys : CoordSys3D
         The coordinate system to calculate the gradient in
         Deprecated since version 1.1
 
@@ -232,8 +233,8 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, gradient
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, gradient
+    >>> R = CoordSys3D('R')
     >>> s1 = R.x*R.y*R.z
     >>> gradient(s1)
     R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
