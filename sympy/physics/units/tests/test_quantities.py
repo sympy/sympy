@@ -12,7 +12,7 @@ from sympy.physics.units.definitions import amu, au, centimeter, coulomb, day, \
 from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import XFAIL, raises
 
 k = PREFIXES["k"]
 
@@ -256,15 +256,19 @@ def test_factor_and_dimension():
     assert (1, volume/amount_of_substance) == Quantity._collect_factor_and_dimension(
         exp(pH))
 
-    v_w1 = Quantity('v_w1', length/time, 1.5*meter/second)
+    v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
     v_w2 = Quantity('v_w2', length/time, 2*meter/second)
     expr = Abs(v_w1/2 - v_w2)
-    assert (1.25000000000000, length/time) == \
+    assert (S(5)/4, length/time) == \
         Quantity._collect_factor_and_dimension(expr)
 
+    expr = S(5)/2*second/meter*v_w1 - 3000
+    assert (-(2996 + S(1)/4), Dimension(1)) == \
+        Quantity._collect_factor_and_dimension(expr)
+
+
+@XFAIL
+def test_factor_and_dimension_with_Abs():
+    v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)
-    assert (0, Dimension(1)) == Quantity._collect_factor_and_dimension(expr)
-
-    expr = 2.5*second/meter*v_w1 - 3000
-    assert (-2996.25000000000, Dimension(1)) == \
-        Quantity._collect_factor_and_dimension(expr)
+    assert (0, lenth/time) == Quantity._collect_factor_and_dimension(expr)
