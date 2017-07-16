@@ -625,7 +625,7 @@ def idiff(eq, y, x, n=1):
         dydx = dydx.diff(x)
 
 
- def intersection(*entities, **kwargs):
+def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
     Parameters
     ==========
@@ -713,4 +713,4 @@ def idiff(eq, y, x, n=1):
     for j in range(0, len(entities)):
         for k in range(j + 1, len(entities)):
             ans.extend(intersection(entities[j], entities[k]))
-return list(ordered(set(ans)))
+    return list(ordered(set(ans)))
