@@ -372,7 +372,6 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
-        print(self.limits)
         if not hints.get('integrals', True):
             return self
 
@@ -759,6 +758,7 @@ class Integral(AddWithLimits):
                     return result
             except (ValueError, PolynomialError):
                 pass
+
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
