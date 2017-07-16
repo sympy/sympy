@@ -695,7 +695,6 @@ def intersection(*entities, **kwargs):
                 entities[i] = Point(e)
             except NotImplementedError:
                 raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
-
     if not pairwise:
         # find the intersection common for all objects
         res = entities[0].intersection(entities[1])
@@ -705,7 +704,6 @@ def intersection(*entities, **kwargs):
                 newres.extend(x.intersection(entity))
             res = newres
         return res
- 
     # find all pairwise intersections
     ans = []
     for j in range(0, len(entities)):
