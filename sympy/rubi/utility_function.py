@@ -16,7 +16,7 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E, expand_trig, poly, apart, lcm)
+    Min, Max, sign, E, expand_trig, poly, apart, lcm, And)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
@@ -1599,9 +1599,9 @@ def RationalFunctionExponents(u, x):
 def RationalFunctionExpand(expr, x):
     # (* u is a polynomial or rational function of x. *)
     # (* RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors. *)
-    u_ = Wild('u', exclude=[1])
-    v_ = Wild('v')
-    n_ = Wild('n', exclude=[x, 1, -1])
+    u_ = Wild('u', exclude=[1, 0])
+    v_ = Wild('v', exclude=[1, 0])
+    n_ = Wild('n', exclude=[x, 1, -1, 0])
     pattern = u_*v_**n_
     match = expr.match(pattern)
     if match:
@@ -1619,9 +1619,9 @@ def RationalFunctionExpand(expr, x):
     t = False
 
     a_ = Wild('a', exclude=[x, 0])
-    b_ = Wild('b', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
     c_ = Wild('c', exclude=[x, 0])
-    d_ = Wild('d', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
     m_ = Wild('m', exclude=[x])
     p_ = Wild('p', exclude=[x, 1])
 
@@ -1646,23 +1646,6 @@ def RationalFunctionExpand(expr, x):
     return v*w
 
 def ExpandIntegrand(expr, x, extra=None):
-    w_, u_, v_ = map(Wild, 'wuv')
-    p_ = Wild('p', exclude=[x])
-    q_ = Wild('q', exclude=[x])
-    a_ = Wild('a', exclude=[x])
-    b_ = Wild('b', exclude=[x])
-    c_ = Wild('c', exclude=[x])
-    d_ = Wild('d', exclude=[x])
-    e_ = Wild('e', exclude=[x])
-    f_ = Wild('f', exclude=[x])
-    g_ = Wild('g', exclude=[x])
-    h_ = Wild('h', exclude=[x])
-    j_ = Wild('j', exclude=[x])
-    n_ = Wild('n', exclude=[x])
-    m_ = Wild('m', exclude=[x])
-    F_ = Wild('F', exclude=[x])
-    k, q, i = symbols('k q i')
-
     if extra:
         w = ExpandIntegrand(extra, x)
         r = NonfreeTerms(w, x)
@@ -1674,6 +1657,17 @@ def ExpandIntegrand(expr, x, extra=None):
         else:
             return expr*FreeTerms(w, x) + MergeMonomials(expr*r, x)
 
+    k, q, i = symbols('k q i')
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
+    e_ = Wild('e', exclude=[x, 0])
+    f_ = Wild('f', exclude=[x])
+    g_ = Wild('g', exclude=[x])
+    h_ = Wild('h', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0])
+    m_ = Wild('m', exclude=[x, 0])
     # Basis: (a+b x)^m/(c+d x)==(b (a+b x)^(m-1))/d+((a d-b c) (a+b x)^(m-1))/(d (c+d x))
     pattern = (a_ + b_*x)**m_*f_**(e_*(c_ + d_*x)**n_)/(g_+h_*x)
     match = expr.match(pattern)
@@ -1685,6 +1679,15 @@ def ExpandIntegrand(expr, x, extra=None):
                 tmp = a*h - b*g
                 return SimplifyTerm(tmp**m/h**m, x)*f**(e*(c + d*x)**n)/(g + h*x) + Sum(SimplifyTerm(b*tmp**(k-1)/h**k, x)*f**(e*(c+d*x)**n)*(a + b*x)**(m-k), (k, 1, m)).doit()
 
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    d_ = Wild('d', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 1, 0])
+    m_ = Wild('m', exclude=[x, 0])
+    F_ = Wild('F', exclude=[x, 1, 0])
+    v_ = Wild('v', exclude=[0])
+    u_ = Wild('u', exclude=[0])
     pattern = u_*(a_ + b_*F_**v_)**m_*(c_ + d_*F_**v_)**n_
     match = expr.match(pattern)
     if match:
@@ -1692,12 +1695,21 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, a, b, F, v, m, c, d, n = tuple([match[i] for i in keys])
             if IntegersQ(m, n) and NegativeQ(n):
-                w = ReplaceAll(ExpandIntegrand((a+b*x)**m*(c + d*x)**n, x), {x: F**v})
+                w = ReplaceAll(ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x), {x: F**v})
                 result = []
                 for i in w.args:
                     result.append(i*u)
                 return w.func(*result)
-    #print('2')
+
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    d_ = Wild('d', exclude=[x])
+    e_ = Wild('e', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0])
+    m_ = Wild('m', exclude=[x, 0])
+    p_ = Wild('p', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0, 1])
     pattern = u_*(a_ + b_*x)**m_*Log(c_*(d_ + e_*x**n_)**p_)
     match = expr.match(pattern)
     if match:
@@ -1706,7 +1718,13 @@ def ExpandIntegrand(expr, x, extra=None):
             u, a, b, m, c, d, e, n, p = tuple([match[i] for i in keys])
             if PolynomialQ(u, x):
                 return ExpandIntegrand(Log(c*(d + e*x**n)**p), x, u*(a + b*x)**m)
-    #print('3')
+
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
+    e_ = Wild('e', exclude=[x, 0])
+    f_ = Wild('f', exclude=[x, 0, 1])
+    u_ = Wild('u', exclude=[0, 1])
+    n_ = Wild('n', exclude=[x, 0])
     pattern = u_*f_**(e_*(c_ + d_*x)**n_)
     match = expr.match(pattern)
     if match:
@@ -1718,7 +1736,17 @@ def ExpandIntegrand(expr, x, extra=None):
                     return ExpandIntegrand(f**(e*(c + d*x)**n), x, u)
                 else:
                     return ExpandLinearProduct(f**(e*(c + d*x)**n), u, c, d, x)
-    #print('4')
+
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    d_ = Wild('d', exclude=[x, 0])
+    e_ = Wild('e', exclude=[x])
+    f_ = Wild('f', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0, 1])
+    p_ = Wild('p', exclude=[x, 0])
+    q_ = Wild('q', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0])
     pattern = u_*(a_ + b_*Log(c_*(d_*(e_ + f_*x)**p_)**q_))**n_
     match = expr.match(pattern)
     if match:
@@ -1727,7 +1755,14 @@ def ExpandIntegrand(expr, x, extra=None):
             u, a, b, c, d, e, f, p, q, n = tuple([match[i] for i in keys])
             if PolynomialQ(u, x):
                 return ExpandLinearProduct((a + b*Log(c*(d*(e + f*x)**p)**q))**n, u, e, f, x)
-    #print('5')
+
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0, 1])
+    n_ = Wild('n', exclude=[0])
+    j_ = Wild('j', exclude=[0])
+    p_ = Wild('p', exclude=[0])
     pattern = (a_ + b_*u_**n_ + c_*u_**j_)**p_
     match = expr.match(pattern)
     if match:
@@ -1736,7 +1771,15 @@ def ExpandIntegrand(expr, x, extra=None):
             a, b, u, n, c, j, p = tuple([match[i] for i in keys])
             if IntegerQ(n) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and NonzeroQ(b**2 - 4*a*c):
                 ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2), x: u**n})
-    #print('6')
+
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    n_ = Wild('n', exclude=[0])
+    m_ = Wild('m', exclude=[0])
+    j_ = Wild('j', exclude=[0])
+    p_ = Wild('p', exclude=[1])
+    u_ = Wild('u', exclude=[0, 1])
     pattern = u_**m_*(a_ + b_*u_**n_ + c_*u_**j_)**p_
     match = expr.match(pattern)
     if match:
@@ -1745,7 +1788,12 @@ def ExpandIntegrand(expr, x, extra=None):
             u, m, a, b, n, c, j, p = tuple([match[i] for i in keys])
             if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0<m<2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
                 return ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, 2),x: u})
-    #print('7')
+
+    a_ = Wild('a', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    u_ = Wild('u', exclude=[1, 0])
+    n_ = Wild('n', exclude=[x, 0])
+    p_ = Wild('p', exclude=[0, 1])
     # Basis: If  q=Sqrt[-a c], then a+c z^2==((-q+c z)(q+c z))/c
     pattern = (a_ + c_*u_**n_)**p_
     match = expr.match(pattern)
@@ -1754,18 +1802,30 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, c, u, n, p = tuple([match[i] for i in keys])
             if IntegerQ(n/2) and NegativeIntegerQ(p):
-                #print('here', {q: Rt(-a*c,2),x: u**(n/2)}, S(1)/c**p, (-q + c*x)**p*(q + c*x)**p)
                 return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c,2),x: u**(n/2)})
-    #print('8')
+
+    u_ = Wild('u', exclude=[0, 1])
+    m_ = Wild('m', exclude=[x, 0])
+    a_ = Wild('a', exclude=[x])
+    c_ = Wild('c', exclude=[x, 1])
+    n_ = Wild('n', exclude=[x, 0])
+    p_ = Wild('p', exclude=[x, 1, 0])
     pattern = u_**m_*(a_ + c_*u_**n_)**p_
     match = expr.match(pattern)
     if match:
         keys = [u_, m_, a_, c_, n_, p_]
         if len(keys) == len(match):
             u, m, a, c, n, p = tuple([match[i] for i in keys])
-            if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0<m<n and (m != n/2):
+            if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0 < m < n and (m != n/2):
                 return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, 2), x: u})
-    #print('9')
+
+    u_ = Wild('u', exclude=[0])
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    d_ = Wild('d', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0, 1])
+    j_ = Wild('j', exclude=[x, 0, 1])
     # Basis: 1/(a x^n+b Sqrt[c+d x^(2 n)])==(a x^n-b Sqrt[c+d x^(2 n)])/(-b^2 c+(a^2-b^2 d) x^(2 n))
     pattern = u_/(a_*x**n_ + b_*Sqrt(c_ + d_*x**j_))
     match = expr.match(pattern)
@@ -1775,7 +1835,17 @@ def ExpandIntegrand(expr, x, extra=None):
             u, a, n, b, c, d, j = tuple([match[i] for i in keys])
             if ZeroQ(j - 2*n):
                 return ExpandIntegrand(u*(a*x**n - b*Sqrt(c + d*x**(2*n)))/(-b**2*c + (a**2 - b**2*d)*x**(2*n)), x)
-    #print('10')
+
+    d_ = Wild('d', exclude=[x])
+    e_ = Wild('e', exclude=[x, 0])
+    f_ = Wild('f', exclude=[x])
+    g_ = Wild('g', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0])
+    n_ = Wild('n', exclude=[x, 0])
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    j_ = Wild('j', exclude=[x, 0])
     # Basis: If  q=Sqrt[b^2-4a c] and r=(2 c d-b e)/q, then (d+e z)/(a+b z+c z^2)==(e+r)/(b-q+2 c z)+(e-r)/(b+q+2 c z)*)
     pattern = (d_ + e_*(f_ + g_*u_**n_))/(a_ + b_*u_**n_ + c_*u_**j_)
     match = expr.match(pattern)
@@ -1787,7 +1857,18 @@ def ExpandIntegrand(expr, x, extra=None):
                 q = Rt(b**2 - 4*a*c, 2)
                 r = TogetherSimplify((2*c*(d + e*f) - b*e*g)/q)
                 return (e*g + r)/(b - q + 2*c*u**n) + (e*g - r)/(b + q + 2*c*u**n)
-    #print('11')
+
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0])
+    m_ = Wild('m', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0, 1])
+    e_ = Wild('e', exclude=[x, 0])
+    p_ = Wild('p', exclude=[x, 0, 1])
+    f_ = Wild('f', exclude=[x, 0])
+    q_ = Wild('q', exclude=[x, 0, 1])
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
     # Basis: If (m|n,p,q)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<p<q<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m + e*z^p + f*z^q)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)) + (e*(r/s)^p)/(-1)^(2*k*(p/n)) + (f*(r/s)^q)/(-1)^(2*k*(q/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
     pattern = (c_ + d_*u_**m_ + e_*u_**p_ + f_*u_**q_)/(a_ + b_*u_**n_)
     match = expr.match(pattern)
@@ -1799,7 +1880,16 @@ def ExpandIntegrand(expr, x, extra=None):
                 r = Numerator(Rt(-a/b, n))
                 s = Denominator(Rt(-a/b, n))
                 return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n) + r*f*(r/s)**q*(-1)**(-2*k*q/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k,1,n)).doit()
-    #print('12')
+
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0])
+    m_ = Wild('m', exclude=[x, 0])
+    e_ = Wild('e', exclude=[x, 0])
+    p_ = Wild('p', exclude=[x, 0, 1])
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0, 1])
     # Basis: If (m|n,p)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<p<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m + e*z^p)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)) + (e*(r/s)^p)/(-1)^(2*k*(p/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
     pattern = (c_ + d_*u_**m_ + e_*u_**p_)/(a_ + b_*u_**n_)
     match = expr.match(pattern)
@@ -1811,7 +1901,12 @@ def ExpandIntegrand(expr, x, extra=None):
                 r = Numerator(Rt(-a/b, n))
                 s = Denominator(Rt(-a/b, n))
                 return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
-    #print('13')
+
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    m_ = Wild('m', exclude=[x, 0, 1, -1])
+    c_ = Wild('c', exclude=[x, 0])
+    d_ = Wild('d', exclude=[x, 0])
     # Basis: (a+b x)^m/(c+d x)==(b (a+b x)^(m-1))/d+((a d-b c) (a+b x)^(m-1))/(d (c+d x))
     pattern = (a_ + b_*x)**m_/(c_ + d_*x)
     match = expr.match(pattern)
@@ -1828,7 +1923,14 @@ def ExpandIntegrand(expr, x, extra=None):
                     for k in range(1, m + 1):
                         result += SimplifyTerm(b*tmp**(k - 1)/d**k, x)*(a + b*x)**(m - k)
                     return result
-    #print('14')
+
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0, 1])
+    m_ = Wild('m', exclude=[x, 0])
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0])
     pattern = (c_ + d_*u_**m_)/(a_ + b_*u_**n_)
     match = expr.match(pattern)
     if match:
@@ -1846,7 +1948,11 @@ def ExpandIntegrand(expr, x, extra=None):
                 n = m
                 q = Rt(-a/b, 2)
                 return -(c - d*q)/(2*b*q*(q + u**n)) - (c + d*q)/(2*b*q*(q - u**n))
-    #print('15')
+
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    u_ = Wild('u', exclude=[0, 1])
+    n_ = Wild('n', exclude=[x, 0, -1])
     pattern = 1/(a_ + b_*u_**n_)
     match = expr.match(pattern)
     if match:
@@ -1868,9 +1974,14 @@ def ExpandIntegrand(expr, x, extra=None):
                 r = Numerator(Rt(-a/b, n))
                 s = Denominator(Rt(-a/b, n))
                 return Sum(r/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
-    #print('16')
+
+    u_ = Wild('u', exclude=[0, 1])
+    m_ = Wild('m', exclude=[x])
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    n_ = Wild('n', exclude=[x, 0, 1])
     # Basis: If  (m|(n-1)/2)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(a/b)^(1/n), then z^m/(a + b*z^n) == (r*(-(r/s))^m*Sum[1/((-1)^(2*k*(m/n))*(r + (-1)^(2*(k/n))*s*z)), {k, 1, n}])/(a*n) == (r*(-(r/s))^m*Sum[(-1)^(2*k*((m + 1)/n))/((-1)^(2*(k/n))*r + s*z), {k, 1, n}])/(a*n)
-    pattern = u_**m_/(a_+b_*u_**n_)
+    pattern = u_**m_/(a_ + b_*u_**n_)
     match = expr.match(pattern)
     if match:
         keys = [u_, m_, a_, b_, n_]
@@ -1884,18 +1995,22 @@ def ExpandIntegrand(expr, x, extra=None):
                     return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g)).doit()
                 else:
                     return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g)).doit()
-            elif IntegersQ(m, n) and 0<m<n:
+            elif IntegersQ(m, n) and 0 < m < n:
                 g = GCD(m, n)
                 r = Numerator(Rt(-a/b, n/GCD(m, n)))
                 s = Denominator(Rt(-a/b, n/GCD(m, n)))
                 if n/g == 2:
-                    return s/(2*b*(r+s*u^g)) - s/(2*b*(r-s*u^g))
+                    return s/(2*b*(r + s*u**g)) - s/(2*b*(r - s*u**g))
                 else:
                     if CoprimeQ[m+g,n]:
                         return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g)).doit()
                     else:
                         return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g)).doit()
-    #print('17')
+
+    u_ = Wild('u', exclude=[0, 1])
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    m_ = Wild('m', exclude=[x, -1, 0])
     # If u is a polynomial in x, ExpandIntegrand[u*(a+b*x)^m,x] expand u*(a+b*x)^m into a sum of terms of the form A*(a+b*x)^n.
     pattern = u_*(a_ + b_*x)**m_
     match = expr.match(pattern)
@@ -1903,11 +2018,24 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [u_, a_, b_, m_]
         if len(keys) == len(match):
             u, a, b, m = tuple([match[i] for i in keys])
-            try:
-                w, c, d, p = MatchQ(u, w_*(c_+d_*x)**p_, w_, c_, d_, p_)
-                res = IntegerQ(p) & p > m
-            except: # if not matched
+            w_ = Wild('w', exclude=[0])
+            c_ = Wild('c', exclude=[x, 0])
+            d_ = Wild('d', exclude=[x, 0])
+            p_ = Wild('p', exclude=[x, 0, 1])
+
+            if PolynomialQ(u, x):
+                if PositiveIntegerQ(m):
+                    return (u*(a + b*x)**m).expand()
+
+            match = u.match(w_*(c_+d_*x)**p_)
+            if match:
+                if IntegerQ(match[p_]) and match[p_] >= m:
+                    res = True
+                else:
+                    res = False
+            else:
                 res = False
+
             if PolynomialQ(u, x) and Not(PositiveIntegerQ(m) and res) and (u != 1):
                 tmp1 = ExpandLinearProduct((a+b*x)**m, u, a, b, x)
                 if not IntegerQ(m):
@@ -1918,7 +2046,14 @@ def ExpandIntegrand(expr, x, extra=None):
                         return tmp2
                     else:
                         return tmp1
-    #print('18')
+
+    u_ = Wild('u', exclude=[0, 1])
+    v_ = Wild('v', exclude=[0, 1])
+    n_ = Wild('n', exclude=[x, 1, 0])
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    m_ = Wild('m', exclude=[x, 0, 1])
+    # (* If u is a polynomial in x, ExpandIntegrand[u*(a+b*x)^m,x] expand u*(a+b*x)^m into a sum of terms of the form A*(a+b*x)^n. *)
     pattern = u_*v_**n_*(a_ + b_*x)**m_
     match = expr.match(pattern)
     if match:
@@ -1931,7 +2066,7 @@ def ExpandIntegrand(expr, x, extra=None):
             elif NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & (Exponent(u, x) >= -n*Exponent(v, x)):
                 pr = PolynomialQuotientRemainder(u, v**(-n),x)
                 return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
-    #print('19')
+
     pattern = u_/v_
     match = expr.match(pattern)
     if match:
@@ -1946,12 +2081,7 @@ def ExpandIntegrand(expr, x, extra=None):
             elif PolynomialQ(u, x) and PolynomialQ(v, x) and Exponent(u, x) >= Exponent(v, x):
                 return PolynomialDivide(u, v, x)
 
-    r = ExpandExpression(expr, x)
-
-    if r != expr:
-        return r
-
-    return expr.expand()
+    return ExpandExpression(expr, x)
 
 def SimplerQ(u, v):
     # If u is simpler than v, SimplerQ(u, v) returns True, else it returns False.  SimplerQ(u, u) returns False

@@ -5,7 +5,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi, pprint, hyper
 
-a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, v = symbols('a b c d e f g h x y z m n p q v', real=True, imaginary=False)
+a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, u, v, F = symbols('a b c d e f g h x y z m n p q u v F', real=True, imaginary=False)
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -553,8 +553,24 @@ def test_PolynomialDivide():
 
 def test_ExpandIntegrand():
     #print(ExpandIntegrand(x/(a*x**1 + b*Sqrt(c + d*x**2)), x))
-    #print(ExpandIntegrand((1 - 1*x**2)**(-3), x))
-    #print(ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)))
+    assert simplify(ExpandIntegrand((1 - 1*x**2)**(-3), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
+    assert ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
+    assert ExpandIntegrand((Sqrt(2) + 1*x)**(3)/(2 + 1*x), x) == (x + sqrt(2))**2 + (-2 + sqrt(2))*(x + sqrt(2)) + (-2 + sqrt(2))**2 + (-20 + 14*sqrt(2))/(x + 2)
+    assert ExpandIntegrand((1 + 1*x)**(3)/(2 + 1*x), x) == x**2 + x + 1 - 1/(x + 2)
+    assert ExpandIntegrand((c + d*x**1 + e*x**2)/(1 - x**3), x) == (c - (-1)**(S(1)/3)*d + (-1)**(S(2)/3)*e)/(-3*(-1)**(S(2)/3)*x + 3) + (c + (-1)**(S(2)/3)*d - (-1)**(S(1)/3)*e)/(3*(-1)**(S(1)/3)*x + 3) + (c + d + e)/(-3*x + 3)
+    assert ExpandIntegrand((c + d*x**1 + e*x**2 + f*x**3)/(1 - x**4), x) == (c + I*d - e - I*f)/(4*I*x + 4) + (c - I*d - e + I*f)/(-4*I*x + 4) + (c - d + e - f)/(4*x + 4) + (c + d + e + f)/(-4*x + 4)
+    assert ExpandIntegrand((d + e*(f + g*x))/(2 + 3*x + 1*x**2), x) == (-2*d - 2*e*f + 4*e*g)/(2*x + 4) + (2*d + 2*e*f - 2*e*g)/(2*x + 2)
+    assert ExpandIntegrand(x/(a*x**3 + b*Sqrt(c + d*x**6)), x) == a*x**4/(-b**2*c + x**6*(a**2 - b**2*d)) + b*x*sqrt(c + d*x**6)/(b**2*c + x**6*(-a**2 + b**2*d))
+    assert simplify(ExpandIntegrand(x**1*(1 - x**4)**(-2), x) - (x/(S(4)*(x**2 + 1)) + x/(S(4)*(x**2 + 1)**2) - x/(S(4)*(x**2 - 1)) + x/(S(4)*(x**2 - 1)**2))) == 0
+    assert simplify(ExpandIntegrand((-1 + x**S(6))**(-3), x) - (S(3)/(S(8)*(x**6 - 1)) - S(3)/(S(16)*(x**S(3) + S(1))**S(2)) - S(1)/(S(8)*(x**S(3) + S(1))**S(3)) - S(3)/(S(16)*(x**S(3) - S(1))**S(2)) + S(1)/(S(8)*(x**S(3) - S(1))**S(3)))) == 0
+    assert ExpandIntegrand(u**1*(a + b*u**2 + c*u**4)**(-1), x) == -2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 + sqrt(-4*a*c + b**2))) + 2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 - sqrt(-4*a*c + b**2)))
+    assert simplify(ExpandIntegrand((1 + 1*u + 1*u**2)**(-2), x) - (S(1)/(S(2)*(-u - 1)*(-u**2 - u - 1)) + S(1)/(S(4)*(-u - 1)*(u + sqrt(-u - 1))**2) + S(1)/(S(4)*(-u - 1)*(u - sqrt(-u - 1))**2))) == 0
+    assert ExpandIntegrand(x*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == -e*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f
+    assert ExpandIntegrand(x*f**(e*(c + d*x)*S(1)), x) == f**(e*(c + d*x))*x
+    assert simplify(ExpandIntegrand((x)*(a + b*x)**m*Log(c*(d + e*x**n)**p), x) - (-a*(a + b*x)**m*log(c*(d + e*x**n)**p)/b + (a + b*x)**(m + S(1))*log(c*(d + e*x**n)**p)/b)) == 0
+    assert simplify(ExpandIntegrand(u*(a + b*F**v)**S(2)*(c + d*F**v)**S(-3), x) - (b**2*u/(d**2*(F**v*d + c)) + 2*b*u*(a*d - b*c)/(d**2*(F**v*d + c)**2) + u*(a*d - b*c)**2/(d**2*(F**v*d + c)**3))) == 0
+    assert ExpandIntegrand((S(1) + 1*x)**S(2)*f**(e*(1 + S(1)*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)/h + f**(e*(x + 1)**n)*(-g + h)/h**2 + f**(e*(x + 1)**n)*(g - h)**2/(h**2*(g + h*x))
+
     assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
     assert simplify(ExpandIntegrand(x**2*(1 - 1*x**2)**(-2), x) - (1/(S(2)*(x**2 - 1)) + 1/(S(4)*(x + 1)**2) + 1/(S(4)*(x - 1)**2))) == 0
     assert ExpandIntegrand((a + x)**2, x) == a**2 + 2*a*x + x**2
@@ -1430,6 +1446,11 @@ def test_AbsurdNumberGCD():
     assert AbsurdNumberGCD(S(4), S(8), S(12)) == 4
     assert AbsurdNumberGCD(S(2), S(3), S(12)) == 1
 
+def test_RationalFunctionExpand():
+    assert RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x - (x - 2)/(2*x**2 + 1) - 2
+    assert RationalFunctionExpand((a + b*x + c*x**4)*log(x)**3, x) == a*log(x)**3 + b*x*log(x)**3 + c*x**4*log(x)**3
+    assert RationalFunctionExpand(a + b*x + c*x**4, x) == a + b*x + c*x**4
+
 def test_SameQ():
     assert SameQ(1, 1, 1)
     assert not SameQ(1, 1, 2)
@@ -1443,12 +1464,8 @@ def test_ConstantFactor():
     assert ConstantFactor(x**S(2), x) == [1, x**2]
     assert ConstantFactor(x**(S(1)/3), x) == [1, x**(1/3)]
     assert ConstantFactor(a*x**3, x) == [a, x**3]
-    #print(ConstantFactor(a + x, x))
 
-def test_RationalFunctionExpand():
-    assert RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x - x/(2*x**2 + 1) - 2 + 2/(2*x**2 + 1)
-    assert RationalFunctionExpand((a + b*x + c*x**4)*log(x)**3, x) == a*log(x)**3 + b*x*log(x)**3 + c*x**4*log(x)**3
-    assert RationalFunctionExpand(a + b*x + c*x**4, x) == a + b*x + c*x**4
+
 
 def test_ConstantFactor():
     assert ConstantFactor(a + a*x**3, x) == [a, x**3 + 1]
