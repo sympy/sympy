@@ -6,11 +6,11 @@ singularity functions in mechanics.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, diff
+from sympy.core import Symbol
+from sympy.core.backend import S, diff, sympify
 from sympy.solvers import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction
-from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 
