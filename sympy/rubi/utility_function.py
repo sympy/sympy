@@ -1,5 +1,7 @@
 '''
-Utility functions for Rubi integration
+Utility functions for Rubi integration.
+
+See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Integration%20utility%20functions.pdf
 '''
 
 from sympy.functions.elementary.integers import floor, frac

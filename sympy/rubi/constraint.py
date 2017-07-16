@@ -1,5 +1,4 @@
 from matchpy import Constraint, substitute
-from sympy import sympify
 from sympy.logic.boolalg import BooleanTrue
 from sympy.rubi.matchpy2sympy import matchpy2sympy
 

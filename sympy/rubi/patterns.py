@@ -1,8 +1,7 @@
-
 from matchpy import Wildcard, Pattern, ReplacementRule, ManyToOneReplacer
-from .operation import *
-from .symbol import VariableSymbol, Integer
-from .constraint import cons, FreeQ
+from sympy.rubi.operation import *
+from sympy.rubi.symbol import VariableSymbol, Integer
+from sympy.rubi.constraint import cons, FreeQ
 
 a, b, c, d, e, f, g, h, x, u, p = map(VariableSymbol, 'abcdefghxup')
 n, m = map(VariableSymbol, 'nm')

@@ -1,5 +1,4 @@
 from matchpy import Symbol, Wildcard
-import matchpy
 
 class VariableSymbol(Symbol):
     pass
