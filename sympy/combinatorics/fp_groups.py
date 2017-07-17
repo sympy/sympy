@@ -304,7 +304,7 @@ class FpSubgroup(DefaultPrinting):
         if self._min_words is None:
             gens = self.generators[:]
             gens.extend([e**-1 for e in gens])
-            for i, w1 in enumerate(gens):
+            for w1 in gens:
                 for w2 in gens:
                     if w2**-1 == w1:
                         continue
