@@ -122,6 +122,32 @@ The output of the code above is::
 
 Example of Custom Printing Method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example below, we want to print modulo operator in a different way in
+latex. Therefore, we override the method ``_latex`` of ``Mod``. See the example
+below::
+
+    from sympy import Symbol, Mod
+    from sympy.printing.latex import print_latex
+
+
+    class ModOp(Mod):
+        def _latex(self, printer=None):
+            a, b = [printer.doprint(i) for i in self.args]
+            return "\operatorname{Mod}{\left( %s,%s \\\\right)}" % (a,b)
+
+
+    x = Symbol('x')
+    m = Symbol('m')
+
+    print_latex(ModOp(x, m))
+    print_latex(Mod(x, m))
+
+The output of the code above is::
+
+    \\operatorname{Mod}{\\left( x,m \\right)}
+    x\\bmod{m}
+
 """
 
 from __future__ import print_function, division
