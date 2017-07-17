@@ -752,3 +752,17 @@ def test_subgroup():
     G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
     H = G.subgroup([Permutation(0,1,3)])
     assert H.is_subgroup(G)
+
+def test_presentation():
+    def _test(P):
+        G = P.presentation()
+        return G.order() == P.order()
+
+    P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6),Permutation(0,3,5,4)(1,6,2,7))
+    assert _test(P)
+
+    P = AlternatingGroup(5)
+    assert _test(P)
+
+    P = SymmetricGroup(4)
+    assert _test(P)

@@ -127,6 +127,8 @@ class PermutationGroup(Basic):
             args = [Permutation()]
         else:
             args = list(args[0] if is_sequence(args[0]) else args)
+            if not args:
+                args = [Permutation()]
         if any(isinstance(a, Cycle) for a in args):
             args = [Permutation(a) for a in args]
         if has_variety(a.size for a in args):
@@ -716,9 +718,12 @@ class PermutationGroup(Basic):
         # 1<=l<=len(base). While H^(l) is the trivial group, T^(l)
         # contains all the elements of G^(l) so we might just as well
         # start with l = len(h_stabs)-1
-        T = g_stabs[len(h_stabs)]._elements
-        t_len = len(T)
+        if len(g_stabs) > len(h_stabs):
+            T = g_stabs[len(h_stabs)]._elements
+        else:
+            T = [identity]
         l = len(h_stabs)-1
+        t_len = len(T)
         while l > -1:
             T_next = []
             for u in transversals[l]:
@@ -1898,7 +1903,7 @@ class PermutationGroup(Basic):
         """
         if not isinstance(G, PermutationGroup):
             return False
-        if self == G:
+        if self == G or self.generators[0]==Permutation():
             return True
         if G.order() % self.order() != 0:
             return False
@@ -3328,6 +3333,104 @@ class PermutationGroup(Basic):
             return n
         else:
             return self._transitivity_degree
+
+    def presentation(G):
+        '''
+        Return an `FpGroup` presentation of the group
+
+        '''
+        from sympy.combinatorics.fp_groups import FpGroup
+        from sympy.combinatorics.coset_table import CosetTable
+        from sympy.combinatorics.free_groups import free_group
+        from itertools import product
+
+        def _factor_group_by_rels(G, rels):
+            if isinstance(G, FpGroup):
+                return FpGroup(G.free_group, list(uniq(
+                                    g for g in G.relators + rels)))
+            return FpGroup(G, rels)
+
+        len_g = len(G.generators)
+
+        if len_g == 1:
+            order = G.generators[0].order()
+            # handle the trivial group
+            if order == 1:
+                return free_group([])[0]
+            F, x = free_group('x')
+            return FpGroup(F, [x**order])
+
+        H = PermutationGroup(Permutation(G.degree-1))
+        H_p = H.presentation()
+        C = G.coset_table(H)
+        n = len(C) # subgroup index
+
+        gen_syms = [('x_%d'%i) for i in range(len(G.generators))]
+        F = free_group(', '.join(gen_syms))[0]
+
+        len_h = len(H_p.generators)
+
+        # the rewriting could be replaced by a homomorphism
+        images = {H_p.generators[i]: F.generators[i] for i in range(len_h)}
+
+        def _rewrite(group, w):
+            w1 = group.identity
+            for i in range(len(w)):
+                e = w[i]
+                if e in images:
+                    w1 = w1*images[e]
+                else:
+                    w1 = w1*images[e**-1]**-1
+            return w1
+
+        rels = [_rewrite(F, r) for r in H_p.relators]
+
+        G_p = FpGroup(F, rels)
+        images = {G.generators[i]: G_p.generators[i]
+                                        for i in range(len(G_p.generators))}
+        vals = list(images.values())
+
+        C_p = CosetTable(G_p, [])
+
+
+        C_p.table = [[None]*(2*len_g) for i in range(n)]
+
+        for i in range(2*len_h):
+            C_p.table[0][i] = 0
+
+        transversal = [None]*n
+        if isinstance(G_p, FpGroup):
+            transversal[0] = G_p.free_group.identity
+        else:
+            transversal[0] = G_p.identity
+
+        gamma = 1
+        for alpha, x in product(range(0, n), range(2*len_g)):
+            beta = C[alpha][x]
+            if beta == gamma:
+                gen = G_p.generators[x//2]**((-1)**(x % 2))
+                transversal[beta] = transversal[alpha]*gen
+                C_p.table[alpha][x] = beta
+                C_p.table[beta][x + (-1)**(x % 2)] = alpha
+                gamma += 1
+                if gamma == n:
+                    break
+
+        C_p.p = list(range(n))
+
+        while not C_p.is_complete():
+            for beta, x in product(range(0, n), range(2*len_g)):
+                if C_p.table[beta][x] != C[beta][x]:
+                    break
+
+            gen = G_p.generators[x//2]**((-1)**(x % 2))
+            new_rel = transversal[beta]*gen*transversal[C[beta][x]]**-1
+            G_p = _factor_group_by_rels(G_p, [new_rel])
+            C_p.scan_and_fill(0, new_rel)
+            C_p = G_p.coset_enumeration([], strategy="coset_table",
+                                resume=C_p, max_cosets=n, incomplete=True)
+
+        return G_p
 
 
 def _orbit(degree, generators, alpha, action='tuples'):

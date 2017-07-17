@@ -135,6 +135,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
+    relators = tuple()
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))
@@ -324,10 +325,6 @@ class FreeGroup(DefaultPrinting):
             return False
         else:
             return True
-
-    def is_subgroup(self, F):
-        """Return True if all elements of `self` belong to `F`."""
-        return F.is_group and all([self.contains(gen) for gen in F.generators])
 
     def center(self):
         """Returns the center of the free group `self`."""
@@ -689,7 +686,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         0
 
         """
-        return sum([abs(j) for (i, j) in self])
+        return sum(abs(j) for (i, j) in self)
 
     def __eq__(self, other):
         """
