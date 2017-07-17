@@ -83,10 +83,7 @@ class Quantity(AtomicExpr):
         return self._scale_factor
 
     def _eval_is_positive(self):
-       return self.scale_factor.is_positive
-
-    def _eval_is_constant(self):
-        return self.scale_factor.is_constant()
+        return self.scale_factor.is_positive
 
     @staticmethod
     def get_dimensional_expr(expr):
@@ -163,7 +160,8 @@ class Quantity(AtomicExpr):
 
     @property
     def free_symbols(self):
-        return set([])
+        """Return free symbols from quantity."""
+        return self.scale_factor.free_symbols
 
 
 def _Quantity_constructor_postprocessor_Add(expr):

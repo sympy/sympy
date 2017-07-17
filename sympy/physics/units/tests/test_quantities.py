@@ -64,6 +64,9 @@ def test_Quantity_definition():
     assert v.dimension == length
     assert v.scale_factor == 5 * 1000
 
+    raises(ValueError, lambda: Quantity('invalid', 'dimension', 1))
+    raises(ValueError, lambda: Quantity('mismatch', length, kg))
+
 
 def test_abbrev():
     u = Quantity("u", length, 1)
@@ -144,7 +147,7 @@ def test_mul_div():
 
     # TODO: decide whether to allow such expression in the future
     # (requires somehow manipulating the core).
-    #assert u / Quantity(length, 2) == 5
+    # assert u / Quantity('l2', length, 2) == 5
 
     assert u * 1 == u
 
