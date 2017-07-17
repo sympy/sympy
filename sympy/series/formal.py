@@ -1074,7 +1074,7 @@ class FormalPowerSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import fps, sin
+        >>> from sympy import fps, sin, integrate
         >>> from sympy.abc import x
         >>> f = fps(sin(x))
         >>> f.integrate(x).truncate()
