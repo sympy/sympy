@@ -281,6 +281,7 @@ def test_FractionalPowerQ():
 def test_AtomQ():
     assert AtomQ(x)
     assert not AtomQ(x+1)
+    assert not AtomQ([a, b])
 
 def test_ExpQ():
     assert ExpQ(E**2)
@@ -552,7 +553,8 @@ def test_PolynomialDivide():
     assert PolynomialDivide(x**6, (a + b*x)**2, x) == -5*a**6/(b**6*(a + b*x)**2) - 6*a**5*x/(b**5*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_ExpandIntegrand():
-    #print(ExpandIntegrand(x/(a*x**1 + b*Sqrt(c + d*x**2)), x))
+    assert ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
+    assert ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
     assert simplify(ExpandIntegrand((1 - 1*x**2)**(-3), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
     assert ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
     assert ExpandIntegrand((Sqrt(2) + 1*x)**(3)/(2 + 1*x), x) == (x + sqrt(2))**2 + (-2 + sqrt(2))*(x + sqrt(2)) + (-2 + sqrt(2))**2 + (-20 + 14*sqrt(2))/(x + 2)

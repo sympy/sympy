@@ -22,6 +22,7 @@ from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hype
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
+from sympy.strategies import distribute
 
 def Int(expr, var, showsteps=False):
     from .rubi import rubi_integrate
@@ -96,11 +97,11 @@ def PositiveQ(var):
         return res
     return False
 
-def PositiveIntegerQ(var):
-    return var.is_Integer and PositiveQ(var)
+def PositiveIntegerQ(*args):
+    return all(var.is_Integer and PositiveQ(var) for var in args)
 
-def NegativeIntegerQ(var):
-    return var.is_Integer and NegativeQ(var)
+def NegativeIntegerQ(*args):
+    return all(var.is_Integer and NegativeQ(var) for var in args)
 
 def IntegerQ(var):
     if isinstance(var, int):
@@ -1659,6 +1660,32 @@ def ExpandIntegrand(expr, x, extra=None):
         else:
             return expr*FreeTerms(w, x) + MergeMonomials(expr*r, x)
 
+    F_ =  Wild('F', exclude=[x, 0, 1])
+    b_ =  Wild('b', exclude=[x, 0])
+    c_ =  Wild('c', exclude=[x])
+    d_ =  Wild('d', exclude=[x, 0])
+    e_ =  Wild('e', exclude=[x, 0])
+    f_ =  Wild('f', exclude=[x, 0])
+    m_ =  Wild('m', exclude=[x, 0])
+    n_ =  Wild('n', exclude=[x, 0])
+    p_ =  Wild('p', exclude=[x, 0])
+    pattern = x**m_*(e_ + f_*x)**p_*F_**(b_*(c_ + d_*x)**n_)
+    match = expr.match(pattern)
+    if match:
+        keys = [m_, e_, f_, p_, F_, b_, c_, d_, n_]
+        if len(match) == len(keys):
+            m, e, f, p, F, b, c, d, n = tuple([match[i] for i in keys])
+            if PositiveIntegerQ(m, p) and m<=p and (EqQ(n, 1) or ZeroQ(d*e - c*f)):
+                return ExpandLinearProduct((e + f*x)**p*F**(b*(c + d*x)**n), x**m, e, f, x)
+            elif PositiveIntegerQ(p):
+                u = ((e + f*x)**p).expand()
+                if SumQ(u):
+                    return Add(*[x**m*F**(b*(c + d*x)**n)*i for i in u.args])
+                else:
+                    return x**m*F**(b*(c + d*x)**n)*u
+            else:
+                return Expand(F**(b*(c + d*x)**n), x, x**m*(e + f*x)**p)
+
     k, q, i = symbols('k q i')
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x, 0])
@@ -2069,6 +2096,8 @@ def ExpandIntegrand(expr, x, extra=None):
                 pr = PolynomialQuotientRemainder(u, v**(-n),x)
                 return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
 
+    u_ = Wild('u', exclude=[0, 1])
+    v_ = Wild('v', exclude=[0, 1])
     pattern = u_/v_
     match = expr.match(pattern)
     if match:
@@ -4312,7 +4341,6 @@ def FunctionOfExponentialTestAux(base, expon, x):
             return True
         else:
             return True
-
         if PositiveIntegerQ(base, SbaseS) and base < SbaseS:
             SbaseS = base
             SexponS = expon
