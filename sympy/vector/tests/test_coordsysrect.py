@@ -313,7 +313,6 @@ def test_lame_coefficients():
     assert a.lame_coefficients() == (1, a.y, 1)
 
 
-
 def test_transformation_equations():
     from sympy import symbols
     x, y, z = symbols('x y z')
@@ -379,7 +378,15 @@ def test_check_orthogonality():
     raises(ValueError, lambda: a._connect_to_standard_cartesian(
         (a.x*sin(a.y / 2)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)), inverse=False))
 
+
 def test_coordsys3d():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         assert CoordSysCartesian("C") == CoordSys3D("C")
+
+
+def test_rotation_trans_equations():
+    a = CoordSys3D('a')
+    assert a._rotation_trans_equations() == (a.x, a.y, a.z)
+    b = a.orient_new_axis('b', 0, -a.k)
+    assert b._rotation_trans_equations() == (b.x, b.y, b.z)
