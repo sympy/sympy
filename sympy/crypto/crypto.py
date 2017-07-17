@@ -10,14 +10,14 @@ from __future__ import print_function
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 
-from sympy import nextprime
-from sympy.core import Rational, Symbol
-from sympy.core.numbers import igcdex, mod_inverse
+from sympy import Symbol
+from sympy.core.backend import (Rational, totient, gcd, isprime, igcdex,
+                                mod_inverse, nextprime)
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.ntheory import isprime, totient, primitive_root
+from sympy.ntheory import primitive_root
 from sympy.polys.domains import FF
-from sympy.polys.polytools import gcd, Poly
+from sympy.polys.polytools import Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
 from sympy.utilities.randtest import _randrange
@@ -310,7 +310,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     a, b = key
     assert gcd(a, N) == 1
     if _inverse:
-        c = mod_inverse(a, N)
+        c = int(mod_inverse(a, N))
         d = -b*c
         a, b = c, d
     B = ''.join([A[(a*i + b) % N] for i in range(N)])
@@ -1783,7 +1783,7 @@ def elgamal_private_key(digit=10, seed=None):
 
     """
     randrange = _randrange(seed)
-    p = nextprime(2**digit)
+    p = int(nextprime(2**digit))
     return p, primitive_root(p), randrange(2, p)
 
 
@@ -1960,7 +1960,7 @@ def dh_private_key(digit=10, seed=None):
     True
 
     """
-    p = nextprime(2**digit)
+    p = int(nextprime(2**digit))
     g = primitive_root(p)
     randrange = _randrange(seed)
     a = randrange(2, p)
