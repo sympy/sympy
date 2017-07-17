@@ -1,4 +1,10 @@
-from matchpy import Operation, Arity
+from sympy.external import import_module
+matchpy = import_module("matchpy")
+
+if matchpy:
+    Operation, Arity = matchpy.Operation, matchpy.Arity
+else:
+    raise ImportError('MatchPy could not be imported')
 
 class Int(Operation):
     name = "Int"
@@ -55,11 +61,11 @@ class RemoveContent(Operation):
 
 class PositiveIntegerQ(Operation):
     name = "PositiveIntegerQ"
-    arity = Arity.unary
+    arity = Arity.variadic
 
 class NegativeIntegerQ(Operation):
     name = "NegativeIntegerQ"
-    arity = Arity.unary
+    arity = Arity.variadic
 
 class PositiveQ(Operation):
     name = "PositiveQ"
@@ -68,6 +74,10 @@ class PositiveQ(Operation):
 class IntegerQ(Operation):
     name = "IntegerQ"
     arity = Arity.unary
+
+class IntegersQ(Operation):
+    name = "IntegersQ"
+    arity = Arity.variadic
 
 class PosQ(Operation):
     name = "PosQ"
@@ -188,3 +198,7 @@ class Hypergeometric2F1(Operation):
 class TogetherSimplify(Operation):
     name = "TogetherSimplify"
     arity = Arity.unary
+
+class Inequality(Operation):
+    name = "Inequality"
+    arity = Arity.variadic

@@ -1,4 +1,10 @@
-from matchpy import Symbol, Wildcard
+from sympy.external import import_module
+matchpy = import_module("matchpy")
+
+if matchpy:
+    Symbol, Wildcard = matchpy.Symbol, matchpy.Wildcard
+else:
+    raise ImportError('MatchPy could not be imported')
 
 class VariableSymbol(Symbol):
     pass

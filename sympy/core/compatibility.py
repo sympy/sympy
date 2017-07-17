@@ -857,6 +857,6 @@ def lru_cache(maxsize=100, typed=False):
     return decorating_function
 ### End of backported lru_cache
 
-if sys.version_info[:2] >= (3, 3):
+if sys.version_info[:2] >= (3, 6):
     # 3.2 has an lru_cache with an incompatible API
     from functools import lru_cache

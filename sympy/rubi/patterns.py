@@ -1,4 +1,11 @@
-from matchpy import Wildcard, Pattern, ReplacementRule, ManyToOneReplacer
+from sympy.external import import_module
+matchpy = import_module("matchpy")
+
+if matchpy:
+    Wildcard, Pattern, ReplacementRule, ManyToOneReplacer = matchpy.Wildcard, matchpy.Pattern, matchpy.ReplacementRule, matchpy.ManyToOneReplacer
+else:
+    raise ImportError('MatchPy could not be imported')
+
 from sympy.rubi.operation import *
 from sympy.rubi.symbol import VariableSymbol, Integer
 from sympy.rubi.constraint import cons, FreeQ
