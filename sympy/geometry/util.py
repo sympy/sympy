@@ -627,17 +627,21 @@ def idiff(eq, y, x, n=1):
 
 def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
+
     Parameters
     ==========
     entities : sequence of GeometryEntity
     pairwise (keyword argument) : Can be either True or False
+
     Returns
     =======
     intersection : list of GeometryEntity
+
     Raises
     ======
     NotImplementedError
         When unable to calculate intersection.
+
     Notes
     =====
     The intersection of any geometrical entity with itself should return
@@ -649,16 +653,20 @@ def intersection(*entities, **kwargs):
     simplified internally.
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
+
     Case 1: When the keyword argument 'pairwise' is False (default value):
-            In this case, the functon returns a list of the points
-            through which all the entities pass.
+    In this case, the functon returns a list of the points
+    through which all the entities pass.
+
     Case 2: When the keyword argument 'pairwise' is True:
-            In this case, the functions returns a list of all points
-            where intersections take place.(Please Note that these points
-            may not necessarily lie on all the entities)
+    In this case, the functions returns a list of all points
+    where intersections take place.(Please Note that these points
+    may not necessarily lie on all the entities)
+
     See Also
     ========
     sympy.geometry.entity.GeometryEntity.intersection
+
     Examples
     ========
     >>> from sympy.geometry import Point, Line, Circle, intersection
