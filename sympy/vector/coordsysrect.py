@@ -388,6 +388,19 @@ class CoordSys3D(Basic):
                   diff(equations[2], self.z)**2)
         return map(simplify, [h1, h2, h3])
 
+    def _rotation_trans_equations(self):
+        """
+        Returns the transformation equations obtained from rotation matrix.
+
+        """
+        matrix = self._parent_rotation_matrix
+
+        trans_eq1 = matrix[0]*self.x + matrix[1]*self.y + matrix[2]*self.z
+        trans_eq2 = matrix[3]*self.x + matrix[4]*self.y + matrix[5]*self.z
+        trans_eq3 = matrix[6]*self.x + matrix[7]*self.y + matrix[8]*self.z
+
+        return trans_eq1, trans_eq2, trans_eq3
+
     @property
     def origin(self):
         return self._origin
@@ -476,7 +489,6 @@ class CoordSys3D(Basic):
         [0, sin(q1),  cos(q1)]])
 
         """
-
         from sympy.vector.functions import _path
         if not isinstance(other, CoordSys3D):
             raise TypeError(str(other) +
