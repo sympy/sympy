@@ -737,10 +737,10 @@ def test_to_meijerg():
 def test_gaussian():
     mu, x = symbols("mu x")
     sd = symbols("sd", positive=True)
-    e = sqrt(2)*exp(-(-mu + x)**2/(2*sd**2))/(2*sqrt(pi)*sd)
-    h1 = expr_to_holonomic(e, x)
-
     Q = QQ[mu, sd].get_field()
+    e = sqrt(2)*exp(-(-mu + x)**2/(2*sd**2))/(2*sqrt(pi)*sd)
+    h1 = expr_to_holonomic(e, x, domain=Q)
+
     _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
     h2 = HolonomicFunction((-mu/sd**2 + x/sd**2) + (1)*Dx, x)
 
@@ -750,9 +750,9 @@ def test_gaussian():
 def test_beta():
     a, b, x = symbols("a b x", positive=True)
     e = x**(a - 1)*(-x + 1)**(b - 1)/beta(a, b)
-    h1 = expr_to_holonomic(e, x)
-
     Q = QQ[a, b].get_field()
+    h1 = expr_to_holonomic(e, x, domain=Q)
+
     _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
     h2 = HolonomicFunction((a + x*(-a - b + 2) - 1) + (x**2 - x)*Dx, x)
 
@@ -762,9 +762,9 @@ def test_beta():
 def test_gamma():
     a, b, x = symbols("a b x", positive=True)
     e = b**(-a)*x**(a - 1)*exp(-x/b)/gamma(a)
-    h1 = expr_to_holonomic(e, x)
-
     Q = QQ[a, b].get_field()
+    h1 = expr_to_holonomic(e, x, domain=Q)
+
     _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
     h2 = HolonomicFunction((-a + 1 + x/b) + (x)*Dx, x)
 
