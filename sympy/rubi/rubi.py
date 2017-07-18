@@ -4,7 +4,7 @@ matchpy = import_module("matchpy")
 if matchpy is None:
     raise ImportError('MatchPy could not be imported')
 
-from sympy.rubi.patterns1 import rubi_object
+from sympy.rubi.patterns import rubi_object
 from sympy.rubi.operation import Int
 from sympy.rubi.sympy2matchpy import sympy2matchpy
 from sympy.core.sympify import sympify

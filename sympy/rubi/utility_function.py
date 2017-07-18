@@ -1110,14 +1110,6 @@ def SmartApart(*args):
 
 def MatchQ(expr, pattern, *var):
     # returns the matched arguments after matching pattern with expression
-    '''
-    Example:
-    >>> a_ = Wild('a', exclude=[x])
-    >>> b_ = Wild('b', exclude=[x])
-    >>> c_ = Wild('c', exclude=[x])
-    >>> MatchQ(a + b, a_ + b_, a_, b_)
-    (a, b) # or {a_: a, b_: b}
-    '''
     match = expr.match(pattern)
     if match:
         return tuple(match[i] for i in var)
@@ -1887,6 +1879,31 @@ def ExpandIntegrand(expr, x, extra=None):
                 r = TogetherSimplify((2*c*(d + e*f) - b*e*g)/q)
                 return (e*g + r)/(b - q + 2*c*u**n) + (e*g - r)/(b + q + 2*c*u**n)
 
+    a_ = Wild('a', exclude=[x, 0])
+    b_ = Wild('b', exclude=[x, 0])
+    c_ = Wild('c', exclude=[x, 0])
+    d_ = Wild('d', exclude=[x, 0])
+    A_ = Wild('A', exclude=[x, 0])
+    B_ = Wild('B', exclude=[x, 0])
+    m_ = Wild('m', exclude=[x, 0])
+    pattern = (a_ + b_*x)**m_*(A_ + B_*x)/(c_ + d_*x)
+    match = expr.match(pattern)
+    if match:
+        keys = [a_, b_, m_, A_, B_, c_, d_]
+        if len(match) == len(keys):
+            a, b, m, A, B, c, d = tuple([match[i] for i in keys])
+            if PositiveIntegerQ(m):
+                if RationalQ(a, b, c, d, A, B):
+                    return ExpandExpression((a + b*x)**m*(A + B*x)/(c + d*x), x)
+                else:
+                    tmp1 = (A*d - B*c)/d
+                    tmp2 = ExpandIntegrand((a + b*x)**m/(c + d*x), x)
+                    if SumQ(tmp2):
+                        tmp2 = Add(*[SimplifyTerm(tmp1*i, x) for i in tmp2.args])
+                    else:
+                        tmp2 = SimplifyTerm(tmp1*tmp2, x)
+                    return SimplifyTerm(B/d, x)*(a + b*x)**m + tmp2
+
     c_ = Wild('c', exclude=[x])
     d_ = Wild('d', exclude=[x, 0])
     u_ = Wild('u', exclude=[0])
@@ -2077,6 +2094,29 @@ def ExpandIntegrand(expr, x, extra=None):
                         return tmp1
 
     u_ = Wild('u', exclude=[0, 1])
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    F_ = Wild('F', exclude=[0])
+    c_ = Wild('c', exclude=[x])
+    d_ = Wild('d', exclude=[x, 0])
+    n_ = Wild('n', exclude=[0, 1])
+    pattern = u_*(a_ + b_*F_)**n_
+    match = expr.match(pattern)
+    if match:
+        if MemberQ([asin, acos, asinh, acosh], match[F_].func):
+            keys = [u_, a_, b_, F_, n_]
+            if len(match) == len(keys):
+                u, a, b, F, n = tuple([match[i] for i in keys])
+                match = F.args[0].match(c_ + d_*x)
+                if match:
+                    keys = c_, d_
+                    if len(keys) == len(match):
+                        c, d = tuple([match[i] for i in keys])
+                        if PolynomialQ(u, x):
+                            F = F.func
+                            return ExpandLinearProduct((a + b*F(c + d*x))**n, u, c, d, x)
+
+    u_ = Wild('u', exclude=[0, 1])
     v_ = Wild('v', exclude=[0, 1])
     n_ = Wild('n', exclude=[x, 1, 0])
     a_ = Wild('a', exclude=[x, 0])
@@ -2095,6 +2135,21 @@ def ExpandIntegrand(expr, x, extra=None):
             elif NegativeIntegerQ(n) & Not(IntegerQ(m)) & PolynomialQ(u, x) & PolynomialQ(v, x) & (Exponent(u, x) >= -n*Exponent(v, x)):
                 pr = PolynomialQuotientRemainder(u, v**(-n),x)
                 return ExpandIntegrand(pr[0]*(a + b*x)**m, x) + ExpandIntegrand(pr[1]*v**n*(a + b*x)**m, x)
+
+    u_ = Wild('u', exclude=[0, 1])
+    v_ = Wild('v', exclude=[0, 1])
+    p_ = Wild('p', exclude=[0, 1])
+    pattern = u_*v_**p_
+    match = expr.match(pattern)
+    if match:
+        keys = [u_, v_, p_]
+        if len(match) == len(keys):
+            u, v, p = tuple([match[i] for i in keys])
+            if Not(IntegerQ(p)):
+                if PolynomialQ(u, x) and FreeQ(v/x, x):
+                    return ExpandToSum((v)**p, u, x)
+                else:
+                    return ExpandIntegrand(NormalizeIntegrand(v**p, x), x, u)
 
     u_ = Wild('u', exclude=[0, 1])
     v_ = Wild('v', exclude=[0, 1])
@@ -3757,7 +3812,7 @@ def SubstForTrig(u, sin , cos, v, x):
 def SubstForHyperbolic(u, sinh, cosh, v, x):
     # (* u (v) is an expression of the form f (Sinh[v],Cosh[v],Tanh[v],Coth[v],Sech[v],Csch[v]). *)
     # (* SubstForHyperbolic[u,sinh,cosh,v,x] returns the expression
-	# f (sinh,cosh,sinh/cosh,cosh/sinh,1/cosh,1/sinh). *)
+    # f (sinh,cosh,sinh/cosh,cosh/sinh,1/cosh,1/sinh). *)
     if AtomQ(u):
         return u
     elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
