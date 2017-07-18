@@ -691,7 +691,7 @@ def intersection(*entities, **kwargs):
     >>> xaxis = Line(origin, slope=0)
     >>> yaxis = Line(origin, (0,1))
     >>> intersection(c1, xaxis, yaxis)
-    Point2D(0, 0)
+    [Point2D(0, 0)]
     >>> intersection(c1, xaxis, yaxis, pairwise=True)
     [Point2D(0, 0), Point2D(0, 2)]
 
