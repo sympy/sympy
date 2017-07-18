@@ -660,15 +660,17 @@ def intersection(*entities, **kwargs):
 
     Case 2: When the keyword argument 'pairwise' is True:
     In this case, the functions returns a list of all points
-    where intersections take place.(Please Note that these points
-    may not necessarily lie on all the entities)
+    where intersections take place.A given intersection may not necessarily
+    lie on all the entities.
 
     See Also
     ========
+
     sympy.geometry.entity.GeometryEntity.intersection
 
     Examples
     ========
+
     >>> from sympy.geometry import Point, Line, Circle, intersection
     >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
     >>> l1, l2 = Line(p1, p2), Line(p3, p2)
@@ -684,12 +686,17 @@ def intersection(*entities, **kwargs):
     >>> intersection(c, l2)
     [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
      Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
-    >>> c1, l3, l4 = Circle((0,0),2), Line((-1,0),(-1,1)), Line((2,0),(2,1))
-    >>> intersection(c1,l3,l4)
-    []
-    >>> intersection(c1,l3,l4, pairwise= True)
-    [Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3))]
+    >>> origin = Point(0, 0)
+    >>> c1 = Circle(origin, radius=1).translate(y=1)
+    >>> xaxis = Line(origin, slope=0)
+    >>> yaxis = Line(origin, slope=oo)
+    >>> intersection(c1, xaxis, yaxis)
+    Point2D(0, 0)
+    >>> intersection(c1, xaxis, yaxis, pairwise=True)
+    [Point2D(0, 0), Point2D(0, 2)]
+
     """
+
     from .entity import GeometryEntity
     from .point import Point
 
