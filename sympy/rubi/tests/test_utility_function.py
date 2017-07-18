@@ -5,7 +5,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi, pprint, hyper
 
-a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, u, v, F = symbols('a b c d e f g h x y z m n p q u v F', real=True, imaginary=False)
+A, B, a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, u, v, F = symbols('A B a b c d e f g h x y z m n p q u v F', real=True, imaginary=False)
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
