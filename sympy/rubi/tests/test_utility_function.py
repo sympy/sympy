@@ -538,11 +538,18 @@ def test_PolynomialDivide():
     assert PolynomialDivide(x**6, (a + b*x)**2, x) == -5*a**6/(b**6*(a + b*x)**2) - 6*a**5*x/(b**5*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_ExpandIntegrand():
+    assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
+    assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3
+    assert ExpandIntegrand(sin(x)**3*(a + b*(1/sin(x)))**2, x) == a**2*sin(x)**3 + 2*a*b*sin(x)**2 + b**2*sin(x)
+    assert ExpandIntegrand(x*(a + b*ArcSin(c + d*x))**n, x) == -c*(a + b*asin(c + d*x))**n/d + (a + b*asin(c + d*x))**n*(c + d*x)/d
+    assert ExpandIntegrand((a + b*x)**S(3)*(A + B*x)/(c + d*x), x) == B*(a + b*x)**3/d + b*(a + b*x)**2*(A*d - B*c)/d**2 + b*(a + b*x)*(A*d - B*c)*(a*d - b*c)/d**3 + b*(A*d - B*c)*(a*d - b*c)**2/d**4 + (A*d - B*c)*(a*d - b*c)**3/(d**4*(c + d*x))
+    assert ExpandIntegrand((x**2)*(S(3)*x)**(S(1)/2), x) ==sqrt(3)*x**(5/2)
+    assert ExpandIntegrand((x)*(sin(x))**(S(1)/2), x) == x*sqrt(sin(x))
     assert ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
     assert ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
     assert simplify(ExpandIntegrand((1 - 1*x**2)**(-3), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
     assert ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
-    #assert ExpandIntegrand((Sqrt(2) + 1*x)**(3)/(2 + 1*x), x) == (x + sqrt(2))**2 + (-2 + sqrt(2))*(x + sqrt(2)) + (-2 + sqrt(2))**2 + (-20 + 14*sqrt(2))/(x + 2)
+    #assert simplify(ExpandIntegrand((Sqrt(2) + 1*x)**(3)/(2 + 1*x), x).expand() - ((x + sqrt(2))**2 + (-2 + sqrt(2))*(x + sqrt(2)) + (-2 + sqrt(2))**2 + (-20 + 14*sqrt(2))/(x + 2)))
     assert ExpandIntegrand((1 + 1*x)**(3)/(2 + 1*x), x) == x**2 + x + 1 - 1/(x + 2)
     assert ExpandIntegrand((c + d*x**1 + e*x**2)/(1 - x**3), x) == (c - (-1)**(S(1)/3)*d + (-1)**(S(2)/3)*e)/(-3*(-1)**(S(2)/3)*x + 3) + (c + (-1)**(S(2)/3)*d - (-1)**(S(1)/3)*e)/(3*(-1)**(S(1)/3)*x + 3) + (c + d + e)/(-3*x + 3)
     assert ExpandIntegrand((c + d*x**1 + e*x**2 + f*x**3)/(1 - x**4), x) == (c + I*d - e - I*f)/(4*I*x + 4) + (c - I*d - e + I*f)/(-4*I*x + 4) + (c - d + e - f)/(4*x + 4) + (c + d + e + f)/(-4*x + 4)
