@@ -360,7 +360,7 @@ class NumExprPrinter(LambdaPrinter):
             # 'RuntimeWarning: invalid value encountered in log'
             ans.append('log(-1)')
         return ''.join(ans) + ')' * parenthesis_count
-    
+
     def blacklisted(self, expr):
         raise TypeError("numexpr cannot be used with %s" %
                         expr.__class__.__name__)
