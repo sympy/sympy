@@ -135,6 +135,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
+    relators = tuple()
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))

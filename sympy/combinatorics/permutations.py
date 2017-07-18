@@ -1925,6 +1925,10 @@ class Permutation(Basic):
         return self.size == 0
 
     @property
+    def is_identity(self):
+        return self.is_Identity
+
+    @property
     def is_Identity(self):
         """
         Returns True if the Permutation is an identity permutation.

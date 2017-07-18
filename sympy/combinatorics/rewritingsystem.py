@@ -41,9 +41,8 @@ class RewritingSystem(object):
         return self._is_confluent
 
     def _init_rules(self):
-        rels = self.group.relators[:]
         identity = self.group.free_group.identity
-        for r in rels:
+        for r in self.group.relators:
             self.add_rule(r, identity)
         self._remove_redundancies()
         return
@@ -66,7 +65,7 @@ class RewritingSystem(object):
         # the overlaps. See [1], Section 3 for details.
 
         # overlaps on the right
-        while len(s1) - len(s2) > 0:
+        while len(s1) - len(s2) > 1:
             g = s1[len(s1)-1]
             s1 = s1.subword(0, len(s1)-1)
             s2 = s2*g**-1
