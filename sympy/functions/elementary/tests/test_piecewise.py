@@ -977,3 +977,27 @@ def test_issue_10258():
     assert Piecewise((0, x < 1), (1, True)).is_finite
     b = Basic()
     assert Piecewise((b, x < 1)).is_finite is None
+
+    # 10258
+    c = Piecewise((1, x < 0), (2, True)) < 3
+    assert c != True
+    assert piecewise_fold(c) == True
+
+
+def test_issue_10087():
+    a, b = Piecewise((x, x > 1), (2, True)), Piecewise((x, x > 3), (3, True))
+    m = a*b
+    f = piecewise_fold(m)
+    for i in (0, 2, 4):
+        assert m.subs(x, i) == f.subs(x, i)
+    m = a + b
+    f = piecewise_fold(m)
+    for i in (0, 2, 4):
+        assert m.subs(x, i) == f.subs(x, i)
+
+
+def test_issue_8919():
+    x, c_1, c_2, c_3, c_4 = symbols('x c_1:5')
+    f1 = Piecewise( (c_1, x < 1), (c_2, True))
+    f2 = Piecewise( (c_3, x < S(1)/3), (c_4, True))
+    assert integrate(f1*f2, (x, 0, 2)) == c_1*c_3/3 + 2*c_1*c_4/3 + c_2*c_4

@@ -830,7 +830,8 @@ def piecewise_fold(expr):
             if not isinstance(e, Piecewise):
                 e = piecewise_fold(e)
             if isinstance(e, Piecewise):
-                new_args.extend([(piecewise_fold(ei), And(ci, c)) for ei, ci in e.args])
+                new_args.extend([(piecewise_fold(ei), And(ci, c))
+                    for ei, ci in e.args])
             else:
                 new_args.append((e, c))
     else:

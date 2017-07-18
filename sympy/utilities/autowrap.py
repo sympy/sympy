@@ -134,8 +134,10 @@ class CodeWrapper(object):
             self.include_empty)
 
     def wrap_code(self, routine, helpers=[]):
-
-        workdir = self.filepath or tempfile.mkdtemp("_sympy_compile")
+        if self.filepath:
+            workdir = os.path.abspath(self.filepath)
+        else:
+            workdir = tempfile.mkdtemp("_sympy_compile")
         if not os.access(workdir, os.F_OK):
             os.mkdir(workdir)
         oldwork = os.getcwd()

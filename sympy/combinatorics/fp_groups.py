@@ -7,7 +7,8 @@ from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
+from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
+                                                free_group, zero_mul_simp)
 from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
@@ -53,29 +54,34 @@ class FpGroup(DefaultPrinting):
     is_FpGroup = True
     is_PermutationGroup = False
 
-    def __new__(cls, fr_grp, relators):
+    def __init__(self, fr_grp, relators):
         relators = _parse_relators(relators)
         # return the corresponding FreeGroup if no relators are specified
         if not relators:
             return fr_grp
-        obj = object.__new__(cls)
-        obj.free_group = fr_grp
-        obj.relators = relators
-        obj.generators = obj._generators()
-        obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
+        self.free_group = fr_grp
+        self.relators = relators
+        self.generators = self._generators()
+        self.dtype = type("FpGroupElement", (FpGroupElement,), {"group": self})
 
         # CosetTable instance on identity subgroup
-        obj._coset_table = None
+        self._coset_table = None
         # returns whether coset table on identity subgroup
         # has been standardized
-        obj._is_standardized = False
+        self._is_standardized = False
 
-        obj._order = None
-        obj._center = None
-        return obj
+        self._order = None
+        self._center = None
 
     def _generators(self):
         return self.free_group.generators
+
+    @property
+    def identity(self):
+        return self.free_group.identity
+
+    def __contains__(self, g):
+        return g in self.free_group
 
     def subgroup(self, gens, C=None):
         '''
@@ -202,13 +208,16 @@ class FpGroup(DefaultPrinting):
         rels = list(self.generators)
         rels.extend(self.relators)
         if not s:
-            rand = self.free_group.identity
-            i = 0
-            while (rand in rels or rand**-1 in rels or rand.is_identity
-                   or rand in rels) and i<10:
-                rand = self.random_element()
-                i += 1
-            s = [gen, rand] + [g for g in self.generators if g != gen]
+            if len(self.generators) == 2:
+                s = [gen] + [g for g in self.generators if g != gen]
+            else:
+                rand = self.free_group.identity
+                i = 0
+                while ((rand in rels or rand**-1 in rels or rand.is_identity)
+                        and i<10):
+                    rand = self.random_element()
+                    i += 1
+                s = [gen, rand] + [g for g in self.generators if g != gen]
         mid = (len(s)+1)//2
         half1 = s[:mid]
         half2 = s[mid:]
@@ -230,6 +239,7 @@ class FpGroup(DefaultPrinting):
                     continue
         if not C:
             return None, None
+        C.compress()
         return half, C
 
     def most_frequent_generator(self):
@@ -277,6 +287,87 @@ class FpGroup(DefaultPrinting):
         return str_form
 
     __repr__ = __str__
+
+
+class FpSubgroup(DefaultPrinting):
+    '''
+    The class implementing a subgroup of an FpGroup or a FreeGroup
+    (only finite index subgroups are supported at this point). This
+    is to be used if one wishes to check if an element of the original
+    group belongs to the subgroup
+
+    '''
+    def __init__(self, G, gens):
+        super(FpSubgroup,self).__init__()
+        self.parent = G
+        self.generators = list(set([g for g in gens if g != G.identity]))
+        self._min_words = None #for use in __contains__
+        self.C = None
+
+    def __contains__(self, g):
+        if self._min_words is None:
+            gens = self.generators[:]
+            gens.extend([e**-1 for e in gens])
+            for w1 in gens:
+                for w2 in gens:
+                    if w2**-1 == w1:
+                        continue
+                    if w2[len(w2)-1]**-1 == w1[0] and w2*w1 not in gens:
+                        gens.append(w2*w1)
+                    if w2[0]**-1 == w1[len(w1)-1] and w1*w2 not in gens:
+                        gens.append(w1*w2)
+            self._min_words = gens
+
+        min_words = self._min_words
+        known = {} #to keep track of words
+
+        def _word_break(w):
+            if len(w) == 0:
+                return True
+            i = 0
+            while i < len(w):
+                i += 1
+                prefix = w.subword(0, i)
+                if prefix not in min_words:
+                    continue
+                rest = w.subword(i, len(w))
+                if rest not in known:
+                    known[rest] = _word_break(rest)
+                if known[rest]:
+                    return True
+            return False
+
+        if _word_break(g):
+            return True
+        elif isinstance(self.parent, FreeGroup):
+            return False
+        else:
+            if self.C is None:
+                C = self.parent.coset_enumeration(self.generators)
+                self.C = C
+            i = 0
+            C = self.C
+            for j in range(len(g)):
+                i = C.table[i][C.A_dict[g[j]]]
+            return i == 0
+
+    def order(self):
+        if not self.generators:
+            return 1
+        if isinstance(self.parent, FreeGroup):
+            return S.Infinity
+        if self.C is None:
+            C = self.parent.coset_enumeration(self.generators)
+            self.C = C
+        # This is valid because `len(self.C.table)` (the index of the subgroup)
+        # will always be finite - otherwise coset enumeration doesn't terminate
+        return self.parent.order()/len(self.C.table)
+
+    def to_FpGroup(self):
+        if isinstance(self.parent, FreeGroup):
+            gen_syms = [('x_%d'%i) for i in range(len(self.generators))]
+            return free_group(', '.join(gen_syms))[0]
+        return self.parent.subgroup(C=self.C)
 
 
 ###############################################################################
@@ -553,11 +644,11 @@ def reidemeister_relators(C):
     # replace order 1 generators by identity element in reidemeister relators
     for i in range(len(rels)):
         w = rels[i]
-        for gen in order_1_gens:
-            w = w.eliminate_word(gen, identity)
+        w = w.eliminate_words(order_1_gens, _all=True)
         rels[i] = w
 
-    C._schreier_generators = [i for i in C._schreier_generators if i not in order_1_gens]
+    C._schreier_generators = [i for i in C._schreier_generators
+                    if not (i in order_1_gens or i**-1 in order_1_gens)]
 
     # Tietze transformation 1 i.e TT_1
     # remove cyclic conjugate elements from relators
@@ -638,7 +729,7 @@ def elimination_technique_1(C):
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
-                chi = (bk*fw).identity_cyclic_reduction()
+                chi = bk*fw
                 redundant_gens[gen] = chi**(-1*k)
                 used_gens.update(chi.contains_generators())
                 redundant_rels.append(rel)
@@ -829,12 +920,11 @@ def reidemeister_presentation(fp_grp, H, C=None):
     g = free_group(syms)[0]
     subs = dict(zip(syms,g.generators))
     C._schreier_generators = g.generators
-    for j in range(len(C._reidemeister_relators)):
-        r = C._reidemeister_relators[j]
+    for j, r in enumerate(C._reidemeister_relators):
         a = r.array_form
         rel = g.identity
-        for i in range(len(a)):
-            rel = rel*subs[a[i][0]]**a[i][1]
+        for sym, p in a:
+            rel = rel*subs[sym]**p
         C._reidemeister_relators[j] = rel
 
     C.schreier_generators = tuple(C._schreier_generators)
