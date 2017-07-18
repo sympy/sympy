@@ -203,8 +203,9 @@ def homomorphism(domain, codomain, gens, images=[]):
         raise ValueError("The given images do not define a homomorphism")
     return GroupHomomorphism(domain, codomain, images)
 
-def _check_homomorphism(domain, images, identity):
+def _check_homomorphism(domain, codomain, images):
     rels = domain.relators
+    identity = codomain.identity
     def _image(r):
         if r.is_identity:
             return identity
@@ -221,7 +222,12 @@ def _check_homomorphism(domain, images, identity):
                 i += abs(power)
             return w
 
-    if any([not _image(r).is_identity for r in rels]):
-        return False
-    else:
-        return True
+    for r in rels:
+        if isinstance(codomain, PermutationGroup):
+            s = _image(r).is_identity
+        else:
+            codomain.make_confluent()
+            s = codomain.equals(_image(r), identity)
+        if not s:
+            return False
+    return True
