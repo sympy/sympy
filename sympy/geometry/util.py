@@ -687,9 +687,9 @@ def intersection(*entities, **kwargs):
     [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
      Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
     >>> origin = Point(0, 0)
-    >>> c1 = Circle(origin, radius=1).translate(y=1)
+    >>> c1 = Circle((0,1), 1)
     >>> xaxis = Line(origin, slope=0)
-    >>> yaxis = Line(origin, slope=oo)
+    >>> yaxis = Line(origin, (0,1))
     >>> intersection(c1, xaxis, yaxis)
     Point2D(0, 0)
     >>> intersection(c1, xaxis, yaxis, pairwise=True)
