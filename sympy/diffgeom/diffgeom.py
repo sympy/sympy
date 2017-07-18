@@ -3,11 +3,10 @@ from __future__ import print_function, division
 from itertools import permutations
 
 from sympy.matrices import Matrix
-from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, Pow, Mul, Add, Tuple
 from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
-from sympy.solvers import solve
-from sympy.functions import factorial
+from sympy.core.backend import factorial, symbols, diff, solve
 from sympy.simplify import simplify
 from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
