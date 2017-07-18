@@ -33,16 +33,17 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 import itertools
-from sympy import Matrix, Rational, prod, Integer
+from sympy import prod, Integer
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, sympify, Add, S
 from sympy.core.compatibility import string_types, reduce, range
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify
 from sympy.matrices import eye
+from sympy.core.backend import Rational, Matrix, symbols
 
 
 class TIDS(CantSympify):

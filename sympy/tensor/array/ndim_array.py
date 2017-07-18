@@ -99,7 +99,7 @@ class NDimArray(object):
         return None
 
     def _setter_iterable_check(self, value):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.core.backend import MatrixBase
         if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
@@ -308,7 +308,7 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.core.backend import MatrixBase
 
         if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
@@ -317,7 +317,7 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.core.backend import MatrixBase
 
         if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
@@ -326,7 +326,7 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.core.backend import MatrixBase
 
         if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
@@ -409,5 +409,5 @@ class ImmutableNDimArray(NDimArray, Basic):
 
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
-from sympy.core.function import Derivative
+from sympy.core.backend import Derivative
 from sympy.core.expr import Expr

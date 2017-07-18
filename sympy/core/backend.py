@@ -10,7 +10,7 @@ if USE_SYMENGINE:
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
         ImmutableMatrix, MatrixBase, Rational, Basic)
-    from symengine.lib.symengine_wrapper import gcd as igcd
+    from symengine.lib.symengine_wrapper import gcd as igcd, _sympify
     from symengine import AppliedUndef
 else:
     from sympy import (Symbol, Integer, sympify, S,
@@ -21,3 +21,4 @@ else:
         expand, Function, symbols, var, Add, Mul, Derivative,
         ImmutableMatrix, MatrixBase, Rational, Basic, igcd)
     from sympy.core.function import AppliedUndef
+    from sympy.core.sympify import _sympify

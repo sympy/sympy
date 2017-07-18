@@ -2,14 +2,15 @@ import itertools
 
 import collections
 
-from sympy import S, Tuple, diff
+from sympy import S, Tuple
+from sympy.core.backend import diff
 
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 
 
 def _arrayfy(a):
-    from sympy.matrices import MatrixBase
+    from sympy.core.backend import MatrixBase
 
     if isinstance(a, NDimArray):
         return a
@@ -189,7 +190,7 @@ def derive_by_array(expr, dx):
     [[[1, 0], [0, 2*y*z]], [[0, y**2], [0, 0]]]
 
     """
-    from sympy.matrices import MatrixBase
+    from sympy.core.backend import MatrixBase
     array_types = (collections.Iterable, MatrixBase, NDimArray)
 
     if isinstance(dx, array_types):

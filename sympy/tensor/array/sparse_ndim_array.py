@@ -3,9 +3,9 @@ import functools
 
 import itertools
 
-from sympy.core.sympify import _sympify
+from sympy.core.backend import _sympify, S
 
-from sympy import S, Dict, Basic, Tuple
+from sympy import Dict, Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 
