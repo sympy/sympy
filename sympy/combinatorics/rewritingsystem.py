@@ -26,9 +26,23 @@ class RewritingSystem(object):
         self.maxeqns = 32767 # max rules
         self.tidyint = 100 # rules before tidying
 
+        # _max_exceeded is True if maxeqns is exceeded
+        # at any point
+        self._max_exceeded = False
+
         # dictionary of reductions
         self.rules = {}
         self._init_rules()
+
+    def set_max(self, n):
+        '''
+        Set the maximum number of rules that can be defined
+
+        '''
+        if self._max_exceeded and n > self.maxeqns:
+            self._max_exceeded = False
+        self.maxeqns = n
+        return
 
     @property
     def is_confluent(self):
@@ -50,6 +64,8 @@ class RewritingSystem(object):
     def add_rule(self, w1, w2):
         new_keys = set()
         if len(self.rules) + 1 > self.maxeqns:
+            self._is_confluent = self._check_confluence()
+            self._max_exceeded = True
             return ValueError("Too many rules were defined.")
 
         if w1 < w2:
@@ -117,6 +133,10 @@ class RewritingSystem(object):
         completion algorithm
 
         '''
+        if self._max_exceeded:
+            if check:
+                return self._is_confluent
+            return
         lhs = list(self.rules.keys())
 
         def _overlaps(r1, r2):
