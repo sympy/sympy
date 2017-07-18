@@ -769,3 +769,32 @@ def test_gamma():
     h2 = HolonomicFunction((-a + 1 + x/b) + (x)*Dx, x)
 
     assert h1 == h2
+
+
+def test_symbolic_power():
+    x, n = symbols("x n")
+    Q = QQ[n].get_field()
+    _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
+    h1 = HolonomicFunction((-1) + (x)*Dx, x) ** -n
+    h2 = HolonomicFunction((n) + (x)*Dx, x)
+
+    assert h1 == h2
+
+
+def test_negative_power():
+    x = symbols("x")
+    _, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    h1 = HolonomicFunction((-1) + (x)*Dx, x) ** -2
+    h2 = HolonomicFunction((2) + (x)*Dx, x)
+
+    assert h1 == h2
+
+
+def test_expr_in_power():
+    x, n = symbols("x n")
+    Q = QQ[n].get_field()
+    _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
+    h1 = HolonomicFunction((-1) + (x)*Dx, x) ** (n - 3)
+    h2 = HolonomicFunction((-n + 3) + (x)*Dx, x)
+
+    assert h1 == h2
