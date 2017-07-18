@@ -655,13 +655,12 @@ def intersection(*entities, **kwargs):
     or else failures due to floating point issues may result.
 
     Case 1: When the keyword argument 'pairwise' is False (default value):
-    In this case, the functon returns a list of the points
-    through which all the entities pass.
+    In this case, the functon returns a list of intersections common to
+    all entities.
 
     Case 2: When the keyword argument 'pairwise' is True:
-    In this case, the functions returns a list of all points
-    where intersections take place.A given intersection may not necessarily
-    lie on all the entities.
+    In this case, the functions returns a list intersections that occur
+    between any pair of entities.
 
     See Also
     ========
@@ -671,29 +670,19 @@ def intersection(*entities, **kwargs):
     Examples
     ========
 
-    >>> from sympy.geometry import Point, Line, Circle, intersection
-    >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
-    >>> l1, l2 = Line(p1, p2), Line(p3, p2)
-    >>> c = Circle(p2, 1)
-    >>> intersection(l1, p2)
-    [Point2D(1, 1)]
-    >>> intersection(l1, l2)
-    [Point2D(1, 1)]
-    >>> intersection(c, p2)
+    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> c = Circle((0, 1), 1)
+    >>> intersection(c, c.center)
     []
-    >>> intersection(c, Point(1, 0))
-    [Point2D(1, 0)]
-    >>> intersection(c, l2)
-    [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
-     Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
-    >>> origin = Point(0, 0)
-    >>> c1 = Circle((0,1), 1)
-    >>> xaxis = Line(origin, slope=0)
-    >>> yaxis = Line(origin, (0,1))
-    >>> intersection(c1, xaxis, yaxis)
+    >>> right = Ray((0, 0), (1, 0))
+    >>> up = Ray((0, 0), (0, 1))
+    >>> intersection(c, right, up)
     [Point2D(0, 0)]
-    >>> intersection(c1, xaxis, yaxis, pairwise=True)
+    >>> intersection(c, right, up, pairwise=True)
     [Point2D(0, 0), Point2D(0, 2)]
+    >>> left = Ray((1, 0), (0, 0))
+    >>> intersection(right, left)
+    [Segment2D(Point2D(0, 0), Point2D(1, 0))]
 
     """
 
@@ -709,13 +698,10 @@ def intersection(*entities, **kwargs):
     entities = list(entities)
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
-            try:
-                entities[i] = Point(e)
-            except NotImplementedError:
-                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+            entities[i] = Point(e)
 
     if not pairwise:
-        # find the intersection common for all objects
+        # find the intersection common to all objects
         res = entities[0].intersection(entities[1])
         for entity in entities[2:]:
             newres = []
@@ -723,6 +709,7 @@ def intersection(*entities, **kwargs):
                 newres.extend(x.intersection(entity))
             res = newres
         return res
+
     # find all pairwise intersections
     ans = []
     for j in range(0, len(entities)):
