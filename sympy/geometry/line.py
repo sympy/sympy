@@ -106,7 +106,8 @@ class LinearEntity(GeometrySet):
         return len(self.p1)
 
     def angle_between(l1, l2):
-        """The angle formed between the two linear entities.
+        """The smallest of the two angles formed at the
+        intersection of two linear entities.
 
         Parameters
         ==========
@@ -133,7 +134,7 @@ class LinearEntity(GeometrySet):
         See Also
         ========
 
-        is_perpendicular
+        is_perpendicular, closing_angle
 
         Examples
         ========
@@ -155,6 +156,50 @@ class LinearEntity(GeometrySet):
 
         v1, v2 = l1.direction, l2.direction
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+
+    def closing_angle(l1, l2):
+        """The ccw angle needed to align l2 with l1.
+
+        Parameters
+        ==========
+
+        l1 : LinearEntity
+        l2 : LinearEntity
+
+        Returns
+        =======
+
+        angle : angle in radians
+
+        See Also
+        ========
+
+        angle_between
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line, pi
+        >>> l1 = Line((0, 0), (1, 0))
+        >>> l2 = l1.rotate(-pi/2)
+        >>> l1.closing_angle(l2)
+        pi/2
+        >>> l2.closing_angle(l1)
+        3*pi/2
+        """
+        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+            raise TypeError('Must pass only LinearEntity objects')
+
+        v1, v2 = l1.direction, l2.direction
+        ang = l1.angle_between(l2)
+        if not ang:
+            return ang
+        ok = not ang or v2.unit.rotate(ang).equals(v1.unit)
+        if ok is None:
+            raise Undecidable("can't determine orientation of %s and %s" % (l1, l2))
+        if ok is False:
+            return 2*S.Pi - ang
+        return ang
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
