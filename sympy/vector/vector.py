@@ -109,20 +109,8 @@ class Vector(BasisDependent):
         # Check if the other is a del operator
         if isinstance(other, Del):
             def directional_derivative(field):
-                from sympy.vector.operators import _get_coord_sys_from_expr
-                coord_sys = _get_coord_sys_from_expr(field)
-                if coord_sys is not None:
-                    field = express(field, coord_sys, variables=True)
-                    out = self.dot(coord_sys._i) * df(field, coord_sys._x)
-                    out += self.dot(coord_sys._j) * df(field, coord_sys._y)
-                    out += self.dot(coord_sys._k) * df(field, coord_sys._z)
-                    if out == 0 and isinstance(field, Vector):
-                        out = Vector.zero
-                    return out
-                elif isinstance(field, Vector) :
-                    return Vector.zero
-                else:
-                    return S(0)
+                from sympy.vector.functions import directional_derivative
+                return directional_derivative(self, field)
             return directional_derivative
 
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):

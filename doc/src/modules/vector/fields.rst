@@ -252,7 +252,7 @@ Directional derivatives of vector and scalar fields can be computed in
 
 Or by using the dedicated function
   >>> from sympy.vector import directional_derivative
-  >>> directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k)
+  >>> directional_derivative(3*C.i + 4*C.j + C.k, C.x*C.y*C.z)
   C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
 
 Conservative and Solenoidal fields
