@@ -115,7 +115,10 @@ class Quantity(AtomicExpr):
             return factor, dimension
         elif isinstance(expr, Pow):
             factor, dim = Quantity._collect_factor_and_dimension(expr.base)
-            return factor ** expr.exp, dim ** expr.exp
+            exp_factor, exp_dim = Quantity._collect_factor_and_dimension(expr.exp)
+            if exp_dim.is_dimensionless:
+               exp_dim = 1
+            return factor ** exp_factor, dim ** (exp_factor * exp_dim)
         elif isinstance(expr, Add):
             factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
             for addend in expr.args[1:]:

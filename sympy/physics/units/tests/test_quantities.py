@@ -266,6 +266,10 @@ def test_factor_and_dimension():
     assert (-(2996 + S(1)/4), Dimension(1)) == \
         Quantity._collect_factor_and_dimension(expr)
 
+    expr = v_w1**(v_w2/v_w1)
+    assert ((S(3)/2)**(S(4)/3), (length/time)**(S(4)/3)) == \
+        Quantity._collect_factor_and_dimension(expr)
+
 
 @XFAIL
 def test_factor_and_dimension_with_Abs():
