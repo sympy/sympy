@@ -4412,6 +4412,10 @@ def degree(f, *gens, **args):
             F, opt = poly_from_expr(f)
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
+    if len(gens) != 0:
+        if gens[0] in F.gens:
+            return sympify(F.degree(gens[0], **args))
+        return Integer(0)
 
     return sympify(F.degree(*gens, **args))
 
