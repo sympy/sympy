@@ -10,7 +10,8 @@ if USE_SYMENGINE:
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
         ImmutableMatrix, MatrixBase, Rational, Basic)
-    from symengine.lib.symengine_wrapper import gcd as igcd
+    from symengine.lib.symengine_wrapper import (gcd as igcd, gcd, lcm,
+        probab_prime_p as isprime)
     from symengine import AppliedUndef
 else:
     from sympy import (Symbol, Integer, sympify, S,
@@ -19,5 +20,5 @@ else:
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase, Rational, Basic, igcd)
+        ImmutableMatrix, MatrixBase, Rational, Basic, igcd, gcd, lcm, isprime)
     from sympy.core.function import AppliedUndef

@@ -109,7 +109,7 @@ class GroupHomomorphism(object):
         return self._kernel
 
     def _compute_kernel(self):
-        from sympy import S
+        from sympy.core.backend import S
         G = self.domain
         G_order = G.order()
         if G_order == S.Infinity:
@@ -192,7 +192,7 @@ class GroupHomomorphism(object):
         Check if the homomorphism is surjective
 
         '''
-        from sympy import S
+        from sympy.core.backend import S
         im = self.image().order()
         oth = self.codomain.order()
         if im == S.Infinity and oth == S.Infinity:

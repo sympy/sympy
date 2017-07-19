@@ -3597,7 +3597,7 @@ class PermutationGroup(Basic):
         '''
         from sympy.combinatorics.homomorphisms import (homomorphism,
             orbit_homomorphism, block_homomorphism)
-        from sympy.ntheory.primetest import isprime
+        from sympy.core.backend import isprime
 
         if not isprime(p):
             raise ValueError("p must be a prime")

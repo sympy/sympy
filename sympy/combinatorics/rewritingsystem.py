@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy import S
 from sympy.combinatorics.free_groups import FreeGroupElement
 
 class RewritingSystem(object):

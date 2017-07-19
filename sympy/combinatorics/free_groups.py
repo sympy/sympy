@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
-from sympy.core.basic import Basic
+from sympy.core.backend import Basic, Symbol, S
 from sympy.core.compatibility import is_sequence, as_int, string_types
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from mpmath import isint
-from sympy.core import S
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.utilities.magic import pollute
-from sympy import sign
 
 
 @public
@@ -93,11 +90,13 @@ def _parse_symbols(symbols):
     if not symbols:
         return tuple()
     if isinstance(symbols, string_types):
+        from sympy.core.symbol import symbols as _symbols
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr or FreeGroupElement):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, string_types) for s in symbols):
+            from sympy.core.backend import symbols as _symbols
             return _symbols(symbols)
         elif all(isinstance(s, Expr) for s in symbols):
             return symbols

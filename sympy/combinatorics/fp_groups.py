@@ -2,8 +2,8 @@
 """Finitely Presented Groups and its algorithms. """
 
 from __future__ import print_function, division
-from sympy.core.basic import Basic
-from sympy.core import Symbol, Mod
+from sympy.core.backend import Basic, Symbol
+from sympy.core import Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
@@ -207,7 +207,8 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import S, gcd
+        from sympy import gcd
+        from sympy.core.backend import S
         if self._order != None:
             return self._order
         if self._coset_table != None:
@@ -359,7 +360,7 @@ class FpGroup(DefaultPrinting):
         '''
         from sympy.combinatorics import Permutation, PermutationGroup
         from sympy.combinatorics.homomorphisms import homomorphism
-        from sympy import S
+        from sympy.core.backend import S
         if self.order() == S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
                                                   "groups is not implemented")
@@ -1012,7 +1013,7 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
-    from sympy import gcd
+    from sympy.core.backend import gcd
 
     rels = rels[:]
     # dictionary with "gen: n" where gen^n is one of the relators
