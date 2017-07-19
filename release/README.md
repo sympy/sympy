@@ -126,3 +126,15 @@ will commit and push the changes automatically.**
 
 The other website that needs to be updated is SymPy Live. You should make this
 as a pull request to the Live repo.
+
+# Updating the Dockerfile
+
+If you change the Dockerfile, you will need to run
+
+    docker build -f Dockerfile . -t sympy/sympy-release
+
+Once you have it working, push the changes up to Dockerhub
+
+    docker push sympy/sympy-release
+
+You'll need access to the sympy org, ask Aaron or Ondřej if you need it.
