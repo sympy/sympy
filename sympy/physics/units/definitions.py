@@ -1,9 +1,12 @@
-from sympy import pi, Rational, sqrt
+from sympy import Rational, pi, sqrt
 from sympy.physics.units import Quantity
-from sympy.physics.units.dimensions import length, mass, force, energy, power, pressure, frequency, time, velocity, \
-    impedance, voltage, conductance, capacitance, inductance, charge, magnetic_density, magnetic_flux, current, action, \
-    amount_of_substance, luminous_intensity, temperature, acceleration
-from sympy.physics.units.prefixes import kilo, milli, micro, nano, pico, deci, centi
+from sympy.physics.units.dimensions import (
+    acceleration, action, amount_of_substance, capacitance, charge,
+    conductance, current, energy, force, frequency, impedance, inductance,
+    length, luminous_intensity, magnetic_density, magnetic_flux, mass, power,
+    pressure, temperature, time, velocity, voltage)
+from sympy.physics.units.prefixes import (
+    centi, deci, kilo, micro, milli, nano, pico)
 
 #### UNITS ####
 

@@ -6,8 +6,8 @@ Physical quantities.
 
 from __future__ import division
 
-from sympy import Add, AtomicExpr, Basic, Function, Mul, Pow, S, Symbol, \
-    sympify
+from sympy import (
+    Add, AtomicExpr, Basic, Function, Mul, Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.prefixes import Prefix

@@ -12,7 +12,7 @@ charset = utf-8
 indent_size = 4
 # isort plugin configuration
 known_first_party = sympy
-multi_line_output = 2
+multi_line_output = 4
 default_section = THIRDPARTY
 skip = .eggs
 

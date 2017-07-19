@@ -2,13 +2,15 @@
 
 from __future__ import division
 
-from sympy import Abs, Add, Basic, Number, Rational, S, Symbol, diff, exp, \
-    integrate, log, sqrt, symbols
-from sympy.physics.units import convert_to, find_unit, amount_of_substance, \
-    volume
-from sympy.physics.units.definitions import amu, au, centimeter, coulomb, day, \
-    foot, grams, hour, inch, kg, km, m, meter, mile, millimeter, minute, mole, \
-    quart, s, second, speed_of_light, steradian
+from sympy import (
+    Abs, Add, Basic, Number, Rational, S, Symbol, diff, exp, integrate, log,
+    sqrt, symbols)
+from sympy.physics.units import (
+    amount_of_substance, convert_to, find_unit, volume)
+from sympy.physics.units.definitions import (
+    amu, au, centimeter, coulomb, day, foot, grams, hour, inch, kg, km, m,
+    meter, mile, millimeter, minute, mole, quart, s, second, speed_of_light,
+    steradian)
 from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
