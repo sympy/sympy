@@ -61,7 +61,7 @@ class RewritingSystem(object):
         self._remove_redundancies()
         return
 
-    def add_rule(self, w1, w2):
+    def add_rule(self, w1, w2, check=False):
         new_keys = set()
         if len(self.rules) + 1 > self.maxeqns:
             self._is_confluent = self._check_confluence()
@@ -87,10 +87,12 @@ class RewritingSystem(object):
             s2 = s2*g**-1
             if len(s1) - len(s2) in [0, 1, 2]:
                 if s2 < s1:
-                    self.rules[s1] = s2
+                    if not check:
+                        self.rules[s1] = s2
                     new_keys.add(s1)
                 elif s1 < s2:
-                    self.rules[s2] = s1
+                    if not check:
+                        self.rules[s2] = s1
                     new_keys.add(s2)
 
         # overlaps on the left
@@ -100,19 +102,22 @@ class RewritingSystem(object):
             w2 = g**-1*w2
             if len(w1) - len(w2) in [0, 1, 2]:
                 if w2 < w1:
-                    self.rules[w1] = w2
+                    if not check:
+                        self.rules[w1] = w2
                     new_keys.add(w1)
                 elif w1 < w2:
-                    self.rules[w2] = w1
+                    if not check:
+                        self.rules[w2] = w1
                     new_keys.add(w2)
 
         return new_keys
 
-    def _remove_redundancies(self):
+    def _remove_redundancies(self, l=[]):
         '''
         Reduce left- and right-hand sides of reduction rules
         and remove redundant equations (i.e. those for which
-        lhs == rhs)
+        lhs == rhs). If a redundant key is in `l`, remove it
+        also.
 
         '''
         rules = self.rules.copy()
@@ -121,8 +126,11 @@ class RewritingSystem(object):
             w = self.reduce(rules[r])
             if v != r:
                 del self.rules[r]
+                if r in l:
+                    del l[l.index(r)]
                 if v != w:
                     self.add_rule(v, w)
+                    l.append(v)
             else:
                 self.rules[v] = w
         return
@@ -154,11 +162,11 @@ class RewritingSystem(object):
                     result.append(a*b*c)
             return result
 
-        def _process_overlap(w, r1, r2):
+        def _process_overlap(w, r1, r2, check):
                 s = w.eliminate_word(r1, self.rules[r1])
                 t = w.eliminate_word(r2, self.rules[r2])
                 if self.reduce(s) != self.reduce(t):
-                    new_keys = self.add_rule(t, s)
+                    new_keys = self.add_rule(t, s, check)
                     return new_keys
                 return
 
@@ -177,15 +185,15 @@ class RewritingSystem(object):
                 if not overlaps:
                     continue
                 for w in overlaps:
-                    new_keys = _process_overlap(w, r1, r2)
+                    new_keys = _process_overlap(w, r1, r2, check)
                     if new_keys:
                         if check:
                             return False
                         added += 1
                         if added > self.tidyint:
                             # tidy up
-                            self._remove_redundancies()
-                        lhs.extend([n for n in new_keys if n in self.rules])
+                            self._remove_redundancies(new_keys)
+                        lhs.extend(new_keys)
 
         self._is_confluent = True
         if check:
