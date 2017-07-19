@@ -4404,13 +4404,16 @@ def degree(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
-
+    f = sympify(f).as_expr()
     try:
-        F, opt = poly_from_expr(f, *gens, **args)
+        if f.is_Number:
+            F, opt = poly_from_expr(f, *gens, **args)
+        else:
+            F, opt = poly_from_expr(f)
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    return sympify(F.degree(opt.gen))
+    return sympify(F.degree(*gens, **args))
 
 
 @public
