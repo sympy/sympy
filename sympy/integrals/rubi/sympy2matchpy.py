@@ -1,9 +1,9 @@
 '''
 Contains Sympy to MatchPy converter function.
 '''
-from sympy.rubi.operation import *
+from sympy.integrals.rubi.operation import *
 from sympy.core import sympify
-from sympy.rubi.symbol import VariableSymbol, Integer
+from sympy.integrals.rubi.symbol import VariableSymbol, Integer
 
 get_matchpy_node = {
     "Add": Add,

@@ -7,7 +7,7 @@ else:
     raise ImportError('MatchPy could not be imported')
 
 from sympy.logic.boolalg import BooleanTrue
-from sympy.rubi.matchpy2sympy import matchpy2sympy
+from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
 
 class cons(Constraint):
     def __init__(self, expr, vars):

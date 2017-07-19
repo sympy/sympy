@@ -214,7 +214,7 @@ def SqrtNumberQ(expr):
     if expr.is_Pow:
         m = expr.base
         n = expr.exp
-        return IntegerQ(n) & SqrtNumberQ(m) | IntegerQ(n-1/2) & RationalQ(m)
+        return (IntegerQ(n) and SqrtNumberQ(m)) or (IntegerQ(n-S(1)/2) and RationalQ(m))
     elif expr.is_Mul:
         return all(SqrtNumberQ(i) for i in expr.args)
     else:
@@ -2332,22 +2332,22 @@ def SimplerSqrtQ(u, v):
 
 def SumSimplerQ(u, v):
     if RationalQ(u, v):
-        if v==0:
+        if v == S(0):
             return False
-        elif v>0:
-            return u<-1
+        elif v > S(0):
+            return u < -S(1)
         else:
-            return u>=-v
+            return u >= -v
     else:
         return SumSimplerAuxQ(Expand(u), Expand(v))
 
 def SumSimplerAuxQ(u, v):
     if SumQ(v):
-        return (RationalQ(First(v)) or SumSimplerAuxQ(u,First(v))) and (RationalQ(Rest(v)) or SumSimplerAuxQ(u,Rest(v)))
+        return (RationalQ(First(v)) or SumSimplerAuxQ(u, First(v))) and (RationalQ(Rest(v)) or SumSimplerAuxQ(u, Rest(v)))
     elif SumQ(u):
         return SumSimplerAuxQ(First(u), v) or SumSimplerAuxQ(Rest(u), v)
     else:
-        return v!=0 and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)<-1/2 or NumericFactor(u)/NumericFactor(v)==-1/2 and NumericFactor(u)<0)
+        return v!=S(0) and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)< -S(1)/2 or NumericFactor(u)/NumericFactor(v)== -S(1)/2 and NumericFactor(u)<S(0))
 
 def BinomialDegree(u, x):
     # if u is a binomial. BinomialDegree[u,x] returns the degree of x in u.

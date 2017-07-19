@@ -6,9 +6,9 @@ if matchpy:
 else:
     raise ImportError('MatchPy could not be imported')
 
-from sympy.rubi.operation import *
-from sympy.rubi.symbol import VariableSymbol, Integer
-from sympy.rubi.constraint import cons, FreeQ
+from sympy.integrals.rubi.operation import *
+from sympy.integrals.rubi.symbol import VariableSymbol, Integer
+from sympy.integrals.rubi.constraint import cons, FreeQ
 
 a, b, c, d, e, f, g, h, x, u, p = map(VariableSymbol, 'abcdefghxup')
 n, m = map(VariableSymbol, 'nm')

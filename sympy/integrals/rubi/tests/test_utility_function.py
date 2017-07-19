@@ -1,4 +1,4 @@
-from sympy.rubi.utility_function import *
+from sympy.integrals.rubi.utility_function import *
 from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch

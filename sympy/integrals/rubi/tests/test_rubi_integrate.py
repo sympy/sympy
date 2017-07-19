@@ -1,5 +1,16 @@
+import sys
+from sympy.external import import_module
+matchpy = import_module("matchpy")
+
+if not matchpy:
+    #bin/test will not execute any tests now
+    disabled = True
+
+if sys.version_info[:2] < (3, 6):
+    disabled = True
+
 from sympy.core.symbol import symbols
-from sympy.rubi.rubi import rubi_integrate
+from sympy.integrals.rubi.rubi import rubi_integrate
 from sympy.functions import log
 from sympy import sqrt, simplify, S, atanh, hyper, I
 

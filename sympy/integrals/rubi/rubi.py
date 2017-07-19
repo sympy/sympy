@@ -4,14 +4,14 @@ matchpy = import_module("matchpy")
 if matchpy is None:
     raise ImportError('MatchPy could not be imported')
 
-from sympy.rubi.patterns import rubi_object
-from sympy.rubi.operation import Int
-from sympy.rubi.sympy2matchpy import sympy2matchpy
+from sympy.integrals.rubi.patterns import rubi_object
+from sympy.integrals.rubi.operation import Int
+from sympy.integrals.rubi.sympy2matchpy import sympy2matchpy
 from sympy.core.sympify import sympify
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core import S
-from sympy.rubi.matchpy2sympy import matchpy2sympy
+from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
 
 rubi = rubi_object()
 
