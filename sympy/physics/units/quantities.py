@@ -89,8 +89,9 @@ class Quantity(AtomicExpr):
         return self.scale_factor.is_constant()
 
     def _eval_Abs(self):
-        return self.__class__(self.name, self.dimension,
-                              Abs(self.scale_factor), self.abbrev)
+        # FIXME prefer usage of self.__class__ or type(self) instead
+        return self.func(self.name, self.dimension, Abs(self.scale_factor),
+                         self.abbrev)
 
     @staticmethod
     def get_dimensional_expr(expr):
