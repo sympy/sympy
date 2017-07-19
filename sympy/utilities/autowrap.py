@@ -167,7 +167,7 @@ class CodeWrapper(object):
         except CalledProcessError as e:
             raise CodeWrapError(
                 "Error while executing command: %s. Command output is:\n%s" % (
-                    " ".join(command), e.output.decode()))
+                    " ".join(command), e.output.decode('utf-8')))
         if not self.quiet:
             print(retoutput)
 
@@ -815,7 +815,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
             os.chdir(oldwork)
             if not self.filepath:
                 try:
-                    shutil.rmtree(workdir)
+                    pass # shutil.rmtree(workdir)
                 except OSError:
                     # Could be some issues on Windows
                     pass
@@ -1083,10 +1083,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     else:
         # Dummies are used for all added expressions to prevent name clashes
         # within the original expression.
-        y = IndexedBase(Dummy())
-        m = Dummy(integer=True)
-        i = Idx(Dummy(integer=True), m)
-        f = implemented_function(Dummy().name, Lambda(args, expr))
+        y = IndexedBase(Dummy('y'))
+        m = Dummy('m', integer=True)
+        i = Idx(Dummy('i', integer=True), m)
+        f_dummy = Dummy('f')
+        f = implemented_function('%s_%d' % (f_dummy.name, f_dummy.dummy_index), Lambda(args, expr))
         # For each of the args create an indexed version.
         indexed_args = [IndexedBase(Dummy(str(a))) for a in args]
         # Order the arguments (out, args, dim)
