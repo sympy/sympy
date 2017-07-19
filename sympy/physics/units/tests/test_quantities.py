@@ -3,8 +3,8 @@
 from __future__ import division
 
 from sympy import (
-    Abs, Add, Basic, Number, Rational, S, Symbol, diff, exp, integrate, log,
-    sqrt, symbols)
+    Abs, Add, Basic, Function, Number, Rational, S, Symbol, diff, exp,
+    integrate, log, sqrt, symbols)
 from sympy.physics.units import (
     amount_of_substance, convert_to, find_unit, volume)
 from sympy.physics.units.definitions import (
@@ -278,3 +278,12 @@ def test_factor_and_dimension_with_Abs():
     v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)
     assert (0, lenth/time) == Quantity._collect_factor_and_dimension(expr)
+
+def test_dimensional_expr_of_derivative():
+    l = Quantity('l', length)
+    t = Quantity('t', time)
+    x = Symbol('x')
+    f = Function('f')
+    dfdx = f(x).diff(x)
+    dl_dt = dfdx.subs({f(x): l, x: t})
+    assert length/time == Dimension(Quantity.get_dimensional_expr(dl_dt))
