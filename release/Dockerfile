@@ -20,9 +20,6 @@ RUN mkdir -p $MATPLOTLIBRC
 RUN echo "backend : Agg" > $MATPLOTLIBRC/matplotlibrc
 
 RUN git clone git://github.com/sympy/sympy.git
-# This can be removed once this is in master
-RUN cd /home/sympy && git checkout 1.1
-RUN cd /home/sympy && git pull
 
 WORKDIR /home/sympy/release
 
