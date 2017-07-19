@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Rational, Float, S, Symbol, cos, oo, pi, simplify, sin, sqrt, symbols, acos
+from sympy import Rational, Float, S, Symbol, cos, oo, pi, simplify, sin, sqrt, symbols, acos, re
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray, Segment, Triangle, intersection, Point3D, Line3D,
@@ -39,7 +39,7 @@ warnings.simplefilter('always', UserWarning)  # make sure to show warnings every
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
     t_float = Float("1.0E-10")
-    return -t_float < a - b < t_float
+    return -t_float < re(a - b) < t_float
 
 
 def test_angle_between():

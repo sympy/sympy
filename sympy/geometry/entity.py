@@ -26,7 +26,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
-from sympy.functions import cos, sin
+from sympy.core.backend import sin, cos
 from sympy.matrices import eye
 from sympy.sets import Set
 
@@ -159,7 +159,7 @@ class GeometryEntity(Basic):
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""
 
-        from sympy.core.evalf import N
+        from sympy.core.backend import N
 
         try:
             bounds = self.bounds
@@ -375,7 +375,8 @@ class GeometryEntity(Basic):
         Circle(Point2D(-pi, pi), -5)
 
         """
-        from sympy import atan, Point, Dummy, oo
+        from sympy import  Point, Dummy, oo
+        from sympy.core.backend import atan
 
         g = self
         l = line

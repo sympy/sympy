@@ -20,14 +20,13 @@ from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.logic.boolalg import And
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff)
 from sympy.simplify.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
+from sympy.core.backend import tan, And, Piecewise, acos, tan, atan2
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
@@ -1193,7 +1192,7 @@ class Ray(LinearEntity):
             Hex string for fill color. Default is "#66cc99".
         """
 
-        from sympy.core.evalf import N
+        from sympy.core.backend import N
 
         verts = (N(self.p1), N(self.p2))
         coords = ["{0},{1}".format(p.x, p.y) for p in verts]
@@ -1828,7 +1827,7 @@ class Line2D(LinearEntity2D, Line):
             Hex string for fill color. Default is "#66cc99".
         """
 
-        from sympy.core.evalf import N
+        from sympy.core.backend import N
 
         verts = (N(self.p1), N(self.p2))
         coords = ["{0},{1}".format(p.x, p.y) for p in verts]
@@ -2183,7 +2182,7 @@ class Segment2D(LinearEntity2D, Segment):
             Hex string for fill color. Default is "#66cc99".
         """
 
-        from sympy.core.evalf import N
+        from sympy.core.backend import N
 
         verts = (N(self.p1), N(self.p2))
         coords = ["{0},{1}".format(p.x, p.y) for p in verts]

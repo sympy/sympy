@@ -58,4 +58,4 @@ def test_reflect_entity_overrides():
         '[Point2D(-0.586, 4.27), Point2D(-1.69, 4.66), '
         'Point2D(-2.41, 3.73), Point2D(-1.74, 2.76), '
         'Point2D(-0.616, 3.10)]')
-    assert pent.area.equals(-rpent.area)
+    assert pent.area.evalf() == -rpent.area.evalf()

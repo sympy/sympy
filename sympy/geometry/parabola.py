@@ -7,7 +7,6 @@ Contains
 
 from __future__ import division, print_function
 from sympy.core import S
-from sympy.core.numbers import oo
 from sympy.core.compatibility import ordered
 from sympy import symbols, simplify, solve
 from sympy.geometry.entity import GeometryEntity, GeometrySet

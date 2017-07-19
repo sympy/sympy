@@ -8,19 +8,19 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy.core import S, pi, sympify
+from sympy.core import S, sympify
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import Rational, oo
+from sympy.core.numbers import oo
 from sympy.core.compatibility import range, ordered
 from sympy.core.symbol import Dummy
 from sympy.simplify import simplify, trigsimp
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
+from sympy.core.backend import pi, Rational, sqrt
 from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -177,7 +177,7 @@ class Ellipse(GeometrySet):
             Hex string for fill color. Default is "#66cc99".
         """
 
-        from sympy.core.evalf import N
+        from sympy.core.backend import N
 
         c = N(self.center)
         h, v = N(self.hradius), N(self.vradius)
@@ -1066,7 +1066,8 @@ class Ellipse(GeometrySet):
         times) until a valid point is obtained.
 
         """
-        from sympy import sin, cos, Rational
+        from sympy import sin, cos
+        from sympy.core.backend import Rational
         t = _symbol('t')
         x, y = self.arbitrary_point(t).args
         # get a random value in [-1, 1) corresponding to cos(t)
@@ -1077,7 +1078,7 @@ class Ellipse(GeometrySet):
             rng = random
         for i in range(10):  # should be enough?
             # simplify this now or else the Float will turn s into a Float
-            c = 2*Rational(rng.random()) - 1
+            c = 2*Rational(rng.random(), 1) - 1
             s = sqrt(1 - c**2)
             p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
             if p1 in self:

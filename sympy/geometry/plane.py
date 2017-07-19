@@ -8,10 +8,9 @@ Plane
 from __future__ import division, print_function
 
 from sympy import simplify
-from sympy.core import Dummy, Rational, S, Symbol
+from sympy.core import Dummy
+from sympy.core.backend import Rational, Symbol, acos, asin, sqrt, S, Matrix
 from sympy.core.compatibility import is_sequence
-from sympy.functions.elementary.trigonometric import acos, asin, sqrt
-from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve, linsolve
 from sympy.utilities.misc import filldedent
@@ -154,7 +153,7 @@ class Plane(GeometryEntity):
         Point3D
 
         """
-        from sympy import cos, sin
+        from sympy.core.backend import sin, cos
         t = t or Dummy('t')
         x, y, z = self.normal_vector
         a, b, c = self.p1.args
