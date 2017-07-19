@@ -110,7 +110,7 @@ class Vector(BasisDependent):
         if isinstance(other, Del):
             def directional_derivative(field):
                 from sympy.vector.functions import directional_derivative
-                return directional_derivative(self, field)
+                return directional_derivative(field, self)
             return directional_derivative
 
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):

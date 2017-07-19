@@ -124,7 +124,7 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
 
-def directional_derivative(direction_vector, field):
+def directional_derivative(field, direction_vector):
     """
     Returns the directional derivative of a scalar or vector field computed
     along a given vector in coordinate system which parameters are expressed.
@@ -132,11 +132,12 @@ def directional_derivative(direction_vector, field):
     Parameters
     ==========
 
+    field : Vector or Scalar
+        The scalar or vector field to compute the directional derivative of
+
     direction_vector : Vector
         The vector to calculated directional derivative along them.
 
-    field : Vector or Scalar
-        The scalar or vector field to compute the directional derivative of
 
     Examples
     ========
@@ -145,10 +146,10 @@ def directional_derivative(direction_vector, field):
     >>> R = CoordSys3D('R')
     >>> f1 = R.x*R.y*R.z
     >>> v1 = 3*R.i + 4*R.j + R.k
-    >>> directional_derivative(v1, f1)
+    >>> directional_derivative(f1, v1)
     R.x*R.y + 4*R.x*R.z + 3*R.y*R.z
     >>> f2 = 5*R.x**2*R.z
-    >>> directional_derivative(v1, f2)
+    >>> directional_derivative(f2, v1)
     5*R.x**2 + 30*R.x*R.z
 
     """
