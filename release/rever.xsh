@@ -3,6 +3,8 @@
 $XONSH_SHOW_TRACEBACK = True
 $RAISE_SUBPROC_ERROR = True
 
+trace on
+
 import os
 import sys
 import unicodedata
