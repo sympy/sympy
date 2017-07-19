@@ -58,10 +58,8 @@ class FpGroup(DefaultPrinting):
     def __init__(self, fr_grp, relators):
         relators = _parse_relators(relators)
         # return the corresponding FreeGroup if no relators are specified
-        if not relators:
-            return fr_grp
         self.free_group = fr_grp
-        self.relators = relators
+        self.relators = list(relators)
         self.generators = self._generators()
         self.dtype = type("FpGroupElement", (FpGroupElement,), {"group": self})
 
