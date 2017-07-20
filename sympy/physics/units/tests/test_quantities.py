@@ -279,11 +279,17 @@ def test_factor_and_dimension_with_Abs():
     expr = v_w1 - Abs(v_w1)
     assert (0, lenth/time) == Quantity._collect_factor_and_dimension(expr)
 
+
 def test_dimensional_expr_of_derivative():
-    l = Quantity('l', length)
-    t = Quantity('t', time)
+    l = Quantity('l', length, 36 * km)
+    t = Quantity('t', time, hour)
+    t1 = Quantity('t1', time, second)
     x = Symbol('x')
+    y = Symbol('y')
     f = Function('f')
-    dfdx = f(x).diff(x)
-    dl_dt = dfdx.subs({f(x): l, x: t})
-    assert length/time == Dimension(Quantity.get_dimensional_expr(dl_dt))
+    dfdx = f(x, y).diff(x, y)
+    dl_dt = dfdx.subs({f(x, y): l, x: t, y: t1})
+    assert Quantity.get_dimensional_expr(dl_dt) ==\
+        Quantity.get_dimensional_expr(l / t / t1)
+    assert Quantity._collect_factor_and_dimension(dl_dt) ==\
+        Quantity._collect_factor_and_dimension(l / t / t1)
