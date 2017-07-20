@@ -1265,19 +1265,11 @@ def linsolve(system, *symbols):
     if not system:
         return S.EmptySet
 
-    if not symbols:
-        raise ValueError('Symbols must be given, for which solution of the '
-                         'system is to be found.')
-
+    # If second argument is an iterable
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    try:
-        sym = symbols[0].is_Symbol or symbols[0].is_Function
-    except AttributeError:
-        sym = False
-
-    if not sym:
+    if not any([hasattr(symbols[0], attr) for attr in ['is_Symbol', 'is_Function']]):
         raise ValueError('Symbols or iterable of symbols must be given as '
                          'second argument, not type %s: %s' % (type(symbols[0]), symbols[0]))
 
@@ -1289,7 +1281,7 @@ def linsolve(system, *symbols):
 
         # 2). A & b as input Form
         if len(system) == 2 and system[0].is_Matrix:
-            A, b = system[0], system[1]
+            A, b = system
 
         # 3). List of equations Form
         if not system[0].is_Matrix:
@@ -1298,28 +1290,17 @@ def linsolve(system, *symbols):
     else:
         raise ValueError("Invalid arguments")
 
-    # Solve using Gauss-Jordan elimination
     try:
-        sol, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
+        solution, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
     except ValueError:
         # No solution
-        return EmptySet()
+        return S.EmptySet
 
     # Replace free parameters with free symbols
-    solution = []
-    if params:
-        for s in sol:
-            for k, v in enumerate(params):
-                s = s.xreplace({v: symbols[free_syms[k]]})
-            solution.append(simplify(s))
-    else:
-        for s in sol:
-            solution.append(simplify(s))
+    replace_dict = {v: symbols[free_syms[k]] for k, v in enumerate(params)}
+    solution = [simplify(sol.xreplace(replace_dict)) for sol in solution]
 
-    # Return solutions
-    solution = FiniteSet(tuple(solution))
-    return solution
-
+    return FiniteSet(tuple(solution))
 
 
 
