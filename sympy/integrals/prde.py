@@ -1008,14 +1008,28 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
 
     """
 
-    F = [cancel(fa/fd)]
+    F = [cancel(wa/wd)]
     for i, ext in enumerate(DE.exts):
         if ext == 'exp':
             F.append(DE.D[i]/DE.T[i])
         elif ext == 'log':
             F.append(DE.D[i].as_expr())
 
+    F.append(cancel(-fa/fd))
+
     rat_linear_rels = linear_relations_in_Q(F)
+    if not rat_linear_rels:
+        return None
+
+    for solution in rat_linear_rels:
+        den = S(1)
+        for rat in solution:
+            den = ilcm(den, rat.q)
+
+        sol = [rat*den for rat in solution]
+        ans = zip(DE.T, sol[1: -1])
+        v = Mul(*[Pow(i, j) for i, j in ans])
+        return (sol[-1], sol[0], v)
 
 
 def is_deriv_k(fa, fd, DE):
