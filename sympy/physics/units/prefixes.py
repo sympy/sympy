@@ -183,11 +183,11 @@ PREFIXES = {
 }
 
 
-kibi = Prefix('kibi', 'Y', 10, 2),
-mebi = Prefix('mebi', 'Y', 20, 2),
-gibi = Prefix('gibi', 'Y', 30, 2),
-tebi = Prefix('tebi', 'Y', 40, 2),
-pebi = Prefix('pebi', 'Y', 50, 2),
+kibi = Prefix('kibi', 'Y', 10, 2)
+mebi = Prefix('mebi', 'Y', 20, 2)
+gibi = Prefix('gibi', 'Y', 30, 2)
+tebi = Prefix('tebi', 'Y', 40, 2)
+pebi = Prefix('pebi', 'Y', 50, 2)
 exbi = Prefix('exbi', 'Y', 60, 2)
 
 
