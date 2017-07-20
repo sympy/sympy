@@ -97,8 +97,10 @@ class Quantity(AtomicExpr):
         elif isinstance(expr, Add):
             return Quantity.get_dimensional_expr(expr.args[0])
         elif isinstance(expr, Derivative):
-            return Quantity.get_dimensional_expr(expr.args[0]) /\
-                Quantity.get_dimensional_expr(expr.args[1])
+            dim = Quantity.get_dimensional_expr(expr.args[0])
+            for independent in expr.args[1:]:
+                dim /= Quantity.get_dimensional_expr(independent)
+            return dim
         elif isinstance(expr, Quantity):
             return expr.dimension.name
         return 1
