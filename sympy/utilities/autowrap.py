@@ -78,8 +78,7 @@ from warnings import warn
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import range, iterable
 from sympy.core.function import Lambda
-from sympy.core.relational import Eq
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.backend import Eq, Symbol, Dummy
 from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.utilities.codegen import (make_routine, get_code_generator,
                                      OutputArgument, InOutArgument,

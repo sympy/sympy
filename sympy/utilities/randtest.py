@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from random import uniform
 import random
 
-from sympy.core.numbers import I
+from sympy.core.backend import I
 from sympy.simplify.simplify import nsimplify
 from sympy.core.containers import Tuple
 from sympy.core.numbers import comp
