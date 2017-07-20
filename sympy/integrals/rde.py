@@ -222,6 +222,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                 A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                 if A is not None:
                     a, m, z = A
+                    a = a.as_poly(DE.t)
                     if a == 1:
                         n = min(n, m)
 
