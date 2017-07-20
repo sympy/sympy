@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import sympify
+from sympy.core.backend import sympify
 
 
 def use(expr, func, level=0, args=(), kwargs={}):

@@ -62,15 +62,15 @@ from collections import defaultdict
 from itertools import product
 
 from sympy import SYMPY_DEBUG
-from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
+from sympy.core import (S, Dummy, sympify, Tuple, expand, I, pi, Mul,
+    expand_func, Add, Expr)
 from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, range
 from sympy.utilities.iterables import sift
-from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
+from sympy.functions import (exp, sqrt, root, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
-        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
-        rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
+        cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
+        rf, factorial, lerchphi, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -80,6 +80,7 @@ from sympy.functions.elementary.complexes import polarify, unpolarify
 from sympy.simplify.powsimp import powdenest
 from sympy.polys import poly, Poly
 from sympy.series import residue
+from sympy.core.backend import symbols, oo, zoo, nan, log, sinh, EulerGamma, Piecewise
 
 # function to define "buckets"
 def _mod1(x):

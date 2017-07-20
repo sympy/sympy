@@ -135,6 +135,8 @@ if not sympy.test('sympy/physics/mechanics'):
     raise Exception('Tests failed')
 if not sympy.test('sympy/liealgebras'):
     raise Exception('Tests failed')
+if not sympy.test('sympy/simplify'):
+    raise Exception('Tests failed')
 EOF
     unset USE_SYMENGINE
 fi

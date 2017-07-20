@@ -4,13 +4,13 @@ from collections import defaultdict
 
 from sympy.core.cache import cacheit
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
-    Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
+    Mul, Dummy, FunctionClass, Add, Wild)
 from sympy.core.compatibility import reduce, iterable
-from sympy.core.numbers import I, Integer
 from sympy.core.function import count_ops, _mexpand
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
+from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan
+from sympy.core.backend import cot, coth, I, Integer, symbols, expand, igcd
 
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy

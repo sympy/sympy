@@ -5,19 +5,19 @@ from collections import defaultdict
 from sympy.core import (Basic, S, Add, Mul, Pow,
     Symbol, sympify, expand_mul, expand_func,
     Function, Dummy, Expr, factor_terms,
-    symbols, expand_power_exp)
+    expand_power_exp)
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
-from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.numbers import Float, Rational
 from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
-    gamma, exp, sqrt, log, exp_polar, piecewise_fold)
+    gamma, log, exp_polar, piecewise_fold)
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-from sympy.functions.elementary.integers import ceiling
+from sympy.core.backend import symbols, I, pi, Integer, exp, sqrt, ceiling
 from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
@@ -616,7 +616,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 def sum_simplify(s):
     """Main function for Sum simplification"""
     from sympy.concrete.summations import Sum
-    from sympy.core.function import expand
+    from sympy.core.backend import expand
 
     terms = Add.make_args(expand(s))
     s_t = [] # Sum Terms
@@ -720,7 +720,7 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
     from sympy.concrete.summations import Sum
-    from sympy import Mul
+    from sympy.core.backend import Mul
 
     #we know this is something in terms of a constant * a sum
     #so we temporarily put the constants inside for simplification

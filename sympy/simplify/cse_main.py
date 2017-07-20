@@ -2,8 +2,8 @@
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple
-from sympy.core.singleton import S
+from sympy.core import Basic, Mul, Add, Pow, Symbol, Tuple
+from sympy.core.backend import sympify, S
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
 from sympy.core.compatibility import iterable, range

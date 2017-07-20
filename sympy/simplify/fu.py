@@ -193,7 +193,7 @@ from collections import defaultdict
 from sympy.simplify.simplify import bottom_up
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
+    cos, sin, tan, cot, sec, csc, TrigonometricFunction)
 from sympy.functions.elementary.hyperbolic import (
     cosh, sinh, tanh, coth, HyperbolicFunction)
 from sympy.core.compatibility import ordered, range
@@ -205,11 +205,11 @@ from sympy.core.add import Add
 from sympy.core.symbol import Dummy
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.basic import S
-from sympy.core.numbers import pi, I
+from sympy.core.numbers import I
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 from sympy.polys.polytools import factor
-from sympy.ntheory.factor_ import perfect_power
+from sympy.core.backend import sqrt, pi, perfect_power
 
 from sympy import SYMPY_DEBUG
 

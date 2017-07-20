@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
 from itertools import combinations_with_replacement
-from sympy.core import symbols, Add, Dummy
-from sympy.core.numbers import Rational
+from sympy.core import Dummy
+from sympy.core.backend import Rational, Add, symbols
 from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
 from sympy.polys.monomials import Monomial, monomial_div
 from sympy.polys.polyerrors import PolificationFailed
@@ -215,6 +215,6 @@ def ratsimpmodprime(expr, G, *gens, **args):
         dn, d = d.clear_denoms(convert=True)
         r = Rational(cn, dn)
     else:
-        r = Rational(1)
+        r = Rational(1, 1)
 
     return (c*r.q)/(d*r.p)

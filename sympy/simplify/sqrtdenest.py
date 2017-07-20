@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.functions import sqrt, sign, root
-from sympy.core import S, sympify, Mul, Add, Expr
+from sympy.functions import sqrt, root
+from sympy.core import S, sympify, Add, Expr
 from sympy.core.function import expand_mul
 from sympy.core.compatibility import range
 from sympy.core.symbol import Dummy
+from sympy.core.backend import sign, Mul
 from sympy.polys import Poly, PolynomialError
 from sympy.core.function import count_ops, _mexpand
 from sympy.utilities import default_sort_key

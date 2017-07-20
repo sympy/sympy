@@ -4,7 +4,8 @@
 from __future__ import print_function, division
 
 from sympy.simplify.hyperexpand import FormulaCollection
-from sympy import latex, Eq, hyper
+from sympy import latex, hyper
+from sympy.core.backend import Eq
 
 c = FormulaCollection()
 

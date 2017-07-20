@@ -3,13 +3,13 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core.function import expand_log, count_ops
-from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
+from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms, Integer
 from sympy.core.compatibility import ordered, default_sort_key, reduce
-from sympy.core.numbers import Integer, Rational
 from sympy.core.mul import prod, _keep_coeff
 from sympy.core.rules import Transform
 from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
 from sympy.polys import lcm, gcd
+from sympy.core.backend import Rational
 from sympy.ntheory.factor_ import multiplicity
 
 
