@@ -11,11 +11,9 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol
-from sympy.core.numbers import I
 from sympy.polys.polytools import Poly
 from sympy.core.evalf import N
-from sympy.functions import sqrt
+from sympy.core.backend import I, sqrt, Symbol, S
 from sympy.utilities import public
 
 x = Symbol('x')

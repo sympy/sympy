@@ -3,12 +3,14 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, Rational, AlgebraicNumber,
-    Add, Mul, sympify, Dummy, expand_mul, I, pi
+    S, AlgebraicNumber, Add, Mul,
+    sympify, Dummy, expand_mul, I, pi
 )
 
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin
+
+from sympy.core.backend import Rational
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,

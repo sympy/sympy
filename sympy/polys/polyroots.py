@@ -4,20 +4,20 @@ from __future__ import print_function, division
 
 import math
 
-from sympy.core.symbol import Dummy, Symbol, symbols
-from sympy.core import S, I, pi
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core import S
 from sympy.core.compatibility import ordered
 from sympy.core.mul import expand_2arg, Mul
-from sympy.core.power import Pow
 from sympy.core.relational import Eq
-from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, igcd, comp
+from sympy.core.numbers import comp
 from sympy.core.exprtools import factor_terms
 from sympy.core.logic import fuzzy_not
 
-from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
+from sympy.ntheory import divisors
+from sympy.functions import exp, sqrt, im, cos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
+from sympy.core.backend import (symbols, I, pi, Pow, sympify, Rational, isprime,
+                                nextprime, acos, igcd)
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly

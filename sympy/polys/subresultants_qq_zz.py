@@ -218,8 +218,9 @@ rem(f, g, x) and the A-M-V Theorem  with the function rem_z(f, g, x).
 
 from __future__ import print_function, division
 
-from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
+from sympy import (degree, floor, LC, Matrix, Poly, pprint)
+from sympy import (QQ, quo, rem, sign, simplify, summation, var, zeros)
+from sympy.core.backend import S, Abs, expand, eye, nan
 
 def sylvester(f, g, x, method = 1):
     '''

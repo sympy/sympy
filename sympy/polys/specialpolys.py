@@ -2,8 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core import Symbol, Dummy
 from sympy.core.singleton import S
 
 from sympy.polys.polytools import Poly, PurePoly
@@ -26,7 +25,7 @@ from sympy.polys.factortools import (
 
 from sympy.polys.domains import ZZ
 
-from sympy.ntheory import nextprime
+from sympy.core.backend import nextprime, sqrt, Add, Mul, symbols, sympify
 
 from sympy.utilities import subsets, public
 

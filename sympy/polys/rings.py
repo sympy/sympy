@@ -7,8 +7,9 @@ from types import GeneratorType
 
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
-from sympy.core.numbers import igcd, oo
+from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify, sympify
+from sympy.core.backend import oo
 from sympy.core.compatibility import is_sequence, reduce, string_types, range
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomials import MonomialOps

@@ -15,7 +15,8 @@ from sympy.polys.polyerrors import (
 
 from sympy.utilities import numbered_symbols, take, public
 
-from sympy.core import S, Basic, Add, Mul, symbols
+from sympy.core import S, Add
+from sympy.core.backend import Basic, Mul, symbols
 
 from sympy.core.compatibility import range
 

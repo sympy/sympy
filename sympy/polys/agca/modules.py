@@ -1087,7 +1087,7 @@ class SubModulePolyRing(SubModule):
         """Compute syzygies. See [SCA, algorithm 2.5.4]."""
         # NOTE if self.gens is a standard basis, this can be done more
         #      efficiently using Schreyer's theorem
-        from sympy.matrices import eye
+        from sympy.core.backend import eye
 
         # First bullet point
         k = len(self.gens)

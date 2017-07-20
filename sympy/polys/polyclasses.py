@@ -7,7 +7,7 @@ from sympy.core.sympify import CantSympify
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed, NotReversible
 
-from sympy import oo
+from sympy.core.backend import oo
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """

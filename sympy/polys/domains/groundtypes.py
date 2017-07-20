@@ -19,9 +19,12 @@ from sympy.core.numbers import (
 )
 
 from sympy import (
-    Float as SymPyReal,
     Integer as SymPyInteger,
     Rational as SymPyRational,
+)
+
+from sympy.core.backend import (
+    Float as SymPyReal,
 )
 
 if HAS_GMPY == 1:

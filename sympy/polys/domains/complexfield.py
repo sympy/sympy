@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core.numbers import Float, I
+from sympy.core.backend import Float, I
 from sympy.utilities import public
 
 from sympy.polys.domains.field import Field

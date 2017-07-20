@@ -9,8 +9,10 @@ if USE_SYMENGINE:
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase, Rational, Basic)
-    from symengine.lib.symengine_wrapper import gcd as igcd
+        ImmutableMatrix, MatrixBase, Rational, Basic, Abs, Float,
+        oo, Pow, nan)
+    from symengine.lib.symengine_wrapper import (nextprime, probab_prime_p as isprime,
+        factorial, gcd as igcd)
     from symengine import AppliedUndef
 else:
     from sympy import (Symbol, Integer, sympify, S,
@@ -19,5 +21,8 @@ else:
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase, Rational, Basic, igcd)
+        ImmutableMatrix, MatrixBase, Rational, Basic, igcd, Abs, Float,
+        oo, Pow, nan)
+    from sympy.ntheory import nextprime, isprime, factorial
+    from sympy.core.evalf import N
     from sympy.core.function import AppliedUndef

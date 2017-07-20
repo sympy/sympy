@@ -50,7 +50,8 @@ from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
 from sympy.core.compatibility import as_int, range
-from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
+from sympy.functions import sin, cos, tan, atan, tanh, ceiling
+from sympy.core.backend import exp, atanh, log
 from mpmath.libmp.libintmath import giant_steps
 import math
 

@@ -95,7 +95,7 @@ def monomial_count(V, N):
     6
 
     """
-    from sympy import factorial
+    from sympy.core.backend import factorial
     return factorial(V + N) / factorial(V) / factorial(N)
 
 def monomial_mul(A, B):
