@@ -11,8 +11,8 @@ if sys.version_info[:2] < (3, 6):
 
 from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
 from sympy.integrals.rubi.symbol import VariableSymbol, Integer
-from sympy.integrals.rubi.operation import List, LinearQ, Add, Mul, Pow, PosQ
 from sympy import symbols, S, I
+from sympy.integrals.rubi.operation import List, LinearQ, Add, Mul, Pow, PosQ
 
 a, b, x = symbols('a b x', real=True, imaginary=False)
 

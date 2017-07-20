@@ -4,11 +4,24 @@ matchpy = import_module("matchpy")
 if matchpy:
     Wildcard, Pattern, ReplacementRule, ManyToOneReplacer = matchpy.Wildcard, matchpy.Pattern, matchpy.ReplacementRule, matchpy.ManyToOneReplacer
 else:
-    raise ImportError('MatchPy could not be imported')
+    Wildcard, Pattern, ReplacementRule, ManyToOneReplacer = object, object, object, object
+    class Wildcard(object):
+        def __init__(self):
+            pass
+        @staticmethod
+        def dot(x):
+            pass
+        @staticmethod
+        def symbol(x):
+            pass
+    class Pattern(object):
+        def __init__(self, a, b):
+            pass
 
-from sympy.integrals.rubi.operation import *
+from sympy.integrals.rubi.operation import (Int, Mul, Add, Pow, And, Or, ZeroQ, NonzeroQ, List, Log, RemoveContent, PositiveIntegerQ, NegativeIntegerQ, PositiveQ, IntegerQ, IntegersQ, PosQ, NegQ, FracPart, IntPart, RationalQ, Subst, LinearQ, Sqrt, NegativeQ, ArcCosh, Rational, Less, Not, Simplify, Denominator, Coefficient, SumSimplerQ, Equal, Unequal, SimplerQ, LessEqual, IntLinearcQ, Greater, GreaterEqual, FractionQ, ExpandIntegrand, With, Set, Hypergeometric2F1, TogetherSimplify, Inequality)
 from sympy.integrals.rubi.symbol import VariableSymbol, Integer
 from sympy.integrals.rubi.constraint import cons, FreeQ
+from sympy.utilities.decorator import doctest_depends_on
 
 a, b, c, d, e, f, g, h, x, u, p = map(VariableSymbol, 'abcdefghxup')
 n, m = map(VariableSymbol, 'nm')
@@ -18,7 +31,7 @@ a_, b_, c_, d_, e_, f_, g_, h_, p_ = map(Wildcard.dot, 'abcdefghp')
 n_, m_ = map(Wildcard.dot, 'nm')
 x_, u_ = map(Wildcard.symbol, 'xu')
 
-
+@doctest_depends_on(modules=('matchpy',))
 def rubi_object():
     rubi = ManyToOneReplacer()
     pattern1 = Pattern(Int(Mul(Pow(Mul(c_, x_), m_), Pow(Add(a_, Mul(b_, Pow(x_, n_))), p_)), x_), FreeQ(a, x), FreeQ(b, x), FreeQ(c, x), FreeQ(m, x), FreeQ(n, x), FreeQ(p, x), cons(And(Not(PositiveIntegerQ(p_)), Or(NegativeIntegerQ(p_), PositiveQ(a_))), (m, a, b, c, p, x, n)))

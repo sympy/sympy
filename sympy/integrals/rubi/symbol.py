@@ -2,9 +2,15 @@ from sympy.external import import_module
 matchpy = import_module("matchpy")
 
 if matchpy:
-    Symbol, Wildcard = matchpy.Symbol, matchpy.Wildcard
+    Symbol = matchpy.Symbol
 else:
-    raise ImportError('MatchPy could not be imported')
+    class Symbol(object):
+        def __init__(self, name, variable_name=None):
+            self.name = name
+            self.head = self
+        @staticmethod
+        def dot(x):
+            pass
 
 class VariableSymbol(Symbol):
     pass

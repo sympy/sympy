@@ -4,7 +4,7 @@ matchpy = import_module("matchpy")
 if matchpy:
     Constraint, substitute = matchpy.Constraint, matchpy.substitute
 else:
-    raise ImportError('MatchPy could not be imported')
+    Constraint, substitute = object, object
 
 from sympy.logic.boolalg import BooleanTrue
 from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
@@ -20,6 +20,7 @@ class cons(Constraint):
             return self.expr
 
         sub = substitute(self.expr, substitution)
+
         try:
             res = matchpy2sympy(sub)
         except:

@@ -1,20 +1,19 @@
 from sympy.external import import_module
 matchpy = import_module("matchpy")
+from sympy.utilities.decorator import doctest_depends_on
 
-if matchpy is None:
-    raise ImportError('MatchPy could not be imported')
+if matchpy:
+    from sympy.integrals.rubi.patterns import rubi_object
+    from sympy.integrals.rubi.operation import Int
+    from sympy.integrals.rubi.sympy2matchpy import sympy2matchpy
+    from sympy.core.sympify import sympify
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
+    from sympy.core import S
+    from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
+    rubi = rubi_object()
 
-from sympy.integrals.rubi.patterns import rubi_object
-from sympy.integrals.rubi.operation import Int
-from sympy.integrals.rubi.sympy2matchpy import sympy2matchpy
-from sympy.core.sympify import sympify
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core import S
-from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
-
-rubi = rubi_object()
-
+@doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
     '''
     Main function for Rubi integeration.

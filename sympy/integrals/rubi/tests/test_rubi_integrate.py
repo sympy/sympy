@@ -10,9 +10,9 @@ if sys.version_info[:2] < (3, 6):
     disabled = True
 
 from sympy.core.symbol import symbols
-from sympy.integrals.rubi.rubi import rubi_integrate
 from sympy.functions import log
 from sympy import sqrt, simplify, S, atanh, hyper, I
+from sympy.integrals.rubi.rubi import rubi_integrate
 
 a, b, c, d, e, f, x, m, n, p = symbols('a b c d e f x m n p', real=True, imaginary=False)
 

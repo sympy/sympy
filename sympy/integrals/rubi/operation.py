@@ -4,7 +4,14 @@ matchpy = import_module("matchpy")
 if matchpy:
     Operation, Arity = matchpy.Operation, matchpy.Arity
 else:
-    raise ImportError('MatchPy could not be imported')
+    Operation = object
+    class Arity(object):
+        nullary = (0, True)
+        unary = (1, True)
+        binary = (2, True)
+        ternary = (3, True)
+        polyadic = (2, False)
+        variadic = (0, False)
 
 class Int(Operation):
     name = "Int"
