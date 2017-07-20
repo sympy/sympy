@@ -580,13 +580,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s == self:
-                    return None
-                if s.is_positive and a.is_nonnegative:
+                if s != self and s.is_positive and a.is_nonnegative:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_positive:
+                    if v is not None and v != self and v.is_positive:
                         return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
@@ -635,13 +633,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s == self:
-                        return None
-                    if s.is_nonnegative:
+                    if s != self and s.is_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonnegative:
+                        if v is not None and v != self and v.is_nonnegative:
                             return True
 
     def _eval_is_nonpositive(self):
@@ -652,13 +648,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s == self:
-                        return None
-                    if s.is_nonpositive:
+                    if s != self and s.is_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonpositive:
+                        if v is not None and v != self and v.is_nonpositive:
                             return True
 
     def _eval_is_negative(self):
@@ -670,13 +664,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s == self:
-                    return None
-                if s.is_negative and a.is_nonpositive:
+                if s != self and s.is_negative and a.is_nonpositive:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_negative:
+                    if v is not None and v != self and v.is_negative:
                         return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
