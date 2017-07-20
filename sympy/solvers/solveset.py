@@ -115,7 +115,14 @@ def invert_real(f_x, y, x, domain=S.Reals):
     Inverts a real-valued function. Same as _invert, but sets
     the domain to ``S.Reals`` before inverting.
     """
-    return _invert(f_x, y, x, domain)
+    lhs, rhs_s = _invert(f_x, y, x, domain)
+    if lhs == x and isinstance(rhs_s, FiniteSet):
+        for rhs in rhs_s:
+            if checksol(f_x, x, rhs):
+                pass
+            else:
+                return (f_x, FiniteSet(y))
+    return lhs, rhs_s
 
 
 def _invert_real(f, g_ys, symbol):
