@@ -1251,17 +1251,16 @@ def linsolve(system, *symbols):
     * A degenerate system returns solution as set of given
       symbols.
 
-    >>> system = Matrix(([0,0,0], [0,0,0], [0,0,0]))
+    >>> system = Matrix(([0, 0, 0], [0, 0, 0], [0, 0, 0]))
     >>> linsolve(system, x, y)
     {(x, y)}
 
     * For an empty system linsolve returns empty set
 
-    >>> linsolve([ ], x)
+    >>> linsolve([], x)
     EmptySet()
 
     """
-
     if not system:
         return S.EmptySet
 
