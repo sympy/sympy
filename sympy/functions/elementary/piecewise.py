@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy
+from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Equality, Relational, _canonical
 from sympy.functions.elementary.miscellaneous import Max, Min
@@ -901,7 +901,7 @@ def _pair(A, B, union=False, dict=None, abi=False):
     ...     return rv
     ...
     >>> for k, v in sorted(replace(x, 1).items()):
-    ...     print(k, v)
+    ...     k, v
     (-1, [(-oo, 1), (1, 1), (2, 4), (5, oo)])
     (0, [(1, 2)])
     (1, [(1, 1), (4, 5)])
@@ -910,7 +910,7 @@ def _pair(A, B, union=False, dict=None, abi=False):
     than the left and redundant intervals:
 
     >>> for k, v in sorted(replace(x, 6).items()):
-    ...     print(k, v)
+    ...     (k, v)
     (-1, [(-oo, 4), (5, 6), (2, 4), (5, oo)])
     (0, [(6, 2)])
     (1, [(4, 5), (4, 5)])
@@ -1052,7 +1052,6 @@ def _mmsimp(e):
             return m
 
     reps = []
-    from sympy import Dummy, Number
     for m in e.atoms(Min, Max):
         nums = dict([(n, Dummy()) for n in m.atoms(Number)])
         reps.append((m, wr(rw(m.xreplace(nums))).xreplace(

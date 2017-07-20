@@ -337,6 +337,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         # second filter
         # variant I: remove ones which can be removed
+        # args = cls._collapse_arguments(set(_args), **assumptions)
 
         # variant II: find local zeros
         args = cls._find_localzeros(set(_args), **assumptions)

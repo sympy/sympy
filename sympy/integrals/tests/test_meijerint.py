@@ -585,23 +585,26 @@ def test_expint():
 def test_messy():
     from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
                        acoth, E1, besselj, acosh, asin, And, re,
-                       fourier_transform, sqrt)
-    assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
+                       fourier_transform, sqrt,
+                       periodic_argument, polar_lift, Abs)
+    cond = Abs(periodic_argument(polar_lift(s)**2, oo)) < pi
+    assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, -oo, cond)
 
-    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)
+    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, cond)
 
     # where should the logs be simplified?
     assert laplace_transform(Chi(x), x, s) == \
-        ((log(s**(-2)) - log((s**2 - 1)/s**2))/(2*s), 1, True)
+        ((log(s**(-2)) - log((s**2 - 1)/s**2))/(2*s), 1, cond)
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
-        (0, And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1))
+        (-oo, (S(0) < re(a)/2 + S(1)/2) & (S(0) < re(a)/2 + 1) & cond)
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
-    assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
-        (Piecewise((0, 4*abs(pi**2*s**2) > 1),
-                   (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
+    assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == (
+        Piecewise(
+        (0, 4*pi**2*Abs(s**2) > 1),
+        (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
     # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
     #                       - folding could be better
 
@@ -611,7 +614,7 @@ def test_messy():
         log(S(1)/2 + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
+        Piecewise((-acosh(1/x), Abs(x**(-2)) > 1), (I*asin(1/x), True))
 
 
 def test_issue_6122():

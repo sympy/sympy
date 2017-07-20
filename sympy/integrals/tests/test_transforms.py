@@ -99,22 +99,24 @@ def test_mellin_transform():
         1/(nu + s), (-re(nu), oo), True)
 
     assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == (
-        gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(beta) > 0)
+        gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), -re(beta) < 0)
     assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == (
         gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
-            (-oo, -re(beta) + 1), re(beta) > 0)
+            (-oo, -re(beta) + 1), -re(beta) < 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
         (gamma(s)*gamma(rho - s)/gamma(rho), (0, re(rho)), True)
 
-    # TODO also the conditions should be simplified
+    # TODO also the conditions should be simplified, e.g.
+    # And(re(rho) - 1 < 0, re(rho) < 1) should just be
+    # re(rho) < 1
     assert MT(abs(1 - x)**(-rho), x, s) == (
         2*sin(pi*rho/2)*gamma(1 - rho)*
         cos(pi*(rho/2 - s))*gamma(s)*gamma(rho-s)/pi,
         (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
-    assert mt[1], mt[2] == ((0, -re(beta) + 1), re(beta) > 0)
+    assert mt[1], mt[2] == ((0, -re(beta) + 1), -re(beta) < 0)
 
     assert MT((x**a - b**a)/(x - b), x, s)[0] == (
         pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))))
@@ -522,21 +524,22 @@ def test_laplace_transform():
 
 def test_issue_8368_7173():
     LT = laplace_transform
+    arg = Abs(periodic_argument(s, oo))
+    cond = (pi/2 >= arg) & (arg < pi/2)
+    cond2 = Abs(periodic_argument(polar_lift(s)**2, oo)) < pi
     # hyperbolic
     assert LT(sinh(x), x, s) == (
         1/(s**2 - 1), 1, And(
-        pi/2 >= Abs(periodic_argument(s, oo)),
-        Abs(periodic_argument(s, oo)) < pi/2))
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1,
-        Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
+        pi/2 >= arg,
+        arg < pi/2))
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, cond2)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, And(
-        pi/2 >= Abs(periodic_argument(s, oo)),
-        Abs(periodic_argument(s, oo)) < pi/2))
-    print(LT(sinh(x)*cosh(x), x, s))#assert LT(sinh(x)*cosh(x), x, s) == (1/(s**2 - 4), 2, Ne(s/2, 1))
-
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, cond)
+    assert LT(sinh(x)*cosh(x), x, s) == (
+        1/(s**2 - 4), 2, Ne(s/2, 1) & cond)
     # trig (make sure they are not being rewritten in terms of exp)
-    assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
+    assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), -oo,
+        cond2)
 
 
 def test_inverse_laplace_transform():
@@ -779,8 +782,6 @@ def test_issue_7173():
     x0, x1, x2, x3, x4, x5, x6, x7, x8, x9 = symbols('x:10')
     ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
     r, e = cse(ans)
-    for i in r:print(i)
-    for i in e:print(i)
     assert r == [
         (x0, pi/2),
         (x1, Abs(periodic_argument(a, oo))),

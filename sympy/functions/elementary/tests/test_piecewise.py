@@ -341,6 +341,7 @@ def test_piecewise_integrate_independent_conditions():
     p = Piecewise((0, Eq(y, 0)), (x*y, True))
     assert integrate(p, (x, 1, 3)) == Piecewise((0, Eq(y, 0)), (4*y, True))
 
+
 def test_piecewise_simplify():
     p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
                   ((-1)**x*(-1), True))
@@ -643,32 +644,6 @@ def test_issue_12587():
         assert ans.subs(y, i) == p.subs(y, i).integrate(lim)
 
 
-def test_issue_8919():
-    c = symbols('c:5')
-    f1 = Piecewise((c[1], x < 1), (c[2], True))
-    f2 = Piecewise((c[3], x < S(1)/3), (c[4], True))
-    assert integrate(f1*f2, (x, 0, 2)) == c[1]*c[3]/3 + 2*c[1]*c[4]/3 + c[2]*c[4]
-    f1 = Piecewise((0, x < 1), (2, True))
-    f2 = Piecewise((3, x < 2), (0, True))
-    assert integrate(f1*f2, (x, 0, 3)) == 6
-
-
-@XFAIL
-def test_issue_8919b():
-    from random import randint
-    a, b, c, x, z = symbols("a,b,c,x,z", real=True)
-    y = symbols("y", positive=True)
-    I = Integral(Piecewise((0, (x >= y)|(x < 0)|(b > c)),(a, True)), (x, 0, z))
-    ans = I.doit()
-    for i in range(10):
-        r = dict(zip((a,b,c,x,z),[randint(-100,100) for i in range(5)]))
-        r[y] = randint(1, 100)
-        try:
-            assert I.subs(r).doit() == ans.subs(r)
-        except AssertionError:
-            assert None
-
-
 def test_issue_11045():
     assert integrate(1/(x*sqrt(x**2 - 1)), (x, 1, 2)) == pi/3
 
@@ -885,15 +860,6 @@ def test_issue_10122():
         ) == Or(And(-oo < x, x < 0), And(S.One < x, x < oo))
 
 
-def test_issue_10087():
-    assert piecewise_fold(Piecewise(
-        (x, x > 1), (2, True))*Piecewise((x, x > 3), (3, True))
-        ) == Piecewise((x**2, x > 3), (3*x, x > 1), (6, True))
-    assert piecewise_fold(Piecewise(
-        (x, x > 1), (2, True)) + Piecewise((x, x > 3), (3, True))
-        ) == Piecewise((2*x, x > 3), (x + 3, x > 1), (5, True))
-
-
 def test_issue_4313():
     u = Piecewise((0, x <= 0), (1, x >= a), (x/a, True))
     e = (u - u.subs(x, y))**2/(x - y)**2
@@ -997,7 +963,25 @@ def test_issue_10087():
 
 
 def test_issue_8919():
-    x, c_1, c_2, c_3, c_4 = symbols('x c_1:5')
-    f1 = Piecewise( (c_1, x < 1), (c_2, True))
-    f2 = Piecewise( (c_3, x < S(1)/3), (c_4, True))
-    assert integrate(f1*f2, (x, 0, 2)) == c_1*c_3/3 + 2*c_1*c_4/3 + c_2*c_4
+    c = symbols('c:5')
+    x = symbols("x")
+    f1 = Piecewise((c[1], x < 1), (c[2], True))
+    f2 = Piecewise((c[3], x < S(1)/3), (c[4], True))
+    assert integrate(f1*f2, (x, 0, 2)) == c[1]*c[3]/3 + 2*c[1]*c[4]/3 + c[2]*c[4]
+    f1 = Piecewise((0, x < 1), (2, True))
+    f2 = Piecewise((3, x < 2), (0, True))
+    assert integrate(f1*f2, (x, 0, 3)) == 6
+
+    y = symbols("y", positive=True)
+    a, b, c, x, z = symbols("a,b,c,x,z", real=True)
+    I = Integral(Piecewise(
+        (0, (x >= y) | (x < 0) | (b > c)),
+        (a, True)), (x, 0, z))
+    ans = I.doit()
+    assert ans == Piecewise(
+        (0, b > c), (-a*Min(0, z) + a*Min(z, Max(0, y)), True))
+    for cond in (True, False):
+         for yy in range(1, 3):
+             for zz in range(-1, 0, 1):
+                 reps = [(b > c, cond), (y, yy), (z, zz)]
+                 assert ans.subs(reps) == I.subs(reps).doit()
