@@ -27,10 +27,10 @@ def test_util():
     # coverage for some leftover functions in sympy.geometry.util
     assert intersection(Point(0, 0)) == []
     raises(TypeError, lambda: intersection(Point(0, 0), 3))
-    assert intersection(Segment((0, 0), (2, 0)), Segment((-1, 0), (1, 0)), 
+    assert intersection(Segment((0, 0), (2, 0)), Segment((-1, 0), (1, 0)),
     Line((0,0), (0,1)), pairwise=True) == [
     Point(0, 0), Segment((0, 0), (1, 0))]
-    assert intersection(Line((0,0), (0,1)), Segment((0, 0), (2, 0)), 
+    assert intersection(Line((0,0), (0,1)), Segment((0, 0), (2, 0)),
     Segment((-1, 0), (1, 0)),pairwise=True) == [
     Point(0, 0), Segment((0, 0), (1, 0))]
     assert intersection(Line((0,0), (0,1)), Segment((0, 0), (2, 0)), 
