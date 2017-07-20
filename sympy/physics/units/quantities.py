@@ -101,6 +101,9 @@ class Quantity(AtomicExpr):
             for independent in expr.args[1:]:
                 dim /= Quantity.get_dimensional_expr(independent)
             return dim
+        elif isinstance(expr, Function):
+            args = [Quantity.get_dimensional_expr(arg) for arg in expr.args]
+            return expr.func(*args)
         elif isinstance(expr, Quantity):
             return expr.dimension.name
         return 1
