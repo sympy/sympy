@@ -132,6 +132,13 @@ class Quantity(AtomicExpr):
                 assert dim == addend_dim
                 factor += addend_factor
             return factor, dim
+        elif isinstance(expr, Derivative):
+            factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
+            for independent in expr.args[1:]:
+                ifactor, idim = Quantity._collect_factor_and_dimension(independent)
+                factor /= ifactor
+                dim /= idim
+            return factor, dim
         elif isinstance(expr, Function):
             fds = [Quantity._collect_factor_and_dimension(arg) for arg in expr.args]
             return expr.func(*(f[0] for f in fds)), expr.func(*(d[1] for d in fds))
