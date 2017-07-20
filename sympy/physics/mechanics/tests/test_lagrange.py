@@ -1,8 +1,8 @@
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     inertia, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, simplify, Function, \
-        Derivative, Matrix
+from sympy.core.backend import symbols, pi, sin, cos, tan
+from sympy import simplify, Function, Derivative, Matrix
 
 
 def test_disc_on_an_incline_plane():
