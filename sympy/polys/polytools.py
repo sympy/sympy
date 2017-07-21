@@ -4404,7 +4404,7 @@ def degree(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
-    f = sympify(f)
+    f, orig = sympify(f), f
     try:
         gens = [sympify(args['gen'])] + list(gens)
         del args['gen']
@@ -4413,7 +4413,7 @@ def degree(f, *gens, **args):
 
     if f.is_Number:
         if len(gens) == 0:
-            raise ComputationFailed('degree', 1, "degree(%s) failed without generators" % f)
+            raise ComputationFailed('degree', 1, PolificationFailed({'gens': ()}, orig, f))
         if f == 0:
             return S.NegativeInfinity
         return S.Zero
