@@ -399,18 +399,16 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
             reduced_e = e
         reduced_exprs.append(reduced_e)
 
-    # don't allow hollow nesting
+    # don't allow hollow nesting; restore expressions that were
+    # subject to "advantageous grouping"
     # e.g if p = [b + 2*d + e + f, b + 2*d + f + g, a + c + d + f + g]
     # and R, C = cse(p) then
     #     R = [(x0, d + f), (x1, b + d)]
     #     C = [e + x0 + x1, g + x0 + x1, a + c + d + f + g]
     # but the args of C[-1] should not be `(a + c, d + f + g)`
-    for i in range(len(exprs)):
-        F = reduced_exprs[i].func
-        if not (F is Mul or F is Add):
-            continue
-        if any(isinstance(a, F) for a in reduced_exprs[i].args):
-            reduced_exprs[i] = F(*reduced_exprs[i].args)
+    subs_opt = list(ordered([(v, k) for k, v in opt_subs.items()]))
+    for i, e in enumerate(reduced_exprs):
+        reduced_exprs[i] = e.subs(subs_opt)
     return replacements, reduced_exprs
 
 
