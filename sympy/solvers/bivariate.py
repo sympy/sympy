@@ -210,7 +210,7 @@ def _solve_lambert(f, symbol, gens):
         rhs = log(rhs)
 
     lhs = factor(lhs, deep=True)
-    # make sure we are inverted as completely as possible
+    # make sure we have inverted as completely as possible
     r = Dummy()
     i, lhs = _invert(lhs - r, symbol)
     rhs = i.xreplace({r: rhs})

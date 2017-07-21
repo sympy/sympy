@@ -1,6 +1,6 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
-from collections import Mapping
+from collections import Mapping, defaultdict
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -303,13 +303,6 @@ class Basic(with_metaclass(ManagedProperties)):
         if self is other:
             return True
 
-        from .function import AppliedUndef, UndefinedFunction as UndefFunc
-
-        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
-            if self.class_key() == other.class_key():
-                return True
-            else:
-                return False
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
             if isinstance(self, Pow) and self.exp == 1:
@@ -321,11 +314,7 @@ class Basic(with_metaclass(ManagedProperties)):
             except SympifyError:
                 return False    # sympy != other
 
-            if isinstance(self, AppliedUndef) and isinstance(other,
-                                                             AppliedUndef):
-                if self.class_key() != other.class_key():
-                    return False
-            elif type(self) is not type(other):
+            if type(self) != type(other):
                 return False
 
         return self._hashable_content() == other._hashable_content()
@@ -419,9 +408,6 @@ class Basic(with_metaclass(ManagedProperties)):
 
            If one or more types are given, the results will contain only
            those types of atoms.
-
-           Examples
-           ========
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -1143,7 +1129,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> from sympy.sets import Interval
         >>> i = Interval.Lopen(0, 5); i
-        (0, 5]
+        Interval.Lopen(0, 5)
         >>> i.args
         (0, 5, True, False)
         >>> i.has(4)  # there is no "4" in the arguments
@@ -1640,6 +1626,38 @@ class Basic(with_metaclass(ManagedProperties)):
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
                 else:
                     return self
+
+    _constructor_postprocessor_mapping = {}
+
+    @classmethod
+    def _exec_constructor_postprocessors(cls, obj):
+        # WARNING: This API is experimental.
+
+        # This is an experimental API that introduces constructor
+        # postprosessors for SymPy Core elements. If an argument of a SymPy
+        # expression has a `_constructor_postprocessor_mapping` attribute, it will
+        # be interpreted as a dictionary containing lists of postprocessing
+        # functions for matching expression node names.
+
+        clsname = obj.__class__.__name__
+        postprocessors = defaultdict(list)
+        for i in obj.args:
+            try:
+                if i in Basic._constructor_postprocessor_mapping:
+                    for k, v in Basic._constructor_postprocessor_mapping[i].items():
+                        postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
+                elif type(i) in Basic._constructor_postprocessor_mapping:
+                    for k, v in Basic._constructor_postprocessor_mapping[type(i)].items():
+                        postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
+            except TypeError:
+                pass
+
+        for f in postprocessors.get(clsname, []):
+            obj = f(obj)
+        if len(postprocessors) > 0 and obj not in Basic._constructor_postprocessor_mapping:
+            Basic._constructor_postprocessor_mapping[obj] = postprocessors
+
+        return obj
 
 
 class Atom(Basic):

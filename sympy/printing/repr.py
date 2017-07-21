@@ -135,9 +135,8 @@ class ReprPrinter(Printer):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
-        dps = prec_to_dps(expr._prec)
         r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
-        return "%s('%s', prec=%i)" % (expr.__class__.__name__, r, dps)
+        return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
@@ -145,6 +144,10 @@ class ReprPrinter(Printer):
 
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
+        # print the dummy_index like it was an assumption
+        if expr.is_Dummy:
+            d['dummy_index'] = expr.dummy_index
+
         if d == {}:
             return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
         else:

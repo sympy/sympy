@@ -1,5 +1,6 @@
 from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import (PermutationGroup,
+    _orbit_transversal)
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation
@@ -239,6 +240,15 @@ def test_orbits():
     assert g.orbit_transversal(0, True) == \
         [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
+
+    G = DihedralGroup(6)
+    transversal, slps = _orbit_transversal(G.degree, G.generators, 0, True, slp=True)
+    for i, t in transversal:
+        slp = slps[i]
+        w = G.identity
+        for s in slp:
+            w = G.generators[s]*w
+        assert w == t
 
     a = Permutation(list(range(1, 100)) + [0])
     G = PermutationGroup([a])
@@ -726,3 +736,39 @@ def test_is_group():
 
 def test_PermutationGroup():
     assert PermutationGroup() == PermutationGroup(Permutation())
+
+def test_coset_transvesal():
+    G = AlternatingGroup(5)
+    H = PermutationGroup(Permutation(0,1,2),Permutation(1,2)(3,4))
+    assert G.coset_transversal(H) == \
+        [Permutation(4), Permutation(2, 3, 4), Permutation(2, 4, 3),
+         Permutation(1, 2, 4), Permutation(4)(1, 2, 3), Permutation(1, 3)(2, 4),
+         Permutation(0, 1, 2, 3, 4), Permutation(0, 1, 2, 4, 3),
+         Permutation(0, 1, 3, 2, 4), Permutation(0, 2, 4, 1, 3)]
+
+def test_coset_table():
+    G = PermutationGroup(Permutation(0,1,2,3), Permutation(0,1,2),
+         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7));
+    H = PermutationGroup(Permutation(0,1,2,3), Permutation(0,7))
+    assert G.coset_table(H) == \
+        [[0, 0, 0, 0, 1, 2, 3, 3, 0, 0], [4, 5, 2, 5, 6, 0, 7, 7, 1, 1],
+         [5, 4, 5, 1, 0, 6, 8, 8, 6, 6], [3, 3, 3, 3, 7, 8, 0, 0, 3, 3],
+         [2, 1, 4, 4, 4, 4, 9, 9, 4, 4], [1, 2, 1, 2, 5, 5, 10, 10, 5, 5],
+         [6, 6, 6, 6, 2, 1, 11, 11, 2, 2], [9, 10, 8, 10, 11, 3, 1, 1, 7, 7],
+         [10, 9, 10, 7, 3, 11, 2, 2, 11, 11], [8, 7, 9, 9, 9, 9, 4, 4, 9, 9],
+         [7, 8, 7, 8, 10, 10, 5, 5, 10, 10], [11, 11, 11, 11, 8, 7, 6, 6, 8, 8]]
+
+def test_subgroup():
+    G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
+    H = G.subgroup([Permutation(0,1,3)])
+    assert H.is_subgroup(G)
+
+def test_generator_product():
+    G = SymmetricGroup(5)
+    p = Permutation(0, 2, 3)(1, 4)
+    gens = G.generator_product(p)
+    assert all(g in G.strong_gens for g in gens)
+    w = G.identity
+    for g in gens:
+        w = g*w
+    assert w == p

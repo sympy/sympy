@@ -5,6 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+from functools import wraps
 import inspect
 import textwrap
 
@@ -55,7 +56,7 @@ MPMATH_TRANSLATIONS = {
     #"uppergamma":"upper_gamma",
     "LambertW": "lambertw",
     "MutableDenseMatrix": "matrix",
-    "ImmutableMatrix": "matrix",
+    "ImmutableDenseMatrix": "matrix",
     "conjugate": "conj",
     "dirichlet_eta": "altzeta",
     "Ei": "ei",
@@ -85,7 +86,6 @@ NUMPY_TRANSLATIONS = {
     "ImmutableSparseMatrix": "array",
     "Matrix": "array",
     "MutableDenseMatrix": "array",
-    "ImmutableMatrix": "array",
     "ImmutableDenseMatrix": "array",
 }
 
@@ -214,13 +214,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
     by default. As of release 1.0 ``numpy.array`` is the default.
-    To get the old default behavior you must pass in ``[{'ImmutableMatrix':
+    To get the old default behavior you must pass in ``[{'ImmutableDenseMatrix':
     numpy.matrix}, 'numpy']`` to the ``modules`` kwarg.
 
     >>> from sympy import lambdify, Matrix
     >>> from sympy.abc import x, y
     >>> import numpy
-    >>> array2mat = [{'ImmutableMatrix': numpy.matrix}, 'numpy']
+    >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
     >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
     >>> f(1, 2)
     matrix([[1],
@@ -436,6 +436,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # This is a fix for gh-11306.
     if module_provided and _module_present('numpy',namespaces):
         def array_wrap(funcarg):
+            @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
                 return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
             return wrapper
@@ -666,7 +667,8 @@ def implemented_function(symfunc, implementation):
     ----------
     symfunc : ``str`` or ``UndefinedFunction`` instance
        If ``str``, then create new ``UndefinedFunction`` with this as
-       name.  If `symfunc` is a sympy function, attach implementation to it.
+       name.  If `symfunc` is an Undefined function, create a new function
+       with the same name and the implemented function attached.
     implementation : callable
        numerical implementation to be called by ``evalf()`` or ``lambdify``
 
@@ -681,7 +683,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x: x+1)
+    >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)
     5
@@ -689,11 +691,15 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
+    _extra_kwargs = {}
+    if isinstance(symfunc, UndefinedFunction):
+        _extra_kwargs = symfunc._extra_kwargs
+        symfunc = symfunc.__name__
     if isinstance(symfunc, string_types):
-        symfunc = UndefinedFunction(symfunc)
+        # Keyword arguments to UndefinedFunction are added as attributes to
+        # the created class.
+        symfunc = UndefinedFunction(symfunc, _imp_=staticmethod(implementation), **_extra_kwargs)
     elif not isinstance(symfunc, UndefinedFunction):
         raise ValueError('symfunc should be either a string or'
                          ' an UndefinedFunction instance.')
-    # We need to attach as a method because symfunc will be a class
-    symfunc._imp_ = staticmethod(implementation)
     return symfunc

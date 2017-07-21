@@ -274,7 +274,7 @@ when we divide by 2, it is represented as multiplying by 1/2.
 
 Finally, one last note.  You may have noticed that the order we entered our
 expression and the order that it came out from ``srepr`` or in the graph were
-different.  You may have also noticed this phenonemon earlier in the
+different.  You may have also noticed this phenomenon earlier in the
 tutorial.  For example
 
      >>> 1 + x

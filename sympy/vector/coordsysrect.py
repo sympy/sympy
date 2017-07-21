@@ -1,14 +1,27 @@
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
+from sympy.core import S, Dummy
+from sympy.solvers import solve
+from sympy.vector.scalar import BaseScalar
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan2, simplify
+import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import sympy.vector
 
 
-class CoordSysCartesian(Basic):
+def CoordSysCartesian(*args, **kwargs):
+    SymPyDeprecationWarning(
+        feature="CoordSysCartesian",
+        useinstead="CoordSys3D",
+        issue=12865,
+        deprecated_since_version="1.1"
+    ).warn()
+    return CoordSys3D(*args, **kwargs)
+
+
+class CoordSys3D(Basic):
     """
     Represents a coordinate system in 3-D space.
     """
@@ -23,7 +36,7 @@ class CoordSysCartesian(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSys3D instance.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -34,7 +47,7 @@ class CoordSysCartesian(Basic):
             to the parent. In other words, the output of
             new_system.rotation_matrix(parent).
 
-        parent : CoordSysCartesian
+        parent : CoordSys3D
             The coordinate system wrt which the orientation/location
             (or both) is being defined.
 
@@ -65,9 +78,9 @@ class CoordSysCartesian(Basic):
         # If location information is not given, adjust the default
         # location as Vector.zero
         if parent is not None:
-            if not isinstance(parent, CoordSysCartesian):
+            if not isinstance(parent, CoordSys3D):
                 raise TypeError("parent should be a " +
-                                "CoordSysCartesian/None")
+                                "CoordSys3D/None")
             if location is None:
                 location = Vector.zero
             else:
@@ -95,10 +108,10 @@ class CoordSysCartesian(Basic):
         # positioned/oriented wrt different parents, even though
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
-            obj = super(CoordSysCartesian, cls).__new__(
+            obj = super(CoordSys3D, cls).__new__(
                 cls, Symbol(name), location, parent_orient, parent)
         else:
-            obj = super(CoordSysCartesian, cls).__new__(
+            obj = super(CoordSys3D, cls).__new__(
                 cls, Symbol(name), location, parent_orient)
         obj._name = name
 
@@ -144,9 +157,13 @@ class CoordSysCartesian(Basic):
         obj._z = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
-        # Assign a Del operator instance
-        from sympy.vector.deloperator import Del
-        obj._delop = Del(obj)
+        obj._h1 = S.One
+        obj._h2 = S.One
+        obj._h3 = S.One
+
+        obj._transformation_eqs = obj._x, obj._y, obj._y
+
+        obj._inv_transformation_eqs = lambda x, y, z: (x, y, z)
 
         # Assign params
         obj._parent = parent
@@ -170,13 +187,234 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
+    def _connect_to_standard_cartesian(self, curv_coord_type, inverse=True):
+        """
+        Change the type of orthogonal curvilinear system. It could be done
+        by tuple of transformation equations or by choosing one of pre-defined
+        coordinate system.
+
+        Parameters
+        ==========
+
+        :param curv_coord_type: str, tuple
+
+        """
+
+        if isinstance(curv_coord_type, string_types):
+            self._set_transformation_equations_mapping(curv_coord_type)
+            self._set_lame_coefficient_mapping(curv_coord_type)
+
+            if inverse:
+                self._set_inv_trans_equations(curv_coord_type)
+
+        elif isinstance(curv_coord_type, (tuple, list, Tuple)):
+            if len(curv_coord_type) == 3 and all(i.atoms(BaseScalar) for i in curv_coord_type):
+                self._transformation_eqs = curv_coord_type
+                self._h1, self._h2, self._h3 = \
+                    self._calculate_lame_coefficients(curv_coord_type)
+            elif len(curv_coord_type) == 2:
+                self._transformation_eqs = \
+                    tuple([eq.subs({curv_coord_type[0][0]: self.x,
+                                    curv_coord_type[0][1]: self.y,
+                                    curv_coord_type[0][2]: self.z})
+                           for eq in curv_coord_type[1]])
+                self._h1, self._h2, self._h3 = \
+                    self._calculate_lame_coefficients(self._transformation_equations())
+            else:
+                raise ValueError("Wrong set of parameter.")
+
+            if inverse:
+                self._inv_transformation_eqs = self._calculate_inv_transformation_equations(
+                    self._transformation_equations())
+
+        else:
+            raise ValueError("Wrong set of parameter.")
+
+        if not self._check_orthogonality():
+            raise ValueError("The transformation equation does not "
+                             "create orthogonal coordinate system")
+
+    def _check_orthogonality(self):
+        """
+        Helper method for _connect_to_cartesian. It checks if
+        set of transformation equations create orthogonal curvilinear
+        coordinate system
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+
+        eq = self._transformation_equations()
+
+        v1 = Matrix([diff(eq[0], self.x), diff(eq[1], self.x), diff(eq[2], self.x)])
+        v2 = Matrix([diff(eq[0], self.y), diff(eq[1], self.y), diff(eq[2], self.y)])
+        v3 = Matrix([diff(eq[0], self.z), diff(eq[1], self.z), diff(eq[2], self.z)])
+
+        if any(simplify(i[0] + i[1] + i[2]) == 0 for i in (v1, v2, v3)):
+            return False
+        else:
+            if simplify(v1.dot(v2)) == 0 and simplify(v2.dot(v3)) == 0 and simplify(v3.dot(v1)) == 0:
+                return True
+            else:
+                return False
+
+    def _set_transformation_equations_mapping(self, curv_coord_name):
+        """
+        Store information about some default, pre-defined transformation
+        equations.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+        equations_mapping = {
+            'cartesian': (self.x, self.y, self.z),
+            'spherical': (self.x * sin(self.y) * cos(self.z),
+                          self.x * sin(self.y) * sin(self.z),
+                          self.x * cos(self.y)),
+            'cylindrical': (self.x * cos(self.y),
+                            self.x * sin(self.y),
+                            self.z)
+        }
+        if curv_coord_name not in equations_mapping:
+            raise ValueError('Wrong set of parameters.'
+                             'Type of coordinate system is defined')
+        self._transformation_eqs = equations_mapping[curv_coord_name]
+
+    def _set_inv_trans_equations(self, curv_coord_name):
+        """
+        Store information about some default, pre-defined inverse
+        transformation equations.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+
+        equations_mapping = {
+            'cartesian': (self.x, self.y, self.z),
+            'spherical': (sqrt(self.x**2 + self.y**2 + self.z**2),
+                          acos((self.z) / sqrt(self.x**2 + self.y**2 + self.z**2)),
+                          atan2(self.y, self.x)),
+            'cylindrical': (sqrt(self.x**2 + self.y**2),
+                            atan2(self.y, self.x),
+                            self.z)
+        }
+        if curv_coord_name not in equations_mapping:
+            raise ValueError('Wrong set of parameters.'
+                             'Type of coordinate system is defined')
+        self._inv_transformation_eqs = equations_mapping[curv_coord_name]
+
+    def _set_lame_coefficient_mapping(self, curv_coord_name):
+        """
+        Store information about Lame coefficient, for pre-defined
+        curvilinear coordinate systems. Return tuple with scaling
+        factor.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+
+        coefficient_mapping = {
+            'cartesian': (1, 1, 1),
+            'spherical': (1, self.x, self.x * sin(self.y)),
+            'cylindrical': (1, self.y, 1)
+        }
+        if curv_coord_name not in coefficient_mapping:
+            raise ValueError('Wrong set of parameters.'
+                             ' Type of coordinate system is not defined')
+        self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
+
+    def _calculate_inv_transformation_equations(self, equations):
+        """
+        Helper method for set_coordinate_type. It calculates inverse
+        transformation equations for given transformations equations.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+
+        x = Dummy('x')
+        y = Dummy('y')
+        z = Dummy('z')
+        eq = self._transformation_equations()
+        try:
+            solved = solve([eq[0] - x, eq[1] - y, eq[2] - z], [x, y, z], dict=True)[0]
+            return solved[x], solved[y], solved[z]
+        except:
+            raise ValueError('Wrong set of parameters.')
+
+    def _calculate_lame_coefficients(self, equations):
+        """
+        Helper method for set_coordinate_type. It calculates Lame coefficients
+        for given transformations equations.
+
+        Parameters
+        ==========
+
+        equations : tuple
+            Tuple of transformation equations
+
+        """
+
+        h1 = sqrt(diff(equations[0], self.x)**2 +
+                  diff(equations[1], self.x)**2 +
+                  diff(equations[2], self.x)**2)
+
+        h2 = sqrt(diff(equations[0], self.y)**2 +
+                  diff(equations[1], self.y)**2 +
+                  diff(equations[2], self.y)**2)
+
+        h3 = sqrt(diff(equations[0], self.z)**2 +
+                  diff(equations[1], self.z)**2 +
+                  diff(equations[2], self.z)**2)
+        return map(simplify, [h1, h2, h3])
+
+    def _rotation_trans_equations(self):
+        """
+        Returns the transformation equations obtained from rotation matrix.
+
+        """
+        matrix = self._parent_rotation_matrix
+
+        trans_eq1 = matrix[0]*self.x + matrix[1]*self.y + matrix[2]*self.z
+        trans_eq2 = matrix[3]*self.x + matrix[4]*self.y + matrix[5]*self.z
+        trans_eq3 = matrix[6]*self.x + matrix[7]*self.y + matrix[8]*self.z
+
+        return trans_eq1, trans_eq2, trans_eq3
+
     @property
     def origin(self):
         return self._origin
 
     @property
     def delop(self):
-        return self._delop
+        SymPyDeprecationWarning(
+            feature="coord_system.delop has been replaced.",
+            useinstead="Use the Del() class",
+            deprecated_since_version="1.1",
+            issue=12866,
+        ).warn()
+        from sympy.vector.deloperator import Del
+        return Del()
 
     @property
     def i(self):
@@ -208,6 +446,15 @@ class CoordSysCartesian(Basic):
     def base_scalars(self):
         return self._x, self._y, self._z
 
+    def lame_coefficients(self):
+        return self._h1, self._h2, self._h3
+
+    def _transformation_equations(self):
+        return self._transformation_eqs[:]
+
+    def _inverse_transformation_equations(self):
+        return self._inv_transformation_eqs[:]
+
     @cacheit
     def rotation_matrix(self, other):
         """
@@ -224,16 +471,16 @@ class CoordSysCartesian(Basic):
         Parameters
         ==========
 
-        other : CoordSysCartesian
+        other : CoordSys3D
             The system which the DCM is generated to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> A = N.orient_new_axis('A', q1, N.i)
         >>> N.rotation_matrix(A)
         Matrix([
@@ -242,11 +489,10 @@ class CoordSysCartesian(Basic):
         [0, sin(q1),  cos(q1)]])
 
         """
-
         from sympy.vector.functions import _path
-        if not isinstance(other, CoordSysCartesian):
+        if not isinstance(other, CoordSys3D):
             raise TypeError(str(other) +
-                            " is not a CoordSysCartesian")
+                            " is not a CoordSys3D")
         # Handle special cases
         if other == self:
             return eye(3)
@@ -270,12 +516,12 @@ class CoordSysCartesian(Basic):
     def position_wrt(self, other):
         """
         Returns the position vector of the origin of this coordinate
-        system with respect to another Point/CoordSysCartesian.
+        system with respect to another Point/CoordSys3D.
 
         Parameters
         ==========
 
-        other : Point/CoordSysCartesian
+        other : Point/CoordSys3D
             If other is a Point, the position of this system's origin
             wrt it is returned. If its an instance of CoordSyRect,
             the position wrt its origin is returned.
@@ -283,8 +529,8 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> N1 = N.locate_new('N1', 10 * N.i)
         >>> N.position_wrt(N1)
         (-10)*N.i
@@ -301,15 +547,15 @@ class CoordSysCartesian(Basic):
         Parameters
         ==========
 
-        otherframe : CoordSysCartesian
+        otherframe : CoordSys3D
             The other system to map the variables to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import Symbol
-        >>> A = CoordSysCartesian('A')
+        >>> A = CoordSys3D('A')
         >>> q = Symbol('q')
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
@@ -332,14 +578,14 @@ class CoordSysCartesian(Basic):
     def locate_new(self, name, position, vector_names=None,
                    variable_names=None):
         """
-        Returns a CoordSysCartesian with its origin located at the given
+        Returns a CoordSys3D with its origin located at the given
         position wrt this coordinate system's origin.
 
         Parameters
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSys3D instance.
 
         position : Vector
             The position vector of the new system's origin wrt this
@@ -353,23 +599,23 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> A = CoordSysCartesian('A')
+        >>> from sympy.vector import CoordSys3D
+        >>> A = CoordSys3D('A')
         >>> B = A.locate_new('B', 10 * A.i)
         >>> B.origin.position_wrt(A.origin)
         10*A.i
 
         """
 
-        return CoordSysCartesian(name, location=position,
-                                 vector_names=vector_names,
-                                 variable_names=variable_names,
-                                 parent=self)
+        return CoordSys3D(name, location=position,
+                          vector_names=vector_names,
+                          variable_names=variable_names,
+                          parent=self)
 
     def orient_new(self, name, orienters, location=None,
                    vector_names=None, variable_names=None):
         """
-        Creates a new CoordSysCartesian oriented in the user-specified way
+        Creates a new CoordSys3D oriented in the user-specified way
         with respect to this system.
 
         Please refer to the documentation of the orienter classes
@@ -379,7 +625,7 @@ class CoordSysCartesian(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSys3D instance.
 
         orienters : iterable/Orienter
             An Orienter or an iterable of Orienters for orienting the
@@ -402,10 +648,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         Using an AxisOrienter
 
@@ -452,11 +698,11 @@ class CoordSysCartesian(Basic):
                 else:
                     final_matrix *= orienter.rotation_matrix()
 
-        return CoordSysCartesian(name, rotation_matrix=final_matrix,
-                                 vector_names=vector_names,
-                                 variable_names=variable_names,
-                                 location=location,
-                                 parent=self)
+        return CoordSys3D(name, rotation_matrix=final_matrix,
+                          vector_names=vector_names,
+                          variable_names=variable_names,
+                          location=location,
+                          parent=self)
 
     def orient_new_axis(self, name, angle, axis, location=None,
                         vector_names=None, variable_names=None):
@@ -490,10 +736,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> B = N.orient_new_axis('B', q1, N.i + 2 * N.j)
 
         """
@@ -539,10 +785,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         A 'Body' fixed rotation is described by three angles and
         three body-fixed rotation axes. To orient a coordinate system D
@@ -607,16 +853,16 @@ class CoordSysCartesian(Basic):
         See Also
         ========
 
-        CoordSysCartesian.orient_new_body : method to orient via Euler
+        CoordSys3D.orient_new_body : method to orient via Euler
             angles
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         To orient a coordinate system D with respect to N, each
         sequential rotation is always about N's orthogonal unit vectors.
@@ -643,7 +889,7 @@ class CoordSysCartesian(Basic):
     def orient_new_quaternion(self, name, q0, q1, q2, q3, location=None,
                               vector_names=None, variable_names=None):
         """
-        Quaternion orientation orients the new CoordSysCartesian with
+        Quaternion orientation orients the new CoordSys3D with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
 
@@ -681,10 +927,10 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> B = N.orient_new_quaternion('B', q0, q1, q2, q3)
 
         """
