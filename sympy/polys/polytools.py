@@ -4404,18 +4404,37 @@ def degree(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
-    f = sympify(f).as_expr()
+    f = sympify(f)
     try:
-        if f.is_Number:
-            F, opt = poly_from_expr(f, *gens, **args)
-        else:
-            F, opt = poly_from_expr(f)
+        gens = [sympify(args['gen'])] + list(gens)
+        del args['gen']
+    except KeyError:
+        pass
+
+    if f.is_Number:
+        if len(gens) == 0:
+            raise ComputationFailed('degree', 1, "degree(%s) failed without generators" % f)
+        if f == 0:
+            return S.NegativeInfinity
+        return S.Zero
+
+    if f.is_Poly:
+        if len(gens) == 0:
+            return sympify(f.degree(**args))
+        if gens[0] in f.gens:
+            return sympify(f.degree(gens[0], **args))
+    try:
+        F, opt = poly_from_expr(f.as_expr())
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
+
+    if F.is_zero:
+        return S.NegativeInfinity
+
     if len(gens) != 0:
         if gens[0] in F.gens:
             return sympify(F.degree(gens[0], **args))
-        return Integer(0)
+        return S.Zero
 
     return sympify(F.degree(*gens, **args))
 
