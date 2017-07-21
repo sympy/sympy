@@ -1204,6 +1204,53 @@ class Ray(LinearEntity):
             'marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
             ).format(2. * scale_factor, path, fill_color)
 
+    def __add__(self, other):
+        """Add other ray to self in a vector sense (with unit magnitude).
+
+        Parameters
+        ==========
+
+        other : The other ray object that is to be added vectorially with self
+
+        Returns
+        =======
+
+        r : a new ray from the source of self that is in the direction of 
+            (self + other)
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.line import Ray2D
+        >>> from sympy.geometry.point import Point2D
+        >>> r1 = Ray2D(Point2D(1,1), Point2D(1,3))
+        >>> r2 = Ray2D(Point2D(2,2), Point2D(3,2))
+        >>> r1+r2
+        Ray2D(Point2D(1, 1), Point2D(sqrt(2)/2 + 1, sqrt(2)/2 + 1))
+        
+        """
+        s_dir, o_dir = self.direction, other.direction
+        # normalizing the directions as we are only 
+        # adding unit vectors of directions
+        s_dir, o_dir = s_dir/s_dir.distance(Point(0,0)), o_dir/o_dir.distance(Point(0,0))
+        new_dir = s_dir+o_dir
+        try:
+            r = Ray(self.p1, self.p1+(new_dir/new_dir.distance(Point(0,0))))
+        except ValueError:
+            raise GeometryError("Invalid ray operation. Possibly adding 2 rays in opposite direction")
+        return r
+
+    def __sub__(self, other):
+        """Subtract two rays vectorially (with unit magnitude)"""
+        s_dir, o_dir = self.direction, other.direction
+        s_dir, o_dir = s_dir/s_dir.distance(Point(0,0)), o_dir/o_dir.distance(Point(0,0))
+        new_dir = s_dir-o_dir
+        try:
+            r = Ray(self.p1, self.p1+(new_dir/new_dir.distance(Point(0,0))))
+        except ValueError:
+            raise GeometryError("Invalid ray operation. Possibly adding 2 rays in opposite direction")
+        return r
+
     def contains(self, other):
         """
         Is other GeometryEntity contained in this Ray?
@@ -1422,6 +1469,46 @@ class Segment(LinearEntity):
         elif dim == 3:
             return Segment3D(p1, p2, **kwargs)
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
+
+    def __add__(self, other):
+        """Add other segment to self vectorially.
+
+        Parameters
+        ==========
+
+        other : The other segment object that is to be added vectorially
+                with self
+
+        Returns
+        =======
+
+        s : a new resultant segment from the addition of self and 'other'
+            segment
+
+        Notes
+        =====
+
+        The resulting segment is calculated by shifting the 'other' segment
+        parallelly such that the other.p1 is same as self.p1  
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.line import Segment2D
+        >>> from sympy.geometry.point import Point2D
+        >>> s1 = Segment2D(Point2D(0,1), Point2D(0,3))
+        >>> s2 = Segment2D(Point2D(2,2), Point2D(3,2))
+        >>> s1+s2
+        Segment2D(Point2D(0, 1), Point2D(1, 3))
+        
+        """
+        new_dir = self.direction+other.direction
+        return Segment(self.p1, self.p1+new_dir)
+
+    def __sub__(self, other):
+        """Subtract two segments vectorially"""
+        new_dir = self.direction-other.direction
+        return Segment(self.p1, self.p1+new_dir)
 
     def contains(self, other):
         """

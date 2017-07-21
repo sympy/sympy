@@ -142,8 +142,13 @@ def test_basic_properties_2d():
 
     r1 = Ray(p1, Point(0, 1))
     r2 = Ray(Point(0, 1), p1)
+    r3 = Ray(Point(1, 0), p2)
+    r4 = Ray(p2, Point(1, 0))
 
     s1 = Segment(p1, p10)
+    s2 = Segment(p1, Point(0,1))
+    s3 = Segment(p1, Point(1,0))
+    s4 = Segment(p1,p2)
     p_s1 = s1.random_point()
 
     assert Line((1, 1), slope=1) == Line((1, 1), (2, 2))
@@ -161,8 +166,11 @@ def test_basic_properties_2d():
     assert s1 in Line(p1, p10)
     assert Ray(Point(0, 0), Point(0, 1)) in Ray(Point(0, 0), Point(0, 2))
     assert Ray(Point(0, 0), Point(0, 2)) in Ray(Point(0, 0), Point(0, 1))
+    assert (r1+r3) == r1
+    assert (r1-r4) == r1
     assert (r1 in s1) is False
     assert Segment(p1, p2) in s1
+    assert (s2+s3) == s4
     assert Ray(Point(x1, x1), Point(x1, 1 + x1)) != Ray(p1, Point(-1, 5))
     assert Segment(p1, p2).midpoint == Point(Rational(1, 2), Rational(1, 2))
     assert Segment(p1, Point(-x1, x1)).length == sqrt(2 * (x1 ** 2))
