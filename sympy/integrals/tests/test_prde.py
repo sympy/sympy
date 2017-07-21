@@ -74,7 +74,7 @@ def test_prde_linear_constraints():
         ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix(0, 3, []))
     G = [(Poly(2*x, t), Poly(t, t)), (Poly(-x, t), Poly(t, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    prde_linear_constraints(Poly(1, t), Poly(0, t), G, DE) == \
+    assert prde_linear_constraints(Poly(1, t), Poly(0, t), G, DE) == \
         ((Poly(0, t), Poly(0, t)), Matrix([[2*x, -x]]))
 
 
@@ -237,48 +237,48 @@ def test_limited_integrate():
 
 
 def test_is_log_deriv_k_t_radical():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'E_K': [], 'L_K': [],
-        'E_args': [], 'L_args': []})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [None],
+        'extargs': [None]})
     assert is_log_deriv_k_t_radical(Poly(2*x, x), Poly(1, x), DE) is None
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2*t1, t1), Poly(1/x, t2)],
-        'L_K': [2], 'E_K': [1], 'L_args': [x], 'E_args': [2*x]})
+        'exts': [None, 'exp', 'log'], 'extargs': [None, 2*x, x]})
     assert is_log_deriv_k_t_radical(Poly(x + t2/2, t2), Poly(1, t2), DE) == \
         ([(t1, 1), (x, 1)], t1*x, 2, 0)
     # TODO: Add more tests
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0), Poly(1/x, t)],
-        'L_K': [2], 'E_K': [1], 'L_args': [x], 'E_args': [x]})
+        'exts': [None, 'exp', 'log'], 'extargs': [None, x, x]})
     assert is_log_deriv_k_t_radical(Poly(x + t/2 + 3, t), Poly(1, t), DE) == \
         ([(t0, 2), (x, 1)], x*t0**2, 2, 3)
 
 
 def test_is_deriv_k():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],
-        'L_K': [1, 2], 'E_K': [], 'L_args': [x, x + 1], 'E_args': []})
+        'exts': [None, 'log', 'log'], 'extargs': [None, x, x + 1]})
     assert is_deriv_k(Poly(2*x**2 + 2*x, t2), Poly(1, t2), DE) == \
         ([(t1, 1), (t2, 1)], t1 + t2, 2)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(t2, t2)],
-        'L_K': [1], 'E_K': [2], 'L_args': [x], 'E_args': [x]})
+        'exts': [None, 'log', 'exp'], 'extargs': [None, x, x]})
     assert is_deriv_k(Poly(x**2*t2**3, t2), Poly(1, t2), DE) == \
         ([(x, 3), (t1, 2)], 2*t1 + 3*x, 1)
     # TODO: Add more tests, including ones with exponentials
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2/x, t1)],
-        'L_K': [1], 'E_K': [], 'L_args': [x**2], 'E_args': []})
+        'exts': [None, 'log'], 'extargs': [None, x**2]})
     assert is_deriv_k(Poly(x, t1), Poly(1, t1), DE) == \
         ([(t1, S(1)/2)], t1/2, 1)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2/(1 + x), t0)],
-        'L_K': [1], 'E_K': [], 'L_args': [x**2 + 2*x + 1], 'E_args': []})
+        'exts': [None, 'log'], 'extargs': [None, x**2 + 2*x + 1]})
     assert is_deriv_k(Poly(1 + x, t0), Poly(1, t0), DE) == \
         ([(t0, S(1)/2)], t0/2, 1)
 
     # Issue 10798
     # DE = DifferentialExtension(log(1/x), x)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-1/x, t)],
-        'L_K': [1], 'E_K': [], 'L_args': [1/x], 'E_args': []})
+        'exts': [None, 'log'], 'extargs': [None, 1/x]})
     assert is_deriv_k(Poly(1, t), Poly(x, t), DE) == ([(t, 1)], t, 1)
 
 

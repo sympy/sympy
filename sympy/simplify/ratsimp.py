@@ -104,7 +104,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         return [Monomial(s).as_expr(*opt.gens) for s in S] + staircase(n - 1)
 
     def _ratsimpmodprime(a, b, allsol, N=0, D=0):
-        """
+        r"""
         Computes a rational simplification of ``a/b`` which minimizes
         the sum of the total degrees of the numerator and the denominator.
 

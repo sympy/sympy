@@ -14,6 +14,7 @@ from sympy.utilities.iterables import cartes
 
 import string
 import re as _re
+import random
 
 
 class Symbol(AtomicExpr, Boolean):
@@ -178,13 +179,13 @@ class Symbol(AtomicExpr, Boolean):
 
 
 class Dummy(Symbol):
-    """Dummy symbols are each unique, identified by an internal count index:
+    """Dummy symbols are each unique, even if they have the same name:
 
     >>> from sympy import Dummy
-    >>> bool(Dummy("x") == Dummy("x")) == True
+    >>> Dummy("x") == Dummy("x")
     False
 
-    If a name is not supplied then a string value of the count index will be
+    If a name is not supplied then a string value of an internal count will be
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
@@ -193,21 +194,41 @@ class Dummy(Symbol):
 
     """
 
+    # In the rare event that a Dummy object needs to be recreated, both the
+    # `name` and `dummy_index` should be passed.  This is used by `srepr` for
+    # example:
+    # >>> d1 = Dummy()
+    # >>> d2 = eval(srepr(d1))
+    # >>> d2 == d1
+    # True
+    #
+    # If a new session is started between `srepr` and `eval`, there is a very
+    # small chance that `d2` will be equal to a previously-created Dummy.
+
     _count = 0
+    _prng = random.Random()
+    _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
     __slots__ = ['dummy_index']
 
     is_Dummy = True
 
-    def __new__(cls, name=None, **assumptions):
+    def __new__(cls, name=None, dummy_index=None, **assumptions):
+        if dummy_index is not None:
+            assert name is not None, "If you specify a dummy_index, you must also provide a name"
+
         if name is None:
             name = "Dummy_" + str(Dummy._count)
+
+        if dummy_index is None:
+            dummy_index = Dummy._base_dummy_index + Dummy._count
+            Dummy._count += 1
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        Dummy._count += 1
-        obj.dummy_index = Dummy._count
+        obj.dummy_index = dummy_index
+
         return obj
 
     def __getstate__(self):
@@ -331,7 +352,7 @@ class Wild(Symbol):
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 def symbols(names, **args):
-    """
+    r"""
     Transform strings into instances of :class:`Symbol` class.
 
     :func:`symbols` function returns a sequence of symbols with names taken
@@ -422,7 +443,7 @@ def symbols(names, **args):
 
         >>> symbols('x((a:b))')
         (x(a), x(b))
-        >>> symbols('x(:1\,:2)')  # or 'x((:1)\,(:2))'
+        >>> symbols(r'x(:1\,:2)')  # or r'x((:1)\,(:2))'
         (x(0,0), x(0,1))
 
     All newly created symbols have assumptions set according to ``args``::
@@ -450,7 +471,7 @@ def symbols(names, **args):
 
     if isinstance(names, string_types):
         marker = 0
-        literals = ['\,', '\:', '\ ']
+        literals = [r'\,', r'\:', r'\ ']
         for i in range(len(literals)):
             lit = literals.pop(0)
             if lit in names:

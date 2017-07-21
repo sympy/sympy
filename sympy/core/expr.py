@@ -346,9 +346,9 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' has no free symbols.
-        It will be faster than `if not self.free_symbols`, however, since
-        `is_number` will fail as soon as it hits a free symbol.
+        """Returns True if ``self`` has no free symbols.
+        It will be faster than ``if not self.free_symbols``, however, since
+        ``is_number`` will fail as soon as it hits a free symbol.
 
         Examples
         ========
@@ -2293,7 +2293,7 @@ class Expr(Basic, EvalfMixin):
         return False
 
     def is_polynomial(self, *syms):
-        """
+        r"""
         Return True if self is a polynomial in syms and False otherwise.
 
         This checks if self is an exact polynomial in syms.  This function

@@ -1,8 +1,10 @@
 from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
-    DifferentialOperators, from_hyper, from_meijerg, expr_to_holonomic)
+                             DifferentialOperators, from_hyper,
+                             from_meijerg, expr_to_holonomic)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
 from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr, Symbol,
-    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si, asinh)
+                   O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand,
+                   Ci, EulerGamma, Si, asinh, gamma, beta)
 from sympy import ZZ, QQ, RR
 
 
@@ -82,6 +84,7 @@ def test_HolonomicFunction_multiplication():
     r = HolonomicFunction((x - 3) + (-2*x + 2)*Dx + (x)*Dx**2, x)
     assert p*q == r
 
+
 def test_addition_initial_condition():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -115,6 +118,7 @@ def test_addition_initial_condition():
     q = expr_to_holonomic(sqrt(x**2-x))
     r = (p + q).to_expr().subs(C_1, -I/2).expand()
     assert r == I*sqrt(x)*sqrt(-x + 1) + sqrt(x)
+
 
 def test_multiplication_initial_condition():
     x = symbols('x')
@@ -153,6 +157,7 @@ def test_multiplication_initial_condition():
     r = (p * q).to_expr()
     assert r == I*x*sqrt(-x + 1)
 
+
 def test_HolonomicFunction_composition():
     x = symbols('x')
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
@@ -178,6 +183,7 @@ def test_HolonomicFunction_composition():
         15*x**4 + 16*x**3 + 6*x**2 + 4*x + 1)*Dx**2, x)
     assert p == r
 
+
 def test_from_hyper():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -191,6 +197,7 @@ def test_from_hyper():
     y0 = '[sqrt(pi)*exp(1/4)*erf(1/2), -sqrt(pi)*exp(1/4)*erf(1/2)/2 + 1]'
     assert sstr(p.y0) == y0
     assert q.annihilator == p.annihilator
+
 
 def test_from_meijerg():
     x = symbols('x')
@@ -209,6 +216,7 @@ def test_from_meijerg():
     q = HolonomicFunction((3*x**2 - 1)*Dx + x**3*Dx**2, x, 1, [-exp(-S(1)/2) + 1, -exp(-S(1)/2)])
     assert p == q
 
+
 def test_to_Sequence():
     x = symbols('x')
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
@@ -226,6 +234,7 @@ def test_to_Sequence():
     p = HolonomicFunction(3*x**3*Dx**4 + 2*x*Dx + x*Dx**3, x).to_sequence()
     q = [(HolonomicSequence(2*n + (3*n**4 - 6*n**3 - 3*n**2 + 6*n)*Sn + (n**3 + 3*n**2 + 2*n)*Sn**2), 0, 1)]
     assert p == q
+
 
 def test_to_Sequence_Initial_Coniditons():
     x = symbols('x')
@@ -445,6 +454,7 @@ def test_evalf_rk4():
     s = '0.493152791638442 - 1.41553435639707e-15*I'
     assert sstr(p[-1]) == s
 
+
 def test_expr_to_holonomic():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -604,6 +614,7 @@ def test_to_expr():
     p = (expr_to_holonomic(1.4*x)+expr_to_holonomic(x)).to_expr()
     assert p == 2.4*x
 
+
 def test_integrate():
     x = symbols('x')
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
@@ -648,6 +659,7 @@ def test_integrate():
     q = expr_to_holonomic(cos(x)**2)
     assert (r*q).integrate(x).to_expr() == -Si(2*x) - cos(x)**2/x
 
+
 def test_diff():
     x, y = symbols('x, y')
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
@@ -663,6 +675,7 @@ def test_diff():
     assert p.diff(x).to_expr() == q.diff()
     assert p.diff(x, 2).to_expr().subs(C_0, -S(1)/3) == q.diff(x, 2).simplify()
     assert p.diff(x, 3).series().subs({C_3:-S(1)/3, C_0:0}) == q.diff(x, 3).series()
+
 
 def test_extended_domain_in_expr_to_holonomic():
     x = symbols('x')
@@ -694,6 +707,7 @@ def test_extended_domain_in_expr_to_holonomic():
     p = p.to_expr().subs(C_1, 0)
     assert p - 1.2*x*cos(1.0*x) == 0
 
+
 def test_to_meijerg():
     x = symbols('x')
     assert hyperexpand(expr_to_holonomic(sin(x)).to_meijerg()) == sin(x)
@@ -718,3 +732,69 @@ def test_to_meijerg():
     assert (p.to_expr() - (D_0*sin(x) + C_0*cos(x) + C_1*sin(x))/sqrt(x)).simplify() == 0
     p = expr_to_holonomic(besselj(S(1)/2, x), y0={S(-1)/2: [sqrt(2)/sqrt(pi), sqrt(2)/sqrt(pi)]})
     assert (p.to_expr() - besselj(S(1)/2, x) - besselj(S(-1)/2, x)).simplify() == 0
+
+
+def test_gaussian():
+    mu, x = symbols("mu x")
+    sd = symbols("sd", positive=True)
+    Q = QQ[mu, sd].get_field()
+    e = sqrt(2)*exp(-(-mu + x)**2/(2*sd**2))/(2*sqrt(pi)*sd)
+    h1 = expr_to_holonomic(e, x, domain=Q)
+
+    _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
+    h2 = HolonomicFunction((-mu/sd**2 + x/sd**2) + (1)*Dx, x)
+
+    assert h1 == h2
+
+
+def test_beta():
+    a, b, x = symbols("a b x", positive=True)
+    e = x**(a - 1)*(-x + 1)**(b - 1)/beta(a, b)
+    Q = QQ[a, b].get_field()
+    h1 = expr_to_holonomic(e, x, domain=Q)
+
+    _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
+    h2 = HolonomicFunction((a + x*(-a - b + 2) - 1) + (x**2 - x)*Dx, x)
+
+    assert h1 == h2
+
+
+def test_gamma():
+    a, b, x = symbols("a b x", positive=True)
+    e = b**(-a)*x**(a - 1)*exp(-x/b)/gamma(a)
+    Q = QQ[a, b].get_field()
+    h1 = expr_to_holonomic(e, x, domain=Q)
+
+    _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
+    h2 = HolonomicFunction((-a + 1 + x/b) + (x)*Dx, x)
+
+    assert h1 == h2
+
+
+def test_symbolic_power():
+    x, n = symbols("x n")
+    Q = QQ[n].get_field()
+    _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
+    h1 = HolonomicFunction((-1) + (x)*Dx, x) ** -n
+    h2 = HolonomicFunction((n) + (x)*Dx, x)
+
+    assert h1 == h2
+
+
+def test_negative_power():
+    x = symbols("x")
+    _, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    h1 = HolonomicFunction((-1) + (x)*Dx, x) ** -2
+    h2 = HolonomicFunction((2) + (x)*Dx, x)
+
+    assert h1 == h2
+
+
+def test_expr_in_power():
+    x, n = symbols("x n")
+    Q = QQ[n].get_field()
+    _, Dx = DifferentialOperators(Q.old_poly_ring(x), 'Dx')
+    h1 = HolonomicFunction((-1) + (x)*Dx, x) ** (n - 3)
+    h2 = HolonomicFunction((-n + 3) + (x)*Dx, x)
+
+    assert h1 == h2

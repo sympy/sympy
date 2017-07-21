@@ -11,7 +11,7 @@ from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
-    Type, Declaration, Pointer, Variable, value_const, pointer_const,
+    Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     real, float32, float64, float80
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, restrict
@@ -74,24 +74,24 @@ def test_ccode_constants_mathh():
 
 
 def test_ccode_constants_other():
-    assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert ccode(2*GoldenRatio) == "const double GoldenRatio = 1.6180339887498948;\n2*GoldenRatio"
     assert ccode(
-        2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
-    assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
+        2*Catalan) == "const double Catalan = 0.91596559417721901;\n2*Catalan"
+    assert ccode(2*EulerGamma) == "const double EulerGamma = 0.57721566490153286;\n2*EulerGamma"
 
 
 def test_ccode_Rational():
     assert ccode(Rational(3, 7)) == "3.0/7.0"
-    assert ccode(Rational(3, 7), precision=18) == "3.0L/7.0L"
+    assert ccode(Rational(3, 7), type_aliases={real: float80}) == "3.0L/7.0L"
     assert ccode(Rational(18, 9)) == "2"
     assert ccode(Rational(3, -7)) == "-3.0/7.0"
-    assert ccode(Rational(3, -7), precision=18) == "-3.0L/7.0L"
+    assert ccode(Rational(3, -7), type_aliases={real: float80}) == "-3.0L/7.0L"
     assert ccode(Rational(-3, -7)) == "3.0/7.0"
-    assert ccode(Rational(-3, -7), precision=18) == "3.0L/7.0L"
+    assert ccode(Rational(-3, -7), type_aliases={real: float80}) == "3.0L/7.0L"
     assert ccode(x + Rational(3, 7)) == "x + 3.0/7.0"
-    assert ccode(x + Rational(3, 7), precision=18) == "x + 3.0L/7.0L"
+    assert ccode(x + Rational(3, 7), type_aliases={real: float80}) == "x + 3.0L/7.0L"
     assert ccode(Rational(3, 7)*x) == "(3.0/7.0)*x"
-    assert ccode(Rational(3, 7)*x, precision=18) == "(3.0L/7.0L)*x"
+    assert ccode(Rational(3, 7)*x, type_aliases={real: float80}) == "(3.0L/7.0L)*x"
 
 
 def test_ccode_Integer():
@@ -109,7 +109,7 @@ def test_ccode_inline_function():
     assert ccode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert ccode(
-        g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
+        g(x)) == "const double Catalan = %s;\n2*x/Catalan" % Catalan.evalf(17)
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -660,25 +660,55 @@ def test_ccode_Declaration():
     i = symbols('i', integer=True)
     var1 = Variable(i, type_=Type.from_expr(i))
     dcl1 = Declaration(var1)
-    assert ccode(dcl1) == 'int i;'
+    assert ccode(dcl1) == 'int i'
 
-    var2 = Variable(x, {value_const}, Type('float32'))
+    var2 = Variable(x, {value_const}, float32)
     dcl2a = Declaration(var2)
-    assert ccode(dcl2a) == 'const float x;'
+    assert ccode(dcl2a) == 'const float x'
     dcl2b = Declaration(var2, pi)
-    assert ccode(dcl2b) == 'const float x = M_PI;'
+    assert ccode(dcl2b) == 'const float x = M_PI'
 
     var3 = Variable(y, None, Type('bool'))
     dcl3 = Declaration(var3)
     printer = C89CodePrinter()
     assert 'stdbool.h' not in printer.headers
-    assert printer.doprint(dcl3) == 'bool y;'
+    assert printer.doprint(dcl3) == 'bool y'
     assert 'stdbool.h' in printer.headers
 
     u = symbols('u', real=True)
     ptr4 = Pointer.deduced(u, {pointer_const, restrict})
     dcl4 = Declaration(ptr4)
-    assert ccode(dcl4) == 'double * const restrict u;'
+    assert ccode(dcl4) == 'double * const restrict u'
+
+    var5 = Variable(x, {value_const}, Type('__float128'))
+    dcl5a = Declaration(var5)
+    assert ccode(dcl5a) == 'const __float128 x'
+    dcl5b = Declaration(var5, pi)
+    assert ccode(dcl5b) == 'const __float128 x = M_PI'
+
+def test_C99CodePrinter_custom_type():
+    # We will look at __float128 (new in glibc 2.26)
+    f128 = FloatType(
+        '__float128', 128,
+        max=Float('1.18973149535723176508575932662800702e+4932'),
+        tiny=Float('3.36210314311209350626267781732175260e-4932'),
+        eps=Float('1.92592994438723585305597794258492732e-34'),
+        dig=33, decimal_dig=36
+    )
+    p128 = C99CodePrinter(
+        type_literals={f128: 'Q'}
+        type_suffixes={f128: 'f128'},
+    )
+    assert p128.doprint(cos(x)) == 'cosf128(x)'
+
+    var5 = Variable(x, {value_const}, f128)
+
+    dcl5a = Declaration(var5)
+    assert ccode(dcl5a) == 'const __float128 x'
+    dcl5b = Declaration(var5, pi)
+    assert ccode(dcl5b) == 'const __float128 x = M_PIf128'
+    dcl5c = Declaration(var5, Catalan)
+    assert ccode(dcl5c) == 'const __float128 x = %sQ' % Catalan.evalf(36)
 
 
 def test_MatrixElement_printing():

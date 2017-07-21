@@ -181,6 +181,8 @@ class C89CodePrinter(CodePrinter):
         float80: 'l'
     }
 
+    type_literals = {}
+
     _ns = ''  # namespace, C++ uses 'std::'
     _kf = known_functions_C89  # known_functions-dict to copy
 
@@ -193,9 +195,10 @@ class C89CodePrinter(CodePrinter):
                                        settings.pop('type_headers', {}).items()))
         self.type_suffixes = dict(chain(self.type_suffixes.items(),
                                         settings.pop('type_suffixes', {}).items()))
+        self.type_literals = dict(chain(self.type_literals.items(),
+                                        settings.pop('type_literals', {}).items()))
         super(C89CodePrinter, self).__init__(settings)
-        self.known_functions = self._kf.copy()
-        self.known_functions.update(**settings.get('user_functions', {}))
+        self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
         self.headers = set()
         self.libraries = set()
@@ -212,7 +215,7 @@ class C89CodePrinter(CodePrinter):
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
         var = Variable(name, {value_const}, type_)
-        decl = Declaration(var, value.evalf(type_['decimal_dig']))
+        decl = Declaration(var, value.evalf(type_.decimal_dig))
         return self._get_statement(self._print(decl))
 
     def _format_code(self, lines):
@@ -323,7 +326,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Symbol(self, expr):
         name = super(C89CodePrinter, self)._print_Symbol(expr)
-        if expr in self._dereference:
+        if expr in self._settings['dereference']:
             return '(*{0})'.format(name)
         else:
             return name
@@ -439,7 +442,7 @@ class C89CodePrinter(CodePrinter):
             raise NotImplementedError("Unknown type of var: %s" % type(var))
         if val is not None:
             result += ' = %s' % self._print(val)
-        return self._get_statement(result)
+        return result
 
     def _print_Variable(self, expr):
         return self._print(expr.symbol)

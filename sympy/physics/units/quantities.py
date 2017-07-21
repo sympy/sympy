@@ -6,10 +6,10 @@ Physical quantities.
 
 from __future__ import division
 
+from sympy import (
+    Add, AtomicExpr, Basic, Function, Mul, Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
-from sympy import sympify, Mul, Pow, S, Symbol, Add, AtomicExpr, Basic
-from sympy.physics.units import Dimension
-from sympy.physics.units import dimensions
+from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.prefixes import Prefix
 
 
@@ -102,12 +102,12 @@ class Quantity(AtomicExpr):
 
     @staticmethod
     def _collect_factor_and_dimension(expr):
-
+        """Return tuple with factor expression and dimension expression."""
         if isinstance(expr, Quantity):
             return expr.scale_factor, expr.dimension
         elif isinstance(expr, Mul):
             factor = 1
-            dimension = 1
+            dimension = Dimension(1)
             for arg in expr.args:
                 arg_factor, arg_dim = Quantity._collect_factor_and_dimension(arg)
                 factor *= arg_factor
@@ -115,11 +115,23 @@ class Quantity(AtomicExpr):
             return factor, dimension
         elif isinstance(expr, Pow):
             factor, dim = Quantity._collect_factor_and_dimension(expr.base)
-            return factor ** expr.exp, dim ** expr.exp
+            exp_factor, exp_dim = Quantity._collect_factor_and_dimension(expr.exp)
+            if exp_dim.is_dimensionless:
+               exp_dim = 1
+            return factor ** exp_factor, dim ** (exp_factor * exp_dim)
         elif isinstance(expr, Add):
-            raise NotImplementedError
+            factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
+            for addend in expr.args[1:]:
+                addend_factor, addend_dim = \
+                    Quantity._collect_factor_and_dimension(addend)
+                assert dim == addend_dim
+                factor += addend_factor
+            return factor, dim
+        elif isinstance(expr, Function):
+            fds = [Quantity._collect_factor_and_dimension(arg) for arg in expr.args]
+            return expr.func(*(f[0] for f in fds)), expr.func(*(d[1] for d in fds))
         else:
-            return 1, 1
+            return expr, Dimension(1)
 
     def convert_to(self, other):
         """

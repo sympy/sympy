@@ -717,7 +717,7 @@ def _rewrite_saxena_1(fac, po, g, x):
 
 
 def _check_antecedents_1(g, x, helper=False):
-    """
+    r"""
     Return a condition under which the mellin transform of g exists.
     Any power of x has already been absorbed into the G function,
     so this is just int_0^\infty g dx.
@@ -834,7 +834,7 @@ def _check_antecedents_1(g, x, helper=False):
 
 
 def _int0oo_1(g, x):
-    """
+    r"""
     Evaluate int_0^\infty g dx using G functions,
     assuming the necessary conditions are fulfilled.
 
@@ -2010,7 +2010,7 @@ def _meijerint_definite_4(f, x, only_double=False):
 
 
 def meijerint_inversion(f, x, t):
-    """
+    r"""
     Compute the inverse laplace transform
     :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
     for real c larger than the real part of all singularities of f.

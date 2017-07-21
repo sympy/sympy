@@ -1,0 +1,29 @@
+FROM continuumio/anaconda3
+
+WORKDIR /home
+
+RUN apt-get update \
+    && apt-get install -y libc6-i386 libc6 linux-headers-amd64 git make zip graphviz inkscape texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x \
+    && apt-get -y clean
+
+RUN conda config --add channels conda-forge
+RUN conda config --set always_yes yes
+RUN conda install python=3.6 rever requests requests-oauthlib \
+    && conda clean --all
+RUN conda info
+RUN /opt/conda/bin/pip install xonda
+
+# Make matplotlib tests work
+# https://stackoverflow.com/questions/2801882/generating-a-png-with-matplotlib-when-display-is-undefined
+ENV MATPLOTLIBRC=/home/matplotlibrc
+RUN mkdir -p $MATPLOTLIBRC
+RUN echo "backend : Agg" > $MATPLOTLIBRC/matplotlibrc
+
+RUN git clone git://github.com/sympy/sympy.git
+# This can be removed once this is in master
+RUN cd /home/sympy && git checkout 1.1
+RUN cd /home/sympy && git pull
+
+WORKDIR /home/sympy/release
+
+ENTRYPOINT ["./pull_and_run_rever.sh"]

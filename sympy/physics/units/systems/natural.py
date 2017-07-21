@@ -11,13 +11,12 @@ time. Moreover instead of mass we use energy.
 
 from __future__ import division
 
-from sympy.physics.units.definitions import eV, hbar, c
-
-from sympy.physics.units.dimensions import DimensionSystem
-from sympy.physics.units.dimensions import length, mass, time, momentum,\
-    force, energy, power, frequency, action, velocity
-from sympy.physics.units.unitsystem import UnitSystem
+from sympy.physics.units.definitions import c, eV, hbar
+from sympy.physics.units.dimensions import (
+    DimensionSystem, action, energy, force, frequency, length, mass, momentum,
+    power, time, velocity)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
+from sympy.physics.units.unitsystem import UnitSystem
 
 dims = (length, mass, time, momentum, force, energy, power, frequency)
 

@@ -477,16 +477,22 @@ class Type(Basic):
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
-        args = args + tuple([kwargs[k] for k in cls.__slots__])
-        return cls.__xnew_cahced_(cls, *args)
+        args = args + tuple([kwargs[k] for k in cls.__slots__[len(args):]])
+        return Type.__xnew_cached_(cls, *args)
 
     def __new_stage2__(cls, *args):
-        obj = Basic.__new__(cls, *args)
-        for attr, arg in zip(self.__slots__, args):
+        obj = Basic.__new__(cls)
+        for attr, arg in zip(cls.__slots__, args):
             setattr(obj, attr, arg)
         return obj
 
     __xnew_cached_ = staticmethod(cacheit(__new_stage2__))
+
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__, ', '.join(
+            ["'%s'" % self.name] + ['%s=%s' % (k, repr(getattr(self, k)))
+                           for k in self.__slots__[1:]]
+        ))
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -676,32 +682,32 @@ int32 = SignedIntType('int32', 32)
 int64 = SignedIntType('int64', 64)
 uint8 = UnsignedIntType('uint8', 8)
 uint16 = UnsignedIntType('uint16', 16)
-uint32 = UnsignedIntType('uint32', 32
+uint32 = UnsignedIntType('uint32', 32)
 uint64 = UnsignedIntType('uint64', 64)
 float16 = Type('float16')
-float32 = Type(
+float32 = FloatType(
     'float32', 32,
     max=Float('3.40282347e+38'),
     tiny=Float('1.17549435e-38'),
     eps=Float('1.1920929e-07'),
     dig=6, decimal_dig=9
 )
-float64 = Type(
+float64 = FloatType(
     'float64', 64,
     max=Float('1.79769313486231571e+308'),
     tiny=Float('2.22507385850720138e-308'),
     eps=Float('2.22044604925031308e-16'),
     dig=15, decimal_dig=17
 )
-float80 = Type(
+float80 = FloatType(
     'float80', 80,
     max=Float('1.18973149535723176502e+4932'),
     tiny=Float('3.36210314311209350626e-4932'),
     eps=Float('1.08420217248550443401e-19'),
     dig=18, decimal_dig=21
 )
-complex64 = Type('complex64', 64, *float32.args[2:])
-complex128 = Type('complex128', 128, *float64.args[2:])
+complex64 = FloatType('complex64', 64, **{k: getattr(float32, k) for k in FloatType.__slots__[2:]})
+complex128 = FloatType('complex128', 128, **{k: getattr(float64, k) for k in FloatType.__slots__[2:]})
 
 # Generic types (precision may be chosen by code printers):
 real = Type('real')
