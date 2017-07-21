@@ -784,5 +784,5 @@ def test_presentation():
     P = AlternatingGroup(5)
     assert _test(P)
 
-    P = SymmetricGroup(4)
+    P = SymmetricGroup(5)
     assert _test(P)

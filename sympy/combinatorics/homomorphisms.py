@@ -195,6 +195,7 @@ def homomorphism(domain, codomain, gens, images=[]):
 
     gens = list(gens)
     images = list(images)
+
     images.extend([codomain.identity]*(len(generators)-len(images)))
     gens.extend([g for g in generators if g not in gens])
     images = dict(zip(gens,images))
@@ -212,13 +213,15 @@ def _check_homomorphism(domain, images, identity):
             w = identity
             r_arr = r.array_form
             i = 0
+            j = 0
             while i < len(r):
-                power = r_arr[i][1]
+                power = r_arr[j][1]
                 if r[i] in images:
                     w = w*images[r[i]]**power
                 else:
                     w = w*images[r[i]**-1]**power
                 i += abs(power)
+                j += 1
             return w
 
     if any([not _image(r).is_identity for r in rels]):

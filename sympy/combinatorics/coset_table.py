@@ -50,7 +50,7 @@ class CosetTable(DefaultPrinting):
     coset_table_max_limit = 4096000
     # maximum size of deduction stack above or equal to
     # which it is emptied
-    max_stack_size = 500
+    max_stack_size = 100
 
     def __init__(self, fp_grp, subgroup, max_cosets=None):
         if not max_cosets:
@@ -976,6 +976,7 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, resume=None,
     if resume:
         C.table = resume.table[:]
         C.p = resume.p[:]
+        C.deduction_stack = resume.deduction_stack
         for alpha, x in product(range(len(C.table)), X):
             if not C.table[alpha][C.A_dict[x]] is None:
                 C.deduction_stack.append((alpha, x))
