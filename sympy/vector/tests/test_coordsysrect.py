@@ -394,8 +394,20 @@ def test_rotation_trans_equations():
 
 def test_transformation_composition():
     a = CoordSys3D('a')
-    assert a._transformation_composition() == (a.x, a.y, a.z)
+    eq1 = a._rotation_trans_equations()
+    eq2 = a._transformation_equations()
+    assert a._transformation_composition(eq1, eq2) == (a.x, a.y, a.z)
     from sympy import symbols
     q0 = symbols('q0')
     b = a.orient_new_axis('b', q0, a.k)
-    assert b._transformation_composition() == (sin(q0)*b.y + cos(q0)*b.x, -sin(q0)*b.x + cos(q0)*b.y, b.z)
+    eq1 = b._transformation_equations()
+    eq2 = b._rotation_trans_equations()
+    assert b._transformation_composition(eq1, eq2) ==\
+           (sin(q0)*b.y + cos(q0)*b.x, -sin(q0)*b.x + cos(q0)*b.y, b.z)
+    b._connect_to_standard_cartesian('spherical')
+    eq1 = b._rotation_trans_equations()
+    eq2 = b._transformation_equations()
+    assert b._transformation_composition(eq1, eq2) ==\
+           (sin(q0)*sin(b.y)*sin(b.z)*b.x + sin(b.y)*cos(q0)*cos(b.z)*b.x,
+            -sin(q0)*sin(b.y)*cos(b.z)*b.x + sin(b.y)*sin(b.z)*cos(q0)*b.x,
+             cos(b.y)*b.x)

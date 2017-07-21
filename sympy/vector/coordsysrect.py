@@ -404,14 +404,15 @@ class CoordSys3D(Basic):
 
         return trans_eq1, trans_eq2, trans_eq3
 
-    def _transformation_composition(self):
+    def _transformation_composition(self, equations_set1, equations_set2):
         from sympy import Dummy
         x = Dummy('x')
         y = Dummy('y')
         z = Dummy('z')
         eq = [i.subs([*zip(self.base_scalars(), (x, y, z))])
-              for i in self._transformation_equations()]
-        eq = [i.subs([*zip((x, y, z), self._rotation_trans_equations())])
+              for i in equations_set1]
+
+        eq = [i.subs([*zip((x, y, z), equations_set2)])
               for i in eq]
         return tuple(simplify(eq))
 
