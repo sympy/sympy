@@ -10,7 +10,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3)
+    ordered, range, PY3, is_sequence)
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
@@ -1057,6 +1057,9 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(*finite_points)
 
     def _contains(self, other):
+        if is_sequence(other) and len(other) == 1:
+            other = other[0]
+
         if not isinstance(other, Expr) or (
                 other is S.Infinity or
                 other is S.NegativeInfinity or

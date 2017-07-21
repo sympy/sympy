@@ -113,7 +113,11 @@ class Point(GeometryEntity):
         on_morph = kwargs.get('on_morph', 'ignore')
 
         # unpack into coords
-        coords = args[0] if len(args) == 1 else args
+        if len(args) == 1 and is_sequence(args[0]):
+            coords = args[0] 
+        else:
+            coords = args
+            
         # A point where only `dim` is specified is initialized
         # to zeros.
         if len(coords) == 0 and kwargs.get('dim', None):
@@ -136,10 +140,6 @@ class Point(GeometryEntity):
         coords = Tuple(*coords)
         dim = kwargs.get('dim', len(coords))
 
-        if len(coords) < 2:
-            raise ValueError(filldedent('''
-                Point requires 2 or more coordinates or
-                keyword `dim` > 1.'''))
         if len(coords) != dim:
             message = ("Dimension of {} needs to be changed"
                        "from {} to {}.").format(coords, len(coords), dim)
