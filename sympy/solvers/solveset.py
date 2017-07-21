@@ -118,11 +118,14 @@ def invert_real(f_x, y, x, domain=S.Reals):
     lhs, rhs_s = _invert(f_x, y, x, domain)
     if lhs == x and isinstance(rhs_s, FiniteSet):
         for rhs in rhs_s:
-            if checksol(f_x, x, rhs):
-                pass
-            else:
-                return (f_x, FiniteSet(y))
-    return lhs, rhs_s
+            try:
+                if checksol(f_x - y, x, rhs):
+                    pass
+                else:
+                    return (f_x, FiniteSet(y))
+            except:
+                return (lhs, rhs_s)
+    return (lhs, rhs_s)
 
 
 def _invert_real(f, g_ys, symbol):

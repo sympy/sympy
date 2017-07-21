@@ -179,6 +179,7 @@ def test_domain_check():
 
 def test_issue_11536():
     assert solveset(0**x - 100, x, S.Reals) == ConditionSet(x, Eq(0**x - 100, 0), S.Reals)
+    assert solveset(0**x - 1, x, S.Reals) == FiniteSet(0)
 
 def test_is_function_class_equation():
     from sympy.abc import x, a
