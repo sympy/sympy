@@ -76,7 +76,7 @@ def test_special_denom():
     # Note, this isn't a very good test, because the denominator is just 1,
     # but at least it tests the exp cancellation case
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-2*x*t0, t0),
-        Poly(I*k*t1, t1)]})
+        Poly(I*k*t1, t1)], 'exts': [None, 'exp', 'exp']})
     DE.decrement_level()
     assert special_denom(Poly(1, t0), Poly(I*k, t0), Poly(1, t0), Poly(t0, t0),
     Poly(1, t0), DE) == \
@@ -158,7 +158,8 @@ def test_solve_poly_rde_no_cancel():
 
 def test_solve_poly_rde_cancel():
     # exp
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]
+        , 'exts': [None, 'exp']})
     assert cancel_exp(Poly(2*x, t), Poly(2*x, t), 0, DE) == \
         Poly(1, t)
     assert cancel_exp(Poly(2*x, t), Poly((1 + 2*x)*t, t), 1, DE) == \

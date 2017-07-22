@@ -53,7 +53,8 @@ def test_prde_special_denom():
     assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3 + 2, t), G, DE) == \
         (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t, t), Poly(t**2, t)),
         (Poly(2*t, t), Poly(t, t))], Poly(1, x))
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)*2*x, t)]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)*2*x, t)]
+        , 'exts': [None, 'tan']})
     G = [(Poly(t + x, t), Poly(t*x, t)), (Poly(2*t, t), Poly(x**2, x))]
     assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3, t), G, DE) == \
         (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)),
@@ -206,8 +207,10 @@ def test_param_rischDE():
 
     # the below test computation takes place while computing the integral
     # of 'f = log(log(x + exp(x)))'
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
-    G = [(Poly(t + x, t, domain='ZZ(x)'), Poly(1, t, domain='QQ')), (Poly(0, t, domain='QQ'), Poly(1, t, domain='QQ'))]
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]
+        , 'exts': [None, 'exp']})
+    G = [(Poly(t + x, t, domain='ZZ(x)'), Poly(1, t, domain='QQ')),
+            (Poly(0, t, domain='QQ'),Poly(1, t, domain='QQ'))]
     h, A = param_rischDE(Poly(-t - 1, t, field=True), Poly(t + x, t, field=True), G, DE)
     assert len(h) == 5
     p = [hi[0].as_expr()/hi[1].as_expr() for hi in h]
@@ -292,7 +295,8 @@ def test_is_log_deriv_k_t_radical_in_field():
     assert is_log_deriv_k_t_radical_in_field(Poly(2 + 3*t, t), Poly(5*x*t, t), DE) == \
         (5, x**3*t**2)
 
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t/x**2, t)]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t/x**2, t)]
+        , 'exts': [None, 'exp']})
     assert is_log_deriv_k_t_radical_in_field(Poly(-(1 + 2*t), t),
     Poly(2*x**2 + 2*x**2*t, t), DE) == \
         (2, t + t**2)

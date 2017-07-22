@@ -24,7 +24,7 @@ from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.solvers import solve
 
-from sympy.polys import Poly, QQ, cancel, lcm, sfield
+from sympy.polys import Poly, QQ, cancel, lcm, sfield, sqf_list
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -996,11 +996,6 @@ def linear_relations_in_Q(F):
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
-    >>> fa, fd = Poly(0, x), Poly(1, x)
-    >>> wa, wd = Poly(1, x), Poly(1, x)
-    >>> t0, t1, t2 = symbols('t0, t1, t2')
-    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0),
-        Poly((t0 + 1)/(t0 + x), t1), Poly((t0 + 1)/(t0*t1 + t1*x), t2)]})
     Page, 251 section 7.3
 
     """
