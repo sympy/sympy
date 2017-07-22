@@ -35,7 +35,7 @@ matrix:
             - libatlas-base-dev
             - liblapack-dev
             - gfortran
-    - python: 3.5
+    - python: 3.6
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
