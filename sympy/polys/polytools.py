@@ -4415,7 +4415,7 @@ def degree(f, *gens, **args):
         gens.append(f.gens[0])
         f = f.as_expr()
 
-    if f.is_Number:
+    if f.is_Number:
         if len(gens) == 0:
             raise ComputationFailed('degree', 1, PolificationFailed({'gens': ()}, orig, f))
         if f == 0:
