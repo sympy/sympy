@@ -687,6 +687,6 @@ def test_issue_2941():
 
 
 def test_directed_segments():
-    assert Segment((1, 0), (0, 0), dir=True).points ==\
+    assert Segment((1, 0), (0, 0), evaluate=True).points ==\
                                         (Point2D(1, 0), Point2D(0, 0))
     assert Segment((1, 0), (0, 0)).points == (Point2D(0, 0), Point2D(1, 0))

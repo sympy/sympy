@@ -131,8 +131,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
             gradient_terms(max_degree)
         for facet_count, hp in enumerate(hp_params):
             a, b = hp[0], hp[1]
-            x0 = facets[facet_count].points[0]
-
+            x0 = facets[facet_count][0][0]
             for i, monom in enumerate(grad_terms):
                 #  Every monomial is a tuple :
                 #  (term, x_degree, y_degree, value over boundary)
@@ -204,7 +203,10 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     a, b = (S(a[0]), S(a[1])), S(b)
 
     value = S.Zero
-    x0 = facets[index].points[0]
+    if isinstance(facets[index], Segment2D):
+        x0 = facets[index].points[0]
+    else:
+        x0 = facets[index][0][0]
     m = len(facets)
     gens = (x, y)
 
@@ -247,7 +249,14 @@ def left_integral(m, index, facets, x0, expr, gens):
     for j in range(0, m):
         intersect = ()
         if j == (index - 1) % m or j == (index + 1) % m:
-            intersect = intersection(facets[index], facets[j])
+            if not isinstance(facets[index], Segment2D):
+                segment_i = Segment2D(facets[index][0][0],
+                                      facets[index][1][0], evaluate=True)
+                segment_j = Segment2D(facets[j][0][0],
+                                      facets[j][1][0], evaluate=True)
+                intersect = intersection(segment_i, segment_j)
+            else:
+                intersect = intersection(facets[index], facets[j])
         if intersect:
             distance_origin = norm(tuple(map(lambda x, y: x - y,
                                              intersect, x0)))

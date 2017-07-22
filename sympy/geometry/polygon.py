@@ -3,6 +3,7 @@ from __future__ import division, print_function
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, range, ordered
 from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.geometry.exceptions import GeometryError
@@ -19,7 +20,6 @@ from .line import Line, Segment
 from .util import _symbol
 
 import warnings
-
 
 class Polygon(GeometrySet):
     """A two-dimensional polygon.
@@ -84,8 +84,7 @@ class Polygon(GeometrySet):
     Both implicit and explicit intersections are allowed. For example,
     consider a polygon shaped like a Z with the top left connecting to the
     bottom right of the Z. The point in the middle of the Z may or may not be
-    explicitly given. However it should be noted that not all characteristics
-    of the implicit case be accurate(such as area):
+    explicitly given.
 
     >>> mid = Point(1, 1)
     >>> Polygon((0, 2), (2, 2), mid, (0, 0), (2, 0), mid).area
@@ -93,7 +92,7 @@ class Polygon(GeometrySet):
     >>> Polygon((0, 2), (2, 2), mid, (2, 0), (0, 0), mid).area
     -2
     >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
-    0
+    2
 
 
     When the the keyword `n` is used to define the number of sides of the
@@ -127,7 +126,7 @@ class Polygon(GeometrySet):
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
 
-        ignore_int = kwargs.get('ignore_int', False)
+        ignore_intersection = kwargs.get('ignore_intersection', True)
 
         vertices = [Point(a, dim=2, **kwargs) for a in args]
 
@@ -174,34 +173,46 @@ class Polygon(GeometrySet):
             convex = rv.is_convex()
         except ValueError:
             convex = True
-        if not convex and not ignore_int:
-            sides = {}
-            for i, side in enumerate(rv.directed_sides):
-                sides[i] = [side]
+
+        sides = {}
+        for i, side in enumerate(rv.directed_sides):
+            sides[i] = [side]
+
+        if not ignore_intersection:
             for i in sides:
                 # exclude the sides connected to si
-                for j in range((i + 2) % len(sides), (i - 1) % len(sides) if i != 1 else len(sides)):
+                for j in range(i + 2, len(sides) + i - 1):
+                    j = j % len(sides)
                     si = sides[i]
                     for i_index, segment_i in enumerate(si):
-                        pts = segment_i.args
+                        pts = (segment_i[0][0], segment_i[1][0])
                         sj = sides[j]
                         for j_index, segment_j in enumerate(sj):
-                            if segment_j.p1 not in pts and segment_j.p2 not in pts:
-                                hit = segment_i.intersection(segment_j)
-                                if hit:
+                            if segment_j[0][0] not in pts and segment_j[1][0]\
+                                                                    not in pts:
+                                seg_i = Segment(*pts, evaluate=True)
+                                seg_j = Segment(segment_j[0][0],
+                                                segment_j[1][0], evaluate=True)
+                                hit = seg_i.intersection(seg_j)
+                                if hit and isinstance(hit[0], Point):
                                     hit = hit[0]
                                     sides[i][i_index:i_index + 1] =\
-                                        [Segment(pts[0], hit, dir=True),
-                                         Segment(hit, pts[1], dir=True)]
-                                    sides[j][j_index:j_index + 1] =\
-                                        [Segment(segment_j.p1, hit, dir=True),
-                                         Segment(hit, segment_j.p2, dir=True)]
+                                        [(segment_i[0], (hit, True)),
+                                         ((hit, True), segment_i[1])]
+                                    sides[j][j_index:j_index + 1] = \
+                                        [(segment_j[0], (hit, True)),
+                                         ((hit, True), segment_j[1])]
                                     break
-            vertices = []
-            for key in sides:
-                for side in sides[key]:
-                    vertices.append(side.p1)
-            return GeometryEntity.__new__(cls, *vertices, **kwargs)
+
+        vertices = []
+        dsides = []
+        for key in sides:
+            for side in sides[key]:
+                if len(vertices) == 0 or vertices[-1] != side[0][0]:
+                    vertices.append(side[0][0])
+                    dsides.append(side)
+        rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
+        rv._directed_sides = dsides
         return rv
 
 
@@ -231,13 +242,63 @@ class Polygon(GeometrySet):
         3
 
         """
-        area = 0
-        args = self.args
-        for i in range(len(args)):
-            x1, y1 = args[i - 1].args
-            x2, y2 = args[i].args
-            area += x1*y2 - x2*y1
-        return simplify(area) / 2
+        def signed_area(polygon):
+            area = S.Zero
+            args = polygon.args
+            for i in range(len(args)):
+                x1, y1 = args[i - 1].args
+                x2, y2 = args[i].args
+                area += x1 * y2 - x2 * y1
+            return simplify(area) / 2
+
+        def traverse_from_intersection(tsides, index, current_sign,
+                                       initial_point):
+            points = []
+            current_side = tsides[index]
+            points.append(initial_point)
+            while True:
+                for i, side in enumerate(tsides):
+                    if current_sign == side[2] and side[0][0] == \
+                            current_side[1][0]:
+                        if side[3] is True:
+                            return [], tsides
+                        current_side = side
+                        points.append(side[0][0])
+                        side[3] = True
+                        break
+                if current_side[1][0] == initial_point:
+                    break
+            return points, tsides
+
+        def even_odd_area(dsides, current_sign, polygon=None):
+            traversal_sides = [None] * len(dsides)
+            for i, side in enumerate(dsides):
+                if side[0][1] is True:
+                    current_sign *= -1
+                if current_sign == -1:
+                    traversal_sides[i] = [side[1], side[0],
+                                          current_sign, False]
+                else:
+                    traversal_sides[i] = [side[0], side[1],
+                                          current_sign, False]
+
+            area = S.Zero
+            flag_intersecting = 0
+            for i, segment_i in enumerate(traversal_sides):
+                if segment_i[0][1] is True:
+                    flag_intersecting = 1
+                    current_sign *= -1
+                    points, traversal_sides = traverse_from_intersection(traversal_sides,
+                                                        i, current_sign,
+                                                        segment_i[0][0])
+                    if len(points) > 2:
+                        area += signed_area(Polygon(*points))
+            if not flag_intersecting:
+                return signed_area(polygon)
+            return area
+        dsides = self._directed_sides
+        return Abs(even_odd_area(dsides, 1, self))
+
 
     @staticmethod
     def _isright(a, b, c):
@@ -396,12 +457,14 @@ class Polygon(GeometrySet):
     @property
     def directed_sides(self):
         """The directed line segments that form the sides of the polygon.
-
+        Contains line segments as tuple of points. The second argument of a
+        point is boolean to denote whether point is intersection point or not.
         Returns
         =======
 
         sides : list of sides with direction as supplied by user.
-            Each side is a Segment.
+            Each side is a tuple of points with second argument denoting
+            whether point .
 
         See Also
         ========
@@ -415,17 +478,24 @@ class Polygon(GeometrySet):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.directed_sides
-        [Segment2D(Point2D(0, 0), Point2D(1, 0)),
-        Segment2D(Point2D(1, 0), Point2D(5, 1)),
-        Segment2D(Point2D(5, 1), Point2D(0, 1)),
-        Segment2D(Point2D(0, 1), Point2D(0, 0))]
+        [[(Point2D(0, 0), False), (Point2D(1, 0), False)],
+         [(Point2D(1, 0), False), (Point2D(5, 1), False)],
+         [(Point2D(5, 1), False), (Point2D(0, 1), False)],
+         [(Point2D(0, 1), False), (Point2D(0, 0), False)]]
 
         """
-        res = []
         args = self.vertices
-        for i in range(-len(args), 0):
-            res.append(Segment(args[i], args[i + 1], dir=True))
+        length = len(args)
+        res = [None] * length
+        for i in range(-length, 0):
+            res[i] = ((args[i], False), (args[i + 1], False))
         return res
+
+
+    @directed_sides.setter
+    def directed_sides(self, value):
+        self._directed_sides = value
+
 
     @property
     def sides(self):

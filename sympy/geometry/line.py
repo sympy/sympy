@@ -2121,8 +2121,8 @@ class Segment2D(LinearEntity2D, Segment):
         p2 = Point(p2, dim=2)
         if p1 == p2:
             return p1
-        dir = kwargs.get('dir', False)
-        if not dir:
+        evaluate = kwargs.get('evaluate', False)
+        if not evaluate:
             if (p1.x > p2.x) == True:
                 p1, p2 = p2, p1
             elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
