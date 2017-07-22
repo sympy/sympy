@@ -1172,6 +1172,9 @@ def test_Poly_degree():
     assert degree(y**2+x**3) == 3
     assert degree(x**2+y**3) == 2
 
+    assert degree(Poly(0,x),z) == -oo
+    assert degree(Poly(1,x),z) == 0
+    assert degree(Poly(x**2+y**3,y)) == 3
     assert degree(Poly(y**2 + x**3, x, y), x, y, gen=y) == 2
     assert degree(Poly(y**2 + x**3, x), x, y, gen=y) == 2
     raises(ComputationFailed, lambda: degree(1))
