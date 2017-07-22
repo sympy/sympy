@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import Expr, sympify, Symbol, Matrix
+from sympy import Expr, sympify
+from sympy.core.backend import Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import is_sequence, string_types

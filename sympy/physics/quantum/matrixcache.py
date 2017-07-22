@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy import Matrix, I, Pow, Rational, exp, pi
+from sympy import Matrix, Pow
+from sympy.core.backend import I, Rational, exp, pi
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse

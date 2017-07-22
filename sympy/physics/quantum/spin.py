@@ -2,11 +2,13 @@
 
 from __future__ import print_function, division
 
-from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
-                   pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
-                   Tuple, Dummy)
+from sympy import (Add, binomial, exp, Expr, Mul, S, simplify,
+                   Sum, sympify, Tuple)
 from sympy.core.compatibility import unicode, range
 from sympy.matrices import zeros
+from sympy.core.backend import (cos, factorial, I, Integer, pi,
+                                Rational, sin, sqrt, symbols,
+                                KroneckerDelta, Dummy)
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import pretty_symbol
 
@@ -14,7 +16,6 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.operator import (HermitianOperator, Operator,
                                             UnitaryOperator)
 from sympy.physics.quantum.state import Bra, Ket, State
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import ComplexSpace, DirectSumHilbertSpace
 from sympy.physics.quantum.tensorproduct import TensorProduct

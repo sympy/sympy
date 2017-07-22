@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
+from sympy import Tuple, Add, Mul, Matrix
+from sympy.core.backend import log, expand, Rational
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger

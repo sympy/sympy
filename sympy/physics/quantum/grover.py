@@ -10,9 +10,9 @@ Todo:
 
 from __future__ import print_function, division
 
-from sympy import floor, pi, sqrt, sympify, eye
+from sympy import floor, sqrt
+from sympy.core.backend import pi, sympify, eye, NegativeOne
 from sympy.core.compatibility import range
-from sympy.core.numbers import NegativeOne
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace

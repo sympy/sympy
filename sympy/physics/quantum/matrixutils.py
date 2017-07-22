@@ -2,9 +2,10 @@
 
 from __future__ import print_function, division
 
-from sympy import Matrix, I, Expr, Integer
+from sympy import Matrix, Expr
 from sympy.core.compatibility import range
 from sympy.matrices import eye, zeros
+from sympy.core.backend import I, Integer
 from sympy.external import import_module
 
 __all__ = [

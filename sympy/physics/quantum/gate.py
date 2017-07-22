@@ -18,7 +18,8 @@ from __future__ import print_function, division
 from itertools import chain
 import random
 
-from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
+from sympy import I, Integer, Mul, Pow, Tuple
+from sympy.core.backend import Add, sqrt
 from sympy.core.numbers import Number
 from sympy.core.compatibility import is_sequence, unicode, range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict

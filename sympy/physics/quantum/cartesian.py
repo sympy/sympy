@@ -8,7 +8,8 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
+from sympy import DiracDelta, exp, Interval, sqrt
+from sympy.core.backend import I, pi, S
 from sympy.core.compatibility import range
 
 from sympy.physics.quantum.constants import hbar

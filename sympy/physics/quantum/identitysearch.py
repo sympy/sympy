@@ -5,7 +5,8 @@ from random import randint
 
 from sympy.core.compatibility import range
 from sympy.external import import_module
-from sympy import Mul, Basic, Number, Pow, Integer
+from sympy import Mul, Basic, Number, Pow
+from sympy.core.backend import Integer
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 

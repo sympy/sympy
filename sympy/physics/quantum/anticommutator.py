@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy import S, Expr, Mul, Integer
+from sympy import Expr, Mul
+from sympy.core.backend import S
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.operator import Operator
@@ -88,8 +89,10 @@ class AntiCommutator(Expr):
         if not (a and b):
             return S.Zero
         if a == b:
+            from sympy import Integer
             return Integer(2)*a**2
         if a.is_commutative or b.is_commutative:
+            from sympy.core.backend import Integer
             return Integer(2)*a*b
 
         # [xA,yB]  ->  xy*[A,B]

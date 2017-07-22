@@ -2,12 +2,12 @@
 
 from __future__ import print_function, division
 
-from sympy import Symbol, pi, sqrt, sin, Interval, S
+from sympy import sqrt, Interval
+from sympy.core.backend import Symbol, pi, sin, S, KroneckerDelta
 
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.constants import hbar
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import L2
 
 m = Symbol('m')

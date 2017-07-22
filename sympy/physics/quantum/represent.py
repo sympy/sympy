@@ -8,7 +8,8 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import Add, Expr, I, integrate, Mul, Pow
+from sympy import Add, Expr, integrate, Mul, Pow
+from sympy.core.backend import I
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator

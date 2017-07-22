@@ -7,7 +7,8 @@ Authors:
 
 from __future__ import print_function, division
 
-from sympy import Basic, Interval, oo, sympify
+from sympy import Basic, Interval, sympify
+from sympy.core.backend import oo
 from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -148,6 +149,7 @@ class ComplexSpace(HilbertSpace):
 
     @classmethod
     def eval(cls, dimension):
+        from sympy import oo
         if len(dimension.atoms()) == 1:
             if not (dimension.is_Integer and dimension > 0 or dimension is oo
             or dimension.is_Symbol):

@@ -1,10 +1,9 @@
 """Pauli operators and states"""
 
-from sympy import I, Mul, Add, Pow, exp, Integer
+from sympy import exp, Integer
 from sympy.physics.quantum import Operator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
-from sympy.matrices import Matrix
-from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.core.backend import I, Add, Pow, Matrix, KroneckerDelta, Mul
 
 __all__ = [
     'SigmaX', 'SigmaY', 'SigmaZ', 'SigmaMinus', 'SigmaPlus', 'SigmaZKet',
@@ -637,6 +636,7 @@ def qsimplify_pauli(e):
     >>> qsimplify_pauli(sx * sy)
     I*SigmaZ()
     """
+    from sympy import Mul
     if isinstance(e, Operator):
         return e
 

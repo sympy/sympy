@@ -6,12 +6,11 @@
 
 from __future__ import print_function, division
 
-from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
-                   symbols, sympify, Wild)
+from sympy import (Add, expand, Expr, Mul, sqrt, Sum, sympify, Wild)
+from sympy.core.backend import Pow, symbols, Eq, Piecewise, KroneckerDelta
 from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
 
 __all__ = [
@@ -441,11 +440,13 @@ def cg_simp(e):
 
     .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
+    from sympy import Mul
     if isinstance(e, Add):
         return _cg_simp_add(e)
     elif isinstance(e, Sum):
         return _cg_simp_sum(e)
     elif isinstance(e, Mul):
+        from sympy.core.backend import Mul
         return Mul(*[cg_simp(arg) for arg in e.args])
     elif isinstance(e, Pow):
         return Pow(cg_simp(e.base), e.exp)
@@ -666,7 +667,9 @@ def _check_varsh_sum_871_1(e):
     b = Wild('b')
     match = e.match(Sum(CG(a, alpha, b, 0, a, alpha), (alpha, -a, a)))
     if match is not None and len(match) == 2:
-        return ((2*a + 1)*KroneckerDelta(b, 0)).subs(match)
+        a = match[a]
+        b = match[b]
+        return ((2*a + 1)*KroneckerDelta(b, 0))
     return e
 
 
@@ -677,7 +680,9 @@ def _check_varsh_sum_871_2(e):
     match = e.match(
         Sum((-1)**(a - alpha)*CG(a, alpha, a, -alpha, c, 0), (alpha, -a, a)))
     if match is not None and len(match) == 2:
-        return (sqrt(2*a + 1)*KroneckerDelta(c, 0)).subs(match)
+        a = match[a]
+        c = match[c]
+        return (sqrt(2*a + 1)*KroneckerDelta(c, 0))
     return e
 
 

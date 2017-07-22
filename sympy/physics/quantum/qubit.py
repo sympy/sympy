@@ -10,10 +10,11 @@ from __future__ import print_function, division
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate
+from sympy import Integer, log
 from sympy.core.basic import sympify
 from sympy.core.compatibility import string_types, range
 from sympy.matrices import Matrix, zeros
+from sympy.core.backend import Mul, Add, Pow, conjugate, S
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -181,9 +182,9 @@ class Qubit(QubitState, Ket):
 
     def _eval_innerproduct_QubitBra(self, bra, **hints):
         if self.label == bra.label:
-            return Integer(1)
+            return S.One
         else:
-            return Integer(0)
+            return S.Zero
 
     def _represent_default_basis(self, **options):
         return self._represent_ZGate(None, **options)

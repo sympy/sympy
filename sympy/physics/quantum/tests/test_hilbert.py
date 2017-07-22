@@ -3,8 +3,8 @@ from sympy.physics.quantum.hilbert import (
     DirectSumHilbertSpace, TensorPowerHilbertSpace
 )
 
-from sympy import Interval, oo, Symbol, sstr, srepr
-
+from sympy import Interval, Symbol, sstr, srepr
+from sympy.core.backend import oo
 
 def test_hilbert_space():
     hs = HilbertSpace()

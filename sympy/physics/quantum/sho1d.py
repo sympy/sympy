@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy import sqrt, I, Symbol, Integer, S
+from sympy import sqrt, Integer
+from sympy.core.backend import I, Symbol, S
 from sympy.core.compatibility import range
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator

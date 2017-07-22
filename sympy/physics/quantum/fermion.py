@@ -3,7 +3,7 @@
 from sympy import Integer
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, Ket, Bra
-from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.core.backend import KroneckerDelta
 
 
 __all__ = [

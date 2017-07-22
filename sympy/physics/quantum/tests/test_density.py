@@ -163,8 +163,8 @@ def test_entropy():
 
     # test for density object
     ent = entropy(d)
-    assert entropy(d) == 0.5*log(2)
-    assert d.entropy() == 0.5*log(2)
+    assert entropy(d) == (S(1)/2)*log(2)
+    assert d.entropy() == (S(1)/2)*log(2)
 
     np = import_module('numpy', min_module_version='1.4.0')
     if np:

@@ -1,9 +1,9 @@
 """Bosonic quantum operators."""
 
-from sympy import Mul, Integer, exp, sqrt, conjugate
+from sympy import Mul
+from sympy.core.backend import exp, sqrt, conjugate, KroneckerDelta, Integer
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
-from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
 __all__ = [
@@ -66,6 +66,7 @@ class BosonOp(Operator):
         if self.name == other.name:
             # [a^\dagger, a] = -1
             if not self.is_annihilation and other.is_annihilation:
+                from sympy import Integer
                 return Integer(-1)
 
         elif 'independent' in hints and hints['independent']:
