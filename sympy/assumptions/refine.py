@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Expr, Basic
+from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.assumptions import Q, ask
 
 
@@ -70,6 +70,9 @@ def refine_abs(expr, assumptions):
         return arg
     if ask(Q.negative(arg), assumptions):
         return -arg
+    # arg is Mul
+    if isinstance(arg, Mul):
+        return refine(abs(arg.args[0]), assumptions) * refine(abs(arg / arg.args[0]), assumptions)
 
 
 def refine_Pow(expr, assumptions):
