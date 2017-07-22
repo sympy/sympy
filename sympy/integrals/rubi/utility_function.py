@@ -382,7 +382,7 @@ def AtomQ(expr):
     expr = sympify(expr)
     if isinstance(expr, list):
         for e in expr:
-            if not e.is_Atom:
+            if not S(e).is_Atom:
                 return False
     if expr in [None, True, False]: # [None, True, False] are atoms in mathematica
         return True
@@ -468,14 +468,6 @@ def SinCosQ(f):
 
 def SinhCoshQ(f):
     return MemberQ([sinh, cosh, sech, csch], Head(f))
-
-def Rt(val, n):
-    if ComplexNumberQ(nthroot(val, n)):
-        return nthroot(val, n)
-    if FractionalPart(float(nthroot(val, n))) == 0:
-        return sympify(int(nthroot(val, n)))
-    else:
-        return sympify(float(nthroot(val, n)))
 
 def LeafCount(expr):
     return len(list(postorder_traversal(expr)))
@@ -1430,7 +1422,11 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, n, p = tuple([match[i] for i in keys])
             if IntegerQ(m/n):
-                return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
+                if u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n) == S.NaN:
+                    return expr
+                else:
+                    return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
+
 
     # Basis: If  m\[Element]\[DoubleStruckCapitalZ] \[And] b c-a d==0, then (a+b z)^m==b^m/d^m (c+d z)^m
     pattern = u_*(a_ + b_*x)**m_*(c_ + d_*x)**n_
@@ -1440,7 +1436,10 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, d, n = tuple([match[i] for i in keys])
             if IntegerQ(m) and ZeroQ(b*c - a*d):
-                return u*b**m/d**m*(c + d*x)**(m + n)
+                if u*b**m/d**m*(c + d*x)**(m + n) == S.NaN:
+                    return expr
+                else:
+                    return u*b**m/d**m*(c + d*x)**(m + n)
     return expr
 
 def PolynomialDivide(p_, q_, x):
@@ -3155,20 +3154,22 @@ def AbsorbMinusSign(expr, *x):
                 return match[u]*(-match[v])**match[m]
 
     return -expr
-# yet todo
+
 def NormalizeSumFactors(u):
     if AtomQ(u):
         return u
-    if ProductQ(u):
+    elif ProductQ(u):
         k = 1
         for i in u.args:
             k *= NormalizeSumFactors(i)
         return SignOfFactor(k)[0]*SignOfFactor(k)[1]
-    else:
+    elif SumQ(u):
         k = 0
         for i in u.args:
             k += NormalizeSumFactors(i)
         return k
+    else:
+        return u
 
 def SignOfFactor(u):
     if RationalQ(u) and u<0 or SumQ(u) and NumericFactor(First(u))<0:
@@ -3218,7 +3219,7 @@ def SmartSimplify(u):
     w = factor(v)
     if LeafCount(w)<LeafCount(v):
         v = w
-    if Not(FalseQ(w= FractionalPowerOfSquareQ(v))) and FractionalPowerSubexpressionQ(u, w, Expand(w)):
+    if Not(FalseQ(w == FractionalPowerOfSquareQ(v))) and FractionalPowerSubexpressionQ(u, w, Expand(w)):
         v = SubstForExpn(v, w, Expand(w))
     else:
         v = FactorNumericGcd(v)
@@ -3883,27 +3884,6 @@ def KnownCotangentIntegrandQ(u, x):
 def KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
 
-def ExpandTrigExpand(u, F, v, m, n, x):
-    w = Expand(TrigExpand(F.subs(x, n*x))**m, x).subs(x, v)
-    if SumQ(w):
-        t = 0
-        for i in w.args:
-            t += u*i
-        return t
-    else:
-        return u*w
-
-def ExpandTrigReduce(u, v, x):
-    w = ExpandTrigReduce(v, x)
-    if SumQ(w):
-        t = 0
-        for i in w.args:
-            t += u*i
-        return t
-    else:
-            return u*w
-
-
 def TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
@@ -4014,3 +3994,941 @@ def AbsurdNumberGCDList(lst1, lst2):
     elif lst2[0][1] < 0:
         return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, Rest(lst2))
     return AbsurdNumberGCDList(lst1, Rest(lst2))
+
+# set 15
+def ExpandTrigExpand(u, F, v, m, n, x):
+    ExpandTrigExpand(1, cos(x), x**2, 2, 2, x)
+    w = Expand(TrigExpand(F.subs(x, n*x))**m).subs(x, v)
+    if SumQ(w):
+        t = 0
+        for i in w.args:
+            t += u*i
+        return t
+    else:
+        return u*w
+
+def ExpandTrigReduce(*args):
+    if len(args) == 3:
+        u = args[0]
+        v = args[1]
+        x = args[2]
+        w = ExpandTrigReduce(v, x)
+        if SumQ(w):
+            t = 0
+            for i in w.args:
+                t += u*i
+            return t
+        else:
+            return u*w
+    else:
+        u = args[0]
+        x = args[1]
+        return ExpandTrigReduceAux(u, x)
+
+def ExpandTrigReduceAux(u, x):
+    v = TrigReduce(u).expand()
+    if SumQ(v):
+        t = 0
+        for i in v.args:
+            t += NormalizeTrig(i, x)
+        return t
+    return NormalizeTrig(v, x)
+
+def NormalizeTrig(v, x):
+    a = Wild('a', exclude=[x])
+    n = Wild('n', exclude=[x, 0])
+    F = Wild('F')
+    expr = a*F**n
+    M = v.match(expr)
+    if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and Exponent(M[F].args[0], x)>0:
+        u = M[F].args[0]
+        return M[a]*M[F].subs(u, ExpandToSum(u, x))**M[n]
+    else:
+        return v
+
+def TrigToExp(expr):
+    return expr.rewrite(sin, exp).rewrite(cos, exp).rewrite(tan, exp).rewrite(sec, exp).rewrite(csc, exp).rewrite(cot, exp)
+
+def ExpandTrigToExp(u, *args):
+    if len(args) == 1:
+        x = args[0]
+        return ExpandTrigToExp(1, u, x)
+    else:
+        v = args[0]
+        x = args[1]
+        w = TrigToExp(v)
+        k = 0
+        if SumQ(w):
+            for i in w.args:
+                k += SimplifyIntegrand(u*i, x)
+            w = k
+        else:
+            w = SimplifyIntegrand(u*w, x)
+        return ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x),x)
+
+def TrigReduce(i):
+    if SumQ(i):
+        t = 0
+        for k in i.args:
+            t += TrigReduce(k)
+        return t
+    if ProductQ(i):
+        if any(PowerQ(k) for k in i.args):
+            if (i.rewrite(sin, exp).rewrite(cos, exp).expand().rewrite(exp, sin)).has(I):
+                return i.rewrite(sin, exp).rewrite(cos, exp).expand().rewrite(exp, sin).simplify()
+            else:
+                return i.rewrite(sin, exp).rewrite(cos, exp).expand().rewrite(exp, sin)
+        else:
+            a = Wild('a')
+            b = Wild('b')
+            v = Wild('v')
+            Match = i.match(v*sin(a)*cos(b))
+            if Match:
+                a = Match[a]
+                b = Match[b]
+                v = Match[v]
+                # 2 sin A cos B = sin(A + B) + sin(A − B)
+                return i.subs(v*sin(a)*cos(b), v*S(1)/2*(sin(a + b) + sin(a - b)))
+            Match = i.match(v*sin(a)*sin(b))
+            if Match:
+                a = Match[a]
+                b = Match[b]
+                v = Match[v]
+                # 2 sin A sin B = cos(A − B) − cos(A + B)
+                return i.subs(v*sin(a)*sin(b), v*S(1)/2*cos(a - b) - cos(a + b))
+            Match = i.match(v*cos(a)*cos(b))
+            if Match:
+                a = Match[a]
+                b = Match[b]
+                v = Match[v]
+                # 2 cos A cos B = cos(A + B) + cos(A − B)
+                return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))            
+    if PowerQ(i):
+        if i.has(sin):
+            if (i.rewrite(sin, exp).expand().rewrite(exp, sin)).has(I):
+                return i.rewrite(sin, exp).expand().rewrite(exp, sin).simplify()
+            else:
+                return i.rewrite(sin, exp).expand().rewrite(exp, sin)
+        if i.has(cos):
+            if (i.rewrite(cos, exp).expand().rewrite(exp, cos)).has(I):
+                return i.rewrite(cos, exp).expand().rewrite(exp, cos).simplify()
+            else:
+                return i.rewrite(cos, exp).expand().rewrite(exp, cos)
+    else:
+        return i
+
+
+'''
+def FunctionOfTrigOfLinearQ(u, x):
+    # If u is an algebraic function of trig functions of a linear function of x, FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
+    a = Wild('a', exclude=[x])
+    n = Wild('n', exclude=[x, 0])
+    f = Wild('f')
+    M = u.match((a*f)**n)
+    if M AlgebraicTrigFunctionQ()
+
+def FunctionOfTrigOfLinearQ(u, x):
+     
+    (* Not[MatchQ[u, (c_.*f_[a_.+b_.*x])^p_. /; FreeQ[{a,b,c,p},x] && MemberQ[{Sin,Cos,Sec,Csc},f]]] && *)
+    Not[MemberQ[{Null, False}, FunctionOfTrig[u,Null,x]]] && AlgebraicTrigFunctionQ[u,x] (* && 
+    RecognizedFunctionOfTrigQ[DeactivateTrig[u,x],x] *)
+'''
+
+def FunctionOfTrig(u, *x):
+    if len(x) == 1:
+        x = x[0]
+        v = FunctionOfTrig(u, None, x)
+        if v:
+            return v
+        else:
+            return False
+    else:
+        v = x[0]
+        x = x[1]
+        if AtomQ(u):
+            if u == x:
+                return False
+            else:
+                return v
+        if TrigQ(u) and LinearQ(u.args[0], x):
+            if v == None:
+                return u.args[0]
+            else:
+                a = Coefficient(v, x, 0)
+                b = Coefficient(v, x, 1)
+                c = Coefficient(u.args[0], x, 0)
+                d = Coefficient(u.args[0], x, 1)
+                if ZeroQ(a*d - b*c) and RationalQ(b/d):
+                    return a/Numerator(b/d) + b*x/Numerator(b/d)
+                else:
+                    return False
+        if HyperbolicQ(u) and LinearQ(u.args[0], x):
+            if v == None:
+                return I*u.args[0]
+            a = Coefficient(v, x, 0)
+            b = Coefficient(v, x, 1)
+            c = I*Coefficient(u.args[0], x, 0)
+            d = I*Coefficient(u.args[0], x, 1)
+            if ZeroQ(a*d - b*c) and RationalQ(b/d):
+                return a/Numerator(b/d) + b*x/Numerator(b/d)
+            else:
+                return False
+        if CalculusQ(u):
+            return False
+        else:
+            w = v
+            for i in u.args:
+                if not w == FunctionOfTrig(i, w, x):
+                    return False
+            else:
+                return w
+
+def AlgebraicTrigFunctionQ(u, x):
+    # If u is algebraic function of trig functions, AlgebraicTrigFunctionQ(u,x) returns True; else it returns False.
+    if AtomQ(u):
+        return True
+    if TrigQ(u) and LinearQ(u.args[0], x):
+        return True
+    if HyperbolicQ(u) and LinearQ(u.args[0], x):
+        return True
+    if PowerQ(u) and FreeQ(u.args[1], x):
+        return AlgebraicTrigFunctionQ(u.args[0], x)
+    if ProductQ(u) and SumQ(u):
+        for i in u.args:
+            if not AlgebraicTrigFunctionQ(i, x):
+                return False
+        return True
+    return False
+
+def FunctionOfHyperbolic(u, *x):
+    #If u is a function of hyperbolic trig functions of v where v is linear in x, FunctionOfHyperbolic(u,x) returns v; else it returns False.
+    if len(x) == 1:
+        x = x[0]
+        v = FunctionOfHyperbolic(u, None, x)
+        if v==None:
+            return False
+        else:
+            return v
+    else:
+        v = x[0]
+        x = x[1]
+        if AtomQ(u):
+            if u == x:
+                return False
+            return v
+        if HyperbolicQ(u) and LinearQ(u.args[0], x):
+            if v == None:
+                return u.args[0]
+            a = Coefficient(v, x, 0)
+            b = Coefficient(v, x, 1)
+            c = Coefficient(u.args[0], x, 0)
+            d = Coefficient(u.args[0], x, 1)
+            if ZeroQ(a*d - b*c) and RationalQ(b/d):
+                return a/Numerator(b/d) + b*x/Numerator(b/d)
+            else:
+                return False
+        if CalculusQ(u):
+            return False
+        w = v
+        for i in u.args:
+            if w == FunctionOfHyperbolic(i, w, x):
+                return False
+        return w
+
+def FunctionOfQ(v, u, x, PureFlag=False):
+    # v is a function of x. If u is a function of v,  FunctionOfQ(v, u, x) returns True; else it returns False. *)
+    if FreeQ(u, x):
+        return False
+    elif AtomQ(v):
+        return True
+    elif Not(InertTrigFreeQ(u)):
+        return FunctionOfQ(v, ActivateTrig(u), x, PureFlag)
+    elif ProductQ(v) and Not(EqQ(FreeFactors(v, x), 1)):
+        return FunctionOfQ(NonfreeFactors(v, x), u, x, PureFlag)
+    elif PureFlag:
+        if SinQ(v) or CscQ(v):
+            return PureFunctionOfSinQ(u, v.args[0], x)
+        elif CosQ(v) or SecQ(v):
+            return PureFunctionOfCosQ(u, v.args[0], x)
+        elif TanQ(v):
+            return PureFunctionOfTanQ(u, v.args[0], x)
+        elif CotQ(v):
+            return PureFunctionOfCotQ(u, v.args[0], x)
+        elif SinhQ(v) or CschQ(v):
+            return PureFunctionOfSinhQ(u, v.args[0], x)
+        elif CoshQ(v) or SechQ(v):
+            return PureFunctionOfCoshQ(u, v.args[0], x)
+        elif TanhQ(v):
+            return PureFunctionOfTanhQ(u, v.args[0], x)
+        elif CothQ(v):
+            return PureFunctionOfCothQ(u, v.args[0], x)
+        else:
+            return FunctionOfExpnQ(u, v, x) != False
+    elif SinQ(v) or CscQ(v):
+        return FunctionOfSinQ(u, v.args[0], x)
+    elif CosQ(v) or SecQ(v):
+        return FunctionOfCosQ(u, v.args[0], x)
+    elif TanQ(v) or CotQ(v):
+        FunctionOfTanQ(u, v.args[0], x)
+    elif SinhQ(v) or CschQ(v):
+        return FunctionOfSinhQ(u, v.args[0], x)
+    elif CoshQ(v) or SechQ(v):
+        return FunctionOfCoshQ(u, v.args[0], x)
+    elif TanhQ(v) or CothQ(v):
+        return FunctionOfTanhQ(u, v.args[0], x)
+    return FunctionOfExpnQ(u, v, x) != False
+
+def FunctionOfExpnQ(u, v, x):
+    if u==v:
+        return 1
+    if AtomQ(u):
+        if u==x:
+            return False
+        else:
+            return 0
+    if CalculusQ(u):
+        return False
+    if PowerQ(u) and FreeQ(u.args[1], x):
+        if ZeroQ(u.args[0]-v):
+            if IntegerQ(u.args[1]):
+                return u.args[1]
+            else:
+                return 1
+        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u.args[0]-v.args[0]):
+            if RationalQ(v.args[1]):
+                if RationalQ(u.args[1]) and IntegerQ(u.args[1]/v.args[1]) and (v.args[1]>0 or u.args[1]<0):
+                    return u.args[1]/v.args[1]
+                else:
+                    return False
+            if IntegerQ(Simplify(u.args[1]/v.args[1])):
+                return Simplify(u.args[1]/v.args[1])
+            else:
+                return False
+        return FunctionOfExpnQ(u.args[0], v, x)
+    if ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
+        return FunctionOfExpnQ(NonfreeFactors(u, x), v, x)
+    if ProductQ(u) and ProductQ(v):
+        deg1 = FunctionOfExpnQ(First(u), First(v), x)
+        if deg1==False:
+            return False
+        deg2 = FunctionOfExpnQ(Rest(u), Rest(v), x);
+        if deg1==deg2 and FreeQ(Simplify(u/v^deg1), x):
+            return deg1
+        else:
+            return False
+    lst = []
+    for i in u.args:
+        if FunctionOfExpnQ(i, v, x) == False:
+            return False
+        lst += FunctionOfExpnQ(i, v, x)
+    return Apply(GCD, lst)
+
+def PureFunctionOfSinQ(u, v, x):
+    # If u is a pure function of Sin(v) and/or Csc(v), PureFunctionOfSinQ(u, v, x) returns True; else it returns False.
+    if AtomQ(u):
+        return u!=x
+    if CalculusQ(u):
+        return False
+    if TrigQ(u) and ZeroQ(u.args[0]-v):
+        return SinQ(u) or CscQ(u)
+    for i in u.args:
+        if Not(PureFunctionOfSinQ(i, v, x)):
+            return False
+    return True
+
+def PureFunctionOfCosQ(u, v, x):
+    # If u is a pure function of Cos(v) and/or Sec(v), PureFunctionOfCosQ(u, v, x) returns True; else it returns False.
+    if AtomQ(u):
+        return u!=x
+    if CalculusQ(u):
+        return False
+    if TrigQ(u) and ZeroQ(u.args[0]-v):
+        return CosQ(u) or SecQ(u)
+    for i in u.args:
+        if Not(PureFunctionOfCosQ(i, v, x)):
+            return False
+    return True
+
+def PureFunctionOfTanQ(u, v, x):
+    # If u is a pure function of Tan(v) and/or Cot(v), PureFunctionOfTanQ(u, v, x) returns True; else it returns False.
+    if AtomQ(u):
+        return u!=x
+    if CalculusQ(u):
+        return False
+    if TrigQ(u) and ZeroQ(u.args[0]-v):
+        return TanQ(u) or CotQ(u)
+    for i in u.args:
+        if Not(PureFunctionOfTanQ(i, v, x)):
+            return False
+    return True
+
+def PureFunctionOfCotQ(u, v, x):
+    # If u is a pure function of Cot(v), PureFunctionOfCotQ(u, v, x) returns True; else it returns False. 
+    if AtomQ(u):
+        return u!=x
+    if CalculusQ(u):
+        return False
+    if TrigQ(u) and ZeroQ(u.args[0]-v):
+        return CotQ(u)
+    for i in u.args:
+        if Not(PureFunctionOfCotQ(i, v, x)):
+            return False
+    return True
+
+def FunctionOfCosQ(u, v, x):
+    # If u is a function of Cos[v], FunctionOfCosQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+        # Basis: If m integer, Cos[m*v]^n is a function of Cos[v]. *)
+        return CosQ(u) or SecQ(u)
+    elif IntegerPowerQ(u) and TrigQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+        if EvenQ(u.args[1]):
+            # Basis: If m integer and n even, Trig[m*v]^n is a function of Cos[v]. *)
+            return True
+        return FunctionOfCosQ(u.args[0], v, x)
+    elif ProductQ(u):
+        lst = FindTrigFactor(sin, csc, u, v, False)
+        if ListQ(lst):
+            # (* Basis: If m integer and n odd, Sin[m*v]^n == Sin[v]*u where u is a function of Cos[v]. *)
+            return FunctionOfCosQ(Sin(v)*lst[1], v, x)
+        lst = FindTrigFactor(tan, cot, u, v, True)
+        if ListQ(lst):
+            # (* Basis: If m integer and n odd, Tan[m*v]^n == Sin[v]*u where u is a function of Cos[v]. *)
+            return FunctionOfCosQ(Sin(v)*lst[1], v, x)
+        return all(FunctionOfCosQ(i, v, x) for i in u.args)
+    return all(FunctionOfCosQ(i, v, x) for i in u.args)
+
+def FunctionOfSinQ(u, v, x):
+    # If u is a function of Sin[v], FunctionOfSinQ[u,v,x] returns True; else it returns False.
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+        if OddQuotientQ(u.args[0], v):
+            # Basis: If m odd, Sin[m*v]^n is a function of Sin[v].
+            return SinQ(u) or CscQ(u)
+        # Basis: If m even, Cos[m*v]^n is a function of Sin[v].
+        return CosQ(u) or SecQ(u)
+    elif IntegerPowerQ(u) and TrigQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+        if EvenQ(u.args[1]):
+            # Basis: If m integer and n even, Hyper[m*v]^n is a function of Sin[v].
+            return True
+        return FunctionOfSinQ(u.args[0], v, x)
+    elif ProductQ(u):
+        if CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
+            return FunctionOfSinQ(Drop(u, 2), v, x)
+        lst = FindTrigFactor(sin, csch, u, v, False)
+        if ListQ(lst) and EvenQuotientQ(lst[0], v):
+            # Basis: If m even and n odd, Sin[m*v]^n == Cos[v]*u where u is a function of Sin[v].
+            return FunctionOfSinQ(Cos(v)*lst[1], v, x)
+        lst = FindTrigFactor(cos, sec, u, v, False)
+        if ListQ(lst) and OddQuotientQ(lst[0], v):
+            # Basis: If m odd and n odd, Cos[m*v]^n == Cos[v]*u where u is a function of Sin[v].
+            return FunctionOfSinQ(Cos(v)*lst[1], v, x)
+        lst = FindTrigFactor(tan, cot, u, v, True)
+        if ListQ(lst):
+            # Basis: If m integer and n odd, Tan[m*v]^n == Cos[v]*u where u is a function of Sin[v].
+            return FunctionOfSinQ(Cos(v)*lst[1], v, x)
+        return all(FunctionOfSinQ(i, v, x) for i in u.args)
+    return all(FunctionOfSinQ(i, v, x) for i in u.args)
+
+def OddTrigPowerQ(u, v, x):
+    if SinQ(u) or CosQ(u) or SecQ(u) or CscQ(u):
+        return OddQuotientQ(u.args[0], v)
+    if PowerQ(u):
+        return Odd(u.args[1]) and OddTrigPowerQ(u.base, v, x)
+    if ProductQ(u):
+        if Not(Eq(FreeFactors(u, x), 1)):
+            return OddTrigPowerQ(NonfreeFactors(u, x), v, x)
+        lst = []
+        for i in u.args:
+            if Not(FunctionOfTanQ(i, v, x)):
+                lst.append(i)
+        if lst == []:
+            return True
+        return Length(lst)==1 and OddTrigPowerQ(lst[0], v, x)
+    if SumQ(u):
+        return all(OddTrigPowerQ(i, v, x) for i in u.args)
+    return False
+
+def FunctionOfTanQ(u, v, x):
+    #(* If u is a function of the form f[Tan[v],Coth[v]] where f is independent of x,
+    # FunctionOfTanQ[u,v,x] returns True; else it returns False. *)
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+        return TanQ(u) or CotQ(u) or EvenQuotientQ(u.args[0], v)
+    elif PowerQ(u):
+        if EvenQ(u.args[1]) and TrigQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+            return True
+        elif EvenQ(u.args[1]) and SumQ(u.args[0]):
+            return FunctionOfTanQ(Expand(u.args[0]**2, v, x))
+    if ProductQ(u):
+        lst = []
+        for i in u.args:
+            if Not(FunctionOfTanQ(i, v, x)):
+                lst.append(i)
+        if lst == []:
+            return True
+        return Length(lst)==2 and OddTrigPowerQ(lst[0], v, x) and OddTrigPowerQ(lst[1], v, x)
+    return all(FunctionOfTanQ(i, v, x) for i in u.args)
+
+def FunctionOfTanWeight(u, v, x):
+    # (* u is a function of the form f[Tan[v],Cot[v]] where f is independent of x.
+    # FunctionOfTanWeight[u,v,x] returns a nonnegative number if u is best considered a function
+    # of Tan[v]; else it returns a negative number. *)
+    if AtomQ(u):
+        return S(0)
+    elif CalculusQ(u):
+        return S(0)
+    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+        if TanQ(u) and ZeroQ(u.args[0] - v):
+            return S(1)
+        elif CotQ(u) and ZeroQ(u.args[0] - v):
+            return S(-1)
+        return S(0)
+    elif PowerQ(u):
+        if EvenQ(u.exp) and TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+            if TanQ(u.base) or CosQ(u.base) or SecQ(u.base):
+                return S(1)
+            return S(-1)
+    if ProductQ(u):
+        if all(FunctionOfTanQ(i, v, x) for i in u.args):
+            return Add(*[FunctionOfTanWeight(i, v, x) for i in u.args])
+        return S(0)
+    return Add(*[FunctionOfTanWeight(i, v, x) for i in u.args])
+
+def FunctionOfTrigQ(u, v, x):
+    # If u (x) is equivalent to a function of the form f (Sin[v],Cos[v],Tan[v],Cot[v],Sec[v],Csc[v]) where f is independent of x, FunctionOfTrigQ[u,v,x] returns True; else it returns False.
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+        return True
+    return all(FunctionOfTrigQ(i, v, x) for i in u.args)
+
+def FunctionOfDensePolynomialsQ(u, x):
+    # If all occurrences of x in u (x) are in dense polynomials, FunctionOfDensePolynomialsQ[u,x] returns True; else it returns False.
+    if FreeQ(u, x):
+        return True
+    if PolynomialQ(u, x):
+        return Length(Exponent(u,x,List))>1
+    return all(FunctionOfDensePolynomialsQ(i, v, x) for i in u.args)
+
+def FunctionOfLog(u, *x):
+    if len(x) == 1:
+        x = x[0]
+        lst = FunctionOfLog(u, False, False, x)
+        if AtomQ(lst) or FalseQ(lst[1]):
+            return False
+        else:
+            return lst
+    else:
+        v = x[0]
+        n = x[1]
+        x = x[2]
+        if AtomQ(u):
+            if u==x:
+                return False
+            else:
+                return [u, v, n]
+        if CalculusQ(u):
+            return False
+        lst = BinomialParts(u.args[0], x)
+        if LogQ(u) and ListQ(lst) and ZeroQ(lst[0]):
+            if FalseQ(v) or u.args[0] == v:
+                return [x, u.args[0], lst[2]]
+            else:
+                return False
+        lst = [0, v, n]
+        lst1 = []
+        for i in u.args:
+            lst1 += [FunctionOfLog(i, lst[1], lst[2], x)]
+        #if AtomQ(lst1):
+        if not lst1:
+            return False
+        else:
+            return lst1
+
+def PowerVariableExpn(u, m, x):
+    # If m is an integer, u is an expression of the form f((c*x)**n) and g=GCD(m,n)>1, 
+    # PowerVariableExpn(u,m,x) returns the list {x**(m/g)*f((c*x)**(n/g)),g,c}; else it returns False.
+    if IntegerQ(m):
+        lst = PowerVariableDegree(u, m, 1, x)
+        #if AtomQ(lst):
+        if not lst:
+            return False
+        else:
+            return [x**(m/lst[0])*PowerVariableSubst(u, lst[0], x), lst[0], lst[1]]
+    else:
+        return False
+
+def PowerVariableDegree(u, m, c, x):
+    if FreeQ(u, x):
+        return [m, c]
+    if AtomQ(u) or CalculusQ(u):
+        return False
+    if PowerQ(u) and FreeQ(u.args[0]/x, x):
+        if ZeroQ(m) or m == u.args[1] and c == u.args[0]/x:
+            return [u.args[1], u.args[0]/x]
+        if IntegerQ(u.args[1]) and IntegerQ(m) and GCD(m, u.args[1])>1 and c==u.args[0]/x:
+            return [GCD(m, u.args[1]), c]
+        else:
+            return False
+    lst = [m, c]
+    for i in u.args:
+        if PowerVariableDegree(i, lst[0], lst[1], x) == False:
+            return False
+        lst1 = PowerVariableDegree(i, lst[0], lst[1], x)
+#   if AtomQ(lst1):
+    if not lst1:
+        return False
+    else:
+        return lst1
+
+def PowerVariableSubst(u, m, x):
+    if FreeQ(u, x) or AtomQ(u) or CalculusQ(u):
+        return u
+    if PowerQ(u) and FreeQ(u.args[0]/x, x):
+        return x**(u.args[1]/m)
+    if ProductQ(u):
+        l = 1
+        for i in u.args:
+            l *= (PowerVariableSubst(i, m, x))
+        return l
+    if SumQ(u):
+        l = 0
+        for i in u.args:
+            l += (PowerVariableSubst(i, m, x))
+        return l
+    return u
+
+def EulerIntegrandQ(expr, x):
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    n = Wild('n', exclude=[x])
+    p = Wild('p', exclude=[x])
+    u = Wild('u')
+    v = Wild('v')
+    # Pattern 1
+    M = expr.match((a*x + b*u**n)**p)
+    if M and len(M) == 5 and FreeQ([M[a], M[b]], x) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
+        return True
+    # Pattern 2
+    M = expr.match(v**m*(a*x + b*u**n)**p)
+    if M and len(M) == 6 and FreeQ([M[a], M[b]], x) and ZeroQ(M[u] - M[v]) and IntegersQ(2*M[m], M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
+        return True
+    # Pattern 3
+    M = expr.match(u**n*v**p)
+    if M and len(M) == 3 and NegativeIntegerQ(M[p]) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and QuadraticQ(M[v], x) and Not(BinomialQ(M[v], x)):
+        return True
+    else:
+        return False
+
+def FunctionOfSquareRootOfQuadratic(u, *x):
+    if len(x) == 1:
+        x == x[0]
+        a = Wild('a', exclude=[x])
+        b = Wild('b', exclude=[x])
+        n = Wild('n', exclude=[x])
+        p = Wild('p', exclude=[x])
+        m = Wild('m', exclude=[x])
+        v = Wild('v')
+        M = u.match(x**m*(a+b*x**n)**p)
+        if M:
+            return False
+        tmp = FunctionOfSquareRootOfQuadratic(u, False, x)
+        if AtomQ(tmp) or FalseQ(tmp.args[0]):
+            return False
+        tmp = tmp.args[0]
+        a = Coefficient(tmp, x, 0)
+        b = Coefficient(tmp, x, 1)
+        c = Coefficient(tmp, x, 2)
+        if ZeroQ(a) and ZeroQ(b) or ZeroQ(b**2-4*a*c):
+            return False
+        if PosQ(c):
+            sqrt = Rt(c, 2);
+            q = a*sqrt + b*x + sqrt*x**2
+            r = b + 2*sqrt*x
+            return [Simplify(SquareRootOfQuadraticSubst(u, q/r, (-a+x**2)/r, x)*q/r**2), Simplify(sqrt*x + Sqrt(tmp)), 2]
+        if PosQ(a):
+            sqrt = Rt(a, 2)
+            q = c*sqrt - b*x + sqrt*x**2
+            r = c - x**2
+            return [Simplify(SquareRootOfQuadraticSubst(u, q/r, (-b+2*sqrt*x)/r, x)*q/r**2), Simplify((-sqrt+Sqrt(tmp))/x), 1]
+        sqrt = Rt(b**2 - 4*a*c, 2)
+        r = c - x**2
+        return[Simplify(-sqrt*SquareRootOfQuadraticSubst(u, -sqrt*x/r, -(b*c+c*sqrt+(-b+sqrt)*x**2)/(2*c*r), x)*x/r**2), FullSimplify(2*c*Sqrt(tmp)/(b-sqrt+2*c*x)), 3]
+    else:
+        v = x[0]
+        x = x[1]
+        if AtomQ(u) or FreeQ(u, x):
+            return [v]
+        if PowerQ(u) and FreeQ(u.args[1], x):
+            if FractionQ(u.args[1]) and Denominator(u.args[1])==2 and PolynomialQ(u.args[0], x) and Exponent(u.args[0], x)==2:
+                if FalseQ(v) or u.args[0] == v:
+                    return [u.args[0]]
+                else:
+                    return False
+            return FunctionOfSquareRootOfQuadratic(u.args[0], v, x)
+        if ProductQ(u) or SumQ(u):
+            lst = [v]
+            lst1 = []
+            for i in u.args:
+                if FunctionOfSquareRootOfQuadratic(i, lst.args[0], x) == False:
+                    return False
+                lst1 = FunctionOfSquareRootOfQuadratic(i, lst.args[0], x)
+            return lst1
+        else:
+            return False
+
+
+def SquareRootOfQuadraticSubst(u, vv, xx, x):
+    # SquareRootOfQuadraticSubst(u, vv, xx, x) returns u with fractional powers replaced by vv raised to the power and x replaced by xx. 
+    if AtomQ(u) or FreeQ(u, x):
+        if u==x:
+            return xx
+        return u
+    if PowerQ(u) and FreeQ(u.args[1], x):
+        if FractionQ(u.args[1]) and Denominator(u.args[1])==2 and PolynomialQ(u.args[0], x) and Exponent(u.args[0], x)==2:
+            return vv**Numerator(u.args[1])
+        return SquareRootOfQuadraticSubst(u.args[0], vv, xx, x)**u.args[1]
+    elif SumQ(u):
+        t = 0
+        for i in u.args:
+            t += SquareRootOfQuadraticSubst(i, vv, xx, x)
+        return t
+    elif ProductQ(u):
+        t = 1
+        for i in u.args:
+            t *= SquareRootOfQuadraticSubst(i, vv, xx, x)
+        return t
+
+# set 16
+def Divides(y, u, x):
+    # If u divided by y is free of x, Divides[y,u,x] returns the quotient; else it returns False.
+    v = Simplify(u/y)
+    if FreeQ(v, x):
+        return v
+    else:
+        return False
+#todo
+def DerivativeDivides(y, u, x):
+    # If y not equal to x,  y is easy to differentiate wrt x,  and u divided by the derivative of y 
+    # is free of x,  DerivativeDivides(y, u, x) returns the quotient; else it returns False  
+    a = Wild('a', exclude={x})
+    M = y.match(a*x)
+    if M:
+        return False
+      #If[If[PolynomialQ[y,x], PolynomialQ[u,x] && Exponent[u,x]==Exponent[y,x]-1, EasyDQ[y,x]],
+    if PolynomialQ(y, x):
+        return PolynomialQ(u, x) and Exponent(u, x)==Exponent(y, x)-1
+    else:
+        return EasyDQ(y, x)
+        #({v=Block({ShowSteps=False},  D(y, x))}:
+        if ZeroQ(v):
+            return False
+        v = Simplify(u/v)
+        if FreeQ(v, x):
+            return v
+        else:
+            return False
+    return False
+
+def EasyDQ(expr, x):
+    # If u is easy to differentiate wrt x,  EasyDQ(u, x) returns True; else it returns False *)
+    u = Wild('u',exclude=[1])
+    m = Wild('m',exclude=[x, 0])
+    M = expr.match(u*x**m)
+    if M:
+        return EasyDQ(M[u], x)
+    if AtomQ(expr) or FreeQ(expr, x) or Length(expr)==0:
+        return True
+    elif CalculusQ(expr):
+        return False
+    elif Length(expr)==1:
+        return EasyDQ(expr.args[0], x)
+    elif BinomialQ(expr, x) or ProductOfLinearPowersQ(expr, x):
+        return True
+    elif RationalFunctionQ(expr, x) and RationalFunctionExponents(expr, x)==[1, 1]:
+        return True
+    elif ProductQ(expr):
+        if FreeQ(First(expr), x):
+            return EasyDQ(Rest(expr), x)
+        elif FreeQ(Rest(expr), x):
+            return EasyDQ(First(expr), x)
+        else:
+            return False
+    elif SumQ(expr):
+        return EasyDQ(First(expr), x) and EasyDQ(Rest(expr), x)
+    elif Length(expr)==2:
+        if FreeQ(expr.args[0], x):
+            EasyDQ(expr.args[1], x)
+        elif FreeQ(expr.args[1], x):
+            return EasyDQ(expr.args[0], x)
+        else:
+            return False
+    return False
+
+def ProductOfLinearPowersQ(u, x):
+    # ProductOfLinearPowersQ(u, x) returns True iff u is a product of factors of the form v^n where v is linear in x
+    v = Wild('v')
+    n = Wild('n', exclude=[x])
+    M = u.match(v**n)
+    return FreeQ(u, x) or M and LinearQ(M[v], x) or ProductQ(u) and ProductOfLinearPowersQ(First(u), x) and ProductOfLinearPowersQ(Rest(u), x)
+
+def Rt(u, n):
+    return RtAux(TogetherSimplify(u), n)
+
+def NthRoot(u, n):
+    return u**(1/n)
+
+def AtomBaseQ(u):
+    # If u is an atom or an atom raised to an odd degree,  AtomBaseQ(u) returns True; else it returns False
+    return AtomQ(u) or PowerQ(u) and OddQ(u.args[1]) and AtomBaseQ(u.args[0])
+
+def SumBaseQ(u):
+    # If u is an sum or a sum raised to an odd degree,  SumBaseQ(u) returns True; else it returns False
+    return SumQ(u) or PowerQ(u) and OddQ(u.args[1]) and SumBaseQ(u.args[0])
+
+def NegSumBaseQ(u):
+    # If u is a sum or a sum raised to an odd degree whose lead term has a negative form,  NegSumBaseQ(u) returns True; else it returns False 
+    return SumQ(u) and NegQ(First(u)) or PowerQ(u) and OddQ(u.args[1]) and NegSumBaseQ(u.args[0])
+
+def AllNegTermQ(u):
+    # If all terms of u have a negative form,  AllNegTermQ(u) returns True; else it returns False
+    if PowerQ(u) and OddQ(u.args[1]):
+        return AllNegTermQ(u.args[0])
+    if SumQ(u):
+        return NegQ(First(u)) and AllNegTermQ(Rest(u))
+    return NegQ(u)
+
+def SomeNegTermQ(u):
+    # If some term of u has a negative form,  SomeNegTermQ(u) returns True; else it returns False
+    if PowerQ(u) and OddQ(u.args[1]):
+        return SomeNegTermQ(u.args[0]) 
+    if SumQ(u):
+        return NegQ(First(u)) or SomeNegTermQ(Rest(u))
+    return NegQ(u)
+
+def TrigSquareQ(u):
+    # If u is an expression of the form Sin(z)^2 or Cos(z)^2,  TrigSquareQ(u) returns True,  else it returns False 
+    return PowerQ(u) and EqQ(u.args[1], 2) and MemberQ([sin, cos], Head(u.args[0]))
+
+def SplitProduct(func, u):
+    # If func(v) is True for a factor v of u,  SplitProduct(func, u) returns [v,  u/v] where v is the first such factor; else it returns False
+    if ProductQ(u):
+        if func(First(u)):
+            return [First(u),  Rest(u)]
+        lst = SplitProduct(func, Rest(u))
+        if AtomQ(lst):
+            return False
+        else:
+            return [lst[0], First(u)*lst[1]] 
+    if func(u):
+        return [u,  1]
+    else:
+        return False
+
+def SplitSum(func, u):
+    # If func(v) is nonatomic for a term v of u,  SplitSum(func, u) returns [func(v),  u-v] where v is the first such term; else it returns False
+    if SumQ(u):
+        if func(First(u)):
+            return [func(First(u)),  Rest(u)]
+        lst = SplitSum(func, Rest(u))
+        if lst == False:
+            return False
+        else:
+            return [lst[0], First(u) + lst[1]]
+    if func(u) == True:
+        return [func(u),  0]
+    else:
+        return False
+
+def RtAux(u, n): 
+    if PowerQ(u):
+        return u.args[0]**(u.args[1]/n)
+    if ComplexNumberQ(u):
+        a = Re(u)
+        b = Im(u)
+        if Not(IntegerQ(a) and IntegerQ(b)) and IntegerQ(a/(a**2 + b**2)) and IntegerQ(b/(a**2 + b**2)):
+            # Basis: a+b*I==1/(a/(a^2+b^2)-b/(a^2+b^2)*I)
+            return 1/RtAux(a/(a**2 + b**2) - b/(a**2 + b**2)*I, n)
+        else:
+            return NthRoot(u, n)    
+    if ProductQ(u):
+        lst = SplitProduct(PositiveQ, u)
+        if ListQ(lst):
+            return RtAux(lst[0], n)*RtAux(lst[1], n)
+        lst = SplitProduct(NegativeQ, u)
+        if ListQ(lst):
+            if EqQ(lst[0], -1):
+                v = lst[1]
+                if PowerQ(v) and NegativeQ(v[1]):
+                    return 1/RtAux(-v[0]**(-v.args[1]), n)
+                if ProductQ(v):
+                    if ListQ(SplitProduct(SumBaseQ, v)):
+                        lst = SplitProduct(AllNegTermQ, v)
+                        if ListQ(lst):
+                            return RtAux(-lst[0], n)*RtAux(lst[1], n)
+                        lst = SplitProduct(NegSumBaseQ, v)
+                        if ListQ(lst):
+                            return RtAux(-lst[0], n)*RtAux(lst[1], n)
+                        lst = SplitProduct(SomeNegTermQ, v)
+                        if ListQ(lst):
+                            return RtAux(-lst[0], n)*RtAux(lst[1], n)
+                        lst = SplitProduct(SumBaseQ, v)
+                        return RtAux(-lst[0], n)*RtAux(lst[1], n)
+                    lst = SplitProduct(AtomBaseQ, v)
+                    if ListQ(lst):
+                        return RtAux(-lst[0], n)*RtAux(lst[1], n)
+                    else:
+                        return RtAux(-First(v), n)*RtAux(Rest(v), n)
+                if OddQ(n):
+                    return -RtAux(v, n)
+                else:
+                    return NthRoot(u, n)
+            else:
+                return RtAux(-lst[0], n)*RtAux(-lst[1], n)
+        lst = SplitProduct(AllNegTermQ, u)
+        if ListQ(lst) and ListQ(SplitProduct(SumBaseQ, lst[1])):
+            return RtAux(-lst[0], n)*RtAux(-lst[1], n)
+        lst = SplitProduct(NegSumBaseQ, u)
+        if ListQ(lst) and ListQ(SplitProduct(NegSumBaseQ, lst[1])):
+            return RtAux(-lst[0], n)*RtAux(-lst[1], n)
+        Map(Function(RtAux(i, n)), u)
+    v = TrigSquare(u)
+    if Not(AtomQ(v)):
+        return RtAux(v, n)
+    if OddQ(n) and NegativeQ(u):
+        return -RtAux(-u, n)
+    if OddQ(n) and NegQ(u) and PosQ(-u):
+        return -RtAux(-u, n)
+    else:
+        return NthRoot(u, n)
+
+
+def TrigSquare(u):
+    # If u is an expression of the form a-a*Sin(z)^2 or a-a*Cos(z)^2, TrigSquare(u) returns Cos(z)^2 or Sin(z)^2 respectively,
+    # else it returns False.
+    if SumQ(u):
+        for i in u.args:
+            v = SplitProduct(TrigSquareQ, i)
+            if v == False or SplitSum(v, u) == False:
+                return False
+            lst = SplitSum(SplitProduct(TrigSquareQ, i))
+        if lst and ZeroQ(lst[1][2] + lst[1]):
+            if Head(lst[0][0].args[0]) == sin:
+                return lst[1]*cos(lst[1][1][1][1])**2
+            return lst[1]*sin(lst[1][1][1][1])**2
+        else:
+            return False
+    else:
+        return False

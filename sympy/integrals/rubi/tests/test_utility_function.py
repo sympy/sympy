@@ -1430,3 +1430,91 @@ def test_AbsurdNumberGCD():
     assert AbsurdNumberGCD(S(4)) == 4
     assert AbsurdNumberGCD(S(4), S(8), S(12)) == 4
     assert AbsurdNumberGCD(S(2), S(3), S(12)) == 1
+
+def test_TrigReduce():
+    assert TrigReduce(cos(x)**2) == cos(2*x)/2 + 1/2
+    assert TrigReduce(cos(x)**2*sin(x)) == sin(x)/4 + sin(3*x)/4
+    assert TrigReduce(cos(x)**2+sin(x)) == sin(x) + cos(2*x)/2 + 1/2
+    assert TrigReduce(cos(x)**2*sin(x)**5) == 5*sin(x)/64 + sin(3*x)/64 - 3*sin(5*x)/64 + sin(7*x)/64
+    assert TrigReduce(2*sin(x)*cos(x) + 2*cos(x)**2) == sin(2*x) + cos(2*x) + 1
+
+def test_FunctionOfDensePolynomialsQ
+    assert FunctionOfDensePolynomialsQ(x**2 + 3, x)
+    assert not FunctionOfDensePolynomialsQ(x**2, x)
+    assert not FunctionOfDensePolynomialsQ(x, x)
+    assert FunctionOfDensePolynomialsQ(S(2), x)
+
+def test_PureFunctionOfSinQ():
+    v = log(x)
+    f = sin(v)
+    assert PureFunctionOfSinQ(f, v, x)
+    assert not PureFunctionOfSinQ(cos(v), v, x)
+    assert PureFunctionOfSinQ(f**2, v, x)
+
+def test_PureFunctionOfTanQ():
+    v = log(x)
+    f = tan(v)
+    assert PureFunctionOfTanQ(f, v, x)
+    assert not PureFunctionOfTanQ(cos(v), v, x)
+    assert PureFunctionOfTanQ(f**2, v, x)
+
+def test_PowerVariableSubst():
+    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(3/2)
+    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(3/2)
+    assert PowerVariableSubst((2*x), 2, x) == 2*x
+    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(3/2)
+    assert PowerVariableSubst((2*x)**7, 2, x) == 128*x**(7/2)
+    assert PowerVariableSubst((6+2*x)**7, 2, x) == (2*x + 6)**7
+    assert PowerVariableSubst((2*x)**7+3, 2, x) == 128*x**(7/2) + 3
+
+def test_PowerVariableDegree():
+    assert PowerVariableDegree(S(2), 0, 2*x, x) == [0, 2*x]
+    assert not PowerVariableDegree((2*x)**2, 0, 2*x, x)
+    assert PowerVariableDegree(x**2, 0, 2*x, x) == [2, 1]
+    assert PowerVariableDegree(S(4), 0, 2*x, x) == [0, 2*x]
+
+def test_PowerVariableExpn():
+    assert not PowerVariableExpn((x)**3, 2, x)
+    assert not PowerVariableExpn((2*x)**3, 2, x)
+    assert PowerVariableExpn((2*x)**2, 4, x) == [4*x**3, 2, 1]
+
+def test_FunctionOfExpnQ():
+    assert FunctionOfExpnQ(2*x, x, x) == 1
+    assert FunctionOfExpnQ((2*x)**3, x, x) == 3
+    assert not FunctionOfExpnQ(S(x), x*2, x)
+    assert FunctionOfExpnQ(S(2*x), x*2, x) == 1
+    assert FunctionOfExpnQ(S(a), x*2, x) == 0
+
+def test_FunctionOfQ():
+    assert not FunctionOfQ(S(x**3), x*2, x)
+    assert FunctionOfQ(S(a), x*2, x)
+    assert FunctionOfQ(S(3*x), x*2, x)
+
+def test_ExpandTrigExpand():
+    assert ExpandTrigExpand(1, cos(x), x**2, 2, 2, x) == 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
+    assert ExpandTrigExpand(1, cos(x)+sin(x), x**2, 2, 2, x) == 4*sin(x**2)**2*cos(x**2)**2 + 8*sin(x**2)*cos(x**2)**3 - 4*sin(x**2)*cos(x**2) + 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
+
+def test_TrigToExp():
+    assert TrigToExp(sin(x)) == -I*(exp(I*x) - exp(-I*x))/2
+    assert TrigToExp(cos(x)) == exp(I*x)/2 + exp(-I*x)/2
+    assert TrigToExp(cos(x)*tan(x**2)) == I*(exp(I*x)/2 + exp(-I*x)/2)*(-exp(I*x**2) + exp(-I*x**2))/(exp(I*x**2) + exp(-I*x**2))
+    assert TrigToExp(cos(x)*tan(x**2)*sin(x)**2) == -I*(exp(I*x)/2 + exp(-I*x)/2)*(exp(I*x) - exp(-I*x))**2*(-exp(I*x**2) + exp(-I*x**2))/(4*(exp(I*x**2) + exp(-I*x**2)))
+    assert TrigToExp(cos(x) + sin(x)**2) == -(exp(I*x) - exp(-I*x))**2/4 + exp(I*x)/2 + exp(-I*x)/2
+
+def test_ExpandTrigReduce():
+    assert ExpandTrigReduce(2*cos(3 + x)**3, x) == 3*cos(x + 3)/2 + cos(3*x + 9)/2
+    assert ExpandTrigReduce(2*sin(x)**3+cos(2 + x), x) == 3*sin(x)/2 - sin(3*x)/2 + cos(x + 2)
+    assert ExpandTrigReduce(cos(x + 3)**2, x) == cos(2*x + 6)/2 + 1/2
+
+def test_NormalizeTrig():
+    assert NormalizeTrig(S(2*sin(2 + x)), x) == 2*sin(x + 2)
+    assert NormalizeTrig(S(2*sin(2 + x)**3), x) == 2*sin(x + 2)**3
+    assert NormalizeTrig(S(2*sin((2 + x)**2)**3), x) == 2*sin(x**2 + 4*x + 4)**3
+
+def test_FunctionOfTrigQ():
+    v = log(x)
+    s = sin(v)
+    t = tan(v)
+    assert not FunctionOfTrigQ(x, v, x)
+    assert FunctionOfTrigQ(s + t, v, x)
+    assert FunctionOfTrigQ(sin(t), v, x)
