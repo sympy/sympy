@@ -222,7 +222,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                 A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                 if A is not None:
                     a, m, z = A
-                    a = a.as_poly(DE.t)
                     if a == 1:
                         n = min(n, m)
 
@@ -245,7 +244,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     pn = p**-n
 
     A = a*pN
-    B = ba*pN.quo(bd) + Poly(n, DE.t)*a*derivation(p, DE).quo(p)*pN
+    B = ba*pN.quo(bd) + Poly(n, DE.t)*Poly(a, DE.t)*derivation(p, DE).quo(p)*pN
     C = (ca*pN*pn).quo(cd)
     h = pn
 

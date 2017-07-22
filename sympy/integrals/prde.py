@@ -888,7 +888,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     z = ls*ln.gcd(ln.diff(DE.t))
 
     if not z.has(DE.t):
-        return NotImplementedError
+        raise NotImplementedError
 
     u1, r1 = (fa*l.quo(fd)).div(z)  # (l*f).div(z)
     u2, r2 = (wa*l.quo(wd)).div(z)  # (l*w).div(z)
@@ -1022,7 +1022,9 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
             sol = [rat*den for rat in solution]
             ans = zip(DE.T, sol[1: -1])
             v = Mul(*[Pow(i, j) for i, j in ans])
-            return (sol[-1], sol[0], v)
+            n = sol[-1]
+            m = sol[0]
+            return n, m, v
 
 
 def is_deriv_k(fa, fd, DE):
