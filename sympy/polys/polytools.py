@@ -4406,11 +4406,10 @@ def degree(f, *gens, **args):
     options.allowed_flags(args, ['gen', 'polys'])
     f, orig = sympify(f), f
     gens = list(gens)
-    try:
-        gens = [sympify(args['gen'])] + gens
+    gen = args.get('gen')
+    if gen is not None:
+        gens = [sympify(gen)] + gens
         del args['gen']
-    except KeyError:
-        pass
 
     if f.is_Poly:
         gens.append(f.gens[0])
