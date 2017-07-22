@@ -4405,11 +4405,16 @@ def degree(f, *gens, **args):
     """
     options.allowed_flags(args, ['gen', 'polys'])
     f, orig = sympify(f), f
+    gens = list(gens)
     try:
-        gens = [sympify(args['gen'])] + list(gens)
+        gens = [sympify(args['gen'])] + gens
         del args['gen']
     except KeyError:
         pass
+
+    if f.is_Poly:
+        gens.append(f.gens[0])
+        f = f.as_expr()
 
     if f.is_Number:
         if len(gens) == 0:
@@ -4418,25 +4423,15 @@ def degree(f, *gens, **args):
             return S.NegativeInfinity
         return S.Zero
 
-    if f.is_Poly:
-        if len(gens) == 0:
-            return sympify(f.degree(**args))
-        if gens[0] in f.gens:
-            return sympify(f.degree(gens[0], **args))
     try:
-        F, opt = poly_from_expr(f.as_expr())
+        F, opt = poly_from_expr(f, **args)
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    if F.is_zero:
-        return S.NegativeInfinity
-
-    if len(gens) != 0:
-        if gens[0] in F.gens:
-            return sympify(F.degree(gens[0], **args))
-        return S.Zero
-
-    return sympify(F.degree(*gens, **args))
+    gens.append(F.gens[0])
+    if gens[0] in F.gens:
+        return sympify(F.degree(gens[0]))
+    return S.Zero
 
 
 @public
