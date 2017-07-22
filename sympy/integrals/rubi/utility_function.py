@@ -4469,3 +4469,33 @@ def FunctionOfExponentialTestAux(base, expon, x):
         SexponS = -SexponS
         return True
     return True
+
+def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False):
+    if expr == optimal_output:
+        return True
+
+    res = expr - optimal_output
+    if expand: # expands the expression and equates
+        e = res.expand()
+        if simplify(e) == 0 or (not e.has(x)):
+            return True
+    elif res.has(hyper):
+        if _hyper_check:
+            dres = res.diff(x)
+            args = dres.free_symbols
+            for i in range(1, 6):
+                sub = dict((s, i) for s in args)
+                if not abs(dres.subs(sub).n()) < S(10)**(-100):
+                    return False
+            return True
+        else:
+            return True
+        return False
+    elif _diff:
+        dres = res.diff(x)
+        if dres == 0:
+            return True
+        elif simplify(dres) == 0:
+            return True
+
+    return False
