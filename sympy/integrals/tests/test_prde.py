@@ -302,8 +302,21 @@ def test_is_log_deriv_k_t_radical_in_field():
         (2, 1/t)
 
 
-def test_parametric_log_deriv():
+def test_parametric_log_deriv_heu():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
     Poly(-1, t), Poly(x*t**2, t), DE) == \
         (2, 6, t*x**5)
+
+
+def test_parametric_log_deriv():
+    # internal step of integrating the function
+    # f = log(log(x + exp(x)))
+    fa, fd = Poly(0, x), Poly(1, x)
+    wa, wd = Poly(1, x), Poly(1, x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0),
+        Poly((t0 + 1)/(t0 + x), t1), Poly((t0 + 1)/(t0*t1 + t1*x), t2)]
+        , 'exts': [None, 'exp', 'log', 'log']})
+    for i in range(3):
+        DE.decrement_level()
+    assert parametric_log_deriv(fa, fd, wa, wd, DE) == (1, 0, 1)

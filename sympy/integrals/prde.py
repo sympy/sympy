@@ -888,9 +888,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     z = ls*ln.gcd(ln.diff(DE.t))
 
     if not z.has(DE.t):
-        # TODO: We treat this as 'no solution', until the structure
-        # theorem version of parametric_log_deriv is implemented.
-        return None
+        return NotImplementedError
 
     u1, r1 = (fa*l.quo(fd)).div(z)  # (l*f).div(z)
     u2, r2 = (wa*l.quo(wd)).div(z)  # (l*w).div(z)
@@ -998,12 +996,11 @@ def linear_relations_in_Q(F):
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
-    >>> fa, fd = Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t)
-    >>> wa, wd = Poly(-1, t), Poly(x*t**2, t)
-    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
-        'exts': [None, 'log']})
-    >>> parametric_log_deriv(fa, fd, wa, wd, DE)
-
+    >>> fa, fd = Poly(0, x), Poly(1, x)
+    >>> wa, wd = Poly(1, x), Poly(1, x)
+    >>> t0, t1, t2 = symbols('t0, t1, t2')
+    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0),
+        Poly((t0 + 1)/(t0 + x), t1), Poly((t0 + 1)/(t0*t1 + t1*x), t2)]})
     Page, 251 section 7.3
 
     """
@@ -1022,14 +1019,15 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
         return None
 
     for solution in rat_linear_rels:
-        den = S(1)
-        for rat in solution:
-            den = ilcm(den, rat.q)
+        if solution[-1]:
+            den = S(1)
+            for rat in solution:
+                den = ilcm(den, rat.q)
 
-        sol = [rat*den for rat in solution]
-        ans = zip(DE.T, sol[1: -1])
-        v = Mul(*[Pow(i, j) for i, j in ans])
-        return (sol[-1], sol[0], v)
+            sol = [rat*den for rat in solution]
+            ans = zip(DE.T, sol[1: -1])
+            v = Mul(*[Pow(i, j) for i, j in ans])
+            return (sol[-1], sol[0], v)
 
 
 def is_deriv_k(fa, fd, DE):
