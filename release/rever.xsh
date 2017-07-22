@@ -46,6 +46,8 @@ $ACTIVITIES = [
     # 'tag',
 ]
 
+version = $VERSION
+
 # Work around https://github.com/ergs/rever/issues/15
 @activity
 def _version():
