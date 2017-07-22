@@ -1232,7 +1232,7 @@ class Ray(LinearEntity):
         # normalizing the directions as magnitude of ray is infinite
         new_dir = self.direction.unit + other.direction.unit
         try:
-            r = Ray(self.p1, self.p1+(new_dir /new_dir.distance(Point(0,0))))
+            r = Ray(self.p1, self.p1 + new_dir)
         except ValueError:
             raise GeometryError("Invalid ray operation. Possibly adding 2 rays in opposite direction")
         return r
@@ -1241,7 +1241,7 @@ class Ray(LinearEntity):
         """Subtract two rays vectorially (with unit magnitude)"""
         new_dir = self.direction.unit - other.direction.unit
         try:
-            r = Ray(self.p1, self.p1+(new_dir/new_dir.distance(Point(0,0))))
+            r = Ray(self.p1, self.p1 + new_dir)
         except ValueError:
             raise GeometryError("Invalid ray operation. Possibly adding 2 rays in opposite direction")
         return r
@@ -1464,6 +1464,12 @@ class Segment(LinearEntity):
         elif dim == 3:
             return Segment3D(p1, p2, **kwargs)
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
+
+    def __add__(self, other):
+        raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self), type(other)))
+
+    def __sub__(self, other):
+        raise TypeError("unsupported operand type(s) for -: '%s' and '%s'" % (type(self), type(other)))
 
     def contains(self, other):
         """
