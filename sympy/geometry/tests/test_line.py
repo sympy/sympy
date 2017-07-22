@@ -163,8 +163,8 @@ def test_basic_properties_2d():
     assert s1 in Line(p1, p10)
     assert Ray(Point(0, 0), Point(0, 1)) in Ray(Point(0, 0), Point(0, 2))
     assert Ray(Point(0, 0), Point(0, 2)) in Ray(Point(0, 0), Point(0, 1))
-    assert (r1+r3) == r1
-    assert (r1-r4) == r1
+    assert (r1+r3) == Ray(Point(0, 0), Point(0, 2))
+    assert (r1-r4) == Ray(Point(0, 0), Point(0, 2))
     assert (r1 in s1) is False
     assert Segment(p1, p2) in s1
     assert Ray(Point(x1, x1), Point(x1, 1 + x1)) != Ray(p1, Point(-1, 5))
