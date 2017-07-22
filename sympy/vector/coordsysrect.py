@@ -409,10 +409,10 @@ class CoordSys3D(Basic):
         x = Dummy('x')
         y = Dummy('y')
         z = Dummy('z')
-        eq = [i.subs([*zip(self.base_scalars(), (x, y, z))])
+        eq = [i.subs(list(zip(self.base_scalars(), (x, y, z))))
               for i in equations_set1]
 
-        eq = [i.subs([*zip((x, y, z), equations_set2)])
+        eq = [i.subs(list(zip((x, y, z), equations_set2)))
               for i in eq]
         return tuple(simplify(eq))
 
