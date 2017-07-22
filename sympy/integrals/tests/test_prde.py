@@ -5,8 +5,8 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
-    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
-    prde_cancel_liouvillian)
+    parametric_log_deriv, is_log_deriv_k_t_radical_in_field,
+    param_poly_rischDE, param_rischDE, prde_cancel_liouvillian)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 from sympy.polys import sfield, AlgebraicField, QQ
