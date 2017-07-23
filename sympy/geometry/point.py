@@ -841,6 +841,34 @@ class Point(GeometryEntity):
         and a distance of 1 from the origin"""
         return self / abs(self)
 
+    @property
+    def direction(self):
+        """Return that Point that is in the same direction as `self`
+        but with any gcd of the coordinates removed.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.point import Point
+        >>> a = Point(2, 4)
+        >>> a.direction
+        Point2D(1, 2)
+        >>> a.unit
+        Point2D(sqrt(5)/5, 2*sqrt(5)/5)
+        >>> _.direction
+        Point2D(1, 2)
+        """
+        from sympy.polys.polytools import gcd
+        from sympy.core.compatibility import reduce
+        args = self.args
+        # done twice for issue 12794
+        for _ in range(2):
+            g = reduce(gcd, args)
+            args = [i/g for i in args]
+            if all(i.is_Integer for i in args):
+                break
+        return Point(*args)
+
     n = evalf
 
     __truediv__ = __div__

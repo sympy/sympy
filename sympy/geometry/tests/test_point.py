@@ -414,3 +414,11 @@ def test_direction_cosine():
     assert p2.direction_cosine(Point3D(0, 0, 0)) == [-sqrt(3) / 3, -sqrt(3) / 3, -sqrt(3) / 3]
     assert p2.direction_cosine(Point3D(1, 1, 12)) == [0, 0, 1]
     assert p2.direction_cosine(Point3D(12, 1, 12)) == [sqrt(2) / 2, 0, sqrt(2) / 2]
+
+
+def test_direction():
+    x = Symbol('x')
+    assert Point(2, 4).direction == Point(1, 2)
+    assert (Point(2, 4)*x).direction == Point(1, 2)
+    assert Point(1, 2).unit.direction == Point(1, 2)
+    assert Point(2, 4, 6).direction == Point(1, 2, 3)

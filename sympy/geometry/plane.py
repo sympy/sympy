@@ -39,15 +39,33 @@ class Plane(GeometryEntity):
     Examples
     ========
 
-    >>> from sympy import Plane, Point3D
+    >>> from sympy import Plane, Point
     >>> from sympy.abc import x
-    >>> Plane(Point3D(1, 1, 1), Point3D(2, 3, 4), Point3D(2, 2, 2))
+    >>> Plane(Point(1, 1, 1), Point(2, 3, 4), Point(2, 2, 2))
     Plane(Point3D(1, 1, 1), (-1, 2, -1))
     >>> Plane((1, 1, 1), (2, 3, 4), (2, 2, 2))
     Plane(Point3D(1, 1, 1), (-1, 2, -1))
-    >>> Plane(Point3D(1, 1, 1), normal_vector=(1,4,7))
+    >>> Plane(Point(1, 1, 1), normal_vector=(1,4,7))
     Plane(Point3D(1, 1, 1), (1, 4, 7))
 
+    When three points are given, the normal vector direction will
+    depend on the order of the points given:
+
+    >>> a, b, c = (0, 0, 0), (1, 0, 0), (0, 1, 0)
+    >>> Plane(a, b, c).normal_vector
+    (0, 0, 1)
+    >>> Plane(b, a, c).normal_vector
+    (0, 0, -1)
+
+    Simplification of normal_vector can be handled with
+    the direction property of Point. For simplicity, the
+    normal vector is given explicitly below rather than
+    using 3 points, but the idea is the same:
+
+    >>> Plane((1, 1, 1), (2, 4, 6)).normal_vector
+    (2, 4, 6)
+    >>> Point(_).direction.args
+    (1, 2, 3)
     """
     def __new__(cls, p1, a=None, b=None, **kwargs):
         p1 = Point3D(p1, dim=3)
