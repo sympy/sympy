@@ -53,8 +53,6 @@ InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
 DerivativeRule = Rule("DerivativeRule")
-ParameterDerivativeRule = Rule("ParameterDerivativeRule",
-                               "undiffed vars")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
@@ -888,12 +886,7 @@ def derivative_rule(integral):
         if integral.symbol in diff_variables:
             return DerivativeRule(*integral)
         else:
-            substep = integral_steps(undifferentiated_function,
-                                     integral.symbol)
-            return ParameterDerivativeRule(substep,
-                                           diff_variables,
-                                           integrand,
-                                           integral.symbol)
+            return DontKnowRule(integrand, integral.symbol)
     else:
         return ConstantRule(integral.integrand, *integral)
 
@@ -1170,11 +1163,6 @@ def eval_derivativerule(integrand, symbol):
         new_diff_vars = list(integrand.args[1:])
         new_diff_vars.remove(symbol)
         return sympy.Derivative(integrand.args[0], *(new_diff_vars))
-
-@evaluates(ParameterDerivativeRule)
-def eval_paramderivrule(substep, diff_vars, integrand, symbol):
-    return sympy.Derivative(_manualintegrate(substep), *diff_vars)
-
 
 @evaluates(HeavisideRule)
 def eval_heaviside(harg, ibnd, substep, integrand, symbol):

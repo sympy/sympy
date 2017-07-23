@@ -183,7 +183,7 @@ def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
         pi * ((x**2 + 2*x + 3))
     assert manualintegrate(Derivative(x**2 + 2*x + 3, y), x) == \
-        Derivative(x**3/3 + x**2 + 3*x, y)
+        Integral(Derivative(x**2 + 2*x + 3, y))
     assert manualintegrate(Derivative(sin(x), x, x, x, y), x) == \
         Derivative(sin(x), x, x, y)
 
@@ -318,10 +318,9 @@ def test_issue_10847():
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
 
 def test_issue_12899():
-    assert manualintegrate(f(x,y).diff(x),y) == Derivative(Integral(f(x,y),y),x)
+    assert manualintegrate(f(x,y).diff(x),y) == Integral(Derivative(f(x,y),x),y)
     assert manualintegrate(f(x,y).diff(y).diff(x),y) == Derivative(f(x,y),x)
 
 
-
-def test_constant_independeint_of_symbol():
+def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
