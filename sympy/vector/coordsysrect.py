@@ -388,12 +388,14 @@ class CoordSys3D(Basic):
                   diff(equations[2], self.z)**2)
         return map(simplify, [h1, h2, h3])
 
-    def _rotation_trans_equations(self):
+    def _inverse_rotation_matrix(self):
+        return simplify(self._parent_rotation_matrix ** -1)
+
+    def _rotation_trans_equations(self, matrix):
         """
         Returns the transformation equations obtained from rotation matrix.
 
         """
-        matrix = self._parent_rotation_matrix
 
         trans_eq1 = matrix[0]*self.x + matrix[1]*self.y + matrix[2]*self.z
         trans_eq2 = matrix[3]*self.x + matrix[4]*self.y + matrix[5]*self.z
