@@ -414,7 +414,7 @@ class CoordSys3D(Basic):
 
         eq = [i.subs(list(zip((x, y, z), equations_set2)))
               for i in eq]
-        return tuple(simplify(eq))
+        return tuple(eq)
 
     @property
     def origin(self):
