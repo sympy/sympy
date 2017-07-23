@@ -209,3 +209,143 @@ class TogetherSimplify(Operation):
 class Inequality(Operation):
     name = "Inequality"
     arity = Arity.variadic
+
+class PerfectSquareQ(Operation):
+    name = "PerfectSquareQ"
+    arity = Arity.unary
+
+class EvenQ(Operation):
+    name = "EvenQ"
+    arity = Arity.unary
+
+class OddQ(Operation):
+    name = "OddQ"
+    arity = Arity.unary
+
+class EqQ(Operation):
+    name = "EqQ"
+    arity = Arity.binary
+
+class NiceSqrtQ(Operation):
+    name = "NiceSqrtQ"
+    arity = Arity.unary
+
+class IntQuadraticQ(Operation):
+    name = "IntQuadraticQ"
+    arity = Arity.variadic
+
+class If(Operation):
+    name = "If"
+    arity = Arity.variadic
+
+class LeafCount(Operation):
+    name = "LeafCount"
+    arity = Arity.unary
+
+class QuadraticQ(Operation):
+    name = "QuadraticQ"
+    arity = Arity.binary
+
+class LinearMatchQ(Operation):
+    name = "LinearMatchQ"
+    arity = Arity.binary
+
+class QuadraticMatchQ(Operation):
+    name = "QuadraticMatchQ"
+    arity = Arity.binary
+
+class AtomQ(Operation):
+    name = "AtomQ"
+    arity = Arity.unary
+
+class SplitProduct(Operation):
+    name = "SplitProduct"
+    arity = Arity.binary
+
+class SumBaseQ(Operation):
+    name = "SumBaseQ"
+    arity = Arity.unary
+
+class NegSumBaseQ(Operation):
+    name = "NegSumBaseQ"
+    arity = Arity.unary
+
+class IntBinomialQ(Operation):
+    name = "IntBinomialQ"
+    arity = Arity.variadic
+
+class LinearPairQ(Operation):
+    name = "LinearPairQ"
+    arity = Arity.ternary
+
+class SimplerSqrtQ(Operation):
+    name = "SimplerSqrtQ"
+    arity = Arity.binary
+
+class PseudoBinomialPairQ(Operation):
+    name = "PseudoBinomialPairQ"
+    arity = Arity.ternary
+
+class Rt(Operation):
+    name = "Rt"
+    arity = Arity.binary
+
+class PolynomialQ(Operation):
+    name = "PolynomialQ"
+    arity = Arity.binary
+
+class BinomialQ(Operation):
+    name = "BinomialQ"
+    arity = Arity.variadic
+
+class BinomialMatchQ(Operation):
+    name = "BinomialMatchQ"
+    arity = Arity.binary
+
+class BinomialDegree(Operation):
+    name = "BinomialDegree"
+    arity = Arity.binary
+
+class GeneralizedBinomialQ(Operation):
+    name = "GeneralizedBinomialQ"
+    arity = Arity.binary
+
+class GeneralizedBinomialMatchQ(Operation):
+    name = "GeneralizedBinomialMatchQ"
+    arity = Arity.binary
+
+class TrinomialQ(Operation):
+    name = "TrinomialQ"
+    arity = Arity.binary
+
+class TrinomialMatchQ(Operation):
+    name = "TrinomialMatchQ"
+    arity = Arity.binary
+
+class GeneralizedTrinomialQ(Operation):
+    name = "GeneralizedTrinomialQ"
+    arity = Arity.binary
+
+class GeneralizedTrinomialMatchQ(Operation):
+    name = "GeneralizedTrinomialMatchQ"
+    arity = Arity.binary
+
+class GeneralizedTrinomialDegree(Operation):
+    name = "GeneralizedTrinomialDegree"
+    arity = Arity.binary
+
+class PolyQ(Operation):
+    name = "PolyQ"
+    arity = Arity.variadic
+
+class Coeff(Operation):
+    name = "Coeff"
+    arity = Arity.variadic
+
+class SumQ(Operation):
+    name = "SumQ"
+    arity = Arity.unary
+
+class Expon(Operation):
+    name = "Expon"
+    arity = Arity.variadic

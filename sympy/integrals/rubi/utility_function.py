@@ -18,11 +18,13 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E, expand_trig, poly, apart, lcm, And)
+    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow)
 from mpmath import ellippi, ellipe, ellipf, appellf1
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 from sympy.strategies import distribute
+from random import randint
+from statistics import stdev
 
 def Int(expr, var, showsteps=False):
     from .rubi import rubi_integrate
@@ -359,7 +361,7 @@ def FractionQ(*args):
 
 def IntLinearcQ(a, b, c, d, m, n, x):
     # returns True iff (a+b*x)^m*(c+d*x)^n is integrable wrt x in terms of non-hypergeometric functions.
-    return IntegerQ(m) | IntegerQ(n) | IntegersQ(3*m, 3*n) | IntegersQ(4*m, 4*n) | IntegersQ(2*m, 6*n) | IntegersQ(6*m, 2*n) | IntegerQ(m + n)
+    return IntegerQ(m) or IntegerQ(n) or IntegersQ(S(3)*m, S(3)*n) or IntegersQ(S(4)*m, S(4)*n) or IntegersQ(S(2)*m, S(6)*n) or IntegersQ(S(6)*m, S(2)*n) or IntegerQ(m + n)
 
 Defer = UnevaluatedExpr
 
@@ -829,9 +831,11 @@ def TrinomialParts(u, x):
     else:
         return False
 
-def PolyQ(u, x, n):
+def PolyQ(u, x, n=None):
     # returns True iff u is a polynomial of degree n.
-    if u.is_polynomial(x):
+    if n==None:
+        return u.is_polynomial(x)
+    elif u.is_polynomial(x):
         return degree(u, gen=x) == n
     return False
 
@@ -930,7 +934,7 @@ def ExpandLinearProduct(v, u, a, b, x):
         lst = [SimplifyTerm(i, x) for i in lst]
         res = 0
         for k in range(1, len(lst)+1):
-            res = res + v*lst[k-1]*(a + b*x)**(k - 1)
+            res = res + simplify(v*lst[k-1]*(a + b*x)**(k - 1))
         return res
     return u*v
 
@@ -1150,11 +1154,11 @@ def RemoveContentAux(expr, x):
         w_ = Wild('w')
         p_ = Wild('p')
         n_ = Wild('n', exclude=[x])
-        m_ = Wild('m', exclude=[x])
+        m_ = Wild('m', exclude=[x, 0])
         u_ = Wild('u')
-        v_ = Wild('v')
-        b_ = Wild('b', exclude=[x])
-        a_ = Wild('a', exclude=[x])
+        v_ = Wild('v', exclude=[0])
+        b_ = Wild('b', exclude=[x, 0])
+        a_ = Wild('a', exclude=[x, 0])
 
         pattern = a_**m_*u_ + b_*v_
         match = expr.match(pattern)
@@ -2139,7 +2143,7 @@ def ExpandIntegrand(expr, x, extra=None):
 
             match = u.match(w_*(c_+d_*x)**p_)
             if match:
-                if IntegerQ(match[p_]) and match[p_] >= m:
+                if IntegerQ(match[p_]) and GreaterEqual(match[p_], m):
                     res = True
                 else:
                     res = False
@@ -2518,8 +2522,8 @@ def BinomialMatchQ(u, x):
         return True
     else:
         a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        n = Wild('n', exclude=[x])
+        b = Wild('b', exclude=[x, 0])
+        n = Wild('n', exclude=[x, 0])
         Match = u.match(a + b*x**n)
         if Match and Match[a] and Match[b] and Match[n]:
             return True
@@ -2534,9 +2538,9 @@ def TrinomialMatchQ(u, x):
         return True
     else:
         a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        n = Wild('n', exclude=[x])
-        c = Wild('c', exclude=[x])
+        b = Wild('b', exclude=[x, 0])
+        n = Wild('n', exclude=[x, 0])
+        c = Wild('c', exclude=[x, 0])
         Match = Expand(u).match(a + b*x**n + c*x**(2*n))
         if Match and Match[a] and Match[b] and Match[n] and Match[c]:
             return True
@@ -2550,10 +2554,10 @@ def GeneralizedBinomialMatchQ(u, x):
                 return False
         return True
     else:
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        n = Wild('n', exclude=[x])
-        q = Wild('q', exclude=[x])
+        a = Wild('a', exclude=[x, 0])
+        b = Wild('b', exclude=[x, 0])
+        n = Wild('n', exclude=[x, 0])
+        q = Wild('q', exclude=[x, 0])
         Match = u.match(a*x**q + b*x**n)
         if Match and len(Match) == 4 and Match[q] != 0 and Match[n] != 0:
             return True
@@ -2567,11 +2571,11 @@ def GeneralizedTrinomialMatchQ(u, x):
                 return False
         return True
     else:
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        n = Wild('n', exclude=[x])
-        c = Wild('c', exclude=[x])
-        q = Wild('q', exclude=[x])
+        a = Wild('a', exclude=[x, 0])
+        b = Wild('b', exclude=[x, 0])
+        n = Wild('n', exclude=[x, 0])
+        c = Wild('c', exclude=[x, 0])
+        q = Wild('q', exclude=[x, 0])
         Match = u.match(a*x**q + b*x**n + c*x**(2*n - q))
         if Match and len(Match) == 5 and 2*Match[n] - Match[q] != 0 and Match[n] != 0:
             return True
@@ -4470,16 +4474,23 @@ def FunctionOfExponentialTestAux(base, expon, x):
         return True
     return True
 
-def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False):
+def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False, _numerical=False):
+    '''
+    Returns True if (expr - optimal_output) is equal to 0 or a constant
+
+    expr: integrated expression
+    x: integration variable
+    expand=True equates `expr` with `optimal_output` in expanded form
+    _hyper_check=True evaluates numerically
+    _diff=True differentiates the expressions before equating
+    _numerical=True equates the expressions at random `x`. Normally used for large expressions.
+    '''
     if expr == optimal_output:
         return True
 
     res = expr - optimal_output
-    if expand: # expands the expression and equates
-        e = res.expand()
-        if simplify(e) == 0 or (not e.has(x)):
-            return True
-    elif res.has(hyper):
+
+    if res.has(hyper):
         if _hyper_check:
             dres = res.diff(x)
             args = dres.free_symbols
@@ -4491,11 +4502,49 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         else:
             return True
         return False
-    elif _diff:
+
+    if _numerical:
+        args = res.free_symbols
+        rand_val = []
+        for i in range(0, 5): # check at 5 random points
+            rand_x = randint(1, 40)
+            substitutions = dict((s, rand_x) for s in args)
+            rand_val.append(float(abs(res.subs(substitutions).n())))
+        try:
+            if stdev(rand_val) < Pow(10, -6):
+                return True
+            else:
+                return False
+        except:
+            pass
+
+    if simplify(res) == 0 or (not res.has(x)):
+        return True
+
+    if _diff:
         dres = res.diff(x)
         if dres == 0:
             return True
         elif simplify(dres) == 0:
             return True
 
+    if expand: # expands the expression and equates
+        e = res.expand()
+        if simplify(e) == 0 or (not e.has(x)):
+            return True
+
     return False
+
+def If(cond, t, f):
+    # returns t if condition is true else f
+    if cond:
+        return t
+    return f
+
+def IntQuadraticQ(a, b, c, d, e, m, p, x):
+    # (* IntQuadraticQ[a,b,c,d,e,m,p,x] returns True iff (d+e*x)^m*(a+b*x+c*x^2)^p is integrable wrt x in terms of non-Appell functions. *)
+    return IntegerQ(p) or PositiveIntegerQ(m) or IntegersQ(2*m, 2*p) or IntegersQ(m, 4*p) or IntegersQ(m, p + S(1)/3) and (ZeroQ(c**2*d**2 - b*c*d*e + b**2*e**2 - 3*a*c*e**2) or ZeroQ(c**2*d**2 - b*c*d*e - 2*b**2*e**2 + 9*a*c*e**2))
+
+def IntBinomialQ(a, b, c, n, m, p, x):
+    #(* IntBinomialQ[a,b,c,n,m,p,x] returns True iff (c*x)^m*(a+b*x^n)^p is integrable wrt x in terms of non-hypergeometric functions. *)
+    return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))

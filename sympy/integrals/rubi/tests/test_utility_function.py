@@ -14,7 +14,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
-from sympy import I, E, pi, pprint, hyper, Add, Wild, simplify, polylog
+from sympy import I, E, pi, hyper, Add, Wild, simplify, polylog
 
 A, B, a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, u, v, F = symbols('A B a b c d e f g h x y z m n p q u v F', real=True, imaginary=False)
 
@@ -539,6 +539,7 @@ def test_ReplaceAll():
 
 def test_ExpandLinearProduct():
     assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
+    assert ExpandLinearProduct((a + b*x)**n, x**3, a, b, x) == -a**3*(a + b*x)**n/b**3 + 3*a**2*(a + b*x)**(n + 1)/b**3 - 3*a*(a + b*x)**(n + 2)/b**3 + (a + b*x)**(n + 3)/b**3
 
 def test_PolynomialDivide():
     assert PolynomialDivide((a*c - b*c*x)**2, (a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
