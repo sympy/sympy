@@ -1062,7 +1062,14 @@ class Pow(Expr):
                 return e.is_zero
 
     def _eval_is_algebraic(self):
-        if self.base.is_zero or (self.base - 1).is_zero:
+        def _is_one(expr):
+            try:
+                return (expr - 1).is_zero
+            except ValueError:
+                # when the operation is not allowed
+                return False
+
+        if self.base.is_zero or _is_one(self.base):
             return True
         elif self.exp.is_rational:
             if self.base.is_algebraic is False:
@@ -1070,7 +1077,7 @@ class Pow(Expr):
             return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
-                and fuzzy_not((self.base - 1).is_zero))
+                and fuzzy_not(_is_one(self.base)))
                 or self.base.is_integer is False
                 or self.base.is_irrational):
                 return self.exp.is_rational

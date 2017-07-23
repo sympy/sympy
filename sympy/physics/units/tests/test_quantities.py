@@ -110,6 +110,19 @@ def test_add_sub():
     # TODO: eventually add this:
     # assert (u - v).convert_to(u) == S.Half*u
 
+def test_abs():
+    v_w1 = Quantity('v_w1', length/time, meter/second)
+    v_w2 = Quantity('v_w2', length/time, meter/second)
+    v_w3 = Quantity('v_w3', length/time, meter/second)
+    expr = v_w3 - Abs(v_w1 - v_w2)
+
+    Dq = Dimension(Quantity.get_dimensional_expr(expr))
+    assert Dimension.get_dimensional_dependencies(Dq) == {
+        'length': 1,
+        'time': -1,
+    }
+    assert meter == sqrt(meter**2)
+
 
 def test_check_unit_consistency():
     return  # TODO remove
@@ -226,6 +239,7 @@ def test_Quantity_derivative():
 
 
 def test_sum_of_incompatible_quantities():
+    raises(ValueError, lambda: meter + 1)
     raises(ValueError, lambda: meter + second)
     raises(ValueError, lambda: 2 * meter + second)
     raises(ValueError, lambda: 2 * meter + 3 * second)
