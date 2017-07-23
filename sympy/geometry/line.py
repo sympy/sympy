@@ -1226,7 +1226,7 @@ class Ray(LinearEntity):
         >>> r1 = Ray2D(Point2D(0,0), Point2D(0,10))
         >>> r2 = Ray2D(Point2D(1,0), Point2D(2,0))
         >>> r1+r2
-        Ray2D(Point2D(0, 0), Point2D(sqrt(2)/2, sqrt(2)/2)))
+        Ray2D(Point2D(0, 0), Point2D(1, 1))
 
         """
         # normalizing the directions as magnitude of ray is infinite
