@@ -24,7 +24,6 @@ from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 from sympy.strategies import distribute
 from random import randint
-from statistics import stdev
 
 def Int(expr, var, showsteps=False):
     from .rubi import rubi_integrate
@@ -4473,6 +4472,18 @@ def FunctionOfExponentialTestAux(base, expon, x):
         SexponS = -SexponS
         return True
     return True
+
+def stdev(lst):
+    """Calculates the standard deviation for a list of numbers."""
+    num_items = len(lst)
+    mean = sum(lst) / num_items
+    differences = [x - mean for x in lst]
+    sq_differences = [d ** 2 for d in differences]
+    ssd = sum(sq_differences)
+    variance = ssd / num_items
+    sd = sqrt(variance)
+
+    return sd
 
 def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False, _numerical=False):
     '''

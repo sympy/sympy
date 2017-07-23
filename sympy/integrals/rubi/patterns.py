@@ -18,7 +18,7 @@ else:
         def __init__(self, a, b):
             pass
 
-from sympy.integrals.rubi.operation import *
+from sympy.integrals.rubi.operation import (Int, Mul, Add, Pow, And, Or, ZeroQ, NonzeroQ, List, Log, RemoveContent, PositiveIntegerQ, NegativeIntegerQ, PositiveQ, IntegerQ, IntegersQ, PosQ, NegQ, FracPart, IntPart, RationalQ, Subst, LinearQ, Sqrt, NegativeQ, ArcCosh, Rational, Less, Not, Simplify, Denominator, Coefficient, SumSimplerQ, Equal, Unequal, SimplerQ, LessEqual, IntLinearcQ, Greater, GreaterEqual, FractionQ, ExpandIntegrand, With, Set, Hypergeometric2F1, TogetherSimplify, Inequality, PerfectSquareQ, EvenQ, OddQ, EqQ, NiceSqrtQ, IntQuadraticQ, If, LeafCount, QuadraticQ, LinearMatchQ, QuadraticMatchQ, AtomQ, SplitProduct, SumBaseQ, NegSumBaseQ, IntBinomialQ, LinearPairQ, SimplerSqrtQ, PseudoBinomialPairQ, Rt, PolynomialQ, BinomialQ, BinomialMatchQ, BinomialDegree, GeneralizedBinomialQ, GeneralizedBinomialMatchQ, TrinomialQ, TrinomialMatchQ, GeneralizedTrinomialQ, GeneralizedTrinomialMatchQ, GeneralizedTrinomialDegree, PolyQ, Coeff, SumQ, Expon)
 from sympy.integrals.rubi.symbol import VariableSymbol, Integer
 from sympy.integrals.rubi.constraint import cons, FreeQ
 from sympy.utilities.decorator import doctest_depends_on
