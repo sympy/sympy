@@ -24,10 +24,15 @@ class SymbolRemovesOtherSymbols(Symbol):
     # Test class for a symbol that removes other symbols in `Mul`.
     pass
 
-
 Basic._constructor_postprocessor_mapping[SymbolRemovesOtherSymbols] = {
     "Mul": [_postprocess_SymbolRemovesOtherSymbols],
 }
+
+class SubclassSymbolInMulOnce(SymbolInMulOnce):
+    pass
+
+class SubclassSymbolRemovesOtherSymbols(SymbolRemovesOtherSymbols):
+    pass
 
 
 def test_constructor_postprocessors1():
@@ -47,4 +52,24 @@ def test_constructor_postprocessors1():
     assert (3*w).args == (3, w)
     assert 3*a*w**2 == 3*w**2
     assert 3*a*x**3*w**2 == 3*w**2
-    assert (w + x).args == (x, w)
+    assert set((w + x).args) == set((x, w))
+
+
+def test_constructor_postprocessors2():
+    a = symbols("a")
+    x = SubclassSymbolInMulOnce("x")
+    y = SubclassSymbolInMulOnce("y")
+    assert isinstance(3*x, Mul)
+    assert (3*x).args == (3, x)
+    assert x*x == x
+    assert 3*x*x == 3*x
+    assert 2*x*x + x == 3*x
+    assert x**3*y*y == x*y
+    assert x**5 + y*x**3 == x + x*y
+
+    w = SubclassSymbolRemovesOtherSymbols("w")
+    assert x*w == w
+    assert (3*w).args == (3, w)
+    assert 3*a*w**2 == 3*w**2
+    assert 3*a*x**3*w**2 == 3*w**2
+    assert set((w + x).args) == set((x, w))

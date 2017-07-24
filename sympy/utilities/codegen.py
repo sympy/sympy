@@ -798,6 +798,7 @@ class CCodeGen(CodeGen):
         super(CCodeGen, self).__init__(project=project)
         self.printer = printer or c_code_printers[self.standard.lower()]()
 
+        self.preprocessor_statements = preprocessor_statements
         if preprocessor_statements is None:
             self.preprocessor_statements = ['#include <math.h>']
 
