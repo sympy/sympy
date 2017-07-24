@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # -*- coding: utf-8 -*-
-
 """
 Naturalunit system.
 
@@ -22,7 +21,7 @@ dims = (length, mass, time, momentum, force, energy, power, frequency)
 
 # dimension system
 _natural_dim = DimensionSystem(base=(action, energy, velocity), dims=dims,
-                              name="Natural system")
+                               name="Natural system")
 
 units = prefix_unit(eV, PREFIXES)
 

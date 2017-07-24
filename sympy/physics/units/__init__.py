@@ -29,6 +29,7 @@ Useful functions:
 
 """
 
+# yapf: disable
 from sympy.core.compatibility import string_types
 from .dimensions import Dimension, DimensionSystem
 from .unitsystem import UnitSystem
@@ -182,6 +183,8 @@ from .definitions import (
     planck_length,
 )
 
+# yapf: enable
+
 
 def find_unit(quantity):
     """
@@ -210,7 +213,10 @@ def find_unit(quantity):
     import sympy.physics.units as u
     rv = []
     if isinstance(quantity, string_types):
-        rv = [i for i in dir(u) if quantity in i and isinstance(getattr(u, i), Quantity)]
+        rv = [
+            i for i in dir(u)
+            if quantity in i and isinstance(getattr(u, i), Quantity)
+        ]
         dim = getattr(u, quantity)
         if isinstance(dim, Dimension):
             rv.extend(find_unit(dim))
@@ -225,10 +231,12 @@ def find_unit(quantity):
             elif isinstance(quantity, Dimension):
                 if other.dimension == quantity:
                     rv.append(str(i))
-            elif other.dimension == Dimension(Quantity.get_dimensional_expr(quantity)):
+            elif other.dimension == Dimension(
+                    Quantity.get_dimensional_expr(quantity)):
                 rv.append(str(i))
 
     return sorted(rv, key=len)
+
 
 # NOTE: the old units module had additional variables:
 # 'density', 'illuminance', 'resistance'.

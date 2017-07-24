@@ -22,6 +22,7 @@ k = PREFIXES["k"]
 def test_str_repr():
     assert str(kg) == "kilogram"
 
+
 def test_eq():
     # simple test
     assert 10*m == 10*m
@@ -32,7 +33,7 @@ def test_convert_to():
     q = Quantity("q1", length, 5000)
     assert q.convert_to(m) == 5000*m
 
-    assert speed_of_light.convert_to(m / s) == 299792458 * m / s
+    assert speed_of_light.convert_to(m/s) == 299792458*m/s
     # TODO: eventually support this kind of conversion:
     # assert (2*speed_of_light).convert_to(m / s) == 2 * 299792458 * m / s
     assert day.convert_to(s) == 86400*s
@@ -62,7 +63,7 @@ def test_Quantity_definition():
 
     v = Quantity("u", length, 5*kilo)
     assert v.dimension == length
-    assert v.scale_factor == 5 * 1000
+    assert v.scale_factor == 5*1000
 
     raises(ValueError, lambda: Quantity('invalid', 'dimension', 1))
     raises(ValueError, lambda: Quantity('mismatch', length, kg))
@@ -135,11 +136,11 @@ def test_check_unit_consistency():
 def test_mul_div():
     u = Quantity("u", length, 10)
 
-    assert 1 / u == u**(-1)
-    assert u / 1 == u
+    assert 1/u == u**(-1)
+    assert u/1 == u
 
-    v1 = u / Quantity("t", time, 2)
-    v2 = Quantity("v", length / time, 5)
+    v1 = u/Quantity("t", time, 2)
+    v2 = Quantity("v", length/time, 5)
 
     # Pow only supports structural equality:
     assert v1 != v2
@@ -149,9 +150,9 @@ def test_mul_div():
     # (requires somehow manipulating the core).
     # assert u / Quantity('l2', length, 2) == 5
 
-    assert u * 1 == u
+    assert u*1 == u
 
-    ut1 = u * Quantity("t", time, 2)
+    ut1 = u*Quantity("t", time, 2)
     ut2 = Quantity("ut", length*time, 20)
 
     # Mul only supports structural equality:
@@ -159,29 +160,29 @@ def test_mul_div():
     assert ut1 == ut2.convert_to(ut1)
 
     # Mul only supports structural equality:
-    assert u * Quantity("lp1", length**-1, 2) != 20
+    assert u*Quantity("lp1", length**-1, 2) != 20
 
     assert u**0 == 1
     assert u**1 == u
     # TODO: Pow only support structural equality:
-    assert u ** 2 != Quantity("u2", length ** 2, 100)
-    assert u ** -1 != Quantity("u3", length ** -1, 0.1)
+    assert u**2 != Quantity("u2", length**2, 100)
+    assert u**-1 != Quantity("u3", length**-1, 0.1)
 
-    assert u ** 2 == Quantity("u2", length ** 2, 100).convert_to(u)
-    assert u ** -1 == Quantity("u3", length ** -1, S.One/10).convert_to(u)
+    assert u**2 == Quantity("u2", length**2, 100).convert_to(u)
+    assert u**-1 == Quantity("u3", length**-1, S.One/10).convert_to(u)
 
 
 def test_units():
-    assert convert_to((5*m/s * day) / km, 1) == 432
-    assert convert_to(foot / meter, meter) == Rational('0.3048')
+    assert convert_to((5*m/s*day)/km, 1) == 432
+    assert convert_to(foot/meter, meter) == Rational('0.3048')
     # amu is a pure mass so mass/mass gives a number, not an amount (mol)
     # TODO: need better simplification routine:
     assert str(convert_to(grams/amu, grams).n(2)) == '6.0e+23'
 
     # Light from the sun needs about 8.3 minutes to reach earth
-    t = (1*au / speed_of_light) / minute
+    t = (1*au/speed_of_light)/minute
     # TODO: need a better way to simplify expressions containing units:
-    t = convert_to(convert_to(t, meter / minute), meter)
+    t = convert_to(convert_to(t, meter/minute), meter)
     assert t == 49865956897/5995849160
 
     # TODO: fix this, it should give `m` without `Abs`
@@ -190,12 +191,12 @@ def test_units():
 
     t = Symbol('t')
     assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
-    assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
+    assert (t*m/s).integrate((t, 1*s, 5*s)) == 12*m*s
 
 
 def test_issue_quart():
-    assert convert_to(4 * quart / inch ** 3, meter) == 231
-    assert convert_to(4 * quart / inch ** 3, millimeter) == 231
+    assert convert_to(4*quart/inch**3, meter) == 231
+    assert convert_to(4*quart/inch**3, millimeter) == 231
 
 
 def test_issue_5565():
@@ -214,14 +215,16 @@ def test_find_unit():
         'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter',
         'decimeters', 'kilometers', 'lightyears', 'micrometer', 'millimeter',
         'nanometers', 'picometers', 'centimeters', 'micrometers',
-        'millimeters', 'nautical_mile', 'planck_length', 'nautical_miles', 'astronomical_unit',
-        'astronomical_units']
+        'millimeters', 'nautical_mile', 'planck_length', 'nautical_miles',
+        'astronomical_unit', 'astronomical_units'
+    ]
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
-    assert find_unit(inch ** 3) == [
+    assert find_unit(inch**3) == [
         'l', 'cl', 'dl', 'ml', 'liter', 'quart', 'liters', 'quarts',
-        'deciliter', 'centiliter', 'deciliters', 'milliliter',
-        'centiliters', 'milliliters']
+        'deciliter', 'centiliter', 'deciliters', 'milliliter', 'centiliters',
+        'milliliters'
+    ]
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts']
 
 
@@ -235,12 +238,12 @@ def test_Quantity_derivative():
 
 def test_sum_of_incompatible_quantities():
     raises(ValueError, lambda: meter + second)
-    raises(ValueError, lambda: 2 * meter + second)
-    raises(ValueError, lambda: 2 * meter + 3 * second)
-    raises(ValueError, lambda: 1 / second + 1 / meter)
-    raises(ValueError, lambda: 2 * meter*(mile + centimeter) + km)
+    raises(ValueError, lambda: 2*meter + second)
+    raises(ValueError, lambda: 2*meter + 3*second)
+    raises(ValueError, lambda: 1/second + 1/meter)
+    raises(ValueError, lambda: 2*meter*(mile + centimeter) + km)
 
-    expr = 2 * (mile + centimeter)/second + km/hour
+    expr = 2*(mile + centimeter)/second + km/hour
     assert expr in Basic._constructor_postprocessor_mapping
     for i in expr.args:
         assert i in Basic._constructor_postprocessor_mapping
@@ -253,14 +256,15 @@ def test_factor_and_dimension():
         meter/second + 36*km/(10*hour))
 
     x, y = symbols('x y')
-    assert (x + y/100, length) == Quantity._collect_factor_and_dimension(
-        x*m + y*centimeter)
+    assert (
+        x + y/100,
+        length) == Quantity._collect_factor_and_dimension(x*m + y*centimeter)
 
     cH = Quantity('cH', amount_of_substance/volume)
     pH = -log(cH)
 
-    assert (1, volume/amount_of_substance) == Quantity._collect_factor_and_dimension(
-        exp(pH))
+    assert (1, volume/amount_of_substance
+            ) == Quantity._collect_factor_and_dimension(exp(pH))
 
     v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
     v_w2 = Quantity('v_w2', length/time, 2*meter/second)
@@ -285,7 +289,7 @@ def test_factor_and_dimension_with_Abs():
 
 
 def test_dimensional_expr_of_derivative():
-    l = Quantity('l', length, 36 * km)
+    l = Quantity('l', length, 36*km)
     t = Quantity('t', time, hour)
     t1 = Quantity('t1', time, second)
     x = Symbol('x')

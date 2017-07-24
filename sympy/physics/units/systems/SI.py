@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 SI unit system.
 Based on MKSA, which stands for "meter, kilogram, second, ampere".
@@ -31,7 +30,6 @@ base_dims = (amount_of_substance, luminous_intensity, temperature)
 
 # dimension system
 _si_dim = _mksa_dim.extend(base=base_dims, dims=derived_dims, name='SI')
-
 
 units = [mol, cd, K, lux]
 all_units = []

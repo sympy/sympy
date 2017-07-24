@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 MKS unit system.
 
@@ -19,8 +18,7 @@ dims = (voltage, impedance, conductance, capacitance, inductance, charge,
         magnetic_density, magnetic_flux)
 
 # dimension system
-_mksa_dim = _mks_dim.extend(base=(current,), dims=dims, name='MKSA')
-
+_mksa_dim = _mks_dim.extend(base=(current, ), dims=dims, name='MKSA')
 
 units = [A, V, ohm, S, F, H, C, T, Wb]
 all_units = []
@@ -29,4 +27,4 @@ for u in units:
 
 all_units.extend([Z0])
 
-MKSA = MKS.extend(base=(A,), units=all_units, name='MKSA')
+MKSA = MKS.extend(base=(A, ), units=all_units, name='MKSA')

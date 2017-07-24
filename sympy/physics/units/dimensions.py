@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-
 """
 Definition of physical dimensions.
 
@@ -77,7 +76,8 @@ class Dimension(Expr):
             name = sympify(name)
 
         if not isinstance(name, Expr):
-            raise TypeError("Dimension name needs to be a valid math expression")
+            raise TypeError(
+                "Dimension name needs to be a valid math expression")
 
         if isinstance(symbol, string_types):
             symbol = Symbol(symbol)
@@ -106,7 +106,8 @@ class Dimension(Expr):
 
     def __eq__(self, other):
         if isinstance(other, Dimension):
-            return self.get_dimensional_dependencies() == other.get_dimensional_dependencies()
+            return self.get_dimensional_dependencies(
+            ) == other.get_dimensional_dependencies()
         return False
 
     def __str__(self):
@@ -141,8 +142,8 @@ class Dimension(Expr):
         """
 
         if not isinstance(other, Dimension):
-            raise TypeError("Only dimension can be added; '%s' is not valid"
-                            % type(other))
+            raise TypeError(
+                "Only dimension can be added; '%s' is not valid" % type(other))
         elif isinstance(other, Dimension) and self != other:
             raise ValueError("Only dimension which are equal can be added; "
                              "'%s' and '%s' are different" % (self, other))
@@ -174,7 +175,7 @@ class Dimension(Expr):
         return Dimension(self.name/other.name)
 
     def __rdiv__(self, other):
-        return other * pow(self, -1)
+        return other*pow(self, -1)
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -200,7 +201,10 @@ class Dimension(Expr):
 
         if name.is_Mul:
             ret = collections.defaultdict(int)
-            dicts = [Dimension._get_dimensional_dependencies_for_name(i) for i in name.args]
+            dicts = [
+                Dimension._get_dimensional_dependencies_for_name(i)
+                for i in name.args
+            ]
             for d in dicts:
                 for k, v in d.items():
                     ret[k] += v
@@ -292,24 +296,33 @@ luminous_intensity._register_as_base_dim()
 # Dimensional dependencies for derived dimensions
 Dimension._dimensional_dependencies["velocity"] = dict(length=1, time=-1)
 Dimension._dimensional_dependencies["acceleration"] = dict(length=1, time=-2)
-Dimension._dimensional_dependencies["momentum"] = dict(mass=1, length=1, time=-1)
+Dimension._dimensional_dependencies["momentum"] = dict(mass=1, length=1,
+                                                       time=-1)
 Dimension._dimensional_dependencies["force"] = dict(mass=1, length=1, time=-2)
 Dimension._dimensional_dependencies["energy"] = dict(mass=1, length=2, time=-2)
 Dimension._dimensional_dependencies["power"] = dict(length=2, mass=1, time=-3)
-Dimension._dimensional_dependencies["pressure"] = dict(mass=1, length=-1, time=-2)
+Dimension._dimensional_dependencies["pressure"] = dict(mass=1, length=-1,
+                                                       time=-2)
 Dimension._dimensional_dependencies["frequency"] = dict(time=-1)
 Dimension._dimensional_dependencies["action"] = dict(length=2, mass=1, time=-1)
 Dimension._dimensional_dependencies["volume"] = dict(length=3)
 
 # Dimensional dependencies for derived dimensions
-Dimension._dimensional_dependencies["voltage"] = dict(mass=1, length=2, current=-1, time=-3)
-Dimension._dimensional_dependencies["impedance"] = dict(mass=1, length=2, current=-2, time=-3)
-Dimension._dimensional_dependencies["conductance"] = dict(mass=-1, length=-2, current=2, time=3)
-Dimension._dimensional_dependencies["capacitance"] = dict(mass=-1, length=-2, current=2, time=4)
-Dimension._dimensional_dependencies["inductance"] = dict(mass=1, length=2, current=-2, time=-2)
+Dimension._dimensional_dependencies["voltage"] = dict(mass=1, length=2,
+                                                      current=-1, time=-3)
+Dimension._dimensional_dependencies["impedance"] = dict(
+    mass=1, length=2, current=-2, time=-3)
+Dimension._dimensional_dependencies["conductance"] = dict(
+    mass=-1, length=-2, current=2, time=3)
+Dimension._dimensional_dependencies["capacitance"] = dict(
+    mass=-1, length=-2, current=2, time=4)
+Dimension._dimensional_dependencies["inductance"] = dict(
+    mass=1, length=2, current=-2, time=-2)
 Dimension._dimensional_dependencies["charge"] = dict(current=1, time=1)
-Dimension._dimensional_dependencies["magnetic_density"] = dict(mass=1, current=-1, time=-2)
-Dimension._dimensional_dependencies["magnetic_flux"] = dict(length=2, mass=1, current=-1, time=-2)
+Dimension._dimensional_dependencies["magnetic_density"] = dict(
+    mass=1, current=-1, time=-2)
+Dimension._dimensional_dependencies["magnetic_flux"] = dict(
+    length=2, mass=1, current=-1, time=-2)
 
 
 class DimensionSystem(object):
@@ -348,8 +361,8 @@ class DimensionSystem(object):
         self._dims = tuple(set(base) | set(dims))
 
         if self.is_consistent is False:
-            raise ValueError("The system with basis '%s' is not consistent"
-                             % str(self._base_dims))
+            raise ValueError("The system with basis '%s' is not consistent" %
+                             str(self._base_dims))
 
     def __str__(self):
         """
@@ -362,7 +375,8 @@ class DimensionSystem(object):
         if self.name != "":
             return self.name
         else:
-            return "DimensionSystem(%s)" % ", ".join(str(d) for d in self._base_dims)
+            return "DimensionSystem(%s)" % ", ".join(
+                str(d) for d in self._base_dims)
 
     def __repr__(self):
         return "<DimensionSystem: %s>" % repr(self._base_dims)
@@ -410,7 +424,8 @@ class DimensionSystem(object):
                     break
         elif isinstance(dim, Dimension):
             for i, idim in enumerate(self._dims):
-                if dim.get_dimensional_dependencies() == idim.get_dimensional_dependencies():
+                if dim.get_dimensional_dependencies(
+                ) == idim.get_dimensional_dependencies():
                     return idim
 
         return found_dim
@@ -483,8 +498,7 @@ class DimensionSystem(object):
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
         return reduce(lambda x, y: x.row_join(y),
-                      [self.dim_can_vector(d) for d in self._base_dims]
-                      ).inv()
+                      [self.dim_can_vector(d) for d in self._base_dims]).inv()
 
     def dim_can_vector(self, dim):
         """
@@ -501,14 +515,17 @@ class DimensionSystem(object):
         """
         Vector representation in terms of the base dimensions.
         """
-        return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
+        return self.can_transf_matrix*Matrix(self.dim_can_vector(dim))
 
     def print_dim_base(self, dim):
         """
         Give the string expression of a dimension in term of the basis symbols.
         """
         dims = self.dim_vector(dim)
-        symbols = [i.symbol if i.symbol is not None else i.name for i in self._base_dims]
+        symbols = [
+            i.symbol if i.symbol is not None else i.name
+            for i in self._base_dims
+        ]
         res = S.One
         for (s, p) in zip(symbols, dims):
             res *= s**p

@@ -23,7 +23,7 @@ def test_definition():
     assert ms.descr == "MS system"
 
     assert ms._system._base_dims == DimensionSystem.sort_dims(base_dim)
-    assert set(ms._system._dims) == set(base_dim + (velocity,))
+    assert set(ms._system._dims) == set(base_dim + (velocity, ))
 
 
 def test_error_definition():
@@ -40,15 +40,15 @@ def test_str_repr():
 def test_print_unit_base():
     A = Quantity("A", current, 1)
     Js = Quantity("Js", action, 1)
-    mksa = UnitSystem((m, kg, s, A), (Js,))
+    mksa = UnitSystem((m, kg, s, A), (Js, ))
 
     assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
 
 
 def test_extend():
-    ms = UnitSystem((m, s), (c,))
+    ms = UnitSystem((m, s), (c, ))
     Js = Quantity("Js", action, 1)
-    mks = ms.extend((kg,), (Js,))
+    mks = ms.extend((kg, ), (Js, ))
 
     res = UnitSystem((m, s, kg), (c, Js))
     assert set(mks._base_units) == set(res._base_units)
@@ -56,7 +56,7 @@ def test_extend():
 
 
 def test_dim():
-    dimsys = UnitSystem((m, kg, s), (c,))
+    dimsys = UnitSystem((m, kg, s), (c, ))
     assert dimsys.dim == 3
 
 

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Module defining unit prefixe class and some constants.
 
@@ -64,16 +63,17 @@ class Prefix(Expr):
     def __str__(self):
         # TODO: add proper printers and tests:
         if self.base == 10:
-            return "Prefix(%r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent)
+            return "Prefix(%r, %r, %r)" % (str(self.name), str(self.abbrev),
+                                           self._exponent)
         else:
-            return "Prefix(%r, %r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent, self.base)
+            return "Prefix(%r, %r, %r, %r)" % (str(self.name),
+                                               str(self.abbrev),
+                                               self._exponent, self.base)
 
     __repr__ = __str__
 
     def __mul__(self, other):
-        fact = self.scale_factor * other.scale_factor
+        fact = self.scale_factor*other.scale_factor
 
         if fact == 1:
             return 1
@@ -84,10 +84,10 @@ class Prefix(Expr):
                     return PREFIXES[p]
             return fact
 
-        return self.scale_factor * other
+        return self.scale_factor*other
 
     def __div__(self, other):
-        fact = self.scale_factor / other.scale_factor
+        fact = self.scale_factor/other.scale_factor
 
         if fact == 1:
             return 1
@@ -97,16 +97,16 @@ class Prefix(Expr):
                     return PREFIXES[p]
             return fact
 
-        return self.scale_factor / other
+        return self.scale_factor/other
 
     __truediv__ = __div__
 
     def __rdiv__(self, other):
         if other == 1:
             for p in PREFIXES:
-                if PREFIXES[p].scale_factor == 1 / self.scale_factor:
+                if PREFIXES[p].scale_factor == 1/self.scale_factor:
                     return PREFIXES[p]
-        return other / self.scale_factor
+        return other/self.scale_factor
 
     __rtruediv__ = __rdiv__
 
@@ -132,8 +132,10 @@ def prefix_unit(unit, prefixes):
     prefixed_units = []
 
     for prefix_abbr, prefix in prefixes.items():
-        prefixed_units.append(Quantity("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor * prefix,
-                                       "%s%s" % (prefix.abbrev, unit.abbrev)))
+        prefixed_units.append(
+            Quantity("%s%s" % (prefix.name, unit.name), unit.dimension,
+                     unit.scale_factor*prefix, "%s%s" % (prefix.abbrev,
+                                                         unit.abbrev)))
 
     return prefixed_units
 
@@ -159,7 +161,6 @@ atto = Prefix('atto', 'a', -18)
 zepto = Prefix('zepto', 'z', -21)
 yocto = Prefix('yocto', 'y', -24)
 
-
 # http://physics.nist.gov/cuu/Units/prefixes.html
 PREFIXES = {
     'Y': yotta,
@@ -184,14 +185,12 @@ PREFIXES = {
     'y': yocto,
 }
 
-
 kibi = Prefix('kibi', 'Y', 10, 2)
 mebi = Prefix('mebi', 'Y', 20, 2)
 gibi = Prefix('gibi', 'Y', 30, 2)
 tebi = Prefix('tebi', 'Y', 40, 2)
 pebi = Prefix('pebi', 'Y', 50, 2)
 exbi = Prefix('exbi', 'Y', 60, 2)
-
 
 # http://physics.nist.gov/cuu/Units/binary.html
 BIN_PREFIXES = {
