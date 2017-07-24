@@ -172,7 +172,7 @@ def test_AccumBounds():
 
 
 def test_Lambda():
-    assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)".format(d.dummy_index)
+    assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
     # issue 2908
     assert str(Lambda((), 1)) == "Lambda((), 1)"
     assert str(Lambda((), x)) == "Lambda((), x)"

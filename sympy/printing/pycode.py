@@ -22,7 +22,7 @@ class PythonCodePrinter(CodePrinter):
     tab = '    '
     _kf = _known_functions
     _operators = {'and': 'and', 'or': 'or', 'not': 'not'}
-    _default_settings = dict(CodePrinter._default_settings, precision=17)
+    _default_settings = dict(CodePrinter._default_settings, precision=15)
 
     def __init__(self, settings=None):
         super(PythonCodePrinter, self).__init__(settings)
