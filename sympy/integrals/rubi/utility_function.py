@@ -116,6 +116,9 @@ def IntegersQ(*var):
 def ComplexNumberQ(*var):
     return all((im(i)!=0) for i in var)
 
+def PureComplexNumberQ(*var):
+    return all((im(i)!=0 and re(i)==0) for i in var)
+
 def RealNumericQ(u):
     return u.is_real
 
@@ -4522,7 +4525,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
             substitutions = dict((s, rand_x) for s in args)
             rand_val.append(float(abs(res.subs(substitutions).n())))
         try:
-            if stdev(rand_val) < Pow(10, -6):
+            if stdev(rand_val) < Pow(10, -3):
                 return True
             return False
         except:
@@ -4558,3 +4561,107 @@ def IntQuadraticQ(a, b, c, d, e, m, p, x):
 def IntBinomialQ(a, b, c, n, m, p, x):
     #(* IntBinomialQ[a,b,c,n,m,p,x] returns True iff (c*x)^m*(a+b*x^n)^p is integrable wrt x in terms of non-hypergeometric functions. *)
     return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))
+
+def RectifyTangent(*args):
+    # (* RectifyTangent(u,a,b,r,x) returns an expression whose derivative equals the derivative of r*ArcTan(a+b*Tan(u)) wrt x. *)
+    if len(args) == 5:
+        u, a, b, r, x = args
+        t = Together(a)
+        if ProductQ(t) and any(PureComplexNumberQ(i) for i in t.args):
+            c = a/I
+            d = b/I
+            if NegativeQ(d):
+                return RectifyTangent(u, -a, -b, -r, x)
+            e = SmartDenominator(Together(c + d*x))
+            c = c*e
+            d = d*e
+            if EvenQ(Denominator(NumericFactor(Together(u)))):
+                return I*r*Log(RemoveContent(Simplify((c+e)**2+d**2)+Simplify((c+e)**2-d**2)*Cos(2*u)+Simplify(2*(c+e)*d)*Sin(2*u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2+d**2)+Simplify((c-e)**2-d**2)*Cos(2*u)+Simplify(2*(c-e)*d)*Sin(2*u),x))/4
+            return I*r*Log(RemoveContent(Simplify((c+e)**2)+Simplify(2*(c+e)*d)*Cos(u)*Sin(u)-Simplify((c+e)**2-d**2)*Sin(u)**2,x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2)+Simplify(2*(c-e)*d)*Cos(u)*Sin(u)-Simplify((c-e)**2-d**2)*Sin(u)**2,x))/4
+        elif NegativeQ(b):
+            return RectifyTangent(u, -a, -b, -r, x)
+        elif EvenQ(Denominator(NumericFactor(Together(u)))):
+            return r*SimplifyAntiderivative(u,x) + r*ArcTan(Simplify((2*a*b*Cos(2*u)-(1+a**2-b**2)*Sin(2*u))/(a**2+(1+b)**2+(1+a**2-b**2)*Cos(2*u)+2*a*b*Sin(2*u))))
+        return r*SimplifyAntiderivative(u,x) - r*ArcTan(ActivateTrig(Simplify((a*b-2*a*b*cos(u)**2+(1+a**2-b**2)*cos(u)*sin(u))/(b*(1+b)+(1+a**2-b**2)*cos(u)**2+2*a*b*cos(u)*sin(u)))))
+
+    u, a, b, x = args
+    t = Together(a)
+    if ProductQ(t) and any(PureComplexNumberQ(i) for i in t.args):
+        c = a/I
+        if NegativeQ(c):
+            return RectifyTangent(u, -a, -b, x)
+        if ZeroQ(c - 1):
+            if EvenQ(Denominator(NumericFactor(Together(u)))):
+                return I*b*ArcTanh(Sin(2*u))/2
+            return I*b*ArcTanh(2*cos(u)*sin(u))/2
+        e = SmartDenominator(c)
+        c = c*e
+        return I*b*Log(RemoveContent(e*Cos(u)+c*Sin(u),x))/2 - I*b*Log(RemoveContent(e*Cos(u)-c*Sin(u),x))/2
+    elif NegativeQ(a):
+        return RectifyTangent(u, -a, -b, x)
+    elif ZeroQ(a - 1):
+        return b*SimplifyAntiderivative(u, x)
+    elif EvenQ(Denominator(NumericFactor(Together(u)))):
+        c =  Simplify((1 + a)/(1 - a))
+        numr = SmartNumerator(c)
+        denr = SmartDenominator(c)
+        return b*SimplifyAntiderivative(u,x) - b*ArcTan(NormalizeLeadTermSigns(denr*Sin(2*u)/(numr+denr*Cos(2*u)))),
+    elif PositiveQ(a - 1):
+        c = Simplify(1/(a - 1))
+        numr = SmartNumerator(c)
+        denr = SmartDenominator(c)
+        return b*SimplifyAntiderivative(u,x) + b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Sin(u)**2))),
+    c = Simplify(a/(1 - a))
+    numr = SmartNumerator(c)
+    denr = SmartDenominator(c)
+    return b*SimplifyAntiderivative(u,x) - b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Cos(u)**2)))
+
+def RectifyCotangent(*args):
+    #(* RectifyCotangent[u,a,b,r,x] returns an expression whose derivative equals the derivative of r*ArcTan[a+b*Cot[u]] wrt x. *)
+    if len(args) == 5:
+        u, a, b, r, x = args
+        t1 = Together(a)
+        t2 = Together(b)
+        if ProductQ(t1) and any(PureComplexNumberQ(i) for i in t1.args) and ProductQ(t2) and any(PureComplexNumberQ(i) for i in t2.args):
+            c = a/I
+            d = b/I
+            if NegativeQ(d):
+                return RectifyTangent(u,-a,-b,-r,x)
+            e = SmartDenominator(Together(c + d*x))
+            c = c*e
+            d = d*e
+            if EvenQ(Denominator(NumericFactor(Together(u)))):
+                return  I*r*Log(RemoveContent(Simplify((c+e)**2+d**2)-Simplify((c+e)**2-d**2)*Cos(2*u)+Simplify(2*(c+e)*d)*Sin(2*u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2+d**2)-Simplify((c-e)**2-d**2)*Cos(2*u)+Simplify(2*(c-e)*d)*Sin(2*u),x))/4
+            return I*r*Log(RemoveContent(Simplify((c+e)**2)-Simplify((c+e)**2-d**2)*Cos(u)**2+Simplify(2*(c+e)*d)*Cos(u)*Sin(u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2)-Simplify((c-e)**2-d**2)*Cos(u)**2+Simplify(2*(c-e)*d)*Cos(u)*Sin(u),x))/4)))
+        elif NegativeQ(b):
+            return RectifyCotangent(u,-a,-b,-r,x)
+        elif EvenQ(Denominator(NumericFactor(Together(u)))):
+            return -r*SimplifyAntiderivative(u,x) - r*ArcTan(Simplify((2*a*b*Cos(2*u)+(1+a**2-b**2)*Sin(2*u))/(a**2+(1+b)**2-(1+a**2-b**2)*Cos(2*u)+2*a*b*Sin(2*u))))
+        return -r*SimplifyAntiderivative(u,x) - r*ArcTan(ActivateTrig(Simplify((a*b-2*a*b*sin(u)**2+(1+a**2-b**2)*cos(u)*sin(u))/(b*(1+b)+(1+a**2-b**2)*sin(u)**2+2*a*b*cos(u)*sin(u)))))
+
+    u, a, b, x = args
+    t = Together(a)
+    if ProductQ(t) and any(PureComplexNumberQ(i) for i in t.args):
+        c = a/I
+        if NegativeQ(c):
+            return RectifyCotangent(u,-a,-b,x)
+        elif ZeroQ(c - 1):
+            if EvenQ(Denominator(NumericFactor(Together(u)))):
+                return -I*b*ArcTanh(Sin(2*u))/2
+            return -I*b*ArcTanh(2*Cos(u)*Sin(u))/2)
+        e = SmartDenominator(c)
+        c = c*e
+        return -I*b*Log(RemoveContent(c*Cos(u)+e*Sin(u),x))/2 + I*b*Log(RemoveContent(c*Cos(u)-e*Sin(u),x))/2
+    elif NegativeQ(a):
+        return RectifyCotangent(u,-a,-b,x)
+    elif ZeroQ(a-1):
+        return b*SimplifyAntiderivative(u,x)
+    elif EvenQ(Denominator(NumericFactor(Together(u)))):
+        c = Simplify(a - 1)
+        numr = SmartNumerator(c)
+        denr = SmartDenominator(c)
+        return b*SimplifyAntiderivative(u,x) - b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Cos(u)**2)))
+    c = Simplify(a/(1-a))
+    numr = SmartNumerator(c)
+    denr = SmartDenominator(c)
+    return b*SimplifyAntiderivative(u,x) + b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Sin(u)**2)))
