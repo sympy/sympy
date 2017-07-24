@@ -457,6 +457,12 @@ def test_laplace_transform():
     t = symbols('t')
     w = Symbol("w")
     f = Function("f")
+    def cond(arg):
+        return Abs(periodic_argument(arg, oo)) < pi/2
+    def acond(arg):
+        c = cond(arg)
+        a = c.lhs
+        return (pi/2 >= a) & c
 
     # Test unevaluated form
     assert laplace_transform(f(t), t, w) == LaplaceTransform(f(t), t, w)
@@ -470,11 +476,13 @@ def test_laplace_transform():
     # basic tests from wikipedia
 
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
-        ((s + c)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
-    assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), 0, True)
-    assert LT(Heaviside(t), t, s) == (1/s, 0, True)
-    assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, 0, True)
-    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), 0, True)
+        ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -oo,
+        cond(c + s))
+    assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), -oo, cond(s))
+    assert LT(Heaviside(t), t, s) == (1/s, -oo, cond(s))
+    assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, -oo, cond(s))
+    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), -oo,
+        (pi/2 >= cond(s).lts) & cond(s))
 
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
@@ -483,20 +491,30 @@ def test_laplace_transform():
     assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
     assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
 
-    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
+    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, -oo, acond(s))
 
-    assert LT(erf(t), t, s) == ((erfc(s/2))*exp(s**2/4)/s, 0, True)
+    assert LT(erf(t), t, s) == \
+        (exp(s**2/4)*erfc(s/2)/s, -oo, Abs(periodic_argument(polar_lift(s)**2,
+        oo)) < pi)
 
-    assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
-    assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)
+    assert LT(sin(a*t), t, s) == \
+        (a/(a**2 + s**2), -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) <
+        pi)
+    assert LT(cos(a*t), t, s) == \
+        (s/(a**2 + s**2), -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) <
+        pi)
     # TODO would be nice to have these come out better
-    assert LT(
-        exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2), -a, True)
+    assert LT(exp(-a*t)*sin(b*t), t, s) == \
+        (b/(b**2 + (a + s)**2), -oo, Abs(periodic_argument(polar_lift(a +
+        s)**2, oo)) < pi)
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
-        ((a + s)/(b**2 + (a + s)**2), -a, True)
+        ((a + s)/(b**2 + (a + s)**2), -oo, Abs(periodic_argument(polar_lift(a
+        + s)**2, oo)) < pi)
 
-    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
-    assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
+    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2),
+        -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
+    assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2),
+        -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
     # TODO general order works, but is a *mess*
     # TODO besseli also works, but is an even greater mess
 
@@ -510,16 +528,18 @@ def test_laplace_transform():
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
         ((-sin(s**2/(2*pi))*fresnels(s/pi) + sin(s**2/(2*pi))/2 -
-            cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
-    assert laplace_transform(fresnelc(t), t, s) == (
+        cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, -oo,
+        Abs(periodic_argument(polar_lift(s)**4, oo)) < 2*pi)
+    assert laplace_transform(fresnelc(t), t, s) == \
         (sin(s**2/(2*pi))*fresnelc(s/pi)/s - cos(s**2/(2*pi))*fresnels(s/pi)/s
-        + sqrt(2)*cos(s**2/(2*pi) + pi/4)/(2*s), 0, True))
+        + sqrt(2)*cos(s**2/(2*pi) + pi/4)/(2*s), -oo,
+        Abs(periodic_argument(polar_lift(s)**4, oo)) < 2*pi)
 
     assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
-        Matrix([
-            [(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],
-            [((s + 1)**(-2), 0, True), (1/(s - 1), 1, True)]
-        ])
+        Matrix([[(1/(s - 1), 1, Abs(periodic_argument(s, oo)) < pi/2), ((s +
+        1)**(-2), -oo, pi/2 >= Abs(periodic_argument(s, oo)))], [((s +
+        1)**(-2), -oo, pi/2 >= Abs(periodic_argument(s, oo))), (1/(s - 1), 1,
+        Abs(periodic_argument(s, oo)) < pi/2)]])
 
 
 def test_issue_8368_7173():
