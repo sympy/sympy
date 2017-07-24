@@ -532,19 +532,22 @@ class Type(Basic):
 
         """
         if isinstance(expr, (float, Float)):
-            return cls('real')
+            return real
         if isinstance(expr, (int, Integer)) or getattr(expr, 'is_integer', False):
-            return cls('integer')
+            return integer
         if getattr(expr, 'is_real', False):
-            return cls('real')
+            return real
         if isinstance(expr, complex) or getattr(expr, 'is_complex', False):
-            return cls('complex')
+            return complex_
         if isinstance(expr, bool) or getattr(expr, 'is_Relational', False):
-            return cls('bool')
+            return bool_
         else:
             raise ValueError("Could not deduce type from expr")
 
-    def cast_check(self, value, rtol=None, atol=None, limits=None, precision_targets=None):
+    def _check(self, value):
+        pass
+
+    def cast_check(self, value, rtol=None, atol=0, limits=None, precision_targets=None):
         """ Casts a value to the data type of the instance.
 
         Parameters
@@ -553,7 +556,7 @@ class Type(Basic):
         rtol : floating point number
             Relative tolerance. (will be deduced if not given).
         atol : floating point number
-            Absolute tolerance. (will be deduced if not given).
+            Absolute tolerance (in addition to ``rtol``).
         limits : dict
             Values given by ``limits.h``, x86/IEEE754 defaults if not given.
             Default: :attr:`default_limits`.
@@ -572,87 +575,38 @@ class Type(Basic):
 
         """
         from sympy.functions.elementary.complexes import im, re
-        def lim(type_name, key):
-            return (limits or self.default_limits).get(type_name, {}).get(key)
         val = _sympify(value)
 
-        name = (precision_targets or self.default_precision_targets).get(self.name, self.name)
         ten = Integer(10)
-        if rtol is None:
-            exp10 = lim(name, 'decimal_dig')
-            rtol = 1e-15 if exp10 is None else ten**(-exp10)
+        exp10 = getattr(self, 'decimal_dig', None)
 
-        if atol is None:
-            if rtol == 0:
-                exp10 = lim(name, 'decimal_dig')
-                atol = 1e-15 if exp10 is None else 10**(-exp10)
-            else:
-                atol = 0
+        if rtol is None:
+            rtol = 1e-15 if exp10 is None else ten**(-exp10)
 
         def tol(num):
             return atol + rtol*abs(num)
 
-        caster = lambda x: x  # identity
-        _min, _max, _tiny = -oo, oo, 0  # undefined precision
+        new_val = self._cast_nocheck(value)
+        self._check(new_val)
 
-        if name == 'integer':
-            caster = int
-        elif name.startswith('int'):
-            nbits = int(name.split('int')[1])
-            _min, _max = -2**(nbits - 1), 2**(nbits - 1) - 1
-            caster = int
-        elif name.startswith('uint'):
-            nbits = int(name.split('uint')[1])
-            _min, _max = 0, 2**nbits - 1
-            caster = int
-        elif name.startswith('float'):
-            _max = +lim(name, 'max')
-            _min = -lim(name, 'max')
-            _tiny = lim(name, 'tiny')
-            dec_dig = lim(name, 'decimal_dig')
-            try:
-                val = Float(str(val), dec_dig+3)
-            except ValueError:
-                val = val.evalf(dec_dig + 3)  # e.g. sympy.pi
-            caster = lambda x: Float(str(x.evalf(dec_dig)), dec_dig+3)
-
-        if name.startswith('complex'):
-            if name == 'complex':
-                nbits = 128  # assume double precision as underlying data
-            else:
-                nbits = int(name.split('complex')[1])
-            corresponding_float = 'float%d' % (nbits // 2)
-            _max = +lim(corresponding_float, 'max')
-            _tiny = lim(corresponding_float, 'tiny')
-            dec_dig = lim(corresponding_float, 'decimal_dig')
-            caster = lambda x: (
-                Float(str(re(x).evalf(dec_dig)), dec_dig+3) +
-                Float(str(im(x).evalf(dec_dig)), dec_dig+3)*1j
-            )
-            if abs(re(val)) > _max or abs(im(val)) > _max:
-                raise ValueError("Maximum value exceeded for data type.")
-            if abs(re(val)) < _tiny or abs(im(val)) < _tiny:
-                raise ValueError("Minimum (absolute) value for data type bigger than new value.")
-            new_val = caster(re(val)) + 1j*caster(im(val))
-            delta = new_val - val
-            if abs(re(delta)) > tol(re(val)) or abs(im(delta)) > tol(im(val)):
-                raise ValueError("Casting gives a significantly different value.")
-        else:
-            if val < _min:
-                raise ValueError("Minumum value for data type bigger than new value.")
-            if val > _max:
-                raise ValueError("Maximum value exceeded for data type.")
-            if abs(val) < _tiny:
-                raise ValueError("Smallest (absolute) value for data type bigger than new value.")
-            new_val = caster(val)
-            delta = new_val - val
-            if abs(delta) > tol(val):  # rounding, e.g. int(3.5) != 3.5
-                raise ValueError("Casting gives a significantly different value.")
+        delta = new_val - val
+        if abs(delta) > tol(val):  # rounding, e.g. int(3.5) != 3.5
+            raise ValueError("Casting gives a significantly different value.")
 
         return new_val
 
-class IntType(Type):
+class IntBaseType(Type):
+    __slots__ = ['name']
+    _cast_nocheck = Integer
+
+class IntType(IntBaseType):
     __slots__ = ['name', 'bits']
+
+    def _check(self, value):
+        if value < self.min:
+            raise ValueError("Value is too small: %d < %d" % (value, self.min))
+        if value > self.max:
+            raise ValueError("Value is too big: %d > %d" % (value, self.max))
 
 class SignedIntType(IntType):
     @property
@@ -674,6 +628,29 @@ class UnsignedIntType(IntType):
 
 class FloatType(Type):
     __slots__ = ['name', 'bits', 'max', 'tiny', 'eps', 'dig', 'decimal_dig']
+
+    def _cast_nocheck(self, value):
+        return Float(str(_sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
+
+    def _check(self, value):
+        if value < -self.max:
+            raise ValueError("Value is too small: %d < %d" % (value, -self.max))
+        if value > self.max:
+            raise ValueError("Value is too big: %d > %d" % (value, self.max))
+        if abs(value) < self.tiny:
+            raise ValueError("Smallest (absolute) value for data type bigger than new value.")
+
+class ComplexType(FloatType):
+
+    def _cast_nocheck(self, value):
+        return (
+            super(ComplexType, self)._cast_nocheck(re(value)) +
+            super(ComplexType, self)._cast_nocheck(im(value))*1j
+        )
+
+    def _check(self, value):
+        super(ComplexType, self)._check(re(value))
+        super(ComplexType, self)._check(im(value))
 
 
 # NumPy types:
@@ -709,12 +686,12 @@ float80 = FloatType(
     eps=Float('1.08420217248550443401e-19'),
     dig=18, decimal_dig=21
 )
-complex64 = FloatType('complex64', 64, **{k: getattr(float32, k) for k in FloatType.__slots__[2:]})
-complex128 = FloatType('complex128', 128, **{k: getattr(float64, k) for k in FloatType.__slots__[2:]})
+complex64 = ComplexType('complex64', 64, **{k: getattr(float32, k) for k in FloatType.__slots__[2:]})
+complex128 = ComplexType('complex128', 128, **{k: getattr(float64, k) for k in FloatType.__slots__[2:]})
 
 # Generic types (precision may be chosen by code printers):
 real = Type('real')
-integer = Type('integer')
+integer = IntBaseType('integer')
 complex_ = Type('complex')
 bool_ = Type('bool')
 
@@ -745,7 +722,7 @@ class Variable(Basic):
     Examples
     --------
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Variable, float32
+    >>> from sympy.codegen.ast import Variable, float32, Type
     >>> x = Symbol('x')
     >>> v = Variable(x, type_=float32)
 

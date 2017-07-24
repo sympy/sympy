@@ -9,6 +9,8 @@ from sympy.codegen.ast import (
     Assignment, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
     AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
     DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
+    integer, real, complex_, int8, uint8, float32 as f32, float64 as f64, float80 as f80,
+    complex64 as c64, complex128 as c128
 )
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
@@ -170,96 +172,59 @@ def test_For():
 
 
 def test_Type():
-    t = Type('float64')
-    assert t.name == 'float64'
-    assert t.from_expr(7) == Type('integer')
+    t = Type('MyType')
+    assert t.name == 'MyType'
+    assert str(t) == 'MyType'
+    assert repr(t) == "Type('MyType')"
 
 
 def test_Type__from_expr():
-    assert Type.from_expr(i) == Type('integer')
+    assert Type.from_expr(i) == integer
     u = symbols('u', real=True)
-    assert Type.from_expr(u) == Type('real')
-    assert Type.from_expr(n) == Type('integer')
-    assert Type.from_expr(3) == Type('integer')
-    assert Type.from_expr(3.0) == Type('real')
-    assert Type.from_expr(3+1j) == Type('complex')
+    assert Type.from_expr(u) == real
+    assert Type.from_expr(n) == integer
+    assert Type.from_expr(3) == integer
+    assert Type.from_expr(3.0) == real
+    assert Type.from_expr(3+1j) == complex_
 
 
 def test_Type__cast_check__integers():
     # Rounding
-    integer = Type('integer')
     raises(ValueError, lambda: integer.cast_check(3.5))
 
     # Range
-    int8 = Type('int8')
     assert int8.cast_check(127.0) == 127
     raises(ValueError, lambda: int8.cast_check(128))
     assert int8.cast_check(-128) == -128
     raises(ValueError, lambda: int8.cast_check(-129))
 
-    uint8 = Type('uint8')
     assert uint8.cast_check(0) == 0
     assert uint8.cast_check(128) == 128
     raises(ValueError, lambda: uint8.cast_check(256.0))
     raises(ValueError, lambda: uint8.cast_check(-1))
 
 
-def test_Type__cast_check__floating_point():
-    f32 = Type('float32')
-    # assert abs(0.12345678949 - f32.cast_check(0.12345678949) - 4.9e-10) < 1e-10  # see gh-12038
-    raises(ValueError, lambda: f32.cast_check(123.45678949))
-    raises(ValueError, lambda: f32.cast_check(12.345678949))
-    raises(ValueError, lambda: f32.cast_check(1.2345678949))
-    raises(ValueError, lambda: f32.cast_check(.12345678949))
-    assert abs(123.456789049 - f32.cast_check(123.456789049) - 4.9e-8) < 1e-8
-
-    f64 = Type('float64')
-    dcm21 = Float('0.123456789012345670499')  # 21 decimals
-    assert abs(dcm21 - f64.cast_check(dcm21) - 4.99e-19) < 1e-19
-
-    f80 = Type('float80')
-    f80.cast_check(Float('0.12345678901234567890103'))
-    raises(ValueError, lambda: f80.cast_check(Float('0.12345678901234567890123')))
-
-    v10 = 12345.67894
-    raises(ValueError, lambda: f32.cast_check(v10))
-    assert abs(Float(str(v10), 20) - f64.cast_check(v10)) < 1e-16
-
-
-def test_Type__cast_check__complex_floating_point():
-    c64 = Type('complex64')
-    val9_11 = 123.456789049 + 0.123456789049j
-    raises(ValueError, lambda: c64.cast_check(.12345678949 + .12345678949j))
-    assert abs(val9_11 - c64.cast_check(val9_11) - 4.9e-8) < 1e-8
-
-    c128 = Type('complex128')
-    dcm21 = Float('0.123456789012345670499') + 1e-20j  # 21 decimals
-    assert abs(dcm21 - c128.cast_check(dcm21) - 4.99e-19) < 1e-19
-    v19 = Float('0.1234567890123456749') + 1j*Float('0.1234567890123456749')
-    raises(ValueError, lambda: c128.cast_check(v19))
-
-
 def test_Variable():
     v = Variable(x, None, Type('real'))
     assert v.symbol == x
-    assert v.type == Type('real')
+    assert v.type == real
     assert v.value_const == False
-    w = Variable(y, {value_const}, Type('float32'))
+    w = Variable(y, {value_const}, f32)
     assert w.symbol == y
-    assert w.type == Type('float32')
+    assert w.type == f32
     assert w.value_const
     v_n = Variable(n, None, Type.from_expr(n))
-    assert v_n.type == Type('integer')
+    assert v_n.type == integer
     v_i = Variable(i, type_=Type.from_expr(n))
-    assert v_i.type == Type('integer')
+    assert v_i.type == integer
 
     a_i = Variable.deduced(i)
-    assert a_i.type == Type('integer')
+    assert a_i.type == integer
 
 
 def test_Variable__deduced():
     v_i = Variable.deduced(i)
-    assert v_i.type == Type('integer')
+    assert v_i.type == integer
 
 
 def test_Pointer():
@@ -271,7 +236,7 @@ def test_Pointer():
     u = symbols('u', real=True)
     py = Pointer(u, {value_const, pointer_const}, Type.from_expr(u))
     assert py.symbol is u
-    assert py.type == Type('real')
+    assert py.type == real
     assert py.value_const
     assert py.pointer_const
 
@@ -279,31 +244,61 @@ def test_Pointer():
 def test_Declaration():
     u = symbols('u', real=True)
     vu = Variable(u, type_=Type.from_expr(u))
-    assert Declaration(vu).variable.type.name == 'real'
+    assert Declaration(vu).variable.type == real
     vn = Variable(n, type_=Type.from_expr(n))
-    assert Declaration(vn).variable.type.name == 'integer'
+    assert Declaration(vn).variable.type == integer
 
     vuc = Variable(u, {value_const}, Type.from_expr(u))
     decl = Declaration(vuc, 3.0)
     assert decl.variable == vuc
-    assert type(decl.value) == Float
+    assert isinstance(decl.value, Float)
     assert decl.value == 3.0
 
-    vy = Variable(y, None, Type('integer'))
+    vy = Variable(y, None, integer)
     decl2 = Declaration(vy, 3)
     assert decl2.variable == vy
     assert decl2.value is Integer(3)
 
     vi = Variable(i, None, Type.from_expr(i))
     decl3 = Declaration(vi, 3.0)
-    assert decl3.variable.type == Type('integer')
+    assert decl3.variable.type == integer
     assert decl3.value == 3.0
 
     decl4 = raises(ValueError, lambda: Declaration.deduced(n, 3.5, cast=True))
 
 
 def test_Declaration__deduced():
-    assert Declaration.deduced(n).variable.type.name == 'integer'
-    assert Declaration.deduced(z, 3).variable.type == Type('integer')
-    assert Declaration.deduced(z, 3.0).variable.type == Type('real')
-    assert Declaration.deduced(z, 3.0+1j).variable.type == Type('complex')
+    assert Declaration.deduced(n).variable.type == integer
+    assert Declaration.deduced(z, 3).variable.type == integer
+    assert Declaration.deduced(z, 3.0).variable.type == real
+    assert Declaration.deduced(z, 3.0+1j).variable.type == complex_
+
+
+def test_Type__cast_check__floating_point():
+    # assert abs(0.12345678949 - f32.cast_check(0.12345678949) - 4.9e-10) < 1e-10  # see gh-12038
+    raises(ValueError, lambda: f32.cast_check(123.45678949))
+    raises(ValueError, lambda: f32.cast_check(12.345678949))
+    raises(ValueError, lambda: f32.cast_check(1.2345678949))
+    raises(ValueError, lambda: f32.cast_check(.12345678949))
+    assert abs(123.456789049 - f32.cast_check(123.456789049) - 4.9e-8) < 1e-8
+
+    dcm21 = Float('0.123456789012345670499')  # 21 decimals
+    assert abs(dcm21 - f64.cast_check(dcm21) - 4.99e-19) < 1e-19
+
+    f80.cast_check(Float('0.12345678901234567890103'))
+    raises(ValueError, lambda: f80.cast_check(Float('0.12345678901234567890123')))
+
+    v10 = 12345.67894
+    raises(ValueError, lambda: f32.cast_check(v10))
+    assert abs(Float(str(v10), 20) - f64.cast_check(v10)) < 1e-16
+
+
+def test_Type__cast_check__complex_floating_point():
+    val9_11 = 123.456789049 + 0.123456789049j
+    raises(ValueError, lambda: c64.cast_check(.12345678949 + .12345678949j))
+    assert abs(val9_11 - c64.cast_check(val9_11) - 4.9e-8) < 1e-8
+
+    dcm21 = Float('0.123456789012345670499') + 1e-20j  # 21 decimals
+    assert abs(dcm21 - c128.cast_check(dcm21) - 4.99e-19) < 1e-19
+    v19 = Float('0.1234567890123456749') + 1j*Float('0.1234567890123456749')
+    raises(ValueError, lambda: c128.cast_check(v19))
