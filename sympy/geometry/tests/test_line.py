@@ -54,9 +54,10 @@ def test_angle_between():
 
 
 def test_closing_angle():
-    a = Line((0, 0), slope=0)
-    assert a.closing_angle(a.rotate(pi/2)) == 3*pi/2
-    assert a.closing_angle(a.rotate(-pi/2)) == pi/2
+    a = Ray((0, 0), angle=0)
+    b = Ray((1, 2), angle=pi/2)
+    assert a.closing_angle(b) == -pi/2
+    assert b.closing_angle(a) == pi/2
     assert a.closing_angle(a) == 0
 
 

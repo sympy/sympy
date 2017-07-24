@@ -20,7 +20,7 @@ from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan)
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
@@ -134,7 +134,7 @@ class LinearEntity(GeometrySet):
         See Also
         ========
 
-        is_perpendicular, closing_angle
+        is_perpendicular, Ray2D.closing_angle
 
         Examples
         ========
@@ -156,50 +156,6 @@ class LinearEntity(GeometrySet):
 
         v1, v2 = l1.direction, l2.direction
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
-
-    def closing_angle(l1, l2):
-        """The ccw angle needed to align l2 with l1.
-
-        Parameters
-        ==========
-
-        l1 : LinearEntity
-        l2 : LinearEntity
-
-        Returns
-        =======
-
-        angle : angle in radians
-
-        See Also
-        ========
-
-        angle_between
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Line, pi
-        >>> l1 = Line((0, 0), (1, 0))
-        >>> l2 = l1.rotate(-pi/2)
-        >>> l1.closing_angle(l2)
-        pi/2
-        >>> l2.closing_angle(l1)
-        3*pi/2
-        """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
-            raise TypeError('Must pass only LinearEntity objects')
-
-        v1, v2 = l1.direction, l2.direction
-        ang = l1.angle_between(l2)
-        if not ang:
-            return ang
-        ok = not ang or v2.unit.rotate(ang).equals(v1.unit)
-        if ok is None:
-            raise Undecidable("can't determine orientation of %s and %s" % (l1, l2))
-        if ok is False:
-            return 2*S.Pi - ang
-        return ang
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
@@ -2116,6 +2072,49 @@ class Ray2D(LinearEntity2D, Ray):
             return S.Zero
         else:
             return S.NegativeInfinity
+
+    def closing_angle(r1, r2):
+        """Return the angle by which r2 must be rotated so it faces the same
+        direction as r1.
+
+        Parameters
+        ==========
+
+        r1 : Ray2D
+        r2 : Ray2D
+
+        Returns
+        =======
+
+        angle : angle in radians (ccw angle is positive)
+
+        See Also
+        ========
+
+        LinearEntity.angle_between
+
+        Examples
+        ========
+
+        >>> from sympy import Ray, pi
+        >>> r1 = Ray((0, 0), (1, 0))
+        >>> r2 = r1.rotate(-pi/2)
+        >>> angle = r1.closing_angle(r2); angle
+        pi/2
+        >>> r2.rotate(angle).direction.unit == r1.direction.unit
+        True
+        >>> r2.closing_angle(r1)
+        -pi/2
+        """
+        if not all(isinstance(r, Ray2D) for r in (r1, r2)):
+            # although the direction property is defined for
+            # all linear entities, only the Ray is truly a
+            # directed object
+            raise TypeError('Both arguments must be Ray2D objects.')
+
+        a1 = atan2(*list(reversed(r1.direction.args)))
+        a2 = atan2(*list(reversed(r2.direction.args)))
+        return a1 - a2
 
 class Segment2D(LinearEntity2D, Segment):
     """An undirected line segment in 2D space.
