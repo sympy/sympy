@@ -7,7 +7,7 @@ Physical quantities.
 from __future__ import division
 
 from sympy import (
-    Add, AtomicExpr, Basic, Function, Mul, Pow, S, Symbol, sympify)
+    Add, AtomicExpr, Basic, Derivative, Function, Mul, Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.prefixes import Prefix
@@ -96,6 +96,11 @@ class Quantity(AtomicExpr):
             return Quantity.get_dimensional_expr(expr.base) ** expr.exp
         elif isinstance(expr, Add):
             return Quantity.get_dimensional_expr(expr.args[0])
+        elif isinstance(expr, Derivative):
+            dim = Quantity.get_dimensional_expr(expr.args[0])
+            for independent in expr.args[1:]:
+                dim /= Quantity.get_dimensional_expr(independent)
+            return dim
         elif isinstance(expr, Quantity):
             return expr.dimension.name
         return 1
@@ -126,6 +131,13 @@ class Quantity(AtomicExpr):
                     Quantity._collect_factor_and_dimension(addend)
                 assert dim == addend_dim
                 factor += addend_factor
+            return factor, dim
+        elif isinstance(expr, Derivative):
+            factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
+            for independent in expr.args[1:]:
+                ifactor, idim = Quantity._collect_factor_and_dimension(independent)
+                factor /= ifactor
+                dim /= idim
             return factor, dim
         elif isinstance(expr, Function):
             fds = [Quantity._collect_factor_and_dimension(arg) for arg in expr.args]
