@@ -494,6 +494,9 @@ class Type(Basic):
                            for k in self.__slots__[1:]]
         ))
 
+    def __str__(self):
+        return self.name
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False

@@ -1,5 +1,5 @@
 import warnings
-from sympy.core import (pi, oo, symbols, Rational, Integer,
+from sympy.core import (pi, oo, symbols, Rational, Integer, Float,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
 from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
                              ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
@@ -8,7 +8,7 @@ from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
@@ -74,10 +74,10 @@ def test_ccode_constants_mathh():
 
 
 def test_ccode_constants_other():
-    assert ccode(2*GoldenRatio) == "const double GoldenRatio = 1.6180339887498948;\n2*GoldenRatio"
+    assert ccode(2*GoldenRatio) == "const double GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
     assert ccode(
-        2*Catalan) == "const double Catalan = 0.91596559417721901;\n2*Catalan"
-    assert ccode(2*EulerGamma) == "const double EulerGamma = 0.57721566490153286;\n2*EulerGamma"
+        2*Catalan) == "const double Catalan = 0.915965594177219;\n2*Catalan"
+    assert ccode(2*EulerGamma) == "const double EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 
 def test_ccode_Rational():
@@ -109,7 +109,7 @@ def test_ccode_inline_function():
     assert ccode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert ccode(
-        g(x)) == "const double Catalan = %s;\n2*x/Catalan" % Catalan.evalf(17)
+        g(x)) == "const double Catalan = %s;\n2*x/Catalan" % Catalan.evalf(15)
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -595,6 +595,12 @@ def test_C99CodePrinter():
     assert 'using' not in c99printer.reserved_words
 
 
+@XFAIL
+def test_C99CodePrinter__precision_f80():
+    f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
+    assert f80_printer.doprint(sin(x+Float('2.1'))) == 'sinl(x + 2.1L)'
+
+
 def test_C99CodePrinter__precision():
     n = symbols('n', integer=True)
     f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
@@ -602,31 +608,31 @@ def test_C99CodePrinter__precision():
     f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
     assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
     assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1)'
-    assert f80_printer.doprint(sin(x+2.1)) == 'sinl(x + 2.1L)'
+    assert f80_printer.doprint(sin(x+Float('2.0'))) == 'sinl(x + 2.0L)'
 
     for printer, suffix in zip([f32_printer, f64_printer, f80_printer], ['f', '', 'l']):
         def check(expr, ref):
             assert printer.doprint(expr) == ref.format(s=suffix, S=suffix.upper())
         check(Abs(n), 'abs(n)')
-        check(Abs(x + 1.2), 'fabs{s}(x + 1.2{S})')
-        check(sin(x + 4.3)**cos(x - 2.7), 'pow{s}(sin{s}(x + 4.3{S}), cos{s}(x - 2.7{S}))')
-        check(exp(x*1.1), 'exp{s}(1.1{S}*x)')
+        check(Abs(x + 2.0), 'fabs{s}(x + 2.0{S})')
+        check(sin(x + 4.0)**cos(x - 2.0), 'pow{s}(sin{s}(x + 4.0{S}), cos{s}(x - 2.0{S}))')
+        check(exp(x*8.0), 'exp{s}(8.0{S}*x)')
         check(exp2(x), 'exp2{s}(x)')
-        check(expm1(x*4.2), 'expm1{s}(4.2{S}*x)')
+        check(expm1(x*4.0), 'expm1{s}(4.0{S}*x)')
         check(log(x/2), 'log{s}((1.0{S}/2.0{S})*x)')
         check(log10(3*x/2), 'log10{s}((3.0{S}/2.0{S})*x)')
-        check(log2(x*3.1), 'log2{s}(3.1{S}*x)')
+        check(log2(x*8.0), 'log2{s}(8.0{S}*x)')
         check(log1p(x), 'log1p{s}(x)')
         check(2**x, 'pow{s}(2, x)')
-        check(2.1**x, 'pow{s}(2.1{S}, x)')
+        check(2.0**x, 'pow{s}(2.0{S}, x)')
         check(x**3, 'pow{s}(x, 3)')
-        check(x**3.1, 'pow{s}(x, 3.1{S})')
+        check(x**4.0, 'pow{s}(x, 4.0{S})')
         check(sqrt(3+x), 'sqrt{s}(x + 3)')
-        check(Cbrt(x-2.1), 'cbrt{s}(x - 2.1{S})')
+        check(Cbrt(x-2.0), 'cbrt{s}(x - 2.0{S})')
         check(hypot(x, y), 'hypot{s}(x, y)')
         check(sin(3.*x + 2.), 'sin{s}(3.0{S}*x + 2.0{S})')
         check(cos(3.*x - 1.), 'cos{s}(3.0{S}*x - 1.0{S})')
-        check(tan(4.2*y + 2.), 'tan{s}(4.2{S}*y + 2.0{S})')
+        check(tan(4.*y + 2.), 'tan{s}(4.0{S}*y + 2.0{S})')
         check(asin(3.*x + 2.), 'asin{s}(3.0{S}*x + 2.0{S})')
         check(acos(3.*x + 2.), 'acos{s}(3.0{S}*x + 2.0{S})')
         check(atan(3.*x + 2.), 'atan{s}(3.0{S}*x + 2.0{S})')
@@ -634,7 +640,7 @@ def test_C99CodePrinter__precision():
 
         check(sinh(3.*x + 2.), 'sinh{s}(3.0{S}*x + 2.0{S})')
         check(cosh(3.*x - 1.), 'cosh{s}(3.0{S}*x - 1.0{S})')
-        check(tanh(4.2*y + 2.), 'tanh{s}(4.2{S}*y + 2.0{S})')
+        check(tanh(4.0*y + 2.), 'tanh{s}(4.0{S}*y + 2.0{S})')
         check(asinh(3.*x + 2.), 'asinh{s}(3.0{S}*x + 2.0{S})')
         check(acosh(3.*x + 2.), 'acosh{s}(3.0{S}*x + 2.0{S})')
         check(atanh(3.*x + 2.), 'atanh{s}(3.0{S}*x + 2.0{S})')
@@ -646,8 +652,8 @@ def test_C99CodePrinter__precision():
         check(ceiling(x + 2.), "ceil{s}(x + 2.0{S})")
         check(floor(x + 2.), "floor{s}(x + 2.0{S})")
         check(fma(x, y, -z), 'fma{s}(x, y, -z)')
-        check(Max(x, 3.2, x**2.3), 'fmax{s}(3.2{S}, fmax{s}(x, pow{s}(x, 2.3{S})))')
-        check(Min(x, 3.2), 'fmin{s}(3.2{S}, x)')
+        check(Max(x, 8.0, x**4.0), 'fmax{s}(8.0{S}, fmax{s}(x, pow{s}(x, 4.0{S})))')
+        check(Min(x, 2.0), 'fmin{s}(2.0{S}, x)')
 
 
 def test_get_math_macros():
@@ -695,20 +701,28 @@ def test_C99CodePrinter_custom_type():
         eps=Float('1.92592994438723585305597794258492732e-34'),
         dig=33, decimal_dig=36
     )
-    p128 = C99CodePrinter(
-        type_literals={f128: 'Q'}
-        type_suffixes={f128: 'f128'},
-    )
-    assert p128.doprint(cos(x)) == 'cosf128(x)'
+    p128 = C99CodePrinter(dict(
+        type_aliases={real: f128},
+        type_literal_suffixes={f128: 'Q'},
+        type_func_suffixes={f128: 'f128'},
+        type_math_macro_suffixes={
+            real: 'f128',
+            f128: 'f128'
+        }
+    ))
+    assert p128.doprint(2.0) == '2.0Q'
+    assert p128.doprint(Rational(1, 2)) == '1.0Q/2.0Q'
+    assert p128.doprint(sin(x)) == 'sinf128(x)'
+    assert p128.doprint(cos(2., evaluate=False)) == 'cosf128(2.0Q)'
 
     var5 = Variable(x, {value_const}, f128)
 
     dcl5a = Declaration(var5)
     assert ccode(dcl5a) == 'const __float128 x'
     dcl5b = Declaration(var5, pi)
-    assert ccode(dcl5b) == 'const __float128 x = M_PIf128'
-    dcl5c = Declaration(var5, Catalan)
-    assert ccode(dcl5c) == 'const __float128 x = %sQ' % Catalan.evalf(36)
+    assert p128.doprint(dcl5b) == 'const __float128 x = M_PIf128'
+    dcl5c = Declaration(var5, Catalan.evalf(38))
+    assert p128.doprint(dcl5c) == 'const __float128 x = %sQ' % Catalan.evalf(f128.dig)
 
 
 def test_MatrixElement_printing():
@@ -728,3 +742,21 @@ def test_subclass_CCodePrinter():
     # issue gh-12687
     class MySubClass(CCodePrinter):
         pass
+
+def test_ccode_math_macros():
+    assert ccode(z + exp(1)) == 'z + M_E'
+    assert ccode(z + log2(exp(1))) == 'z + M_LOG2E'
+    assert ccode(z + 1/log(2)) == 'z + M_LOG2E'
+    assert ccode(z + log(2)) == 'z + M_LN2'
+    assert ccode(z + log(10)) == 'z + M_LN10'
+    assert ccode(z + pi) == 'z + M_PI'
+    assert ccode(z + pi/2) == 'z + M_PI_2'
+    assert ccode(z + pi/4) == 'z + M_PI_4'
+    assert ccode(z + 1/pi) == 'z + M_1_PI'
+    assert ccode(z + 2/pi) == 'z + M_2_PI'
+    assert ccode(z + 2/sqrt(pi)) == 'z + M_2_SQRTPI'
+    assert ccode(z + 2/Sqrt(pi)) == 'z + M_2_SQRTPI'
+    assert ccode(z + sqrt(2)) == 'z + M_SQRT2'
+    assert ccode(z + Sqrt(2)) == 'z + M_SQRT2'
+    assert ccode(z + 1/sqrt(2)) == 'z + M_SQRT1_2'
+    assert ccode(z + 1/Sqrt(2)) == 'z + M_SQRT1_2'

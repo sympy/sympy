@@ -136,6 +136,17 @@ class _requires(object):
         return _method_wrapper
 
 
+def _as_macro_if_defined(meth):
+    @wraps(meth)
+    def _meth_wrapper(self, expr, **kwargs):
+        if expr in self.math_macros:
+            return '%s%s' % (self.math_macros[expr], self._get_math_macro_suffix(real))
+        else:
+            return meth(self, expr, **kwargs)
+
+    return _meth_wrapper
+
+
 class C89CodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
@@ -146,7 +157,7 @@ class C89CodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 17,
+        'precision': 15,
         'user_functions': {},
         'human': True,
         'enable_statements': True,
@@ -175,28 +186,42 @@ class C89CodePrinter(CodePrinter):
         bool_: {'stdbool.h'}
     }
 
-    type_suffixes = {
+    type_func_suffixes = {
         float32: 'f',
         float64: '',
         float80: 'l'
     }
 
-    type_literals = {}
+    type_literal_suffixes = {
+        float32: 'F',
+        float64: '',
+        float80: 'L'
+    }
+
+    type_math_macro_suffixes = {
+        float80: 'l'
+    }
+
+    math_macros = None
 
     _ns = ''  # namespace, C++ uses 'std::'
     _kf = known_functions_C89  # known_functions-dict to copy
 
     def __init__(self, settings={}):
+        if self.math_macros is None:
+            self.math_macros = get_math_macros()
         self.type_aliases = dict(chain(self.type_aliases.items(),
                                        settings.pop('type_aliases', {}).items()))
         self.type_mappings = dict(chain(self.type_mappings.items(),
                                         settings.pop('type_mappings', {}).items()))
         self.type_headers = dict(chain(self.type_headers.items(),
                                        settings.pop('type_headers', {}).items()))
-        self.type_suffixes = dict(chain(self.type_suffixes.items(),
-                                        settings.pop('type_suffixes', {}).items()))
-        self.type_literals = dict(chain(self.type_literals.items(),
-                                        settings.pop('type_literals', {}).items()))
+        self.type_func_suffixes = dict(chain(self.type_func_suffixes.items(),
+                                        settings.pop('type_func_suffixes', {}).items()))
+        self.type_literal_suffixes = dict(chain(self.type_literal_suffixes.items(),
+                                        settings.pop('type_literal_suffixes', {}).items()))
+        self.type_math_macro_suffixes = dict(chain(self.type_math_macro_suffixes.items(),
+                                        settings.pop('type_math_macro_suffixes', {}).items()))
         super(C89CodePrinter, self).__init__(settings)
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
@@ -215,7 +240,7 @@ class C89CodePrinter(CodePrinter):
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
         var = Variable(name, {value_const}, type_)
-        decl = Declaration(var, value.evalf(type_.decimal_dig))
+        decl = Declaration(var, value.evalf(type_.dig))
         return self._get_statement(self._print(decl))
 
     def _format_code(self, lines):
@@ -225,11 +250,16 @@ class C89CodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
+    @_as_macro_if_defined
+    def _print_Mul(self, expr):
+        return super(C89CodePrinter, self)._print_Mul(expr)
+
+    @_as_macro_if_defined
     def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
         PREC = precedence(expr)
-        suffix = self._get_suffix()
+        suffix = self._get_func_suffix(real)
         if expr.exp == -1:
             return '1.0%s/%s' % (suffix.upper(), self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
@@ -242,7 +272,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        suffix = self._get_suffix().upper()
+        suffix = self._get_literal_suffix(real)
         return '%d.0%s/%d.0%s' % (p, suffix, q, suffix)
 
     def _print_Indexed(self, expr):
@@ -271,11 +301,9 @@ class C89CodePrinter(CodePrinter):
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
-    def _print_Exp1(self, expr):
-        return "M_E"
-
-    def _print_Pi(self, expr):
-        return 'M_PI'
+    @_as_macro_if_defined
+    def _print_NumberSymbol(self, expr):
+        return super(C89CodePrinter, self)._print_NumberSymbol(expr)
 
     def _print_Infinity(self, expr):
         return 'HUGE_VAL'
@@ -413,8 +441,17 @@ class C89CodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-    def _get_suffix(self):
-        return self.type_suffixes[self.type_aliases[real]]
+    def _get_func_suffix(self, type_):
+        return self.type_func_suffixes[self.type_aliases.get(type_, type_)]
+
+    def _get_literal_suffix(self, type_):
+        return self.type_literal_suffixes[self.type_aliases.get(type_, type_)]
+
+    def _get_math_macro_suffix(self, type_):
+        print(type_, self.type_math_macro_suffixes, self.type_aliases[type_])
+        alias = self.type_aliases.get(type_, type_)
+        dflt = self.type_math_macro_suffixes.get(alias, '')
+        return self.type_math_macro_suffixes.get(type_, dflt)
 
     def _print_Type(self, type_):
         self.headers.update(self.type_headers.get(type_, set()))
@@ -451,8 +488,10 @@ class C89CodePrinter(CodePrinter):
         return self._print(expr.symbol)
 
     def _print_Float(self, flt):
-        suffix = self._get_suffix().upper()
-        num = super(C89CodePrinter, self)._print_Float(flt)
+        type_ = self.type_aliases.get(real, real)
+        suffix = self._get_literal_suffix(type_)
+        num = str(flt.evalf(type_.dig))
+        print(flt, num)
         if 'e' not in num and '.' not in num:
             num += '.0'
         num_parts = num.split('e')
@@ -505,10 +544,13 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     standard = 'C99'
     reserved_words = set(reserved_words + reserved_words_c99)
     type_mappings=dict(chain(C89CodePrinter.type_mappings.items(), {
-            Type('complex64'): ('float complex', {'complex.h'}),
-            Type('complex128'): ('double complex', {'complex.h'}),
-        }.items()
-    ))
+        complex64: 'float complex',
+        complex128: 'double complex',
+    }.items()))
+    type_headers = dict(chain(C89CodePrinter.type_headers.items(), {
+        complex64: {'complex.h'},
+        complex128: {'complex.h'}
+    }.items()))
     _kf = known_functions_C99  # known_functions-dict to copy
 
     # functions with versions with 'f' and 'l' suffixes:
@@ -530,6 +572,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     # tgamma was already covered by 'known_functions' dict
 
     @_requires({'math.h'}, {'m'})
+    @_as_macro_if_defined
     def _print_math_func(self, expr, nest=False):
         known = self.known_functions[expr.__class__.__name__]
         if not isinstance(known, str):
@@ -539,7 +582,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
                     break
             else:
                 raise ValueError("No matching printer")
-        suffix = self._get_suffix() if self._ns + known in self._prec_funcs else ''
+        suffix = self._get_func_suffix(real) if self._ns + known in self._prec_funcs else ''
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
