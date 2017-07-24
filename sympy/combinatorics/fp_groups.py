@@ -297,12 +297,13 @@ class FpSubgroup(DefaultPrinting):
     group belongs to the subgroup
 
     '''
-    def __init__(self, G, gens):
+    def __init__(self, G, gens, normal=False):
         super(FpSubgroup,self).__init__()
         self.parent = G
         self.generators = list(set([g for g in gens if g != G.identity]))
         self._min_words = None #for use in __contains__
         self.C = None
+        self.normal = normal
 
     def __contains__(self, g):
 
@@ -330,6 +331,8 @@ class FpSubgroup(DefaultPrinting):
                 # make the initial list
                 gens = []
                 for w in self.generators:
+                    if self.normal:
+                        w = w.cyclic_reduction()
                     gens.extend(_process(w))
 
                 for w1 in gens:
@@ -381,7 +384,7 @@ class FpSubgroup(DefaultPrinting):
                 # check if w is a word in _min_words or one of
                 # the infinite families in it
                 w, r = w.cyclic_reduction(removed=True)
-                if r.is_identity:
+                if r.is_identity or self.normal:
                     return w in min_words
                 else:
                     t = [s[1] for s in min_words if isinstance(s, tuple)
@@ -410,6 +413,8 @@ class FpSubgroup(DefaultPrinting):
                         return True
                 return False
 
+            if self.normal:
+                g = g.cyclic_reduction()
             return _word_break(g)
         else:
             if self.C is None:
