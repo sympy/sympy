@@ -389,6 +389,10 @@ class CoordSys3D(Basic):
         return map(simplify, [h1, h2, h3])
 
     def _inverse_rotation_matrix(self):
+        """
+        Returns inverse rotation matrix.
+
+        """
         return simplify(self._parent_rotation_matrix ** -1)
 
     def _rotation_trans_equations(self, matrix):
