@@ -349,3 +349,7 @@ class SumQ(Operation):
 class Expon(Operation):
     name = "Expon"
     arity = Arity.variadic
+
+class ArcTan(Operation):
+    name = "ArcTan"
+    arity = Arity.unary

@@ -4524,10 +4524,9 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         try:
             if stdev(rand_val) < Pow(10, -6):
                 return True
-            else:
-                return False
+            return False
         except:
-            pass
+            return False
 
     if simplify(res) == 0 or (not res.has(x)):
         return True

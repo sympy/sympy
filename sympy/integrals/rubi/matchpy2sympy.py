@@ -1,10 +1,10 @@
-from sympy.integrals.rubi.symbol import VariableSymbol, Integer
+from sympy.integrals.rubi.symbol import VariableSymbol, matchpyInteger
 from sympy.integrals.rubi.utility_function import (Int, ZeroQ, NonzeroQ, List, Log, RemoveContent,
     PositiveIntegerQ, NegativeIntegerQ, PositiveQ, IntegerQ, PosQ, NegQ, FracPart,
     IntPart, RationalQ, Subst, LinearQ, Sqrt, NegativeQ, ArcCosh, RationalQ, Less,
     Not, Simplify, Denominator, Coefficient, SumSimplerQ, Equal, Unequal, SimplerQ,
     LessEqual, IntLinearcQ, Greater, GreaterEqual, FractionQ, ExpandIntegrand,
-    With, Set, Hypergeometric2F1, TogetherSimplify)
+    With, Set, Hypergeometric2F1, TogetherSimplify, Rt, ArcTan)
 from sympy import Add, Mul, Pow, Symbol, S, I, And, Or
 
 m2s_function = {
@@ -53,6 +53,8 @@ m2s_function = {
     'Set':  Set,
     'Hypergeometric2F1':  Hypergeometric2F1,
     'TogetherSimplify':  TogetherSimplify,
+    'Rt': Rt,
+    'ArcTan': ArcTan
 }
 
 def matchpy2sympy(expr):
@@ -61,7 +63,7 @@ def matchpy2sympy(expr):
         if name == 'I':
             return I
         return Symbol(name, real=True, imaginary=False)
-    elif isinstance(expr, Integer):
+    elif isinstance(expr, matchpyInteger):
         return S(expr.name)
     args = [matchpy2sympy(i) for i in expr.operands]
     return m2s_function[expr.name](*args)
