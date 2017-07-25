@@ -4,7 +4,7 @@ from __future__ import division
 
 from sympy import (
     Abs, Add, Basic, Function, Number, Rational, S, Symbol, diff, exp,
-    integrate, log, sqrt, symbols)
+    integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (
     amount_of_substance, convert_to, find_unit, volume)
 from sympy.physics.units.definitions import (
@@ -299,3 +299,9 @@ def test_dimensional_expr_of_derivative():
     assert Quantity._collect_factor_and_dimension(dl_dt) ==\
         Quantity._collect_factor_and_dimension(l / t / t1) ==\
         (10, length/time**2)
+
+
+def test_get_dimensional_expr_with_function():
+    v_w1 = Quantity('v_w1', length / time, meter / second)
+    assert Quantity.get_dimensional_expr(sin(v_w1)) == \
+        sin(Quantity.get_dimensional_expr(v_w1))
