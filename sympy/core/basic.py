@@ -1,6 +1,7 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 from collections import Mapping, defaultdict
+from itertools import chain
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -1646,8 +1647,13 @@ class Basic(with_metaclass(ManagedProperties)):
                 if i in Basic._constructor_postprocessor_mapping:
                     for k, v in Basic._constructor_postprocessor_mapping[i].items():
                         postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
-                elif type(i) in Basic._constructor_postprocessor_mapping:
-                    for k, v in Basic._constructor_postprocessor_mapping[type(i)].items():
+                else:
+                    postprocessor_mappings = (
+                        Basic._constructor_postprocessor_mapping[cls].items()
+                        for cls in type(i).mro()
+                        if cls in Basic._constructor_postprocessor_mapping
+                    )
+                    for k, v in chain.from_iterable(postprocessor_mappings):
                         postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
             except TypeError:
                 pass
