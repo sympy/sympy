@@ -444,6 +444,15 @@ class FpSubgroup(DefaultPrinting):
             return free_group(', '.join(gen_syms))[0]
         return self.parent.subgroup(C=self.C)
 
+    def __str__(self):
+        if len(self.generators) > 30:
+            str_form = "<fp subgroup with %s generators>" % len(self.generators)
+        else:
+            str_form = "<fp subgroup on the generators %s>" % str(self.generators)
+        return str_form
+
+    __repr__ = __str__
+
 
 ###############################################################################
 #                           LOW INDEX SUBGROUPS                               #

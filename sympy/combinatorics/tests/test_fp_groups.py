@@ -160,7 +160,6 @@ def test_order():
     assert f.order() == 2000
 
 def test_fp_subgroup():
-    from sympy import S
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
     S = FpSubgroup(f, [x*y])
