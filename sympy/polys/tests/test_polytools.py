@@ -1179,6 +1179,12 @@ def test_Poly_degree():
     assert degree(Poly(y**2 + x**3, x), x, y, gen=y) == 2
     raises(ComputationFailed, lambda: degree(1))
 
+    assert degree(Poly(exp(x) + y**2, y), exp(x)) == 1
+    assert degree(Poly(exp(x) + y**2, y), y, exp(x), gen=1) == 1
+
+    p = exp(x) + y**2
+    assert degree(p) == Poly(p).degree(0)
+
 
 def test_Poly_degree_list():
     assert Poly(0, x).degree_list() == (-oo,)
