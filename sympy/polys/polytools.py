@@ -4404,32 +4404,32 @@ def degree(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
-    f, orig = sympify(f), f
-    gens = list(gens)
-    gen = args.get('gen')
-    if gen is not None:
-        gens = [sympify(gen)] + gens
-        del args['gen']
+    f = sympify(f)
+    gen = args.pop('gen', 0)
 
     if f.is_Poly:
-        gens.append(f.gens[0])
+        if len(gens) == 0:
+            return sympify(f.degree(gen=gen))
         f = f.as_expr()
 
-    if f.is_Number:
-        if len(gens) == 0:
-            raise ComputationFailed('degree', 1, PolificationFailed({'gens': ()}, orig, f))
-        if f == 0:
-            return S.NegativeInfinity
-        return S.Zero
-
     try:
-        F, opt = poly_from_expr(f, **args)
+        if f.is_Number:
+           F, opt = poly_from_expr(f, *gens, **args)
+        else:
+            F, opt = poly_from_expr(f, **args)
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    gens.append(F.gens[0])
-    if gens[0] in F.gens:
-        return sympify(F.degree(gens[0]))
+    if len(gens) == 0:
+        gens = F.gens
+    if isinstance(gen, int):
+        try:
+            gen = gens[gen]
+        except IndexError:
+            raise PolynomialError("-%s <= gen < %s expected, got %s" %
+                                  (len(gens), len(gens), gen))
+    if gen in F.gens:
+        return sympify(F.degree(gen))
     return S.Zero
 
 
