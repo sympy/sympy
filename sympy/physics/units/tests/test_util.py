@@ -25,8 +25,8 @@ def test_dim_simplify_add():
 
 
 def test_dim_simplify_mul():
+    assert dim_simplify(Mul(L, T)) == L*T
     assert dim_simplify(L*T) == L*T
-    assert dim_simplify(L * T) == L*T
 
 
 def test_dim_simplify_pow():
