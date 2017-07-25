@@ -223,11 +223,12 @@ def test_undefined_function():
     #assert bool(f == sympy.sympify(sf))
 
 def test_abstract_function():
+    from sage.symbolic.expression import Expression
     x,y = sympy.symbols('x y')
     f = sympy.Function('f')
     expr =  f(x,y)
     sexpr = expr._sage_()
-    assert isinstance(sexpr,sage.symbolic.expression.Expression), "converted expression %r is not sage expression" % sexpr
+    assert isinstance(sexpr,Expression), "converted expression %r is not sage expression" % sexpr
     # This test has to be uncommented in the future: it depends on the sage ticket #22802 (https://trac.sagemath.org/ticket/22802)
     # invexpr = sexpr._sympy_()
     # assert invexpr == expr, "inverse coversion %r is not correct " % invexpr
@@ -256,6 +257,7 @@ TESTS::
     sage: test_issue_4023()
     sage: test_integral()
     sage: test_undefined_function()
+    sage  test_abstract_function()
 
 Sage has no symbolic Lucas function at the moment::
 
