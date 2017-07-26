@@ -318,3 +318,9 @@ def test_binary_information():
 
     assert kibibyte.convert_to(bit) == 8*1024*bit
     assert byte.convert_to(bit) == 8*bit
+
+    a = 10*kibibyte*hour
+
+    assert convert_to(a, byte) == 10240*byte*hour
+    assert convert_to(a, minute) == 600*kibibyte*minute
+    assert convert_to(a, [byte, minute]) == 614400*byte*minute
