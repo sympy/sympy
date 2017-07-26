@@ -182,7 +182,7 @@ from .definitions import (
     planck_length,
     bit, bits,
     byte,
-    kebibyte, kebibytes,
+    kibibyte, kibibytes,
     mebibyte, mebibytes,
     gibibyte, gibibytes,
     tebibyte, tebibytes,
