@@ -1,3 +1,5 @@
+from functools import wraps
+from itertools import chain
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -11,21 +13,78 @@ _kw_only_py2 = {'exec', 'print'}
 _kw_only_py3 = {'False', 'nonlocal', 'True'}
 
 _known_functions = {
-    'Abs': 'abs'
+    'Abs': 'abs',
 }
+_known_functions_math = {
+    'acos': 'acos',
+    'acosh': 'acosh',
+    'asin': 'asin',
+    'asinh': 'asinh',
+    'atan': 'atan',
+    'atan2': 'atan2',
+    'atanh': 'atanh',
+    'ceiling': 'ceil',
+    'cos': 'cos',
+    'cosh': 'cosh',
+    'erf': 'erf',
+    'erfc': 'erfc',
+    'exp': 'exp',
+    'expm1': 'expm1',
+    'factorial': 'factorial',
+    'floor': 'floor',
+    'gamma': 'gamma',
+    'hypot': 'hypot',
+    'loggamma': 'lgamma',
+    'log': 'log',
+    'log10': 'log10',
+    'log1p': 'log1p',
+    'log2': 'log2',
+    'sin': 'sin',
+    'sinh': 'sinh',
+    'Sqrt': 'sqrt',
+    'tan': 'tan',
+    'tanh': 'tanh'
+}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow modf
+# radians trunc fmod fsum gcd degrees fabs]
+
+class requires(object):
+    """ Decorator for registering requirements on print methods. """
+    def __init__(self, **kwargs):
+        self._req = kwargs
+
+    def __call__(self, method):
+        def _method_wrapper(self_, *args, **kwargs):
+            for k, v in self._req.items():
+                getattr(self_, k).update(v)
+            return method(self_, *args, **kwargs)
+        return wraps(method)(_method_wrapper)
+
+
+def _print_known(self, expr):
+    known = self.known_functions[expr.__class__.__name__]
+    parts = known.split('.')
+    if len(parts) > 1:
+        self.modules.update(('.'.join(parts[:-1]),))
+    return '{name}({args})'.format(name=known, args=', '.join(map(self._print, expr.args)))
+
 
 class PythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
     standard = "python3"
     reserved_words = _kw_py2and3.union(_kw_only_py3)
+    modules = None  # initialized to a set in __init__
     tab = '    '
-    _kf = _known_functions
+    _kf = dict(chain(
+        _known_functions.items(),
+        [(k, 'math.' + v) for k, v in _known_functions_math.items()]
+    ))
     _operators = {'and': 'and', 'or': 'or', 'not': 'not'}
     _default_settings = dict(CodePrinter._default_settings, precision=15)
 
     def __init__(self, settings=None):
         super(PythonCodePrinter, self).__init__(settings)
+        self.modules = set()
         self.known_functions = dict(self._kf, **(settings or {}).get(
             'user_functions', {}))
 
@@ -34,6 +93,22 @@ class PythonCodePrinter(CodePrinter):
 
     def _get_comment(self, text):
         return "  # {0}".format(text)
+
+    @requires(modules={'math'})
+    def _print_Exp1(self, expr):
+        return 'math.e'
+
+    @requires(modules={'math'})
+    def _print_pi(self, expr):
+        return 'math.pi'
+
+    @requires(modules={'math'})
+    def _print_Infinity(self, expr):
+        return 'math.inf'
+
+    @requires(modules={'math'})
+    def _print_NaN(self, expr):
+        return 'math.nan'
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
@@ -69,6 +144,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_ImaginaryUnit(self, expr):
         return '1j'
 
+for k in PythonCodePrinter._kf:
+    setattr(PythonCodePrinter, '_print_%s' % k, _print_known)
+
 
 def pycode(expr, **settings):
     return PythonCodePrinter(settings).doprint(expr)
@@ -78,6 +156,8 @@ class MpmathPrinter(PythonCodePrinter):
     """
     Lambda printer for mpmath which maintains precision for floats
     """
+
+    @requires(modules={'mpmath'})
     def _print_Integer(self, e):
         return 'mpf(%d)' % e
 
@@ -90,11 +170,26 @@ class MpmathPrinter(PythonCodePrinter):
         args = str(tuple(map(int, e._mpf_)))
         return 'mpf(%s)' % args
 
+    @requires(modules={'mpmath'})
     def _print_uppergamma(self,e): #printer for the uppergamma function
         return "gammainc({0}, {1}, inf)".format(self._print(e.args[0]), self._print(e.args[1]))
 
+    @requires(modules={'mpmath'})
     def _print_lowergamma(self,e): #printer for the lowergamma functioin
         return "gammainc({0}, 0, {1})".format(self._print(e.args[0]), self._print(e.args[1]))
+
+
+_not_in_numpy = 'erf erfc factorial gamma lgamma'.split()
+_in_numpy = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_numpy]
+_known_functions_numpy = dict(_in_numpy, **{
+    'acos': 'arccos',
+    'acosh': 'arccosh',
+    'asin': 'arcsin',
+    'asinh': 'arcsinh',
+    'atan': 'arctan',
+    'atan2': 'arctan2',
+    'atanh': 'arctanh',
+})
 
 
 class NumPyPrinter(PythonCodePrinter):
@@ -102,6 +197,23 @@ class NumPyPrinter(PythonCodePrinter):
     Numpy printer which handles vectorized piecewise functions,
     logical operators, etc.
     """
+    _kf = dict(chain(
+        PythonCodePrinter._kf.items(),
+        [(k, 'numpy.' + v) for k, v in _known_functions_numpy.items()]
+    ))
+
+
+    @requires(modules={'numpy'})
+    def _print_Exp1(self, expr):
+        return "numpy.e"
+
+    @requires(modules={'numpy'})
+    def _print_Infinity(self, expr):
+        return "numpy.inf"
+
+    @requires(modules={'numpy'})
+    def _print_pi(self, expr):
+        return "numpy.pi"
 
     def _print_seq(self, seq, delimiter=', '):
         "General sequence printer: converts to tuple"
@@ -181,75 +293,18 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Pow(self, expr):
         if expr.exp == 0.5:
-            return '{0}({1})'.format('sqrt', self._print(expr.base))
+            return '{0}({1})'.format('numpy.sqrt', self._print(expr.base))
         else:
             return super(NumPyPrinter, self)._print_Pow(expr)
-
-    def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
-        return 'numpy.log10({0})'.format(self._print(expr.args[0]))
-
-    def _print_Sqrt(self, expr):
-        return 'numpy.sqrt({0})'.format(self._print(expr.args[0]))
-
-    def _print_hypot(self, expr):
-        return 'numpy.hypot({0}, {1})'.format(*map(self._print, expr.args))
-
-    def _print_expm1(self, expr):
-        return 'numpy.expm1({0})'.format(self._print(expr.args[0]))
-
-    def _print_log1p(self, expr):
-        return 'numpy.log1p({0})'.format(self._print(expr.args[0]))
-
-    def _print_exp2(self, expr):
-        return 'numpy.exp2({0})'.format(self._print(expr.args[0]))
-
-    def _print_log2(self, expr):
-        return 'log2({0})'.format(self._print(expr.args[0]))
-
-    def _print_acos(self, expr):
-        return "numpy.arccos(%s)" % self._print(expr.args[0])
-
-    def _print_acosh(self, expr):
-        return "numpy.arccosh(%s)" % self._print(expr.args[0])
 
     def _print_arg(self, expr):
         return "numpy.angle(%s)" % self._print(expr.args[0])
 
-    def _print_asin(self, expr):
-        return "numpy.arcsin(%s)" % self._print(expr.args[0])
-
-    def _print_asinh(self, expr):
-        return "numpy.arcsinh(%s)" % self._print(expr.args[0])
-
-    def _print_atan(self, expr):
-        return "numpy.arctan(%s)" % self._print(expr.args[0])
-
-    def _print_atan2(self, expr):
-        return "numpy.arctan2(%s)" % ', '.join(map(self._print, expr.args))
-
-    def _print_atanh(self, expr):
-        return "numpy.arctanh(%s)" % self._print(expr.args[0])
-
-    def _print_ceiling(self, expr):
-        return "numpy.ceil(%s)" % self._print(expr.args[0])
-
-    def _print_E(self, expr):
-        return "numpy.e"
-
     def _print_im(self, expr):
         return "numpy.imag(%s)" % self._print(expr.args[0])
 
-    def _print_ln(self, expr):
-        return "numpy.log(%s)" % self._print(expr.args[0])
-
     def _print_Mod(self, expr):
         return "numpy.mod(%s)" % ', '.join(map(self._print, expr.args))
-
-    def _print_oo(self, expr):
-        return "numpy.inf"
-
-    def _print_pi(self, expr):
-        return "numpy.pi"
 
     def _print_re(self, expr):
         return "numpy.real(%s)" % self._print(expr.args[0])
@@ -262,9 +317,25 @@ class NumPyPrinter(PythonCodePrinter):
     _print_MutableDenseMatrix = _print_Matrix
     _print_ImmutableDenseMatrix = _print_Matrix
 
+for k in NumPyPrinter._kf:
+    setattr(NumPyPrinter, '_print_%s' % k, _print_known)
+
+
+_known_functions_scipy_special = {
+    'erf': 'erf',
+    'erfc': 'erfc',
+    'gamma': 'gamma',
+    'loggamma': 'gammaln'
+}
 
 class SciPyPrinter(NumPyPrinter):
 
+    _kf = dict(chain(
+        NumPyPrinter._kf.items(),
+        [(k, 'scipy.special.' + v) for k, v in _known_functions_scipy_special.items()]
+    ))
+
+    @requires(modules={'scipy.sparse'})
     def _print_SparseMatrix(self, expr):
         i, j, data = [], [], []
         for (r, c), v in expr._smat.items():
@@ -273,8 +344,24 @@ class SciPyPrinter(NumPyPrinter):
             data.append(v)
 
         return "scipy.sparse.coo_matrix({data}, ({i}, {j}), shape={shape})".format(
-            data=data,
-            i=i,
-            j=j,
-            shape=expr.shape
+            data=data, i=i, j=j, shape=expr.shape
         )
+
+    _print_ImmutableSparseMatrix = _print_SparseMatrix
+    _print_MutableSparseMatrix = _print_SparseMatrix
+
+
+for k in SciPyPrinter._kf:
+    setattr(SciPyPrinter, '_print_%s' % k, _print_known)
+
+
+class SymPyPrinter(PythonCodePrinter):
+
+    _kf = dict([(k, 'sympy.' + v) for k, v in chain(
+        _known_functions.items(),
+        _known_functions_math.items()
+    )])
+
+    @requires(modules={'sympy'})
+    def _print_Function(self, expr):
+        return 'sympy.{name}({args})'.format(name=expr.func.__name__, args=', '.join(map(self._print, expr.args)))

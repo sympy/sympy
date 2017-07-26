@@ -386,21 +386,38 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
-    if _module_present('mpmath',namespaces) and printer is None:
+    if printer is None:
         #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import MpmathPrinter as printer
+        if _module_present('mpmath',namespaces):
+            from sympy.printing.lambdarepr import MpmathPrinter as Printer
+        elif _module_present('numpy',namespaces):
+            from sympy.printing.lambdarepr import NumPyPrinter as Printer
+        elif _module_present('numexpr',namespaces):
+            from sympy.printing.lambdarepr import NumExprPrinter as Printer
+            printer = NumExprPrinter()
+        elif _module_present('tensorflow',namespaces):
+            from sympy.printing.lambdarepr import TensorflowPrinter as Printer
+        elif _module_present('sympy', namespaces):
+            from sympy.printing.pycode import SymPyPrinter as Printer
+        else:
+            from sympy.printing.pycode import PythonCodePrinter
+            if isinstance(modules, dict):
+                class _Printer(PythonCodePrinter):
+                    pass
 
-    if _module_present('numpy',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import NumPyPrinter as printer
-
-    if _module_present('numexpr',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import NumExprPrinter as printer
-
-    if _module_present('tensorflow',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import TensorflowPrinter as printer
+                for k, v in modules.items():
+                    def _print_wrapper(self_, expr):
+                        print(k, v, self_, expr)
+                        if isinstance(v, (float, int, str, complex)):
+                            return str(v)
+                        else:
+                            return self_._print(v(expr))
+                    setattr(_Printer, '_print_%s' % k, _print_wrapper)
+                Printer = _Printer
+            else:
+                Printer = PythonCodePrinter
+        print(Printer)
+        printer = Printer()
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
@@ -424,6 +441,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
+    for mod in printer.modules:
+        if mod not in namespace:
+            exec_("import %s" % mod, {}, namespace)
 
     if flat in lstr:
         namespace.update({flat: flatten})
@@ -438,7 +458,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         def array_wrap(funcarg):
             @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                return funcarg(*[namespace['numpy.asarray'](i) for i in argsx], **kwargsx)
+                return funcarg(*[namespace['numpy'].asarray(i) for i in argsx], **kwargsx)
             return wrapper
         func = array_wrap(func)
     # Apply the docstring

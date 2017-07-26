@@ -74,9 +74,9 @@ def test_bad_args():
 
 def test_atoms():
     # Non-Symbol atoms should not be pulled out from the expression namespace
-    f = lambdify(x, pi + x, {"pi": 3.14})
+    f = lambdify(x, pi + x, {"Pi": 3.14})
     assert f(0) == 3.14
-    f = lambdify(x, I + x, {"I": 1j})
+    f = lambdify(x, I + x, {"ImaginaryUnit": 1j})
     assert f(1) == 1 + 1j
 
 #================== Test different modules =========================
