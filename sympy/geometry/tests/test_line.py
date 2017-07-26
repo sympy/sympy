@@ -53,6 +53,14 @@ def test_angle_between():
                                 Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))), acos(sqrt(3) / 3)
 
 
+def test_closing_angle():
+    a = Ray((0, 0), angle=0)
+    b = Ray((1, 2), angle=pi/2)
+    assert a.closing_angle(b) == -pi/2
+    assert b.closing_angle(a) == pi/2
+    assert a.closing_angle(a) == 0
+
+
 def test_arbitrary_point():
     l1 = Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
     l2 = Line(Point(x1, x1), Point(y1, y1))
@@ -142,8 +150,6 @@ def test_basic_properties_2d():
 
     r1 = Ray(p1, Point(0, 1))
     r2 = Ray(Point(0, 1), p1)
-    r3 = Ray(Point(1, 0), p2)
-    r4 = Ray(p2, Point(1, 0))
 
     s1 = Segment(p1, p10)
     p_s1 = s1.random_point()
@@ -163,8 +169,6 @@ def test_basic_properties_2d():
     assert s1 in Line(p1, p10)
     assert Ray(Point(0, 0), Point(0, 1)) in Ray(Point(0, 0), Point(0, 2))
     assert Ray(Point(0, 0), Point(0, 2)) in Ray(Point(0, 0), Point(0, 1))
-    assert (r1+r3) == Ray(Point(0, 0), Point(0, 2))
-    assert (r1-r4) == Ray(Point(0, 0), Point(0, 2))
     assert (r1 in s1) is False
     assert Segment(p1, p2) in s1
     assert Ray(Point(x1, x1), Point(x1, 1 + x1)) != Ray(p1, Point(-1, 5))

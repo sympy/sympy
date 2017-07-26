@@ -1205,46 +1205,10 @@ class Ray(LinearEntity):
             ).format(2. * scale_factor, path, fill_color)
 
     def __add__(self, other):
-        """Add other ray to self in a vector sense (with unit magnitude).
-
-        Parameters
-        ==========
-
-        other : The other ray object that is to be added vectorially with self
-
-        Returns
-        =======
-
-        r : a new ray from the source of self that is in the direction of
-            (self + other)
-
-        Examples
-        ========
-
-        >>> from sympy.geometry.line import Ray2D
-        >>> from sympy.geometry.point import Point2D
-        >>> r1 = Ray2D(Point2D(0,0), Point2D(0,10))
-        >>> r2 = Ray2D(Point2D(1,0), Point2D(2,0))
-        >>> r1+r2
-        Ray2D(Point2D(0, 0), Point2D(1, 1))
-
-        """
-        # normalizing the directions as magnitude of ray is infinite
-        new_dir = self.direction.unit + other.direction.unit
-        try:
-            r = Ray(self.p1, self.p1 + new_dir)
-        except ValueError:
-            raise GeometryError("Invalid ray operation. Possibly adding 2 rays in opposite direction")
-        return r
+        raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self), type(other)))
 
     def __sub__(self, other):
-        """Subtract two rays vectorially (with unit magnitude)"""
-        new_dir = self.direction.unit - other.direction.unit
-        try:
-            r = Ray(self.p1, self.p1 + new_dir)
-        except ValueError:
-            raise GeometryError("Invalid ray operation. Possibly adding 2 rays in opposite direction")
-        return r
+        raise TypeError("unsupported operand type(s) for -: '%s' and '%s'" % (type(self), type(other)))
 
     def contains(self, other):
         """
