@@ -272,6 +272,9 @@ charge = Dimension(name='charge', symbol='Q')
 magnetic_density = Dimension(name='magnetic_density', symbol='B')
 magnetic_flux = Dimension(name='magnetic_flux')
 
+# Dimensions in information theory:
+information = Dimension(name='information')
+
 # Create dimensions according the the base units in MKSA.
 # For other unit systems, they can be derived by transforming the base
 # dimensional dependency dictionary.
@@ -288,6 +291,8 @@ current._register_as_base_dim()
 temperature._register_as_base_dim()
 amount_of_substance._register_as_base_dim()
 luminous_intensity._register_as_base_dim()
+
+information._register_as_base_dim()
 
 # Dimensional dependencies for derived dimensions
 Dimension._dimensional_dependencies["velocity"] = dict(length=1, time=-1)
