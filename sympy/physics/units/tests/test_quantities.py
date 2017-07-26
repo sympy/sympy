@@ -4,7 +4,7 @@ from __future__ import division
 
 from sympy import (
     Abs, Add, Basic, Function, Number, Rational, S, Symbol, diff, exp,
-    integrate, log, sqrt, symbols)
+    integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (
     amount_of_substance, convert_to, find_unit, volume)
 from sympy.physics.units.definitions import (
@@ -64,6 +64,9 @@ def test_Quantity_definition():
     assert v.dimension == length
     assert v.scale_factor == 5 * 1000
 
+    raises(ValueError, lambda: Quantity('invalid', 'dimension', 1))
+    raises(ValueError, lambda: Quantity('mismatch', length, kg))
+
 
 def test_abbrev():
     u = Quantity("u", length, 1)
@@ -116,16 +119,17 @@ def test_add_sub():
 
 
 def test_check_unit_consistency():
-    return  # TODO remove
     u = Quantity("u", length, 10)
     v = Quantity("v", length, 5)
     w = Quantity("w", time, 2)
 
-    # TODO: no way of checking unit consistency:
-    #raises(ValueError, lambda: check_unit_consistency(u + w))
-    #raises(ValueError, lambda: check_unit_consistency(u - w))
-    #raises(TypeError, lambda: check_unit_consistency(u + 1))
-    #raises(TypeError, lambda: check_unit_consistency(u - 1))
+    def check_unit_consistency(expr):
+        Quantity._collect_factor_and_dimension(expr)
+
+    raises(ValueError, lambda: check_unit_consistency(u + w))
+    raises(ValueError, lambda: check_unit_consistency(u - w))
+    raises(TypeError, lambda: check_unit_consistency(u + 1))
+    raises(TypeError, lambda: check_unit_consistency(u - 1))
 
 
 def test_mul_div():
@@ -143,7 +147,7 @@ def test_mul_div():
 
     # TODO: decide whether to allow such expression in the future
     # (requires somehow manipulating the core).
-    #assert u / Quantity(length, 2) == 5
+    # assert u / Quantity('l2', length, 2) == 5
 
     assert u * 1 == u
 
@@ -295,3 +299,9 @@ def test_dimensional_expr_of_derivative():
     assert Quantity._collect_factor_and_dimension(dl_dt) ==\
         Quantity._collect_factor_and_dimension(l / t / t1) ==\
         (10, length/time**2)
+
+
+def test_get_dimensional_expr_with_function():
+    v_w1 = Quantity('v_w1', length / time, meter / second)
+    assert Quantity.get_dimensional_expr(sin(v_w1)) == \
+        sin(Quantity.get_dimensional_expr(v_w1))

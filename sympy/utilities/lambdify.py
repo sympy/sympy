@@ -579,7 +579,6 @@ def lambdastr(args, expr, printer=None, dummify=False):
         else:
             expr = sub_expr(expr, dummies_dict)
     expr = lambdarepr(expr)
-
     return "lambda %s: (%s)" % (args, expr)
 
 

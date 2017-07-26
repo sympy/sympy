@@ -16,13 +16,13 @@ def test_basic():
 
 def test_matrix():
     A = Matrix([[x, y], [y*x, z**2]])
-    assert lambdarepr(A) == "MutableDenseMatrix([[x, y], [x*y, z**2]])"
+    assert lambdarepr(A) == "ImmutableDenseMatrix([[x, y], [x*y, z**2]])"
 
     # Test printing a Matrix that has an element that is printed differently
     # with the LambdaPrinter than in the StrPrinter.
     p = Piecewise((x, True), evaluate=False)
     A = Matrix([p])
-    assert lambdarepr(A) == "MutableDenseMatrix([[((x) if (True) else None)]])"
+    assert lambdarepr(A) == "ImmutableDenseMatrix([[((x) if (True) else None)]])"
 
 
 def test_piecewise():
