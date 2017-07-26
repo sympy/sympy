@@ -2,7 +2,7 @@ from sympy import Rational, pi, sqrt
 from sympy.physics.units import Quantity
 from sympy.physics.units.dimensions import (
     acceleration, action, amount_of_substance, capacitance, charge,
-    conductance, current, energy, force, frequency, impedance, inductance,
+    conductance, current, energy, force, frequency, information, impedance, inductance,
     length, luminous_intensity, magnetic_density, magnetic_flux, mass, power,
     pressure, temperature, time, velocity, voltage)
 from sympy.physics.units.prefixes import (
@@ -172,10 +172,7 @@ planck_temperature = Quantity("planck_temperature", temperature, sqrt(hbar*speed
 planck_length = Quantity("planck_length", length, sqrt(hbar*G/speed_of_light**3), "l_P")
 # TODO: add more from https://en.wikipedia.org/wiki/Planck_units
 
-# Information theory:
-
-information = Dimension('information')
-
+# Information theory units:
 bit = bits = Quantity('bit', information, 1)
 byte = bytes = Quantity('byte', information, 8*bit)
 kibibyte = kibibytes = Quantity('kibibyte', information, kibi*byte)
