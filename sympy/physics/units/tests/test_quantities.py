@@ -10,7 +10,8 @@ from sympy.physics.units import (
 from sympy.physics.units.definitions import (
     amu, au, centimeter, coulomb, day, foot, grams, hour, inch, kg, km, m,
     meter, mile, millimeter, minute, mole, quart, s, second, speed_of_light,
-    steradian)
+    steradian,
+    bit, byte, kebibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
 from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
