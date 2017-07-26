@@ -180,6 +180,14 @@ from .definitions import (
     planck_time,
     planck_temperature,
     planck_length,
+    bit, bits,
+    byte,
+    kebibyte, kebibytes,
+    mebibyte, mebibytes,
+    gibibyte, gibibytes,
+    tebibyte, tebibytes,
+    pebibyte, pebibytes,
+    exbibyte, exbibytes,
 )
 
 
