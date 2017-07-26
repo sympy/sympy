@@ -436,8 +436,8 @@ def get_previous_version_tag():
             parents = $(git rev-list --parents -n 1 @(curtag)).strip().split()
             # rev-list prints the current commit and then all its parents
             # If the tagged commit *is* a merge commit, just comment this
-            # out, and make sure `fab vagrant get_previous_version_tag` is correct
-            assert len(parents) == 2, curtag
+            # out, and manually make sure `get_previous_version_tag` is correct
+            # assert len(parents) == 2, curtag
             curcommit = curtag + "^" # The parent of the tagged commit
         else:
             print(blue("Using {tag} as the tag for the previous "
