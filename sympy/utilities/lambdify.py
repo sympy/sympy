@@ -105,7 +105,7 @@ NUMEXPR_TRANSLATIONS = {}
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
-    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "numpy": (NUMPY, {}, {}, ("import numpy",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -438,7 +438,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         def array_wrap(funcarg):
             @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
+                return funcarg(*[namespace['numpy.asarray'](i) for i in argsx], **kwargsx)
             return wrapper
         func = array_wrap(func)
     # Apply the docstring

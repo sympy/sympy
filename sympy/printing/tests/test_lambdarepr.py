@@ -147,25 +147,27 @@ def test_piecewise():
         "(True) else None)))))))))))"
 
 
-def test_sum():
+def test_sum__1():
     # In each case, test eval() the lambdarepr() to make sure that
     # it evaluates to the same results as the symbolic expression
-
     s = Sum(x ** i, (i, a, b))
-
     l = lambdarepr(s)
     assert l == "(builtins.sum(x**i for i in range(a, b+1)))"
 
-    assert (lambdify((x, a, b), s)(2, 3, 8) ==
-            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
+    args = x, a, b
+    f = lambdify(args, s)
+    v = 2, 3, 8
+    assert f(*v) == s.subs(zip(args, v)).doit()
 
+def test_sum__2():
     s = Sum(i * x, (i, a, b))
-
     l = lambdarepr(s)
     assert l == "(builtins.sum(i*x for i in range(a, b+1)))"
 
-    assert (lambdify((x, a, b), s)(2, 3, 8) ==
-            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
+    args = x, a, b
+    f = lambdify(args, s)
+    v = 2, 3, 8
+    assert f(*v) == s.subs(zip(args, v)).doit()
 
 
 def test_multiple_sums():
@@ -174,8 +176,12 @@ def test_multiple_sums():
     l = lambdarepr(s)
     assert l == "(builtins.sum(i*x + j for i in range(a, b+1) for j in range(c, d+1)))"
 
-    assert (lambdify((x, a, b, c, d), s)(2, 3, 4, 5, 6) ==
-            s.subs([(x, 2), (a, 3), (b, 4), (c, 5), (d, 6)]).doit())
+    args = x, a, b, c, d
+    f = lambdify(args, s)
+    vals = 2, 3, 4, 5, 6
+    f_ref = s.subs(zip(args, vals)).doit()
+    f_res = f(*vals)
+    assert f_res == f_ref
 
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
