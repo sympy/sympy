@@ -581,7 +581,7 @@ class Type(Basic):
         exp10 = getattr(self, 'decimal_dig', None)
 
         if rtol is None:
-            rtol = 1e-15 if exp10 is None else ten**(-exp10)
+            rtol = 1e-15 if exp10 is None else 2.0*ten**(-exp10)
 
         def tol(num):
             return atol + rtol*abs(num)
@@ -643,12 +643,14 @@ class FloatType(Type):
 class ComplexType(FloatType):
 
     def _cast_nocheck(self, value):
+        from sympy.functions import re, im
         return (
             super(ComplexType, self)._cast_nocheck(re(value)) +
             super(ComplexType, self)._cast_nocheck(im(value))*1j
         )
 
     def _check(self, value):
+        from sympy.functions import re, im
         super(ComplexType, self)._check(re(value))
         super(ComplexType, self)._check(im(value))
 
@@ -667,23 +669,23 @@ uint64 = UnsignedIntType('uint64', 64)
 float16 = Type('float16')
 float32 = FloatType(
     'float32', 32,
-    max=Float('3.40282347e+38'),
-    tiny=Float('1.17549435e-38'),
-    eps=Float('1.1920929e-07'),
+    max=Float('3.40282347e+38', precision=32+8),
+    tiny=Float('1.17549435e-38', precision=32+8),
+    eps=Float('1.1920929e-07', precision=32+8),
     dig=6, decimal_dig=9
 )
 float64 = FloatType(
     'float64', 64,
-    max=Float('1.79769313486231571e+308'),
-    tiny=Float('2.22507385850720138e-308'),
-    eps=Float('2.22044604925031308e-16'),
+    max=Float('1.79769313486231571e+308', precision=64+8),
+    tiny=Float('2.22507385850720138e-308', precision=64+8),
+    eps=Float('2.22044604925031308e-16', precision=64+8),
     dig=15, decimal_dig=17
 )
 float80 = FloatType(
     'float80', 80,
-    max=Float('1.18973149535723176502e+4932'),
-    tiny=Float('3.36210314311209350626e-4932'),
-    eps=Float('1.08420217248550443401e-19'),
+    max=Float('1.18973149535723176502e+4932', precision=80+8),
+    tiny=Float('3.36210314311209350626e-4932', precision=80+8),
+    eps=Float('1.08420217248550443401e-19', precision=80+8),
     dig=18, decimal_dig=21
 )
 complex64 = ComplexType('complex64', 64, **{k: getattr(float32, k) for k in FloatType.__slots__[2:]})

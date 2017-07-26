@@ -20,15 +20,17 @@ the responsibility for generating properly cased Fortran code to the user.
 from __future__ import print_function, division
 
 from collections import defaultdict
+from itertools import chain
 import string
 
-from sympy.core import S, Add, N
+from sympy.core import S, Add, N, Float
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.codegen.ast import (Assignment, Declaration, Pointer, Type,
-                               float32, float64, complex64, complex128)
+                               float32, float64, complex64, complex128, intc,
+                               real, integer, bool_, complex_)
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -57,14 +59,23 @@ class FCodePrinter(CodePrinter):
     printmethod = "_fcode"
     language = "Fortran"
 
+    type_aliases = {
+        real: float64,
+        complex_: complex128,
+    }
+
     type_mappings = {
-        Type('intc'): ('integer(c_int)', {'iso_c_binding': 'c_int'}),
-        float32: ('real(4)', None),
-        float64: ('real(8)', None),
-        complex64: ('complex(4)', None),
-        complex128: ('complex(8)', None),
-        Type('integer'): ('integer', None),
-        Type('bool'): ('logical', None)
+        intc: 'integer(c_int)',
+        float32: 'real(4)',
+        float64: 'real(8)',
+        complex64: 'complex(4)',
+        complex128: 'complex(8)',
+        integer: 'integer',
+        bool_: 'logical'
+    }
+
+    type_modules = {
+        intc: {'iso_c_binding': 'c_int'}
     }
 
     _default_settings = {
@@ -73,6 +84,7 @@ class FCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'enable_statements': True,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
@@ -91,7 +103,11 @@ class FCodePrinter(CodePrinter):
     }
 
     def __init__(self, settings={}):
-        CodePrinter.__init__(self, settings)
+        self.type_aliases = dict(chain(self.type_aliases.items(),
+                                       settings.pop('type_aliases', {}).items()))
+        self.type_mappings = dict(chain(self.type_mappings.items(),
+                                        settings.pop('type_mappings', {}).items()))
+        super(FCodePrinter, self).__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -101,6 +117,7 @@ class FCodePrinter(CodePrinter):
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
         self.module_uses = defaultdict(set)  # e.g.: use iso_c_binding, only: c_int
+
 
     @property
     def _lead(self):
@@ -122,6 +139,12 @@ class FCodePrinter(CodePrinter):
 
     def _declare_number_const(self, name, value):
         return "parameter ({0} = {1})".format(name, value)
+
+    def _print_NumberSymbol(self, expr):
+        # A Number symbol that is not implemented here or with _printmethod
+        # is registered and evaluated
+        self._number_symbols.add((expr, self._print(Float(expr.evalf(self._settings['precision'])))))
+        return str(expr)
 
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
@@ -318,25 +341,10 @@ class FCodePrinter(CodePrinter):
         lhs, rhs = expr.args
         return ' /= '.join(map(self._print, (lhs, rhs)))
 
-    def _get_precision_type(self):
-        typ = self._settings['precision']
-        if not isinstance(typ, Type):
-            if typ <= Type.default_limits['float32']['dig']:
-                typ = float32
-            elif typ <= Type.default_limits['float64']['dig']:
-                typ = float64
-            elif typ <= Type.default_limits['float80']['dig']:
-                typ = float80
-            else:
-                raise NotImplementedError("Need a higher precision datatype.")
-        return typ
-
     def _print_Type(self, type_):
-        if type_.name == 'real':  # precision-dependent data type
-            type_ = self._get_precision_type()
-        if type_.name == 'complex':
-            type_ = {float32: complex64, float64: complex128}[self._get_precision_type()]
-        type_str, module_uses = self.type_mappings.get(type_, type_.name)
+        type_ = self.type_aliases.get(type_, type_)
+        type_str = self.type_mappings.get(type_, type_.name)
+        module_uses = self.type_modules.get(type_)
         if module_uses:
             for k, v in module_uses:
                 self.module_uses[k].add(v)
@@ -512,7 +520,7 @@ def fcode(expr, assign_to=None, **settings):
         line-wrapping, or for expressions that generate multi-line statements.
     precision : integer, optional
         DEPRECATED. Use type_mappings instead. The precision for numbers such
-        as pi [default=17]. 
+        as pi [default=17].
     user_functions : dict, optional
         A dictionary where keys are ``FunctionClass`` instances and values are
         their string representations. Alternatively, the dictionary value can
