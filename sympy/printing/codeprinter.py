@@ -34,7 +34,8 @@ class CodePrinter(StrPrinter):
     _default_settings = {'order': None,
                          'full_prec': 'auto',
                          'error_on_reserved': False,
-                         'reserved_word_suffix': '_'}
+                         'reserved_word_suffix': '_',
+                         'human': True}
 
     def __init__(self, settings=None):
 
@@ -254,6 +255,11 @@ class CodePrinter(StrPrinter):
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
 
+    def _print_Dummy(self, expr):
+        if expr.name.startswith('Dummy_'):
+            return '_' + expr.name
+        else:
+            return '%s_%d' % (expr.name, expr.dummy_index)
 
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
@@ -336,10 +342,6 @@ class CodePrinter(StrPrinter):
         self._number_symbols.add((expr,
             self._print(expr.evalf(self._settings["precision"]))))
         return str(expr)
-
-    def _print_Dummy(self, expr):
-        # dummies must be printed as unique symbols
-        return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     def _print_Catalan(self, expr):
         return self._print_NumberSymbol(expr)
@@ -430,7 +432,6 @@ class CodePrinter(StrPrinter):
     _print_Basic = _print_not_supported
     _print_ComplexInfinity = _print_not_supported
     _print_Derivative = _print_not_supported
-    _print_dict = _print_not_supported
     _print_ExprCondPair = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported
@@ -438,7 +439,6 @@ class CodePrinter(StrPrinter):
     _print_Interval = _print_not_supported
     _print_AccumulationBounds = _print_not_supported
     _print_Limit = _print_not_supported
-    _print_list = _print_not_supported
     _print_Matrix = _print_not_supported
     _print_ImmutableMatrix = _print_not_supported
     _print_ImmutableDenseMatrix = _print_not_supported
@@ -455,7 +455,6 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
-    _print_tuple = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported

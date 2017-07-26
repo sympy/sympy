@@ -1002,9 +1002,6 @@ def test_linsolve():
     assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
     assert linsolve(system1, (x1, x2, x3, x4)) == sol
 
-    # raise ValueError if no symbols are given
-    raises(ValueError, lambda: linsolve(system1))
-
     # raise ValueError if, A & b is not given as tuple
     raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
 

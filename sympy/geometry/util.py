@@ -14,7 +14,7 @@ from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve
 from sympy.core.compatibility import (
-    is_sequence, range, string_types)
+    is_sequence, range, string_types, ordered)
 from .point import Point, Point2D
 
 
@@ -245,18 +245,18 @@ def centroid(*args):
     Stacking 3 polygons on top of each other effectively triples the
     weight of that polygon:
 
-        >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
-        >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
-        >>> centroid(p, q)
-        Point2D(3/2, 1/2)
-        >>> centroid(p, p, p, q) # centroid x-coord shifts left
-        Point2D(11/10, 1/2)
+    >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
+    >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
+    >>> centroid(p, q)
+    Point2D(3/2, 1/2)
+    >>> centroid(p, p, p, q) # centroid x-coord shifts left
+    Point2D(11/10, 1/2)
 
     Stacking the squares vertically above and below p has the same
     effect:
 
-        >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
-        Point2D(11/10, 1/2)
+    >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
+    Point2D(11/10, 1/2)
 
     """
 
@@ -625,28 +625,25 @@ def idiff(eq, y, x, n=1):
         dydx = dydx.diff(x)
 
 
-def intersection(*entities):
+def intersection(*entities, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
     ==========
-
     entities : sequence of GeometryEntity
+    pairwise (keyword argument) : Can be either True or False
 
     Returns
     =======
-
     intersection : list of GeometryEntity
 
     Raises
     ======
-
     NotImplementedError
         When unable to calculate intersection.
 
     Notes
     =====
-
     The intersection of any geometrical entity with itself should return
     a list with one item: the entity in question.
     An intersection requires two or more entities. If only a single
@@ -657,6 +654,14 @@ def intersection(*entities):
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
 
+    Case 1: When the keyword argument 'pairwise' is False (default value):
+    In this case, the functon returns a list of intersections common to
+    all entities.
+
+    Case 2: When the keyword argument 'pairwise' is True:
+    In this case, the functions returns a list intersections that occur
+    between any pair of entities.
+
     See Also
     ========
 
@@ -665,25 +670,26 @@ def intersection(*entities):
     Examples
     ========
 
-    >>> from sympy.geometry import Point, Line, Circle, intersection
-    >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
-    >>> l1, l2 = Line(p1, p2), Line(p3, p2)
-    >>> c = Circle(p2, 1)
-    >>> intersection(l1, p2)
-    [Point2D(1, 1)]
-    >>> intersection(l1, l2)
-    [Point2D(1, 1)]
-    >>> intersection(c, p2)
+    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> c = Circle((0, 1), 1)
+    >>> intersection(c, c.center)
     []
-    >>> intersection(c, Point(1, 0))
-    [Point2D(1, 0)]
-    >>> intersection(c, l2)
-    [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
-     Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
+    >>> right = Ray((0, 0), (1, 0))
+    >>> up = Ray((0, 0), (0, 1))
+    >>> intersection(c, right, up)
+    [Point2D(0, 0)]
+    >>> intersection(c, right, up, pairwise=True)
+    [Point2D(0, 0), Point2D(0, 2)]
+    >>> left = Ray((1, 0), (0, 0))
+    >>> intersection(right, left)
+    [Segment2D(Point2D(0, 0), Point2D(1, 0))]
 
     """
+
     from .entity import GeometryEntity
     from .point import Point
+
+    pairwise = kwargs.pop('pairwise', False)
 
     if len(entities) <= 1:
         return []
@@ -692,15 +698,21 @@ def intersection(*entities):
     entities = list(entities)
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
-            try:
-                entities[i] = Point(e)
-            except NotImplementedError:
-                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+            entities[i] = Point(e)
 
-    res = entities[0].intersection(entities[1])
-    for entity in entities[2:]:
-        newres = []
-        for x in res:
-            newres.extend(x.intersection(entity))
-        res = newres
-    return res
+    if not pairwise:
+        # find the intersection common to all objects
+        res = entities[0].intersection(entities[1])
+        for entity in entities[2:]:
+            newres = []
+            for x in res:
+                newres.extend(x.intersection(entity))
+            res = newres
+        return res
+
+    # find all pairwise intersections
+    ans = []
+    for j in range(0, len(entities)):
+        for k in range(j + 1, len(entities)):
+            ans.extend(intersection(entities[j], entities[k]))
+    return list(ordered(set(ans)))

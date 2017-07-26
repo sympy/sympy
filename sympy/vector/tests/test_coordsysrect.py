@@ -387,10 +387,18 @@ def test_coordsys3d():
 
 def test_rotation_trans_equations():
     a = CoordSys3D('a')
-    assert a._rotation_trans_equations() == (a.x, a.y, a.z)
+    from sympy import symbols
+    q0 = symbols('q0')
+    assert a._rotation_trans_equations(a._parent_rotation_matrix) == (a.x, a.y, a.z)
+    assert a._rotation_trans_equations(a._inverse_rotation_matrix()) == (a.x, a.y, a.z)
     b = a.orient_new_axis('b', 0, -a.k)
-    assert b._rotation_trans_equations() == (b.x, b.y, b.z)
-
+    assert b._rotation_trans_equations(b._parent_rotation_matrix) == (b.x, b.y, b.z)
+    assert b._rotation_trans_equations(b._inverse_rotation_matrix()) == (b.x, b.y, b.z)
+    c = a.orient_new_axis('c', q0, -a.k)
+    assert c._rotation_trans_equations(c._parent_rotation_matrix) == \
+           (-sin(q0) * c.y + cos(q0) * c.x, sin(q0) * c.x + cos(q0) * c.y, c.z)
+    assert c._rotation_trans_equations(c._inverse_rotation_matrix()) == \
+           (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)
 
 def test_translation_trans_equations():
     from sympy import symbols
@@ -403,3 +411,4 @@ def test_translation_trans_equations():
     assert c._translation_trans_equations() == (c.x + 1, c.y + 1, c.z + 1)
     d = a.orient_new_axis('d', q0, -a.k, location=(a.i + a.j + Vector.zero))
     assert d._translation_trans_equations() == (d.x + 1, d.y + 1, d.z)
+
