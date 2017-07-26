@@ -7,7 +7,7 @@ from sympy.physics.units.dimensions import (
     pressure, temperature, time, velocity, voltage)
 from sympy.physics.units.prefixes import (
     centi, deci, kilo, micro, milli, nano, pico,
-    kebi, mebi, gibi, tebi, pebi, exbi)
+    kibi, mebi, gibi, tebi, pebi, exbi)
 
 #### UNITS ####
 
