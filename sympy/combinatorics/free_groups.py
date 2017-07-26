@@ -1207,6 +1207,89 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             word = group.dtype(rep)
         return word
 
+    def cyclic_reduction(self, removed=False):
+        """Return a cyclically reduced version of the word. Unlike
+        `identity_cyclic_reduction`, this will not cyclically permute
+        the reduced word - just remove the "unreduced" bits on either
+        side of it. Compare the examples with those of
+        `identity_cyclic_reduction`.
+
+        When `removed` is `True`, return a tuple `(word, r)` where
+        self `r` is such that before the reductin the word was either
+        `r*word*r**-1`.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x**2*y**2*x**-1).cyclic_reduction()
+        x*y**2
+        >>> (x**-3*y**-1*x**5).cyclic_reduction()
+        y**-1*x**2
+        >>> (x**-3*y**-1*x**5).cyclic_reduction(removed=True)
+        (y**-1*x**2, x**-3)
+
+        """
+        word = self.copy()
+        group = self.group
+        g = self.group.identity
+        while not word.is_cyclically_reduced():
+            exp1 = abs(word.exponent_syllable(0))
+            exp2 = abs(word.exponent_syllable(-1))
+            exp = min(exp1, exp2)
+            start = word[0]**abs(exp)
+            end = word[-1]**abs(exp)
+            word = start**-1*word*end**-1
+            g = g*start
+        if removed:
+            return word, g
+        return word
+
+    def power_of(self, other):
+        '''
+        Check if `self == other**n` for some integer n.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> ((x*y)**2).power_of(x*y)
+        True
+        >>> (x**-3*y**-2*x**3).power_of(x**-3*y*x**3)
+        True
+
+        '''
+        if self.is_identity:
+            return True
+
+        l = len(other)
+        if l == 1:
+            # self has to be a power of one generator
+            gens = self.contains_generators()
+            s = other in gens or other**-1 in gens
+            return len(gens) == 1 and s
+
+        # if self is not cyclically reduced and it is a power of other,
+        # other isn't cyclically reduced and the parts removed during
+        # their reduction must be equal
+        reduced, r1 = self.cyclic_reduction(removed=True)
+        if not r1.is_identity:
+            other, r2 = other.cyclic_reduction(removed=True)
+            if r1 == r2:
+                return reduced.power_of(other)
+            return False
+
+        if len(self) < l or len(self) % l:
+            return False
+
+        prefix = self.subword(0, l)
+        if prefix == other or prefix**-1 == other:
+            rest = self.subword(l, len(self))
+            return rest.power_of(other)
+        return False
+
 
 def letter_form_to_array_form(array_form, group):
     """
