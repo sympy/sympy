@@ -407,13 +407,18 @@ class CoordSys3D(Basic):
 
         return trans_eq1, trans_eq2, trans_eq3
 
-    def _translation_trans_equations(self):
+    def _translation_trans_equations(self, inverse=False):
         """
         Returns the transformation equations obtained from translation
         vector. Translation vector is defined as a linking vector of
         origins of two coordinate systems.
 
         """
+        if inverse:
+            sign = -1
+        else:
+            sign = 1
+
         if self._parent is None:
             return self.base_scalars()
         else:
@@ -421,7 +426,7 @@ class CoordSys3D(Basic):
             vec_norm_projections = []
             for i in self._parent.base_vectors():
                 try:
-                    vec_norm_projections.append(vec_component[i])
+                    vec_norm_projections.append(sign * vec_component[i])
                 except:
                     vec_norm_projections.append(0)
             return tuple([sum(i) for i in zip(vec_norm_projections, self.base_scalars())])
