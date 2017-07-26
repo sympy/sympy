@@ -6,7 +6,8 @@ from sympy.physics.units.dimensions import (
     length, luminous_intensity, magnetic_density, magnetic_flux, mass, power,
     pressure, temperature, time, velocity, voltage)
 from sympy.physics.units.prefixes import (
-    centi, deci, kilo, micro, milli, nano, pico)
+    centi, deci, kilo, micro, milli, nano, pico,
+    kebi, mebi, gibi, tebi, pebi, exbi)
 
 #### UNITS ####
 
@@ -170,3 +171,16 @@ planck_time = Quantity("planck_time", time, sqrt(hbar*G/speed_of_light**5), "t_P
 planck_temperature = Quantity("planck_temperature", temperature, sqrt(hbar*speed_of_light**5/G/boltzmann**2), "T_P")
 planck_length = Quantity("planck_length", length, sqrt(hbar*G/speed_of_light**3), "l_P")
 # TODO: add more from https://en.wikipedia.org/wiki/Planck_units
+
+# Information theory:
+
+information = Dimension('information')
+
+bit = bits = Quantity('bit', information, 1)
+byte = bytes = Quantity('byte', information, 8*bit)
+kibibyte = kibibytes = Quantity('kibibyte', information, kibi*byte)
+mebibyte = mebibytes = Quantity('mebibyte', information, mebi*byte)
+gibibyte = gibibytes = Quantity('gibibyte', information, gibi*byte)
+tebibyte = tebibytes = Quantity('tebibyte', information, tebi*byte)
+pebibyte = pebibytes = Quantity('pebibyte', information, pebi*byte)
+exbibyte = exbibytes = Quantity('exbibyte', information, exbi*byte)
