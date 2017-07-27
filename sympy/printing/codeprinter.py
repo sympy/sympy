@@ -21,13 +21,25 @@ def prints_statement(method):
 
     @wraps(method)
     def wrapper(self, expr):
-        if self._settings['enable_statements']:
+        if self._settings.get('enable_statements', True):
             return method(self, expr)
         else:
             raise ValueError("The code-printer setting 'enable_statements' is False,\n"
                              "but %s generates a statement in the chosen language." %
                              type(expr))
     return wrapper
+
+class requires(object):
+    """ Decorator for registering requirements on print methods. """
+    def __init__(self, **kwargs):
+        self._req = kwargs
+
+    def __call__(self, method):
+        def _method_wrapper(self_, *args, **kwargs):
+            for k, v in self._req.items():
+                getattr(self_, k).update(v)
+            return method(self_, *args, **kwargs)
+        return wraps(method)(_method_wrapper)
 
 
 class AssignmentError(Exception):

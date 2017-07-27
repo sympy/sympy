@@ -51,7 +51,8 @@ def test_ccode_Pow():
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
                    (lambda base, exp: not exp.is_integer, "pow")]
     assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
-    assert ccode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
+    assert ccode(x**0.5, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 0.5)'
+    assert ccode(x**Rational(16, 5), user_functions={'Pow': _cond_cfunc}) == 'pow(x, 16.0/5.0)'
     _cond_cfunc2 = [(lambda base, exp: base == 2, lambda base, exp: 'exp2(%s)' % exp),
                     (lambda base, exp: base != 2, 'pow')]
     # Related to gh-11353
@@ -74,10 +75,10 @@ def test_ccode_constants_mathh():
 
 
 def test_ccode_constants_other():
-    assert ccode(2*GoldenRatio) == "const double GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert ccode(2*GoldenRatio) == "const double GoldenRatio = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
     assert ccode(
-        2*Catalan) == "const double Catalan = 0.915965594177219;\n2*Catalan"
-    assert ccode(2*EulerGamma) == "const double EulerGamma = 0.577215664901533;\n2*EulerGamma"
+        2*Catalan) == "const double Catalan = %s;\n2*Catalan" % Catalan.evalf(17)
+    assert ccode(2*EulerGamma) == "const double EulerGamma = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
 
 
 def test_ccode_Rational():
@@ -109,7 +110,7 @@ def test_ccode_inline_function():
     assert ccode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert ccode(
-        g(x)) == "const double Catalan = %s;\n2*x/Catalan" % Catalan.evalf(15)
+        g(x)) == "const double Catalan = %s;\n2*x/Catalan" % Catalan.evalf(17)
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -607,7 +608,7 @@ def test_C99CodePrinter__precision():
     f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
     f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
     assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
-    assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1)'
+    assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1000000000000001)'
     assert f80_printer.doprint(sin(x+Float('2.0'))) == 'sinl(x + 2.0L)'
 
     for printer, suffix in zip([f32_printer, f64_printer, f80_printer], ['f', '', 'l']):
@@ -695,7 +696,7 @@ def test_ccode_Declaration():
 def test_C99CodePrinter_custom_type():
     # We will look at __float128 (new in glibc 2.26)
     f128 = FloatType(
-        '__float128', 128,
+        '_Float128', 128,
         max=Float('1.18973149535723176508575932662800702e+4932'),
         tiny=Float('3.36210314311209350626267781732175260e-4932'),
         eps=Float('1.92592994438723585305597794258492732e-34'),
@@ -708,9 +709,20 @@ def test_C99CodePrinter_custom_type():
         type_math_macro_suffixes={
             real: 'f128',
             f128: 'f128'
+        },
+        type_macros={
+            f128: ('__STDC_WANT_IEC_60559_TYPES_EXT__',)
         }
     ))
+    assert p128.doprint(x) == 'x'
+    assert not p128.headers
+    assert not p128.libraries
+    assert not p128.macros
     assert p128.doprint(2.0) == '2.0Q'
+    assert not p128.headers
+    assert not p128.libraries
+    assert p128.macros == {'__STDC_WANT_IEC_60559_TYPES_EXT__'}
+
     assert p128.doprint(Rational(1, 2)) == '1.0Q/2.0Q'
     assert p128.doprint(sin(x)) == 'sinf128(x)'
     assert p128.doprint(cos(2., evaluate=False)) == 'cosf128(2.0Q)'
@@ -718,11 +730,11 @@ def test_C99CodePrinter_custom_type():
     var5 = Variable(x, {value_const}, f128)
 
     dcl5a = Declaration(var5)
-    assert ccode(dcl5a) == 'const __float128 x'
+    assert ccode(dcl5a) == 'const _Float128 x'
     dcl5b = Declaration(var5, pi)
-    assert p128.doprint(dcl5b) == 'const __float128 x = M_PIf128'
+    assert p128.doprint(dcl5b) == 'const _Float128 x = M_PIf128'
     dcl5c = Declaration(var5, Catalan.evalf(38))
-    assert p128.doprint(dcl5c) == 'const __float128 x = %sQ' % Catalan.evalf(f128.dig)
+    assert p128.doprint(dcl5c) == 'const _Float128 x = %sQ' % Catalan.evalf(f128.decimal_dig)
 
 
 def test_MatrixElement_printing():

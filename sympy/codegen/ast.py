@@ -433,35 +433,33 @@ class Type(Basic):
 
     Examples
     --------
-    >>> from sympy.codegen.ast import Type
+    >>> from sympy.codegen.ast import Type, float64, float32, float80
     >>> Type.from_expr(42).name
     'integer'
-    >>> f32 = Type("float32")
     >>> v6 = 0.123456
-    >>> f32.cast_check(v6)
+    >>> float32.cast_check(v6)
     0.123456
     >>> v10 = 12345.67894
-    >>> f32.cast_check(v10)  # doctest: +ELLIPSIS
+    >>> float32.cast_check(v10)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
     ValueError: Casting gives a significantly different value.
-    >>> f64 = Type('float64')
-    >>> f64.cast_check(v10)
+    >>> float64.cast_check(v10)
     12345.67894
     >>> from sympy import Float
     >>> v18 = Float('0.123456789012345646')
-    >>> f64.cast_check(v18)
+    >>> float64.cast_check(v18)
     Traceback (most recent call last):
       ...
     ValueError: Casting gives a significantly different value.
-    >>> Type('float80').cast_check(v18)
+    >>> float80.cast_check(v18)
     0.123456789012345649
     >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
     >>> from sympy import Symbol
     >>> from sympy.printing.cxxcode import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
     >>> cxxcode(Declaration(Variable(Symbol('x'), None, boost_mp50)))
-    'boost::multiprecision::cpp_dec_float_50 x;'
+    'boost::multiprecision::cpp_dec_float_50 x'
 
     References
     ----------
@@ -724,7 +722,7 @@ class Variable(Basic):
     Examples
     --------
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Variable, float32, Type
+    >>> from sympy.codegen.ast import Variable, float32, integer
     >>> x = Symbol('x')
     >>> v = Variable(x, type_=float32)
 
@@ -732,7 +730,7 @@ class Variable(Basic):
     assumptions about the symbol using the ``deduced`` classmethod::
     >>> i = Symbol('i', integer=True)
     >>> v = Variable.deduced(i)
-    >>> v.type == Type('integer')
+    >>> v.type == integer
     True
 
     """
@@ -795,15 +793,15 @@ class Declaration(Basic):
     Examples
     --------
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Declaration, Type, Variable
+    >>> from sympy.codegen.ast import Declaration, Type, Variable, integer
     >>> x = Symbol('x')
     >>> xvar = Variable(x)
     >>> decl = Declaration.deduced(xvar, 3)
-    >>> decl.variable.type == Type('integer')
+    >>> decl.variable.type == integer
     True
     >>> k = Symbol('k', integer=True)
     >>> k_decl = Declaration.deduced(k, 3.0)
-    >>> k_decl.variable.type == Type('integer')
+    >>> k_decl.variable.type == integer
     True
 
     """
