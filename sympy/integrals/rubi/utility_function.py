@@ -4632,7 +4632,7 @@ def RectifyCotangent(*args):
             d = d*e
             if EvenQ(Denominator(NumericFactor(Together(u)))):
                 return  I*r*Log(RemoveContent(Simplify((c+e)**2+d**2)-Simplify((c+e)**2-d**2)*Cos(2*u)+Simplify(2*(c+e)*d)*Sin(2*u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2+d**2)-Simplify((c-e)**2-d**2)*Cos(2*u)+Simplify(2*(c-e)*d)*Sin(2*u),x))/4
-            return I*r*Log(RemoveContent(Simplify((c+e)**2)-Simplify((c+e)**2-d**2)*Cos(u)**2+Simplify(2*(c+e)*d)*Cos(u)*Sin(u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2)-Simplify((c-e)**2-d**2)*Cos(u)**2+Simplify(2*(c-e)*d)*Cos(u)*Sin(u),x))/4)))
+            return I*r*Log(RemoveContent(Simplify((c+e)**2)-Simplify((c+e)**2-d**2)*Cos(u)**2+Simplify(2*(c+e)*d)*Cos(u)*Sin(u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2)-Simplify((c-e)**2-d**2)*Cos(u)**2+Simplify(2*(c-e)*d)*Cos(u)*Sin(u),x))/4
         elif NegativeQ(b):
             return RectifyCotangent(u,-a,-b,-r,x)
         elif EvenQ(Denominator(NumericFactor(Together(u)))):
@@ -4648,7 +4648,7 @@ def RectifyCotangent(*args):
         elif ZeroQ(c - 1):
             if EvenQ(Denominator(NumericFactor(Together(u)))):
                 return -I*b*ArcTanh(Sin(2*u))/2
-            return -I*b*ArcTanh(2*Cos(u)*Sin(u))/2)
+            return -I*b*ArcTanh(2*Cos(u)*Sin(u))/2
         e = SmartDenominator(c)
         c = c*e
         return -I*b*Log(RemoveContent(c*Cos(u)+e*Sin(u),x))/2 + I*b*Log(RemoveContent(c*Cos(u)-e*Sin(u),x))/2
