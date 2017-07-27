@@ -7,7 +7,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq)
+    DotProduct, Eq, Dummy)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -610,7 +610,7 @@ def test_imps():
     func = sympy.Function('myfunc')
     assert not hasattr(func, '_imp_')
     my_f = implemented_function(func, lambda x: 2*x)
-    assert hasattr(func, '_imp_')
+    assert hasattr(my_f, '_imp_')
     # Error for functions with same name and different implementation
     f2 = implemented_function("f", lambda x: x + 101)
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
@@ -785,3 +785,13 @@ def test_issue_12173():
     exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
     assert exp1 == uppergamma(1, 2).evalf()
     assert exp2 == lowergamma(1, 2).evalf()
+
+def test_lambdify_dummy_arg():
+    d1 = Dummy()
+    f1 = lambdify(d1, d1 + 1, dummify=False)
+    assert f1(2) == 3
+    f1b = lambdify(d1, d1 + 1)
+    assert f1b(2) == 3
+    d2 = Dummy('x')
+    f2 = lambdify(d2, d2 + 1)
+    assert f2(2) == 3

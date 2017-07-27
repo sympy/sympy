@@ -460,6 +460,9 @@ class LatexPrinter(Printer):
             and expr.exp.is_Rational \
                 and expr.exp.q != 1:
             base, p, q = self.parenthesize(expr.base, PRECEDENCE['Pow']), expr.exp.p, expr.exp.q
+            #fixes issue #12886, adds parentheses before superscripts raised to powers
+            if '^' in base and expr.base.is_Symbol:
+                base = r"\left(%s\right)" % base
             if expr.base.is_Function:
                 return self._print(expr.base, "%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
@@ -481,9 +484,13 @@ class LatexPrinter(Printer):
                     if tex[:1] == "-":
                         return tex[1:].strip()
                 tex = r"%s^{%s}"
+                #fixes issue #12886, adds parentheses before superscripts raised to powers
+                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+                if '^' in base and expr.base.is_Symbol:
+                    base = r"\left(%s\right)" % base
+                exp = self._print(expr.exp)
 
-                return tex % (self.parenthesize(expr.base, PRECEDENCE['Pow']),
-                              self._print(expr.exp))
+                return tex % (base, exp)
 
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])

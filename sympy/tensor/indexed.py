@@ -510,11 +510,9 @@ class Idx(Expr):
         * ``tuple``: The two elements are interpreted as the lower and upper
           bounds of the range, respectively.
 
-    Note: the ``Idx`` constructor is rather pedantic in that it only accepts
-    integer arguments.  The only exception is that you can use ``-oo`` and
-    ``oo`` to specify an unbounded range.  For all other cases, both label and
-    bounds must be declared as integers, e.g. if ``n`` is given as an argument
-    then ``n.is_integer`` must return ``True``.
+    Note: bounds of the range are assumed to be either integer or infinite (oo
+    and -oo are allowed to specify an unbounded range). If ``n`` is given as a
+    bound, then ``n.is_integer`` must not return false.
 
     For convenience, if the label is given as a string it is automatically
     converted to an integer symbol.  (Note: this conversion is not done for
@@ -581,7 +579,7 @@ class Idx(Expr):
                 raise ValueError(filldedent("""
                     Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
-                if not (bound.is_integer or abs(bound) is S.Infinity):
+                if bound.is_integer is False:
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):

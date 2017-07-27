@@ -1,5 +1,6 @@
 from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import (PermutationGroup,
+    _orbit_transversal)
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation
@@ -239,6 +240,15 @@ def test_orbits():
     assert g.orbit_transversal(0, True) == \
         [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
+
+    G = DihedralGroup(6)
+    transversal, slps = _orbit_transversal(G.degree, G.generators, 0, True, slp=True)
+    for i, t in transversal:
+        slp = slps[i]
+        w = G.identity
+        for s in slp:
+            w = G.generators[s]*w
+        assert w == t
 
     a = Permutation(list(range(1, 100)) + [0])
     G = PermutationGroup([a])
@@ -752,3 +762,13 @@ def test_subgroup():
     G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
     H = G.subgroup([Permutation(0,1,3)])
     assert H.is_subgroup(G)
+
+def test_generator_product():
+    G = SymmetricGroup(5)
+    p = Permutation(0, 2, 3)(1, 4)
+    gens = G.generator_product(p)
+    assert all(g in G.strong_gens for g in gens)
+    w = G.identity
+    for g in gens:
+        w = g*w
+    assert w == p

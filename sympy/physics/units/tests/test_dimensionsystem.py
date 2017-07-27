@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Matrix, eye, symbols
-from sympy.physics.units.dimensions import Dimension, DimensionSystem, length, time, velocity, mass, current, \
-    action, charge
+from sympy.physics.units.dimensions import (
+    Dimension, DimensionSystem, action, charge, current, length, mass, time,
+    velocity)
 from sympy.utilities.pytest import raises
 
 

@@ -3903,6 +3903,20 @@ def test_sympy__vector__vector__Vector():
     pass
 
 
+def test_sympy__vector__vector__Cross():
+    from sympy.vector.vector import Cross
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    _test_args(Cross(C.i, C.j))
+
+
+def test_sympy__vector__vector__Dot():
+    from sympy.vector.vector import Dot
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    _test_args(Dot(C.i, C.j))
+
+
 def test_sympy__vector__dyadic__Dyadic():
     from sympy.vector.dyadic import Dyadic
     #Dyadic is never to be initialized using args

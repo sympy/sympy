@@ -2,15 +2,19 @@
 
 from __future__ import division
 
-from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols, Basic
-from sympy.physics.units import convert_to, find_unit
-
-from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
-    quart, inch, coulomb, millimeter, steradian, second, mile, centimeter, hour
-from sympy.physics.units.dimensions import length, time, charge
-from sympy.physics.units.quantities import Quantity
+from sympy import (
+    Abs, Add, Basic, Function, Number, Rational, S, Symbol, diff, exp,
+    integrate, log, sin, sqrt, symbols)
+from sympy.physics.units import (
+    amount_of_substance, convert_to, find_unit, volume)
+from sympy.physics.units.definitions import (
+    amu, au, centimeter, coulomb, day, foot, grams, hour, inch, kg, km, m,
+    meter, mile, millimeter, minute, mole, quart, s, second, speed_of_light,
+    steradian)
+from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
-from sympy.utilities.pytest import raises
+from sympy.physics.units.quantities import Quantity
+from sympy.utilities.pytest import XFAIL, raises
 
 k = PREFIXES["k"]
 
@@ -59,6 +63,9 @@ def test_Quantity_definition():
     v = Quantity("u", length, 5*kilo)
     assert v.dimension == length
     assert v.scale_factor == 5 * 1000
+
+    raises(ValueError, lambda: Quantity('invalid', 'dimension', 1))
+    raises(ValueError, lambda: Quantity('mismatch', length, kg))
 
 
 def test_abbrev():
@@ -112,16 +119,17 @@ def test_add_sub():
 
 
 def test_check_unit_consistency():
-    return  # TODO remove
     u = Quantity("u", length, 10)
     v = Quantity("v", length, 5)
     w = Quantity("w", time, 2)
 
-    # TODO: no way of checking unit consistency:
-    #raises(ValueError, lambda: check_unit_consistency(u + w))
-    #raises(ValueError, lambda: check_unit_consistency(u - w))
-    #raises(TypeError, lambda: check_unit_consistency(u + 1))
-    #raises(TypeError, lambda: check_unit_consistency(u - 1))
+    def check_unit_consistency(expr):
+        Quantity._collect_factor_and_dimension(expr)
+
+    raises(ValueError, lambda: check_unit_consistency(u + w))
+    raises(ValueError, lambda: check_unit_consistency(u - w))
+    raises(TypeError, lambda: check_unit_consistency(u + 1))
+    raises(TypeError, lambda: check_unit_consistency(u - 1))
 
 
 def test_mul_div():
@@ -139,7 +147,7 @@ def test_mul_div():
 
     # TODO: decide whether to allow such expression in the future
     # (requires somehow manipulating the core).
-    #assert u / Quantity(length, 2) == 5
+    # assert u / Quantity('l2', length, 2) == 5
 
     assert u * 1 == u
 
@@ -236,3 +244,64 @@ def test_sum_of_incompatible_quantities():
     assert expr in Basic._constructor_postprocessor_mapping
     for i in expr.args:
         assert i in Basic._constructor_postprocessor_mapping
+
+
+def test_factor_and_dimension():
+    assert (3000, Dimension(1)) == Quantity._collect_factor_and_dimension(3000)
+    assert (1001, length) == Quantity._collect_factor_and_dimension(meter + km)
+    assert (2, length/time) == Quantity._collect_factor_and_dimension(
+        meter/second + 36*km/(10*hour))
+
+    x, y = symbols('x y')
+    assert (x + y/100, length) == Quantity._collect_factor_and_dimension(
+        x*m + y*centimeter)
+
+    cH = Quantity('cH', amount_of_substance/volume)
+    pH = -log(cH)
+
+    assert (1, volume/amount_of_substance) == Quantity._collect_factor_and_dimension(
+        exp(pH))
+
+    v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
+    v_w2 = Quantity('v_w2', length/time, 2*meter/second)
+    expr = Abs(v_w1/2 - v_w2)
+    assert (S(5)/4, length/time) == \
+        Quantity._collect_factor_and_dimension(expr)
+
+    expr = S(5)/2*second/meter*v_w1 - 3000
+    assert (-(2996 + S(1)/4), Dimension(1)) == \
+        Quantity._collect_factor_and_dimension(expr)
+
+    expr = v_w1**(v_w2/v_w1)
+    assert ((S(3)/2)**(S(4)/3), (length/time)**(S(4)/3)) == \
+        Quantity._collect_factor_and_dimension(expr)
+
+
+@XFAIL
+def test_factor_and_dimension_with_Abs():
+    v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
+    expr = v_w1 - Abs(v_w1)
+    assert (0, lenth/time) == Quantity._collect_factor_and_dimension(expr)
+
+
+def test_dimensional_expr_of_derivative():
+    l = Quantity('l', length, 36 * km)
+    t = Quantity('t', time, hour)
+    t1 = Quantity('t1', time, second)
+    x = Symbol('x')
+    y = Symbol('y')
+    f = Function('f')
+    dfdx = f(x, y).diff(x, y)
+    dl_dt = dfdx.subs({f(x, y): l, x: t, y: t1})
+    assert Quantity.get_dimensional_expr(dl_dt) ==\
+        Quantity.get_dimensional_expr(l / t / t1) ==\
+        Symbol("length")/Symbol("time")**2
+    assert Quantity._collect_factor_and_dimension(dl_dt) ==\
+        Quantity._collect_factor_and_dimension(l / t / t1) ==\
+        (10, length/time**2)
+
+
+def test_get_dimensional_expr_with_function():
+    v_w1 = Quantity('v_w1', length / time, meter / second)
+    assert Quantity.get_dimensional_expr(sin(v_w1)) == \
+        sin(Quantity.get_dimensional_expr(v_w1))

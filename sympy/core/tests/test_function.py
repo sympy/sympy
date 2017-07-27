@@ -828,3 +828,34 @@ def test_issue_12005():
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+
+def test_undefined_function_eq():
+    f = Function('f')
+    f2 = Function('f')
+    g = Function('g')
+    f_real = Function('f', is_real=True)
+
+    # This test may only be meaningful if the cache is turned off
+    assert f == f2
+    assert hash(f) == hash(f2)
+    assert f == f
+
+    assert f != g
+
+    assert f != f_real
+
+def test_function_assumptions():
+    x = Symbol('x')
+    f = Function('f')
+    f_real = Function('f', real=True)
+
+    assert f != f_real
+    assert f(x) != f_real(x)
+
+    assert f(x).is_real is None
+    assert f_real(x).is_real is True
+
+    # Can also do it this way, but it won't be equal to f_real because of the
+    # way UndefinedFunction.__new__ works.
+    f_real2 = Function('f', is_real=True)
+    assert f_real2(x).is_real is True
