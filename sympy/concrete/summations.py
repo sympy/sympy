@@ -405,9 +405,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         # Piecewise function handle
         if sequence_term.is_Piecewise:
-            for func_cond in sequence_term.args:
-                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
-                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            for func, cond in sequence_term.args:
+                # see if it represents something going to oo
+                if cond == True or cond.as_set().sup is S.Infinity:
+                    s = Sum(func, (sym, lower_limit, upper_limit))
+                    return s.is_convergent()
             return S.true
 
         ###  -------- Divergence test ----------- ###

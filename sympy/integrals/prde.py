@@ -980,9 +980,14 @@ def is_deriv_k(fa, fd, DE):
     of the logarithmic terms in L_args.
 
     To handle the case where we are given Df/f, not f, use is_deriv_k_in_field().
+
+    See also
+    ========
+    is_log_deriv_k_t_radical_in_field, is_log_deriv_k_t_radical
+
     """
     # Compute Df/f
-    dfa, dfd = fd*(fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd**2*fa
+    dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd*fa
     dfa, dfd = dfa.cancel(dfd, include=True)
 
     # Our assumption here is that each monomial is recursively transcendental
@@ -1089,6 +1094,11 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     To handle the case where we are given Df, not f, use
     is_log_deriv_k_t_radical_in_field().
+
+    See also
+    ========
+    is_log_deriv_k_t_radical_in_field, is_deriv_k
+
     """
     H = []
     if Df:
@@ -1151,6 +1161,11 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     """
     Checks if f can be written as the logarithmic derivative of a k(t)-radical.
 
+    It differs from is_log_deriv_k_t_radical(fa, fd, DE, Df=False)
+    for any given fa, fd, DE in that it finds the solution in the
+    given field not in some (possibly unspecified extension) and
+    "in_field" with the function name is used to indicate that.
+
     f in k(t) can be written as the logarithmic derivative of a k(t) radical if
     there exist n in ZZ and u in k(t) with n, u != 0 such that n*f == Du/u.
     Either returns (n, u) or None, which means that f cannot be written as the
@@ -1159,6 +1174,11 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     case is one of {'primitive', 'exp', 'tan', 'auto'} for the primitive,
     hyperexponential, and hypertangent cases, respectively.  If case is 'auto',
     it will attempt to determine the type of the derivation automatically.
+
+    See also
+    ========
+    is_log_deriv_k_t_radical, is_deriv_k
+
     """
     fa, fd = fa.cancel(fd, include=True)
 

@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
 from .str import StrPrinter
+from .pycode import PythonCodePrinter
 from sympy.utilities import default_sort_key
 
 
-class LambdaPrinter(StrPrinter):
+class LambdaPrinter(PythonCodePrinter):
     """
     This printer converts expressions into strings that can be used by
     lambdify.
@@ -12,7 +13,7 @@ class LambdaPrinter(StrPrinter):
 
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (expr.__class__.__name__,
-                           self._print((expr.tolist())))
+                           self._print(expr.tolist()))
 
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
@@ -87,6 +88,10 @@ class LambdaPrinter(StrPrinter):
             ') else (', self._print(expr.args[2]), '))'
         ]
         return ''.join(result)
+
+    def _print_NumberSymbol(self, expr):
+        return str(expr)
+
 
 class TensorflowPrinter(LambdaPrinter):
     """
@@ -171,10 +176,6 @@ class NumPyPrinter(LambdaPrinter):
     Numpy printer which handles vectorized piecewise functions,
     logical operators, etc.
     """
-    _default_settings = {
-        "order": "none",
-        "full_prec": "auto",
-    }
 
     def _print_seq(self, seq, delimiter=', '):
         "General sequence printer: converts to tuple"
@@ -366,6 +367,9 @@ class MpmathPrinter(LambdaPrinter):
     """
     Lambda printer for mpmath which maintains precision for floats
     """
+    def _print_Integer(self, e):
+        return 'mpf(%d)' % e
+
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
         # the caller of the lambdified function will have set it to sufficient

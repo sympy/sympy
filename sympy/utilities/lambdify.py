@@ -582,7 +582,6 @@ def lambdastr(args, expr, printer=None, dummify=False):
         else:
             expr = sub_expr(expr, dummies_dict)
     expr = lambdarepr(expr)
-
     return "lambda %s: (%s)" % (args, expr)
 
 
@@ -670,7 +669,8 @@ def implemented_function(symfunc, implementation):
     ----------
     symfunc : ``str`` or ``UndefinedFunction`` instance
        If ``str``, then create new ``UndefinedFunction`` with this as
-       name.  If `symfunc` is a sympy function, attach implementation to it.
+       name.  If `symfunc` is an Undefined function, create a new function
+       with the same name and the implemented function attached.
     implementation : callable
        numerical implementation to be called by ``evalf()`` or ``lambdify``
 
@@ -685,7 +685,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x: x+1)
+    >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)
     5
@@ -693,11 +693,15 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
+    _extra_kwargs = {}
+    if isinstance(symfunc, UndefinedFunction):
+        _extra_kwargs = symfunc._extra_kwargs
+        symfunc = symfunc.__name__
     if isinstance(symfunc, string_types):
-        symfunc = UndefinedFunction(symfunc)
+        # Keyword arguments to UndefinedFunction are added as attributes to
+        # the created class.
+        symfunc = UndefinedFunction(symfunc, _imp_=staticmethod(implementation), **_extra_kwargs)
     elif not isinstance(symfunc, UndefinedFunction):
         raise ValueError('symfunc should be either a string or'
                          ' an UndefinedFunction instance.')
-    # We need to attach as a method because symfunc will be a class
-    symfunc._imp_ = staticmethod(implementation)
     return symfunc

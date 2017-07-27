@@ -1,6 +1,6 @@
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, Symbol
-from sympy.core.expr import AtomicExpr
+from sympy.core import S, Pow, Symbol, sympify
+from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSys3D
@@ -109,20 +109,8 @@ class Vector(BasisDependent):
         # Check if the other is a del operator
         if isinstance(other, Del):
             def directional_derivative(field):
-                from sympy.vector.operators import _get_coord_sys_from_expr
-                coord_sys = _get_coord_sys_from_expr(field)
-                if coord_sys is not None:
-                    field = express(field, coord_sys, variables=True)
-                    out = self.dot(coord_sys._i) * df(field, coord_sys._x)
-                    out += self.dot(coord_sys._j) * df(field, coord_sys._y)
-                    out += self.dot(coord_sys._k) * df(field, coord_sys._z)
-                    if out == 0 and isinstance(field, Vector):
-                        out = Vector.zero
-                    return out
-                elif isinstance(field, Vector) :
-                    return Vector.zero
-                else:
-                    return S(0)
+                from sympy.vector.functions import directional_derivative
+                return directional_derivative(field, self)
             return directional_derivative
 
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):
@@ -462,6 +450,115 @@ class VectorZero(BasisDependentZero, Vector):
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
         return obj
+
+
+class Cross(Expr):
+    """
+    Represents unevaluated Cross product.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, Cross
+    >>> R = CoordSys3D('R')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
+    >>> Cross(v1, v2)
+    Cross(R.i + R.j + R.k, R.x*R.i + R.y*R.j + R.z*R.k)
+    >>> Cross(v1, v2).doit()
+    (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
+
+    """
+
+    def __new__(cls, expr1, expr2):
+        if not (isinstance(expr1, Vector) and isinstance(expr2, Vector)):
+            raise ValueError('Arguments must be the vectors.')
+        expr1 = sympify(expr1)
+        expr2 = sympify(expr2)
+        obj = Expr.__new__(cls, expr1, expr2)
+        obj._expr1 = expr1
+        obj._expr2 = expr2
+        return obj
+
+    def doit(self, **kwargs):
+        return cross(self._expr1, self._expr2)
+
+
+class Dot(Expr):
+    """
+    Represents unevaluated Dot product.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, Dot
+    >>> from sympy import symbols
+    >>> R = CoordSys3D('R')
+    >>> a, b, c = symbols('a b c')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = a * R.i + b * R.j + c * R.k
+    >>> Dot(v1, v2)
+    Dot(R.i + R.j + R.k, a*R.i + b*R.j + c*R.k)
+    >>> Dot(v1, v2).doit()
+    a + b + c
+
+    """
+
+    def __new__(cls, expr1, expr2):
+        if not (isinstance(expr1, Vector) and isinstance(expr2, Vector)):
+            raise ValueError('Arguments must be the vectors.')
+        expr1 = sympify(expr1)
+        expr2 = sympify(expr2)
+        obj = Expr.__new__(cls, expr1, expr2)
+        obj._expr1 = expr1
+        obj._expr2 = expr2
+        return obj
+
+    def doit(self, **kwargs):
+        return dot(self._expr1, self._expr2)
+
+
+def cross(vect1, vect2):
+    """
+    Returns cross product of two vectors.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D
+    >>> from sympy.vector.vector import cross
+    >>> R = CoordSys3D('R')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
+    >>> cross(v1, v2)
+    (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
+
+    """
+
+    if not (isinstance(vect1, Vector) and isinstance(vect2, Vector)):
+        raise ValueError('Arguments must be the vectors.')
+    return Vector.cross(vect1, vect2)
+
+
+def dot(vect1, vect2):
+    """
+    Returns dot product of two vectors.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D
+    >>> from sympy.vector.vector import dot
+    >>> R = CoordSys3D('R')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
+    >>> dot(v1, v2)
+    R.x + R.y + R.z
+
+    """
+    if not (isinstance(vect1, Vector) and isinstance(vect2, Vector)):
+        raise ValueError('Arguments must be the vectors.')
+    return Vector.dot(vect1, vect2)
 
 
 def _vect_div(one, other):
