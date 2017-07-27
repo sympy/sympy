@@ -26,7 +26,7 @@ class CoordSys3D(Basic):
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, location=None, rotation_matrix=None,
+    def __new__(cls, name, location=None, rotation_matrix=None, transformation=None,
                 parent=None, vector_names=None, variable_names=None):
         """
         The orientation/location parameters are necessary if this system
@@ -98,6 +98,29 @@ class CoordSys3D(Basic):
             location = Vector.zero
             origin = Point(name + '.origin')
 
+        if parent is None:
+            if rotation_matrix is not None:
+                rotation_equations = CoordSys3D._rotation_trans_equations(parent_orient, lambda x, y, z: (x, y, z))
+            else:
+                rotation_equations = lambda x, y, z: (x, y, z)
+
+            if location is not None:
+                translation_equations = None
+
+            if transformation is not None:
+                transformation_equations = None
+        else:
+            if rotation_matrix is not None:
+                rotation_equations = parent._rotation_trans_equations(parent_orient, parent.base_scalars())
+            else:
+                rotation_equations =parent.base_scalars()
+
+            if location is not None:
+                translation_equations = None
+
+            if transformation is not None:
+                transformation_equations = None
+
         # All systems that are defined as 'roots' are unequal, unless
         # they have the same name.
         # Systems defined at same orientation/position wrt the same
@@ -109,12 +132,11 @@ class CoordSys3D(Basic):
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
             obj = super(CoordSys3D, cls).__new__(
-                cls, Symbol(name), location, parent_orient, parent)
+                cls, Symbol(name), location, parent_orient, parent, transformation)
         else:
             obj = super(CoordSys3D, cls).__new__(
-                cls, Symbol(name), location, parent_orient)
+                cls, Symbol(name), location, parent_orient, transformation)
         obj._name = name
-
         # Initialize the base vectors
         if vector_names is None:
             vector_names = (name + '.i', name + '.j', name + '.k')
@@ -395,15 +417,15 @@ class CoordSys3D(Basic):
         """
         return simplify(self._parent_rotation_matrix ** -1)
 
-    def _rotation_trans_equations(self, matrix):
+    @classmethod
+    def _rotation_trans_equations(cls, matrix, variables):
         """
         Returns the transformation equations obtained from rotation matrix.
 
         """
-
-        trans_eq1 = matrix[0]*self.x + matrix[1]*self.y + matrix[2]*self.z
-        trans_eq2 = matrix[3]*self.x + matrix[4]*self.y + matrix[5]*self.z
-        trans_eq3 = matrix[6]*self.x + matrix[7]*self.y + matrix[8]*self.z
+        trans_eq1 = matrix[0]*variables[0] + matrix[1]*variables[1] + matrix[2]*variables[2]
+        trans_eq2 = matrix[3]*variables[0] + matrix[4]*variables[1] + matrix[5]*variables[2]
+        trans_eq3 = matrix[6]*variables[0] + matrix[7]*variables[1] + matrix[8]*variables[2]
 
         return trans_eq1, trans_eq2, trans_eq3
 
@@ -950,7 +972,7 @@ class CoordSys3D(Basic):
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
-                 pretty_scalars=None):
+                 pretty_scalars=None, transformation=None):
         # Dummy initializer for setting docstring
         pass
 
