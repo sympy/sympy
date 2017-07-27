@@ -10,7 +10,8 @@ from sympy.physics.units import (
 from sympy.physics.units.definitions import (
     amu, au, centimeter, coulomb, day, foot, grams, hour, inch, kg, km, m,
     meter, mile, millimeter, minute, mole, quart, s, second, speed_of_light,
-    steradian)
+    steradian,
+    bit, byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
 from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
@@ -305,3 +306,21 @@ def test_get_dimensional_expr_with_function():
     v_w1 = Quantity('v_w1', length / time, meter / second)
     assert Quantity.get_dimensional_expr(sin(v_w1)) == \
         sin(Quantity.get_dimensional_expr(v_w1))
+
+
+def test_binary_information():
+    assert convert_to(kibibyte, byte) == 1024*byte
+    assert convert_to(mebibyte, byte) == 1024**2*byte
+    assert convert_to(gibibyte, byte) == 1024**3*byte
+    assert convert_to(tebibyte, byte) == 1024**4*byte
+    assert convert_to(pebibyte, byte) == 1024**5*byte
+    assert convert_to(exbibyte, byte) == 1024**6*byte
+
+    assert kibibyte.convert_to(bit) == 8*1024*bit
+    assert byte.convert_to(bit) == 8*bit
+
+    a = 10*kibibyte*hour
+
+    assert convert_to(a, byte) == 10240*byte*hour
+    assert convert_to(a, minute) == 600*kibibyte*minute
+    assert convert_to(a, [byte, minute]) == 614400*byte*minute
