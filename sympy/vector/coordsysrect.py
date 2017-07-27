@@ -26,8 +26,8 @@ class CoordSys3D(Basic):
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, location=None, rotation_matrix=None, transformation=None,
-                parent=None, vector_names=None, variable_names=None):
+    def __new__(cls, name, transformation=None, parent=None, location=None,
+                rotation_matrix=None, vector_names=None, variable_names=None):
         """
         The orientation/location parameters are necessary if this system
         is being defined at a certain orientation or location wrt another.
@@ -108,9 +108,7 @@ class CoordSys3D(Basic):
             # See lines 80:99. Location is somehow treated only when parent is put.
             # We are not able to create independent vector, so we can't assign
             # anything to location.
-
             translation_equations = None
-
             if transformation is not None:
                 transformation_equations = None
         else:
@@ -138,10 +136,10 @@ class CoordSys3D(Basic):
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
             obj = super(CoordSys3D, cls).__new__(
-                cls, Symbol(name), location, parent_orient, parent, transformation)
+                cls, Symbol(name), transformation, parent)
         else:
             obj = super(CoordSys3D, cls).__new__(
-                cls, Symbol(name), location, parent_orient, transformation)
+                cls, Symbol(name), transformation)
         obj._name = name
         # Initialize the base vectors
         if vector_names is None:
