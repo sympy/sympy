@@ -834,6 +834,34 @@ def solve(f, *symbols, **flags):
 
     implicit = flags.get('implicit', False)
 
+    # preprocess symbol(s)
+    ###########################################################################
+    if not symbols:
+        # get symbols from equations
+        symbols = set().union(*[fi.free_symbols for fi in f])
+        if len(symbols) < len(f):
+            for fi in f:
+                pot = preorder_traversal(fi)
+                for p in pot:
+                    if isinstance(p, AppliedUndef):
+                        flags['dict'] = True  # better show symbols
+                        symbols.add(p)
+                        pot.skip()  # don't go any deeper
+        symbols = list(symbols)
+
+        ordered_symbols = False
+    elif len(symbols) == 1 and iterable(symbols[0]):
+        symbols = symbols[0]
+
+    # remove symbols the user is not interested in
+    exclude = flags.pop('exclude', set())
+    if exclude:
+        if isinstance(exclude, Expr):
+            exclude = [exclude]
+        exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
+    symbols = [s for s in symbols if s not in exclude]
+
+
     # preprocess equation(s)
     ###########################################################################
     for i, fi in enumerate(f):
@@ -868,33 +896,6 @@ def solve(f, *symbols, **flags):
                 if bare_f:
                     bare_f = False
                 f[i: i + 1] = [fr, fi]
-
-    # preprocess symbol(s)
-    ###########################################################################
-    if not symbols:
-        # get symbols from equations
-        symbols = set().union(*[fi.free_symbols for fi in f])
-        if len(symbols) < len(f):
-            for fi in f:
-                pot = preorder_traversal(fi)
-                for p in pot:
-                    if isinstance(p, AppliedUndef):
-                        flags['dict'] = True  # better show symbols
-                        symbols.add(p)
-                        pot.skip()  # don't go any deeper
-        symbols = list(symbols)
-
-        ordered_symbols = False
-    elif len(symbols) == 1 and iterable(symbols[0]):
-        symbols = symbols[0]
-
-    # remove symbols the user is not interested in
-    exclude = flags.pop('exclude', set())
-    if exclude:
-        if isinstance(exclude, Expr):
-            exclude = [exclude]
-        exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
-    symbols = [s for s in symbols if s not in exclude]
 
     # real/imag handling -----------------------------
     w = Dummy('w')

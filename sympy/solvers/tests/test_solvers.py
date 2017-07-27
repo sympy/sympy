@@ -1789,6 +1789,12 @@ def test_issue_2840_8155():
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
 
+def test_solve_inequality_list():
+    sol = And(S(0) < x, x < oo)
+    assert solve(x + 1 > 1) == sol
+    assert solve([x + 1 > 1]) == sol
+    assert solve([x + 1 > 1], x) == sol
+    assert solve([x + 1 > 1], [x]) == sol
 
 def test_issue_11538():
     assert solve(x + E) == [-E]

@@ -6,10 +6,10 @@ Unit system for physical quantities; include definition of constants.
 
 from __future__ import division
 
+from sympy import S
 from sympy.core.decorators import deprecated
 from sympy.physics.units.quantities import Quantity
 
-from sympy import S
 from .dimensions import DimensionSystem
 
 
@@ -31,9 +31,7 @@ class UnitSystem(object):
         self._system = DimensionSystem([u.dimension for u in base],
                                        [u.dimension for u in units])
 
-        if self.is_consistent is False:
-            raise ValueError("The system with basis '%s' is not consistent"
-                             % str(self._base_units))
+        assert self.is_consistent  # test is performed in DimensionSystem
 
         self._units = tuple(set(base) | set(units))
 
@@ -56,27 +54,14 @@ class UnitSystem(object):
         if self.name != "":
             return self.name
         else:
-            return "UnitSystem((%s))" % ", ".join(str(d) for d in self._base_units)
+            return "UnitSystem((%s))" % ", ".join(
+                str(d) for d in self._base_units)
 
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
 
-    def __getitem__(self, key):
-        """
-        Shortcut to the get_unit method, using key access.
-        """
-
-        u = self.get_unit(key)
-
-        #TODO: really want to raise an error?
-        if u is None:
-            raise KeyError(key)
-
-        return u
-
     def extend(self, base, units=(), name="", description=""):
-        """
-        Extend the current system into a new one.
+        """Extend the current system into a new one.
 
         Take the base and normal units of the current system to merge
         them to the base and normal units given in argument.

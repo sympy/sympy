@@ -36,7 +36,7 @@ class CoordSys3D(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSys3D instance.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -80,7 +80,7 @@ class CoordSys3D(Basic):
         if parent is not None:
             if not isinstance(parent, CoordSys3D):
                 raise TypeError("parent should be a " +
-                                "CoordSysCartesian/None")
+                                "CoordSys3D/None")
             if location is None:
                 location = Vector.zero
             else:
@@ -388,12 +388,18 @@ class CoordSys3D(Basic):
                   diff(equations[2], self.z)**2)
         return map(simplify, [h1, h2, h3])
 
-    def _rotation_trans_equations(self):
+    def _inverse_rotation_matrix(self):
+        """
+        Returns inverse rotation matrix.
+
+        """
+        return simplify(self._parent_rotation_matrix ** -1)
+
+    def _rotation_trans_equations(self, matrix):
         """
         Returns the transformation equations obtained from rotation matrix.
 
         """
-        matrix = self._parent_rotation_matrix
 
         trans_eq1 = matrix[0]*self.x + matrix[1]*self.y + matrix[2]*self.z
         trans_eq2 = matrix[3]*self.x + matrix[4]*self.y + matrix[5]*self.z
@@ -471,7 +477,7 @@ class CoordSys3D(Basic):
         Parameters
         ==========
 
-        other : CoordSysCartesian
+        other : CoordSys3D
             The system which the DCM is generated to.
 
         Examples
@@ -492,7 +498,7 @@ class CoordSys3D(Basic):
         from sympy.vector.functions import _path
         if not isinstance(other, CoordSys3D):
             raise TypeError(str(other) +
-                            " is not a CoordSysCartesian")
+                            " is not a CoordSys3D")
         # Handle special cases
         if other == self:
             return eye(3)
@@ -516,12 +522,12 @@ class CoordSys3D(Basic):
     def position_wrt(self, other):
         """
         Returns the position vector of the origin of this coordinate
-        system with respect to another Point/CoordSysCartesian.
+        system with respect to another Point/CoordSys3D.
 
         Parameters
         ==========
 
-        other : Point/CoordSysCartesian
+        other : Point/CoordSys3D
             If other is a Point, the position of this system's origin
             wrt it is returned. If its an instance of CoordSyRect,
             the position wrt its origin is returned.
@@ -547,7 +553,7 @@ class CoordSys3D(Basic):
         Parameters
         ==========
 
-        otherframe : CoordSysCartesian
+        otherframe : CoordSys3D
             The other system to map the variables to.
 
         Examples
@@ -578,14 +584,14 @@ class CoordSys3D(Basic):
     def locate_new(self, name, position, vector_names=None,
                    variable_names=None):
         """
-        Returns a CoordSysCartesian with its origin located at the given
+        Returns a CoordSys3D with its origin located at the given
         position wrt this coordinate system's origin.
 
         Parameters
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSys3D instance.
 
         position : Vector
             The position vector of the new system's origin wrt this
@@ -615,7 +621,7 @@ class CoordSys3D(Basic):
     def orient_new(self, name, orienters, location=None,
                    vector_names=None, variable_names=None):
         """
-        Creates a new CoordSysCartesian oriented in the user-specified way
+        Creates a new CoordSys3D oriented in the user-specified way
         with respect to this system.
 
         Please refer to the documentation of the orienter classes
@@ -625,7 +631,7 @@ class CoordSys3D(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysCartesian instance.
+            The name of the new CoordSys3D instance.
 
         orienters : iterable/Orienter
             An Orienter or an iterable of Orienters for orienting the
@@ -853,7 +859,7 @@ class CoordSys3D(Basic):
         See Also
         ========
 
-        CoordSysCartesian.orient_new_body : method to orient via Euler
+        CoordSys3D.orient_new_body : method to orient via Euler
             angles
 
         Examples
@@ -889,7 +895,7 @@ class CoordSys3D(Basic):
     def orient_new_quaternion(self, name, q0, q1, q2, q3, location=None,
                               vector_names=None, variable_names=None):
         """
-        Quaternion orientation orients the new CoordSysCartesian with
+        Quaternion orientation orients the new CoordSys3D with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
 
