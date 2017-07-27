@@ -2,7 +2,7 @@ import warnings
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, loggamma, sign, Max, Min)
+                             gamma, loggamma, sign, Max, Min, floor)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -112,6 +112,7 @@ def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
     assert 'not supported in c' in ccode(gamma(x), standard='C89').lower()
     assert ccode(ceiling(x)) == "ceil(x)"
+    assert ccode(floor(x)) == "floor(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
 
@@ -121,9 +122,11 @@ def test_ccode_user_functions():
     n = symbols('n', integer=True)
     custom_functions = {
         "ceiling": "ceil",
+        "floor": "floor",
         "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
     }
     assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
+    assert ccode(floor(x)), user_functions=custom_functions) == "floor(x)"
     assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
     assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
 
