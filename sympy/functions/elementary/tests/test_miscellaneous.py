@@ -369,3 +369,10 @@ def test_issue_11099():
             Min(x, y).subs(random_test_data).evalf()
         assert Max(x, y).evalf(subs=random_test_data) == \
             Max(x, y).subs(random_test_data).evalf()
+
+
+def test_issue_12638():
+    from sympy.abc import a, b, c, d
+    assert Min(a, b, c, Max(a, b)).simplify() == Min(a, b, c)
+    assert Min(a, b, Max(a, b, c)).simplify() == Min(a, b)
+    assert Min(a, b, Max(a, c)).simplify() == Min(a, b)
