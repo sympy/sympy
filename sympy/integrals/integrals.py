@@ -782,7 +782,8 @@ G-function methods.
         if f.func is Piecewise:
             return f.piecewise_integrate(x)
 
-        # let's cut it short if `f` does not depend on `x`
+        # let's cut it short if `f` does not depend on `x`; if
+        # x is only a dummy, that will be handled below
         if not f.has(x):
             return f*x
 
