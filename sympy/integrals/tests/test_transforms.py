@@ -93,15 +93,15 @@ def test_mellin_transform():
     bpos = symbols('b', positive=True)
 
     # 8.4.2
-    assert MT(x**nu*Heaviside(x - 1), x, s) == (
-        -1/(nu + s), (-oo, -re(nu)), True)
-    assert MT(x**nu*Heaviside(1 - x), x, s) == (
-        1/(nu + s), (-re(nu), oo), True)
+    assert MT(x**nu*Heaviside(x - 1), x, s) == \
+        (-1/(nu + s), (-oo, -re(nu)), True)
+    assert MT(x**nu*Heaviside(1 - x), x, s) == \
+        (1/(nu + s), (-re(nu), oo), True)
 
-    assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == (
-        gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), -re(beta) < 0)
-    assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == (
-        gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
+    assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == \
+        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), -re(beta) < 0)
+    assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == \
+        (gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
             (-oo, -re(beta) + 1), -re(beta) < 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
@@ -118,20 +118,20 @@ def test_mellin_transform():
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
     assert mt[1], mt[2] == ((0, -re(beta) + 1), -re(beta) < 0)
 
-    assert MT((x**a - b**a)/(x - b), x, s)[0] == (
-        pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))))
-    assert MT((x**a - bpos**a)/(x - bpos), x, s) == (
-        pi*bpos**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))),
+    assert MT((x**a - b**a)/(x - b), x, s)[0] == \
+        pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s)))
+    assert MT((x**a - bpos**a)/(x - bpos), x, s) == \
+        (pi*bpos**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))),
             (Max(-re(a), 0), Min(1 - re(a), 1)), True)
 
     expr = (sqrt(x + b**2) + b)**a
-    assert MT(expr.subs(b, bpos), x, s) == (
-        -a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
+    assert MT(expr.subs(b, bpos), x, s) == \
+        (-a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
          (0, -re(a)/2), True)
 
     expr = (sqrt(x + b**2) + b)**a/sqrt(x + b**2)
-    assert MT(expr.subs(b, bpos), x, s) == (
-        2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s)
+    assert MT(expr.subs(b, bpos), x, s) == \
+        (2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s)
                                          *gamma(1 - a - 2*s)/gamma(1 - a - s),
             (0, -re(a)/2 + S(1)/2), True)
 
@@ -148,8 +148,8 @@ def test_mellin_transform():
     assert MT(log(abs(1 - 1/x)), x, s) == (pi/(s*tan(pi*s)), (0, 1), True)
 
     # 8.4.14
-    assert MT(erf(sqrt(x)), x, s) == (
-        -gamma(s + S(1)/2)/(sqrt(pi)*s), (-S(1)/2, 0), True)
+    assert MT(erf(sqrt(x)), x, s) == \
+        (-gamma(s + S(1)/2)/(sqrt(pi)*s), (-S(1)/2, 0), True)
 
 
 @slow
@@ -297,9 +297,11 @@ def test_expint():
         s, u, (0, 1)).expand() == Ci(sqrt(u))
 
     # TODO LT of Si, Shi, Chi is a mess ...
+    cond2 = And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1)
     assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s,
-        -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
-    assert laplace_transform(expint(a, x), x, s) == (lerchphi(s*exp_polar(I*pi), 1, a),
+        -oo, cond2)
+    assert laplace_transform(expint(a, x), x, s) == (
+        lerchphi(s*exp_polar(I*pi), 1, a),
         -oo, (S(0) < re(a)) & (Abs(periodic_argument(s, oo)) < pi/2))
     assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s,
         -oo, pi/2 >= Abs(periodic_argument(s, oo)))
@@ -465,6 +467,7 @@ def test_laplace_transform():
         c = cond(arg)
         a = c.lhs
         return (pi/2 >= a) & c
+    cond2 = And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1)
 
     # Test unevaluated form
     assert laplace_transform(f(t), t, w) == LaplaceTransform(f(t), t, w)
@@ -495,28 +498,19 @@ def test_laplace_transform():
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, -oo, acond(s))
 
-    assert LT(erf(t), t, s) == \
-        (exp(s**2/4)*erfc(s/2)/s, -oo, Abs(periodic_argument(polar_lift(s)**2,
-        oo)) < pi)
+    assert LT(erf(t), t, s) == (exp(s**2/4)*erfc(s/2)/s, -oo, cond2)
 
-    assert LT(sin(a*t), t, s) == \
-        (a/(a**2 + s**2), -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) <
-        pi)
-    assert LT(cos(a*t), t, s) == \
-        (s/(a**2 + s**2), -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) <
-        pi)
+    assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), -oo, cond2)
+    assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), -oo, cond2)
     # TODO would be nice to have these come out better
-    assert LT(exp(-a*t)*sin(b*t), t, s) == \
-        (b/(b**2 + (a + s)**2), -oo, Abs(periodic_argument(polar_lift(a +
-        s)**2, oo)) < pi)
-    assert LT(exp(-a*t)*cos(b*t), t, s) == \
-        ((a + s)/(b**2 + (a + s)**2), -oo, Abs(periodic_argument(polar_lift(a
-        + s)**2, oo)) < pi)
+    assert LT(exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2),
+        -oo, Abs(periodic_argument(polar_lift(a + s)**2, oo)) < pi)
+    assert LT(exp(-a*t)*cos(b*t), t, s) == ((a + s)/(b**2 + (a + s)**2),
+        -oo, Abs(periodic_argument(polar_lift(a + s)**2, oo)) < pi)
 
-    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2),
-        -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
+    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), -oo, cond2)
     assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2),
-        -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
+        -oo, cond2)
     # TODO general order works, but is a *mess*
     # TODO besseli also works, but is an even greater mess
 
