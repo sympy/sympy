@@ -126,7 +126,6 @@ def test_ccode_user_functions():
         "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
     }
     assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
-    assert ccode(floor(x)), user_functions=custom_functions) == "floor(x)"
     assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
     assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
 
