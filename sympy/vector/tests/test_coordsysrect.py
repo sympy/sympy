@@ -432,10 +432,6 @@ def test_transformation_composition():
          (sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3))*cos(d.y)*d.x + (-sin(q1)*cos(q3) +
         sin(q2)*sin(q3)*cos(q1))*sin(d.y)*d.x + cos(q1)*cos(q2)*d.z)
 
-    d = a.locate_new('d', (a.i + a.j + Vector.zero))
-    assert d._translation_trans_equations() == (d.x + 1, d.y + 1, d.z)
-    assert d._translation_trans_equations(inverse=True) == (d.x - 1, d.y - 1, d.z)
-
 
 def test_translation_trans_equations():
     from sympy import symbols
@@ -447,3 +443,6 @@ def test_translation_trans_equations():
     assert b._translation_trans_equations(inverse=True) == (b.x, b.y, b.z)
     c = a.locate_new('c', (a.i + a.j + a.k))
     assert c._translation_trans_equations() == (c.x + 1, c.y + 1, c.z + 1)
+    d = a.locate_new('d', (a.i + a.j + Vector.zero))
+    assert d._translation_trans_equations() == (d.x + 1, d.y + 1, d.z)
+    assert d._translation_trans_equations(inverse=True) == (d.x - 1, d.y - 1, d.z)
