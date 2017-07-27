@@ -1,9 +1,13 @@
-from sympy import pi, Rational, sqrt
+from sympy import Rational, pi, sqrt
 from sympy.physics.units import Quantity
-from sympy.physics.units.dimensions import length, mass, force, energy, power, pressure, frequency, time, velocity, \
-    impedance, voltage, conductance, capacitance, inductance, charge, magnetic_density, magnetic_flux, current, action, \
-    amount_of_substance, luminous_intensity, temperature, acceleration
-from sympy.physics.units.prefixes import kilo, milli, micro, nano, pico, deci, centi
+from sympy.physics.units.dimensions import (
+    acceleration, action, amount_of_substance, capacitance, charge,
+    conductance, current, energy, force, frequency, information, impedance, inductance,
+    length, luminous_intensity, magnetic_density, magnetic_flux, mass, power,
+    pressure, temperature, time, velocity, voltage)
+from sympy.physics.units.prefixes import (
+    centi, deci, kilo, micro, milli, nano, pico,
+    kibi, mebi, gibi, tebi, pebi, exbi)
 
 #### UNITS ####
 
@@ -167,3 +171,13 @@ planck_time = Quantity("planck_time", time, sqrt(hbar*G/speed_of_light**5), "t_P
 planck_temperature = Quantity("planck_temperature", temperature, sqrt(hbar*speed_of_light**5/G/boltzmann**2), "T_P")
 planck_length = Quantity("planck_length", length, sqrt(hbar*G/speed_of_light**3), "l_P")
 # TODO: add more from https://en.wikipedia.org/wiki/Planck_units
+
+# Information theory units:
+bit = bits = Quantity('bit', information, 1)
+byte = bytes = Quantity('byte', information, 8*bit)
+kibibyte = kibibytes = Quantity('kibibyte', information, kibi*byte)
+mebibyte = mebibytes = Quantity('mebibyte', information, mebi*byte)
+gibibyte = gibibytes = Quantity('gibibyte', information, gibi*byte)
+tebibyte = tebibytes = Quantity('tebibyte', information, tebi*byte)
+pebibyte = pebibytes = Quantity('pebibyte', information, pebi*byte)
+exbibyte = exbibytes = Quantity('exbibyte', information, exbi*byte)

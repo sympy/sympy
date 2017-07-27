@@ -9,7 +9,7 @@ if USE_SYMENGINE:
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase)
+        ImmutableMatrix, MatrixBase, Rational, Basic)
     from symengine import AppliedUndef
 else:
     from sympy import (Symbol, Integer, sympify, S,
@@ -18,5 +18,5 @@ else:
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase)
+        ImmutableMatrix, MatrixBase, Rational, Basic)
     from sympy.core.function import AppliedUndef

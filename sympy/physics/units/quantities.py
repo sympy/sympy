@@ -6,8 +6,8 @@ Physical quantities.
 
 from __future__ import division
 
-from sympy import Add, AtomicExpr, Basic, Function, Mul, Pow, S, Symbol, \
-    sympify
+from sympy import (
+    Add, AtomicExpr, Basic, Derivative, Function, Mul, Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.prefixes import Prefix
@@ -83,10 +83,7 @@ class Quantity(AtomicExpr):
         return self._scale_factor
 
     def _eval_is_positive(self):
-       return self.scale_factor.is_positive
-
-    def _eval_is_constant(self):
-        return self.scale_factor.is_constant()
+        return self.scale_factor.is_positive
 
     @staticmethod
     def get_dimensional_expr(expr):
@@ -96,6 +93,14 @@ class Quantity(AtomicExpr):
             return Quantity.get_dimensional_expr(expr.base) ** expr.exp
         elif isinstance(expr, Add):
             return Quantity.get_dimensional_expr(expr.args[0])
+        elif isinstance(expr, Derivative):
+            dim = Quantity.get_dimensional_expr(expr.args[0])
+            for independent in expr.args[1:]:
+                dim /= Quantity.get_dimensional_expr(independent)
+            return dim
+        elif isinstance(expr, Function):
+            args = [Quantity.get_dimensional_expr(arg) for arg in expr.args]
+            return expr.func(*args)
         elif isinstance(expr, Quantity):
             return expr.dimension.name
         return 1
@@ -124,12 +129,27 @@ class Quantity(AtomicExpr):
             for addend in expr.args[1:]:
                 addend_factor, addend_dim = \
                     Quantity._collect_factor_and_dimension(addend)
-                assert dim == addend_dim
+                if dim != addend_dim:
+                    raise TypeError(
+                        'Dimension of "{0}" is {1}, '
+                        'but it should be {2}'.format(
+                            addend, addend_dim.name, dim.name))
                 factor += addend_factor
             return factor, dim
+        elif isinstance(expr, Derivative):
+            factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
+            for independent in expr.args[1:]:
+                ifactor, idim = Quantity._collect_factor_and_dimension(independent)
+                factor /= ifactor
+                dim /= idim
+            return factor, dim
         elif isinstance(expr, Function):
-            fds = [Quantity._collect_factor_and_dimension(arg) for arg in expr.args]
-            return expr.func(*(f[0] for f in fds)), expr.func(*(d[1] for d in fds))
+            fds = [Quantity._collect_factor_and_dimension(
+                arg) for arg in expr.args]
+            return (expr.func(*(f[0] for f in fds)),
+                    expr.func(*(d[1] for d in fds)))
+        elif isinstance(expr, Dimension):
+            return 1, expr
         else:
             return expr, Dimension(1)
 
@@ -155,7 +175,8 @@ class Quantity(AtomicExpr):
 
     @property
     def free_symbols(self):
-        return set([])
+        """Return free symbols from quantity."""
+        return self.scale_factor.free_symbols
 
 
 def _Quantity_constructor_postprocessor_Add(expr):

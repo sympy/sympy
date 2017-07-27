@@ -2,13 +2,16 @@
 
 from __future__ import division
 
-from sympy import Abs, Add, Basic, Number, Rational, S, Symbol, diff, exp, \
-    integrate, log, sqrt, symbols
-from sympy.physics.units import convert_to, find_unit, amount_of_substance, \
-    volume
-from sympy.physics.units.definitions import amu, au, centimeter, coulomb, day, \
-    foot, grams, hour, inch, kg, km, m, meter, mile, millimeter, minute, mole, \
-    quart, s, second, speed_of_light, steradian
+from sympy import (
+    Abs, Add, Basic, Function, Number, Rational, S, Symbol, diff, exp,
+    integrate, log, sin, sqrt, symbols)
+from sympy.physics.units import (
+    amount_of_substance, convert_to, find_unit, volume)
+from sympy.physics.units.definitions import (
+    amu, au, centimeter, coulomb, day, foot, grams, hour, inch, kg, km, m,
+    meter, mile, millimeter, minute, mole, quart, s, second, speed_of_light,
+    steradian,
+    bit, byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
 from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
@@ -62,6 +65,9 @@ def test_Quantity_definition():
     assert v.dimension == length
     assert v.scale_factor == 5 * 1000
 
+    raises(ValueError, lambda: Quantity('invalid', 'dimension', 1))
+    raises(ValueError, lambda: Quantity('mismatch', length, kg))
+
 
 def test_abbrev():
     u = Quantity("u", length, 1)
@@ -114,16 +120,17 @@ def test_add_sub():
 
 
 def test_check_unit_consistency():
-    return  # TODO remove
     u = Quantity("u", length, 10)
     v = Quantity("v", length, 5)
     w = Quantity("w", time, 2)
 
-    # TODO: no way of checking unit consistency:
-    #raises(ValueError, lambda: check_unit_consistency(u + w))
-    #raises(ValueError, lambda: check_unit_consistency(u - w))
-    #raises(TypeError, lambda: check_unit_consistency(u + 1))
-    #raises(TypeError, lambda: check_unit_consistency(u - 1))
+    def check_unit_consistency(expr):
+        Quantity._collect_factor_and_dimension(expr)
+
+    raises(ValueError, lambda: check_unit_consistency(u + w))
+    raises(ValueError, lambda: check_unit_consistency(u - w))
+    raises(TypeError, lambda: check_unit_consistency(u + 1))
+    raises(TypeError, lambda: check_unit_consistency(u - 1))
 
 
 def test_mul_div():
@@ -141,7 +148,7 @@ def test_mul_div():
 
     # TODO: decide whether to allow such expression in the future
     # (requires somehow manipulating the core).
-    #assert u / Quantity(length, 2) == 5
+    # assert u / Quantity('l2', length, 2) == 5
 
     assert u * 1 == u
 
@@ -276,3 +283,44 @@ def test_factor_and_dimension_with_Abs():
     v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)
     assert (0, lenth/time) == Quantity._collect_factor_and_dimension(expr)
+
+
+def test_dimensional_expr_of_derivative():
+    l = Quantity('l', length, 36 * km)
+    t = Quantity('t', time, hour)
+    t1 = Quantity('t1', time, second)
+    x = Symbol('x')
+    y = Symbol('y')
+    f = Function('f')
+    dfdx = f(x, y).diff(x, y)
+    dl_dt = dfdx.subs({f(x, y): l, x: t, y: t1})
+    assert Quantity.get_dimensional_expr(dl_dt) ==\
+        Quantity.get_dimensional_expr(l / t / t1) ==\
+        Symbol("length")/Symbol("time")**2
+    assert Quantity._collect_factor_and_dimension(dl_dt) ==\
+        Quantity._collect_factor_and_dimension(l / t / t1) ==\
+        (10, length/time**2)
+
+
+def test_get_dimensional_expr_with_function():
+    v_w1 = Quantity('v_w1', length / time, meter / second)
+    assert Quantity.get_dimensional_expr(sin(v_w1)) == \
+        sin(Quantity.get_dimensional_expr(v_w1))
+
+
+def test_binary_information():
+    assert convert_to(kibibyte, byte) == 1024*byte
+    assert convert_to(mebibyte, byte) == 1024**2*byte
+    assert convert_to(gibibyte, byte) == 1024**3*byte
+    assert convert_to(tebibyte, byte) == 1024**4*byte
+    assert convert_to(pebibyte, byte) == 1024**5*byte
+    assert convert_to(exbibyte, byte) == 1024**6*byte
+
+    assert kibibyte.convert_to(bit) == 8*1024*bit
+    assert byte.convert_to(bit) == 8*bit
+
+    a = 10*kibibyte*hour
+
+    assert convert_to(a, byte) == 10240*byte*hour
+    assert convert_to(a, minute) == 600*kibibyte*minute
+    assert convert_to(a, [byte, minute]) == 614400*byte*minute
