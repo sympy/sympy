@@ -297,12 +297,14 @@ def test_expint():
         s, u, (0, 1)).expand() == Ci(sqrt(u))
 
     # TODO LT of Si, Shi, Chi is a mess ...
-    assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
-    assert laplace_transform(expint(a, x), x, s) == \
-        (lerchphi(s*polar_lift(-1), 1, a), 0, S(0) < re(a))
-    assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
-    assert laplace_transform(expint(2, x), x, s) == \
-        ((s - log(s + 1))/s**2, 0, True)
+    assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s,
+        -oo, Abs(periodic_argument(polar_lift(s)**2, oo)) < pi)
+    assert laplace_transform(expint(a, x), x, s) == (lerchphi(s*exp_polar(I*pi), 1, a),
+        -oo, (S(0) < re(a)) & (Abs(periodic_argument(s, oo)) < pi/2))
+    assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s,
+        -oo, pi/2 >= Abs(periodic_argument(s, oo)))
+    assert laplace_transform(expint(2, x), x, s) == ((s - log(s + 1))/s**2,
+        -oo, pi/2 >= Abs(periodic_argument(s, oo)))
 
     assert inverse_laplace_transform(-log(1 + s**2)/2/s, s, u).expand() == \
         Heaviside(u)*Ci(u)
