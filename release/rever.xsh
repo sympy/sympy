@@ -240,6 +240,11 @@ def update_docs():
 def update_sympy_org():
     _update_sympy_org()
 
+@activity()
+def update_websites():
+    _update_docs()
+    _update_sympy_org()
+
 # HELPER FUNCTIONS
 
 def test_tarball(py_version):
