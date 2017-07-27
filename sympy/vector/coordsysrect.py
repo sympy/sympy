@@ -102,10 +102,14 @@ class CoordSys3D(Basic):
             if rotation_matrix is not None:
                 rotation_equations = CoordSys3D._rotation_trans_equations(parent_orient, lambda x, y, z: (x, y, z))
             else:
-                rotation_equations = lambda x, y, z: (x, y, z)
+                rotation_equations = None
 
-            if location is not None:
-                translation_equations = None
+            # Information about location without parent doesn't have sense.
+            # See lines 80:99. Location is somehow treated only when parent is put.
+            # We are not able to create independent vector, so we can't assign
+            # anything to location.
+
+            translation_equations = None
 
             if transformation is not None:
                 transformation_equations = None
@@ -113,9 +117,11 @@ class CoordSys3D(Basic):
             if rotation_matrix is not None:
                 rotation_equations = parent._rotation_trans_equations(parent_orient, parent.base_scalars())
             else:
-                rotation_equations =parent.base_scalars()
+                rotation_equations = None
 
             if location is not None:
+                translation_equations = parent._translation_trans_equations(parent, origin, parent.base_scalars())
+            else:
                 translation_equations = None
 
             if transformation is not None:
@@ -429,7 +435,8 @@ class CoordSys3D(Basic):
 
         return trans_eq1, trans_eq2, trans_eq3
 
-    def _translation_trans_equations(self, inverse=False):
+    @classmethod
+    def _translation_trans_equations(cls, parent, origin, variables, inverse=False):
         """
         Returns the transformation equations obtained from translation
         vector. Translation vector is defined as a linking vector of
@@ -441,17 +448,17 @@ class CoordSys3D(Basic):
         else:
             sign = 1
 
-        if self._parent is None:
-            return self.base_scalars()
+        if origin._parent is None:
+            return variables
         else:
-            vec_component = self._origin.position_wrt(self._parent).components
+            vec_component = origin.position_wrt(parent).components
             vec_norm_projections = []
-            for i in self._parent.base_vectors():
+            for i in parent.base_vectors():
                 try:
                     vec_norm_projections.append(sign * vec_component[i])
                 except:
                     vec_norm_projections.append(0)
-            return tuple([sum(i) for i in zip(vec_norm_projections, self.base_scalars())])
+            return tuple([sum(i) for i in zip(vec_norm_projections, variables)])
 
     @property
     def origin(self):
