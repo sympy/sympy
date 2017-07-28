@@ -220,9 +220,9 @@ class RewritingSystem(object):
                         i = min([lhs.index(s) for s in r])
                     lhs = [l for l in lhs if l not in r]
                     lhs.extend(a)
-                if r1 not in lhs:
-                    # r1 was removed as redundant
-                    continue
+                    if r1 in r:
+                        # r1 was removed as redundant
+                        break
 
         self._is_confluent = True
         if check:
