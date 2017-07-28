@@ -449,7 +449,7 @@ def test_solve_sqrt_fail():
     assert solveset_real(eq, x) == FiniteSet(S(1)/3)
 
 
-@slow
+@XFAIL
 def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
