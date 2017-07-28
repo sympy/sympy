@@ -810,7 +810,7 @@ def transolve(f, symbol, domain, **flags):
         # solving equation
         for rhs in rhs_s:
             orig_f = f
-            f = factor(powdenest(lhs - rhs))
+            f = simplify(factor(powdenest(lhs - rhs)))
             g = _check_log(f)
             if f.is_Mul:
                 result += _solveset(f, symbol, domain)
