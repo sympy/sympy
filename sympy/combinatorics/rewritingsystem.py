@@ -122,27 +122,31 @@ class RewritingSystem(object):
 
         return new_keys
 
-    def _remove_redundancies(self, l=[]):
+    def _remove_redundancies(self, changes=False):
         '''
         Reduce left- and right-hand sides of reduction rules
         and remove redundant equations (i.e. those for which
-        lhs == rhs). If a redundant key is in `l`, remove it
-        also.
+        lhs == rhs). If `changes` is `True`, return a set
+        containing the removed keys and a set containing the
+        added keys
 
         '''
+        removed = set()
+        added = set()
         rules = self.rules.copy()
         for r in rules:
             v = self.reduce(r, exclude=r)
             w = self.reduce(rules[r])
             if v != r:
                 del self.rules[r]
-                if r in l:
-                    del l[l.index(r)]
+                removed.add(r)
                 if v != w:
                     self.add_rule(v, w)
-                    l.append(v)
+                    added.add(v)
             else:
                 self.rules[v] = w
+        if changes:
+            return removed, added
         return
 
     def make_confluent(self, check=False):
@@ -181,14 +185,20 @@ class RewritingSystem(object):
                 return
 
         added = 0
-        for i, r1 in enumerate(lhs):
-            # this could be lhs[i+1:] to not
+        i = 0
+        while i < len(lhs):
+            r1 = lhs[i]
+            i += 1
+            # j could be i+1 to not
             # check each pair twice but lhs
             # is extended in the loop and the new
             # elements have to be checked with the
             # preceding ones. there is probably a better way
             # to handle this
-            for r2 in lhs:
+            j = 0
+            while j < len(lhs):
+                r2 = lhs[j]
+                j += 1
                 if r1 == r2:
                     continue
                 overlaps = _overlaps(r1, r2)
@@ -199,11 +209,20 @@ class RewritingSystem(object):
                     if new_keys:
                         if check:
                             return False
-                        added += 1
-                        if added > self.tidyint:
-                            # tidy up
-                            self._remove_redundancies(new_keys)
                         lhs.extend(new_keys)
+                        added += len(new_keys)
+                if added > self.tidyint:
+                    # tidy up
+                    r, a = self._remove_redundancies(changes=True)
+                    added = 0
+                    if r:
+                        # reset i since some elements were removed
+                        i = min([lhs.index(s) for s in r])
+                    lhs = [l for l in lhs if l not in r]
+                    lhs.extend(a)
+                if r1 not in lhs:
+                    # r1 was removed as redundant
+                    continue
 
         self._is_confluent = True
         if check:
