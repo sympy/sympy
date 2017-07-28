@@ -44,7 +44,7 @@ class JavascriptCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True
@@ -66,7 +66,7 @@ class JavascriptCodePrinter(CodePrinter):
         return "// {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "var {0} = {1};".format(name, value)
+        return "var {0} = {1};".format(name, value.evalf(self._settings['precision']))
 
     def _format_code(self, lines):
         return self.indent_code(lines)

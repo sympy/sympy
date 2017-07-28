@@ -135,11 +135,11 @@ def test_numbersymbol_c_code():
         "#include <math.h>\n"
         "double test() {\n"
         "   double test_result;\n"
-        "   double const Catalan = 0.915965594177219;\n"
+        "   double const Catalan = %s;\n"
         "   test_result = pow(M_PI, Catalan);\n"
         "   return test_result;\n"
         "}\n"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
@@ -624,11 +624,11 @@ def test_numbersymbol_f_code():
     expected = (
         "REAL*8 function test()\n"
         "implicit none\n"
-        "REAL*8, parameter :: Catalan = 0.915965594177219d0\n"
-        "REAL*8, parameter :: pi = 3.14159265358979d0\n"
+        "REAL*8, parameter :: Catalan = %sd0\n"
+        "REAL*8, parameter :: pi = %sd0\n"
         "test = pi**Catalan\n"
         "end function\n"
-    )
+    ) % (Catalan.evalf(17), pi.evalf(17))
     assert source == expected
 
 def test_erf_f_code():

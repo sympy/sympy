@@ -172,7 +172,37 @@ def test_sympy__codegen__ast__For():
 
 def test_sympy__codegen__ast__Type():
     from sympy.codegen.ast import Type
-    assert _test_args(Type('float32'))
+    assert _test_args(Type('float128'))
+
+
+def test_sympy__codegen__ast__IntBaseType():
+    from sympy.codegen.ast import IntBaseType
+    assert _test_args(IntBaseType('bigint'))
+
+
+def test_sympy__codegen__ast__IntType():
+    from sympy.codegen.ast import IntType
+    assert _test_args(IntType('int128', 128))
+
+
+def test_sympy__codegen__ast__SignedIntType():
+    from sympy.codegen.ast import SignedIntType
+    assert _test_args(SignedIntType('int128_with_sign', 128))
+
+
+def test_sympy__codegen__ast__UnsignedIntType():
+    from sympy.codegen.ast import UnsignedIntType
+    assert _test_args(UnsignedIntType('unt128', 128))
+
+
+def test_sympy__codegen__ast__FloatType():
+    from sympy.codegen.ast import FloatType
+    assert _test_args(FloatType('float242', 242, max=42, tiny=1e-60, eps=1e-30, dig=42, decimal_dig=44))
+
+
+def test_sympy__codegen__ast__ComplexType():
+    from sympy.codegen.ast import ComplexType
+    assert _test_args(ComplexType('complex42', 42, max=42, tiny=1e-42, eps=1e-42, dig=42, decimal_dig=42))
 
 
 def test_sympy__codegen__ast__Attribute():

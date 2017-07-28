@@ -138,7 +138,7 @@ class FCodePrinter(CodePrinter):
         return "! {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "parameter ({0} = {1})".format(name, value)
+        return "parameter ({0} = {1})".format(name, self._print(value))
 
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod

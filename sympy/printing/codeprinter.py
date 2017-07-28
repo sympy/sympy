@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import Add, Mul, Pow, S, sympify
+from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
@@ -369,7 +369,7 @@ class CodePrinter(StrPrinter):
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
         # is registered and evaluated
-        self._number_symbols.add((expr, expr))
+        self._number_symbols.add((expr, Float(expr.evalf(self._settings['precision']))))
         return str(expr)
 
     def _print_Catalan(self, expr):
