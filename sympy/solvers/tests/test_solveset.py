@@ -493,7 +493,7 @@ def test_solve_polynomial_symbolic_param():
 
     # issue 4507
     assert solveset_complex(y - b/(1 + a*x), x) == \
-        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
+        FiniteSet((b - y)/(y*a)) - FiniteSet(-1/a)
 
     # issue 4508
     assert solveset_complex(y - b*x/(a + x), x) == \
@@ -566,6 +566,12 @@ def test_solveset_real_log():
 def test_poly_gens():
     assert solveset_real(4**(2*(x**2) + 2*x) - 8, x) == \
         FiniteSet(-Rational(3, 2), S.Half)
+
+def test_expo():
+    x = Symbol('x')
+    assert solveset(4**(5-9*x) - 8**(2-x), x, S.Reals) == FiniteSet(Rational(4, 15))
+    assert solveset(3**x - 9**(x+5), x, S.Reals) == FiniteSet(-10)
+    assert solveset(4**(x**2) - 4**(6-x), x, S.Reals) == FiniteSet(-3, 2)
 
 
 def test_uselogcombine_1():
@@ -952,8 +958,8 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x + 1/x**2)
     solution = solveset(y**2 + y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq(exp(x + x**(-2)) + exp(2*x + 2/x**2), 0),
-                                   S.Reals)
+    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0),
+                         S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
