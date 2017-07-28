@@ -24,7 +24,7 @@ def read_log():
                 continue
             if dur[-1] != 's':
                 raise NotImplementedError("expected seconds")
-            yield test_id, float(time[:-1])
+            yield test_id, float(dur[:-1])
         elif start_token in line:
             start_token_seen = True
 
