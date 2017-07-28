@@ -28,6 +28,8 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.solvers.solvers import checksol, denoms, unrad
+=======
+from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
