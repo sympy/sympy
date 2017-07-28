@@ -12,7 +12,7 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega)
+    udivisor_count, primenu, primeomega, small_trailing)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -78,6 +78,9 @@ def test_trailing():
         assert trailing((1 << i) * 31337) == i
     assert trailing((1 << 1000001)) == 1000001
     assert trailing((1 << 273956)*7**37) == 273956
+    # issue 12709
+    big = small_trailing[-1]*2
+    assert trailing(-big) == trailing(big)
 
 
 def test_multiplicity():
