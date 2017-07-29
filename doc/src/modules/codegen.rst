@@ -94,9 +94,10 @@ Here is a simple example of printing a C version of a SymPy expression::
     -Z⋅e ⋅k
     ────────
       2⋅r
-    >>> ccode(expr, standard='C99')
+    >>> ccode(expr)
     -1.0/2.0*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to="E", standard='C99', precision=18)
+    >>> from sympy.codegen.ast import real, float80
+    >>> ccode(expr, assign_to="E", type_aliases={real: float80})
     E = -1.0L/2.0L*Z*powl(e, 2)*k/r;
 
 To generate code with some math functions provided by e.g. the C99 standard we need
