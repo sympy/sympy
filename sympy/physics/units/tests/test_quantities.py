@@ -2,16 +2,15 @@
 
 from __future__ import division
 
-from sympy import (
-    Abs, Add, Basic, Function, Number, Rational, S, Symbol, diff, exp,
-    integrate, log, sin, sqrt, symbols)
-from sympy.physics.units import (
-    amount_of_substance, convert_to, find_unit, volume)
-from sympy.physics.units.definitions import (
-    amu, au, centimeter, coulomb, day, foot, grams, hour, inch, kg, km, m,
-    meter, mile, millimeter, minute, mole, quart, s, second, speed_of_light,
-    steradian,
-    bit, byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
+from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
+    diff, exp, integrate, log, sin, sqrt, symbols)
+from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
+    volume)
+from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
+    day, energy, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
+    minute, pressure, quart, s, second, speed_of_light, temperature, bit,
+    byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
+
 from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
@@ -118,6 +117,19 @@ def test_add_sub():
     # TODO: eventually add this:
     # assert (u - v).convert_to(u) == S.Half*u
 
+def test_abs():
+    v_w1 = Quantity('v_w1', length/time, meter/second)
+    v_w2 = Quantity('v_w2', length/time, meter/second)
+    v_w3 = Quantity('v_w3', length/time, meter/second)
+    expr = v_w3 - Abs(v_w1 - v_w2)
+
+    Dq = Dimension(Quantity.get_dimensional_expr(expr))
+    assert Dimension.get_dimensional_dependencies(Dq) == {
+        'length': 1,
+        'time': -1,
+    }
+    assert meter == sqrt(meter**2)
+
 
 def test_check_unit_consistency():
     u = Quantity("u", length, 10)
@@ -129,8 +141,8 @@ def test_check_unit_consistency():
 
     raises(ValueError, lambda: check_unit_consistency(u + w))
     raises(ValueError, lambda: check_unit_consistency(u - w))
-    raises(TypeError, lambda: check_unit_consistency(u + 1))
-    raises(TypeError, lambda: check_unit_consistency(u - 1))
+    raises(ValueError, lambda: check_unit_consistency(u + 1))
+    raises(ValueError, lambda: check_unit_consistency(u - 1))
 
 
 def test_mul_div():
@@ -235,6 +247,7 @@ def test_Quantity_derivative():
 
 
 def test_sum_of_incompatible_quantities():
+    raises(ValueError, lambda: meter + 1)
     raises(ValueError, lambda: meter + second)
     raises(ValueError, lambda: 2 * meter + second)
     raises(ValueError, lambda: 2 * meter + 3 * second)
@@ -245,6 +258,20 @@ def test_sum_of_incompatible_quantities():
     assert expr in Basic._constructor_postprocessor_mapping
     for i in expr.args:
         assert i in Basic._constructor_postprocessor_mapping
+
+
+def test_quantity_postprocessing():
+    q1 = Quantity('q1', length*pressure**2*temperature/time)
+    q2 = Quantity('q2', energy*pressure*temperature/(length**2*time))
+    assert q1 + q2
+    q = q1 + q2
+    Dq = Dimension(Quantity.get_dimensional_expr(q))
+    assert Dimension.get_dimensional_dependencies(Dq) == {
+        'length': -1,
+        'mass': 2,
+        'temperature': 1,
+        'time': -5,
+    }
 
 
 def test_factor_and_dimension():
