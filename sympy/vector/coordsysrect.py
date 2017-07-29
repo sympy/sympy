@@ -115,6 +115,9 @@ class CoordSys3D(Basic):
                 from sympy import symbols
                 x, y, z = symbols('x y z')
                 transformation_equations = rotation_equations(*translation_equations(x, y, z))
+                if not CoordSys3D._check_orthogonality(transformation_equations, (x, y, z)):
+                    raise ValueError("The transformation equation does not "
+                                     "create orthogonal coordinate system")
 
             else:
                 if rotation_matrix is not None:
@@ -130,7 +133,9 @@ class CoordSys3D(Basic):
                     translation_equations = lambda x, y, z: (x, y, z)
 
                 transformation_equations = rotation_equations(*translation_equations(*parent.base_scalars()))
-
+                if not CoordSys3D._check_orthogonality(transformation_equations, parent.base_scalars()):
+                    raise ValueError("The transformation equation does not "
+                                     "create orthogonal coordinate system")
         else:
             if not (location and rotation_matrix) is None:
                 raise ValueError
@@ -271,11 +276,12 @@ class CoordSys3D(Basic):
         else:
             raise ValueError("Wrong set of parameter.")
 
-        if not self._check_orthogonality():
+        if not self._check_orthogonality(self._transformation_eqs, self.base_scalars()):
             raise ValueError("The transformation equation does not "
                              "create orthogonal coordinate system")
 
-    def _check_orthogonality(self):
+    @classmethod
+    def _check_orthogonality(cls, equations, variables):
         """
         Helper method for _connect_to_cartesian. It checks if
         set of transformation equations create orthogonal curvilinear
@@ -287,13 +293,19 @@ class CoordSys3D(Basic):
         equations : tuple
             Tuple of transformation equations
 
+        variables : tuple
+            Tuple of variables, which transformation equations depends on.
         """
 
-        eq = self._transformation_equations()
+        v1 = Matrix([diff(equations[0], variables[0]),
+                     diff(equations[1], variables[0]), diff(equations[2], variables[0])])
 
-        v1 = Matrix([diff(eq[0], self.x), diff(eq[1], self.x), diff(eq[2], self.x)])
-        v2 = Matrix([diff(eq[0], self.y), diff(eq[1], self.y), diff(eq[2], self.y)])
-        v3 = Matrix([diff(eq[0], self.z), diff(eq[1], self.z), diff(eq[2], self.z)])
+        v2 = Matrix([diff(equations[0], variables[1]),
+                     diff(equations[1], variables[1]), diff(equations[2], variables[1])])
+
+        v3 = Matrix([diff(equations[0], variables[2]),
+                     diff(equations[1], variables[2]), diff(equations[2], variables[2])])
+
 
         if any(simplify(i[0] + i[1] + i[2]) == 0 for i in (v1, v2, v3)):
             return False
