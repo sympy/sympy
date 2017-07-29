@@ -141,8 +141,8 @@ class RewritingSystem(object):
                 del self.rules[r]
                 removed.add(r)
                 if v != w:
-                    self.add_rule(v, w)
-                    added.add(v)
+                    new = self.add_rule(v, w)
+                    added.update(new)
             else:
                 self.rules[v] = w
         if changes:
