@@ -98,31 +98,46 @@ class CoordSys3D(Basic):
             location = Vector.zero
             origin = Point(name + '.origin')
 
-        if parent is None:
-            if rotation_matrix is not None:
-                rotation_equations = CoordSys3D._rotation_trans_equations(parent_orient, lambda x, y, z: (x, y, z))
-            else:
-                rotation_equations = None
+        if transformation is None:
+            if parent is None:
+                if rotation_matrix is not None:
+                    rotation_equations = \
+                       lambda x, y, z: CoordSys3D._rotation_trans_equations(parent_orient, lambda x, y, z: (x, y, z))
+                else:
+                    rotation_equations = lambda x, y, z: (x, y, z)
 
-            # Information about location without parent doesn't have sense.
-            # See lines 80:99. Location is somehow treated only when parent is put.
-            # We are not able to create independent vector, so we can't assign
-            # anything to location.
-            translation_equations = None
-            if transformation is not None:
-                transformation_equations = None
+                # Information about location without parent doesn't have sense.
+                # See lines 80:99. Location is somehow treated only when parent is put.
+                # We are not able to create independent vector, so we can't assign
+                # anything to location.
+                translation_equations = lambda x, y, z: (x, y, z)
+
+                from sympy import symbols
+                x, y, z = symbols('x y z')
+                transformation_equations = rotation_equations(*translation_equations(x, y, z))
+
+            else:
+                if rotation_matrix is not None:
+                    rotation_equations = \
+                        lambda x, y, z: parent._rotation_trans_equations(parent_orient, (x, y, z))
+                else:
+                    rotation_equations = lambda x, y, z: (x, y, z)
+
+                if location is not None:
+                    translation_equations = \
+                        lambda x, y, z: parent._translation_trans_equations(parent, origin, (x, y, z))
+                else:
+                    translation_equations = lambda x, y, z: (x, y, z)
+
+                transformation_equations = rotation_equations(*translation_equations(*parent.base_scalars()))
+
         else:
-            if rotation_matrix is not None:
-                rotation_equations = parent._rotation_trans_equations(parent_orient, parent.base_scalars())
-            else:
-                rotation_equations = None
+            if not (location and rotation_matrix) is None:
+                raise ValueError
 
-            if location is not None:
-                translation_equations = parent._translation_trans_equations(parent, origin, parent.base_scalars())
+            if parent is None:
+                transformation_equations = None
             else:
-                translation_equations = None
-
-            if transformation is not None:
                 transformation_equations = None
 
         # All systems that are defined as 'roots' are unequal, unless
@@ -200,7 +215,7 @@ class CoordSys3D(Basic):
 
         obj._parent_rotation_matrix = parent_orient
         obj._origin = origin
-
+        obj.transformation_equations = transformation_equations
         # Return the instance
         return obj
 
