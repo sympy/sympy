@@ -422,19 +422,15 @@ class CoordSys3D(Basic):
         return simplify(self._parent_rotation_matrix ** -1)
 
     @classmethod
-    def _rotation_trans_equations(cls, matrix, variables):
+    def _rotation_trans_equations(cls, matrix, equations):
         """
         Returns the transformation equations obtained from rotation matrix.
 
         """
-        trans_eq1 = matrix[0]*variables[0] + matrix[1]*variables[1] + matrix[2]*variables[2]
-        trans_eq2 = matrix[3]*variables[0] + matrix[4]*variables[1] + matrix[5]*variables[2]
-        trans_eq3 = matrix[6]*variables[0] + matrix[7]*variables[1] + matrix[8]*variables[2]
-
-        return trans_eq1, trans_eq2, trans_eq3
+        return tuple(matrix * Matrix(equations))
 
     @classmethod
-    def _translation_trans_equations(cls, parent, origin, variables, inverse=False):
+    def _translation_trans_equations(cls, parent, origin, equations, inverse=False):
         """
         Returns the transformation equations obtained from translation
         vector. Translation vector is defined as a linking vector of
@@ -447,7 +443,7 @@ class CoordSys3D(Basic):
             sign = 1
 
         if origin._parent is None:
-            return variables
+            return equations
         else:
             vec_component = origin.position_wrt(parent).components
             vec_norm_projections = []
@@ -456,7 +452,7 @@ class CoordSys3D(Basic):
                     vec_norm_projections.append(sign * vec_component[i])
                 except:
                     vec_norm_projections.append(0)
-            return tuple([sum(i) for i in zip(vec_norm_projections, variables)])
+            return tuple([sum(i) for i in zip(vec_norm_projections, equations)])
 
     @property
     def origin(self):
