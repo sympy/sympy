@@ -10,10 +10,10 @@ from sympy.utilities.pytest import raises
 def test_definition():
 
     base = (length, time)
-    ms = DimensionSystem(base, (velocity,), "MS", "MS system")
+    ms = DimensionSystem(base, (velocity, ), "MS", "MS system")
 
     assert ms._base_dims == DimensionSystem.sort_dims(base)
-    assert set(ms._dims) == set(base + (velocity,))
+    assert set(ms._dims) == set(base + (velocity, ))
     assert ms.name == "MS"
     assert ms.descr == "MS system"
 
@@ -26,19 +26,20 @@ def test_error_definition():
 def test_str_repr():
     assert str(DimensionSystem((length, time), name="MS")) == "MS"
     dimsys = DimensionSystem((length, time))
-    assert str(dimsys) == 'DimensionSystem(Dimension(length, L), Dimension(time, T))'
+    assert str(
+        dimsys) == 'DimensionSystem(Dimension(length, L), Dimension(time, T))'
 
-    assert (repr(DimensionSystem((length, time), name="MS"))
-            == '<DimensionSystem: (Dimension(length, L), Dimension(time, T))>')
+    assert (repr(DimensionSystem((length, time), name="MS")) ==
+            '<DimensionSystem: (Dimension(length, L), Dimension(time, T))>')
 
 
 def test_call():
-    mksa = DimensionSystem((length, time, mass, current), (action,))
+    mksa = DimensionSystem((length, time, mass, current), (action, ))
     assert mksa(action) == mksa.print_dim_base(action)
 
 
 def test_get_dim():
-    ms = DimensionSystem((length, time), (velocity,))
+    ms = DimensionSystem((length, time), (velocity, ))
 
     assert ms.get_dim("L") == length
     assert ms.get_dim("length") == length
@@ -49,9 +50,9 @@ def test_get_dim():
 
 
 def test_extend():
-    ms = DimensionSystem((length, time), (velocity,))
+    ms = DimensionSystem((length, time), (velocity, ))
 
-    mks = ms.extend((mass,), (action,))
+    mks = ms.extend((mass, ), (action, ))
 
     res = DimensionSystem((length, time, mass), (velocity, action))
     assert mks._base_dims == res._base_dims
@@ -60,8 +61,8 @@ def test_extend():
 
 def test_sort_dims():
 
-    assert (DimensionSystem.sort_dims((length, velocity, time))
-                                      == (length, time, velocity))
+    assert (DimensionSystem.sort_dims((length, velocity,
+                                       time)) == (length, time, velocity))
 
 
 def test_list_dims():
@@ -101,7 +102,8 @@ def test_inv_can_transf_matrix():
     assert dimsys.inv_can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, velocity, action))
-    assert dimsys.inv_can_transf_matrix == Matrix([[2, 1, 1], [1, 0, 0], [-1, 0, -1]])
+    assert dimsys.inv_can_transf_matrix == Matrix([[2, 1, 1], [1, 0, 0],
+                                                   [-1, 0, -1]])
 
 
 def test_can_transf_matrix():
@@ -110,7 +112,8 @@ def test_can_transf_matrix():
     assert dimsys.can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, velocity, action))
-    assert dimsys.can_transf_matrix == Matrix([[0, 1, 0], [1, -1, 1], [0, -1, -1]])
+    assert dimsys.can_transf_matrix == Matrix([[0, 1, 0], [1, -1, 1],
+                                               [0, -1, -1]])
 
 
 def test_is_consistent():
@@ -119,7 +122,7 @@ def test_is_consistent():
 
 
 def test_print_dim_base():
-    mksa = DimensionSystem((length, time, mass, current), (action,))
+    mksa = DimensionSystem((length, time, mass, current), (action, ))
     L, M, T = symbols("L M T")
     assert mksa.print_dim_base(action) == L**2*M/T
 

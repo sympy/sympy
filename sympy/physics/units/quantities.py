@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Physical quantities.
 """
@@ -24,7 +23,8 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
-    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, **assumptions):
+    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None,
+                **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
@@ -42,9 +42,11 @@ class Quantity(AtomicExpr):
                 raise ValueError("quantity value and dimension mismatch")
 
         # replace all prefixes by their ratio to canonical units:
-        scale_factor = scale_factor.replace(lambda x: isinstance(x, Prefix), lambda x: x.scale_factor)
+        scale_factor = scale_factor.replace(lambda x: isinstance(x, Prefix),
+                                            lambda x: x.scale_factor)
         # replace all quantities by their ratio to canonical units:
-        scale_factor = scale_factor.replace(lambda x: isinstance(x, Quantity), lambda x: x.scale_factor)
+        scale_factor = scale_factor.replace(lambda x: isinstance(x, Quantity),
+                                            lambda x: x.scale_factor)
 
         if abbrev is None:
             abbrev = name
@@ -88,9 +90,9 @@ class Quantity(AtomicExpr):
     @staticmethod
     def get_dimensional_expr(expr):
         if isinstance(expr, Mul):
-            return Mul(*[Quantity.get_dimensional_expr(i) for i in expr.args])
+            return Mul(* [Quantity.get_dimensional_expr(i) for i in expr.args])
         elif isinstance(expr, Pow):
-            return Quantity.get_dimensional_expr(expr.base) ** expr.exp
+            return Quantity.get_dimensional_expr(expr.base)**expr.exp
         elif isinstance(expr, Add):
             return Quantity.get_dimensional_expr(expr.args[0])
         elif isinstance(expr, Derivative):
@@ -114,38 +116,42 @@ class Quantity(AtomicExpr):
             factor = 1
             dimension = Dimension(1)
             for arg in expr.args:
-                arg_factor, arg_dim = Quantity._collect_factor_and_dimension(arg)
+                arg_factor, arg_dim = Quantity._collect_factor_and_dimension(
+                    arg)
                 factor *= arg_factor
                 dimension *= arg_dim
             return factor, dimension
         elif isinstance(expr, Pow):
             factor, dim = Quantity._collect_factor_and_dimension(expr.base)
-            exp_factor, exp_dim = Quantity._collect_factor_and_dimension(expr.exp)
+            exp_factor, exp_dim = Quantity._collect_factor_and_dimension(
+                expr.exp)
             if exp_dim.is_dimensionless:
-               exp_dim = 1
-            return factor ** exp_factor, dim ** (exp_factor * exp_dim)
+                exp_dim = 1
+            return factor**exp_factor, dim**(exp_factor*exp_dim)
         elif isinstance(expr, Add):
             factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
             for addend in expr.args[1:]:
                 addend_factor, addend_dim = \
                     Quantity._collect_factor_and_dimension(addend)
                 if dim != addend_dim:
-                    raise TypeError(
-                        'Dimension of "{0}" is {1}, '
-                        'but it should be {2}'.format(
-                            addend, addend_dim.name, dim.name))
+                    raise TypeError('Dimension of "{0}" is {1}, '
+                                    'but it should be {2}'.format(
+                                        addend, addend_dim.name, dim.name))
                 factor += addend_factor
             return factor, dim
         elif isinstance(expr, Derivative):
             factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
             for independent in expr.args[1:]:
-                ifactor, idim = Quantity._collect_factor_and_dimension(independent)
+                ifactor, idim = Quantity._collect_factor_and_dimension(
+                    independent)
                 factor /= ifactor
                 dim /= idim
             return factor, dim
         elif isinstance(expr, Function):
-            fds = [Quantity._collect_factor_and_dimension(
-                arg) for arg in expr.args]
+            fds = [
+                Quantity._collect_factor_and_dimension(arg)
+                for arg in expr.args
+            ]
             return (expr.func(*(f[0] for f in fds)),
                     expr.func(*(d[1] for d in fds)))
         elif isinstance(expr, Dimension):
@@ -185,10 +191,12 @@ def _Quantity_constructor_postprocessor_Add(expr):
     # expressions like `meter + second` to be created.
 
     deset = {
-        tuple(Dimension(Quantity.get_dimensional_expr(i)).get_dimensional_dependencies().items())
+        tuple(
+            Dimension(Quantity.get_dimensional_expr(i))
+            .get_dimensional_dependencies().items())
         for i in expr.args
         if i.free_symbols == set()  # do not raise if there are symbols
-                    # (free symbols could contain the units corrections)
+        # (free symbols could contain the units corrections)
         and not i.is_number
     }
     # If `deset` has more than one element, then some dimensions do not
@@ -197,6 +205,7 @@ def _Quantity_constructor_postprocessor_Add(expr):
         raise ValueError("summation of quantities of incompatible dimensions")
     return expr
 
+
 Basic._constructor_postprocessor_mapping[Quantity] = {
-    "Add" : [_Quantity_constructor_postprocessor_Add],
+    "Add": [_Quantity_constructor_postprocessor_Add],
 }

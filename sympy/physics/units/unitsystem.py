@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Unit system for physical quantities; include definition of constants.
 """
@@ -85,10 +84,10 @@ class UnitSystem(object):
         factor = unit.scale_factor
         vec = self._system.dim_vector(unit.dimension)
 
-        for (u, p) in sorted(zip(self._base_units, vec), key=lambda x: x[1],
-                             reverse=True):
+        for (u, p) in sorted(
+                zip(self._base_units, vec), key=lambda x: x[1], reverse=True):
 
-            factor /= u.scale_factor ** p
+            factor /= u.scale_factor**p
             if p == 0:
                 continue
             elif p == 1:
@@ -96,7 +95,7 @@ class UnitSystem(object):
             else:
                 res *= u**p
 
-        return factor * res
+        return factor*res
 
     @property
     def dim(self):

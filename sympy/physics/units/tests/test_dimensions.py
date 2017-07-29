@@ -64,26 +64,35 @@ def test_add_sub():
 
 
 def test_mul_div_exp():
-    velo = length / time
+    velo = length/time
 
-    assert (length * length) == length ** 2
+    assert (length*length) == length**2
 
-    assert (length * length).get_dimensional_dependencies() == {"length": 2}
-    assert (length ** 2).get_dimensional_dependencies() == {"length": 2}
-    assert (length * time).get_dimensional_dependencies() == { "length": 1, "time": 1}
-    assert velo.get_dimensional_dependencies() == { "length": 1, "time": -1}
-    assert (velo ** 2).get_dimensional_dependencies() == {"length": 2, "time": -2}
+    assert (length*length).get_dimensional_dependencies() == {"length": 2}
+    assert (length**2).get_dimensional_dependencies() == {"length": 2}
+    assert (length*time).get_dimensional_dependencies() == {
+        "length": 1,
+        "time": 1
+    }
+    assert velo.get_dimensional_dependencies() == {"length": 1, "time": -1}
+    assert (velo**2).get_dimensional_dependencies() == {
+        "length": 2,
+        "time": -2
+    }
 
-    assert (length / length).get_dimensional_dependencies() == {}
-    assert (velo / length * time).get_dimensional_dependencies() == {}
-    assert (length ** -1).get_dimensional_dependencies() == {"length": -1}
-    assert (velo ** -1.5).get_dimensional_dependencies() == {"length": -1.5, "time": 1.5}
+    assert (length/length).get_dimensional_dependencies() == {}
+    assert (velo/length*time).get_dimensional_dependencies() == {}
+    assert (length**-1).get_dimensional_dependencies() == {"length": -1}
+    assert (velo**-1.5).get_dimensional_dependencies() == {
+        "length": -1.5,
+        "time": 1.5
+    }
 
     length_a = length**"a"
     assert length_a.get_dimensional_dependencies() == {"length": Symbol("a")}
 
     assert length != 1
-    assert length / length != 1
+    assert length/length != 1
 
-    length_0 = length ** 0
+    length_0 = length**0
     assert length_0.get_dimensional_dependencies() == {}

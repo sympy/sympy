@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Several methods to simplify expressions involving unit objects.
 """
@@ -33,9 +32,16 @@ def _get_conversion_matrix_for_expr(expr, target_units):
     from sympy import Matrix
 
     expr_dim = Dimension(Quantity.get_dimensional_expr(expr))
-    dim_dependencies = expr_dim.get_dimensional_dependencies(mark_dimensionless=True)
-    target_dims = [Dimension(Quantity.get_dimensional_expr(x)) for x in target_units]
-    canon_dim_units = {i for x in target_dims for i in x.get_dimensional_dependencies(mark_dimensionless=True)}
+    dim_dependencies = expr_dim.get_dimensional_dependencies(
+        mark_dimensionless=True)
+    target_dims = [
+        Dimension(Quantity.get_dimensional_expr(x)) for x in target_units
+    ]
+    canon_dim_units = {
+        i
+        for x in target_dims
+        for i in x.get_dimensional_dependencies(mark_dimensionless=True)
+    }
     canon_expr_units = {i for i in dim_dependencies}
 
     if not canon_expr_units.issubset(canon_dim_units):
@@ -43,7 +49,10 @@ def _get_conversion_matrix_for_expr(expr, target_units):
 
     canon_dim_units = sorted(canon_dim_units)
 
-    camat = Matrix([[i.get_dimensional_dependencies(mark_dimensionless=True).get(j, 0)  for i in target_dims] for j in canon_dim_units])
+    camat = Matrix([[
+        i.get_dimensional_dependencies(mark_dimensionless=True).get(j, 0)
+        for i in target_dims
+    ] for j in canon_dim_units])
     exprmat = Matrix([dim_dependencies.get(k, 0) for k in canon_dim_units])
 
     res_exponents = camat.solve_least_squares(exprmat, method=None)
@@ -103,13 +112,15 @@ def convert_to(expr, target_units):
     expr = sympify(expr)
 
     if not isinstance(expr, Quantity) and expr.has(Quantity):
-        expr = expr.replace(lambda x: isinstance(x, Quantity), lambda x: x.convert_to(target_units))
+        expr = expr.replace(lambda x: isinstance(x, Quantity),
+                            lambda x: x.convert_to(target_units))
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
-            return reduce(lambda x, y: x * y, [get_total_scale_factor(i) for i in expr.args])
+            return reduce(lambda x, y: x*y,
+                          [get_total_scale_factor(i) for i in expr.args])
         elif isinstance(expr, Pow):
-            return get_total_scale_factor(expr.base) ** expr.exp
+            return get_total_scale_factor(expr.base)**expr.exp
         elif isinstance(expr, Quantity):
             return expr.scale_factor
         return expr
@@ -119,4 +130,6 @@ def convert_to(expr, target_units):
         return expr
 
     expr_scale_factor = get_total_scale_factor(expr)
-    return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
+    return expr_scale_factor*Mul.fromiter(
+        (1/get_total_scale_factor(u)*u)**p
+        for u, p in zip(target_units, depmat))
