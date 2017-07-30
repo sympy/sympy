@@ -126,7 +126,7 @@ def test_constants():
 
 def test_constants_other():
     assert mcode(2*GoldenRatio) == "2*(1+sqrt(5))/2"
-    assert mcode(2*Catalan) == "2*0.915965594177219"
+    assert mcode(2*Catalan) == "2*%s" % Catalan.evalf(17)
     assert mcode(2*EulerGamma) == "2*0.5772156649015329"
 
 
@@ -208,9 +208,9 @@ def test_containers():
 def test_octave_noninline():
     source = mcode((x+y)/Catalan, assign_to='me', inline=False)
     expected = (
-        "Catalan = 0.915965594177219;\n"
+        "Catalan = %s;\n"
         "me = (x + y)/Catalan;"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
