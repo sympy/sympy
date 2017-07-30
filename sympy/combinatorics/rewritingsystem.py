@@ -81,14 +81,9 @@ class RewritingSystem(object):
         # the overlaps. See [1], Section 3 for details.
 
         if len(s1) - len(s2) in [0, 1, 2]:
-            if s2 < s1:
-                if not check:
-                    self.rules[s1] = s2
-                new_keys.add(s1)
-            elif s1 < s2:
-                if not check:
-                    self.rules[s2] = s1
-                new_keys.add(s2)
+            if not check and s1 != s2:
+                self.rules[s1] = s2
+            new_keys.add(s1)
 
         # overlaps on the right
         while len(s1) - len(s2) > 1:
