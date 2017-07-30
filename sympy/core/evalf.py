@@ -32,10 +32,9 @@ rnd = round_nearest
 
 
 def bitcount(n):
-    """Return smallest integer, b, such that n/2**b < 1. This means
-    that b is 0 if n < 1.
+    """Return smallest integer, b, such that |n|/2**b < 1.
     """
-    return mpmath_bitcount(int(n))
+    return mpmath_bitcount(abs(int(n)))
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid

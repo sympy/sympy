@@ -1,6 +1,7 @@
 from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
     Mul, S, Pow, sieve, Symbol, summation, Dummy,
     factorial as fac)
+from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
 
@@ -66,7 +67,7 @@ def multiproduct(seq=(), start=1):
     return units * multiproduct(multi)**2
 
 
-def test_trailing():
+def test_trailing_bitcount():
     assert trailing(0) == 0
     assert trailing(1) == 0
     assert trailing(-1) == 0
@@ -81,6 +82,7 @@ def test_trailing():
     # issue 12709
     big = small_trailing[-1]*2
     assert trailing(-big) == trailing(big)
+    assert bitcount(-big) == bitcount(big)
 
 
 def test_multiplicity():
