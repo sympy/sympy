@@ -2,7 +2,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
-from sympy.core import S, Dummy
+from sympy.core import S, Dummy, Lambda
 from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
 from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan2, simplify
@@ -132,18 +132,18 @@ class CoordSys3D(Basic):
                 else:
                     translation_equations = lambda x, y, z: (x, y, z)
 
-                transformation_equations = rotation_equations(*translation_equations(*parent.base_scalars()))
-                if not CoordSys3D._check_orthogonality(transformation_equations, parent.base_scalars()):
+                transformation = rotation_equations(*translation_equations(*parent.base_scalars()))
+                if not CoordSys3D._check_orthogonality(transformation, parent.base_scalars()):
                     raise ValueError("The transformation equation does not "
                                      "create orthogonal coordinate system")
         else:
-            if not (location and rotation_matrix) is None:
+            if location is not None and rotation_matrix is not None:
                 raise ValueError
 
             if parent is None:
-                transformation_equations = None
+                transformation = None
             else:
-                transformation_equations = None
+                transformation = None
 
         # All systems that are defined as 'roots' are unequal, unless
         # they have the same name.
@@ -220,7 +220,7 @@ class CoordSys3D(Basic):
 
         obj._parent_rotation_matrix = parent_orient
         obj._origin = origin
-        obj.transformation_equations = transformation_equations
+        obj._transformation = transformation
         # Return the instance
         return obj
 
@@ -305,7 +305,6 @@ class CoordSys3D(Basic):
 
         v3 = Matrix([diff(equations[0], variables[2]),
                      diff(equations[1], variables[2]), diff(equations[2], variables[2])])
-
 
         if any(simplify(i[0] + i[1] + i[2]) == 0 for i in (v1, v2, v3)):
             return False
