@@ -1,5 +1,7 @@
+from collections import defaultdict
 from functools import wraps
 from itertools import chain
+from sympy.core import sympify
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -46,26 +48,23 @@ _known_functions_math = {
     'tanh': 'tanh'
 }  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow modf
 # radians trunc fmod fsum gcd degrees fabs]
+_known_constants_math = {
+    'Exp1': 'e',
+    'Pi': 'pi',
+    'Infinity': 'inf',
+    'NaN': 'nan'
+}
 
-class requires(object):
-    """ Decorator for registering requirements on print methods. """
-    def __init__(self, **kwargs):
-        self._req = kwargs
-
-    def __call__(self, method):
-        def _method_wrapper(self_, *args, **kwargs):
-            for k, v in self._req.items():
-                getattr(self_, k).update(v)
-            return method(self_, *args, **kwargs)
-        return wraps(method)(_method_wrapper)
-
-
-def _print_known(self, expr):
+def _print_known_func(self, expr):
     known = self.known_functions[expr.__class__.__name__]
-    parts = known.split('.')
-    if len(parts) > 1:
-        self.modules.update(('.'.join(parts[:-1]),))
-    return '{name}({args})'.format(name=known, args=', '.join(map(self._print, expr.args)))
+    return '{name}({args})'.format(name=self._module_format(known),
+                                   args=', '.join(map(self._print, expr.args)))
+
+
+def _print_known_const(self, expr):
+    known = self.known_constants[expr.__class__.__name__]
+    return self._module_format(known)
+
 
 
 class PythonCodePrinter(CodePrinter):
@@ -79,36 +78,41 @@ class PythonCodePrinter(CodePrinter):
         _known_functions.items(),
         [(k, 'math.' + v) for k, v in _known_functions_math.items()]
     ))
+    _kc = {k: 'math.'+v for k, v in _known_constants_math.items()}
     _operators = {'and': 'and', 'or': 'or', 'not': 'not'}
-    _default_settings = dict(CodePrinter._default_settings, precision=15)
+    _default_settings = dict(
+        CodePrinter._default_settings,
+        precision=17,
+        inline=True,
+        fully_qualified_modules=True
+    )
 
     def __init__(self, settings=None):
         super(PythonCodePrinter, self).__init__(settings)
-        self.modules = set()
+        self.module_imports = defaultdict(set)
         self.known_functions = dict(self._kf, **(settings or {}).get(
             'user_functions', {}))
+        self.known_constants = dict(self._kc, **(settings or {}).get(
+            'user_constants', {}))
+
+    def _declare_number_const(self, name, value):
+        return "%s = %s" % (name, value)
+
+    def _module_format(self, fqn):
+        parts = fqn.split('.')
+        if len(parts) > 1:
+            self.module_imports['.'.join(parts[:-1])].add(parts[-1])
+
+        if self._settings['fully_qualified_modules']:
+            return fqn
+        else:
+            return fqn.split('(')[0].split('[')[0].split('.')[-1]
 
     def _format_code(self, lines):
         return lines
 
     def _get_comment(self, text):
         return "  # {0}".format(text)
-
-    @requires(modules={'math'})
-    def _print_Exp1(self, expr):
-        return 'math.e'
-
-    @requires(modules={'math'})
-    def _print_pi(self, expr):
-        return 'math.pi'
-
-    @requires(modules={'math'})
-    def _print_Infinity(self, expr):
-        return 'math.inf'
-
-    @requires(modules={'math'})
-    def _print_NaN(self, expr):
-        return 'math.nan'
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
@@ -130,6 +134,10 @@ class PythonCodePrinter(CodePrinter):
                     self.tab, expr))
         return '\n'.join(lines)
 
+    def _print_ITE(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        return self._print(expr.rewrite(Piecewise))
+
     def _print_Sum(self, expr):
         loops = (
             'for {i} in range({a}, {b}+1)'.format(
@@ -145,11 +153,22 @@ class PythonCodePrinter(CodePrinter):
         return '1j'
 
 for k in PythonCodePrinter._kf:
-    setattr(PythonCodePrinter, '_print_%s' % k, _print_known)
+    setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
+
+for k in _known_constants_math:
+    setattr(PythonCodePrinter, '_print_%s' % k, _print_known_const)
 
 
 def pycode(expr, **settings):
     return PythonCodePrinter(settings).doprint(expr)
+
+
+_not_in_mpmath = 'log1p log2'.split()
+_in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
+_known_functions_mpmath = dict(_in_mpmath)
+_known_constants_mpmath = {
+    'Pi': 'pi'
+}
 
 
 class MpmathPrinter(PythonCodePrinter):
@@ -157,9 +176,20 @@ class MpmathPrinter(PythonCodePrinter):
     Lambda printer for mpmath which maintains precision for floats
     """
 
-    @requires(modules={'mpmath'})
+    _kf = dict(chain(
+        PythonCodePrinter._kf.items(),
+        [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
+    ))
+
+    def doprint(self, expr, **kwargs):
+        from sympy.functions import log
+        from sympy.codegen.cfunctions import log2, log1p
+        expr = expr.replace(log2, lambda arg: arg.rewrite(log))
+        expr = expr.replace(log1p, lambda arg: arg.rewrite(log))
+        return super(MpmathPrinter, self).doprint(expr, **kwargs)
+
     def _print_Integer(self, e):
-        return 'mpf(%d)' % e
+        return '%s(%d)' % (self._module_format('mpmath.mpf'), e)
 
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
@@ -168,15 +198,22 @@ class MpmathPrinter(PythonCodePrinter):
 
         # Remove 'mpz' if gmpy is installed.
         args = str(tuple(map(int, e._mpf_)))
-        return 'mpf(%s)' % args
+        return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
 
-    @requires(modules={'mpmath'})
+
     def _print_uppergamma(self,e): #printer for the uppergamma function
-        return "gammainc({0}, {1}, inf)".format(self._print(e.args[0]), self._print(e.args[1]))
+        return self._module_format("{0}({1}, {2}, inf)".format(
+            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1])))
 
-    @requires(modules={'mpmath'})
     def _print_lowergamma(self,e): #printer for the lowergamma functioin
-        return "gammainc({0}, 0, {1})".format(self._print(e.args[0]), self._print(e.args[1]))
+        return ("{0}({1}, 0, {2})".format(
+            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1])))
+
+for k in MpmathPrinter._kf:
+    setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
+
+for k in _known_constants_mpmath:
+    setattr(MpmathPrinter, '_print_%s' % k, _print_known_const)
 
 
 _not_in_numpy = 'erf erfc factorial gamma lgamma'.split()
@@ -189,6 +226,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'atan': 'arctan',
     'atan2': 'arctan2',
     'atanh': 'arctanh',
+    'exp2': 'exp2',
 })
 
 
@@ -201,19 +239,8 @@ class NumPyPrinter(PythonCodePrinter):
         PythonCodePrinter._kf.items(),
         [(k, 'numpy.' + v) for k, v in _known_functions_numpy.items()]
     ))
+    _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
 
-
-    @requires(modules={'numpy'})
-    def _print_Exp1(self, expr):
-        return "numpy.e"
-
-    @requires(modules={'numpy'})
-    def _print_Infinity(self, expr):
-        return "numpy.inf"
-
-    @requires(modules={'numpy'})
-    def _print_pi(self, expr):
-        return "numpy.pi"
 
     def _print_seq(self, seq, delimiter=', '):
         "General sequence printer: converts to tuple"
@@ -234,7 +261,7 @@ class NumPyPrinter(PythonCodePrinter):
         if arg2.shape[1] != 1:
             arg2 = arg2.T
 
-        return "numpy.dot(%s, %s)" % (self._print(arg1), self._print(arg2))
+        return "%s(%s, %s)" % (self._module_format('numpy.dot'), self._print(arg1), self._print(arg2))
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
@@ -244,7 +271,7 @@ class NumPyPrinter(PythonCodePrinter):
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
         # If this is not the case, it may be triggered prematurely.
-        return 'numpy.select({0}, {1}, default=numpy.nan)'.format(conds, exprs)
+        return '{0}({1}, {2}, default=numpy.nan)'.format(self._module_format('numpy.select'), conds, exprs)
 
     def _print_Relational(self, expr):
         "Relational printer for Equality and Unequality"
@@ -259,9 +286,8 @@ class NumPyPrinter(PythonCodePrinter):
         if expr.rel_op in op:
             lhs = self._print(expr.lhs)
             rhs = self._print(expr.rhs)
-            return 'numpy.{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
-                                               lhs=lhs,
-                                               rhs=rhs)
+            return '{op}({lhs}, {rhs})'.format(op=self._module_format('numpy.'+op[expr.rel_op]),
+                                               lhs=lhs, rhs=rhs)
         return super(NumPyPrinter, self)._print_Relational(expr)
 
     def _print_And(self, expr):
@@ -269,48 +295,48 @@ class NumPyPrinter(PythonCodePrinter):
         # We have to override LambdaPrinter because it uses Python 'and' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format('numpy.logical_and', ','.join(self._print(i) for i in expr.args))
+        return '{0}({1})'.format(self._module_format('numpy.logical_and'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Or(self, expr):
         "Logical Or printer"
         # We have to override LambdaPrinter because it uses Python 'or' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format('numpy.logical_or', ','.join(self._print(i) for i in expr.args))
+        return '{0}({1})'.format(self._module_format('numpy.logical_or'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Not(self, expr):
         "Logical Not printer"
         # We have to override LambdaPrinter because it uses Python 'not' keyword.
         # If LambdaPrinter didn't define it, we would still have to define our
         #     own because StrPrinter doesn't define it.
-        return '{0}({1})'.format('numpy.logical_not', ','.join(self._print(i) for i in expr.args))
+        return '{0}({1})'.format(self._module_format('numpy.logical_not'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Min(self, expr):
-        return '{0}(({1}))'.format('numpy.amin', ','.join(self._print(i) for i in expr.args))
+        return '{0}(({1}))'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
-        return '{0}(({1}))'.format('numpy.amax', ','.join(self._print(i) for i in expr.args))
+        return '{0}(({1}))'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Pow(self, expr):
         if expr.exp == 0.5:
-            return '{0}({1})'.format('numpy.sqrt', self._print(expr.base))
+            return '{0}({1})'.format(self._module_format('numpy.sqrt'), self._print(expr.base))
         else:
             return super(NumPyPrinter, self)._print_Pow(expr)
 
     def _print_arg(self, expr):
-        return "numpy.angle(%s)" % self._print(expr.args[0])
+        return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
 
     def _print_im(self, expr):
-        return "numpy.imag(%s)" % self._print(expr.args[0])
+        return "%s(%s)" % (self._module_format('numpy.imag', self._print(expr.args[0])))
 
     def _print_Mod(self, expr):
-        return "numpy.mod(%s)" % ', '.join(map(self._print, expr.args))
+        return "%s(%s)" % (self._module_format('numpy.mod'), ', '.join(map(self._print, expr.args)))
 
     def _print_re(self, expr):
-        return "numpy.real(%s)" % self._print(expr.args[0])
+        return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))
 
     def _print_Matrix(self, expr):
-        return "numpy.array(%s)" % self._print(expr.tolist())
+        return "%s(%s)" % (self._module_format('numpy.array'), self._print(expr.tolist()))
 
     _print_SparseMatrix = _print_Matrix
     _print_ImmutableSparseMatrix = _print_Matrix
@@ -318,7 +344,10 @@ class NumPyPrinter(PythonCodePrinter):
     _print_ImmutableDenseMatrix = _print_Matrix
 
 for k in NumPyPrinter._kf:
-    setattr(NumPyPrinter, '_print_%s' % k, _print_known)
+    setattr(NumPyPrinter, '_print_%s' % k, _print_known_func)
+
+for k in NumPyPrinter._kc:
+    setattr(NumPyPrinter, '_print_%s' % k, _print_known_const)
 
 
 _known_functions_scipy_special = {
@@ -327,6 +356,9 @@ _known_functions_scipy_special = {
     'gamma': 'gamma',
     'loggamma': 'gammaln'
 }
+_known_constants_scipy_constants = {
+    'GoldenRatio': 'golden_ratio'
+}
 
 class SciPyPrinter(NumPyPrinter):
 
@@ -334,8 +366,8 @@ class SciPyPrinter(NumPyPrinter):
         NumPyPrinter._kf.items(),
         [(k, 'scipy.special.' + v) for k, v in _known_functions_scipy_special.items()]
     ))
+    _kc = {k: 'scipy.constants.' + v for k, v in _known_constants_scipy_constants.items()}
 
-    @requires(modules={'scipy.sparse'})
     def _print_SparseMatrix(self, expr):
         i, j, data = [], [], []
         for (r, c), v in expr._smat.items():
@@ -343,7 +375,8 @@ class SciPyPrinter(NumPyPrinter):
             j.append(c)
             data.append(v)
 
-        return "scipy.sparse.coo_matrix({data}, ({i}, {j}), shape={shape})".format(
+        return "{name}({data}, ({i}, {j}), shape={shape})".format(
+            name=self._module_format('scipy.sparse.coo_matrix'),
             data=data, i=i, j=j, shape=expr.shape
         )
 
@@ -352,7 +385,10 @@ class SciPyPrinter(NumPyPrinter):
 
 
 for k in SciPyPrinter._kf:
-    setattr(SciPyPrinter, '_print_%s' % k, _print_known)
+    setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)
+
+for k in SciPyPrinter._kc:
+    setattr(SciPyPrinter, '_print_%s' % k, _print_known_const)
 
 
 class SymPyPrinter(PythonCodePrinter):
@@ -362,6 +398,6 @@ class SymPyPrinter(PythonCodePrinter):
         _known_functions_math.items()
     )])
 
-    @requires(modules={'sympy'})
     def _print_Function(self, expr):
-        return 'sympy.{name}({args})'.format(name=expr.func.__name__, args=', '.join(map(self._print, expr.args)))
+        return '%s(%s)' % (self._module_format(expr.func.__module__ + '.' + expr.func.__name__,
+                                               args=', '.join(map(self._print, expr.args))))

@@ -389,35 +389,18 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if printer is None:
         #XXX: This has to be done here because of circular imports
         if _module_present('mpmath',namespaces):
-            from sympy.printing.lambdarepr import MpmathPrinter as Printer
+            from sympy.printing.pycode import MpmathPrinter as Printer
         elif _module_present('numpy',namespaces):
-            from sympy.printing.lambdarepr import NumPyPrinter as Printer
+            from sympy.printing.pycode import NumPyPrinter as Printer
         elif _module_present('numexpr',namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
-            printer = NumExprPrinter()
         elif _module_present('tensorflow',namespaces):
             from sympy.printing.lambdarepr import TensorflowPrinter as Printer
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer
         else:
-            from sympy.printing.pycode import PythonCodePrinter
-            if isinstance(modules, dict):
-                class _Printer(PythonCodePrinter):
-                    pass
-
-                for k, v in modules.items():
-                    def _print_wrapper(self_, expr):
-                        print(k, v, self_, expr)
-                        if isinstance(v, (float, int, str, complex)):
-                            return str(v)
-                        else:
-                            return self_._print(v(expr))
-                    setattr(_Printer, '_print_%s' % k, _print_wrapper)
-                Printer = _Printer
-            else:
-                Printer = PythonCodePrinter
-        print(Printer)
-        printer = Printer()
+            from sympy.printing.pycode import PythonCodePrinter as Printer
+        printer = Printer({'fully_qualified_modules': False})
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
@@ -441,9 +424,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
-    for mod in printer.modules:
-        if mod not in namespace:
-            exec_("import %s" % mod, {}, namespace)
+    imp_mod_lines = []
+    for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
+        for k in keys:
+            if k not in namespace:
+                imp_mod_lines.append("from %s import %s" % (mod, k))
+    for ln in imp_mod_lines:
+        exec_(ln, {}, namespace)
 
     if flat in lstr:
         namespace.update({flat: flatten})
@@ -467,8 +454,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     expr_str = str(expr)
     if len(expr_str) > 78:
         expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
-    func.__doc__ = ("Created with lambdify. Signature:\n\n{sig}\n\n"
-                    "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
+    func.__doc__ = (
+        "Created with lambdify. Signature:\n\n"
+        "{sig}\n\n"
+        "Expression:\n\n"
+        "{expr}\n\n"
+        "Source code:\n\n"
+        "{src}\n\n"
+        "Imported modules:\n\n"
+        "{imp_mods}"
+        ).format(sig=sig, expr=expr_str, src=lstr, imp_mods='\n'.join(imp_mod_lines))
     return func
 
 def _module_present(modname, modlist):

@@ -5,7 +5,8 @@ from sympy.core.numbers import pi
 from sympy.logic import And, Or
 from sympy.functions import Piecewise, acos
 from sympy.matrices import SparseMatrix
-from sympy.printing.pycode import PythonCodePrinter, SciPyPrinter
+from sympy.printing.pycode import PythonCodePrinter, SciPyPrinter, pycode
+from sympy.utilities.pytest import raises
 
 
 x, y, z = symbols('x y z')
@@ -49,3 +50,9 @@ def test_SciPyPrinter():
     smat = SparseMatrix(2, 5, {(0, 1): 3})
     assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
     assert 'scipy.sparse' in p.modules
+
+def test_pycode_reserved_words():
+    s1, s2 = symbols('if else')
+    raises(ValueError, lambda: pycode(s1 + s2, error_on_reserved=True))
+    py_str = pycode(s1 + s2)
+    assert py_str in ('else_ + if_', 'if_ + else_')
