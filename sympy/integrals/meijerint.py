@@ -82,7 +82,7 @@ def _create_lookup_table(table):
     def constant(a):
         return [(a, meijerg([1], [], [], [0], z)),
                 (a, meijerg([], [1], [0], [], z))]
-    table[()] = [(a, constant(a), True, True)]
+    table[frozenset()] = [(a, constant(a), True, True)]
 
     # [P], Section 8.
 
@@ -288,16 +288,15 @@ timeit = timethis('meijerg')
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
     if x not in f.free_symbols:
-        return ()
+        return frozenset()
     elif f.is_Function:
-        return (type(f),)
+        return frozenset((type(f),))
     else:
         types = [_mytype(a, x) for a in f.args]
         res = []
         for t in types:
-            res += list(t)
-        res.sort()
-        return tuple(res)
+            res += frozenset(t)
+        return frozenset(res)
 
 
 class _CoeffExpValueError(ValueError):

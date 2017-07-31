@@ -12,7 +12,7 @@ _create_lookup_table(t)
 
 doc = ""
 
-for about, category in sorted(t.items()):
+for about, category in sorted(t.items(), key=lambda x: sorted(x[0], key=str)):
     if about == ():
         doc += 'Elementary functions:\n\n'
     else:
