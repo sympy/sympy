@@ -92,7 +92,7 @@ def test_mix_number_mult_symbols():
     assert mcode(x/y/z) == "x./(y.*z)"
     assert mcode((x+y)/z) == "(x + y)./z"
     assert mcode((x+y)/(z+x)) == "(x + y)./(x + z)"
-    assert mcode((x+y)/EulerGamma) == "(x + y)/0.5772156649015329"
+    assert mcode((x+y)/EulerGamma) == "(x + y)/%s" % EulerGamma.evalf(17)
     assert mcode(x/3/pi) == "x/(3*pi)"
     assert mcode(S(3)/5*x*y/pi) == "3*x.*y/(5*pi)"
 
@@ -127,7 +127,7 @@ def test_constants():
 def test_constants_other():
     assert mcode(2*GoldenRatio) == "2*(1+sqrt(5))/2"
     assert mcode(2*Catalan) == "2*%s" % Catalan.evalf(17)
-    assert mcode(2*EulerGamma) == "2*0.5772156649015329"
+    assert mcode(2*EulerGamma) == "2*%s" % EulerGamma.evalf(17)
 
 
 def test_boolean():
