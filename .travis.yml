@@ -9,6 +9,7 @@ env:
   - SPLIT="4/4" TEST_SYMPY="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
+dist: trusty
 
 python:
   - 2.7
@@ -66,6 +67,7 @@ matrix:
             - texlive-xetex
             - texlive-fonts-recommended
             - texlive-latex-extra
+            - latexmk
             - lmodern
             - librsvg2-bin
             - imagemagick
@@ -233,7 +235,7 @@ before_install:
       pip install fastcache;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx==1.3.1" "docutils==0.12" doctr;
+      pip install "sphinx" "docutils" doctr;
     fi
   - |
     if [[ "${TEST_MATPLOTLIB}" == "true" || "${TEST_SYMENGINE}" == "true" ]]; then

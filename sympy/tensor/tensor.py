@@ -33,7 +33,7 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 import itertools
-from sympy import Matrix, Rational, prod
+from sympy import Matrix, Rational, prod, Integer
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, sympify, Add, S
@@ -1723,7 +1723,7 @@ class TensorIndexType(Basic):
         return delta
 
     def get_epsilon(self):
-        if not isinstance(self._eps_dim, int):
+        if not isinstance(self._eps_dim, (int, Integer)):
             return None
         sym = TensorSymmetry(get_symmetric_group_sgs(self._eps_dim, 1))
         Sdim = TensorType([self]*self._eps_dim, sym)

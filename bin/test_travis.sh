@@ -12,7 +12,7 @@ fi
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     echo "Testing SPHINX"
     cd doc
-    make html-errors
+    make html
     make man
     make latex
     cd _build/latex
