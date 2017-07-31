@@ -15,7 +15,7 @@ from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
-from sympy.simplify import simplify, fraction, trigsimp, powdenest, logcombine
+from sympy.simplify import simplify, fraction, trigsimp, powdenest, logcombine, powsimp
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold)
@@ -27,7 +27,7 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
-from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens
+from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens, _ispow
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -150,6 +150,32 @@ def _invert_real(f, g_ys, symbol):
         g, h = f.as_independent(symbol)
         if g is not S.Zero:
             return _invert_real(h, imageset(Lambda(n, n - g), g_ys), symbol)
+
+        # if there are two terms with g_ys=0
+        # e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3,
+        # where f(x) and g(x) are power terms
+        if not g and not g_ys.args[0] and len(h.args) == 2 and \
+                not h.is_polynomial(symbol):
+            a, b = ordered(h.args)
+            ai, ad = a.as_independent(symbol)
+            bi, bd = b.as_independent(symbol)
+
+            if any(_ispow(i) for i in (ad,bd)):
+                a_base, a_exp = ad.as_base_exp()
+                b_base, b_exp = bd.as_base_exp()
+
+                if a_base == b_base:
+                    h = powsimp(powdenest(ad/bd))
+                    g = -bi/ai
+
+                else:
+                    rat = ad/bd
+                    _h = powsimp(rat)
+                    if _h != rat:
+                        h = _h
+                        g = -bi/ai
+
+            return (h, FiniteSet(g))
 
     if f.is_Mul:
         # f = g*h
@@ -809,7 +835,7 @@ def transolve(f, symbol, domain, **flags):
     if lhs.is_Add:
         # solving equation
         for rhs in rhs_s:
-            f = simplify(factor(powdenest(lhs - rhs)))
+            f = factor(powdenest(lhs - rhs))
             g = _check_log(f)
             if f.is_Mul:
                 result += _solveset(f, symbol, domain)

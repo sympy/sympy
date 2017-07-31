@@ -82,6 +82,10 @@ def test_invert_real():
     plus_y = Intersection(Interval(0, oo), FiniteSet(y))
     assert invert_real(Abs(x), y, x) == (x, Union(minus_y, plus_y))
 
+    assert invert_real(2**(2*x) + 2**x + 1, 0, x) == (2**(2*x) + 2**x, {-1})
+    assert invert_real(-(375*3**(2*x) - 5**x)/125, 0, x) == ((5/9)**x, {375})
+    assert invert_real(9*2**(2*x) - 16*3**x, 0, x) == ((3/4)**x, {Rational(9,16)})
+
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
     assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y)/log(2)))))
 
@@ -572,6 +576,16 @@ def test_expo():
     assert solveset(4**(5-9*x) - 8**(2-x), x, S.Reals) == FiniteSet(Rational(4, 15))
     assert solveset(3**x - 9**(x+5), x, S.Reals) == FiniteSet(-10)
     assert solveset(4**(x**2) - 4**(6-x), x, S.Reals) == FiniteSet(-3, 2)
+    assert solveset(4**(x+1) + 4**(x+2) + 4**(x-1) - 3**(x+2) -3**(x+3), x, S.Reals) == \
+        FiniteSet(2)
+    assert solveset(5**(x-3) - 3**(2*x + 1), x, S.Reals) == FiniteSet(-log(375)/(-log(5) + 2*log(3)))
+    assert solveset(4**(x-2) - 5**(x), x, S.Reals) == FiniteSet(log(2**(4/(-log(5) + log(4)))))
+    assert solveset(2**(x) + 4**(x) + 8**(x) - 84, x, S.Reals) == FiniteSet(2)
+
+@XFAIL
+def test_xfail_expo():
+    assert solveset(2**(x) + 4**(x) + 8**(x), x, S.Reals) == S.EmptySet
+    assert solveset(0**x - 100, x, S.Reals) == S.EmptySet
 
 
 def test_uselogcombine_1():
@@ -958,8 +972,7 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x + 1/x**2)
     solution = solveset(y**2 + y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0),
-                         S.Reals)
+    unsolved_object = S.EmptySet
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
