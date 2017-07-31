@@ -2,7 +2,8 @@ from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Pow, Symbol, sympify
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.compatibility import range
-from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
+from sympy.matrices import det
+from sympy import sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
@@ -60,7 +61,7 @@ class Vector(BasisDependent):
         expression).
         If 'other' is a Dyadic, the dot product is returned as a Vector.
         If 'other' is an instance of Del, returns the directional
-        derivate operator as a Python function. If this function is
+        derivative operator as a Python function. If this function is
         applied to a scalar expression, it returns the directional
         derivative of the scalar field wrt this Vector.
 
@@ -177,32 +178,12 @@ class Vector(BasisDependent):
                 isinstance(other, VectorZero)):
             return Vector.zero
 
-        # Compute cross product
-        def _det(mat):
-            """This is needed as a little method for to find the determinant
-            of a list in python.
-            SymPy's Matrix won't take in Vector, so need a custom function.
-            The user shouldn't be calling this.
-
-            """
-
-            return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] *
-                                 mat[2][1]) +
-                    mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
-                                 mat[2][2]) +
-                    mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] *
-                                 mat[2][0]))
-
         outvec = Vector.zero
         for system, vect in other.separate().items():
-            tempi = system.i
-            tempj = system.j
-            tempk = system.k
-            tempm = [[tempi, tempj, tempk],
-                     [self & tempi, self & tempj, self & tempk],
-                     [vect & tempi, vect & tempj, vect & tempk]]
-            outvec += _det(tempm)
-
+            tempm = [[system.i, system.j, system.k],
+                     [self & system.i, self & system.j, self & system.k],
+                     [vect & system.i, vect & system.j, vect & system.k]]
+            outvec += det(Matrix(tempm))
         return outvec
 
     def __xor__(self, other):
