@@ -14,7 +14,7 @@ x, y, z = symbols('x y z')
 
 def test_PythonCodePrinter():
     prntr = PythonCodePrinter()
-    assert not prntr.modules
+    assert not prntr.module_imports
     assert prntr.doprint(x**y) == 'x**y'
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
     assert prntr.doprint(And(x, y)) == 'x and y'
@@ -34,22 +34,22 @@ def test_PythonCodePrinter():
         'else:\n'
         '    raise NotImplementedError("Unhandled condition in: %s")' % pw
     )
-    assert not prntr.modules
+    assert not prntr.module_imports
     assert prntr.doprint(pi) == 'math.pi'
-    assert prntr.modules == {'math'}
+    assert prntr.module_imports == {'math': {'pi'}}
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
 
 
 def test_SciPyPrinter():
     p = SciPyPrinter()
     expr = acos(x)
-    assert 'numpy' not in p.modules
+    assert 'numpy' not in p.module_imports
     assert p.doprint(expr) == 'numpy.arccos(x)'
-    assert 'numpy' in p.modules
-    assert not any(m.startswith('scipy') for m in p.modules)
+    assert 'numpy' in p.module_imports
+    assert not any(m.startswith('scipy') for m in p.module_imports)
     smat = SparseMatrix(2, 5, {(0, 1): 3})
     assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
-    assert 'scipy.sparse' in p.modules
+    assert 'scipy.sparse' in p.module_imports
 
 def test_pycode_reserved_words():
     s1, s2 = symbols('if else')
