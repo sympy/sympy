@@ -10,7 +10,7 @@ import inspect
 import textwrap
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins)
+    NotIterable, string_types, range, builtins, integer_types)
 from sympy.utilities.decorator import doctest_depends_on
 
 # These are the namespaces the lambda functions will use.
@@ -102,7 +102,7 @@ TENSORFLOW_TRANSLATIONS = {
 NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
-MODULES = {
+_MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, {}, {}, ("import numpy",)),
@@ -127,7 +127,7 @@ def _import(module, reload="False"):
     """
     from sympy.external import import_module
     try:
-        namespace, namespace_default, translations, import_commands = MODULES[
+        namespace, namespace_default, translations, import_commands = _MODULES[
             module]
     except KeyError:
         raise NameError(
@@ -388,19 +388,49 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     if printer is None:
         #XXX: This has to be done here because of circular imports
-        if _module_present('mpmath',namespaces):
+        wrap_printer = True
+        if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer
-        elif _module_present('numpy',namespaces):
+        elif _module_present('numpy', namespaces):
             from sympy.printing.pycode import NumPyPrinter as Printer
-        elif _module_present('numexpr',namespaces):
+        elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
-        elif _module_present('tensorflow',namespaces):
+            wrap_printer = False
+        elif _module_present('tensorflow', namespaces):
             from sympy.printing.lambdarepr import TensorflowPrinter as Printer
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer
         else:
             from sympy.printing.pycode import PythonCodePrinter as Printer
-        printer = Printer({'fully_qualified_modules': False})
+
+        from sympy.matrices import MatrixBase
+
+        if wrap_printer:
+            class LambdifyPrinter(Printer):
+                """ Wrapper class for backward compatibility in lambdify """
+                def _print(self, expr):
+                    clsname = expr.__class__.__name__
+                    if clsname in namespace:
+                        func = namespace[clsname]
+                        if func.__module__ == 'mpmath.ctx_mp_python':
+                            self._module_format('mpmath.' + clsname)
+                        else:
+                            fqn = ((func.__module__ + '.') if func.__module__ else '') + func.__name__
+                            reg = bool(func.__module__) and not func.__name__.startswith('<') and not '<' in func.__module__
+                            self._module_format(fqn, register=reg)
+
+                        if isinstance(expr, MatrixBase):
+                            return "%s(%s)" % (clsname, self._print(expr.tolist()))
+                        elif hasattr(expr, 'args'):
+                            return '%s(%s)' % (clsname, ', '.join(map(self._print, expr.args)))
+                        else:
+                            return repr(expr)
+                    else:
+                        return super(LambdifyPrinter, self)._print(expr)
+        else:
+            LambdifyPrinter = Printer
+
+        printer = LambdifyPrinter({'fully_qualified_modules': False})
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
@@ -445,7 +475,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         def array_wrap(funcarg):
             @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                return funcarg(*[namespace['numpy'].asarray(i) for i in argsx], **kwargsx)
+                asarray = namespace['numpy'].asarray
+                newargs = [asarray(i) if isinstance(i, integer_types + (float,
+                    complex)) else i for i in argsx]
+                return funcarg(*newargs, **kwargsx)
             return wrapper
         func = array_wrap(func)
     # Apply the docstring
@@ -481,7 +514,7 @@ def _get_namespace(m):
     """
     if isinstance(m, str):
         _import(m)
-        return MODULES[m][0]
+        return _MODULES[m][0]
     elif isinstance(m, dict):
         return m
     elif hasattr(m, "__dict__"):

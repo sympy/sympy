@@ -702,12 +702,13 @@ def test_python_keywords():
 
 def test_lambdify_docstring():
     func = lambdify((w, x, y, z), w + x + y + z)
-    assert func.__doc__ == (
+    ref = (
         "Created with lambdify. Signature:\n\n"
         "func(w, x, y, z)\n\n"
         "Expression:\n\n"
         "w + x + y + z"
-    )
+    ).splitlines()
+    assert func.__doc__.splitlines()[:len(ref)] == ref
     syms = symbols('a1:26')
     func = lambdify(syms, sum(syms))
     ref = (

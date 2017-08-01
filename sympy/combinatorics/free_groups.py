@@ -601,21 +601,33 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             return self.inverse()*other.inverse()*self*other
 
-    def eliminate_words(self, words, _all=False):
+    def eliminate_words(self, words, _all=False, inverse=True):
         '''
         Replace each subword from the dictionary `words` by words[subword].
         If words is a list, replace the words by the identity.
+
         '''
+        again = True
         new = self
         if isinstance(words, dict):
-            for sub in words:
-                new = new.eliminate_word(sub, words[sub], _all=_all)
+            while again:
+                again = False
+                for sub in words:
+                    prev = new
+                    new = new.eliminate_word(sub, words[sub], _all=_all, inverse=inverse)
+                    if new != prev:
+                        again = True
         else:
-            for sub in words:
-                new = new.eliminate_word(sub, _all=_all)
+            while again:
+                again = False
+                for sub in words:
+                    prev = new
+                    new = new.eliminate_word(sub, _all=_all, inverse=inverse)
+                    if new != prev:
+                        again = True
         return new
 
-    def eliminate_word(self, gen, by=None, _all=False):
+    def eliminate_word(self, gen, by=None, _all=False, inverse=True):
         """
         For an associative word `self`, a subword `gen`, and an associative
         word `by` (identity by default), return the associative word obtained by
@@ -659,6 +671,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             i = word.subword_index(gen)
             k = 1
         except ValueError:
+            if not inverse:
+                return word
             try:
                 i = word.subword_index(gen**-1)
                 k = -1
@@ -862,7 +876,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         s = gen.array_form[0]
         return s[1]*sum([abs(i[1]) for i in self.array_form if i[0] == s[0]])
 
-    def subword(self, from_i, to_j):
+    def subword(self, from_i, to_j, strict=True):
         """
         For an associative word `self` and two positive integers `from_i` and
         `to_j`, `subword` returns the subword of `self` that begins at position
@@ -879,6 +893,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
+        if not strict:
+            from_i = max(from_i, 0)
+            to_j = min(len(self), to_j)
         if from_i < 0 or to_j > len(self):
             raise ValueError("`from_i`, `to_j` must be positive and no greater than "
                     "the length of associative word")
@@ -1206,6 +1223,89 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
                         word.array_form[1: word.number_syllables() - 1]
             word = group.dtype(rep)
         return word
+
+    def cyclic_reduction(self, removed=False):
+        """Return a cyclically reduced version of the word. Unlike
+        `identity_cyclic_reduction`, this will not cyclically permute
+        the reduced word - just remove the "unreduced" bits on either
+        side of it. Compare the examples with those of
+        `identity_cyclic_reduction`.
+
+        When `removed` is `True`, return a tuple `(word, r)` where
+        self `r` is such that before the reductin the word was either
+        `r*word*r**-1`.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x**2*y**2*x**-1).cyclic_reduction()
+        x*y**2
+        >>> (x**-3*y**-1*x**5).cyclic_reduction()
+        y**-1*x**2
+        >>> (x**-3*y**-1*x**5).cyclic_reduction(removed=True)
+        (y**-1*x**2, x**-3)
+
+        """
+        word = self.copy()
+        group = self.group
+        g = self.group.identity
+        while not word.is_cyclically_reduced():
+            exp1 = abs(word.exponent_syllable(0))
+            exp2 = abs(word.exponent_syllable(-1))
+            exp = min(exp1, exp2)
+            start = word[0]**abs(exp)
+            end = word[-1]**abs(exp)
+            word = start**-1*word*end**-1
+            g = g*start
+        if removed:
+            return word, g
+        return word
+
+    def power_of(self, other):
+        '''
+        Check if `self == other**n` for some integer n.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> ((x*y)**2).power_of(x*y)
+        True
+        >>> (x**-3*y**-2*x**3).power_of(x**-3*y*x**3)
+        True
+
+        '''
+        if self.is_identity:
+            return True
+
+        l = len(other)
+        if l == 1:
+            # self has to be a power of one generator
+            gens = self.contains_generators()
+            s = other in gens or other**-1 in gens
+            return len(gens) == 1 and s
+
+        # if self is not cyclically reduced and it is a power of other,
+        # other isn't cyclically reduced and the parts removed during
+        # their reduction must be equal
+        reduced, r1 = self.cyclic_reduction(removed=True)
+        if not r1.is_identity:
+            other, r2 = other.cyclic_reduction(removed=True)
+            if r1 == r2:
+                return reduced.power_of(other)
+            return False
+
+        if len(self) < l or len(self) % l:
+            return False
+
+        prefix = self.subword(0, l)
+        if prefix == other or prefix**-1 == other:
+            rest = self.subword(l, len(self))
+            return rest.power_of(other)
+        return False
 
 
 def letter_form_to_array_form(array_form, group):

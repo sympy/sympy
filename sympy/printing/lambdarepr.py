@@ -218,6 +218,7 @@ class NumExprPrinter(LambdaPrinter):
             else:
                 raise TypeError("numexpr does not support function '%s'" %
                                 func_name)
+        print(nstr)
         return "%s(%s)" % (nstr, self._print_seq(e.args))
 
     def blacklisted(self, expr):
@@ -246,6 +247,9 @@ class NumExprPrinter(LambdaPrinter):
         lstr = super(NumExprPrinter, self).doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
 
+
+for k in NumExprPrinter._numexpr_functions:
+    setattr(NumExprPrinter, '_print_%s' % k, NumExprPrinter._print_Function)
 
 def lambdarepr(expr, **settings):
     """

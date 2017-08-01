@@ -66,7 +66,6 @@ def _print_known_const(self, expr):
     return self._module_format(known)
 
 
-
 class PythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
@@ -98,9 +97,10 @@ class PythonCodePrinter(CodePrinter):
     def _declare_number_const(self, name, value):
         return "%s = %s" % (name, value)
 
-    def _module_format(self, fqn):
+    def _module_format(self, fqn, register=True):
         parts = fqn.split('.')
-        if len(parts) > 1:
+        print(fqn, parts)
+        if register and len(parts) > 1:
             self.module_imports['.'.join(parts[:-1])].add(parts[-1])
 
         if self._settings['fully_qualified_modules']:
@@ -202,12 +202,13 @@ class MpmathPrinter(PythonCodePrinter):
 
 
     def _print_uppergamma(self,e): #printer for the uppergamma function
-        return self._module_format("{0}({1}, {2}, inf)".format(
-            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1])))
+        return "{0}({1}, {2}, {3})".format(
+            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1]),
+            self._module_format('mpmath.inf'))
 
     def _print_lowergamma(self,e): #printer for the lowergamma functioin
-        return ("{0}({1}, 0, {2})".format(
-            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1])))
+        return "{0}({1}, 0, {2})".format(
+            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1]))
 
 for k in MpmathPrinter._kf:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
@@ -399,5 +400,6 @@ class SymPyPrinter(PythonCodePrinter):
     )])
 
     def _print_Function(self, expr):
-        return '%s(%s)' % (self._module_format(expr.func.__module__ + '.' + expr.func.__name__,
-                                               args=', '.join(map(self._print, expr.args))))
+        mod = expr.func.__module__ or ''
+        return '%s(%s)' % (self._module_format(mod + ('.' if mod else '') + expr.func.__name__),
+                           ', '.join(map(self._print, expr.args)))

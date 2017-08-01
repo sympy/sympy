@@ -84,14 +84,14 @@ class GroupHomomorphism(object):
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
         gens = []
-        K = FpSubgroup(G, gens)
+        K = FpSubgroup(G, gens, normal=True)
         i = self.image().order()
         while K.order()*i != G_order:
             r = G.random_element()
             k = r*self.invert(self(r))
             if not k in K:
                 gens.append(k)
-                K = FpSubgroup(G, gens)
+                K = FpSubgroup(G, gens, normal=True)
         return K
 
     def image(self):
