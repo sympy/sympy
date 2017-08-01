@@ -220,9 +220,9 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
 
     '''
     if check and isinstance(domain, PermutationGroup):
-        raise NotImplementedError("Checking if the images of the generators\
-            extend to a homomorphism is not implemented for permutation groups.\
-            Use check=False if you would like to create the homomorphism")
+        raise NotImplementedError("Checking if the homomorphism is well-defined\
+            is not implemented for permutation groups. Use check=False if you\
+            would like to create the homomorphism")
 
     if not isinstance(domain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")
