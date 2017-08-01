@@ -12,7 +12,7 @@ fi
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     echo "Testing SPHINX"
     cd doc
-    make html-errors
+    make html
     make man
     make latex
     cd _build/latex
@@ -132,6 +132,8 @@ if [[ "${TEST_SYMENGINE}" == "true" ]]; then
 print('Testing SymEngine')
 import sympy
 if not sympy.test('sympy/physics/mechanics'):
+    raise Exception('Tests failed')
+if not sympy.test('sympy/liealgebras'):
     raise Exception('Tests failed')
 EOF
     unset USE_SYMENGINE

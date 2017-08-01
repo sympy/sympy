@@ -89,7 +89,7 @@ Before you release, you need to push the tag up, as described above.
 
 Release candidates should be uploaded to GitHub only.
 
-    rever VERSION -e GitHub_release
+    rever VERSION -a GitHub_release
 
 This will create the release on GitHub for the tag, and upload the files to
 it.  Do not upload release candidates to PyPI, as `pip` and `easy_install`
@@ -104,7 +104,7 @@ You (obviously) need push access to create a GitHub release.
 
 For final releases, you should upload to both GitHub and PyPI. The command
 
-    rever VERSION -e upload
+    rever VERSION -a upload
 
 will do both of these (**TODO: This function has not been translated from the
 fabfile yet**).  You will need admin access to the SymPy PyPI project.
@@ -117,7 +117,7 @@ can upload again.
 
 You should now update the websites. Only do this for final releases. The command
 
-    rever VERSION -e update_websites
+    rever VERSION -a update_websites
 
 will update docs.sympy.org and sympy.org (**TODO: This isn't fully translated
 from the fabfile yet.**).  You will need to have local clones
@@ -126,3 +126,15 @@ will commit and push the changes automatically.**
 
 The other website that needs to be updated is SymPy Live. You should make this
 as a pull request to the Live repo.
+
+# Updating the Dockerfile
+
+If you change the Dockerfile, you will need to run
+
+    docker build -f Dockerfile . -t sympy/sympy-release
+
+Once you have it working, push the changes up to Dockerhub
+
+    docker push sympy/sympy-release
+
+You'll need access to the sympy org, ask Aaron or Ondřej if you need it.

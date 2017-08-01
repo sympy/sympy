@@ -16,8 +16,8 @@ from __future__ import division
 
 import collections
 
+from sympy import Integer, Matrix, S, Symbol, sympify
 from sympy.core.compatibility import reduce, string_types
-from sympy import sympify, Integer, Matrix, Symbol, S
 from sympy.core.expr import Expr
 
 
@@ -125,18 +125,19 @@ class Dimension(Expr):
         return self
 
     def _register_as_base_dim(self):
-        if self.name in self._dimensional_dependencies:
-            raise IndexError("already in dependecies dict")
         if not self.name.is_Symbol:
             raise TypeError("Base dimensions need to have symbolic name")
-        self._dimensional_dependencies[self.name] = {self.name: 1}
+
+        name = str(self.name)
+        if name in self._dimensional_dependencies:
+            raise IndexError("already in dependecies dict")
+        self._dimensional_dependencies[str(self.name)] = {str(self.name): 1}
 
     def __add__(self, other):
-        """
-        Define the addition for Dimension.
+        """Define the addition for Dimension.
 
-        Addition of dimension has a sense only if the second object is the same
-        dimension (we don't add length to time).
+        Addition of dimension has a sense only if the second object is
+        the same dimension (we don't add length to time).
         """
 
         if not isinstance(other, Dimension):
@@ -185,8 +186,14 @@ class Dimension(Expr):
             return {'dimensionless': 1}
         return dimdep
 
-    @staticmethod
-    def _get_dimensional_dependencies_for_name(name):
+    @classmethod
+    def _from_dimensional_dependencies(cls, dependencies):
+        return reduce(lambda x, y: x * y, (
+            Dimension(d)**e for d, e in dependencies.items()
+        ))
+
+    @classmethod
+    def _get_dimensional_dependencies_for_name(cls, name):
 
         if name.is_Symbol:
             if name.name in Dimension._dimensional_dependencies:
@@ -206,10 +213,19 @@ class Dimension(Expr):
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if name.is_Pow:
-            if name.exp == 0:
-                return {}
             dim = Dimension._get_dimensional_dependencies_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
+
+        if name.is_Function:
+            args = (Dimension._from_dimensional_dependencies(
+                Dimension._get_dimensional_dependencies_for_name(arg)
+            ) for arg in name.args)
+            result = name.func(*args)
+
+            if isinstance(result, cls):
+                return result.get_dimensional_dependencies()
+            # TODO shall we consider a result that is not a dimension?
+            # return Dimension._get_dimensional_dependencies_for_name(result)
 
     @property
     def is_dimensionless(self):
@@ -273,22 +289,27 @@ charge = Dimension(name='charge', symbol='Q')
 magnetic_density = Dimension(name='magnetic_density', symbol='B')
 magnetic_flux = Dimension(name='magnetic_flux')
 
+# Dimensions in information theory:
+information = Dimension(name='information')
+
 # Create dimensions according the the base units in MKSA.
 # For other unit systems, they can be derived by transforming the base
 # dimensional dependency dictionary.
 
 # Dimensional dependencies for MKS base dimensions
-Dimension._dimensional_dependencies["length"] = dict(length=1)
-Dimension._dimensional_dependencies["mass"] = dict(mass=1)
-Dimension._dimensional_dependencies["time"] = dict(time=1)
+length._register_as_base_dim()
+mass._register_as_base_dim()
+time._register_as_base_dim()
 
 # Dimensional dependencies for base dimensions (MKSA not in MKS)
-Dimension._dimensional_dependencies["current"] = dict(current=1)
+current._register_as_base_dim()
 
 # Dimensional dependencies for other base dimensions:
-Dimension._dimensional_dependencies["temperature"] = dict(temperature=1)
-Dimension._dimensional_dependencies["amount_of_substance"] = dict(amount_of_substance=1)
-Dimension._dimensional_dependencies["luminous_intensity"] = dict(luminous_intensity=1)
+temperature._register_as_base_dim()
+amount_of_substance._register_as_base_dim()
+luminous_intensity._register_as_base_dim()
+
+information._register_as_base_dim()
 
 # Dimensional dependencies for derived dimensions
 Dimension._dimensional_dependencies["velocity"] = dict(length=1, time=-1)
@@ -343,9 +364,6 @@ class DimensionSystem(object):
 
         self.name = name
         self.descr = descr
-
-        if (None, None) in [(d.name, d.symbol) for d in base]:
-            raise ValueError("Base dimensions must have a symbol or a name")
 
         self._base_dims = self.sort_dims(base)
         # base is first such that named dimension are keeped

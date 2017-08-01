@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+# isort:skip_file
 """
 Dimensional analysis and unit systems.
 
@@ -180,6 +180,14 @@ from .definitions import (
     planck_time,
     planck_temperature,
     planck_length,
+    bit, bits,
+    byte,
+    kibibyte, kibibytes,
+    mebibyte, mebibytes,
+    gibibyte, gibibytes,
+    tebibyte, tebibytes,
+    pebibyte, pebibytes,
+    exbibyte, exbibytes,
 )
 
 

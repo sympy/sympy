@@ -3,6 +3,8 @@
 $XONSH_SHOW_TRACEBACK = True
 $RAISE_SUBPROC_ERROR = True
 
+trace on
+
 import os
 import sys
 import unicodedata
@@ -44,6 +46,8 @@ $ACTIVITIES = [
     # 'tag',
 ]
 
+version = $VERSION
+
 # Work around https://github.com/ergs/rever/issues/15
 @activity
 def _version():
@@ -79,12 +83,12 @@ def source_tarball():
 
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx=1.3.1', 'docutils=0.12', 'numpy', 'mpmath'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath'],
         envname='sympy-release-docs'):
 
         cd doc
         make clean
-        make html-errors
+        make html
         make man
 
         cd _build
@@ -105,7 +109,7 @@ def build_docs():
 @activity(deps={'source_tarball', 'build_docs'})
 def copy_release_files():
     ls dist
-    cp dist/* /home/release/
+    cp dist/* /root/release/
 
 @activity(deps={'source_tarball'})
 def test_tarball27():
@@ -205,7 +209,7 @@ def _md5(print_=True, local=False):
     if local:
         out = $(md5sum @(release_files()))
     else:
-        out = $(md5sum /home/release/*)
+        out = $(md5sum /root/release/*)
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
@@ -236,6 +240,11 @@ def update_docs():
 def update_sympy_org():
     _update_sympy_org()
 
+@activity()
+def update_websites():
+    _update_docs()
+    _update_sympy_org()
+
 # HELPER FUNCTIONS
 
 def test_tarball(py_version):
@@ -248,10 +257,10 @@ def test_tarball(py_version):
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
-        cp @('/home/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
+        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
         tar xvf releasetar.tar
 
-        cd @("/home/{source-orig-notar}".format(**tarball_format))
+        cd @("/root/{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
 
@@ -335,9 +344,9 @@ def show_files(file, print_=True):
     # TODO: Test the unarchived name. See
     # https://github.com/sympy/sympy/issues/7087.
     if file == 'source':
-        ret = $(tar tf @("/home/release/{source}".format(**tarball_format)))
+        ret = $(tar tf @("/root/release/{source}".format(**tarball_format)))
     elif file == 'html':
-        ret = $(unzip -l @("/home/release/{html}".format(**tarball_format)))
+        ret = $(unzip -l @("/root/release/{html}".format(**tarball_format)))
     else:
         raise ValueError(file + " is not valid")
     if print_:
@@ -432,8 +441,8 @@ def get_previous_version_tag():
             parents = $(git rev-list --parents -n 1 @(curtag)).strip().split()
             # rev-list prints the current commit and then all its parents
             # If the tagged commit *is* a merge commit, just comment this
-            # out, and make sure `fab vagrant get_previous_version_tag` is correct
-            assert len(parents) == 2, curtag
+            # out, and manually make sure `get_previous_version_tag` is correct
+            # assert len(parents) == 2, curtag
             curcommit = curtag + "^" # The parent of the tagged commit
         else:
             print(blue("Using {tag} as the tag for the previous "

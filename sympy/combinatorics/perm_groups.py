@@ -1092,20 +1092,43 @@ class PermutationGroup(Basic):
         factors = [tr[i][factors[i]] for i in range(len(base))]
         return factors
 
-    def generator_product(self, g):
+    def generator_product(self, g, original=False):
         '''
         Return a list of strong generators `[s1, ..., sn]`
-        s.t `g = sn*...*s1`.
+        s.t `g = sn*...*s1`. If `original=True`, make the list
+        contain only the original group generators
 
         '''
-        if g in self.strong_gens:
-            return [g]
-        f = self.coset_factor(g, True)
         product = []
+        if g in self.strong_gens:
+            if not original or g in self.generators:
+                return [g]
+            else:
+                slp = self._strong_gens_slp[g]
+                for s in slp:
+                    product.extend(self.generator_product(s, original=True))
+                return product
+        elif g**-1 in self.strong_gens:
+            g = g**-1
+            if not original or g in self.generators:
+                return [g**-1]
+            else:
+                slp = self._strong_gens_slp[g]
+                for s in slp:
+                    product.extend(self.generator_product(s, original=True))
+                l = len(product)
+                product = [product[l-i-1]**-1 for i in range(l)]
+                return product
+            
+        f = self.coset_factor(g, True)
         for i, j in enumerate(f):
             slp = self._transversal_slp[i][j]
             for s in slp:
-                product.append(self.strong_gens[s])
+                if not original:
+                    product.append(self.strong_gens[s])
+                else:
+                    s = self.strong_gens[s]
+                    product.extend(self.generator_product(s, original=True))
         return product
 
     def coset_rank(self, g):
@@ -1163,9 +1186,9 @@ class PermutationGroup(Basic):
         """
         if rank < 0 or rank >= self.order():
             return None
-        base = self._base
-        transversals = self._transversals
-        basic_orbits = self._basic_orbits
+        base = self.base
+        transversals = self.basic_transversals
+        basic_orbits = self.basic_orbits
         m = len(base)
         v = [0]*m
         for i in range(m):

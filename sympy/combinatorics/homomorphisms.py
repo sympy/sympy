@@ -36,35 +36,57 @@ class GroupHomomorphism(object):
             if not (v in inverses
                     or v.is_identity):
                 inverses[v] = k
-        gens = image.strong_gens
+        if isinstance(self.codomain, PermutationGroup):
+            gens = image.strong_gens
+        else:
+            gens = image.generators
         for g in gens:
             if g in inverses or g.is_identity:
                 continue
             w = self.domain.identity
-            for s in image._strong_gens_slp[g]:
+            if isinstance(self.codomain, PermutationGroup):
+                parts = image._strong_gens_slp[g][:]
+                parts = [parts[len(parts)-i-1] for i in range(len(parts))]
+            else:
+                parts = g
+            for s in parts:
                 if s in inverses:
-                    w = inverses[s]*w
+                    w = w*inverses[s]
                 else:
-                    w = inverses[s**-1]**-1*w
+                    w = w*inverses[s**-1]**-1
             inverses[g] = w
+
         return inverses
 
     def invert(self, g):
         '''
-        Return an element of the preimage of `g`
+        Return an element of the preimage of `g`.
+        NOTE: If the codomain is an FpGroup, the inverse for equal
+        elements might not always be the same unless the FpGroup's
+        rewriting system is confluent. However, making a system
+        confluent can be time-consuming. If it's important, try
+        `self.codomain.make_confluent()` first.
 
         '''
-        if not isinstance(self.codomain, PermutationGroup):
-            raise NotImplementedError(
-                "Only elements of PermutationGroups can be inverted")
+        if isinstance(self.codomain, FpGroup):
+            g = self.codomain.reduce(g)
         if self._inverses is None:
             self._inverses = self._invs()
         image = self.image()
         w = self.domain.identity
-        for g in image.generator_product(g):
-            if g.is_identity:
+        if isinstance(self.codomain, PermutationGroup):
+            gens = image.generator_product(g)
+            gens = [gens[len(gens)-i-1] for i in range(len(gens))]
+        else:
+            gens = g
+        for i in range(len(gens)):
+            s = gens[i]
+            if s.is_identity:
                 continue
-            w = self._inverses[g]*w
+            if s in self._inverses:
+                w = w*self._inverses[s]
+            else:
+                w = w*self._inverses[s**-1]**-1
         return w
 
     def kernel(self):
@@ -84,14 +106,20 @@ class GroupHomomorphism(object):
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
         gens = []
-        K = FpSubgroup(G, gens)
+        if isinstance(G, PermutationGroup):
+            K = PermutationGroup(G.identity)
+        else:
+            K = FpSubgroup(G, gens, normal=True)
         i = self.image().order()
         while K.order()*i != G_order:
-            r = G.random_element()
+            r = G.random()
             k = r*self.invert(self(r))
             if not k in K:
                 gens.append(k)
-                K = FpSubgroup(G, gens)
+                if isinstance(G, PermutationGroup):
+                    K = PermutationGroup(gens)
+                else:
+                    K = FpSubgroup(G, gens, normal=True)
         return K
 
     def image(self):
@@ -103,10 +131,8 @@ class GroupHomomorphism(object):
             values = list(set(self.images.values()))
             if isinstance(self.codomain, PermutationGroup):
                 self._image = self.codomain.subgroup(values)
-            elif isinstance(self.codomain, FpGroup):
-                self._image = FpSubgroup(self.codomain, values)
             else:
-                self._image = FreeSubgroup(self.codomain, values)
+                self._image = FpSubgroup(self.codomain, values)
         return self._image
 
     def _apply(self, elem):
@@ -114,17 +140,30 @@ class GroupHomomorphism(object):
         Apply `self` to `elem`.
 
         '''
-        if not elem in self.domain.free_group:
+        if not elem in self.domain:
             raise ValueError("The supplied element doesn't belong to the domain")
         if elem.is_identity:
             return self.codomain.identity
         else:
-            p = elem.array_form[0][1]
-            if p < 0:
-                g = elem[0]**-1
+            images = self.images
+            value = self.codomain.identity
+            if isinstance(self.domain, PermutationGroup):
+                gens = self.domain.generator_product(elem, original=True)
+                for g in gens:
+                    if g in self.images:
+                        value = images[g]*value
+                    else:
+                        value = images[g**-1]**-1*value
             else:
-                g = elem[0]
-            return self.images[g]**p*self._apply(elem.subword(abs(p), len(elem)))
+                i = 0
+                for _, p in elem.array_form:
+                    if p < 0:
+                        g = elem[i]**-1
+                    else:
+                        g = elem[i]
+                    value = value*images[g]**p
+                    i += abs(p)
+        return value
 
     def __call__(self, elem):
         return self._apply(elem)
@@ -164,7 +203,7 @@ class GroupHomomorphism(object):
         '''
         return self.image().order() == 1
 
-def homomorphism(domain, codomain, gens, images=[]):
+def homomorphism(domain, codomain, gens, images=[], check=True):
     '''
     Create (if possible) a group homomorphism from the group `domain`
     to the group `codomain` defined by the images of the domain's
@@ -176,10 +215,16 @@ def homomorphism(domain, codomain, gens, images=[]):
     If the given images of the generators do not define a homomorphism,
     an exception is raised.
 
+    If `check` is `False`, don't check whether the given images actually
+    define a homomorphism.
+
     '''
-    if isinstance(domain, PermutationGroup):
-        raise NotImplementedError("Homomorphisms from permutation groups are not currently implemented")
-    elif not isinstance(domain, (FpGroup, FreeGroup)):
+    if check and isinstance(domain, PermutationGroup):
+        raise NotImplementedError("Checking if the images of the generators\
+            extend to a homomorphism is not implemented for permutation groups.\
+            Use check=False if you would like to create the homomorphism")
+
+    if not isinstance(domain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")
     if not isinstance(codomain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The codomain must be a group")
@@ -199,12 +244,13 @@ def homomorphism(domain, codomain, gens, images=[]):
     gens.extend([g for g in generators if g not in gens])
     images = dict(zip(gens,images))
 
-    if not _check_homomorphism(domain, images, codomain.identity):
+    if check and not _check_homomorphism(domain, codomain, images):
         raise ValueError("The given images do not define a homomorphism")
     return GroupHomomorphism(domain, codomain, images)
 
-def _check_homomorphism(domain, images, identity):
+def _check_homomorphism(domain, codomain, images):
     rels = domain.relators
+    identity = codomain.identity
     def _image(r):
         if r.is_identity:
             return identity
@@ -212,16 +258,28 @@ def _check_homomorphism(domain, images, identity):
             w = identity
             r_arr = r.array_form
             i = 0
+            j = 0
             while i < len(r):
-                power = r_arr[i][1]
+                power = r_arr[j][1]
                 if r[i] in images:
                     w = w*images[r[i]]**power
                 else:
                     w = w*images[r[i]**-1]**power
                 i += abs(power)
+                j += 1
             return w
 
-    if any([not _image(r).is_identity for r in rels]):
-        return False
-    else:
-        return True
+    for r in rels:
+        if isinstance(codomain, FpGroup):
+            s = codomain.equals(_image(r), identity)
+            if s is None:
+                # only try to make the rewriting system
+                # confluent when it can't determine the
+                # truth of equality otherwise
+                codomain.make_confluent()
+                s = codomain.equals(_image(r), identity)
+        else:
+            s = _image(r).is_identity
+        if not s:
+            return False
+    return True

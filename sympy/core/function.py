@@ -757,8 +757,21 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname)
+        func = getattr(sage, fname,None)
         args = [arg._sage_() for arg in self.args]
+
+        # In the case the function is not known in sage:
+        if func is None:
+            import sympy
+            if getattr(sympy, fname,None) is None:
+                # abstract function
+                return sage.function(fname)(*args)
+
+            else:
+                # the function defined in sympy is not known in sage
+                # this exception is catched in sage
+                raise AttributeError
+
         return func(*args)
 
 
