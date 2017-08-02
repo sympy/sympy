@@ -99,7 +99,6 @@ class PythonCodePrinter(CodePrinter):
 
     def _module_format(self, fqn, register=True):
         parts = fqn.split('.')
-        print(fqn, parts)
         if register and len(parts) > 1:
             self.module_imports['.'.join(parts[:-1])].add(parts[-1])
 
