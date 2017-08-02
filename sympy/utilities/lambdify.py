@@ -105,7 +105,7 @@ NUMEXPR_TRANSLATIONS = {}
 _MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
-    "numpy": (NUMPY, {}, {}, ("import numpy",)),
+    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -412,7 +412,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                     clsname = expr.__class__.__name__
                     if clsname in namespace:
                         func = namespace[clsname]
-                        if func.__module__ == 'mpmath.ctx_mp_python':
+                        if func.__class__.__name__ == 'ufunc':
+                            self._module_format('numpy.' + clsname)
+                        elif getattr(func, '__module__', '') == 'mpmath.ctx_mp_python':
                             self._module_format('mpmath.' + clsname)
                         else:
                             if func.__module__ and not '<' in func.__module__ and not '<' in func.__name__:
@@ -484,7 +486,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         def array_wrap(funcarg):
             @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                asarray = namespace['numpy'].asarray
+                asarray = namespace['asarray']
                 newargs = [asarray(i) if isinstance(i, integer_types + (float,
                     complex)) else i for i in argsx]
                 return funcarg(*newargs, **kwargsx)
