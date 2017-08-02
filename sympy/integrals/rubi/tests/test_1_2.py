@@ -147,17 +147,20 @@ def test_1_2():
         [a + d/x**S(3) + c/x**S(2) + b/x, x, S(1), - S(1)/S(2)*d/x**S(2) - c/x + a*x + b*log(x)],
     ]
     for i in test:
-        r = rubi_integrate(i[0], i[1])
-        if len(i) == 5:
-            if rubi_test(r, i[1], i[3], expand=True, _diff=True, _numerical=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True, _numerical=True):
-                passed += 1
+        try:
+            r = rubi_integrate(i[0], i[1])
+            if len(i) == 5:
+                if rubi_test(r, i[1], i[3], expand=True, _diff=True, _numerical=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True, _numerical=True):
+                    passed += 1
+                else:
+                    failed.append(i[0])
             else:
-                failed.append(i[0])
-        else:
-            if rubi_test(r, i[1], i[3], expand=True, _diff=True, _numerical=True):
-                passed += 1
-            else:
-                failed.append(i[0])
+                if rubi_test(r, i[1], i[3], expand=True, _diff=True, _numerical=True):
+                    passed += 1
+                else:
+                    failed.append(i[0])
+        except:
+            failed.append(i[0])
 
     print(passed)
     print(len(failed))
