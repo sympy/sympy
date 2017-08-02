@@ -170,6 +170,11 @@ def test_sympy__codegen__ast__For():
     assert _test_args(For(x, Range(10), CodeBlock(AddAugmentedAssignment(y, 1))))
 
 
+def test_sympy__codegen__ast__Token():
+    from sympy.codegen.ast import Token
+    assert _test_args(Token())
+
+
 def test_sympy__codegen__ast__Type():
     from sympy.codegen.ast import Type
     assert _test_args(Type('float128'))
@@ -180,9 +185,9 @@ def test_sympy__codegen__ast__IntBaseType():
     assert _test_args(IntBaseType('bigint'))
 
 
-def test_sympy__codegen__ast__IntType():
-    from sympy.codegen.ast import IntType
-    assert _test_args(IntType('int128', 128))
+def test_sympy__codegen__ast___SizedIntType():
+    from sympy.codegen.ast import _SizedIntType
+    assert _test_args(_SizedIntType('int128', 128))
 
 
 def test_sympy__codegen__ast__SignedIntType():

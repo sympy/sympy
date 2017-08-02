@@ -175,7 +175,7 @@ def test_Type():
     t = Type('MyType')
     assert t.name == 'MyType'
     assert str(t) == 'MyType'
-    assert repr(t) == "Type('MyType')"
+    assert repr(t) == "Type(name='MyType')"
 
 
 def test_Type__from_expr():
@@ -186,6 +186,7 @@ def test_Type__from_expr():
     assert Type.from_expr(3) == integer
     assert Type.from_expr(3.0) == real
     assert Type.from_expr(3+1j) == complex_
+    raises(ValueError, lambda: Type.from_expr(sum))
 
 
 def test_Type__cast_check__integers():

@@ -21,8 +21,45 @@ AST Type Tree
        |--->CodeBlock
        |
        |--->For
+       |
+       |--->Token
+       |        |--->Attribute
+       |        |--->Type
+       |                |--->IntBaseType
+       |                |              |--->_SizedIntType
+       |                |                               |--->SignedIntType
+       |                |                               |--->UnsignedIntType
+       |                |--->FloatType
+       |                             |--->ComplexType
+       |
+       |--->Variable
+       |           |---> Pointer
+       |
+       |--->Declaration
+
+
+
+Predefined types
+----------------
+A number of ``Type`` instances are provided in the ``sympy.codegen.ast`` module
+for convenience. Perhaps the two most common ones for code-generation (of numeric
+codes) are ``float32`` and ``float64`` (known as single and double precision respectively).
+There are also precision generic versions of Types (for which the codeprinters selects the
+underlying data type at time of printing): ``real``, ``integer``, ``complex_``, ``bool_``.
+
+The other ``Type`` instances defined are:
+
+- ``intc``: Integer type used by C's "int".
+- ``intp``: Integer type used by C's "unsigned".
+- ``int8``, ``int16``, ``int32``, ``int64``: n-bit integers.
+- ``uint8``, ``uint16``, ``uint32``, ``uint64``: n-bit unsigned integers.
+- ``float80``: known as "extended precision" on modern x86/amd64 hardware.
+- ``complex64``: Complex number represented by two ``float32`` numbers
+- ``complex128``: Complex number represented by two ``float64`` numbers
 
 """
+
+
 
 from __future__ import print_function, division
 
@@ -413,29 +450,75 @@ class For(Basic):
         return self._args[2]
 
 
-class Type(Basic):
+class Token(Basic):
+    """ Similar to Symbol, but takes no assumptions.
+
+    Defining fields are set in __slots__.
+    """
+
+    __slots__ = []
+
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
+            return args[0]
+        args = args + tuple([kwargs[k] for k in cls.__slots__[len(args):]])
+        return Type.__xnew_cached_(cls, *args)
+
+    def __new_stage2__(cls, *args):
+        obj = Basic.__new__(cls)
+        for attr, arg in zip(cls.__slots__, args):
+            setattr(obj, attr, arg)
+        return obj
+
+    __xnew_cached_ = staticmethod(cacheit(__new_stage2__))
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        for attr in self.__slots__:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+        return True
+
+    def __hash__(self):
+        return hash(tuple([getattr(self, attr) for attr in self.__slots__]))
+
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__, ', '.join(
+            ['%s=%s' % (k, repr(getattr(self, k))) for k in self.__slots__]
+        ))
+
+    __str__ = __repr__
+    _sympystr = lambda self, printer: repr(self)
+
+
+class Type(Token):
     """ Represents a type.
 
     The naming is a super-set of NumPy naming, see [1]_. Type has a classmethod
     ``from_expr`` which offer type deduction. It also has a method
     ``cast_check`` which casts the argument to its type, possibly raising an
-    exception if possible rounding error is not within tolerances.
+    exception if rounding error is not within tolerances, or if the value is not
+    representable by the underlying data type (e.g. unsigned integers).
 
     Arguments
     ---------
     name : str
-        Either an explicit type: ``intc``, ``intp``, ``int8``, ``int16``,
-        ``int32``, ``int64``, ``uint8``, ``uint16``, ``uint32``, ``uint64``,
-        ``float16``, ``float32``, ``float64``, ``complex64``, ``complex128``,
-        ``bool``. Or a type category (precision decided by code-printer): ``integer``,
-        ``real`` or ``complex`` (where the latter two are of floating point type).
+        Name of the type, e.g. ``object``, ``int16``, ``float16`` (where the latter two
+        would use the ``Type`` sub-classes ``IntType`` and ``FloatType`` respectively).
         If a ``Type`` instance is given, the said instance is returned.
 
     Examples
     --------
-    >>> from sympy.codegen.ast import Type, float64, float32, float80
+    >>> from sympy.codegen.ast import Type
     >>> Type.from_expr(42).name
     'integer'
+    >>> from sympy.codegen.ast import uint8
+    >>> uint8.cast_check(-1)   # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    ValueError: Minimum value for data type bigger than new value.
+    >>> from sympy.codegen.ast import float32
     >>> v6 = 0.123456
     >>> float32.cast_check(v6)
     0.123456
@@ -444,16 +527,6 @@ class Type(Basic):
     Traceback (most recent call last):
       ...
     ValueError: Casting gives a significantly different value.
-    >>> float64.cast_check(v10)
-    12345.67894
-    >>> from sympy import Float
-    >>> v18 = Float('0.123456789012345646')
-    >>> float64.cast_check(v18)
-    Traceback (most recent call last):
-      ...
-    ValueError: Casting gives a significantly different value.
-    >>> float80.cast_check(v18)
-    0.123456789012345649
     >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
     >>> from sympy import Symbol
     >>> from sympy.printing.cxxcode import cxxcode
@@ -472,39 +545,8 @@ class Type(Basic):
 
     default_precision_targets = {}
 
-    def __new__(cls, *args, **kwargs):
-        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
-            return args[0]
-        args = args + tuple([kwargs[k] for k in cls.__slots__[len(args):]])
-        return Type.__xnew_cached_(cls, *args)
-
-    def __new_stage2__(cls, *args):
-        obj = Basic.__new__(cls)
-        for attr, arg in zip(cls.__slots__, args):
-            setattr(obj, attr, arg)
-        return obj
-
-    __xnew_cached_ = staticmethod(cacheit(__new_stage2__))
-
-    def __repr__(self):
-        return "{0}({1})".format(self.__class__.__name__, ', '.join(
-            ["'%s'" % self.name] + ['%s=%s' % (k, repr(getattr(self, k)))
-                           for k in self.__slots__[1:]]
-        ))
-
     def __str__(self):
         return self.name
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        for attr in self.__slots__:
-            if getattr(self, attr) != getattr(other, attr):
-                return False
-        return True
-
-    def __hash__(self):
-        return hash(tuple([getattr(self, attr) for attr in self.__slots__]))
 
     @classmethod
     def from_expr(cls, expr):
@@ -523,6 +565,10 @@ class Type(Basic):
         >>> from sympy import Symbol
         >>> Type.from_expr(Symbol('z', complex=True)) == complex_
         True
+        >>> Type.from_expr(sum)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+          ...
+        ValueError: Could not deduce type from expr.
 
         Raises
         ------
@@ -540,7 +586,7 @@ class Type(Basic):
         if isinstance(expr, bool) or getattr(expr, 'is_Relational', False):
             return bool_
         else:
-            raise ValueError("Could not deduce type from expr")
+            raise ValueError("Could not deduce type from expr.")
 
     def _check(self, value):
         pass
@@ -563,13 +609,34 @@ class Type(Basic):
 
         Examples
         --------
-        >>> from sympy.codegen.ast import Type, integer, float32
-        >>> Type(integer).cast_check(3.0) == 3
+        >>> from sympy.codegen.ast import Type, integer, float32, int8
+        >>> integer.cast_check(3.0) == 3
         True
-        >>> Type(float32).cast_check(1e-40)  # doctest: +ELLIPSIS
+        >>> float32.cast_check(1e-40)  # doctest: +ELLIPSIS
         Traceback (most recent call last):
           ...
         ValueError: Minimum value for data type bigger than new value.
+        >>> int8.cast_check(256)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+          ...
+        ValueError: Maximum value for data type smaller than new value.
+        >>> v10 = 12345.67894
+        >>> float32.cast_check(v10)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+          ...
+        ValueError: Casting gives a significantly different value.
+        >>> from sympy.codegen.ast import float64
+        >>> float64.cast_check(v10)
+        12345.67894
+        >>> from sympy import Float
+        >>> v18 = Float('0.123456789012345646')
+        >>> float64.cast_check(v18)
+        Traceback (most recent call last):
+          ...
+        ValueError: Casting gives a significantly different value.
+        >>> from sympy.codegen.ast import float80
+        >>> float80.cast_check(v18)
+        0.123456789012345649
 
         """
         from sympy.functions.elementary.complexes import im, re
@@ -593,11 +660,14 @@ class Type(Basic):
 
         return new_val
 
+
 class IntBaseType(Type):
+    """ Integer base type, contains no size information. """
     __slots__ = ['name']
     _cast_nocheck = Integer
 
-class IntType(IntBaseType):
+
+class _SizedIntType(IntBaseType):
     __slots__ = ['name', 'bits']
 
     def _check(self, value):
@@ -606,7 +676,8 @@ class IntType(IntBaseType):
         if value > self.max:
             raise ValueError("Value is too big: %d > %d" % (value, self.max))
 
-class SignedIntType(IntType):
+
+class SignedIntType(_SizedIntType):
     @property
     def min(self):
         return -2**(self.bits-1)
@@ -615,7 +686,8 @@ class SignedIntType(IntType):
     def max(self):
         return 2**(self.bits-1) - 1
 
-class UnsignedIntType(IntType):
+
+class UnsignedIntType(_SizedIntType):
     @property
     def min(self):
         return 0
@@ -624,7 +696,24 @@ class UnsignedIntType(IntType):
     def max(self):
         return 2**self.bits - 1
 
+
 class FloatType(Type):
+    """ Represents a floating point value.
+
+    Examples
+    --------
+    >>> from sympy import S, Float
+    >>> from sympy.codegen.ast import FloatType
+    >>> half_precision = FloatType('f16', bits=16, max=65504, tiny=S(2)**-14,
+    ...     eps=Float('0.0009765625'), dig=2, decimal_dig=4)
+    >>> half_precision.cast_check(1.0)
+    1.0
+    >>> half_precision.cast_check(1e5)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    ValueError: Maximum value for data type smaller than new value.
+
+    """
     __slots__ = ['name', 'bits', 'max', 'tiny', 'eps', 'dig', 'decimal_dig']
 
     def _cast_nocheck(self, value):
@@ -639,6 +728,7 @@ class FloatType(Type):
             raise ValueError("Smallest (absolute) value for data type bigger than new value.")
 
 class ComplexType(FloatType):
+    """ Represents a complex floating point number. """
 
     def _cast_nocheck(self, value):
         from sympy.functions import re, im
@@ -654,8 +744,8 @@ class ComplexType(FloatType):
 
 
 # NumPy types:
-intc = Type('intc')
-intp = Type('intp')
+intc = IntBaseType('intc')
+intp = IntBaseType('intp')
 int8 = SignedIntType('int8', 8)
 int16 = SignedIntType('int16', 16)
 int32 = SignedIntType('int32', 32)
@@ -664,7 +754,6 @@ uint8 = UnsignedIntType('uint8', 8)
 uint16 = UnsignedIntType('uint16', 16)
 uint32 = UnsignedIntType('uint32', 32)
 uint64 = UnsignedIntType('uint64', 64)
-float16 = Type('float16')
 float32 = FloatType(
     'float32', 32,
     max=Float('3.40282347e+38', precision=32+8),
@@ -696,14 +785,9 @@ complex_ = Type('complex')
 bool_ = Type('bool')
 
 
-class Attribute(Symbol):
+class Attribute(Token):
     """ Variable attribute """
     __slots__ = ['name']
-
-    def __new__(cls, name):
-        if isinstance(name, Type):
-            return name
-        return Symbol.__new__(cls, name)
 
 value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
@@ -747,7 +831,24 @@ class Variable(Basic):
 
     @classmethod
     def deduced(cls, symbol, attrs=None):
-        """ Alt. constructor with type deduction from ``Type.from_expr`` """
+        """ Alt. constructor with type deduction from ``Type.from_expr``.
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.codegen.ast import Variable, complex_
+        >>> n = Symbol('n', integer=True)
+        >>> str(Variable.deduced(n).type)
+        'integer'
+        >>> x = Symbol('x', real=True)
+        >>> v = Variable.deduced(x)
+        >>> v.type
+        Type(name='real')
+        >>> z = Symbol('z', complex=True)
+        >>> Variable.deduced(z).type == complex_
+        True
+
+        """
         return cls(symbol, attrs, Type.from_expr(symbol))
 
     @property
@@ -767,6 +868,7 @@ class Variable(Basic):
 
     @property
     def value_const(self):
+        """ Boolean value describing whether the value is constant. """
         return self.attributes.contains(value_const) == True
 
 
@@ -775,6 +877,7 @@ class Pointer(Variable):
 
     @property
     def pointer_const(self):
+        """ Boolean value describing whether the pointer address is constant. """
         return self.attributes.contains(pointer_const) == True
 
 
@@ -820,14 +923,30 @@ class Declaration(Basic):
         return Basic.__new__(cls, *args)
 
     @classmethod
-    def deduced(cls, symbol, val=None, attrs=None, **kwargs):
-        """ Deduces type primarily from symbol, secondarily from val """
+    def deduced(cls, symbol, value=None, attrs=None, **kwargs):
+        """ Deduces type primarily from ``symbol``, secondarily from ``value``.
+
+        Examples
+        --------
+        >>> from sympy import Symbol
+        >>> from sympy.codegen.ast import Declaration, real, integer
+        >>> x = Symbol('x', real=True)
+        >>> decl = Declaration.deduced(x)
+        >>> decl.variable.type == real
+        True
+        >>> decl.value is None
+        True
+        >>> n = Symbol('n', integer=True)
+        >>> Declaration.deduced(n).variable
+        Variable(n, EmptySet(), IntBaseType(name='integer'))
+
+        """
         try:
             type_ = Type.from_expr(symbol)
         except ValueError:
-            type_ = Type.from_expr(val)
+            type_ = Type.from_expr(value)
         var = Variable(symbol, attrs, type_)
-        return cls(var, val, **kwargs)
+        return cls(var, value, **kwargs)
 
     @property
     def variable(self):
