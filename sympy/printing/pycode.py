@@ -118,20 +118,21 @@ class PythonCodePrinter(CodePrinter):
         return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
 
     def _print_Piecewise(self, expr):
-        lines = []
-        for i, (e, c) in enumerate(expr.args):
-            if i == 0:
-                lines.append("if %s:" % self._print(c))
-            elif i == len(expr.args) - 1 and c == True:
-                lines.append('else:')
-            else:
-                lines.append('elif %s:' % self._print(c))
-            lines.append(self.tab + 'return ' + self._print(e))
-            if i == len(expr.args) - 1 and c != True:
-                lines.append('else:')
-                lines.append('%sraise NotImplementedError("Unhandled condition in: %s")' % (
-                    self.tab, expr))
-        return '\n'.join(lines)
+        result = []
+        i = 0
+        for arg in expr.args:
+            e = arg.expr
+            c = arg.cond
+            result.append('((')
+            result.append(self._print(e))
+            result.append(') if (')
+            result.append(self._print(c))
+            result.append(') else (')
+            i += 1
+        result = result[:-1]
+        result.append(') else None)')
+        result.append(')'*(2*i - 2))
+        return ''.join(result)
 
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise

@@ -415,9 +415,18 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                         if func.__module__ == 'mpmath.ctx_mp_python':
                             self._module_format('mpmath.' + clsname)
                         else:
-                            fqn = ((func.__module__ + '.') if func.__module__ else '') + func.__name__
-                            reg = bool(func.__module__) and not func.__name__.startswith('<') and not '<' in func.__module__
-                            self._module_format(fqn, register=reg)
+                            if func.__module__ and not '<' in func.__module__ and not '<' in func.__name__:
+                                try:
+                                    exec('from %s import %s' % (func.__module__, func.__name__), {})
+                                except ImportError:
+                                    reg = False
+                                else:
+                                    reg = True
+                            else:
+                                reg = False
+                            self._module_format((
+                                (func.__module__ + '.') if func.__module__ else ''
+                            ) + func.__name__, register=reg)
 
                         if isinstance(expr, MatrixBase):
                             return "%s(%s)" % (clsname, self._print(expr.tolist()))
@@ -430,7 +439,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         else:
             LambdifyPrinter = Printer
 
-        printer = LambdifyPrinter({'fully_qualified_modules': False})
+        printer = LambdifyPrinter({'fully_qualified_modules': False, 'inline': True})
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):

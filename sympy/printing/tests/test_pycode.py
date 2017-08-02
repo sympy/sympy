@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function)
 from sympy.core import Expr, Mod, symbols
 from sympy.core.numbers import pi
 from sympy.logic import And, Or
-from sympy.functions import Piecewise, acos
+from sympy.functions import acos
 from sympy.matrices import SparseMatrix
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
@@ -20,21 +20,6 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
-    assert prntr.doprint(Piecewise((x, x > 1), (y, True))) == (
-        'if x > 1:\n'
-        '    return x\n'
-        'else:\n'
-        '    return y'
-    )
-    pw = Piecewise((x, x > 1), (y, x > 0))
-    assert prntr.doprint(pw) == (
-        'if x > 1:\n'
-        '    return x\n'
-        'elif x > 0:\n'
-        '    return y\n'
-        'else:\n'
-        '    raise NotImplementedError("Unhandled condition in: %s")' % pw
-    )
     assert not prntr.module_imports
     assert prntr.doprint(pi) == 'math.pi'
     assert prntr.module_imports == {'math': {'pi'}}
