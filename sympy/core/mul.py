@@ -8,7 +8,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group, fuzzy_and
-from .compatibility import reduce
+from .compatibility import reduce, default_sort_key
 from .expr import Expr
 from .parameters import global_parameters
 
@@ -24,12 +24,11 @@ class NC_Marker:
 
     is_commutative = False
 
-
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
-    args.sort(key=_args_sortkey)
+    args.sort(key=default_sort_key)
 
 
 def _unevaluated_Mul(*args):
