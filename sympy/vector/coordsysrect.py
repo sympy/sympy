@@ -48,7 +48,7 @@ def _default_variables(curv_coord_name):
     return variables_mapping[curv_coord_name]
 
 
-def _set_transformation_equations_mapping(curv_coord_name, variables):
+def _set_transformation_equations_mapping(curv_coord_name):
     """
     Store information about some default, pre-defined transformation
     equations.
@@ -64,13 +64,16 @@ def _set_transformation_equations_mapping(curv_coord_name, variables):
 
     """
     equations_mapping = {
-        'cartesian': (variables[0], variables[1], variables[2]),
-        'spherical': (variables[0] * sin(variables[1]) * cos(variables[2]),
-                      variables[0] * sin(variables[1]) * sin(variables[2]),
-                      variables[0] * cos(variables[1])),
-        'cylindrical': (variables[0] * cos(variables[1]),
-                        variables[0] * sin(variables[1]),
-                        variables[2])
+        'cartesian': lambda x, y, z: (x, y, z),
+        'spherical': lambda r, theta, phi: (
+                r*sin(theta)*cos(phi),
+                r*sin(theta)*sin(phi),
+                r*cos(theta)
+            ),
+        'cylindrical': lambda r, theta, h: (
+                r*cos(theta),
+                r*sin(theta),
+            ),
     }
     if curv_coord_name not in equations_mapping:
         raise ValueError('Wrong set of parameters.'
@@ -78,7 +81,7 @@ def _set_transformation_equations_mapping(curv_coord_name, variables):
     return equations_mapping[curv_coord_name]
 
 
-def _set_inv_trans_equations(curv_coord_name, variables):
+def _set_inv_trans_equations(curv_coord_name):
     """
     Store information about some default, pre-defined inverse
     transformation equations.
@@ -95,13 +98,18 @@ def _set_inv_trans_equations(curv_coord_name, variables):
     """
 
     equations_mapping = {
-        'cartesian': (variables[0], variables[1], variables[2]),
-        'spherical': (sqrt(variables[0]**2 + variables[1]**2 + variables[2]**2),
-                      acos((variables[2]) / sqrt(variables[0]**2 + variables[1]**2 + variables[2]**2)),
-                      atan2(variables[1], variables[0])),
-        'cylindrical': (sqrt(variables[0]**2 + variables[1]**2),
-                        atan2(variables[1], variables[0]),
-                        variables[2])
+        'cartesian': lambda x, y, z: (x, y, z),
+        'spherical': lambda x, y, z: (
+                sqrt(x**2 + y**2 + z**2),
+                acos(z / sqrt(x**2 + y**2 + z**2)),
+                atan2(y, x)
+            ),
+        'cylindrical': lambda x, y, z:
+            (
+                sqrt(x**2 + y**2),
+                atan2(y, x),
+                z
+            ),
     }
     if curv_coord_name not in equations_mapping:
         raise ValueError('Wrong set of parameters.'
@@ -109,7 +117,7 @@ def _set_inv_trans_equations(curv_coord_name, variables):
     return equations_mapping[curv_coord_name]
 
 
-def _set_lame_coefficient_mapping(curv_coord_name, variables):
+def _set_lame_coefficient_mapping(curv_coord_name):
     """
     Store information about Lame coefficient, for pre-defined
     curvilinear coordinate systems. Return tuple with scaling
@@ -127,9 +135,9 @@ def _set_lame_coefficient_mapping(curv_coord_name, variables):
     """
 
     coefficient_mapping = {
-        'cartesian': (S.One, S.One, S.One),
-        'spherical': (S.One, variables[0], variables[0] * sin(variables[1])),
-        'cylindrical': (S.One, variables[1], S.One)
+        'cartesian': lambda x, y, z: (S.One, S.One, S.One),
+        'spherical': lambda r, theta, phi: (S.One, r, r*sin(theta)),
+        'cylindrical': lambda r, theta, h: (S.One, theta, S.One)
     }
     if curv_coord_name not in coefficient_mapping:
         raise ValueError('Wrong set of parameters.'
@@ -218,29 +226,30 @@ class CoordSys3D(Basic):
 
         if transformation is None:
                 if rotation_matrix is not None:
-                    rotation_equations = \
+                    rotation_lambda = \
                         lambda x, y, z: parent._rotation_trans_equations(parent_orient, (x, y, z))
                 else:
-                    rotation_equations = lambda x, y, z: (x, y, z)
+                    rotation_lambda = lambda x, y, z: (x, y, z)
 
                 if location is not None:
-                    translation_equations = \
+                    translation_lambda = \
                         lambda x, y, z: parent._translation_trans_equations(parent, origin, (x, y, z))
                 else:
-                    translation_equations = lambda x, y, z: (x, y, z)
+                    translation_lambda = lambda x, y, z: (x, y, z)
 
-                transformation = Lambda((x1, x2, x3), rotation_equations(*translation_equations(x1, x2, x3)))
-                lame_coefficients = _set_lame_coefficient_mapping('cartesian', (x1, x2, x3))
-                inverse_transformation = _set_inv_trans_equations('cartesian', (x1, x2, x3))
+                transformation = Lambda((x1, x2, x3), translation_lambda(*rotation_lambda(x1, x2, x3)))
+                lame_coefficients = _set_lame_coefficient_mapping('cartesian')
+                inverse_transformation = _set_inv_trans_equations('cartesian')
 
         else:
             if location is not None and rotation_matrix is not None:
                 raise ValueError
 
-            connect_to = CoordSys3D._connect_to_standard_cartesian(transformation, (x1, x2, x3))
-            transformation = Lambda((x1, x2, x3), connect_to[0](x1, x2, x3))
-            lame_coefficients = connect_to[1]
-            inverse_transformation = connect_to[2]
+            transformation, lame_coefficients, inverse_transformation = \
+                CoordSys3D._connect_to_standard_cartesian(transformation)
+
+        # Make sure that transformation is a Lambda:
+        assert isinstance(transformation, Lambda)
 
         # All systems that are defined as 'roots' are unequal, unless
         # they have the same name.
@@ -328,7 +337,7 @@ class CoordSys3D(Basic):
         return iter([self.i, self.j, self.k])
 
     @classmethod
-    def _connect_to_standard_cartesian(cls, curv_coord_type, variables=None, inverse=True):
+    def _connect_to_standard_cartesian(cls, curv_coord_type, inverse=True):
         """
         Change the type of orthogonal curvilinear system. It could be done
         by tuple of transformation equations or by choosing one of pre-defined
@@ -344,18 +353,25 @@ class CoordSys3D(Basic):
 
         """
 
+        x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy)
+
         if isinstance(curv_coord_type, string_types):
             if variables is None:
                 variables = _default_variables(curv_coord_type)
 
-            transformation_equations = _set_transformation_equations_mapping(curv_coord_type, variables)
-            lame_coefficients = _set_lame_coefficient_mapping(curv_coord_type, variables)
+            transformation_equations = _set_transformation_equations_mapping(curv_coord_type)
+            lame_coefficients = _set_lame_coefficient_mapping(curv_coord_type)
 
             if inverse:
-                inverse_transformation_equations = _set_inv_trans_equations(curv_coord_type, variables)
+                inverse_transformation_equations = _set_inv_trans_equations(curv_coord_type)
             else:
                 inverse_transformation_equations = None
 
+        elif isinstance(curv_coord_type, collection.Callable):
+            pass
+            # TODO add code here
+            transformation_equations = Lambda((x1, x2, x3), curv_coord_type(x1, x2, x3))
+        
         elif isinstance(curv_coord_type, (tuple, list, Tuple, collections.Callable)):
             if variables is None:
                 variables = _default_variables('general')
@@ -363,13 +379,13 @@ class CoordSys3D(Basic):
             if len(curv_coord_type) == 3:
                 transformation_equations = curv_coord_type
                 lame_coefficients = \
-                    cls._calculate_lame_coefficients(curv_coord_type, variables)
+                    cls._calculate_lame_coefficients(curv_coord_type)
             else:
                 raise ValueError("Wrong set of parameter.")
 
             if inverse:
                 inverse_transformation_equations = cls._calculate_inv_transformation_equations(
-                    transformation_equations, variables)
+                    transformation_equations)
             else:
                 inverse_transformation_equations = None
 
