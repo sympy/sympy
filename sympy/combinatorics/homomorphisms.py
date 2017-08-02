@@ -45,8 +45,7 @@ class GroupHomomorphism(object):
                 continue
             w = self.domain.identity
             if isinstance(self.codomain, PermutationGroup):
-                parts = image._strong_gens_slp[g][:]
-                parts = [parts[len(parts)-i-1] for i in range(len(parts))]
+                parts = image._strong_gens_slp[g][::-1]
             else:
                 parts = g
             for s in parts:
@@ -75,8 +74,7 @@ class GroupHomomorphism(object):
         image = self.image()
         w = self.domain.identity
         if isinstance(self.codomain, PermutationGroup):
-            gens = image.generator_product(g)
-            gens = [gens[len(gens)-i-1] for i in range(len(gens))]
+            gens = image.generator_product(g)[::-1]
         else:
             gens = g
         for i in range(len(gens)):
@@ -220,9 +218,9 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
 
     '''
     if check and isinstance(domain, PermutationGroup):
-        raise NotImplementedError("Checking if the homomorphism is well-defined\
-            is not implemented for permutation groups. Use check=False if you\
-            would like to create the homomorphism")
+        raise NotImplementedError("Checking if the homomorphism is well-defined "
+            "is not implemented for permutation groups. Use check=False if you "
+            "would like to create the homomorphism")
 
     if not isinstance(domain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")

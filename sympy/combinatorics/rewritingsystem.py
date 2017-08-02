@@ -175,8 +175,11 @@ class RewritingSystem(object):
                 s = w.eliminate_word(r1, self.rules[r1])
                 t = w.eliminate_word(r2, self.rules[r2])
                 if self.reduce(s) != self.reduce(t):
-                    new_keys = self.add_rule(t, s, check)
-                    return new_keys
+                    try:
+                        new_keys = self.add_rule(t, s, check)
+                        return new_keys
+                    except ValueError:
+                        return False
                 return
 
         added = 0
@@ -206,6 +209,10 @@ class RewritingSystem(object):
                             return False
                         lhs.extend(new_keys)
                         added += len(new_keys)
+                    elif new_keys == False:
+                        # too many rules were added so the process
+                        # couldn't complete
+                        return self._is_confluent
                 if added > self.tidyint:
                     # tidy up
                     r, a = self._remove_redundancies(changes=True)
@@ -220,11 +227,9 @@ class RewritingSystem(object):
                         break
 
         self._is_confluent = True
-        if check:
-            return True
-        else:
+        if not check:
             self._remove_redundancies()
-        return
+        return True
 
     def _check_confluence(self):
         return self.make_confluent(check=True)

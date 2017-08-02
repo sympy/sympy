@@ -1119,7 +1119,7 @@ class PermutationGroup(Basic):
                 l = len(product)
                 product = [product[l-i-1]**-1 for i in range(l)]
                 return product
-            
+
         f = self.coset_factor(g, True)
         for i, j in enumerate(f):
             slp = self._transversal_slp[i][j]
