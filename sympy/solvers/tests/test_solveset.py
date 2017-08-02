@@ -585,6 +585,14 @@ def test_expo():
     assert solveset(4**(x-2) - 5**(x), x, S.Reals) == FiniteSet(log(2**(4/(-log(5) + log(4)))))
     assert solveset(2**(x) + 4**(x) + 8**(x) - 84, x, S.Reals) == FiniteSet(2)
 
+    #complex domain
+    assert solveset(3**x + 9**(x+5), x) == \
+        imageset(Lambda(n, (I*(2*n*pi + pi) - 10*log(3))/log(3)), S.Integers)
+    assert solveset(4**(5-9*x) + 8**(2-x), x) == \
+        imageset(Lambda(n, (I*(2*n*pi + pi) + 4*log(2))/(15*log(2))), S.Integers)
+    assert solveset(2**x + 32, x) == \
+        imageset(Lambda(n, (I*(2*n*pi + pi) + 5*log(2))/log(2)), S.Integers)
+
 @XFAIL
 def test_xfail_expo():
     assert solveset(2**(x) + 4**(x) + 8**(x), x, S.Reals) == S.EmptySet

@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex)
+from sympy.core.function import (Lambda, expand_complex, expand_log)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify import simplify, fraction, trigsimp, powdenest, logcombine, powsimp
@@ -292,7 +292,8 @@ def _invert_complex(f, g_ys, symbol):
         expo_has_symbol = expo.has(symbol)
 
         if expo_has_symbol:
-            pow_inv = Union(*[ imageset(Lambda(n, (I*(2*n*pi + arg(g_y)) + log(Abs(g_y)))/log(base)), S.Integers)
+            pow_inv = Union(*[ imageset(Lambda(n, (I*(2*n*pi + arg(g_y)) +
+                expand_log(log(Abs(g_y))))/expand_log(log(base))), S.Integers)
                                 for g_y in g_ys if g_y !=0])
             return _invert_complex(expo, pow_inv, symbol)
 
