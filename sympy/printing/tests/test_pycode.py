@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
-from sympy.core import Mod, symbols
+from sympy.core import Expr, Mod, symbols
 from sympy.core.numbers import pi
 from sympy.logic import And, Or
 from sympy.functions import Piecewise, acos
 from sympy.matrices import SparseMatrix
-from sympy.printing.pycode import PythonCodePrinter, SciPyPrinter, pycode
+from sympy.printing.pycode import (
+    MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
+)
 from sympy.utilities.pytest import raises
-
 
 x, y, z = symbols('x y z')
 
@@ -51,8 +52,23 @@ def test_SciPyPrinter():
     assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
 
+
 def test_pycode_reserved_words():
     s1, s2 = symbols('if else')
     raises(ValueError, lambda: pycode(s1 + s2, error_on_reserved=True))
     py_str = pycode(s1 + s2)
     assert py_str in ('else_ + if_', 'if_ + else_')
+
+
+class CustomPrintedObject(Expr):
+    def _numpycode(self, printer):
+        return 'numpy'
+
+    def _mpmathcode(self, printer):
+        return 'mpmath'
+
+
+def test_printmethod():
+    obj = CustomPrintedObject()
+    assert NumPyPrinter().doprint(obj) == 'numpy'
+    assert MpmathPrinter().doprint(obj) == 'mpmath'

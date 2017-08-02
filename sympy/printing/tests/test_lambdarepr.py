@@ -1,7 +1,7 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
 from sympy.utilities.pytest import raises
 
-from sympy.printing.lambdarepr import lambdarepr
+from sympy.printing.lambdarepr import *
 
 x, y, z = symbols("x,y,z")
 i, a, b = symbols("i,a,b")
@@ -183,5 +183,33 @@ def test_multiple_sums():
     f_res = f(*vals)
     assert f_res == f_ref
 
+
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
+
+
+class CustomPrintedObject(Expr):
+    def _lambdacode(self, printer):
+        return 'lambda'
+
+    def _tensorflowcode(self, printer):
+        return 'tensorflow'
+
+    def _numpycode(self, printer):
+        return 'numpy'
+
+    def _numexprcode(self, printer):
+        return 'numexpr'
+
+    def _mpmathcode(self, printer):
+        return 'mpmath'
+
+
+def test_printmethod():
+    # In each case, printmethod is called to test
+    # its working
+
+    obj = CustomPrintedObject()
+    assert LambdaPrinter().doprint(obj) == 'lambda'
+    assert TensorflowPrinter().doprint(obj) == 'tensorflow'
+    assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"

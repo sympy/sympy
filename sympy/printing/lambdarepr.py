@@ -14,6 +14,7 @@ class LambdaPrinter(PythonCodePrinter):
     This printer converts expressions into strings that can be used by
     lambdify.
     """
+    printmethod = "_lambdacode"
 
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (expr.__class__.__name__,
@@ -91,6 +92,7 @@ class TensorflowPrinter(LambdaPrinter):
     Tensorflow printer which handles vectorized piecewise functions,
     logical operators, max/min, and relational operators.
     """
+    printmethod = "_tensorflowcode"
 
     def _print_And(self, expr):
         "Logical And printer"
@@ -169,6 +171,8 @@ class TensorflowPrinter(LambdaPrinter):
 class NumExprPrinter(LambdaPrinter):
     # key, value pairs correspond to sympy name and numexpr name
     # functions not appearing in this dict will raise a TypeError
+    printmethod = "_numexprcode"
+
     _numexpr_functions = {
         'sin' : 'sin',
         'cos' : 'cos',

@@ -174,6 +174,7 @@ class MpmathPrinter(PythonCodePrinter):
     """
     Lambda printer for mpmath which maintains precision for floats
     """
+    printmethod = "_mpmathcode"
 
     _kf = dict(chain(
         PythonCodePrinter._kf.items(),
@@ -235,6 +236,8 @@ class NumPyPrinter(PythonCodePrinter):
     Numpy printer which handles vectorized piecewise functions,
     logical operators, etc.
     """
+    printmethod = "_numpycode"
+
     _kf = dict(chain(
         PythonCodePrinter._kf.items(),
         [(k, 'numpy.' + v) for k, v in _known_functions_numpy.items()]
