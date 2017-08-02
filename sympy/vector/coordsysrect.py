@@ -214,27 +214,9 @@ class CoordSys3D(Basic):
             location = Vector.zero
             origin = Point(name + '.origin')
 
+        x1, x2, x3 = symbols("x1,x2,x3", cls=Dummy)
+
         if transformation is None:
-            if parent is None:
-                if rotation_matrix is not None:
-                    rotation_equations = \
-                       lambda x, y, z: CoordSys3D._rotation_trans_equations(parent_orient, lambda x, y, z: (x, y, z))
-                else:
-                    rotation_equations = lambda x, y, z: (x, y, z)
-
-                # Information about location without parent doesn't have sense.
-                # See lines 80:99. Location is somehow treated only when parent is put.
-                # We are not able to create independent vector, so we can't assign
-                # anything to location.
-                translation_equations = lambda x, y, z: (x, y, z)
-
-                from sympy import symbols
-                x, y, z = symbols('x y z')
-                transformation = rotation_equations(*translation_equations(x, y, z))
-                lame_coefficients = _set_lame_coefficient_mapping('cartesian', (x, y, z))
-                inverse_transformation = None
-
-            else:
                 if rotation_matrix is not None:
                     rotation_equations = \
                         lambda x, y, z: parent._rotation_trans_equations(parent_orient, (x, y, z))
@@ -247,16 +229,16 @@ class CoordSys3D(Basic):
                 else:
                     translation_equations = lambda x, y, z: (x, y, z)
 
-                transformation = rotation_equations(*translation_equations(*parent.base_scalars()))
-                lame_coefficients = _set_lame_coefficient_mapping('cartesian', parent.base_scalars())
-                inverse_transformation = _set_inv_trans_equations('cartesian', parent.base_scalars())
+                transformation = Lambda((x1, x2, x3), rotation_equations(*translation_equations(x1, x2, x3)))
+                lame_coefficients = _set_lame_coefficient_mapping('cartesian', (x1, x2, x3))
+                inverse_transformation = _set_inv_trans_equations('cartesian', (x1, x2, x3))
 
         else:
             if location is not None and rotation_matrix is not None:
                 raise ValueError
 
-            connect_to = CoordSys3D._connect_to_standard_cartesian(transformation, variable_names)
-            transformation = connect_to[0]
+            connect_to = CoordSys3D._connect_to_standard_cartesian(transformation, (x1, x2, x3))
+            transformation = Lambda((x1, x2, x3), connect_to[0](x1, x2, x3))
             lame_coefficients = connect_to[1]
             inverse_transformation = connect_to[2]
 
