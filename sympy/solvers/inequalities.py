@@ -4,8 +4,9 @@ from __future__ import print_function, division
 
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
-from sympy.sets import Interval
+from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.sets import Interval
 from sympy.sets.sets import FiniteSet, Union
 from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
@@ -571,26 +572,57 @@ def _pt(start, end):
     return pt
 
 
-def _solve_inequality(ie, s):
+def _solve_inequality(ie, s, linear=False):
     """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. """
+        univariate inequalities. If linear is True, return an
+        inequality with the symbol (or symbol-containing terms)
+        isolated on the lhs; if the expression is linear the lhs will
+        be `s`."""
+    if s not in ie.free_symbols:
+        return ie
+    if ie.rhs == s:
+        ie = ie.reversed
+    if ie.lhs == s and s not in ie.rhs.free_symbols:
+        return ie
     expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)
-        if p.degree() != 1:
+        if p.degree() == 0:
+            return ie.func(p.as_expr(), 0)
+        if not linear and p.degree() > 1:
+            # handle in except clause
             raise NotImplementedError
     except (PolynomialError, NotImplementedError):
-        try:
-            return reduce_rational_inequalities([[ie]], s)
-        except PolynomialError:
-            return solve_univariate_inequality(ie, s)
-    a, b = p.all_coeffs()
-    if a.is_positive or ie.rel_op in ('!=', '=='):
-        return ie.func(s, -b/a)
-    elif a.is_negative:
-        return ie.reversed.func(s, -b/a)
+        if not linear:
+            try:
+                return reduce_rational_inequalities([[ie]], s)
+            except PolynomialError:
+                return solve_univariate_inequality(ie, s)
+        else:
+            p = Poly(expr)
+
+    e = p.as_expr()  # this is in exanded form
+    # Do a safe inversion of e, moving non-s terms
+    # to the rhs and dividing by a nonzero factor
+    # as long as sign is known unless the relationship
+    # involves Eq/Ne
+    rhs = 0
+    b, ax = e.as_independent(s, as_Add=True)
+    e -= b
+    rhs -= b
+    ef = factor_terms(e)
+    a, e = ef.as_independent(s, as_Add=False)
+    if (a.is_zero is None or  # don't divide by potential 0
+            a.is_negative ==
+            a.is_positive == None and  # if sign is not known then
+            ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
+        e = ef
+        a = S.One
+    rhs /= a
+    if a.is_positive:
+        return ie.func(e, rhs)
     else:
-        raise NotImplementedError
+        return ie.reversed.func(e, rhs)
 
 
 def _reduce_inequalities(inequalities, symbols):
