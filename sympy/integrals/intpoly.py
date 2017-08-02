@@ -14,11 +14,88 @@ from __future__ import print_function, division
 from functools import cmp_to_key
 
 from sympy.core import S, diff, Expr, Symbol
-
-from sympy.geometry import Segment2D, Polygon, Point
-from sympy.abc import x, y
+from sympy.geometry import Segment2D, Polygon, Point, Point2D, Point3D
+from sympy.abc import x, y, z
 
 from sympy.polys.polytools import LC, gcd_list, degree_list
+
+
+def polytope_integrate3d(poly, expr):
+    expr = S(expr)
+    hp_params = hyperplane_parameters(poly)
+    facets = poly
+    return main_integrate3d(expr, facets, hp_params)
+
+
+def main_integrate3d(expr, facets, hp_params):
+    dims = (x, y, z)
+    dim_length = len(dims)
+    integral_value = S.Zero
+    polynomials = decompose(expr)
+    for deg in polynomials:
+        poly_contribute = S.Zero
+        facet_count = 0
+        for i, facet in enumerate(facets):
+            hp = hp_params[i]
+            if hp[1] == S.Zero:
+                continue
+            poly_contribute += polygon_integrate(facet, i, facets, expr, deg) *\
+                        (hp[1] / norm(tuple(hp[0])))
+            facet_count += 1
+        poly_contribute /= (dim_length + deg)
+        integral_value += poly_contribute
+    return integral_value
+
+
+def polygon_integrate(facet, index, facets, expr, degree):
+    if expr == S.Zero:
+        return S.Zero
+    result = S.Zero
+    m = len(facets)
+    x0 = facet[0]
+    for i in range(len(facet)):
+        side = (facet[i], facet[(i + 1) % len(facet)])
+        for j in range(m):
+            if j != index and len(set(side).intersection(set(facets[j]))) == 2:
+                result += distance_to_side(x0, side) *\
+                          lineseg_integrate(facet, i, side, expr, degree)
+
+    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] + diff(expr, z) * x0[2]
+    result += polygon_integrate(facet, index, facets, expr, degree - 1)
+    result /= (degree + 2)
+    return result
+
+
+def distance_to_side(point, line_seg):
+    x1, x2 = line_seg
+    num = norm(((point[1] - x1[1]) * (point[2] - x2[2]) -
+                (point[1] - x2[1]) * (point[2] - x1[2]),
+                (point[0] - x2[0]) * (point[2] - x1[2]) -
+                (point[0] - x1[0]) * (point[2] - x2[2]),
+                (point[0] - x1[0]) * (point[1] - x2[1]) -
+                (point[0] - x2[0]) * (point[1] - x1[1])))
+    denom = norm((x2[0] - x1[0], x2[1] - x1[1], x2[2] - x1[2]))
+    return num/denom
+
+
+def lineseg_integrate(polygon, i, line_seg, expr, degree):
+    if expr == S.Zero:
+        return S.Zero
+    result = S.Zero
+    x0 = line_seg[0]
+    distance = norm(tuple([line_seg[1][i] - line_seg[0][i] for i in range(3)]))
+    #if isinstance(expr, Expr):
+    #    expr_dict = {x: line_seg[0][0],
+    #                 y: line_seg[0][1],
+    #                 z: line_seg[0][2]}
+    #    result += distance * expr.subs(expr_dict)
+    #else:
+    result += distance * expr
+
+    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] + diff(expr, z) * x0[2]
+    result += lineseg_integrate(polygon, i, line_seg, expr, degree)
+    result /= (degree + 1)
+    return result
 
 
 def polytope_integrate(poly, expr, **kwargs):
@@ -265,6 +342,8 @@ def left_integral(m, index, facets, x0, expr, gens):
                     value += distance_origin * expr.subs(expr_dict)
                 else:
                     value += distance_origin * expr
+            else:
+                integration_reduction_dynamic()
     return value
 
 
@@ -370,22 +449,40 @@ def hyperplane_parameters(poly):
     >>> hyperplane_parameters(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)))
     [((0, 1), 3), ((1, -2), -1), ((-2, -1), -3)]
     """
-    vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon.
-    params = [None] * (len(vertices) - 1)
-    for i in range(len(vertices) - 1):
-        v1 = vertices[i]
-        v2 = vertices[i + 1]
+    if isinstance(poly, Polygon):
+        vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon.
+        params = [None] * (len(vertices) - 1)
 
-        a1 = v1[1] - v2[1]
-        a2 = v2[0] - v1[0]
-        b = v2[0] * v1[1] - v2[1] * v1[0]
+        for i in range(len(vertices) - 1):
+            v1 = vertices[i]
+            v2 = vertices[i + 1]
 
-        factor = gcd_list([a1, a2, b])
+            a1 = v1[1] - v2[1]
+            a2 = v2[0] - v1[0]
+            b = v2[0] * v1[1] - v2[1] * v1[0]
 
-        b = S(b)/factor
-        a = (S(a1)/factor, S(a2)/factor)
-        params[i] = (a, b)
+            factor = gcd_list([a1, a2, b])
 
+            b = S(b) / factor
+            a = (S(a1) / factor, S(a2) / factor)
+            params[i] = (a, b)
+    else:
+        params = [None] * len(poly)
+        for i, polygon in enumerate(poly):
+            v1, v2, v3 = polygon[:3]
+            v2 = [v2[j] - v1[j] for j in range(0, 3)]
+            v3 = [v3[j] - v1[j] for j in range(0, 3)]
+            a = [v3[1] * v2[2] - v3[2] * v2[1],
+                 v3[2] * v2[0] - v3[0] * v2[2],
+                 v3[0] * v2[1] - v3[1] * v2[0]]
+
+            b = sum([a[j] * v1[j] for j in range(0, 3)])
+            fac = gcd_list(a)
+            if fac is S.Zero:
+                fac = 1
+            a = [j / fac for j in a]
+            b = b / fac
+            params[i] = (a, b)
     return params
 
 
@@ -665,9 +762,12 @@ def norm(point):
     """
     half = S(1)/2
     if isinstance(point, tuple):
-        return (point[0] ** 2 + point[1] ** 2) ** half
+        return sum([coord ** 2 for coord in point]) ** half
     elif isinstance(point, Point):
-        return (point.x ** 2 + point.y ** 2) ** half
+        if isinstance(point, Point2D):
+            return (point.x ** 2 + point.y ** 2) ** half
+        else:
+            return (point.x ** 2 + point.y ** 2 + point.z) ** half
     elif isinstance(point, dict):
         return sum(i**2 for i in point.values()) ** half
 

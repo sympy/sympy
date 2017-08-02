@@ -5,7 +5,7 @@ from sympy import sqrt
 from sympy.core import S
 
 from sympy.integrals.intpoly import (decompose, best_origin,
-                                     polytope_integrate)
+                                     polytope_integrate, polytope_integrate3d)
 
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
@@ -147,6 +147,24 @@ def test_polytope_integrate():
     assert result_dict[expr1] == 615780107/594
     assert result_dict[expr2] == 13062161/27
     assert result_dict[expr3] == 1946257153/924
+
+    #  Tests for 3D polytopes
+    unit_cube = [[(0, 1, 0), (1, 1, 0), (1, 1, 1), (0, 1, 1)],
+                 [(0, 1, 1), (1, 1, 1), (1, 0, 1), (0, 0, 1)],
+                 [(1, 1, 1), (1, 1, 0), (1, 0, 0), (1, 0, 1)],
+                 [(0, 0, 1), (1, 0, 1), (1, 0, 0), (0, 0, 0)],
+                 [(0, 1, 1), (0, 0, 1), (0, 0, 0), (0, 1, 0)],
+                 [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)]]
+
+    cube2 = [[(0, 6, 6), (6, 6, 6), (3, 6, 0), (0, 6, 0)],
+                 [(3, 6, 0), (6, 6, 6), (6, 0, 6), (3, 0, 0)],
+                 [(0, 6, 6), (0, 0, 6), (6, 0, 6), (6, 6, 6)],
+                 [(0, 0, 0), (3, 0, 0), (6, 0, 6), (0, 0, 6)],
+                 [(0, 6, 6), (0, 6, 0), (0, 0, 0), (0, 0, 6)],
+                 [(0, 0, 0), (0, 6, 0), (3, 6, 0), (3, 0, 0)]]
+
+    assert polytope_integrate3d(cube2, 1) == S(-162)
+    assert polytope_integrate3d(unit_cube, 1) == 1
 
 
 @XFAIL
