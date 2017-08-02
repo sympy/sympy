@@ -3,7 +3,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
-
+from sympy import symbols
 from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
 from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos, sqrt, diff, Tuple, acos, atan2, simplify
@@ -11,6 +11,7 @@ import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 import collections
+
 
 def CoordSysCartesian(*args, **kwargs):
     SymPyDeprecationWarning(
@@ -20,32 +21,6 @@ def CoordSysCartesian(*args, **kwargs):
         deprecated_since_version="1.1"
     ).warn()
     return CoordSys3D(*args, **kwargs)
-
-
-def _default_variables(curv_coord_name):
-    """
-    Store information about some default, pre-defined symbols.
-
-    Parameters
-    ==========
-
-    curv_coord_name : str
-        The type of the new coordinate system.
-
-    """
-    from sympy.abc import x, y, z, r, theta, phi, rho
-    from sympy import symbols
-    q1, q2, q3 = symbols('q1, q2, q3')
-
-    variables_mapping = {
-        'cartesian': (x, y, z),
-        'spherical': (r, theta, phi),
-        'cylindrical': (rho, phi, z),
-        'general': (q1, q2, q3)
-    }
-    if curv_coord_name not in variables_mapping:
-        raise ValueError('Wrong set of parameters.')
-    return variables_mapping[curv_coord_name]
 
 
 def _set_transformation_equations_mapping(curv_coord_name):
@@ -59,9 +34,6 @@ def _set_transformation_equations_mapping(curv_coord_name):
     curv_coord_name : str
         The type of the new coordinate system.
 
-    variables : Tuple
-        The variables which equations depends on.
-
     """
     equations_mapping = {
         'cartesian': lambda x, y, z: (x, y, z),
@@ -73,6 +45,7 @@ def _set_transformation_equations_mapping(curv_coord_name):
         'cylindrical': lambda r, theta, h: (
                 r*cos(theta),
                 r*sin(theta),
+                h
             ),
     }
     if curv_coord_name not in equations_mapping:
@@ -91,9 +64,6 @@ def _set_inv_trans_equations(curv_coord_name):
 
     curv_coord_name : str
         The type of the new coordinate system.
-
-    variables : Tuple
-        The variables which equations depends on.
 
     """
 
@@ -128,9 +98,6 @@ def _set_lame_coefficient_mapping(curv_coord_name):
 
     curv_coord_name : str
         The type of the new coordinate system.
-
-    variables : Tuple
-        The variables which equations depends on.
 
     """
 
@@ -225,28 +192,29 @@ class CoordSys3D(Basic):
         x1, x2, x3 = symbols("x1,x2,x3", cls=Dummy)
 
         if transformation is None:
-                if rotation_matrix is not None:
-                    rotation_lambda = \
-                        lambda x, y, z: parent._rotation_trans_equations(parent_orient, (x, y, z))
-                else:
-                    rotation_lambda = lambda x, y, z: (x, y, z)
+            if rotation_matrix is not None:
+                rotation_lambda = \
+                    lambda x, y, z: parent._rotation_trans_equations(parent_orient, (x, y, z))
+            else:
+                rotation_lambda = lambda x, y, z: (x, y, z)
 
-                if location is not None:
-                    translation_lambda = \
-                        lambda x, y, z: parent._translation_trans_equations(parent, origin, (x, y, z))
-                else:
-                    translation_lambda = lambda x, y, z: (x, y, z)
+            if location is not None:
 
-                transformation = Lambda((x1, x2, x3), translation_lambda(*rotation_lambda(x1, x2, x3)))
-                lame_coefficients = _set_lame_coefficient_mapping('cartesian')
-                inverse_transformation = _set_inv_trans_equations('cartesian')
+                translation_lambda = \
+                    lambda x, y, z: CoordSys3D._translation_trans_equations(CoordSys3D, origin, (x, y, z))
+            else:
+                translation_lambda = lambda x, y, z: (x, y, z)
+
+            transformation = Lambda((x1, x2, x3), translation_lambda(*rotation_lambda(x1, x2, x3)))
+            lame_coefficients = _set_lame_coefficient_mapping('cartesian')
+            inverse_transformation = _set_inv_trans_equations('cartesian')
 
         else:
             if location is not None and rotation_matrix is not None:
                 raise ValueError
 
             transformation, lame_coefficients, inverse_transformation = \
-                CoordSys3D._connect_to_standard_cartesian(transformation)
+                CoordSys3D._connect_to_standard_cartesian(transformation, variable_names)
 
         # Make sure that transformation is a Lambda:
         assert isinstance(transformation, Lambda)
@@ -298,7 +266,7 @@ class CoordSys3D(Basic):
         else:
             variable_names = [str(i) for i in variable_names]
             _check_strings('variable_names', vector_names)
-            variable_names = list(variable_names)
+            variable_names = [name + '.' + i for i in variable_names]
             latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
                              x in variable_names]
             pretty_scalars = [(name + '_' + x) for x in variable_names]
@@ -310,9 +278,12 @@ class CoordSys3D(Basic):
         obj._z = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
-        obj._h1, obj._h2, obj._h3 = lame_coefficients
-        obj._transformation = transformation
-        obj._inverse_transformation = inverse_transformation
+        obj._h1, obj._h2, obj._h3 = lame_coefficients(obj._x, obj._y, obj._z)
+        if parent is not None:
+            obj._transformation = transformation(parent._x, parent._y, parent._z)
+        else:
+            obj._transformation = transformation(obj._x, obj._y, obj._z)
+        obj._inverse_transformation = inverse_transformation(obj._x, obj._y, obj._z)
 
         # Assign params
         obj._parent = parent
@@ -337,7 +308,7 @@ class CoordSys3D(Basic):
         return iter([self.i, self.j, self.k])
 
     @classmethod
-    def _connect_to_standard_cartesian(cls, curv_coord_type, inverse=True):
+    def _connect_to_standard_cartesian(cls, curv_coord_type, variables=None, inverse=True):
         """
         Change the type of orthogonal curvilinear system. It could be done
         by tuple of transformation equations or by choosing one of pre-defined
@@ -346,19 +317,16 @@ class CoordSys3D(Basic):
         Parameters
         ==========
 
-        param curv_coord_type: str, tuple
+        curv_coord_type: str, tuple
 
-        variables : Tuple
-            The variables which equations depends on.
+        variables : tuple
+            Tuple of variables, which transformation equations depends on.
 
         """
 
         x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy)
 
         if isinstance(curv_coord_type, string_types):
-            if variables is None:
-                variables = _default_variables(curv_coord_type)
-
             transformation_equations = _set_transformation_equations_mapping(curv_coord_type)
             lame_coefficients = _set_lame_coefficient_mapping(curv_coord_type)
 
@@ -367,34 +335,32 @@ class CoordSys3D(Basic):
             else:
                 inverse_transformation_equations = None
 
-        elif isinstance(curv_coord_type, collection.Callable):
-            pass
-            # TODO add code here
-            transformation_equations = Lambda((x1, x2, x3), curv_coord_type(x1, x2, x3))
-        
-        elif isinstance(curv_coord_type, (tuple, list, Tuple, collections.Callable)):
-            if variables is None:
-                variables = _default_variables('general')
+        else:
+            if isinstance(curv_coord_type, collections.Callable):
+                transformation_equations = Lambda((x1, x2, x3), curv_coord_type(x1, x2, x3))
 
-            if len(curv_coord_type) == 3:
-                transformation_equations = curv_coord_type
-                lame_coefficients = \
-                    cls._calculate_lame_coefficients(curv_coord_type)
+            elif isinstance(curv_coord_type, (tuple, list, Tuple)):
+                if len(curv_coord_type) == 3:
+                    transformation_equations = \
+                        Lambda((x1, x2, x3), tuple(i.subs(list(zip(variables, (x1, x2, x3))))
+                                                   for i in curv_coord_type))
+                else:
+                    raise ValueError("Wrong set of parameter.")
+
             else:
                 raise ValueError("Wrong set of parameter.")
 
+            if not cls._check_orthogonality(curv_coord_type, variables):
+                raise ValueError("The transformation equation does not "
+                                 "create orthogonal coordinate system")
+
+            lame_coefficients = cls._calculate_lame_coefficients(transformation_equations(*variables), variables)
+
             if inverse:
-                inverse_transformation_equations = cls._calculate_inv_transformation_equations(
-                    transformation_equations)
+                inverse_transformation_equations = \
+                    cls._calculate_inv_transformation_equations(curv_coord_type, variables)
             else:
                 inverse_transformation_equations = None
-
-        else:
-            raise ValueError("Wrong set of parameter.")
-
-        if not cls._check_orthogonality(transformation_equations, variables):
-            raise ValueError("The transformation equation does not "
-                             "create orthogonal coordinate system")
 
         return transformation_equations, lame_coefficients, inverse_transformation_equations
 
@@ -446,15 +412,15 @@ class CoordSys3D(Basic):
 
         variables : Tuple
             The variables which equations depends on.
-
         """
-
+        x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy)
         x = Dummy('x')
         y = Dummy('y')
         z = Dummy('z')
         try:
             solved = solve([equations[0] - x, equations[1] - y, equations[2] - z], variables, dict=True)[0]
-            return solved[variables[0]], solved[variables[1]], solved[variables[2]]
+            solved = solved[variables[0]], solved[variables[1]], solved[variables[2]]
+            return Lambda((x1, x2, x3), tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved))
         except:
             raise ValueError('Wrong set of parameters.')
 
@@ -475,6 +441,7 @@ class CoordSys3D(Basic):
 
         """
 
+        x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy)
         h1 = sqrt(diff(equations[0], variables[0])**2 +
                   diff(equations[1], variables[0])**2 +
                   diff(equations[2], variables[0])**2)
@@ -486,7 +453,7 @@ class CoordSys3D(Basic):
         h3 = sqrt(diff(equations[0], variables[2])**2 +
                   diff(equations[1], variables[2])**2 +
                   diff(equations[2], variables[2])**2)
-        return map(simplify, [h1, h2, h3])
+        return Lambda((x1, x2, x3), tuple(i.subs(list(zip(variables, (x1, x2, x3)))) for i in [h1, h2, h3]))
 
     def _inverse_rotation_matrix(self):
         """
