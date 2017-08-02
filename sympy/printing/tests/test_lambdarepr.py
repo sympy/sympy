@@ -1,7 +1,8 @@
 from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
 from sympy.utilities.pytest import raises
 
-from sympy.printing.lambdarepr import *
+from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, TensorflowPrinter, NumExprPrinter
+
 
 x, y, z = symbols("x,y,z")
 i, a, b = symbols("i,a,b")

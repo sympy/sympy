@@ -417,7 +417,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                         else:
                             if func.__module__ and not '<' in func.__module__ and not '<' in func.__name__:
                                 try:
-                                    exec('from %s import %s' % (func.__module__, func.__name__), {})
+                                    exec_('from %s import %s' % (func.__module__, func.__name__), {})
                                 except ImportError:
                                     reg = False
                                 else:

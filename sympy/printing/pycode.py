@@ -51,8 +51,9 @@ _known_functions_math = {
 _known_constants_math = {
     'Exp1': 'e',
     'Pi': 'pi',
-    'Infinity': 'inf',
-    'NaN': 'nan'
+    # Only in python >= 3.5:
+    # 'Infinity': 'inf',
+    # 'NaN': 'nan'
 }
 
 def _print_known_func(self, expr):
@@ -112,6 +113,12 @@ class PythonCodePrinter(CodePrinter):
 
     def _get_comment(self, text):
         return "  # {0}".format(text)
+
+    def _print_NaN(self, expr):
+        return "float('nan')"
+
+    def _print_Infinity(self, expr):
+        return "float('inf')"
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
