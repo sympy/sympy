@@ -179,6 +179,9 @@ def test_invert_complex():
 
     assert invert_complex(log(x), y, x) == (x, FiniteSet(exp(y)))
 
+    assert invert_complex(2**x + 32, y, x) == \
+        (x, imageset(Lambda(n, (I*(2*n*pi + arg(y - 32)) + log(Abs(y - 32)))/log(2)), S.Integers))
+
     raises(ValueError, lambda: invert_real(1, y, x))
     raises(ValueError, lambda: invert_complex(x, x, x))
     raises(ValueError, lambda: invert_complex(x, x, 1))

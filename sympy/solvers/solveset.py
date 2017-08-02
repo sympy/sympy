@@ -286,6 +286,16 @@ def _invert_complex(f, g_ys, symbol):
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.args[0], exp_invs, symbol)
 
+    if f.is_Pow:
+        base, expo = f.args
+        base_has_symbol = base.has(symbol)
+        expo_has_symbol = expo.has(symbol)
+
+        if expo_has_symbol:
+            pow_inv = Union(*[ imageset(Lambda(n, (I*(2*n*pi + arg(g_y)) + log(Abs(g_y)))/log(base)), S.Integers)
+                                for g_y in g_ys if g_y !=0])
+            return _invert_complex(expo, pow_inv, symbol)
+
     return (f, g_ys)
 
 
