@@ -84,16 +84,15 @@ def lineseg_integrate(polygon, i, line_seg, expr, degree):
     result = S.Zero
     x0 = line_seg[0]
     distance = norm(tuple([line_seg[1][i] - line_seg[0][i] for i in range(3)]))
-    #if isinstance(expr, Expr):
-    #    expr_dict = {x: line_seg[0][0],
-    #                 y: line_seg[0][1],
-    #                 z: line_seg[0][2]}
-    #    result += distance * expr.subs(expr_dict)
-    #else:
-    result += distance * expr
-
+    if isinstance(expr, Expr):
+        expr_dict = {x: line_seg[1][0],
+                     y: line_seg[1][1],
+                     z: line_seg[1][2]}
+        result += distance * expr.subs(expr_dict)
+    else:
+        result += distance * expr
     expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] + diff(expr, z) * x0[2]
-    result += lineseg_integrate(polygon, i, line_seg, expr, degree)
+    result += lineseg_integrate(polygon, i, line_seg, expr, degree - 1)
     result /= (degree + 1)
     return result
 
@@ -342,8 +341,6 @@ def left_integral(m, index, facets, x0, expr, gens):
                     value += distance_origin * expr.subs(expr_dict)
                 else:
                     value += distance_origin * expr
-            else:
-                integration_reduction_dynamic()
     return value
 
 

@@ -10,7 +10,7 @@ from sympy.integrals.intpoly import (decompose, best_origin,
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -149,22 +149,23 @@ def test_polytope_integrate():
     assert result_dict[expr3] == 1946257153/924
 
     #  Tests for 3D polytopes
-    unit_cube = [[(0, 1, 0), (1, 1, 0), (1, 1, 1), (0, 1, 1)],
-                 [(0, 1, 1), (1, 1, 1), (1, 0, 1), (0, 0, 1)],
-                 [(1, 1, 1), (1, 1, 0), (1, 0, 0), (1, 0, 1)],
-                 [(0, 0, 1), (1, 0, 1), (1, 0, 0), (0, 0, 0)],
-                 [(0, 1, 1), (0, 0, 1), (0, 0, 0), (0, 1, 0)],
-                 [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)]]
+    cube = [[(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)],
+            [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],
+            [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],
+            [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],
+            [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],
+            [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
 
     cube2 = [[(0, 6, 6), (6, 6, 6), (3, 6, 0), (0, 6, 0)],
-                 [(3, 6, 0), (6, 6, 6), (6, 0, 6), (3, 0, 0)],
-                 [(0, 6, 6), (0, 0, 6), (6, 0, 6), (6, 6, 6)],
-                 [(0, 0, 0), (3, 0, 0), (6, 0, 6), (0, 0, 6)],
-                 [(0, 6, 6), (0, 6, 0), (0, 0, 0), (0, 0, 6)],
-                 [(0, 0, 0), (0, 6, 0), (3, 6, 0), (3, 0, 0)]]
+             [(3, 6, 0), (6, 6, 6), (6, 0, 6), (3, 0, 0)],
+             [(0, 6, 6), (0, 0, 6), (6, 0, 6), (6, 6, 6)],
+             [(0, 0, 0), (3, 0, 0), (6, 0, 6), (0, 0, 6)],
+             [(0, 6, 6), (0, 6, 0), (0, 0, 0), (0, 0, 6)],
+             [(0, 0, 0), (0, 6, 0), (3, 6, 0), (3, 0, 0)]]
 
+    assert polytope_integrate3d(cube, x**2 + y**2 + x*y + z**2) == S(15625)/4
     assert polytope_integrate3d(cube2, 1) == S(-162)
-    assert polytope_integrate3d(unit_cube, 1) == 1
+    assert polytope_integrate3d(cube, 1) == 125
 
 
 @XFAIL
