@@ -34,6 +34,12 @@ class Quantity(AtomicExpr):
                 dimension = Dimension(1)
             else:
                 raise ValueError("expected dimension or 1")
+        else:
+            for dim_sym in dimension.name.atoms(Symbol):
+                if dim_sym.name not in dimensions.Dimension._dimensional_dependencies:
+                    raise ValueError("Dimension %s is not registered in the"
+                                     "dimensional dependency tree." % dim_sym)
+
         scale_factor = sympify(scale_factor)
 
         dimex = Quantity.get_dimensional_expr(scale_factor)
