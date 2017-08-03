@@ -1,15 +1,19 @@
-from .patterns import rubi_object
-from .operation import Int
-import matchpy
-from .sympy2matchpy import sympy2matchpy
-from sympy.core.sympify import sympify
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core import S
-from sympy.rubi.matchpy2sympy import matchpy2sympy
+from sympy.external import import_module
+matchpy = import_module("matchpy")
+from sympy.utilities.decorator import doctest_depends_on
 
-rubi = rubi_object()
+if matchpy:
+    from sympy.integrals.rubi.patterns import rubi_object
+    from sympy.integrals.rubi.operation import Int
+    from sympy.integrals.rubi.sympy2matchpy import sympy2matchpy
+    from sympy.core.sympify import sympify
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
+    from sympy.core import S
+    from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
+    rubi = rubi_object()
 
+@doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
     '''
     Main function for Rubi integeration.
@@ -22,8 +26,7 @@ def rubi_integrate(expr, var, showsteps=False):
     elif not expr.has(var): # handle constant expressions
         return expr*var
     elif isinstance(expr, Add): # integrate each is_Add expression indivdually
-        args = [rubi_integrate(i, var) for i in expr.args]
-        return Add(*args)
+        return Add(*[rubi_integrate(i, var) for i in expr.args])
     elif isinstance(expr, Mul): #seperate out constants in Mul expression
         e = 1
         c = 1
@@ -33,21 +36,10 @@ def rubi_integrate(expr, var, showsteps=False):
             else:
                 c = c*i
         if c != 1:
-            res = rubi_integrate(e, var)
             return c*rubi_integrate(e, var)
 
     if not isinstance(expr, matchpy.Expression):
         expr = Int(sympy2matchpy(expr), sympy2matchpy(var))
-
-    if showsteps:
-        matches = rubi.matcher.match(expr)
-        for _ in matches._match(rubi.matcher.root):
-            for pattern_index in matches.patterns:
-                renaming = rubi.matcher.pattern_vars[pattern_index]
-                substitution = matches.substitution.rename({renamed: original for original, renamed in renaming.items()})
-                pattern = rubi.matcher.patterns[pattern_index][0]
-                print('{} matched with {}'.format(pattern , substitution))
-                print()
 
     result = rubi.replace(expr)
 

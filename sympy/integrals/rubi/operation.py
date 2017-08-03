@@ -1,4 +1,17 @@
-from matchpy import Operation, Arity
+from sympy.external import import_module
+matchpy = import_module("matchpy")
+
+if matchpy:
+    Operation, Arity = matchpy.Operation, matchpy.Arity
+else:
+    Operation = object
+    class Arity(object):
+        nullary = (0, True)
+        unary = (1, True)
+        binary = (2, True)
+        ternary = (3, True)
+        polyadic = (2, False)
+        variadic = (0, False)
 
 class Int(Operation):
     name = "Int"
@@ -20,7 +33,8 @@ class Add(Operation):
 
 class Pow(Operation):
     name = "Pow"
-    arity = Arity.binary
+    arity = Arity.variadic
+    one_identity = True
 
 class And(Operation):
     name = "And"
@@ -54,11 +68,11 @@ class RemoveContent(Operation):
 
 class PositiveIntegerQ(Operation):
     name = "PositiveIntegerQ"
-    arity = Arity.unary
+    arity = Arity.variadic
 
 class NegativeIntegerQ(Operation):
     name = "NegativeIntegerQ"
-    arity = Arity.unary
+    arity = Arity.variadic
 
 class PositiveQ(Operation):
     name = "PositiveQ"
@@ -67,6 +81,10 @@ class PositiveQ(Operation):
 class IntegerQ(Operation):
     name = "IntegerQ"
     arity = Arity.unary
+
+class IntegersQ(Operation):
+    name = "IntegersQ"
+    arity = Arity.variadic
 
 class PosQ(Operation):
     name = "PosQ"
@@ -187,3 +205,7 @@ class Hypergeometric2F1(Operation):
 class TogetherSimplify(Operation):
     name = "TogetherSimplify"
     arity = Arity.unary
+
+class Inequality(Operation):
+    name = "Inequality"
+    arity = Arity.variadic

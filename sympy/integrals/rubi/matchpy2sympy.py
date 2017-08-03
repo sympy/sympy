@@ -1,7 +1,5 @@
-import sympy
-import matchpy
-from sympy.rubi.symbol import VariableSymbol, Integer
-from sympy.rubi.utility_function import (Int, ZeroQ, NonzeroQ, List, Log, RemoveContent,
+from sympy.integrals.rubi.symbol import VariableSymbol, Integer
+from sympy.integrals.rubi.utility_function import (Int, ZeroQ, NonzeroQ, List, Log, RemoveContent,
     PositiveIntegerQ, NegativeIntegerQ, PositiveQ, IntegerQ, PosQ, NegQ, FracPart,
     IntPart, RationalQ, Subst, LinearQ, Sqrt, NegativeQ, ArcCosh, RationalQ, Less,
     Not, Simplify, Denominator, Coefficient, SumSimplerQ, Equal, Unequal, SimplerQ,
