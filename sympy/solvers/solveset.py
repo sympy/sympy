@@ -261,6 +261,29 @@ def _invert_complex(f, g_ys, symbol):
         if g is not S.Zero:
             return _invert_complex(h, imageset(Lambda(n, n - g), g_ys), symbol)
 
+        if not g and not g_ys.args[0] and len(h.args) == 2 and \
+                not h.is_polynomial(symbol):
+            a, b = ordered(h.args)
+            ai, ad = a.as_independent(symbol)
+            bi, bd = b.as_independent(symbol)
+
+            if any(_ispow(i) for i in (ad,bd)):
+                a_base, a_exp = ad.as_base_exp()
+                b_base, b_exp = bd.as_base_exp()
+
+                if a_base == b_base:
+                    h = powsimp(powdenest(ad/bd))
+                    g = -bi/ai
+
+                else:
+                    rat = ad/bd
+                    _h = powsimp(rat)
+                    if _h != rat:
+                        h = _h
+                        g = -bi/ai
+
+            return (h, FiniteSet(g))
+
     if f.is_Mul:
         # f = g*h
         g, h = f.as_independent(symbol)

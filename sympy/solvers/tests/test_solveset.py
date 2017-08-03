@@ -587,11 +587,20 @@ def test_expo():
 
     #complex domain
     assert solveset(3**x + 9**(x+5), x) == \
-        imageset(Lambda(n, (I*(2*n*pi + pi) - 10*log(3))/log(3)), S.Integers)
+        imageset(Lambda(n, -I*(2*n*pi + pi)/log(3) - 10), S.Integers)
     assert solveset(4**(5-9*x) + 8**(2-x), x) == \
-        imageset(Lambda(n, (I*(2*n*pi + pi) + 4*log(2))/(15*log(2))), S.Integers)
+        imageset(Lambda(n, -I*(2*n*pi + pi)/(15*log(2)) + 4/15), S.Integers)
     assert solveset(2**x + 32, x) == \
         imageset(Lambda(n, (I*(2*n*pi + pi) + 5*log(2))/log(2)), S.Integers)
+    assert solveset(2**(x) + 4**(x) + 8**(x), x) == \
+        Union(imageset(Lambda(n, I*(2*n*pi - 2*pi/3)/log(2)), S.Integers),
+            imageset(Lambda(n, I*(2*n*pi + 2*pi/3)/log(2)), S.Integers))
+    assert solveset(4**(x+1) + 4**(x+2) + 4**(x-1) - 3**(x+2) -3**(x+3), x) == \
+        imageset(Lambda(n, (2*n*I*pi - 4*log(2) + 2*log(3))/(-2*log(2) + log(3))), S.Integers)
+    assert solveset(5**(x-3) + 3**(2*x + 1), x) == \
+        imageset(Lambda(n, (I*(2*n*pi + pi) + log(375))/(-2*log(3) + log(5))), S.Integers)
+    assert solveset(4**(x-2) - 5**(x), x) == \
+        imageset(Lambda(n, (2*n*I*pi - 4*log(2))/(-2*log(2) + log(5))), S.Integers)
 
 @XFAIL
 def test_xfail_expo():
