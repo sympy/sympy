@@ -1,20 +1,34 @@
 from sympy.external import import_module
 matchpy = import_module("matchpy")
+from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
-    Symbol = matchpy.Symbol
+    from matchpy import Wildcard, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, register_operation_iterator
 else:
-    class Symbol(object):
-        def __init__(self, name, variable_name=None):
-            self.name = name
-            self.head = self
-        @staticmethod
-        def dot(x):
-            pass
+    class Wildcard(object):
+        pass
 
-class VariableSymbol(Symbol):
-    pass
+from sympy import cacheit, Symbol
 
-class matchpyInteger(Symbol):
-    def __init__(self, value, variable_name=None):
-        super(self.__class__, self).__init__(name=str(value), variable_name=variable_name)
+@doctest_depends_on(modules=('matchpy',))
+class WC(Wildcard, Symbol):
+    def __init__(self, min_length, fixed_size, variable_name=None, optional=None, **assumptions):
+        Wildcard.__init__(self, min_length, fixed_size, variable_name, optional)
+
+    def __new__(cls, min_length, fixed_size, variable_name=None, optional=None, **assumptions):
+        cls._sanitize(assumptions, cls)
+        return WC.__xnew__(cls, min_length, fixed_size, variable_name, optional, **assumptions)
+
+    def __getnewargs__(self):
+        return (self.min_length, self.fixed_size, self.variable_name, self.optional)
+
+    @staticmethod
+    def __xnew__(cls, min_length, fixed_size, variable_name=None, optional=None, **assumptions):
+        obj = Symbol.__xnew__(cls, variable_name, **assumptions)
+        return obj
+
+    def _hashable_content(self):
+        if self.optional:
+            return super()._hashable_content() + (self.min_count, self.fixed_size, self.variable_name, self.optional)
+        else:
+            return super()._hashable_content() + (self.min_count, self.fixed_size, self.variable_name)

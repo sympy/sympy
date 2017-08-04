@@ -3,33 +3,25 @@ matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
-    from sympy.integrals.rubi.patterns import rubi_object
-    from sympy.integrals.rubi.operation import Int
-    from sympy.integrals.rubi.sympy2matchpy import sympy2matchpy
-    from sympy.core.sympify import sympify
     from sympy.core.add import Add
-    from sympy.core.mul import Mul
+    from sympy.integrals import Integral
     from sympy.core import S
-    from sympy.integrals.rubi.matchpy2sympy import matchpy2sympy
+
+    from sympy.integrals.rubi.patterns import rubi_object
     rubi = rubi_object()
 
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
     '''
     Main function for Rubi integeration.
-    Raises NotImplementedError Error if expression is not integrated
+    Returns Integral object if unable to integrate.
     '''
-    if expr == None:
-        return None
-    if isinstance(expr, int) or isinstance(expr, float):
-        return expr*var
-    elif not expr.has(var): # handle constant expressions
-        return expr*var
-    elif isinstance(expr, Add): # integrate each is_Add expression indivdually
+    if isinstance(expr, int):
+        return S(expr)*var
+    if expr.is_Add: # integrate each is_Add expression indivdually
         return Add(*[rubi_integrate(i, var) for i in expr.args])
-    elif isinstance(expr, Mul): #seperate out constants in Mul expression
-        e = 1
-        c = 1
+    elif expr.is_Mul: # remove constants
+        e, c = 1, 1
         for i in expr.args:
             if i.has(var):
                 e = e*i
@@ -38,12 +30,6 @@ def rubi_integrate(expr, var, showsteps=False):
         if c != 1:
             return c*rubi_integrate(e, var)
 
-    if not isinstance(expr, matchpy.Expression):
-        expr = Int(sympy2matchpy(expr), sympy2matchpy(var))
+    result = rubi.replace(Integral(expr, var))
 
-    result = rubi.replace(expr)
-
-    if result == expr:
-        raise NotImplementedError('Unable to intergate {}'.format(expr))
-
-    return matchpy2sympy(result)
+    return result
