@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import S, Expr, Mul, Integer
+from sympy import S, Expr, Mul, Integer, default_sort_key
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.operator import Operator
@@ -101,7 +101,7 @@ class AntiCommutator(Expr):
 
         # Canonical ordering of arguments
         #The Commutator [A,B] is on canonical form if A < B.
-        if a.compare(b) == 1:
+        if sorted([a, b], key=default_sort_key) == [a, b]:
             return cls(b, a)
 
     def doit(self, **hints):

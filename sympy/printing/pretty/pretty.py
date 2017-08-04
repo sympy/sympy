@@ -1858,8 +1858,8 @@ class PrettyPrinter(Printer):
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
-        if self.order not in ('old', 'none'):
-            args = product.as_ordered_factors()
+        if self.order != 'none':
+            args = product.as_ordered_factors(self.order)
         else:
             args = list(product.args)
 

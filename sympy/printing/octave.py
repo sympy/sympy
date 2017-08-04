@@ -158,7 +158,7 @@ class OctaveCodePrinter(CodePrinter):
 
         pow_paren = []  # Will collect all pow with more than one base element and exp = -1
 
-        if self.order not in ('old', 'none'):
+        if self.order != 'none':
             args = expr.as_ordered_factors()
         else:
             # use make_args in case expr was something like -x -> x

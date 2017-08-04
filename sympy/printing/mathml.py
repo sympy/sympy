@@ -223,7 +223,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
             # think a coeff of 1 can remain
             return self._print(terms[0])
 
-        if self.order != 'old':
+        if self.order != 'none':
             terms = Mul._from_args(terms).as_ordered_factors()
 
         x = self.dom.createElement('apply')
@@ -684,8 +684,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             if coeff is S.One and len(terms) == 1:
                 mrow.appendChild(self._print(terms[0]))
                 return mrow
-            if self.order != 'old':
-                terms = Mul._from_args(terms).as_ordered_factors()
+            if self.order != 'none':
+                terms = Mul._from_args(terms).as_ordered_factors(self.order)
 
             if coeff != 1:
                 x = self._print(coeff)
@@ -1780,7 +1780,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x = self.dom.createElement('mrow')
         args = expr.args
         if isinstance(args[0], Mul):
-            args = args[0].as_ordered_factors() + list(args[1:])
+            args = args[0].as_ordered_factors(self.order) + list(args[1:])
         else:
             args = list(args)
 

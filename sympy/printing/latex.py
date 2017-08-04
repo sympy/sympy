@@ -508,8 +508,8 @@ class LatexPrinter(Printer):
             if not expr.is_Mul:
                 return str(self._print(expr))
             else:
-                if self.order not in ('old', 'none'):
-                    args = expr.as_ordered_factors()
+                if self.order != 'none':
+                    args = expr.as_ordered_factors(self.order)
                 else:
                     args = list(expr.args)
 
@@ -1680,7 +1680,7 @@ class LatexPrinter(Printer):
 
         args = expr.args
         if isinstance(args[0], Mul):
-            args = args[0].as_ordered_factors() + list(args[1:])
+            args = args[0].as_ordered_factors(self.order) + list(args[1:])
         else:
             args = list(args)
 
@@ -2772,10 +2772,9 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
         ``dot``, or ``times``.
     order: string, optional
         Any of the supported monomial orderings (currently ``lex``, ``grlex``,
-        or ``grevlex``), ``old``, and ``none``. This parameter does nothing for
-        Mul objects. Setting order to ``old`` uses the compatibility ordering
-        for Add defined in Printer. For very large expressions, set the
-        ``order`` keyword to ``none`` if speed is a concern.
+        or ``grevlex``), and ``none``. This parameter does nothing for
+        Mul objects. For very large expressions, set the ``order`` keyword to
+        ``none`` if speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
     root_notation : boolean, optional

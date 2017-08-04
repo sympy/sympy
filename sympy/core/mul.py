@@ -1,5 +1,4 @@
 from collections import defaultdict
-from functools import cmp_to_key
 import operator
 
 from .sympify import sympify
@@ -25,7 +24,6 @@ class NC_Marker:
     is_commutative = False
 
 # Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=default_sort_key)
@@ -1892,6 +1890,8 @@ class Mul(Expr, AssocOp):
         [2, x, y, sin(x), cos(x)]
 
         """
+        if order == 'old':
+            raise ValueError("'old' ordering has been removed")
         cpart, ncpart = self.args_cnc()
         cpart.sort(key=lambda expr: expr.sort_key(order=order))
         return cpart + ncpart

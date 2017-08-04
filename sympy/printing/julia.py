@@ -139,8 +139,8 @@ class JuliaCodePrinter(CodePrinter):
 
         pow_paren = []  # Will collect all pow with more than one base element and exp = -1
 
-        if self.order not in ('old', 'none'):
-            args = expr.as_ordered_factors()
+        if self.order != 'none':
+            args = expr.as_ordered_factors(self.order)
         else:
             # use make_args in case expr was something like -x -> x
             args = Mul.make_args(expr)

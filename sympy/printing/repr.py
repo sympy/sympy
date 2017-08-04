@@ -202,8 +202,8 @@ class ReprPrinter(Printer):
         return "nan"
 
     def _print_Mul(self, expr, order=None):
-        if self.order not in ('old', 'none'):
-            args = expr.as_ordered_factors()
+        if self.order != 'none':
+            args = expr.as_ordered_factors(order)
         else:
             # use make_args in case expr was something like -x -> x
             args = Mul.make_args(expr)

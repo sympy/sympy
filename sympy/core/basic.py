@@ -182,78 +182,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return {}
 
-    def compare(self, other):
-        """
-        Return -1, 0, 1 if the object is smaller, equal, or greater than other.
-
-        Not in the mathematical sense. If the object is of a different type
-        from the "other" then their classes are ordered according to
-        the sorted_classes list.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x, y
-        >>> x.compare(y)
-        -1
-        >>> x.compare(x)
-        0
-        >>> y.compare(x)
-        1
-
-        """
-        # all redefinitions of __cmp__ method should start with the
-        # following lines:
-        if self is other:
-            return 0
-        n1 = self.__class__
-        n2 = other.__class__
-        c = (n1 > n2) - (n1 < n2)
-        if c:
-            return c
-        #
-        st = self._hashable_content()
-        ot = other._hashable_content()
-        c = (len(st) > len(ot)) - (len(st) < len(ot))
-        if c:
-            return c
-        for l, r in zip(st, ot):
-            l = Basic(*l) if isinstance(l, frozenset) else l
-            r = Basic(*r) if isinstance(r, frozenset) else r
-            if isinstance(l, Basic):
-                c = l.compare(r)
-            else:
-                c = (l > r) - (l < r)
-            if c:
-                return c
-        return 0
-
-    @staticmethod
-    def _compare_pretty(a, b):
-        from sympy.series.order import Order
-        if isinstance(a, Order) and not isinstance(b, Order):
-            return 1
-        if not isinstance(a, Order) and isinstance(b, Order):
-            return -1
-
-        if a.is_Rational and b.is_Rational:
-            l = a.p * b.q
-            r = b.p * a.q
-            return (l > r) - (l < r)
-        else:
-            from sympy.core.symbol import Wild
-            p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
-            r_a = a.match(p1 * p2**p3)
-            if r_a and p3 in r_a:
-                a3 = r_a[p3]
-                r_b = b.match(p1 * p2**p3)
-                if r_b and p3 in r_b:
-                    b3 = r_b[p3]
-                    c = Basic.compare(a3, b3)
-                    if c != 0:
-                        return c
-
-        return Basic.compare(a, b)
 
     @classmethod
     def fromiter(cls, args, **assumptions):
@@ -313,8 +241,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
 
-        This is the same as a.compare(b) == 0 but faster.
-
         Notes
         =====
 
@@ -356,13 +282,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
-        """``a != b``  -> Compare two symbolic trees and see whether they are different
-
-        this is the same as:
-
-        ``a.compare(b) != 0``
-
-        but faster
+        """
+        ``a != b``  -> Compare two symbolic trees and see whether they are different
         """
         return not self == other
 

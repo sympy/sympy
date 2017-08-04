@@ -1062,6 +1062,8 @@ class Expr(Basic, EvalfMixin):
 
     def as_ordered_factors(self, order=None):
         """Return list of ordered factors (if Mul) else [self]."""
+        if order == 'old':
+            raise ValueError("'old' ordering has been removed")
         return [self]
 
     def as_poly(self, *gens, **args):

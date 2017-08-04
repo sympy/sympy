@@ -20,7 +20,7 @@ import random
 
 from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
 from sympy.core.numbers import Number
-from sympy.core.compatibility import is_sequence, unicode
+from sympy.core.compatibility import is_sequence, unicode, default_sort_key
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -34,7 +34,6 @@ from sympy.physics.quantum.matrixcache import matrix_cache
 
 from sympy.matrices.matrices import MatrixBase
 
-from sympy.utilities import default_sort_key
 
 __all__ = [
     'Gate',
@@ -1222,10 +1221,10 @@ def gate_sort(circuit):
                 first_base, first_exp = circ_array[i].as_base_exp()
                 second_base, second_exp = circ_array[i + 1].as_base_exp()
 
-                # Use sympy's hash based sorting. This is not mathematical
-                # sorting, but is rather based on comparing hashes of objects.
-                # See Basic.compare for details.
-                if first_base.compare(second_base) > 0:
+                # Use sympy's canonical sorting. This is not mathematical
+                # sorting, but an arbitrary canonical sorting of the
+                # expression trees.
+                if sorted([first_base, second_base], key=default_sort_key) == [first_base, second_base]:
                     if Commutator(first_base, second_base).doit() == 0:
                         new_args = (circuit.args[:i] + (circuit.args[i + 1],) +
                                    (circuit.args[i],) + circuit.args[i + 2:])

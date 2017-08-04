@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import S, Expr, Mul, Add, Pow
+from sympy import S, Expr, Mul, Add, Pow, default_sort_key
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
@@ -114,7 +114,7 @@ class Commutator(Expr):
 
         # Canonical ordering of arguments
         # The Commutator [A, B] is in canonical form if A < B.
-        if a.compare(b) == 1:
+        if sorted([a, b], key=default_sort_key) == [a, b]:
             return S.NegativeOne*cls(b, a)
 
     def _expand_pow(self, A, B, sign):

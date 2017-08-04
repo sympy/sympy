@@ -249,7 +249,7 @@ this will generate isympy.1 in the current directory. -->
 					<para>Example: isympy -o rev-lax</para>
 
                     <para><replaceable class="parameter">ORDER</replaceable> must be one of 'lex', 'rev-lex', 'grlex',
-                    'rev-grlex', 'grevlex', 'rev-grevlex', 'old', or 'none'.</para>
+                    'rev-grlex', 'grevlex', 'rev-grevlex', or 'none'.</para>
 				</listitem>
             </varlistentry>
             <varlistentry>
