@@ -1,11 +1,11 @@
-from sympy.core import Expr, Symbol, S
+from sympy.core import AtomicExpr, Symbol, S
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.printing.precedence import PRECEDENCE
 
 
-class BaseScalar(Expr):
+class BaseScalar(AtomicExpr):
     """
     A coordinate symbol/base scalar.
 

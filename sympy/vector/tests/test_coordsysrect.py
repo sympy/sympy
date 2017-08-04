@@ -299,26 +299,11 @@ def test_evalf():
     assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()
 
 
-def test_lame_coefficients():
-    a = CoordSys3D('a')
-    a._set_lame_coefficient_mapping('spherical')
-    assert a.lame_coefficients() == (1, a.x, sin(a.y)*a.x)
-    a = CoordSys3D('a')
-    assert a.lame_coefficients() == (1, 1, 1)
-    a = CoordSys3D('a')
-    a._set_lame_coefficient_mapping('cartesian')
-    assert a.lame_coefficients() == (1, 1, 1)
-    a = CoordSys3D('a')
-    a._set_lame_coefficient_mapping('cylindrical')
-    assert a.lame_coefficients() == (1, a.y, 1)
-
-
 def test_transformation_equations():
     from sympy import symbols
     x, y, z = symbols('x y z')
-    a = CoordSys3D('a')
     # Str
-    a._connect_to_standard_cartesian('spherical')
+    a = CoordSys3D('a', transformation='spherical')
     assert a._transformation_equations() == (a.x * sin(a.y) * cos(a.z),
                           a.x * sin(a.y) * sin(a.z),
                           a.x * cos(a.y))
@@ -326,57 +311,25 @@ def test_transformation_equations():
     assert a._inverse_transformation_equations() == (sqrt(a.x**2 + a.y**2 +a.z**2),
                           acos((a.z) / sqrt(a.x**2 + a.y**2 + a.z**2)),
                           atan2(a.y, a.x))
-    a._connect_to_standard_cartesian('cylindrical')
+    a = CoordSys3D('a', transformation='cylindrical')
     assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert a.lame_coefficients() == (1, a.y, 1)
     assert a._inverse_transformation_equations() == (sqrt(a.x**2 + a.y**2),
                             atan2(a.y, a.x), a.z)
-    a._connect_to_standard_cartesian('cartesian')
+    a = CoordSys3D('a', transformation='cartesian')
     assert a._transformation_equations() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
     assert a._inverse_transformation_equations() == (a.x, a.y, a.z)
     # Variables and expressions
-    a._connect_to_standard_cartesian(((x, y, z), (x, y, z)))
+    a = CoordSys3D('a', transformation=(x, y, z), variable_names=(x, y, z))
+    a._calculate_inverse()
     assert a._transformation_equations() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
     assert a._inverse_transformation_equations() == (a.x, a.y, a.z)
-    a._connect_to_standard_cartesian(((x, y, z), ((x * cos(y), x * sin(y), z))), inverse=False)
+    a = CoordSys3D('a', transformation=((x*cos(y), x*sin(y), z)), variable_names=(x, y, z))
+    a._calculate_inverse()
     assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
-    assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
-    a._connect_to_standard_cartesian(((x, y, z), (x * sin(y) * cos(z), x * sin(y) * sin(z), x * cos(y))), inverse=False)
-    assert a._transformation_equations() == (a.x * sin(a.y) * cos(a.z),
-                          a.x * sin(a.y) * sin(a.z),
-                          a.x * cos(a.y))
-    assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), sqrt(sin(a.y)**2*a.x**2))
-    # Equations
-    a._connect_to_standard_cartesian((a.x*sin(a.y)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)), inverse=False)
-    assert a._transformation_equations() == (a.x * sin(a.y) * cos(a.z),
-                          a.x * sin(a.y) * sin(a.z),
-                          a.x * cos(a.y))
-    assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), sqrt(sin(a.y)**2*a.x**2))
-    a._connect_to_standard_cartesian((a.x, a.y, a.z))
-    assert a._transformation_equations() == (a.x, a.y, a.z)
-    assert simplify(a.lame_coefficients()) == (1, 1, 1)
-    assert a._inverse_transformation_equations() == (a.x, a.y, a.z)
-    a._connect_to_standard_cartesian((a.x * cos(a.y), a.x * sin(a.y), a.z), inverse=False)
-    assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
-    assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
-
-    raises(ValueError, lambda: a._connect_to_standard_cartesian((x, y, z)))
-
-
-def test_check_orthogonality():
-    a = CoordSys3D('a')
-    a._connect_to_standard_cartesian((a.x*sin(a.y)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)), inverse=False)
-    assert a._check_orthogonality() is True
-    a._connect_to_standard_cartesian((a.x * cos(a.y), a.x * sin(a.y), a.z))
-    assert a._check_orthogonality() is True
-    a._connect_to_standard_cartesian((cosh(a.x)*cos(a.y), sinh(a.x)*sin(a.y), a.z), inverse=False)
-    assert a._check_orthogonality() is True
-
-    raises(ValueError, lambda: a._connect_to_standard_cartesian((a.x, a.x, a.z)))
-    raises(ValueError, lambda: a._connect_to_standard_cartesian(
-        (a.x*sin(a.y / 2)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y)), inverse=False))
+    assert a.lame_coefficients() == (1, sqrt(a.x**2), 1)
 
 
 def test_coordsys3d():
@@ -403,7 +356,6 @@ def test_rotation_trans_equations():
 
 def test_translation_trans_equations():
     from sympy import symbols
-    q0 = symbols('q0')
     a = CoordSys3D('a')
     assert a._translation_trans_equations(a, a._origin, a.base_scalars()) == (a.x, a.y, a.z)
     b = a.locate_new('b', None)

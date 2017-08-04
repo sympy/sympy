@@ -333,11 +333,7 @@ class CoordSys3D(Basic):
         if isinstance(curv_coord_type, string_types):
             transformation_equations = _set_transformation_equations_mapping(curv_coord_type)
             lame_coefficients = _set_lame_coefficient_mapping(curv_coord_type)
-
-            if inverse:
-                inverse_transformation_equations = _set_inv_trans_equations(curv_coord_type)
-            else:
-                inverse_transformation_equations = None
+            inverse_transformation_equations = _set_inv_trans_equations(curv_coord_type)
 
         else:
             if isinstance(curv_coord_type, collections.Callable):
@@ -359,16 +355,12 @@ class CoordSys3D(Basic):
                                  "create orthogonal coordinate system")
 
             lame_coefficients = cls._calculate_lame_coefficients(transformation_equations)
-
-            if inverse:
-                inverse_transformation_equations = \
-                    cls._calculate_inv_transformation_equations(transformation_equations)
-            else:
-                inverse_transformation_equations = None
+            inverse_transformation_equations = None
 
         return transformation_equations, lame_coefficients, inverse_transformation_equations
 
     @classmethod
+    @cacheit
     def _check_orthogonality(cls, equations):
         """
         Helper method for _connect_to_cartesian. It checks if
@@ -402,8 +394,7 @@ class CoordSys3D(Basic):
             else:
                 return False
 
-    @classmethod
-    def _calculate_inv_transformation_equations(cls, equations):
+    def _calculate_inverse(self):
         """
         Helper method for set_coordinate_type. It calculates inverse
         transformation equations for given transformations equations.
@@ -419,16 +410,18 @@ class CoordSys3D(Basic):
         x = Dummy('x')
         y = Dummy('y')
         z = Dummy('z')
-        equations = equations(x1, x2, x3)
+        equations = self._transformation(x1, x2, x3)
 
         try:
             solved = solve([equations[0] - x, equations[1] - y, equations[2] - z], (x1, x2, x3), dict=True)[0]
             solved = solved[x1], solved[x2], solved[x3]
-            return Lambda((x1, x2, x3), tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved))
+            self._inverse_transformation = \
+                Lambda((x1, x2, x3), tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved))
         except:
             raise ValueError('Wrong set of parameters.')
 
     @classmethod
+    @cacheit
     def _calculate_lame_coefficients(cls, equations):
         """
         Helper method for set_coordinate_type. It calculates Lame coefficients
@@ -447,15 +440,15 @@ class CoordSys3D(Basic):
 
         return Lambda((x1, x2, x3),
                       (
-                          sqrt(diff(equations[0], x1)**2 +
+                          simplify(sqrt(diff(equations[0], x1)**2 +
                                diff(equations[1], x1)**2 +
-                               diff(equations[2], x1)**2),
-                          sqrt(diff(equations[0], x2)**2 +
+                               diff(equations[2], x1)**2)),
+                          simplify(sqrt(diff(equations[0], x2)**2 +
                                diff(equations[1], x2)**2 +
-                               diff(equations[2], x2)**2),
-                          sqrt(diff(equations[0], x3)**2 +
+                               diff(equations[2], x2)**2)),
+                          simplify(sqrt(diff(equations[0], x3)**2 +
                                diff(equations[1], x3)**2 +
-                               diff(equations[2], x3)**2)
+                               diff(equations[2], x3)**2))
                       ))
 
     def _inverse_rotation_matrix(self):
@@ -544,7 +537,7 @@ class CoordSys3D(Basic):
         return self._x, self._y, self._z
 
     def lame_coefficients(self):
-        return tuple(map(simplify, [self._h1, self._h2, self._h3]))
+        return self._h1, self._h2, self._h3
 
     def _transformation_equations(self):
         return self._transformation(*self.base_scalars())
