@@ -803,10 +803,8 @@ class TensorProduct(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy import Function
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import TensorProduct
-    >>> from sympy import pprint
 
     >>> TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
     1
@@ -892,10 +890,8 @@ class WedgeProduct(TensorProduct):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy import Function
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import WedgeProduct
-    >>> from sympy import pprint
 
     >>> WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
     1
