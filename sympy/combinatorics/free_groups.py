@@ -766,7 +766,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
                 return False
             elif a[1] < b[1]:
                 return True
-            elif a[1] > [1]:
+            elif a[1] > b[1]:
                 return False
         return False
 
