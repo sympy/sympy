@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from inspect import getmro
 
-from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
@@ -234,22 +233,23 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
+    from .basic import Basic
     if evaluate is None:
         if global_evaluate[0] is False:
             evaluate = global_evaluate[0]
         else:
             evaluate = True
+
     try:
-        if a in sympy_classes:
+        if isinstance(a, Basic) or issubclass(a, Basic):
             return a
-    except TypeError: # Type of a is unhashable
+    except TypeError:
         pass
     try:
         cls = a.__class__
     except AttributeError:  # a is probably an old-style class object
         cls = type(a)
-    if cls in sympy_classes:
-        return a
+
     if cls is type(None):
         if strict:
             raise SympifyError(a)

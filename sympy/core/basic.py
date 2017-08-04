@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 from collections import Mapping, defaultdict
 
-from .assumptions import BasicMeta, ManagedProperties
+from .assumptions import ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
@@ -1088,7 +1088,7 @@ class Basic(with_metaclass(ManagedProperties)):
             for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
-        if isinstance(pattern, BasicMeta):
+        if isinstance(pattern, type) and issubclass(pattern, Basic):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
 
