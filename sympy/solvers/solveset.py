@@ -391,7 +391,10 @@ def _solve_as_rational(f, symbol, domain):
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
-        return valid_solns - invalid_solns
+        if isinstance(valid_solns, ConditionSet) or isinstance(invalid_solns, ConditionSet):
+            return ConditionSet(f, symbol, domain)
+        else:
+            return valid_solns - invalid_solns
 
 
 def _solve_trig(f, symbol, domain):

@@ -756,6 +756,10 @@ def test_solve_trig():
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
         imageset(Lambda(n, 2*n*pi), S.Integers)
 
+def test_issue_13084():
+    f = sin(2*x + 3) - Rational(1,2)
+    assert solveset(f, x, S.Reals) == ConditionSet(x, Eq(sin(2*x + 3) - 1/2, 0), S.Reals)
+
 
 @XFAIL
 def test_solve_trig_abs():
