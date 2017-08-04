@@ -61,6 +61,18 @@ class RewritingSystem(object):
         self._remove_redundancies()
         return
 
+    def _add_rule(self, r1, r2):
+        '''
+        Add the rule r1 -> r2 with no checking or futher
+        deductions
+
+        '''
+        if len(self.rules) + 1 > self.maxeqns:
+            self._is_confluent = self._check_confluence()
+            self._max_exceeded = True
+            raise RuntimeError("Too many rules were defined.")
+        self.rules[r1] = r2
+
     def add_rule(self, w1, w2, check=False):
         new_keys = set()
 
@@ -80,14 +92,14 @@ class RewritingSystem(object):
         # the overlaps. See [1], Section 3 for details.
 
         if len(s1) - len(s2) < 3:
-            if not check:
-                if len(self.rules) + 1 > self.maxeqns:
-                    self._is_confluent = self._check_confluence()
-                    self._max_exceeded = True
-                    raise RuntimeError("Too many rules were defined.")
-                self.rules[s1] = s2
             if s1 not in self.rules:
                 new_keys.add(s1)
+                if not check:
+                    self._add_rule(s1, s2)
+            if s2**-1 > s1**-1 and s2**-1 not in self.rules:
+                new_keys.add(s2**-1)
+                if not check:
+                    self._add_rule(s2**-1, s1**-1)
 
         # overlaps on the right
         while len(s1) - len(s2) > 1:
@@ -164,6 +176,9 @@ class RewritingSystem(object):
                 t = w.eliminate_word(r2, self.rules[r2])
                 t = self.reduce(t)
                 if s != t:
+                    if check:
+                        # system not confluent
+                        return [0]
                     try:
                         new_keys = self.add_rule(t, s, check)
                         return new_keys

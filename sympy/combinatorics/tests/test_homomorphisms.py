@@ -39,7 +39,7 @@ def test_homomorphism():
     # FreeGroup -> FpGroup
     G = FpGroup(F, [a*b*a**-1*b**-1])
     T = homomorphism(F, G, F.generators, G.generators)
-    assert T.invert(a**-1*b**-1*a**2) == a**-1*b**-1*a**2
+    assert T.invert(a**-1*b**-1*a**2) == a*b**-1
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)
