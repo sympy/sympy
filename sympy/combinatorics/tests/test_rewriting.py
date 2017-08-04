@@ -6,9 +6,7 @@ def test_rewriting():
     G = FpGroup(F, [a*b*a**-1*b**-1])
     a, b = G.generators
     R = G._rewriting_system
-    assert R.is_confluent == False
-    R.make_confluent()
-    assert R.is_confluent == True
+    assert R.is_confluent
 
     assert G.reduce(b**3*a**4*b**-2*a) == a**5*b
     assert G.equals(b**2*a**-1*b, b**4*a**-1*b**-1)

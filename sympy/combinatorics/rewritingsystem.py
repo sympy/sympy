@@ -63,10 +63,9 @@ class RewritingSystem(object):
 
     def add_rule(self, w1, w2, check=False):
         new_keys = set()
-        if len(self.rules) + 1 > self.maxeqns:
-            self._is_confluent = self._check_confluence()
-            self._max_exceeded = True
-            return ValueError("Too many rules were defined.")
+
+        if w1 == w2:
+            return new_keys
 
         if w1 < w2:
             w1, w2 = w2, w1
@@ -80,40 +79,33 @@ class RewritingSystem(object):
         # redundant rules that would result from processing
         # the overlaps. See [1], Section 3 for details.
 
-        if len(s1) - len(s2) in [0, 1, 2]:
-            if not check and s1 != s2:
+        if len(s1) - len(s2) < 3:
+            if not check:
+                if len(self.rules) + 1 > self.maxeqns:
+                    self._is_confluent = self._check_confluence()
+                    self._max_exceeded = True
+                    raise RuntimeError("Too many rules were defined.")
                 self.rules[s1] = s2
-            new_keys.add(s1)
+            if s1 not in self.rules:
+                new_keys.add(s1)
 
         # overlaps on the right
         while len(s1) - len(s2) > 1:
             g = s1[len(s1)-1]
             s1 = s1.subword(0, len(s1)-1)
             s2 = s2*g**-1
-            if len(s1) - len(s2) in [0, 1, 2]:
-                if s2 < s1:
-                    if not check:
-                        self.rules[s1] = s2
-                    new_keys.add(s1)
-                elif s1 < s2:
-                    if not check:
-                        self.rules[s2] = s1
-                    new_keys.add(s2)
+            if len(s1) - len(s2) < 3:
+                new = self.add_rule(s1, s2, check)
+                new_keys.update(new)
 
         # overlaps on the left
         while len(w1) - len(w2) > 1:
             g = w1[0]
             w1 = w1.subword(1, len(w1))
             w2 = g**-1*w2
-            if len(w1) - len(w2) in [0, 1, 2]:
-                if w2 < w1:
-                    if not check:
-                        self.rules[w1] = w2
-                    new_keys.add(w1)
-                elif w1 < w2:
-                    if not check:
-                        self.rules[w2] = w1
-                    new_keys.add(w2)
+            if len(w1) - len(w2) < 3:
+                new = self.add_rule(w1, w2, check)
+                new_keys.update(new)
 
         return new_keys
 
@@ -135,11 +127,8 @@ class RewritingSystem(object):
             if v != r:
                 del self.rules[r]
                 removed.add(r)
-                if v != w:
-                    new = self.add_rule(v, w)
-                    added.update(new)
-            else:
-                self.rules[v] = w
+            new = self.add_rule(v, w)
+            added.update(new)
         if changes:
             return removed, added
         return
@@ -151,9 +140,7 @@ class RewritingSystem(object):
 
         '''
         if self._max_exceeded:
-            if check:
-                return self._is_confluent
-            return
+            return self._is_confluent
         lhs = list(self.rules.keys())
 
         def _overlaps(r1, r2):
@@ -173,12 +160,14 @@ class RewritingSystem(object):
 
         def _process_overlap(w, r1, r2, check):
                 s = w.eliminate_word(r1, self.rules[r1])
+                s = self.reduce(s)
                 t = w.eliminate_word(r2, self.rules[r2])
-                if self.reduce(s) != self.reduce(t):
+                t = self.reduce(t)
+                if s != t:
                     try:
                         new_keys = self.add_rule(t, s, check)
                         return new_keys
-                    except ValueError:
+                    except RuntimeError:
                         return False
                 return
 
@@ -200,6 +189,7 @@ class RewritingSystem(object):
                 if r1 == r2:
                     continue
                 overlaps = _overlaps(r1, r2)
+                overlaps.extend(_overlaps(r1**-1, r2))
                 if not overlaps:
                     continue
                 for w in overlaps:
@@ -213,7 +203,8 @@ class RewritingSystem(object):
                         # too many rules were added so the process
                         # couldn't complete
                         return self._is_confluent
-                if added > self.tidyint:
+
+                if added > self.tidyint and not check:
                     # tidy up
                     r, a = self._remove_redundancies(changes=True)
                     added = 0
@@ -250,7 +241,7 @@ class RewritingSystem(object):
             again = False
             for r in rules:
                 prev = new
-                if len(r) == len(rules[r]):
+                if rules[r]**-1 in rules:
                     new = new.eliminate_word(r, rules[r], _all=True, inverse=False)
                 else:
                     new = new.eliminate_word(r, rules[r], _all=True)

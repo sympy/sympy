@@ -77,6 +77,12 @@ class GroupHomomorphism(object):
             gens = image.generator_product(g)[::-1]
         else:
             gens = g
+        # the following can't be "for s in gens:"
+        # because that would be equivalent to
+        # "for s in gens.array_form:" when g is
+        # a FreeGroupElement. On the other hand,
+        # when you call gens by index, the generator
+        # (or inverse) at position i is returned.
         for i in range(len(gens)):
             s = gens[i]
             if s.is_identity:
@@ -111,7 +117,7 @@ class GroupHomomorphism(object):
         i = self.image().order()
         while K.order()*i != G_order:
             r = G.random()
-            k = r*self.invert(self(r))
+            k = r*self.invert(self(r))**-1
             if not k in K:
                 gens.append(k)
                 if isinstance(G, PermutationGroup):
@@ -257,6 +263,14 @@ def _check_homomorphism(domain, codomain, images):
             r_arr = r.array_form
             i = 0
             j = 0
+            # i is the index for r and j is for
+            # r_arr. r_arr[j] is the tuple (sym, p)
+            # where sym is the generator symbol
+            # and p is the power to which it is
+            # raised while r[i] is a generator
+            # (not just its symbol) or the inverse of
+            # a generator - hence the need for
+            # both indices
             while i < len(r):
                 power = r_arr[j][1]
                 if r[i] in images:
@@ -274,8 +288,15 @@ def _check_homomorphism(domain, codomain, images):
                 # only try to make the rewriting system
                 # confluent when it can't determine the
                 # truth of equality otherwise
-                codomain.make_confluent()
+                success = codomain.make_confluent()
                 s = codomain.equals(_image(r), identity)
+                if s in None and not success:
+                    raise RuntimeError("Can't determine if the images "
+                        "define a homomorphism. Try increasing "
+                        "the maximum number of rewriting rules "
+                        "(group._rewriting_system.set_max(new_value); "
+                        "the current value is stored in group._rewriting"
+                        "_system.maxeqns)")
         else:
             s = _image(r).is_identity
         if not s:
