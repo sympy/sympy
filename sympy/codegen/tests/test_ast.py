@@ -268,11 +268,28 @@ def test_Declaration():
     decl4 = raises(ValueError, lambda: Declaration.deduced(n, 3.5, cast=True))
 
 
+
 def test_Declaration__deduced():
     assert Declaration.deduced(n).variable.type == integer
     assert Declaration.deduced(z, 3).variable.type == integer
     assert Declaration.deduced(z, 3.0).variable.type == real
     assert Declaration.deduced(z, 3.0+1j).variable.type == complex_
+
+
+def test_FloatType():
+    assert f32.dig == 6
+    assert f64.dig == 15
+    assert f80.dig == 18
+    assert f32.decimal_dig == 9
+    assert f64.decimal_dig == 17
+    assert f80.decimal_dig == 21
+    assert abs(f32.max / Float('3.40282347e+38', precision=32) - 1) < 10**-f32.dig
+    assert abs(f64.max / Float('1.79769313486231571e+308', precision=64) - 1) < 10**-f64.dig  # cf. np.finfo(np.float64).max
+    assert abs(f80.max / Float('1.18973149535723176502e+4932', precision=80) - 1) < 10**-f80.dig
+
+    assert abs(f32.tiny / Float('1.17549435e-38', precision=32) - 1) < 10**-f32.dig  # cf. np.finfo(np.float32).tiny
+    assert abs(f64.tiny / Float('2.22507385850720138e-308', precision=64) - 1) < 10**-f64.dig
+    assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 10**-f80.dig
 
 
 def test_Type__cast_check__floating_point():

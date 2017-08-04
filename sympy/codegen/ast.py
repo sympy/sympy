@@ -193,7 +193,7 @@ def aug_assign(lhs, op, rhs):
         subclass these types are also supported.
 
     op : str
-        Operator (+, -, /, \*, %).
+        Operator (+, -, /, \\*, %).
 
     rhs : Expr
         Sympy object representing the rhs of the expression. This can be any
@@ -668,7 +668,7 @@ class IntBaseType(Type):
 
 
 class _SizedIntType(IntBaseType):
-    __slots__ = ['name', 'bits']
+    __slots__ = ['name', 'nbits']
 
     def _check(self, value):
         if value < self.min:
@@ -680,11 +680,11 @@ class _SizedIntType(IntBaseType):
 class SignedIntType(_SizedIntType):
     @property
     def min(self):
-        return -2**(self.bits-1)
+        return -2**(self.nbits-1)
 
     @property
     def max(self):
-        return 2**(self.bits-1) - 1
+        return 2**(self.nbits-1) - 1
 
 
 class UnsignedIntType(_SizedIntType):
@@ -694,18 +694,40 @@ class UnsignedIntType(_SizedIntType):
 
     @property
     def max(self):
-        return 2**self.bits - 1
+        return 2**self.nbits - 1
 
+two = Integer(2)
 
 class FloatType(Type):
-    """ Represents a floating point value.
+    """ Represents a floating point value. Base 2 & one sign bit is assumed.
+
+    In general
+
+    Arguments
+    ---------
+    name : str
+    nbits : integer
+        Number of bits used (storage).
+    nmant : integer
+        Number of bits used to represent the mantissa.
+    nexp : integer
+        Number of bits used to represent the mantissa.
 
     Examples
     --------
     >>> from sympy import S, Float
     >>> from sympy.codegen.ast import FloatType
-    >>> half_precision = FloatType('f16', bits=16, max=65504, tiny=S(2)**-14,
-    ...     eps=Float('0.0009765625'), dig=2, decimal_dig=4)
+    >>> half_precision = FloatType('f16', nbits=16, nmant=10, nexp=5)
+    >>> half_precision.max
+    65504
+    >>> half_precision.tiny == S(2)**-14
+    True
+    >>> half_precision.eps == S(2)**-10
+    True
+    >>> half_precision.dig == 2
+    True
+    >>> half_precision.decimal_dig == 4
+    True
     >>> half_precision.cast_check(1.0)
     1.0
     >>> half_precision.cast_check(1e5)  # doctest: +ELLIPSIS
@@ -714,7 +736,43 @@ class FloatType(Type):
     ValueError: Maximum value for data type smaller than new value.
 
     """
-    __slots__ = ['name', 'bits', 'max', 'tiny', 'eps', 'dig', 'decimal_dig']
+
+    __slots__ = ['name', 'nbits', 'nmant', 'nexp']
+
+    @property
+    def max(self):
+        """ Maximum value representable. """
+        return two**(2**(self.nexp-1))
+
+    @property
+    def tiny(self):
+        """ Smallest magnitude value (excluding subnormals). """
+        return two**(2 - 2**(self.nexp - 1))
+
+    @property
+    def eps(self):
+        """ Difference between 1.0 and the next representable value. """
+        return two**(-self.nmant)
+
+    @property
+    def dig(self):
+        """ Number of decimal digits that are guaranteed to be preserved in text.
+
+        When converting text -> float -> text, you are guaranteed that at least ``dig``
+        number of digits are preserved with respect to rounding or overflow.
+        """
+        from sympy.functions import floor, log
+        return floor(self.nmant * log(2)/log(10))
+
+    @property
+    def decimal_dig(self):
+        """ Number of decimal digits needed to guarantee float -> text -> float to be idempotent.
+
+        In order to avoid rounding errors when storing a floating point value as text (decimal digits),
+        you will need to use ``decimal_dig`` number of digits.
+        """
+        from sympy.functions import ceiling, log
+        return ceiling((self.nmant + 1) * log(2)/log(10) + 1)
 
     def _cast_nocheck(self, value):
         return Float(str(_sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
@@ -726,6 +784,7 @@ class FloatType(Type):
             raise ValueError("Value is too big: %d > %d" % (value, self.max))
         if abs(value) < self.tiny:
             raise ValueError("Smallest (absolute) value for data type bigger than new value.")
+
 
 class ComplexType(FloatType):
     """ Represents a complex floating point number. """
@@ -754,27 +813,13 @@ uint8 = UnsignedIntType('uint8', 8)
 uint16 = UnsignedIntType('uint16', 16)
 uint32 = UnsignedIntType('uint32', 32)
 uint64 = UnsignedIntType('uint64', 64)
-float32 = FloatType(
-    'float32', 32,
-    max=Float('3.40282347e+38', precision=32+8),
-    tiny=Float('1.17549435e-38', precision=32+8),
-    eps=Float('1.1920929e-07', precision=32+8),
-    dig=6, decimal_dig=9
-)
-float64 = FloatType(
-    'float64', 64,
-    max=Float('1.79769313486231571e+308', precision=64+8),
-    tiny=Float('2.22507385850720138e-308', precision=64+8),
-    eps=Float('2.22044604925031308e-16', precision=64+8),
-    dig=15, decimal_dig=17
-)
-float80 = FloatType(
-    'float80', 80,
-    max=Float('1.18973149535723176502e+4932', precision=80+8),
-    tiny=Float('3.36210314311209350626e-4932', precision=80+8),
-    eps=Float('1.08420217248550443401e-19', precision=80+8),
-    dig=18, decimal_dig=21
-)
+float16 = FloatType('float16', 16, nexp=5, nmant=10)  # IEEE 754 binary16, Half precision
+float32 = FloatType('float32', 32, nexp=8, nmant=23)  # IEEE 754 binary32, Single precision
+float64 = FloatType('float64', 64, nexp=11, nmant=52)  # IEEE 754 binary64, Double precision
+float80 = FloatType('float80', 80, nexp=15, nmant=63)  # x86 extended precision (1 integer part bit), "long double"
+float128 = FloatType('float128', 128, nexp=15, nmant=112)  # IEEE 754 binary128, Quadruple precision
+float256 = FloatType('float256', 256, nexp=19, nmant=236)  # IEEE 754 binary256, Octuple precision
+
 complex64 = ComplexType('complex64', 64, **{k: getattr(float32, k) for k in FloatType.__slots__[2:]})
 complex128 = ComplexType('complex128', 128, **{k: getattr(float64, k) for k in FloatType.__slots__[2:]})
 
