@@ -241,7 +241,7 @@ class RewritingSystem(object):
             again = False
             for r in rules:
                 prev = new
-                if rules[r]**-1 in rules:
+                if rules[r]**-1 > r**-1:
                     new = new.eliminate_word(r, rules[r], _all=True, inverse=False)
                 else:
                     new = new.eliminate_word(r, rules[r], _all=True)
