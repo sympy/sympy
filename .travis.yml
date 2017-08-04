@@ -295,13 +295,15 @@ install:
       then virtualenv -p /usr/bin/pypy ~/.venv;
            . ~/.venv/bin/activate;
     fi
+  # -We:invalid makes invalid escape sequences error in Python 3.6. See
+  # -#12028.
   - if [[ "${TEST_SAGE}" != "true" ]]; then
       pip install mpmath;
       pip uninstall -y setuptools;
-      python setup.py install;
+      python -We:invalid setup.py install;
       pip uninstall -y sympy;
       pip install --upgrade setuptools;
-      python setup.py install;
+      python -We:invalid setup.py install;
     fi
 script:
   # Don't run doctr if the build fails
