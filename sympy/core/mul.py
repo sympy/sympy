@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
-from functools import cmp_to_key
 import operator
 
 from .sympify import sympify
@@ -26,7 +25,6 @@ class NC_Marker:
     is_commutative = False
 
 # Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=default_sort_key)

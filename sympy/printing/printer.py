@@ -265,6 +265,6 @@ class Printer(object):
         order = order or self.order
 
         if order == 'old':
-            return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
+            raise ValueError("'old' ordering has been removed")
         else:
             return expr.as_ordered_terms(order=order)

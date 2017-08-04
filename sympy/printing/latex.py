@@ -369,7 +369,7 @@ class LatexPrinter(Printer):
             else:
                 _tex = last_term_tex = ""
 
-                if self.order not in ('old', 'none'):
+                if self.order != 'none':
                     args = expr.as_ordered_factors()
                 else:
                     args = expr.args
@@ -2050,11 +2050,10 @@ def latex(expr, **settings):
     >>> latex((2*tau)**Rational(7,2))
     '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
 
-    order: Any of the supported monomial orderings (currently "lex", "grlex", or
-    "grevlex"), "old", and "none". This parameter does nothing for Mul objects.
-    Setting order to "old" uses the compatibility ordering for Add defined in
-    Printer. For very large expressions, set the 'order' keyword to 'none' if
-    speed is a concern.
+    order: Any of the supported monomial orderings (currently "lex", "grlex",
+    or "grevlex"), and "none". This parameter does nothing for Mul objects.
+    For very large expressions, set the 'order' keyword to 'none' if speed is
+    a concern.
 
     mode: Specifies how the generated code will be delimited. 'mode' can be one
     of 'plain', 'inline', 'equation' or 'equation*'.  If 'mode' is set to

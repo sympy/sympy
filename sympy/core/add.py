@@ -1,9 +1,7 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
-from functools import cmp_to_key
 
-from .basic import Basic
 from .compatibility import reduce, is_sequence, range, default_sort_key
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
@@ -14,7 +12,6 @@ from .expr import Expr
 
 
 # Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _addsort(args):
     # in-place sorting of args
     args.sort(key=default_sort_key)
