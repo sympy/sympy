@@ -13,7 +13,7 @@ def test_twave():
     A1, phi1, A2, phi2, f = symbols('A1, phi1, A2, phi2, f')
     n = Symbol('n')  # Refractive index
     t = Symbol('t')  # Time
-    x = Symbol('x')  # Spatial varaible
+    x = Symbol('x')  # Spatial variable
     k = Symbol('k')  # Wave number
     E = Function('E')
     w1 = TWave(A1, f, phi1)
