@@ -1739,3 +1739,21 @@ def test_comparisons_with_unknown_type():
     assert not bar >= oo
     assert oo >= bar
     assert bar <= oo
+
+def test_NumberSymbol_comparison():
+    rpi = Rational('905502432259640373/288230376151711744')
+    fpi = Float(float(pi))
+
+    assert (rpi == pi) == (pi == rpi)
+    assert (rpi != pi) == (pi != rpi)
+    assert (rpi < pi) == (pi > rpi)
+    assert (rpi <= pi) == (pi >= rpi)
+    assert (rpi > pi) == (pi < rpi)
+    assert (rpi >= pi) == (pi <= rpi)
+
+    assert (fpi == pi) == (pi == fpi)
+    assert (fpi != pi) == (pi != fpi)
+    assert (fpi < pi) == (pi > fpi)
+    assert (fpi <= pi) == (pi >= fpi)
+    assert (fpi > pi) == (pi < fpi)
+    assert (fpi >= pi) == (pi <= fpi)
