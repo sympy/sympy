@@ -104,7 +104,7 @@ class GeometryEntity(Basic):
 
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
-        return not self.__eq__(o)
+        return not self == o
 
     def __new__(cls, *args, **kwargs):
         # Points are sequences, but they should not
