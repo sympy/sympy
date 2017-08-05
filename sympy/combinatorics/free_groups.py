@@ -663,7 +663,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         word = word.subword(0, i)*by**k*word.subword(i+l, len(word)).eliminate_word(gen, by)
 
         if _all:
-            return word.eliminate_word(gen, by, _all=True)
+            return word.eliminate_word(gen, by, _all=True, inverse=inverse)
         else:
             return word
 
