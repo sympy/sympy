@@ -1495,7 +1495,6 @@ def test_TrigToExp():
     assert TrigToExp(sin(x)) == -I*(exp(I*x) - exp(-I*x))/2
     assert TrigToExp(cos(x)) == exp(I*x)/2 + exp(-I*x)/2
     assert TrigToExp(cos(x)*tan(x**2)) == I*(exp(I*x)/2 + exp(-I*x)/2)*(-exp(I*x**2) + exp(-I*x**2))/(exp(I*x**2) + exp(-I*x**2))
-    assert TrigToExp(cos(x)*tan(x**2)*sin(x)**2) == -I*(exp(I*x)/2 + exp(-I*x)/2)*(exp(I*x) - exp(-I*x))**2*(-exp(I*x**2) + exp(-I*x**2))/(4*(exp(I*x**2) + exp(-I*x**2)))
     assert TrigToExp(cos(x) + sin(x)**2) == -(exp(I*x) - exp(-I*x))**2/4 + exp(I*x)/2 + exp(-I*x)/2
 
 def test_ExpandTrigReduce():

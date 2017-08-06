@@ -4122,7 +4122,7 @@ def KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
 
 def ExpandTrigExpand(u, F, v, m, n, x):
-    w = Expand(TrigExpand(F.subs(x, n*x))**m, x).subs(x, v)
+    w = Expand(TrigExpand(F.subs(x, n*x))**m).subs(x, v)
     if SumQ(w):
         t = 0
         for i in w.args:
@@ -4251,18 +4251,6 @@ def AbsurdNumberGCDList(lst1, lst2):
     elif lst2[0][1] < 0:
         return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, Rest(lst2))
     return AbsurdNumberGCDList(lst1, Rest(lst2))
-
-# set 15
-def ExpandTrigExpand(u, F, v, m, n, x):
-    ExpandTrigExpand(1, cos(x), x**2, 2, 2, x)
-    w = Expand(TrigExpand(F.subs(x, n*x))**m).subs(x, v)
-    if SumQ(w):
-        t = 0
-        for i in w.args:
-            t += u*i
-        return t
-    else:
-        return u*w
 
 def ExpandTrigReduce(*args):
     if len(args) == 3:
