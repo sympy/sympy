@@ -1844,7 +1844,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, b, u, n, c, j, p = tuple([match[i] for i in keys])
             if IntegerQ(n) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and NonzeroQ(b**2 - 4*a*c):
-                ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c,2), x: u**n})
+                ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c, S(2)), x: u**n})
 
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x, 0])
@@ -1861,7 +1861,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, m, a, b, n, c, j, p = tuple([match[i] for i in keys])
             if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0<m<2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
-                return ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, 2),x: u})
+                return ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, S(2)),x: u})
 
     a_ = Wild('a', exclude=[x, 0])
     c_ = Wild('c', exclude=[x, 0])
@@ -1876,7 +1876,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, c, u, n, p = tuple([match[i] for i in keys])
             if IntegerQ(n/2) and NegativeIntegerQ(p):
-                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c,2),x: u**(n/2)})
+                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c, S(2)),x: u**(n/2)})
 
     u_ = Wild('u', exclude=[0, 1])
     m_ = Wild('m', exclude=[x, 0])
@@ -1891,7 +1891,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, m, a, c, n, p = tuple([match[i] for i in keys])
             if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0 < m < n and (m != n/2):
-                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, 2), x: u})
+                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, S(2)), x: u})
 
     u_ = Wild('u', exclude=[0])
     a_ = Wild('a', exclude=[x, 0])
@@ -1928,7 +1928,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             d, e, f, g, u, n, a, b, c, j = tuple([match[i] for i in keys])
             if ZeroQ(j - 2*n) and NonzeroQ(b*2 - 4*a*c):
-                q = Rt(b**2 - 4*a*c, 2)
+                q = Rt(b**2 - 4*a*c, S(2))
                 r = TogetherSimplify((2*c*(d + e*f) - b*e*g)/q)
                 return (e*g + r)/(b - q + 2*c*u**n) + (e*g - r)/(b + q + 2*c*u**n)
 
@@ -2061,7 +2061,7 @@ def ExpandIntegrand(expr, x, extra=None):
                 # q=Sqrt[-(a/b)], then (c+d z)/(a+b z^2)==-((c-d q)/(2 b q(q+z)))-(c+d q)/(2 b q(q-z))
                 j = n
                 n = m
-                q = Rt(-a/b, 2)
+                q = Rt(-a/b, S(2))
                 return -(c - d*q)/(2*b*q*(q + u**n)) - (c + d*q)/(2*b*q*(q - u**n))
 
     a_ = Wild('a', exclude=[x, 0])
@@ -2076,13 +2076,13 @@ def ExpandIntegrand(expr, x, extra=None):
             a, b, u, n = tuple([match[i] for i in keys])
             if n == 3:
                 # Basis: Let r/s=(-(a/b))^(1/3), then  1/(a+b z^3)==r/(3a(r-s z))+(r(2 r+s z))/(3a(r^2+r s z+s^2 z^2))
-                r = Numerator(Rt(-a/b, 3))
-                s = Denominator(Rt(-a/b, 3))
+                r = Numerator(Rt(-a/b, S(3)))
+                s = Denominator(Rt(-a/b, S(3)))
                 return r/(S(3)*a*(r - s*u)) + r*(2*r + s*u)/(3*a*(r**2 + r*s*u + s**2*u**2))
             elif PositiveIntegerQ(n/4):
                 # Let r/s=Sqrt[-(a/b)], then  1/(a+b z^2)==r/(2a(r-s z))+r/(2a(r+s z))
-                r = Numerator(Rt(-a/b,2))
-                s = Denominator(Rt(-a/b, 2))
+                r = Numerator(Rt(-a/b, S(2)))
+                s = Denominator(Rt(-a/b, S(2)))
                 return r/(2*a*(r - s*u**(n/2))) + r/(2*a*(r + s*u**(n/2)))
             elif IntegerQ(n) & PositiveQ(n):
                 # Basis: If  n\[Element]SuperPlus[\[DoubleStruckCapitalZ]], let r/s=(-(a/b))^(1/n), then  1/(a + b*z^n) == (r*Sum[1/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
@@ -2305,8 +2305,8 @@ def SimplerSqrtQ(u, v):
         return True
     if NegativeQ(u) and Not(NegativeQ(v)):
         return False
-    sqrtu = Rt(u, 2)
-    sqrtv = Rt(v, 2)
+    sqrtu = Rt(u, S(2))
+    sqrtv = Rt(v, S(2))
     if IntegerQ(sqrtu):
         if IntegerQ(sqrtv):
             return sqrtu<sqrtv
@@ -4347,7 +4347,7 @@ def TrigReduce(i):
                 b = Match[b]
                 v = Match[v]
                 # 2 cos A cos B = cos(A + B) + cos(A − B)
-                return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))            
+                return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))
     if PowerQ(i):
         if i.has(sin):
             if (i.rewrite(sin, exp).expand().rewrite(exp, sin)).has(I):
@@ -4373,14 +4373,14 @@ def FunctionOfTrigOfLinearQ(u, x):
     if M AlgebraicTrigFunctionQ()
 
 def FunctionOfTrigOfLinearQ(u, x):
-     
+
     (* Not[MatchQ[u, (c_.*f_[a_.+b_.*x])^p_. /; FreeQ[{a,b,c,p},x] && MemberQ[{Sin,Cos,Sec,Csc},f]]] && *)
-    Not[MemberQ[{Null, False}, FunctionOfTrig[u,Null,x]]] && AlgebraicTrigFunctionQ[u,x] (* && 
+    Not[MemberQ[{Null, False}, FunctionOfTrig[u,Null,x]]] && AlgebraicTrigFunctionQ[u,x] (* &&
     RecognizedFunctionOfTrigQ[DeactivateTrig[u,x],x] *)
 '''
 
 def FunctionOfTrig(u, *x):
-	# If u is a function of trig functions of v where v is a linear function of x, 
+	# If u is a function of trig functions of v where v is a linear function of x,
 	# FunctionOfTrig[u,x] returns v; else it returns False.
     if len(x) == 1:
         x = x[0]
@@ -4610,7 +4610,7 @@ def PureFunctionOfTanQ(u, v, x):
     return True
 
 def PureFunctionOfCotQ(u, v, x):
-    # If u is a pure function of Cot(v), PureFunctionOfCotQ(u, v, x) returns True; else it returns False. 
+    # If u is a pure function of Cot(v), PureFunctionOfCotQ(u, v, x) returns True; else it returns False.
     if AtomQ(u):
         return u!=x
     if CalculusQ(u):
@@ -4807,7 +4807,7 @@ def FunctionOfLog(u, *args):
             return [u.subs(log(lst1[1]), x), lst1[1], lst1[2]]
 
 def PowerVariableExpn(u, m, x):
-    # If m is an integer, u is an expression of the form f((c*x)**n) and g=GCD(m,n)>1, 
+    # If m is an integer, u is an expression of the form f((c*x)**n) and g=GCD(m,n)>1,
     # PowerVariableExpn(u,m,x) returns the list {x**(m/g)*f((c*x)**(n/g)),g,c}; else it returns False.
     if IntegerQ(m):
         lst = PowerVariableDegree(u, m, 1, x)
@@ -4902,16 +4902,16 @@ def FunctionOfSquareRootOfQuadratic(u, *args):
         if ZeroQ(a) and ZeroQ(b) or ZeroQ(b**2-4*a*c):
             return False
         if PosQ(c):
-            sqrt = Rt(c, 2);
+            sqrt = Rt(c, S(2));
             q = a*sqrt + b*x + sqrt*x**2
             r = b + 2*sqrt*x
             return [Simplify(SquareRootOfQuadraticSubst(u, q/r, (-a+x**2)/r, x)*q/r**2), Simplify(sqrt*x + Sqrt(tmp)), 2]
         if PosQ(a):
-            sqrt = Rt(a, 2)
+            sqrt = Rt(a, S(2))
             q = c*sqrt - b*x + sqrt*x**2
             r = c - x**2
             return [Simplify(SquareRootOfQuadraticSubst(u, q/r, (-b+2*sqrt*x)/r, x)*q/r**2), Simplify((-sqrt+Sqrt(tmp))/x), 1]
-        sqrt = Rt(b**2 - 4*a*c, 2)
+        sqrt = Rt(b**2 - 4*a*c, S(2))
         r = c - x**2
         return[Simplify(-sqrt*SquareRootOfQuadraticSubst(u, -sqrt*x/r, -(b*c+c*sqrt+(-b+sqrt)*x**2)/(2*c*r), x)*x/r**2), FullSimplify(2*c*Sqrt(tmp)/(b-sqrt+2*c*x)), 3]
     else:
@@ -5023,7 +5023,7 @@ def SumBaseQ(u):
     return SumQ(u) or PowerQ(u) and OddQ(u.args[1]) and SumBaseQ(u.args[0])
 
 def NegSumBaseQ(u):
-    # If u is a sum or a sum raised to an odd degree whose lead term has a negative form,  NegSumBaseQ(u) returns True; else it returns False 
+    # If u is a sum or a sum raised to an odd degree whose lead term has a negative form,  NegSumBaseQ(u) returns True; else it returns False
     return SumQ(u) and NegQ(First(u)) or PowerQ(u) and OddQ(u.args[1]) and NegSumBaseQ(u.args[0])
 
 def AllNegTermQ(u):
@@ -5037,13 +5037,13 @@ def AllNegTermQ(u):
 def SomeNegTermQ(u):
     # If some term of u has a negative form,  SomeNegTermQ(u) returns True; else it returns False
     if PowerQ(u) and OddQ(u.args[1]):
-        return SomeNegTermQ(u.args[0]) 
+        return SomeNegTermQ(u.args[0])
     if SumQ(u):
         return NegQ(First(u)) or SomeNegTermQ(Rest(u))
     return NegQ(u)
 
 def TrigSquareQ(u):
-    # If u is an expression of the form Sin(z)^2 or Cos(z)^2,  TrigSquareQ(u) returns True,  else it returns False 
+    # If u is an expression of the form Sin(z)^2 or Cos(z)^2,  TrigSquareQ(u) returns True,  else it returns False
     return PowerQ(u) and EqQ(u.args[1], 2) and MemberQ([sin, cos], Head(u.args[0]))
 
 def SplitProduct(func, u):
@@ -5055,7 +5055,7 @@ def SplitProduct(func, u):
         if AtomQ(lst):
             return False
         else:
-            return [lst[0], First(u)*lst[1]] 
+            return [lst[0], First(u)*lst[1]]
     if func(u):
         return [u,  1]
     else:
@@ -5076,7 +5076,7 @@ def SplitSum(func, u):
     else:
         return False
 
-def RtAux(u, n): 
+def RtAux(u, n):
     if PowerQ(u):
         return u.args[0]**(u.args[1]/n)
     if ComplexNumberQ(u):
@@ -5084,9 +5084,9 @@ def RtAux(u, n):
         b = Im(u)
         if Not(IntegerQ(a) and IntegerQ(b)) and IntegerQ(a/(a**2 + b**2)) and IntegerQ(b/(a**2 + b**2)):
             # Basis: a+b*I==1/(a/(a^2+b^2)-b/(a^2+b^2)*I)
-            return 1/RtAux(a/(a**2 + b**2) - b/(a**2 + b**2)*I, n)
+            return S(1)/RtAux(a/(a**2 + b**2) - b/(a**2 + b**2)*I, n)
         else:
-            return NthRoot(u, n)    
+            return NthRoot(u, n)
     if ProductQ(u):
         lst = SplitProduct(PositiveQ, u)
         if ListQ(lst):
@@ -5160,7 +5160,7 @@ def IntSum(u, x):
   return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
-    # If u is of the form c*(a+b*x)**m, IntTerm(u,x) returns the antiderivative of u wrt x; 
+    # If u is of the form c*(a+b*x)**m, IntTerm(u,x) returns the antiderivative of u wrt x;
     # else it returns d*Int(v,x) where d*v=u and d is free of x.
     c = Wild('c', exclude=[x])
     m = Wild('m', exclude=[x, 1])
