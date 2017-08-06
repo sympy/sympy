@@ -303,7 +303,7 @@ install:
       python -We:invalid setup.py install;
       pip uninstall -y sympy;
       pip install --upgrade setuptools;
-      python -We:invalid setup.py install;
+      python -We:invalid setup.py install --no-compile;
     fi
 script:
   # Don't run doctr if the build fails
