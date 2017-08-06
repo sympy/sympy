@@ -1730,6 +1730,11 @@ def test_SplitSum():
     assert SplitSum(FracPart, sin(x)) == [sin(x), 0]
     assert SplitSum(FracPart, sin(x) + S(2)) == [sin(x), S(2)]
 
+def test_IntSum():
+    assert IntSum(S(3*x+3/x**3),x) == 3*x**2/2 - 3/(2*x**2)
+    assert IntSum(S(3*x**3),x) == 3*x**4/4
+    assert IntSum(S(3/x),x) == 3*log(x)
+
 def test_ExpandIntegrand():
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
     assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3

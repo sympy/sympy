@@ -5048,36 +5048,6 @@ def TrigSquareQ(u):
     # If u is an expression of the form Sin(z)^2 or Cos(z)^2,  TrigSquareQ(u) returns True,  else it returns False
     return PowerQ(u) and EqQ(u.args[1], 2) and MemberQ([sin, cos], Head(u.args[0]))
 
-def SplitProduct(func, u):
-    # If func(v) is True for a factor v of u,  SplitProduct(func, u) returns [v,  u/v] where v is the first such factor; else it returns False
-    if ProductQ(u):
-        if func(First(u)):
-            return [First(u),  Rest(u)]
-        lst = SplitProduct(func, Rest(u))
-        if AtomQ(lst):
-            return False
-        else:
-            return [lst[0], First(u)*lst[1]]
-    if func(u):
-        return [u,  1]
-    else:
-        return False
-
-def SplitSum(func, u):
-    # If func(v) is nonatomic for a term v of u,  SplitSum(func, u) returns [func(v),  u-v] where v is the first such term; else it returns False
-    if SumQ(u):
-        if func(First(u)):
-            return [func(First(u)),  Rest(u)]
-        lst = SplitSum(func, Rest(u))
-        if lst == False:
-            return False
-        else:
-            return [lst[0], First(u) + lst[1]]
-    if func(u) == True:
-        return [func(u),  0]
-    else:
-        return False
-
 def RtAux(u, n):
     if PowerQ(u):
         return u.args[0]**(u.args[1]/n)
@@ -5159,23 +5129,25 @@ def TrigSquare(u):
         return False
 
 def IntSum(u, x):
-  return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
+    # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
+    # else it returns d*Int[v,x] where d*v=u and d is free of x.
+    return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
     # If u is of the form c*(a+b*x)**m, IntTerm(u,x) returns the antiderivative of u wrt x;
     # else it returns d*Int(v,x) where d*v=u and d is free of x.
     c = Wild('c', exclude=[x])
-    m = Wild('m', exclude=[x, 1])
+    m = Wild('m', exclude=[x, 0])
     v = Wild('v')
     M = expr.match(c/v)
-    if FreeQ(M[c], x) and LinearQ(M[v], x):
+    if M and len(M) == 2 and FreeQ(M[c], x) and LinearQ(M[v], x):
         return Simp(M[c]*Log(RemoveContent(M[v], x))/Coefficient(M[v], x, 1), x)
     M = expr.match(c*v**m)
-    if len(M) == 3 and NonzeroQ(M[m] + 1) and LinearQ(M[v], x):
+    if M and len(M) == 3 and NonzeroQ(M[m] + 1) and LinearQ(M[v], x):
         return Simp(M[c]*M[v]**(M[m] + 1)/(Coefficient(M[v], x, 1)*(M[m] + 1)), x)
     if SumQ(expr):
         t = 0
-        for i in u.args:
+        for i in expr.args:
             t += IntTerm(i, x)
         return t
     else:
