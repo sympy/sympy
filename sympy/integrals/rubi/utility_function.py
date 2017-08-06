@@ -253,9 +253,6 @@ def Denominator(var):
 def Hypergeometric2F1(a, b, c, z):
     return hyper([a, b], [c], z)
 
-def ArcTan(a):
-    return atan(a)
-
 def Not(var):
     if isinstance(var, bool):
         return not var
@@ -878,10 +875,6 @@ def Together(u):
 
 def FixSimplify(u):
     return u
-
-def TogetherSimplify(u):
-    return simplify(u)
-    #return With(Set(v, Together(Simplify(Together(u)))), FixSimplify(v))
 
 def PosAux(u):
     if RationalQ(u):
@@ -2347,14 +2340,6 @@ def SumSimplerQ(u, v):
     else:
         return SumSimplerAuxQ(Expand(u), Expand(v))
 
-def SumSimplerAuxQ(u, v):
-    if SumQ(v):
-        return (RationalQ(First(v)) or SumSimplerAuxQ(u, First(v))) and (RationalQ(Rest(v)) or SumSimplerAuxQ(u, Rest(v)))
-    elif SumQ(u):
-        return SumSimplerAuxQ(First(u), v) or SumSimplerAuxQ(Rest(u), v)
-    else:
-        return v!=S(0) and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)< -S(1)/2 or NumericFactor(u)/NumericFactor(v)== -S(1)/2 and NumericFactor(u)<S(0))
-
 def BinomialDegree(u, x):
     # if u is a binomial. BinomialDegree[u,x] returns the degree of x in u.
     return BinomialParts(u, x)[2]
@@ -2778,19 +2763,6 @@ def SumSimplerAuxQ(u, v):
         return SumSimplerAuxQ(First(u), v) or SumSimplerAuxQ(Rest(u), v)
     else:
         return v!=0 and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)<-1/2 or NumericFactor(u)/NumericFactor(v)==-1/2 and NumericFactor(u)<0)
-
-def SumSimplerQ(u, v):
-    # (* If u+v is simpler than u, SumSimplerQ[u,v] returns True, else it returns False. *)
-    # (* If for every term w of v there is a term of u equal to n*w where n<-1/2, u+v will be simpler than u. *)
-    if RationalQ(u, v):
-        if v==0:
-            return False
-        elif v > 0:
-            return u < -1
-        else:
-            return u >= -v
-    else:
-        return SumSimplerAuxQ(Expand(u), Expand(v))
 
 def Prepend(l1, l2):
     if not isinstance(l2, list):
@@ -3957,9 +3929,6 @@ def InertTrigQ(*args):
 def InertReciprocalQ(f, g):
     return (f.func == sin and g.func == csc) or (f.func == cos and g.func == sec) or (f.func == tan and g.func == cot)
 
-def ActivateTrig(u):
-    return u
-
 def DeactivateTrig(u, x):
     # (* u is a function of trig functions of a linear function of x. *)
     # (* DeactivateTrig[u,x] returns u with the trig functions replaced with inert trig functions. *)
@@ -3967,12 +3936,6 @@ def DeactivateTrig(u, x):
 
 def FixInertTrigFunction(u, x):
     return u
-
-def DeactivateTrigAux(u, x):
-    if AtomQ(u):
-        return u
-    elif TrigQ(u) and LinearQ(u.args[0], x):
-        v = ExpandToSum(u.args[0], x)
 
 def DeactivateTrigAux(u, x):
     if AtomQ(u):
@@ -4122,16 +4085,6 @@ def KnownCotangentIntegrandQ(u, x):
 
 def KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
-
-def ExpandTrigReduce(u, v, x):
-    w = ExpandTrigReduce(v, x)
-    if SumQ(w):
-        t = 0
-        for i in w.args:
-            t += u*i
-        return t
-    else:
-            return u*w
 
 def TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])

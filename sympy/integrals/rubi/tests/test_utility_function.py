@@ -131,20 +131,6 @@ def test_Simplify():
     assert Simplify(sin(x)**2 + cos(x)**2) == 1
     assert Simplify((x**3 + x**2 - x - 1)/(x**2 + 2*x + 1)) == x - 1
 
-def test_EllipticPi():
-    assert EllipticPi(0.25, 0.25) == 1.956616279119236207279727
-    assert EllipticPi(3, 0) == (0.0 - 1.11072073453959156175397j)
-
-def test_EllipticE():
-    assert EllipticE(0) == 1.570796326794896619231322
-    assert EllipticE(2) == (0.5990701173677961037199612 + 0.5990701173677961037199612j)
-    assert EllipticE(0.5 + 0.25j) == (1.360868682163129682716687 - 0.1238733442561786843557315j)
-
-def test_EllipticF():
-    assert EllipticF(0,1) == 0.0
-    assert EllipticF(2 + 3j,0) == (2.0 + 3.0j)
-    assert EllipticF(1,1) == 1.226191170883517070813061
-
 def test_ArcTanh():
     assert ArcTanh(a) == atanh(a)
 
@@ -1435,13 +1421,6 @@ def test_PowerVariableExpn():
     assert not PowerVariableExpn((2*x)**3, 2, x)
     assert PowerVariableExpn((2*x)**2, 4, x) == [4*x**3, 2, 1]
 
-def test_FunctionOfExpnQ():
-    assert FunctionOfExpnQ(2*x, x, x) == 1
-    assert FunctionOfExpnQ((2*x)**3, x, x) == 3
-    assert not FunctionOfExpnQ(S(x), x*2, x)
-    assert FunctionOfExpnQ(S(2*x), x*2, x) == 1
-    assert FunctionOfExpnQ(S(a), x*2, x) == 0
-
 def test_FunctionOfQ():
     assert not FunctionOfQ(S(x**3), x*2, x)
     assert FunctionOfQ(S(a), x*2, x)
@@ -1547,20 +1526,6 @@ def test_FunctionOfExpnQ():
     assert not FunctionOfExpnQ(x + 1, (x + 5)**2, x)
     assert not FunctionOfExpnQ(x + 1, (x + 1)**2, x)
 
-def test_PureFunctionOfSinQ():
-    v = log(x)
-    f = sin(v)
-    assert PureFunctionOfSinQ(f, v, x)
-    assert not PureFunctionOfSinQ(cos(v), v, x)
-    assert PureFunctionOfSinQ(f**2, v, x)
-
-def test_PureFunctionOfTanQ():
-    v = log(x)
-    f = tan(v)
-    assert PureFunctionOfTanQ(f, v, x)
-    assert not PureFunctionOfTanQ(cos(v), v, x)
-    assert PureFunctionOfTanQ(f**2, v, x)
-
 def test_PureFunctionOfCosQ():
     v = log(x)
     f = cos(v)
@@ -1609,19 +1574,6 @@ def test_FunctionOfTanWeight():
     assert FunctionOfTanWeight(sin(v)**2, v, x) == -1
     assert FunctionOfTanWeight(cot(v)*sin(v)**2, v, x) == -2
 
-def test_FunctionOfTrigQ():
-    v = log(x)
-    s = sin(v)
-    t = tan(v)
-    assert not FunctionOfTrigQ(x, v, x)
-    assert FunctionOfTrigQ(s + t, v, x)
-    assert FunctionOfTrigQ(sin(t), v, x)
-
-def test_FunctionOfDensePolynomialsQ():
-    assert FunctionOfDensePolynomialsQ(S(2), x)
-    assert not FunctionOfDensePolynomialsQ(x, x)
-    assert FunctionOfDensePolynomialsQ(x**2 + 3, x)
-
 def test_OddTrigPowerQ():
     assert not OddTrigPowerQ(sin(x)**3, 1, x)
     assert OddTrigPowerQ(sin(3),1,x)
@@ -1634,23 +1586,6 @@ def test_FunctionOfLog():
     assert FunctionOfLog(log(3*x**3)**2 + 1,x) == [x**2 + 1, 3*x**3, 3]
     assert FunctionOfLog(log(2*x**8)*2,x) == [2*x, 2*x**8, 8]
     assert not FunctionOfLog(2*sin(x)*2,x)
-
-def test_PowerVariableExpn():
-    assert PowerVariableExpn((2*x)**2, 4, x) == [4*x**3, 2, 1]
-    assert not PowerVariableExpn((2*x)**3, 2, x)
-    assert not PowerVariableExpn((x)**3, 2, x)
-    assert PowerVariableExpn((x)**3, 6, x) == [x**3, 3, 1]
-
-def test_PowerVariableSubst():
-    assert PowerVariableSubst((6 + 2*x)**7, 2, x) == (2*x + 6)**7
-    assert PowerVariableSubst((2*x)**7 + 3, 2, x) == 128*x**(7/2) + 3
-    assert PowerVariableSubst(S(2), 2, x) == 2
-
-def test_PowerVariableDegree():
-    assert PowerVariableDegree((2*x)**2, 0, 2*x, x) == [2, 1]
-    assert PowerVariableDegree(S(4), 0, 2*x, x) == [0, 2*x]
-    assert PowerVariableDegree(x**2, 0, 2*x, x) == [2, 1]
-    assert PowerVariableDegree(27*x**5, 0, 2*x, x) == [5, 1]
 
 def test_EulerIntegrandQ():
     assert EulerIntegrandQ((2*x + 3*((x + 1)**3)**1.5)**(-3), x)
@@ -1712,7 +1647,7 @@ def test_AllNegTermQ():
     assert AllNegTermQ((x - 2)**3)
     assert not AllNegTermQ((x - 2)**2)
 
-def TrigSquareQ():
+def test_TrigSquareQ():
     assert TrigSquareQ(sin(x)**2)
     assert TrigSquareQ(cos(x)**2)
     assert not TrigSquareQ(tan(x)**2)
