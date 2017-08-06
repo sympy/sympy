@@ -1455,8 +1455,8 @@ def test_TrigToExp():
     assert TrigToExp(sin(x)) == -I*(exp(I*x) - exp(-I*x))/2
     assert TrigToExp(cos(x)) == exp(I*x)/2 + exp(-I*x)/2
     assert TrigToExp(cos(x)*tan(x**2)) == I*(exp(I*x)/2 + exp(-I*x)/2)*(-exp(I*x**2) + exp(-I*x**2))/(exp(I*x**2) + exp(-I*x**2))
-    assert TrigToExp(cos(x)*tan(x**2)*sin(x)**2) == -I*(exp(I*x)/2 + exp(-I*x)/2)*(exp(I*x) - exp(-I*x))**2*(-exp(I*x**2) + exp(-I*x**2))/(4*(exp(I*x**2) + exp(-I*x**2)))
     assert TrigToExp(cos(x) + sin(x)**2) == -(exp(I*x) - exp(-I*x))**2/4 + exp(I*x)/2 + exp(-I*x)/2
+    assert Simplify(TrigToExp(cos(x)*tan(x**S(2))*sin(x)**S(2))-(-I*(exp(I*x)/S(2) + exp(-I*x)/S(2))*(exp(I*x) - exp(-I*x))**S(2)*(-exp(I*x**S(2)) + exp(-I*x**S(2)))/(S(4)*(exp(I*x**S(2)) + exp(-I*x**S(2)))))) == 0
 
 def test_ExpandTrigReduce():
     assert ExpandTrigReduce(2*cos(3 + x)**3, x) == 3*cos(x + 3)/2 + cos(3*x + 9)/2
@@ -1729,6 +1729,11 @@ def test_SplitProduct():
 def test_SplitSum():
     assert SplitSum(FracPart, sin(x)) == [sin(x), 0]
     assert SplitSum(FracPart, sin(x) + S(2)) == [sin(x), S(2)]
+
+def test_IntSum():
+    assert IntSum(S(3*x+3/x**3),x) == 3*x**2/2 - 3/(2*x**2)
+    assert IntSum(S(3*x**3),x) == 3*x**4/4
+    assert IntSum(S(3/x),x) == 3*log(x)
 
 def test_ExpandIntegrand():
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
