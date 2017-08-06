@@ -3,7 +3,7 @@ matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
-    from matchpy import Wildcard, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, register_operation_iterator
+    from matchpy import Wildcard
 else:
     class Wildcard(object):
         pass

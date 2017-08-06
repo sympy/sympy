@@ -11,7 +11,7 @@ if sys.version_info[:2] < (3, 6):
 
 from sympy.core.symbol import symbols
 from sympy.functions import log
-from sympy import sqrt, simplify, S, atanh, hyper, I
+from sympy import sqrt, simplify, S, atanh, hyper, I, atan
 from sympy.integrals.rubi.rubi import rubi_integrate
 
 a, b, c, d, e, f, x, m, n, p = symbols('a b c d e f x m n p', real=True, imaginary=False)
@@ -30,3 +30,5 @@ def test_rubi_integrate():
     assert rubi_integrate(a**3*x, x) == S(1)/S(2)*a**3*x**2
     assert rubi_integrate((a + b*x)**3/x**3, x) == -a**3/(2*x**2) - 3*a**2*b/x + 3*a*b**2*log(x) + b**3*x
     assert rubi_integrate(x**3*(a + b*x), x) == a*x**4/4 + b*x**5/5
+    assert rubi_integrate((b*x)**m*(d*x + 2)**n, x) == 2**n*(b*x)**(m + 1)*hyper((-n, m + 1), (m + 2,), -d*x/2)/(b*(m + 1))
+    assert rubi_integrate(S(1)/(a**(S(2)/3) - a**(S(1)/3)*b**(S(1)/3)*x + b**(S(2)/3)*x**S(2)), x) == 2*sqrt(3)*atan(sqrt(3)*(-a**(S(1)/3)*b**(S(1)/3) + 2*b**(S(2)/3)*x)/(3*sqrt(a**(S(2)/3)*b**(S(2)/3))))/(3*sqrt(a**(S(2)/3)*b**(S(2)/3)))
