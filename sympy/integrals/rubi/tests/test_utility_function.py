@@ -9,14 +9,15 @@ if not matchpy:
 if sys.version_info[:2] < (3, 6):
     disabled = True
 
-from sympy.integrals.rubi.utility_function import (Int, Set, With, Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, List, Log, PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ, ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ, NegativeOrZeroQ, FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart, FracPart, RationalQ, ProductQ, SumQ, NonsumQ, Subst, First, Rest, SqrtNumberQ, SqrtNumberSumQ, LinearQ, Sqrt, ArcCosh, Coefficient, Denominator, Hypergeometric2F1, ArcTan, Not, Simplify, FractionalPart, IntegerPart, AppellF1, EllipticPi, EllipticE, EllipticF, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcCsch, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less, Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ, InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ, EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, FixSimplify, TogetherSimplify, PosAux, PosQ, CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor, NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst, ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder, FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup, AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor, RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon, MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ, GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList, PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ, RationalFunctionFactors, NonrationalFunctionFactors, Reverse, RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ, SimplerSqrtQ, SumSimplerQ, SumSimplerAuxQ, BinomialDegree, TrinomialDegree, CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree, GeneralizedBinomialParts, GeneralizedTrinomialDegree, GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent, MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors, QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors, SumSimplerAuxQ, SumSimplerQ, Prepend, Drop, CombineExponents, FactorInteger, FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ, FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn, PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree, FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify, FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand, NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase, NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator, SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand, SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM, SubstForFractionalPowerOfLinear, FractionalPowerOfLinear, InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, ActivateTrig, DeactivateTrig, FixInertTrigFunction, DeactivateTrigAux, DeactivateTrigAux, PowerOfInertTrigSumQ, PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ, KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ, ExpandTrigExpand, ExpandTrigReduce, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ, FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ, FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ, FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, SplitProduct, SplitSum, RtAux, TrigSquare, IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors, MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential, FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux, FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent)
+from sympy.integrals.rubi.utility_function import (Int, Set, With, Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, List, Log, PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ, ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ, NegativeOrZeroQ, FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart, FracPart, RationalQ, ProductQ, SumQ, NonsumQ, Subst, First, Rest, SqrtNumberQ, SqrtNumberSumQ, LinearQ, Sqrt, ArcCosh, Coefficient, Denominator, Hypergeometric2F1, ArcTan, Not, Simplify, FractionalPart, IntegerPart, AppellF1, EllipticPi, EllipticE, EllipticF, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcCsch, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less, Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ, InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ, EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, FixSimplify, TogetherSimplify, PosAux, PosQ, CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor, NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst, ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder, FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup, AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor, RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon, MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ, GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList, PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ, RationalFunctionFactors, NonrationalFunctionFactors, Reverse, RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ, SimplerSqrtQ, SumSimplerQ, SumSimplerAuxQ, BinomialDegree, TrinomialDegree, CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree, GeneralizedBinomialParts, GeneralizedTrinomialDegree, GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent, MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors, QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors, SumSimplerAuxQ, SumSimplerQ, Prepend, Drop, CombineExponents, FactorInteger, FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ, FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn, PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree, FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify, FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand, NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase, NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator, SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand, SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM, SubstForFractionalPowerOfLinear, FractionalPowerOfLinear, InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, ActivateTrig, DeactivateTrig, FixInertTrigFunction, DeactivateTrigAux, DeactivateTrigAux, PowerOfInertTrigSumQ, PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ, KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ, ExpandTrigExpand, ExpandTrigReduce, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ, FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ, FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ, FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, SplitProduct, SplitSum, RtAux, TrigSquare, IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors, MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential, FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux, FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent, Inequality)
 from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import I, E, pi, hyper, Add, Wild, simplify, polylog, Symbol, exp
 
-A, B, a, b, c, d, e, f, g, h, x, y, z, m, n, p, q, u, v, F = symbols('A B a b c d e f g h x y z m n p q u v F', real=True, imaginary=False)
+A, B, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, F = symbols('A B a b c d e f g h y z m n p q u v F', real=True, imaginary=False)
+x = Symbol('x')
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -193,8 +194,8 @@ def test_Unequal():
     assert not Unequal(1, 1)
 
 def test_FractionQ():
-    assert FractionQ(S(1), S(2), S(1)/3)
-    assert not FractionQ(sqrt(2))
+    assert not FractionQ(S('3'))
+    assert FractionQ(S('3')/S('2'))
 
 def test_Expand():
     assert Expand((1 + x)**10) == x**10 + 10*x**9 + 45*x**8 + 120*x**7 + 210*x**6 + 252*x**5 + 210*x**4 + 120*x**3 + 45*x**2 + 10*x + 1
@@ -275,7 +276,7 @@ def test_PositiveIntegerPowerQ():
     assert PositiveIntegerPowerQ(a**(-2)) == False
 
 def test_FractionalPowerQ():
-    assert FractionalPowerQ(a**2) == True
+    assert FractionalPowerQ(a**(S(2)/S(3)))
     assert FractionalPowerQ(a**sqrt(2)) == False
 
 def test_AtomQ():
@@ -435,8 +436,8 @@ def test_First():
     assert First(a*b*c) == a
 
 def test_ComplexFreeQ():
-    assert ComplexFreeQ(x)
-    assert not ComplexFreeQ(x+2*I)
+    assert ComplexFreeQ(a)
+    assert not ComplexFreeQ(a + 2*I)
 
 def test_FractionalPowerFreeQ():
     assert not FractionalPowerFreeQ(x**(S(2)/3))
@@ -545,46 +546,6 @@ def test_PolynomialDivide():
     assert PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
     assert PolynomialDivide(x**6, (a + b*x)**2, x) == -5*a**6/(b**6*(a + b*x)**2) - 6*a**5*x/(b**5*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
-def test_ExpandIntegrand():
-    assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
-    assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3
-    assert ExpandIntegrand(sin(x)**3*(a + b*(1/sin(x)))**2, x) == a**2*sin(x)**3 + 2*a*b*sin(x)**2 + b**2*sin(x)
-    assert ExpandIntegrand(x*(a + b*ArcSin(c + d*x))**n, x) == -c*(a + b*asin(c + d*x))**n/d + (a + b*asin(c + d*x))**n*(c + d*x)/d
-    assert ExpandIntegrand((a + b*x)**S(3)*(A + B*x)/(c + d*x), x) == B*(a + b*x)**3/d + b*(a + b*x)**2*(A*d - B*c)/d**2 + b*(a + b*x)*(A*d - B*c)*(a*d - b*c)/d**3 + b*(A*d - B*c)*(a*d - b*c)**2/d**4 + (A*d - B*c)*(a*d - b*c)**3/(d**4*(c + d*x))
-    assert ExpandIntegrand((x**2)*(S(3)*x)**(S(1)/2), x) ==sqrt(3)*x**(5/2)
-    assert ExpandIntegrand((x)*(sin(x))**(S(1)/2), x) == x*sqrt(sin(x))
-    assert ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
-    assert ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
-    assert simplify(ExpandIntegrand((S(1) - S(1)*x**S(2))**(-S(3)), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
-    assert ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
-    #assert simplify(ExpandIntegrand((Sqrt(2) + 1*x)**(3)/(2 + 1*x), x).expand() - ((x + sqrt(2))**2 + (-2 + sqrt(2))*(x + sqrt(2)) + (-2 + sqrt(2))**2 + (-20 + 14*sqrt(2))/(x + 2)))
-    assert ExpandIntegrand((1 + 1*x)**(3)/(2 + 1*x), x) == x**2 + x + 1 - 1/(x + 2)
-    assert ExpandIntegrand((c + d*x**1 + e*x**2)/(1 - x**3), x) == (c - (-1)**(S(1)/3)*d + (-1)**(S(2)/3)*e)/(-3*(-1)**(S(2)/3)*x + 3) + (c + (-1)**(S(2)/3)*d - (-1)**(S(1)/3)*e)/(3*(-1)**(S(1)/3)*x + 3) + (c + d + e)/(-3*x + 3)
-    assert ExpandIntegrand((c + d*x**1 + e*x**2 + f*x**3)/(1 - x**4), x) == (c + I*d - e - I*f)/(4*I*x + 4) + (c - I*d - e + I*f)/(-4*I*x + 4) + (c - d + e - f)/(4*x + 4) + (c + d + e + f)/(-4*x + 4)
-    assert ExpandIntegrand((d + e*(f + g*x))/(2 + 3*x + 1*x**2), x) == (-2*d - 2*e*f + 4*e*g)/(2*x + 4) + (2*d + 2*e*f - 2*e*g)/(2*x + 2)
-    assert ExpandIntegrand(x/(a*x**3 + b*Sqrt(c + d*x**6)), x) == a*x**4/(-b**2*c + x**6*(a**2 - b**2*d)) + b*x*sqrt(c + d*x**6)/(b**2*c + x**6*(-a**2 + b**2*d))
-    assert simplify(ExpandIntegrand(x**1*(1 - x**4)**(-2), x) - (x/(S(4)*(x**2 + 1)) + x/(S(4)*(x**2 + 1)**2) - x/(S(4)*(x**2 - 1)) + x/(S(4)*(x**2 - 1)**2))) == 0
-    assert simplify(ExpandIntegrand((-1 + x**S(6))**(-3), x) - (S(3)/(S(8)*(x**6 - 1)) - S(3)/(S(16)*(x**S(3) + S(1))**S(2)) - S(1)/(S(8)*(x**S(3) + S(1))**S(3)) - S(3)/(S(16)*(x**S(3) - S(1))**S(2)) + S(1)/(S(8)*(x**S(3) - S(1))**S(3)))) == 0
-    assert ExpandIntegrand(u**1*(a + b*u**2 + c*u**4)**(-1), x) == -2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 + sqrt(-4*a*c + b**2))) + 2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 - sqrt(-4*a*c + b**2)))
-    assert simplify(ExpandIntegrand((1 + 1*u + 1*u**2)**(-2), x) - (S(1)/(S(2)*(-u - 1)*(-u**2 - u - 1)) + S(1)/(S(4)*(-u - 1)*(u + sqrt(-u - 1))**2) + S(1)/(S(4)*(-u - 1)*(u - sqrt(-u - 1))**2))) == 0
-    assert ExpandIntegrand(x*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == -e*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f
-    assert ExpandIntegrand(x*f**(e*(c + d*x)*S(1)), x) == f**(e*(c + d*x))*x
-    assert simplify(ExpandIntegrand((x)*(a + b*x)**m*Log(c*(d + e*x**n)**p), x) - (-a*(a + b*x)**m*log(c*(d + e*x**n)**p)/b + (a + b*x)**(m + S(1))*log(c*(d + e*x**n)**p)/b)) == 0
-    assert simplify(ExpandIntegrand(u*(a + b*F**v)**S(2)*(c + d*F**v)**S(-3), x) - (b**2*u/(d**2*(F**v*d + c)) + 2*b*u*(a*d - b*c)/(d**2*(F**v*d + c)**2) + u*(a*d - b*c)**2/(d**2*(F**v*d + c)**3))) == 0
-    assert ExpandIntegrand((S(1) + 1*x)**S(2)*f**(e*(1 + S(1)*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)/h + f**(e*(x + 1)**n)*(-g + h)/h**2 + f**(e*(x + 1)**n)*(g - h)**2/(h**2*(g + h*x))
-
-    assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
-    assert simplify(ExpandIntegrand(x**2*(1 - 1*x**2)**(-2), x) - (1/(S(2)*(x**2 - 1)) + 1/(S(4)*(x + 1)**2) + 1/(S(4)*(x - 1)**2))) == 0
-    assert ExpandIntegrand((a + x)**2, x) == a**2 + 2*a*x + x**2
-    assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
-    assert ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
-    assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
-    assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18/(2*x**2 + 4) - 2/(2*x**2 + 2)
-    assert ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (c - d - I*e)/(4*I*x + 4) + (c - d + I*e)/(-4*I*x + 4) + (c + d - e)/(4*x + 4) + (c + d + e)/(-4*x + 4)
-    assert ExpandIntegrand((a + b*x)**2/(c + d*x), x) == b*(a + b*x)/d + b*(a*d - b*c)/d**2 + (a*d - b*c)**2/(d**2*(c + d*x))
-    assert ExpandIntegrand(x**2*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == e**2*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f**2 - 2*e*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f**2 + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)**2/f**2
-    assert ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
-    assert ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x))
 
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
@@ -669,7 +630,6 @@ def test_SimplerQ():
     assert SimplerQ(2, x)
     assert not SimplerQ(x**2, x)
     assert SimplerQ(2*x, x + 2 + 6*x**3)
-
 
 def test_GeneralizedTrinomialParts():
     assert not GeneralizedTrinomialParts((7 + 2*x**6 + 3*x**12), x)
@@ -1003,14 +963,14 @@ def test_CombineExponents():
     assert True
 
 def test_FractionalPowerOfSquareQ():
-    assert FractionalPowerOfSquareQ(x) == False
-    assert FractionalPowerOfSquareQ((a + b)**2) == (a + b)**2
-    assert FractionalPowerOfSquareQ((a + b)**2*c) == (a + b)**2
+    assert not FractionalPowerOfSquareQ(x)
+    assert not FractionalPowerOfSquareQ((a + b)**(S(2)/S(3)))
+    assert not FractionalPowerOfSquareQ((a + b)**(S(2)/S(3))*c)
+    assert FractionalPowerOfSquareQ(((a + b*x)**(S(2)))**(S(1)/3)) == (a + b*x)**S(2)
 
 def test_FractionalPowerSubexpressionQ():
     assert not FractionalPowerSubexpressionQ(x, a, x)
-    assert FractionalPowerSubexpressionQ(x**S(2), a, x)
-    assert FractionalPowerSubexpressionQ(x**S(2)*a, a, x)
+    assert FractionalPowerSubexpressionQ(x**(S(2)/S(3)), a, x)
     assert not FractionalPowerSubexpressionQ(b*a, a, x)
 
 def test_FactorNumericGcd():
@@ -1335,7 +1295,7 @@ def test_SubstForHyperbolic():
 def test_SubstForFractionalPowerOfLinear():
     u = a + b*x
     assert not SubstForFractionalPowerOfLinear(u, x)
-    assert SubstForFractionalPowerOfLinear(u**(S(2)), x) == [x**2, 1, a + b*x, 1/b]
+    assert not SubstForFractionalPowerOfLinear(u**(S(2)), x)
     assert SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]
 
 def test_InverseFunctionOfLinear():
@@ -1419,7 +1379,7 @@ def test_SubstForFractionalPowerOfQuotientOfLinears():
 
 def test_SubstForFractionalPowerQ():
     assert SubstForFractionalPowerQ(x, sin(x), x)
-    assert not SubstForFractionalPowerQ(x**2, sin(x), x)
+    assert SubstForFractionalPowerQ(x**2, sin(x), x)
     assert not SubstForFractionalPowerQ(x**(S(3)/2), sin(x), x)
     assert SubstForFractionalPowerQ(sin(x)**(S(3)/2), sin(x), x)
 
@@ -1489,7 +1449,7 @@ def test_FunctionOfQ():
 
 def test_ExpandTrigExpand():
     assert ExpandTrigExpand(1, cos(x), x**2, 2, 2, x) == 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
-    assert ExpandTrigExpand(1, cos(x)+sin(x), x**2, 2, 2, x) == 4*sin(x**2)**2*cos(x**2)**2 + 8*sin(x**2)*cos(x**2)**3 - 4*sin(x**2)*cos(x**2) + 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
+    assert ExpandTrigExpand(1, cos(x) + sin(x), x**2, 2, 2, x) == 4*sin(x**2)**2*cos(x**2)**2 + 8*sin(x**2)*cos(x**2)**3 - 4*sin(x**2)*cos(x**2) + 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
 
 def test_TrigToExp():
     assert TrigToExp(sin(x)) == -I*(exp(I*x) - exp(-I*x))/2
@@ -1756,3 +1716,57 @@ def TrigSquareQ():
     assert TrigSquareQ(sin(x)**2)
     assert TrigSquareQ(cos(x)**2)
     assert not TrigSquareQ(tan(x)**2)
+
+def test_Inequality():
+    assert not Inequality(S('0'), Less, m, LessEqual, S('1'))
+    assert Inequality(S('0'), Less, S('1'))
+    assert Inequality(S('0'), Less, S('1'), LessEqual, S('5'))
+
+def test_SplitProduct():
+    assert SplitProduct(OddQ, S(3)*x) == [3, x]
+    assert not SplitProduct(OddQ, S(2)*x)
+
+def test_SplitSum():
+    assert SplitSum(FracPart, sin(x)) == [sin(x), 0]
+    assert SplitSum(FracPart, sin(x) + S(2)) == [sin(x), S(2)]
+
+def test_ExpandIntegrand():
+    assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
+    assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3
+    assert ExpandIntegrand(sin(x)**3*(a + b*(1/sin(x)))**2, x) == a**2*sin(x)**3 + 2*a*b*sin(x)**2 + b**2*sin(x)
+    assert ExpandIntegrand(x*(a + b*ArcSin(c + d*x))**n, x) == -c*(a + b*asin(c + d*x))**n/d + (a + b*asin(c + d*x))**n*(c + d*x)/d
+    assert ExpandIntegrand((a + b*x)**S(3)*(A + B*x)/(c + d*x), x) == B*(a + b*x)**3/d + b*(a + b*x)**2*(A*d - B*c)/d**2 + b*(a + b*x)*(A*d - B*c)*(a*d - b*c)/d**3 + b*(A*d - B*c)*(a*d - b*c)**2/d**4 + (A*d - B*c)*(a*d - b*c)**3/(d**4*(c + d*x))
+    assert ExpandIntegrand((x**2)*(S(3)*x)**(S(1)/2), x) ==sqrt(3)*x**(5/2)
+    assert ExpandIntegrand((x)*(sin(x))**(S(1)/2), x) == x*sqrt(sin(x))
+    assert ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
+    assert ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
+    assert simplify(ExpandIntegrand((S(1) - S(1)*x**S(2))**(-S(3)), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
+    assert ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
+    #assert simplify(ExpandIntegrand((Sqrt(2) + 1*x)**(3)/(2 + 1*x), x).expand() - ((x + sqrt(2))**2 + (-2 + sqrt(2))*(x + sqrt(2)) + (-2 + sqrt(2))**2 + (-20 + 14*sqrt(2))/(x + 2)))
+    assert ExpandIntegrand((1 + 1*x)**(3)/(2 + 1*x), x) == x**2 + x + 1 - 1/(x + 2)
+    assert ExpandIntegrand((c + d*x**1 + e*x**2)/(1 - x**3), x) == (c - (-1)**(S(1)/3)*d + (-1)**(S(2)/3)*e)/(-3*(-1)**(S(2)/3)*x + 3) + (c + (-1)**(S(2)/3)*d - (-1)**(S(1)/3)*e)/(3*(-1)**(S(1)/3)*x + 3) + (c + d + e)/(-3*x + 3)
+    assert ExpandIntegrand((c + d*x**1 + e*x**2 + f*x**3)/(1 - x**4), x) == (c + I*d - e - I*f)/(4*I*x + 4) + (c - I*d - e + I*f)/(-4*I*x + 4) + (c - d + e - f)/(4*x + 4) + (c + d + e + f)/(-4*x + 4)
+    assert ExpandIntegrand((d + e*(f + g*x))/(2 + 3*x + 1*x**2), x) == (-2*d - 2*e*f + 4*e*g)/(2*x + 4) + (2*d + 2*e*f - 2*e*g)/(2*x + 2)
+    assert ExpandIntegrand(x/(a*x**3 + b*Sqrt(c + d*x**6)), x) == a*x**4/(-b**2*c + x**6*(a**2 - b**2*d)) + b*x*sqrt(c + d*x**6)/(b**2*c + x**6*(-a**2 + b**2*d))
+    assert simplify(ExpandIntegrand(x**1*(1 - x**4)**(-2), x) - (x/(S(4)*(x**2 + 1)) + x/(S(4)*(x**2 + 1)**2) - x/(S(4)*(x**2 - 1)) + x/(S(4)*(x**2 - 1)**2))) == 0
+    assert simplify(ExpandIntegrand((-1 + x**S(6))**(-3), x) - (S(3)/(S(8)*(x**6 - 1)) - S(3)/(S(16)*(x**S(3) + S(1))**S(2)) - S(1)/(S(8)*(x**S(3) + S(1))**S(3)) - S(3)/(S(16)*(x**S(3) - S(1))**S(2)) + S(1)/(S(8)*(x**S(3) - S(1))**S(3)))) == 0
+    assert ExpandIntegrand(u**1*(a + b*u**2 + c*u**4)**(-1), x) == -2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 + sqrt(-4*a*c + b**2))) + 2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 - sqrt(-4*a*c + b**2)))
+    assert simplify(ExpandIntegrand((1 + 1*u + 1*u**2)**(-2), x) - (S(1)/(S(2)*(-u - 1)*(-u**2 - u - 1)) + S(1)/(S(4)*(-u - 1)*(u + sqrt(-u - 1))**2) + S(1)/(S(4)*(-u - 1)*(u - sqrt(-u - 1))**2))) == 0
+    assert ExpandIntegrand(x*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == -e*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f
+    assert ExpandIntegrand(x*f**(e*(c + d*x)*S(1)), x) == f**(e*(c + d*x))*x
+    assert simplify(ExpandIntegrand((x)*(a + b*x)**m*Log(c*(d + e*x**n)**p), x) - (-a*(a + b*x)**m*log(c*(d + e*x**n)**p)/b + (a + b*x)**(m + S(1))*log(c*(d + e*x**n)**p)/b)) == 0
+    assert simplify(ExpandIntegrand(u*(a + b*F**v)**S(2)*(c + d*F**v)**S(-3), x) - (b**2*u/(d**2*(F**v*d + c)) + 2*b*u*(a*d - b*c)/(d**2*(F**v*d + c)**2) + u*(a*d - b*c)**2/(d**2*(F**v*d + c)**3))) == 0
+    assert ExpandIntegrand((S(1) + 1*x)**S(2)*f**(e*(1 + S(1)*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)/h + f**(e*(x + 1)**n)*(-g + h)/h**2 + f**(e*(x + 1)**n)*(g - h)**2/(h**2*(g + h*x))
+
+    assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
+    assert simplify(ExpandIntegrand(x**2*(1 - 1*x**2)**(-2), x) - (1/(S(2)*(x**2 - 1)) + 1/(S(4)*(x + 1)**2) + 1/(S(4)*(x - 1)**2))) == 0
+    assert ExpandIntegrand((a + x)**2, x) == a**2 + 2*a*x + x**2
+    assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
+    assert ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
+    assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
+    assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18/(2*x**2 + 4) - 2/(2*x**2 + 2)
+    assert ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (c - d - I*e)/(4*I*x + 4) + (c - d + I*e)/(-4*I*x + 4) + (c + d - e)/(4*x + 4) + (c + d + e)/(-4*x + 4)
+    assert ExpandIntegrand((a + b*x)**2/(c + d*x), x) == b*(a + b*x)/d + b*(a*d - b*c)/d**2 + (a*d - b*c)**2/(d**2*(c + d*x))
+    assert ExpandIntegrand(x**2*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == e**2*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f**2 - 2*e*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f**2 + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)**2/f**2
+    assert ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
+    assert ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x))

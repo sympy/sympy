@@ -18,7 +18,9 @@ def rubi_integrate(expr, var, showsteps=False):
     '''
     if isinstance(expr, int):
         return S(expr)*var
-    if expr.is_Add: # integrate each is_Add expression indivdually
+    elif not expr.has(var):
+        return expr*var
+    elif expr.is_Add: # integrate each is_Add expression indivdually
         return Add(*[rubi_integrate(i, var) for i in expr.args])
     elif expr.is_Mul: # remove constants
         e, c = 1, 1

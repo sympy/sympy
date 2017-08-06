@@ -18,8 +18,9 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow)
-from mpmath import ellippi, ellipe, ellipf, appellf1
+    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi)
+from mpmath import appellf1
+from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 from sympy.strategies import distribute
@@ -275,13 +276,13 @@ def AppellF1(a, b1, b2, c, x, y):
     return appellf1(a, b1, b2, c, x, y)
 
 def EllipticPi(*args):
-    return ellippi(*args)
+    return elliptic_pi(*args)
 
 def EllipticE(*args):
-    return ellipe(*args)
+    return elliptic_e(*args)
 
 def EllipticF(Phi, m):
-    return ellipf(Phi, m)
+    return elliptic_f(Phi, m)
 
 def ArcTan(a):
     return atan(a)
@@ -359,7 +360,7 @@ def GreaterEqual(*args):
     return True
 
 def FractionQ(*args):
-    return all(i.is_Rational for i in args)
+    return all(i.is_Rational for i in args) and all(Denominator(i)!= S(1) for i in args)
 
 def IntLinearcQ(a, b, c, d, m, n, x):
     # returns True iff (a+b*x)^m*(c+d*x)^n is integrable wrt x in terms of non-hypergeometric functions.
@@ -383,7 +384,7 @@ def PositiveIntegerPowerQ(u):
     return PowerQ(u) and IntegerQ(u.args[1]) and PositiveQ(u.args[1])
 
 def FractionalPowerQ(u):
-    return PowerQ(u) & FractionQ(u.args[1])
+    return PowerQ(u) and FractionQ(u.args[1])
 
 def AtomQ(expr):
     expr = sympify(expr)
@@ -2260,7 +2261,7 @@ def SimplerQ(u, v):
             return True
     if FractionQ(v):
         return False
-    if (Re(u)==0 or Re(u)==0.0) and (Re(v)==0 or Re(v)==0.0):
+    if (Re(u)==0 or Re(u) == 0) and (Re(v)==0 or Re(v) == 0):
         return SimplerQ(Im(u), Im(v))
     if ComplexNumberQ(u):
         if ComplexNumberQ(v):
@@ -2284,17 +2285,17 @@ def SimplerQ(u, v):
             return True
     if AtomQ(v):
         return False
-    if Head(u)==Head(v):
-        if Length(u)==Length(v):
-            for i in range(len(u)):
-                if not u[i]==v[i]:
-                    return SimplerQ(u[i], v[i])
+    if Head(u) == Head(v):
+        if Length(u) == Length(v):
+            for i in range(len(u.args)):
+                if not u.args[i] == v.args[i]:
+                    return SimplerQ(u.args[i], v.args[i])
                 else:
                     return False
-        return Length(u)<Length(v)
-    if LeafCount(u)<LeafCount(v):
+        return Length(u) < Length(v)
+    if LeafCount(u) < LeafCount(v):
         return True
-    if LeafCount(v)<LeafCount(u):
+    if LeafCount(v) < LeafCount(u):
         return False
     else:
         return Not(OrderedQ([v,u]))
@@ -2913,10 +2914,10 @@ def FractionalPowerOfSquareQ(u):
     if AtomQ(u):
         return False
     elif FractionalPowerQ(u):
-        a_ = Wild('a')
-        b_ = Wild('b')
-        c_ = Wild('c')
-        match = u.match(a_*(b_ + c_)**S(2))
+        a_ = Wild('a', exclude=[0])
+        b_ = Wild('b', exclude=[0])
+        c_ = Wild('c', exclude=[0])
+        match = u.args[0].match(a_*(b_ + c_)**(S(2)))
         if match:
             keys = [a_, b_, c_]
             if len(keys) == len(match):
@@ -3454,12 +3455,13 @@ def TogetherSimplify(u):
 def SmartSimplify(u):
     v = Simplify(u)
     w = factor(v)
-    if LeafCount(w)<LeafCount(v):
+    if LeafCount(w) < LeafCount(v):
         v = w
     if Not(FalseQ(w == FractionalPowerOfSquareQ(v))) and FractionalPowerSubexpressionQ(u, w, Expand(w)):
         v = SubstForExpn(v, w, Expand(w))
     else:
         v = FactorNumericGcd(v)
+    return FixSimplify(v)
 
 def SubstForExpn(u, v, w):
     if u == v:
@@ -4121,16 +4123,6 @@ def KnownCotangentIntegrandQ(u, x):
 def KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
 
-def ExpandTrigExpand(u, F, v, m, n, x):
-    w = Expand(TrigExpand(F.subs(x, n*x))**m, x).subs(x, v)
-    if SumQ(w):
-        t = 0
-        for i in w.args:
-            t += u*i
-        return t
-    else:
-        return u*w
-
 def ExpandTrigReduce(u, v, x):
     w = ExpandTrigReduce(v, x)
     if SumQ(w):
@@ -4252,9 +4244,7 @@ def AbsurdNumberGCDList(lst1, lst2):
         return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, Rest(lst2))
     return AbsurdNumberGCDList(lst1, Rest(lst2))
 
-# set 15
 def ExpandTrigExpand(u, F, v, m, n, x):
-    ExpandTrigExpand(1, cos(x), x**2, 2, 2, x)
     w = Expand(TrigExpand(F.subs(x, n*x))**m).subs(x, v)
     if SumQ(w):
         t = 0
@@ -5413,16 +5403,15 @@ def stdev(lst):
     return sd
 
 def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False, _numerical=False):
-    '''
-    Returns True if (expr - optimal_output) is equal to 0 or a constant
+    #Returns True if (expr - optimal_output) is equal to 0 or a constant
 
-    expr: integrated expression
-    x: integration variable
-    expand=True equates `expr` with `optimal_output` in expanded form
-    _hyper_check=True evaluates numerically
-    _diff=True differentiates the expressions before equating
-    _numerical=True equates the expressions at random `x`. Normally used for large expressions.
-    '''
+    #expr: integrated expression
+    #x: integration variable
+    #expand=True equates `expr` with `optimal_output` in expanded form
+    #_hyper_check=True evaluates numerically
+    #_diff=True differentiates the expressions before equating
+    #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
+
     if expr == optimal_output:
         return True
 
@@ -5589,3 +5578,114 @@ def RectifyCotangent(*args):
     numr = SmartNumerator(c)
     denr = SmartDenominator(c)
     return b*SimplifyAntiderivative(u,x) + b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Sin(u)**2)))
+
+def Inequality(*args):
+    f = args[1::2]
+    e = args[0::2]
+    r = []
+    for i in range(0, len(f)):
+        r.append(f[i](e[i], e[i + 1]))
+    return all(r)
+
+def Condition(c, r):
+    # returns r if c is True
+    if c:
+        return r
+    else:
+        raise NotImplementedError('In Condition()')
+
+def SimpFixFactor(u, x):
+    return simplify(u)
+
+def Simp(u, x):
+    return NormalizeSumFactors(SimpHelp(u, x))
+
+def SimpHelp(u, x):
+    if AtomQ(u):
+        return u
+    elif FreeQ(u, x):
+        v = SmartSimplify(u)
+        if LeafCount(v) <= LeafCount(u):
+            return v
+        return u
+    elif ProductQ(u):
+        #m = MatchQ[Rest[u],a_.+n_*Pi+b_.*v_ /; FreeQ[{a,b},x] && Not[FreeQ[v,x]] && EqQ[n^2,1/4]]
+        #if EqQ(First(u), S(1)/2) and m:
+        #    if
+        #If[EqQ[First[u],1/2] && MatchQ[Rest[u],a_.+n_*Pi+b_.*v_ /; FreeQ[{a,b},x] && Not[FreeQ[v,x]] && EqQ[n^2,1/4]],
+        #  If[MatchQ[Rest[u],n_*Pi+b_.*v_ /; FreeQ[b,x] && Not[FreeQ[v,x]] && EqQ[n^2,1/4]],
+        #    Map[Function[1/2*#],Rest[u]],
+        #  If[MatchQ[Rest[u],m_*a_.+n_*Pi+p_*b_.*v_ /; FreeQ[{a,b},x] && Not[FreeQ[v,x]] && IntegersQ[m/2,p/2]],
+        #    Map[Function[1/2*#],Rest[u]],
+        #  u]],
+
+        v = FreeFactors(u, x)
+        w = NonfreeFactors(u, x)
+        v = NumericFactor(v)*SmartSimplify(NonnumericFactors(v)*x**2)/x**2
+        if ProductQ(w):
+            w = Mul(*[SimpHelp(i,x) for i in w.args])
+        else:
+            w = SimpHelp(w, x)
+        w = FactorNumericGcd(w)
+        v = MergeFactors(v, w)
+        if ProductQ(v):
+            return Mul(*[SimpFixFactor(i, x) for i in v.args])
+        return v
+    elif SumQ(u):
+        Pi = pi
+        a_ = Wild('a', exclude=[x])
+        b_ = Wild('b', exclude=[x, 0])
+        n_ = Wild('n', exclude=[x, 0, 0])
+        pattern = a_ + n_*Pi + b_*x
+        match = u.match(pattern)
+        m = False
+        if match:
+            if Eq(match[n]**3, S(1)/16):
+                m = True
+        if m:
+            return u
+        elif PolynomialQ(u, x) and Exponent(u, x)<=0:
+            return SimpHelp(Coefficient(u, x, 0), x)
+        elif PolynomialQ(u, x) and Exponent(u, x) == 1 and Coefficient(u, x, 0) == 0:
+            return SimpHelp(Coefficient(u, x, 1), x)*x
+
+        v = 0
+        w = 0
+        for i in u.args:
+            if FreeQ(i, x):
+                v = i + v
+            else:
+                w = i + w
+        v = SmartSimplify(v)
+        if SumQ(w):
+            w = Add(*[SimpHelp(i, x) for i in w])
+        else:
+            w = SimpHelp(w, x)
+        return v + w
+    return u.func(*[SimpHelp(i, x) for i in u.args])
+
+def SplitProduct(func, u):
+    #(* If func[v] is True for a factor v of u, SplitProduct[func,u] returns {v, u/v} where v is the first such factor; else it returns False. *)
+    if ProductQ(u):
+        if func(First(u)):
+            return [First(u), Rest(u)]
+        lst = SplitProduct(func, Rest(u))
+        if AtomQ(lst):
+            return False
+        return [lst[0], First(u)*lst[1]]
+    if func(u):
+        return [u, 1]
+    return False
+
+def SplitSum(func, u):
+    # (* If func[v] is nonatomic for a term v of u, SplitSum[func,u] returns {func[v], u-v} where v is the first such term; else it returns False. *)
+    if SumQ(u):
+        if Not(AtomQ(func(First(u)))):
+            return [func(First(u)), Rest(u)]
+        lst = SplitSum(func, Rest(u))
+        if AtomQ(lst):
+            return False
+        return [lst[0], First(u) + lst[1]]
+    elif Not(AtomQ(func(u))):
+        return [func(u), 0]
+    return False
