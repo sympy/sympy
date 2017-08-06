@@ -419,7 +419,12 @@ def _solve_trig(f, symbol, domain):
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        #try solving through solve_decomposition
+        try:
+            result = solve_decomposition(f_original, symbol, domain)
+            return result
+        except:
+            return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
@@ -436,7 +441,10 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             result = FiniteSet(*solns.keys())
         else:
             poly = Poly(f, symbol)
-            solns = poly.all_roots()
+            try:
+                solns = poly.all_roots()
+            except:
+                pass
             if poly.degree() <= len(solns):
                 result = FiniteSet(*solns)
             else:

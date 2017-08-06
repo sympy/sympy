@@ -757,9 +757,11 @@ def test_solve_trig():
         imageset(Lambda(n, 2*n*pi), S.Integers)
 
 def test_issue_13084():
-    f = sin(2*x + 3) - Rational(1,2)
-    assert solveset(f, x, S.Reals) == ConditionSet(x, Eq(sin(2*x + 3) - 1/2, 0), S.Reals)
-
+    n = Dummy('n')
+    f2 = sin(2*x)**2 + 2* sin(2*x) + 1
+    f3 = sin(2*x) + 1
+    assert solveset(f2, x, S.Reals) == imageset(Lambda(n, pi*(4*n + 3)/4), S.Integers)
+    assert solveset(f3, x, S.Reals) == imageset(Lambda(n, pi*(4*n + 3)/4), S.Integers)
 
 @XFAIL
 def test_solve_trig_abs():
