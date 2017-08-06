@@ -18,6 +18,7 @@ class RewritingSystem(object):
 
     '''
     def __init__(self, group):
+        from collections import deque
         self.group = group
         self.alphabet = group.generators
         self._is_confluent = None
@@ -32,6 +33,8 @@ class RewritingSystem(object):
 
         # dictionary of reductions
         self.rules = {}
+        self.rules_cache = deque([])
+        self.cache_size = 50
         self._init_rules()
 
     def set_max(self, n):
@@ -61,6 +64,12 @@ class RewritingSystem(object):
         self._remove_redundancies()
         return
 
+    def _add_to_cache(self, p):
+        self.rules_cache.append(p)
+        if len(self.rules_cache) > self.cache_size:
+            self.rules_cache.popleft()
+        return
+
     def _add_rule(self, r1, r2):
         '''
         Add the rule r1 -> r2 with no checking or futher
@@ -82,6 +91,10 @@ class RewritingSystem(object):
         if w1 < w2:
             w1, w2 = w2, w1
 
+        if (w1, w2) in self.rules_cache:
+            return new_keys
+        self._add_to_cache((w1, w2))
+
         s1, s2 = w1, w2
 
         # The following is the equivalent of checking
@@ -102,20 +115,31 @@ class RewritingSystem(object):
                     self._add_rule(s2**-1, s1**-1)
 
         # overlaps on the right
-        while len(s1) - len(s2) > 1:
+        while len(s1) - len(s2) > -1:
             g = s1[len(s1)-1]
             s1 = s1.subword(0, len(s1)-1)
             s2 = s2*g**-1
-            if len(s1) - len(s2) < 3:
+            if len(s1) - len(s2) < 0:
+                #print("this", len(s1)-len(s2))
+                if s2 not in self.rules:
+                    if not check:
+                        self._add_rule(s2, s1)
+                    new_keys.add(s2)
+            elif len(s1) - len(s2) < 3:
                 new = self.add_rule(s1, s2, check)
                 new_keys.update(new)
 
         # overlaps on the left
-        while len(w1) - len(w2) > 1:
+        while len(w1) - len(w2) > -1:
             g = w1[0]
             w1 = w1.subword(1, len(w1))
             w2 = g**-1*w2
-            if len(w1) - len(w2) < 3:
+            if len(w1) - len(w2) < 0:
+                if w2 not in self.rules:
+                    if not check:
+                        self._add_rule(w2, w1)
+                    new_keys.add(w2)
+            elif len(w1) - len(w2) < 3:
                 new = self.add_rule(w1, w2, check)
                 new_keys.update(new)
 
