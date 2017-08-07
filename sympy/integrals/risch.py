@@ -217,7 +217,8 @@ class DifferentialExtension(object):
         # setting the default value 'dummy'
         self.dummy = dummy
         self.reset()
-        exp_new_extension, log_new_extension = True, True
+        exp_new_extension, log_new_extension, tan_new_extension = True, True, True
+
         if rewrite_complex:
             rewritables = {
                 (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
@@ -227,7 +228,7 @@ class DifferentialExtension(object):
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
         else:
-            if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
+            if any(i.has(x) for i in self.f.atoms(sin, cos, atan, asin, acos)):
                 raise NotImplementedError("Trigonometric extensions are not "
                 "supported (yet!)")
 
@@ -237,12 +238,14 @@ class DifferentialExtension(object):
         sympows = set()
         logs = set()
         symlogs = set()
+        tans = set()
+        symtans = set()
 
         while True:
             if self.newf.is_rational_function(*self.T):
                 break
 
-            if not exp_new_extension and not log_new_extension:
+            if not exp_new_extension and not log_new_extension and not tan_new_extension:
                 # We couldn't find a new extension on the last pass, so I guess
                 # we can't do it.
                 raise NotImplementedError("Couldn't find an elementary "
@@ -253,6 +256,7 @@ class DifferentialExtension(object):
                     self._rewrite_exps_pows(exps, pows, numpows, sympows, log_new_extension)
 
             logs, symlogs = self._rewrite_logs(logs, symlogs)
+            tans = self._rewrite_tans(tans)
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
@@ -265,6 +269,9 @@ class DifferentialExtension(object):
 
             if handle_first == 'log' or not exp_new_extension:
                 log_new_extension = self._log_part(logs)
+
+            if tan_new_extension:
+                tan_new_extension = self._tan_part(tans)
 
         self.fa, self.fd = frac_in(self.newf, self.t)
         self._auto_attrs()
@@ -384,6 +391,9 @@ class DifferentialExtension(object):
 
         return exps, pows, numpows, sympows, log_new_extension
 
+    def _rewrite_tans(self, tans):
+        return self.newf.atoms(tan)
+
     def _rewrite_logs(self, logs, symlogs):
         """
         Rewrite logs for better processing.
@@ -432,6 +442,41 @@ class DifferentialExtension(object):
         self.t = self.T[self.level]
         self.d = self.D[self.level]
         self.case = self.cases[self.level]
+
+    def _tan_part(self, tans):
+
+        new_extension = False
+        restart = False
+        tanargs = [i.args[0] for i in tans]
+        ip = integer_powers(tanargs)
+
+        for arg, others in ip:
+            others.sort(key=lambda i: i[1])
+
+            arga, argd = frac_in(arg, self.t)
+            # in _exp_part we have 'is_log_deriv_k_t_radical' here
+
+            darga = (argd*derivation(Poly(arga, self.t), self) -
+                    arga*derivation(Poly(argd, self.t), self))
+            dargd = argd**2
+            darga, dargd = darga.cancel(dargd, include=True)
+            darg = darga.as_expr()/dargd.as_expr()
+            self.t = next(self.ts)
+            self.T.append(self.t)
+            self.extargs.append(arg)
+            self.exts.append('tan')
+            self.D.append(cancel(darg.as_expr()/(1 + arg**2)).as_poly(self.t))
+
+            if self.dummy:
+                i = Dummy("i")
+            else:
+                i = Symbol('i')
+            self.Tfuncs += [Lambda(i, tan(arg.subs(self.x, i)))]
+            self.newf = self.newf.xreplace(
+                    dict((tan(tanarg), rewrite_tans(p, self.t)) for tanarg, p in others))
+            new_extension = True
+
+        return new_extension
 
     def _exp_part(self, exps):
         """
@@ -711,6 +756,20 @@ class DifferentialExtension(object):
         self.case = self.cases[self.level]
         return None
 
+def rewrite_tans(n, t):
+    from sympy.functions.combinatorial.numbers import nC
+    from sympy.core.compatibility import as_int
+
+    s0 = 0
+    n = as_int(n)
+    for k in range(1, (n + 1)//2 + 1):
+        s0 += nC(n, 2*k-1)*t**(2*k - 1)*(-1)**(k + 1)
+
+    s1 = 0
+    for k in range(n//2 + 1):
+        s1 += nC(n, 2*k)*t**(2*k)*(-1)**k
+
+    return s0/s1
 
 def update_sets(seq, atoms, func):
     s = set(seq)
