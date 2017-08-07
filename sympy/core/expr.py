@@ -248,7 +248,7 @@ class Expr(Basic, EvalfMixin):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
             if (me.is_complex and me.is_real is False) or \
                     me.has(S.ComplexInfinity):
@@ -270,7 +270,7 @@ class Expr(Basic, EvalfMixin):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
             if (me.is_complex and me.is_real is False) or \
                     me.has(S.ComplexInfinity):
@@ -292,7 +292,7 @@ class Expr(Basic, EvalfMixin):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
             if (me.is_complex and me.is_real is False) or \
                     me.has(S.ComplexInfinity):
@@ -314,7 +314,7 @@ class Expr(Basic, EvalfMixin):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
             if (me.is_complex and me.is_real is False) or \
                     me.has(S.ComplexInfinity):

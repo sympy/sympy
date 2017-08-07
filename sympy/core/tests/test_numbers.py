@@ -1658,15 +1658,14 @@ def test_comparisons_with_unknown_type():
     class Foo(object):
         """
         Class that is unaware of Basic, and relies on both classes returning
-        the NotImplemented singleton for equivalence to evaluate to False, and
-        the other comparisons to raise a TypeError.
+        the NotImplemented singleton for equivalence to evaluate to False.
 
         """
 
     ni, nf, nr = Integer(3), Float(1.0), Rational(1, 3)
     foo = Foo()
 
-    for n in ni, nf, nr, oo:
+    for n in ni, nf, nr, oo, -oo, zoo, nan:
         assert n != foo
         assert foo != n
         assert not n == foo
@@ -1682,63 +1681,44 @@ def test_comparisons_with_unknown_type():
 
     class Bar(object):
         """
-        Class that considers itself greater than any instance of Number except
-        Infinity, and relies on the NotImplemented singleton for symmetric
-        relations.
+        Class that considers itself equal to any instance of Number except
+        infinities and nans, and relies on sympy types returning the
+        NotImplemented singleton for symmetric equality relations.
 
         """
         def __eq__(self, other):
-            if isinstance(other, Number):
+            if other in (oo, -oo, zoo, nan):
                 return False
+            if isinstance(other, Number):
+                return True
             return NotImplemented
 
         def __ne__(self, other):
             return not self == other
 
-        def __lt__(self, other):
-            if other is oo:
-                return True
-            if isinstance(other, Number):
-                return False
-            return NotImplemented
-
-        def __le__(self, other):
-            return self < other or self == other
-
-        def __gt__(self, other):
-            return not self <= other
-
-        def __ge__(self, other):
-            return not self < other
-
     bar = Bar()
 
     for n in ni, nf, nr:
+        assert n == bar
+        assert bar == n
+        assert not n != bar
+        assert not bar != n
+
+    for n in oo, -oo, zoo, nan:
         assert n != bar
         assert bar != n
         assert not n == bar
         assert not bar == n
-        assert n < bar
-        assert bar > n
-        assert not n > bar
-        assert not bar < n
-        assert n <= bar
-        assert bar >= n
-        assert not n >= bar
-        assert not bar <= n
 
-    assert oo != bar
-    assert bar != oo
-    assert not oo == bar
-    assert not bar == oo
-    assert not oo < bar
-    assert not bar > oo
-    assert oo > bar
-    assert bar < oo
-    assert not oo <= bar
-    assert not bar >= oo
-    assert oo >= bar
-    assert bar <= oo
+    for n in ni, nf, nr, oo, -oo, zoo, nan:
+        raises(TypeError, lambda: n < bar)
+        raises(TypeError, lambda: bar > n)
+        raises(TypeError, lambda: n > bar)
+        raises(TypeError, lambda: bar < n)
+        raises(TypeError, lambda: n <= bar)
+        raises(TypeError, lambda: bar >= n)
+        raises(TypeError, lambda: n >= bar)
+        raises(TypeError, lambda: bar <= n)
 
 def test_NumberSymbol_comparison():
     rpi = Rational('905502432259640373/288230376151711744')

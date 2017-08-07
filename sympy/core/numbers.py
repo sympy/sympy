@@ -697,7 +697,7 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         raise NotImplementedError('%s needs .__lt__() method' %
             (self.__class__.__name__))
 
@@ -705,7 +705,7 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         raise NotImplementedError('%s needs .__le__() method' %
             (self.__class__.__name__))
 
@@ -713,14 +713,14 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         return _sympify(other).__lt__(self)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         return _sympify(other).__le__(self)
 
     def __hash__(self):
@@ -1282,7 +1282,7 @@ class Float(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
         if other.is_comparable:
@@ -1296,7 +1296,7 @@ class Float(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
         if other.is_comparable:
@@ -1310,7 +1310,7 @@ class Float(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         if other.is_real and other.is_number:
@@ -1324,7 +1324,7 @@ class Float(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
         if other.is_real and other.is_number:
@@ -1740,7 +1740,7 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
         expr = self
@@ -1758,7 +1758,7 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
         expr = self
@@ -1776,7 +1776,7 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         expr = self
@@ -1794,7 +1794,7 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         expr = self
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
@@ -2118,7 +2118,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, Integer):
             return _sympify(self.p > other.p)
         return Rational.__gt__(self, other)
@@ -2127,7 +2127,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, Integer):
             return _sympify(self.p < other.p)
         return Rational.__lt__(self, other)
@@ -2136,7 +2136,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, Integer):
             return _sympify(self.p >= other.p)
         return Rational.__ge__(self, other)
@@ -2145,7 +2145,7 @@ class Integer(Rational):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if isinstance(other, Integer):
             return _sympify(self.p <= other.p)
         return Rational.__le__(self, other)
@@ -2840,7 +2840,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         if other.is_real:
             return S.false
         return Expr.__lt__(self, other)
@@ -2849,7 +2849,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if other.is_real:
             if other.is_finite or other is S.NegativeInfinity:
                 return S.false
@@ -2863,7 +2863,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         if other.is_real:
             if other.is_finite or other is S.NegativeInfinity:
                 return S.true
@@ -2877,7 +2877,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if other.is_real:
             return S.true
         return Expr.__ge__(self, other)
@@ -3061,7 +3061,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         if other.is_real:
             if other.is_finite or other is S.Infinity:
                 return S.true
@@ -3075,7 +3075,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if other.is_real:
             return S.true
         return Expr.__le__(self, other)
@@ -3084,7 +3084,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         if other.is_real:
             return S.false
         return Expr.__gt__(self, other)
@@ -3093,7 +3093,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if other.is_real:
             if other.is_finite or other is S.Infinity:
                 return S.false
@@ -3354,7 +3354,7 @@ class NumberSymbol(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         if self is other:
             return S.false
         if isinstance(other, Number):
@@ -3375,7 +3375,7 @@ class NumberSymbol(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if self is other:
             return S.true
         if other.is_real and other.is_number:
@@ -3388,7 +3388,7 @@ class NumberSymbol(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         r = _sympify((-self) < (-other))
         if r in (S.true, S.false):
             return r
@@ -3399,7 +3399,7 @@ class NumberSymbol(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return NotImplemented
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         r = _sympify((-self) <= (-other))
         if r in (S.true, S.false):
             return r
