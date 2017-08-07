@@ -124,6 +124,14 @@ def get_math_macros():
 
 
 def _as_macro_if_defined(meth):
+    """ Decorator for printer methods
+
+    When a Printer's method is decorated using this decorator the expressions printed
+    will first be looked for in the attribute ``math_macros``, and if present it will
+    print the macro name in ``math_macros`` followed by a type suffix for the type
+    ``real``. e.g. printing ``sympy.pi`` would print ``M_PIl`` if real is mapped to float80.
+
+    """
     @wraps(meth)
     def _meth_wrapper(self, expr, **kwargs):
         if expr in self.math_macros:
@@ -577,7 +585,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
-                args += ', %s' % self._print(expr.fromiter(expr.args[1:]))
+                args += ', %s' % self._print(expr.func(*expr.args[1:]))
         else:
             args = ', '.join(map(self._print, expr.args))
         return '{ns}{name}{suffix}({args})'.format(

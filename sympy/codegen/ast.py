@@ -66,7 +66,6 @@ from __future__ import print_function, division
 
 from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
-from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify, sympify
@@ -462,15 +461,10 @@ class Token(Basic):
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
         args = args + tuple([kwargs[k] for k in cls.__slots__[len(args):]])
-        return Type.__xnew_cached_(cls, *args)
-
-    def __new_stage2__(cls, *args):
         obj = Basic.__new__(cls)
         for attr, arg in zip(cls.__slots__, args):
             setattr(obj, attr, arg)
         return obj
-
-    __xnew_cached_ = staticmethod(cacheit(__new_stage2__))
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -483,13 +477,12 @@ class Token(Basic):
     def __hash__(self):
         return hash(tuple([getattr(self, attr) for attr in self.__slots__]))
 
-    def __repr__(self):
-        return "{0}({1})".format(self.__class__.__name__, ', '.join(
-            ['%s=%s' % (k, repr(getattr(self, k))) for k in self.__slots__]
-        ))
+    _hashable_content = __hash__
 
-    __str__ = __repr__
-    _sympystr = lambda self, printer: repr(self)
+    def _sympystr(self, printer):
+        return "{0}({1})".format(self.__class__.__name__, ', '.join(
+            ['%s=%s' % (k, printer._print(getattr(self, k))) for k in self.__slots__]
+        ))
 
 
 class Type(Token):
@@ -640,7 +633,7 @@ class Type(Token):
 
         """
         from sympy.functions.elementary.complexes import im, re
-        val = _sympify(value)
+        val = sympify(value)
 
         ten = Integer(10)
         exp10 = getattr(self, 'decimal_dig', None)
@@ -742,19 +735,19 @@ class FloatType(Type):
     @property
     def max_exponent(self):
         """ The largest positive number n, such that 2**(n - 1) is a representable finite value. """
+        # cf. C++'s ``std::numeric_limits::max_exponent``
         return two**(self.nexp - 1)
 
     @property
     def min_exponent(self):
         """ The lowest negative number n, such that 2**(n - 1) is a valid normalized number. """
+        # cf. C++'s ``std::numeric_limits::min_exponent``
         return 3 - self.max_exponent
 
     @property
     def max(self):
         """ Maximum value representable. """
-        e_max = two**self.nexp - 2
-        e_bias = two**(self.nexp - 1) - 1
-        return (two**self.nmant - 1)*two**(e_max - e_bias)
+        return (1 - two**-(self.nmant+1))*two**self.max_exponent
 
     @property
     def tiny(self):
@@ -762,8 +755,8 @@ class FloatType(Type):
         # See C macros: FLT_MIN, DBL_MIN, LDBL_MIN
         # or C++'s ``std::numeric_limits::min``
         # or numpy.finfo(dtype).tiny
-        return two**self.min_exponent
-        #two**(2 - 2**(self.nexp - 1))
+        return two**(self.min_exponent - 1)
+
 
     @property
     def eps(self):
@@ -791,7 +784,7 @@ class FloatType(Type):
         return ceiling((self.nmant + 1) * log(2)/log(10) + 1)
 
     def _cast_nocheck(self, value):
-        return Float(str(_sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
+        return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):
         if value < -self.max:
@@ -882,16 +875,16 @@ class Variable(Basic):
 
     nargs = (2, 3)  # type is optional
 
-    def __new__(cls, symbol, attrs=None, type_=None):
-        args = (_sympify(symbol), FiniteSet() if attrs is None else FiniteSet(*attrs))
+    def __new__(cls, symbol, attrs=FiniteSet(), type_=None):
+        args = (_sympify(symbol), attrs if isinstance(attrs, FiniteSet) else FiniteSet(*attrs))
         if type_ is not None:
             if not isinstance(type_, Type):
-                raise NotImplementedError("Expected a Type as type_")
+                raise TypeError("type_ argument should be an instance of Type")
             args += (type_,)
         return Basic.__new__(cls, *args)
 
     @classmethod
-    def deduced(cls, symbol, attrs=None):
+    def deduced(cls, symbol, attrs=FiniteSet()):
         """ Alt. constructor with type deduction from ``Type.from_expr``.
 
         Examples
@@ -974,7 +967,7 @@ class Declaration(Basic):
 
     def __new__(cls, var, val=None, cast=False):
         if not isinstance(var, Variable):
-            raise NotImplementedError("Expected a Variable instance as var")
+            raise TypeError("var argument should be an instance of Variable")
         args = var,
         if val is not None:
             if cast:
@@ -984,7 +977,7 @@ class Declaration(Basic):
         return Basic.__new__(cls, *args)
 
     @classmethod
-    def deduced(cls, symbol, value=None, attrs=None, **kwargs):
+    def deduced(cls, symbol, value=None, attrs=FiniteSet(), **kwargs):
         """ Deduces type primarily from ``symbol``, secondarily from ``value``.
 
         Examples

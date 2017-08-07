@@ -12,7 +12,7 @@ from sympy.utilities.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
-    real, float32, float64, float80
+    real, float32, float64, float80, float128
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, restrict
 from sympy.utilities.lambdify import implemented_function
@@ -72,6 +72,8 @@ def test_ccode_constants_mathh():
     assert ccode(-oo, standard='c89') == "-HUGE_VAL"
     assert ccode(oo) == "INFINITY"
     assert ccode(-oo, standard='c99') == "-INFINITY"
+    assert ccode(pi, type_aliases={real: float80}) == "M_PIl"
+
 
 
 def test_ccode_constants_other():
@@ -675,7 +677,7 @@ def test_ccode_Declaration():
     dcl2b = Declaration(var2, pi)
     assert ccode(dcl2b) == 'const float x = M_PI'
 
-    var3 = Variable(y, None, Type('bool'))
+    var3 = Variable(y, type_=Type('bool'))
     dcl3 = Declaration(var3)
     printer = C89CodePrinter()
     assert 'stdbool.h' not in printer.headers
@@ -693,15 +695,10 @@ def test_ccode_Declaration():
     dcl5b = Declaration(var5, pi)
     assert ccode(dcl5b) == 'const __float128 x = M_PI'
 
+
 def test_C99CodePrinter_custom_type():
     # We will look at __float128 (new in glibc 2.26)
-    f128 = FloatType(
-        '_Float128', 128,
-        max=Float('1.18973149535723176508575932662800702e+4932'),
-        tiny=Float('3.36210314311209350626267781732175260e-4932'),
-        eps=Float('1.92592994438723585305597794258492732e-34'),
-        dig=33, decimal_dig=36
-    )
+    f128 = FloatType('_Float128', float128.nbits, float128.nmant, float128.nexp)
     p128 = C99CodePrinter(dict(
         type_aliases={real: f128},
         type_literal_suffixes={f128: 'Q'},
@@ -754,6 +751,7 @@ def test_subclass_CCodePrinter():
     # issue gh-12687
     class MySubClass(CCodePrinter):
         pass
+
 
 def test_ccode_math_macros():
     assert ccode(z + exp(1)) == 'z + M_E'

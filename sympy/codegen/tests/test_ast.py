@@ -175,7 +175,17 @@ def test_Type():
     t = Type('MyType')
     assert t.name == 'MyType'
     assert str(t) == 'MyType'
-    assert repr(t) == "Type(name='MyType')"
+    assert repr(t) == "Type(name=MyType)"
+
+
+def test_Type_eq():
+    t1 = Type('t1')
+    t2 = Type('t2')
+    assert t1 != t2
+    assert t1 == t1 and t2 == t2
+    t1b = Type('t1')
+    assert t1 == t1b
+    assert t2 != t1b
 
 
 def test_Type__from_expr():
@@ -192,6 +202,9 @@ def test_Type__from_expr():
 def test_Type__cast_check__integers():
     # Rounding
     raises(ValueError, lambda: integer.cast_check(3.5))
+    assert integer.cast_check('3') == 3
+    assert integer.cast_check(Float('3.0000000000000000000')) == 3
+    assert integer.cast_check(Float('3.0000000000000000001')) == 3  # unintuitive maybe?
 
     # Range
     assert int8.cast_check(127.0) == 127
@@ -206,7 +219,7 @@ def test_Type__cast_check__integers():
 
 
 def test_Variable():
-    v = Variable(x, None, Type('real'))
+    v = Variable(x, type_=Type('real'))
     assert v.symbol == x
     assert v.type == real
     assert v.value_const == False
@@ -214,7 +227,7 @@ def test_Variable():
     assert w.symbol == y
     assert w.type == f32
     assert w.value_const
-    v_n = Variable(n, None, Type.from_expr(n))
+    v_n = Variable(n, type_=Type.from_expr(n))
     assert v_n.type == integer
     v_i = Variable(i, type_=Type.from_expr(n))
     assert v_i.type == integer
@@ -255,12 +268,12 @@ def test_Declaration():
     assert isinstance(decl.value, Float)
     assert decl.value == 3.0
 
-    vy = Variable(y, None, integer)
+    vy = Variable(y, type_=integer)
     decl2 = Declaration(vy, 3)
     assert decl2.variable == vy
     assert decl2.value is Integer(3)
 
-    vi = Variable(i, None, Type.from_expr(i))
+    vi = Variable(i, type_=Type.from_expr(i))
     decl3 = Declaration(vi, 3.0)
     assert decl3.variable.type == integer
     assert decl3.value == 3.0
@@ -313,7 +326,9 @@ def test_FloatType():
     assert abs(f80.max / Float('1.18973149535723176502e+4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.max / Float('1.18973149535723176508575932662800702e+4932', precision=128) - 1) < 0.1*10**-f128.dig
 
-    assert abs(f16.tiny / Float('6.1035e-05', precision=16) - 1) < 0.1*10**-f16.dig  # cf. np.finfo(np.float32).tiny    assert abs(f32.tiny / Float('1.17549435e-38', precision=32) - 1) < 0.1*10**-f32.dig  # cf. np.finfo(np.float32).tiny
+    # cf. np.finfo(np.float32).tiny
+    assert abs(f16.tiny / Float('6.1035e-05', precision=16) - 1) < 0.1*10**-f16.dig
+    assert abs(f32.tiny / Float('1.17549435e-38', precision=32) - 1) < 0.1*10**-f32.dig
     assert abs(f64.tiny / Float('2.22507385850720138e-308', precision=64) - 1) < 0.1*10**-f64.dig
     assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
