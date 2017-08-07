@@ -33,8 +33,7 @@ class RewritingSystem(object):
 
         # dictionary of reductions
         self.rules = {}
-        self.rules_cache = deque([])
-        self.cache_size = 50
+        self.rules_cache = deque([], 50)
         self._init_rules()
 
     def set_max(self, n):
@@ -64,12 +63,6 @@ class RewritingSystem(object):
         self._remove_redundancies()
         return
 
-    def _add_to_cache(self, p):
-        self.rules_cache.append(p)
-        if len(self.rules_cache) > self.cache_size:
-            self.rules_cache.popleft()
-        return
-
     def _add_rule(self, r1, r2):
         '''
         Add the rule r1 -> r2 with no checking or futher
@@ -93,7 +86,7 @@ class RewritingSystem(object):
 
         if (w1, w2) in self.rules_cache:
             return new_keys
-        self._add_to_cache((w1, w2))
+        self.rules_cache.append((w1, w2))
 
         s1, s2 = w1, w2
 
@@ -163,8 +156,14 @@ class RewritingSystem(object):
             if v != r:
                 del self.rules[r]
                 removed.add(r)
-            new = self.add_rule(v, w)
-            added.update(new)
+                if v > w:
+                    added.add(v)
+                    self.rules[v] = w
+                elif v < w:
+                    added.add(w)
+                    self.rules[w] = v
+            else:
+                self.rules[v] = w
         if changes:
             return removed, added
         return
