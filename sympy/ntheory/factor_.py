@@ -166,7 +166,7 @@ def trailing(n):
     >>> trailing(63)
     0
     """
-    n = int(n)
+    n = abs(int(n))
     if not n:
         return 0
     low_byte = n & 0xff
