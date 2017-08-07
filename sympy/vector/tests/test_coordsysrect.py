@@ -75,10 +75,10 @@ def test_coordinate_vars():
     """
     A = CoordSys3D('A')
     # Note that the name given on the lhs is different from A.x._name
-    assert BaseScalar('A.x', 0, A, 'A_x', r'\mathbf{{x}_{A}}') == A.x
-    assert BaseScalar('A.y', 1, A, 'A_y', r'\mathbf{{y}_{A}}') == A.y
-    assert BaseScalar('A.z', 2, A, 'A_z', r'\mathbf{{z}_{A}}') == A.z
-    assert BaseScalar('A.x', 0, A, 'A_x', r'\mathbf{{x}_{A}}').__hash__() == A.x.__hash__()
+    assert BaseScalar(0, A, 'A_x', r'\mathbf{{x}_{A}}') == A.x
+    assert BaseScalar(1, A, 'A_y', r'\mathbf{{y}_{A}}') == A.y
+    assert BaseScalar(2, A, 'A_z', r'\mathbf{{z}_{A}}') == A.z
+    assert BaseScalar(0, A, 'A_x', r'\mathbf{{x}_{A}}').__hash__() == A.x.__hash__()
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)
@@ -300,19 +300,41 @@ def test_evalf():
 
 
 def test_transformation_equations():
-    from sympy import symbols
+
     x, y, z = symbols('x y z')
+    #r, theta, phi = symbols("r theta phi")
     # Str
-    a = CoordSys3D('a', transformation='spherical')
-    assert a._transformation_equations() == (a.x * sin(a.y) * cos(a.z),
-                          a.x * sin(a.y) * sin(a.z),
-                          a.x * cos(a.y))
-    assert a.lame_coefficients() == (1, a.x, a.x * sin(a.y))
-    assert a._inverse_transformation_equations() == (sqrt(a.x**2 + a.y**2 +a.z**2),
-                          acos((a.z) / sqrt(a.x**2 + a.y**2 + a.z**2)),
-                          atan2(a.y, a.x))
-    a = CoordSys3D('a', transformation='cylindrical')
-    assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
+    a = CoordSys3D('a', transformation='spherical',
+                   variable_names=["r", "theta", "phi"])
+    r, theta, phi = a.base_scalars()
+
+    assert r == a.r
+    assert theta == a.theta
+    assert phi == a.phi
+
+    raises(AttributeError, lambda: a.x)
+    raises(AttributeError, lambda: a.y)
+    raises(AttributeError, lambda: a.z)
+
+    assert a.transformation_to_parent() == (
+        r*sin(theta)*cos(phi),
+        r*sin(theta)*sin(phi),
+        r*cos(theta)
+    )
+    assert a.lame_coefficients() == (1, r, r*sin(theta))
+    assert a.transformation_from_parent_function()(x, y, z) == (
+        sqrt(x ** 2 + y ** 2 + z ** 2),
+        acos((z) / sqrt(x**2 + y**2 + z**2)),
+        atan2(y, x)
+    )
+    a = CoordSys3D('a', transformation='cylindrical',
+                   variable_names=["r", "theta", "z"])
+    r, theta, z = a.base_scalars()
+    assert a.transformation_to_parent() == (
+        r*cos(theta),
+        r*sin(theta),
+        z
+    )
     assert a.lame_coefficients() == (1, a.y, 1)
     assert a._inverse_transformation_equations() == (sqrt(a.x**2 + a.y**2),
                             atan2(a.y, a.x), a.z)
