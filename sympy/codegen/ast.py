@@ -724,9 +724,9 @@ class FloatType(Type):
     True
     >>> half_precision.eps == S(2)**-10
     True
-    >>> half_precision.dig == 2
+    >>> half_precision.dig == 3
     True
-    >>> half_precision.decimal_dig == 4
+    >>> half_precision.decimal_dig == 5
     True
     >>> half_precision.cast_check(1.0)
     1.0
@@ -740,14 +740,30 @@ class FloatType(Type):
     __slots__ = ['name', 'nbits', 'nmant', 'nexp']
 
     @property
+    def max_exponent(self):
+        """ The largest positive number n, such that 2**(n - 1) is a representable finite value. """
+        return two**(self.nexp - 1)
+
+    @property
+    def min_exponent(self):
+        """ The lowest negative number n, such that 2**(n - 1) is a valid normalized number. """
+        return 3 - self.max_exponent
+
+    @property
     def max(self):
         """ Maximum value representable. """
-        return two**(2**(self.nexp-1))
+        e_max = two**self.nexp - 2
+        e_bias = two**(self.nexp - 1) - 1
+        return (two**self.nmant - 1)*two**(e_max - e_bias)
 
     @property
     def tiny(self):
-        """ Smallest magnitude value (excluding subnormals). """
-        return two**(2 - 2**(self.nexp - 1))
+        """ The minimum positive normalized value. """
+        # See C macros: FLT_MIN, DBL_MIN, LDBL_MIN
+        # or C++'s ``std::numeric_limits::min``
+        # or numpy.finfo(dtype).tiny
+        return two**self.min_exponent
+        #two**(2 - 2**(self.nexp - 1))
 
     @property
     def eps(self):

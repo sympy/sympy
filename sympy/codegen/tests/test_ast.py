@@ -9,8 +9,8 @@ from sympy.codegen.ast import (
     Assignment, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
     AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
     DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
-    integer, real, complex_, int8, uint8, float32 as f32, float64 as f64, float80 as f80,
-    complex64 as c64, complex128 as c128
+    integer, real, complex_, int8, uint8, float16 as f16, float32 as f32,
+    float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128
 )
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
@@ -277,19 +277,46 @@ def test_Declaration__deduced():
 
 
 def test_FloatType():
+    assert f16.dig == 3
     assert f32.dig == 6
     assert f64.dig == 15
     assert f80.dig == 18
+    assert f128.dig == 33
+
+    assert f16.decimal_dig == 5
     assert f32.decimal_dig == 9
     assert f64.decimal_dig == 17
     assert f80.decimal_dig == 21
-    assert abs(f32.max / Float('3.40282347e+38', precision=32) - 1) < 10**-f32.dig
-    assert abs(f64.max / Float('1.79769313486231571e+308', precision=64) - 1) < 10**-f64.dig  # cf. np.finfo(np.float64).max
-    assert abs(f80.max / Float('1.18973149535723176502e+4932', precision=80) - 1) < 10**-f80.dig
+    assert f128.decimal_dig == 36
 
-    assert abs(f32.tiny / Float('1.17549435e-38', precision=32) - 1) < 10**-f32.dig  # cf. np.finfo(np.float32).tiny
-    assert abs(f64.tiny / Float('2.22507385850720138e-308', precision=64) - 1) < 10**-f64.dig
-    assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 10**-f80.dig
+    assert f16.max_exponent == 16
+    assert f32.max_exponent == 128
+    assert f64.max_exponent == 1024
+    assert f80.max_exponent == 16384
+    assert f128.max_exponent == 16384
+
+    assert f16.min_exponent == -13
+    assert f32.min_exponent == -125
+    assert f64.min_exponent == -1021
+    assert f80.min_exponent == -16381
+    assert f128.min_exponent == -16381
+
+    assert abs(f16.eps / Float('0.00097656', precision=16) - 1) < 0.1*10**-f16.dig
+    assert abs(f32.eps / Float('1.1920929e-07', precision=32) - 1) < 0.1*10**-f32.dig
+    assert abs(f64.eps / Float('2.2204460492503131e-16', precision=64) - 1) < 0.1*10**-f64.dig
+    assert abs(f80.eps / Float('1.08420217248550443401e-19', precision=80) - 1) < 0.1*10**-f80.dig
+    assert abs(f128.eps / Float(' 1.92592994438723585305597794258492732e-34', precision=128) - 1) < 0.1*10**-f128.dig
+
+    assert abs(f16.max / Float('65504', precision=16) - 1) < .1*10**-f16.dig
+    assert abs(f32.max / Float('3.40282347e+38', precision=32) - 1) < 0.1*10**-f32.dig
+    assert abs(f64.max / Float('1.79769313486231571e+308', precision=64) - 1) < 0.1*10**-f64.dig  # cf. np.finfo(np.float64).max
+    assert abs(f80.max / Float('1.18973149535723176502e+4932', precision=80) - 1) < 0.1*10**-f80.dig
+    assert abs(f128.max / Float('1.18973149535723176508575932662800702e+4932', precision=128) - 1) < 0.1*10**-f128.dig
+
+    assert abs(f16.tiny / Float('6.1035e-05', precision=16) - 1) < 0.1*10**-f16.dig  # cf. np.finfo(np.float32).tiny    assert abs(f32.tiny / Float('1.17549435e-38', precision=32) - 1) < 0.1*10**-f32.dig  # cf. np.finfo(np.float32).tiny
+    assert abs(f64.tiny / Float('2.22507385850720138e-308', precision=64) - 1) < 0.1*10**-f64.dig
+    assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
+    assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
 
 
 def test_Type__cast_check__floating_point():
@@ -309,6 +336,8 @@ def test_Type__cast_check__floating_point():
     v10 = 12345.67894
     raises(ValueError, lambda: f32.cast_check(v10))
     assert abs(Float(str(v10), precision=64+8) - f64.cast_check(v10)) < v10*1e-16
+
+    assert abs(f32.cast_check(2147483647) - 2147483650) < 1
 
 
 def test_Type__cast_check__complex_floating_point():
