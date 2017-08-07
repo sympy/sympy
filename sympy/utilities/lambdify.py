@@ -387,61 +387,25 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             namespace.update({str(term): term})
 
     if printer is None:
-        #XXX: This has to be done here because of circular imports
-        wrap_printer = True
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer
         elif _module_present('numpy', namespaces):
             from sympy.printing.pycode import NumPyPrinter as Printer
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
-            wrap_printer = False
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.lambdarepr import TensorflowPrinter as Printer
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer
         else:
             from sympy.printing.pycode import PythonCodePrinter as Printer
-
-        from sympy.matrices import MatrixBase
-
-        if wrap_printer:
-            class LambdifyPrinter(Printer):
-                """ Wrapper class for backward compatibility in lambdify """
-                def _print(self, expr):
-                    clsname = expr.__class__.__name__
-                    if clsname in namespace:
-                        func = namespace[clsname]
-                        if func.__class__.__name__ == 'ufunc':
-                            self._module_format('numpy.' + clsname)
-                        elif getattr(func, '__module__', '') == 'mpmath.ctx_mp_python':
-                            self._module_format('mpmath.' + clsname)
-                        else:
-                            if func.__module__ and not '<' in func.__module__ and not '<' in func.__name__:
-                                try:
-                                    exec_('from %s import %s' % (func.__module__, func.__name__), {})
-                                except ImportError:
-                                    reg = False
-                                else:
-                                    reg = True
-                            else:
-                                reg = False
-                            self._module_format((
-                                (func.__module__ + '.') if func.__module__ else ''
-                            ) + func.__name__, register=reg)
-
-                        if isinstance(expr, MatrixBase):
-                            return "%s(%s)" % (clsname, self._print(expr.tolist()))
-                        elif hasattr(expr, 'args'):
-                            return '%s(%s)' % (clsname, ', '.join(map(self._print, expr.args)))
-                        else:
-                            return repr(expr)
-                    else:
-                        return super(LambdifyPrinter, self)._print(expr)
-        else:
-            LambdifyPrinter = Printer
-
-        printer = LambdifyPrinter({'fully_qualified_modules': False, 'inline': True})
+        user_functions = {}
+        for m in namespaces[::-1]:
+            if isinstance(m, dict):
+                for k in m:
+                    user_functions[k] = k
+        printer = Printer({'fully_qualified_modules': False, 'inline': True,
+                           'user_functions': user_functions})
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):

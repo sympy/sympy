@@ -82,6 +82,7 @@ class PythonCodePrinter(CodePrinter):
     _operators = {'and': 'and', 'or': 'or', 'not': 'not'}
     _default_settings = dict(
         CodePrinter._default_settings,
+        user_functions={},
         precision=17,
         inline=True,
         fully_qualified_modules=True
@@ -158,6 +159,22 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ImaginaryUnit(self, expr):
         return '1j'
+
+    def _print_MatrixBase(self, expr):
+        name = expr.__class__.__name__
+        func = self.known_functions.get(name, name)
+        return "%s(%s)" % (func, self._print(expr.tolist()))
+
+    _print_SparseMatrix = \
+        _print_MutableSparseMatrix = \
+        _print_ImmutableSparseMatrix = \
+        _print_Matrix = \
+        _print_DenseMatrix = \
+        _print_MutableDenseMatrix = \
+        _print_ImmutableMatrix = \
+        _print_ImmutableDenseMatrix = \
+        lambda self, expr: self._print_MatrixBase(expr)
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -346,13 +363,12 @@ class NumPyPrinter(PythonCodePrinter):
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))
 
-    def _print_Matrix(self, expr):
-        return "%s(%s)" % (self._module_format('numpy.array'), self._print(expr.tolist()))
+    def _print_MatrixBase(self, expr):
+        func = self.known_functions.get(expr.__class__.__name__, None)
+        if func is None:
+            func = self._module_format('numpy.array')
+        return "%s(%s)" % (func, self._print(expr.tolist()))
 
-    _print_SparseMatrix = _print_Matrix
-    _print_ImmutableSparseMatrix = _print_Matrix
-    _print_MutableDenseMatrix = _print_Matrix
-    _print_ImmutableDenseMatrix = _print_Matrix
 
 for k in NumPyPrinter._kf:
     setattr(NumPyPrinter, '_print_%s' % k, _print_known_func)
@@ -392,7 +408,6 @@ class SciPyPrinter(NumPyPrinter):
         )
 
     _print_ImmutableSparseMatrix = _print_SparseMatrix
-    _print_MutableSparseMatrix = _print_SparseMatrix
 
 
 for k in SciPyPrinter._kf:
