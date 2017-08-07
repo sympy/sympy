@@ -290,6 +290,8 @@ before_install:
       sudo apt-get install -y sagemath-upstream-binary;
     fi
 install:
+  # If a command fails, fail the build.
+  - set -e
 #The install cycle below is to test installation on systems without setuptools.
   - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
       then virtualenv -p /usr/bin/pypy ~/.venv;
