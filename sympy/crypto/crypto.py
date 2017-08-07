@@ -344,7 +344,7 @@ def decipher_affine(msg, key, symbols=None):
 
 
 def encipher_substitution(msg, old, new=None):
-    """
+    r"""
     Returns the ciphertext obtained by replacing each character that
     appears in ``old`` with the corresponding character in ``new``.
     If ``old`` is a mapping, then new is ignored and the replacements
