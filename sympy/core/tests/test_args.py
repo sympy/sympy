@@ -202,12 +202,12 @@ def test_sympy__codegen__ast__UnsignedIntType():
 
 def test_sympy__codegen__ast__FloatType():
     from sympy.codegen.ast import FloatType
-    assert _test_args(FloatType('float242', 242, max=42, tiny=1e-60, eps=1e-30, dig=42, decimal_dig=44))
+    assert _test_args(FloatType('float242', 242, nmant=142, nexp=99))
 
 
 def test_sympy__codegen__ast__ComplexType():
     from sympy.codegen.ast import ComplexType
-    assert _test_args(ComplexType('complex42', 42, max=42, tiny=1e-42, eps=1e-42, dig=42, decimal_dig=42))
+    assert _test_args(ComplexType('complex42', 42, nmant=15, nexp=5))
 
 
 def test_sympy__codegen__ast__Attribute():
@@ -219,19 +219,19 @@ def test_sympy__codegen__ast__Variable():
     from sympy.codegen.ast import Variable, Type, value_const
     assert _test_args(Variable(x))
     assert _test_args(Variable(y, {value_const}, Type('float32')))
-    assert _test_args(Variable(z, None, Type('float64')))
+    assert _test_args(Variable(z, type_=Type('float64')))
 
 
 def test_sympy__codegen__ast__Pointer():
     from sympy.codegen.ast import Pointer, Type, pointer_const
     assert _test_args(Pointer(x))
-    assert _test_args(Pointer(y, None, Type('float32')))
+    assert _test_args(Pointer(y, type_=Type('float32')))
     assert _test_args(Pointer(z, {pointer_const}, Type('float64')))
 
 
 def test_sympy__codegen__ast__Declaration():
     from sympy.codegen.ast import Declaration, Variable, Type
-    vx = Variable(x, None, Type('float'))
+    vx = Variable(x, type_=Type('float'))
     assert _test_args(Declaration(vx))
     assert _test_args(Declaration(vx, 3.0))
 

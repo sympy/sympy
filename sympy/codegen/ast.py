@@ -524,7 +524,7 @@ class Type(Token):
     >>> from sympy import Symbol
     >>> from sympy.printing.cxxcode import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
-    >>> cxxcode(Declaration(Variable(Symbol('x'), None, boost_mp50)))
+    >>> cxxcode(Declaration(Variable(Symbol('x'), type_=boost_mp50)))
     'boost::multiprecision::cpp_dec_float_50 x'
 
     References
@@ -727,7 +727,6 @@ class FloatType(Type):
     Traceback (most recent call last):
       ...
     ValueError: Maximum value for data type smaller than new value.
-
     """
 
     __slots__ = ['name', 'nbits', 'nmant', 'nexp']
