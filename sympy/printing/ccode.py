@@ -280,7 +280,7 @@ class C89CodePrinter(CodePrinter):
         strides = getattr(expr.base, 'strides', None)
         indices = expr.indices
 
-        if strides is None or isinstance(strides, str):
+        if strides is None or isinstance(strides, string_types):
             dims = expr.shape
             shift = S.One
             temp = tuple()
@@ -574,7 +574,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     @_as_macro_if_defined
     def _print_math_func(self, expr, nest=False):
         known = self.known_functions[expr.__class__.__name__]
-        if not isinstance(known, str):
+        if not isinstance(known, string_types):
             for cb, name in known:
                 if cb(*expr.args):
                     known = name

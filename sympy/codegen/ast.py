@@ -474,10 +474,11 @@ class Token(Basic):
                 return False
         return True
 
-    def __hash__(self):
-        return hash(tuple([getattr(self, attr) for attr in self.__slots__]))
+    def _hashable_content(self):
+        return tuple([getattr(self, attr) for attr in self.__slots__])
 
-    _hashable_content = __hash__
+    def __hash__(self):
+        return hash(self._hashable_content())
 
     def _sympystr(self, printer):
         return "{0}({1})".format(self.__class__.__name__, ', '.join(
@@ -692,13 +693,14 @@ class UnsignedIntType(_SizedIntType):
 two = Integer(2)
 
 class FloatType(Type):
-    """ Represents a floating point value. Base 2 & one sign bit is assumed.
+    """ Represents a floating point value.
 
-    In general
+    Base 2 & one sign bit is assumed.
 
     Arguments
     ---------
     name : str
+        Name of the type.
     nbits : integer
         Number of bits used (storage).
     nmant : integer
@@ -774,10 +776,12 @@ class FloatType(Type):
 
     @property
     def decimal_dig(self):
-        """ Number of decimal digits needed to guarantee float -> text -> float to be idempotent.
+        """ Number of digits needed to store & load without loss.
 
-        In order to avoid rounding errors when storing a floating point value as text (decimal digits),
-        you will need to use ``decimal_dig`` number of digits.
+        Number of decimal digits needed to guarantee that two consecutive conversions
+        (float -> text -> float) to be idempotent. This is useful when one do not want
+        to loose precision due to rounding errors when storing a floating point value
+        as text.
         """
         from sympy.functions import ceiling, log
         return ceiling((self.nmant + 1) * log(2)/log(10) + 1)
