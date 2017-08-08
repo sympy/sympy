@@ -36,9 +36,11 @@ from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol
+from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
+A = CoordSys3D('A')
 
 
 def test_printmethod():
@@ -170,6 +172,31 @@ def test_latex_Float():
     assert latex(Float(1.0e-100), mul_symbol="times") == r"1.0 \times 10^{-100}"
     assert latex(1.0*oo) == r"\infty"
     assert latex(-1.0*oo) == r"- \infty"
+
+
+def test_latex_Cross():
+    assert latex(Cross(A.i, A.j*A.x*3+A.k)) == r"\mathbf{\hat{i}_{A}} \times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+    assert latex(Cross(A.i, A.j)) == r"\mathbf{\hat{i}_{A}} \times \mathbf{\hat{j}_{A}}"
+
+
+def test_latex_Curl():
+    assert latex(Curl(3*A.x*A.j)) == r"\nabla\times (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}"
+    assert latex(Curl(3*A.x*A.j+A.i)) == r"\nabla\times \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+
+
+def test_latex_Divergence():
+    assert latex(Divergence(3*A.x*A.j+A.i)) == r"\nabla\cdot \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+    assert latex(Divergence(3*A.x*A.j)) == r"\nabla\cdot (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}"
+
+
+def test_latex_Dot():
+    assert latex(Dot(A.i, A.j*A.x*3+A.k)) == r"\mathbf{\hat{i}_{A}} \cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+    assert latex(Dot(A.i, A.j)) == r"\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}"
+
+
+def test_latex_Gradient():
+    assert latex(Gradient(A.x)) == r"\nabla\cdot \mathbf{{x}_{A}}"
+    assert latex(Gradient(A.x + 3*A.y)) == r"\nabla\cdot \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
 
 
 def test_latex_symbols():

@@ -347,6 +347,30 @@ class LatexPrinter(Printer):
         else:
             return str_real
 
+    def _print_Cross(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s \times %s" % (self.parenthesize(vec1, PRECEDENCE['Add']),
+                                  self.parenthesize(vec2, PRECEDENCE['Add']))
+
+    def _print_Curl(self, expr):
+        vec = expr._expr
+        return r"\nabla\times %s" % self.parenthesize(vec, PRECEDENCE['Add'])
+
+    def _print_Divergence(self, expr):
+        vec = expr._expr
+        return r"\nabla\cdot %s" % self.parenthesize(vec, PRECEDENCE['Add'])
+
+    def _print_Dot(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s \cdot %s" % (self.parenthesize(vec1, PRECEDENCE['Add']),
+                                  self.parenthesize(vec2, PRECEDENCE['Add']))
+
+    def _print_Gradient(self, expr):
+        func = expr._expr
+        return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Add'])
+
     def _print_Mul(self, expr):
         include_parens = False
         if _coeff_isneg(expr):
