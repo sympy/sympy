@@ -465,7 +465,7 @@ class DifferentialExtension(object):
             self.T.append(self.t)
             self.extargs.append(arg)
             self.exts.append('tan')
-            self.D.append(cancel(darg.as_expr()/(1 + arg**2)).as_poly(self.t))
+            self.D.append(darg.as_poly(self.t, expand=False)*Poly((1 + self.t**2), self.t, expand=False))
 
             if self.dummy:
                 i = Dummy("i")
