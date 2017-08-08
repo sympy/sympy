@@ -39,7 +39,6 @@ from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 a, b, x, y, z, k, n = symbols('a,b,x,y,z,k,n')
 th = Symbol('theta')
 ph = Symbol('phi')
-A = CoordSys3D('A')
 
 """
 Expressions whose pretty-printing is tested here:
@@ -5855,21 +5854,17 @@ def test_MatrixElement_printing():
     assert upretty(F) == ucode_str1
 
 
-def test_Cross_printing():
-    assert upretty(Cross(A.i, A.x*A.i+3*A.y*A.j)) == "(A_i)×((A_x) A_i + (3⋅A_y) A_j)"
+def test_vector_expr_pretty_printing():
+    A = CoordSys3D('A')
 
+    assert upretty(Cross(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)×((A_x) A_i + (3⋅A_y) A_j)")
+    assert upretty(x*Cross(A.i, A.j)) == u('x⋅(A_i)×(A_j)')
 
-def test_Curl_printing():
-    assert upretty(Curl(A.x*A.i + 3*A.y*A.j)) == "∇×((A_x) A_i + (3⋅A_y) A_j)"
+    assert upretty(Curl(A.x*A.i + 3*A.y*A.j)) == u("∇×((A_x) A_i + (3⋅A_y) A_j)")
 
+    assert upretty(Divergence(A.x*A.i + 3*A.y*A.j)) == u("∇⋅((A_x) A_i + (3⋅A_y) A_j)")
 
-def test_Divergence_printing():
-    assert upretty(Divergence(A.x*A.i + 3*A.y*A.j)) == "∇⋅((A_x) A_i + (3⋅A_y) A_j)"
+    assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)⋅((A_x) A_i + (3⋅A_y) A_j)")
 
-
-def test_Dot_printing():
-    assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == "(A_i)⋅((A_x) A_i + (3⋅A_y) A_j)"
-
-
-def test_Gradient_printing():
-    assert upretty(Gradient(A.x+3*A.y)) == "∇⋅(A_x + 3⋅A_y)"
+    assert upretty(Gradient(A.x+3*A.y)) == u("∇⋅(A_x + 3⋅A_y)")
+    # TODO: add support for ASCII pretty.
