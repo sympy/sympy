@@ -102,7 +102,7 @@ TENSORFLOW_TRANSLATIONS = {
 NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
-_MODULES = {
+MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *",)),
@@ -127,7 +127,7 @@ def _import(module, reload="False"):
     """
     from sympy.external import import_module
     try:
-        namespace, namespace_default, translations, import_commands = _MODULES[
+        namespace, namespace_default, translations, import_commands = MODULES[
             module]
     except KeyError:
         raise NameError(
@@ -489,7 +489,7 @@ def _get_namespace(m):
     """
     if isinstance(m, str):
         _import(m)
-        return _MODULES[m][0]
+        return MODULES[m][0]
     elif isinstance(m, dict):
         return m
     elif hasattr(m, "__dict__"):
