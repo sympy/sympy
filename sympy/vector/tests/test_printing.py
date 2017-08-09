@@ -29,14 +29,14 @@ v.append(Vector.zero)
 v.append(N.i)
 v.append(-N.i)
 v.append(N.i + N.j)
-v.append(a * N.i)
-v.append(a * N.i - b * N.j)
-v.append((a ** 2 + N.x) * N.i + N.k)
-v.append((a ** 2 + b) * N.i + 3 * (C.y - c) * N.k)
+v.append(a*N.i)
+v.append(a*N.i - b*N.j)
+v.append((a**2 + N.x)*N.i + N.k)
+v.append((a**2 + b)*N.i + 3*(C.y - c)*N.k)
 f = Function('f')
-v.append(N.j - (Integral(f(b)) - C.x ** 2) * N.k)
+v.append(N.j - (Integral(f(b)) - C.x**2)*N.k)
 upretty_v_8 = u(
-    """\
+"""\
 N_j + ⎛   2   ⌠        ⎞ N_k\n\
       ⎜C_x  - ⎮ f(b) db⎟    \n\
       ⎝       ⌡        ⎠    \
@@ -52,15 +52,15 @@ N_j + /         /       \\\n\
 
 v.append(N.i + C.k)
 v.append(express(N.i, C))
-v.append((a ** 2 + b) * N.i + (Integral(f(b))) * N.k)
+v.append((a**2 + b)*N.i + (Integral(f(b)))*N.k)
 upretty_v_11 = u(
-    """\
+"""\
 ⎛ 2    ⎞ N_i + ⎛⌠        ⎞ N_k\n\
 ⎝a  + b⎠       ⎜⎮ f(b) db⎟    \n\
                ⎝⌡        ⎠    \
 """)
 pretty_v_11 = u(
-    """\
+"""\
 / 2    \\ + /  /       \\\n\
 \\a  + b/ N_i| |        |\n\
            | | f(b) db|\n\
@@ -70,26 +70,26 @@ pretty_v_11 = u(
 
 for x in v:
     d.append(x | N.k)
-s = 3 * N.x ** 2 * C.y
+s = 3*N.x**2*C.y
 upretty_s = u(
-    """\
+"""\
          2\n\
 3⋅C_y⋅N_x \
 """)
 pretty_s = u(
-    """\
+"""\
          2\n\
 3*C_y*N_x \
 """)
 
 # This is the pretty form for ((a**2 + b)*N.i + 3*(C.y - c)*N.k) | N.k
 upretty_d_7 = u(
-    """\
+"""\
 ⎛ 2    ⎞ (N_i|N_k) + (3⋅C_y - 3⋅c) (N_k|N_k)\n\
 ⎝a  + b⎠                                    \
 """)
 pretty_d_7 = u(
-    """\
+"""\
 / 2    \\ (N_i|N_k) + (3*C_y - 3*c) (N_k|N_k)\n\
 \\a  + b/                                    \
 """)

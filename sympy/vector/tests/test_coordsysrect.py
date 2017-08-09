@@ -354,6 +354,21 @@ def test_transformation_equations():
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
 
 
+def test_check_orthogonality():
+    x, y, z = symbols('x y z')
+    u,v = symbols('u, v')
+    a = CoordSys3D('a', transformation=((x*sin(y)*cos(z), x*sin(y)*sin(z), x*cos(y)), (x, y, z)))
+    assert a._check_orthogonality(a._transformation) is True
+    a = CoordSys3D('a', transformation=((x * cos(y), x * sin(y), z), (x, y, z)))
+    assert a._check_orthogonality(a._transformation) is True
+    a = CoordSys3D('a', transformation=((cosh(u) * cos(v), sinh(u) * sin(v), z), (u, v, z)))
+    assert a._check_orthogonality(a._transformation) is True
+
+    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, x, z), (x, y, z))))
+    raises(ValueError, lambda: CoordSys3D('a', transformation=(
+        (x*sin(y/2)*cos(z), x*sin(y)*sin(z), x*cos(y)), (x, y, z))))
+
+
 def test_coordsys3d():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
