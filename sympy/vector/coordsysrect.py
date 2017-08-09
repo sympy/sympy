@@ -76,9 +76,12 @@ class CoordSys3D(Basic):
         if transformation is not None:
             if (location is not None) and (rotation_matrix is not None):
                 raise ValueError()
-            if isinstance(transformation, Tuple):
-                rotation_matrix = transformation[0]
-                location = transformation[1]
+            if isinstance(transformation, (Tuple, tuple, list)):
+                if isinstance(transformation[0], Matrix):
+                    rotation_matrix = transformation[0]
+                    location = transformation[1]
+                else:
+                    transformation = Lambda(transformation[1], transformation[0])
             elif isinstance(transformation, string_types):
                 transformation = Symbol(transformation)
             elif isinstance(transformation, (Symbol, Lambda)):
@@ -135,6 +138,13 @@ class CoordSys3D(Basic):
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
             lambda_lame = CoordSys3D._get_lame_coeff(trname)
             lambda_inverse = CoordSys3D._set_inv_trans_equations(trname)
+        elif isinstance(transformation, Lambda):
+            if not CoordSys3D._check_orthogonality(transformation):
+                raise ValueError("The transformation equation does not "
+                                 "create orthogonal coordinate system")
+            lambda_transformation = transformation
+            lambda_lame = CoordSys3D._calculate_lame_coeff(lambda_transformation)
+            lambda_inverse = None
         else:
             lambda_transformation = lambda x, y, z: transformation(x, y, z)
             lambda_lame = CoordSys3D._get_lame_coeff(transformation)
@@ -235,54 +245,9 @@ class CoordSys3D(Basic):
     def __iter__(self):
         return iter(self.base_vectors())
 
-    @classmethod
-    def _connect_to_standard_cartesian(cls, curv_coord_type):
-        """
-        Change the type of orthogonal curvilinear system. It could be done
-        by tuple of transformation equations or by choosing one of pre-defined
-        coordinate system.
-
-        Parameters
-        ==========
-
-        curv_coord_type: str, tuple
-
-        """
-
-        x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy)
-
-        if isinstance(curv_coord_type, string_types):
-            transformation_equations = CoordSys3D._get_transformation_lambdas(curv_coord_type)
-            lame_coefficients = CoordSys3D._get_lame_coeff(curv_coord_type)
-            inverse_transformation_equations = CoordSys3D._set_inv_trans_equations(curv_coord_type)
-
-        else:
-            if isinstance(curv_coord_type, collections.Callable):
-                transformation_equations = Lambda((x1, x2, x3), curv_coord_type(x1, x2, x3))
-
-            elif isinstance(curv_coord_type, (tuple, list, Tuple)):
-                if len(curv_coord_type) == 2:
-                    transformation_equations = \
-                        Lambda((x1, x2, x3), tuple(i.subs(list(zip(curv_coord_type[1], (x1, x2, x3))))
-                                                   for i in curv_coord_type[0]))
-                else:
-                    raise ValueError("Wrong set of parameter.")
-
-            else:
-                raise ValueError("Wrong set of parameter.")
-
-            if not cls._check_orthogonality(transformation_equations):
-                raise ValueError("The transformation equation does not "
-                                 "create orthogonal coordinate system")
-
-            lame_coefficients = cls._calculate_lame_coefficients(transformation_equations)
-            inverse_transformation_equations = None
-
-        return transformation_equations, lame_coefficients, inverse_transformation_equations
-
-    @classmethod
+    @staticmethod
     @cacheit
-    def _check_orthogonality(cls, equations):
+    def _check_orthogonality(equations):
         """
         Helper method for _connect_to_cartesian. It checks if
         set of transformation equations create orthogonal curvilinear
@@ -322,20 +287,20 @@ class CoordSys3D(Basic):
 
         if curv_coord_name == 'spherical':
             return lambda x, y, z: (
-                sqrt(x ** 2 + y ** 2 + z ** 2),
-                acos(z / sqrt(x ** 2 + y ** 2 + z ** 2)),
+                sqrt(x**2 + y**2 + z**2),
+                acos(z/sqrt(x**2 + y**2 + z**2)),
                 atan2(y, x)
             )
         if curv_coord_name == 'cylindrical':
             return lambda x, y, z: (
-                sqrt(x ** 2 + y ** 2),
+                sqrt(x**2 + y**2),
                 atan2(y, x),
                 z
             )
         raise ValueError('Wrong set of parameters.'
                          'Type of coordinate system is defined')
 
-    def _calculate_inverse(self):
+    def _calculate_inv_trans_equations(self):
         """
         Helper method for set_coordinate_type. It calculates inverse
         transformation equations for given transformations equations.
@@ -347,16 +312,15 @@ class CoordSys3D(Basic):
             Lambda of transformation equations
 
         """
-        x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy)
-        x = Dummy('x')
-        y = Dummy('y')
-        z = Dummy('z')
+        x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy, reals=True)
+        x, y, z = symbols("x, y, z", cls=Dummy)
+
         equations = self._transformation(x1, x2, x3)
 
         try:
             solved = solve([equations[0] - x, equations[1] - y, equations[2] - z], (x1, x2, x3), dict=True)[0]
             solved = solved[x1], solved[x2], solved[x3]
-            self._inverse_transformation = \
+            self._transformation_from_parent_lambda = \
                 lambda x1, x2, x3: tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved)
         except:
             raise ValueError('Wrong set of parameters.')
@@ -375,7 +339,7 @@ class CoordSys3D(Basic):
         return CoordSys3D._calculate_lame_coefficients(curv_coord_name)
 
     @staticmethod
-    def _calculate_lame_coefficients(equations):
+    def _calculate_lame_coeff(equations):
         """
         It calculates Lame coefficients
         for given transformations equations.

@@ -335,23 +335,23 @@ def test_transformation_equations():
         r*sin(theta),
         z
     )
-    assert a.lame_coefficients() == (1, a.y, 1)
-    assert a._inverse_transformation_equations() == (sqrt(a.x**2 + a.y**2),
-                            atan2(a.y, a.x), a.z)
+    assert a.lame_coefficients() == (1, a.theta, 1)
+    assert a.transformation_from_parent_function()(x, y, z) == (sqrt(x**2 + y**2),
+                            atan2(y, x), z)
     a = CoordSys3D('a', transformation='cartesian')
-    assert a._transformation_equations() == (a.x, a.y, a.z)
+    assert a.transformation_to_parent() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
-    assert a._inverse_transformation_equations() == (a.x, a.y, a.z)
+    assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
     # Variables and expressions
+    x, y, z = symbols('x y z')
     a = CoordSys3D('a', transformation=((x, y, z), (x, y, z)))
-    a._calculate_inverse()
-    assert a._transformation_equations() == (a.x, a.y, a.z)
+    a._calculate_inv_trans_equations()
+    assert a.transformation_to_parent() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
-    assert a._inverse_transformation_equations() == (a.x, a.y, a.z)
+    assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
     a = CoordSys3D('a', transformation=(((x*cos(y), x*sin(y), z)), (x, y, z)))
-    a._calculate_inverse()
-    assert a._transformation_equations() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
-    assert a.lame_coefficients() == (1, sqrt(a.x**2), 1)
+    assert a.transformation_to_parent() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
+    assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
 
 
 def test_coordsys3d():
