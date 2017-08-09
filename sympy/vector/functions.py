@@ -124,22 +124,20 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
 
-def directional_derivative(scalar, vect):
+def directional_derivative(field, direction_vector):
     """
-    Returns the directional derivative of a scalar field computed along a given vector
-    in given coordinate system.
+    Returns the directional derivative of a scalar or vector field computed
+    along a given vector in coordinate system which parameters are expressed.
 
     Parameters
     ==========
 
-    scalar : SymPy Expr
-        The scalar field to compute the gradient of
+    field : Vector or Scalar
+        The scalar or vector field to compute the directional derivative of
 
-    vect : Vector
-        The vector operand
+    direction_vector : Vector
+        The vector to calculated directional derivative along them.
 
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
 
     Examples
     ========
@@ -155,7 +153,20 @@ def directional_derivative(scalar, vect):
     5*R.x**2 + 30*R.x*R.z
 
     """
-    return gradient(scalar).dot(vect).doit()
+    from sympy.vector.operators import _get_coord_sys_from_expr
+    coord_sys = _get_coord_sys_from_expr(field)
+    if coord_sys is not None:
+        field = express(field, coord_sys, variables=True)
+        out = Vector.dot(direction_vector, coord_sys._i) * diff(field, coord_sys._x)
+        out += Vector.dot(direction_vector, coord_sys._j) * diff(field, coord_sys._y)
+        out += Vector.dot(direction_vector, coord_sys._k) * diff(field, coord_sys._z)
+        if out == 0 and isinstance(field, Vector):
+            out = Vector.zero
+        return out
+    elif isinstance(field, Vector):
+        return Vector.zero
+    else:
+        return S(0)
 
 
 def is_conservative(field):

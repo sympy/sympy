@@ -3,11 +3,11 @@ from __future__ import division
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, rootof, S, simplify, sin, sqrt, Symbol, tan, asin, sinh,
+    Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
-    homogeneous_order, infinitesimals, checkinfsol, checksysodesol)
+    homogeneous_order, infinitesimals, checkinfsol, checksysodesol, solve_ics)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
@@ -742,6 +742,104 @@ def test_classify_ode():
         ('separable', '1st_power_series', 'lie_group', 'separable_Integral')
 
 
+def test_classify_ode_ics():
+    # Dummy
+    eq = f(x).diff(x, x) - f(x)
+
+    # Not f(0) or f'(0)
+    ics = {x: 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+
+    ############################
+    # f(0) type (AppliedUndef) #
+    ############################
+
+
+    # Wrong function
+    ics = {g(0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Contains x
+    ics = {f(x): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Too many args
+    ics = {f(0, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # point contains f
+    # XXX: Should be NotImplementedError
+    ics = {f(0): f(1)}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Does not raise
+    ics = {f(0): 1}
+    classify_ode(eq, f(x), ics=ics)
+
+
+    #####################
+    # f'(0) type (Subs) #
+    #####################
+
+    # Wrong function
+    ics = {g(x).diff(x).subs(x, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Contains x
+    ics = {f(y).diff(y).subs(y, x): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Wrong variable
+    ics = {f(y).diff(y).subs(y, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Too many args
+    ics = {f(x, y).diff(x).subs(x, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Derivative wrt wrong vars
+    ics = {Derivative(f(x), x, y).subs(x, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # point contains f
+    # XXX: Should be NotImplementedError
+    ics = {f(x).diff(x).subs(x, 0): f(0)}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Does not raise
+    ics = {f(x).diff(x).subs(x, 0): 1}
+    classify_ode(eq, f(x), ics=ics)
+
+    ###########################
+    # f'(y) type (Derivative) #
+    ###########################
+
+    # Wrong function
+    ics = {g(x).diff(x).subs(x, y): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Contains x
+    ics = {f(y).diff(y).subs(y, x): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Too many args
+    ics = {f(x, y).diff(x).subs(x, y): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Derivative wrt wrong vars
+    ics = {Derivative(f(x), x, z).subs(x, y): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # point contains f
+    # XXX: Should be NotImplementedError
+    ics = {f(x).diff(x).subs(x, y): f(0)}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Does not raise
+    ics = {f(x).diff(x).subs(x, y): 1}
+    classify_ode(eq, f(x), ics=ics)
+
 def test_classify_sysode():
     # Here x is assumed to be x(t) and y as y(t) for simplicity.
     # Similarly diff(x,t) and diff(y,y) is assumed to be x1 and y1 respectively.
@@ -883,6 +981,68 @@ def test_classify_sysode():
     # issue 8193: funcs parameter for classify_sysode has to actually work
     assert classify_sysode(eq1, funcs=[x(t), y(t)]) == sol1
 
+
+def test_solve_ics():
+    # Basic tests that things work from dsolve.
+    assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(0): 1}) == Eq(f(x), exp(x))
+    assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(x).diff(x).subs(x, 0): 1}) == Eq(f(x), exp(x))
+    assert dsolve(f(x).diff(x, x) + f(x), f(x), ics={f(0): 1,
+        f(x).diff(x).subs(x, 0): 1}) == Eq(f(x), sin(x) + cos(x))
+    assert dsolve([f(x).diff(x) - f(x) + g(x), g(x).diff(x) - g(x) - f(x)],
+        [f(x), g(x)], ics={f(0): 1, g(0): 0}) == [Eq(f(x), exp(x)*cos(x)),
+            Eq(g(x), exp(x)*sin(x))]
+
+    # Test cases where dsolve returns two solutions.
+    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(1): 0}) == [Eq(f(x),
+        -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
+    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
+        -sqrt(x - S(1)/2)/x), Eq(f(x), sqrt(x - S(1)/2)/x)]
+
+    assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
+        ics={f(0):1}, hint='1st_exact', simplify=False) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
+    assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
+        ics={f(0):1}, hint='1st_exact', simplify=True) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
+
+    assert solve_ics([Eq(f(x), C1*exp(x))], [f(x)], [C1], {f(0): 1}) == {C1: 1}
+    assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2],
+        {f(0): 1, f(pi/2): 1}) == {C1: 1, C2: 1}
+
+    assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2],
+        {f(0): 1, f(x).diff(x).subs(x, 0): 1}) == {C1: 1, C2: 1}
+
+    # XXX: Ought to be ValueError
+    raises(NotImplementedError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
+
+    # XXX: Ought to be ValueError
+    raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1}))
+
+    # Degenerate case. f'(0) is identically 0.
+    raises(ValueError, lambda: solve_ics([Eq(f(x), sqrt(C1 - x**2))], [f(x)], [C1], {f(x).diff(x).subs(x, 0): 0}))
+
+    EI, q, L = symbols('EI q L')
+
+    # eq = Eq(EI*diff(f(x), x, 4), q)
+    sols = [Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3 + q*x**4/(24*EI))]
+    funcs = [f(x)]
+    constants = [C1, C2, C3, C4]
+    # Test both cases, Derivative (the default from f(x).diff(x).subs(x, L)),
+    # and Subs
+    ics1 = {f(0): 0,
+        f(x).diff(x).subs(x, 0): 0,
+        f(L).diff(L, 2): 0,
+        f(L).diff(L, 3): 0}
+    ics2 = {f(0): 0,
+        f(x).diff(x).subs(x, 0): 0,
+        Subs(f(x).diff(x, 2), x, L): 0,
+        Subs(f(x).diff(x, 3), x, L): 0}
+
+    solved_constants1 = solve_ics(sols, funcs, constants, ics1)
+    solved_constants2 = solve_ics(sols, funcs, constants, ics2)
+    assert solved_constants1 == solved_constants2 == {
+        C1: 0,
+        C2: 0,
+        C3: L**2*q/(4*EI),
+        C4: -L*q/(6*EI)}
 
 def test_ode_order():
     f = Function('f')
@@ -2589,7 +2749,7 @@ def test_user_infinitesimals():
 
 def test_issue_7081():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
-    assert dsolve(eq) == Eq(f(x), -((C1 + x**2)/(-C1 + x**2)))
+    assert dsolve(eq) == Eq(f(x), (C1 - x**2)/(C1 + x**2))
 
 
 def test_2nd_power_series_ordinary():

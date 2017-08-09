@@ -709,7 +709,7 @@ class ComplexRootOf(RootOf):
         # CRootOf instance. It must also be a number that agrees with the
         # is_real value of the CRootOf instance.
         if type(self) == type(other):
-            return sympify(self.__eq__(other))
+            return sympify(self == other)
         if not (other.is_number and not other.has(AppliedUndef)):
             return S.false
         if not other.is_finite:

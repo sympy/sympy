@@ -455,6 +455,11 @@ def test_minimal_block():
 
     assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
 
+    P1 = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    P2 = PermutationGroup(Permutation(0, 1, 2, 3, 4, 5), Permutation(1, 5)(2, 4))
+    assert P1.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
+    assert P2.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
+
 
 def test_max_div():
     S = SymmetricGroup(10)
@@ -772,3 +777,26 @@ def test_generator_product():
     for g in gens:
         w = g*w
     assert w == p
+
+def test_sylow_subgroup():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    S = P.sylow_subgroup(2)
+    assert S.order() == 4
+
+    P = DihedralGroup(12)
+    S = P.sylow_subgroup(3)
+    assert S.order() == 3
+
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5), Permutation(0, 2))
+    S = P.sylow_subgroup(3)
+    assert S.order() == 9
+    S = P.sylow_subgroup(2)
+    assert S.order() == 8
+
+    P = SymmetricGroup(10)
+    S = P.sylow_subgroup(2)
+    assert S.order() == 256
+    S = P.sylow_subgroup(3)
+    assert S.order() == 81
+    S = P.sylow_subgroup(5)
+    assert S.order() == 25
