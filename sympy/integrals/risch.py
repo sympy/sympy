@@ -270,7 +270,7 @@ class DifferentialExtension(object):
             if handle_first == 'log' or not exp_new_extension:
                 log_new_extension = self._log_part(logs)
 
-            if tan_new_extension:
+            if tan_new_extension or (not exp_new_extension and not log_new_extension):
                 tan_new_extension = self._tan_part(tans)
 
         self.fa, self.fd = frac_in(self.newf, self.t)
@@ -392,7 +392,12 @@ class DifferentialExtension(object):
         return exps, pows, numpows, sympows, log_new_extension
 
     def _rewrite_tans(self, tans):
-        return self.newf.atoms(tan)
+        atoms = self.newf.atoms(tan)
+        tans = update_sets(tans, atoms,
+            lambda i: i.args[0].is_rational_function(*self.T) and
+            i.args[0].has(*self.T))
+
+        return tans
 
     def _rewrite_logs(self, logs, symlogs):
         """
