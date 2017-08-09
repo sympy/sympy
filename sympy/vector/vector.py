@@ -363,7 +363,7 @@ class BaseVector(Vector, AtomicExpr):
         obj._base_instance = obj
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
-        obj._name = name
+        obj._name = system._name + '.' + name
         obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system

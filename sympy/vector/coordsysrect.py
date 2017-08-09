@@ -167,18 +167,12 @@ class CoordSys3D(Basic):
                 cls, Symbol(name), transformation)
         obj._name = name
         # Initialize the base vectors
-        if vector_names is None:
-            vector_names = (name + '.i', name + '.j', name + '.k')
-            latex_vects = [(r'\mathbf{\hat{i}_{%s}}' % name),
-                           (r'\mathbf{\hat{j}_{%s}}' % name),
-                           (r'\mathbf{\hat{k}_{%s}}' % name)]
-            pretty_vects = (name + '_i', name + '_j', name + '_k')
-        else:
-            _check_strings('vector_names', vector_names)
-            vector_names = list(vector_names)
-            latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
+
+        _check_strings('vector_names', vector_names)
+        vector_names = list(vector_names)
+        latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
                            x in vector_names]
-            pretty_vects = [(name + '_' + x) for x in vector_names]
+        pretty_vects = [(name + '_' + x) for x in vector_names]
 
         obj._vector_names = vector_names
 
@@ -189,17 +183,12 @@ class CoordSys3D(Basic):
         obj._base_vectors = (v1, v2, v3)
 
         # Initialize the base scalars
-        if variable_names is None:
-            variable_names = (name + '.x', name + '.y', name + '.z')
-            latex_scalars = [(r"\mathbf{{x}_{%s}}" % name),
-                             (r"\mathbf{{y}_{%s}}" % name),
-                             (r"\mathbf{{z}_{%s}}" % name)]
-            pretty_scalars = (name + '_x', name + '_y', name + '_z')
-        else:
-            _check_strings('variable_names', vector_names)
-            latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
-                             x in variable_names]
-            pretty_scalars = [(name + '_' + x) for x in variable_names]
+
+        _check_strings('variable_names', vector_names)
+        variable_names = list(variable_names)
+        latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
+                         x in variable_names]
+        pretty_scalars = [(name + '_' + x) for x in variable_names]
 
         obj._variable_names = variable_names
         obj._vector_names = vector_names
@@ -560,7 +549,7 @@ class CoordSys3D(Basic):
         >>> q = Symbol('q')
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
-        {A.x: -sin(q)*B.y + cos(q)*B.x, A.y: sin(q)*B.x + cos(q)*B.y, A.z: B.z}
+        {A.x: B.x*cos(q) - B.y*sin(q), A.y: B.x*sin(q) + B.y*cos(q), A.z: B.z}
 
         """
 

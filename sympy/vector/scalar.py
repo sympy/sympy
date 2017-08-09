@@ -35,7 +35,7 @@ class BaseScalar(AtomicExpr):
             raise ValueError("Invalid index specified.")
         # The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
-        obj._name = obj.name = system._variable_names[index]
+        obj._name = obj.name = system._name + '.' + system._variable_names[index]
         obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
