@@ -1162,28 +1162,17 @@ def test_Poly_degree():
     assert degree(1, x) == 0
     assert degree(x, x) == 1
 
-    assert degree(x*y**2, gen=x) == 1
-    assert degree(x*y**2, gen=y) == 2
-
-    assert degree(x*y**2, x, y) == 1
-    assert degree(x*y**2, y, x) == 2
+    assert degree(x*y**2, x) == 1
+    assert degree(x*y**2, y) == 2
     assert degree(x*y**2, z) == 0
 
     assert degree(y**2+x**3) == 3
-    assert degree(x**2+y**3) == 2
 
     assert degree(Poly(0,x),z) == -oo
     assert degree(Poly(1,x),z) == 0
     assert degree(Poly(x**2+y**3,y)) == 3
-    assert degree(Poly(y**2 + x**3, x, y), x, y, gen=y) == 2
-    assert degree(Poly(y**2 + x**3, x), x, y, gen=y) == 2
-    raises(ComputationFailed, lambda: degree(1))
-
-    assert degree(Poly(exp(x) + y**2, y), exp(x)) == 1
-    assert degree(Poly(exp(x) + y**2, y), y, exp(x), gen=1) == 1
-
-    p = exp(x) + y**2
-    assert degree(p) == Poly(p).degree(0)
+    assert degree(Poly(y**2 + x**3, y, x), 1) == 3
+    assert degree(Poly(y**2 + x**3, x), z) == 0
 
 
 def test_Poly_degree_list():
