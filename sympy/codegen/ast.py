@@ -36,7 +36,17 @@ AST Type Tree
        |           |---> Pointer
        |
        |--->Declaration
-
+       |
+       |--->While
+       |
+       |--->Scope
+       |
+       |--->PrintStatement
+       |
+       |--->FunctionPrototype
+       |                    |--->FunctionDefinition
+       |
+       |--->FunctionCall
 
 
 Predefined types
@@ -394,7 +404,8 @@ class For(Basic):
     ----------
     target : symbol
     iter : iterable
-    body : sympy expr
+    body : CodeBlock or iterable
+        When passed an iterable it is used to instantiate a CodeBlock.
 
     Examples
     --------
@@ -484,6 +495,10 @@ class Token(Basic):
         return "{0}({1})".format(self.__class__.__name__, ', '.join(
             ['%s=%s' % (k, printer._print(getattr(self, k))) for k in self.__slots__]
         ))
+
+    @property
+    def args(self):
+        return self._hashable_content()
 
 
 class Type(Token):
@@ -1017,3 +1032,162 @@ class Declaration(Basic):
             return self.args[1]
         else:
             return None
+
+class While(Basic):
+    """ Represents a 'for-loop' in the code.
+
+    Expressions are of the form:
+        "while condition:
+             body..."
+
+    Parameters
+    ----------
+    condition : expression convertable to boolean
+    body : CodeBlock or iterable
+        When passed an iterable it is used to instantiate a CodeBlock.
+
+    Examples
+    --------
+
+    >>> from sympy import symbols, Gt, Abs
+    >>> from sympy.codegen import Assignment
+    >>> x, dx = symbols('x dx')
+    >>> expr = 1 - x**2
+    >>> whl = While(Gt(Abs(dx), 1e-9), [
+    ...     Assignment(dx, -expr/expr.diff(x)),
+    ...     AddAugmentedAssignment(x, dx)
+    ... ])
+
+    """
+    nargs = 2
+
+    def __new__(cls, condition, body):
+        condition = _sympify(condition)
+        if not isinstance(body, CodeBlock):
+            if not iterable(body):
+                raise TypeError("body must be an iterable or CodeBlock")
+            body = CodeBlock(*(_sympify(i) for i in body))
+        return Basic.__new__(cls, condition, body)
+
+    @property
+    def condition(self):
+        return self.args[0]
+
+    @property
+    def body(self):
+        return self.args[1]
+
+
+class Scope(Basic):
+    """ Represents a scope in the code.
+
+    Parameters
+    ----------
+    body : CodeBlock or iterable
+        When passed an iterable it is used to instantiate a CodeBlock.
+
+    """
+    nargs = 1
+
+    def __new__(cls, body):
+        if not isinstance(body, CodeBlock):
+            if not iterable(body):
+                raise TypeError("body must be an iterable or CodeBlock")
+            body = CodeBlock(*(_sympify(i) for i in body))
+        return Basic.__new__(cls, body)
+
+    @property
+    def body(self):
+        return self.args[0]
+
+
+
+class PrintStatement(Token):
+    """ Represents a print statement in the code.
+
+    Parameters
+    ----------
+    formatstring : str
+    *args : Basic instances (or convertible to such through sympify)
+    """
+
+    __slots__ = ['format_string', '_args']
+
+    def __new__(cls, formatstring, *args):
+        obj = object.__new__(cls)
+        obj._args = tuple([_sympify(arg) for arg in args])
+        obj.format_string = formatstring
+
+
+class FunctionPrototype(Token):
+    """ Represents a function prototype
+
+    Allows the user to generate forward declaration in e.g. C/C++.
+
+    Parameters
+    ----------
+    return_type : Type
+    name : str
+    input_types : iterable of Declaration instances
+
+    """
+
+    __slots__ = ['return_type', 'name', 'inputs']
+
+    def __new__(cls, return_type, name, inputs):
+        if not isinstance(return_type, Type):
+            raise TypeError("return_type argument should be an instance of Type")
+        if not all(isinstance(inp, Declaration) for inp in inputs):
+            raise TypeError("All elements in argument inputs need to be instances of Declaration")
+        return Token.__new__(cls, return_type, name, Tuple(*inputs))
+
+    @classmethod
+    def from_FunctionDefinition(cls, func_def):
+        if not isinstance(func_def, FunctionDefinition):
+            raise TypeError("func_def is not an instance of FunctionDefiniton")
+        return_type, name, inputs, body = func_def.args
+        return cls(return_type, name, tuple(inp.type for inp in inputs))
+
+
+class FunctionDefinition(FunctionPrototype):
+    """ Represents a function definition in the code.
+
+    Parameters
+    ----------
+    return_type : Type
+    name : str
+    inputs : iterable of Declaration instances
+    body : CodeBlock or iterable
+
+    """
+
+    __slots__ = FunctionPrototype.__slots__ + ['body']
+
+    def __new__(cls, return_type, name, inputs, body):
+        if not isinstance(body, CodeBlock):
+            if not iterable(body):
+                raise TypeError("body must be an iterable or CodeBlock")
+            body = CodeBlock(*(_sympify(i) for i in body))
+        obj = FunctionPrototype.__new__(cls, return_type, name, tuple(inputs))
+        obj.body = body
+        return obj
+
+
+class ReturnStatement(Basic):
+    """ Represents a return statement in the code. """
+
+
+class FunctionCall(Token):
+    """ Represents a call to a function in the code.
+
+    Parameters
+    ----------
+    name : str
+    args : Tuple
+    statement : bool
+
+    """
+    __slots__ = ['function_name', 'function_args', 'statement']
+
+    def __new__(cls, function_name, function_args=(), statement=False):
+        return Token.__new__(cls, function_name, Tuple(*function_args), true if statement else false)

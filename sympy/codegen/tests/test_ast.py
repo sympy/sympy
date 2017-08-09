@@ -1,5 +1,5 @@
 from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Tuple
+    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Tuple, Lt
 )
 from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
@@ -10,7 +10,9 @@ from sympy.codegen.ast import (
     AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
     DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
     integer, real, complex_, int8, uint8, float16 as f16, float32 as f32,
-    float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128
+    float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128,
+    While, Scope, PrintStatement, FunctionPrototype, FunctionDefinition, ReturnStatement,
+    FunctionCall
 )
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
@@ -364,3 +366,83 @@ def test_Type__cast_check__complex_floating_point():
     assert abs(dcm21 - c128.cast_check(dcm21) - 4.99e-19) < 1e-19
     v19 = Float('0.1234567890123456749') + 1j*Float('0.1234567890123456749')
     raises(ValueError, lambda: c128.cast_check(v19))
+
+
+def test_While():
+    xpp = AddAugmentedAssignment(x, 1)
+    whl1 = While(x < 2, [xpp])
+    assert whl1.condition.args[0] == x
+    assert whl1.condition.args[1] == 2
+    assert whl1.condition == Lt(x, 2)
+    assert Lt(x, 2) == x < 2
+    assert whl1.condition == x < 2
+    assert whl1.body.args == (xpp,)
+
+    cblk = CodeBlock(AddAugmentedAssignment(x, 1))
+    whl2 = While(x < 2, cblk)
+    assert whl1 == whl2
+    assert whl1 != While(x < 3, [xpp])
+
+
+def test_Scope():
+    assign = Assignment(x, y)
+    incr = AddAugmentedAssignment(x, 1)
+    scp = Scope([assign, incr])
+    cblk = CodeBlock(assign, incr)
+    assert scp.body == cblk
+    assert scp == Scope(cblk)
+    assert scp != Scope([incr, assign])
+
+
+def test_PrintStatement():
+    fmt = "%d %.3f"
+    ps = PrintStatement(fmt, n, x)
+    assert ps.format_string == fmt
+    assert ps.args == (n, x)
+    assert ps == PrintStatement(fmt, n, x)
+    assert ps != PrintStatement(fmt, x, n)
+
+
+def test_FunctionPrototype_and_FunctionDefinition():
+    vx = Variable(x, type_=real)
+    dx = Declaration(vx)
+    vn = Variable(n, type_=integer)
+    dn = Declaration(n, 2)
+    fp1 = FunctionPrototype(real, 'power', [dx, dn])
+    assert fp1.return_type == real
+    assert fp1.name == 'power'
+    assert fp1.inputs == Tuple(dx, dn)
+    assert fp1 == FunctionPrototype(real, 'power', [dx, dn])
+    assert fp1 != FunctionPrototype(real, 'power', [dn, dx])
+
+    body = [Assignment(x, x**n), ReturnStatement(x)]
+    fd1 = FunctionDefinition(real, 'power', [dx, dn], body)
+    assert fd1.return_type == real
+    assert fd1.name == 'power'
+    assert fd1.inputs == Tuple(dx, dn)
+    assert fd1.body == CodeBlock(*body)
+    assert fd1 == FunctionDefinition(real, 'power', [dx, dn], body)
+    assert fd1 != FunctionDefinition(real, 'power', [dx, dn], body[::-1])
+
+    fp2 = FunctionPrototype.from_FunctionDefinition(fd1)
+    assert fp2 == fp1
+
+    fd2 = FunctionDefinition.from_FunctionPrototype(fp1, body)
+    assert fd2 == fd1
+
+
+def test_ReturnStatement():
+    rs = ReturnStatement(x)
+    assert rs.args == (x,)
+    assert rs == ReturnStatement(x)
+    assert rs != ReturnStatement(y)
+
+
+def test_FunctionCall():
+    fc = FunctionCall('power', (x, 3))
+    assert fc.function_args[0] == x
+    assert fc.function_args[1] == 3
+    assert isinstance(fc.function_args[1], Integer)
+    assert fc == FunctionCall('power', (x, 3))
+    assert fc != FunctionCall('power', (3, x))
+    assert fc != FunctionCall('Power', (x, 3))
