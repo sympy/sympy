@@ -7,6 +7,7 @@ from .mathml import mathml, print_mathml
 from .python import python, print_python
 from .pycode import pycode
 from .ccode import ccode, print_ccode
+from .glsl import glsl_code, print_glsl
 from .cxxcode import cxxcode
 from .fcode import fcode, print_fcode
 from .rcode import rcode, print_rcode

@@ -262,25 +262,6 @@ class FreeGroup(DefaultPrinting):
         """
         return self._rank
 
-    def _symbol_index(self, symbol):
-        """Returns the index of a generator for free group `self`, while
-        returns the -ve index of the inverse generator.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy import Symbol
-        >>> F, x, y = free_group("x, y")
-        >>> F._symbol_index(-Symbol('x'))
-        0
-
-        """
-        try:
-            return self.symbols.index(symbol)
-        except ValueError:
-            return -self.symbols.index(-symbol)
-
     @property
     def is_abelian(self):
         """Returns if the group is Abelian.
@@ -682,7 +663,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         word = word.subword(0, i)*by**k*word.subword(i+l, len(word)).eliminate_word(gen, by)
 
         if _all:
-            return word.eliminate_word(gen, by, _all=True)
+            return word.eliminate_word(gen, by, _all=True, inverse=inverse)
         else:
             return word
 
@@ -774,18 +755,18 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return True
         elif l > m:
             return False
-        a = self.letter_form
-        b = other.letter_form
         for i in range(l):
-            p = group._symbol_index(a[i])
-            q = group._symbol_index(b[i])
-            if abs(p) < abs(q):
-                return True
-            elif abs(p) > abs(q):
-                return False
-            elif p < q:
+            a = self[i].array_form[0]
+            b = other[i].array_form[0]
+            p = group.symbols.index(a[0])
+            q = group.symbols.index(b[0])
+            if p < q:
                 return True
             elif p > q:
+                return False
+            elif a[1] < b[1]:
+                return True
+            elif a[1] > b[1]:
                 return False
         return False
 

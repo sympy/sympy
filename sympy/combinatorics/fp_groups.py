@@ -248,7 +248,7 @@ class FpGroup(DefaultPrinting):
                 i = 0
                 while ((rand in rels or rand**-1 in rels or rand.is_identity)
                         and i<10):
-                    rand = self.random_element()
+                    rand = self.random()
                     i += 1
                 s = [gen, rand] + [g for g in self.generators if g != gen]
         mid = (len(s)+1)//2
@@ -281,7 +281,7 @@ class FpGroup(DefaultPrinting):
         freqs = [sum([r.generator_count(g) for r in rels]) for g in gens]
         return gens[freqs.index(max(freqs))]
 
-    def random_element(self):
+    def random(self):
         import random
         r = self.free_group.identity
         for i in range(random.randint(2,3)):

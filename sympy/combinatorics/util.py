@@ -116,7 +116,7 @@ def _check_cycles_alt_sym(perm):
 
 
 def _distribute_gens_by_base(base, gens):
-    """
+    r"""
     Distribute the group elements ``gens`` by membership in basic stabilizers.
 
     Notice that for a base `(b_1, b_2, ..., b_k)`, the basic stabilizers

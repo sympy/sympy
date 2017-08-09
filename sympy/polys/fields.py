@@ -151,7 +151,7 @@ class FracField(DefaultPrinting):
             (other.symbols, other.ngens, other.domain, other.order)
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def raw_new(self, numer, denom=None):
         return self.dtype(numer, denom)
@@ -302,7 +302,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f.numer == g and f.denom == f.field.ring.one
 
     def __ne__(f, g):
-        return not f.__eq__(g)
+        return not f == g
 
     def __nonzero__(f):
         return bool(f.numer)
