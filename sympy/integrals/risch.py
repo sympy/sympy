@@ -757,6 +757,31 @@ class DifferentialExtension(object):
         return None
 
 def rewrite_tans(n, t):
+    """
+    n: integer multiple of argument x
+    t: variable for tan(x)
+
+    rewrite t(n*x) in terms of t(x)
+
+    It uses the formula that for any integer 'n'
+    tan(n*t) = Pn(tan(t))/Qn(tan(t)) where Pn, Qn are
+    polynomials such that:
+
+    P_n(x) = {n \choose 1}x - {n \choose 3}x^3 + \ldots
+    Q_n(x) = 1 - {n \choose 2}x^2 + \ldots
+
+    Examples
+    ========
+
+    >>> from sympy.abc import t
+    >>> from sympy.integrals.risch import rewrite_tans
+    >>> rewrite_tans(3, t)
+    (-t**3 + 3*t)/(-3*t**2 + 1)
+
+    >>> rewrite(1, t)
+    t
+
+    """
     from sympy.functions.combinatorial.numbers import nC
     from sympy.core.compatibility import as_int
 
