@@ -74,10 +74,10 @@ class CoordSys3D(Basic):
             vector_names = ["i", "j", "k"]
 
         if transformation is not None:
-            if (location is not None) and (rotation_matrix is not None):
-                raise ValueError()
+            if (location is not None) or (rotation_matrix is not None):
+                raise ValueError("specify either `transformation` or `location`/`rotation_matrix`")
             if isinstance(transformation, (Tuple, tuple, list)):
-                if isinstance(transformation[0], Matrix):
+                if isinstance(transformation[0], MatrixBase):
                     rotation_matrix = transformation[0]
                     location = transformation[1]
                 else:
@@ -131,8 +131,10 @@ class CoordSys3D(Basic):
                 transformation[1],
                 parent
             )
+            r, l = transformation
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
-            lambda_inverse = CoordSys3D._set_inv_trans_equations('cartesian')
+            lambda_inverse = lambda x,y,z: r.inv()*Matrix(
+                [x-l[0], y-l[1], z-l[2]])
         elif isinstance(transformation, Symbol):
             trname = transformation.name
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
@@ -235,7 +237,6 @@ class CoordSys3D(Basic):
         return iter(self.base_vectors())
 
     @staticmethod
-    @cacheit
     def _check_orthogonality(equations):
         """
         Helper method for _connect_to_cartesian. It checks if
@@ -446,7 +447,6 @@ class CoordSys3D(Basic):
     def transformation_from_parent_function(self):
         return self._transformation_from_parent_lambda
 
-    @cacheit
     def rotation_matrix(self, other):
         """
         Returns the direction cosine matrix(DCM), also known as the
@@ -503,6 +503,7 @@ class CoordSys3D(Basic):
             i += 1
         return result
 
+    @cacheit
     def position_wrt(self, other):
         """
         Returns the position vector of the origin of this coordinate
