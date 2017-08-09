@@ -478,7 +478,7 @@ class Token(Basic):
         return tuple([getattr(self, attr) for attr in self.__slots__])
 
     def __hash__(self):
-        return hash(self._hashable_content())
+        return super(Token, self).__hash__()
 
     def _sympystr(self, printer):
         return "{0}({1})".format(self.__class__.__name__, ', '.join(

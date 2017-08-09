@@ -24,7 +24,7 @@ from sympy.codegen.ast import (
     float32, float64, float80, complex64, complex128, intc, value_const,
     Declaration
 )
-from sympy.printing.codeprinter import CodePrinter, prints_statement, requires
+from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
@@ -155,7 +155,6 @@ class C89CodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
-        'enable_statements': True,
         'contract': True,
         'dereference': set(),
         'error_on_reserved': False,
@@ -372,7 +371,6 @@ class C89CodePrinter(CodePrinter):
             (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
         return self._print(_piecewise)
 
-    @prints_statement
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         op = expr.rel_op
@@ -380,7 +378,6 @@ class C89CodePrinter(CodePrinter):
         return self._get_statement("{0} {1} {2}".format(
             *map(self._print, [lhs_code, op, rhs_code])))
 
-    @prints_statement
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
@@ -456,7 +453,6 @@ class C89CodePrinter(CodePrinter):
         self.macros.update(self.type_macros.get(type_, set()))
         return self.type_mappings.get(type_, type_.name)
 
-    @prints_statement
     def _print_Declaration(self, expr):
         from sympy.codegen.cfunctions import restrict
         var, val = expr.variable, expr.value

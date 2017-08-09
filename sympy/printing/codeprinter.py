@@ -16,19 +16,6 @@ from sympy.printing.precedence import precedence
 from sympy.codegen.ast import Assignment
 
 
-def prints_statement(method):
-    """ Decorator for methods printing statements (as opposed to expressions) """
-
-    @wraps(method)
-    def wrapper(self, expr):
-        if self._settings.get('enable_statements', True):
-            return method(self, expr)
-        else:
-            raise ValueError("The code-printer setting 'enable_statements' is False,\n"
-                             "but %s generates a statement in the chosen language." %
-                             type(expr))
-    return wrapper
-
 class requires(object):
     """ Decorator for registering requirements on print methods. """
     def __init__(self, **kwargs):
@@ -63,7 +50,6 @@ class CodePrinter(StrPrinter):
                          'full_prec': 'auto',
                          'error_on_reserved': False,
                          'reserved_word_suffix': '_',
-                         'enable_statements': False,
                          'human': True}
 
     def __init__(self, settings=None):
@@ -293,7 +279,6 @@ class CodePrinter(StrPrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
-    @prints_statement
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
