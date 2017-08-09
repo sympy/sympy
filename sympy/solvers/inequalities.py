@@ -573,11 +573,72 @@ def _pt(start, end):
 
 
 def _solve_inequality(ie, s, linear=False):
-    """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. If linear is True, return an
-        inequality with the symbol (or symbol-containing terms)
-        isolated on the lhs; if the expression is linear the lhs will
-        be `s`."""
+    """Return the inequality with s isolated on the left, if possible.
+    If the relationship is non-linear, a solution involving And or Or
+    may be returned. False or True are returned if the relationship
+    is never True or always True, respectively.
+
+    If `linear` is True (default is False) an `s`-dependent expression
+    will be isoloated on the left, if possible
+    but it will not be solved for `s` unless the expression is linear
+    in `s`. Furthermore, only "safe" operations which don't change the
+    sense of the relationship are applied: no division by an unsigned
+    value is attempted unless the relationship involves Eq or Ne and
+    no division by a value not known to be nonzero is ever attempted.
+
+    Examples
+    ========
+
+    >>> from sympy import Eq, Symbol
+    >>> from sympy.solvers.inequalities import _solve_inequality as f
+    >>> from sympy.abc import x, y
+
+    For linear expressions, the symbol can be isolated:
+
+    >>> f(x - 2 < 0, x)
+    x < 2
+    >>> f(-x - 6 < x, x)
+    x > -3
+
+    Sometimes nonlinear relationships will be False
+
+    >>> f(x**2 + 4 < 0, x)
+    False
+
+    Or they may involve more than one region of values:
+
+    >>> f(x**2 - 4 < 0, x)
+    (-2 < x) & (x < 2)
+
+    To restrict the solution to a relational, set linear=True
+    and only the x-dependent portion will be isolated on the left:
+
+    >>> f(x**2 - 4 < 0, x, linear=True)
+    x**2 < 4
+
+    Division of only nonzero quantities is allowed, so x cannot
+    be isolated by dividing by y:
+
+    >>> y.is_nonzero is None  # it is unknown whether it is 0 or not
+    True
+    >>> f(x*y < 1, x)
+    x*y < 1
+
+    And while an equality (or unequality) still holds after dividing by a
+    non-zero quantity
+
+    >>> nz = Symbol('nz', nonzero=True)
+    >>> f(Eq(x*nz, 1), x)
+    Eq(x, 1/nz)
+
+    the sign must be known for other inequalities involving > or <:
+
+    >>> f(x*nz <= 1, x)
+    nz*x <= 1
+    >>> p = Symbol('p', positive=True)
+    >>> f(x*p <= 1, x)
+    x <= 1/p
+    """
     if s not in ie.free_symbols:
         return ie
     if ie.rhs == s:
