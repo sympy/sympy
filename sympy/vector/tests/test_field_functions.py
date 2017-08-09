@@ -228,24 +228,24 @@ def test_scalar_potential_difference():
 
 
 def test_differential_operators_curvilinear_system():
-    A = CoordSys3D('A', transformation="spherical")
-    B = CoordSys3D('B', transformation='cylindrical')
+    A = CoordSys3D('A', transformation="spherical", variable_names=["r", "theta", "phi"])
+    B = CoordSys3D('B', transformation='cylindrical', variable_names=["r", "theta", "z"])
     # Test for spherical coordinate system and gradient
-    assert gradient(3*A.x + 4*A.y) == 3*A.i + 4/A.x*A.j
-    assert gradient(3*A.x*A.z + 4*A.y) == 3*A.z*A.i + 4/A.x*A.j + (3/sin(A.y))*A.k
-    assert gradient(0*A.x + 0*A.y+0*A.z) == Vector.zero
-    assert gradient(A.x*A.y*A.z) == A.y*A.z*A.i + A.z*A.j + (A.y/sin(A.y))*A.k
+    assert gradient(3*A.r + 4*A.theta) == 3*A.i + 4/A.r*A.j
+    assert gradient(3*A.r*A.phi + 4*A.theta) == 3*A.phi*A.i + 4/A.r*A.j + (3/sin(A.theta))*A.k
+    assert gradient(0*A.r + 0*A.theta+0*A.phi) == Vector.zero
+    assert gradient(A.r*A.theta*A.phi) == A.theta*A.phi*A.i + A.phi*A.j + (A.theta/sin(A.theta))*A.k
     # Test for spherical coordinate system and divergence
-    assert divergence(A.x * A.i + A.y * A.j + A.z * A.k) == \
-           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 3 + 1/(sin(A.y)*A.x)
-    assert divergence(3*A.x*A.z*A.i + A.y*A.j + A.x*A.y*A.z*A.k) == \
-           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 9*A.z + A.y/sin(A.y)
+    assert divergence(A.r * A.i + A.theta * A.j + A.phi * A.k) == \
+           (sin(A.theta)*A.r + cos(A.theta)*A.r*A.theta)/(sin(A.theta)*A.r**2) + 3 + 1/(sin(A.theta)*A.r)
+    assert divergence(3*A.r*A.phi*A.i + A.theta*A.j + A.r*A.theta*A.phi*A.k) == \
+           (sin(A.theta)*A.r + cos(A.theta)*A.r*A.theta)/(sin(A.theta)*A.r**2) + 9*A.phi + A.theta/sin(A.theta)
     assert divergence(Vector.zero) == 0
     assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
     # Test for cylindrical coordinate system and divergence
-    assert divergence(B.x*B.i + B.y*B.j + B.z*B.k) == 2 + 1/B.y
-    assert divergence(B.x*B.j + B.z*B.k) == 1
+    assert divergence(B.r*B.i + B.theta*B.j + B.z*B.k) == 2 + 1/B.theta
+    assert divergence(B.r*B.j + B.z*B.k) == 1
     # Test for spherical coordinate system and divergence
-    assert curl(A.x*A.i + A.y*A.j + A.z*A.k) == \
-           (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + A.y/A.x*A.k
-    assert curl(A.x*A.j + A.z*A.k) == (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + 2*A.k
+    assert curl(A.r*A.i + A.theta*A.j + A.phi*A.k) == \
+           (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + A.theta/A.r*A.k
+    assert curl(A.r*A.j + A.phi*A.k) == (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + 2*A.k
