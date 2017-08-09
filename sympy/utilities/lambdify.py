@@ -66,28 +66,7 @@ MPMATH_TRANSLATIONS = {
     "Ci": "ci"
 }
 
-NUMPY_TRANSLATIONS = {
-    "acos": "arccos",
-    "acosh": "arccosh",
-    "arg": "angle",
-    "asin": "arcsin",
-    "asinh": "arcsinh",
-    "atan": "arctan",
-    "atan2": "arctan2",
-    "atanh": "arctanh",
-    "ceiling": "ceil",
-    "E": "e",
-    "im": "imag",
-    "ln": "log",
-    "Mod": "mod",
-    "oo": "inf",
-    "re": "real",
-    "SparseMatrix": "array",
-    "ImmutableSparseMatrix": "array",
-    "Matrix": "array",
-    "MutableDenseMatrix": "array",
-    "ImmutableDenseMatrix": "array",
-}
+NUMPY_TRANSLATIONS = {}
 
 TENSORFLOW_TRANSLATIONS = {
     "Abs": "abs",
