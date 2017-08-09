@@ -31,11 +31,14 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    _default_settings = {'order': None,
-                         'full_prec': 'auto',
-                         'error_on_reserved': False,
-                         'reserved_word_suffix': '_',
-                         'human': True}
+    _default_settings = {
+        'order': None,
+        'full_prec': 'auto',
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
+        'human': True,
+        'inline': False
+    }
 
     def __init__(self, settings=None):
 
@@ -337,11 +340,14 @@ class CodePrinter(StrPrinter):
     _print_Expr = _print_Function
 
     def _print_NumberSymbol(self, expr):
-        # A Number symbol that is not implemented here or with _printmethod
-        # is registered and evaluated
-        self._number_symbols.add((expr,
-            self._print(expr.evalf(self._settings["precision"]))))
-        return str(expr)
+        if self._settings.get("inline", False):
+            return self._print(expr.evalf(self._settings["precision"]))
+        else:
+            # A Number symbol that is not implemented here or with _printmethod
+            # is registered and evaluated
+            self._number_symbols.add((expr,
+                self._print(expr.evalf(self._settings["precision"]))))
+            return str(expr)
 
     def _print_Catalan(self, expr):
         return self._print_NumberSymbol(expr)
