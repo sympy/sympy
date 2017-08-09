@@ -9,6 +9,7 @@ from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group, zero_mul_simp)
+from sympy.combinatorics.rewritingsystem import RewritingSystem
 from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
@@ -56,9 +57,6 @@ class FpGroup(DefaultPrinting):
 
     def __init__(self, fr_grp, relators):
         relators = _parse_relators(relators)
-        # return the corresponding FreeGroup if no relators are specified
-        if not relators:
-            return fr_grp
         self.free_group = fr_grp
         self.relators = relators
         self.generators = self._generators()
@@ -73,8 +71,43 @@ class FpGroup(DefaultPrinting):
         self._order = None
         self._center = None
 
+        self._rewriting_system = RewritingSystem(self)
+        return
+
     def _generators(self):
         return self.free_group.generators
+
+    def make_confluent(self):
+        '''
+        Try to make the group's rewriting system confluent
+
+        '''
+        self._rewriting_system.make_confluent()
+        return
+
+    def reduce(self, word):
+        '''
+        Return the reduced form of `word` in `self` according to the group's
+        rewriting system. If it's confluent, the reduced form is the unique normal
+        form of the word in the group.
+
+        '''
+        return self._rewriting_system.reduce(word)
+
+    def equals(self, word1, word2):
+        '''
+        Compare `word1` and `word2` for equality in the group
+        using the group's rewriting system. If the system is
+        confluent, the returned answer is necessarily correct.
+        (If it isn't, `False` could be returned in some cases
+        where in fact `word1 == word2`)
+
+        '''
+        if self.reduce(word1*word2**-1) == self.identity:
+            return True
+        elif self._rewriting_system.is_confluent:
+            return False
+        return None
 
     @property
     def identity(self):
@@ -215,7 +248,7 @@ class FpGroup(DefaultPrinting):
                 i = 0
                 while ((rand in rels or rand**-1 in rels or rand.is_identity)
                         and i<10):
-                    rand = self.random_element()
+                    rand = self.random()
                     i += 1
                 s = [gen, rand] + [g for g in self.generators if g != gen]
         mid = (len(s)+1)//2
@@ -248,7 +281,7 @@ class FpGroup(DefaultPrinting):
         freqs = [sum([r.generator_count(g) for r in rels]) for g in gens]
         return gens[freqs.index(max(freqs))]
 
-    def random_element(self):
+    def random(self):
         import random
         r = self.free_group.identity
         for i in range(random.randint(2,3)):
@@ -297,50 +330,125 @@ class FpSubgroup(DefaultPrinting):
     group belongs to the subgroup
 
     '''
-    def __init__(self, G, gens):
+    def __init__(self, G, gens, normal=False):
         super(FpSubgroup,self).__init__()
         self.parent = G
         self.generators = list(set([g for g in gens if g != G.identity]))
         self._min_words = None #for use in __contains__
         self.C = None
+        self.normal = normal
 
     def __contains__(self, g):
-        if self._min_words is None:
-            gens = self.generators[:]
-            gens.extend([e**-1 for e in gens])
-            for w1 in gens:
-                for w2 in gens:
-                    if w2**-1 == w1:
-                        continue
-                    if w2[len(w2)-1]**-1 == w1[0] and w2*w1 not in gens:
-                        gens.append(w2*w1)
-                    if w2[0]**-1 == w1[len(w1)-1] and w1*w2 not in gens:
-                        gens.append(w1*w2)
-            self._min_words = gens
 
-        min_words = self._min_words
-        known = {} #to keep track of words
+        if isinstance(self.parent, FreeGroup):
+            if self._min_words is None:
+                # make _min_words - a list of subwords such that
+                # g is in the subgroup if and only if it can be
+                # partitioned into these subwords. Infinite families of
+                # subwords are presented by tuples, e.g. (r, w)
+                # stands fot the family of subwords r*w**n*r**-1
 
-        def _word_break(w):
-            if len(w) == 0:
-                return True
-            i = 0
-            while i < len(w):
-                i += 1
-                prefix = w.subword(0, i)
-                if prefix not in min_words:
-                    continue
-                rest = w.subword(i, len(w))
-                if rest not in known:
-                    known[rest] = _word_break(rest)
-                if known[rest]:
+                def _process(w):
+                    # this is to be used before adding new words
+                    # into _min_words; if the word w is not cyclically
+                    # reduced, it will generate an infinite family of
+                    # subwords so should be written as a tuple;
+                    # if it is, w**-1 should be added to the list
+                    # as well
+                    p, r = w.cyclic_reduction(removed=True)
+                    if not r.is_identity:
+                        return [(r, p)]
+                    else:
+                        return [w, w**-1]
+
+                # make the initial list
+                gens = []
+                for w in self.generators:
+                    if self.normal:
+                        w = w.cyclic_reduction()
+                    gens.extend(_process(w))
+
+                for w1 in gens:
+                    for w2 in gens:
+                        # if w1 and w2 are equal or are inverses, continue
+                        if w1 == w2 or (not isinstance(w1, tuple)
+                                                        and w1**-1 == w2):
+                            continue
+
+                        # if the start of one word is the inverse of the
+                        # end of the other, their multuple should be added
+                        # to _min_words because of cancellation
+                        if isinstance(w1, tuple):
+                            # start, end
+                            s1, s2 = w1[0][0], w1[0][0]**-1
+                        else:
+                            s1, s2 = w1[0], w1[len(w1)-1]
+
+                        if isinstance(w2, tuple):
+                            # start, end
+                            r1, r2 = w2[0][0], w2[0][0]**-1
+                        else:
+                            r1, r2 = w2[0], w2[len(w1)-1]
+
+                        # p1 and p2 are w1 and w2 or, in case when
+                        # w1 or w2 is an infinite family, a representative
+                        p1, p2 = w1, w2
+                        if isinstance(w1, tuple):
+                            p1 = w1[0]*w1[1]*w1[0]**-1
+                        if isinstance(w2, tuple):
+                            p2 = w2[0]*w2[1]*w2[0]**-1
+
+                        # add the product of the words to the list is necessary
+                        if r1**-1 == s2 and not (p1*p2).is_identity:
+                            new = _process(p1*p2)
+                            if not new in gens:
+                                gens.extend(new)
+
+                        if r2**-1 == s1 and not (p2*p1).is_identity:
+                            new = _process(p2*p1)
+                            if not new in gens:
+                                gens.extend(new)
+
+                self._min_words = gens
+
+            min_words = self._min_words
+
+            def _is_subword(w):
+                # check if w is a word in _min_words or one of
+                # the infinite families in it
+                w, r = w.cyclic_reduction(removed=True)
+                if r.is_identity or self.normal:
+                    return w in min_words
+                else:
+                    t = [s[1] for s in min_words if isinstance(s, tuple)
+                                                                and s[0] == r]
+                    return [s for s in t if w.power_of(s)] != []
+
+            # store the solution of words for which the result of
+            # _word_break (below) is known
+            known = {}
+
+            def _word_break(w):
+                # check if w can be written as a product of words
+                # in min_words
+                if len(w) == 0:
                     return True
-            return False
+                i = 0
+                while i < len(w):
+                    i += 1
+                    prefix = w.subword(0, i)
+                    if not _is_subword(prefix):
+                        continue
+                    rest = w.subword(i, len(w))
+                    if rest not in known:
+                        known[rest] = _word_break(rest)
+                    if known[rest]:
+                        return True
+                return False
 
-        if _word_break(g):
-            return True
-        elif isinstance(self.parent, FreeGroup):
-            return False
+            if self.normal:
+                g = g.cyclic_reduction()
+            return _word_break(g)
         else:
             if self.C is None:
                 C = self.parent.coset_enumeration(self.generators)
@@ -368,6 +476,15 @@ class FpSubgroup(DefaultPrinting):
             gen_syms = [('x_%d'%i) for i in range(len(self.generators))]
             return free_group(', '.join(gen_syms))[0]
         return self.parent.subgroup(C=self.C)
+
+    def __str__(self):
+        if len(self.generators) > 30:
+            str_form = "<fp subgroup with %s generators>" % len(self.generators)
+        else:
+            str_form = "<fp subgroup on the generators %s>" % str(self.generators)
+        return str_form
+
+    __repr__ = __str__
 
 
 ###############################################################################

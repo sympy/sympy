@@ -367,7 +367,7 @@ class NDimArray(object):
         return (self.shape == other.shape) and (list(self) == list(other))
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__

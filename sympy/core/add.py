@@ -509,9 +509,10 @@ class Add(Expr, AssocOp):
                 im_I.append(a*S.ImaginaryUnit)
             else:
                 return
-        if self.func(*nz).is_zero:
+        b = self.func(*nz)
+        if b.is_zero:
             return fuzzy_not(self.func(*im_I).is_zero)
-        elif self.func(*nz).is_zero is False:
+        elif b.is_zero is False:
             return False
 
     def _eval_is_zero(self):
@@ -539,12 +540,15 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if self.func(*nz).is_zero:
+        if len(nz) == len(self.args):
+            return None
+        b = self.func(*nz)
+        if b.is_zero:
             if not im_or_z and not im:
                 return True
             if im and not im_or_z:
                 return False
-        if self.func(*nz).is_zero is False:
+        if b.is_zero is False:
             return False
 
     def _eval_is_odd(self):
@@ -576,11 +580,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_positive and a.is_nonnegative:
+                if s != self and s.is_positive and a.is_nonnegative:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_positive:
+                    if v is not None and v != self and v.is_positive:
                         return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
@@ -629,11 +633,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonnegative:
+                    if s != self and s.is_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonnegative:
+                        if v is not None and v != self and v.is_nonnegative:
                             return True
 
     def _eval_is_nonpositive(self):
@@ -644,11 +648,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonpositive:
+                    if s != self and s.is_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonpositive:
+                        if v is not None and v != self and v.is_nonpositive:
                             return True
 
     def _eval_is_negative(self):
@@ -660,11 +664,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_negative and a.is_nonpositive:
+                if s != self and s.is_negative and a.is_nonpositive:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_negative:
+                    if v is not None and v != self and v.is_negative:
                         return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()

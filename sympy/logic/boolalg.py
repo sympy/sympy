@@ -980,6 +980,10 @@ class ITE(BooleanFunction):
     def _eval_derivative(self, x):
         return self.func(self.args[0], *[a.diff(x) for a in self.args[1:]])
 
+    def _eval_rewrite_as_Piecewise(self, *args):
+        from sympy.functions import Piecewise
+        return Piecewise((args[1], args[0]), (args[2], True))
+
     # the diff method below is copied from Expr class
     def diff(self, *symbols, **assumptions):
         new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
@@ -1321,7 +1325,7 @@ def eliminate_implications(expr):
     >>> eliminate_implications(Equivalent(A, B, C))
     (A | ~C) & (B | ~A) & (C | ~B)
     """
-    return to_nnf(expr)
+    return to_nnf(expr, simplify=False)
 
 
 def is_literal(expr):
