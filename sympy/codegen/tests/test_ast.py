@@ -373,9 +373,7 @@ def test_While():
     whl1 = While(x < 2, [xpp])
     assert whl1.condition.args[0] == x
     assert whl1.condition.args[1] == 2
-    assert whl1.condition == Lt(x, 2)
-    assert Lt(x, 2) == x < 2
-    assert whl1.condition == x < 2
+    assert whl1.condition == Lt(x, 2, evaluate=False)
     assert whl1.body.args == (xpp,)
 
     cblk = CodeBlock(AddAugmentedAssignment(x, 1))
@@ -398,7 +396,7 @@ def test_PrintStatement():
     fmt = "%d %.3f"
     ps = PrintStatement(fmt, n, x)
     assert ps.format_string == fmt
-    assert ps.args == (n, x)
+    assert ps._args == (n, x)
     assert ps == PrintStatement(fmt, n, x)
     assert ps != PrintStatement(fmt, x, n)
 
@@ -407,7 +405,7 @@ def test_FunctionPrototype_and_FunctionDefinition():
     vx = Variable(x, type_=real)
     dx = Declaration(vx)
     vn = Variable(n, type_=integer)
-    dn = Declaration(n, 2)
+    dn = Declaration(vn, 2)
     fp1 = FunctionPrototype(real, 'power', [dx, dn])
     assert fp1.return_type == real
     assert fp1.name == 'power'

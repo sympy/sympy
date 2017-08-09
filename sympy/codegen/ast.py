@@ -79,6 +79,7 @@ from sympy.core.basic import Basic
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify, sympify
+from sympy.logic import true, false
 from sympy.sets import FiniteSet
 from sympy.utilities.iterables import iterable
 
@@ -1117,6 +1118,7 @@ class PrintStatement(Token):
         obj = object.__new__(cls)
         obj._args = tuple([_sympify(arg) for arg in args])
         obj.format_string = formatstring
+        return obj
 
 
 class FunctionPrototype(Token):
@@ -1134,19 +1136,19 @@ class FunctionPrototype(Token):
 
     __slots__ = ['return_type', 'name', 'inputs']
 
-    def __new__(cls, return_type, name, inputs):
+    def __new__(cls, return_type, name, inputs, **kwargs):
         if not isinstance(return_type, Type):
             raise TypeError("return_type argument should be an instance of Type")
         if not all(isinstance(inp, Declaration) for inp in inputs):
             raise TypeError("All elements in argument inputs need to be instances of Declaration")
-        return Token.__new__(cls, return_type, name, Tuple(*inputs))
+        return Token.__new__(cls, return_type, name, Tuple(*inputs), **kwargs)
 
     @classmethod
     def from_FunctionDefinition(cls, func_def):
         if not isinstance(func_def, FunctionDefinition):
             raise TypeError("func_def is not an instance of FunctionDefiniton")
         return_type, name, inputs, body = func_def.args
-        return cls(return_type, name, tuple(inp.type for inp in inputs))
+        return cls(return_type, name, inputs)
 
 
 class FunctionDefinition(FunctionPrototype):
@@ -1168,9 +1170,15 @@ class FunctionDefinition(FunctionPrototype):
             if not iterable(body):
                 raise TypeError("body must be an iterable or CodeBlock")
             body = CodeBlock(*(_sympify(i) for i in body))
-        obj = FunctionPrototype.__new__(cls, return_type, name, tuple(inputs))
-        obj.body = body
-        return obj
+        return FunctionPrototype.__new__(cls, return_type, name,
+                                         tuple(inputs), body=body)
+
+    @classmethod
+    def from_FunctionPrototype(cls, func_proto, body):
+        if not isinstance(func_proto, FunctionPrototype):
+            raise TypeError("func_proto is not an instance of FunctionPrototype")
+        return_type, name, inputs = func_proto.args
+        return cls(return_type, name, inputs, body)
 
 
 class ReturnStatement(Basic):
