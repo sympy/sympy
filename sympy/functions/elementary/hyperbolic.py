@@ -1238,7 +1238,7 @@ class asech(Function):
         return sech
 
     def _eval_rewrite_as_log(self, arg):
-        return log(1/arg + sqrt(1/arg**2 - 1))
+        return log(1/arg + sqrt(1/arg - 1) * sqrt(1/arg + 1))
 
 
 class acsch(Function):
