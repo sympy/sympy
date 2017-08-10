@@ -503,6 +503,37 @@ class C89CodePrinter(CodePrinter):
     def _print_BooleanFalse(self, expr):
         return 'false'
 
+    def _print_While(self, expr):
+        return 'while ({condition}) {{\n{body}\n}}'.format(**expr.printed_kwargs(self))
+
+    def _print_Scope(self, expr):
+        return '{\n%s\n}' % self._print(expr.body)
+
+    def _print_Statement(self, expr):
+        arg, = expr.args
+        return '%s;' % self._print(arg)
+
+    @requires(headers={'stdio.h'})
+    def _print_PrintStatement(self, expr):
+        return 'printf("%s", %s);' % (expr.format_string, ', '.join(map(self._print, expr._args)))
+
+
+    def _print_FunctionPrototype(self, expr):
+        return "%s %s(%s)" % (
+            tuple(map(self._print, (expr.return_type, expr.name))) +
+            (', '.join(map(self._print, expr.inputs)),)
+        )
+
+    def _print_FunctionDefinition(self, expr):
+        return "%s%s" % (self._print_FunctionPrototype(expr), self._print_Scope(expr))
+
+    def _print_ReturnStatement(self, expr):
+        arg, = expr.args
+        return 'return %s;' % self._print(arg)
+
+    def _print_FunctionCall(self, expr):
+        return '%s(%s)%s' % (expr.function_name, ', '.join(map(self._print, expr.function_args)),
+                             ';' if expr.statement else '')
 
 
 class _C9XCodePrinter(object):

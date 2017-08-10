@@ -76,6 +76,7 @@ from __future__ import print_function, division
 
 from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
+from sympy.core.compatibility import string_types
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify, sympify
@@ -501,6 +502,13 @@ class Token(Basic):
     def args(self):
         return self._hashable_content()
 
+    def kwargs(self, exclude=()):
+        return {k: v for k, v in zip(self.__slots__, self.args) if k not in exclude}
+
+    def printed_kwargs(self, printer, exclude=()):
+        return {k: printer._print(v) for k, v in self.kwargs(exclude=exclude).items()}
+
+
 
 class Type(Token):
     """ Represents a type.
@@ -848,8 +856,8 @@ float80 = FloatType('float80', 80, nexp=15, nmant=63)  # x86 extended precision 
 float128 = FloatType('float128', 128, nexp=15, nmant=112)  # IEEE 754 binary128, Quadruple precision
 float256 = FloatType('float256', 256, nexp=19, nmant=236)  # IEEE 754 binary256, Octuple precision
 
-complex64 = ComplexType('complex64', 64, **{k: getattr(float32, k) for k in FloatType.__slots__[2:]})
-complex128 = ComplexType('complex128', 128, **{k: getattr(float64, k) for k in FloatType.__slots__[2:]})
+complex64 = ComplexType('complex64', nbits=64, **float32.kwargs(exclude=('nbits',)))
+complex128 = ComplexType('complex128', nbits=128, **float64.kwargs(exclude=('nbits',)))
 
 # Generic types (precision may be chosen by code printers):
 real = Type('real')
@@ -1034,7 +1042,7 @@ class Declaration(Basic):
         else:
             return None
 
-class While(Basic):
+class While(Token):
     """ Represents a 'for-loop' in the code.
 
     Expressions are of the form:
@@ -1043,7 +1051,7 @@ class While(Basic):
 
     Parameters
     ----------
-    condition : expression convertable to boolean
+    condition : expression convertable to Boolean
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 
@@ -1060,7 +1068,7 @@ class While(Basic):
     ... ])
 
     """
-    nargs = 2
+    __slots__ = ['condition', 'body']
 
     def __new__(cls, condition, body):
         condition = _sympify(condition)
@@ -1068,18 +1076,10 @@ class While(Basic):
             if not iterable(body):
                 raise TypeError("body must be an iterable or CodeBlock")
             body = CodeBlock(*(_sympify(i) for i in body))
-        return Basic.__new__(cls, condition, body)
-
-    @property
-    def condition(self):
-        return self.args[0]
-
-    @property
-    def body(self):
-        return self.args[1]
+        return Token.__new__(cls, condition, body)
 
 
-class Scope(Basic):
+class Scope(Token):
     """ Represents a scope in the code.
 
     Parameters
@@ -1088,19 +1088,19 @@ class Scope(Basic):
         When passed an iterable it is used to instantiate a CodeBlock.
 
     """
-    nargs = 1
+    __slots__ = ['body']
 
     def __new__(cls, body):
         if not isinstance(body, CodeBlock):
             if not iterable(body):
                 raise TypeError("body must be an iterable or CodeBlock")
             body = CodeBlock(*(_sympify(i) for i in body))
-        return Basic.__new__(cls, body)
+        return Token.__new__(cls, body)
 
-    @property
-    def body(self):
-        return self.args[0]
 
+class Statement(Basic):
+    """ Represents a statement """
+    nargs = 1
 
 
 class PrintStatement(Token):
@@ -1114,11 +1114,10 @@ class PrintStatement(Token):
 
     __slots__ = ['format_string', '_args']
 
-    def __new__(cls, formatstring, *args):
-        obj = object.__new__(cls)
-        obj._args = tuple([_sympify(arg) for arg in args])
-        obj.format_string = formatstring
-        return obj
+    def __new__(cls, format_string, *args):
+        if not isinstance(format_string, string_types):
+            raise ValueError("Argument format_string needs to be a string type")
+        return Token.__new__(cls, format_string, tuple([_sympify(arg) for arg in args]))
 
 
 class FunctionPrototype(Token):
@@ -1190,8 +1189,8 @@ class FunctionCall(Token):
 
     Parameters
     ----------
-    name : str
-    args : Tuple
+    function_name : str
+    function_args : Tuple
     statement : bool
 
     """

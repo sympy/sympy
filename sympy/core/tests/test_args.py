@@ -236,6 +236,48 @@ def test_sympy__codegen__ast__Declaration():
     assert _test_args(Declaration(vx, 3.0))
 
 
+def test_sympy__codegen__ast__While():
+    from sympy.codegen.ast import While, AddAugmentedAssignment
+    assert _test_args(While(abs(x) < 1, [AddAugmentedAssignment(x, -1)]))
+
+
+def test_sympy__codegen__ast__Scope():
+    from sympy.codegen.ast import Scope, AddAugmentedAssignment
+    assert _test_args(Scope([AddAugmentedAssignment(x, -1)]))
+
+
+def test_sympy__codegen__ast__Statement():
+    from sympy.codegen.ast import Statement, AddAugmentedAssignment
+    assert _test_args(Statement([AddAugmentedAssignment(x, -1)]))
+
+
+def test_sympy__codegen__ast__PrintStatement():
+    from sympy.codegen.ast import PrintStatement
+    assert _test_args(PrintStatement("%d %d", x, y))
+
+
+def test_sympy__codegen__ast__FunctionPrototype():
+    from sympy.codegen.ast import FunctionPrototype, real, Declaration, Variable
+    inp_x = Declaration(Variable(x, type_=real))
+    assert _test_args(FunctionPrototype(real, 'pwer', [inp_x]))
+
+
+def test_sympy__codegen__ast__FunctionDefinition():
+    from sympy.codegen.ast import FunctionDefinition, real, Declaration, Variable, Assignment
+    inp_x = Declaration(Variable(x, type_=real))
+    assert _test_args(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)]))
+
+
+def test_sympy__codegen__ast__ReturnStatement():
+    from sympy.codegen.ast import ReturnStatement
+    assert _test_args(ReturnStatement(x))
+
+
+def test_sympy__codegen__ast__FunctionCall():
+    from sympy.codegen.ast import FunctionCall
+    assert _test_args(FunctionCall('pwer', [x], True))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
