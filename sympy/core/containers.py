@@ -10,7 +10,7 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, range
-from sympy.core.sympify import _sympify, converter
+from sympy.core.sympify import _sympify, sympify, converter
 from sympy.utilities.iterables import iterable
 
 
@@ -45,7 +45,7 @@ class Tuple(Basic):
 
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
-            args = ( _sympify(arg) for arg in args )
+            args = ( sympify(arg) for arg in args )
         obj = Basic.__new__(cls, *args)
         return obj
 
