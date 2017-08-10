@@ -302,7 +302,6 @@ def test_evalf():
 def test_transformation_equations():
 
     x, y, z = symbols('x y z')
-    #r, theta, phi = symbols("r theta phi")
     # Str
     a = CoordSys3D('a', transformation='spherical',
                    variable_names=["r", "theta", "phi"])
@@ -349,24 +348,30 @@ def test_transformation_equations():
     assert a.transformation_to_parent() == (a.x, a.y, a.z)
     assert a.lame_coefficients() == (1, 1, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
-    a = CoordSys3D('a', transformation=(((x*cos(y), x*sin(y), z)), (x, y, z)))
+    a = CoordSys3D('a', transformation=(((x, y, z), (x*cos(y), x*sin(y), z))))
     assert a.transformation_to_parent() == (a.x * cos(a.y), a.x * sin(a.y), a.z)
     assert simplify(a.lame_coefficients()) == (1, sqrt(a.x**2), 1)
+    # lambda
+    a = CoordSys3D('a', transformation=lambda x, y, z: (x*sin(y)*cos(z), x*sin(y)*sin(z), x*cos(y)))
+    assert a.transformation_to_parent() == (a.x*sin(a.y)*cos(a.z), a.x*sin(a.y)*sin(a.z), a.x*cos(a.y))
+
+    raises(TypeError, lambda: CoordSys3D('a', transformation={
+        x: x*sin(y)*cos(z), y:x*sin(y)*sin(z), z:  x*cos(y)}))
 
 
 def test_check_orthogonality():
     x, y, z = symbols('x y z')
     u,v = symbols('u, v')
-    a = CoordSys3D('a', transformation=((x*sin(y)*cos(z), x*sin(y)*sin(z), x*cos(y)), (x, y, z)))
+    a = CoordSys3D('a', transformation=((x, y, z), (x*sin(y)*cos(z), x*sin(y)*sin(z), x*cos(y))))
     assert a._check_orthogonality(a._transformation) is True
-    a = CoordSys3D('a', transformation=((x * cos(y), x * sin(y), z), (x, y, z)))
+    a = CoordSys3D('a', transformation=((x, y, z), (x * cos(y), x * sin(y), z)))
     assert a._check_orthogonality(a._transformation) is True
-    a = CoordSys3D('a', transformation=((cosh(u) * cos(v), sinh(u) * sin(v), z), (u, v, z)))
+    a = CoordSys3D('a', transformation=((u, v, z), (cosh(u) * cos(v), sinh(u) * sin(v), z)))
     assert a._check_orthogonality(a._transformation) is True
 
     raises(ValueError, lambda: CoordSys3D('a', transformation=((x, x, z), (x, y, z))))
     raises(ValueError, lambda: CoordSys3D('a', transformation=(
-        (x*sin(y/2)*cos(z), x*sin(y)*sin(z), x*cos(y)), (x, y, z))))
+        (x, y, z), (x*sin(y/2)*cos(z), x*sin(y)*sin(z), x*cos(y)))))
 
 
 def test_coordsys3d():

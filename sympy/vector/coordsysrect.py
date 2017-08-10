@@ -81,7 +81,10 @@ class CoordSys3D(Basic):
                     rotation_matrix = transformation[0]
                     location = transformation[1]
                 else:
-                    transformation = Lambda(transformation[1], transformation[0])
+                    transformation = Lambda(transformation[0], transformation[1])
+            elif isinstance(transformation, collections.Callable):
+                x1, x2, x3 = symbols('x1 x2 x3', cls=Dummy)
+                transformation = Lambda((x1, x2, x3), transformation(x1, x2, x3))
             elif isinstance(transformation, string_types):
                 transformation = Symbol(transformation)
             elif isinstance(transformation, (Symbol, Lambda)):
@@ -97,7 +100,7 @@ class CoordSys3D(Basic):
             if not isinstance(rotation_matrix, MatrixBase):
                 raise TypeError("rotation_matrix should be an Immutable" +
                                 "Matrix instance")
-                rotation_matrix = rotation_matrix.as_immutable()
+            rotation_matrix = rotation_matrix.as_immutable()
 
         # If location information is not given, adjust the default
         # location as Vector.zero
