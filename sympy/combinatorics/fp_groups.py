@@ -9,6 +9,7 @@ from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group, zero_mul_simp)
+from sympy.combinatorics.rewritingsystem import RewritingSystem
 from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
@@ -56,9 +57,6 @@ class FpGroup(DefaultPrinting):
 
     def __init__(self, fr_grp, relators):
         relators = _parse_relators(relators)
-        # return the corresponding FreeGroup if no relators are specified
-        if not relators:
-            return fr_grp
         self.free_group = fr_grp
         self.relators = relators
         self.generators = self._generators()
@@ -73,8 +71,43 @@ class FpGroup(DefaultPrinting):
         self._order = None
         self._center = None
 
+        self._rewriting_system = RewritingSystem(self)
+        return
+
     def _generators(self):
         return self.free_group.generators
+
+    def make_confluent(self):
+        '''
+        Try to make the group's rewriting system confluent
+
+        '''
+        self._rewriting_system.make_confluent()
+        return
+
+    def reduce(self, word):
+        '''
+        Return the reduced form of `word` in `self` according to the group's
+        rewriting system. If it's confluent, the reduced form is the unique normal
+        form of the word in the group.
+
+        '''
+        return self._rewriting_system.reduce(word)
+
+    def equals(self, word1, word2):
+        '''
+        Compare `word1` and `word2` for equality in the group
+        using the group's rewriting system. If the system is
+        confluent, the returned answer is necessarily correct.
+        (If it isn't, `False` could be returned in some cases
+        where in fact `word1 == word2`)
+
+        '''
+        if self.reduce(word1*word2**-1) == self.identity:
+            return True
+        elif self._rewriting_system.is_confluent:
+            return False
+        return None
 
     @property
     def identity(self):
@@ -215,7 +248,7 @@ class FpGroup(DefaultPrinting):
                 i = 0
                 while ((rand in rels or rand**-1 in rels or rand.is_identity)
                         and i<10):
-                    rand = self.random_element()
+                    rand = self.random()
                     i += 1
                 s = [gen, rand] + [g for g in self.generators if g != gen]
         mid = (len(s)+1)//2
@@ -248,7 +281,7 @@ class FpGroup(DefaultPrinting):
         freqs = [sum([r.generator_count(g) for r in rels]) for g in gens]
         return gens[freqs.index(max(freqs))]
 
-    def random_element(self):
+    def random(self):
         import random
         r = self.free_group.identity
         for i in range(random.randint(2,3)):

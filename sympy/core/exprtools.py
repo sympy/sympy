@@ -797,7 +797,7 @@ class Factors(object):
         return self.factors == other.factors
 
     def __ne__(self, other):  # Factors
-        return not self.__eq__(other)
+        return not self == other
 
 
 class Term(object):
@@ -909,7 +909,7 @@ class Term(object):
                 self.denom == other.denom)
 
     def __ne__(self, other):  # Term
-        return not self.__eq__(other)
+        return not self == other
 
 
 def _gcd_terms(terms, isprimitive=False, fraction=True):

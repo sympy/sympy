@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from itertools import permutations
 
 from sympy.matrices import Matrix
-from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
 from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
@@ -411,7 +411,7 @@ class Point(Basic):
         return self._coords.free_symbols
 
 
-class BaseScalarField(Expr):
+class BaseScalarField(AtomicExpr):
     """Base Scalar Field over a Manifold for a given Coordinate System.
 
     A scalar field takes a point as an argument and returns a scalar.
@@ -467,7 +467,7 @@ class BaseScalarField(Expr):
     is_commutative = True
 
     def __new__(cls, coord_sys, index):
-        obj = Expr.__new__(cls, coord_sys, sympify(index))
+        obj = AtomicExpr.__new__(cls, coord_sys, sympify(index))
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
@@ -495,7 +495,7 @@ class BaseScalarField(Expr):
         return self
 
 
-class BaseVectorField(Expr):
+class BaseVectorField(AtomicExpr):
     r"""Vector Field over a Manifold.
 
     A vector field is an operator taking a scalar field and returning a
@@ -559,7 +559,7 @@ class BaseVectorField(Expr):
 
     def __new__(cls, coord_sys, index):
         index = sympify(index)
-        obj = Expr.__new__(cls, coord_sys, index)
+        obj = AtomicExpr.__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
@@ -634,7 +634,7 @@ class Commutator(Expr):
     Commutator(e_x, e_r)
 
     >>> simplify(c_xr(R2.y**2).doit())
-    -2*cos(theta)*y**2/(x**2 + y**2)
+    -2*y**2*cos(theta)/(x**2 + y**2)
 
     """
     def __new__(cls, v1, v2):
@@ -677,7 +677,7 @@ class Commutator(Expr):
 
 
 class Differential(Expr):
-    """Return the differential (exterior derivative) of a form field.
+    r"""Return the differential (exterior derivative) of a form field.
 
     The differential of a form (i.e. the exterior derivative) has a complicated
     definition in the general case.
@@ -803,10 +803,8 @@ class TensorProduct(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy import Function
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import TensorProduct
-    >>> from sympy import pprint
 
     >>> TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
     1
@@ -892,10 +890,8 @@ class WedgeProduct(TensorProduct):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy import Function
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import WedgeProduct
-    >>> from sympy import pprint
 
     >>> WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
     1
@@ -1417,7 +1413,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
+    x*e_r/sqrt(x**2 + y**2) - y*e_theta/(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
     """
@@ -1558,7 +1554,7 @@ def metric_to_Riemann_components(expr):
     Examples
     ========
 
-    >>> from sympy import pprint, exp
+    >>> from sympy import exp
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
@@ -1568,10 +1564,10 @@ def metric_to_Riemann_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0, :, :, :]
-    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
+    [[[0, 0], [0, 0]], [[0, r*exp(-2*r)], [-r*exp(-2*r), 0]]]
     >>> riemann[1, :, :, :]
     [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
 
@@ -1612,7 +1608,7 @@ def metric_to_Ricci_components(expr):
     Examples
     ========
 
-    >>> from sympy import pprint, exp
+    >>> from sympy import exp
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
@@ -1622,9 +1618,9 @@ def metric_to_Ricci_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    [[1/r, 0], [0, exp(-2*r)*r]]
+    [[1/r, 0], [0, r*exp(-2*r)]]
 
     """
     riemann = metric_to_Riemann_components(expr)

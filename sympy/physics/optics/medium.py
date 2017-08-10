@@ -183,10 +183,10 @@ class Medium(Symbol):
         return self.refractive_index < other.refractive_index
 
     def __gt__(self, other):
-        return not self.__lt__(other)
+        return not self < other
 
     def __eq__(self, other):
         return self.refractive_index == other.refractive_index
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other

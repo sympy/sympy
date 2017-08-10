@@ -239,10 +239,9 @@ class MatrixShaping(MatrixRequired):
         col
         row_join
         """
-        from sympy.matrices import MutableMatrix
-        # Allows you to build a matrix even if it is null matrix
-        if not self:
-            return type(self)(other)
+        # A null matrix can always be stacked (see  #10770)
+        if self.rows == 0 and self.cols != other.cols:
+            return self._new(0, other.cols, []).col_join(other)
 
         if self.cols != other.cols:
             raise ShapeError(
@@ -476,9 +475,9 @@ class MatrixShaping(MatrixRequired):
         row
         col_join
         """
-        # Allows you to build a matrix even if it is null matrix
-        if not self:
-            return self._new(other)
+        # A null matrix can always be stacked (see  #10770)
+        if self.cols == 0 and self.rows != other.rows:
+            return self._new(other.rows, 0, []).row_join(other)
 
         if self.rows != other.rows:
             raise ShapeError(

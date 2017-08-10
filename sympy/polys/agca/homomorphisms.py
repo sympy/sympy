@@ -416,7 +416,7 @@ class ModuleHomomorphism(object):
 
 
 class MatrixHomomorphism(ModuleHomomorphism):
-    """
+    r"""
     Helper class for all homomoprhisms which are expressed via a matrix.
 
     That is, for such homomorphisms ``domain`` is contained in a module

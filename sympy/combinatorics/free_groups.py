@@ -262,25 +262,6 @@ class FreeGroup(DefaultPrinting):
         """
         return self._rank
 
-    def _symbol_index(self, symbol):
-        """Returns the index of a generator for free group `self`, while
-        returns the -ve index of the inverse generator.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy import Symbol
-        >>> F, x, y = free_group("x, y")
-        >>> F._symbol_index(-Symbol('x'))
-        0
-
-        """
-        try:
-            return self.symbols.index(symbol)
-        except ValueError:
-            return -self.symbols.index(-symbol)
-
     @property
     def is_abelian(self):
         """Returns if the group is Abelian.
@@ -601,21 +582,33 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             return self.inverse()*other.inverse()*self*other
 
-    def eliminate_words(self, words, _all=False):
+    def eliminate_words(self, words, _all=False, inverse=True):
         '''
         Replace each subword from the dictionary `words` by words[subword].
         If words is a list, replace the words by the identity.
+
         '''
+        again = True
         new = self
         if isinstance(words, dict):
-            for sub in words:
-                new = new.eliminate_word(sub, words[sub], _all=_all)
+            while again:
+                again = False
+                for sub in words:
+                    prev = new
+                    new = new.eliminate_word(sub, words[sub], _all=_all, inverse=inverse)
+                    if new != prev:
+                        again = True
         else:
-            for sub in words:
-                new = new.eliminate_word(sub, _all=_all)
+            while again:
+                again = False
+                for sub in words:
+                    prev = new
+                    new = new.eliminate_word(sub, _all=_all, inverse=inverse)
+                    if new != prev:
+                        again = True
         return new
 
-    def eliminate_word(self, gen, by=None, _all=False):
+    def eliminate_word(self, gen, by=None, _all=False, inverse=True):
         """
         For an associative word `self`, a subword `gen`, and an associative
         word `by` (identity by default), return the associative word obtained by
@@ -659,6 +652,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             i = word.subword_index(gen)
             k = 1
         except ValueError:
+            if not inverse:
+                return word
             try:
                 i = word.subword_index(gen**-1)
                 k = -1
@@ -668,7 +663,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         word = word.subword(0, i)*by**k*word.subword(i+l, len(word)).eliminate_word(gen, by)
 
         if _all:
-            return word.eliminate_word(gen, by, _all=True)
+            return word.eliminate_word(gen, by, _all=True, inverse=inverse)
         else:
             return word
 
@@ -760,18 +755,18 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return True
         elif l > m:
             return False
-        a = self.letter_form
-        b = other.letter_form
         for i in range(l):
-            p = group._symbol_index(a[i])
-            q = group._symbol_index(b[i])
-            if abs(p) < abs(q):
-                return True
-            elif abs(p) > abs(q):
-                return False
-            elif p < q:
+            a = self[i].array_form[0]
+            b = other[i].array_form[0]
+            p = group.symbols.index(a[0])
+            q = group.symbols.index(b[0])
+            if p < q:
                 return True
             elif p > q:
+                return False
+            elif a[1] < b[1]:
+                return True
+            elif a[1] > b[1]:
                 return False
         return False
 
@@ -862,7 +857,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         s = gen.array_form[0]
         return s[1]*sum([abs(i[1]) for i in self.array_form if i[0] == s[0]])
 
-    def subword(self, from_i, to_j):
+    def subword(self, from_i, to_j, strict=True):
         """
         For an associative word `self` and two positive integers `from_i` and
         `to_j`, `subword` returns the subword of `self` that begins at position
@@ -879,6 +874,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
+        if not strict:
+            from_i = max(from_i, 0)
+            to_j = min(len(self), to_j)
         if from_i < 0 or to_j > len(self):
             raise ValueError("`from_i`, `to_j` must be positive and no greater than "
                     "the length of associative word")

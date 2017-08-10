@@ -1875,7 +1875,7 @@ class HolonomicFunction(object):
         return HolonomicFunction(sol, x, x0, self.y0)
 
     def to_hyper(self, as_list=False, _recur=None):
-        """
+        r"""
         Returns a hypergeometric function (or linear combination of them)
         representing the given holonomic function.
 
