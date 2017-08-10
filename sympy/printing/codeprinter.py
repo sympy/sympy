@@ -16,19 +16,6 @@ from sympy.printing.precedence import precedence
 from sympy.codegen.ast import Assignment
 
 
-def prints_statement(method):
-    """ Decorator for methods printing statements (as opposed to expressions) """
-
-    @wraps(method)
-    def wrapper(self, expr):
-        if self._settings.get('enable_statements', True):
-            return method(self, expr)
-        else:
-            raise ValueError("The code-printer setting 'enable_statements' is False,\n"
-                             "but %s generates a statement in the chosen language." %
-                             type(expr))
-    return wrapper
-
 class requires(object):
     """ Decorator for registering requirements on print methods. """
     def __init__(self, **kwargs):
@@ -59,12 +46,14 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    _default_settings = {'order': None,
-                         'full_prec': 'auto',
-                         'error_on_reserved': False,
-                         'reserved_word_suffix': '_',
-                         'enable_statements': False,
-                         'human': True}
+    _default_settings = {
+        'order': None,
+        'full_prec': 'auto',
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
+        'human': True,
+        'inline': False
+    }
 
     def __init__(self, settings=None):
 
@@ -125,8 +114,8 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            result = (self._number_symbols, self._not_supported,
-                    "\n".join(lines))
+            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            result = (num_syms, self._not_supported, "\n".join(lines))
         del self._not_supported
         del self._number_symbols
         return result
@@ -293,7 +282,6 @@ class CodePrinter(StrPrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
-    @prints_statement
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -367,10 +355,14 @@ class CodePrinter(StrPrinter):
     _print_Expr = _print_Function
 
     def _print_NumberSymbol(self, expr):
-        # A Number symbol that is not implemented here or with _printmethod
-        # is registered and evaluated
-        self._number_symbols.add((expr, Float(expr.evalf(self._settings['precision']))))
-        return str(expr)
+        if self._settings.get("inline", False):
+            return self._print(Float(expr.evalf(self._settings["precision"])))
+        else:
+            # A Number symbol that is not implemented here or with _printmethod
+            # is registered and evaluated
+            self._number_symbols.add((expr,
+                Float(expr.evalf(self._settings["precision"]))))
+            return str(expr)
 
     def _print_Catalan(self, expr):
         return self._print_NumberSymbol(expr)

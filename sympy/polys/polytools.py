@@ -4109,7 +4109,7 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __ne__(f, g):
-        return not f.__eq__(g)
+        return not f == g
 
     def __nonzero__(f):
         return not f.is_zero
@@ -4118,7 +4118,7 @@ class Poly(Expr):
 
     def eq(f, g, strict=False):
         if not strict:
-            return f.__eq__(g)
+            return f == g
         else:
             return f._strict_eq(sympify(g))
 
@@ -6700,7 +6700,7 @@ class GroebnerBasis(Basic):
             return False
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     @property
     def is_zero_dimensional(self):

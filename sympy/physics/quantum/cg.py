@@ -148,7 +148,7 @@ class Wigner3j(Expr):
 
 
 class CG(Wigner3j):
-    """Class for Clebsch-Gordan coefficient
+    r"""Class for Clebsch-Gordan coefficient
 
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
@@ -156,7 +156,7 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\\rangle
+        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\rangle
 
     Parameters
     ==========

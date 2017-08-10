@@ -40,6 +40,8 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+suppress_warnings = ['ref.citation', 'ref.footnote']
+
 # General substitutions.
 project = 'SymPy'
 copyright = '2017 SymPy Development Team'

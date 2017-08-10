@@ -231,14 +231,6 @@ class OctaveCodePrinter(CodePrinter):
         return "(1+sqrt(5))/2"
 
 
-    def _print_NumberSymbol(self, expr):
-        if self._settings["inline"]:
-            return self._print(expr.evalf(self._settings["precision"]))
-        else:
-            # assign to a variable, perhaps more readable for longer program
-            return super(OctaveCodePrinter, self)._print_NumberSymbol(expr)
-
-
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase

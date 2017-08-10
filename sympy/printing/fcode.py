@@ -84,7 +84,6 @@ class FCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
-        'enable_statements': True,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
@@ -143,7 +142,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
         # is registered and evaluated
-        self._number_symbols.add((expr, self._print(Float(expr.evalf(self._settings['precision'])))))
+        self._number_symbols.add((expr, Float(expr.evalf(self._settings['precision']))))
         return str(expr)
 
     def _format_code(self, lines):

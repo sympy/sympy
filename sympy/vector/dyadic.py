@@ -257,7 +257,7 @@ class DyadicZero(BasisDependentZero, Dyadic):
 
     _op_priority = 13.1
     _pretty_form = u'(0|0)'
-    _latex_form = '(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
+    _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)

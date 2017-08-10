@@ -556,7 +556,7 @@ def decompose(expr, separate=False):
     >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5)
     {1: x + y, 2: x**2 + x*y, 5: x**3*y**2 + y**5}
     >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5, True)
-    [x, y, x**2, y**5, x*y, x**3*y**2]
+    {x, x**2, y, y**5, x*y, x**3*y**2}
     """
     expr = S(expr)
     poly_dict = {}
@@ -569,7 +569,7 @@ def decompose(expr, separate=False):
             degrees = [(sum(degree_list(monom, *symbols)), monom)
                        for monom in expr.args]
             if separate:
-                return [monom[1] for monom in degrees]
+                return {monom[1] for monom in degrees}
             else:
                 for monom in degrees:
                     degree, term = monom
@@ -593,7 +593,7 @@ def decompose(expr, separate=False):
         poly_dict[0] = expr
 
     if separate:
-        return list(poly_dict.values())
+        return set(poly_dict.values())
     return poly_dict
 
 

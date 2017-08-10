@@ -86,6 +86,57 @@ class PrettyPrinter(Printer):
             full_prec = self._print_level == 1
         return prettyForm(sstr(e, full_prec=full_prec))
 
+    def _print_Cross(self, e):
+        vec1 = e._expr1
+        vec2 = e._expr2
+        pform = self._print(vec2)
+        pform = prettyForm(*pform.left('('))
+        pform = prettyForm(*pform.right(')'))
+        pform = prettyForm(*pform.left(self._print(U('MULTIPLICATION SIGN'))))
+        pform = prettyForm(*pform.left(')'))
+        pform = prettyForm(*pform.left(self._print(vec1)))
+        pform = prettyForm(*pform.left('('))
+        return pform
+
+    def _print_Curl(self, e):
+        vec = e._expr
+        pform = self._print(vec)
+        pform = prettyForm(*pform.left('('))
+        pform = prettyForm(*pform.right(')'))
+        pform = prettyForm(*pform.left(self._print(U('MULTIPLICATION SIGN'))))
+        pform = prettyForm(*pform.left(self._print(U('NABLA'))))
+        return pform
+
+    def _print_Divergence(self, e):
+        vec = e._expr
+        pform = self._print(vec)
+        pform = prettyForm(*pform.left('('))
+        pform = prettyForm(*pform.right(')'))
+        pform = prettyForm(*pform.left(self._print(U('DOT OPERATOR'))))
+        pform = prettyForm(*pform.left(self._print(U('NABLA'))))
+        return pform
+
+    def _print_Dot(self, e):
+        vec1 = e._expr1
+        vec2 = e._expr2
+        pform = self._print(vec2)
+        pform = prettyForm(*pform.left('('))
+        pform = prettyForm(*pform.right(')'))
+        pform = prettyForm(*pform.left(self._print(U('DOT OPERATOR'))))
+        pform = prettyForm(*pform.left(')'))
+        pform = prettyForm(*pform.left(self._print(vec1)))
+        pform = prettyForm(*pform.left('('))
+        return pform
+
+    def _print_Gradient(self, e):
+        func = e._expr
+        pform = self._print(func)
+        pform = prettyForm(*pform.left('('))
+        pform = prettyForm(*pform.right(')'))
+        pform = prettyForm(*pform.left(self._print(U('DOT OPERATOR'))))
+        pform = prettyForm(*pform.left(self._print(U('NABLA'))))
+        return pform
+
     def _print_Atom(self, e):
         try:
             # print atoms like Exp1 or Pi
