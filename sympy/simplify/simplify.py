@@ -16,10 +16,12 @@ from sympy.functions import (
     gamma, exp, sqrt, log, exp_polar, piecewise_fold)
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.exponential import ExpBase
-from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
+    InverseHyperbolicFunction)
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.complexes import unpolarify
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
+    InverseTrigonometricFunction)
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 
@@ -567,6 +569,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(TrigonometricFunction) and not fu or expr.has(
             HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
+
+    if expr.has(InverseTrigonometricFunction) or expr.has(InverseHyperbolicFunction):
+        _e = expr.rewrite(log)
+        expr = shorter(expr, _e, together(logcombine(_e), deep = True))
 
     if expr.has(log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
