@@ -2272,8 +2272,8 @@ class atan(InverseTrigonometricFunction):
         return self.args[0].is_real
 
     def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * (log(
-            (S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
+        return S.ImaginaryUnit/2 * (log(S(1) - S.ImaginaryUnit * x)
+            - log(S(1) + S.ImaginaryUnit * x))
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
@@ -2420,8 +2420,8 @@ class acot(InverseTrigonometricFunction):
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * \
-            (log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
+        return S.ImaginaryUnit/2 * (log(x - S.ImaginaryUnit)
+            - log(x + S.ImaginaryUnit))
 
     def inverse(self, argindex=1):
         """
