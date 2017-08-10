@@ -33,6 +33,8 @@ from sympy.utilities import filldedent
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key
 
+from sympy.solvers.decompogen import decompogen
+
 
 def _invert(f_x, y, x, domain=S.Complexes):
     r"""
@@ -392,7 +394,7 @@ def _solve_as_rational(f, symbol, domain):
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
         if isinstance(valid_solns, ConditionSet) or isinstance(invalid_solns, ConditionSet):
-            return ConditionSet(f, symbol, domain)
+            return ConditionSet(symbol, Eq(f, 0), domain)
         else:
             return valid_solns - invalid_solns
 
@@ -419,12 +421,7 @@ def _solve_trig(f, symbol, domain):
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        #try solving through solve_decomposition
-        try:
-            result = solve_decomposition(f_original, symbol, domain)
-            return result
-        except:
-            return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
@@ -441,10 +438,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             result = FiniteSet(*solns.keys())
         else:
             poly = Poly(f, symbol)
-            try:
-                solns = poly.all_roots()
-            except:
-                pass
+            solns = poly.all_roots()
             if poly.degree() <= len(solns):
                 result = FiniteSet(*solns)
             else:
@@ -929,7 +923,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return _solveset(f, symbol, domain, _check=True)
+    res = _solveset(f, symbol, domain, _check=True)
+
+    if isinstance(res, ConditionSet):
+        try:
+            return solve_decomposition(f, symbol, domain)
+        except:
+            return ConditionSet(symbol, Eq(f, 0), domain)
+    else:
+        return res
 
 
 def solveset_real(f, symbol):
