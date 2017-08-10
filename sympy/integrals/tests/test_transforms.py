@@ -469,7 +469,7 @@ def test_laplace_transform():
 
     # basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
-        ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
+        ((s + c)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
     assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), 0, True)
     assert LT(Heaviside(t), t, s) == (1/s, 0, True)
     assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, 0, True)
@@ -478,13 +478,13 @@ def test_laplace_transform():
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
 
-    assert LT(exp(t), t, s)[:2] == (1/(s - 1), 0)
-    assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 0)
-    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), 0)
+    assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
+    assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
+    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
-    assert LT(erf(t), t, s) == (exp(s**2/4)*erfc(s/2)/s, 0, True)
+    assert LT(erf(t), t, s) == (erfc(s/2)*exp(s**2/4)/s, 0, True)
 
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)
@@ -508,10 +508,10 @@ def test_laplace_transform():
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
         ((-sin(s**2/(2*pi))*fresnels(s/pi) + sin(s**2/(2*pi))/2 -
-        cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
-    assert laplace_transform(fresnelc(t), t, s) == \
+            cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
+    assert laplace_transform(fresnelc(t), t, s) == (
         (sin(s**2/(2*pi))*fresnelc(s/pi)/s - cos(s**2/(2*pi))*fresnels(s/pi)/s
-        + sqrt(2)*cos(s**2/(2*pi) + pi/4)/(2*s), 0, True)
+        + sqrt(2)*cos(s**2/(2*pi) + pi/4)/(2*s), 0, True))
 
     cond = Ne(1/s, 1) & (
         S(0) < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)

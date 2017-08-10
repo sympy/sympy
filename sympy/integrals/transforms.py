@@ -999,7 +999,7 @@ def _laplace_transform(f, t, s_, simplify=True):
                     if m[q].is_positive and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0
                 m = d.match(
-                    cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p) > 0
+                    cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p > 0)
                 if not m:
                     m = d.match(
                         cos(abs(arg(polar_lift(s)**w1*w5, q))*w2
@@ -1112,8 +1112,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, -oo,
-    (-re(a) < 1) & (Abs(periodic_argument(s, oo)) < pi/2))
+    (s**(-a)*gamma(a + 1)/s, 0, -re(a) < 1)
 
     See Also
     ========
