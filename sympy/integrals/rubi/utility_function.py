@@ -2242,43 +2242,43 @@ def SimplerQ(u, v):
                 return Abs(u)<Abs(v)
         else:
             return True
-    if IntegerQ(v):
+    elif IntegerQ(v):
         return False
-    if FractionQ(u):
+    elif FractionQ(u):
         if FractionQ(v):
-            if Denominator(u)==Denominator(v):
+            if Denominator(u) == Denominator(v):
                 return SimplerQ(Numerator(u), Numerator(v))
             else:
                 return Denominator(u)<Denominator(v)
         else:
             return True
-    if FractionQ(v):
+    elif FractionQ(v):
         return False
-    if (Re(u)==0 or Re(u) == 0) and (Re(v)==0 or Re(v) == 0):
+    elif (Re(u)==0 or Re(u) == 0) and (Re(v)==0 or Re(v) == 0):
         return SimplerQ(Im(u), Im(v))
-    if ComplexNumberQ(u):
+    elif ComplexNumberQ(u):
         if ComplexNumberQ(v):
-            if Re(u)==Re(v):
+            if Re(u) == Re(v):
                 return SimplerQ(Im(u), Im(v))
             else:
                 return SimplerQ(Re(u),Re(v))
         else:
             return False
-    if NumberQ(u):
+    elif NumberQ(u):
         if NumberQ(v):
             return OrderedQ([u,v])
         else:
             return True
-    if NumberQ(v):
+    elif NumberQ(v):
         return False
-    if AtomQ(u):
+    elif AtomQ(u):
         if AtomQ(v):
             return OrderedQ([u,v])
         else:
             return True
-    if AtomQ(v):
+    elif AtomQ(v):
         return False
-    if Head(u) == Head(v):
+    elif Head(u) == Head(v):
         if Length(u) == Length(v):
             for i in range(len(u.args)):
                 if not u.args[i] == v.args[i]:
@@ -2286,12 +2286,12 @@ def SimplerQ(u, v):
                 else:
                     return False
         return Length(u) < Length(v)
-    if LeafCount(u) < LeafCount(v):
+    elif LeafCount(u) < LeafCount(v):
         return True
-    if LeafCount(v) < LeafCount(u):
+    elif LeafCount(v) < LeafCount(u):
         return False
-    else:
-        return Not(OrderedQ([v,u]))
+    print(u, v)
+    return Not(OrderedQ([v,u]))
 
 def SimplerSqrtQ(u, v):
     # If Rt(u, 2) is simpler than Rt(v, 2), SimplerSqrtQ(u, v) returns True, else it returns False.  SimplerSqrtQ(u, u) returns False
@@ -2940,7 +2940,7 @@ def MergeableFactorQ(bas, deg, v):
             return RationalQ(deg+v.exp) and (deg+v.exp>=0 or RationalQ(deg) and deg>0)
         return SumQ(v.base) and IntegerQ(v.exp) and (Not(IntegerQ(deg) or IntegerQ(deg/v.exp))) and MergeableFactorQ(bas, deg/v.exp, v.base)
     elif ProductQ(v):
-        return MergeableFactorQ(base, deg, First(v)) or MergeableFactorQ(bas, deg, Rest(v))
+        return MergeableFactorQ(bas, deg, First(v)) or MergeableFactorQ(bas, deg, Rest(v))
     return SumQ(v) and MergeableFactorQ(bas, deg, First(v)) and MergeableFactorQ(bas, deg, Rest(v))
 
 def MergeFactor(bas, deg, v):
@@ -3002,7 +3002,6 @@ def Smallest(num1, num2=None):
             num = Smallest(num, i)
         return num
     return Min(num1, num2)
-
 
 def OrderedQ(l):
     return l == Sort(l)
@@ -4317,23 +4316,6 @@ def TrigReduce(i):
     else:
         return i
 
-
-'''
-def FunctionOfTrigOfLinearQ(u, x):
-    # If u is an algebraic function of trig functions of a linear function of x, FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
-    a = Wild('a', exclude=[x])
-    n = Wild('n', exclude=[x, 0])
-    f = Wild('f')
-    M = u.match((a*f)**n)
-    if M AlgebraicTrigFunctionQ()
-
-def FunctionOfTrigOfLinearQ(u, x):
-
-    (* Not[MatchQ[u, (c_.*f_[a_.+b_.*x])^p_. /; FreeQ[{a,b,c,p},x] && MemberQ[{Sin,Cos,Sec,Csc},f]]] && *)
-    Not[MemberQ[{Null, False}, FunctionOfTrig[u,Null,x]]] && AlgebraicTrigFunctionQ[u,x] (* &&
-    RecognizedFunctionOfTrigQ[DeactivateTrig[u,x],x] *)
-'''
-
 def FunctionOfTrig(u, *x):
     # If u is a function of trig functions of v where v is a linear function of x,
     # FunctionOfTrig[u,x] returns v; else it returns False.
@@ -5565,7 +5547,7 @@ def SimpHelp(u, x):
         match = u.match(pattern)
         m = False
         if match:
-            if Eq(match[n]**3, S(1)/16):
+            if EqQ(match[n]**3, S(1)/16):
                 m = True
         if m:
             return u
