@@ -157,9 +157,11 @@ def directional_derivative(field, direction_vector):
     coord_sys = _get_coord_sys_from_expr(field)
     if coord_sys is not None:
         field = express(field, coord_sys, variables=True)
-        out = Vector.dot(direction_vector, coord_sys.i) * diff(field, coord_sys.x)
-        out += Vector.dot(direction_vector, coord_sys.j) * diff(field, coord_sys.y)
-        out += Vector.dot(direction_vector, coord_sys.k) * diff(field, coord_sys.z)
+        i, j, k = coord_sys.base_vectors()
+        x, y, z = coord_sys.base_scalars()
+        out = Vector.dot(direction_vector, i) * diff(field, x)
+        out += Vector.dot(direction_vector, j) * diff(field, y)
+        out += Vector.dot(direction_vector, k) * diff(field, z)
         if out == 0 and isinstance(field, Vector):
             out = Vector.zero
         return out

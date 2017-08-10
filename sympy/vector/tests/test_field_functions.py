@@ -190,6 +190,13 @@ def test_directional_derivative():
     assert directional_derivative(5*C.x**2*C.z, 3*C.i + 4*C.j + C.k) == 5*C.x**2 + 30*C.x*C.z
     assert directional_derivative(5*C.x**2*C.z, 4*C.j) == S.Zero
 
+    D = CoordSys3D("D", "spherical", variable_names=["r", "theta", "phi"],
+                   vector_names=["e_r", "e_theta", "e_phi"])
+    r, theta, phi = D.base_scalars()
+    e_r, e_theta, e_phi = D.base_vectors()
+    assert directional_derivative(r**2*e_r, e_r) == 2*r*e_r
+    assert directional_derivative(5*r**2*phi, 3*e_r + 4*e_theta + e_phi) == 5*r**2 + 30*r*phi
+
 
 def test_scalar_potential():
     assert scalar_potential(Vector.zero, C) == 0
