@@ -369,15 +369,15 @@ class DiracDelta(Function):
 class Heaviside(Function):
     """Heaviside Piecewise function
 
-    Heaviside function has the following properties [*]_:
+    Heaviside function has the following properties [1]_:
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
                         ``( 0, if x < 0``
-    2) ``Heaviside(x) = < ( undefined if x==0 [*]``
+    2) ``Heaviside(x) = < ( undefined if x==0 [1]``
                         ``( 1, if x > 0``
     3) ``Max(0,x).diff(x) = Heaviside(x)``
 
-    .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
+    .. [1] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
            but Maple uses ``H(0) = undefined``.  Different application areas
            may have specific conventions.  For example, in control theory, it
            is common practice to assume ``H(0) == 0`` to match the Laplace
@@ -407,8 +407,8 @@ class Heaviside(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
-    .. [2] http://dlmf.nist.gov/1.16#iv
+    .. [2] http://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [3] http://dlmf.nist.gov/1.16#iv
 
     """
 
