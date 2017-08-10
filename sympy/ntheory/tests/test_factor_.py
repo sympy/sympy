@@ -1,6 +1,7 @@
 from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
     Mul, S, Pow, sieve, Symbol, summation, Dummy,
     factorial as fac)
+from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
 
@@ -12,7 +13,7 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega)
+    udivisor_count, primenu, primeomega, small_trailing)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -66,7 +67,7 @@ def multiproduct(seq=(), start=1):
     return units * multiproduct(multi)**2
 
 
-def test_trailing():
+def test_trailing_bitcount():
     assert trailing(0) == 0
     assert trailing(1) == 0
     assert trailing(-1) == 0
@@ -78,6 +79,10 @@ def test_trailing():
         assert trailing((1 << i) * 31337) == i
     assert trailing((1 << 1000001)) == 1000001
     assert trailing((1 << 273956)*7**37) == 273956
+    # issue 12709
+    big = small_trailing[-1]*2
+    assert trailing(-big) == trailing(big)
+    assert bitcount(-big) == bitcount(big)
 
 
 def test_multiplicity():

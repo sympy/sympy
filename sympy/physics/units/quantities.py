@@ -6,8 +6,8 @@ Physical quantities.
 
 from __future__ import division
 
-from sympy import (
-    Add, AtomicExpr, Basic, Derivative, Function, Mul, Pow, S, Symbol, sympify)
+from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
+    Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.prefixes import Prefix
@@ -34,6 +34,12 @@ class Quantity(AtomicExpr):
                 dimension = Dimension(1)
             else:
                 raise ValueError("expected dimension or 1")
+        else:
+            for dim_sym in dimension.name.atoms(Symbol):
+                if dim_sym.name not in dimensions.Dimension._dimensional_dependencies:
+                    raise ValueError("Dimension %s is not registered in the"
+                                     "dimensional dependency tree." % dim_sym)
+
         scale_factor = sympify(scale_factor)
 
         dimex = Quantity.get_dimensional_expr(scale_factor)
@@ -84,6 +90,14 @@ class Quantity(AtomicExpr):
 
     def _eval_is_positive(self):
         return self.scale_factor.is_positive
+
+    def _eval_is_constant(self):
+        return self.scale_factor.is_constant()
+
+    def _eval_Abs(self):
+        # FIXME prefer usage of self.__class__ or type(self) instead
+        return self.func(self.name, self.dimension, Abs(self.scale_factor),
+                         self.abbrev)
 
     @staticmethod
     def get_dimensional_expr(expr):
@@ -185,11 +199,12 @@ def _Quantity_constructor_postprocessor_Add(expr):
     # expressions like `meter + second` to be created.
 
     deset = {
-        tuple(Dimension(Quantity.get_dimensional_expr(i)).get_dimensional_dependencies().items())
+        tuple(sorted(Dimension(
+            Quantity.get_dimensional_expr(i) if not i.is_number else 1
+        ).get_dimensional_dependencies().items()))
         for i in expr.args
         if i.free_symbols == set()  # do not raise if there are symbols
                     # (free symbols could contain the units corrections)
-        and not i.is_number
     }
     # If `deset` has more than one element, then some dimensions do not
     # match in the sum:

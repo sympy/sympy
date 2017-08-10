@@ -26,7 +26,7 @@ mil = angular_mil = angular_mils = Quantity("angular_mil", 1, 2*pi/6400, "mil")
 # Base units:
 
 m = meter = meters = Quantity("meter", length, 1, abbrev="m")
-kg = kilogram = kilograms = Quantity("kilogram", mass, kilo, abbrev="g")
+kg = kilogram = kilograms = Quantity("kilogram", mass, kilo, abbrev="kg")
 s = second = seconds = Quantity("second", time, 1, abbrev="s")
 A = ampere = amperes = Quantity("ampere", current, 1, abbrev='A')
 K = kelvin = kelvins = Quantity('kelvin', temperature, 1, 'K')
