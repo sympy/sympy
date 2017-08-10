@@ -612,7 +612,7 @@ def test_LinearMatchQ():
     assert not LinearMatchQ(3*x**2, x)
 
 def test_SimplerQ():
-    assert SimplerQ(2*x, x + 2)
+    assert SimplerQ(2*a, a + 2)
     assert SimplerQ(2, x)
     assert not SimplerQ(x**2, x)
     assert SimplerQ(2*x, x + 2 + 6*x**3)

@@ -2290,7 +2290,6 @@ def SimplerQ(u, v):
         return True
     elif LeafCount(v) < LeafCount(u):
         return False
-    print(u, v)
     return Not(OrderedQ([v,u]))
 
 def SimplerSqrtQ(u, v):
@@ -4286,21 +4285,18 @@ def TrigReduce(i):
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                # 2 sin A cos B = sin(A + B) + sin(A − B)
                 return i.subs(v*sin(a)*cos(b), v*S(1)/2*(sin(a + b) + sin(a - b)))
             Match = i.match(v*sin(a)*sin(b))
             if Match:
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                # 2 sin A sin B = cos(A − B) − cos(A + B)
                 return i.subs(v*sin(a)*sin(b), v*S(1)/2*cos(a - b) - cos(a + b))
             Match = i.match(v*cos(a)*cos(b))
             if Match:
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                # 2 cos A cos B = cos(A + B) + cos(A − B)
                 return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))
     if PowerQ(i):
         if i.has(sin):
@@ -5066,6 +5062,7 @@ def TrigSquare(u):
 def IntSum(u, x):
     # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
     # else it returns d*Int[v,x] where d*v=u and d is free of x.
+    return Add(*[Int(i, x) for i in u.args])
     return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
@@ -5311,7 +5308,6 @@ def stdev(lst):
 
 def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False, _numerical=False):
     #Returns True if (expr - optimal_output) is equal to 0 or a constant
-
     #expr: integrated expression
     #x: integration variable
     #expand=True equates `expr` with `optimal_output` in expanded form
@@ -5378,9 +5374,17 @@ def IntQuadraticQ(a, b, c, d, e, m, p, x):
     # (* IntQuadraticQ[a,b,c,d,e,m,p,x] returns True iff (d+e*x)^m*(a+b*x+c*x^2)^p is integrable wrt x in terms of non-Appell functions. *)
     return IntegerQ(p) or PositiveIntegerQ(m) or IntegersQ(2*m, 2*p) or IntegersQ(m, 4*p) or IntegersQ(m, p + S(1)/3) and (ZeroQ(c**2*d**2 - b*c*d*e + b**2*e**2 - 3*a*c*e**2) or ZeroQ(c**2*d**2 - b*c*d*e - 2*b**2*e**2 + 9*a*c*e**2))
 
-def IntBinomialQ(a, b, c, n, m, p, x):
-    #(* IntBinomialQ[a,b,c,n,m,p,x] returns True iff (c*x)^m*(a+b*x^n)^p is integrable wrt x in terms of non-hypergeometric functions. *)
-    return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))
+def IntBinomialQ(*args):
+    #(* IntBinomialQ(a,b,c,n,m,p,x) returns True iff (c*x)^m*(a+b*x^n)^p is integrable wrt x in terms of non-hypergeometric functions. *)
+    if len(args) == 8:
+        a, b, c, d, n, p, q, x = args
+        return IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or (ZeroQ(n-2) or ZeroQ(n-4)) and (IntegersQ(p,4*q) or IntegersQ(4*p,q)) or ZeroQ(n-2) and (IntegersQ(2*p,2*q) or IntegersQ(3*p,q) and ZeroQ(b*c+3*a*d) or IntegersQ(p,3*q) and ZeroQ(3*b*c+a*d))
+    elif len(args) == 7:
+        a, b, c, n, m, p, x = args
+        return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))
+    elif len(args) == 10:
+        a, b, c, d, e, m, n, p, q, x = args
+        return IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or ZeroQ(n-2) and IntegerQ(m) and IntegersQ(2*p,2*q) or ZeroQ(n-4) and (IntegersQ(m,p,2*q) or IntegersQ(m,2*p,q))
 
 def RectifyTangent(*args):
     # (* RectifyTangent(u,a,b,r,x) returns an expression whose derivative equals the derivative of r*ArcTan(a+b*Tan(u)) wrt x. *)
