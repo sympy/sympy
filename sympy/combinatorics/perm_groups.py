@@ -2219,7 +2219,7 @@ class PermutationGroup(Basic):
 
         """
         if not self.is_transitive():
-            return False 
+            return False
         n = self.degree
         gens = self.generators
         # initialize the list of equivalence class representatives
@@ -3543,12 +3543,12 @@ class PermutationGroup(Basic):
             m = G.order()
             n = 0
             while m % p == 0:
-                m = m/p 
+                m = m/p
                 n += 1
                 if m == 1:
                     return True, n
             return False, n
-        
+
         def _sylow_reduce(mu, nu):
             # reduction based on two homomorphisms
             # mu and nu with trivially intersecting

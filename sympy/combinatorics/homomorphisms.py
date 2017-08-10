@@ -210,7 +210,7 @@ class GroupHomomorphism(object):
     def restict_to(self, H):
         '''
         Return the restriction of the homomorphism to the subgroup `H`
-        of the domain. 
+        of the domain.
 
         '''
         if not isinstance(H, PermutationGroup) or not H.is_subgroup(self.domain):
@@ -389,6 +389,4 @@ def block_homomorphism(group, blocks):
     identity = range(m)
     images = {g: Permutation([b[p[i]^g] for i in identity]) for g in group.generators}
     H = GroupHomomorphism(group, codomain, images)
-
-    
     return H
