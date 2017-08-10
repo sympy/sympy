@@ -221,6 +221,14 @@ def test_hstack():
     raises(ShapeError, lambda: m.hstack(m, m2))
     assert Matrix.hstack() == Matrix()
 
+    # test regression #12938
+    M1 = Matrix.zeros(0, 0)
+    M2 = Matrix.zeros(0, 1)
+    M3 = Matrix.zeros(0, 2)
+    M4 = Matrix.zeros(0, 3)
+    m = ShapingOnlyMatrix.hstack(M1, M2, M3, M4)
+    assert m.rows == 0 and m.cols == 6
+
 def test_vstack():
     m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
     m2 = ShapingOnlyMatrix(3, 4, lambda i, j: i*3 + j)
