@@ -348,6 +348,14 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
+        if arg.func is acsc:
+            x = arg.args[0]
+            return 1 / x
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -632,6 +640,14 @@ class cos(TrigonometricFunction):
         if arg.func is acot:
             x = arg.args[0]
             return 1 / sqrt(1 + 1 / x**2)
+
+        if arg.func is acsc:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2)
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return 1 / x
 
     @staticmethod
     @cacheit
@@ -1026,6 +1042,14 @@ class tan(TrigonometricFunction):
             x = arg.args[0]
             return 1 / x
 
+        if arg.func is acsc:
+            x = arg.args[0]
+            return 1 / (sqrt(1 - 1 / x**2) * x)
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2) * x
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1303,6 +1327,14 @@ class cot(TrigonometricFunction):
         if arg.func is acos:
             x = arg.args[0]
             return x / sqrt(1 - x**2)
+
+        if arg.func is acsc:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2) * x
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return 1 / (sqrt(1 - 1 / x**2) * x)
 
     @staticmethod
     @cacheit
