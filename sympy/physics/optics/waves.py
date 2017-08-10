@@ -199,7 +199,7 @@ class TWave(Expr):
     def speed(self):
         """
         Returns the propagation speed of the wave,
-        in meters mer second.
+        in meters per second.
         It is dependent on the propagation medium.
 
         Examples
