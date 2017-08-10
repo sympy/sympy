@@ -631,9 +631,9 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
     eq = Add(x, -x, 2, -3, evaluate=False)
-    assert eq.as_independent(x) == (-1, Add(x, -x, evaluate=False))
+    assert eq.as_independent(x) in [(-1, Add(x, -x, evaluate=False)), (-1, Add(-x, x, evaluate=False))]
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
-    eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
+    eq.as_independent(x) in [(-6, Mul(x, 1/x, evaluate=False)), (-6, Mul(1/x, x, evaluate=False))]
 
     assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
