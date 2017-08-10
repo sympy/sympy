@@ -166,7 +166,7 @@ class Vector(object):
         return Vector(newlist)
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __neg__(self):
         return self * -1

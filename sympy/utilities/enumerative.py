@@ -129,7 +129,7 @@ class PartComponent(object):
 
     def __ne__(self, other):
         """Defined for consistency with __eq__"""
-        return not self.__eq__(other)
+        return not self == other
 
 
 # This function tries to be a faithful implementation of algorithm

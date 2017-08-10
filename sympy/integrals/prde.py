@@ -930,7 +930,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
 
 
 def is_deriv_k(fa, fd, DE):
-    """
+    r"""
     Checks if Df/f is the derivative of an element of k(t).
 
     a in k(t) is the derivative of an element of k(t) if there exists b in k(t)
@@ -1044,7 +1044,7 @@ def is_deriv_k(fa, fd, DE):
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
-    """
+    r"""
     Checks if Df is the logarithmic derivative of a k(t)-radical.
 
     b in k(t) can be written as the logarithmic derivative of a k(t) radical if

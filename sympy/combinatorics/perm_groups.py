@@ -1092,20 +1092,43 @@ class PermutationGroup(Basic):
         factors = [tr[i][factors[i]] for i in range(len(base))]
         return factors
 
-    def generator_product(self, g):
+    def generator_product(self, g, original=False):
         '''
         Return a list of strong generators `[s1, ..., sn]`
-        s.t `g = sn*...*s1`.
+        s.t `g = sn*...*s1`. If `original=True`, make the list
+        contain only the original group generators
 
         '''
-        if g in self.strong_gens:
-            return [g]
-        f = self.coset_factor(g, True)
         product = []
+        if g in self.strong_gens:
+            if not original or g in self.generators:
+                return [g]
+            else:
+                slp = self._strong_gens_slp[g]
+                for s in slp:
+                    product.extend(self.generator_product(s, original=True))
+                return product
+        elif g**-1 in self.strong_gens:
+            g = g**-1
+            if not original or g in self.generators:
+                return [g**-1]
+            else:
+                slp = self._strong_gens_slp[g]
+                for s in slp:
+                    product.extend(self.generator_product(s, original=True))
+                l = len(product)
+                product = [product[l-i-1]**-1 for i in range(l)]
+                return product
+
+        f = self.coset_factor(g, True)
         for i, j in enumerate(f):
             slp = self._transversal_slp[i][j]
             for s in slp:
-                product.append(self.strong_gens[s])
+                if not original:
+                    product.append(self.strong_gens[s])
+                else:
+                    s = self.strong_gens[s]
+                    product.extend(self.generator_product(s, original=True))
         return product
 
     def coset_rank(self, g):
@@ -1163,9 +1186,9 @@ class PermutationGroup(Basic):
         """
         if rank < 0 or rank >= self.order():
             return None
-        base = self._base
-        transversals = self._transversals
-        basic_orbits = self._basic_orbits
+        base = self.base
+        transversals = self.basic_transversals
+        basic_orbits = self.basic_orbits
         m = len(base)
         v = [0]*m
         for i in range(m):
@@ -1295,7 +1318,7 @@ class PermutationGroup(Basic):
         return res
 
     def derived_subgroup(self):
-        """Compute the derived subgroup.
+        r"""Compute the derived subgroup.
 
         The derived subgroup, or commutator subgroup is the subgroup generated
         by all commutators `[g, h] = hgh^{-1}g^{-1}` for `g, h\in G` ; it is
@@ -1785,7 +1808,7 @@ class PermutationGroup(Basic):
         return True
 
     def is_primitive(self, randomized=True):
-        """Test if a group is primitive.
+        r"""Test if a group is primitive.
 
         A permutation group ``G`` acting on a set ``S`` is called primitive if
         ``S`` contains no nontrivial block under the action of ``G``
@@ -2147,15 +2170,15 @@ class PermutationGroup(Basic):
         i = 0
         len_not_rep = k - 1
         while i < len_not_rep:
-            temp = not_rep[i]
+            gamma = not_rep[i]
             i += 1
             for gen in gens:
                 # find has side effects: performs path compression on the list
                 # of representatives
-                delta = self._union_find_rep(temp, parents)
+                delta = self._union_find_rep(gamma, parents)
                 # union has side effects: performs union by rank on the list
                 # of representatives
-                temp = self._union_find_merge(gen(temp), gen(delta), ranks,
+                temp = self._union_find_merge(gen(gamma), gen(delta), ranks,
                                               parents, not_rep)
                 if temp == -1:
                     return [0]*n
@@ -3049,7 +3072,7 @@ class PermutationGroup(Basic):
 
     @property
     def strong_gens(self):
-        """Return a strong generating set from the Schreier-Sims algorithm.
+        r"""Return a strong generating set from the Schreier-Sims algorithm.
 
         A generating set `S = \{g_1, g_2, ..., g_t\}` for a permutation group
         `G` is a strong generating set relative to the sequence of points
@@ -3345,7 +3368,7 @@ class PermutationGroup(Basic):
 
     @property
     def transitivity_degree(self):
-        """Compute the degree of transitivity of the group.
+        r"""Compute the degree of transitivity of the group.
 
         A permutation group `G` acting on `\Omega = \{0, 1, ..., n-1\}` is
         ``k``-fold transitive, if, for any k points

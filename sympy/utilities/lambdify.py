@@ -10,7 +10,7 @@ import inspect
 import textwrap
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins)
+    NotIterable, string_types, range, builtins, integer_types)
 from sympy.utilities.decorator import doctest_depends_on
 
 # These are the namespaces the lambda functions will use.
@@ -438,7 +438,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         def array_wrap(funcarg):
             @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
+                asarray = namespace['asarray']
+                newargs = [asarray(i) if isinstance(i, integer_types + (float,
+                    complex)) else i for i in argsx]
+                return funcarg(*newargs, **kwargsx)
             return wrapper
         func = array_wrap(func)
     # Apply the docstring

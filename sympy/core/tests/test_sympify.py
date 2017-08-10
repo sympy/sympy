@@ -560,11 +560,15 @@ def test_numpy():
         skip('numpy not installed.Abort numpy tests.')
 
     assert sympify(np.bool_(1)) is S(True)
-    assert equal(
-        sympify(np.int_(1234567891234567891)), S(1234567891234567891))
+    try:
+        assert equal(
+            sympify(np.int_(1234567891234567891)), S(1234567891234567891))
+        assert equal(
+            sympify(np.intp(1234567891234567891)), S(1234567891234567891))
+    except OverflowError:
+        # May fail on 32-bit systems: Python int too large to convert to C long
+        pass
     assert equal(sympify(np.intc(1234567891)), S(1234567891))
-    assert equal(
-        sympify(np.intp(1234567891234567891)), S(1234567891234567891))
     assert equal(sympify(np.int8(-123)), S(-123))
     assert equal(sympify(np.int16(-12345)), S(-12345))
     assert equal(sympify(np.int32(-1234567891)), S(-1234567891))
@@ -578,8 +582,11 @@ def test_numpy():
     assert equal(sympify(np.float32(1.123456)), Float(1.123456, precision=24))
     assert equal(sympify(np.float64(1.1234567891234)),
                 Float(1.1234567891234, precision=53))
+    assert equal(sympify(np.longdouble(1.123456789)),
+                 Float(1.123456789, precision=80))
     assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
 
     try:
         assert equal(sympify(np.float96(1.123456789)),
