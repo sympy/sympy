@@ -297,16 +297,12 @@ def test_expint():
         s, u, (0, 1)).expand() == Ci(sqrt(u))
 
     # TODO LT of Si, Shi, Chi is a mess ...
-    cond2 = And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1)
-    assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s,
-        -oo, cond2)
-    assert laplace_transform(expint(a, x), x, s) == (
-        lerchphi(s*exp_polar(I*pi), 1, a),
-        -oo, (S(0) < re(a)) & (Abs(periodic_argument(s, oo)) < pi/2))
-    assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s,
-        -oo, pi/2 >= Abs(periodic_argument(s, oo)))
-    assert laplace_transform(expint(2, x), x, s) == ((s - log(s + 1))/s**2,
-        -oo, pi/2 >= Abs(periodic_argument(s, oo)))
+    assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
+    assert laplace_transform(expint(a, x), x, s) == \
+        (lerchphi(s*exp_polar(I*pi), 1, a), 0, S(0) < re(a))
+    assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
+    assert laplace_transform(expint(2, x), x, s) == \
+        ((s - log(s + 1))/s**2, 0, True)
 
     assert inverse_laplace_transform(-log(1 + s**2)/2/s, s, u).expand() == \
         Heaviside(u)*Ci(u)
@@ -461,13 +457,6 @@ def test_laplace_transform():
     t = symbols('t')
     w = Symbol("w")
     f = Function("f")
-    def cond(arg):
-        return Abs(periodic_argument(arg, oo)) < pi/2
-    def acond(arg):
-        c = cond(arg)
-        a = c.lhs
-        return (pi/2 >= a) & c
-    cond2 = And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1)
 
     # Test unevaluated form
     assert laplace_transform(f(t), t, w) == LaplaceTransform(f(t), t, w)
@@ -476,41 +465,36 @@ def test_laplace_transform():
 
     # test a bug
     spos = symbols('s', positive=True)
-    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), True)
+    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), 0)
 
     # basic tests from wikipedia
-
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
-        ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -oo,
-        cond(c + s))
-    assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), -oo, cond(s))
-    assert LT(Heaviside(t), t, s) == (1/s, -oo, cond(s))
-    assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, -oo, cond(s))
-    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), -oo,
-        (pi/2 >= cond(s).lts) & cond(s))
+        ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
+    assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), 0, True)
+    assert LT(Heaviside(t), t, s) == (1/s, 0, True)
+    assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, 0, True)
+    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), 0, True)
 
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
 
-    assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
-    assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
-    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
+    assert LT(exp(t), t, s)[:2] == (1/(s - 1), 0)
+    assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 0)
+    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), 0)
 
-    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, -oo, acond(s))
+    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
-    assert LT(erf(t), t, s) == (exp(s**2/4)*erfc(s/2)/s, -oo, cond2)
+    assert LT(erf(t), t, s) == (exp(s**2/4)*erfc(s/2)/s, 0, True)
 
-    assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), -oo, cond2)
-    assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), -oo, cond2)
+    assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
+    assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)
     # TODO would be nice to have these come out better
-    assert LT(exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2),
-        -oo, Abs(periodic_argument(polar_lift(a + s)**2, oo)) < pi)
-    assert LT(exp(-a*t)*cos(b*t), t, s) == ((a + s)/(b**2 + (a + s)**2),
-        -oo, Abs(periodic_argument(polar_lift(a + s)**2, oo)) < pi)
+    assert LT(exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2), -a, True)
+    assert LT(exp(-a*t)*cos(b*t), t, s) == \
+        ((a + s)/(b**2 + (a + s)**2), -a, True)
 
-    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), -oo, cond2)
-    assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2),
-        -oo, cond2)
+    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
+    assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
     # TODO general order works, but is a *mess*
     # TODO besseli also works, but is an even greater mess
 
@@ -524,38 +508,33 @@ def test_laplace_transform():
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
         ((-sin(s**2/(2*pi))*fresnels(s/pi) + sin(s**2/(2*pi))/2 -
-        cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, -oo,
-        Abs(periodic_argument(polar_lift(s)**4, oo)) < 2*pi)
+        cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
     assert laplace_transform(fresnelc(t), t, s) == \
         (sin(s**2/(2*pi))*fresnelc(s/pi)/s - cos(s**2/(2*pi))*fresnels(s/pi)/s
-        + sqrt(2)*cos(s**2/(2*pi) + pi/4)/(2*s), -oo,
-        Abs(periodic_argument(polar_lift(s)**4, oo)) < 2*pi)
+        + sqrt(2)*cos(s**2/(2*pi) + pi/4)/(2*s), 0, True)
 
+    cond = Ne(1/s, 1) & (
+        S(0) < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
     assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
-        Matrix([[(1/(s - 1), 1, Abs(periodic_argument(s, oo)) < pi/2), ((s +
-        1)**(-2), -oo, pi/2 >= Abs(periodic_argument(s, oo)))], [((s +
-        1)**(-2), -oo, pi/2 >= Abs(periodic_argument(s, oo))), (1/(s - 1), 1,
-        Abs(periodic_argument(s, oo)) < pi/2)]])
+        Matrix([
+            [(1/(s - 1), 0, cond), ((s + 1)**(-2), 0, True)],
+            [((s + 1)**(-2), 0, True), (1/(s - 1), 0, cond)]
+        ])
 
 
 def test_issue_8368_7173():
     LT = laplace_transform
-    arg = Abs(periodic_argument(s, oo))
-    cond = (pi/2 >= arg) & (arg < pi/2)
-    cond2 = Abs(periodic_argument(polar_lift(s)**2, oo)) < pi
     # hyperbolic
-    assert LT(sinh(x), x, s) == (
-        1/(s**2 - 1), 1, And(
-        pi/2 >= arg,
-        arg < pi/2))
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, cond2)
+    cond = (
+        S(0) < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 0, Ne(1/s, 1) & cond)
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, cond)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 0, Ne(1/s, 1) & cond)
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 2, Ne(s/2, 1) & cond)
+        1/(s**2 - 4), 0, Ne(s/2, 1) & (cond.lhs < cond.rhs - 1))
     # trig (make sure they are not being rewritten in terms of exp)
-    assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), -oo,
-        cond2)
+    assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
 
 def test_inverse_laplace_transform():
@@ -795,35 +774,17 @@ def test_issue_8882():
 
 def test_issue_7173():
     from sympy import cse
-    x0, x1, x2, x3, x4, x5, x6, x7, x8, x9 = symbols('x:10')
+    x0, x1, x2 = symbols('x:3')
     ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
     r, e = cse(ans)
     assert r == [
         (x0, pi/2),
         (x1, Abs(periodic_argument(a, oo))),
-        (x2, x0 >= x1),
-        (x3, x1 < x0),
-        (x4, Abs(periodic_argument(s, oo))),
-        (x5, x0 >= x4),
-        (x6, x4 < x0),
-        (x7, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo))),
-        (x8, x7 < x0),
-        (x9, x0 >= x7)]
+        (x2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)))]
     assert e == [
-        a/(-4*a**2 + s**2), -oo,
-        (x2 | x3) & (x3 | x6) & (x5 | x6) & (x6 | x8) & (x8 | x9) &
-        (x2 | x3 | x5) & (x2 | x3 | x6) & (x2 | x5 | x6) &
-        (x3 | x5 | x6) & (x5 | x6 | x8) & (x5 | x6 | x9) &
-        (x5 | x8 | x9) & (x6 | x8 | x9)]
-    '''
-    Could be the following; note 2nd element here is 0 instead of -oo
-    assert laplace_transform(sinh(a*x)*cosh(a*x), x, s) == \
-    (a/(s**2 - 4*a**2), 0,
-    And(Or(Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <
-    pi/2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <=
-    pi/2), Or(Abs(periodic_argument(a, oo)) < pi/2,
-    Abs(periodic_argument(a, oo)) <= pi/2)))
-    '''
+        a/(-4*a**2 + s**2),
+        0,
+        ((x0 >= x1) | (x1 < x0)) & ((x0 >= x2) | (x2 < x0))]
 
 
 def test_issue_8514():
