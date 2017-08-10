@@ -7,7 +7,7 @@ import random
 
 from sympy.core.numbers import I
 from sympy.simplify.simplify import nsimplify
-from sympy.core.containers import Tuple
+from sympy.core.sympify import sympify
 from sympy.core.numbers import comp
 from sympy.core.symbol import Symbol
 from sympy.core.compatibility import is_sequence, as_int
@@ -44,7 +44,7 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     >>> tn(sin(x)**2 + cos(x)**2, 1, x)
     True
     """
-    f, g, z = Tuple(f, g, z)
+    f, g, z = sympify(f), sympify(g), sympify(z)
     z = [z] if isinstance(z, Symbol) else (f.free_symbols | g.free_symbols)
     reps = list(zip(z, [random_complex_number(a, b, c, d) for zi in z]))
     z1 = f.subs(reps).n()
