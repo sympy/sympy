@@ -114,8 +114,8 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            result = (self._number_symbols, self._not_supported,
-                    "\n".join(lines))
+            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            result = (num_syms, self._not_supported, "\n".join(lines))
         del self._not_supported
         del self._number_symbols
         return result
@@ -361,7 +361,7 @@ class CodePrinter(StrPrinter):
             # A Number symbol that is not implemented here or with _printmethod
             # is registered and evaluated
             self._number_symbols.add((expr,
-                self._print(Float(expr.evalf(self._settings["precision"])))))
+                Float(expr.evalf(self._settings["precision"]))))
             return str(expr)
 
     def _print_Catalan(self, expr):
