@@ -243,8 +243,8 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                     (numer, denom), gen)
             except PolynomialError:
                 raise PolynomialError(filldedent('''
-                    only polynomials and
-                    rational functions are supported in this context'''))
+only polynomials and rational functions are supported in this context.
+                    '''))
 
             if not opt.domain.is_Exact:
                 numer, denom, exact = numer.to_exact(), denom.to_exact(), False
@@ -296,8 +296,9 @@ def reduce_abs_inequality(expr, rel, gen):
     """
     if gen.is_real is False:
          raise TypeError(filldedent('''
-            can't solve inequalities with absolute
-            values containing non-real variables'''))
+can't solve inequalities with absolute values containing non-real
+variables.
+            '''))
 
     def _bottom_up_scan(expr):
         exprs = []
@@ -447,10 +448,20 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
     # real.
-    d = Dummy(real=True) if gen.is_real is None else gen
-    expr = expr.subs(gen, d)
     _gen = gen
-    gen = d
+    if gen.is_real is False:
+        rv = S.EmptySet
+        return rv if not relational else rv.as_relational(_gen)
+    elif gen.is_real is None:
+        gen = Dummy('gen', real=True)
+        try:
+            expr = expr.xreplace({_gen: gen})
+        except TypeError:
+            raise TypeError(filldedent('''
+When gen is real, the relational has a complex part
+which leads to an invalid comparison like I < 0.
+            '''))
+
     rv = None
 
     if expr is S.true:
@@ -484,24 +495,32 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
         if rv is None:
             n, d = e.as_numer_denom()
-            if gen not in n.free_symbols and len(e.free_symbols) > 1:
-                solns = None
-            else:
+            try:
+                if gen not in n.free_symbols and len(e.free_symbols) > 1:
+                    raise ValueError
+                # this might raise ValueError on its own
+                # or it might give None...
                 solns = solvify(e, gen, domain)
-            if solns is None:
+                if solns is None:
+                    # in which case we raise ValueError
+                    raise ValueError
+            except (ValueError, NotImplementedError):
                 raise NotImplementedError(filldedent('''
-The inequality cannot be
-solved using solve_univariate_inequality.'''))
-            singularities = []
-            for d in denoms(expr, gen):
-                singularities.extend(solvify(d, gen, domain))
-            if not continuous:
-                domain = continuous_domain(e, gen, domain)
+The inequality cannot be solved using solve_univariate_inequality.
+                        '''))
 
-            include_x = expr.func(0, 0)
-
+            expanded_e = expand_mul(e)
             def valid(x):
-                v = e.subs(gen, x)
+                # this is used to see if gen=x satisfies the
+                # relational by substituting it into the
+                # expanded form and testing against 0, e.g.
+                # if expr = x*(x + 1) < 2 then e = x*(x + 1) - 2
+                # and expanded_e = x**2 + x - 2; the test is
+                # whether a given value of x satisfies
+                # x**2 + x - 2 < 0
+                #
+                # expanded_e, expr and gen used from enclosing scope
+                v = expanded_e.subs(gen, x)
                 try:
                     r = expand_mul(expr.func(v, 0))
                 except TypeError:
@@ -514,8 +533,17 @@ solved using solve_univariate_inequality.'''))
                     v = v.n(2)
                     if v.is_comparable:
                         return expr.func(v, 0)
+                    # not comparable or couldn't be evaluated
                     raise NotImplementedError(
                         'relationship did not evaluate: %s' % r)
+
+            singularities = []
+            for d in denoms(expr, gen):
+                singularities.extend(solvify(d, gen, domain))
+            if not continuous:
+                domain = continuous_domain(e, gen, domain)
+
+            include_x = '=' in expr.rel_op and expr.rel_op != '!='
 
             try:
                 discontinuities = set(domain.boundary -
@@ -543,7 +571,7 @@ solved using solve_univariate_inequality.'''))
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 
-            sol_sets = [S.EmptySet]
+            empty = sol_sets = [S.EmptySet]
 
             start = domain.inf
             if valid(start) and start.is_finite:
@@ -593,6 +621,9 @@ def _pt(start, end):
         if (end.is_infinite and end.is_negative or
                 start.is_infinite and start.is_positive):
             start, end = end, start
+        # if possible, use a multiple of self which has
+        # better behavior when checking assumptions than
+        # an expression obtained by adding or subtracting 1
         if end.is_infinite:
             if start.is_positive:
                 pt = start*2
@@ -749,8 +780,8 @@ def _reduce_inequalities(inequalities, symbols):
                 continue
             else:
                 raise NotImplementedError(filldedent('''
-                    inequality has more than one
-                    symbol of interest'''))
+inequality has more than one symbol of interest.
+                    '''))
 
         if expr.is_polynomial(gen):
             poly_part.setdefault(gen, []).append((expr, rel))
@@ -802,7 +833,8 @@ def reduce_inequalities(inequalities, symbols=[]):
     symbols = (set(symbols) or gens) & gens
     if any(i.is_real is False for i in symbols):
         raise TypeError(filldedent('''
-            inequalities cannot contain symbols that are not real.'''))
+inequalities cannot contain symbols that are not real.
+            '''))
 
     # make vanilla symbol real
     recast = dict([(i, Dummy(i.name, real=True))
