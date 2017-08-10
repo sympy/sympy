@@ -5,7 +5,7 @@ from sympy import sqrt
 from sympy.core import S
 
 from sympy.integrals.intpoly import (decompose, best_origin,
-                                     polytope_integrate, polytope_integrate3d)
+                                     polytope_integrate)
 
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
@@ -163,9 +163,9 @@ def test_polytope_integrate():
              [(0, 6, 6), (0, 6, 0), (0, 0, 0), (0, 0, 6)],
              [(0, 0, 0), (0, 6, 0), (3, 6, 0), (3, 0, 0)]]
 
-    assert polytope_integrate3d(cube, x**2 + y**2 + x*y + z**2) == S(15625)/4
-    assert polytope_integrate3d(cube2, 1) == S(-162)
-    assert polytope_integrate3d(cube, 1) == 125
+    assert polytope_integrate(cube, x**2 + y**2 + x*y + z**2) == S(15625)/4
+    assert polytope_integrate(cube2, 1) == S(-162)
+    assert polytope_integrate(cube, 1) == 125
 
 
 @XFAIL
