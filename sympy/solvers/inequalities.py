@@ -4,8 +4,9 @@ from __future__ import print_function, division
 
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
-from sympy.sets import Interval
+from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.sets import Interval
 from sympy.sets.sets import FiniteSet, Union
 from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
@@ -610,39 +611,117 @@ def _pt(start, end):
 
 
 def _solve_inequality(ie, s, linear=False):
-    """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. If linear is True, only return an
-        inequality with the symbol isolated on the lhs if the
-        expression is linear."""
+    """Return the inequality with s isolated on the left, if possible.
+    If the relationship is non-linear, a solution involving And or Or
+    may be returned. False or True are returned if the relationship
+    is never True or always True, respectively.
+
+    If `linear` is True (default is False) an `s`-dependent expression
+    will be isoloated on the left, if possible
+    but it will not be solved for `s` unless the expression is linear
+    in `s`. Furthermore, only "safe" operations which don't change the
+    sense of the relationship are applied: no division by an unsigned
+    value is attempted unless the relationship involves Eq or Ne and
+    no division by a value not known to be nonzero is ever attempted.
+
+    Examples
+    ========
+
+    >>> from sympy import Eq, Symbol
+    >>> from sympy.solvers.inequalities import _solve_inequality as f
+    >>> from sympy.abc import x, y
+
+    For linear expressions, the symbol can be isolated:
+
+    >>> f(x - 2 < 0, x)
+    x < 2
+    >>> f(-x - 6 < x, x)
+    x > -3
+
+    Sometimes nonlinear relationships will be False
+
+    >>> f(x**2 + 4 < 0, x)
+    False
+
+    Or they may involve more than one region of values:
+
+    >>> f(x**2 - 4 < 0, x)
+    (-2 < x) & (x < 2)
+
+    To restrict the solution to a relational, set linear=True
+    and only the x-dependent portion will be isolated on the left:
+
+    >>> f(x**2 - 4 < 0, x, linear=True)
+    x**2 < 4
+
+    Division of only nonzero quantities is allowed, so x cannot
+    be isolated by dividing by y:
+
+    >>> y.is_nonzero is None  # it is unknown whether it is 0 or not
+    True
+    >>> f(x*y < 1, x)
+    x*y < 1
+
+    And while an equality (or unequality) still holds after dividing by a
+    non-zero quantity
+
+    >>> nz = Symbol('nz', nonzero=True)
+    >>> f(Eq(x*nz, 1), x)
+    Eq(x, 1/nz)
+
+    the sign must be known for other inequalities involving > or <:
+
+    >>> f(x*nz <= 1, x)
+    nz*x <= 1
+    >>> p = Symbol('p', positive=True)
+    >>> f(x*p <= 1, x)
+    x <= 1/p
+    """
     if s not in ie.free_symbols:
         return ie
     if ie.rhs == s:
         ie = ie.reversed
     if ie.lhs == s and s not in ie.rhs.free_symbols:
         return ie
-    expr = ie.lhs - ie.rhs  # XXX don't we have to watch for cancellation of non-real terms?
+    expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)
         if p.degree() == 0:
             return ie.func(p.as_expr(), 0)
-        if p.degree() != 1:
-            if linear:
-                return ie
+        if not linear and p.degree() > 1:
+            # handle in except clause
             raise NotImplementedError
     except (PolynomialError, NotImplementedError):
-        # nonlinear solution attempt
-        try:
-            return reduce_rational_inequalities([[ie]], s)
-        except PolynomialError:
-            return solve_univariate_inequality(ie, s)
-    # linear solution
-    a, b = p.all_coeffs()
-    if a.is_positive or ie.rel_op in ('!=', '=='):
-        return ie.func(s, -b/a)
-    elif a.is_negative:
-        return ie.reversed.func(s, -b/a)
+        if not linear:
+            try:
+                return reduce_rational_inequalities([[ie]], s)
+            except PolynomialError:
+                return solve_univariate_inequality(ie, s)
+        else:
+            p = Poly(expr)
+
+    e = p.as_expr()  # this is in exanded form
+    # Do a safe inversion of e, moving non-s terms
+    # to the rhs and dividing by a nonzero factor
+    # as long as sign is known unless the relationship
+    # involves Eq/Ne
+    rhs = 0
+    b, ax = e.as_independent(s, as_Add=True)
+    e -= b
+    rhs -= b
+    ef = factor_terms(e)
+    a, e = ef.as_independent(s, as_Add=False)
+    if (a.is_zero is None or  # don't divide by potential 0
+            a.is_negative ==
+            a.is_positive == None and  # if sign is not known then
+            ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
+        e = ef
+        a = S.One
+    rhs /= a
+    if a.is_positive:
+        return ie.func(e, rhs)
     else:
-        raise NotImplementedError
+        return ie.reversed.func(e, rhs)
 
 
 def _reduce_inequalities(inequalities, symbols):

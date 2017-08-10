@@ -4,9 +4,11 @@ from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
 from sympy.solvers.inequalities import (reduce_inequalities,
-    solve_poly_inequality as psolve, reduce_rational_inequalities,
-    solve_univariate_inequality as isolve, reduce_abs_inequality,
-    _solve_inequality)
+                                        solve_poly_inequality as psolve,
+                                        reduce_rational_inequalities,
+                                        solve_univariate_inequality as isolve,
+                                        reduce_abs_inequality,
+                                        _solve_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -388,8 +390,20 @@ def test__solve_inequality():
     assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
     ie = Eq(S.One, y)
     assert _solve_inequality(ie, x) == ie
+    for fx in (x**2, exp(x), sin(x) + cos(x), x*(1 + x)):
+        for c in (0, 1):
+            e = 2*fx - c > 0
+            assert _solve_inequality(e, x, linear=True) == (
+                fx > c/2)
+    assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x, linear=True) == (
+        x*(x + 1) < S.Half)
+    assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)
+    nz = Symbol('nz', nonzero=True)
+    assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)
+    assert _solve_inequality(x*nz < 1, x) == (x*nz < 1)
     a = Symbol('a', positive=True)
     assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)
+    assert _solve_inequality(a/x > 1, x, linear=True) == (1/x > 1/a)
 
 
 def test__pt():
