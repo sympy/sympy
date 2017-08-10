@@ -3533,6 +3533,8 @@ class PermutationGroup(Basic):
         '''
         Return a p-Sylow subgroup of the group.
 
+        The algorithm is described in [1], Chapter 4, Section 7
+
         '''
         from sympy.combinatorics.homomorphisms import (homomorphism,
             orbit_homomorphism, block_homomorphism)

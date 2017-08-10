@@ -5,6 +5,7 @@ from .pretty import pager_print, pretty, pretty_print, pprint, \
 from .latex import latex, print_latex
 from .mathml import mathml, print_mathml
 from .python import python, print_python
+from .pycode import pycode
 from .ccode import ccode, print_ccode
 from .glsl import glsl_code, print_glsl
 from .cxxcode import cxxcode

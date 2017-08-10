@@ -260,6 +260,7 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
         raise NotImplementedError("Checking if the homomorphism is well-defined "
             "is not implemented for permutation groups. Use check=False if you "
             "would like to create the homomorphism")
+
     if not isinstance(domain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")
     if not isinstance(codomain, (PermutationGroup, FpGroup, FreeGroup)):
@@ -338,7 +339,7 @@ def _check_homomorphism(domain, codomain, images):
 def orbit_homomorphism(group, omega):
     '''
     Return the homomorphism induced by the action of the permutation
-    group `group` on the set `omega`.
+    group `group` on the set `omega` that is closed under the action.
 
     '''
     from sympy.combinatorics import Permutation
@@ -361,7 +362,7 @@ def block_homomorphism(group, blocks):
     group `group` on the block system `blocks`. The latter should be
     of the same form as returned by the `minimal_block` method for
     permutation groups, namely a list of length `group.degree` where
-    the i-th entry is the representative of the block i belongs to.
+    the i-th entry is a representative of the block i belongs to.
 
     '''
     from sympy.combinatorics import Permutation
