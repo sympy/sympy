@@ -504,7 +504,7 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_While(self, expr):
-        return 'while ({condition}) {{\n{body}\n}}'.format(**expr.printed_kwargs(self))
+        return 'while ({condition}) {{\n{body}\n}}'.format(**expr.attrs(apply=self._print))
 
     def _print_Scope(self, expr):
         return '{\n%s\n}' % self._print(expr.body)

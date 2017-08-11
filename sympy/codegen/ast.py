@@ -465,7 +465,8 @@ class For(Basic):
 class Token(Basic):
     """ Similar to Symbol, but takes no assumptions.
 
-    Defining fields are set in __slots__.
+    Defining fields are set in __slots__. Attributes (defined in __slots__) are
+    allowed to contain instances of Basic or strings.
     """
 
     __slots__ = []
@@ -498,16 +499,22 @@ class Token(Basic):
             ['%s=%s' % (k, printer._print(getattr(self, k))) for k in self.__slots__]
         ))
 
+    def attrs(self, exclude=(), apply=lambda arg: arg):
+        return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
+
     @property
-    def args(self):
-        return self._hashable_content()
+    def _argset(self):
+        return set(self.attrs().values())
 
-    def kwargs(self, exclude=()):
-        return {k: v for k, v in zip(self.__slots__, self.args) if k not in exclude}
-
-    def printed_kwargs(self, printer, exclude=()):
-        return {k: printer._print(v) for k, v in self.kwargs(exclude=exclude).items()}
-
+    def atoms(self):
+        result = set()
+        for v in self._argset:
+            if isinstance(v, string_types):
+                continue
+            elif isinstance(v, Basic):
+                result.add(v)
+            else:
+                raise ValueError("Not Basic or str: %s" % repr(v))
 
 
 class Type(Token):
@@ -856,8 +863,8 @@ float80 = FloatType('float80', 80, nexp=15, nmant=63)  # x86 extended precision 
 float128 = FloatType('float128', 128, nexp=15, nmant=112)  # IEEE 754 binary128, Quadruple precision
 float256 = FloatType('float256', 256, nexp=19, nmant=236)  # IEEE 754 binary256, Octuple precision
 
-complex64 = ComplexType('complex64', nbits=64, **float32.kwargs(exclude=('nbits',)))
-complex128 = ComplexType('complex128', nbits=128, **float64.kwargs(exclude=('nbits',)))
+complex64 = ComplexType('complex64', nbits=64, **float32.attrs(exclude=('nbits',)))
+complex128 = ComplexType('complex128', nbits=128, **float64.attrs(exclude=('nbits',)))
 
 # Generic types (precision may be chosen by code printers):
 real = Type('real')
@@ -1059,12 +1066,12 @@ class While(Token):
     --------
 
     >>> from sympy import symbols, Gt, Abs
-    >>> from sympy.codegen import Assignment
+    >>> from sympy.codegen import aug_assign, Assignment, While
     >>> x, dx = symbols('x dx')
     >>> expr = 1 - x**2
     >>> whl = While(Gt(Abs(dx), 1e-9), [
     ...     Assignment(dx, -expr/expr.diff(x)),
-    ...     AddAugmentedAssignment(x, dx)
+    ...     aug_assign(x, '+', dx)
     ... ])
 
     """
@@ -1146,8 +1153,7 @@ class FunctionPrototype(Token):
     def from_FunctionDefinition(cls, func_def):
         if not isinstance(func_def, FunctionDefinition):
             raise TypeError("func_def is not an instance of FunctionDefiniton")
-        return_type, name, inputs, body = func_def.args
-        return cls(return_type, name, inputs)
+        return cls(**func_def.attrs(exclude=('body',)))
 
 
 class FunctionDefinition(FunctionPrototype):
@@ -1176,8 +1182,7 @@ class FunctionDefinition(FunctionPrototype):
     def from_FunctionPrototype(cls, func_proto, body):
         if not isinstance(func_proto, FunctionPrototype):
             raise TypeError("func_proto is not an instance of FunctionPrototype")
-        return_type, name, inputs = func_proto.args
-        return cls(return_type, name, inputs, body)
+        return cls(body=body, **func_proto.attrs())
 
 
 class ReturnStatement(Basic):

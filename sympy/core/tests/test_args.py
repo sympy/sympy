@@ -248,7 +248,7 @@ def test_sympy__codegen__ast__Scope():
 
 def test_sympy__codegen__ast__Statement():
     from sympy.codegen.ast import Statement, AddAugmentedAssignment
-    assert _test_args(Statement([AddAugmentedAssignment(x, -1)]))
+    assert _test_args(Statement(AddAugmentedAssignment(x, -1)))
 
 
 def test_sympy__codegen__ast__PrintStatement():
