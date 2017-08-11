@@ -149,7 +149,7 @@ class CompilerRunner(object):
                     ['-l'+x for x in self.libraries] +
                     self.linkline)
         counted = []
-        for envvar in re.findall('\$\{(\w+)\}', ' '.join(cmd)):
+        for envvar in re.findall(r'\$\{(\w+)\}', ' '.join(cmd)):
             if os.getenv(envvar) is None:
                 if envvar not in counted:
                     counted.append(envvar)

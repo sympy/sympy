@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
-""" This module is private, i.e. external code should not depend on it.
-
-These functions are used by tests run as part of continuous integration.
-Once the implementation is mature (it should support the major
-platforms: Windows, OS X & Linux) it may become official API which
- may be relied upon by downstream libraries. Until then API may break
-without prior notice.
-"""
 
 import os
 import re
 import sys
 import tempfile
+import warnings
 from distutils.sysconfig import get_config_var, get_config_vars
 
 from .util import (
@@ -29,16 +22,15 @@ from .runners import (
 )
 
 
-sharedext = get_config_var('EXT_SUFFIX')
+sharedext = get_config_var('EXT_SUFFIX' if sys.version_info >= (3, 3) else 'SO')
 
-if os.name == 'posix':  # Future improvement to make cross-platform
-    # flagprefix = '-'
+if os.name == 'posix':
     objext = '.o'
 elif os.name == 'nt':
-    # flagprefix = '/' <-- let's assume mingw compilers...
     objext = '.obj'
 else:
-    raise ImportError("Unknown os.name: {}".format(os.name))
+    warning.warng("Unknown os.name: {}".format(os.name))
+    objext = '.o'
 
 
 def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=False,
@@ -61,7 +53,7 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
         Reproduce directory structure in `destdir`. default: ``False``
     per_file_kwargs: dict
         Dict mapping instances in ``files`` to keyword arguments.
-    \*\*kwargs: dict
+    \\*\\*kwargs: dict
         Default keyword arguments to pass to ``Runner``.
 
     """
@@ -146,7 +138,7 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
         C++ objects? default: ``False``.
     fort: bool
         Fortran objects? default: ``False``.
-    **kwargs: dict
+    \\*\\*kwargs: dict
         Keyword arguments passed to ``Runner``.
 
     Returns
@@ -331,7 +323,7 @@ def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs
         Working directory and root of relative paths. If ``None``: current dir.
     inc_py: bool
         Add Python include path to kwarg "include_dirs". Default: False
-    **kwargs: dict
+    \\*\\*kwargs: dict
         keyword arguments passed to Runner or pyx2obj
 
     """
@@ -503,8 +495,7 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
 
     Examples
     --------
-    >>> mod = compile_link_import_py_ext(['fft.f90', 'convolution.cpp',
-        'fft_wrapper.pyx'])  # doctest: +SKIP
+    >>> mod = compile_link_import_py_ext(['fft.f90', 'conv.cpp', '_fft.pyx'])  # doctest: +SKIP
     >>> Aprim = mod.fft(A)  # doctest: +SKIP
 
     """
@@ -533,7 +524,7 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
     sources : iterable of name/source pair tuples
     build_dir : string (default: None)
         path to cache_dir. None implies use a temporary directory.
-    **kwargs:
+    \\*\\*kwargs:
         keyword arguments passed onto `compile_link_import_py_ext`
     """
     build_dir = build_dir or tempfile.mkdtemp()
