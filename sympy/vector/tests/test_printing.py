@@ -148,8 +148,8 @@ def test_latex_printing():
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
     assert latex(v[5]) == ('(a)\\mathbf{\\hat{i}_{N}} + ' +
                            '(- b)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('(\mathbf{{x}_{N}} + a^{2})\mathbf{\hat{i}_' +
-                          '{N}} + \mathbf{\hat{k}_{N}}')
+    assert latex(v[6]) == ('(\\mathbf{{x}_{N}} + a^{2})\\mathbf{\\hat{i}_' +
+                          '{N}} + \\mathbf{\\hat{k}_{N}}')
     assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{x}_' +
                            '{C}}^{2} - \\int f{\\left (b \\right )}\\,' +
                            ' db)\\mathbf{\\hat{k}_{N}}')
