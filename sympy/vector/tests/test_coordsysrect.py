@@ -400,6 +400,39 @@ def test_rotation_trans_equations():
     assert c._rotation_trans_equations(c._inverse_rotation_matrix()) == \
            (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)
 
+
+def test_transformation_composition():
+    a = CoordSys3D('a')
+    from sympy import symbols
+    q0, q1, q2, q3, q4 = symbols('q0 q1 q2 q3 q4')
+    eq1 = a._rotation_trans_equations()
+    eq2 = a._transformation_equations()
+    assert a._transformation_composition(eq1, eq2) == (a.x, a.y, a.z)
+    b = a.orient_new_axis('b', q0, a.k)
+    eq1 = b._transformation_equations()
+    eq2 = b._rotation_trans_equations()
+    assert b._transformation_composition(eq1, eq2) ==\
+           (sin(q0)*b.y + cos(q0)*b.x, -sin(q0)*b.x + cos(q0)*b.y, b.z)
+    b._connect_to_standard_cartesian('spherical')
+    eq1 = b._rotation_trans_equations()
+    eq2 = b._transformation_equations()
+    assert b._transformation_composition(eq1, eq2) ==\
+           (sin(q0)*sin(b.y)*sin(b.z)*b.x + sin(b.y)*cos(q0)*cos(b.z)*b.x,
+            -sin(q0)*sin(b.y)*cos(b.z)*b.x + sin(b.y)*sin(b.z)*cos(q0)*b.x,
+             cos(b.y)*b.x)
+    d = a.orient_new_space('d', q1, q2, q3, '123')
+    d._rotation_trans_equations()
+    d._connect_to_standard_cartesian('cylindrical', inverse=False)
+    eq1 = d._rotation_trans_equations()
+    eq2 = d._transformation_equations()
+    assert d._transformation_composition(eq1, eq2) == \
+        (-sin(q2)*d.z + sin(q3)*sin(d.y)*cos(q2)*d.x + cos(q2)*cos(q3)*cos(d.y)*d.x,
+         (sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3))*sin(d.y)*d.x +
+         (sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1))*cos(d.y)*d.x + sin(q1)*cos(q2)*d.z,
+         (sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3))*cos(d.y)*d.x + (-sin(q1)*cos(q3) +
+        sin(q2)*sin(q3)*cos(q1))*sin(d.y)*d.x + cos(q1)*cos(q2)*d.z)
+
+
 def test_translation_trans_equations():
     from sympy import symbols
     q0 = symbols('q0')

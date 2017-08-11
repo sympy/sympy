@@ -161,7 +161,7 @@ class CoordSys3D(Basic):
         obj._h2 = S.One
         obj._h3 = S.One
 
-        obj._transformation_eqs = obj._x, obj._y, obj._y
+        obj._transformation_eqs = obj._x, obj._y, obj._z
 
         obj._inv_transformation_eqs = lambda x, y, z: (x, y, z)
 
@@ -229,6 +229,9 @@ class CoordSys3D(Basic):
 
         else:
             raise ValueError("Wrong set of parameter.")
+
+        if not self._parent_rotation_matrix.equals(eye(3)):
+            pass
 
         if not self._check_orthogonality():
             raise ValueError("The transformation equation does not "
@@ -406,6 +409,19 @@ class CoordSys3D(Basic):
         trans_eq3 = matrix[6]*self.x + matrix[7]*self.y + matrix[8]*self.z
 
         return trans_eq1, trans_eq2, trans_eq3
+
+
+    def _transformation_composition(self, equations_set1, equations_set2):
+        from sympy import Dummy
+        x = Dummy('x')
+        y = Dummy('y')
+        z = Dummy('z')
+        eq = [i.subs(list(zip(self.base_scalars(), (x, y, z))))
+              for i in equations_set1]
+
+        eq = [i.subs(list(zip((x, y, z), equations_set2)))
+              for i in eq]
+        return tuple(eq)
 
     def _translation_trans_equations(self, inverse=False):
         """
