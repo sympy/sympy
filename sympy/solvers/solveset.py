@@ -620,7 +620,7 @@ def solve_decomposition(f, symbol, domain):
         result = S.EmptySet
         if isinstance(y_s, FiniteSet):
             for y in y_s:
-                solutions = solveset(Eq(g, y), symbol, domain)
+                solutions = _solveset(g - y, symbol, domain, _check=True)
                 if not isinstance(solutions, ConditionSet):
                     result += solutions
 
@@ -632,7 +632,7 @@ def solve_decomposition(f, symbol, domain):
                 iter_iset = y_s.args
 
             for iset in iter_iset:
-                new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
+                new_solutions = _solveset(iset.lamda.expr - g, symbol, domain, _check=True)
                 dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
                 base_set = iset.base_set
                 if isinstance(new_solutions, FiniteSet):
@@ -923,15 +923,13 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    res = _solveset(f, symbol, domain, _check=True)
-
-    if isinstance(res, ConditionSet):
+    if decompogen(f, symbol)[0] == f:
+        return _solveset(f, symbol, domain, _check=True)
+    else:
         try:
             return solve_decomposition(f, symbol, domain)
         except:
-            return ConditionSet(symbol, Eq(f, 0), domain)
-    else:
-        return res
+            return _solveset(f, symbol, domain, _check=True)
 
 
 def solveset_real(f, symbol):

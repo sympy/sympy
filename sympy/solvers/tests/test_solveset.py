@@ -41,7 +41,6 @@ n = Symbol('n', real=True)
 
 
 def test_invert_real():
-
     x = Symbol('x', real=True)
     y = Symbol('y')
     n = Symbol('n')
@@ -757,12 +756,13 @@ def test_solve_trig():
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
         imageset(Lambda(n, 2*n*pi), S.Integers)
 
+
 def test_issue_13084():
     n = Dummy('n')
-    f2 = sin(2*x)**2 + 2* sin(2*x) + 1
-    f3 = sin(2*x) + 1
-    assert solveset(f2, x, S.Reals) == imageset(Lambda(n, pi*(4*n + 3)/4), S.Integers)
-    assert solveset(f3, x, S.Reals) == imageset(Lambda(n, pi*(4*n + 3)/4), S.Integers)
+    f1 = sin(2*x)**2 + 2* sin(2*x) + 1
+    f2 = sin(2*x) + 1
+    assert solveset(f1, x, S.Reals) == ImageSet(Lambda(n, n*pi + 3*pi/4), S.Integers)
+    assert solveset(f1, x, S.Reals) == ImageSet(Lambda(n, n*pi + 3*pi/4), S.Integers)
 
 @XFAIL
 def test_solve_trig_abs():
@@ -903,29 +903,33 @@ def test_solveset():
     assert solveset(Eq(exp(x), 1), x) == imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers)
 
+
 def test_conditionset():
-    n = Dummy('n')
     assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) == \
         ConditionSet(x, True, S.Reals)
-    assert solveset(x**2 + x*sin(x) - 1, x, domain=S.Reals) == \
-        ConditionSet(x, Eq(x**2 + x*sin(x) - 1, 0), S.Reals)
 
-    assert solveset(sin(Abs(x)) - x, x, domain=S.Reals) == \
+    assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
+        ConditionSet(x, Eq(x*(x + sin(x)) - 1, 0), S.Reals)
+
+    assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals) == \
         ConditionSet(x, Eq(-x + sin(Abs(x)), 0), Interval(-oo, oo))
 
-    assert solveset(-I*(exp(I*x) - exp(-I*x))/2 - 1, x) == \
+    assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x) == \
         imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
 
     assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
         ConditionSet(x, x + sin(x) > 1, S.Reals)
+
 
 @XFAIL
 def test_conditionset_equality():
     ''' Checking equality of different representations of ConditionSet'''
     assert solveset(Eq(tan(x), y), x) == ConditionSet(x, Eq(tan(x), y), S.Complexes)
 
+
 def test_solveset_domain():
     x = Symbol('x')
+
     assert solveset(x**2 - x - 6, x, Interval(0, oo)) == FiniteSet(3)
     assert solveset(x**2 - 1, x, Interval(0, oo)) == FiniteSet(1)
     assert solveset(x**4 - 16, x, Interval(0, 10)) == FiniteSet(2)
@@ -936,7 +940,7 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq(exp(x + x**(-2)) + exp(2*x + 2/x**2), 0), S.Reals)
+    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
@@ -1004,9 +1008,6 @@ def test_linsolve():
     assert linsolve(M, (x1, x2, x3, x4)) == sol
     assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
     assert linsolve(system1, (x1, x2, x3, x4)) == sol
-
-    # raise ValueError if no symbols are given
-    raises(ValueError, lambda: linsolve(system1))
 
     # raise ValueError if, A & b is not given as tuple
     raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
@@ -1506,7 +1507,7 @@ def test_simplification():
 def test_issue_10555():
     f = Function('f')
     assert solveset(f(x) - pi/2, x, S.Reals) == \
-        ConditionSet(x, Eq(f(x) - pi/2, 0), S.Reals)
+        ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
 
 
 def test_issue_8715():
