@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.core.relational import Relational, Eq, Ge, Lt, Ne
 from sympy.sets import Interval
 from sympy.sets.sets import FiniteSet, Union
 from sympy.sets.fancysets import ImageSet
@@ -707,7 +707,15 @@ def _solve_inequality(ie, s, linear=False):
     >>> p = Symbol('p', positive=True)
     >>> f(x*p <= 1, x)
     x <= 1/p
+
+    When there are denominators in the original expression that
+    are removed by expansion, conditions for them will be returned
+    as part of the result:
+
+    >>> f(x < x*(2/x - 1), x)
+    (x < 1) & Ne(x, 0)
     """
+    from sympy.solvers.solvers import denoms
     if s not in ie.free_symbols:
         return ie
     if ie.rhs == s:
@@ -715,11 +723,12 @@ def _solve_inequality(ie, s, linear=False):
     if ie.lhs == s and s not in ie.rhs.free_symbols:
         return ie
     expr = ie.lhs - ie.rhs
+    rv = None
     try:
         p = Poly(expr, s)
         if p.degree() == 0:
-            return ie.func(p.as_expr(), 0)
-        if not linear and p.degree() > 1:
+            rv = ie.func(p.as_expr(), 0)
+        elif not linear and p.degree() > 1:
             # handle in except clause
             raise NotImplementedError
     except (PolynomialError, NotImplementedError):
@@ -731,28 +740,37 @@ def _solve_inequality(ie, s, linear=False):
         else:
             p = Poly(expr)
 
-    e = p.as_expr()  # this is in exanded form
-    # Do a safe inversion of e, moving non-s terms
-    # to the rhs and dividing by a nonzero factor
-    # as long as sign is known unless the relationship
-    # involves Eq/Ne
-    rhs = 0
-    b, ax = e.as_independent(s, as_Add=True)
-    e -= b
-    rhs -= b
-    ef = factor_terms(e)
-    a, e = ef.as_independent(s, as_Add=False)
-    if (a.is_zero is None or  # don't divide by potential 0
-            a.is_negative ==
-            a.is_positive == None and  # if sign is not known then
-            ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
-        e = ef
-        a = S.One
-    rhs /= a
-    if a.is_positive:
-        return ie.func(e, rhs)
-    else:
-        return ie.reversed.func(e, rhs)
+    e = expanded = p.as_expr()  # this is in exanded form
+    if rv is None:
+        # Do a safe inversion of e, moving non-s terms
+        # to the rhs and dividing by a nonzero factor if
+        # the relational is Eq/Ne; for other relationals
+        # the sign must also be positive or negative
+        rhs = 0
+        b, ax = e.as_independent(s, as_Add=True)
+        e -= b
+        rhs -= b
+        ef = factor_terms(e)
+        a, e = ef.as_independent(s, as_Add=False)
+        if (a.is_zero != False or  # don't divide by potential 0
+                a.is_negative ==
+                a.is_positive == None and  # if sign is not known then
+                ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
+            e = ef
+            a = S.One
+        rhs /= a
+        if a.is_positive:
+            rv = ie.func(e, rhs)
+        else:
+            rv = ie.reversed.func(e, rhs)
+    # return conditions under which the value is
+    # valid, too.
+    conds = [rv]
+    beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
+    current_denoms = denoms(expanded)
+    for d in beginning_denoms - current_denoms:
+        conds.append(_solve_inequality(Ne(d, 0), s, linear=linear))
+    return And(*conds)
 
 
 def _reduce_inequalities(inequalities, symbols):
