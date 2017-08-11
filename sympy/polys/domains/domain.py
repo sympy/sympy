@@ -343,7 +343,7 @@ class Domain(object):
 
     def __ne__(self, other):
         """Returns ``False`` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return not self == other
 
     def map(self, seq):
         """Rersively apply ``self`` to all elements of ``seq``. """

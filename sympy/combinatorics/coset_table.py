@@ -681,7 +681,7 @@ class CosetTable(DefaultPrinting):
                         table[alpha][A_dict[x]] = beta
 
     def standardize(self):
-        """
+        r"""
         A coset table is standardized if when running through the cosets and
         within each coset through the generator images (ignoring generator
         inverses), the cosets appear in order of the integers

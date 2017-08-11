@@ -94,10 +94,11 @@ Here is a simple example of printing a C version of a SymPy expression::
     -Z⋅e ⋅k
     ────────
       2⋅r
-    >>> ccode(expr, standard='C99')
-    -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to="E", standard='C99')
-    E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
+    >>> ccode(expr)
+    -1.0/2.0*Z*pow(e, 2)*k/r
+    >>> from sympy.codegen.ast import real, float80
+    >>> ccode(expr, assign_to="E", type_aliases={real: float80})
+    E = -1.0L/2.0L*Z*powl(e, 2)*k/r;
 
 To generate code with some math functions provided by e.g. the C99 standard we need
 to import functions from :mod:`sympy.codegen.cfunctions`::
@@ -566,4 +567,10 @@ Fortran specific functions
 --------------------------
 
 .. automodule:: sympy.codegen.ffunctions
+    :members:
+
+Classes for abstract syntax trees (sympy.codegen.ast)
+-----------------------------------------------------
+
+.. automodule:: sympy.codegen.ast
     :members:

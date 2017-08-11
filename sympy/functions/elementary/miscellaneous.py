@@ -354,6 +354,32 @@ class MinMaxBase(Expr, LatticeOp):
             obj._argset = _args
             return obj
 
+    def _eval_simplify(self, ratio, measure):
+        # simplify Min(foo, y, Max(foo, x)) to Min(foo, y)
+        # Like And/Or, anything in common between the two
+        # is cause to eliminate the opposite arg.
+        cls = self.func
+        if cls == Min:
+            op = Max
+        elif cls == Max:
+            op = Min
+        else:
+            op = None
+        if op:
+            unnested = set()
+            nested = []
+            remove = []
+            for a in self.args:
+                if isinstance(a, op):
+                    nested.append(a)
+                else:
+                    unnested.add(a)
+            N = len(nested) - 1
+            for i, n in enumerate(reversed(nested)):
+                if set(n.args) & unnested:
+                    nested.pop(N - i)
+            return cls(*(list(unnested) + nested))
+
     @classmethod
     def _new_args_filter(cls, arg_sequence):
         """

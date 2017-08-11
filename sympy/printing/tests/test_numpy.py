@@ -15,7 +15,7 @@ def test_numpy_piecewise_regression():
     See gh-9747 and gh-9749 for details.
     """
     p = Piecewise((1, x < 0), (0, True))
-    assert NumPyPrinter().doprint(p) == 'select([less(x, 0),True], [1,0], default=nan)'
+    assert NumPyPrinter().doprint(p) == 'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
 
 
 def test_sum():

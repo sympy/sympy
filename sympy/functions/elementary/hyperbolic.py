@@ -847,9 +847,6 @@ class asinh(Function):
             return self.func(arg)
 
     def _eval_rewrite_as_log(self, x):
-        """
-        Rewrites asinh as log function.
-        """
         return log(x + sqrt(x**2 + 1))
 
     def inverse(self, argindex=1):
@@ -954,6 +951,9 @@ class acosh(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x):
+        return log(x + sqrt(x + 1) * sqrt(x - 1))
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1029,6 +1029,9 @@ class atanh(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x):
+        return (log(1 + x) - log(1 - x)) / 2
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1100,6 +1103,9 @@ class acoth(Function):
             return S.ImaginaryUnit*S.Pi/2
         else:
             return self.func(arg)
+
+    def _eval_rewrite_as_log(self, x):
+        return (log(1 + 1/x) - log(1 - 1/x)) / 2
 
     def inverse(self, argindex=1):
         """
@@ -1232,7 +1238,7 @@ class asech(Function):
         return sech
 
     def _eval_rewrite_as_log(self, arg):
-        return log(1/arg + sqrt(1/arg**2 - 1))
+        return log(1/arg + sqrt(1/arg - 1) * sqrt(1/arg + 1))
 
 
 class acsch(Function):

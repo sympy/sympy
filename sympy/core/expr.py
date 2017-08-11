@@ -1861,7 +1861,7 @@ class Expr(Basic, EvalfMixin):
         """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
         should always be positive and ``Mul(*foo.as_content_primitive()) == foo``.
-        The primitive need no be in canonical form and should try to preserve
+        The primitive need not be in canonical form and should try to preserve
         the underlying structure if possible (i.e. expand_mul should not be
         applied to self).
 
