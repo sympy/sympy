@@ -382,7 +382,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, fu=False, rewrite=False):
     """
     Simplifies the given expression.
 
@@ -504,6 +504,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+    
+    If rewrite is True then it attempts to rewrite given expression in
+    all possible terms, simplify rewritten expressions, and return the
+    simplest one.
     """
     expr = sympify(expr)
 
@@ -517,6 +521,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product
+    from sympy.core.basic import preorder_traversal
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -609,6 +614,17 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
+
+    if rewrite:
+        rewritables = set()
+        for sub in preorder_traversal(original_expr):
+            rewritables.update([attr[17:] for attr in sub.func.__dict__.keys()
+                if attr[:17] == '_eval_rewrite_as_'])
+
+        rewritten = [simplify(original_expr.rewrite(func), ratio=ratio,
+            measure=measure, fu=fu) for func in rewritables]
+        rewritten.append(expr)
+        expr = shorter(*rewritten)
 
     return expr
 
