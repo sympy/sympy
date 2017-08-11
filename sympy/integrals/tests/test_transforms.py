@@ -465,7 +465,7 @@ def test_laplace_transform():
 
     # test a bug
     spos = symbols('s', positive=True)
-    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), 0)
+    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), 1)
 
     # basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
@@ -517,22 +517,20 @@ def test_laplace_transform():
         S(0) < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
     assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
         Matrix([
-            [(1/(s - 1), 0, cond), ((s + 1)**(-2), 0, True)],
-            [((s + 1)**(-2), 0, True), (1/(s - 1), 0, cond)]
+            [(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],
+            [((s + 1)**(-2), 0, True), (1/(s - 1), 1, True)]
         ])
 
 
 def test_issue_8368_7173():
     LT = laplace_transform
     # hyperbolic
-    cond = (
-        S(0) < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 0, Ne(1/s, 1) & cond)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, True)
     assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 0, Ne(1/s, 1) & cond)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 0, Ne(s/2, 1) & (cond.lhs < cond.rhs - 1))
+        1/(s**2 - 4), 2, Ne(s/2, 1))
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
