@@ -115,18 +115,7 @@ def invert_real(f_x, y, x, domain=S.Reals):
     Inverts a real-valued function. Same as _invert, but sets
     the domain to ``S.Reals`` before inverting.
     """
-    lhs, rhs_s = _invert(f_x, y, x, domain)
-    if lhs == x and isinstance(rhs_s, FiniteSet):
-        for rhs in rhs_s:
-            try:
-                if checksol(f_x - y, x, rhs):
-                    pass
-                else:
-                    return (f_x, FiniteSet(y))
-            except:
-                return (lhs, rhs_s)
-    return (lhs, rhs_s)
-
+    return _invert(f_x, y, x, domain)
 
 def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
@@ -198,8 +187,13 @@ def _invert_real(f, g_ys, symbol):
                 return _invert_real(base, res, symbol)
 
         if not base_has_sym:
-            return _invert_real(expo,
-                imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+            if base is not S.Zero:
+                return _invert_real(expo,
+                    imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+            if base is S.Zero and g_ys.args[0] is S.One:
+                #special case: 0**x - 1
+                return (expo, FiniteSet(0))
+
 
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
