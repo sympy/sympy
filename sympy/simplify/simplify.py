@@ -504,7 +504,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False, rewrite=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
-    
+
     If rewrite is True then it attempts to rewrite given expression in
     all possible terms, simplify rewritten expressions, and return the
     simplest one.
