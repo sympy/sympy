@@ -253,9 +253,6 @@ def Denominator(var):
 def Hypergeometric2F1(a, b, c, z):
     return hyper([a, b], [c], z)
 
-def ArcTan(a):
-    return atan(a)
-
 def Not(var):
     if isinstance(var, bool):
         return not var
@@ -878,10 +875,6 @@ def Together(u):
 
 def FixSimplify(u):
     return u
-
-def TogetherSimplify(u):
-    return simplify(u)
-    #return With(Set(v, Together(Simplify(Together(u)))), FixSimplify(v))
 
 def PosAux(u):
     if RationalQ(u):
@@ -2249,43 +2242,43 @@ def SimplerQ(u, v):
                 return Abs(u)<Abs(v)
         else:
             return True
-    if IntegerQ(v):
+    elif IntegerQ(v):
         return False
-    if FractionQ(u):
+    elif FractionQ(u):
         if FractionQ(v):
-            if Denominator(u)==Denominator(v):
+            if Denominator(u) == Denominator(v):
                 return SimplerQ(Numerator(u), Numerator(v))
             else:
                 return Denominator(u)<Denominator(v)
         else:
             return True
-    if FractionQ(v):
+    elif FractionQ(v):
         return False
-    if (Re(u)==0 or Re(u) == 0) and (Re(v)==0 or Re(v) == 0):
+    elif (Re(u)==0 or Re(u) == 0) and (Re(v)==0 or Re(v) == 0):
         return SimplerQ(Im(u), Im(v))
-    if ComplexNumberQ(u):
+    elif ComplexNumberQ(u):
         if ComplexNumberQ(v):
-            if Re(u)==Re(v):
+            if Re(u) == Re(v):
                 return SimplerQ(Im(u), Im(v))
             else:
                 return SimplerQ(Re(u),Re(v))
         else:
             return False
-    if NumberQ(u):
+    elif NumberQ(u):
         if NumberQ(v):
             return OrderedQ([u,v])
         else:
             return True
-    if NumberQ(v):
+    elif NumberQ(v):
         return False
-    if AtomQ(u):
+    elif AtomQ(u):
         if AtomQ(v):
             return OrderedQ([u,v])
         else:
             return True
-    if AtomQ(v):
+    elif AtomQ(v):
         return False
-    if Head(u) == Head(v):
+    elif Head(u) == Head(v):
         if Length(u) == Length(v):
             for i in range(len(u.args)):
                 if not u.args[i] == v.args[i]:
@@ -2293,12 +2286,11 @@ def SimplerQ(u, v):
                 else:
                     return False
         return Length(u) < Length(v)
-    if LeafCount(u) < LeafCount(v):
+    elif LeafCount(u) < LeafCount(v):
         return True
-    if LeafCount(v) < LeafCount(u):
+    elif LeafCount(v) < LeafCount(u):
         return False
-    else:
-        return Not(OrderedQ([v,u]))
+    return Not(OrderedQ([v,u]))
 
 def SimplerSqrtQ(u, v):
     # If Rt(u, 2) is simpler than Rt(v, 2), SimplerSqrtQ(u, v) returns True, else it returns False.  SimplerSqrtQ(u, u) returns False
@@ -2346,14 +2338,6 @@ def SumSimplerQ(u, v):
             return u >= -v
     else:
         return SumSimplerAuxQ(Expand(u), Expand(v))
-
-def SumSimplerAuxQ(u, v):
-    if SumQ(v):
-        return (RationalQ(First(v)) or SumSimplerAuxQ(u, First(v))) and (RationalQ(Rest(v)) or SumSimplerAuxQ(u, Rest(v)))
-    elif SumQ(u):
-        return SumSimplerAuxQ(First(u), v) or SumSimplerAuxQ(Rest(u), v)
-    else:
-        return v!=S(0) and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)< -S(1)/2 or NumericFactor(u)/NumericFactor(v)== -S(1)/2 and NumericFactor(u)<S(0))
 
 def BinomialDegree(u, x):
     # if u is a binomial. BinomialDegree[u,x] returns the degree of x in u.
@@ -2779,19 +2763,6 @@ def SumSimplerAuxQ(u, v):
     else:
         return v!=0 and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)<-1/2 or NumericFactor(u)/NumericFactor(v)==-1/2 and NumericFactor(u)<0)
 
-def SumSimplerQ(u, v):
-    # (* If u+v is simpler than u, SumSimplerQ[u,v] returns True, else it returns False. *)
-    # (* If for every term w of v there is a term of u equal to n*w where n<-1/2, u+v will be simpler than u. *)
-    if RationalQ(u, v):
-        if v==0:
-            return False
-        elif v > 0:
-            return u < -1
-        else:
-            return u >= -v
-    else:
-        return SumSimplerAuxQ(Expand(u), Expand(v))
-
 def Prepend(l1, l2):
     if not isinstance(l2, list):
         return [l2] + l1
@@ -2968,7 +2939,7 @@ def MergeableFactorQ(bas, deg, v):
             return RationalQ(deg+v.exp) and (deg+v.exp>=0 or RationalQ(deg) and deg>0)
         return SumQ(v.base) and IntegerQ(v.exp) and (Not(IntegerQ(deg) or IntegerQ(deg/v.exp))) and MergeableFactorQ(bas, deg/v.exp, v.base)
     elif ProductQ(v):
-        return MergeableFactorQ(base, deg, First(v)) or MergeableFactorQ(bas, deg, Rest(v))
+        return MergeableFactorQ(bas, deg, First(v)) or MergeableFactorQ(bas, deg, Rest(v))
     return SumQ(v) and MergeableFactorQ(bas, deg, First(v)) and MergeableFactorQ(bas, deg, Rest(v))
 
 def MergeFactor(bas, deg, v):
@@ -3030,7 +3001,6 @@ def Smallest(num1, num2=None):
             num = Smallest(num, i)
         return num
     return Min(num1, num2)
-
 
 def OrderedQ(l):
     return l == Sort(l)
@@ -3957,9 +3927,6 @@ def InertTrigQ(*args):
 def InertReciprocalQ(f, g):
     return (f.func == sin and g.func == csc) or (f.func == cos and g.func == sec) or (f.func == tan and g.func == cot)
 
-def ActivateTrig(u):
-    return u
-
 def DeactivateTrig(u, x):
     # (* u is a function of trig functions of a linear function of x. *)
     # (* DeactivateTrig[u,x] returns u with the trig functions replaced with inert trig functions. *)
@@ -3967,12 +3934,6 @@ def DeactivateTrig(u, x):
 
 def FixInertTrigFunction(u, x):
     return u
-
-def DeactivateTrigAux(u, x):
-    if AtomQ(u):
-        return u
-    elif TrigQ(u) and LinearQ(u.args[0], x):
-        v = ExpandToSum(u.args[0], x)
 
 def DeactivateTrigAux(u, x):
     if AtomQ(u):
@@ -4122,16 +4083,6 @@ def KnownCotangentIntegrandQ(u, x):
 
 def KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
-
-def ExpandTrigReduce(u, v, x):
-    w = ExpandTrigReduce(v, x)
-    if SumQ(w):
-        t = 0
-        for i in w.args:
-            t += u*i
-        return t
-    else:
-            return u*w
 
 def TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])
@@ -4334,21 +4285,18 @@ def TrigReduce(i):
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                # 2 sin A cos B = sin(A + B) + sin(A − B)
                 return i.subs(v*sin(a)*cos(b), v*S(1)/2*(sin(a + b) + sin(a - b)))
             Match = i.match(v*sin(a)*sin(b))
             if Match:
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                # 2 sin A sin B = cos(A − B) − cos(A + B)
                 return i.subs(v*sin(a)*sin(b), v*S(1)/2*cos(a - b) - cos(a + b))
             Match = i.match(v*cos(a)*cos(b))
             if Match:
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                # 2 cos A cos B = cos(A + B) + cos(A − B)
                 return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))
     if PowerQ(i):
         if i.has(sin):
@@ -4363,23 +4311,6 @@ def TrigReduce(i):
                 return i.rewrite(cos, exp).expand().rewrite(exp, cos)
     else:
         return i
-
-
-'''
-def FunctionOfTrigOfLinearQ(u, x):
-    # If u is an algebraic function of trig functions of a linear function of x, FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
-    a = Wild('a', exclude=[x])
-    n = Wild('n', exclude=[x, 0])
-    f = Wild('f')
-    M = u.match((a*f)**n)
-    if M AlgebraicTrigFunctionQ()
-
-def FunctionOfTrigOfLinearQ(u, x):
-
-    (* Not[MatchQ[u, (c_.*f_[a_.+b_.*x])^p_. /; FreeQ[{a,b,c,p},x] && MemberQ[{Sin,Cos,Sec,Csc},f]]] && *)
-    Not[MemberQ[{Null, False}, FunctionOfTrig[u,Null,x]]] && AlgebraicTrigFunctionQ[u,x] (* &&
-    RecognizedFunctionOfTrigQ[DeactivateTrig[u,x],x] *)
-'''
 
 def FunctionOfTrig(u, *x):
     # If u is a function of trig functions of v where v is a linear function of x,
@@ -5131,6 +5062,7 @@ def TrigSquare(u):
 def IntSum(u, x):
     # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
     # else it returns d*Int[v,x] where d*v=u and d is free of x.
+    return Add(*[Int(i, x) for i in u.args])
     return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
@@ -5376,7 +5308,6 @@ def stdev(lst):
 
 def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False, _numerical=False):
     #Returns True if (expr - optimal_output) is equal to 0 or a constant
-
     #expr: integrated expression
     #x: integration variable
     #expand=True equates `expr` with `optimal_output` in expanded form
@@ -5443,9 +5374,17 @@ def IntQuadraticQ(a, b, c, d, e, m, p, x):
     # (* IntQuadraticQ[a,b,c,d,e,m,p,x] returns True iff (d+e*x)^m*(a+b*x+c*x^2)^p is integrable wrt x in terms of non-Appell functions. *)
     return IntegerQ(p) or PositiveIntegerQ(m) or IntegersQ(2*m, 2*p) or IntegersQ(m, 4*p) or IntegersQ(m, p + S(1)/3) and (ZeroQ(c**2*d**2 - b*c*d*e + b**2*e**2 - 3*a*c*e**2) or ZeroQ(c**2*d**2 - b*c*d*e - 2*b**2*e**2 + 9*a*c*e**2))
 
-def IntBinomialQ(a, b, c, n, m, p, x):
-    #(* IntBinomialQ[a,b,c,n,m,p,x] returns True iff (c*x)^m*(a+b*x^n)^p is integrable wrt x in terms of non-hypergeometric functions. *)
-    return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))
+def IntBinomialQ(*args):
+    #(* IntBinomialQ(a,b,c,n,m,p,x) returns True iff (c*x)^m*(a+b*x^n)^p is integrable wrt x in terms of non-hypergeometric functions. *)
+    if len(args) == 8:
+        a, b, c, d, n, p, q, x = args
+        return IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or (ZeroQ(n-2) or ZeroQ(n-4)) and (IntegersQ(p,4*q) or IntegersQ(4*p,q)) or ZeroQ(n-2) and (IntegersQ(2*p,2*q) or IntegersQ(3*p,q) and ZeroQ(b*c+3*a*d) or IntegersQ(p,3*q) and ZeroQ(3*b*c+a*d))
+    elif len(args) == 7:
+        a, b, c, n, m, p, x = args
+        return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))
+    elif len(args) == 10:
+        a, b, c, d, e, m, n, p, q, x = args
+        return IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or ZeroQ(n-2) and IntegerQ(m) and IntegersQ(2*p,2*q) or ZeroQ(n-4) and (IntegersQ(m,p,2*q) or IntegersQ(m,2*p,q))
 
 def RectifyTangent(*args):
     # (* RectifyTangent(u,a,b,r,x) returns an expression whose derivative equals the derivative of r*ArcTan(a+b*Tan(u)) wrt x. *)
@@ -5612,7 +5551,7 @@ def SimpHelp(u, x):
         match = u.match(pattern)
         m = False
         if match:
-            if Eq(match[n]**3, S(1)/16):
+            if EqQ(match[n]**3, S(1)/16):
                 m = True
         if m:
             return u

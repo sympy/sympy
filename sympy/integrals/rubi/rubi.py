@@ -3,10 +3,7 @@ matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
-    from sympy.core.add import Add
     from sympy.integrals import Integral
-    from sympy.core import S
-
     from sympy.integrals.rubi.patterns import rubi_object
     rubi = rubi_object()
 
@@ -16,21 +13,8 @@ def rubi_integrate(expr, var, showsteps=False):
     Main function for Rubi integeration.
     Returns Integral object if unable to integrate.
     '''
-    if isinstance(expr, int):
+    if isinstance(expr, int) or isinstance(expr, float):
         return S(expr)*var
-    elif not expr.has(var):
-        return expr*var
-    elif expr.is_Add: # integrate each is_Add expression indivdually
-        return Add(*[rubi_integrate(i, var) for i in expr.args])
-    elif expr.is_Mul: # remove constants
-        e, c = 1, 1
-        for i in expr.args:
-            if i.has(var):
-                e = e*i
-            else:
-                c = c*i
-        if c != 1:
-            return c*rubi_integrate(e, var)
 
     result = rubi.replace(Integral(expr, var))
 
