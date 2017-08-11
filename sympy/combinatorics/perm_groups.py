@@ -3406,7 +3406,8 @@ class PermutationGroup(Basic):
         Return an `FpGroup` presentation of the group
 
         '''
-        from sympy.combinatorics.fp_groups import FpGroup
+        from sympy.combinatorics.fp_groups import (FpGroup,
+                                            simplify_presentation)
         from sympy.combinatorics.coset_table import CosetTable
         from sympy.combinatorics.free_groups import free_group
         from sympy.combinatorics.homomorphisms import homomorphism
@@ -3505,9 +3506,9 @@ class PermutationGroup(Basic):
             G_p = _factor_group_by_rels(G_p, [new_rel])
             C_p.scan_and_fill(0, new_rel)
             C_p = G_p.coset_enumeration([], strategy="coset_table",
-                                resume=C_p, max_cosets=n, incomplete=True)
+                                draft=C_p, max_cosets=n, incomplete=True)
 
-        return G_p
+        return simplify_presentation(G_p)
 
 def _orbit(degree, generators, alpha, action='tuples'):
     r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.

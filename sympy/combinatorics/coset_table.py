@@ -772,7 +772,7 @@ class CosetTable(DefaultPrinting):
 ###############################################################################
 
 # relator-based method
-def coset_enumeration_r(fp_grp, Y, max_cosets=None, resume=None,
+def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
                                                             incomplete=False):
     """
     This is easier of the two implemented methods of coset enumeration.
@@ -783,7 +783,7 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, resume=None,
     that's why the name relator-based method.
 
     An instance of `CosetTable` for `fp_grp` can be passed as the keyword
-    argument `resume` in which case the coset enumeration will start with
+    argument `draft` in which case the coset enumeration will start with
     that instance and attempt to complete it.
 
     When `incomplete` is `True` and the function is unable to complete for
@@ -925,9 +925,9 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, resume=None,
     """
     # 1. Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
-    if resume:
-        C.table = resume.table[:]
-        C.p = resume.p[:]
+    if draft:
+        C.table = draft.table[:]
+        C.p = draft.p[:]
     R = fp_grp.relators
     A_dict = C.A_dict
     A_dict_inv = C.A_dict_inv
@@ -957,7 +957,7 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, resume=None,
 
 # Pg. 166
 # coset-table based method
-def coset_enumeration_c(fp_grp, Y, max_cosets=None, resume=None,
+def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
                                                             incomplete=False):
     """
     >>> from sympy.combinatorics.free_groups import free_group
@@ -973,10 +973,10 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, resume=None,
     X = fp_grp.generators
     R = fp_grp.relators
     C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
-    if resume:
-        C.table = resume.table[:]
-        C.p = resume.p[:]
-        C.deduction_stack = resume.deduction_stack
+    if draft:
+        C.table = draft.table[:]
+        C.p = draft.p[:]
+        C.deduction_stack = draft.deduction_stack
         for alpha, x in product(range(len(C.table)), X):
             if not C.table[alpha][C.A_dict[x]] is None:
                 C.deduction_stack.append((alpha, x))

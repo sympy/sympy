@@ -778,7 +778,7 @@ def test_presentation():
         G = P.presentation()
         return G.order() == P.order()
 
-    P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6),Permutation(0,3,5,4)(1,6,2,7))
+    P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6), Permutation(0,3,5,4)(1,6,2,7))
     assert _test(P)
 
     P = AlternatingGroup(5)
