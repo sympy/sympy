@@ -178,6 +178,7 @@ def test_Type():
     assert t.name == 'MyType'
     assert str(t) == 'MyType'
     assert repr(t) == "Type(name=MyType)"
+    assert Type(t) == t
 
 
 def test_Type_eq():
@@ -221,17 +222,17 @@ def test_Type__cast_check__integers():
 
 
 def test_Variable():
-    v = Variable(x, type_=Type('real'))
+    v = Variable(x, type=Type('real'))
     assert v.symbol == x
     assert v.type == real
-    assert v.value_const == False
-    w = Variable(y, {value_const}, f32)
+    assert v.obey(value_const) == False
+    w = Variable(y, f32, attrs={value_const})
     assert w.symbol == y
     assert w.type == f32
-    assert w.value_const
-    v_n = Variable(n, type_=Type.from_expr(n))
+    assert w.obey(value_const)
+    v_n = Variable(n, type=Type.from_expr(n))
     assert v_n.type == integer
-    v_i = Variable(i, type_=Type.from_expr(n))
+    v_i = Variable(i, type=Type.from_expr(n))
     assert v_i.type == integer
 
     a_i = Variable.deduced(i)
@@ -247,21 +248,21 @@ def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
     assert p.type == None
-    assert not p.value_const
-    assert not p.pointer_const
+    assert not p.obey(value_const)
+    assert not p.obey(pointer_const)
     u = symbols('u', real=True)
-    py = Pointer(u, {value_const, pointer_const}, Type.from_expr(u))
+    py = Pointer(u, type=Type.from_expr(u), attrs={value_const, pointer_const})
     assert py.symbol is u
     assert py.type == real
-    assert py.value_const
-    assert py.pointer_const
+    assert py.obey(value_const)
+    assert py.obey(pointer_const)
 
 
 def test_Declaration():
     u = symbols('u', real=True)
-    vu = Variable(u, type_=Type.from_expr(u))
+    vu = Variable(u, type=Type.from_expr(u))
     assert Declaration(vu).variable.type == real
-    vn = Variable(n, type_=Type.from_expr(n))
+    vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
 
     vuc = Variable(u, {value_const}, Type.from_expr(u))
@@ -270,17 +271,17 @@ def test_Declaration():
     assert isinstance(decl.value, Float)
     assert decl.value == 3.0
 
-    vy = Variable(y, type_=integer)
+    vy = Variable(y, type=integer)
     decl2 = Declaration(vy, 3)
     assert decl2.variable == vy
     assert decl2.value is Integer(3)
 
-    vi = Variable(i, type_=Type.from_expr(i))
+    vi = Variable(i, type=Type.from_expr(i))
     decl3 = Declaration(vi, 3.0)
     assert decl3.variable.type == integer
     assert decl3.value == 3.0
 
-    decl4 = raises(ValueError, lambda: Declaration.deduced(n, 3.5, cast=True))
+    decl4 = raises(ValueError, lambda: Declaration.deduced(n, value=3.5, cast=True))
 
 
 
@@ -402,9 +403,9 @@ def test_PrintStatement():
 
 
 def test_FunctionPrototype_and_FunctionDefinition():
-    vx = Variable(x, type_=real)
+    vx = Variable(x, type=real)
     dx = Declaration(vx)
-    vn = Variable(n, type_=integer)
+    vn = Variable(n, type=integer)
     dn = Declaration(vn, 2)
     fp1 = FunctionPrototype(real, 'power', [dx, dn])
     assert fp1.return_type == real

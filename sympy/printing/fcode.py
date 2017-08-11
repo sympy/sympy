@@ -28,12 +28,19 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
-from sympy.codegen.ast import (Assignment, Declaration, Pointer, Type,
-                               float32, float64, complex64, complex128, intc,
-                               real, integer, bool_, complex_)
+from sympy.codegen.ast import (
+    Assignment, Attribute, Declaration, Pointer, Type,
+    float32, float64, complex64, complex128, intc, real, integer, bool_, complex_
+)
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
+
+pure = Attribute('pure')
+elemental = Attribute('elemental')  # (all elemental procedures are also pure)
+intent_in = Attribute('intent_in')
+intent_out = Attribute('intent_out')
+intent_inout = Attribute('intent_inout')
 
 known_functions = {
     "sin": "sin",
@@ -320,6 +327,12 @@ class FCodePrinter(CodePrinter):
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
+    def _print_AugmentedAssignment(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        return self._get_statement("{0} = {0} {1} {2}".format(
+            *map(self._print, [lhs_code, expr._symbol, rhs_code])))
+
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
@@ -366,6 +379,22 @@ class FCodePrinter(CodePrinter):
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
             result = ' '.join(self._print(var.type), self._print(var.symbol))
         return result
+
+    def _print_While(self, expr):
+        return 'do while ({condition})\n{body}\nend do'.format(**expr.kwargs(apply=self._print))
+
+    def _print_FunctionDefinition(self, expr):
+        if epxr.obey(elemental):
+            prefix = 'elemental '
+        elif expr.obey(pure):
+            prefix = 'pure '
+        else:
+            prefix = ''
+
+        return "{prefix}function {name}({args})\n{body}\nend function".format(
+            prefix=prefix, name=expr.name, args=', '.join(map(self._print, expr.inputs)),
+            body=self._print(expr.body)
+        )
 
     def _print_BooleanTrue(self, expr):
         return '.true.'

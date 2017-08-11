@@ -2,8 +2,8 @@ from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
     factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
     Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
 
-from sympy.codegen import For, Assignment
-from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_
+from sympy.codegen import For, Assignment, aug_assign
+from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_, While
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -727,3 +727,17 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert(fcode(F) == "      ((-1)*B + A)(1, 1)")
+
+
+def test_aug_assign():
+    x = symbols('x')
+    assert fcode(aug_assign(x, '+', 1), source_format='free') == 'x = x + 1'
+
+
+def test_While():
+    x = symbols('x')
+    assert fcode(While(abs(x) > 1, [aug_assign(x, '-', 1)]), source_format='free') == (
+        'do while (abs(x) > 1)\n'
+        '   x = x - 1\n'
+        'end do'
+    )

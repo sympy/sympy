@@ -458,15 +458,15 @@ class C89CodePrinter(CodePrinter):
         var, val = expr.variable, expr.value
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
-                vc='const ' if var.value_const else '',
+                vc='const ' if var.obey(value_const) else '',
                 t=self._print(var.type),
-                pc=' const' if var.pointer_const else '',
+                pc=' const' if var.obey(pointer_const) else '',
                 r='restrict ' if var.attributes.contains(restrict) == True else '',
                 s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
             result = '{vc}{t} {s}'.format(
-                vc='const ' if var.value_const else '',
+                vc='const ' if var.obey(value_const) else '',
                 t=self._print(var.type),
                 s=self._print(var.symbol)
             )
@@ -504,7 +504,7 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_While(self, expr):
-        return 'while ({condition}) {{\n{body}\n}}'.format(**expr.attrs(apply=self._print))
+        return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(apply=self._print))
 
     def _print_Scope(self, expr):
         return '{\n%s\n}' % self._print(expr.body)

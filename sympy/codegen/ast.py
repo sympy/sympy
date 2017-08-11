@@ -474,7 +474,9 @@ class Token(Basic):
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
-        args = args + tuple([kwargs[k] for k in cls.__slots__[len(args):]])
+        args = args + tuple([kwargs.pop(k) for k in cls.__slots__[len(args):]])
+        if kwargs:
+            raise ValueError("Unknown kwargs: %s" % kwargs)
         obj = Basic.__new__(cls)
         for attr, arg in zip(cls.__slots__, args):
             setattr(obj, attr, arg)
@@ -499,12 +501,12 @@ class Token(Basic):
             ['%s=%s' % (k, printer._print(getattr(self, k))) for k in self.__slots__]
         ))
 
-    def attrs(self, exclude=(), apply=lambda arg: arg):
+    def kwargs(self, exclude=(), apply=lambda arg: arg):
         return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
 
     @property
     def _argset(self):
-        return set(self.attrs().values())
+        return set(self.kwargs().values())
 
     def atoms(self):
         result = set()
@@ -863,8 +865,8 @@ float80 = FloatType('float80', 80, nexp=15, nmant=63)  # x86 extended precision 
 float128 = FloatType('float128', 128, nexp=15, nmant=112)  # IEEE 754 binary128, Quadruple precision
 float256 = FloatType('float256', 256, nexp=19, nmant=236)  # IEEE 754 binary256, Octuple precision
 
-complex64 = ComplexType('complex64', nbits=64, **float32.attrs(exclude=('nbits',)))
-complex128 = ComplexType('complex128', nbits=128, **float64.attrs(exclude=('nbits',)))
+complex64 = ComplexType('complex64', nbits=64, **float32.kwargs(exclude=('name', 'nbits')))
+complex128 = ComplexType('complex128', nbits=128, **float64.kwargs(exclude=('name', 'nbits')))
 
 # Generic types (precision may be chosen by code printers):
 real = Type('real')
@@ -877,10 +879,28 @@ class Attribute(Token):
     """ Variable attribute """
     __slots__ = ['name']
 
+
 value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
 
-class Variable(Basic):
+
+class Node(Token):
+    """ Subclass of Token, carrying the attribute 'attrs' (FiniteSet) """
+
+    __slots__ = ['attrs']
+
+    def __new__(cls, *args, **kwargs):
+        attrs = kwargs.pop('attrs', FiniteSet())
+        obj = Token.__new__(cls, *args, **kwargs)
+        obj.attrs = attrs if isinstance(attrs, FiniteSet) else FiniteSet(*attrs)
+        return obj
+
+    def obey(self, *attrs):
+        """ Returns whether ``self.attrs`` contains all elements in attrs. """
+        return all(self.attrs.contains(attr) == True for attr in attrs)
+
+
+class Variable(Node):
     """ Represents a variable
 
     Parameters
@@ -907,15 +927,10 @@ class Variable(Basic):
 
     """
 
-    nargs = (2, 3)  # type is optional
+    __slots__ = ['symbol', 'type']
 
-    def __new__(cls, symbol, attrs=FiniteSet(), type_=None):
-        args = (_sympify(symbol), attrs if isinstance(attrs, FiniteSet) else FiniteSet(*attrs))
-        if type_ is not None:
-            if not isinstance(type_, Type):
-                raise TypeError("type_ argument should be an instance of Type")
-            args += (type_,)
-        return Basic.__new__(cls, *args)
+    def __new__(cls, symbol, type=None, *args, **kwargs):
+        return Node.__new__(cls, symbol, type, *args, **kwargs)
 
     @classmethod
     def deduced(cls, symbol, attrs=FiniteSet()):
@@ -937,36 +952,11 @@ class Variable(Basic):
         True
 
         """
-        return cls(symbol, attrs, Type.from_expr(symbol))
-
-    @property
-    def symbol(self):
-        return self.args[0]
-
-    @property
-    def attributes(self):
-        return self.args[1]
-
-    @property
-    def type(self):
-        if len(self.args) == 3:
-            return self.args[2]
-        else:
-            return None
-
-    @property
-    def value_const(self):
-        """ Boolean value describing whether the value is constant. """
-        return self.attributes.contains(value_const) == True
+        return cls(symbol, type=Type.from_expr(symbol), attrs=attrs)
 
 
 class Pointer(Variable):
     """ Represents a pointer """
-
-    @property
-    def pointer_const(self):
-        """ Boolean value describing whether the pointer address is constant. """
-        return self.attributes.contains(pointer_const) == True
 
 
 class Declaration(Basic):
@@ -1033,7 +1023,7 @@ class Declaration(Basic):
             type_ = Type.from_expr(symbol)
         except ValueError:
             type_ = Type.from_expr(value)
-        var = Variable(symbol, attrs, type_)
+        var = Variable(symbol, type=type_, attrs=attrs)
         return cls(var, value, **kwargs)
 
     @property
@@ -1127,7 +1117,7 @@ class PrintStatement(Token):
         return Token.__new__(cls, format_string, tuple([_sympify(arg) for arg in args]))
 
 
-class FunctionPrototype(Token):
+class FunctionPrototype(Node):
     """ Represents a function prototype
 
     Allows the user to generate forward declaration in e.g. C/C++.
@@ -1153,7 +1143,7 @@ class FunctionPrototype(Token):
     def from_FunctionDefinition(cls, func_def):
         if not isinstance(func_def, FunctionDefinition):
             raise TypeError("func_def is not an instance of FunctionDefiniton")
-        return cls(**func_def.attrs(exclude=('body',)))
+        return cls(**func_def.kwargs(exclude=('body',)))
 
 
 class FunctionDefinition(FunctionPrototype):
@@ -1182,7 +1172,7 @@ class FunctionDefinition(FunctionPrototype):
     def from_FunctionPrototype(cls, func_proto, body):
         if not isinstance(func_proto, FunctionPrototype):
             raise TypeError("func_proto is not an instance of FunctionPrototype")
-        return cls(body=body, **func_proto.attrs())
+        return cls(body=body, **func_proto.kwargs())
 
 
 class ReturnStatement(Basic):
