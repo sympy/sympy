@@ -18,7 +18,7 @@ def test_newtons_method():
     assert algo.has(Assignment(dx, -expr/expr.diff(x)))
 
 
-def test_newtons_method_function():
+def test_newtons_method_function__ccode():
     x = sp.Symbol('x')
     expr = sp.cos(x) - x**3
     func = newtons_method_function(expr, x)
@@ -37,7 +37,7 @@ def test_newtons_method_function():
     assert abs(mod.py_newton(0.5) - 0.865474033102) < 1e-12
 
 
-def test_newtons_method_function_parameters():
+def test_newtons_method_function__ccode_parameters():
     args = x, A, k, p = sp.symbols('x A k p')
     expr = A*sp.cos(k*x) - p*x**3
     with pytest.raises(ValueError):

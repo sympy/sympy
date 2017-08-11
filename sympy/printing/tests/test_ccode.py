@@ -11,8 +11,9 @@ from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
-    Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
-    real, float32, float64, float80, float128
+    AddAugmentedAssignment, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
+    While, Scope, PrintStatement, FunctionPrototype, FunctionDefinition, FunctionCall, Statement, ReturnStatement,
+    real, float32, float64, float80, float128,
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, restrict
 from sympy.utilities.lambdify import implemented_function
@@ -770,3 +771,34 @@ def test_ccode_math_macros():
     assert ccode(z + Sqrt(2)) == 'z + M_SQRT2'
     assert ccode(z + 1/sqrt(2)) == 'z + M_SQRT1_2'
     assert ccode(z + 1/Sqrt(2)) == 'z + M_SQRT1_2'
+
+
+def test_ccode_codegen_ast():
+    assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
+        'while (fabs(x) > 1) {\n'
+        '   x -= 1;\n'
+        '}'
+    )
+    assert ccode(Scope([AddAugmentedAssignment(x, 1)])) == (
+        '{\n'
+        '   x += 1;\n'
+        '}'
+    )
+    inp_x = Declaration(Variable(x, type_=real))
+    assert ccode(FunctionPrototype(real, 'pwer', [inp_x])) == 'double pwer(double x)'
+    assert ccode(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)])) == (
+        'double pwer(double x){\n'
+        '   x = pow(x, 2);\n'
+        '}'
+    )
+
+    # explicit wrapping node for statement:
+    assert ccode(Statement(x)) == 'x;'
+
+    # kwarg "statement" in node:
+    assert ccode(FunctionCall('pwer', [x], statement=False)) == 'pwer(x)'
+    assert ccode(FunctionCall('pwer', [x], statement=True)) == 'pwer(x);'
+
+    # Node with "statement" in the name:
+    assert ccode(PrintStatement("%d %d", x, y)) == 'printf("%d %d", x, y);'
+    assert ccode(ReturnStatement(x)) == 'return x;'
