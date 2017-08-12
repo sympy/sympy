@@ -190,7 +190,7 @@ def _invert_real(f, g_ys, symbol):
             if base is not S.Zero:
                 return _invert_real(expo,
                     imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
-            if base is S.Zero and g_ys.args[0] is S.One:
+            elif g_ys.args[0] is S.One:
                 #special case: 0**x - 1
                 return (expo, FiniteSet(0))
 
