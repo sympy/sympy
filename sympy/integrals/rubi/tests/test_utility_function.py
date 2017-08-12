@@ -1412,7 +1412,7 @@ def test_PowerVariableSubst():
 
 def test_PowerVariableDegree():
     assert PowerVariableDegree(S(2), 0, 2*x, x) == [0, 2*x]
-    assert not PowerVariableDegree((2*x)**2, 0, 2*x, x)
+    assert PowerVariableDegree((2*x)**2, 0, 2*x, x) == [2, 1]
     assert PowerVariableDegree(x**2, 0, 2*x, x) == [2, 1]
     assert PowerVariableDegree(S(4), 0, 2*x, x) == [0, 2*x]
 
