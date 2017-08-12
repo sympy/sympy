@@ -1,7 +1,7 @@
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
-from sympy.vector.operators import gradient, curl, divergence
+from sympy.vector.operators import curl, divergence
 from sympy import diff, integrate, S, simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
@@ -122,6 +122,17 @@ def express(expr, system, system2=None, variables=False):
                 subs_dict.update(f.scalar_map(system))
             return expr.subs(subs_dict)
         return expr
+
+
+def split_coordinate(expr):
+    import collections
+    d = collections.defaultdict(lambda: S.One)
+    if isinstance(expr, (BaseScalar, BaseVector)):
+        return [expr]
+    else:
+        for i in expr.args:
+            d[frozenset(i.atoms(CoordSys3D))] *= i
+        return d.values()
 
 
 def directional_derivative(field, direction_vector):
