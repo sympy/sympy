@@ -140,20 +140,24 @@ def curl(vect, coord_sys=None, doit=True):
     """
 
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+
     if coord_sys is None:
         return Vector.zero
     else:
+        i, j, k = coord_sys.base_vectors()
+        x, y, z = coord_sys.base_scalars()
+        h1, h2, h3 = coord_sys.lame_coefficients()
         from sympy.vector.functions import express
-        vectx = express(vect.dot(coord_sys._i), coord_sys, variables=True)
-        vecty = express(vect.dot(coord_sys._j), coord_sys, variables=True)
-        vectz = express(vect.dot(coord_sys._k), coord_sys, variables=True)
+        vectx = express(vect.dot(i), coord_sys, variables=True)
+        vecty = express(vect.dot(j), coord_sys, variables=True)
+        vectz = express(vect.dot(k), coord_sys, variables=True)
         outvec = Vector.zero
-        outvec += (Derivative(vectz * coord_sys._h3, coord_sys._y) -
-                   Derivative(vecty * coord_sys._h2, coord_sys._z)) * coord_sys._i / (coord_sys._h2 * coord_sys._h3)
-        outvec += (Derivative(vectx * coord_sys._h1, coord_sys._z) -
-                   Derivative(vectz * coord_sys._h3, coord_sys._x)) * coord_sys._j / (coord_sys._h1 * coord_sys._h3)
-        outvec += (Derivative(vecty * coord_sys._h2, coord_sys._x) -
-                   Derivative(vectx * coord_sys._h1, coord_sys._y)) * coord_sys._k / (coord_sys._h2 * coord_sys._h1)
+        outvec += (Derivative(vectz * h3, y) -
+                   Derivative(vecty * h2, z)) * i / (h2 * h3)
+        outvec += (Derivative(vectx * h1, z) -
+                   Derivative(vectz * h3, x)) * j / (h1 * h3)
+        outvec += (Derivative(vecty * h2, x) -
+                   Derivative(vectx * h1, y)) * k / (h2 * h1)
 
         if doit:
             return outvec.doit()
@@ -194,17 +198,20 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
-
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+
     if coord_sys is None:
         return S.Zero
     else:
-        vx = _diff_conditional(vect.dot(coord_sys._i), coord_sys._x, coord_sys._h2, coord_sys._h3) \
-             / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
-        vy = _diff_conditional(vect.dot(coord_sys._j), coord_sys._y, coord_sys._h3, coord_sys._h1) \
-             / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
-        vz = _diff_conditional(vect.dot(coord_sys._k), coord_sys._z, coord_sys._h1, coord_sys._h2) \
-             / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
+        i, j, k = coord_sys.base_vectors()
+        x, y, z = coord_sys.base_scalars()
+        h1, h2, h3 = coord_sys.lame_coefficients()
+        vx = _diff_conditional(vect.dot(i), x, h2, h3) \
+             / (h1 * h2 * h3)
+        vy = _diff_conditional(vect.dot(j), y, h3, h1) \
+             / (h1 * h2 * h3)
+        vz = _diff_conditional(vect.dot(k), z, h1, h2) \
+             / (h1 * h2 * h3)
         if doit:
             return (vx + vy + vz).doit()
         return vx + vy + vz
@@ -249,15 +256,17 @@ def gradient(scalar_field, coord_sys=None, doit=True):
         return Vector.zero
     else:
         from sympy.vector.functions import express
-        scalar_field = express(scalar_field, coord_sys,
-                                   variables=True)
-        vx = Derivative(scalar_field, coord_sys._x) / coord_sys._h1
-        vy = Derivative(scalar_field, coord_sys._y) / coord_sys._h2
-        vz = Derivative(scalar_field, coord_sys._z) / coord_sys._h3
+        h1, h2, h3 = coord_sys.lame_coefficients()
+        i, j, k = coord_sys.base_vectors()
+        x, y, z = coord_sys.base_scalars()
+        scalar_field = express(scalar_field, coord_sys, variables=True)
+        vx = Derivative(scalar_field, x) / h1
+        vy = Derivative(scalar_field, y) / h2
+        vz = Derivative(scalar_field, z) / h3
 
         if doit:
-            return (vx * coord_sys._i + vy * coord_sys._j + vz * coord_sys._k).doit()
-        return vx * coord_sys._i + vy * coord_sys._j + vz * coord_sys._k
+            return (vx * i + vy * j + vz * k).doit()
+        return vx * i + vy * j + vz * k
 
 
 def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
