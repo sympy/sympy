@@ -941,7 +941,7 @@ def test_acot():
 
 
 def test_acot_rewrite():
-    assert acot(x).rewrite(log) == I*(log(x - I)-log(x + I))/2
+    assert acot(x).rewrite(log) == I*(log(1 - I/x)-log(1 + I/x))/2
     assert acot(x).rewrite(asin) == x*(-asin(sqrt(-x**2)/sqrt(-x**2 - 1)) + pi/2)*sqrt(x**(-2))
     assert acot(x).rewrite(acos) == x*sqrt(x**(-2))*acos(sqrt(-x**2)/sqrt(-x**2 - 1))
     assert acot(x).rewrite(atan) == atan(1/x)

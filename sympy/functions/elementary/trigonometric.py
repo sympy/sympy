@@ -2420,8 +2420,8 @@ class acot(InverseTrigonometricFunction):
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * (log(x - S.ImaginaryUnit)
-            - log(x + S.ImaginaryUnit))
+        return S.ImaginaryUnit/2 * (log(1 - S.ImaginaryUnit/x)
+            - log(1 + S.ImaginaryUnit/x))
 
     def inverse(self, argindex=1):
         """
