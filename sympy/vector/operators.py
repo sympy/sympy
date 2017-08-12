@@ -1,10 +1,11 @@
 from sympy.core.expr import Expr
-from sympy.core import  sympify, S
+from sympy.core import sympify, S
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector
+from sympy.vector.vector import Vector, VectorMul, VectorAdd
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
+from sympy import Add, Mul
 
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):
@@ -250,23 +251,51 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
-    coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
+    from sympy.vector.functions import express, split_coordinate
 
-    if coord_sys is None:
-        return Vector.zero
-    else:
-        from sympy.vector.functions import express
-        h1, h2, h3 = coord_sys.lame_coefficients()
-        i, j, k = coord_sys.base_vectors()
-        x, y, z = coord_sys.base_scalars()
-        scalar_field = express(scalar_field, coord_sys, variables=True)
-        vx = Derivative(scalar_field, x) / h1
-        vy = Derivative(scalar_field, y) / h2
-        vz = Derivative(scalar_field, z) / h3
+    def grad(expr):
+        coord = list(expr.atoms(CoordSys3D))
+        if len(coord) > 1:
+            return Gradient(expr)
+        elif not coord:
+            return Vector.zero
+        else:
+            coord = _get_coord_sys_from_expr(expr)
+        h1, h2, h3 = coord.lame_coefficients()
+        i, j, k = coord.base_vectors()
+        x, y, z = coord.base_scalars()
+        expr = express(expr, coord, variables=True)
+        vx = Derivative(expr, x) / h1
+        vy = Derivative(expr, y) / h2
+        vz = Derivative(expr, z) / h3
 
         if doit:
             return (vx * i + vy * j + vz * k).doit()
         return vx * i + vy * j + vz * k
+
+    try:
+        scalar_field.atoms(CoordSys3D)
+    except:
+        return Vector.zero
+
+    if len(scalar_field.atoms(CoordSys3D)) < 2:
+        return grad(scalar_field)
+    else:
+        scalar_field = scalar_field.expand()
+
+        scalar_field = scalar_field.args if scalar_field.is_Add else [scalar_field]
+        result = []
+        for el_add in scalar_field:
+            tmp = []
+            if el_add.is_Mul:
+                for el_mul in split_coordinate(el_add):
+                    tmp.append(VectorMul(*[grad(el_mul), *[x for x in split_coordinate(el_add) if el_mul != x]]))
+            else:
+                tmp.append(grad(el_add))
+
+            result.append(VectorAdd(*tmp))
+
+        return VectorAdd(*result)
 
 
 def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
