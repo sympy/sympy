@@ -274,6 +274,8 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
             raise ValueError('Not an acceptable rotation order')
         if len(coords) != 3:
             raise ValueError('Need 3 coordinates for body or space')
+        if speeds == (0,0,0):
+            return [0,0,0]
         # Actual hard-coded kinematic differential equations
         q1, q2, q3 = coords
         q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
