@@ -12,8 +12,6 @@ from .singleton import S
 
 from inspect import getmro
 
-# TESTING: REMOVE ME
-'\invalid'
 
 class Basic(with_metaclass(ManagedProperties)):
     """
