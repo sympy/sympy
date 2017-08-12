@@ -2193,6 +2193,8 @@ class Expr(Basic, EvalfMixin):
             (negative_self).extract_multiplicatively(-1) is not None)
         if self_has_minus != negative_self_has_minus:
             return self_has_minus
+        elif negative_self==self:
+            return False
         else:
             if self.is_Add:
                 # We choose the one with less arguments with minus signs
