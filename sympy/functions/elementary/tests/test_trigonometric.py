@@ -857,6 +857,7 @@ def test_atan_rewrite():
     assert atan(x).rewrite(asec) == sqrt(x**2)*asec(sqrt(x**2 + 1))/x
     assert atan(x).rewrite(acsc) == (-acsc(sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
 
+    assert atan(-5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:-5*I})
     assert atan(5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:5*I})
 
 
@@ -951,6 +952,7 @@ def test_acot_rewrite():
     assert acot(x).rewrite(acsc) == x*(-acsc(sqrt((x**2 + 1)/x**2)) + pi/2)*sqrt(x**(-2))
 
     assert acot(-I/5).evalf() == acot(x).rewrite(log).evalf(subs={x:-I/5})
+    assert acot(I/5).evalf() == acot(x).rewrite(log).evalf(subs={x:I/5})
 
 
 def test_attributes():
