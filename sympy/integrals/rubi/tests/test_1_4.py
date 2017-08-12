@@ -15,7 +15,7 @@ from sympy.functions.elementary.hyperbolic import atanh as arctanh
 from sympy.functions.elementary.hyperbolic import asinh as arcsinh
 from sympy.functions.elementary.hyperbolic import acosh as arccosh
 from sympy.functions.elementary.trigonometric import atan as arctan
-    from sympy.functions.elementary.trigonometric import asin as arcsin
+from sympy.functions.elementary.trigonometric import asin as arcsin
 from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, EllipticPi, hypergeom, rubi_test
 from sympy import pi as Pi
@@ -62,7 +62,6 @@ def test_numerical():
     ]
     for i in test:
         r = rubi_integrate(i[0], i[1])
-        print(i[0], '---', r)
         if len(i) == 5:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True, _numerical=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True, _numerical=True)
         else:

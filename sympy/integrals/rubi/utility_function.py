@@ -5551,7 +5551,7 @@ def SimpHelp(u, x):
         match = u.match(pattern)
         m = False
         if match:
-            if EqQ(match[n]**3, S(1)/16):
+            if EqQ(match[n_]**3, S(1)/16):
                 m = True
         if m:
             return u
