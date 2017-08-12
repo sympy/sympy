@@ -896,6 +896,14 @@ def test_solveset():
     assert solveset(Eq(exp(x), 1), x) == imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers)
 
+    # issue 12217
+    raises(ValueError, lambda: solveset(sqrt(2) - 1, 1))
+    raises(ValueError, lambda: solveset(sqrt(1) - 1, 1))
+    raises(ValueError, lambda: solveset(x - 4, 4))
+
+    assert solveset(4, domain=S.Reals) == S.EmptySet
+    assert solveset(sqrt(1) - 1, x) == S.Complexes
+    assert solveset(sqrt(2) - 1, x) == S.EmptySet
 
 def test_conditionset():
     assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) == \

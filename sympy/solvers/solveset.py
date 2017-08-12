@@ -879,6 +879,20 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(f, (Expr, Number)):
         raise ValueError("%s is not a valid SymPy expression" % (f))
 
+    if symbol is None:
+        free_symbols = f.free_symbols
+        if len(free_symbols) == 1:
+            symbol = free_symbols.pop()
+        elif len(free_symbols) > 1:
+            raise ValueError(filldedent('''
+                The independent variable must be specified for a
+                multivariate equation.'''))
+        else:
+            pass
+    elif not getattr(symbol, 'is_Symbol', False):
+        raise ValueError('A Symbol must be given, not type %s: %s' %
+            (type(symbol), symbol))
+
     free_symbols = f.free_symbols
 
     if not free_symbols:
@@ -891,16 +905,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
-    if symbol is None:
-        if len(free_symbols) == 1:
-            symbol = free_symbols.pop()
-        else:
-            raise ValueError(filldedent('''
-                The independent variable must be specified for a
-                multivariate equation.'''))
-    elif not getattr(symbol, 'is_Symbol', False):
-        raise ValueError('A Symbol must be given, not type %s: %s' %
-            (type(symbol), symbol))
 
     if isinstance(f, Eq):
         from sympy.core import Add
