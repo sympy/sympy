@@ -14,8 +14,7 @@ from __future__ import print_function, division
 from functools import cmp_to_key
 
 from sympy.core import S, diff, Expr, Symbol
-from sympy.geometry import Segment2D, Segment3D, Polygon, Point, Point2D, \
-                           Point3D
+from sympy.geometry import Segment2D, Polygon, Point, Point2D
 from sympy.abc import x, y, z
 
 from sympy.polys.polytools import LC, gcd_list, degree_list
@@ -60,30 +59,29 @@ def polytope_integrate(poly, expr, **kwargs):
     expr = S(expr)
 
     if isinstance(poly, Polygon):
-        # For Vertex Representation
+        # For Vertex Representation(2D case)
         hp_params = hyperplane_parameters(poly)
         facets = poly.sides
     elif len(poly[0]) == 2:
         # For Hyperplane Representation
         plen = len(poly)
-        if len(poly[0][0]) == 2:# 2D case
+        if len(poly[0][0]) == 2:  # 2D case
             intersections = [intersection(poly[(i - 1) % plen], poly[i],
                                           "plane2D")
                              for i in range(0, plen)]
             hp_params = poly
             lints = len(intersections)
-            facets = [Segment2D(intersections[i], intersections[(i + 1) % lints])
+            facets = [Segment2D(intersections[i],
+                                intersections[(i + 1) % lints])
                       for i in range(0, lints)]
-        else:# 3D case
-            intersections = [intersection(poly[i], poly, "plane3D")
-                             for i in range(0, plen)]
-            facets = [point_sort(polygon, poly[i]) for i, polygon in
-                      enumerate(intersections)]
-            hp_params = poly
+        else:
+            raise NotImplementedError("Integration for H-representation 3D"
+                                      "case not implemented yet.")
     else:
         # For 3D case.
         hp_params = hyperplane_parameters(poly)
         facets = poly
+        return main_integrate3d(expr, facets, hp_params)
 
     if max_degree is not None:
         result = {}
@@ -110,6 +108,30 @@ def polytope_integrate(poly, expr, **kwargs):
 
 
 def main_integrate3d(expr, facets, hp_params):
+    """Function to translate the problem of integrating uni/bi/trivariate
+    polynomials over a 3-Polytope to integrating over it's faces.
+    This is done using Generalized Stokes Theorem and Euler Theorem.
+
+    Parameters
+    ===========
+    expr : The input polynomial
+    facets : Faces of the 3-Polytope
+    hp_params : Hyperplane Parameters of the facets
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import main_integrate3d,\
+    hyperplane_parameters
+    >>> triangle = [(0, 0, 0), (1, 1, 1), (0, 0, 2)]
+    >>> cube = [[(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)],\
+                 [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
+                 [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
+                 [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
+                 [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
+                 [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
+    >>> hp_params = hyperplane_parameters(cube)
+    >>> main_integrate3d(1, cube, hp_params)
+    125
+    """
     dims = (x, y, z)
     dim_length = len(dims)
     integral_value = S.Zero
@@ -122,7 +144,7 @@ def main_integrate3d(expr, facets, hp_params):
             if hp[1] == S.Zero:
                 continue
             poly_contribute += polygon_integrate(facet, i, facets, expr, deg) *\
-                        (hp[1] / norm(tuple(hp[0])))
+                (hp[1] / norm(tuple(hp[0])))
             facet_count += 1
         poly_contribute /= (dim_length + deg)
         integral_value += poly_contribute
@@ -130,6 +152,28 @@ def main_integrate3d(expr, facets, hp_params):
 
 
 def polygon_integrate(facet, index, facets, expr, degree):
+    """Helper function to integrate the input uni/bi/trivariate polynomial
+    over a certain face of the 3-Polytope.
+
+    Parameters
+    ===========
+    facet : A particular face of the 3-Polytope over which `expr` is integrated
+    index : The index of `facet` in `facets`
+    facets : Faces of the 3-Polytope
+    expr : The input polynomial
+    degree : Degree of `expr`
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import polygon_integrate
+    >>> cube = [[(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)],\
+                 [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
+                 [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
+                 [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
+                 [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
+                 [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
+    >>> polygon_integrate(cube[0], 0, cube, 1, 0)
+    25
+    """
     if expr == S.Zero:
         return S.Zero
     result = S.Zero
@@ -149,6 +193,19 @@ def polygon_integrate(facet, index, facets, expr, degree):
 
 
 def distance_to_side(point, line_seg):
+    """Helper function to compute the distance between given 3D point and
+    a line segment.
+
+    Parameters
+    ===========
+    point : 3D Point
+    line_seg : Line Segment
+
+    >>> from sympy.integrals.intpoly import distance_to_side
+    >>> point = (0, 0, 0)
+    >>> distance_to_side(point, [(0, 0, 1), (0, 1, 0)])
+    sqrt(2)/2
+    """
     x1, x2 = line_seg
     num = norm(((point[1] - x1[1]) * (point[2] - x2[2]) -
                 (point[1] - x2[1]) * (point[2] - x1[2]),
@@ -157,15 +214,30 @@ def distance_to_side(point, line_seg):
                 (point[0] - x1[0]) * (point[1] - x2[1]) -
                 (point[0] - x2[0]) * (point[1] - x1[1])))
     denom = norm((x2[0] - x1[0], x2[1] - x1[1], x2[2] - x1[2]))
-    return num/denom
+    return S(num)/denom
 
 
-def lineseg_integrate(polygon, i, line_seg, expr, degree):
+def lineseg_integrate(polygon, index, line_seg, expr, degree):
+    """Helper function to compute the line integral of `expr` over `line_seg`
+
+    Parameters
+    ===========
+    polygon : Face of a 3-Polytope
+    index : index of line_seg in polygon
+    line_seg : Line Segment
+
+    >>> from sympy.integrals.intpoly import lineseg_integrate
+    >>> polygon = [(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)]
+    >>> line_seg = [(0, 5, 0), (5, 5, 0)]
+    >>> lineseg_integrate(polygon, 0, line_seg, 1, 0)
+    5
+    """
     if expr == S.Zero:
         return S.Zero
     result = S.Zero
     x0 = line_seg[0]
-    distance = norm(tuple([line_seg[1][i] - line_seg[0][i] for i in range(3)]))
+    distance = norm(tuple([line_seg[1][i] - line_seg[0][i] for i in
+                           range(3)]))
     if isinstance(expr, Expr):
         expr_dict = {x: line_seg[1][0],
                      y: line_seg[1][1],
@@ -174,7 +246,7 @@ def lineseg_integrate(polygon, i, line_seg, expr, degree):
     else:
         result += distance * expr
     expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] + diff(expr, z) * x0[2]
-    result += lineseg_integrate(polygon, i, line_seg, expr, degree - 1)
+    result += lineseg_integrate(polygon, index, line_seg, expr, degree - 1)
     result /= (degree + 1)
     return result
 
@@ -455,7 +527,7 @@ def hyperplane_parameters(poly):
     [((0, 1), 3), ((1, -2), -1), ((-2, -1), -3)]
     """
     if isinstance(poly, Polygon):
-        vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon.
+        vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon
         params = [None] * (len(vertices) - 1)
 
         for i in range(len(vertices) - 1):
@@ -538,6 +610,7 @@ def best_origin(a, b, lineseg, expr):
     (0, 3.0)
     """
     a1, b1 = lineseg.points[0]
+
     def x_axis_cut(ls):
         """Returns the point where the input line segment
         intersects the x-axis.
@@ -847,7 +920,7 @@ def intersection(geom_1, geom_2, intersection_type):
             return (S(t1 * (x3 - x4) - t2 * (x1 - x2)) / denom,
                     S(t1 * (y3 - y4) - t2 * (y1 - y2)) / denom)
     if intersection_type[:-2] == "plane":
-        if intersection_type == "plane2D":# Intersection of hyperplanes
+        if intersection_type == "plane2D":  # Intersection of hyperplanes
             a1x, a1y = geom_1[0]
             a2x, a2y = geom_2[0]
             b1, b2 = S(geom_1[1]), S(geom_2[1])
@@ -856,12 +929,6 @@ def intersection(geom_1, geom_2, intersection_type):
             if denom:
                 return (S(b1 * a2y - b2 * a1y) / denom,
                         S(b2 * a1x - b1 * a2x) / denom)
-        elif intersection_type == "plane3D":
-            a1x, a1y, a1z = geom_1[0]
-            facets = []
-            #for polygon in geom_2:
-
-        return ()
 
 
 def is_vertex(ent):
