@@ -2276,20 +2276,19 @@ def SimplerQ(u, v):
             return True
     elif NumberQ(v):
         return False
-    elif AtomQ(u):
-        if AtomQ(v):
+    elif AtomQ(u) or (Head(u) == re) or (Head(u) == im):
+        if AtomQ(v) or (Head(u) == re) or (Head(u) == im):
             return OrderedQ([u,v])
         else:
             return True
-    elif AtomQ(v):
+    elif AtomQ(v) or (Head(u) == re) or (Head(u) == im):
         return False
     elif Head(u) == Head(v):
         if Length(u) == Length(v):
             for i in range(len(u.args)):
                 if not u.args[i] == v.args[i]:
                     return SimplerQ(u.args[i], v.args[i])
-                else:
-                    return False
+            return False
         return Length(u) < Length(v)
     elif LeafCount(u) < LeafCount(v):
         return True

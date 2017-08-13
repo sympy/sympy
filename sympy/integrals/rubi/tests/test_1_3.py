@@ -152,7 +152,7 @@ def test_1():
         [x**S(3)*(c + d*x)**(S(5)/S(2))/(a + b*x)**(S(5)/S(2)), x, S(7), - S(2)/S(3)*x**S(3)*(c + d*x)**(S(5)/S(2))/(b*(a + b*x)**(S(3)/S(2))) - S(5)/S(64)*(b*c - a*d)*(b**S(3)*c**S(3) + S(21)*a*b**S(2)*c**S(2)*d - S(189)*a**S(2)*b*c*d**S(2) + S(231)*a**S(3)*d**S(3))*arctanh(sqrt(d)*sqrt(a + b*x)/(sqrt(b)*sqrt(c + d*x)))/(b**(S(13)/S(2))*d**(S(3)/S(2))) - S(2)/S(3)*(S(6)*b*c - S(11)*a*d)*x**S(2)*(c + d*x)**(S(5)/S(2))/(b**S(2)*(b*c - a*d)*sqrt(a + b*x)) - S(5)/S(96)*(b**S(3)*c**S(3) + S(21)*a*b**S(2)*c**S(2)*d - S(189)*a**S(2)*b*c*d**S(2) + S(231)*a**S(3)*d**S(3))*(c + d*x)**(S(3)/S(2))*sqrt(a + b*x)/(b**S(5)*d*(b*c - a*d)) + S(1)/S(24)*(c + d*x)**(S(5)/S(2))*(S(5)*b**S(2)*c**S(2) - S(156)*a*b*c*d + S(231)*a**S(2)*d**S(2) + S(2)*b*d*(S(59)*b*c - S(99)*a*d)*x)*sqrt(a + b*x)/(b**S(4)*d*(b*c - a*d)) - S(5)/S(64)*(b**S(3)*c**S(3) + S(21)*a*b**S(2)*c**S(2)*d - S(189)*a**S(2)*b*c*d**S(2) + S(231)*a**S(3)*d**S(3))*sqrt(a + b*x)*sqrt(c + d*x)/(b**S(6)*d)],
         [x**S(2)/((a + b*x)**(S(5)/S(2))*(c + d*x)**(S(1)/S(2))), x, S(4), S(2)*arctanh(sqrt(d)*sqrt(a + b*x)/(sqrt(b)*sqrt(c + d*x)))/(b**(S(5)/S(2))*sqrt(d)) - S(2)/S(3)*a**S(2)*sqrt(c + d*x)/(b**S(2)*(b*c - a*d)*(a + b*x)**(S(3)/S(2))) + S(4)/S(3)*a*(S(3)*b*c - S(2)*a*d)*sqrt(c + d*x)/(b**S(2)*(b*c - a*d)**S(2)*sqrt(a + b*x))],
         [x*sqrt(a + b*x)/sqrt( - a - b*x), x, S(2), S(1)/S(2)*x**S(2)*sqrt(a + b*x)/sqrt( - a - b*x)],
-
+        [(c + d*x)**(S(3)/S(2))/(x*(a + b*x)**S(2)), x, S(6), - S(2)*c**(S(3)/S(2))*arctanh(sqrt(c + d*x)/sqrt(c))/a**S(2) + (S(2)*b*c + a*d)*arctanh(sqrt(b)*sqrt(c + d*x)/sqrt(b*c - a*d))*sqrt(b*c - a*d)/(a**S(2)*b**(S(3)/S(2))) + (b*c - a*d)*sqrt(c + d*x)/(a*b*(a + b*x))],
     ]
     for i in test:
         print(i[0])
