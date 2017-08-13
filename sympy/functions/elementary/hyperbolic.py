@@ -771,7 +771,13 @@ class sech(ReciprocalHyperbolicFunction):
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class asinh(Function):
+class InverseHyperbolicFunction(Function):
+    """Base class for inverse hyperbolic functions."""
+
+    pass
+
+
+class asinh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic sine function.
 
@@ -856,7 +862,7 @@ class asinh(Function):
         return sinh
 
 
-class acosh(Function):
+class acosh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cosine function.
 
@@ -961,7 +967,7 @@ class acosh(Function):
         return cosh
 
 
-class atanh(Function):
+class atanh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic tangent function.
 
@@ -1039,7 +1045,7 @@ class atanh(Function):
         return tanh
 
 
-class acoth(Function):
+class acoth(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cotangent function.
 
@@ -1114,7 +1120,7 @@ class acoth(Function):
         return coth
 
 
-class asech(Function):
+class asech(InverseHyperbolicFunction):
     """
     The inverse hyperbolic secant function.
 
@@ -1241,7 +1247,7 @@ class asech(Function):
         return log(1/arg + sqrt(1/arg - 1) * sqrt(1/arg + 1))
 
 
-class acsch(Function):
+class acsch(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cosecant function.
 
