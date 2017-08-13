@@ -367,7 +367,7 @@ class NDimArray(object):
         return (self.shape == other.shape) and (list(self) == list(other))
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -402,6 +402,9 @@ class NDimArray(object):
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
+
+    def __hash__(self):
+        return Basic.__hash__(self)
 
 
 from sympy.core.numbers import Integer

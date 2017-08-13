@@ -8,6 +8,7 @@ from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
+from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 
@@ -250,6 +251,9 @@ class SparseMatrix(MatrixBase):
             rv /= scale
         return self._new(rv)
 
+    def _eval_Abs(self):
+        return self.applyfunc(lambda x: Abs(x))
+
     def _eval_add(self, other):
         """If `other` is a SparseMatrix, add efficiently. Otherwise,
         do standard addition."""
@@ -314,6 +318,11 @@ class SparseMatrix(MatrixBase):
                 if i_previous != i:
                     rv = rv.col_insert(i, rv.col(i_previous))
         return rv
+
+    @classmethod
+    def _eval_eye(cls, rows, cols):
+        entries = {(i,i): S.One for i in range(min(rows, cols))}
+        return cls._new(rows, cols, entries)
 
     def _eval_has(self, *patterns):
         # if the matrix has any zeros, see if S.Zero
@@ -403,6 +412,10 @@ class SparseMatrix(MatrixBase):
     def _eval_values(self):
         return [v for k,v in self._smat.items() if not v.is_zero]
 
+    @classmethod
+    def _eval_zeros(cls, rows, cols):
+        return cls._new(rows, cols, {})
+
     def _LDL_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
         # having difficulties, try uncommenting to make sure that the
@@ -464,6 +477,12 @@ class SparseMatrix(MatrixBase):
                 X[i, 0] -= v*X[j, 0]
             X[i, 0] /= self[i, i]
         return self._new(X)
+
+    @property
+    def _mat(self):
+        """Return a list of matrix elements.  Some routines
+        in DenseMatrix use `_mat` directly to speed up operations."""
+        return list(self)
 
     def _upper_triangular_solve(self, rhs):
         """Fast algorithm for solving an upper-triangular system,
@@ -590,12 +609,6 @@ class SparseMatrix(MatrixBase):
 
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
-
-    @classmethod
-    def eye(cls, n):
-        """Return an n x n identity matrix."""
-        n = as_int(n)
-        return cls(n, n, {(i, i): S.One for i in range(n)})
 
     def LDLdecomposition(self):
         """
@@ -830,13 +843,6 @@ class SparseMatrix(MatrixBase):
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
-    @classmethod
-    def zeros(cls, r, c=None):
-        """Return an r x c matrix of zeros, square if c is omitted."""
-        c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls(r, c, {})
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
@@ -979,8 +985,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> C == A.row_insert(A.rows, Matrix(B))
         True
         """
-        if not self:
-            return type(self)(other)
+        # A null matrix can always be stacked (see  #10770)
+        if self.rows == 0 and self.cols != other.cols:
+            return self._new(0, other.cols, []).col_join(other)
+
         A, B = self, other
         if not A.cols == B.cols:
             raise ShapeError()
@@ -1185,8 +1193,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> C == A.col_insert(A.cols, B)
         True
         """
-        if not self:
-            return type(self)(other)
+        # A null matrix can always be stacked (see  #10770)
+        if self.cols == 0 and self.rows != other.rows:
+            return self._new(other.rows, 0, []).row_join(other)
+
         A, B = self, other
         if not A.rows == B.rows:
             raise ShapeError()

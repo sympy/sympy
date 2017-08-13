@@ -1410,6 +1410,7 @@ def test_hermitian():
         Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) is True
 
 
+@slow
 def test_imaginary():
     assert ask(Q.imaginary(x)) is None
     assert ask(Q.imaginary(x), Q.real(x)) is False
@@ -1778,6 +1779,7 @@ def test_nonpositive():
     assert ask(Q.nonpositive(sqrt(-1))) is False
     assert ask(Q.nonpositive(x), Q.imaginary(x)) is False
 
+
 def test_nonnegative():
     assert ask(Q.nonnegative(-1)) is False
     assert ask(Q.nonnegative(0))
@@ -1787,7 +1789,7 @@ def test_nonnegative():
     assert ask(Q.nonnegative(sqrt(-1))) is False
     assert ask(Q.nonnegative(x), Q.imaginary(x)) is False
 
-def test_real():
+def test_real_basic():
     assert ask(Q.real(x)) is None
     assert ask(Q.real(x), Q.real(x)) is True
     assert ask(Q.real(x), Q.nonzero(x)) is True
@@ -1809,6 +1811,8 @@ def test_real():
     assert ask(Q.real(I*x), Q.imaginary(x)) is True
     assert ask(Q.real(I*x), Q.complex(x)) is None
 
+@slow
+def test_real_pow():
     assert ask(Q.real(x**2), Q.real(x)) is True
     assert ask(Q.real(sqrt(x)), Q.negative(x)) is False
     assert ask(Q.real(x**y), Q.real(x) & Q.integer(y)) is True
@@ -1835,6 +1839,7 @@ def test_real():
     assert ask(Q.real(x**i), Q.imaginary(i)) is None  # x could be 0
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
 
+def test_real_functions():
     # trigonometric functions
     assert ask(Q.real(sin(x))) is None
     assert ask(Q.real(cos(x))) is None

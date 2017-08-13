@@ -771,7 +771,13 @@ class sech(ReciprocalHyperbolicFunction):
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class asinh(Function):
+class InverseHyperbolicFunction(Function):
+    """Base class for inverse hyperbolic functions."""
+
+    pass
+
+
+class asinh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic sine function.
 
@@ -847,9 +853,6 @@ class asinh(Function):
             return self.func(arg)
 
     def _eval_rewrite_as_log(self, x):
-        """
-        Rewrites asinh as log function.
-        """
         return log(x + sqrt(x**2 + 1))
 
     def inverse(self, argindex=1):
@@ -859,7 +862,7 @@ class asinh(Function):
         return sinh
 
 
-class acosh(Function):
+class acosh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cosine function.
 
@@ -954,6 +957,9 @@ class acosh(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x):
+        return log(x + sqrt(x + 1) * sqrt(x - 1))
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -961,7 +967,7 @@ class acosh(Function):
         return cosh
 
 
-class atanh(Function):
+class atanh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic tangent function.
 
@@ -1029,6 +1035,9 @@ class atanh(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x):
+        return (log(1 + x) - log(1 - x)) / 2
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1036,7 +1045,7 @@ class atanh(Function):
         return tanh
 
 
-class acoth(Function):
+class acoth(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cotangent function.
 
@@ -1101,6 +1110,9 @@ class acoth(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x):
+        return (log(1 + 1/x) - log(1 - 1/x)) / 2
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1108,7 +1120,7 @@ class acoth(Function):
         return coth
 
 
-class asech(Function):
+class asech(InverseHyperbolicFunction):
     """
     The inverse hyperbolic secant function.
 
@@ -1232,10 +1244,10 @@ class asech(Function):
         return sech
 
     def _eval_rewrite_as_log(self, arg):
-        return log(1/arg + sqrt(1/arg**2 - 1))
+        return log(1/arg + sqrt(1/arg - 1) * sqrt(1/arg + 1))
 
 
-class acsch(Function):
+class acsch(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cosecant function.
 

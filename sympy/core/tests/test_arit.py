@@ -1255,12 +1255,19 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False, complex=True)
+    nr = Symbol('nr', real=False, complex=True)  # e.g. I or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i*nr).is_real is None
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
+
+    ni = Symbol('ni', imaginary=False, complex=True)  # e.g. 2 or 1 + I
+    a = Symbol('a', real=True, nonzero=True)
+    b = Symbol('b', real=True)
+    assert (i*ni).is_real is False
+    assert (a*ni).is_real is None
+    assert (b*ni).is_real is None
 
 
 def test_Mul_hermitian_antihermitian():

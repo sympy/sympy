@@ -212,7 +212,7 @@ def dup_sqf_part(f, K):
     gcd = dup_gcd(f, dup_diff(f, 1, K), K)
     sqf = dup_quo(f, gcd, K)
 
-    if K.has_Field:
+    if K.is_Field:
         return dup_monic(sqf, K)
     else:
         return dup_primitive(sqf, K)[1]
@@ -247,7 +247,7 @@ def dmp_sqf_part(f, u, K):
     gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
     sqf = dmp_quo(f, gcd, u, K)
 
-    if K.has_Field:
+    if K.is_Field:
         return dmp_ground_monic(sqf, u, K)
     else:
         return dmp_ground_primitive(sqf, u, K)[1]
@@ -291,7 +291,7 @@ def dup_sqf_list(f, K, all=False):
     if K.is_FiniteField:
         return dup_gf_sqf_list(f, K, all=all)
 
-    if K.has_Field:
+    if K.is_Field:
         coeff = dup_LC(f, K)
         f = dup_monic(f, K)
     else:
@@ -379,7 +379,7 @@ def dmp_sqf_list(f, u, K, all=False):
     if K.is_FiniteField:
         return dmp_gf_sqf_list(f, u, K, all=all)
 
-    if K.has_Field:
+    if K.is_Field:
         coeff = dmp_ground_LC(f, u, K)
         f = dmp_ground_monic(f, u, K)
     else:

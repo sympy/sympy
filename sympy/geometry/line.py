@@ -18,18 +18,15 @@ Segment3D
 """
 from __future__ import division, print_function
 
-from sympy.core import Dummy, S, sympify
-from sympy.core.exprtools import factor_terms
+from sympy.core import S, sympify
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, sqrt, tan)
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
-from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
-from sympy.core.compatibility import is_sequence, iterable
 from sympy.core.decorators import deprecated
-from sympy.sets import Intersection, EmptySet
+from sympy.sets import Intersection
 from sympy.matrices import Matrix
 
 from .entity import GeometryEntity, GeometrySet
@@ -37,7 +34,6 @@ from .point import Point, Point3D
 from .util import _symbol
 from sympy.utilities.misc import Undecidable
 
-import warnings
 
 
 
@@ -110,7 +106,8 @@ class LinearEntity(GeometrySet):
         return len(self.p1)
 
     def angle_between(l1, l2):
-        """The angle formed between the two linear entities.
+        """The smallest of the two angles formed at the
+        intersection of two linear entities.
 
         Parameters
         ==========
@@ -137,7 +134,7 @@ class LinearEntity(GeometrySet):
         See Also
         ========
 
-        is_perpendicular
+        is_perpendicular, Ray2D.closing_angle
 
         Examples
         ========
@@ -969,7 +966,6 @@ class Line(LinearEntity):
 
     >>> import sympy
     >>> from sympy import Point
-    >>> from sympy.abc import L
     >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
@@ -1078,7 +1074,7 @@ class Line(LinearEntity):
             return S.Zero
         return self.perpendicular_segment(other).length
 
-    @deprecated(useinstead="equals", deprecated_since_version="1.0")
+    @deprecated(useinstead="equals", issue=12860, deprecated_since_version="1.0")
     def equal(self, other):
         return self.equals(other)
 
@@ -1155,9 +1151,7 @@ class Ray(LinearEntity):
 
     >>> import sympy
     >>> from sympy import Point, pi
-    >>> from sympy.abc import r
     >>> from sympy.geometry import Ray
-    >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
@@ -1393,7 +1387,6 @@ class Segment(LinearEntity):
 
     >>> import sympy
     >>> from sympy import Point
-    >>> from sympy.abc import s
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
@@ -1954,9 +1947,7 @@ class Ray2D(LinearEntity2D, Ray):
 
     >>> import sympy
     >>> from sympy import Point, pi
-    >>> from sympy.abc import r
     >>> from sympy.geometry import Ray
-    >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
@@ -2082,6 +2073,49 @@ class Ray2D(LinearEntity2D, Ray):
         else:
             return S.NegativeInfinity
 
+    def closing_angle(r1, r2):
+        """Return the angle by which r2 must be rotated so it faces the same
+        direction as r1.
+
+        Parameters
+        ==========
+
+        r1 : Ray2D
+        r2 : Ray2D
+
+        Returns
+        =======
+
+        angle : angle in radians (ccw angle is positive)
+
+        See Also
+        ========
+
+        LinearEntity.angle_between
+
+        Examples
+        ========
+
+        >>> from sympy import Ray, pi
+        >>> r1 = Ray((0, 0), (1, 0))
+        >>> r2 = r1.rotate(-pi/2)
+        >>> angle = r1.closing_angle(r2); angle
+        pi/2
+        >>> r2.rotate(angle).direction.unit == r1.direction.unit
+        True
+        >>> r2.closing_angle(r1)
+        -pi/2
+        """
+        if not all(isinstance(r, Ray2D) for r in (r1, r2)):
+            # although the direction property is defined for
+            # all linear entities, only the Ray is truly a
+            # directed object
+            raise TypeError('Both arguments must be Ray2D objects.')
+
+        a1 = atan2(*list(reversed(r1.direction.args)))
+        a2 = atan2(*list(reversed(r2.direction.args)))
+        return a1 - a2
+
 class Segment2D(LinearEntity2D, Segment):
     """An undirected line segment in 2D space.
 
@@ -2107,7 +2141,6 @@ class Segment2D(LinearEntity2D, Segment):
 
     >>> import sympy
     >>> from sympy import Point
-    >>> from sympy.abc import s
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
@@ -2260,7 +2293,6 @@ class Line3D(LinearEntity3D, Line):
 
     >>> import sympy
     >>> from sympy import Point3D
-    >>> from sympy.abc import L
     >>> from sympy.geometry import Line3D, Segment3D
     >>> L = Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
     >>> L
@@ -2353,7 +2385,6 @@ class Ray3D(LinearEntity3D, Ray):
 
     >>> import sympy
     >>> from sympy import Point3D, pi
-    >>> from sympy.abc import r
     >>> from sympy.geometry import Ray3D
     >>> r = Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r
@@ -2512,7 +2543,6 @@ class Segment3D(LinearEntity3D, Segment):
 
     >>> import sympy
     >>> from sympy import Point3D
-    >>> from sympy.abc import s
     >>> from sympy.geometry import Segment3D
     >>> Segment3D((1, 0, 0), (1, 1, 1)) # tuples are interpreted as pts
     Segment3D(Point3D(1, 0, 0), Point3D(1, 1, 1))

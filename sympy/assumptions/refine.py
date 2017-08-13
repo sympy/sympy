@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Expr, Basic
+from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.assumptions import Q, ask
-
 
 def refine(expr, assumptions=True):
     """
@@ -63,6 +62,7 @@ def refine_abs(expr, assumptions):
 
     """
     from sympy.core.logic import fuzzy_not
+    from sympy import Abs
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):
@@ -70,6 +70,17 @@ def refine_abs(expr, assumptions):
         return arg
     if ask(Q.negative(arg), assumptions):
         return -arg
+    # arg is Mul
+    if isinstance(arg, Mul):
+        r = [refine(abs(a), assumptions) for a in arg.args]
+        non_abs = []
+        in_abs = []
+        for i in r:
+            if isinstance(i, Abs):
+                in_abs.append(i.args[0])
+            else:
+                non_abs.append(i)
+        return Mul(*non_abs) * Abs(Mul(*in_abs))
 
 
 def refine_Pow(expr, assumptions):

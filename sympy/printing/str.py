@@ -237,7 +237,8 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '[%s, %s]' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
@@ -495,10 +496,11 @@ class StrPrinter(Printer):
             if -expr.exp is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
-                return "1/sqrt(%s)" % self._print(expr.base)
+                return "%s/sqrt(%s)" % tuple(map(self._print, (S.One, expr.base)))
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
-                return '1/%s' % self.parenthesize(expr.base, PREC, strict=False)
+                return '%s/%s' % (self._print(S.One),
+                                  self.parenthesize(expr.base, PREC, strict=False))
 
         e = self.parenthesize(expr.exp, PREC, strict=False)
         if self.printmethod == '_sympyrepr' and expr.exp.is_Rational and expr.exp.q != 1:
@@ -701,7 +703,7 @@ class StrPrinter(Printer):
         return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
-        return ' \ '.join(self._print(set) for set in expr.args)
+        return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
         return "%s" % expr.name

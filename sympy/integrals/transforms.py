@@ -1712,7 +1712,7 @@ def inverse_cosine_transform(F, k, x, **hints):
 
 @_noconds_(True)
 def _hankel_transform(f, r, k, nu, name, simplify=True):
-    """
+    r"""
     Compute a general Hankel transform
 
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.

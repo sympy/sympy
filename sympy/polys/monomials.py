@@ -264,7 +264,7 @@ def term_div(a, b, domain):
 
     monom = monomial_div(a_lm, b_lm)
 
-    if domain.has_Field:
+    if domain.is_Field:
         if monom is not None:
             return monom, domain.quo(a_lc, b_lc)
         else:
@@ -446,7 +446,7 @@ class Monomial(PicklableWithSlots):
         return self.exponents == exponents
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __mul__(self, other):
         if isinstance(other, Monomial):

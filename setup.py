@@ -40,8 +40,11 @@ mpmath_version = '0.19'
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
+extra_kwargs = {}
+
 try:
     from setuptools import setup, Command
+    extra_kwargs['zip_safe'] = False
 except ImportError:
     from distutils.core import setup, Command
 
@@ -358,13 +361,14 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.6',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.2',
             'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
             ],
-          install_requires=['mpmath>=%s' % mpmath_version]
+          install_requires=['mpmath>=%s' % mpmath_version],
+          **extra_kwargs
           )

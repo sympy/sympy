@@ -585,7 +585,11 @@ def test_issue_8449():
 
 def test_simplify():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    assert simplify(S(1) < -x) == (x < -1)
+    r = S(1) < -x
+    # until relationals have an _eval_simplify method
+    # if there is no simplification to do on either side
+    # the only the canonical form is returned
+    assert simplify(r) == r.canonical
 
 
 def test_equals():
@@ -617,34 +621,22 @@ def test_reversed():
 
 
 def test_canonical():
-    one = S(1)
+    c = [i.canonical for i in (
+        x + y < z,
+        x + 2 > 3,
+        x < 2,
+        S(2) > x,
+        x**2 > -x/y,
+        Gt(3, 2, evaluate=False)
+        )]
+    assert [i.canonical for i in c] == c
+    assert [i.reversed.canonical for i in c] == c
+    assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
 
-    def unchanged(v):
-        c = v.canonical
-        return v.is_Relational and c.is_Relational and v == c
-
-    def isreversed(v):
-        return v.canonical == v.reversed
-
-    assert unchanged(x < one)
-    assert unchanged(x <= one)
-    assert isreversed(Eq(one, x, evaluate=False))
-    assert unchanged(Eq(x, one, evaluate=False))
-    assert isreversed(Ne(one, x, evaluate=False))
-    assert unchanged(Ne(x, one, evaluate=False))
-    assert unchanged(x >= one)
-    assert unchanged(x > one)
-
-    assert unchanged(x < y)
-    assert unchanged(x <= y)
-    assert isreversed(Eq(y, x, evaluate=False))
-    assert unchanged(Eq(x, y, evaluate=False))
-    assert isreversed(Ne(y, x, evaluate=False))
-    assert unchanged(Ne(x, y, evaluate=False))
-    assert isreversed(x >= y)
-    assert isreversed(x > y)
-    assert (-x < 1).canonical == (x > -1)
-    assert isreversed(-x > y)
+    c = [i.reversed.func(i.rhs, i.lhs, evaluate=False).canonical for i in c]
+    assert [i.canonical for i in c] == c
+    assert [i.reversed.canonical for i in c] == c
+    assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
 
 
 @XFAIL
@@ -667,7 +659,7 @@ def test_issue_8444():
 
 
 def test_issue_10304():
-    d = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    d = cos(1)**2 + sin(1)**2 - 1
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
@@ -709,6 +701,7 @@ def test_issue_10633():
     assert Eq(False, True) == False
     assert Eq(True, True) == True
     assert Eq(False, False) == True
+
 
 def test_issue_10927():
     x = symbols('x')

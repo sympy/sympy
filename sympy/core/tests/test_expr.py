@@ -1526,6 +1526,8 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
+    assert Poly(3,x).is_constant() is True
+
 
 def test_equals():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)
@@ -1768,6 +1770,7 @@ def test_issue_1112():
     x = Symbol('x', positive=False)
     assert (x > 0) is S.false
 
+
 def test_issue_10161():
     x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
@@ -1778,6 +1781,13 @@ def test_issue_10755():
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
 
+
 def test_issue_11877():
     x = symbols('x')
     assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
+
+
+def test_normal():
+    x = symbols('x')
+    e = Mul(S.Half, 1 + x, evaluate=False)
+    assert e.normal() == e

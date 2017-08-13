@@ -17,6 +17,7 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.expr import Expr
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -166,7 +167,7 @@ def trailing(n):
     >>> trailing(63)
     0
     """
-    n = int(n)
+    n = abs(int(n))
     if not n:
         return 0
     low_byte = n & 0xff
@@ -1554,7 +1555,7 @@ def antidivisor_count(n):
 
 
 class totient(Function):
-    """
+    r"""
     Calculate the Euler totient function phi(n)
 
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
@@ -1591,13 +1592,15 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
+            raise ValueError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
 
 
 class reduced_totient(Function):
-    """
+    r"""
     Calculate the Carmichael reduced totient function lambda(n)
 
     ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
@@ -1645,7 +1648,7 @@ class reduced_totient(Function):
 
 
 class divisor_sigma(Function):
-    """
+    r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
 
     ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
@@ -1711,7 +1714,7 @@ class divisor_sigma(Function):
 
 
 def core(n, t=2):
-    """
+    r"""
     Calculate core(n,t) = `core_t(n)` of a positive integer n
 
     ``core_2(n)`` is equal to the squarefree part of n
@@ -1808,7 +1811,7 @@ def digits(n, b=10):
 
 
 class udivisor_sigma(Function):
-    """
+    r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
 
     ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``

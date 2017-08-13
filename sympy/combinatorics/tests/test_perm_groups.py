@@ -1,5 +1,6 @@
 from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import (PermutationGroup,
+    _orbit_transversal)
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation
@@ -240,6 +241,15 @@ def test_orbits():
         [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
 
+    G = DihedralGroup(6)
+    transversal, slps = _orbit_transversal(G.degree, G.generators, 0, True, slp=True)
+    for i, t in transversal:
+        slp = slps[i]
+        w = G.identity
+        for s in slp:
+            w = G.generators[s]*w
+        assert w == t
+
     a = Permutation(list(range(1, 100)) + [0])
     G = PermutationGroup([a])
     assert [min(o) for o in G.orbits()] == [0]
@@ -444,6 +454,11 @@ def test_minimal_block():
     assert S.minimal_block([0, 1]) == [0, 0, 0, 0, 0, 0]
 
     assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
+
+    P1 = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    P2 = PermutationGroup(Permutation(0, 1, 2, 3, 4, 5), Permutation(1, 5)(2, 4))
+    assert P1.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
+    assert P2.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
 
 
 def test_max_div():
@@ -747,3 +762,18 @@ def test_coset_table():
          [6, 6, 6, 6, 2, 1, 11, 11, 2, 2], [9, 10, 8, 10, 11, 3, 1, 1, 7, 7],
          [10, 9, 10, 7, 3, 11, 2, 2, 11, 11], [8, 7, 9, 9, 9, 9, 4, 4, 9, 9],
          [7, 8, 7, 8, 10, 10, 5, 5, 10, 10], [11, 11, 11, 11, 8, 7, 6, 6, 8, 8]]
+
+def test_subgroup():
+    G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
+    H = G.subgroup([Permutation(0,1,3)])
+    assert H.is_subgroup(G)
+
+def test_generator_product():
+    G = SymmetricGroup(5)
+    p = Permutation(0, 2, 3)(1, 4)
+    gens = G.generator_product(p)
+    assert all(g in G.strong_gens for g in gens)
+    w = G.identity
+    for g in gens:
+        w = g*w
+    assert w == p

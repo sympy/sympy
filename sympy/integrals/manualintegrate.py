@@ -27,6 +27,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.strategies.core import switch, do_one, null_safe, condition
 
+
 def Rule(name, props=""):
     # GOTCHA: namedtuple class name not considered!
     def __eq__(self, other):
@@ -876,10 +877,16 @@ distribute_expand_rule = rewriter(
     lambda integrand, symbol: integrand.expand())
 
 def derivative_rule(integral):
-    variables = integral[0].args[1:]
+    integrand = integral[0]
+    diff_variables = integrand.args[1:]
+    undifferentiated_function = integrand.args[0]
+    integrand_variables = undifferentiated_function.free_symbols
 
-    if variables[-1] == integral.symbol:
-        return DerivativeRule(*integral)
+    if integral.symbol in integrand_variables:
+        if integral.symbol in diff_variables:
+            return DerivativeRule(*integral)
+        else:
+            return DontKnowRule(integrand, integral.symbol)
     else:
         return ConstantRule(integral.integrand, *integral)
 
@@ -1153,7 +1160,9 @@ def eval_derivativerule(integrand, symbol):
     if len(integrand.args) == 2:
         return integrand.args[0]
     else:
-        return sympy.Derivative(integrand.args[0], *integrand.args[1:-1])
+        new_diff_vars = list(integrand.args[1:])
+        new_diff_vars.remove(symbol)
+        return sympy.Derivative(integrand.args[0], *(new_diff_vars))
 
 @evaluates(HeavisideRule)
 def eval_heaviside(harg, ibnd, substep, integrand, symbol):

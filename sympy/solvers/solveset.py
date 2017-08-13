@@ -12,10 +12,9 @@ from __future__ import print_function, division
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand, expand_complex)
+from sympy.core.function import (Lambda, expand_complex)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import simplify, fraction, trigsimp
-from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold)
@@ -36,7 +35,7 @@ from sympy.core.compatibility import ordered, default_sort_key
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
-    """
+    r"""
     Reduce the complex valued equation ``f(x) = y`` to a set of equations
     ``{g(x) = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is
     a simpler function than ``f(x)``.  The return value is a tuple ``(g(x),
@@ -118,7 +117,6 @@ def invert_real(f_x, y, x, domain=S.Reals):
     """
     return _invert(f_x, y, x, domain)
 
-
 def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
 
@@ -189,8 +187,13 @@ def _invert_real(f, g_ys, symbol):
                 return _invert_real(base, res, symbol)
 
         if not base_has_sym:
-            return _invert_real(expo,
-                imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+            if base is not S.Zero:
+                return _invert_real(expo,
+                    imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+            elif g_ys.args[0] is S.One:
+                #special case: 0**x - 1
+                return (expo, FiniteSet(0))
+
 
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
@@ -772,7 +775,7 @@ def _solveset(f, symbol, domain, _check=False):
 
 
 def solveset(f, symbol=None, domain=S.Complexes):
-    """Solves a given inequality or equation with set as output
+    r"""Solves a given inequality or equation with set as output
 
     Parameters
     ==========
@@ -1252,33 +1255,24 @@ def linsolve(system, *symbols):
     * A degenerate system returns solution as set of given
       symbols.
 
-    >>> system = Matrix(([0,0,0], [0,0,0], [0,0,0]))
+    >>> system = Matrix(([0, 0, 0], [0, 0, 0], [0, 0, 0]))
     >>> linsolve(system, x, y)
     {(x, y)}
 
     * For an empty system linsolve returns empty set
 
-    >>> linsolve([ ], x)
+    >>> linsolve([], x)
     EmptySet()
 
     """
-
     if not system:
         return S.EmptySet
 
-    if not symbols:
-        raise ValueError('Symbols must be given, for which solution of the '
-                         'system is to be found.')
-
+    # If second argument is an iterable
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    try:
-        sym = symbols[0].is_Symbol
-    except AttributeError:
-        sym = False
-
-    if not sym:
+    if not any([hasattr(symbols[0], attr) for attr in ['is_Symbol', 'is_Function']]):
         raise ValueError('Symbols or iterable of symbols must be given as '
                          'second argument, not type %s: %s' % (type(symbols[0]), symbols[0]))
 
@@ -1290,7 +1284,7 @@ def linsolve(system, *symbols):
 
         # 2). A & b as input Form
         if len(system) == 2 and system[0].is_Matrix:
-            A, b = system[0], system[1]
+            A, b = system
 
         # 3). List of equations Form
         if not system[0].is_Matrix:
@@ -1299,28 +1293,17 @@ def linsolve(system, *symbols):
     else:
         raise ValueError("Invalid arguments")
 
-    # Solve using Gauss-Jordan elimination
     try:
-        sol, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
+        solution, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
     except ValueError:
         # No solution
-        return EmptySet()
+        return S.EmptySet
 
     # Replace free parameters with free symbols
-    solution = []
-    if params:
-        for s in sol:
-            for k, v in enumerate(params):
-                s = s.xreplace({v: symbols[free_syms[k]]})
-            solution.append(simplify(s))
-    else:
-        for s in sol:
-            solution.append(simplify(s))
+    replace_dict = {v: symbols[free_syms[k]] for k, v in enumerate(params)}
+    solution = [simplify(sol.xreplace(replace_dict)) for sol in solution]
 
-    # Return solutions
-    solution = FiniteSet(tuple(solution))
-    return solution
-
+    return FiniteSet(tuple(solution))
 
 
 

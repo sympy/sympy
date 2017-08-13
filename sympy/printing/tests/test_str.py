@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr)
+    AccumBounds, UnevaluatedExpr, Eq, Ne)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -17,6 +17,7 @@ from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
+from sympy import MatrixSymbol
 
 x, y, z, w = symbols('x,y,z,w')
 d = Dummy('d')
@@ -510,6 +511,9 @@ def test_Relational():
     assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
     assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
+    assert str(Eq(x, 1) | Eq(x, 2)) == "Eq(x, 1) | Eq(x, 2)"
+    assert str(Ne(x, 1) & Ne(x, 2)) == "Ne(x, 1) & Ne(x, 2)"
+
 
 def test_CRootOf():
     assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
@@ -673,7 +677,7 @@ def test_RandomDomain():
     assert str(where(X > 0)) == "Domain: (0 < x1) & (x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: (Eq(d1, 5)) | (Eq(d1, 6))"
+    assert str(where(D > 4)) == "Domain: Eq(d1, 5) | Eq(d1, 6)"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
@@ -754,3 +758,16 @@ def test_UnevaluatedExpr():
     a, b = symbols("a b")
     expr1 = 2*UnevaluatedExpr(a+b)
     assert str(expr1) == "2*(a + b)"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(str(A[0, 0]) == "A[0, 0]")
+    assert(str(3 * A[0, 0]) == "3*A[0, 0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert str(F) == "((-1)*B + A)[0, 0]"
