@@ -180,7 +180,9 @@ def test_permutation_methods():
 
     # DiheadralGroup(4)
     G = FpGroup(F, [x**2, y**4, x*y*x**-1*y])
-    assert G.normal_closure([x]) == [x, x*y**2]
+    S = FpSubgroup(G, G.normal_closure([x]))
+    assert x in S
+    assert y**-1*x*y in S
 
     # Z_5xZ_4
     G = FpGroup(F, [x*y*x**-1*y**-1, y**5, x**4])
