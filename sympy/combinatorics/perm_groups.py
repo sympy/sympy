@@ -3423,7 +3423,9 @@ class PermutationGroup(Basic):
 
     def presentation(G):
         '''
-        Return an `FpGroup` presentation of the group
+        Return an `FpGroup` presentation of the group.
+
+        The algorithm is described in [1], Chapter 6.1.
 
         '''
         from sympy.combinatorics.fp_groups import (FpGroup,
