@@ -59,7 +59,8 @@ class GroupHomomorphism(object):
 
     def invert(self, g):
         '''
-        Return an element of the preimage of `g`.
+        Return an element of the preimage of `g` or of each element
+        of `g` if `g` is a list.
         NOTE: If the codomain is an FpGroup, the inverse for equal
         elements might not always be the same unless the FpGroup's
         rewriting system is confluent. However, making a system
@@ -67,31 +68,36 @@ class GroupHomomorphism(object):
         `self.codomain.make_confluent()` first.
 
         '''
-        if isinstance(self.codomain, FpGroup):
-            g = self.codomain.reduce(g)
-        if self._inverses is None:
-            self._inverses = self._invs()
-        image = self.image()
-        w = self.domain.identity
-        if isinstance(self.codomain, PermutationGroup):
-            gens = image.generator_product(g)[::-1]
-        else:
-            gens = g
-        # the following can't be "for s in gens:"
-        # because that would be equivalent to
-        # "for s in gens.array_form:" when g is
-        # a FreeGroupElement. On the other hand,
-        # when you call gens by index, the generator
-        # (or inverse) at position i is returned.
-        for i in range(len(gens)):
-            s = gens[i]
-            if s.is_identity:
-                continue
-            if s in self._inverses:
-                w = w*self._inverses[s]
+        from sympy.combinatorics import Permutation
+        from sympy.combinatorics.free_groups import FreeGroupElement
+        if isinstance(g, (Permutation, FreeGroupElement)):
+            if isinstance(self.codomain, FpGroup):
+                g = self.codomain.reduce(g)
+            if self._inverses is None:
+                self._inverses = self._invs()
+            image = self.image()
+            w = self.domain.identity
+            if isinstance(self.codomain, PermutationGroup):
+                gens = image.generator_product(g)[::-1]
             else:
-                w = w*self._inverses[s**-1]**-1
-        return w
+                gens = g
+            # the following can't be "for s in gens:"
+            # because that would be equivalent to
+            # "for s in gens.array_form:" when g is
+            # a FreeGroupElement. On the other hand,
+            # when you call gens by index, the generator
+            # (or inverse) at position i is returned.
+            for i in range(len(gens)):
+                s = gens[i]
+                if s.is_identity:
+                    continue
+                if s in self._inverses:
+                    w = w*self._inverses[s]
+                else:
+                    w = w*self._inverses[s**-1]**-1
+            return w
+        elif isinstance(g, list):
+            return [self.invert(e) for e in g]
 
     def kernel(self):
         '''
@@ -145,6 +151,8 @@ class GroupHomomorphism(object):
 
         '''
         if not elem in self.domain:
+            if isinstance(elem, list):
+                return [self._apply(e) for e in elem]
             raise ValueError("The supplied element doesn't belong to the domain")
         if elem.is_identity:
             return self.codomain.identity

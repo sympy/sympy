@@ -186,8 +186,7 @@ class FreeGroup(DefaultPrinting):
     def __contains__(self, i):
         """Return True if ``i`` is contained in FreeGroup."""
         if not isinstance(i, FreeGroupElement):
-            raise TypeError("FreeGroup contains only FreeGroupElement as elements "
-                        ", not elements of type %s" % type(i))
+            return False
         group = i.group
         return self == group
 
