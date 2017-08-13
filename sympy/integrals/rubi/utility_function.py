@@ -18,7 +18,7 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi)
+    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
@@ -26,16 +26,17 @@ from sympy.utilities.iterables import flatten
 from sympy.strategies import distribute
 from random import randint
 
-def Int(expr, var, showsteps=False):
+def Int(expr, var):
     from .rubi import rubi_integrate
-    if expr == None:
-        return None
-    return rubi_integrate(expr, var, showsteps)
+    return rubi_integrate(expr, var)
 
 def Set(expr, value):
     return {expr: value}
 
 def With(subs, expr):
+    if isinstance(subs, bool):
+        print('Not Implemented')
+        return 0
     if isinstance(subs, dict):
         k = list(subs.keys())[0]
         expr = expr.subs(k, subs[k])
@@ -73,6 +74,8 @@ def ZeroQ(expr):
         return expr == 0
 
 def NegativeQ(u):
+    if u == zoo or u == oo:
+        return False
     res = u < 0
     if not res.is_Relational:
         return res
@@ -94,6 +97,8 @@ def Log(e):
     return log(e)
 
 def PositiveQ(var):
+    if var == zoo or var == oo:
+        return False
     res = var > 0
     if not res.is_Relational:
         return res
@@ -5030,7 +5035,7 @@ def RtAux(u, n):
         lst = SplitProduct(NegSumBaseQ, u)
         if ListQ(lst) and ListQ(SplitProduct(NegSumBaseQ, lst[1])):
             return RtAux(-lst[0], n)*RtAux(-lst[1], n)
-        Map(Function(RtAux(i, n)), u)
+        return u.func(*[RtAux(i, n) for i in u.args])
     v = TrigSquare(u)
     if Not(AtomQ(v)):
         return RtAux(v, n)
@@ -5498,7 +5503,7 @@ def Inequality(*args):
         r.append(f[i](e[i], e[i + 1]))
     return all(r)
 
-def Condition(c, r):
+def Condition(r, c):
     # returns r if c is True
     if c:
         return r

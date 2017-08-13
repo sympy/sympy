@@ -14,7 +14,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
-from sympy import I, E, pi, hyper, Add, Wild, simplify, polylog, Symbol, exp
+from sympy import I, E, pi, hyper, Add, Wild, simplify, polylog, Symbol, exp, zoo
 
 A, B, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, F = symbols('A B a b c d e f g h y z m n p q u v F', real=True, imaginary=False)
 x = Symbol('x')
@@ -56,6 +56,7 @@ def test_PositiveQ():
     assert PositiveQ(S(1))
     assert not PositiveQ(S(-3))
     assert not PositiveQ(S(0))
+    assert not PositiveQ(zoo)
 
 def test_IntegerQ():
     assert IntegerQ(S(1))
@@ -1412,7 +1413,7 @@ def test_PowerVariableSubst():
 
 def test_PowerVariableDegree():
     assert PowerVariableDegree(S(2), 0, 2*x, x) == [0, 2*x]
-    assert not PowerVariableDegree((2*x)**2, 0, 2*x, x)
+    assert PowerVariableDegree((2*x)**2, 0, 2*x, x) == [2, 1]
     assert PowerVariableDegree(x**2, 0, 2*x, x) == [2, 1]
     assert PowerVariableDegree(S(4), 0, 2*x, x) == [0, 2*x]
 

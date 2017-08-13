@@ -5,12 +5,13 @@ from sympy.utilities.decorator import doctest_depends_on
 if matchpy:
     from sympy.integrals import Integral
     from sympy.integrals.rubi.patterns import rubi_object
+    from sympy import S
     rubi = rubi_object()
 
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
     '''
-    Main function for Rubi integeration.
+    Function for Rubi integeration.
     Returns Integral object if unable to integrate.
     '''
     if isinstance(expr, int) or isinstance(expr, float):
