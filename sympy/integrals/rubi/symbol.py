@@ -8,7 +8,7 @@ else:
     class Wildcard(object):
         pass
 
-from sympy import cacheit, Symbol
+from sympy import Symbol
 
 @doctest_depends_on(modules=('matchpy',))
 class WC(Wildcard, Symbol):

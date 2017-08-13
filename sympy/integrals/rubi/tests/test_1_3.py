@@ -155,7 +155,6 @@ def test_1():
         [(c + d*x)**(S(3)/S(2))/(x*(a + b*x)**S(2)), x, S(6), - S(2)*c**(S(3)/S(2))*arctanh(sqrt(c + d*x)/sqrt(c))/a**S(2) + (S(2)*b*c + a*d)*arctanh(sqrt(b)*sqrt(c + d*x)/sqrt(b*c - a*d))*sqrt(b*c - a*d)/(a**S(2)*b**(S(3)/S(2))) + (b*c - a*d)*sqrt(c + d*x)/(a*b*(a + b*x))],
     ]
     for i in test:
-        print(i[0])
         r = rubi_integrate(i[0], i[1])
         if len(i) == 5:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True, _numerical=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True, _numerical=True)
@@ -183,7 +182,6 @@ def test_simplify():
             assert rubi_test(r, i[1], i[3], expand=True) or rubi_test(r, i[1], i[4], expand=True)
         else:
             assert rubi_test(r, i[1], i[3], expand=True)
-
 
 def test_diff():
     test = [

@@ -865,15 +865,15 @@ def NiceSqrtAuxQ(u):
     elif PowerQ(u):
         return EvenQ(u.args[1])
     elif ProductQ(u):
-        return NiceSqrtAuxQ(First(u)) & NiceSqrtAuxQ(Rest(u))
+        return NiceSqrtAuxQ(First(u)) and NiceSqrtAuxQ(Rest(u))
     elif SumQ(u):
         s = Simplify(u)
-        return  NonsumQ(s) & NiceSqrtAuxQ(s)
+        return  NonsumQ(s) and NiceSqrtAuxQ(s)
     else:
         return False
 
 def NiceSqrtQ(u):
-    return Not(NegativeQ(u)) & NiceSqrtAuxQ(u)
+    return Not(NegativeQ(u)) and NiceSqrtAuxQ(u)
 
 def Together(u):
     return factor(u)
@@ -5351,7 +5351,8 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         except:
             return False
 
-    if simplify(res) == 0 or (not res.has(x)):
+    r = simplify(res)
+    if r == 0 or (not r.has(x)):
         return True
 
     if _diff:
@@ -5604,3 +5605,6 @@ def SplitSum(func, u):
     elif Not(AtomQ(func(u))):
         return [func(u), 0]
     return False
+
+def Complex(a, b):
+    return a + I*b
