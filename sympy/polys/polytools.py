@@ -4409,9 +4409,10 @@ def degree(f, gen=0):
     """
 
     f = sympify(f)
+    if f.is_Number:
+        return S.Zero if f else S.NegativeInfinity
+
     if not f.is_Poly:
-        if f.is_number:
-            return S.Zero if f else S.NegativeInfinity
         f, _ = poly_from_expr(f)
 
     if not isinstance(gen, int):
