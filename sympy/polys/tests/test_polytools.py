@@ -1167,6 +1167,7 @@ def test_Poly_degree():
     assert degree(x*y**2, z) == 0
 
     assert degree(y**2+x**3) == 3
+    assert degree(pi) == 1
 
     assert degree(Poly(0,x),z) == -oo
     assert degree(Poly(1,x),z) == 0
