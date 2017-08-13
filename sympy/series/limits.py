@@ -61,10 +61,10 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             l = limit(a, z, z0, dir)
             if l.has(S.Infinity) and l.is_finite is None:
-                ee = factor(e)
-                if ee.is_Mul and e.is_Add:
-                    return heuristics(ee, z, z0, dir)
-                else:
+                if isinstance(e, Add):
+                    m = factor(e)
+                    if isinstance(m, Mul):
+                        return heuristics(m, z, z0, dir)
                     return
             elif isinstance(l, Limit):
                 return
