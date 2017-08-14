@@ -1,6 +1,6 @@
 """
 Module to implement integration of uni/bivariate polynomials over
-2D Polytopes(Polygons).
+2D Polytopes and uni/bi/trivariate polynomials over 3D Polytopes.
 
 Uses evaluation techniques as described in Chin et al(2015)[1]
 
@@ -21,12 +21,11 @@ from sympy.polys.polytools import LC, gcd_list, degree_list
 
 
 def polytope_integrate(poly, expr, **kwargs):
-    """Integrates homogeneous functions over polytopes.
+    """Integrates polynomials over 2/3-Polytopes.
 
-    This function accepts the polytope in `poly` (currently only polygons are
-    implemented) and the function in `expr` (currently only
-    univariate/bivariate polynomials are implemented) and returns the exact
-    integral of `expr` over `poly`.
+    This function accepts the polytope in `poly` and the function in `expr`
+    (uni/bi/trivariate polynomials are implemented) and returns
+    the exact integral of `expr` over `poly`.
     Parameters
     ==========
     poly : The input Polygon.
@@ -34,7 +33,7 @@ def polytope_integrate(poly, expr, **kwargs):
 
     Optional Parameters:
     --------------------
-    clockwise : Binary value to sort input points of the polygon clockwise.
+    clockwise : Binary value to sort input points of the 2-Polytope clockwise.
     max_degree : The maximum degree of any monomial of the input polynomial.
     Examples
     ========
@@ -54,7 +53,11 @@ def polytope_integrate(poly, expr, **kwargs):
     max_degree = kwargs.get('max_degree', None)
 
     if clockwise is True:
-        poly = point_sort(poly)
+        if isinstance(poly, Polygon):
+            poly = point_sort(poly)
+        else:
+	        raise TypeError("clockwise=True works for only 2-Polytope"
+		                	"V-representation input")
 
     expr = S(expr)
 
@@ -63,9 +66,9 @@ def polytope_integrate(poly, expr, **kwargs):
         hp_params = hyperplane_parameters(poly)
         facets = poly.sides
     elif len(poly[0]) == 2:
-        # For Hyperplane Representation
+        # For Hyperplane Representation(2D case)
         plen = len(poly)
-        if len(poly[0][0]) == 2:  # 2D case
+        if len(poly[0][0]) == 2:
             intersections = [intersection(poly[(i - 1) % plen], poly[i],
                                           "plane2D")
                              for i in range(0, plen)]
@@ -78,7 +81,7 @@ def polytope_integrate(poly, expr, **kwargs):
             raise NotImplementedError("Integration for H-representation 3D"
                                       "case not implemented yet.")
     else:
-        # For 3D case.
+        # For Vertex Representation(3D case)
         hp_params = hyperplane_parameters(poly)
         facets = poly
         return main_integrate3d(expr, facets, hp_params)
@@ -109,8 +112,8 @@ def polytope_integrate(poly, expr, **kwargs):
 
 def main_integrate3d(expr, facets, hp_params):
     """Function to translate the problem of integrating uni/bi/trivariate
-    polynomials over a 3-Polytope to integrating over it's faces.
-    This is done using Generalized Stokes Theorem and Euler Theorem.
+    polynomials over a 3-Polytope to integrating over its faces.
+    This is done using Generalized Stokes's Theorem and Euler's Theorem.
 
     Parameters
     ===========
@@ -123,11 +126,11 @@ def main_integrate3d(expr, facets, hp_params):
     hyperplane_parameters
     >>> triangle = [(0, 0, 0), (1, 1, 1), (0, 0, 2)]
     >>> cube = [[(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)],\
-                 [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
-                 [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
-                 [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
-                 [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
-                 [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
+                [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
+                [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
+                [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
+                [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
+                [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
     >>> hp_params = hyperplane_parameters(cube)
     >>> main_integrate3d(1, cube, hp_params)
     125
@@ -166,11 +169,11 @@ def polygon_integrate(facet, index, facets, expr, degree):
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import polygon_integrate
     >>> cube = [[(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)],\
-                 [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
-                 [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
-                 [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
-                 [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
-                 [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
+                [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
+                [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
+                [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
+                [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
+                [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
     >>> polygon_integrate(cube[0], 0, cube, 1, 0)
     25
     """
@@ -253,8 +256,8 @@ def lineseg_integrate(polygon, index, line_seg, expr, degree):
 
 def main_integrate(expr, facets, hp_params, max_degree=None):
     """Function to translate the problem of integrating univariate/bivariate
-    polynomials over a 2-Polytope to integrating over it's boundary facets.
-    This is done using Generalized Stokes Theorem and Euler Theorem.
+    polynomials over a 2-Polytope to integrating over its boundary facets.
+    This is done using Generalized Stokes's Theorem and Euler's Theorem.
 
     Parameters
     ===========
@@ -429,7 +432,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
                                   x0, monomial_values, monom_index):
     """The same integration_reduction function which uses a dynamic
     programming approach to compute terms by using the values of the integral
-    the gradient of previous terms.
+    of previously computed terms.
 
     Parameters
     ===========
@@ -486,8 +489,8 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
 
 
 def gradient_terms(binomial_power=0):
-    """Returns a list of all the possible
-    monomials between 0 and y**binomial_power
+    """Returns a list of all the possible monomials between
+    0 and y**binomial_power
 
     Parameters
     ===========
@@ -569,7 +572,8 @@ def cross_product(v1, v2, v3):
 
 
 def best_origin(a, b, lineseg, expr):
-    """Helper method for polytope_integrate.
+    """Helper method for polytope_integrate. Currently not used in the main
+    algorithm.
     Returns a point on the lineseg whose vector inner product with the
     divergence of `expr` yields an expression with the least maximum
     total power.
@@ -778,11 +782,13 @@ def decompose(expr, separate=False):
 
 
 def point_sort(poly, normal=None, clockwise=True):
-    """Returns the same polygon with points sorted in clockwise order.
+    """Returns the same polygon with points sorted in clockwise or
+    anti-clockwise order.
 
     Note that it's necessary for input points to be sorted in some order
-    (clockwise or anti-clockwise) for the algorithm to work. As a convention
-    algorithm has been implemented keeping clockwise orientation in mind.
+    (clockwise or anti-clockwise) for the integration algorithm to work.
+    As a convention algorithm has been implemented keeping clockwise
+    orientation in mind.
 
     Parameters
     ==========
@@ -800,7 +806,6 @@ def point_sort(poly, normal=None, clockwise=True):
     >>> from sympy.geometry.point import Point
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
     [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
-
     """
     n = len(poly)
     if n < 2:
@@ -865,7 +870,6 @@ def norm(point):
     >>> from sympy.geometry.point import Point
     >>> norm(Point(2, 7))
     sqrt(53)
-
     """
     half = S(1)/2
     if isinstance(point, tuple):
@@ -881,10 +885,12 @@ def norm(point):
 
 def intersection(geom_1, geom_2, intersection_type):
     """Returns intersection between geometric objects.
-    Note that this function is meant for use in integration_reduction
-    and at that point in the calling function the lines denoted by the
-    segments surely intersect within segment boundaries. Coincident lines
-    are taken to be non-intersecting.
+
+    Note that this function is meant for use in integration_reduction and
+    at that point in the calling function the lines denoted by the segments
+    surely intersect within segment boundaries. Coincident lines are taken
+    to be non-intersecting. Also, the hyperplane intersection for 2D case is
+    also implemented.
 
     Parameters
     ==========
@@ -899,7 +905,10 @@ def intersection(geom_1, geom_2, intersection_type):
     >>> l2 = Segment2D(Point(2, 0), Point(2, 5))
     >>> intersection(l1, l2, "segment2D")
     (2, 3)
-
+    >>> p1 = ((-1, 0), 0)
+    >>> p2 = ((0, 1), 1)
+    >>> intersection(p1, p2, "plane2D")
+    (0, 1)
     """
     if intersection_type[:-2] == "segment":
         if intersection_type == "segment2D":
