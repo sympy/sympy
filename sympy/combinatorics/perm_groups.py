@@ -2952,7 +2952,6 @@ class PermutationGroup(Basic):
             # create the list of the strong generators strong_gens and
             # rewrite the indices of strong_gens_slp in terms of the
             # elements of strong_gens
-            strong_gens = _gens[:]
             for k, slp in strong_gens_slp:
                 strong_gens.append(k)
                 for i in range(len(slp)):
