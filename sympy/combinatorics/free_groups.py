@@ -307,10 +307,6 @@ class FreeGroup(DefaultPrinting):
         else:
             return True
 
-    def is_subgroup(self, F):
-        """Return True if all elements of `self` belong to `F`."""
-        return F.is_group and all([self.contains(gen) for gen in F.generators])
-
     def center(self):
         """Returns the center of the free group `self`."""
         return {self.identity}
