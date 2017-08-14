@@ -1,10 +1,12 @@
+import collections
 from sympy.core.expr import Expr
-from sympy.core import  sympify, S
+from sympy.core import sympify, S
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector
+from sympy.vector.vector import Vector, VectorMul, VectorAdd
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
+from sympy import Add, Mul
 
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):
@@ -21,13 +23,16 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
         ).warn()
 
     try:
-        coord_sys = list(expr.atoms(CoordSys3D))
-        if len(coord_sys) == 1:
-            return coord_sys[0]
-        else:
-            return None
+        return expr.atoms(CoordSys3D)
     except:
-        return None
+        return set([])
+
+
+def _split_mul_args_wrt_coordsys(expr):
+    d = collections.defaultdict(lambda: S.One)
+    for i in expr.args:
+        d[frozenset(i.atoms(CoordSys3D))] *= i
+    return list(d.values())
 
 
 class Gradient(Expr):
@@ -141,16 +146,41 @@ def curl(vect, coord_sys=None, doit=True):
 
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
 
-    if coord_sys is None:
+    if len(coord_sys) == 0:
         return Vector.zero
-    else:
+    elif len(coord_sys) == 1:
+        coord_sys = coord_sys.pop()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
-        from sympy.vector.functions import express
+        vectx = vect.dot(i)
+        vecty = vect.dot(j)
+        vectz = vect.dot(k)
+        outvec = Vector.zero
+        outvec += (Derivative(vectz * h3, y) -
+                   Derivative(vecty * h2, z)) * i / (h2 * h3)
+        outvec += (Derivative(vectx * h1, z) -
+                   Derivative(vectz * h3, x)) * j / (h1 * h3)
+        outvec += (Derivative(vecty * h2, x) -
+                   Derivative(vectx * h1, y)) * k / (h2 * h1)
+
+        if doit:
+            return outvec.doit()
+        return outvec
+    else:
+        # TODO: use some of the vector calculus properties for this:
+        coord_sys = coord_sys.pop()  # get one random coord_sys
+        i, j, k = coord_sys.base_vectors()
+        x, y, z = coord_sys.base_scalars()
+        h1, h2, h3 = coord_sys.lame_coefficients()
+
+        from .functions import express
         vectx = express(vect.dot(i), coord_sys, variables=True)
         vecty = express(vect.dot(j), coord_sys, variables=True)
         vectz = express(vect.dot(k), coord_sys, variables=True)
+
+        # This is a repetition of previous code, it will be removed as soon as
+        # we have some better algorithm to deal with this case:
         outvec = Vector.zero
         outvec += (Derivative(vectz * h3, y) -
                    Derivative(vecty * h2, z)) * i / (h2 * h3)
@@ -200,9 +230,11 @@ def divergence(vect, coord_sys=None, doit=True):
     """
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
 
-    if coord_sys is None:
+    if len(coord_sys) == 0:
         return S.Zero
     else:
+        # TODO: is case of many coord systems, this gets a random one:
+        coord_sys = coord_sys.pop()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
@@ -252,14 +284,13 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     """
     coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
 
-    if coord_sys is None:
+    if len(coord_sys) == 0:
         return Vector.zero
-    else:
-        from sympy.vector.functions import express
+    elif len(coord_sys) == 1:
+        coord_sys = coord_sys.pop()
         h1, h2, h3 = coord_sys.lame_coefficients()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
-        scalar_field = express(scalar_field, coord_sys, variables=True)
         vx = Derivative(scalar_field, x) / h1
         vy = Derivative(scalar_field, y) / h2
         vz = Derivative(scalar_field, z) / h3
@@ -267,6 +298,13 @@ def gradient(scalar_field, coord_sys=None, doit=True):
         if doit:
             return (vx * i + vy * j + vz * k).doit()
         return vx * i + vy * j + vz * k
+    else:
+        if isinstance(scalar_field, (Add, VectorAdd)):
+            return VectorAdd.fromiter(gradient(i) for i in scalar_field.args)
+        if isinstance(scalar_field, (Mul, VectorMul)):
+            s = _split_mul_args_wrt_coordsys(scalar_field)
+            return VectorAdd.fromiter(scalar_field / i * gradient(i) for i in s)
+        return Gradient(scalar_field)
 
 
 def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):

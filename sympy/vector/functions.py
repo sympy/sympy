@@ -155,7 +155,9 @@ def directional_derivative(field, direction_vector):
     """
     from sympy.vector.operators import _get_coord_sys_from_expr
     coord_sys = _get_coord_sys_from_expr(field)
-    if coord_sys is not None:
+    if len(coord_sys) > 0:
+        # TODO: This gets a random coordinate system in case of multiple ones:
+        coord_sys = coord_sys.pop()
         field = express(field, coord_sys, variables=True)
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
