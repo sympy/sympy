@@ -702,11 +702,11 @@ def test_fcode_Declaration():
 
 
     x, y = symbols('x y')
-    var2 = Variable(x, {value_const}, float32)
+    var2 = Variable(x, float32, {value_const})
     dcl2b = Declaration(var2, 42)
     check(dcl2b, 'real(4), parameter :: x = 42')
 
-    var3 = Variable(y, (), bool_)
+    var3 = Variable(y, type=bool_)
     dcl3 = Declaration(var3)
     check(dcl3, 'logical :: y')
 

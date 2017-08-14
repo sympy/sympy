@@ -16,4 +16,3 @@ TODO:
 """
 
 from .compilation import compile_link_import_strings
-from .util import capture_stdout_stderr

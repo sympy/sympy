@@ -668,17 +668,17 @@ def test_get_math_macros():
 
 def test_ccode_Declaration():
     i = symbols('i', integer=True)
-    var1 = Variable(i, type_=Type.from_expr(i))
+    var1 = Variable(i, type=Type.from_expr(i))
     dcl1 = Declaration(var1)
     assert ccode(dcl1) == 'int i'
 
-    var2 = Variable(x, {value_const}, float32)
+    var2 = Variable(x, type=float32, attrs={value_const})
     dcl2a = Declaration(var2)
     assert ccode(dcl2a) == 'const float x'
     dcl2b = Declaration(var2, pi)
     assert ccode(dcl2b) == 'const float x = M_PI'
 
-    var3 = Variable(y, type_=Type('bool'))
+    var3 = Variable(y, type=Type('bool'))
     dcl3 = Declaration(var3)
     printer = C89CodePrinter()
     assert 'stdbool.h' not in printer.headers
@@ -690,7 +690,7 @@ def test_ccode_Declaration():
     dcl4 = Declaration(ptr4)
     assert ccode(dcl4) == 'double * const restrict u'
 
-    var5 = Variable(x, {value_const}, Type('__float128'))
+    var5 = Variable(x, Type('__float128'), {value_const})
     dcl5a = Declaration(var5)
     assert ccode(dcl5a) == 'const __float128 x'
     dcl5b = Declaration(var5, pi)
@@ -725,7 +725,7 @@ def test_C99CodePrinter_custom_type():
     assert p128.doprint(sin(x)) == 'sinf128(x)'
     assert p128.doprint(cos(2., evaluate=False)) == 'cosf128(2.0Q)'
 
-    var5 = Variable(x, {value_const}, f128)
+    var5 = Variable(x, f128, attrs={value_const})
 
     dcl5a = Declaration(var5)
     assert ccode(dcl5a) == 'const _Float128 x'
@@ -784,7 +784,7 @@ def test_ccode_codegen_ast():
         '   x += 1;\n'
         '}'
     )
-    inp_x = Declaration(Variable(x, type_=real))
+    inp_x = Declaration(Variable(x, type=real))
     assert ccode(FunctionPrototype(real, 'pwer', [inp_x])) == 'double pwer(double x)'
     assert ccode(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)])) == (
         'double pwer(double x){\n'
@@ -800,5 +800,5 @@ def test_ccode_codegen_ast():
     assert ccode(FunctionCall('pwer', [x], statement=True)) == 'pwer(x);'
 
     # Node with "statement" in the name:
-    assert ccode(PrintStatement("%d %d", x, y)) == 'printf("%d %d", x, y);'
+    assert ccode(PrintStatement([x, y], "%d %d")) == 'printf("%d %d", x, y);'
     assert ccode(ReturnStatement(x)) == 'return x;'

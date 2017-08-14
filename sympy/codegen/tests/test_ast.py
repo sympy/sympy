@@ -1,18 +1,19 @@
+import math
 from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Tuple, Lt
+    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
 )
 from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
 
 
 from sympy.codegen.ast import (
-    Assignment, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
+    Assignment, Attribute, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
     AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
     DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
     integer, real, complex_, int8, uint8, float16 as f16, float32 as f32,
     float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128,
-    While, Scope, PrintStatement, FunctionPrototype, FunctionDefinition, ReturnStatement,
-    FunctionCall
+    While, Scope, String, PrintStatement, FunctionPrototype, FunctionDefinition, ReturnStatement,
+    FunctionCall, untyped, IntBaseType, intc, Node
 )
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
@@ -173,6 +174,23 @@ def test_For():
     raises(TypeError, lambda: For(n, x, (x + y,)))
 
 
+def test_String():
+    st = String('foobar')
+    assert st == String('foobar')
+    assert st.text == 'foobar'
+
+    class Signifier(String):
+        pass
+
+    si = Signifier('foobar')
+    assert si != st
+    assert si.text == st.text
+
+
+def test_Node():
+    n = Node()
+    assert n == Node()
+
 def test_Type():
     t = Type('MyType')
     assert t.name == 'MyType'
@@ -220,9 +238,17 @@ def test_Type__cast_check__integers():
     raises(ValueError, lambda: uint8.cast_check(256.0))
     raises(ValueError, lambda: uint8.cast_check(-1))
 
+def test_Attribute():
+    noexcept = Attribute('noexcept')
+    assert noexcept == Attribute('noexcept')
+    alignas16 = Attribute('alignas', [16])
+    alignas32 = Attribute('alignas', [32])
+    assert alignas16 != alignas32
 
 def test_Variable():
-    v = Variable(x, type=Type('real'))
+    v = Variable(x, type=real)
+    assert v == Variable(v)
+    assert v == Variable('x', type=real)
     assert v.symbol == x
     assert v.type == real
     assert v.obey(value_const) == False
@@ -237,6 +263,7 @@ def test_Variable():
 
     a_i = Variable.deduced(i)
     assert a_i.type == integer
+    assert Variable.deduced(Symbol('x', real=True)).type == real
 
 
 def test_Variable__deduced():
@@ -247,7 +274,7 @@ def test_Variable__deduced():
 def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
-    assert p.type == None
+    assert p.type == untyped
     assert not p.obey(value_const)
     assert not p.obey(pointer_const)
     u = symbols('u', real=True)
@@ -265,7 +292,9 @@ def test_Declaration():
     vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
 
-    vuc = Variable(u, {value_const}, Type.from_expr(u))
+    vuc = Variable(u, Type.from_expr(u), {value_const})
+    assert vuc.obey(value_const)
+    assert not vuc.obey(pointer_const)
     decl = Declaration(vuc, 3.0)
     assert decl.variable == vuc
     assert isinstance(decl.value, Float)
@@ -281,9 +310,15 @@ def test_Declaration():
     assert decl3.variable.type == integer
     assert decl3.value == 3.0
 
-    decl4 = raises(ValueError, lambda: Declaration.deduced(n, value=3.5, cast=True))
+    decl4 = Declaration.deduced(n, value=3.5, cast_check=False)
+    assert abs(decl4.value - 3.5) < 1e-15
+    raises(ValueError, lambda: Declaration.deduced(n, value=3.5, cast_check=True))
 
 
+def test_IntBaseType():
+    assert intc.name == 'intc'
+    assert intc.args == ()
+    assert IntBaseType('a').name == 'a'
 
 def test_Declaration__deduced():
     assert Declaration.deduced(n).variable.type == integer
@@ -335,6 +370,15 @@ def test_FloatType():
     assert abs(f64.tiny / Float('2.22507385850720138e-308', precision=64) - 1) < 0.1*10**-f64.dig
     assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
+
+    assert f64.cast_check(0.5) == 0.5
+    assert abs(f64.cast_check(3.7) - 3.7) < 3e-17
+    assert isinstance(f64.cast_check(3), (Float, float))
+
+    assert f64.cast_nocheck(oo) == float('inf')
+    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert math.isnan(f64.cast_nocheck(nan))
 
 
 def test_Type__cast_check__floating_point():
@@ -395,11 +439,16 @@ def test_Scope():
 
 def test_PrintStatement():
     fmt = "%d %.3f"
-    ps = PrintStatement(fmt, n, x)
+    ps = PrintStatement([n, x], fmt)
     assert ps.format_string == fmt
-    assert ps._args == (n, x)
-    assert ps == PrintStatement(fmt, n, x)
-    assert ps != PrintStatement(fmt, x, n)
+    assert ps.print_args == Tuple(n, x)
+    assert ps.args == (Tuple(n, x),)
+    assert ps == PrintStatement((n, x), fmt)
+    assert ps != PrintStatement([x, n], fmt)
+    ps2 = PrintStatement([n, x])
+    assert ps2 == PrintStatement([n, x])
+    assert ps2 != ps
+    assert ps2.format_string is None
 
 
 def test_FunctionPrototype_and_FunctionDefinition():

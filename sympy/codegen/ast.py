@@ -73,6 +73,7 @@ The other ``Type`` instances defined are:
 
 from __future__ import print_function, division
 
+from itertools import chain
 
 from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
@@ -470,14 +471,27 @@ class Token(Basic):
     """
 
     __slots__ = []
+    defaults = {}
+    not_in_args = []
+
+    @classmethod
+    def constructor(cls, attr):
+        return getattr(cls, '_construct_%s' % attr, lambda x: x)
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
-        args = args + tuple([kwargs.pop(k) for k in cls.__slots__[len(args):]])
+        args = [
+            cls.constructor(attr)(arg) for attr, arg
+            in zip(cls.__slots__, args + tuple([
+                kwargs.pop(k, cls.defaults[k]) if k in cls.defaults else kwargs.pop(k) for k
+                in cls.__slots__[len(args):]
+            ]))
+        ]
         if kwargs:
             raise ValueError("Unknown kwargs: %s" % kwargs)
-        obj = Basic.__new__(cls)
+
+        obj = Basic.__new__(cls, *[arg for slot, arg in zip(cls.__slots__, args) if slot not in cls.not_in_args])
         for attr, arg in zip(cls.__slots__, args):
             setattr(obj, attr, arg)
         return obj
@@ -504,19 +518,37 @@ class Token(Basic):
     def kwargs(self, exclude=(), apply=lambda arg: arg):
         return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
 
-    @property
-    def _argset(self):
-        return set(self.kwargs().values())
 
-    def atoms(self):
-        result = set()
-        for v in self._argset:
-            if isinstance(v, string_types):
-                continue
-            elif isinstance(v, Basic):
-                result.add(v)
-            else:
-                raise ValueError("Not Basic or str: %s" % repr(v))
+class String(Token):
+    __slots__ = ['text']
+    not_in_args = ['text']
+
+    @classmethod
+    def _construct_text(cls, text):
+        if not isinstance(text, string_types):
+            raise TypeError("Argument text is not a string type.")
+        return text
+
+
+class Node(Token):
+    """ Subclass of Token, carrying the attribute 'attrs' (FiniteSet) """
+
+    __slots__ = ['attrs']
+
+    defaults = {'attrs': None}
+
+    @classmethod
+    def _construct_attrs(cls, arg):
+        if arg is None:
+            return Tuple()
+        elif isinstance(arg, Tuple):
+            return arg
+        else:
+            return Tuple(*arg)
+
+    def obey(self, *attrs):
+        """ Returns whether ``self.attrs`` contains all elements in attrs. """
+        return all(attr in self.attrs for attr in attrs)  # self.attrs.contains(attr) == True
 
 
 class Type(Token):
@@ -558,7 +590,7 @@ class Type(Token):
     >>> from sympy import Symbol
     >>> from sympy.printing.cxxcode import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
-    >>> cxxcode(Declaration(Variable(Symbol('x'), type_=boost_mp50)))
+    >>> cxxcode(Declaration(Variable('x', type=boost_mp50)))
     'boost::multiprecision::cpp_dec_float_50 x'
 
     References
@@ -569,8 +601,7 @@ class Type(Token):
 
     """
     __slots__ = ['name']
-
-    default_precision_targets = {}
+    not_in_args = ['name']
 
     def __str__(self):
         return self.name
@@ -678,7 +709,7 @@ class Type(Token):
         def tol(num):
             return atol + rtol*abs(num)
 
-        new_val = self._cast_nocheck(value)
+        new_val = self.cast_nocheck(value)
         self._check(new_val)
 
         delta = new_val - val
@@ -691,11 +722,13 @@ class Type(Token):
 class IntBaseType(Type):
     """ Integer base type, contains no size information. """
     __slots__ = ['name']
-    _cast_nocheck = Integer
+    cast_nocheck = lambda self, i: Integer(int(i))
 
 
 class _SizedIntType(IntBaseType):
     __slots__ = ['name', 'nbits']
+
+    _construct_nbits = Integer
 
     def _check(self, value):
         if value < self.min:
@@ -725,7 +758,10 @@ class UnsignedIntType(_SizedIntType):
 
 two = Integer(2)
 
-class FloatType(Type):
+class FloatBaseType(Type):
+    cast_nocheck = Float
+
+class FloatType(FloatBaseType):
     """ Represents a floating point value.
 
     Base 2 & one sign bit is assumed.
@@ -765,6 +801,9 @@ class FloatType(Type):
     """
 
     __slots__ = ['name', 'nbits', 'nmant', 'nexp']
+
+    _construct_nbits = _construct_nmant = _construct_nexp = Integer
+
 
     @property
     def max_exponent(self):
@@ -819,7 +858,7 @@ class FloatType(Type):
         from sympy.functions import ceiling, log
         return ceiling((self.nmant + 1) * log(2)/log(10) + 1)
 
-    def _cast_nocheck(self, value):
+    def cast_nocheck(self, value):
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):
@@ -830,21 +869,24 @@ class FloatType(Type):
         if abs(value) < self.tiny:
             raise ValueError("Smallest (absolute) value for data type bigger than new value.")
 
+class ComplexBaseType(FloatBaseType):
 
-class ComplexType(FloatType):
-    """ Represents a complex floating point number. """
-
-    def _cast_nocheck(self, value):
+    def cast_nocheck(self, value):
         from sympy.functions import re, im
         return (
-            super(ComplexType, self)._cast_nocheck(re(value)) +
-            super(ComplexType, self)._cast_nocheck(im(value))*1j
+            super(ComplexBaseType, self).cast_nocheck(re(value)) +
+            super(ComplexBaseType, self).cast_nocheck(im(value))*1j
         )
 
     def _check(self, value):
         from sympy.functions import re, im
-        super(ComplexType, self)._check(re(value))
-        super(ComplexType, self)._check(im(value))
+        super(ComplexBaseType, self)._check(re(value))
+        super(ComplexBaseType, self)._check(im(value))
+
+
+class ComplexType(ComplexBaseType, FloatType):
+    """ Represents a complex floating point number. """
+
 
 
 # NumPy types:
@@ -869,35 +911,23 @@ complex64 = ComplexType('complex64', nbits=64, **float32.kwargs(exclude=('name',
 complex128 = ComplexType('complex128', nbits=128, **float64.kwargs(exclude=('name', 'nbits')))
 
 # Generic types (precision may be chosen by code printers):
-real = Type('real')
+untyped = Type('untyped')
+real = FloatBaseType('real')
 integer = IntBaseType('integer')
-complex_ = Type('complex')
+complex_ = ComplexBaseType('complex')
 bool_ = Type('bool')
 
 
 class Attribute(Token):
     """ Variable attribute """
-    __slots__ = ['name']
-
+    __slots__ = ['name', 'parameters']
+    not_in_args = ['name']
+    defaults = {'parameters': Tuple()}
+    _construct_name = String._construct_text
+    _construct_arguments = Tuple
 
 value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
-
-
-class Node(Token):
-    """ Subclass of Token, carrying the attribute 'attrs' (FiniteSet) """
-
-    __slots__ = ['attrs']
-
-    def __new__(cls, *args, **kwargs):
-        attrs = kwargs.pop('attrs', FiniteSet())
-        obj = Token.__new__(cls, *args, **kwargs)
-        obj.attrs = attrs if isinstance(attrs, FiniteSet) else FiniteSet(*attrs)
-        return obj
-
-    def obey(self, *attrs):
-        """ Returns whether ``self.attrs`` contains all elements in attrs. """
-        return all(self.attrs.contains(attr) == True for attr in attrs)
 
 
 class Variable(Node):
@@ -906,31 +936,49 @@ class Variable(Node):
     Parameters
     ----------
     symbol : Symbol
-    attrs : iterable of Attribute instances
-        Will be stored as a FiniteSet.
-    type_ : Type (optional)
+    type : Type (optional)
         Type of the variable.
+    attrs : iterable of Attribute instances
+        Will be stored as a Tuple.
 
     Examples
     --------
     >>> from sympy import Symbol
     >>> from sympy.codegen.ast import Variable, float32, integer
     >>> x = Symbol('x')
-    >>> v = Variable(x, type_=float32)
+    >>> v = Variable(x, type=float32)
+    >>> v.attrs
+    ()
+    >>> v == Variable('x')
+    False
+    >>> v == Variable('x', type=float32)
+    True
 
     One may also construct a ``Variable`` instance with the type deduced from
     assumptions about the symbol using the ``deduced`` classmethod::
+
     >>> i = Symbol('i', integer=True)
     >>> v = Variable.deduced(i)
     >>> v.type == integer
     True
+    >>> v == Variable('i')
+    False
+
+    >>> from sympy.codegen.ast import value_const
+    >>> v.obey(value_const)
+    False
+    >>> w = Variable('w', attrs=[value_const])
+    >>> w.obey(value_const)
+    True
 
     """
 
-    __slots__ = ['symbol', 'type']
+    __slots__ = ['symbol', 'type'] + Node.__slots__
+    defaults = dict(chain(Node.defaults.items(), {
+        'type': untyped
+    }.items()))
 
-    def __new__(cls, symbol, type=None, *args, **kwargs):
-        return Node.__new__(cls, symbol, type, *args, **kwargs)
+    _construct_symbol = staticmethod(sympify)
 
     @classmethod
     def deduced(cls, symbol, attrs=FiniteSet()):
@@ -946,7 +994,7 @@ class Variable(Node):
         >>> x = Symbol('x', real=True)
         >>> v = Variable.deduced(x)
         >>> v.type
-        Type(name='real')
+        FloatBaseType(name='real')
         >>> z = Symbol('z', complex=True)
         >>> Variable.deduced(z).type == complex_
         True
@@ -967,42 +1015,46 @@ class Declaration(Basic):
     var : Variable, Pointer or IndexedBase
     val : Value (optional)
         Value to be assigned upon declaration.
-    cast : bool
-        If val is not ``None`` val will be casted using
-        ``var.Type.cast_check()``.
 
     Examples
     --------
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Declaration, Type, Variable, integer
+    >>> from sympy.codegen.ast import Declaration, Type, Variable, integer, untyped
+    >>> z = Declaration('z')
+    >>> z.variable.type == untyped
+    True
+    >>> z.value is None
+    True
     >>> x = Symbol('x')
     >>> xvar = Variable(x)
     >>> decl = Declaration.deduced(xvar, 3)
     >>> decl.variable.type == integer
     True
     >>> k = Symbol('k', integer=True)
-    >>> k_decl = Declaration.deduced(k, 3.0)
-    >>> k_decl.variable.type == integer
+    >>> k_decl1 = Declaration.deduced(k, 3.0)
+    >>> k_decl1.variable.type == integer
     True
-
+    >>> k_decl2 = Declaration.deduced(k, 3.4)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    ValueError: Casting gives a significantly different value.
     """
 
     nargs = (1, 2)
 
-    def __new__(cls, var, val=None, cast=False):
-        if not isinstance(var, Variable):
-            raise TypeError("var argument should be an instance of Variable")
-        args = var,
-        if val is not None:
-            if cast:
-                args += (var.type.cast_check(val),)
-            else:
-                args += (_sympify(val),)
+    def __new__(cls, variable, value=None):
+        args = Variable(variable),
+        if value is not None:
+            args += (_sympify(value),)
         return Basic.__new__(cls, *args)
 
     @classmethod
-    def deduced(cls, symbol, value=None, attrs=FiniteSet(), **kwargs):
+    def deduced(cls, symbol, value=None, attrs=FiniteSet(), cast_check=True, **kwargs):
         """ Deduces type primarily from ``symbol``, secondarily from ``value``.
+
+        Parameters
+        ----------
+        symbol :
 
         Examples
         --------
@@ -1016,13 +1068,24 @@ class Declaration(Basic):
         True
         >>> n = Symbol('n', integer=True)
         >>> Declaration.deduced(n).variable
-        Variable(n, EmptySet(), IntBaseType(name='integer'))
+        Variable(symbol=n, type=IntBaseType(name='integer'), attrs=())
+        >>> n_decl = Declaration.deduced(n, 3.0)
+        >>> n_decl.value
+        3
+        >>> n_decl = Declaration.deduced(n, 3.4)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+          ...
+        ValueError: Casting gives a significantly different value.
+        >>> n_decl = Declaration.deduced(n, 3.4, cast_check=False)
 
         """
         try:
             type_ = Type.from_expr(symbol)
         except ValueError:
             type_ = Type.from_expr(value)
+
+        if value is not None and cast_check:
+            value = type_.cast_check(value)
         var = Variable(symbol, type=type_, attrs=attrs)
         return cls(var, value, **kwargs)
 
@@ -1109,12 +1172,13 @@ class PrintStatement(Token):
     *args : Basic instances (or convertible to such through sympify)
     """
 
-    __slots__ = ['format_string', '_args']
+    __slots__ = ['print_args', 'format_string']
+    not_in_args = ['format_string']
+    defaults = {'format_string': None}
 
-    def __new__(cls, format_string, *args):
-        if not isinstance(format_string, string_types):
-            raise ValueError("Argument format_string needs to be a string type")
-        return Token.__new__(cls, format_string, tuple([_sympify(arg) for arg in args]))
+    @classmethod
+    def _construct_print_args(cls, args):
+        return Tuple(*args)
 
 
 class FunctionPrototype(Node):
@@ -1131,6 +1195,8 @@ class FunctionPrototype(Node):
     """
 
     __slots__ = ['return_type', 'name', 'inputs']
+    not_in_args = ['name']
+
 
     def __new__(cls, return_type, name, inputs, **kwargs):
         if not isinstance(return_type, Type):
@@ -1190,6 +1256,8 @@ class FunctionCall(Token):
 
     """
     __slots__ = ['function_name', 'function_args', 'statement']
+    not_in_args = ['function_name']
+    defaults = {'statement': false}
 
-    def __new__(cls, function_name, function_args=(), statement=False):
-        return Token.__new__(cls, function_name, Tuple(*function_args), true if statement else false)
+    _construct_function_args = staticmethod(lambda fargs: Tuple(*fargs))
+    _construct_statement = staticmethod(lambda arg: true if arg else false)

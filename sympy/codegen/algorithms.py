@@ -7,6 +7,9 @@ from sympy.codegen.ast import (
     Variable, Pointer, real, Statement
 )
 
+def _decl_real(arg, value=None):
+    return Declaration(Variable(arg, type=real), value)
+
 
 def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
                    itermax=None, counter=None):
@@ -43,10 +46,10 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     delta_expr = -expr/expr.diff(wrt)
     body = [Assignment(delta, delta_expr), AddAugmentedAssignment(wrt, delta)]
     if debug:
-        prnt = PrintStatement(r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d), wrt, delta)
+        prnt = PrintStatement([wrt, delta], r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d))
         body = [body[0], prnt] + body[1:]
     req = Gt(Abs(delta), atol)
-    declars = [Statement(Declaration.deduced(delta, oo))]
+    declars = [Statement(_decl_real(delta, oo))]
     if itermax is not None:
         counter = counter or Dummy(integer=True)
         declars.append(Declaration.deduced(counter, 0))
@@ -63,9 +66,6 @@ def _symbol_of(arg):
     if isinstance(arg, (Variable, Pointer)):
         arg = arg.symbol
     return arg
-
-def _decl_real(arg):
-    return Declaration(Variable(arg, type_=real))
 
 def newtons_method_function(expr, wrt, args=None, func_name="newton", **kwargs):
     """ Generates an AST for a function implementing the Newton-Raphson method.

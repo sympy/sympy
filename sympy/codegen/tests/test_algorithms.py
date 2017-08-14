@@ -1,15 +1,18 @@
 from __future__ import (absolute_import, division, print_function)
 
+import sys
 import pytest
 import sympy as sp
+
 from sympy.codegen.ast import Assignment
 from sympy.codegen.algorithms import newtons_method, newtons_method_function
 from sympy.external import import_module
 from sympy.printing.ccode import ccode
-from sympy.utilities._compilation import compile_link_import_strings, capture_stdout_stderr
-from sympy.utilities.pytest import skip
+from sympy.utilities._compilation import compile_link_import_strings
+from sympy.utilities.pytest import skip, USE_PYTEST
 
 cython = import_module('cython')
+wurlitzer = import_module('wurlitzer')
 
 def test_newtons_method():
     x, dx, atol = sp.symbols('x dx atol')
@@ -42,7 +45,9 @@ def test_newtons_method_function__ccode_parameters():
     expr = A*sp.cos(k*x) - p*x**3
     with pytest.raises(ValueError):
         newtons_method_function(expr, x)
-    func = newtons_method_function(expr, x, args, debug=True)
+    use_wurlitzer = wurlitzer and sys.version_info[0] == 2  # weird threading issues with Python 3
+
+    func = newtons_method_function(expr, x, args, debug=use_wurlitzer)
 
     if not cython:
         skip("cython not installed.")
@@ -56,12 +61,19 @@ def test_newtons_method_function__ccode_parameters():
                          "    return newton(x, A, k, p)\n"))
     ], compile_kwargs=compile_kw)
 
-    with capture_stdout_stderr() as out_err:
+    if use_wurlitzer:
+        with wurlitzer.pipes() as (out, err):
+            result = mod.py_newton(0.5)
+    else:
         result = mod.py_newton(0.5)
+
     assert abs(result - 0.865474033102) < 1e-12
-    out, err = out_err
-    assert err == ''
-    assert out == """\
+
+    if not use_wurlitzer:
+        skip("C-level output only tested on Python 2 when package wurlitzer is available.")
+
+    assert err.read() == ''
+    assert out.read() == """\
 x=         0.5 d_x=     0.61214
 x=      1.1121 d_x=    -0.20247
 x=     0.90967 d_x=   -0.042409

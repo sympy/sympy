@@ -29,7 +29,7 @@ from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.codegen.ast import (
-    Assignment, Attribute, Declaration, Pointer, Type,
+    Assignment, Attribute, Declaration, Pointer, Type, value_const,
     float32, float64, complex64, complex128, intc, real, integer, bool_, complex_
 )
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
@@ -369,13 +369,13 @@ class FCodePrinter(CodePrinter):
         if self._settings["standard"] >= 90:
             result = '{t}{vc} :: {s}'.format(
                 t=self._print(var.type),
-                vc=', parameter' if var.value_const else '',
+                vc=', parameter' if var.obey(value_const) else '',
                 s=self._print(var.symbol)
             )
             if val is not None:
                 result += ' = %s' % self._print(val)
         else:
-            if var.value_const or val:
+            if var.obey(value_const) or val:
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
             result = ' '.join(self._print(var.type), self._print(var.symbol))
         return result

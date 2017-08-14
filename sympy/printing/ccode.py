@@ -20,9 +20,9 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Type, Variable, real, complex_, integer, bool_,
-    float32, float64, float80, complex64, complex128, intc, value_const,
-    Declaration
+    Assignment, Pointer, Type, Variable, Declaration,
+    real, complex_, integer, bool_, float32, float64, float80,
+    complex64, complex128, intc, value_const, pointer_const
 )
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -237,7 +237,7 @@ class C89CodePrinter(CodePrinter):
 
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
-        var = Variable(name, {value_const}, type_)
+        var = Variable(name, type=type_, attrs={value_const})
         decl = Declaration(var, value.evalf(type_.decimal_dig))
         return self._get_statement(self._print(decl))
 
@@ -461,7 +461,7 @@ class C89CodePrinter(CodePrinter):
                 vc='const ' if var.obey(value_const) else '',
                 t=self._print(var.type),
                 pc=' const' if var.obey(pointer_const) else '',
-                r='restrict ' if var.attributes.contains(restrict) == True else '',
+                r='restrict ' if var.obey(restrict) else '',
                 s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
@@ -515,8 +515,7 @@ class C89CodePrinter(CodePrinter):
 
     @requires(headers={'stdio.h'})
     def _print_PrintStatement(self, expr):
-        return 'printf("%s", %s);' % (expr.format_string, ', '.join(map(self._print, expr._args)))
-
+        return 'printf("%s", %s);' % (expr.format_string, ', '.join(map(self._print, expr.print_args)))
 
     def _print_FunctionPrototype(self, expr):
         return "%s %s(%s)" % (

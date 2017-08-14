@@ -200,10 +200,19 @@ def test_sympy__codegen__ast__UnsignedIntType():
     assert _test_args(UnsignedIntType('unt128', 128))
 
 
+def test_sympy__codegen__ast__FloatBaseType():
+    from sympy.codegen.ast import FloatBaseType
+    assert _test_args(FloatBaseType('positive_real'))
+
+
 def test_sympy__codegen__ast__FloatType():
     from sympy.codegen.ast import FloatType
     assert _test_args(FloatType('float242', 242, nmant=142, nexp=99))
 
+
+def test_sympy__codegen__ast__ComplexBaseType():
+    from sympy.codegen.ast import ComplexBaseType
+    assert _test_args(ComplexBaseType('positive_cmplx'))
 
 def test_sympy__codegen__ast__ComplexType():
     from sympy.codegen.ast import ComplexType
@@ -215,23 +224,33 @@ def test_sympy__codegen__ast__Attribute():
     assert _test_args(Attribute('noexcept'))
 
 
+def test_sympy__codegen__ast__String():
+    from sympy.codegen.ast import String
+    assert _test_args(String('foobar'))
+
+def test_sympy__codegen__ast__Node():
+    from sympy.codegen.ast import Node
+    assert _test_args(Node())
+    assert _test_args(Node(attrs={1, 2, 3}))
+
+
 def test_sympy__codegen__ast__Variable():
     from sympy.codegen.ast import Variable, Type, value_const
     assert _test_args(Variable(x))
-    assert _test_args(Variable(y, {value_const}, Type('float32')))
-    assert _test_args(Variable(z, type_=Type('float64')))
+    assert _test_args(Variable(y, Type('float32'), {value_const}))
+    assert _test_args(Variable(z, type=Type('float64')))
 
 
 def test_sympy__codegen__ast__Pointer():
     from sympy.codegen.ast import Pointer, Type, pointer_const
     assert _test_args(Pointer(x))
-    assert _test_args(Pointer(y, type_=Type('float32')))
-    assert _test_args(Pointer(z, {pointer_const}, Type('float64')))
+    assert _test_args(Pointer(y, type=Type('float32')))
+    assert _test_args(Pointer(z, Type('float64'), {pointer_const}))
 
 
 def test_sympy__codegen__ast__Declaration():
     from sympy.codegen.ast import Declaration, Variable, Type
-    vx = Variable(x, type_=Type('float'))
+    vx = Variable(x, type=Type('float'))
     assert _test_args(Declaration(vx))
     assert _test_args(Declaration(vx, 3.0))
 
@@ -253,18 +272,19 @@ def test_sympy__codegen__ast__Statement():
 
 def test_sympy__codegen__ast__PrintStatement():
     from sympy.codegen.ast import PrintStatement
-    assert _test_args(PrintStatement("%d %d", x, y))
+    assert _test_args(PrintStatement([x, y]))
+    assert _test_args(PrintStatement([x, y], "%d %d"))
 
 
 def test_sympy__codegen__ast__FunctionPrototype():
     from sympy.codegen.ast import FunctionPrototype, real, Declaration, Variable
-    inp_x = Declaration(Variable(x, type_=real))
+    inp_x = Declaration(Variable(x, type=real))
     assert _test_args(FunctionPrototype(real, 'pwer', [inp_x]))
 
 
 def test_sympy__codegen__ast__FunctionDefinition():
     from sympy.codegen.ast import FunctionDefinition, real, Declaration, Variable, Assignment
-    inp_x = Declaration(Variable(x, type_=real))
+    inp_x = Declaration(Variable(x, type=real))
     assert _test_args(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)]))
 
 
