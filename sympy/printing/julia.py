@@ -59,7 +59,7 @@ class JuliaCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 16,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True,

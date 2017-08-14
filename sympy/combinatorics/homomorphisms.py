@@ -277,6 +277,7 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
 
     gens = list(gens)
     images = list(images)
+
     images.extend([codomain.identity]*(len(generators)-len(images)))
     gens.extend([g for g in generators if g not in gens])
     images = dict(zip(gens,images))

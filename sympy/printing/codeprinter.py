@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, Mul, Pow, S, sympify
+from functools import wraps
+
+from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
@@ -12,6 +14,19 @@ from sympy.printing.precedence import precedence
 
 # Backwards compatibility
 from sympy.codegen.ast import Assignment
+
+
+class requires(object):
+    """ Decorator for registering requirements on print methods. """
+    def __init__(self, **kwargs):
+        self._req = kwargs
+
+    def __call__(self, method):
+        def _method_wrapper(self_, *args, **kwargs):
+            for k, v in self._req.items():
+                getattr(self_, k).update(v)
+            return method(self_, *args, **kwargs)
+        return wraps(method)(_method_wrapper)
 
 
 class AssignmentError(Exception):
@@ -99,8 +114,8 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            result = (self._number_symbols, self._not_supported,
-                    "\n".join(lines))
+            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            result = (num_syms, self._not_supported, "\n".join(lines))
         del self._not_supported
         del self._number_symbols
         return result
@@ -341,12 +356,12 @@ class CodePrinter(StrPrinter):
 
     def _print_NumberSymbol(self, expr):
         if self._settings.get("inline", False):
-            return self._print(expr.evalf(self._settings["precision"]))
+            return self._print(Float(expr.evalf(self._settings["precision"])))
         else:
             # A Number symbol that is not implemented here or with _printmethod
             # is registered and evaluated
             self._number_symbols.add((expr,
-                self._print(expr.evalf(self._settings["precision"]))))
+                Float(expr.evalf(self._settings["precision"]))))
             return str(expr)
 
     def _print_Catalan(self, expr):
