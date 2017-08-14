@@ -153,10 +153,9 @@ def curl(vect, coord_sys=None, doit=True):
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
-        from sympy.vector.functions import express
-        vectx = express(vect.dot(i), coord_sys, variables=True)
-        vecty = express(vect.dot(j), coord_sys, variables=True)
-        vectz = express(vect.dot(k), coord_sys, variables=True)
+        vectx = vect.dot(i)
+        vecty = vect.dot(j)
+        vectz = vect.dot(k)
         outvec = Vector.zero
         outvec += (Derivative(vectz * h3, y) -
                    Derivative(vecty * h2, z)) * i / (h2 * h3)
@@ -169,16 +168,30 @@ def curl(vect, coord_sys=None, doit=True):
             return outvec.doit()
         return outvec
     else:
-
         # TODO: use some of the vector calculus properties for this:
         coord_sys = coord_sys.pop()  # get one random coord_sys
         i, j, k = coord_sys.base_vectors()
+        x, y, z = coord_sys.base_scalars()
+        h1, h2, h3 = coord_sys.lame_coefficients()
 
         from .functions import express
         vectx = express(vect.dot(i), coord_sys, variables=True)
         vecty = express(vect.dot(j), coord_sys, variables=True)
         vectz = express(vect.dot(k), coord_sys, variables=True)
-        return curl(vectx*i + vecty*j + vectz*k)
+
+        # This is a repetition of previous code, it will be removed as soon as
+        # we have some better algorithm to deal with this case:
+        outvec = Vector.zero
+        outvec += (Derivative(vectz * h3, y) -
+                   Derivative(vecty * h2, z)) * i / (h2 * h3)
+        outvec += (Derivative(vectx * h1, z) -
+                   Derivative(vectz * h3, x)) * j / (h1 * h3)
+        outvec += (Derivative(vecty * h2, x) -
+                   Derivative(vectx * h1, y)) * k / (h2 * h1)
+
+        if doit:
+            return outvec.doit()
+        return outvec
 
 
 def divergence(vect, coord_sys=None, doit=True):
@@ -275,11 +288,9 @@ def gradient(scalar_field, coord_sys=None, doit=True):
         return Vector.zero
     elif len(coord_sys) == 1:
         coord_sys = coord_sys.pop()
-        from sympy.vector.functions import express
         h1, h2, h3 = coord_sys.lame_coefficients()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
-        #scalar_field = express(scalar_field, coord_sys, variables=True)
         vx = Derivative(scalar_field, x) / h1
         vy = Derivative(scalar_field, y) / h2
         vz = Derivative(scalar_field, z) / h3
