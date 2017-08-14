@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Pow, Mul, Dummy, Tuple
 )
 
 from sympy.core.mul import _keep_coeff
@@ -4386,8 +4386,16 @@ def _update_args(args, key, value):
 def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
+    This function is implemented recursively.
 
     The degree of 0 is negative infinity.
+
+    Enhancement
+    ===========
+
+    The degree is calculated by traversing through the
+    argument list recursively and hence improve the speed
+    of operation for higher exponents of functions.
 
     Examples
     ========
@@ -4401,16 +4409,152 @@ def degree(f, *gens, **args):
     1
     >>> degree(0, x)
     -oo
+    >>> degree((x+1)**10000)
+    10000
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
 
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed as exc:
-        raise ComputationFailed('degree', 1, exc)
+    if f == S.Zero:
+        return S.NegativeInfinity
+    elif isinstance(f, int) or f.is_number:
+        try:
+            poly_from_expr(f, *gens, **args)
+        except PolificationFailed as exc:
+            raise ComputationFailed('degree', 1, exc)
+        return S.Zero
+    elif isinstance(f, Poly):
+        func = f.gens[0]
+        f = f.args[0]
+    else:
+        func = f.atoms(Symbol).pop()
 
-    return sympify(F.degree(opt.gen))
+    if gens is not None:
+        for arg in gens:
+            func = arg
+            if len(gens) > S.One:
+                break
+    if args is not None:
+        for key, value in args.items():
+            func = value
+            if len(args) > S.One:
+                break
+
+    order, r = _degree(f, func)
+    return abs(order)
+
+
+def _degree(f, func):
+    """
+    Iterative fuction to compute degree of a polynomial
+    """
+    if f == func:
+        return S.One, 1
+    elif f.has(func):
+        # if f is a power function
+        if isinstance(f, Pow):
+            order = S.One
+            temp_r = 1
+            if f.args[0].has(func):
+                order1 = 0
+                for arg in f.args:
+                    order2, r = _degree(arg, func)
+                    if Integer(abs(order1)) < Integer(abs(order2)):
+                        order1 = order2
+                        temp_r = r
+                order = abs(order1) if(Integer(f.args[1]).is_even) else order1
+            elif f.args[1].has(func):
+                return max(order, f.args[1].coeff(func)), temp_r**f.args[1]
+            return order * f.args[1], temp_r**f.args[1]
+        # if f is multiplicative
+        if isinstance(f, Mul):
+            order1 = 0
+            temp_r = 1
+            for arg in f.args:
+                order2, r = _degree(arg, func)
+                if Integer(abs(order1)) < Integer(abs(order2)):
+                    order1 = order2
+                    temp_r = r
+            # isinstance to makesure the f.args[0] is a number. otherwise an error
+            if ((isinstance(f.args[0], int) or isinstance(f.args[0], Integer)) and f.args[0] < S.Zero):
+                return -order1, temp_r * f.args[0]
+            else:
+                return order1, temp_r * f.args[0]
+        # if f is Additive
+        if isinstance(f, Add):
+            order1 = 0
+            temp_arg = 0
+            temp_r = 1
+            for arg in f.args:
+                order2, r = _degree(arg, func)
+                # if polynomial is in (A**3-B**3) form
+                if Integer(abs(order1)) == Integer(abs(order2)) and order1 != order2 and abs(r) == abs(temp_r):
+                    # find the characteristics of A
+                    if isinstance(arg, Mul):
+                        if isinstance(arg.args[1], Add): # polynomial in ((x+1)**3-(x-1)**3) form
+                            arg = arg.args[1]
+                        if isinstance(arg.args[1], Pow) and isinstance(arg.args[1].args[0], Add): # in (2*(x+1)**3-2*(x-1)**3)
+                            arg = arg.args[1]
+                        elif isinstance(arg, Pow) and arg.args[1].has(func): # in (3**x-2**x) form
+                            return abs(order1), abs(r)
+                        else: # in ((x+1)**3-x**3) form
+                            deg1, r = _degree(temp_arg.args[0].args[0], func)
+                            deg2, r = _degree(temp_arg.args[0].args[1], func)
+                            deg = (temp_arg.args[1] - 1)
+                            order1 = max(abs(deg1), abs(deg2)) * deg + min(abs(deg1), abs(deg2))
+                            continue
+                    # find the characteristics of B, as above
+                    if isinstance(temp_arg, Mul):
+                        if isinstance(temp_arg.args[1], Add):
+                            arg = temp_arg.args[1]
+                        if isinstance(temp_arg.args[1], Pow) and isinstance(temp_arg.args[1].args[0], Add):
+                            arg = temp_arg.args[1]
+                        elif isinstance(arg, Pow) and arg.args[1].has(func):
+                            return abs(order1), abs(r)
+                        else:
+                            deg1, r = _degree(arg.args[0].args[0], func)
+                            deg2, r = _degree(arg.args[0].args[1], func)
+                            deg = (arg.args[1] - 1)
+                            order1 = max(abs(deg1), abs(deg2)) * deg + min(abs(deg1), abs(deg2))
+                            continue
+                    # algorithm for calculating second highest degree in A
+                    if isinstance(arg.args[0], Add):
+                        deg1, r = _degree(arg.args[0].args[0], func)
+                        deg2, r = _degree(arg.args[0].args[1], func)
+                        deg = (arg.args[1] - 1)
+                        order_temp1 = max(abs(deg1), abs(deg2)) * deg + min(abs(deg1), abs(deg2))
+                    else:
+                        order_temp1 = abs(arg.args[1]-1)
+
+                    # algorithm for calculating second highest degree in B
+                    if temp_arg != 0 and isinstance(temp_arg.args[0], Mul):
+                        arg = temp_arg.args[1]
+                    if isinstance(temp_arg, Add):
+                        deg1, r = _degree(arg.args[0].args[0], func)
+                        deg2, r = _degree(arg.args[0].args[1], func)
+                        deg = (arg.args[1] - 1)
+                        order_temp2 = max(abs(deg1), abs(deg2)) * deg + min(abs(deg1), abs(deg2))
+                    else:
+                        order_temp2 = abs(arg.args[1]-1)
+
+                    # take the second highest degree in A and B
+                    order1 = max(order_temp1, order_temp2)
+
+                # Polynomial in normal form
+                elif Integer(abs(order1)) < Integer(abs(order2)):
+                    order1 = order2
+                    temp_arg = arg
+                    temp_r = abs(r)
+            return order1, temp_r
+        else:
+            order1 = 0;
+            for arg in f.args:
+                order2, r = _degree(arg, func)
+                if order1 < order2:
+                    order1 = order2
+            return order1, r
+    else:
+        return S.Zero, f if isinstance(f ,int) else 1
 
 
 @public
