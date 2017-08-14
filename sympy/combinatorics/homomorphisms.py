@@ -207,7 +207,7 @@ class GroupHomomorphism(object):
         '''
         return self.image().order() == 1
 
-    def restict_to(self, H):
+    def restrict_to(self, H):
         '''
         Return the restriction of the homomorphism to the subgroup `H`
         of the domain.

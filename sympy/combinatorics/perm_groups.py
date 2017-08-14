@@ -1859,7 +1859,7 @@ class PermutationGroup(Basic):
         orbits = stab.orbits()
         for orb in orbits:
             x = orb.pop()
-            if x != 0 and self.minimal_block([0, x]) != [0]*n:
+            if x != 0 and any(e != 0 for e in self.minimal_block([0, x])):
                 self._is_primitive = False
                 return False
         self._is_primitive = True
@@ -1868,7 +1868,23 @@ class PermutationGroup(Basic):
     def minimal_blocks(self, randomized=True):
         '''
         For a transitive group, return the list of all minimal
-        block systems.
+        block systems. If a group is intrasitive, return `False`.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
+        >>> DihedralGroup(6).minimal_blocks()
+        [[0, 3, 0, 3, 0, 3], [0, 4, 2, 0, 4, 2]]
+        >>> G = PermutationGroup(Permutation(1,2,5))
+        >>> G.minimal_blocks()
+        False
+
+        See Also
+        ========
+
+        minimal_block, is_transitive, is_primitive
 
         '''
         def _number_blocks(blocks):
@@ -2736,7 +2752,7 @@ class PermutationGroup(Basic):
 
     def _schreier_sims(self, base=None):
         schreier = self.schreier_sims_incremental(base=base, slp_dict=True)
-        base, strong_gens = schreier[0], schreier[1]
+        base, strong_gens = schreier[:2]
         self._base = base
         self._strong_gens = strong_gens
         self._strong_gens_slp = schreier[2]
@@ -2927,8 +2943,7 @@ class PermutationGroup(Basic):
         if slp_dict:
             # rewrite the indices of strong_gens_slp in terms of the elements
             # of strong_gens
-            for k in strong_gens_slp:
-                slp = strong_gens_slp[k]
+            for k, slp in strong_gens_slp.items():
                 for i in range(len(slp)):
                     s = slp[i]
                     if isinstance(s[1], tuple):
@@ -3535,9 +3550,26 @@ class PermutationGroup(Basic):
 
         The algorithm is described in [1], Chapter 4, Section 7
 
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> D = DihedralGroup(6)
+        >>> S = D.sylow_subgroup(2)
+        >>> S.order()
+        4
+        >>> G = SymmetricGroup(6)
+        >>> S = G.sylow_subgroup(5)
+        >>> S.order()
+        5
+
         '''
         from sympy.combinatorics.homomorphisms import (homomorphism,
             orbit_homomorphism, block_homomorphism)
+        from sympy.ntheory.primetest import isprime
+
+        if not isprime(p):
+            raise ValueError("p must be a prime")
 
         def is_p_group(G):
             # check if the order of G is a power of p
@@ -3557,7 +3589,7 @@ class PermutationGroup(Basic):
             # kernels
             Q = mu.image().sylow_subgroup(p)
             Q = mu.invert_subgroup(Q)
-            nu = nu.restict_to(Q)
+            nu = nu.restrict_to(Q)
             R = nu.image().sylow_subgroup(p)
             return nu.invert_subgroup(R)
 
@@ -3594,7 +3626,7 @@ class PermutationGroup(Basic):
             return _sylow_reduce(mu, nu)
         elif len(blocks) == 1:
             block = list(blocks)[0]
-            if block != [0]*self.degree:
+            if any(e != 0 for e in block):
                 # self is imprimitive
                 mu = block_homomorphism(self, block)
                 if not is_p_group(mu.image())[0]:
@@ -3619,7 +3651,7 @@ class PermutationGroup(Basic):
             P = Z._p_elements_group(p)
             h = P.random()
             C_h = self.centralizer(h)
-            while C_h.order() % s_order != 0:
+            while C_h.order() % p*s_order != 0:
                 h = P.random()
                 C_h = self.centralizer(h)
             C = C_h

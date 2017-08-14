@@ -460,6 +460,15 @@ def test_minimal_block():
     assert P1.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
     assert P2.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
 
+def test_minimal_blocks():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    assert P.minimal_blocks() == [[0, 3, 0, 3, 0, 3], [0, 4, 5, 0, 4, 5]]
+
+    P = SymmetricGroup(5)
+    assert P.minimal_blocks() == [[0]*5]
+
+    P = PermutationGroup(Permutation(0, 3))
+    assert P.minimal_blocks() == False
 
 def test_max_div():
     S = SymmetricGroup(10)
