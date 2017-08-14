@@ -114,6 +114,8 @@ class Quantity(AtomicExpr):
             return dim
         elif isinstance(expr, Function):
             args = [Quantity.get_dimensional_expr(arg) for arg in expr.args]
+            if args == [1]:
+                return 1
             return expr.func(*args)
         elif isinstance(expr, Quantity):
             return expr.dimension.name
