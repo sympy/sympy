@@ -2174,7 +2174,7 @@ class Expr(Basic, EvalfMixin):
         return Add(*coeffs)
 
     def could_extract_minus_sign(self):
-         """Return True if self is not in a canonical form with respect
+        """Return True if self is not in a canonical form with respect
         to its sign.
 
         For most expressions, e, there will be a difference in e and -e.
