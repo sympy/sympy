@@ -348,6 +348,14 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
+        if arg.func is acsc:
+            x = arg.args[0]
+            return 1 / x
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -633,6 +641,14 @@ class cos(TrigonometricFunction):
             x = arg.args[0]
             return 1 / sqrt(1 + 1 / x**2)
 
+        if arg.func is acsc:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2)
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return 1 / x
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -779,11 +795,11 @@ class cos(TrigonometricFunction):
             # if n can be factored in terms of Fermat primes with
             # multiplicity of each being 1, return those primes, else
             # False
-            from sympy import chebyshevt
             primes = []
             for p_i in cst_table_some:
-                n, r = divmod(n, p_i)
-                if not r:
+                quotient, remainder = divmod(n, p_i)
+                if remainder == 0:
+                    n = quotient
                     primes.append(p_i)
                     if n == 1:
                         return tuple(primes)
@@ -1025,6 +1041,14 @@ class tan(TrigonometricFunction):
         if arg.func is acot:
             x = arg.args[0]
             return 1 / x
+
+        if arg.func is acsc:
+            x = arg.args[0]
+            return 1 / (sqrt(1 - 1 / x**2) * x)
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2) * x
 
     @staticmethod
     @cacheit
@@ -1303,6 +1327,14 @@ class cot(TrigonometricFunction):
         if arg.func is acos:
             x = arg.args[0]
             return x / sqrt(1 - x**2)
+
+        if arg.func is acsc:
+            x = arg.args[0]
+            return sqrt(1 - 1 / x**2) * x
+
+        if arg.func is asec:
+            x = arg.args[0]
+            return 1 / (sqrt(1 - 1 / x**2) * x)
 
     @staticmethod
     @cacheit
@@ -2240,8 +2272,8 @@ class atan(InverseTrigonometricFunction):
         return self.args[0].is_real
 
     def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * (log(
-            (S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
+        return S.ImaginaryUnit/2 * (log(S(1) - S.ImaginaryUnit * x)
+            - log(S(1) + S.ImaginaryUnit * x))
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
@@ -2388,8 +2420,8 @@ class acot(InverseTrigonometricFunction):
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * \
-            (log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
+        return S.ImaginaryUnit/2 * (log(1 - S.ImaginaryUnit/x)
+            - log(1 + S.ImaginaryUnit/x))
 
     def inverse(self, argindex=1):
         """

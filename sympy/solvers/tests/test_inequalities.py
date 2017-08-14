@@ -1,6 +1,6 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
+from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
 from sympy.solvers.inequalities import (reduce_inequalities,
@@ -290,6 +290,20 @@ def test_solve_univariate_inequality():
 
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
+    c1 = Dummy("c1", positive=True)
+    raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
+    n = Dummy('n', negative=True)
+    assert isolve(n/c1 > -2, c1) == (-n/2 < c1)
+    assert isolve(n/c1 < 0, c1) == True
+    assert isolve(n/c1 > 0, c1) == False
+
+    zero = cos(1)**2 + sin(1)**2 - 1
+    raises(NotImplementedError, lambda: isolve(x**2 < zero, x))
+    raises(NotImplementedError, lambda: isolve(
+        x**2 < zero*I, x))
+    raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
+    raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
+    raises(TypeError, lambda: isolve(x - I < 0, x))
 
 
 def test_trig_inequalities():
@@ -402,4 +416,17 @@ def test__solve_inequality():
     # make sure to include conditions under which solution is valid
     e = Eq(1 - x, x*(1/x - 1))
     assert _solve_inequality(e, x) == Ne(x, 0)
-    assert _solve_inequality(-x < x*(1/x - 1), x) == Ne(x, 0)
+    assert _solve_inequality(x < x*(1/x - 1), x) == (x < S.Half) & Ne(x, 0)
+
+
+def test__pt():
+    from sympy.solvers.inequalities import _pt
+    assert _pt(-oo, oo) == 0
+    assert _pt(S(1), S(3)) == 2
+    assert _pt(S(1), oo) == _pt(oo, S(1)) == 2
+    assert _pt(S(1), -oo) == _pt(-oo, S(1)) == S.Half
+    assert _pt(S(-1), oo) == _pt(oo, S(-1)) == -S.Half
+    assert _pt(S(-1), -oo) == _pt(-oo, S(-1)) == -2
+    assert _pt(x, oo) == _pt(oo, x) == x + 1
+    assert _pt(x, -oo) == _pt(-oo, x) == x - 1
+    raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S(1)))
