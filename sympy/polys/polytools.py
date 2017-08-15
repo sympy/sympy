@@ -4408,7 +4408,7 @@ def degree(f, gen=0):
     degree_list
     """
 
-    if f.is_Poly:
+    if isinstance(f, Poly):
         p = f
         isNum = p.as_expr().is_Number
     else:
@@ -4421,7 +4421,7 @@ def degree(f, gen=0):
         return S.Zero if p else S.NegativeInfinity
 
     if not sympify(gen, strict=True).is_Number:
-        if gen not in p.gens and f.is_Poly:
+        if gen not in p.gens and isinstance(f, Poly):
             # try recast without explicit gens
             p, _ = poly_from_expr(f.as_expr())
         if gen not in p.gens:
