@@ -7,7 +7,7 @@ from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
 
 def test_combsimp():
-    from sympy.abc import n, k
+    n, k = symbols('n k', integer = True)
 
     assert combsimp(factorial(n)) == factorial(n)
     assert combsimp(binomial(n, k)) == binomial(n, k)
@@ -23,20 +23,20 @@ def test_combsimp():
     assert combsimp(factorial(n)*binomial(n + 1, k + 1)/binomial(n, k)) == \
         factorial(n + 1)/(1 + k)
 
-    assert combsimp(binomial(n - 1, k)) == -((-n + k)*binomial(n, k))/n
+    assert combsimp(binomial(n - 1, k)) == binomial(n - 1, k)
 
-    assert combsimp(binomial(n + 2, k + S(1)/2)) == 4*((n + 1)*(n + 2) *
-        binomial(n, k + S(1)/2))/((2*k - 2*n - 1)*(2*k - 2*n - 3))
+    assert combsimp(binomial(n + 2, k + S(1)/2)) == gamma(n + 3)/ \
+        (gamma(k + 3/2)*gamma(-k + n + 5/2))
     assert combsimp(binomial(n + 2, k + 2.0)) == \
-        -((1.0*n + 2.0)*binomial(n + 1.0, k + 2.0))/(k - n)
+        gamma(n + 3)/(gamma(k + 3.0)*gamma(-k + n + 1))
 
     # coverage tests
     assert combsimp(factorial(n*(1 + n) - n**2 - n)) == 1
     assert combsimp(binomial(n + k - 2, n)) == \
-        k*(k - 1)*binomial(n + k, n)/((n + k)*(n + k - 1))
+        binomial(k + n - 2, n)
     i = Symbol('i', integer=True)
     e = gamma(i + 3)
-    assert combsimp(e) == e
+    assert combsimp(e) == factorial(i + 2)
     e = gamma(exp(i))
     assert combsimp(e) == e
     e = gamma(n + S(1)/3)*gamma(n + S(2)/3)
@@ -129,7 +129,7 @@ def test_combsimp_gamma():
 def test_issue_9699():
     n, k = symbols('n k', real=True)
     x, y = symbols('x, y')
-    assert combsimp((n + 1)*factorial(n)) == factorial(n + 1)
+    assert combsimp((n + 1)*factorial(n)) == gamma(n + 2)
     assert combsimp((x + 1)*factorial(x)/gamma(y)) == gamma(x + 2)/gamma(y)
-    assert combsimp(factorial(n)/n) == factorial(n - 1)
-    assert combsimp(rf(x + n, k)*binomial(n, k)) == binomial(n, k)*gamma(k + n + x)/gamma(n + x)
+    assert combsimp(factorial(n)/n) == gamma(n)
+    assert combsimp(rf(x + n, k)*binomial(n, k)) == gamma(n + 1)*gamma(k + n + x)/(gamma(k + 1)*gamma(n + x)*gamma(-k + n + 1))
