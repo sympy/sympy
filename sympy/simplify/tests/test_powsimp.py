@@ -98,6 +98,12 @@ def test_powsimp():
     # issue 8836
     assert str( powsimp(exp(I*pi/3)*root(-1,3)) ) == '(-1)**(2/3)'
 
+    # issue 9183
+    assert powsimp(-0.1**x) == -0.1**x
+
+    # issue 10095
+    assert powsimp((1/(2*E))**oo) == 0
+
 
 def test_powsimp_negated_base():
     assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
