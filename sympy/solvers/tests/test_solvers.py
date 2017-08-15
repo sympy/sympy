@@ -707,15 +707,15 @@ def test_issue_5132():
     assert solve(eqs, set=True) == \
         ([x, y], set([
         (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(sqrt(-z**2 - sin(log(3)))), -log(3))]))
+        (log(-z**2 - sin(log(3)))/2, -log(3))]))
     assert solve(eqs, x, z, set=True) == \
         ([x], set([
         (log(-sqrt(-z**2 + sin(y))),),
-        (log(sqrt(-z**2 + sin(y))),)]))
+        (log(-z**2 + sin(y))/2,)]))
     assert set(solve(eqs, x, y)) == \
         set([
             (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(sqrt(-z**2 - sin(log(3)))), -log(3))])
+        (log(-z**2 - sin(log(3)))/2, -log(3))])
     assert set(solve(eqs, y, z)) == \
         set([
             (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
@@ -724,15 +724,15 @@ def test_issue_5132():
     assert solve(eqs, set=True) == ([x, y], set(
         [
         (log(-sqrt(-z - sin(log(3)))), -log(3)),
-            (log(sqrt(-z - sin(log(3)))), -log(3))]))
+            (log(-z - sin(log(3)))/2, -log(3))]))
     assert solve(eqs, x, z, set=True) == ([x], set(
         [
         (log(-sqrt(-z + sin(y))),),
-            (log(sqrt(-z + sin(y))),)]))
+            (log(-z + sin(y))/2,)]))
     assert set(solve(eqs, x, y)) == set(
         [
             (log(-sqrt(-z - sin(log(3)))), -log(3)),
-            (log(sqrt(-z - sin(log(3)))), -log(3))])
+            (log(-z - sin(log(3)))/2, -log(3))])
     assert solve(eqs, z, y) == \
         [(-exp(2*x) - sin(log(3)), -log(3))]
     assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4), set=True) == (
@@ -1777,16 +1777,15 @@ def test_issue_8828():
 
 def test_issue_2840_8155():
     assert solve(sin(3*x) + sin(6*x)) == [
-        0, -pi, pi, 2*pi, 2*I*(log(2) - log(-1 - sqrt(3)*I)), 2*I*(log(2) -
-        log(-1 + sqrt(3)*I)), 2*I*(log(2) - log(1 - sqrt(3)*I)), 2*I*(log(2) -
-        log(1 + sqrt(3)*I)), 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
-        log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
-        log(sqrt(3) + I)), -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
-        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-sin(pi/18) -
-        I*cos(pi/18)), -2*I*log(-sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(sin(pi/18) - I*cos(pi/18)), -2*I*log(sin(pi/18) +
-        I*cos(pi/18)), -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
-        -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
+        0, -pi, pi, 14*pi/9, 16*pi/9, 2*pi, 2*I*(log(2) - log(-1 - sqrt(3)*I)),
+        2*I*(log(2) - log(-1 + sqrt(3)*I)), 2*I*(log(2) - log(1 - sqrt(3)*I)),
+        2*I*(log(2) - log(1 + sqrt(3)*I)), 2*I*(log(2) - log(-sqrt(3) - I)),
+        2*I*(log(2) - log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)),
+        2*I*(log(2) - log(sqrt(3) + I)), -2*I*log(-(-1)**(S(1)/9)), -2*I*log(
+        -(-1)**(S(2)/9)), -2*I*log(-sin(pi/18) - I*cos(pi/18)), -2*I*log(-sin(
+        pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) - I*cos(pi/18)), -2*I*log(
+        sin(pi/18) + I*cos(pi/18)), -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(
+        -I*pi/9)), -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
     assert solve(2*sin(x) - 2*sin(2*x)) == [
         0, -pi, pi, 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
         log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
