@@ -4414,8 +4414,7 @@ def degree(f, gen=0):
 
     if not f.is_Poly:
         f, _ = poly_from_expr(f)
-        if isinstance(gen, int) and f.is_multivariate:
-            raise ValueError("For multivariate expressions, an explicit generator must be given for gen, not an integer.")
+
     if not sympify(gen, strict=True).is_Number:
         if gen not in f.gens and f.is_Poly:
             # try recast without explicit gens
