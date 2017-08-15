@@ -439,14 +439,14 @@ class Integral(AddWithLimits):
                         meijerg=meijerg, risch=risch, manual=manual,
                         conds=conds)
             else:
-                '''
-There are a number of tradeoffs in using the Meijer G
-method. It can sometimes be a lot faster than other methods,
-and sometimes slower. And there are certain types of
-integrals for which it is more likely to work than others.
-These heuristics are incorporated in deciding what
-integration methods to try, in what order. See the
-integrate() docstring for details.'''
+                # There are a number of tradeoffs in using the
+                # Meijer G method. It can sometimes be a lot faster
+                # than other methods, and sometimes slower. And
+                # there are certain types of integrals for which it
+                # is more likely to work than others. These
+                # heuristics are incorporated in deciding what
+                # integration methods to try, in what order. See the
+                # integrate() docstring for details.
                 def try_meijerg(function, xab):
                     ret = None
                     if len(xab) == 3 and meijerg is not False:
@@ -485,14 +485,14 @@ integrate() docstring for details.'''
                         continue
                     else:
                         meijerg1 = False
-                        '''
-If the special meijerg code did not succeed in finding a definite
-integral, then the code using meijerint_indefinite will not either
-(it might find an antiderivative, but the answer is likely to be
-nonsensical). Thus if we are requested to only use Meijer G-function
-methods, we give up at this stage. Otherwise we just disable
-G-function methods.
-'''
+                # If the special meijerg code did not succeed in
+                # finding a definite integral, then the code using
+                # meijerint_indefinite will not either (it might
+                # find an antiderivative, but the answer is likely
+                # to be nonsensical). Thus if we are requested to
+                # only use Meijer G-function methods, we give up at
+                # this stage. Otherwise we just disable G-function
+                # methods.
                 if meijerg1 is False and meijerg is True:
                     antideriv = None
                 else:
