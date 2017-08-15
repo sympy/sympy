@@ -308,7 +308,9 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
+    # TODO: Remove this line when warning from issue #12884 will be removed
     coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
+    coord_sys = _get_coord_systems(scalar_field)
 
     if len(coord_sys) == 0:
         return Vector.zero
