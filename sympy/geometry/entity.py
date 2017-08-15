@@ -364,12 +364,14 @@ class GeometryEntity(Basic):
         >>> l = Line((0, pi), slope=sqrt(2))
         >>> pent = RegularPolygon((1, 2), 1, 5)
         >>> rpent = pent.reflect(l)
+        >>> rpent
         RegularPolygon(Point(-2*sqrt(2)*pi/3 - 1/3 + 4*sqrt(2)/3, 2/3 + 2*sqrt(2)/3 + 2*pi/3), -1, 5, -pi/5 + acos(1/3))
 
         >>> from sympy import pi, Line, Circle, Point
         >>> l = Line((0, pi), slope=1)
         >>> circ = Circle(Point(0, 0), 5)
         >>> rcirc = circ.reflect(l)
+        >>> rcirc
         Circle(Point(-pi, pi), -5)
 
         """
