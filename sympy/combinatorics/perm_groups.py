@@ -127,6 +127,8 @@ class PermutationGroup(Basic):
             args = [Permutation()]
         else:
             args = list(args[0] if is_sequence(args[0]) else args)
+            if not args:
+                args = [Permutation()]
         if any(isinstance(a, Cycle) for a in args):
             args = [Permutation(a) for a in args]
         if has_variety(a.size for a in args):
@@ -158,8 +160,10 @@ class PermutationGroup(Basic):
         # these attributes are assigned after running schreier_sims
         obj._base = []
         obj._strong_gens = []
+        obj._strong_gens_slp = []
         obj._basic_orbits = []
         obj._transversals = []
+        obj._transversal_slp = []
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
@@ -716,9 +720,12 @@ class PermutationGroup(Basic):
         # 1<=l<=len(base). While H^(l) is the trivial group, T^(l)
         # contains all the elements of G^(l) so we might just as well
         # start with l = len(h_stabs)-1
-        T = g_stabs[len(h_stabs)]._elements
-        t_len = len(T)
+        if len(g_stabs) > len(h_stabs):
+            T = g_stabs[len(h_stabs)]._elements
+        else:
+            T = [identity]
         l = len(h_stabs)-1
+        t_len = len(T)
         while l > -1:
             T_next = []
             for u in transversals[l]:
@@ -736,6 +743,8 @@ class PermutationGroup(Basic):
             T += T_next
             t_len += len(T_next)
             l -= 1
+        T.remove(identity)
+        T = [identity] + T
         return T
 
     def _coset_representative(self, g, H):
@@ -788,8 +797,7 @@ class PermutationGroup(Basic):
             row = [T.index(r) for r in row]
             table.append(row)
 
-
-        # standardize (this is the same as the algorithm used in fp_groups)
+        # standardize (this is the same as the algorithm used in coset_table)
         # If CosetTable is made compatible with PermutationGroups, this
         # should be replaced by table.standardize()
         A = range(len(A))
@@ -808,8 +816,8 @@ class PermutationGroup(Basic):
                             elif table[i][x] == gamma:
                                 table[i][x] = beta
                 gamma += 1
-                if gamma == n-1:
-                    return table
+            if gamma >= n-1:
+                return table
 
     def center(self):
         r"""
@@ -1090,6 +1098,47 @@ class PermutationGroup(Basic):
         factors = [tr[i][factors[i]] for i in range(len(base))]
         return factors
 
+    def generator_product(self, g, original=False):
+        '''
+        Return a list of strong generators `[s1, ..., sn]`
+        s.t `g = sn*...*s1`. If `original=True`, make the list
+        contain only the original group generators
+
+        '''
+        product = []
+        if g.is_identity:
+            return []
+        if g in self.strong_gens:
+            if not original or g in self.generators:
+                return [g]
+            else:
+                slp = self._strong_gens_slp[g]
+                for s in slp:
+                    product.extend(self.generator_product(s, original=True))
+                return product
+        elif g**-1 in self.strong_gens:
+            g = g**-1
+            if not original or g in self.generators:
+                return [g**-1]
+            else:
+                slp = self._strong_gens_slp[g]
+                for s in slp:
+                    product.extend(self.generator_product(s, original=True))
+                l = len(product)
+                product = [product[l-i-1]**-1 for i in range(l)]
+                return product
+
+        f = self.coset_factor(g, True)
+        for i, j in enumerate(f):
+            slp = self._transversal_slp[i][j]
+            for s in slp:
+                if not original:
+                    product.append(self.strong_gens[s])
+                else:
+                    s = self.strong_gens[s]
+                    product.extend(self.generator_product(s, original=True))
+        return product
+
     def coset_rank(self, g):
         """rank using Schreier-Sims representation
 
@@ -1145,9 +1194,9 @@ class PermutationGroup(Basic):
         """
         if rank < 0 or rank >= self.order():
             return None
-        base = self._base
-        transversals = self._transversals
-        basic_orbits = self._basic_orbits
+        base = self.base
+        transversals = self.basic_transversals
+        basic_orbits = self.basic_orbits
         m = len(base)
         v = [0]*m
         for i in range(m):
@@ -1191,6 +1240,14 @@ class PermutationGroup(Basic):
         order
         """
         return self._degree
+
+    @property
+    def identity(self):
+        '''
+        Return the identity element of the permutation group.
+
+        '''
+        return _af_new(list(range(self.degree)))
 
     @property
     def elements(self):
@@ -1269,7 +1326,7 @@ class PermutationGroup(Basic):
         return res
 
     def derived_subgroup(self):
-        """Compute the derived subgroup.
+        r"""Compute the derived subgroup.
 
         The derived subgroup, or commutator subgroup is the subgroup generated
         by all commutators `[g, h] = hgh^{-1}g^{-1}` for `g, h\in G` ; it is
@@ -1759,7 +1816,7 @@ class PermutationGroup(Basic):
         return True
 
     def is_primitive(self, randomized=True):
-        """Test if a group is primitive.
+        r"""Test if a group is primitive.
 
         A permutation group ``G`` acting on a set ``S`` is called primitive if
         ``S`` contains no nontrivial block under the action of ``G``
@@ -1898,7 +1955,7 @@ class PermutationGroup(Basic):
         """
         if not isinstance(G, PermutationGroup):
             return False
-        if self == G:
+        if self == G or self.generators[0]==Permutation():
             return True
         if G.order() % self.order() != 0:
             return False
@@ -2121,15 +2178,15 @@ class PermutationGroup(Basic):
         i = 0
         len_not_rep = k - 1
         while i < len_not_rep:
-            temp = not_rep[i]
+            gamma = not_rep[i]
             i += 1
             for gen in gens:
                 # find has side effects: performs path compression on the list
                 # of representatives
-                delta = self._union_find_rep(temp, parents)
+                delta = self._union_find_rep(gamma, parents)
                 # union has side effects: performs union by rank on the list
                 # of representatives
-                temp = self._union_find_merge(gen(temp), gen(delta), ranks,
+                temp = self._union_find_merge(gen(gamma), gen(delta), ranks,
                                               parents, not_rep)
                 if temp == -1:
                     return [0]*n
@@ -2628,10 +2685,18 @@ class PermutationGroup(Basic):
             return
 
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-        basic_orbits, transversals = _orbits_transversals_from_bsgs(base,\
-                strong_gens_distr)
+        basic_orbits, transversals, slps = _orbits_transversals_from_bsgs(base,\
+                strong_gens_distr, slp=True)
+
+        # rewrite the indices stored in slps in terms of strong_gens
+        for i, slp in enumerate(slps):
+            gens = strong_gens_distr[i]
+            for k in slp:
+                slp[k] = [strong_gens.index(gens[s]) for s in slp[k]]
+
         self._transversals = transversals
         self._basic_orbits = [sorted(x) for x in basic_orbits]
+        self._transversal_slp = slps
 
     def schreier_sims_incremental(self, base=None, gens=None):
         """Extend a sequence of points and generating set to a base and strong
@@ -2696,6 +2761,7 @@ class PermutationGroup(Basic):
         id_af = list(range(degree))
         # handle the trivial group
         if len(gens) == 1 and gens[0].is_Identity:
+            self._strong_gens_slp = {gens[0]: [gens[0]]}
             return base, gens
         # prevent side effects
         _base, _gens = base[:], gens[:]
@@ -2712,13 +2778,16 @@ class PermutationGroup(Basic):
                 _base.append(new)
         # distribute generators according to basic stabilizers
         strong_gens_distr = _distribute_gens_by_base(_base, _gens)
+        strong_gens_slp = []
         # initialize the basic stabilizers, basic orbits and basic transversals
         orbs = {}
         transversals = {}
+        slps = {}
         base_len = len(_base)
         for i in range(base_len):
-            transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
-                _base[i], pairs=True, af=True))
+            transversals[i], slps[i] = _orbit_transversal(degree, strong_gens_distr[i],
+                _base[i], pairs=True, af=True, slp=True)
+            transversals[i] = dict(transversals[i])
             orbs[i] = list(transversals[i].keys())
         # main loop: amend the stabilizer chain until we have generators
         # for all stabilizers
@@ -2730,10 +2799,12 @@ class PermutationGroup(Basic):
             # test the generators for being a strong generating set
             db = {}
             for beta, u_beta in list(transversals[i].items()):
-                for gen in strong_gens_distr[i]:
+                for j, gen in enumerate(strong_gens_distr[i]):
                     gb = gen._array_form[beta]
                     u1 = transversals[i][gb]
                     g1 = _af_rmul(gen._array_form, u_beta)
+                    slp = [(i, g) for g in slps[i][beta]]
+                    slp = [(i, j)] + slp
                     if g1 != u1:
                         # test if the schreier generator is in the i+1-th
                         # would-be basic stabilizer
@@ -2743,7 +2814,11 @@ class PermutationGroup(Basic):
                         except KeyError:
                             u1_inv = db[gb] = _af_invert(u1)
                         schreier_gen = _af_rmul(u1_inv, g1)
-                        h, j = _strip_af(schreier_gen, _base, orbs, transversals, i)
+                        u1_inv_slp = slps[i][gb][:]
+                        u1_inv_slp.reverse()
+                        u1_inv_slp = [(i, (g,)) for g in u1_inv_slp]
+                        slp = u1_inv_slp + slp
+                        h, j, slp = _strip_af(schreier_gen, _base, orbs, transversals, i, slp=slp, slps=slps)
                         if j <= base_len:
                             # new strong generator h at level j
                             y = False
@@ -2760,11 +2835,13 @@ class PermutationGroup(Basic):
                             # if a new strong generator is found, update the
                             # data structures and start over
                             h = _af_new(h)
+                            strong_gens_slp.append((h, slp))
                             for l in range(i + 1, j):
                                 strong_gens_distr[l].append(h)
-                                transversals[l] =\
-                                dict(_orbit_transversal(degree, strong_gens_distr[l],
-                                    _base[l], pairs=True, af=True))
+                                transversals[l], slps[l] =\
+                                _orbit_transversal(degree, strong_gens_distr[l],
+                                    _base[l], pairs=True, af=True, slp=True)
+                                transversals[l] = dict(transversals[l])
                                 orbs[l] = list(transversals[l].keys())
                             i = j - 1
                             # continue main loop using the flag
@@ -2776,8 +2853,23 @@ class PermutationGroup(Basic):
             if continue_i is True:
                 continue
             i -= 1
-        # build the strong generating set
-        strong_gens = list(uniq(i for gens in strong_gens_distr for i in gens))
+
+        # create the list of the strong generators strong_gens and rewrite
+        # the indices of strong_gens_slp in terms of the elements of strong_gens
+        strong_gens = _gens[:]
+        for k, slp in strong_gens_slp:
+            strong_gens.append(k)
+            for i in range(len(slp)):
+                s = slp[i]
+                if isinstance(s[1], tuple):
+                    slp[i] = strong_gens_distr[s[0]][s[1][0]]**-1
+                else:
+                    slp[i] = strong_gens_distr[s[0]][s[1]]
+        strong_gens_slp = dict(strong_gens_slp)
+        # add the original generators
+        for g in _gens:
+            strong_gens_slp[g] = [g]
+        self._strong_gens_slp = strong_gens_slp
         return _base, strong_gens
 
     def schreier_sims_random(self, base=None, gens=None, consec_succ=10,
@@ -2987,7 +3079,7 @@ class PermutationGroup(Basic):
 
     @property
     def strong_gens(self):
-        """Return a strong generating set from the Schreier-Sims algorithm.
+        r"""Return a strong generating set from the Schreier-Sims algorithm.
 
         A generating set `S = \{g_1, g_2, ..., g_t\}` for a permutation group
         `G` is a strong generating set relative to the sequence of points
@@ -3283,7 +3375,7 @@ class PermutationGroup(Basic):
 
     @property
     def transitivity_degree(self):
-        """Compute the degree of transitivity of the group.
+        r"""Compute the degree of transitivity of the group.
 
         A permutation group `G` acting on `\Omega = \{0, 1, ..., n-1\}` is
         ``k``-fold transitive, if, for any k points
@@ -3329,6 +3421,119 @@ class PermutationGroup(Basic):
         else:
             return self._transitivity_degree
 
+    def presentation(G):
+        '''
+        Return an `FpGroup` presentation of the group.
+
+        The algorithm is described in [1], Chapter 6.1.
+
+        '''
+        from sympy.combinatorics.fp_groups import (FpGroup,
+                                            simplify_presentation)
+        from sympy.combinatorics.coset_table import CosetTable
+        from sympy.combinatorics.free_groups import free_group
+        from sympy.combinatorics.homomorphisms import homomorphism
+        from itertools import product
+
+        def _factor_group_by_rels(G, rels):
+            if isinstance(G, FpGroup):
+                return FpGroup(G.free_group, list(uniq(
+                                    g for g in G.relators + rels)))
+            return FpGroup(G, rels)
+
+        len_g = len(G.generators)
+
+        if len_g == 1:
+            order = G.generators[0].order()
+            # handle the trivial group
+            if order == 1:
+                return free_group([])[0]
+            F, x = free_group('x')
+            return FpGroup(F, [x**order])
+
+        if G.order() > 20:
+            half_gens = G.generators[0:(len_g+1)//2]
+        else:
+            half_gens = []
+        H = PermutationGroup(half_gens)
+        H_p = H.presentation()
+
+        len_h = len(H_p.generators)
+
+        C = G.coset_table(H)
+        n = len(C) # subgroup index
+
+        gen_syms = [('x_%d'%i) for i in range(len(G.generators))]
+        F = free_group(', '.join(gen_syms))[0]
+
+        # the rewriting could be replaced by a homomorphism
+        images = {H_p.generators[i]: F.generators[i] for i in range(len_h)}
+
+        def _rewrite(group, w):
+            w1 = group.identity
+            for i in range(len(w)):
+                e = w[i]
+                if e in images:
+                    w1 = w1*images[e]
+                else:
+                    w1 = w1*images[e**-1]**-1
+            return w1
+
+        rels = [_rewrite(F, r) for r in H_p.relators]
+        G_p = FpGroup(F, rels)
+
+        T = homomorphism(G_p, G, G_p.generators, G.generators)
+
+        C_p = CosetTable(G_p, [])
+
+        C_p.table = [[None]*(2*len_g) for i in range(n)]
+
+        # initiate the coset transversal
+        transversal = [None]*n
+        transversal[0] = G_p.identity
+
+        # fill in the coset table as much as possible
+        for i in range(2*len_h):
+            C_p.table[0][i] = 0
+
+        gamma = 1
+        for alpha, x in product(range(0, n), range(2*len_g)):
+            beta = C[alpha][x]
+            if beta == gamma:
+                gen = G_p.generators[x//2]**((-1)**(x % 2))
+                transversal[beta] = transversal[alpha]*gen
+                C_p.table[alpha][x] = beta
+                C_p.table[beta][x + (-1)**(x % 2)] = alpha
+                gamma += 1
+                if gamma == n:
+                    break
+
+        C_p.p = list(range(n))
+        beta = x = 0
+
+        while not C_p.is_complete():
+            # find the first undefined entry
+            while C_p.table[beta][x] == C[beta][x]:
+                x = (x + 1) % (2*len_g)
+                if x == 0:
+                    beta = (beta + 1) % n
+
+            # define a new relator
+            gen = G_p.generators[x//2]**((-1)**(x % 2))
+            new_rel = transversal[beta]*gen*transversal[C[beta][x]]**-1
+            perm = T(new_rel)
+            next = G_p.identity
+            for s in H.generator_product(perm, original=True):
+                next = T.invert(s)*next
+            new_rel = new_rel*next**-1
+
+            # continue coset enumeration
+            G_p = _factor_group_by_rels(G_p, [new_rel])
+            C_p.scan_and_fill(0, new_rel)
+            C_p = G_p.coset_enumeration([], strategy="coset_table",
+                                draft=C_p, max_cosets=n, incomplete=True)
+
+        return simplify_presentation(G_p)
 
 def _orbit(degree, generators, alpha, action='tuples'):
     r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
@@ -3433,7 +3638,7 @@ def _orbits(degree, generators):
         sorted_I = [i for i in sorted_I if i not in orb]
     return orbs
 
-def _orbit_transversal(degree, generators, alpha, pairs, af=False):
+def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
     r"""Computes a transversal for the orbit of ``alpha`` as a set.
 
     generators   generators of the group ``G``
@@ -3448,6 +3653,11 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False):
     if ``af`` is ``True``, the transversal elements are given in
     array form.
 
+    If `slp` is `True`, a dictionary `{beta: slp_beta}` is returned
+    for `\beta \in Orb` where `slp_beta` is a list of indices of the
+    generators in `generators` s.t. if `slp_beta = [i_1 ... i_n]`
+    `g_\beta = generators[i_n]*...*generators[i_1]`.
+
     Examples
     ========
 
@@ -3461,24 +3671,35 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False):
     """
 
     tr = [(alpha, list(range(degree)))]
+    slp_dict = {alpha: []}
     used = [False]*degree
     used[alpha] = True
     gens = [x._array_form for x in generators]
     for x, px in tr:
+        px_slp = slp_dict[x]
         for gen in gens:
             temp = gen[x]
             if used[temp] == False:
+                slp_dict[temp] = [gens.index(gen)] + px_slp
                 tr.append((temp, _af_rmul(gen, px)))
                 used[temp] = True
     if pairs:
         if not af:
             tr = [(x, _af_new(y)) for x, y in tr]
-        return tr
+        if not slp:
+            return tr
+        return tr, slp_dict
 
     if af:
-        return [y for _, y in tr]
+        tr = [y for _, y in tr]
+        if not slp:
+            return tr
+        return tr, slp_dict
 
-    return [_af_new(y) for _, y in tr]
+    tr = [_af_new(y) for _, y in tr]
+    if not slp:
+        return tr
+    return tr, slp_dict
 
 def _stabilizer(degree, generators, alpha):
     r"""Return the stabilizer subgroup of ``alpha``.

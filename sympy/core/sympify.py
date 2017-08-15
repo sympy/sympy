@@ -50,6 +50,7 @@ class CantSympify(object):
     """
     pass
 
+
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
@@ -256,12 +257,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         else:
             return a
 
-    #Support for basic numpy datatypes
+    # Support for basic numpy datatypes
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
             if not isinstance(a, np.floating):
-                return sympify(np.asscalar(a))
+                func = converter[complex] if np.iscomplex(a) else sympify
+                return func(np.asscalar(a))
             else:
                 try:
                     from sympy.core.numbers import Float

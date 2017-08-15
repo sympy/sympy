@@ -104,4 +104,5 @@ will be greatly improved.
 
 More information:
 
-.. autofunction:noindex: cse
+.. autofunction:: cse
+   :noindex:

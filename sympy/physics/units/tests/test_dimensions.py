@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from sympy import sympify, Symbol, S, sqrt
-from sympy.physics.units.dimensions import Dimension
-from sympy.physics.units.dimensions import length, time
+from sympy import S, Symbol, sqrt, sympify
+from sympy.physics.units.dimensions import Dimension, length, time
 from sympy.utilities.pytest import raises
 
 
@@ -25,6 +24,17 @@ def test_error_definition():
 
     # non-number with named argument
     raises(TypeError, lambda: Dimension({"length": (1, 2)}))
+
+    # symbol should by Symbol or str
+    raises(AssertionError, lambda: Dimension("length", symbol=1))
+
+
+def test_error_regisration():
+    # tuple with more or less than two entries
+    raises(IndexError, lambda: length._register_as_base_dim())
+
+    one = Dimension(1)
+    raises(TypeError, lambda: one._register_as_base_dim())
 
 
 def test_str():
@@ -74,3 +84,6 @@ def test_mul_div_exp():
 
     assert length != 1
     assert length / length != 1
+
+    length_0 = length ** 0
+    assert length_0.get_dimensional_dependencies() == {}

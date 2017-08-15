@@ -1,6 +1,7 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 from collections import Mapping, defaultdict
+from itertools import chain
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -303,13 +304,6 @@ class Basic(with_metaclass(ManagedProperties)):
         if self is other:
             return True
 
-        from .function import AppliedUndef, UndefinedFunction as UndefFunc
-
-        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
-            if self.class_key() == other.class_key():
-                return True
-            else:
-                return False
         if type(self) is not type(other):
             # issue 6100 a**1.0 == a like a**2.0 == a**2
             if isinstance(self, Pow) and self.exp == 1:
@@ -319,13 +313,9 @@ class Basic(with_metaclass(ManagedProperties)):
             try:
                 other = _sympify(other)
             except SympifyError:
-                return False    # sympy != other
+                return NotImplemented
 
-            if isinstance(self, AppliedUndef) and isinstance(other,
-                                                             AppliedUndef):
-                if self.class_key() != other.class_key():
-                    return False
-            elif type(self) is not type(other):
+            if type(self) != type(other):
                 return False
 
         return self._hashable_content() == other._hashable_content()
@@ -339,7 +329,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
            but faster
         """
-        return not self.__eq__(other)
+        return not self == other
 
     def dummy_eq(self, other, symbol=None):
         """
@@ -712,7 +702,10 @@ class Basic(with_metaclass(ManagedProperties)):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
-        See docstring of Expr.as_content_primitive
+        See Also
+        ========
+
+        sympy.core.expr.Expr.as_content_primitive
         """
         return S.One, self
 
@@ -1187,7 +1180,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
     def _has_matcher(self):
         """Helper for .has()"""
-        return self.__eq__
+        return lambda other: self == other
 
     def replace(self, query, value, map=False, simultaneous=True, exact=False):
         """
@@ -1657,8 +1650,13 @@ class Basic(with_metaclass(ManagedProperties)):
                 if i in Basic._constructor_postprocessor_mapping:
                     for k, v in Basic._constructor_postprocessor_mapping[i].items():
                         postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
-                elif type(i) in Basic._constructor_postprocessor_mapping:
-                    for k, v in Basic._constructor_postprocessor_mapping[type(i)].items():
+                else:
+                    postprocessor_mappings = (
+                        Basic._constructor_postprocessor_mapping[cls].items()
+                        for cls in type(i).mro()
+                        if cls in Basic._constructor_postprocessor_mapping
+                    )
+                    for k, v in chain.from_iterable(postprocessor_mappings):
                         postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
             except TypeError:
                 pass

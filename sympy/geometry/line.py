@@ -20,7 +20,7 @@ from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan)
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
@@ -106,7 +106,8 @@ class LinearEntity(GeometrySet):
         return len(self.p1)
 
     def angle_between(l1, l2):
-        """The angle formed between the two linear entities.
+        """The smallest of the two angles formed at the
+        intersection of two linear entities.
 
         Parameters
         ==========
@@ -133,7 +134,7 @@ class LinearEntity(GeometrySet):
         See Also
         ========
 
-        is_perpendicular
+        is_perpendicular, Ray2D.closing_angle
 
         Examples
         ========
@@ -2071,6 +2072,49 @@ class Ray2D(LinearEntity2D, Ray):
             return S.Zero
         else:
             return S.NegativeInfinity
+
+    def closing_angle(r1, r2):
+        """Return the angle by which r2 must be rotated so it faces the same
+        direction as r1.
+
+        Parameters
+        ==========
+
+        r1 : Ray2D
+        r2 : Ray2D
+
+        Returns
+        =======
+
+        angle : angle in radians (ccw angle is positive)
+
+        See Also
+        ========
+
+        LinearEntity.angle_between
+
+        Examples
+        ========
+
+        >>> from sympy import Ray, pi
+        >>> r1 = Ray((0, 0), (1, 0))
+        >>> r2 = r1.rotate(-pi/2)
+        >>> angle = r1.closing_angle(r2); angle
+        pi/2
+        >>> r2.rotate(angle).direction.unit == r1.direction.unit
+        True
+        >>> r2.closing_angle(r1)
+        -pi/2
+        """
+        if not all(isinstance(r, Ray2D) for r in (r1, r2)):
+            # although the direction property is defined for
+            # all linear entities, only the Ray is truly a
+            # directed object
+            raise TypeError('Both arguments must be Ray2D objects.')
+
+        a1 = atan2(*list(reversed(r1.direction.args)))
+        a2 = atan2(*list(reversed(r2.direction.args)))
+        return a1 - a2
 
 class Segment2D(LinearEntity2D, Segment):
     """An undirected line segment in 2D space.

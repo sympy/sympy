@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 from __future__ import print_function, division
 
 from .add import Add
-from .assumptions import ManagedProperties
+from .assumptions import ManagedProperties, _assume_defined
 from .basic import Basic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered
@@ -315,7 +315,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
 
 class Function(Application, Expr):
-    """Base class for applied mathematical functions.
+    """
+    Base class for applied mathematical functions.
 
     It also serves as a constructor for undefined function classes.
 
@@ -339,6 +340,16 @@ class Function(Application, Expr):
     Derivative(f(x), x)
     >>> g.diff(x)
     Derivative(g(x), x)
+
+    Assumptions can be passed to Function.
+
+    >>> f_real = Function('f', real=True)
+    >>> f_real(x).is_real
+    True
+
+    Note that assumptions on a function are unrelated to the assumptions on
+    the variable it is called on. If you want to add a relationship, subclass
+    Function and define the appropriate ``_eval_is_assumption`` methods.
 
     In the following example Function is used as a base class for
     ``my_func`` that represents a mathematical function *my_func*. Suppose
@@ -383,6 +394,7 @@ class Function(Application, Expr):
     ...     nargs = (1, 2)
     ...
     >>>
+
     """
 
     @property
@@ -425,13 +437,12 @@ class Function(Application, Expr):
 
         evaluate = options.get('evaluate', global_evaluate[0])
         result = super(Function, cls).__new__(cls, *args, **options)
-        if not evaluate or not isinstance(result, cls):
-            return result
+        if evaluate and isinstance(result, cls) and result.args:
+            pr2 = min(cls._should_evalf(a) for a in result.args)
+            if pr2 > 0:
+                pr = max(cls._should_evalf(a) for a in result.args)
+                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
 
-        pr = max(cls._should_evalf(a) for a in result.args)
-        pr2 = min(cls._should_evalf(a) for a in result.args)
-        if pr2 > 0:
-            return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
     @classmethod
@@ -745,8 +756,21 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname)
+        func = getattr(sage, fname,None)
         args = [arg._sage_() for arg in self.args]
+
+        # In the case the function is not known in sage:
+        if func is None:
+            import sympy
+            if getattr(sympy, fname,None) is None:
+                # abstract function
+                return sage.function(fname)(*args)
+
+            else:
+                # the function defined in sympy is not known in sage
+                # this exception is catched in sage
+                raise AttributeError
+
         return func(*args)
 
 
@@ -777,7 +801,14 @@ class UndefinedFunction(FunctionClass):
     """
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
         __dict__ = __dict__ or {}
+        # Allow Function('f', real=True)
+        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        # You can add other attributes, although they do have to be hashable
+        # (but seriously, if you want to add anything other than assumptions,
+        # just subclass Function)
         __dict__.update(kwargs)
+        # Save these for __eq__
+        __dict__.update({'_extra_kwargs': kwargs})
         __dict__['__module__'] = None # For pickling
         ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         return ret
@@ -785,8 +816,18 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
-                                         (s.class_key() == o.class_key()))
+    _extra_kwargs = {}
+
+    def __hash__(self):
+        return hash((self.class_key(), frozenset(self._extra_kwargs.items())))
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and
+            self.class_key() == other.class_key() and
+            self._extra_kwargs == other._extra_kwargs)
+
+    def __ne__(self, other):
+        return not self == other
 
 class WildFunction(Function, AtomicExpr):
     """

@@ -37,6 +37,8 @@ def test_sin():
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)
     assert sin(acot(x)) == 1 / (sqrt(1 + 1 / x**2) * x)
+    assert sin(acsc(x)) == 1 / x
+    assert sin(asec(x)) == sqrt(1 - 1 / x**2)
     assert sin(atan2(y, x)) == y / sqrt(x**2 + y**2)
 
     assert sin(pi*I) == sinh(pi)*I
@@ -247,6 +249,8 @@ def test_cos():
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
     assert cos(asin(x)) == sqrt(1 - x**2)
     assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
+    assert cos(acsc(x)) == sqrt(1 - 1 / x**2)
+    assert cos(asec(x)) == 1 / x
     assert cos(atan2(y, x)) == x / sqrt(x**2 + y**2)
 
     assert cos(pi*I) == cosh(pi)
@@ -404,6 +408,8 @@ def test_tan():
     assert tan(asin(x)) == x / sqrt(1 - x**2)
     assert tan(acos(x)) == sqrt(1 - x**2) / x
     assert tan(acot(x)) == 1 / x
+    assert tan(acsc(x)) == 1 / (sqrt(1 - 1 / x**2) * x)
+    assert tan(asec(x)) == sqrt(1 - 1 / x**2) * x
     assert tan(atan2(y, x)) == y/x
 
     assert tan(pi*I) == tanh(pi)*I
@@ -548,6 +554,8 @@ def test_cot():
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x
     assert cot(acos(x)) == x / sqrt(1 - x**2)
+    assert cot(acsc(x)) == sqrt(1 - 1 / x**2) * x
+    assert cot(asec(x)) == 1 / (sqrt(1 - 1 / x**2) * x)
     assert cot(atan2(y, x)) == x/y
 
     assert cot(pi*I) == -coth(pi)*I
@@ -842,12 +850,15 @@ def test_atan():
 
 
 def test_atan_rewrite():
-    assert atan(x).rewrite(log) == I*log((1 - I*x)/(1 + I*x))/2
+    assert atan(x).rewrite(log) == I*(log(1 - I*x)-log(1 + I*x))/2
     assert atan(x).rewrite(asin) == (-asin(1/sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
     assert atan(x).rewrite(acos) == sqrt(x**2)*acos(1/sqrt(x**2 + 1))/x
     assert atan(x).rewrite(acot) == acot(1/x)
     assert atan(x).rewrite(asec) == sqrt(x**2)*asec(sqrt(x**2 + 1))/x
     assert atan(x).rewrite(acsc) == (-acsc(sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
+
+    assert atan(-5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:-5*I})
+    assert atan(5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:5*I})
 
 
 def test_atan2():
@@ -933,12 +944,15 @@ def test_acot():
 
 
 def test_acot_rewrite():
-    assert acot(x).rewrite(log) == I*log((x - I)/(x + I))/2
+    assert acot(x).rewrite(log) == I*(log(1 - I/x)-log(1 + I/x))/2
     assert acot(x).rewrite(asin) == x*(-asin(sqrt(-x**2)/sqrt(-x**2 - 1)) + pi/2)*sqrt(x**(-2))
     assert acot(x).rewrite(acos) == x*sqrt(x**(-2))*acos(sqrt(-x**2)/sqrt(-x**2 - 1))
     assert acot(x).rewrite(atan) == atan(1/x)
     assert acot(x).rewrite(asec) == x*sqrt(x**(-2))*asec(sqrt((x**2 + 1)/x**2))
     assert acot(x).rewrite(acsc) == x*(-acsc(sqrt((x**2 + 1)/x**2)) + pi/2)*sqrt(x**(-2))
+
+    assert acot(-I/5).evalf() == acot(x).rewrite(log).evalf(subs={x:-I/5})
+    assert acot(I/5).evalf() == acot(x).rewrite(log).evalf(subs={x:I/5})
 
 
 def test_attributes():

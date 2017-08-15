@@ -2,30 +2,13 @@
 
 from __future__ import division
 
-from sympy import sstr, pi
-from sympy.physics.units import G
-
-from sympy import Add, Pow, Mul, sin, Tuple, sqrt, sympify
-from sympy.physics.units import coulomb
-from sympy.physics.units import hbar
-from sympy.physics.units import joule
-from sympy.physics.units import kelvin
-from sympy.physics.units import mile, speed_of_light, meter, second, minute, hour, day
-from sympy.physics.units import centimeter
-from sympy.physics.units import inch
-from sympy.physics.units import kilogram
-from sympy.physics.units import kilometer
-from sympy.physics.units import length
-from sympy.physics.units import newton
-from sympy.physics.units import planck
-from sympy.physics.units import planck_length
-from sympy.physics.units import planck_mass
-from sympy.physics.units import planck_temperature
-from sympy.physics.units import planck_time
-from sympy.physics.units import radians, degree
-from sympy.physics.units import steradian
-from sympy.physics.units import time, gram
-from sympy.physics.units.util import dim_simplify, convert_to
+from sympy import Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify
+from sympy.physics.units import (
+    G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
+    kilogram, kilometer, length, meter, mile, minute, newton, planck,
+    planck_length, planck_mass, planck_temperature, planck_time, radians,
+    second, speed_of_light, steradian, time)
+from sympy.physics.units.util import convert_to, dim_simplify
 
 
 def NS(e, n=15, **options):
@@ -42,8 +25,8 @@ def test_dim_simplify_add():
 
 
 def test_dim_simplify_mul():
+    assert dim_simplify(Mul(L, T)) == L*T
     assert dim_simplify(L*T) == L*T
-    assert dim_simplify(L * T) == L*T
 
 
 def test_dim_simplify_pow():

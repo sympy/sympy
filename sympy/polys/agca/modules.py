@@ -250,7 +250,7 @@ class ModuleElement(object):
         return self.eq(self.data, om.data)
 
     def __ne__(self, om):
-        return not self.__eq__(om)
+        return not self == om
 
 ##########################################################################
 ## Free Modules ##########################################################
