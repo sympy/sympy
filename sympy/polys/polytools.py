@@ -4408,21 +4408,26 @@ def degree(f, gen=0):
     degree_list
     """
 
-    f = sympify(f, strict=True)
-    if f.is_number and f.as_expr().is_Number:
-        return S.Zero if f else S.NegativeInfinity
+    if f.is_Poly:
+        p = f
+        isNum = p.as_expr().is_Number
+    else:
+        p = sympify(f, strict=True)
+        isNum = p.is_Number
+        if not isNum:
+            p, _ = poly_from_expr(f)
 
-    if not f.is_Poly:
-        f, _ = poly_from_expr(f)
+    if isNum:
+        return S.Zero if p else S.NegativeInfinity
 
     if not sympify(gen, strict=True).is_Number:
-        if gen not in f.gens and f.is_Poly:
+        if gen not in p.gens and f.is_Poly:
             # try recast without explicit gens
-            f, _ = poly_from_expr(f.as_expr())
-        if gen not in f.gens:
+            p, _ = poly_from_expr(f.as_expr())
+        if gen not in p.gens:
             return S.Zero
 
-    return sympify(f.degree(gen), strict=True)
+    return sympify(p.degree(gen), strict=True)
 
 
 @public
