@@ -238,11 +238,12 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
+    # TODO: Remove this line when warning from issue #12884 will be removed
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
-
+    coord_sys = _get_coord_systems(vect)
     if len(coord_sys) == 0:
         return S.Zero
-    else:
+    elif len(coord_sys) == 1:
         # TODO: is case of many coord systems, this gets a random one:
         coord_sys = coord_sys.pop()
         i, j, k = coord_sys.base_vectors()
@@ -257,6 +258,21 @@ def divergence(vect, coord_sys=None, doit=True):
         if doit:
             return (vx + vy + vz).doit()
         return vx + vy + vz
+    else:
+        if isinstance(vect, (Add, VectorAdd)):
+            return Add.fromiter(divergence(i) for i in vect.args)
+        elif isinstance(vect, (Mul, VectorMul)):
+            s = _split_mul_args_wrt_coordsys(vect)
+            scalar = [i for i in s if not isinstance(i, Vector) and len(_get_coord_systems(i)) > 0]
+            const = [i for i in s + [S(1)] if len(_get_coord_systems(i)) == 0][0]
+            vector = [i for i in s if isinstance(i, Vector)][0]
+            for i in scalar:
+                if _get_coord_systems(vector).pop() in _get_coord_systems(i):
+                    return Divergence(vect)
+            dot = [const*Dot(vector, gradient(i)) for i in scalar]
+            return Add.fromiter(dot + [Mul.fromiter(scalar + [const*divergence(vector)])])
+        else:
+            raise ValueError()
 
 
 def gradient(scalar_field, coord_sys=None, doit=True):
