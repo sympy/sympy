@@ -274,8 +274,9 @@ class Piecewise(Function):
         # updated args
         if not newargs:
             raise ValueError(filldedent('''
-There are no conditions (or none that are not trivially false) to
-define an expression.'''))
+                There are no conditions (or none that
+                are not trivially false) to define an
+                expression.'''))
         if missing or not same:
             return cls(*newargs)
 
@@ -592,13 +593,13 @@ define an expression.'''))
         return _mmsimp(sum)
 
     def _abei(self, sym):
-        """Return (a, b, e, i) where a and b are the lower and
-        upper bounds in which the expression e of argument i
-        in self is defined.
+        """Return a list of tuples, (a, b, e, i), where a and b
+        are the lower and upper bounds in which the expression e
+        of argument i in self is defined.
 
         If there are any relationals not involving sym, or
-        any relational cannot be solved for sym, we raise
-        NotImplementedError. The evaluated conditions will
+        any relational cannot be solved for sym,
+        NotImplementedError is raised. The evaluated conditions will
         be returned as ranges. Discontinuous ranges will be
         returned separately with identical expressions and
         the first condition that evaluates to True will be
@@ -615,7 +616,8 @@ define an expression.'''))
                     sym in rv.free_symbols:
                 if rv.args[0] != sym:
                     raise NotImplementedError(filldedent('''
-Unable to solve relational %s for %s.''' % (r, sym)))
+                        Unable to solve relational
+                        %s for %s.''' % (r, sym)))
                 if rv.rel_op == '!=':
                     rv = Or(sym < rv.rhs, sym > rv.rhs)
             if rv == (S.NegativeInfinity < sym) & (sym < S.Infinity):
@@ -623,8 +625,9 @@ Unable to solve relational %s for %s.''' % (r, sym)))
             return rv
 
         def nonsymfail(cond):
-                    raise NotImplementedError(filldedent('''
-A condition not involving %s appeared: %s''' % (sym, cond)))
+            raise NotImplementedError(filldedent('''
+                A condition not involving
+                %s appeared: %s''' % (sym, cond)))
 
         # make self canonical wrt Relationals
         reps = dict(
