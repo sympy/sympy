@@ -1174,6 +1174,11 @@ class Pow(Expr):
         if neg_exp:
             n, d = d, n
             exp = -exp
+        if exp.is_infinite:
+            if n is S.One and d is not S.One:
+                return n, self.func(d, exp)
+            if n is not S.One and d is S.One:
+                return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
     def matches(self, expr, repl_dict={}, old=False):
