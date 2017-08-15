@@ -4408,7 +4408,7 @@ def degree(f, gen=0):
     degree_list
     """
 
-    f = sympify(f)
+    f = sympify(f, strict=True)
     if f.is_number and f.as_expr().is_Number:
         return S.Zero if f else S.NegativeInfinity
 
@@ -4416,14 +4416,14 @@ def degree(f, gen=0):
         f, _ = poly_from_expr(f)
         if isinstance(gen, int) and f.is_multivariate:
             raise ValueError("For multivariate expressions, an explicit generator must be given for gen, not an integer.")
-    if not sympify(gen).is_Number:
+    if not sympify(gen, strict=True).is_Number:
         if gen not in f.gens and f.is_Poly:
             # try recast without explicit gens
             f, _ = poly_from_expr(f.as_expr())
         if gen not in f.gens:
             return S.Zero
 
-    return sympify(f.degree(gen))
+    return sympify(f.degree(gen), strict=True)
 
 
 @public
