@@ -9,6 +9,16 @@ from sympy.core.function import Derivative
 from sympy import Add, Mul
 
 
+def _get_coord_systems(expr):
+    g = preorder_traversal(expr)
+    ret = set([])
+    for i in g:
+        if isinstance(i, CoordSys3D):
+            ret.add(i)
+            g.skip()
+    return frozenset(ret)
+
+
 def _get_coord_sys_from_expr(expr, coord_sys=None):
     """
     expr : expression
@@ -22,26 +32,13 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
             issue=12884,
         ).warn()
 
-    try:
-        return expr.atoms(CoordSys3D)
-    except:
-        return set([])
-
-
-def _get_coord_systems(expr):
-    g = preorder_traversal(expr)
-    ret = set([])
-    for i in g:
-        if isinstance(i, CoordSys3D):
-            ret.add(i)
-            g.skip()
-    return ret
+    return _get_coord_systems(expr)
 
 
 def _split_mul_args_wrt_coordsys(expr):
     d = collections.defaultdict(lambda: S.One)
     for i in expr.args:
-        d[frozenset(_get_coord_systems(i))] *= i
+        d[_get_coord_systems(i)] *= i
     return list(d.values())
 
 
@@ -240,7 +237,6 @@ def divergence(vect, coord_sys=None, doit=True):
     """
     # TODO: Remove this line when warning from issue #12884 will be removed
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
-    coord_sys = _get_coord_systems(vect)
     if len(coord_sys) == 0:
         return S.Zero
     elif len(coord_sys) == 1:
@@ -308,9 +304,7 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
-    # TODO: Remove this line when warning from issue #12884 will be removed
     coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
-    coord_sys = _get_coord_systems(scalar_field)
 
     if len(coord_sys) == 0:
         return Vector.zero
