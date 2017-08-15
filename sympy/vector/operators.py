@@ -156,7 +156,7 @@ def curl(vect, coord_sys=None, doit=True):
     if len(coord_sys) == 0:
         return Vector.zero
     elif len(coord_sys) == 1:
-        coord_sys = coord_sys.pop()
+        coord_sys = next(iter(coord_sys))
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
@@ -176,7 +176,7 @@ def curl(vect, coord_sys=None, doit=True):
         return outvec
     else:
         # TODO: use some of the vector calculus properties for this:
-        coord_sys = coord_sys.pop()  # get one random coord_sys
+        coord_sys = next(iter(coord_sys))  # get one random coord_sys
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
@@ -241,7 +241,7 @@ def divergence(vect, coord_sys=None, doit=True):
         return S.Zero
     elif len(coord_sys) == 1:
         # TODO: is case of many coord systems, this gets a random one:
-        coord_sys = coord_sys.pop()
+        coord_sys = next(iter(coord_sys))
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
@@ -309,7 +309,7 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     if len(coord_sys) == 0:
         return Vector.zero
     elif len(coord_sys) == 1:
-        coord_sys = coord_sys.pop()
+        coord_sys = next(iter(coord_sys))
         h1, h2, h3 = coord_sys.lame_coefficients()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
