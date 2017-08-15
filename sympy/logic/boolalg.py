@@ -1516,7 +1516,7 @@ def _check_pair(minterm1, minterm2):
 
 def _convert_to_varsSOP(minterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
     """
     temp = []
@@ -1532,7 +1532,7 @@ def _convert_to_varsSOP(minterm, variables):
 
 def _convert_to_varsPOS(maxterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for POS).
     """
     temp = []
