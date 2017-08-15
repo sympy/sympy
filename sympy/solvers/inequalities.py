@@ -740,7 +740,7 @@ def _solve_inequality(ie, s, linear=False):
         else:
             p = Poly(expr)
 
-    e = expanded = p.as_expr()  # this is in exanded form
+    e = p.as_expr()  # this is in exanded form
     if rv is None:
         # Do a safe inversion of e, moving non-s terms
         # to the rhs and dividing by a nonzero factor if
@@ -767,7 +767,7 @@ def _solve_inequality(ie, s, linear=False):
     # valid, too.
     conds = [rv]
     beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
-    current_denoms = denoms(expanded)
+    current_denoms = denoms(rv)
     for d in beginning_denoms - current_denoms:
         conds.append(_solve_inequality(Ne(d, 0), s, linear=linear))
     return And(*conds)
