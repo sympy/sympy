@@ -175,6 +175,22 @@ def test_sympy__codegen__ast__Token():
     assert _test_args(Token())
 
 
+def test_sympy__codegen__ast__NoneToken():
+    from sympy.codegen.ast import NoneToken
+    assert _test_args(NoneToken())
+
+
+def test_sympy__codegen__ast__String():
+    from sympy.codegen.ast import String
+    assert _test_args(String('foobar'))
+
+
+def test_sympy__codegen__ast__Node():
+    from sympy.codegen.ast import Node
+    assert _test_args(Node())
+    assert _test_args(Node(attrs={1, 2, 3}))
+
+
 def test_sympy__codegen__ast__Type():
     from sympy.codegen.ast import Type
     assert _test_args(Type('float128'))
@@ -222,16 +238,6 @@ def test_sympy__codegen__ast__ComplexType():
 def test_sympy__codegen__ast__Attribute():
     from sympy.codegen.ast import Attribute
     assert _test_args(Attribute('noexcept'))
-
-
-def test_sympy__codegen__ast__String():
-    from sympy.codegen.ast import String
-    assert _test_args(String('foobar'))
-
-def test_sympy__codegen__ast__Node():
-    from sympy.codegen.ast import Node
-    assert _test_args(Node())
-    assert _test_args(Node(attrs={1, 2, 3}))
 
 
 def test_sympy__codegen__ast__Variable():
@@ -296,6 +302,65 @@ def test_sympy__codegen__ast__ReturnStatement():
 def test_sympy__codegen__ast__FunctionCall():
     from sympy.codegen.ast import FunctionCall
     assert _test_args(FunctionCall('pwer', [x], True))
+
+
+def test_sympy__codegen__cnodes__CommaOperator():
+    from sympy.codegen.cnodes import CommaOperator
+    assert _test_args(CommaOperator(1, 2))
+
+
+def test_sympy__codegen__cnodes__goto():
+    from sympy.codegen.cnodes import goto
+    assert _test_args(goto('early_exit'))
+
+
+def test_sympy__codegen__cnodes__Label():
+    from sympy.codegen.cnodes import Label
+    assert _test_args(Label('early_exit'))
+
+
+def test_sympy__codegen__cnodes__PreDecrement():
+    from sympy.codegen.cnodes import PreDecrement
+    assert _test_args(PreDecrement(x))
+
+
+def test_sympy__codegen__cnodes__PostDecrement():
+    from sympy.codegen.cnodes import PostDecrement
+    assert _test_args(PostDecrement(x))
+
+
+def test_sympy__codegen__cnodes__PreIncrement():
+    from sympy.codegen.cnodes import PreIncrement
+    assert _test_args(PreIncrement(x))
+
+
+def test_sympy__codegen__cnodes__PostIncrement():
+    from sympy.codegen.cnodes import PostIncrement
+    assert _test_args(PostIncrement(x))
+
+
+def test_sympy__codegen__cnodes__struct():
+    from sympy.codegen.ast import real, Variable
+    from sympy.codegen.cnodes import struct
+    assert _test_args(struct(declarations=[
+        Variable(x, type=real),
+        Variable(y, type=real)
+    ]))
+
+
+def test_sympy__codegen__cnodes__union():
+    from sympy.codegen.ast import float32, int32, Variable
+    from sympy.codegen.cnodes import union
+    assert _test_args(union(declarations=[
+        Variable(x, type=float32),
+        Variable(y, type=int32)
+    ]))
+
+
+def test_sympy__codegen__cxxnodes__using():
+    from sympy.codegen.cxxnodes import using
+    assert _test_args(using('std::vector'))
+    assert _test_args(using('std::vector', 'vec'))
 
 
 @XFAIL

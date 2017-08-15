@@ -282,6 +282,9 @@ class CodePrinter(StrPrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
+    def _print_String(self, string):
+        return str(string)
+
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol

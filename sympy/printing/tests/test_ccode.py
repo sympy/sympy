@@ -1,10 +1,13 @@
 import warnings
-from sympy.core import (pi, oo, symbols, Rational, Integer, Float,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
-from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
-                             ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
-                             loggamma, Max, Min, Piecewise,
-                             sign, sin, sinh, sqrt, tan, tanh)
+from sympy.core import (
+    pi, oo, symbols, Rational, Integer, Float, GoldenRatio, EulerGamma, Catalan,
+    Lambda, Dummy, Eq, nan
+)
+from sympy.functions import (
+    Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
+    erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
+    sqrt, tan, tanh
+)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -13,9 +16,10 @@ from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, g
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, PrintStatement, FunctionPrototype, FunctionDefinition, FunctionCall, Statement, ReturnStatement,
-    real, float32, float64, float80, float128,
+    real, float32, float64, float80, float128, intc
 )
-from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, restrict
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
+from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.tensor import IndexedBase, Idx
@@ -771,6 +775,11 @@ def test_ccode_math_macros():
     assert ccode(z + Sqrt(2)) == 'z + M_SQRT2'
     assert ccode(z + 1/sqrt(2)) == 'z + M_SQRT1_2'
     assert ccode(z + 1/Sqrt(2)) == 'z + M_SQRT1_2'
+
+
+def test_ccode_Type():
+    assert ccode(Type('float')) == 'float'
+    assert ccode(intc) == 'int'
 
 
 def test_ccode_codegen_ast():

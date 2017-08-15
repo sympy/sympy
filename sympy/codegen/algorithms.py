@@ -28,6 +28,16 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     wrt : Symbol
         With respect to, i.e. what is the variable
 
+    Examples
+    --------
+    >>> sympy import symbols, cos
+    >>> from sympy.codegen.ast import Assignment
+    >>> from sympy.codegen.algorithms import newtons_method
+    >>> x, dx, atol = symbols('x dx atol')
+    >>> expr = cos(x) - x**3
+    >>> algo = newtons_method(expr, x, atol, dx)
+    >>> algo.has(Assignment(dx, -expr/expr.diff(x)))
+    True
 
     References
     ==========

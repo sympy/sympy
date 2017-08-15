@@ -75,7 +75,7 @@ from __future__ import print_function, division
 
 from itertools import chain
 
-from sympy.core import Symbol, Tuple
+from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types
 from sympy.core.numbers import Float, Integer, oo
@@ -474,20 +474,33 @@ class Token(Basic):
     defaults = {}
     not_in_args = []
 
+    @property
+    def is_Atom(self):
+        return len(self.__slots__) == 0
+
     @classmethod
-    def constructor(cls, attr):
+    def _get_constructor(cls, attr):
         return getattr(cls, '_construct_%s' % attr, lambda x: x)
+
+    @classmethod
+    def _construct(cls, attr, arg):
+        if arg == None:
+            return cls.defaults.get(attr, none)
+        else:
+            if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
+                return arg
+            else:
+                return cls._get_constructor(attr)(arg)
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
-        args = [
-            cls.constructor(attr)(arg) for attr, arg
-            in zip(cls.__slots__, args + tuple([
+        args = [cls._construct(attr, arg) for attr, arg in zip(
+            cls.__slots__, args + tuple([
                 kwargs.pop(k, cls.defaults[k]) if k in cls.defaults else kwargs.pop(k) for k
                 in cls.__slots__[len(args):]
-            ]))
-        ]
+            ])
+        )]
         if kwargs:
             raise ValueError("Unknown kwargs: %s" % kwargs)
 
@@ -511,17 +524,35 @@ class Token(Basic):
         return super(Token, self).__hash__()
 
     def _sympystr(self, printer):
-        return "{0}({1})".format(self.__class__.__name__, ', '.join(
-            ['%s=%s' % (k, printer._print(getattr(self, k))) for k in self.__slots__]
-        ))
+        values = [getattr(self, k) for k in self.__slots__]
+        return "{0}({1})".format(self.__class__.__name__, ', '.join([
+            ('%s=' + ('"%s"' if isinstance(v, string_types) else '%s')) % (k, printer._print(v))
+            for k, v in zip(self.__slots__, values)
+        ]))
 
     def kwargs(self, exclude=(), apply=lambda arg: arg):
         return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
 
 
+class NoneToken(Token):
+
+    def __eq__(self, other):
+        return other is None or isinstance(other, NoneToken)
+
+    def _hashable_content(self):
+        return ()
+
+    def __hash__(self):
+        return super(Token, self).__hash__()
+
+
+none = NoneToken()
+
+
 class String(Token):
     __slots__ = ['text']
     not_in_args = ['text']
+    is_Atom = True
 
     @classmethod
     def _construct_text(cls, text):
@@ -529,13 +560,16 @@ class String(Token):
             raise TypeError("Argument text is not a string type.")
         return text
 
+    def __str__(self):
+        return self.text
+
 
 class Node(Token):
     """ Subclass of Token, carrying the attribute 'attrs' (FiniteSet) """
 
     __slots__ = ['attrs']
 
-    defaults = {'attrs': None}
+    defaults = {'attrs': none}
 
     @classmethod
     def _construct_attrs(cls, arg):
@@ -548,13 +582,15 @@ class Node(Token):
 
     def obey(self, *attrs):
         """ Returns whether ``self.attrs`` contains all elements in attrs. """
+        if self.attrs == none:
+            return False
         return all(attr in self.attrs for attr in attrs)  # self.attrs.contains(attr) == True
 
 
 class Type(Token):
     """ Represents a type.
 
-    The naming is a super-set of NumPy naming, see [1]_. Type has a classmethod
+    The naming is a super-set of NumPy naming. Type has a classmethod
     ``from_expr`` which offer type deduction. It also has a method
     ``cast_check`` which casts the argument to its type, possibly raising an
     exception if rounding error is not within tolerances, or if the value is not
@@ -595,16 +631,15 @@ class Type(Token):
 
     References
     ----------
-
-    .. [1] Numpy types
-        https://docs.scipy.org/doc/numpy/user/basics.types.html
+    https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
     __slots__ = ['name']
-    not_in_args = ['name']
+
+    _construct_name = String
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
     @classmethod
     def from_expr(cls, expr):
@@ -919,11 +954,10 @@ bool_ = Type('bool')
 
 
 class Attribute(Token):
-    """ Variable attribute """
+    """ Attribute (possibly parametrized) """
     __slots__ = ['name', 'parameters']
-    not_in_args = ['name']
     defaults = {'parameters': Tuple()}
-    _construct_name = String._construct_text
+    _construct_name = String
     _construct_arguments = Tuple
 
 value_const = Attribute('value_const')
@@ -955,7 +989,7 @@ class Variable(Node):
     True
 
     One may also construct a ``Variable`` instance with the type deduced from
-    assumptions about the symbol using the ``deduced`` classmethod::
+    assumptions about the symbol using the ``deduced`` classmethod:
 
     >>> i = Symbol('i', integer=True)
     >>> v = Variable.deduced(i)
@@ -963,7 +997,6 @@ class Variable(Node):
     True
     >>> v == Variable('i')
     False
-
     >>> from sympy.codegen.ast import value_const
     >>> v.obey(value_const)
     False
@@ -1043,6 +1076,8 @@ class Declaration(Basic):
     nargs = (1, 2)
 
     def __new__(cls, variable, value=None):
+        if isinstance(variable, Declaration) and value is None:
+            return variable
         args = Variable(variable),
         if value is not None:
             args += (_sympify(value),)
@@ -1173,8 +1208,9 @@ class PrintStatement(Token):
     """
 
     __slots__ = ['print_args', 'format_string']
-    not_in_args = ['format_string']
-    defaults = {'format_string': None}
+    defaults = {'format_string': none}
+
+    _construct_format_string = String
 
     @classmethod
     def _construct_print_args(cls, args):
@@ -1190,20 +1226,25 @@ class FunctionPrototype(Node):
     ----------
     return_type : Type
     name : str
-    input_types : iterable of Declaration instances
+    function_args : iterable of Declaration instances
 
     """
 
-    __slots__ = ['return_type', 'name', 'inputs']
-    not_in_args = ['name']
+    __slots__ = ['return_type', 'name', 'function_args']
 
+    _construct_return_type = Type
+    _construct_name = String
 
-    def __new__(cls, return_type, name, inputs, **kwargs):
-        if not isinstance(return_type, Type):
-            raise TypeError("return_type argument should be an instance of Type")
-        if not all(isinstance(inp, Declaration) for inp in inputs):
-            raise TypeError("All elements in argument inputs need to be instances of Declaration")
-        return Token.__new__(cls, return_type, name, Tuple(*inputs), **kwargs)
+    @staticmethod
+    def _construct_function_args(args):
+        return Tuple(*[Declaration(arg) for arg in args])
+
+    def __new__(cls, *args, **kwargs):
+        return Token.__new__(cls, *args, **kwargs)
+        if not all(isinstance(inp, Declaration) for inp in self.function_args):
+            raise TypeError("function_args need to be all instances of Declaration")
+        if not isinstance(self.return_type, Type):
+            raise TypeError("return_type should be an instance of Type")
 
     @classmethod
     def from_FunctionDefinition(cls, func_def):
@@ -1219,20 +1260,20 @@ class FunctionDefinition(FunctionPrototype):
     ----------
     return_type : Type
     name : str
-    inputs : iterable of Declaration instances
+    function_args : iterable of Declaration instances
     body : CodeBlock or iterable
 
     """
 
     __slots__ = FunctionPrototype.__slots__ + ['body']
 
-    def __new__(cls, return_type, name, inputs, body):
+    def __new__(cls, return_type, name, function_args, body):
         if not isinstance(body, CodeBlock):
             if not iterable(body):
                 raise TypeError("body must be an iterable or CodeBlock")
             body = CodeBlock(*(_sympify(i) for i in body))
         return FunctionPrototype.__new__(cls, return_type, name,
-                                         tuple(inputs), body=body)
+                                         tuple(function_args), body=body)
 
     @classmethod
     def from_FunctionPrototype(cls, func_proto, body):
@@ -1250,14 +1291,14 @@ class FunctionCall(Token):
 
     Parameters
     ----------
-    function_name : str
+    name : str
     function_args : Tuple
     statement : bool
 
     """
-    __slots__ = ['function_name', 'function_args', 'statement']
-    not_in_args = ['function_name']
+    __slots__ = ['name', 'function_args', 'statement']
     defaults = {'statement': false}
 
+    _construct_name = String
     _construct_function_args = staticmethod(lambda fargs: Tuple(*fargs))
     _construct_statement = staticmethod(lambda arg: true if arg else false)

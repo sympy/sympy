@@ -13,7 +13,7 @@ from sympy.codegen.ast import (
     integer, real, complex_, int8, uint8, float16 as f16, float32 as f32,
     float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128,
     While, Scope, String, PrintStatement, FunctionPrototype, FunctionDefinition, ReturnStatement,
-    FunctionCall, untyped, IntBaseType, intc, Node
+    FunctionCall, untyped, IntBaseType, intc, Node, none, NoneToken, Token
 )
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
@@ -174,10 +174,25 @@ def test_For():
     raises(TypeError, lambda: For(n, x, (x + y,)))
 
 
+def test_none():
+    assert none.is_Atom
+    assert none == none
+    class Foo(Token):
+        pass
+    foo = Foo()
+    assert foo != none
+    assert none == None
+    assert none == NoneToken()
+    assert none.func(*none.args) == none
+
+
 def test_String():
     st = String('foobar')
+    assert st.is_Atom
     assert st == String('foobar')
     assert st.text == 'foobar'
+    assert st.func(**st.kwargs()) == st
+
 
     class Signifier(String):
         pass
@@ -190,16 +205,17 @@ def test_String():
 def test_Node():
     n = Node()
     assert n == Node()
+    assert n.func(*n.args) == n
+
 
 def test_Type():
     t = Type('MyType')
-    assert t.name == 'MyType'
+    assert len(t.args) == 1
+    assert t.name == String('MyType')
     assert str(t) == 'MyType'
-    assert repr(t) == "Type(name=MyType)"
+    assert repr(t) == 'Type(name=String(text="MyType"))'
     assert Type(t) == t
-
-
-def test_Type_eq():
+    assert t.func(*t.args) == t
     t1 = Type('t1')
     t2 = Type('t2')
     assert t1 != t2
@@ -244,6 +260,8 @@ def test_Attribute():
     alignas16 = Attribute('alignas', [16])
     alignas32 = Attribute('alignas', [32])
     assert alignas16 != alignas32
+    assert alignas16.func(*alignas16.args) == alignas16
+
 
 def test_Variable():
     v = Variable(x, type=real)
@@ -252,23 +270,25 @@ def test_Variable():
     assert v.symbol == x
     assert v.type == real
     assert v.obey(value_const) == False
+    assert v.func(*v.args) == v
+
     w = Variable(y, f32, attrs={value_const})
     assert w.symbol == y
     assert w.type == f32
     assert w.obey(value_const)
+    assert w.func(*w.args) == w
+
     v_n = Variable(n, type=Type.from_expr(n))
     assert v_n.type == integer
+    assert v_n.func(*v_n.args) == v_n
     v_i = Variable(i, type=Type.from_expr(n))
     assert v_i.type == integer
+    assert v_i != v_n
 
     a_i = Variable.deduced(i)
     assert a_i.type == integer
     assert Variable.deduced(Symbol('x', real=True)).type == real
-
-
-def test_Variable__deduced():
-    v_i = Variable.deduced(i)
-    assert v_i.type == integer
+    assert a_i.func(*a_i.args) == a_i
 
 
 def test_Pointer():
@@ -277,12 +297,15 @@ def test_Pointer():
     assert p.type == untyped
     assert not p.obey(value_const)
     assert not p.obey(pointer_const)
+    assert p.func(*p.args) == p
+
     u = symbols('u', real=True)
     py = Pointer(u, type=Type.from_expr(u), attrs={value_const, pointer_const})
     assert py.symbol is u
     assert py.type == real
     assert py.obey(value_const)
     assert py.obey(pointer_const)
+    assert py.func(*py.args) == py
 
 
 def test_Declaration():
@@ -299,6 +322,7 @@ def test_Declaration():
     assert decl.variable == vuc
     assert isinstance(decl.value, Float)
     assert decl.value == 3.0
+    assert decl.func(*decl.args) == decl
 
     vy = Variable(y, type=integer)
     decl2 = Declaration(vy, 3)
@@ -311,14 +335,16 @@ def test_Declaration():
     assert decl3.value == 3.0
 
     decl4 = Declaration.deduced(n, value=3.5, cast_check=False)
+    assert decl4.func(*decl4.args) == decl4
     assert abs(decl4.value - 3.5) < 1e-15
     raises(ValueError, lambda: Declaration.deduced(n, value=3.5, cast_check=True))
 
 
+
 def test_IntBaseType():
-    assert intc.name == 'intc'
-    assert intc.args == ()
-    assert IntBaseType('a').name == 'a'
+    assert intc.name == String('intc')
+    assert intc.args == (intc.name,)
+    assert str(IntBaseType('a').name) == 'a'
 
 def test_Declaration__deduced():
     assert Declaration.deduced(n).variable.type == integer
@@ -380,6 +406,9 @@ def test_FloatType():
     assert f64.cast_nocheck(-oo) == -float('inf')
     assert math.isnan(f64.cast_nocheck(nan))
 
+    assert f32 != f64
+    assert f64 == f64.func(*f64.args)
+
 
 def test_Type__cast_check__floating_point():
     raises(ValueError, lambda: f32.cast_check(123.45678949))
@@ -420,11 +449,13 @@ def test_While():
     assert whl1.condition.args[1] == 2
     assert whl1.condition == Lt(x, 2, evaluate=False)
     assert whl1.body.args == (xpp,)
+    assert whl1.func(*whl1.args) == whl1
 
     cblk = CodeBlock(AddAugmentedAssignment(x, 1))
     whl2 = While(x < 2, cblk)
     assert whl1 == whl2
     assert whl1 != While(x < 3, [xpp])
+
 
 
 def test_Scope():
@@ -435,20 +466,23 @@ def test_Scope():
     assert scp.body == cblk
     assert scp == Scope(cblk)
     assert scp != Scope([incr, assign])
+    assert scp.func(*scp.args) == scp
 
 
 def test_PrintStatement():
     fmt = "%d %.3f"
     ps = PrintStatement([n, x], fmt)
-    assert ps.format_string == fmt
+    assert str(ps.format_string) == fmt
     assert ps.print_args == Tuple(n, x)
-    assert ps.args == (Tuple(n, x),)
+    assert ps.args == (Tuple(n, x), String(fmt))
     assert ps == PrintStatement((n, x), fmt)
     assert ps != PrintStatement([x, n], fmt)
+    assert ps.func(*ps.args) == ps
+
     ps2 = PrintStatement([n, x])
     assert ps2 == PrintStatement([n, x])
     assert ps2 != ps
-    assert ps2.format_string is None
+    assert ps2.format_string == None
 
 
 def test_FunctionPrototype_and_FunctionDefinition():
@@ -458,19 +492,22 @@ def test_FunctionPrototype_and_FunctionDefinition():
     dn = Declaration(vn, 2)
     fp1 = FunctionPrototype(real, 'power', [dx, dn])
     assert fp1.return_type == real
-    assert fp1.name == 'power'
-    assert fp1.inputs == Tuple(dx, dn)
+    assert fp1.name == String('power')
+    assert fp1.function_args == Tuple(dx, dn)
     assert fp1 == FunctionPrototype(real, 'power', [dx, dn])
     assert fp1 != FunctionPrototype(real, 'power', [dn, dx])
+    assert fp1.func(*fp1.args) == fp1
+
 
     body = [Assignment(x, x**n), ReturnStatement(x)]
     fd1 = FunctionDefinition(real, 'power', [dx, dn], body)
     assert fd1.return_type == real
-    assert fd1.name == 'power'
-    assert fd1.inputs == Tuple(dx, dn)
+    assert str(fd1.name) == 'power'
+    assert fd1.function_args == Tuple(dx, dn)
     assert fd1.body == CodeBlock(*body)
     assert fd1 == FunctionDefinition(real, 'power', [dx, dn], body)
     assert fd1 != FunctionDefinition(real, 'power', [dx, dn], body[::-1])
+    assert fd1.func(*fd1.args) == fd1
 
     fp2 = FunctionPrototype.from_FunctionDefinition(fd1)
     assert fp2 == fp1
@@ -484,6 +521,7 @@ def test_ReturnStatement():
     assert rs.args == (x,)
     assert rs == ReturnStatement(x)
     assert rs != ReturnStatement(y)
+    assert rs.func(*rs.args) == rs
 
 
 def test_FunctionCall():
@@ -494,3 +532,24 @@ def test_FunctionCall():
     assert fc == FunctionCall('power', (x, 3))
     assert fc != FunctionCall('power', (3, x))
     assert fc != FunctionCall('Power', (x, 3))
+    assert fc.func(*fc.args) == fc
+
+
+def test_ast_replace():
+    x = Variable('x', real)
+    y = Variable('y', real)
+    n = Variable('n', integer)
+
+    pwer = FunctionDefinition(real, 'pwer', [x, n], [pow(x.symbol, n.symbol)])
+    pname = pwer.name
+    pcall = FunctionCall('pwer', [y, 3])
+
+    tree1 = CodeBlock(pwer, pcall)
+    assert str(tree1.args[0].name) == 'pwer'
+    assert str(tree1.args[1].name) == 'pwer'
+
+    tree2 = tree1.replace(pname, String('power'))
+    assert str(tree1.args[0].name) == 'pwer'
+    assert str(tree1.args[1].name) == 'pwer'
+    assert str(tree2.args[0].name) == 'power'
+    assert str(tree2.args[1].name) == 'power'

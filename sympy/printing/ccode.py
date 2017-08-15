@@ -22,7 +22,8 @@ from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
     Assignment, Pointer, Type, Variable, Declaration,
     real, complex_, integer, bool_, float32, float64, float80,
-    complex64, complex128, intc, value_const, pointer_const
+    complex64, complex128, intc, value_const, pointer_const,
+    int8, int16, int32, int64, uint8, uint16, uint32, uint64,
 )
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -174,10 +175,26 @@ class C89CodePrinter(CodePrinter):
         float64: 'double',
         integer: 'int',
         bool_: 'bool',
+        int8: 'int8_t',
+        int16: 'int16_t',
+        int32: 'int32_t',
+        int64: 'int64_t',
+        uint8: 'int8_t',
+        uint16: 'int16_t',
+        uint32: 'int32_t',
+        uint64: 'int64_t',
     }
 
     type_headers = {
-        bool_: {'stdbool.h'}
+        bool_: {'stdbool.h'},
+        int8: {'stdint.h'},
+        int16: {'stdint.h'},
+        int32: {'stdint.h'},
+        int64: {'stdint.h'},
+        uint8: {'stdint.h'},
+        uint16: {'stdint.h'},
+        uint32: {'stdint.h'},
+        uint64: {'stdint.h'},
     }
     type_macros = {}  # Macros needed to be defined when using a Type
 
@@ -451,10 +468,10 @@ class C89CodePrinter(CodePrinter):
     def _print_Type(self, type_):
         self.headers.update(self.type_headers.get(type_, set()))
         self.macros.update(self.type_macros.get(type_, set()))
-        return self.type_mappings.get(type_, type_.name)
+        return self._print(self.type_mappings.get(type_, type_.name))
 
     def _print_Declaration(self, expr):
-        from sympy.codegen.cfunctions import restrict
+        from sympy.codegen.cnodes import restrict
         var, val = expr.variable, expr.value
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
@@ -520,7 +537,7 @@ class C89CodePrinter(CodePrinter):
     def _print_FunctionPrototype(self, expr):
         return "%s %s(%s)" % (
             tuple(map(self._print, (expr.return_type, expr.name))) +
-            (', '.join(map(self._print, expr.inputs)),)
+            (', '.join(map(self._print, expr.function_args)),)
         )
 
     def _print_FunctionDefinition(self, expr):
@@ -531,8 +548,38 @@ class C89CodePrinter(CodePrinter):
         return 'return %s;' % self._print(arg)
 
     def _print_FunctionCall(self, expr):
-        return '%s(%s)%s' % (expr.function_name, ', '.join(map(self._print, expr.function_args)),
+        return '%s(%s)%s' % (expr.name, ', '.join(map(self._print, expr.function_args)),
                              ';' if expr.statement else '')
+
+    def _print_CommaOperator(self, expr):
+        return '(%s)' % ', '.join(map(self._print, expr.args))
+
+    def _print_Label(self, expr):
+        return '%s: ' % str(expr)
+
+    def _print_goto(self, expr):
+        return 'goto %s' % expr.label;
+
+    def _print_PreIncrement(self, expr):
+        return '++(%s)' % self._print(*expr.args)
+
+    def _print_PostIncrement(self, expr):
+        return '(%s)++' % self._print(*expr.args)
+
+    def _print_PreDecrement(self, expr):
+        return '--(%s)' % self._print(*expr.args)
+
+    def _print_PostDecrement(self, expr):
+        return '(%s)--' % self._print(*expr.args)
+
+    def _print_struct(self, expr):
+        return "%(keyword)s %(name)s {\n%(lines)s}" % dict(
+            keyword=expr.__class__.__name__, name=expr.name, lines=';\n'.join(
+                [self._print(decl) for decl in expr.declarations] + [''])
+        )
+
+    _print_union = _print_struct
+
 
 
 class _C9XCodePrinter(object):
@@ -633,9 +680,18 @@ for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma '
           'atanh erf erfc loggamma gamma ceiling floor').split():
     setattr(C99CodePrinter, '_print_%s' % k, C99CodePrinter._print_math_func)
 
+
+class C11CodePrinter(C99CodePrinter):
+
+    @requires(headers={'stdalign.h'})
+    def _print_alignof(self, expr):
+        return 'alignof(%s)' % self._print(*expr.args)
+
+
 c_code_printers = {
     'c89': C89CodePrinter,
     'c99': C99CodePrinter,
+    'c11': C11CodePrinter
 }
 
 
