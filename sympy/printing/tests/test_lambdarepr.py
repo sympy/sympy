@@ -1,7 +1,8 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
 from sympy.utilities.pytest import raises
 
-from sympy.printing.lambdarepr import lambdarepr
+from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, TensorflowPrinter, NumExprPrinter
+
 
 x, y, z = symbols("x,y,z")
 i, a, b = symbols("i,a,b")
@@ -147,25 +148,27 @@ def test_piecewise():
         "(True) else None)))))))))))"
 
 
-def test_sum():
+def test_sum__1():
     # In each case, test eval() the lambdarepr() to make sure that
     # it evaluates to the same results as the symbolic expression
-
     s = Sum(x ** i, (i, a, b))
-
     l = lambdarepr(s)
     assert l == "(builtins.sum(x**i for i in range(a, b+1)))"
 
-    assert (lambdify((x, a, b), s)(2, 3, 8) ==
-            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
+    args = x, a, b
+    f = lambdify(args, s)
+    v = 2, 3, 8
+    assert f(*v) == s.subs(zip(args, v)).doit()
 
+def test_sum__2():
     s = Sum(i * x, (i, a, b))
-
     l = lambdarepr(s)
     assert l == "(builtins.sum(i*x for i in range(a, b+1)))"
 
-    assert (lambdify((x, a, b), s)(2, 3, 8) ==
-            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
+    args = x, a, b
+    f = lambdify(args, s)
+    v = 2, 3, 8
+    assert f(*v) == s.subs(zip(args, v)).doit()
 
 
 def test_multiple_sums():
@@ -174,8 +177,40 @@ def test_multiple_sums():
     l = lambdarepr(s)
     assert l == "(builtins.sum(i*x + j for i in range(a, b+1) for j in range(c, d+1)))"
 
-    assert (lambdify((x, a, b, c, d), s)(2, 3, 4, 5, 6) ==
-            s.subs([(x, 2), (a, 3), (b, 4), (c, 5), (d, 6)]).doit())
+    args = x, a, b, c, d
+    f = lambdify(args, s)
+    vals = 2, 3, 4, 5, 6
+    f_ref = s.subs(zip(args, vals)).doit()
+    f_res = f(*vals)
+    assert f_res == f_ref
+
 
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
+
+
+class CustomPrintedObject(Expr):
+    def _lambdacode(self, printer):
+        return 'lambda'
+
+    def _tensorflowcode(self, printer):
+        return 'tensorflow'
+
+    def _numpycode(self, printer):
+        return 'numpy'
+
+    def _numexprcode(self, printer):
+        return 'numexpr'
+
+    def _mpmathcode(self, printer):
+        return 'mpmath'
+
+
+def test_printmethod():
+    # In each case, printmethod is called to test
+    # its working
+
+    obj = CustomPrintedObject()
+    assert LambdaPrinter().doprint(obj) == 'lambda'
+    assert TensorflowPrinter().doprint(obj) == 'tensorflow'
+    assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"

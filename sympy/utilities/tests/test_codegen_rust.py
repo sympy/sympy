@@ -80,11 +80,11 @@ def test_numbersymbol():
     source = result[1]
     expected = (
         "fn test() -> f64 {\n"
-        "    const Catalan: f64 = 0.915965594177219;\n"
+        "    const Catalan: f64 = %s;\n"
         "    let out1 = PI.powf(Catalan);\n"
         "    out1\n"
         "}\n"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
@@ -97,13 +97,13 @@ def test_numbersymbol_inline():
     source = result[1]
     expected = (
         "fn test() -> (f64, f64) {\n"
-        "    const Catalan: f64 = 0.915965594177219;\n"
-        "    const EulerGamma: f64 = 0.5772156649015329;\n"
+        "    const Catalan: f64 = %s;\n"
+        "    const EulerGamma: f64 = %s;\n"
         "    let out1 = PI.powf(Catalan);\n"
         "    let out2 = EulerGamma);\n"
         "    (out1, out2)\n"
         "}\n"
-    )
+    ) % (Catalan.evalf(17), EulerGamma.evalf(17))
     assert source == expected
 
 

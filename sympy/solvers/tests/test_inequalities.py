@@ -417,7 +417,7 @@ def test__solve_inequality():
     # make sure to include conditions under which solution is valid
     e = Eq(1 - x, x*(1/x - 1))
     assert _solve_inequality(e, x) == Ne(x, 0)
-    assert _solve_inequality(-x < x*(1/x - 1), x) == Ne(x, 0)
+    assert _solve_inequality(x < x*(1/x - 1), x) == (x < S.Half) & Ne(x, 0)
 
 
 def test__pt():
