@@ -117,7 +117,7 @@ class ReprPrinter(Printer):
 
     def _print_Mul(self, expr, order=None):
         terms = expr.args
-        if self.order != 'old':
+        if self.order != 'none':
             args = expr._new_rawargs(*terms).as_ordered_factors()
         else:
             args = terms

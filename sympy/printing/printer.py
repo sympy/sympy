@@ -69,12 +69,7 @@ Some more information how the single concepts work and who should use which:
 
 from __future__ import print_function, division
 
-from sympy import Basic, Add
-
-from sympy.core.core import BasicMeta
-
-from functools import cmp_to_key
-
+from sympy import Basic
 
 class Printer(object):
     """Generic printer
@@ -246,7 +241,7 @@ class Printer(object):
             # (Printer.printmethod) and the object knows for itself how it
             # should be printed, use that method.
             if (self.printmethod and hasattr(expr, self.printmethod)
-                    and not isinstance(expr, BasicMeta)):
+                    and not (isinstance(expr, type) and issubclass(expr, Basic))):
                 return getattr(expr, self.printmethod)(self, *args, **kwargs)
 
             # See if the class of expr is known, or if one of its super
@@ -265,6 +260,6 @@ class Printer(object):
         order = order or self.order
 
         if order == 'old':
-            return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
+            raise ValueError("'old' ordering has been removed")
         else:
             return expr.as_ordered_terms(order=order)

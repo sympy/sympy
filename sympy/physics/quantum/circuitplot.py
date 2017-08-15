@@ -20,7 +20,6 @@ from sympy import Mul
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
-from sympy.core.core import BasicMeta
 from sympy.core.assumptions import ManagedProperties
 
 
@@ -362,7 +361,7 @@ class CreateOneQubitGate(ManagedProperties):
     def __new__(mcl, name, latexname=None):
         if not latexname:
             latexname = name
-        return BasicMeta.__new__(mcl, name + "Gate", (OneQubitGate,),
+        return ManagedProperties.__new__(mcl, name + "Gate", (OneQubitGate,),
                                  {'gate_name': name, 'gate_name_latex': latexname})
 
 def CreateCGate(name, latexname=None):

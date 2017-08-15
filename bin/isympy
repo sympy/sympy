@@ -80,7 +80,7 @@ COMMAND LINE OPTIONS
         $isympy -o rev-lex
 
     ORDER must be one of 'lex', 'rev-lex', 'grlex', 'rev-grlex',
-    'grevlex', 'rev-grevlex', 'old', or 'none'.
+    'grevlex', 'rev-grevlex', or 'none'.
 
     Note that for very large expressions, ORDER='none' may speed up
     printing considerably but the terms will have no canonical order.
@@ -247,8 +247,8 @@ def main():
         dest='order',
         action='store',
         default=None,
-        choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old', 'none'],
-        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old | none; defaults to lex')
+        choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'none'],
+        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | none; defaults to lex')
 
     parser.add_option(
         '-q', '--quiet',

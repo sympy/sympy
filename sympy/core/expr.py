@@ -74,12 +74,7 @@ class Expr(Basic, EvalfMixin):
         elif expr.is_Atom:
             args = (str(expr),)
         else:
-            if expr.is_Add:
-                args = expr.as_ordered_terms(order=order)
-            elif expr.is_Mul:
-                args = expr.as_ordered_factors(order=order)
-            else:
-                args = expr.args
+            args = expr.args
 
             args = tuple(
                 [ default_sort_key(arg, order=order) for arg in args ])

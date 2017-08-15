@@ -10,7 +10,7 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, range
-from sympy.core.sympify import sympify, converter
+from sympy.core.sympify import _sympify, sympify, converter
 from sympy.utilities.iterables import iterable
 
 
@@ -106,10 +106,10 @@ class Tuple(Basic):
         return tuple(a._to_mpmath(prec) for a in self.args)
 
     def __lt__(self, other):
-        return sympify(self.args < other.args)
+        return _sympify(self.args < other.args)
 
     def __le__(self, other):
-        return sympify(self.args <= other.args)
+        return _sympify(self.args <= other.args)
 
     # XXX: Basic defines count() as something different, so we can't
     # redefine it here. Originally this lead to cse() test failure.
@@ -220,7 +220,7 @@ class Dict(Basic):
 
     def __getitem__(self, key):
         """x.__getitem__(y) <==> x[y]"""
-        return self._dict[sympify(key)]
+        return self._dict[_sympify(key)]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("SymPy Dicts are Immutable")
@@ -251,14 +251,14 @@ class Dict(Basic):
 
     def get(self, key, default=None):
         '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
-        return self._dict.get(sympify(key), default)
+        return self._dict.get(_sympify(key), default)
 
     def __contains__(self, key):
         '''D.__contains__(k) -> True if D has a key k, else False'''
-        return sympify(key) in self._dict
+        return _sympify(key) in self._dict
 
     def __lt__(self, other):
-        return sympify(self.args < other.args)
+        return _sympify(self.args < other.args)
 
     @property
     def _sorted_args(self):

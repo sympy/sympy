@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
-from functools import cmp_to_key
 import operator
 
 from .sympify import sympify
@@ -10,7 +9,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import reduce, range
+from .compatibility import reduce, range, default_sort_key
 from .expr import Expr
 
 # internal marker to indicate:
@@ -25,12 +24,10 @@ class NC_Marker:
 
     is_commutative = False
 
-
 # Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
-    args.sort(key=_args_sortkey)
+    args.sort(key=default_sort_key)
 
 
 def _unevaluated_Mul(*args):
