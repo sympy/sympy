@@ -6,7 +6,7 @@ from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
 from sympy.vector.vector import Dot
-from sympy.vector.operators import curl, divergence, gradient, Gradient, Divergence
+from sympy.vector.operators import curl, divergence, gradient, Gradient, Divergence, Cross
 from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
@@ -279,8 +279,13 @@ def test_mixed_coordinates():
            (3*a.x*a.y*a.z*cos(q))*b.i + b.z*b.j + (b.y + cos(a.x + a.y))*b.k
     # divergence
     assert divergence(a.i*a.x+a.j*a.y+a.z*a.k + b.i*b.x+b.j*b.y+b.z*b.k + c.i*c.x+c.j*c.y+c.z*c.k) == S(9)
-    assert divergence(3*a.i*a.x*cos(a.x+b.z) + a.j*b.x*c.z) == \
-           Divergence((3 * a.x * cos(a.x + b.z)) * a.i) + Dot(a.j, b.i) + Dot(a.j, c.k)
-    assert divergence(3*a.i*a.x*a.z + b.j*b.x*c.z + 3*a.j*a.z*a.y) == 6*a.z + Dot(b.x*b.j, c.k)
+    # assert divergence(3*a.i*a.x*cos(a.x+b.z) + a.j*b.x*c.z) == None
+    assert divergence(3*a.i*a.x*a.z + b.j*b.x*c.z + 3*a.j*a.z*a.y) == 6*a.z + Dot(b.j, c.z*b.i + b.x*c.k)
     assert divergence(3*cos(q)*a.x*b.x*b.i*c.x)\
-           == 3*a.x*c.x*cos(q) + 3*cos(q)*Dot(b.x*b.i, a.i) + 3*cos(q)*Dot(b.x*b.i, c.i)
+           == Dot(b.i, (3*b.x*c.x*cos(q))*a.i + (3*a.x*c.x*cos(q))*b.i + (3*a.x*b.x*cos(q))*c.i)
+    assert divergence(a.x*b.x*c.x*Cross(a.x*a.i, a.y*b.j)) ==\
+           a.x*b.x*c.x*Divergence(Cross(a.x*a.i, a.y*b.j)) + \
+           Dot(Cross(a.x*a.i, a.y*b.j), b.x*c.x*a.i + a.x*c.x*b.i + a.x*b.x*c.i)
+    assert divergence(a.x*b.x*c.x*(a.x*a.i + b.x*b.i)) ==\
+           Dot(a.i, 2*a.x*b.x*c.x*a.i + a.x**2*c.x*b.i + a.x**2*b.x*c.i) + \
+           Dot(b.i, b.x**2*c.x*a.i + 2*a.x*b.x*c.x*b.i + a.x*b.x**2*c.i)

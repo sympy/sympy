@@ -2,7 +2,7 @@ import collections
 from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector, VectorMul, VectorAdd, Dot
+from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
@@ -240,6 +240,8 @@ def divergence(vect, coord_sys=None, doit=True):
     if len(coord_sys) == 0:
         return S.Zero
     elif len(coord_sys) == 1:
+        if isinstance(vect, (Cross, Curl, Gradient)):
+            return Divergence(vect)
         # TODO: is case of many coord systems, this gets a random one:
         coord_sys = next(iter(coord_sys))
         i, j, k = coord_sys.base_vectors()
@@ -258,17 +260,13 @@ def divergence(vect, coord_sys=None, doit=True):
         if isinstance(vect, (Add, VectorAdd)):
             return Add.fromiter(divergence(i) for i in vect.args)
         elif isinstance(vect, (Mul, VectorMul)):
-            s = _split_mul_args_wrt_coordsys(vect)
-            scalar = [i for i in s if not isinstance(i, Vector) and len(_get_coord_systems(i)) > 0]
-            const = [i for i in s + [S(1)] if len(_get_coord_systems(i)) == 0][0]
-            vector = [i for i in s if isinstance(i, Vector)][0]
-            for i in scalar:
-                if _get_coord_systems(vector).pop() in _get_coord_systems(i):
-                    return Divergence(vect)
-            dot = [const*Dot(vector, gradient(i)) for i in scalar]
-            return Add.fromiter(dot + [Mul.fromiter(scalar + [const*divergence(vector)])])
+            vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
+            scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
+            return Add(Dot(vector, gradient(scalar)), Mul(scalar, divergence(vector)))
+        elif isinstance(vect, (Cross, Curl, Gradient)):
+            return Divergence(vect)
         else:
-            raise ValueError()
+            raise Divergence(vect)
 
 
 def gradient(scalar_field, coord_sys=None, doit=True):
