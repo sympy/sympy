@@ -12,4 +12,4 @@ from sympy.vector.functions import (express, matrix_to_vector,
 from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-from sympy.vector.operators import Gradient, Divergence, Curl, gradient, curl, divergence
+from sympy.vector.operators import Gradient, Divergence, Curl, gradient, curl, divergence, _split_mul_args_wrt_coordsys

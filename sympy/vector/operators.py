@@ -1,8 +1,8 @@
 import collections
 from sympy.core.expr import Expr
-from sympy.core import sympify, S
+from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector, VectorMul, VectorAdd
+from sympy.vector.vector import Vector, VectorMul, VectorAdd, Dot
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
@@ -28,10 +28,20 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
         return set([])
 
 
+def _get_coord_systems(expr):
+    g = preorder_traversal(expr)
+    ret = set([])
+    for i in g:
+        if isinstance(i, CoordSys3D):
+            ret.add(i)
+            g.skip()
+    return ret
+
+
 def _split_mul_args_wrt_coordsys(expr):
     d = collections.defaultdict(lambda: S.One)
     for i in expr.args:
-        d[frozenset(i.atoms(CoordSys3D))] *= i
+        d[frozenset(_get_coord_systems(i))] *= i
     return list(d.values())
 
 
