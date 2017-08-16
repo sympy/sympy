@@ -341,6 +341,12 @@ def test_get_dimensional_expr_with_function():
         sin(Quantity.get_dimensional_expr(v_w1))
 
 
+def test_get_dimensional_expr_with_function_1():
+    v_w1 = Quantity('v_w1', length / time, meter / second)
+    v_w2 = Quantity('v_w2', length / time, meter / second)
+    assert Quantity.get_dimensional_expr(sin(v_w1/v_w2)) == 1
+
+
 def test_binary_information():
     assert convert_to(kibibyte, byte) == 1024*byte
     assert convert_to(mebibyte, byte) == 1024**2*byte
