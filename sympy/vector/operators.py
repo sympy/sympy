@@ -2,7 +2,7 @@ import collections
 from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
+from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot, dot
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
@@ -253,16 +253,20 @@ def divergence(vect, coord_sys=None, doit=True):
              / (h1 * h2 * h3)
         vz = _diff_conditional(vect.dot(k), z, h1, h2) \
              / (h1 * h2 * h3)
+        res = vx + vy + vz
         if doit:
-            return (vx + vy + vz).doit()
-        return vx + vy + vz
+            return res.doit()
+        return res
     else:
         if isinstance(vect, (Add, VectorAdd)):
             return Add.fromiter(divergence(i) for i in vect.args)
         elif isinstance(vect, (Mul, VectorMul)):
             vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
             scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
-            return Add(Dot(vector, gradient(scalar)), Mul(scalar, divergence(vector)))
+            res = Dot(vector, gradient(scalar)) + scalar*divergence(vector)
+            if doit:
+                return res.doit()
+            return res
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Divergence(vect)
         else:
