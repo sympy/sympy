@@ -280,7 +280,7 @@ class CodePrinter(StrPrinter):
             return '%s_%d' % (expr.name, expr.dummy_index)
 
     def _print_CodeBlock(self, expr):
-        return '\n'.join([self._print(i) for i in expr.args])
+        return '\n'.join([self._print(i) for i in expr.body])
 
     def _print_String(self, string):
         return str(string)

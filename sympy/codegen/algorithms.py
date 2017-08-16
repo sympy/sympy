@@ -65,9 +65,9 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
         declars.append(Declaration.deduced(counter, 0))
         body.append(AddAugmentedAssignment(counter, 1))
         req = And(req, Lt(counter, itermax))
-    whl = While(req, CodeBlock(*body))
+    whl = While(req, CodeBlock(body))
     blck = declars + [whl]
-    return Wrapper(CodeBlock(*blck))
+    return Wrapper(CodeBlock(blck))
 
 
 def _symbol_of(arg):
@@ -96,8 +96,8 @@ def newtons_method_function(expr, wrt, args=None, func_name="newton", **kwargs):
             delta = None  # will use Dummy
     algo = newtons_method(expr, wrt, delta=delta, **kwargs).xreplace(pointer_subs)
     if isinstance(algo, Scope):
-        algo, = algo.args
+        algo = algo.body
     not_in_args = expr.free_symbols.difference(set(_symbol_of(arg) for arg in args))
     if not_in_args:
         raise ValueError("Missing symbols in args: %s" % ', '.join(map(str, not_in_args)))
-    return FunctionDefinition(real, func_name, tuple(map(_decl_real, args)), CodeBlock(algo, ReturnStatement(wrt)))
+    return FunctionDefinition(real, func_name, tuple(map(_decl_real, args)), CodeBlock([algo, ReturnStatement(wrt)]))

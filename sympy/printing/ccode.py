@@ -524,7 +524,7 @@ class C89CodePrinter(CodePrinter):
         return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(apply=self._print))
 
     def _print_Scope(self, expr):
-        return '{\n%s\n}' % self._print(expr.body)
+        return '{\n%s\n}' % self._print_CodeBlock(expr)
 
     def _print_Statement(self, expr):
         arg, = expr.args
@@ -541,7 +541,7 @@ class C89CodePrinter(CodePrinter):
         )
 
     def _print_FunctionDefinition(self, expr):
-        return "%s%s" % (self._print_FunctionPrototype(expr), self._print_Scope(expr))
+        return "%s%s" % (self._print_FunctionPrototype(expr), self._print_Scope(expr.body))
 
     def _print_ReturnStatement(self, expr):
         arg, = expr.args

@@ -84,6 +84,118 @@ from sympy.core.sympify import _sympify, sympify
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
 
+
+class Token(Basic):
+    """ Base class for the AST types
+
+    Defining fields are set in __slots__. Attributes (defined in __slots__) are
+    only allowed to contain instances of Basic (unless atomic, see ``String``).
+    """
+
+    __slots__ = []
+    defaults = {}
+    not_in_args = []
+    indented_args = ['body']
+
+    @property
+    def is_Atom(self):
+        return len(self.__slots__) == 0
+
+    @classmethod
+    def _get_constructor(cls, attr):
+        return getattr(cls, '_construct_%s' % attr, lambda x: x)
+
+    @classmethod
+    def _construct(cls, attr, arg):
+        if arg == None:
+            return cls.defaults.get(attr, none)
+        else:
+            if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
+                return arg
+            else:
+                return cls._get_constructor(attr)(arg)
+
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
+            return args[0]
+        args = [cls._construct(attr, arg) for attr, arg in zip(
+            cls.__slots__, args + tuple([
+                kwargs.pop(k, cls.defaults[k]) if k in cls.defaults else kwargs.pop(k) for k
+                in cls.__slots__[len(args):]])
+        )]
+        if kwargs:
+            raise ValueError("Unknown kwargs: %s" % kwargs)
+
+        obj = Basic.__new__(cls, *[arg for slot, arg in zip(cls.__slots__, args) if slot not in cls.not_in_args])
+        for attr, arg in zip(cls.__slots__, args):
+            setattr(obj, attr, arg)
+        return obj
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        for attr in self.__slots__:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+        return True
+
+    def _hashable_content(self):
+        return tuple([getattr(self, attr) for attr in self.__slots__])
+
+    def __hash__(self):
+        return super(Token, self).__hash__()
+
+    def _joiner(self, k, indent_level):
+        return (',\n' + ' '*indent_level) if k in self.indented_args else ', '
+
+    def _print_indented(self, printer, k, v, il, *args, **kwargs):
+        if isinstance(v, Token):
+            return printer._print(v, *args, indent_level=il, joiner=self._joiner(k, il), **kwargs)
+        elif isinstance(v, Tuple):
+            joined = self._joiner(k, il).join(map(printer._print, v.args))
+            if k in self.indented_args:
+                return '(\n' + ' '*il + joined + '\n' + ' '*(il - 4) + ')'
+        else:
+            return printer._print(v, *args, **kwargs)
+
+    def _sympyrepr(self, printer, *args, **kwargs):
+        exclude = kwargs.get('exclude', ())
+        values = [getattr(self, k) for k in self.__slots__]
+        indent_level = kwargs.pop('indent_level', 0)
+        joiner = kwargs.pop('joiner', ', ')
+        ils = [indent_level + (4 if k in self.indented_args else 0) for k in self.__slots__]
+        return "{0}({1})".format(self.__class__.__name__, joiner.join([
+            ('{1}' if i == 0 else '{0}={1}').format(k, self._print_indented(printer, k, v, il, *args, **kwargs))
+            for i, (k, v, il) in enumerate(zip(self.__slots__, values, ils))
+            if not (k in self.defaults and v == self.defaults[k]) and k not in exclude  # already the default
+        ]))
+
+    _sympystr = _sympyrepr
+
+    def __repr__(self):  # sympy.core.Basic.__repr__ uses sstr
+        from sympy.printing import srepr
+        return srepr(self)
+
+
+    def kwargs(self, exclude=(), apply=lambda arg: arg):
+        return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
+
+
+class NoneToken(Token):
+
+    def __eq__(self, other):
+        return other is None or isinstance(other, NoneToken)
+
+    def _hashable_content(self):
+        return ()
+
+    def __hash__(self):
+        return super(Token, self).__hash__()
+
+
+none = NoneToken()
+
+
 class Assignment(Relational):
     """
     Represents variable assignment for code generation.
@@ -226,19 +338,22 @@ def aug_assign(lhs, op, rhs):
     return Relational.ValidRelationOperator[op + '='](lhs, rhs)
 
 
-class CodeBlock(Basic):
+class CodeBlock(Token):
     """
     Represents a block of code
 
     For now only assignments are supported. This restriction will be lifted in
     the future.
 
-    Useful methods on this object are
+    Useful attributes on this object are:
 
     ``left_hand_sides``:
         Tuple of left-hand sides of assignments, in order.
     ``left_hand_sides``:
         Tuple of right-hand sides of assignments, in order.
+
+    Useful methods on this object are:
+
     ``topological_sort``:
         Class method. Return a CodeBlock with assignments
         sorted so that variables are assigned before they
@@ -259,21 +374,29 @@ class CodeBlock(Basic):
     y = x + 1;
 
     """
-    def __new__(cls, *args):
+
+    __slots__ = ['body', 'left_hand_sides', 'right_hand_sides']
+    defaults = dict(zip(__slots__[-2:], [none]*2))
+    not_in_args = __slots__[-2:]
+
+    _construct_body = staticmethod(lambda arg: Tuple(*arg))
+    _construct_left_hand_sides = staticmethod(lambda arg: Tuple(*arg))
+    _construct_right_hand_sides = staticmethod(lambda arg: Tuple(*arg))
+
+    def __new__(cls, body):
+        if isinstance(body, CodeBlock):
+            return body
         left_hand_sides = []
         right_hand_sides = []
-        for i in args:
+        for i in body:
             if isinstance(i, Assignment):
                 lhs, rhs = i.args
                 left_hand_sides.append(lhs)
                 right_hand_sides.append(rhs)
+        return Token.__new__(cls, body, left_hand_sides, right_hand_sides)
 
-        obj = Basic.__new__(cls, *args)
-
-        obj.left_hand_sides = Tuple(*left_hand_sides)
-        obj.right_hand_sides = Tuple(*right_hand_sides)
-
-        return obj
+    def _sympyrepr(self, printer, *args, **kwargs):
+        return super(CodeBlock, self)._sympyrepr(printer, *args, exclude=not_in_args, **kwargs)
 
     @classmethod
     def topological_sort(cls, assignments):
@@ -301,7 +424,11 @@ class CodeBlock(Basic):
         ...     Assignment(z, 2),
         ... ]
         >>> CodeBlock.topological_sort(assignments)
-        CodeBlock(Assignment(z, 2), Assignment(y, z + 1), Assignment(x, y + z))
+        CodeBlock((
+            Assignment(z, 2),
+            Assignment(y, z + 1),
+            Assignment(x, y + z))
+        )
 
         """
         from sympy.utilities.iterables import topological_sort
@@ -344,7 +471,7 @@ class CodeBlock(Basic):
 
         ordered_assignments = topological_sort([A, E])
         # De-enumerate the result
-        return cls(*list(zip(*ordered_assignments))[1])
+        return cls(list(zip(*ordered_assignments))[1])
 
     def cse(self, symbols=None, optimizations=None, postprocess=None,
         order='canonical'):
@@ -361,20 +488,20 @@ class CodeBlock(Basic):
         >>> from sympy.codegen.ast import CodeBlock, Assignment
         >>> x, y, z = symbols('x y z')
 
-        >>> c = CodeBlock(
+        >>> c = CodeBlock([
         ...     Assignment(x, 1),
         ...     Assignment(y, sin(x) + 1),
         ...     Assignment(z, sin(x) - 1),
-        ... )
+        ... ])
         ...
         >>> c.cse()
-        CodeBlock(Assignment(x, 1), Assignment(x0, sin(x)), Assignment(y, x0 + 1), Assignment(z, x0 - 1))
+        CodeBlock((Assignment(x, 1), Assignment(x0, sin(x)), Assignment(y, x0 + 1), Assignment(z, x0 - 1)))
 
         """
         # TODO: Check that the symbols are new
         from sympy.simplify.cse_main import cse
 
-        if not all(isinstance(i, Assignment) for i in self.args):
+        if not all(isinstance(i, Assignment) for i in self.body):
             # Will support more things later
             raise NotImplementedError("CodeBlock.cse only supports Assignments")
 
@@ -395,7 +522,7 @@ class CodeBlock(Basic):
         return self.topological_sort(new_assignments + new_block)
 
 
-class For(Basic):
+class For(Token):
     """Represents a 'for-loop' in the code.
 
     Expressions are of the form:
@@ -419,142 +546,17 @@ class For(Basic):
     For(n, Range(0, 10, 1), CodeBlock(AddAugmentedAssignment(x, n)))
 
     """
-
-    def __new__(cls, target, iter, body):
-        target = _sympify(target)
-        if not iterable(iter):
-            raise TypeError("iter must be an iterable")
-        if isinstance(iter, list):
-            # _sympify errors on lists because they are mutable
-            iter = tuple(iter)
-        iter = _sympify(iter)
-        if not isinstance(body, CodeBlock):
-            if not iterable(body):
-                raise TypeError("body must be an iterable or CodeBlock")
-            body = CodeBlock(*(_sympify(i) for i in body))
-        return Basic.__new__(cls, target, iter, body)
-
-    @property
-    def target(self):
-        """
-        Return the symbol (target) from the for-loop representation.
-        This object changes each iteration.
-        Target must be a symbol.
-        """
-        return self._args[0]
-
-    @property
-    def iterable(self):
-        """
-        Return the iterable from the for-loop representation.
-        This is the object that target takes values from.
-        Must be an iterable object.
-        """
-        return self._args[1]
-
-    @property
-    def body(self):
-        """
-        Return the sympy expression (body) from the for-loop representation.
-        This is run for each value of target.
-        Must be an iterable object or CodeBlock.
-        """
-        return self._args[2]
-
-
-class Token(Basic):
-    """ Similar to Symbol, but takes no assumptions.
-
-    Defining fields are set in __slots__. Attributes (defined in __slots__) are
-    allowed to contain instances of Basic or strings.
-    """
-
-    __slots__ = []
-    defaults = {}
-    not_in_args = []
-
-    @property
-    def is_Atom(self):
-        return len(self.__slots__) == 0
+    __slots__ = ['target', 'iterable', 'body']
+    _construct_target = staticmethod(_sympify)
+    _construct_body = CodeBlock
 
     @classmethod
-    def _get_constructor(cls, attr):
-        return getattr(cls, '_construct_%s' % attr, lambda x: x)
-
-    @classmethod
-    def _construct(cls, attr, arg):
-        if arg == None:
-            return cls.defaults.get(attr, none)
-        else:
-            if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
-                return arg
-            else:
-                return cls._get_constructor(attr)(arg)
-
-    def __new__(cls, *args, **kwargs):
-        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
-            return args[0]
-        args = [cls._construct(attr, arg) for attr, arg in zip(
-            cls.__slots__, args + tuple([
-                kwargs.pop(k, cls.defaults[k]) if k in cls.defaults else kwargs.pop(k) for k
-                in cls.__slots__[len(args):]])
-        )]
-        if kwargs:
-            raise ValueError("Unknown kwargs: %s" % kwargs)
-
-        obj = Basic.__new__(cls, *[arg for slot, arg in zip(cls.__slots__, args) if slot not in cls.not_in_args])
-        for attr, arg in zip(cls.__slots__, args):
-            setattr(obj, attr, arg)
-        return obj
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        for attr in self.__slots__:
-            if getattr(self, attr) != getattr(other, attr):
-                return False
-        return True
-
-    def _hashable_content(self):
-        return tuple([getattr(self, attr) for attr in self.__slots__])
-
-    def __hash__(self):
-        return super(Token, self).__hash__()
-
-    def _sympyrepr(self, printer):
-        values = [getattr(self, k) for k in self.__slots__]
-        return "{0}({1})".format(self.__class__.__name__, ', '.join(
-            [printer._print(v) for v in values[:1]] + [
-                '%s=%s' % (k, printer._print(v))
-                for k, v in zip(self.__slots__[1:], values[1:])
-                if not (k in self.defaults and v == self.defaults[k])  # already the default
-            ]
-        ))
-
-    _sympystr = _sympyrepr
-
-    def __repr__(self):  # sympy.core.Basic.__repr__ uses sstr
-        from sympy.printing import srepr
-        return srepr(self)
-
-
-    def kwargs(self, exclude=(), apply=lambda arg: arg):
-        return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
-
-
-class NoneToken(Token):
-
-    def __eq__(self, other):
-        return other is None or isinstance(other, NoneToken)
-
-    def _hashable_content(self):
-        return ()
-
-    def __hash__(self):
-        return super(Token, self).__hash__()
-
-
-none = NoneToken()
+    def _construct_iterable(cls, itr):
+        if not iterable(itr):
+            raise TypeError("iterable must be an iterable")
+        if isinstance(itr, list):  # _sympify errors on lists because they are mutable
+            itr = tuple(itr)
+        return _sympify(itr)
 
 
 class String(Token):
@@ -590,7 +592,7 @@ class String(Token):
             raise TypeError("Argument text is not a string type.")
         return text
 
-    def _sympystr(self, printer):
+    def _sympystr(self, printer, *args, **kwargs):
         return self.text
 
 
@@ -667,7 +669,7 @@ class Type(Token):
 
     _construct_name = String
 
-    def _sympystr(self, printer):
+    def _sympystr(self, printer, *args, **kwargs):
         return str(self.name)
 
     @classmethod
@@ -1003,9 +1005,12 @@ class Attribute(Token):
     __slots__ = ['name', 'parameters']
     defaults = {'parameters': Tuple()}
     _construct_name = String
-    _construct_arguments = Tuple
 
-    def _sympystr(self, printer):
+    @classmethod
+    def _construct_parameters(cls, params):
+        return Tuple(*params)
+
+    def _sympystr(self, printer, *args, **kwargs):
         return str(self.name)
 
 
@@ -1226,17 +1231,11 @@ class While(Token):
 
     """
     __slots__ = ['condition', 'body']
-
-    def __new__(cls, condition, body):
-        condition = _sympify(condition)
-        if not isinstance(body, CodeBlock):
-            if not iterable(body):
-                raise TypeError("body must be an iterable or CodeBlock")
-            body = CodeBlock(*(_sympify(i) for i in body))
-        return Token.__new__(cls, condition, body)
+    _construct_condition = staticmethod(lambda cond: _sympify(cond))
+    _construct_body = CodeBlock
 
 
-class Scope(Token):
+class Scope(CodeBlock):
     """ Represents a scope in the code.
 
     Parameters
@@ -1245,14 +1244,6 @@ class Scope(Token):
         When passed an iterable it is used to instantiate a CodeBlock.
 
     """
-    __slots__ = ['body']
-
-    def __new__(cls, body):
-        if not isinstance(body, CodeBlock):
-            if not iterable(body):
-                raise TypeError("body must be an iterable or CodeBlock")
-            body = CodeBlock(*(_sympify(i) for i in body))
-        return Token.__new__(cls, body)
 
 
 class Statement(Basic):
@@ -1328,14 +1319,7 @@ class FunctionDefinition(FunctionPrototype):
     """
 
     __slots__ = FunctionPrototype.__slots__ + ['body']
-
-    def __new__(cls, return_type, name, function_args, body):
-        if not isinstance(body, CodeBlock):
-            if not iterable(body):
-                raise TypeError("body must be an iterable or CodeBlock")
-            body = CodeBlock(*(_sympify(i) for i in body))
-        return FunctionPrototype.__new__(cls, return_type, name,
-                                         tuple(function_args), body=body)
+    _construct_body = CodeBlock
 
     @classmethod
     def from_FunctionPrototype(cls, func_proto, body):

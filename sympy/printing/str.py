@@ -24,11 +24,11 @@ class StrPrinter(Printer):
 
     _relationals = dict()
 
-    def parenthesize(self, item, level, strict=False):
+    def parenthesize(self, item, level, strict=False, *args, **kwargs):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
-            return "(%s)" % self._print(item)
+            return "(%s)" % self._print(item, *args, **kwargs)
         else:
-            return self._print(item)
+            return self._print(item, *args, **kwargs)
 
     def stringify(self, args, sep, level=0):
         return sep.join([self.parenthesize(item, level) for item in args])
@@ -86,7 +86,7 @@ class StrPrinter(Printer):
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
 
-    def _print_Basic(self, expr):
+    def _print_Basic(self, expr, *args, **kwargs):
         l = [self._print(o) for o in expr.args]
         return expr.__class__.__name__ + "(%s)" % ", ".join(l)
 
@@ -591,7 +591,7 @@ class StrPrinter(Printer):
             rv = rv[1:]
         return rv
 
-    def _print_Relational(self, expr):
+    def _print_Relational(self, expr, *args, **kwargs):
 
         charmap = {
             "==": "Eq",
