@@ -682,7 +682,7 @@ class StrPrinter(Printer):
         return "Q.%s" % expr.name
 
     def _print_str(self, expr):
-        return expr
+        return str(expr)
 
     def _print_tuple(self, expr):
         if len(expr) == 1:

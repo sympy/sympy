@@ -82,7 +82,6 @@ from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify, sympify
 from sympy.logic import true, false
-from sympy.sets import FiniteSet
 from sympy.utilities.iterables import iterable
 
 class Assignment(Relational):
@@ -498,8 +497,7 @@ class Token(Basic):
         args = [cls._construct(attr, arg) for attr, arg in zip(
             cls.__slots__, args + tuple([
                 kwargs.pop(k, cls.defaults[k]) if k in cls.defaults else kwargs.pop(k) for k
-                in cls.__slots__[len(args):]
-            ])
+                in cls.__slots__[len(args):]])
         )]
         if kwargs:
             raise ValueError("Unknown kwargs: %s" % kwargs)
@@ -523,12 +521,22 @@ class Token(Basic):
     def __hash__(self):
         return super(Token, self).__hash__()
 
-    def _sympystr(self, printer):
+    def _sympyrepr(self, printer):
         values = [getattr(self, k) for k in self.__slots__]
-        return "{0}({1})".format(self.__class__.__name__, ', '.join([
-            ('%s=' + ('"%s"' if isinstance(v, string_types) else '%s')) % (k, printer._print(v))
-            for k, v in zip(self.__slots__, values)
-        ]))
+        return "{0}({1})".format(self.__class__.__name__, ', '.join(
+            [printer._print(v) for v in values[:1]] + [
+                '%s=%s' % (k, printer._print(v))
+                for k, v in zip(self.__slots__[1:], values[1:])
+                if not (k in self.defaults and v == self.defaults[k])  # already the default
+            ]
+        ))
+
+    _sympystr = _sympyrepr
+
+    def __repr__(self):  # sympy.core.Basic.__repr__ uses sstr
+        from sympy.printing import srepr
+        return srepr(self)
+
 
     def kwargs(self, exclude=(), apply=lambda arg: arg):
         return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
@@ -550,6 +558,28 @@ none = NoneToken()
 
 
 class String(Token):
+    """ SymPy object representing a string.
+
+    Atomic object which is not an expression (as opposed to Symbol).
+
+    Parameters
+    ----------
+    text : str
+
+    Examples
+    --------
+    >>> from sympy.codegen.ast import String
+    >>> f = String('foo')
+    >>> f
+    foo
+    >>> str(f)
+    'foo'
+    >>> f.text
+    'foo'
+    >>> print(repr(f))
+    String('foo')
+
+    """
     __slots__ = ['text']
     not_in_args = ['text']
     is_Atom = True
@@ -560,25 +590,21 @@ class String(Token):
             raise TypeError("Argument text is not a string type.")
         return text
 
-    def __str__(self):
+    def _sympystr(self, printer):
         return self.text
 
 
+
 class Node(Token):
-    """ Subclass of Token, carrying the attribute 'attrs' (FiniteSet) """
+    """ Subclass of Token, carrying the attribute 'attrs' (Tuple) """
 
     __slots__ = ['attrs']
 
-    defaults = {'attrs': none}
+    defaults = {'attrs': Tuple()}
 
     @classmethod
-    def _construct_attrs(cls, arg):
-        if arg is None:
-            return Tuple()
-        elif isinstance(arg, Tuple):
-            return arg
-        else:
-            return Tuple(*arg)
+    def _construct_attrs(cls, args):
+        return Tuple(*args)
 
     def obey(self, *attrs):
         """ Returns whether ``self.attrs`` contains all elements in attrs. """
@@ -606,8 +632,11 @@ class Type(Token):
     Examples
     --------
     >>> from sympy.codegen.ast import Type
-    >>> Type.from_expr(42).name
-    'integer'
+    >>> t = Type.from_expr(42)
+    >>> t
+    integer
+    >>> print(repr(t))
+    IntBaseType(String('integer'))
     >>> from sympy.codegen.ast import uint8
     >>> uint8.cast_check(-1)   # doctest: +ELLIPSIS
     Traceback (most recent call last):
@@ -638,7 +667,7 @@ class Type(Token):
 
     _construct_name = String
 
-    def __str__(self):
+    def _sympystr(self, printer):
         return str(self.name)
 
     @classmethod
@@ -801,8 +830,8 @@ class FloatType(FloatBaseType):
 
     Base 2 & one sign bit is assumed.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     name : str
         Name of the type.
     nbits : integer
@@ -954,11 +983,31 @@ bool_ = Type('bool')
 
 
 class Attribute(Token):
-    """ Attribute (possibly parametrized) """
+    """ Attribute (possibly parametrized)
+
+    Parameters
+    ----------
+    name : str
+    parameters : Tuple
+
+    Examples
+    --------
+    >>> from sympy.codegen.ast import Attribute
+    >>> volatile = Attribute('volatile')
+    >>> volatile
+    volatile
+    >>> print(repr(volatile))
+    Attribute(String('volatile'))
+
+    """
     __slots__ = ['name', 'parameters']
     defaults = {'parameters': Tuple()}
     _construct_name = String
     _construct_arguments = Tuple
+
+    def _sympystr(self, printer):
+        return str(self.name)
+
 
 value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
@@ -987,6 +1036,8 @@ class Variable(Node):
     False
     >>> v == Variable('x', type=float32)
     True
+    >>> v
+    Variable(x, type=float32)
 
     One may also construct a ``Variable`` instance with the type deduced from
     assumptions about the symbol using the ``deduced`` classmethod:
@@ -1001,6 +1052,8 @@ class Variable(Node):
     >>> v.obey(value_const)
     False
     >>> w = Variable('w', attrs=[value_const])
+    >>> w
+    Variable(w, attrs=(value_const,))
     >>> w.obey(value_const)
     True
 
@@ -1014,8 +1067,13 @@ class Variable(Node):
     _construct_symbol = staticmethod(sympify)
 
     @classmethod
-    def deduced(cls, symbol, attrs=FiniteSet()):
+    def deduced(cls, symbol, attrs=Tuple()):
         """ Alt. constructor with type deduction from ``Type.from_expr``.
+
+        Parameters
+        ----------
+        symbol : Symbol
+        attrs : Tuple
 
         Examples
         --------
@@ -1027,7 +1085,7 @@ class Variable(Node):
         >>> x = Symbol('x', real=True)
         >>> v = Variable.deduced(x)
         >>> v.type
-        FloatBaseType(name='real')
+        real
         >>> z = Symbol('z', complex=True)
         >>> Variable.deduced(z).type == complex_
         True
@@ -1084,12 +1142,16 @@ class Declaration(Basic):
         return Basic.__new__(cls, *args)
 
     @classmethod
-    def deduced(cls, symbol, value=None, attrs=FiniteSet(), cast_check=True, **kwargs):
+    def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True, **kwargs):
         """ Deduces type primarily from ``symbol``, secondarily from ``value``.
 
         Parameters
         ----------
-        symbol :
+        symbol : Symbol
+        value : expr
+            Value with which the variable will be initialized.
+        attrs : Tuple
+           Attributes (see ``Node``)
 
         Examples
         --------
@@ -1103,7 +1165,7 @@ class Declaration(Basic):
         True
         >>> n = Symbol('n', integer=True)
         >>> Declaration.deduced(n).variable
-        Variable(symbol=n, type=IntBaseType(name='integer'), attrs=())
+        Variable(n, type=integer)
         >>> n_decl = Declaration.deduced(n, 3.0)
         >>> n_decl.value
         3

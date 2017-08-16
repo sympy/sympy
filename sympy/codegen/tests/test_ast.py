@@ -200,6 +200,9 @@ def test_String():
     si = Signifier('foobar')
     assert si != st
     assert si.text == st.text
+    s = String('foo')
+    assert str(s) == 'foo'
+    assert repr(s) == "String('foo')"
 
 
 def test_Node():
@@ -213,7 +216,7 @@ def test_Type():
     assert len(t.args) == 1
     assert t.name == String('MyType')
     assert str(t) == 'MyType'
-    assert repr(t) == 'Type(name=String(text="MyType"))'
+    assert repr(t) == "Type(String('MyType'))"
     assert Type(t) == t
     assert t.func(*t.args) == t
     t1 = Type('t1')
@@ -271,6 +274,7 @@ def test_Variable():
     assert v.type == real
     assert v.obey(value_const) == False
     assert v.func(*v.args) == v
+    assert str(v) == 'Variable(x, type=real)'
 
     w = Variable(y, f32, attrs={value_const})
     assert w.symbol == y
@@ -347,7 +351,9 @@ def test_IntBaseType():
     assert str(IntBaseType('a').name) == 'a'
 
 def test_Declaration__deduced():
-    assert Declaration.deduced(n).variable.type == integer
+    dn = Declaration.deduced(n)
+    assert dn.variable.type == integer
+    assert str(dn.variable) == 'Variable(n, type=integer)'
     assert Declaration.deduced(z, 3).variable.type == integer
     assert Declaration.deduced(z, 3.0).variable.type == real
     assert Declaration.deduced(z, 3.0+1j).variable.type == complex_

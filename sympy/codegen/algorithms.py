@@ -30,7 +30,7 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
 
     Examples
     --------
-    >>> sympy import symbols, cos
+    >>> from sympy import symbols, cos
     >>> from sympy.codegen.ast import Assignment
     >>> from sympy.codegen.algorithms import newtons_method
     >>> x, dx, atol = symbols('x dx atol')
