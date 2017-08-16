@@ -2028,7 +2028,7 @@ def test_S4():
 def test_S5():
     n, k = symbols('n k', integer=True, positive=True)
     assert (Product((2*k - 1)/(2*k), (k, 1, n)).doit().combsimp() ==
-            factorial(n - Rational(1, 2))/(sqrt(pi)*factorial(n)))
+            gamma(n + Rational(1, 2))/(sqrt(pi)*gamma(n + 1)))
 
 
 @SKIP("https://github.com/sympy/sympy/issues/7133")

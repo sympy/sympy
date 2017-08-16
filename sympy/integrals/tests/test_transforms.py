@@ -651,7 +651,7 @@ def test_sine_transform():
     assert inverse_sine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
 
     assert sine_transform(
-        (1/sqrt(t))**3, t, w) == sqrt(w)*gamma(S(1)/4)/(2*gamma(S(5)/4))
+        (1/sqrt(t))**3, t, w) == 2*sqrt(w)
 
     assert sine_transform(t**(-a), t, w) == 2**(
         -a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma((a + 1)/2)
