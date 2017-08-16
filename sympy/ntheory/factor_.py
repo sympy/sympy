@@ -17,6 +17,7 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.expr import Expr
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -166,7 +167,7 @@ def trailing(n):
     >>> trailing(63)
     0
     """
-    n = int(n)
+    n = abs(int(n))
     if not n:
         return 0
     low_byte = n & 0xff
@@ -1591,6 +1592,8 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
+            raise ValueError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])

@@ -19,14 +19,18 @@ the responsibility for generating properly cased Fortran code to the user.
 
 from __future__ import print_function, division
 
+from collections import defaultdict
+from itertools import chain
 import string
 
-from sympy.core import S, Add, N
+from sympy.core import S, Add, N, Float
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
-from sympy.codegen.ast import Assignment
+from sympy.codegen.ast import (Assignment, Declaration, Pointer, Type,
+                               float32, float64, complex64, complex128, intc,
+                               real, integer, bool_, complex_)
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -55,15 +59,34 @@ class FCodePrinter(CodePrinter):
     printmethod = "_fcode"
     language = "Fortran"
 
+    type_aliases = {
+        real: float64,
+        complex_: complex128,
+    }
+
+    type_mappings = {
+        intc: 'integer(c_int)',
+        float32: 'real(4)',
+        float64: 'real(8)',
+        complex64: 'complex(4)',
+        complex128: 'complex(8)',
+        integer: 'integer',
+        bool_: 'logical'
+    }
+
+    type_modules = {
+        intc: {'iso_c_binding': 'c_int'}
+    }
+
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'source_format': 'fixed',
         'contract': True,
-        'standard': 77
+        'standard': 77,
     }
 
     _operators = {
@@ -79,7 +102,11 @@ class FCodePrinter(CodePrinter):
     }
 
     def __init__(self, settings={}):
-        CodePrinter.__init__(self, settings)
+        self.type_aliases = dict(chain(self.type_aliases.items(),
+                                       settings.pop('type_aliases', {}).items()))
+        self.type_mappings = dict(chain(self.type_mappings.items(),
+                                        settings.pop('type_mappings', {}).items()))
+        super(FCodePrinter, self).__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -88,6 +115,8 @@ class FCodePrinter(CodePrinter):
         if self._settings['standard'] not in standards:
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
+        self.module_uses = defaultdict(set)  # e.g.: use iso_c_binding, only: c_int
+
 
     @property
     def _lead(self):
@@ -108,7 +137,13 @@ class FCodePrinter(CodePrinter):
         return "! {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "parameter ({0} = {1})".format(name, value)
+        return "parameter ({0} = {1})".format(name, self._print(value))
+
+    def _print_NumberSymbol(self, expr):
+        # A Number symbol that is not implemented here or with _printmethod
+        # is registered and evaluated
+        self._number_symbols.add((expr, Float(expr.evalf(self._settings['precision']))))
+        return str(expr)
 
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
@@ -305,6 +340,39 @@ class FCodePrinter(CodePrinter):
         lhs, rhs = expr.args
         return ' /= '.join(map(self._print, (lhs, rhs)))
 
+    def _print_Type(self, type_):
+        type_ = self.type_aliases.get(type_, type_)
+        type_str = self.type_mappings.get(type_, type_.name)
+        module_uses = self.type_modules.get(type_)
+        if module_uses:
+            for k, v in module_uses:
+                self.module_uses[k].add(v)
+        return type_str
+
+    def _print_Declaration(self, expr):
+        var, val = expr.variable, expr.value
+        if isinstance(var, Pointer):
+            raise NotImplementedError("Pointers are not available by default in Fortran.")
+        if self._settings["standard"] >= 90:
+            result = '{t}{vc} :: {s}'.format(
+                t=self._print(var.type),
+                vc=', parameter' if var.value_const else '',
+                s=self._print(var.symbol)
+            )
+            if val is not None:
+                result += ' = %s' % self._print(val)
+        else:
+            if var.value_const or val:
+                raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
+            result = ' '.join(self._print(var.type), self._print(var.symbol))
+        return result
+
+    def _print_BooleanTrue(self, expr):
+        return '.true.'
+
+    def _print_BooleanFalse(self, expr):
+        return '.false.'
+
     def _pad_leading_columns(self, lines):
         result = []
         for line in lines:
@@ -450,7 +518,8 @@ def fcode(expr, assign_to=None, **settings):
         ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
         line-wrapping, or for expressions that generate multi-line statements.
     precision : integer, optional
-        The precision for numbers such as pi [default=15].
+        DEPRECATED. Use type_mappings instead. The precision for numbers such
+        as pi [default=17].
     user_functions : dict, optional
         A dictionary where keys are ``FunctionClass`` instances and values are
         their string representations. Alternatively, the dictionary value can

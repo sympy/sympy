@@ -59,7 +59,7 @@ class JuliaCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 16,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -243,14 +243,6 @@ class JuliaCodePrinter(CodePrinter):
         if self._settings["inline"]:
             return "golden"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
-
-
-    def _print_NumberSymbol(self, expr):
-        if self._settings["inline"]:
-            return self._print(expr.evalf(self._settings["precision"]))
-        else:
-            # assign to a variable, perhaps more readable for longer program
             return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
 
 

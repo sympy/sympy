@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
+from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
                    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
                    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
                    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
@@ -1065,6 +1065,14 @@ def test_extractions():
     assert ((x + x*y)/y).could_extract_minus_sign() is False
     assert (x*(-x - x**3)).could_extract_minus_sign() is True
     assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
+
+    class sign_invariant(Function, Expr):
+        nargs = 1
+        def __neg__(self):
+            return self
+    foo = sign_invariant(x)
+    assert foo == -foo
+    assert foo.could_extract_minus_sign() is False
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.

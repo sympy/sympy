@@ -455,6 +455,11 @@ def test_minimal_block():
 
     assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
 
+    P1 = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    P2 = PermutationGroup(Permutation(0, 1, 2, 3, 4, 5), Permutation(1, 5)(2, 4))
+    assert P1.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
+    assert P2.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
+
 
 def test_max_div():
     S = SymmetricGroup(10)
@@ -772,3 +777,17 @@ def test_generator_product():
     for g in gens:
         w = g*w
     assert w == p
+
+def test_presentation():
+    def _test(P):
+        G = P.presentation()
+        return G.order() == P.order()
+
+    P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6), Permutation(0,3,5,4)(1,6,2,7))
+    assert _test(P)
+
+    P = AlternatingGroup(5)
+    assert _test(P)
+
+    P = SymmetricGroup(5)
+    assert _test(P)

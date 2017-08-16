@@ -325,8 +325,11 @@ class BaseVector(Vector, AtomicExpr):
 
     """
 
-    def __new__(cls, name, index, system, pretty_str, latex_str):
-        name = str(name)
+    def __new__(cls, index, system, pretty_str=None, latex_str=None):
+        if pretty_str is None:
+            pretty_str = "x{0}".format(index)
+        if latex_str is None:
+            latex_str = "x_{0}".format(index)
         pretty_str = str(pretty_str)
         latex_str = str(latex_str)
         # Verify arguments
@@ -334,15 +337,14 @@ class BaseVector(Vector, AtomicExpr):
             raise ValueError("index must be 0, 1 or 2")
         if not isinstance(system, CoordSys3D):
             raise TypeError("system should be a CoordSys3D")
+        name = system._vector_names[index]
         # Initialize an object
-        obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
-                                             system, Symbol(pretty_str),
-                                             Symbol(latex_str))
+        obj = super(BaseVector, cls).__new__(cls, S(index), system)
         # Assign important attributes
         obj._base_instance = obj
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
-        obj._name = name
+        obj._name = system._name + '.' + name
         obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
@@ -426,7 +428,7 @@ class VectorZero(BasisDependentZero, Vector):
 
     _op_priority = 12.1
     _pretty_form = u'0'
-    _latex_form = '\mathbf{\hat{0}}'
+    _latex_form = r'\mathbf{\hat{0}}'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
