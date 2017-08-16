@@ -105,6 +105,7 @@ def combsimp(expr, as_gamma = None, as_binomial = True):
                 k = _k
 
         if count_ops(k) > count_ops(n - k):
+            rewrite = True
             k = n - k
 
         if rewrite:
@@ -469,7 +470,7 @@ def combsimp(expr, as_gamma = None, as_binomial = True):
         expr = factor(expr)
 
     expr = expr.replace(gamma,
-        lambda n: expand_func(gamma(n)) if n.is_number and n.is_rational else gamma(n))
+        lambda n: expand_func(gamma(n)) if n.is_Rational else gamma(n))
 
     if not as_gamma:
         expr = expr.rewrite(factorial)
@@ -480,21 +481,26 @@ def combsimp(expr, as_gamma = None, as_binomial = True):
             def f(rv):
                 n, d = rv.as_numer_denom()
 
-                if n.is_Mul:
-                    n_args = list(n.args)
-                    n_fact_args = [arg.args[0] for arg in n.args if isinstance(arg, factorial)]
-                    if not n_fact_args:
-                        return rv
-                elif isinstance(n, factorial):
-                    n_args = [n]
-                    n_fact_args = [n.args[0]]
-                else:
+                n_args = []
+                n_fact_args = []
+                if isinstance(n, (Mul, Pow, factorial)):
+                    for factor, exp in n.as_powers_dict().items():
+                        try:
+                            n_args.extend([factor]*exp)
+                            if isinstance(factor, factorial):
+                                n_fact_args.extend([factor.args[0]]*exp)
+                        except TypeError:
+                            n_args.append(factor**exp)
+                if not n_args or not n_fact_args:
                     return rv
 
-                if d.is_Mul:
-                    d_args = list(d.args)
-                elif isinstance(d, factorial):
-                    d_args = [n]
+                d_args = []
+                if isinstance(d, (Mul, Pow, factorial)):
+                    for factor, exp in d.as_powers_dict().items():
+                        try:
+                            d_args.extend([factor]*exp)
+                        except TypeError:
+                            n_args.append(factor**exp)
                 else:
                     return rv
 
