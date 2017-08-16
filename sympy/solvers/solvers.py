@@ -736,7 +736,7 @@ def solve(f, *symbols, **flags):
 
         >>> eq = x**3 + 3*x**2 + x - 1
         >>> solve(eq, cubics=False)
-        [-1, -1 + sqrt(2), -sqrt(2) - 1]
+        [-1, -sqrt(2) - 1, -1 + sqrt(2)]
 
     Solving equations involving radicals
     ------------------------------------

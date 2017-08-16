@@ -48,26 +48,26 @@ class AntiCommutator(Expr):
 
     Create an anticommutator and use ``doit()`` to multiply them out.
 
-    >>> ac = AntiCommutator(A,B); ac
-    {A,B}
+    >>> ac = AntiCommutator(B, A); ac
+    {B,A}
     >>> ac.doit()
     A*B + B*A
 
     The commutator orders it arguments in canonical order:
 
-    >>> ac = AntiCommutator(B,A); ac
-    {A,B}
+    >>> ac = AntiCommutator(A,B); ac
+    {B,A}
 
     Commutative constants are factored out:
 
     >>> AntiCommutator(3*x*A,x*y*B)
-    3*x**2*y*{A,B}
+    3*x**2*y*{B,A}
 
     Adjoint operations applied to the anticommutator are properly applied to
     the arguments:
 
     >>> Dagger(AntiCommutator(A,B))
-    {Dagger(A),Dagger(B)}
+    {Dagger(B),Dagger(A)}
 
     References
     ==========

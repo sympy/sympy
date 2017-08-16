@@ -600,7 +600,7 @@ Example:
     >>> print(a)
     [2, 1]
     >>> print(solve(x**2 + 2*x - 1, x)) # Some functions return lists
-    [-1 + sqrt(2), -sqrt(2) - 1]
+    [-sqrt(2) - 1, -1 + sqrt(2)]
 
 
 .. note::

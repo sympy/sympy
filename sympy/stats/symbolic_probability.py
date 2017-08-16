@@ -34,7 +34,7 @@ class Probability(Expr):
     Evaluation of the integral:
 
     >>> prob.evaluate_integral()
-    sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
+    (-sqrt(pi)*erf(sqrt(2)/2) + sqrt(pi))/(2*sqrt(pi))
     """
     def __new__(cls, prob, condition=None, **kwargs):
         prob = _sympify(prob)

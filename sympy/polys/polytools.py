@@ -6129,7 +6129,7 @@ def factor(f, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    2*(x + y)*(x**2 + 1)**2
+    2*(x**2 + 1)**2*(x + y)
 
     >>> factor(x**2 + 1)
     x**2 + 1
@@ -6144,7 +6144,7 @@ def factor(f, *gens, **args):
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
     (x - 1)*(x + 1)/(x + 2)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
-    (x + 2)**20000000*(x**2 + 1)
+    (x**2 + 1)*(x + 2)**20000000
 
     By default, factor deals with an expression as a whole:
 

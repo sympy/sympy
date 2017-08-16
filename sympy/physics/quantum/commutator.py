@@ -48,39 +48,39 @@ class Commutator(Expr):
 
     Create a commutator and use ``.doit()`` to evaluate it:
 
-    >>> comm = Commutator(A, B)
+    >>> comm = Commutator(B, A)
     >>> comm
-    [A,B]
+    [B,A]
     >>> comm.doit()
-    A*B - B*A
+    B*A - A*B
 
     The commutator orders it arguments in canonical order:
 
-    >>> comm = Commutator(B, A); comm
-    -[A,B]
+    >>> comm = Commutator(A, B); comm
+    -[B, A]
 
     Commutative constants are factored out:
 
     >>> Commutator(3*x*A, x*y*B)
-    3*x**2*y*[A,B]
+    -3*x**2*y*[B,A]
 
     Using ``.expand(commutator=True)``, the standard commutator expansion rules
     can be applied:
 
     >>> Commutator(A+B, C).expand(commutator=True)
-    [A,C] + [B,C]
+    -[C,A] - [C,B]
     >>> Commutator(A, B+C).expand(commutator=True)
-    [A,B] + [A,C]
+    -[B,A] - [C,A]
     >>> Commutator(A*B, C).expand(commutator=True)
-    [A,C]*B + A*[B,C]
+    -[C,A]*B - A*[C,B]
     >>> Commutator(A, B*C).expand(commutator=True)
-    [A,B]*C + B*[A,C]
+    -[B,A]*C - B*[C,A]
 
     Adjoint operations applied to the commutator are properly applied to the
     arguments:
 
     >>> Dagger(Commutator(A, B))
-    -[Dagger(A),Dagger(B)]
+    [Dagger(B),Dagger(A)]
 
     References
     ==========
