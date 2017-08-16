@@ -4383,7 +4383,7 @@ def _update_args(args, key, value):
 
 
 @public
-def degree(f, *gens, **args):
+def degree(f, gen=0):
     """
     Return the degree of ``f`` in the given variable.
 
@@ -4402,15 +4402,32 @@ def degree(f, *gens, **args):
     >>> degree(0, x)
     -oo
 
+    See also
+    ========
+    total_degree
+    degree_list
     """
-    options.allowed_flags(args, ['gen', 'polys'])
 
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed as exc:
-        raise ComputationFailed('degree', 1, exc)
+    f = sympify(f, strict=True)
+    if f.is_Poly:
+        p = f
+        isNum = p.as_expr().is_Number
+    else:
+        isNum = f.is_Number
+        if not isNum:
+            p, _ = poly_from_expr(f)
 
-    return sympify(F.degree(opt.gen))
+    if isNum:
+        return S.Zero if f else S.NegativeInfinity
+
+    if not sympify(gen, strict=True).is_Number:
+        if f.is_Poly and gen not in p.gens:
+            # try recast without explicit gens
+            p, _ = poly_from_expr(f.as_expr())
+        if gen not in p.gens:
+            return S.Zero
+
+    return Integer(p.degree(gen))
 
 
 @public
