@@ -14,6 +14,9 @@ def test_decompogen():
     assert decompogen(Abs(cos(x)**2 + 3*cos(x) - 4), x) == [Abs(x), x**2 + 3*x - 4, cos(x)]
     assert decompogen(sin(x)**2 + sin(x) - sqrt(3)/2, x) == [x**2 + x - sqrt(3)/2, sin(x)]
     assert decompogen(Abs(cos(y)**2 + 3*cos(x) - 4), x) == [Abs(x), 3*x + cos(y)**2 - 4, cos(x)]
+    assert decompogen(2**x, x) == [2**x]
+    assert decompogen(2**x + 10, x) == [x + 10, 2**x]
+    assert decompogen(2**(x+3) + 4, x) == [8*x + 4, 2**x]
 
 
 def test_decompogen_poly():
