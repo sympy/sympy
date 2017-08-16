@@ -1,7 +1,7 @@
 from sympy import (
     symbols, powsimp, symbols, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
     S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
-    Rational)
+    Rational, oo)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -102,7 +102,7 @@ def test_powsimp():
     assert powsimp(-0.1**x) == -0.1**x
 
     # issue 10095
-    assert powsimp((1/(2*E))**oo) == 0
+    assert powsimp((1/(2*E))**oo) == (exp(-1)/2)**oo
 
 
 def test_powsimp_negated_base():
