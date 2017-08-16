@@ -117,7 +117,7 @@ class CosetTable(DefaultPrinting):
         `\alpha \in \Omega` and `x \in A`.
 
         """
-        return not any([None in self.table[coset] for coset in self.omega])
+        return not any(None in self.table[coset] for coset in self.omega)
 
     # Pg. 153 [1]
     def define(self, alpha, x):

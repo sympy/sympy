@@ -167,7 +167,8 @@ class FpGroup(DefaultPrinting):
         self._coset_table.standardize()
         self._is_standardized = True
 
-    def coset_table(self, H, strategy="relator_based"):
+    def coset_table(self, H, strategy="relator_based", max_cosets=None,
+                                                 draft=None, incomplete=False):
         """
         Return the mathematical coset table of ``self`` in ``H``.
 
@@ -177,12 +178,14 @@ class FpGroup(DefaultPrinting):
                 if not self._is_standardized:
                     self.standardize_coset_table()
             else:
-                C = self.coset_enumeration([], strategy)
+                C = self.coset_enumeration([], strategy, max_cosets=max_cosets,
+                                            draft=draft, incomplete=incomplete)
                 self._coset_table = C
                 self.standardize_coset_table()
             return self._coset_table.table
         else:
-            C = self.coset_enumeration(H, strategy)
+            C = self.coset_enumeration(H, strategy, max_cosets=max_cosets,
+                                            draft=draft, incomplete=incomplete)
             C.standardize()
             return C.table
 
@@ -270,22 +273,25 @@ class FpGroup(DefaultPrinting):
         mid = (len(s)+1)//2
         half1 = s[:mid]
         half2 = s[mid:]
+        draft1 = None
+        draft2 = None
         m = 200
         C = None
         while not C and (m/2 < CosetTable.coset_table_max_limit):
             m = min(m, CosetTable.coset_table_max_limit)
-            try:
-                C = self.coset_enumeration(half1, max_cosets=m)
+            draft1 = self.coset_enumeration(half1, max_cosets=m,
+                                 draft=draft1, incomplete=True)
+            if draft1.is_complete():
+                C = draft1
                 half = half1
-            except ValueError:
-                pass
-            if not C:
-                try:
-                    C = self.coset_enumeration(half2, max_cosets=m)
+            else:
+                draft2 = self.coset_enumeration(half2, max_cosets=m,
+                                 draft=draft2, incomplete=True)
+                if draft2.is_complete():
+                    C = draft2
                     half = half2
-                except ValueError:
-                    m *= 2
-                    continue
+            if not C:
+                m *= 2
         if not C:
             return None, None
         C.compress()
