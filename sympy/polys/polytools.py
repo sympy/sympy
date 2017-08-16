@@ -4408,7 +4408,7 @@ def degree(f, gen=0):
     degree_list
     """
 
-    f = sympyify(f, strict=True)
+    f = sympify(f, strict=True)
     if f.is_Poly:
         p = f
         isNum = p.as_expr().is_Number
