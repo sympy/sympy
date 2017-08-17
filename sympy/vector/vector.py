@@ -1,5 +1,5 @@
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, Symbol, sympify
+from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.compatibility import range
 from sympy.matrices import det
@@ -488,8 +488,6 @@ class Dot(Expr):
     """
 
     def __new__(cls, expr1, expr2):
-        if not (isinstance(expr1, Vector) and isinstance(expr2, Vector)):
-            raise ValueError('Arguments must be the vectors.')
         expr1 = sympify(expr1)
         expr2 = sympify(expr2)
         obj = Expr.__new__(cls, expr1, expr2)
