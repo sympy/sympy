@@ -489,6 +489,9 @@ def test_Rational():
     assert str(sqrt(-4)) == str(2*I)
     assert str(2**Rational(1, 10**10)) == "2**(1/10000000000)"
 
+    assert sstr(Rational(2, 3), sympy_integers=True) == "S(2)/3"
+    assert sstr(Symbol("x")**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+
 
 def test_Float():
     # NOTE dps is the whole number of decimal digits
