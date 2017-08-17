@@ -810,6 +810,24 @@ def test_sylow_subgroup():
     S = P.sylow_subgroup(5)
     assert S.order() == 25
 
+    # the length of the lower central series
+    # of a p-Sylow subgroup of Sym(n) grows with
+    # the highest exponent exp of p such
+    # that n >= p**exp
+    exp = 1
+    length = 0
+    for i in range(2, 9):
+        P = SymmetricGroup(i)
+        S = P.sylow_subgroup(2)
+        ls = S.lower_central_series()
+        if i // 2**exp > 0:
+            # length increases with exponent
+            assert len(ls) > length
+            length = len(ls)
+            exp += 1
+        else:
+            assert len(ls) == length
+
 def test_presentation():
     def _test(P):
         G = P.presentation()
