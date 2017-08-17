@@ -259,13 +259,16 @@ def divergence(vect, coord_sys=None, doit=True):
         return res
     else:
         if isinstance(vect, (Add, VectorAdd)):
-            return Add.fromiter(divergence(i) for i in vect.args)
+            return Add.fromiter(divergence(i, doit=doit) for i in vect.args)
         elif isinstance(vect, (Mul, VectorMul)):
             vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
             scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
-            res = Dot(vector, gradient(scalar)) + scalar*divergence(vector)
+            res = Dot(vector, gradient(scalar)) + scalar*divergence(vector, doit=doit)
             if doit:
-                return res.doit()
+                try:
+                    return res.doit()
+                except:
+                    return res
             return res
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Divergence(vect)

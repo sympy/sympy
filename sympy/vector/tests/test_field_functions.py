@@ -280,9 +280,10 @@ def test_mixed_coordinates():
     # divergence
     assert divergence(a.i*a.x+a.j*a.y+a.z*a.k + b.i*b.x+b.j*b.y+b.z*b.k + c.i*c.x+c.j*c.y+c.z*c.k) == S(9)
     # assert divergence(3*a.i*a.x*cos(a.x+b.z) + a.j*b.x*c.z) == None
-    assert divergence(3*a.i*a.x*a.z + b.j*b.x*c.z + 3*a.j*a.z*a.y) == 6*a.z + Dot(b.j, c.z*b.i + b.x*c.k)
-    assert divergence(3*cos(q)*a.x*b.x*b.i*c.x)\
-           == Dot(b.i, (3*b.x*c.x*cos(q))*a.i + (3*a.x*c.x*cos(q))*b.i + (3*a.x*b.x*cos(q))*c.i)
+    assert divergence(3*a.i*a.x*a.z + b.j*b.x*c.z + 3*a.j*a.z*a.y) == \
+            6*a.z + Dot(b.j, c.z*b.i + b.x*c.k)
+    assert divergence(3*cos(q)*a.x*b.x*b.i*c.x) == \
+            Dot(b.i, (3*b.x*c.x*cos(q))*a.i + (3*a.x*c.x*cos(q))*b.i + (3*a.x*b.x*cos(q))*c.i)
     assert divergence(a.x*b.x*c.x*Cross(a.x*a.i, a.y*b.j)) ==\
            a.x*b.x*c.x*Divergence(Cross(a.x*a.i, a.y*b.j)) + \
            Dot(Cross(a.x*a.i, a.y*b.j), b.x*c.x*a.i + a.x*c.x*b.i + a.x*b.x*c.i)
