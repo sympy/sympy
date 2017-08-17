@@ -1,5 +1,5 @@
 from sympy.core import Function, Pow, sympify
-from sympy.polys import Poly, decompose
+from sympy.polys import Poly, decompose, GeneratorsNeeded
 
 
 def decompogen(f, symbol):
@@ -46,7 +46,7 @@ def decompogen(f, symbol):
     # ===== Convert to Polynomial ===== #
     try:
         fp = Poly(f)
-    except:
+    except GeneratorsNeeded:
         return None
     gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
     if len(gens) == 1 and gens[0] != symbol:
