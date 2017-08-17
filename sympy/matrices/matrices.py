@@ -15,6 +15,7 @@ from sympy.core.compatibility import is_sequence, default_sort_key, range, \
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.decorator import doctest_depends_on
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import Abs, exp, factorial
 from sympy.printing import sstr
@@ -36,6 +37,7 @@ def _iszero(x):
         return None
 
 
+@doctest_depends_on(modules=('numpy',))
 class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
 
