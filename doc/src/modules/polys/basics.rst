@@ -91,11 +91,10 @@ excluded, in which case they are adjoined to the coefficient ring::
     >>> e.as_poly()
     Poly(x*y + 2*y*pi, x, y, pi, domain='ZZ')
     >>> e.as_poly(x, y)
-    Poly(x*y + 2*pi*y, x, y, domain='EX')
+    Poly(x*y + 2*pi*y, x, y, domain='ZZ[pi]')
 
-Here ``EX`` denotes the domain of all expressions. Since operations
-in ``EX`` are slow, it is often advisable to define the coefficient
-ring explicitly::
+Alternatively, the coefficient domain can be specified by means of
+a keyword argument::
 
     >>> e = (x + 2*pi)*y
     >>> e.as_poly(domain=ZZ[pi])
@@ -242,7 +241,7 @@ each nonzero element of the domain and having the following property:
 
         `a = qb + r`
 
-    and such that either `r = 0` or `w(r) < w(b)`.
+    such that either `r = 0` or `w(r) < w(b)`.
 
 
 The ring of integers and all univariate polynomial rings over fields
