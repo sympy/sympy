@@ -66,6 +66,7 @@ def heuristics(e, z, z0, dir):
                     if isinstance(m, Mul):
                         return heuristics(m, z, z0, dir)
                     return
+                return
             elif isinstance(l, Limit):
                 return
             elif l is S.NaN:
