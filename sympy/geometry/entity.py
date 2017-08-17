@@ -100,7 +100,7 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def __getnewargs__(self):
-        """Returns a Tuple that will be passed to __new__ on unpickling."""
+        """Returns a tuple that will be passed to __new__ on unpickling."""
         return tuple(self.args)
 
     def __ne__(self, o):
