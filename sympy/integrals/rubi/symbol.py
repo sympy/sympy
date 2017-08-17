@@ -6,7 +6,8 @@ if matchpy:
     from matchpy import Wildcard
 else:
     class Wildcard(object):
-        pass
+        def __init__(self, min_length, fixed_size, variable_name, optional):
+            pass
 
 from sympy import Symbol
 
