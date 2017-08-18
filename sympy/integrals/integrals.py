@@ -21,6 +21,7 @@ from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
 from sympy.functions import Piecewise, sqrt, sign
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
@@ -399,16 +400,45 @@ class Integral(AddWithLimits):
         if function.is_zero:
             return S.Zero
 
+        # Any embedded piecewise functions need to be brought out to the
+        # top level. If there are any Piecewise arguments that shouldn't
+        # be modified they need to be masked off here. Another way to do
+        # this would be to give objects an _eval_piecewise_fold method
+        # so they can decide how they should fold
+        reps = {}
+
+        # SeqFormuula
+        from sympy.series.sequences import SeqFormula
+        for i in function.atoms(SeqFormula):
+            if i.atoms(Piecewise):
+                reps[i] = Dummy()
+
+        # others go here
+        # ...
+
+        # do the replacements
+        function = function.xreplace(reps)
+        # do the fold
+        function = piecewise_fold(function)
+        # undo the reps
+        function = function.xreplace({v:k for k, v in reps.items()})
+
+        # hacks to handle special cases
         if isinstance(function, MatrixBase):
-            return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
+            return function.applyfunc(
+                lambda f: self.func(f, self.limits).doit(**hints))
 
         if isinstance(function, FormalPowerSeries):
-            if any(len(xab) > 1 for xab in self.limits):
-                return function.integrate(self.limits[0])
+            if len(self.limits) > 1:
+                raise NotImplementedError
+            xab = self.limits[0]
+            if len(xab) > 1:
+                return function.integrate(xab)
             else:
-                return function.integrate(self.limits[0][0])
+                return function.integrate(xab[0])
 
-        # There is no trivial answer, so continue
+        # There is no trivial answer, folding and special handling
+        # are done so continue
 
         undone_limits = []
         # ulj = free symbols of any undone limits' upper and lower limits
