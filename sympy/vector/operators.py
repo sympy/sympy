@@ -1,12 +1,22 @@
 import collections
 from sympy.core.expr import Expr
-from sympy.core import sympify, S
+from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector, VectorMul, VectorAdd
+from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot, dot
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
 from sympy import Add, Mul
+
+
+def _get_coord_systems(expr):
+    g = preorder_traversal(expr)
+    ret = set([])
+    for i in g:
+        if isinstance(i, CoordSys3D):
+            ret.add(i)
+            g.skip()
+    return frozenset(ret)
 
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):
@@ -22,16 +32,13 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
             issue=12884,
         ).warn()
 
-    try:
-        return expr.atoms(CoordSys3D)
-    except:
-        return set([])
+    return _get_coord_systems(expr)
 
 
 def _split_mul_args_wrt_coordsys(expr):
     d = collections.defaultdict(lambda: S.One)
     for i in expr.args:
-        d[frozenset(i.atoms(CoordSys3D))] *= i
+        d[_get_coord_systems(i)] *= i
     return list(d.values())
 
 
@@ -149,7 +156,7 @@ def curl(vect, coord_sys=None, doit=True):
     if len(coord_sys) == 0:
         return Vector.zero
     elif len(coord_sys) == 1:
-        coord_sys = coord_sys.pop()
+        coord_sys = next(iter(coord_sys))
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
@@ -169,7 +176,7 @@ def curl(vect, coord_sys=None, doit=True):
         return outvec
     else:
         # TODO: use some of the vector calculus properties for this:
-        coord_sys = coord_sys.pop()  # get one random coord_sys
+        coord_sys = next(iter(coord_sys))  # get one random coord_sys
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
@@ -228,13 +235,15 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
+    # TODO: Remove this line when warning from issue #12884 will be removed
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
-
     if len(coord_sys) == 0:
         return S.Zero
-    else:
+    elif len(coord_sys) == 1:
+        if isinstance(vect, (Cross, Curl, Gradient)):
+            return Divergence(vect)
         # TODO: is case of many coord systems, this gets a random one:
-        coord_sys = coord_sys.pop()
+        coord_sys = next(iter(coord_sys))
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
         h1, h2, h3 = coord_sys.lame_coefficients()
@@ -244,9 +253,27 @@ def divergence(vect, coord_sys=None, doit=True):
              / (h1 * h2 * h3)
         vz = _diff_conditional(vect.dot(k), z, h1, h2) \
              / (h1 * h2 * h3)
+        res = vx + vy + vz
         if doit:
-            return (vx + vy + vz).doit()
-        return vx + vy + vz
+            return res.doit()
+        return res
+    else:
+        if isinstance(vect, (Add, VectorAdd)):
+            return Add.fromiter(divergence(i, doit=doit) for i in vect.args)
+        elif isinstance(vect, (Mul, VectorMul)):
+            vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
+            scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
+            res = Dot(vector, gradient(scalar)) + scalar*divergence(vector, doit=doit)
+            if doit:
+                try:
+                    return res.doit()
+                except:
+                    return res
+            return res
+        elif isinstance(vect, (Cross, Curl, Gradient)):
+            return Divergence(vect)
+        else:
+            raise Divergence(vect)
 
 
 def gradient(scalar_field, coord_sys=None, doit=True):
@@ -287,7 +314,7 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     if len(coord_sys) == 0:
         return Vector.zero
     elif len(coord_sys) == 1:
-        coord_sys = coord_sys.pop()
+        coord_sys = next(iter(coord_sys))
         h1, h2, h3 = coord_sys.lame_coefficients()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()

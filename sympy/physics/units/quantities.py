@@ -114,10 +114,12 @@ class Quantity(AtomicExpr):
             return dim
         elif isinstance(expr, Function):
             args = [Quantity.get_dimensional_expr(arg) for arg in expr.args]
+            if all(i == 1 for i in args):
+                return S.One
             return expr.func(*args)
         elif isinstance(expr, Quantity):
             return expr.dimension.name
-        return 1
+        return S.One
 
     @staticmethod
     def _collect_factor_and_dimension(expr):

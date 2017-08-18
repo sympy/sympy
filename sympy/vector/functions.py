@@ -157,7 +157,7 @@ def directional_derivative(field, direction_vector):
     coord_sys = _get_coord_sys_from_expr(field)
     if len(coord_sys) > 0:
         # TODO: This gets a random coordinate system in case of multiple ones:
-        coord_sys = coord_sys.pop()
+        coord_sys = next(iter(coord_sys))
         field = express(field, coord_sys, variables=True)
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()

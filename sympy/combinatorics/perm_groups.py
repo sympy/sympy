@@ -3669,6 +3669,8 @@ class PermutationGroup(Basic):
         ========
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+
         >>> D = DihedralGroup(6)
         >>> S = D.sylow_subgroup(2)
         >>> S.order()
@@ -3677,6 +3679,23 @@ class PermutationGroup(Basic):
         >>> S = G.sylow_subgroup(5)
         >>> S.order()
         5
+
+        >>> G1 = AlternatingGroup(3)
+        >>> G2 = AlternatingGroup(5)
+        >>> G3 = AlternatingGroup(9)
+
+        >>> S1 = G1.sylow_subgroup(3)
+        >>> S2 = G2.sylow_subgroup(3)
+        >>> S3 = G3.sylow_subgroup(3)
+
+        >>> len1 = len(S1.lower_central_series())
+        >>> len2 = len(S2.lower_central_series())
+        >>> len3 = len(S3.lower_central_series())
+
+        >>> len1 == len2
+        True
+        >>> len1 < len3
+        True
 
         '''
         from sympy.combinatorics.homomorphisms import (homomorphism,
