@@ -90,7 +90,6 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
-        from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
@@ -137,10 +136,6 @@ class Add(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
-                continue
-
-            elif isinstance(o, AccumBounds):
-                coeff = o.__add__(coeff)
                 continue
 
             elif isinstance(o, MatrixExpr):

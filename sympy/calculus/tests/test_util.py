@@ -309,3 +309,18 @@ def test_contains_AccumBounds():
     raises(TypeError, lambda: a in AccumBounds(1, 2))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true
+
+def test_AccumBounds_postprocessor():
+    assert Mul(0, AccumBounds(-1, 1)) == Mul(AccumBounds(-1, 1), 0) == 0
+    assert Mul(2, AccumBounds(-1, 1)) == Mul(AccumBounds(-1, 1), 2) == AccumBounds(-2, 2)
+    assert Mul(AccumBounds(-1, 1), 2, AccumBounds(-2, 0)) == \
+           Mul(2, AccumBounds(-1, 1), AccumBounds(-2, 0)) == \
+           Mul(AccumBounds(-1, 1), AccumBounds(-2, 0), 2) == \
+           AccumBounds(-4, 4)
+
+    assert Add(0, AccumBounds(-1, 1)) == Add(AccumBounds(-1, 1), 0) == AccumBounds(-1, 1)
+    assert Add(2, AccumBounds(-1, 1)) == Add(AccumBounds(-1, 1), 2) == AccumBounds(1, 3)
+    assert Add(AccumBounds(-1, 1), 2, AccumBounds(-2, 0)) == \
+           Add(2, AccumBounds(-1, 1), AccumBounds(-2, 0)) == \
+           Add(AccumBounds(-1, 1), AccumBounds(-2, 0), 2) == \
+           AccumBounds(-1, 3)

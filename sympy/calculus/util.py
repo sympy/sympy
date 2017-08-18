@@ -750,6 +750,7 @@ class AccumulationBounds(AtomicExpr):
     def __rsub__(self, other):
         return self.__neg__() + other
 
+
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Expr):
@@ -1222,6 +1223,33 @@ class AccumulationBounds(AtomicExpr):
         if other.min <= self.min and other.max >= self.min:
             return AccumBounds(other.min, Max(self.max, other.max))
 
+
+def _AccumulationBounds_constroctor_postprocessor_Mul(expr):
+    res = S(1)
+    non_accum_args = []
+    for arg in expr.args:
+        if isinstance(arg, AccumulationBounds):
+            # Call AccumulationBounds.__mul__
+            res = res*arg
+        else:
+            non_accum_args.append(arg)
+    return res*Mul.fromiter(non_accum_args)
+
+def _AccumulationBounds_constroctor_postprocessor_Add(expr):
+    res = S(0)
+    non_accum_args = []
+    for arg in expr.args:
+        if isinstance(arg, AccumulationBounds):
+            # Call AccumulationBounds.__add__
+            res = res + arg
+        else:
+            non_accum_args.append(arg)
+    return res + Add.fromiter(non_accum_args)
+
+Basic._constructor_postprocessor_mapping[AccumulationBounds] = {
+    "Mul": [_AccumulationBounds_constroctor_postprocessor_Mul],
+    "Add": [_AccumulationBounds_constroctor_postprocessor_Add],
+}
 
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds

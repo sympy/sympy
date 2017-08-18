@@ -172,7 +172,6 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
-        from sympy.calculus.util import AccumBounds
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -269,9 +268,6 @@ class Mul(Expr, AssocOp):
                         return [S.NaN], [], None
                 continue
 
-            elif isinstance(o, AccumBounds):
-                coeff = o.__mul__(coeff)
-                continue
 
             elif o is S.ComplexInfinity:
                 if not coeff:
