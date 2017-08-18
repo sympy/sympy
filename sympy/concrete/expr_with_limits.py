@@ -10,7 +10,6 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 from sympy.matrices import Matrix
@@ -75,16 +74,12 @@ class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
         function = sympify(function)
         if hasattr(function, 'func') and function.func is Equality:
             lhs = function.lhs
             rhs = function.rhs
             return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
-        function = piecewise_fold(function)
 
         if function is S.NaN:
             return S.NaN
@@ -347,10 +342,6 @@ class AddWithLimits(ExprWithLimits):
     """
 
     def __new__(cls, function, *symbols, **assumptions):
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        #
         # This constructor only differs from ExprWithLimits
         # in the application of the orientation variable.  Perhaps merge?
         function = sympify(function)
@@ -359,7 +350,6 @@ class AddWithLimits(ExprWithLimits):
             rhs = function.rhs
             return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
-        function = piecewise_fold(function)
 
         if function is S.NaN:
             return S.NaN

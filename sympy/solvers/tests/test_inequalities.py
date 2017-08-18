@@ -412,6 +412,7 @@ def test__solve_inequality():
     assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)
     assert _solve_inequality(x*nz < 1, x) == (x*nz < 1)
     a = Symbol('a', positive=True)
+    assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)
     assert _solve_inequality(a/x > 1, x, linear=True) == (1/x > 1/a)
     # make sure to include conditions under which solution is valid
     e = Eq(1 - x, x*(1/x - 1))
