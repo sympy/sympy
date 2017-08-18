@@ -3592,17 +3592,14 @@ class PermutationGroup(Basic):
         the subgroup they generate is p-Sylow.
 
         Alternating groups are treated the same except when p=2. In this
-        case, the p-Sylow subgroup corresponding to the first part should
-        have (0 1)(2 3) instead of (0 1) as a generator, and (0 1)(s s+1)
-        should be added for an appropriate s (the start of a part) for each
-        part in the partition.
+        case, (0 1)(s s+1) should be added for an appropriate s (the start
+        of a part) for each part in the partitions.
 
         See Also
         ========
         sylow_subgroup, is_alt_sym
 
         '''
-        from sympy.combinatorics.named_groups import SymmetricGroup
         n = self.degree
         gens = []
         identity = Permutation(n-1)
@@ -3619,9 +3616,9 @@ class PermutationGroup(Basic):
 
         power = len(coeffs)-1
         # gens[:i] is the generating set for a p-Sylow
-        # subgroup on [0..p**i-1]
+        # subgroup on [0..p**(i-1)-1]
         for i in range(1, power+1):
-            gen = Permutation([(j + p**(i-1)) % p**i for j in range(p**i)]) 
+            gen = Permutation([(j + p**(i-1)) % p**i for j in range(p**i)])
             if alt and gen == Permutation(0, 1):
                 # (0 1) shouldn't be added for alternating groups
                 continue
@@ -3635,7 +3632,7 @@ class PermutationGroup(Basic):
             a = coeffs[power]
 
             # make the permutation shifting the start of the first
-            # part ([0..p^i] for some i) to the current one
+            # part ([0..p^i-1] for some i) to the current one
             for s in range(a):
                 shift = Permutation()
                 if start > 0:

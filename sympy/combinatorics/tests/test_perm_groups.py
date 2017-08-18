@@ -828,6 +828,11 @@ def test_sylow_subgroup():
         else:
             assert len(ls) == length
 
+    G = SymmetricGroup(100)
+    S = G.sylow_subgroup(3)
+    assert G.order() % S.order() == 0
+    assert G.order()/S.order() % 3 > 0
+
 def test_presentation():
     def _test(P):
         G = P.presentation()
