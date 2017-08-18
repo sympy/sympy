@@ -19,7 +19,7 @@ While looking for the method, it follows these steps:
 
 1. **Let the object print itself if it knows how.**
 
-    The printers looks for a specific method in every object. The name of that method
+    The printers look for a specific method in every object. The name of that method
     depends on the specific printer and is defined under ``Printer.printmethod``.
     For example, StrPrinter calls ``_sympystr`` and LatexPrinter calls ``_latex``.
     Look at the documentation of the printer that you want to use.
@@ -75,8 +75,10 @@ Example of Custom Printer
 
 .. _printer_example:
 
-In the example below, we have a printer which prints derivative of a function
-in a shorter form. See the code below::
+In the example below, we have a printer which prints the derivative of a function
+in a shorter form.
+
+.. code-block:: python
 
     from sympy import Symbol
     from sympy.printing.latex import LatexPrinter, print_latex
@@ -99,7 +101,7 @@ in a shorter form. See the code below::
 
     def print_my_latex(expr):
         \"\"\" Most of the printers define their own wrappers for print().
-        These wrappers usually takes printer settings. Our printer does not have
+        These wrappers usually take printer settings. Our printer does not have
         any settings.
         \"\"\"
         print(MyLatexPrinter().doprint(expr))
@@ -123,9 +125,10 @@ The output of the code above is::
 Example of Custom Printing Method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this example below, we want to print modulo operator in a different way in
-latex. Therefore, we override the method ``_latex`` of ``Mod``. See the example
-below::
+In the example below, the latex printing of the modulo operator is modified.
+This is done by overriding the method ``_latex`` of ``Mod``.
+
+.. code-block:: python
 
     from sympy import Symbol, Mod
     from sympy.printing.latex import print_latex
