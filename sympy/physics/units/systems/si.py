@@ -7,7 +7,7 @@ Added kelvin, candela and mole.
 
 Example:
 
-    >>> from sympy.physics.units.systems.SI import SI
+    >>> from sympy.physics.units.systems.si import SI
     >>> from sympy.physics.units import avogadro, boltzmann, lux
     >>> SI.print_unit_base(avogadro)
     6.022140857e+23/mole
