@@ -117,14 +117,16 @@ class Vector(BasisDependent):
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):
             return S(0)
 
-        v1 = express(self, other._sys)
-        v2 = express(other, other._sys)
-        dotproduct = S(0)
-        for x in other._sys.base_vectors():
-            dotproduct += (v1.components.get(x, 0) *
-                           v2.components.get(x, 0))
-
-        return dotproduct
+        try:
+            v1 = express(self, other._sys)
+            v2 = express(other, other._sys)
+            dotproduct = S(0)
+            for x in other._sys.base_vectors():
+                dotproduct += (v1.components.get(x, 0) *
+                               v2.components.get(x, 0))
+            return dotproduct
+        except:
+            return Dot(self, other)
 
     def __and__(self, other):
         return self.dot(other)
