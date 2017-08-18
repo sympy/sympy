@@ -198,7 +198,7 @@ invertible and there are no irreducible elements.
 Factorial domains
 `````````````````
 In the ring of integers, each nonzero element can be represented as
-a product irreducible elements and optionally a unit `\pm 1`. Moreover,
+a product of irreducible elements and optionally a unit `\pm 1`. Moreover,
 any two such products have the same number of irreducible factors
 which are associated with each other in a suitable order.
 Integral domains having this property are called *factorial*,
@@ -212,7 +212,7 @@ A family of integers has only a finite number of common divisors
 and the greatest of them is divisible by all of them. More generally,
 given a family of nonzero elements `(a_i)` in an integral domain,
 a common divisor `d` of the elements is is called a *greatest common
-divisor*, abbreviated *gcd*, of the the family if it is a multiple
+divisor*, abbreviated *gcd*, of the family if it is a multiple
 of all common divisors.
 A greatest common divisor, if it exists, is not unique in general;
 all of its associates have the same property. It is denoted by
