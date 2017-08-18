@@ -535,9 +535,10 @@ def dot(vect1, vect2):
     R.x + R.y + R.z
 
     """
-    if not (isinstance(vect1, Vector) and isinstance(vect2, Vector)):
-        raise ValueError('Arguments must be the vectors.')
-    return Vector.dot(vect1, vect2)
+    try:
+        return Vector.dot(vect1, vect2)
+    except:
+        return Dot(vect1, vect2)
 
 
 def _vect_div(one, other):

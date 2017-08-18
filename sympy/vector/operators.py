@@ -24,6 +24,8 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
     expr : expression
         The coordinate system is extracted from this parameter.
     """
+
+    # TODO: Remove this line when warning from issue #12884 will be removed
     if coord_sys is not None:
         SymPyDeprecationWarning(
             feature="coord_sys parameter",
@@ -176,16 +178,19 @@ def curl(vect, coord_sys=None, doit=True):
         return outvec
     else:
         if isinstance(vect, (Add, VectorAdd)):
-            return Add.fromiter(curl(i, doit=doit) for i in vect.args)
+            from sympy.vector import express
+            try:
+                cs = next(iter(coord_sys))
+                args = [express(i, cs, variables=True) for i in vect.args]
+            except ValueError:
+                args = vect.args
+            return VectorAdd.fromiter(curl(i, doit=doit) for i in args)
         elif isinstance(vect, (Mul, VectorMul)):
             vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
             scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
-            res = Cross(gradient(scalar), vector) + Add.fromiter(scalar*i for i in curl(vector, doit=doit).args)
+            res = Cross(gradient(scalar), vector).doit() + scalar*curl(vector, doit=doit)
             if doit:
-                try:
-                    return res.doit()
-                except:
-                    return res
+                return res.doit()
             return res
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Curl(vect)
@@ -227,7 +232,6 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
-    # TODO: Remove this line when warning from issue #12884 will be removed
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
     if len(coord_sys) == 0:
         return S.Zero
@@ -257,10 +261,7 @@ def divergence(vect, coord_sys=None, doit=True):
             scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
             res = Dot(vector, gradient(scalar)) + scalar*divergence(vector, doit=doit)
             if doit:
-                try:
-                    return res.doit()
-                except:
-                    return res
+                return res.doit()
             return res
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Divergence(vect)
