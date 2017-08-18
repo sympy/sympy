@@ -993,7 +993,6 @@ class Line(LinearEntity):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point
     >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
@@ -1178,7 +1177,6 @@ class Ray(LinearEntity):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point, pi
     >>> from sympy.geometry import Ray
     >>> r = Ray(Point(2, 3), Point(3, 5))
@@ -1348,7 +1346,7 @@ class Ray(LinearEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Ray, pi
+        >>> from sympy import Ray, pi
         >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
         [t, 0, 10]
@@ -1414,7 +1412,6 @@ class Segment(LinearEntity):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
@@ -1791,7 +1788,6 @@ class Line2D(LinearEntity2D, Line):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point
     >>> from sympy.abc import L
     >>> from sympy.geometry import Line, Segment
@@ -1974,7 +1970,6 @@ class Ray2D(LinearEntity2D, Ray):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point, pi
     >>> from sympy.geometry import Ray
     >>> r = Ray(Point(2, 3), Point(3, 5))
@@ -2168,7 +2163,6 @@ class Segment2D(LinearEntity2D, Segment):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
@@ -2320,7 +2314,6 @@ class Line3D(LinearEntity3D, Line):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point3D
     >>> from sympy.geometry import Line3D, Segment3D
     >>> L = Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
@@ -2412,8 +2405,7 @@ class Ray3D(LinearEntity3D, Ray):
     Examples
     ========
 
-    >>> import sympy
-    >>> from sympy import Point3D, pi
+    >>> from sympy import Point3D
     >>> from sympy.geometry import Ray3D
     >>> r = Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r
@@ -2570,7 +2562,6 @@ class Segment3D(LinearEntity3D, Segment):
     Examples
     ========
 
-    >>> import sympy
     >>> from sympy import Point3D
     >>> from sympy.geometry import Segment3D
     >>> Segment3D((1, 0, 0), (1, 1, 1)) # tuples are interpreted as pts
