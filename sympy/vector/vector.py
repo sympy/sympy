@@ -454,8 +454,6 @@ class Cross(Expr):
     """
 
     def __new__(cls, expr1, expr2):
-        if not (isinstance(expr1, Vector) and isinstance(expr2, Vector)):
-            raise ValueError('Arguments must be the vectors.')
         expr1 = sympify(expr1)
         expr2 = sympify(expr2)
         obj = Expr.__new__(cls, expr1, expr2)
