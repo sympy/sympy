@@ -175,30 +175,22 @@ def curl(vect, coord_sys=None, doit=True):
             return outvec.doit()
         return outvec
     else:
-        # TODO: use some of the vector calculus properties for this:
-        coord_sys = next(iter(coord_sys))  # get one random coord_sys
-        i, j, k = coord_sys.base_vectors()
-        x, y, z = coord_sys.base_scalars()
-        h1, h2, h3 = coord_sys.lame_coefficients()
-
-        from .functions import express
-        vectx = express(vect.dot(i), coord_sys, variables=True)
-        vecty = express(vect.dot(j), coord_sys, variables=True)
-        vectz = express(vect.dot(k), coord_sys, variables=True)
-
-        # This is a repetition of previous code, it will be removed as soon as
-        # we have some better algorithm to deal with this case:
-        outvec = Vector.zero
-        outvec += (Derivative(vectz * h3, y) -
-                   Derivative(vecty * h2, z)) * i / (h2 * h3)
-        outvec += (Derivative(vectx * h1, z) -
-                   Derivative(vectz * h3, x)) * j / (h1 * h3)
-        outvec += (Derivative(vecty * h2, x) -
-                   Derivative(vectx * h1, y)) * k / (h2 * h1)
-
-        if doit:
-            return outvec.doit()
-        return outvec
+        if isinstance(vect, (Add, VectorAdd)):
+            return Add.fromiter(curl(i, doit=doit) for i in vect.args)
+        elif isinstance(vect, (Mul, VectorMul)):
+            vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
+            scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
+            res = Cross(gradient(scalar), vector) + Add.fromiter(scalar*i for i in curl(vector, doit=doit).args)
+            if doit:
+                try:
+                    return res.doit()
+                except:
+                    return res
+            return res
+        elif isinstance(vect, (Cross, Curl, Gradient)):
+            return Curl(vect)
+        else:
+            raise Curl(vect)
 
 
 def divergence(vect, coord_sys=None, doit=True):
