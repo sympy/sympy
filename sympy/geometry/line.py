@@ -35,8 +35,6 @@ from .util import _symbol
 from sympy.utilities.misc import Undecidable
 
 
-
-
 class LinearEntity(GeometrySet):
     """A base class for all linear entities (Line, Ray and Segment)
     in n-dimensional Euclidean space.
@@ -232,7 +230,7 @@ class LinearEntity(GeometrySet):
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object '
-            'and cannot be used as a parameter.' % t.name)
+                             'and cannot be used as a parameter.' % t.name)
         # multiply on the right so the variable gets
         # combined with the coordinates of the point
         return self.p1 + (self.p2 - self.p1)*t
@@ -467,8 +465,8 @@ class LinearEntity(GeometrySet):
                 m_rref, pivots = m.col_insert(2, v).rref(simplify=True)
                 # rank == 2 ensures we have 2 pivots, but let's check anyway
                 if len(pivots) != 2:
-                    raise GeometryError("Failed when solving Mx=b when M={} and b={}".format(m,v))
-                coeff = m_rref[0,2]
+                    raise GeometryError("Failed when solving Mx=b when M={} and b={}".format(m, v))
+                coeff = m_rref[0, 2]
                 line_intersection = l1.direction*coeff + self.p1
 
                 # if we're both lines, we can skip a containment check
@@ -960,6 +958,7 @@ class LinearEntity(GeometrySet):
 
         return self.direction*t/abs(self.direction) + self.p1
 
+
 class Line(LinearEntity):
     """An infinite line in space.
 
@@ -1142,6 +1141,7 @@ class Line(LinearEntity):
         t = _symbol(parameter)
         return [t, -5, 5]
 
+
 class Ray(LinearEntity):
     """A Ray is a semi-line in the space with a source point and a direction.
 
@@ -1268,11 +1268,11 @@ class Ray(LinearEntity):
                 # if we're in the direction of the ray, our
                 # direction vector dot the ray's direction vector
                 # should be non-negative
-                return bool( (self.p2 - self.p1).dot(other - self.p1) >= S.Zero )
+                return bool((self.p2 - self.p1).dot(other - self.p1) >= S.Zero)
             return False
         elif isinstance(other, Ray):
             if Point.is_collinear(self.p1, self.p2, other.p1, other.p2):
-                return bool( (self.p2 - self.p1).dot(other.p2 - other.p1) > S.Zero )
+                return bool((self.p2 - self.p1).dot(other.p2 - other.p1) > S.Zero)
             return False
         elif isinstance(other, Segment):
             return other.p1 in self and other.p2 in self
@@ -1379,6 +1379,7 @@ class Ray(LinearEntity):
 
         """
         return self.p1
+
 
 class Segment(LinearEntity):
     """An undirected line segment in space.
@@ -1660,6 +1661,7 @@ class Segment(LinearEntity):
         t = _symbol(parameter)
         return [t, 0, 1]
 
+
 class LinearEntity2D(LinearEntity):
     """A base class for all linear entities (line, ray and segment)
     in a 2-dimensional Euclidean space.
@@ -1767,6 +1769,7 @@ class LinearEntity2D(LinearEntity):
             return S.Infinity
         return simplify(d2/d1)
 
+
 class Line2D(LinearEntity2D, Line):
     """An infinite line in space 2D.
 
@@ -1824,7 +1827,7 @@ class Line2D(LinearEntity2D, Line):
                 p2 = Point(pt, dim=2)
             except (NotImplementedError, TypeError, ValueError):
                 raise ValueError('The 2nd argument was not a valid Point. '
-                'If it was a slope, enter it with keyword "slope".')
+                                 'If it was a slope, enter it with keyword "slope".')
         elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_finite is False:
@@ -1896,9 +1899,9 @@ class Line2D(LinearEntity2D, Line):
         elif p1.y == p2.y:
             return (S.Zero, S.One, -p1.y)
         return tuple([simplify(i) for i in
-               (self.p1.y - self.p2.y,
-                self.p2.x - self.p1.x,
-                self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
+                      (self.p1.y - self.p2.y,
+                       self.p2.x - self.p1.x,
+                       self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
 
     def equation(self, x='x', y='y'):
         """The equation of the line: ax + by + c.
@@ -1940,6 +1943,7 @@ class Line2D(LinearEntity2D, Line):
 
         a, b, c = self.coefficients
         return a*x + b*y + c
+
 
 class Ray2D(LinearEntity2D, Ray):
     """
@@ -2140,6 +2144,7 @@ class Ray2D(LinearEntity2D, Ray):
         a2 = atan2(*list(reversed(r2.direction.args)))
         return a1 - a2
 
+
 class Segment2D(LinearEntity2D, Segment):
     """An undirected line segment in 2D space.
 
@@ -2216,6 +2221,7 @@ class Segment2D(LinearEntity2D, Segment):
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
             ).format(2. * scale_factor, path, fill_color)
 
+
 class LinearEntity3D(LinearEntity):
     """An base class for all linear entities (line, ray and segment)
     in a 3-dimensional Euclidean space.
@@ -2291,6 +2297,7 @@ class LinearEntity3D(LinearEntity):
         p1, p2 = self.points
         return p1.direction_cosine(p2)
 
+
 class Line3D(LinearEntity3D, Line):
     """An infinite 3D line in space.
 
@@ -2337,7 +2344,7 @@ class Line3D(LinearEntity3D, Line):
                          p1.z + direction_ratio[2])
         else:
             raise ValueError('A 2nd Point or keyword "direction_ratio" must '
-            'be used.')
+                             'be used.')
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
@@ -2374,6 +2381,7 @@ class Line3D(LinearEntity3D, Line):
         a = p1.direction_ratio(p2)
         return (((x - p1.x)/a[0]), ((y - p1.y)/a[1]),
                 ((z - p1.z)/a[2]), k)
+
 
 class Ray3D(LinearEntity3D, Ray):
     """
@@ -2437,7 +2445,7 @@ class Ray3D(LinearEntity3D, Ray):
                          p1.z + direction_ratio[2])
         else:
             raise ValueError('A 2nd Point or keyword "direction_ratio" must'
-            'be used.')
+                             'be used.')
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
@@ -2538,6 +2546,7 @@ class Ray3D(LinearEntity3D, Ray):
             return S.Zero
         else:
             return S.NegativeInfinity
+
 
 class Segment3D(LinearEntity3D, Segment):
     """A undirected line segment in a 3D space.
