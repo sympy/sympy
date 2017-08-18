@@ -56,8 +56,8 @@ def polytope_integrate(poly, expr, **kwargs):
         if isinstance(poly, Polygon):
             poly = point_sort(poly)
         else:
-	        raise TypeError("clockwise=True works for only 2-Polytope"
-		                	"V-representation input")
+            raise TypeError("clockwise=True works for only 2-Polytope"
+                            "V-representation input")
 
     expr = S(expr)
 
@@ -82,9 +82,10 @@ def polytope_integrate(poly, expr, **kwargs):
                                       "case not implemented yet.")
     else:
         # For Vertex Representation(3D case)
-        hp_params = hyperplane_parameters(poly)
-        facets = poly
-        return main_integrate3d(expr, facets, hp_params)
+        vertices = poly[0]
+        facets = poly[1:]
+        hp_params = hyperplane_parameters(facets, vertices)
+        return main_integrate3d(expr, facets, vertices, hp_params)
 
     if max_degree is not None:
         result = {}
@@ -110,29 +111,29 @@ def polytope_integrate(poly, expr, **kwargs):
     return main_integrate(expr, facets, hp_params)
 
 
-def main_integrate3d(expr, facets, hp_params):
-    """Function to translate the problem of integrating uni/bi/trivariate
+def main_integrate3d(expr, facets, vertices, hp_params):
+    """Function to translate the problem of integrating uni/bi/tri-variate
     polynomials over a 3-Polytope to integrating over its faces.
     This is done using Generalized Stokes's Theorem and Euler's Theorem.
 
     Parameters
     ===========
     expr : The input polynomial
-    facets : Faces of the 3-Polytope
+    facets : Faces of the 3-Polytope(expressed as indices of `vertices`)
+    vertices : Vertices that constitute the Polytope
     hp_params : Hyperplane Parameters of the facets
 
     >>> from sympy.abc import x, y
-    >>> from sympy.integrals.intpoly import main_integrate3d,\
+    >>> from sympy.integrals.intpoly import main_integrate3d, \
     hyperplane_parameters
-    >>> triangle = [(0, 0, 0), (1, 1, 1), (0, 0, 2)]
-    >>> cube = [[(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)],\
-                [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
-                [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
-                [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
-                [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
-                [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
-    >>> hp_params = hyperplane_parameters(cube)
-    >>> main_integrate3d(1, cube, hp_params)
+    >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+                (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+                [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+                [3, 1, 0, 2], [0, 4, 6, 2]]
+    >>> vertices = cube[0]
+    >>> faces = cube[1:]
+    >>> hp_params = hyperplane_parameters(faces, vertices)
+    >>> main_integrate3d(1, faces, vertices, hp_params)
     125
     """
     dims = (x, y, z)
@@ -146,7 +147,8 @@ def main_integrate3d(expr, facets, hp_params):
             hp = hp_params[i]
             if hp[1] == S.Zero:
                 continue
-            poly_contribute += polygon_integrate(facet, i, facets, expr, deg) *\
+            poly_contribute += polygon_integrate(facet, i, facets,
+                                                 vertices, expr, deg) *\
                 (hp[1] / norm(tuple(hp[0])))
             facet_count += 1
         poly_contribute /= (dim_length + deg)
@@ -154,43 +156,47 @@ def main_integrate3d(expr, facets, hp_params):
     return integral_value
 
 
-def polygon_integrate(facet, index, facets, expr, degree):
+def polygon_integrate(facet, index, facets, vertices, expr, degree):
     """Helper function to integrate the input uni/bi/trivariate polynomial
     over a certain face of the 3-Polytope.
 
     Parameters
     ===========
-    facet : A particular face of the 3-Polytope over which `expr` is integrated
+    facet : Particular face of the 3-Polytope over which `expr` is integrated
     index : The index of `facet` in `facets`
-    facets : Faces of the 3-Polytope
+    facets : Faces of the 3-Polytope(expressed as indices of `vertices`)
+    vertices : Vertices that constitute the facet
     expr : The input polynomial
     degree : Degree of `expr`
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import polygon_integrate
-    >>> cube = [[(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)],\
-                [(0, 5, 5), (5, 5, 5), (5, 0, 5), (0, 0, 5)],\
-                [(5, 5, 5), (5, 5, 0), (5, 0, 0), (5, 0, 5)],\
-                [(0, 0, 5), (5, 0, 5), (5, 0, 0), (0, 0, 0)],\
-                [(0, 5, 5), (0, 0, 5), (0, 0, 0), (0, 5, 0)],\
-                [(0, 0, 0), (5, 0, 0), (5, 5, 0), (0, 5, 0)]]
-    >>> polygon_integrate(cube[0], 0, cube, 1, 0)
+    >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+                 (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+                 [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+                 [3, 1, 0, 2], [0, 4, 6, 2]]
+    >>> facet = cube[1]
+    >>> facets = cube[1:]
+    >>> vertices = cube[0]
+    >>> polygon_integrate(facet, 0, facets, vertices, 1, 0)
     25
     """
     if expr == S.Zero:
         return S.Zero
     result = S.Zero
     m = len(facets)
-    x0 = facet[0]
+    x0 = vertices[facet[0]]
     for i in range(len(facet)):
         side = (facet[i], facet[(i + 1) % len(facet)])
         for j in range(m):
             if j != index and len(set(side).intersection(set(facets[j]))) == 2:
+                side = (vertices[side[0]], vertices[side[1]])
                 result += distance_to_side(x0, side) *\
                           lineseg_integrate(facet, i, side, expr, degree)
 
     expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] + diff(expr, z) * x0[2]
-    result += polygon_integrate(facet, index, facets, expr, degree - 1)
+    result += polygon_integrate(facet, index, facets, vertices, expr,
+                                degree - 1)
     result /= (degree + 2)
     return result
 
@@ -513,7 +519,7 @@ def gradient_terms(binomial_power=0):
     return terms
 
 
-def hyperplane_parameters(poly):
+def hyperplane_parameters(poly, vertices=None):
     """A helper function to return the hyperplane parameters
     of which the facets of the polygon are a part of.
     Currently works for only 2-Polytopes.
@@ -521,6 +527,9 @@ def hyperplane_parameters(poly):
     ==========
     poly : The input Polygon
 
+    Optional Parameters
+    ----------------------
+    vertices :  Vertex indices of faces of 3-Polytope
     Examples
     ========
     >>> from sympy.geometry.point import Point
@@ -549,7 +558,7 @@ def hyperplane_parameters(poly):
     else:
         params = [None] * len(poly)
         for i, polygon in enumerate(poly):
-            v1, v2, v3 = polygon[:3]
+            v1, v2, v3 = [vertices[vertex] for vertex in polygon[:3]]
             normal = cross_product(v1, v2, v3)
             b = sum([normal[j] * v1[j] for j in range(0, 3)])
             fac = gcd_list(normal)
