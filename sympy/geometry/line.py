@@ -107,7 +107,7 @@ class LinearEntity(GeometrySet):
         Parameters
         ==========
 
-        p1: LinearEntity
+        p1 : LinearEntity
 
         Returns
         =======
