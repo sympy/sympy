@@ -187,7 +187,7 @@ class LinearEntity(GeometrySet):
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Line.
+        """A parametrized point on the Line.
 
         Parameters
         ==========
@@ -234,7 +234,7 @@ class LinearEntity(GeometrySet):
             raise ValueError('Symbol %s already appears in object '
             'and cannot be used as a parameter.' % t.name)
         # multiply on the right so the variable gets
-        # combined witht he coordinates of the point
+        # combined with the coordinates of the point
         return self.p1 + (self.p2 - self.p1)*t
 
     @staticmethod
