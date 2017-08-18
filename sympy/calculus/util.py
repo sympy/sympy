@@ -1224,7 +1224,7 @@ class AccumulationBounds(AtomicExpr):
             return AccumBounds(other.min, Max(self.max, other.max))
 
 
-def _AccumulationBounds_constroctor_postprocessor_Mul(expr):
+def _AccumulationBounds_constructor_postprocessor_Mul(expr):
     res = S(1)
     non_accum_args = []
     for arg in expr.args:
@@ -1235,7 +1235,7 @@ def _AccumulationBounds_constroctor_postprocessor_Mul(expr):
             non_accum_args.append(arg)
     return res*Mul.fromiter(non_accum_args)
 
-def _AccumulationBounds_constroctor_postprocessor_Add(expr):
+def _AccumulationBounds_constructor_postprocessor_Add(expr):
     res = S(0)
     non_accum_args = []
     for arg in expr.args:
@@ -1247,8 +1247,8 @@ def _AccumulationBounds_constroctor_postprocessor_Add(expr):
     return res + Add.fromiter(non_accum_args)
 
 Basic._constructor_postprocessor_mapping[AccumulationBounds] = {
-    "Mul": [_AccumulationBounds_constroctor_postprocessor_Mul],
-    "Add": [_AccumulationBounds_constroctor_postprocessor_Add],
+    "Mul": [_AccumulationBounds_constructor_postprocessor_Mul],
+    "Add": [_AccumulationBounds_constructor_postprocessor_Add],
 }
 
 # setting an alias for AccumulationBounds
