@@ -207,6 +207,39 @@ class GroupHomomorphism(object):
         '''
         return self.image().order() == 1
 
+    def restrict_to(self, H):
+        '''
+        Return the restriction of the homomorphism to the subgroup `H`
+        of the domain.
+
+        '''
+        if not isinstance(H, PermutationGroup) or not H.is_subgroup(self.domain):
+            raise ValueError("Given H is not a subgroup of the domain")
+        domain = H
+        images = {g: self(g) for g in H.generators}
+        return GroupHomomorphism(domain, self.codomain, images)
+
+    def invert_subgroup(self, H):
+        '''
+        Return the subgroup of the domain that is the inverse image
+        of the subgroup `H` of the homomorphism image
+
+        '''
+        if not H.is_subgroup(self.image()):
+            raise ValueError("Given H is not a subgroup of the image")
+        gens = []
+        P = PermutationGroup(self.image().identity)
+        for h in H.generators:
+            h_i = self.invert(h)
+            if h_i not in P:
+                gens.append(h_i)
+                P = PermutationGroup(gens)
+            for k in self.kernel().generators:
+                if k*h_i not in P:
+                    gens.append(k*h_i)
+                    P = PermutationGroup(gens)
+        return P
+
 def homomorphism(domain, codomain, gens, images=[], check=True):
     '''
     Create (if possible) a group homomorphism from the group `domain`
@@ -303,3 +336,59 @@ def _check_homomorphism(domain, codomain, images):
         if not s:
             return False
     return True
+
+def orbit_homomorphism(group, omega):
+    '''
+    Return the homomorphism induced by the action of the permutation
+    group `group` on the set `omega` that is closed under the action.
+
+    '''
+    from sympy.combinatorics import Permutation
+    from sympy.combinatorics.named_groups import SymmetricGroup
+    codomain = SymmetricGroup(len(omega))
+    identity = codomain.identity
+    omega = list(omega)
+    images = {g: identity*Permutation([omega.index(o^g) for o in omega]) for g in group.generators}
+    group._schreier_sims(base=omega)
+    H = GroupHomomorphism(group, codomain, images)
+    if len(group.basic_stabilizers) > len(omega):
+        H._kernel = group.basic_stabilizers[len(omega)]
+    else:
+        H._kernel = PermutationGroup([group.identity])
+    return H
+
+def block_homomorphism(group, blocks):
+    '''
+    Return the homomorphism induced by the action of the permutation
+    group `group` on the block system `blocks`. The latter should be
+    of the same form as returned by the `minimal_block` method for
+    permutation groups, namely a list of length `group.degree` where
+    the i-th entry is a representative of the block i belongs to.
+
+    '''
+    from sympy.combinatorics import Permutation
+    from sympy.combinatorics.named_groups import SymmetricGroup
+
+    n = len(blocks)
+
+    # number the blocks; m is the total number,
+    # b is such that b[i] is the number of the block i belongs to,
+    # p is the list of length m such that p[i] is the representative
+    # of the i-th block
+    m = 0
+    p = []
+    b = [None]*n
+    for i in range(n):
+        if blocks[i] == i:
+            p.append(i)
+            b[i] = m
+            m += 1
+    for i in range(n):
+        b[i] = b[blocks[i]]
+
+    codomain = SymmetricGroup(m)
+    # the list corresponding to the identity permutation in codomain
+    identity = range(m)
+    images = {g: Permutation([b[p[i]^g] for i in identity]) for g in group.generators}
+    H = GroupHomomorphism(group, codomain, images)
+    return H

@@ -460,6 +460,15 @@ def test_minimal_block():
     assert P1.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
     assert P2.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
 
+def test_minimal_blocks():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    assert P.minimal_blocks() == [[0, 3, 0, 3, 0, 3], [0, 4, 5, 0, 4, 5]]
+
+    P = SymmetricGroup(5)
+    assert P.minimal_blocks() == [[0]*5]
+
+    P = PermutationGroup(Permutation(0, 3))
+    assert P.minimal_blocks() == False
 
 def test_max_div():
     S = SymmetricGroup(10)
@@ -777,6 +786,47 @@ def test_generator_product():
     for g in gens:
         w = g*w
     assert w == p
+
+def test_sylow_subgroup():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    S = P.sylow_subgroup(2)
+    assert S.order() == 4
+
+    P = DihedralGroup(12)
+    S = P.sylow_subgroup(3)
+    assert S.order() == 3
+
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5), Permutation(0, 2))
+    S = P.sylow_subgroup(3)
+    assert S.order() == 9
+    S = P.sylow_subgroup(2)
+    assert S.order() == 8
+
+    P = SymmetricGroup(10)
+    S = P.sylow_subgroup(2)
+    assert S.order() == 256
+    S = P.sylow_subgroup(3)
+    assert S.order() == 81
+    S = P.sylow_subgroup(5)
+    assert S.order() == 25
+
+    # the length of the lower central series
+    # of a p-Sylow subgroup of Sym(n) grows with
+    # the highest exponent exp of p such
+    # that n >= p**exp
+    exp = 1
+    length = 0
+    for i in range(2, 9):
+        P = SymmetricGroup(i)
+        S = P.sylow_subgroup(2)
+        ls = S.lower_central_series()
+        if i // 2**exp > 0:
+            # length increases with exponent
+            assert len(ls) > length
+            length = len(ls)
+            exp += 1
+        else:
+            assert len(ls) == length
 
 def test_presentation():
     def _test(P):
