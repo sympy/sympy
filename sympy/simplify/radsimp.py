@@ -257,7 +257,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         terms is a list of tuples as returned by parse_terms;
         pattern is an expression treated as a product of factors
         """
-        pattern = list(ordered(Mul.make_args(pattern)))
+        pattern = Mul.make_args(pattern)
 
         if len(terms) < len(pattern):
             # pattern is longer than matched product
