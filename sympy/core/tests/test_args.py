@@ -3986,6 +3986,6 @@ def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
 
-def test_sympy__integrals__rubi__symbol__WC():
-    from sympy.integrals.rubi.symbol import WC
-    assert _test_args(WC(1, True, 'a'))
+def test_sympy__integrals__rubi__symbol__matchpyWC():
+    from sympy.integrals.rubi.symbol import matchpyWC
+    assert _test_args(matchpyWC(1, True, 'a'))
