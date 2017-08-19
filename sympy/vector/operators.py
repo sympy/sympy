@@ -24,6 +24,8 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
     expr : expression
         The coordinate system is extracted from this parameter.
     """
+
+    # TODO: Remove this line when warning from issue #12884 will be removed
     if coord_sys is not None:
         SymPyDeprecationWarning(
             feature="coord_sys parameter",
@@ -175,30 +177,25 @@ def curl(vect, coord_sys=None, doit=True):
             return outvec.doit()
         return outvec
     else:
-        # TODO: use some of the vector calculus properties for this:
-        coord_sys = next(iter(coord_sys))  # get one random coord_sys
-        i, j, k = coord_sys.base_vectors()
-        x, y, z = coord_sys.base_scalars()
-        h1, h2, h3 = coord_sys.lame_coefficients()
-
-        from .functions import express
-        vectx = express(vect.dot(i), coord_sys, variables=True)
-        vecty = express(vect.dot(j), coord_sys, variables=True)
-        vectz = express(vect.dot(k), coord_sys, variables=True)
-
-        # This is a repetition of previous code, it will be removed as soon as
-        # we have some better algorithm to deal with this case:
-        outvec = Vector.zero
-        outvec += (Derivative(vectz * h3, y) -
-                   Derivative(vecty * h2, z)) * i / (h2 * h3)
-        outvec += (Derivative(vectx * h1, z) -
-                   Derivative(vectz * h3, x)) * j / (h1 * h3)
-        outvec += (Derivative(vecty * h2, x) -
-                   Derivative(vectx * h1, y)) * k / (h2 * h1)
-
-        if doit:
-            return outvec.doit()
-        return outvec
+        if isinstance(vect, (Add, VectorAdd)):
+            from sympy.vector import express
+            try:
+                cs = next(iter(coord_sys))
+                args = [express(i, cs, variables=True) for i in vect.args]
+            except ValueError:
+                args = vect.args
+            return VectorAdd.fromiter(curl(i, doit=doit) for i in args)
+        elif isinstance(vect, (Mul, VectorMul)):
+            vector = [i for i in vect.args if isinstance(i, (Vector, Cross, Gradient))][0]
+            scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
+            res = Cross(gradient(scalar), vector).doit() + scalar*curl(vector, doit=doit)
+            if doit:
+                return res.doit()
+            return res
+        elif isinstance(vect, (Cross, Curl, Gradient)):
+            return Curl(vect)
+        else:
+            raise Curl(vect)
 
 
 def divergence(vect, coord_sys=None, doit=True):
@@ -235,7 +232,6 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
-    # TODO: Remove this line when warning from issue #12884 will be removed
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
     if len(coord_sys) == 0:
         return S.Zero
@@ -265,10 +261,7 @@ def divergence(vect, coord_sys=None, doit=True):
             scalar = Mul.fromiter(i for i in vect.args if not isinstance(i, (Vector, Cross, Gradient)))
             res = Dot(vector, gradient(scalar)) + scalar*divergence(vector, doit=doit)
             if doit:
-                try:
-                    return res.doit()
-                except:
-                    return res
+                return res.doit()
             return res
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Divergence(vect)

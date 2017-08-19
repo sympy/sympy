@@ -454,8 +454,6 @@ class Cross(Expr):
     """
 
     def __new__(cls, expr1, expr2):
-        if not (isinstance(expr1, Vector) and isinstance(expr2, Vector)):
-            raise ValueError('Arguments must be the vectors.')
         expr1 = sympify(expr1)
         expr2 = sympify(expr2)
         obj = Expr.__new__(cls, expr1, expr2)
@@ -537,9 +535,10 @@ def dot(vect1, vect2):
     R.x + R.y + R.z
 
     """
-    if not (isinstance(vect1, Vector) and isinstance(vect2, Vector)):
-        raise ValueError('Arguments must be the vectors.')
-    return Vector.dot(vect1, vect2)
+    try:
+        return Vector.dot(vect1, vect2)
+    except:
+        return Dot(vect1, vect2)
 
 
 def _vect_div(one, other):
