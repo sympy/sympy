@@ -123,12 +123,12 @@ class Predicate(Boolean):
         Q.prime(7)
 
     To obtain the truth value of an expression containing predicates, use
-    the function `ask`:
+    the function ``ask``:
 
         >>> ask(Q.prime(7))
         True
 
-    The tautological predicate `Q.is_true` can be used to wrap other objects:
+    The tautological predicate ``Q.is_true`` can be used to wrap other objects:
 
         >>> Q.is_true(x > 1)
         Q.is_true(x > 1)
