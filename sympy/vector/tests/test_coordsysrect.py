@@ -185,7 +185,7 @@ def test_rotation_matrix():
                 sin(q2), -sin(q1)*cos(q2), cos(q1)*cos(q2)]])
 
 
-def test_vector():
+def test_vector_with_orientation():
     """
     Tests the effects of orientation of coordinate systems on
     basic vector operations.
@@ -195,13 +195,13 @@ def test_vector():
     B = A.orient_new_axis('B', q2, A.i)
     C = B.orient_new_axis('C', q3, B.j)
 
-    #Test to_matrix
+    # Test to_matrix
     v1 = a*N.i + b*N.j + c*N.k
     assert v1.to_matrix(A) == Matrix([[ a*cos(q1) + b*sin(q1)],
                                       [-a*sin(q1) + b*cos(q1)],
                                       [                     c]])
 
-    #Test dot
+    # Test dot
     assert N.i.dot(A.i) == cos(q1)
     assert N.i.dot(A.j) == -sin(q1)
     assert N.i.dot(A.k) == 0
@@ -225,7 +225,7 @@ def test_vector():
     assert A.k.dot(C.j) == sin(q2)
     assert A.k.dot(C.k) == cos(q2)*cos(q3)
 
-    #Test cross
+    # Test cross
     assert N.i.cross(A.i) == sin(q1)*A.k
     assert N.i.cross(A.j) == cos(q1)*A.k
     assert N.i.cross(A.k) == -sin(q1)*A.i - cos(q1)*A.j
