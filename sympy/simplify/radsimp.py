@@ -351,7 +351,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collected, disliked = defaultdict(list), S.Zero
     for product in summa:
-        terms = [parse_term(i) for i in ordered(Mul.make_args(product))]
+        c, nc = product.args_cnc(split_1=False)
+        args = list(ordered(c)) + nc
+        terms = [parse_term(i) for i in args]
         small_first = True
 
         for symbol in syms:
