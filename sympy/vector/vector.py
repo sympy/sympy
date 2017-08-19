@@ -1,9 +1,8 @@
 from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.compatibility import range
-from sympy.matrices import det
-from sympy import sqrt, ImmutableMatrix as Matrix
+from sympy.core.compatibility import range, default_sort_key
+from sympy import sqrt, ImmutableMatrix as Matrix, Add
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
@@ -92,7 +91,6 @@ class Vector(BasisDependent):
 
         """
 
-        from sympy.vector.functions import express
         # Check special cases
         if isinstance(other, Dyadic):
             if isinstance(self, VectorZero):
@@ -114,17 +112,7 @@ class Vector(BasisDependent):
                 return directional_derivative(field, self)
             return directional_derivative
 
-        if isinstance(self, VectorZero) or isinstance(other, VectorZero):
-            return S(0)
-
-        v1 = express(self, other._sys)
-        v2 = express(other, other._sys)
-        dotproduct = S(0)
-        for x in other._sys.base_vectors():
-            dotproduct += (v1.components.get(x, 0) *
-                           v2.components.get(x, 0))
-
-        return dotproduct
+        return dot(self, other)
 
     def __and__(self, other):
         return self.dot(other)
@@ -172,19 +160,8 @@ class Vector(BasisDependent):
                 outer = cross_product.outer(k.args[1])
                 outdyad += v * outer
             return outdyad
-        elif not isinstance(other, Vector):
-            raise TypeError(str(other) + " is not a vector")
-        elif (isinstance(self, VectorZero) or
-                isinstance(other, VectorZero)):
-            return Vector.zero
 
-        outvec = Vector.zero
-        for system, vect in other.separate().items():
-            tempm = [[system.i, system.j, system.k],
-                     [self & system.i, self & system.j, self & system.k],
-                     [vect & system.i, vect & system.j, vect & system.k]]
-            outvec += det(Matrix(tempm))
-        return outvec
+        return cross(self, other)
 
     def __xor__(self, other):
         return self.cross(other)
@@ -435,7 +412,7 @@ class VectorZero(BasisDependentZero, Vector):
         return obj
 
 
-class Cross(Expr):
+class Cross(Vector):
     """
     Represents unevaluated Cross product.
 
@@ -456,6 +433,8 @@ class Cross(Expr):
     def __new__(cls, expr1, expr2):
         expr1 = sympify(expr1)
         expr2 = sympify(expr2)
+        if default_sort_key(expr1) > default_sort_key(expr2):
+            return -Cross(expr2, expr1)
         obj = Expr.__new__(cls, expr1, expr2)
         obj._expr1 = expr1
         obj._expr2 = expr2
@@ -488,6 +467,7 @@ class Dot(Expr):
     def __new__(cls, expr1, expr2):
         expr1 = sympify(expr1)
         expr2 = sympify(expr2)
+        expr1, expr2 = sorted([expr1, expr2], key=default_sort_key)
         obj = Expr.__new__(cls, expr1, expr2)
         obj._expr1 = expr1
         obj._expr2 = expr2
@@ -513,10 +493,34 @@ def cross(vect1, vect2):
     (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
 
     """
+    if isinstance(vect1, Add):
+        return VectorAdd.fromiter(cross(i, vect2) for i in vect1.args)
+    if isinstance(vect2, Add):
+        return VectorAdd.fromiter(cross(vect1, i) for i in vect2.args)
+    if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
+        if vect1._sys == vect2._sys:
+            n1 = vect1.args[0]
+            n2 = vect2.args[0]
+            if n1 == n2:
+                return Vector.zero
+            n3 = ({0,1,2}.difference({n1, n2})).pop()
+            sign = 1 if ((n1 + 1) % 3 == n2) else -1
+            return sign*vect1._sys.base_vectors()[n3]
+        try:
+            from .functions import express
+            return cross(express(vect1, vect2._sys), vect2)
+        except:
+            return Cross(vect1, vect2)
+    if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
+        return Vector.zero
+    if isinstance(vect1, VectorMul):
+        v1, m1 = next(iter(vect1.components.items()))
+        return m1*cross(v1, vect2)
+    if isinstance(vect2, VectorMul):
+        v2, m2 = next(iter(vect2.components.items()))
+        return m2*cross(vect1, v2)
 
-    if not (isinstance(vect1, Vector) and isinstance(vect2, Vector)):
-        raise ValueError('Arguments must be the vectors.')
-    return Vector.cross(vect1, vect2)
+    return Cross(vect1, vect2)
 
 
 def dot(vect1, vect2):
@@ -535,10 +539,28 @@ def dot(vect1, vect2):
     R.x + R.y + R.z
 
     """
-    try:
-        return Vector.dot(vect1, vect2)
-    except:
-        return Dot(vect1, vect2)
+    if isinstance(vect1, Add):
+        return Add.fromiter(dot(i, vect2) for i in vect1.args)
+    if isinstance(vect2, Add):
+        return Add.fromiter(dot(vect1, i) for i in vect2.args)
+    if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
+        if vect1._sys == vect2._sys:
+            return S.One if vect1 == vect2 else S.Zero
+        try:
+            from .functions import express
+            return dot(vect1, express(vect2, vect1._sys))
+        except:
+            return Dot(vect1, vect2)
+    if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
+        return S.Zero
+    if isinstance(vect1, VectorMul):
+        v1, m1 = next(iter(vect1.components.items()))
+        return m1*dot(v1, vect2)
+    if isinstance(vect2, VectorMul):
+        v2, m2 = next(iter(vect2.components.items()))
+        return m2*dot(vect1, v2)
+
+    return Dot(vect1, vect2)
 
 
 def _vect_div(one, other):

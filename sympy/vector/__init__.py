@@ -1,5 +1,5 @@
 from sympy.vector.vector import (Vector, VectorAdd, VectorMul,
-                                 BaseVector, VectorZero, Cross, Dot)
+                                 BaseVector, VectorZero, Cross, Dot, cross, dot)
 from sympy.vector.dyadic import (Dyadic, DyadicAdd, DyadicMul,
                                  BaseDyadic, DyadicZero)
 from sympy.vector.scalar import BaseScalar
