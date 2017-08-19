@@ -1715,7 +1715,9 @@ class PermutationGroup(Basic):
         if _random_prec is None:
             n = self.degree
             if n < 8:
-                sym_order = reduce(lambda x, y: x*y, range(1, n+1))
+                sym_order = 1
+                for i in range(2, n+1):
+                    sym_order *= i
                 order = self.order()
                 return order == sym_order or 2*order == sym_order
             if not self.is_transitive():
@@ -3618,10 +3620,10 @@ class PermutationGroup(Basic):
         # gens[:i] is the generating set for a p-Sylow
         # subgroup on [0..p**(i-1)-1]
         for i in range(1, power+1):
-            gen = Permutation([(j + p**(i-1)) % p**i for j in range(p**i)])
-            if alt and gen == Permutation(0, 1):
+            if i == 1 and alt:
                 # (0 1) shouldn't be added for alternating groups
                 continue
+            gen = Permutation([(j + p**(i-1)) % p**i for j in range(p**i)])
             gens.append(identity*gen)
 
         # the first point in the current part (see the algorithm
