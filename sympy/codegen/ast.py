@@ -148,15 +148,21 @@ class Token(Basic):
     def _joiner(self, k, indent_level):
         return (',\n' + ' '*indent_level) if k in self.indented_args else ', '
 
-    def _print_indented(self, printer, k, v, il, *args, **kwargs):
-        if isinstance(v, Token):
-            return printer._print(v, *args, indent_level=il, joiner=self._joiner(k, il), **kwargs)
-        elif isinstance(v, Tuple):
-            joined = self._joiner(k, il).join(map(printer._print, v.args))
+    def _indented(self, printer, k, v, il, *args, **kwargs):
+        def _print(arg):
+            if isinstance(arg, Token):
+                return printer._print(arg, *args, indent_level=il, joiner=self._joiner(k, il), **kwargs)
+            else:
+                return printer._print(v, *args, **kwargs)
+
+        if isinstance(v, Tuple):
+            joined = self._joiner(k, il).join([_print(arg) for arg in v.args])
             if k in self.indented_args:
-                return '(\n' + ' '*il + joined + '\n' + ' '*(il - 4) + ')'
+                return '(\n' + ' '*il + joined + ',\n' + ' '*(il - 4) + ')'
+            else:
+                return ('({0},)' if len(v.args) == 1 else '({0})').format(joined)
         else:
-            return printer._print(v, *args, **kwargs)
+            return _print(v)
 
     def _sympyrepr(self, printer, *args, **kwargs):
         exclude = kwargs.get('exclude', ())
@@ -165,9 +171,9 @@ class Token(Basic):
         joiner = kwargs.pop('joiner', ', ')
         ils = [indent_level + (4 if k in self.indented_args else 0) for k in self.__slots__]
         return "{0}({1})".format(self.__class__.__name__, joiner.join([
-            ('{1}' if i == 0 else '{0}={1}').format(k, self._print_indented(printer, k, v, il, *args, **kwargs))
+            ('{1}' if i == 0 else '{0}={1}').format(k, self._indented(printer, k, v, il, *args, **kwargs))
             for i, (k, v, il) in enumerate(zip(self.__slots__, values, ils))
-            if not (k in self.defaults and v == self.defaults[k]) and k not in exclude  # already the default
+            if not (k in self.defaults and v == self.defaults[k]) and k not in exclude
         ]))
 
     _sympystr = _sympyrepr
@@ -338,7 +344,7 @@ def aug_assign(lhs, op, rhs):
     return Relational.ValidRelationOperator[op + '='](lhs, rhs)
 
 
-class CodeBlock(Token):
+class CodeBlock(Basic):
     """
     Represents a block of code
 
@@ -374,29 +380,29 @@ class CodeBlock(Token):
     y = x + 1;
 
     """
-
-    __slots__ = ['body', 'left_hand_sides', 'right_hand_sides']
-    defaults = dict(zip(__slots__[-2:], [none]*2))
-    not_in_args = __slots__[-2:]
-
-    _construct_body = staticmethod(lambda arg: Tuple(*arg))
-    _construct_left_hand_sides = staticmethod(lambda arg: Tuple(*arg))
-    _construct_right_hand_sides = staticmethod(lambda arg: Tuple(*arg))
-
-    def __new__(cls, body):
-        if isinstance(body, CodeBlock):
-            return body
+    def __new__(cls, *args):
         left_hand_sides = []
         right_hand_sides = []
-        for i in body:
+        for i in args:
             if isinstance(i, Assignment):
                 lhs, rhs = i.args
                 left_hand_sides.append(lhs)
                 right_hand_sides.append(rhs)
-        return Token.__new__(cls, body, left_hand_sides, right_hand_sides)
+
+        obj = Basic.__new__(cls, *args)
+
+        obj.left_hand_sides = Tuple(*left_hand_sides)
+        obj.right_hand_sides = Tuple(*right_hand_sides)
+        return obj
 
     def _sympyrepr(self, printer, *args, **kwargs):
-        return super(CodeBlock, self)._sympyrepr(printer, *args, exclude=not_in_args, **kwargs)
+        il = kwargs.pop('indent_level', 0) + 4
+        joiner = ',\n' + ' '*il
+        joined = joiner.join(map(printer._print, self.args))
+        return ('{0}(\n'.format(' '*(il-4) + self.__class__.__name__,) +
+                ' '*il + joined + '\n' + ' '*(il - 4) + ')')
+
+    _sympystr = _sympyrepr
 
     @classmethod
     def topological_sort(cls, assignments):
@@ -424,10 +430,10 @@ class CodeBlock(Token):
         ...     Assignment(z, 2),
         ... ]
         >>> CodeBlock.topological_sort(assignments)
-        CodeBlock((
+        CodeBlock(
             Assignment(z, 2),
             Assignment(y, z + 1),
-            Assignment(x, y + z))
+            Assignment(x, y + z)
         )
 
         """
@@ -471,7 +477,7 @@ class CodeBlock(Token):
 
         ordered_assignments = topological_sort([A, E])
         # De-enumerate the result
-        return cls(list(zip(*ordered_assignments))[1])
+        return cls(*list(zip(*ordered_assignments))[1])
 
     def cse(self, symbols=None, optimizations=None, postprocess=None,
         order='canonical'):
@@ -488,20 +494,25 @@ class CodeBlock(Token):
         >>> from sympy.codegen.ast import CodeBlock, Assignment
         >>> x, y, z = symbols('x y z')
 
-        >>> c = CodeBlock([
+        >>> c = CodeBlock(
         ...     Assignment(x, 1),
         ...     Assignment(y, sin(x) + 1),
         ...     Assignment(z, sin(x) - 1),
-        ... ])
+        ... )
         ...
         >>> c.cse()
-        CodeBlock((Assignment(x, 1), Assignment(x0, sin(x)), Assignment(y, x0 + 1), Assignment(z, x0 - 1)))
+        CodeBlock(
+            Assignment(x, 1),
+            Assignment(x0, sin(x)),
+            Assignment(y, x0 + 1),
+            Assignment(z, x0 - 1)
+        )
 
         """
         # TODO: Check that the symbols are new
         from sympy.simplify.cse_main import cse
 
-        if not all(isinstance(i, Assignment) for i in self.body):
+        if not all(isinstance(i, Assignment) for i in self.args):
             # Will support more things later
             raise NotImplementedError("CodeBlock.cse only supports Assignments")
 
@@ -543,12 +554,20 @@ class For(Token):
     >>> from sympy.codegen.ast import aug_assign, For
     >>> x, n = symbols('x n')
     >>> For(n, Range(10), [aug_assign(x, '+', n)])
-    For(n, Range(0, 10, 1), CodeBlock(AddAugmentedAssignment(x, n)))
+    For(n, iterable=Range(0, 10, 1), body=CodeBlock(
+        AddAugmentedAssignment(x, n)
+    ))
 
     """
     __slots__ = ['target', 'iterable', 'body']
     _construct_target = staticmethod(_sympify)
-    _construct_body = CodeBlock
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
 
     @classmethod
     def _construct_iterable(cls, itr):
@@ -1232,10 +1251,16 @@ class While(Token):
     """
     __slots__ = ['condition', 'body']
     _construct_condition = staticmethod(lambda cond: _sympify(cond))
-    _construct_body = CodeBlock
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
 
 
-class Scope(CodeBlock):
+class Scope(Token):
     """ Represents a scope in the code.
 
     Parameters
@@ -1244,6 +1269,15 @@ class Scope(CodeBlock):
         When passed an iterable it is used to instantiate a CodeBlock.
 
     """
+    __slots__ = ['body']
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
+
 
 
 class Statement(Basic):
@@ -1319,7 +1353,13 @@ class FunctionDefinition(FunctionPrototype):
     """
 
     __slots__ = FunctionPrototype.__slots__ + ['body']
-    _construct_body = CodeBlock
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
 
     @classmethod
     def from_FunctionPrototype(cls, func_proto, body):

@@ -108,7 +108,7 @@ def test_AugAssign():
     raises(TypeError, lambda: aug_assign(B, '+', 0))
 
 def test_CodeBlock():
-    c = CodeBlock([Assignment(x, 1), Assignment(y, x + 1)])
+    c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
     assert c.func(*c.args) == c
 
     assert c.left_hand_sides == Tuple(x, y)
@@ -130,7 +130,7 @@ def test_CodeBlock_topological_sort():
         Assignment(t, x),
         ]
     c = CodeBlock.topological_sort(assignments)
-    assert c == CodeBlock(ordered_assignments)
+    assert c == CodeBlock(*ordered_assignments)
 
     # Cycle
     invalid_assignments = [
@@ -150,23 +150,24 @@ def test_CodeBlock_topological_sort():
     raises(ValueError, lambda: CodeBlock.topological_sort(invalid_assignments))
 
 def test_CodeBlock_cse():
-    c = CodeBlock([
+    c = CodeBlock(
         Assignment(y, 1),
         Assignment(x, sin(y)),
         Assignment(z, sin(y)),
         Assignment(t, x*z),
-        ])
-    assert c.cse() == CodeBlock([
+        )
+    assert c.cse() == CodeBlock(
         Assignment(y, 1),
         Assignment(x0, sin(y)),
         Assignment(x, x0),
         Assignment(z, x0),
         Assignment(t, x*z),
-    ])
+    )
 
-    raises(NotImplementedError, lambda: CodeBlock([
+    raises(NotImplementedError, lambda: CodeBlock(
         Assignment(x, 1),
-        Assignment(y, 1), Assignment(y, 2)]).cse())
+        Assignment(y, 1), Assignment(y, 2)
+    ).cse())
 
 def test_For():
     f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), aug_assign(x, '+', y)))
@@ -455,10 +456,10 @@ def test_While():
     assert whl1.condition.args[0] == x
     assert whl1.condition.args[1] == 2
     assert whl1.condition == Lt(x, 2, evaluate=False)
-    assert whl1.body.args == (Tuple(xpp),)
+    assert whl1.body.args == (xpp,)
     assert whl1.func(*whl1.args) == whl1
 
-    cblk = CodeBlock([AddAugmentedAssignment(x, 1)])
+    cblk = CodeBlock(AddAugmentedAssignment(x, 1))
     whl2 = While(x < 2, cblk)
     assert whl1 == whl2
     assert whl1 != While(x < 3, [xpp])
@@ -469,9 +470,9 @@ def test_Scope():
     assign = Assignment(x, y)
     incr = AddAugmentedAssignment(x, 1)
     scp = Scope([assign, incr])
-    cblk = CodeBlock([assign, incr])
-    assert scp.body == cblk.body
-    assert scp == Scope(cblk.body)
+    cblk = CodeBlock(assign, incr)
+    assert scp.body == cblk
+    assert scp == Scope(cblk)
     assert scp != Scope([incr, assign])
     assert scp.func(*scp.args) == scp
 
@@ -511,7 +512,7 @@ def test_FunctionPrototype_and_FunctionDefinition():
     assert fd1.return_type == real
     assert str(fd1.name) == 'power'
     assert fd1.function_args == Tuple(dx, dn)
-    assert fd1.body == CodeBlock(body)
+    assert fd1.body == CodeBlock(*body)
     assert fd1 == FunctionDefinition(real, 'power', [dx, dn], body)
     assert fd1 != FunctionDefinition(real, 'power', [dx, dn], body[::-1])
     assert fd1.func(*fd1.args) == fd1
@@ -551,12 +552,12 @@ def test_ast_replace():
     pname = pwer.name
     pcall = FunctionCall('pwer', [y, 3])
 
-    tree1 = CodeBlock([pwer, pcall])
-    assert str(tree1.body.args[0].name) == 'pwer'
-    assert str(tree1.body.args[1].name) == 'pwer'
+    tree1 = CodeBlock(pwer, pcall)
+    assert str(tree1.args[0].name) == 'pwer'
+    assert str(tree1.args[1].name) == 'pwer'
 
     tree2 = tree1.replace(pname, String('power'))
-    assert str(tree1.body.args[0].name) == 'pwer'
-    assert str(tree1.body.args[1].name) == 'pwer'
-    assert str(tree2.body.args[0].name) == 'power'
-    assert str(tree2.body.args[1].name) == 'power'
+    assert str(tree1.args[0].name) == 'pwer'
+    assert str(tree1.args[1].name) == 'pwer'
+    assert str(tree2.args[0].name) == 'power'
+    assert str(tree2.args[1].name) == 'power'
