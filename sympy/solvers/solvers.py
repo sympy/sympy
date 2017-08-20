@@ -1385,7 +1385,7 @@ def _solve(f, *symbols, **flags):
                             if other_cond.subs(symbol, candidate) == True:
                                 matches_other_piece = True
                                 break
-                        except:
+                        except Exception:
                             pass
                     if not matches_other_piece:
                         v = v == True or v.doit()
