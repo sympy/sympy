@@ -350,7 +350,7 @@ def setWC(string):
     '''
     Replaces `WC(a, b)` by `WC('a', S(b))`
     '''
-    p = r'(WC\((\w+), ([-+]?\d)\))'
+    p = r'(WC\((\w+), S\(([-+]?\d)\)\))'
     matches = re.findall(p, string)
     for i in matches:
         string = string.replace(i[0], "WC('{}', S({}))".format(i[1], i[2]))
@@ -394,10 +394,11 @@ def downvalues_rules(r, parsed):
         pattern = sstr(pattern, sympy_integers=True)
         pattern = setWC(pattern)
         transformed = sympify(transformed)
+        transformed = sstr(transformed, sympy_integers=True)
 
         index += 1
         parsed = parsed + '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
-        parsed = parsed + '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + str(transformed) + ')\n    '
+        parsed = parsed + '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + transformed + ')\n    '
         parsed = parsed + 'rubi.add(rule'+ str(index) +')\n\n'
 
     parsed = parsed + '    return rubi\n'
@@ -416,27 +417,11 @@ def rubi_rule_parser(fullform, header=None):
     fullform : FullForm of the rule as string.
     header : Header imports for the file. Uses default imports if None.
 
-    Examples
-    ========
-    >>> from sympy.integrals.rubi.parsetools.parse import rubi_rule_parser
-    >>> header = \'''
-    ... from matchpy import Operation, CommutativeOperation
-    ... def rubi_object():
-    ...     rubi = ManyToOneReplacer()
-    ...
-    ... \'''
-    >>> fullform = 'List[RuleDelayed[HoldPattern[Int[Power[Pattern[x,Blank[]],Optional[Pattern[m,Blank[]]]],Pattern[x,Blank[Symbol]]]],Condition[Times[Power[x,Plus[m,1]],Power[Plus[m,1],-1]],And[FreeQ[m,x],NonzeroQ[Plus[m,1]]]]]]'
-    >>> rules = rubi_rule_parser(fullform, header)
-    >>> print(rules)
-    from matchpy import Operation, CommutativeOperation
-    def rubi_object():
-        rubi = ManyToOneReplacer()
-    <BLANKLINE>
-        pattern1 = Pattern(Integral(x_**WC('m', S(1)), x_), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda m: NonzeroQ(m + 1)))
-        rule1 = ReplacementRule(pattern1, lambda m, x : x**(m + 1)/(m + 1))
-        rubi.add(rule1)
-    <BLANKLINE>
-        return rubi
+    References
+    ==========
+    [1] http://reference.wolfram.com/language/ref/FullForm.html
+    [2] http://reference.wolfram.com/language/ref/DownValues.html
+    [3] https://gist.github.com/Upabjojr/bc07c49262944f9c1eb0
     '''
     if not header: # use default header values
         header = parsed

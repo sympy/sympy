@@ -208,7 +208,7 @@ def Log(e):
     return log(e)
 
 def PositiveQ(var):
-    if var == zoo or var == oo:
+    if var.has(zoo) or var.has(oo):
         return False
     res = var > 0
     if not res.is_Relational:
