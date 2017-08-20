@@ -3,10 +3,13 @@ Utility functions for Rubi integration.
 
 See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Integration%20utility%20functions.pdf
 '''
+from sympy.external import import_module
+matchpy = import_module("matchpy")
+from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.functions.elementary.integers import floor, frac
 from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf)
-from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, acsch, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly, quo, rem
 from sympy.simplify.simplify import fraction, simplify, cancel, factor, nthroot
@@ -18,24 +21,133 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi)
+    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 from sympy.strategies import distribute
+from sympy import Basic
 from random import randint
 
-def Int(expr, var, showsteps=False):
+if matchpy:
+    from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
+    from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
+    from sympy.integrals.rubi.symbol import WC
+
+    class UtilityOperator(Operation):
+        name = 'UtilityOperator'
+        arity = Arity.variadic
+        commutative=False
+        associative=True
+
+    Operation.register(Pow)
+    OneIdentityOperation.register(Pow)
+    register_operation_iterator(Pow, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(Add)
+    OneIdentityOperation.register(Add)
+    CommutativeOperation.register(Add)
+    AssociativeOperation.register(Add)
+    register_operation_iterator(Add, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(Mul)
+    OneIdentityOperation.register(Mul)
+    CommutativeOperation.register(Mul)
+    AssociativeOperation.register(Mul)
+    register_operation_iterator(Mul, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(sin)
+    register_operation_iterator(sin, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(cos)
+    register_operation_iterator(cos, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(tan)
+    register_operation_iterator(tan, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(cot)
+    register_operation_iterator(cot, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(csc)
+    register_operation_iterator(csc, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(sec)
+    register_operation_iterator(sec, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(sinh)
+    register_operation_iterator(sinh, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(cosh)
+    register_operation_iterator(cosh, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(tanh)
+    register_operation_iterator(tanh, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(coth)
+    register_operation_iterator(coth, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(csch)
+    register_operation_iterator(csch, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(sech)
+    register_operation_iterator(sech, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(asin)
+    register_operation_iterator(asin, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(acos)
+    register_operation_iterator(acos, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(atan)
+    register_operation_iterator(atan, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(acot)
+    register_operation_iterator(acot, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(acsc)
+    register_operation_iterator(acsc, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(asec)
+    register_operation_iterator(asec, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(asinh)
+    register_operation_iterator(asinh, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(acosh)
+    register_operation_iterator(acosh, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(atanh)
+    register_operation_iterator(atanh, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(acoth)
+    register_operation_iterator(acoth, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(acsch)
+    register_operation_iterator(acsch, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(asech)
+    register_operation_iterator(asech, lambda a: a._args, lambda a: len(a._args))
+
+    def sympy_op_factory(old_operation, new_operands, variable_name):
+         return type(old_operation)(*new_operands)
+
+    register_operation_factory(Basic, sympy_op_factory)
+
+    A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCFGabcdefghijklmnpqrtuvswxz']
+    a, b, c, d, e = symbols('a b c d e')
+
+def Int(expr, var):
     from .rubi import rubi_integrate
-    if expr == None:
-        return None
-    return rubi_integrate(expr, var, showsteps)
+    return rubi_integrate(expr, var)
 
 def Set(expr, value):
     return {expr: value}
 
 def With(subs, expr):
+    if isinstance(subs, bool):
+        print('Not Implemented')
+        return 0
     if isinstance(subs, dict):
         k = list(subs.keys())[0]
         expr = expr.subs(k, subs[k])
@@ -73,6 +185,8 @@ def ZeroQ(expr):
         return expr == 0
 
 def NegativeQ(u):
+    if u == zoo or u == oo:
+        return False
     res = u < 0
     if not res.is_Relational:
         return res
@@ -94,6 +208,8 @@ def Log(e):
     return log(e)
 
 def PositiveQ(var):
+    if var == zoo or var == oo:
+        return False
     res = var > 0
     if not res.is_Relational:
         return res
@@ -226,7 +342,7 @@ def SqrtNumberQ(expr):
         return RationalQ(expr) or expr == I
 
 def SqrtNumberSumQ(u):
-    return SumQ(u) & SqrtNumberQ(First(u)) & SqrtNumberQ(Rest(u)) | ProductQ(u) & SqrtNumberQ(First(u)) & SqrtNumberSumQ(Rest(u))
+    return SumQ(u) and SqrtNumberQ(First(u)) and SqrtNumberQ(Rest(u)) or ProductQ(u) and SqrtNumberQ(First(u)) and SqrtNumberSumQ(Rest(u))
 
 def LinearQ(expr, x):
     if expr.is_polynomial(x):
@@ -283,6 +399,12 @@ def EllipticF(Phi, m):
 
 def ArcTan(a):
     return atan(a)
+
+def ArcCot(a):
+    return acot(a)
+
+def ArcCoth(a):
+    return acoth(a)
 
 def ArcTanh(a):
     return atanh(a)
@@ -433,6 +555,24 @@ def SecQ(u):
 
 def CscQ(u):
     return Head(u) == csc
+
+def Sin(u):
+    return sin(u)
+
+def Cos(u):
+    return cos(u)
+
+def Tan(u):
+    return tan(u)
+
+def Cot(u):
+    return cot(u)
+
+def Sec(u):
+    return sec(u)
+
+def Csc(u):
+    return csc(u)
 
 def HyperbolicQ(u):
     if AtomQ(u):
@@ -860,21 +1000,18 @@ def NiceSqrtAuxQ(u):
     elif PowerQ(u):
         return EvenQ(u.args[1])
     elif ProductQ(u):
-        return NiceSqrtAuxQ(First(u)) & NiceSqrtAuxQ(Rest(u))
+        return NiceSqrtAuxQ(First(u)) and NiceSqrtAuxQ(Rest(u))
     elif SumQ(u):
         s = Simplify(u)
-        return  NonsumQ(s) & NiceSqrtAuxQ(s)
+        return  NonsumQ(s) and NiceSqrtAuxQ(s)
     else:
         return False
 
 def NiceSqrtQ(u):
-    return Not(NegativeQ(u)) & NiceSqrtAuxQ(u)
+    return Not(NegativeQ(u)) and NiceSqrtAuxQ(u)
 
 def Together(u):
     return factor(u)
-
-def FixSimplify(u):
-    return u
 
 def PosAux(u):
     if RationalQ(u):
@@ -2271,20 +2408,19 @@ def SimplerQ(u, v):
             return True
     elif NumberQ(v):
         return False
-    elif AtomQ(u):
-        if AtomQ(v):
+    elif AtomQ(u) or (Head(u) == re) or (Head(u) == im):
+        if AtomQ(v) or (Head(u) == re) or (Head(u) == im):
             return OrderedQ([u,v])
         else:
             return True
-    elif AtomQ(v):
+    elif AtomQ(v) or (Head(u) == re) or (Head(u) == im):
         return False
     elif Head(u) == Head(v):
         if Length(u) == Length(v):
             for i in range(len(u.args)):
                 if not u.args[i] == v.args[i]:
                     return SimplerQ(u.args[i], v.args[i])
-                else:
-                    return False
+            return False
         return Length(u) < Length(v)
     elif LeafCount(u) < LeafCount(v):
         return True
@@ -2574,7 +2710,7 @@ def PolynomialTermQ(u, x):
     a = Wild('a', exclude=[x])
     n = Wild('n', exclude=[x])
     Match = u.match(a*x**n)
-    if Match and IntegerQ(Match[n]) and Match[n]>0:
+    if Match and IntegerQ(Match[n]) and Greater(Match[n], S(0)):
         return True
     else:
         return False
@@ -2600,7 +2736,7 @@ def PseudoBinomialParts(u, x):
     c = Wild('c', exclude=[x])
     n = Wild('n', exclude=[x])
     Match = u.match(a + b*(c + d*x)**n)
-    if Match and Match[n]>2 and Match[a] and Match[b] and Match[c] and Match[d] and Match[n]:
+    if Match and Greater(Match[n], S(2)) and Match[a] and Match[b] and Match[c] and Match[d] and Match[n]:
         return [Match[a], Match[b], Match[c], Match[d], Match[n]]
     else:
         return False
@@ -2972,10 +3108,17 @@ def MergeFactors(u, v):
     return u*v
 
 def TrigSimplifyQ(u):
-    return u == TrigSimplify(u)
+    # (* TrigSimplifyQ[u] returns True if TrigSimplify[u] actually simplifies u; else False. *)
+    return ActivateTrig(u) == TrigSimplify(u)
 
 def TrigSimplify(u):
-    return trigsimp(u)
+    # (* TrigSimplify[u] returns a bottom-up trig simplification of u. *)
+    return ActivateTrig(TrigSimplifyRecur(u))
+
+def TrigSimplifyRecur(u):
+    if AtomQ(u):
+        return u
+    return TrigSimplifyAux(u.func(*[TrigSimplifyRecur(i) for i in u.args]))
 
 def Order(expr1, expr2):
     if expr1 == expr2:
@@ -5030,7 +5173,7 @@ def RtAux(u, n):
         lst = SplitProduct(NegSumBaseQ, u)
         if ListQ(lst) and ListQ(SplitProduct(NegSumBaseQ, lst[1])):
             return RtAux(-lst[0], n)*RtAux(-lst[1], n)
-        Map(Function(RtAux(i, n)), u)
+        return u.func(*[RtAux(i, n) for i in u.args])
     v = TrigSquare(u)
     if Not(AtomQ(v)):
         return RtAux(v, n)
@@ -5347,7 +5490,8 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         except:
             return False
 
-    if simplify(res) == 0 or (not res.has(x)):
+    r = simplify(res)
+    if r == 0 or (not r.has(x)):
         return True
 
     if _diff:
@@ -5498,15 +5642,12 @@ def Inequality(*args):
         r.append(f[i](e[i], e[i + 1]))
     return all(r)
 
-def Condition(c, r):
+def Condition(r, c):
     # returns r if c is True
     if c:
         return r
     else:
         raise NotImplementedError('In Condition()')
-
-def SimpFixFactor(u, x):
-    return simplify(u)
 
 def Simp(u, x):
     return NormalizeSumFactors(SimpHelp(u, x))
@@ -5551,7 +5692,7 @@ def SimpHelp(u, x):
         match = u.match(pattern)
         m = False
         if match:
-            if EqQ(match[n]**3, S(1)/16):
+            if EqQ(match[n_]**3, S(1)/16):
                 m = True
         if m:
             return u
@@ -5600,3 +5741,478 @@ def SplitSum(func, u):
     elif Not(AtomQ(func(u))):
         return [func(u), 0]
     return False
+
+def Complex(a, b):
+    return a + I*b
+
+def UnsameQ(a, b):
+    return a != b
+
+@doctest_depends_on(modules=('matchpy',))
+def _SimpFixFactor():
+    replacer = ManyToOneReplacer()
+
+    pattern1 = Pattern(UtilityOperator(Pow(Add(Mul(Complex(S(0), c_), WC('a', S(1))), Mul(Complex(S(0), d_), WC('b', S(1)))), WC('p', S(1))), x_), CustomConstraint(lambda p: IntegerQ(p)))
+    rule1 = ReplacementRule(pattern1, lambda b, c, x, a, p, d : Mul(Pow(I, p), SimpFixFactor(Pow(Add(Mul(a, c), Mul(b, d)), p), x)))
+    replacer.add(rule1)
+
+    pattern2 = Pattern(UtilityOperator(Pow(Add(Mul(Complex(S(0), d_), WC('a', S(1))), Mul(Complex(S(0), e_), WC('b', S(1))), Mul(Complex(S(0), f_), WC('c', S(1)))), WC('p', S(1))), x_), CustomConstraint(lambda p: IntegerQ(p)))
+    rule2 = ReplacementRule(pattern2, lambda b, c, x, f, a, p, e, d : Mul(Pow(I, p), SimpFixFactor(Pow(Add(Mul(a, d), Mul(b, e), Mul(c, f)), p), x)))
+    replacer.add(rule2)
+
+    pattern3 = Pattern(UtilityOperator(Pow(Add(Mul(WC('a', S(1)), Pow(c_, r_)), Mul(WC('b', S(1)), Pow(x_, WC('n', S(1))))), WC('p', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda n, p: IntegersQ(n, p)), CustomConstraint(lambda c: AtomQ(c)), CustomConstraint(lambda r: RationalQ(r)), CustomConstraint(lambda r: Less(r, S(0))))
+    rule3 = ReplacementRule(pattern3, lambda b, c, r, n, x, a, p : Mul(Pow(c, Mul(r, p)), SimpFixFactor(Pow(Add(a, Mul(Mul(b, Pow(Pow(c, r), S(-1))), Pow(x, n))), p), x)))
+    replacer.add(rule3)
+
+    pattern4 = Pattern(UtilityOperator(Pow(Add(WC('a', S(0)), Mul(WC('b', S(1)), Pow(c_, r_), Pow(x_, WC('n', S(1))))), WC('p', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda n, p: IntegersQ(n, p)), CustomConstraint(lambda c: AtomQ(c)), CustomConstraint(lambda r: RationalQ(r)), CustomConstraint(lambda r: Less(r, S(0))))
+    rule4 = ReplacementRule(pattern4, lambda b, c, r, n, x, a, p : Mul(Pow(c, Mul(r, p)), SimpFixFactor(Pow(Add(Mul(a, Pow(Pow(c, r), S(-1))), Mul(b, Pow(x, n))), p), x)))
+    replacer.add(rule4)
+
+    pattern5 = Pattern(UtilityOperator(Pow(Add(Mul(WC('a', S(1)), Pow(c_, WC('s', S(1)))), Mul(WC('b', S(1)), Pow(c_, WC('r', S(1))), Pow(x_, WC('n', S(1))))), WC('p', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda n, p: IntegersQ(n, p)), CustomConstraint(lambda r, s: RationalQ(s, r)), CustomConstraint(lambda r, s: Inequality(S(0), Less, s, LessEqual, r)), CustomConstraint(lambda p, c, s: UnsameQ(Pow(c, Mul(s, p)), S(-1))))
+    rule5 = ReplacementRule(pattern5, lambda b, c, r, n, x, a, p, s : Mul(Pow(c, Mul(s, p)), SimpFixFactor(Pow(Add(a, Mul(b, Pow(c, Add(r, Mul(S(-1), s))), Pow(x, n))), p), x)))
+    replacer.add(rule5)
+
+    pattern6 = Pattern(UtilityOperator(Pow(Add(Mul(WC('a', S(1)), Pow(c_, WC('s', S(1)))), Mul(WC('b', S(1)), Pow(c_, WC('r', S(1))), Pow(x_, WC('n', S(1))))), WC('p', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda n, p: IntegersQ(n, p)), CustomConstraint(lambda r, s: RationalQ(s, r)), CustomConstraint(lambda s, r: Less(S(0), r, s)), CustomConstraint(lambda p, c, r: UnsameQ(Pow(c, Mul(r, p)), S(-1))))
+    rule6 = ReplacementRule(pattern6, lambda b, c, r, n, x, a, p, s : Mul(Pow(c, Mul(r, p)), SimpFixFactor(Pow(Add(Mul(a, Pow(c, Add(s, Mul(S(-1), r)))), Mul(b, Pow(x, n))), p), x)))
+    replacer.add(rule6)
+
+    return replacer
+
+@doctest_depends_on(modules=('matchpy',))
+def SimpFixFactor(expr, x):
+    r = SimpFixFactor_replacer.replace(UtilityOperator(expr, x))
+    if isinstance(r, UtilityOperator):
+        return expr
+    return r
+
+@doctest_depends_on(modules=('matchpy',))
+def _FixSimplify():
+    replacer = ManyToOneReplacer()
+
+    pattern1 = Pattern(UtilityOperator(Mul(Complex(S(0), a_), WC('u', S(1)), Pow(Add(Mul(Complex(S(0), b_), WC('v', S(1))), w_), WC('n', S(1))))), CustomConstraint(lambda n: OddQ(n)))
+    rule1 = ReplacementRule(pattern1, lambda a, n, b, u, v, w : Mul(Pow(S(-1), Mul(Add(n, S(1)), Pow(S('2'), S(-1)))), a, u, FixSimplify(Pow(Add(Mul(b, v), Mul(S(-1), Mul(Complex(S(0), S(1)), w))), n))))
+    replacer.add(rule1)
+
+    pattern2 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(v)), CustomConstraint(lambda u: PositiveQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
+    rule2 = ReplacementRule(pattern2, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(u, Mul(m, Pow(GCD(m, n), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, n), S(-1)))))))), Condition(FixSimplify(Mul(w, Pow(S('z'), GCD(m, n)))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    replacer.add(rule2)
+
+    pattern3 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(Mul(S(1), Pow(v, S(-1))))), CustomConstraint(lambda u: PositiveQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
+    rule3 = ReplacementRule(pattern3, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(u, Mul(m, Pow(GCD(m, Mul(S(-1), n)), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, Mul(S(-1), n)), S(-1)))))))), Condition(FixSimplify(Mul(w, Pow(S('z'), GCD(m, Mul(S(-1), n))))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    replacer.add(rule3)
+
+    pattern4 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(v)), CustomConstraint(lambda u: NegativeQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
+    rule4 = ReplacementRule(pattern4, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(Mul(S(-1), u), Mul(m, Pow(GCD(m, n), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, n), S(-1)))))))), Condition(FixSimplify(Mul(Mul(S(-1), w), Pow(S('z'), GCD(m, n)))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    replacer.add(rule4)
+
+    pattern5 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(Mul(S(1), Pow(v, S(-1))))), CustomConstraint(lambda u: NegativeQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
+    rule5 = ReplacementRule(pattern5, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(Mul(S(-1), u), Mul(m, Pow(GCD(m, Mul(S(-1), n)), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, Mul(S(-1), n)), S(-1)))))))), Condition(FixSimplify(Mul(Mul(S(-1), w), Pow(S('z'), GCD(m, Mul(S(-1), n))))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    replacer.add(rule5)
+
+    pattern6 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(a_, m_), Pow(Add(Mul(WC('v', S(1)), Pow(b_, n_)), u_), WC('p', S(1))))), CustomConstraint(lambda a, b, n, m: RationalQ(a, b, m, n)), CustomConstraint(lambda a: Greater(a, S(0))), CustomConstraint(lambda b: Greater(b, S(0))), CustomConstraint(lambda p: PositiveIntegerQ(p)))
+    rule6 = ReplacementRule(pattern6, lambda a, p, n, b, m, u, v, w : With(List(Set(S('c'), Simplify(Mul(Pow(a, Mul(m, Pow(p, S(-1)))), Pow(b, n))))), Condition(FixSimplify(Mul(w, Pow(Add(Mul(Pow(a, Mul(m, Pow(p, S(-1)))), u), Mul(S('c'), v)), p))), RationalQ(S('c')))))
+    replacer.add(rule6)
+
+    pattern7 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(a_, WC('m', S(1))), Add(Mul(WC('u', S(1)), Pow(a_, n_)), Mul(WC('v', S(1)), Pow(b_, WC('p', S(1))))))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda p: IntegerQ(p)), CustomConstraint(lambda p, n: Greater(Add(p, Mul(S(-1), n)), S(0))), CustomConstraint(lambda a, b: SameQ(Add(a, b), S(0))))
+    rule7 = ReplacementRule(pattern7, lambda a, p, n, b, m, u, v, w : FixSimplify(Mul(w, Pow(a, Add(m, n)), Add(u, Mul(Pow(S(-1), p), Pow(a, Add(p, Mul(S(-1), n))), v)))))
+    replacer.add(rule7)
+
+    pattern8 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(a_, b_), WC('m', S(1))), Pow(Add(c_, d_), n_))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda n: Not(IntegerQ(n))), CustomConstraint(lambda a, b, c, d: ZeroQ(Add(Mul(b, c), Mul(S(-1), Mul(a, d))))))
+    rule8 = ReplacementRule(pattern8, lambda a, n, c, b, d, m, w : With(List(Set(S('q'), Simplify(Mul(b, Pow(d, S(-1)))))), Condition(FixSimplify(Mul(w, Pow(S('q'), m), Pow(Add(c, d), Add(m, n)))))))
+    replacer.add(rule8)
+
+    pattern9 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(Mul(WC('u', S(1)), Pow(a_, WC('m', S(1)))), Mul(WC('v', S(1)), Pow(a_, WC('n', S(1))))), WC('t', S(1))))), CustomConstraint(lambda a: Not(RationalQ(a))), CustomConstraint(lambda t: IntegerQ(t)), CustomConstraint(lambda n, m: RationalQ(m, n)), CustomConstraint(lambda n, m: Inequality(S(0), Less, m, LessEqual, n)))
+    rule9 = ReplacementRule(pattern9, lambda t, a, n, m, u, v, w : FixSimplify(Mul(Pow(a, Mul(m, t)), w, Pow(Add(u, Mul(Pow(a, Add(n, Mul(S(-1), m))), v)), t))))
+    replacer.add(rule9)
+
+    pattern10 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(Mul(WC('u', S(1)), Pow(a_, WC('m', S(1)))), Mul(WC('v', S(1)), Pow(a_, WC('n', S(1)))), Mul(WC('z', S(1)), Pow(a_, WC('p', S(1))))), WC('t', S(1))))), CustomConstraint(lambda a: Not(RationalQ(a))), CustomConstraint(lambda t: IntegerQ(t)), CustomConstraint(lambda p, n, m: RationalQ(m, n, p)), CustomConstraint(lambda p, n, m: Inequality(S(0), Less, m, LessEqual, n, LessEqual, p)))
+    rule10 = ReplacementRule(pattern10, lambda t, a, p, n, z, m, u, v, w : FixSimplify(Mul(Pow(a, Mul(m, t)), w, Pow(Add(u, Mul(Pow(a, Add(n, Mul(S(-1), m))), v), Mul(Pow(a, Add(p, Mul(S(-1), m))), z)), t))))
+    replacer.add(rule10)
+
+    pattern11 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(Mul(WC('u', S(1)), Pow(a_, WC('m', S(1)))), Mul(WC('v', S(1)), Pow(a_, WC('n', S(1)))), Mul(WC('z', S(1)), Pow(a_, WC('p', S(1)))), Mul(WC('y', S(1)), Pow(a_, WC('q', S(1))))), WC('t', S(1))))), CustomConstraint(lambda a: Not(RationalQ(a))), CustomConstraint(lambda t: IntegerQ(t)), CustomConstraint(lambda p, n, m: RationalQ(m, n, p)), CustomConstraint(lambda p, n, m, q: Inequality(S(0), Less, m, LessEqual, n, LessEqual, p, LessEqual, q)))
+    rule11 = ReplacementRule(pattern11, lambda t, a, p, n, y, z, m, u, v, w, q : FixSimplify(Mul(Pow(a, Mul(m, t)), w, Pow(Add(u, Mul(Pow(a, Add(n, Mul(S(-1), m))), v), Mul(Pow(a, Add(p, Mul(S(-1), m))), z), Mul(Pow(a, Add(q, Mul(S(-1), m))), y)), t))))
+    replacer.add(rule11)
+
+    pattern12 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Add(WC('u', S(0)), Mul(WC('b', S(1)), Pow(v_, S(S(1))/S(S('2')))), Mul(WC('c', S(1)), Pow(v_, S(S(1))/S(S('2')))), Mul(WC('d', S(1)), Pow(v_, S(S(1))/S(S('2')))), Mul(WC('a', S(1)), Pow(v_, S(S(1))/S(S('2'))))))), CustomConstraint(lambda v: SumQ(v)))
+    rule12 = ReplacementRule(pattern12, lambda a, c, d, b, u, v, w : FixSimplify(Mul(w, Add(u, Mul(FixSimplify(Add(a, b, c, d)), Sqrt(v))))))
+    replacer.add(rule12)
+
+    pattern13 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Add(WC('u', S(0)), Mul(WC('b', S(1)), Pow(v_, S(S(1))/S(S('2')))), Mul(WC('c', S(1)), Pow(v_, S(S(1))/S(S('2')))), Mul(WC('a', S(1)), Pow(v_, S(S(1))/S(S('2'))))))), CustomConstraint(lambda v: SumQ(v)))
+    rule13 = ReplacementRule(pattern13, lambda a, c, b, u, v, w : FixSimplify(Mul(w, Add(u, Mul(FixSimplify(Add(a, b, c)), Sqrt(v))))))
+    replacer.add(rule13)
+
+    pattern14 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Add(WC('u', S(0)), Mul(WC('b', S(1)), Pow(v_, S(S(1))/S(S('2')))), Mul(WC('a', S(1)), Pow(v_, S(S(1))/S(S('2'))))))), CustomConstraint(lambda v: SumQ(v)))
+    rule14 = ReplacementRule(pattern14, lambda a, b, u, v, w : FixSimplify(Mul(w, Add(u, Mul(FixSimplify(Add(a, b)), Sqrt(v))))))
+    replacer.add(rule14)
+
+    pattern15 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(v_, m_), Pow(w_, n_))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda w: Not(RationalQ(w))), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda n: Less(n, S(0))), CustomConstraint(lambda v, n, w: ZeroQ(Add(v, Pow(w, Mul(S(-1), n))))))
+    rule15 = ReplacementRule(pattern15, lambda n, m, u, v, w : Mul(S(-1), FixSimplify(Mul(u, Pow(v, Add(m, S(-1)))))))
+    replacer.add(rule15)
+
+    pattern16 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(v_, m_), Pow(w_, WC('n', S(1))))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda w: Not(RationalQ(w))), CustomConstraint(lambda n: IntegerQ(n)), CustomConstraint(lambda v, w: ZeroQ(Add(v, w))))
+    rule16 = ReplacementRule(pattern16, lambda n, m, u, v, w : Mul(Pow(S(-1), n), FixSimplify(Mul(u, Pow(v, Add(m, n))))))
+    replacer.add(rule16)
+
+    pattern17 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Mul(S(-1), Pow(v_, WC('p', S(1)))), m_), Pow(w_, WC('n', S(1))))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda w: Not(RationalQ(w))), CustomConstraint(lambda p, n: IntegerQ(Mul(n, Pow(p, S(-1))))), CustomConstraint(lambda v, w: ZeroQ(Add(v, Mul(S(-1), w)))))
+    rule17 = ReplacementRule(pattern17, lambda p, n, m, u, v, w : Mul(Pow(S(-1), Mul(n, Pow(p, S(-1)))), FixSimplify(Mul(u, Pow(Mul(S(-1), Pow(v, p)), Add(m, Mul(n, Pow(p, S(-1)))))))))
+    replacer.add(rule17)
+
+    pattern18 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Mul(S(-1), Pow(v_, WC('p', S(1)))), m_), Pow(w_, WC('n', S(1))))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda w: Not(RationalQ(w))), CustomConstraint(lambda p, n: IntegersQ(n, Mul(n, Pow(p, S(-1))))), CustomConstraint(lambda v, w: ZeroQ(Add(v, w))))
+    rule18 = ReplacementRule(pattern18, lambda p, n, m, u, v, w : Mul(Pow(S(-1), Add(n, Mul(n, Pow(p, S(-1))))), FixSimplify(Mul(u, Pow(Mul(S(-1), Pow(v, p)), Add(m, Mul(n, Pow(p, S(-1)))))))))
+    replacer.add(rule18)
+
+    pattern19 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(a_, Mul(S(-1), b_)), WC('m', S(1))), Pow(Add(a_, b_), WC('m', S(1))))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda a: AtomQ(a)), CustomConstraint(lambda b: AtomQ(b)))
+    rule19 = ReplacementRule(pattern19, lambda a, b, m, u : Mul(u, Pow(Add(Pow(a, S('2')), Mul(S(-1), Pow(b, S('2')))), m)))
+    replacer.add(rule19)
+
+    pattern20 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(c, Pow(d, S('2'))), Mul(S(-1), e, Add(Mul(b, d), Mul(S(-1), a, e)))), WC('m', S(1))), WC('u', S(1)))), CustomConstraint(lambda m: RationalQ(m)))
+    rule20 = ReplacementRule(pattern20, lambda m, u : Mul(u, Pow(Add(Mul(S('c'), Pow(S('d'), S('2'))), Mul(S(-1), Mul(S('b'), S('d'), S('e'))), Mul(S('a'), Pow(S('e'), S('2')))), m)))
+    replacer.add(rule20)
+
+    pattern21 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(c, Pow(d, S('2'))), Mul(e, Add(Mul(S(-1), b, d), Mul(a, e)))), WC('m', S(1))), WC('u', S(1)))), CustomConstraint(lambda m: RationalQ(m)))
+    rule21 = ReplacementRule(pattern21, lambda m, u : Mul(u, Pow(Add(Mul(S('c'), Pow(S('d'), S('2'))), Mul(S(-1), Mul(S('b'), S('d'), S('e'))), Mul(S('a'), Pow(S('e'), S('2')))), m)))
+    replacer.add(rule21)
+
+    pattern22 = Pattern(UtilityOperator(u_))
+    rule22 = ReplacementRule(pattern22, lambda u : u)
+    replacer.add(rule22)
+
+    return replacer
+
+@doctest_depends_on(modules=('matchpy',))
+def FixSimplify(expr):
+    return FixSimplify_replacer.replace(UtilityOperator(expr))
+
+@doctest_depends_on(modules=('matchpy',))
+def _SimplifyAntiderivativeSum():
+    replacer = ManyToOneReplacer()
+
+    pattern1 = Pattern(UtilityOperator(Add(Mul(Log(Add(a_, Mul(WC('b', S(1)), Pow(Tan(u_), WC('n', S(1)))))), WC('A', S(1))), Mul(Log(Cos(u_)), WC('B', S(1))), WC('v', S(0))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda A, x: FreeQ(A, x)), CustomConstraint(lambda B, x: FreeQ(B, x)), CustomConstraint(lambda n: IntegerQ(n)), CustomConstraint(lambda B, A, n: ZeroQ(Add(Mul(n, A), Mul(S(1), B)))))
+    rule1 = ReplacementRule(pattern1, lambda n, x, v, b, B, A, u, a : Add(SimplifyAntiderivativeSum(v, x), Mul(A, Log(RemoveContent(Add(Mul(a, Pow(Cos(u), n)), Mul(b, Pow(Sin(u), n))), x)))))
+    replacer.add(rule1)
+
+    pattern2 = Pattern(UtilityOperator(Add(Mul(Log(Add(Mul(Pow(Cot(u_), WC('n', S(1))), WC('b', S(1))), a_)), WC('A', S(1))), Mul(Log(Sin(u_)), WC('B', S(1))), WC('v', S(0))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda A, x: FreeQ(A, x)), CustomConstraint(lambda B, x: FreeQ(B, x)), CustomConstraint(lambda n: IntegerQ(n)), CustomConstraint(lambda B, A, n: ZeroQ(Add(Mul(n, A), Mul(S(1), B)))))
+    rule2 = ReplacementRule(pattern2, lambda n, x, v, b, B, A, a, u : Add(SimplifyAntiderivativeSum(v, x), Mul(A, Log(RemoveContent(Add(Mul(a, Pow(Sin(u), n)), Mul(b, Pow(Cos(u), n))), x)))))
+    replacer.add(rule2)
+
+    pattern3 = Pattern(UtilityOperator(Add(Mul(Log(Add(a_, Mul(WC('b', S(1)), Pow(Tan(u_), WC('n', S(1)))))), WC('A', S(1))), Mul(Log(Add(c_, Mul(WC('d', S(1)), Pow(Tan(u_), WC('n', S(1)))))), WC('B', S(1))), WC('v', S(0))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda A, x: FreeQ(A, x)), CustomConstraint(lambda B, x: FreeQ(B, x)), CustomConstraint(lambda n: IntegerQ(n)), CustomConstraint(lambda B, A: ZeroQ(Add(A, B))))
+    rule3 = ReplacementRule(pattern3, lambda n, x, v, b, A, B, u, c, d, a : Add(SimplifyAntiderivativeSum(v, x), Mul(A, Log(RemoveContent(Add(Mul(a, Pow(Cos(u), n)), Mul(b, Pow(Sin(u), n))), x))), Mul(B, Log(RemoveContent(Add(Mul(c, Pow(Cos(u), n)), Mul(d, Pow(Sin(u), n))), x)))))
+    replacer.add(rule3)
+
+    pattern4 = Pattern(UtilityOperator(Add(Mul(Log(Add(Mul(Pow(Cot(u_), WC('n', S(1))), WC('b', S(1))), a_)), WC('A', S(1))), Mul(Log(Add(Mul(Pow(Cot(u_), WC('n', S(1))), WC('d', S(1))), c_)), WC('B', S(1))), WC('v', S(0))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda A, x: FreeQ(A, x)), CustomConstraint(lambda B, x: FreeQ(B, x)), CustomConstraint(lambda n: IntegerQ(n)), CustomConstraint(lambda B, A: ZeroQ(Add(A, B))))
+    rule4 = ReplacementRule(pattern4, lambda n, x, v, b, A, B, c, a, d, u : Add(SimplifyAntiderivativeSum(v, x), Mul(A, Log(RemoveContent(Add(Mul(b, Pow(Cos(u), n)), Mul(a, Pow(Sin(u), n))), x))), Mul(B, Log(RemoveContent(Add(Mul(d, Pow(Cos(u), n)), Mul(c, Pow(Sin(u), n))), x)))))
+    replacer.add(rule4)
+
+    pattern5 = Pattern(UtilityOperator(Add(Mul(Log(Add(a_, Mul(WC('b', S(1)), Pow(Tan(u_), WC('n', S(1)))))), WC('A', S(1))), Mul(Log(Add(c_, Mul(WC('d', S(1)), Pow(Tan(u_), WC('n', S(1)))))), WC('B', S(1))), Mul(Log(Add(e_, Mul(WC('f', S(1)), Pow(Tan(u_), WC('n', S(1)))))), WC('C', S(1))), WC('v', S(0))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda A, x: FreeQ(A, x)), CustomConstraint(lambda B, x: FreeQ(B, x)), CustomConstraint(lambda C, x: FreeQ(C, x)), CustomConstraint(lambda n: IntegerQ(n)), CustomConstraint(lambda B, A, C: ZeroQ(Add(A, B, C))))
+    rule5 = ReplacementRule(pattern5, lambda n, e, x, v, b, A, B, u, c, f, d, a, C : Add(SimplifyAntiderivativeSum(v, x), Mul(A, Log(RemoveContent(Add(Mul(a, Pow(Cos(u), n)), Mul(b, Pow(Sin(u), n))), x))), Mul(B, Log(RemoveContent(Add(Mul(c, Pow(Cos(u), n)), Mul(d, Pow(Sin(u), n))), x))), Mul(C, Log(RemoveContent(Add(Mul(e, Pow(Cos(u), n)), Mul(f, Pow(Sin(u), n))), x)))))
+    replacer.add(rule5)
+
+    pattern6 = Pattern(UtilityOperator(Add(Mul(Log(Add(Mul(Pow(Cot(u_), WC('n', S(1))), WC('b', S(1))), a_)), WC('A', S(1))), Mul(Log(Add(Mul(Pow(Cot(u_), WC('n', S(1))), WC('d', S(1))), c_)), WC('B', S(1))), Mul(Log(Add(Mul(Pow(Cot(u_), WC('n', S(1))), WC('f', S(1))), e_)), WC('C', S(1))), WC('v', S(0))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda A, x: FreeQ(A, x)), CustomConstraint(lambda B, x: FreeQ(B, x)), CustomConstraint(lambda C, x: FreeQ(C, x)), CustomConstraint(lambda n: IntegerQ(n)), CustomConstraint(lambda B, A, C: ZeroQ(Add(A, B, C))))
+    rule6 = ReplacementRule(pattern6, lambda n, e, x, v, b, A, B, c, a, f, d, u, C : Add(SimplifyAntiderivativeSum(v, x), Mul(A, Log(RemoveContent(Add(Mul(b, Pow(Cos(u), n)), Mul(a, Pow(Sin(u), n))), x))), Mul(B, Log(RemoveContent(Add(Mul(d, Pow(Cos(u), n)), Mul(c, Pow(Sin(u), n))), x))), Mul(C, Log(RemoveContent(Add(Mul(f, Pow(Cos(u), n)), Mul(e, Pow(Sin(u), n))), x)))))
+    replacer.add(rule6)
+
+    return replacer
+
+@doctest_depends_on(modules=('matchpy',))
+def SimplifyAntiderivativeSum(expr, x):
+    r = SimplifyAntiderivativeSum_replacer.replace(UtilityOperator(expr, x))
+    if isinstance(r, UtilityOperator):
+        return expr
+    return r
+
+@doctest_depends_on(modules=('matchpy',))
+def _SimplifyAntiderivative():
+    replacer = ManyToOneReplacer()
+
+    pattern2 = Pattern(UtilityOperator(Log(Mul(c_, u_)), x_), CustomConstraint(lambda c, x: FreeQ(c, x)))
+    rule2 = ReplacementRule(pattern2, lambda x, c, u : SimplifyAntiderivative(Log(u), x))
+    replacer.add(rule2)
+
+    pattern3 = Pattern(UtilityOperator(Log(Pow(u_, n_)), x_), CustomConstraint(lambda n, x: FreeQ(n, x)))
+    rule3 = ReplacementRule(pattern3, lambda x, n, u : Mul(n, SimplifyAntiderivative(Log(u), x)))
+    replacer.add(rule3)
+
+    pattern7 = Pattern(UtilityOperator(Log(Pow(f_, u_)), x_), CustomConstraint(lambda f, x: FreeQ(f, x)))
+    rule7 = ReplacementRule(pattern7, lambda x, f, u : Mul(Log(f), SimplifyAntiderivative(u, x)))
+    replacer.add(rule7)
+
+    pattern8 = Pattern(UtilityOperator(Log(Add(a_, Mul(WC('b', S(1)), Tan(u_)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda b, a: ZeroQ(Add(Pow(a, S(2)), Pow(b, S(2))))))
+    rule8 = ReplacementRule(pattern8, lambda x, b, u, a : Add(Mul(Mul(b, Pow(a, S(1))), SimplifyAntiderivative(u, x)), Mul(S(1), SimplifyAntiderivative(Log(Cos(u)), x))))
+    replacer.add(rule8)
+
+    pattern9 = Pattern(UtilityOperator(Log(Add(Mul(Cot(u_), WC('b', S(1))), a_)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda b, a: ZeroQ(Add(Pow(a, S(2)), Pow(b, S(2))))))
+    rule9 = ReplacementRule(pattern9, lambda x, b, u, a : Add(Mul(Mul(Mul(S(1), b), Pow(a, S(1))), SimplifyAntiderivative(u, x)), Mul(S(1), SimplifyAntiderivative(Log(Sin(u)), x))))
+    replacer.add(rule9)
+
+    pattern10 = Pattern(UtilityOperator(ArcTan(Mul(WC('a', S(1)), Tan(u_))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule10 = ReplacementRule(pattern10, lambda x, u, a : RectifyTangent(u, a, S(1), x))
+    replacer.add(rule10)
+
+    pattern11 = Pattern(UtilityOperator(ArcCot(Mul(WC('a', S(1)), Tan(u_))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule11 = ReplacementRule(pattern11, lambda x, u, a : RectifyTangent(u, a, S(1), x))
+    replacer.add(rule11)
+
+    pattern12 = Pattern(UtilityOperator(ArcCot(Mul(WC('a', S(1)), Tanh(u_))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule12 = ReplacementRule(pattern12, lambda x, u, a : Mul(S(1), SimplifyAntiderivative(ArcTan(Mul(a, Tanh(u))), x)))
+    replacer.add(rule12)
+
+    pattern13 = Pattern(UtilityOperator(ArcTanh(Mul(WC('a', S(1)), Tan(u_))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule13 = ReplacementRule(pattern13, lambda x, u, a : RectifyTangent(u, Mul(I, a), Mul(S(1), I), x))
+    replacer.add(rule13)
+
+    pattern14 = Pattern(UtilityOperator(ArcCoth(Mul(WC('a', S(1)), Tan(u_))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule14 = ReplacementRule(pattern14, lambda x, u, a : RectifyTangent(u, Mul(I, a), Mul(S(1), I), x))
+    replacer.add(rule14)
+
+    pattern15 = Pattern(UtilityOperator(ArcTanh(Tanh(u_)), x_))
+    rule15 = ReplacementRule(pattern15, lambda x, u : SimplifyAntiderivative(u, x))
+    replacer.add(rule15)
+
+    pattern16 = Pattern(UtilityOperator(ArcCoth(Tanh(u_)), x_))
+    rule16 = ReplacementRule(pattern16, lambda x, u : SimplifyAntiderivative(u, x))
+    replacer.add(rule16)
+
+    pattern17 = Pattern(UtilityOperator(ArcCot(Mul(Cot(u_), WC('a', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule17 = ReplacementRule(pattern17, lambda x, u, a : RectifyCotangent(u, a, S(1), x))
+    replacer.add(rule17)
+
+    pattern18 = Pattern(UtilityOperator(ArcTan(Mul(Cot(u_), WC('a', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule18 = ReplacementRule(pattern18, lambda x, u, a : RectifyCotangent(u, a, S(1), x))
+    replacer.add(rule18)
+
+    pattern19 = Pattern(UtilityOperator(ArcTan(Mul(Coth(u_), WC('a', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule19 = ReplacementRule(pattern19, lambda x, u, a : Mul(S(1), SimplifyAntiderivative(ArcTan(Mul(Tanh(u), Pow(a, S(1)))), x)))
+    replacer.add(rule19)
+
+    pattern20 = Pattern(UtilityOperator(ArcCoth(Mul(Cot(u_), WC('a', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule20 = ReplacementRule(pattern20, lambda x, u, a : RectifyCotangent(u, Mul(I, a), I, x))
+    replacer.add(rule20)
+
+    pattern21 = Pattern(UtilityOperator(ArcTanh(Mul(Cot(u_), WC('a', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda a: PositiveQ(Pow(a, S(2)))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule21 = ReplacementRule(pattern21, lambda x, u, a : RectifyCotangent(u, Mul(I, a), I, x))
+    replacer.add(rule21)
+
+    pattern22 = Pattern(UtilityOperator(ArcCoth(Coth(u_)), x_))
+    rule22 = ReplacementRule(pattern22, lambda x, u : SimplifyAntiderivative(u, x))
+    replacer.add(rule22)
+
+    pattern23 = Pattern(UtilityOperator(ArcTanh(Mul(Coth(u_), WC('a', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule23 = ReplacementRule(pattern23, lambda x, u, a : SimplifyAntiderivative(ArcTanh(Mul(Tanh(u), Pow(a, S(1)))), x))
+    replacer.add(rule23)
+
+    pattern24 = Pattern(UtilityOperator(ArcTanh(Coth(u_)), x_))
+    rule24 = ReplacementRule(pattern24, lambda x, u : SimplifyAntiderivative(u, x))
+    replacer.add(rule24)
+
+    pattern25 = Pattern(UtilityOperator(ArcTan(Mul(WC('c', S(1)), Add(a_, Mul(WC('b', S(1)), Tan(u_))))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), CustomConstraint(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule25 = ReplacementRule(pattern25, lambda x, a, b, u, c : RectifyTangent(u, Mul(a, c), Mul(b, c), S(1), x))
+    replacer.add(rule25)
+
+    pattern26 = Pattern(UtilityOperator(ArcTanh(Mul(WC('c', S(1)), Add(a_, Mul(WC('b', S(1)), Tan(u_))))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), CustomConstraint(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule26 = ReplacementRule(pattern26, lambda x, a, b, u, c : RectifyTangent(u, Mul(I, a, c), Mul(I, b, c), Mul(S(1), I), x))
+    replacer.add(rule26)
+
+    pattern27 = Pattern(UtilityOperator(ArcTan(Mul(WC('c', S(1)), Add(Mul(Cot(u_), WC('b', S(1))), a_))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), CustomConstraint(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule27 = ReplacementRule(pattern27, lambda x, a, b, u, c : RectifyCotangent(u, Mul(a, c), Mul(b, c), S(1), x))
+    replacer.add(rule27)
+
+    pattern28 = Pattern(UtilityOperator(ArcTanh(Mul(WC('c', S(1)), Add(Mul(Cot(u_), WC('b', S(1))), a_))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), CustomConstraint(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule28 = ReplacementRule(pattern28, lambda x, a, b, u, c : RectifyCotangent(u, Mul(I, a, c), Mul(I, b, c), Mul(S(1), I), x))
+    replacer.add(rule28)
+
+    pattern29 = Pattern(UtilityOperator(ArcTan(Add(WC('a', S(0)), Mul(WC('b', S(1)), Tan(u_)), Mul(WC('c', S(1)), Pow(Tan(u_), S(2))))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule29 = ReplacementRule(pattern29, lambda x, a, b, u, c : If(EvenQ(Denominator(NumericFactor(Together(u)))), ArcTan(NormalizeTogether(Mul(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u))), Mul(b, Sin(Mul(S(2), u)))), Pow(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u))), Mul(b, Sin(Mul(S(2), u)))), S(1))))), ArcTan(NormalizeTogether(Mul(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2))), Mul(b, Cos(u), Sin(u))), Pow(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2))), Mul(b, Cos(u), Sin(u))), S(1)))))))
+    replacer.add(rule29)
+
+    pattern30 = Pattern(UtilityOperator(ArcTan(Add(WC('a', S(0)), Mul(WC('b', S(1)), Add(WC('d', S(0)), Mul(WC('e', S(1)), Tan(u_)))), Mul(WC('c', S(1)), Pow(Add(WC('f', S(0)), Mul(WC('g', S(1)), Tan(u_))), S(2))))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule30 = ReplacementRule(pattern30, lambda x, d, a, e, f, b, u, c, g : SimplifyAntiderivative(ArcTan(Add(a, Mul(b, d), Mul(c, Pow(f, S(2))), Mul(Add(Mul(b, e), Mul(S(2), c, f, g)), Tan(u)), Mul(c, Pow(g, S(2)), Pow(Tan(u), S(2))))), x))
+    replacer.add(rule30)
+
+    pattern31 = Pattern(UtilityOperator(ArcTan(Add(WC('a', S(0)), Mul(WC('c', S(1)), Pow(Tan(u_), S(2))))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule31 = ReplacementRule(pattern31, lambda x, c, u, a : If(EvenQ(Denominator(NumericFactor(Together(u)))), ArcTan(NormalizeTogether(Mul(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u)))), Pow(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u)))), S(1))))), ArcTan(NormalizeTogether(Mul(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2)))), Pow(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2)))), S(1)))))))
+    replacer.add(rule31)
+
+    pattern32 = Pattern(UtilityOperator(ArcTan(Add(WC('a', S(0)), Mul(WC('c', S(1)), Pow(Add(WC('f', S(0)), Mul(WC('g', S(1)), Tan(u_))), S(2))))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda u: ComplexFreeQ(u)))
+    rule32 = ReplacementRule(pattern32, lambda x, a, f, u, c, g : SimplifyAntiderivative(ArcTan(Add(a, Mul(c, Pow(f, S(2))), Mul(Mul(S(2), c, f, g), Tan(u)), Mul(c, Pow(g, S(2)), Pow(Tan(u), S(2))))), x))
+    replacer.add(rule32)
+
+    return replacer
+
+@doctest_depends_on(modules=('matchpy',))
+def SimplifyAntiderivative(expr, x):
+    r = SimplifyAntiderivative_replacer.replace(UtilityOperator(expr, x))
+    if isinstance(r, UtilityOperator):
+        if ProductQ(expr):
+            u, c = S(1), S(1)
+            for i in expr.args:
+                if FreeQ(i, x):
+                    c *= i
+                else:
+                    u *= i
+            if FreeQ(c, x) and c != S(1):
+                v = SimplifyAntiderivative(u, x)
+                if SumQ(v) and NonsumQ(u):
+                    return Add(*[c*i for i in v.args])
+                return c*v
+        elif LogQ(expr):
+            F = expr.args[0]
+            if MemberQ([cot, sec, csc, coth, sech, csch], Head(F)):
+                return -SimplifyAntiderivative(Log(1/F), x)
+        if MemberQ([log, atan, acot], Head(expr)):
+            F = Head(expr)
+            G = expr.args[0]
+            if MemberQ([cot, sec, csc, coth, sech, csch], Head(G)):
+                return -SimplifyAntiderivative(F(1/G), x)
+        if MemberQ([atanh, acoth], Head(expr)):
+            F = Head(expr)
+            G = expr.args[0]
+            if MemberQ([cot, sec, csc, coth, sech, csch], Head(G)):
+                return SimplifyAntiderivative(F(1/G), x)
+        u = expr
+        if FreeQ(u, x):
+            return S(0)
+        elif LogQ(u):
+            return Log(RemoveContent(u.args[0], x))
+        elif SumQ(u):
+            return SimplifyAntiderivativeSum(Add(*[SimplifyAntiderivative(i, x) for i in u.args]), x)
+        return u
+    else:
+        return r
+
+@doctest_depends_on(modules=('matchpy',))
+def _TrigSimplifyAux():
+    replacer = ManyToOneReplacer()
+
+    pattern1 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(Mul(WC('a', S(1)), Pow(v_, WC('m', S(1)))), Mul(WC('b', S(1)), Pow(v_, WC('n', S(1))))), p_))), CustomConstraint(lambda v: InertTrigQ(v)), CustomConstraint(lambda p: IntegerQ(p)), CustomConstraint(lambda n, m: RationalQ(m, n)), CustomConstraint(lambda n, m: Less(m, n)))
+    rule1 = ReplacementRule(pattern1, lambda n, a, p, m, u, v, b : Mul(u, Pow(v, Mul(m, p)), Pow(TrigSimplifyAux(Add(a, Mul(b, Pow(v, Add(n, Mul(S(-1), m)))))), p)))
+    replacer.add(rule1)
+
+    pattern2 = Pattern(UtilityOperator(Add(Mul(Pow(cos(u_), S('2')), WC('a', S(1))), WC('v', S(0)), Mul(WC('b', S(1)), Pow(sin(u_), S('2'))))), CustomConstraint(lambda b, a: SameQ(a, b)))
+    rule2 = ReplacementRule(pattern2, lambda u, v, b, a : Add(a, v))
+    replacer.add(rule2)
+
+    pattern3 = Pattern(UtilityOperator(Add(WC('v', S(0)), Mul(WC('a', S(1)), Pow(sec(u_), S('2'))), Mul(WC('b', S(1)), Pow(tan(u_), S('2'))))), CustomConstraint(lambda b, a: SameQ(a, Mul(S(-1), b))))
+    rule3 = ReplacementRule(pattern3, lambda u, v, b, a : Add(a, v))
+    replacer.add(rule3)
+
+    pattern4 = Pattern(UtilityOperator(Add(Mul(Pow(csc(u_), S('2')), WC('a', S(1))), Mul(Pow(cot(u_), S('2')), WC('b', S(1))), WC('v', S(0)))), CustomConstraint(lambda b, a: SameQ(a, Mul(S(-1), b))))
+    rule4 = ReplacementRule(pattern4, lambda u, v, b, a : Add(a, v))
+    replacer.add(rule4)
+
+    pattern5 = Pattern(UtilityOperator(Pow(Add(Mul(Pow(cos(u_), S('2')), WC('a', S(1))), WC('v', S(0)), Mul(WC('b', S(1)), Pow(sin(u_), S('2')))), n_)))
+    rule5 = ReplacementRule(pattern5, lambda n, a, u, v, b : Pow(Add(Mul(Add(b, Mul(S(-1), a)), Pow(Sin(u), S('2'))), a, v), n))
+    replacer.add(rule5)
+
+    pattern6 = Pattern(UtilityOperator(Add(WC('w', S(0)), u_, Mul(WC('v', S(1)), Pow(sin(z_), S('2'))))), CustomConstraint(lambda u, v: SameQ(u, Mul(S(-1), v))))
+    rule6 = ReplacementRule(pattern6, lambda u, w, z, v : Add(Mul(u, Pow(Cos(z), S('2'))), w))
+    replacer.add(rule6)
+
+    pattern7 = Pattern(UtilityOperator(Add(Mul(Pow(cos(z_), S('2')), WC('v', S(1))), WC('w', S(0)), u_)), CustomConstraint(lambda u, v: SameQ(u, Mul(S(-1), v))))
+    rule7 = ReplacementRule(pattern7, lambda z, w, v, u : Add(Mul(u, Pow(Sin(z), S('2'))), w))
+    replacer.add(rule7)
+
+    pattern8 = Pattern(UtilityOperator(Add(WC('w', S(0)), u_, Mul(WC('v', S(1)), Pow(tan(z_), S('2'))))), CustomConstraint(lambda u, v: SameQ(u, v)))
+    rule8 = ReplacementRule(pattern8, lambda u, w, z, v : Add(Mul(u, Pow(Sec(z), S('2'))), w))
+    replacer.add(rule8)
+
+    pattern9 = Pattern(UtilityOperator(Add(Mul(Pow(cot(z_), S('2')), WC('v', S(1))), WC('w', S(0)), u_)), CustomConstraint(lambda u, v: SameQ(u, v)))
+    rule9 = ReplacementRule(pattern9, lambda z, w, v, u : Add(Mul(u, Pow(Csc(z), S('2'))), w))
+    replacer.add(rule9)
+
+    pattern10 = Pattern(UtilityOperator(Add(WC('w', S(0)), u_, Mul(WC('v', S(1)), Pow(sec(z_), S('2'))))), CustomConstraint(lambda u, v: SameQ(u, Mul(S(-1), v))))
+    rule10 = ReplacementRule(pattern10, lambda u, w, z, v : Add(Mul(v, Pow(Tan(z), S('2'))), w))
+    replacer.add(rule10)
+
+    pattern11 = Pattern(UtilityOperator(Add(Mul(Pow(csc(z_), S('2')), WC('v', S(1))), WC('w', S(0)), u_)), CustomConstraint(lambda u, v: SameQ(u, Mul(S(-1), v))))
+    rule11 = ReplacementRule(pattern11, lambda z, w, v, u : Add(Mul(v, Pow(Cot(z), S('2'))), w))
+    replacer.add(rule11)
+
+    pattern12 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(Mul(cos(v_), WC('b', S(1))), a_), S(-1)), Pow(sin(v_), S('2')))), CustomConstraint(lambda b, a: ZeroQ(Add(Pow(a, S('2')), Mul(S(-1), Pow(b, S('2')))))))
+    rule12 = ReplacementRule(pattern12, lambda u, v, b, a : Mul(u, Add(Mul(S(1), Pow(a, S(-1))), Mul(S(-1), Mul(Cos(v), Pow(b, S(-1)))))))
+    replacer.add(rule12)
+
+    pattern13 = Pattern(UtilityOperator(Mul(Pow(cos(v_), S('2')), WC('u', S(1)), Pow(Add(a_, Mul(WC('b', S(1)), sin(v_))), S(-1)))), CustomConstraint(lambda b, a: ZeroQ(Add(Pow(a, S('2')), Mul(S(-1), Pow(b, S('2')))))))
+    rule13 = ReplacementRule(pattern13, lambda u, v, b, a : Mul(u, Add(Mul(S(1), Pow(a, S(-1))), Mul(S(-1), Mul(Sin(v), Pow(b, S(-1)))))))
+    replacer.add(rule13)
+
+    pattern14 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(tan(v_), WC('n', S(1))), Pow(Add(a_, Mul(WC('b', S(1)), Pow(tan(v_), WC('n', S(1))))), S(-1)))), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda a: NonsumQ(a)))
+    rule14 = ReplacementRule(pattern14, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Cot(v), n))), S(-1))))
+    replacer.add(rule14)
+
+    pattern15 = Pattern(UtilityOperator(Mul(Pow(cot(v_), WC('n', S(1))), WC('u', S(1)), Pow(Add(Mul(Pow(cot(v_), WC('n', S(1))), WC('b', S(1))), a_), S(-1)))), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda a: NonsumQ(a)))
+    rule15 = ReplacementRule(pattern15, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Tan(v), n))), S(-1))))
+    replacer.add(rule15)
+
+    pattern16 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(sec(v_), WC('n', S(1))), Pow(Add(a_, Mul(WC('b', S(1)), Pow(sec(v_), WC('n', S(1))))), S(-1)))), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda a: NonsumQ(a)))
+    rule16 = ReplacementRule(pattern16, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Cos(v), n))), S(-1))))
+    replacer.add(rule16)
+
+    pattern17 = Pattern(UtilityOperator(Mul(Pow(csc(v_), WC('n', S(1))), WC('u', S(1)), Pow(Add(Mul(Pow(csc(v_), WC('n', S(1))), WC('b', S(1))), a_), S(-1)))), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda a: NonsumQ(a)))
+    rule17 = ReplacementRule(pattern17, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Sin(v), n))), S(-1))))
+    replacer.add(rule17)
+
+    pattern18 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(a_, Mul(WC('b', S(1)), Pow(sec(v_), WC('n', S(1))))), S(-1)), Pow(tan(v_), WC('n', S(1))))), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda a: NonsumQ(a)))
+    rule18 = ReplacementRule(pattern18, lambda n, a, u, v, b : Mul(u, Mul(Pow(Sin(v), n), Pow(Add(b, Mul(a, Pow(Cos(v), n))), S(-1)))))
+    replacer.add(rule18)
+
+    pattern19 = Pattern(UtilityOperator(Mul(Pow(cot(v_), WC('n', S(1))), WC('u', S(1)), Pow(Add(Mul(Pow(csc(v_), WC('n', S(1))), WC('b', S(1))), a_), S(-1)))), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda a: NonsumQ(a)))
+    rule19 = ReplacementRule(pattern19, lambda n, a, u, v, b : Mul(u, Mul(Pow(Cos(v), n), Pow(Add(b, Mul(a, Pow(Sin(v), n))), S(-1)))))
+    replacer.add(rule19)
+
+    pattern20 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(Mul(WC('a', S(1)), Pow(sec(v_), WC('n', S(1)))), Mul(WC('b', S(1)), Pow(tan(v_), WC('n', S(1))))), WC('p', S(1))))), CustomConstraint(lambda n, p: IntegersQ(n, p)))
+    rule20 = ReplacementRule(pattern20, lambda n, a, p, u, v, b : Mul(u, Pow(Sec(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Sin(v), n))), p)))
+    replacer.add(rule20)
+
+    pattern21 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(Pow(csc(v_), WC('n', S(1))), WC('a', S(1))), Mul(Pow(cot(v_), WC('n', S(1))), WC('b', S(1)))), WC('p', S(1))), WC('u', S(1)))), CustomConstraint(lambda n, p: IntegersQ(n, p)))
+    rule21 = ReplacementRule(pattern21, lambda n, a, p, u, v, b : Mul(u, Pow(Csc(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Cos(v), n))), p)))
+    replacer.add(rule21)
+
+    pattern22 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(Mul(WC('b', S(1)), Pow(sin(v_), WC('n', S(1)))), Mul(WC('a', S(1)), Pow(tan(v_), WC('n', S(1))))), WC('p', S(1))))), CustomConstraint(lambda n, p: IntegersQ(n, p)))
+    rule22 = ReplacementRule(pattern22, lambda n, a, p, u, v, b : Mul(u, Pow(Tan(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Cos(v), n))), p)))
+    replacer.add(rule22)
+
+    pattern23 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(Pow(cot(v_), WC('n', S(1))), WC('a', S(1))), Mul(Pow(cos(v_), WC('n', S(1))), WC('b', S(1)))), WC('p', S(1))), WC('u', S(1)))), CustomConstraint(lambda n, p: IntegersQ(n, p)))
+    rule23 = ReplacementRule(pattern23, lambda n, a, p, u, v, b : Mul(u, Pow(Cot(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Sin(v), n))), p)))
+    replacer.add(rule23)
+
+    pattern24 = Pattern(UtilityOperator(Mul(Pow(cos(v_), WC('m', S(1))), WC('u', S(1)), Pow(Add(WC('a', S(0)), Mul(WC('c', S(1)), Pow(sec(v_), WC('n', S(1)))), Mul(WC('b', S(1)), Pow(tan(v_), WC('n', S(1))))), WC('p', S(1))))), CustomConstraint(lambda n, p, m: IntegersQ(m, n, p)))
+    rule24 = ReplacementRule(pattern24, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Cos(v), Add(m, Mul(S(-1), Mul(n, p)))), Pow(Add(c, Mul(b, Pow(Sin(v), n)), Mul(a, Pow(Cos(v), n))), p)))
+    replacer.add(rule24)
+
+    pattern25 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(sec(v_), WC('m', S(1))), Pow(Add(WC('a', S(0)), Mul(WC('c', S(1)), Pow(sec(v_), WC('n', S(1)))), Mul(WC('b', S(1)), Pow(tan(v_), WC('n', S(1))))), WC('p', S(1))))), CustomConstraint(lambda n, p, m: IntegersQ(m, n, p)))
+    rule25 = ReplacementRule(pattern25, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Sec(v), Add(m, Mul(n, p))), Pow(Add(c, Mul(b, Pow(Sin(v), n)), Mul(a, Pow(Cos(v), n))), p)))
+    replacer.add(rule25)
+
+    pattern26 = Pattern(UtilityOperator(Mul(Pow(Add(WC('a', S(0)), Mul(Pow(cot(v_), WC('n', S(1))), WC('b', S(1))), Mul(Pow(csc(v_), WC('n', S(1))), WC('c', S(1)))), WC('p', S(1))), WC('u', S(1)), Pow(sin(v_), WC('m', S(1))))), CustomConstraint(lambda n, p, m: IntegersQ(m, n, p)))
+    rule26 = ReplacementRule(pattern26, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Sin(v), Add(m, Mul(S(-1), Mul(n, p)))), Pow(Add(c, Mul(b, Pow(Cos(v), n)), Mul(a, Pow(Sin(v), n))), p)))
+    replacer.add(rule26)
+
+    pattern27 = Pattern(UtilityOperator(Mul(Pow(csc(v_), WC('m', S(1))), Pow(Add(WC('a', S(0)), Mul(Pow(cot(v_), WC('n', S(1))), WC('b', S(1))), Mul(Pow(csc(v_), WC('n', S(1))), WC('c', S(1)))), WC('p', S(1))), WC('u', S(1)))), CustomConstraint(lambda n, p, m: IntegersQ(m, n, p)))
+    rule27 = ReplacementRule(pattern27, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Csc(v), Add(m, Mul(n, p))), Pow(Add(c, Mul(b, Pow(Cos(v), n)), Mul(a, Pow(Sin(v), n))), p)))
+    replacer.add(rule27)
+
+    pattern28 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(Mul(Pow(csc(v_), WC('m', S(1))), WC('a', S(1))), Mul(WC('b', S(1)), Pow(sin(v_), WC('n', S(1))))), WC('p', S(1))))), CustomConstraint(lambda n, m: IntegersQ(m, n)))
+    rule28 = ReplacementRule(pattern28, lambda n, a, p, m, u, v, b : If(And(ZeroQ(Add(m, n, S(-2))), ZeroQ(Add(a, b))), Mul(u, Pow(Mul(a, Mul(Pow(Cos(v), S('2')), Pow(Pow(Sin(v), m), S(-1)))), p)), Mul(u, Pow(Mul(Add(a, Mul(b, Pow(Sin(v), Add(m, n)))), Pow(Pow(Sin(v), m), S(-1))), p))))
+    replacer.add(rule28)
+
+    pattern29 = Pattern(UtilityOperator(Mul(WC('u', S(1)), Pow(Add(Mul(Pow(cos(v_), WC('n', S(1))), WC('b', S(1))), Mul(WC('a', S(1)), Pow(sec(v_), WC('m', S(1))))), WC('p', S(1))))), CustomConstraint(lambda n, m: IntegersQ(m, n)))
+    rule29 = ReplacementRule(pattern29, lambda n, a, p, m, u, v, b : If(And(ZeroQ(Add(m, n, S(-2))), ZeroQ(Add(a, b))), Mul(u, Pow(Mul(a, Mul(Pow(Sin(v), S('2')), Pow(Pow(Cos(v), m), S(-1)))), p)), Mul(u, Pow(Mul(Add(a, Mul(b, Pow(Cos(v), Add(m, n)))), Pow(Pow(Cos(v), m), S(-1))), p))))
+    replacer.add(rule29)
+
+    pattern30 = Pattern(UtilityOperator(u_))
+    rule30 = ReplacementRule(pattern30, lambda u : u)
+    replacer.add(rule30)
+
+    return replacer
+
+
+@doctest_depends_on(modules=('matchpy',))
+def TrigSimplifyAux(expr):
+    return TrigSimplifyAux_replacer.replace(UtilityOperator(expr))
+
+if matchpy:
+    TrigSimplifyAux_replacer = _TrigSimplifyAux()
+    SimplifyAntiderivative_replacer = _SimplifyAntiderivative()
+    SimplifyAntiderivativeSum_replacer = _SimplifyAntiderivativeSum()
+    FixSimplify_replacer = _FixSimplify()
+    SimpFixFactor_replacer = _SimpFixFactor()

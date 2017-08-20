@@ -103,7 +103,6 @@ def test_3():
         else:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
 
-
 def test_4():
     test = [
         [x**m/(a + b*x)**S(2), x, S(1), x**(S(1) + m)*hypergeom([S(2), S(1) + m], [S(2) + m], - b*x/a)/(a**S(2)*(S(1) + m))],
@@ -113,20 +112,19 @@ def test_4():
         [(c + d*(a + b*x))**(S(5)/S(2)), x, S(2), S(2)/S(7)*(c + d*(a + b*x))**(S(7)/S(2))/(b*d)],
         [(c + d*(a + b*x))**(S(3)/S(2)), x, S(2), S(2)/S(5)*(c + d*(a + b*x))**(S(5)/S(2))/(b*d)],
         [(a + b*x)**S(3)/(a*d/b + d*x)**S(3), x, S(2), b**S(3)*x/d**S(3)],
-        [S(1)/((a + b*x)*(a*d/b + d*x)**S(3)), x, S(2), - S(1)/S(3)*b**S(2)/(d**S(3)*(a + b*x)**S(3))],
         [(a + b*x)*(a*c - b*c*x)**S(3), x, S(2), - S(1)/S(2)*a*c**S(3)*(a - b*x)**S(4)/b + S(1)/S(5)*c**S(3)*(a - b*x)**S(5)/b],
         [(a*c - b*c*x)**S(3)/(a + b*x), x, S(2), - S(4)*a**S(2)*c**S(3)*x + a*c**S(3)*(a - b*x)**S(2)/b + S(1)/S(3)*c**S(3)*(a - b*x)**S(3)/b + S(8)*a**S(3)*c**S(3)*log(a + b*x)/b],
         [S(1)/((a + b*x)**S(2)*(a*c - b*c*x)), x, S(3), ( - S(1)/S(2))/(a*b*c*(a + b*x)) + S(1)/S(2)*arctanh(b*x/a)/(a**S(2)*b*c)],
         [(S(1) + x)**(S(1)/S(2))/(S(1) - x)**(S(9)/S(2)), x, S(3), S(1)/S(7)*(S(1) + x)**(S(3)/S(2))/(S(1) - x)**(S(7)/S(2)) + S(2)/S(35)*(S(1) + x)**(S(3)/S(2))/(S(1) - x)**(S(5)/S(2)) + S(2)/S(105)*(S(1) + x)**(S(3)/S(2))/(S(1) - x)**(S(3)/S(2))],
         [(S(1) + x)**(S(5)/S(2))/(S(1) - x)**(S(1)/S(2)), x, S(5), S(5)/S(2)*arcsin(x) - S(5)/S(6)*(S(1) + x)**(S(3)/S(2))*sqrt(S(1) - x) - S(1)/S(3)*(S(1) + x)**(S(5)/S(2))*sqrt(S(1) - x) - S(5)/S(2)*sqrt(S(1) - x)*sqrt(S(1) + x)],
     ]
-
     for i in test:
         r = rubi_integrate(i[0], i[1])
         if len(i) == 5:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True)
         else:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
+
 
 def test_5():
     test = [
@@ -206,6 +204,7 @@ def test_6():
 def test_numerical():
     test = [
         [(a + b*x)**(S(1)/S(2))*(c + d*x)**(S(1)/S(4)), x, S(5), S(4)/S(7)*(a + b*x)**(S(3)/S(2))*(c + d*x)**(S(1)/S(4))/b + S(4)/S(21)*(b*c - a*d)*(c + d*x)**(S(1)/S(4))*sqrt(a + b*x)/(b*d) - S(8)/S(21)*(b*c - a*d)**(S(9)/S(4))*EllipticF(b**(S(1)/S(4))*(c + d*x)**(S(1)/S(4))/(b*c - a*d)**(S(1)/S(4)), I)*sqrt(S(1) - b*(c + d*x)/(b*c - a*d))/(b**(S(5)/S(4))*d**S(2)*sqrt(a - b*c/d + b*(c + d*x)/d))],
+        [S(1)/((a + b*x)*(a*d/b + d*x)**S(3)), x, S(2), - S(1)/S(3)*b**S(2)/(d**S(3)*(a + b*x)**S(3))],
     ]
 
     for i in test:
