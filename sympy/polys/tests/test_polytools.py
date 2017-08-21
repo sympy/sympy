@@ -2444,6 +2444,10 @@ def test_factor():
 
     assert factor(sqrt(x**2)) == sqrt(x**2)
 
+    # issue 13149
+    assert factor(expand((0.5*x+1)*(0.5*y+1))) == Mul(4.0, 0.25*x + 0.5, 0.25*y + 0.5, evaluate = False)
+    assert factor(expand((0.5*x+0.5)**2)) == 4.0*(0.25*x + 0.25)**2
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
