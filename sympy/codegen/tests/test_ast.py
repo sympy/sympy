@@ -274,14 +274,14 @@ def test_Variable():
     assert v == Variable('x', type=real)
     assert v.symbol == x
     assert v.type == real
-    assert v.obey(value_const) == False
+    assert value_const not in v.attrs
     assert v.func(*v.args) == v
     assert str(v) == 'Variable(x, type=real)'
 
     w = Variable(y, f32, attrs={value_const})
     assert w.symbol == y
     assert w.type == f32
-    assert w.obey(value_const)
+    assert value_const in w.attrs
     assert w.func(*w.args) == w
 
     v_n = Variable(n, type=Type.from_expr(n))
@@ -301,16 +301,16 @@ def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
     assert p.type == untyped
-    assert not p.obey(value_const)
-    assert not p.obey(pointer_const)
+    assert value_const not in p.attrs
+    assert pointer_const not in p.attrs
     assert p.func(*p.args) == p
 
     u = symbols('u', real=True)
     py = Pointer(u, type=Type.from_expr(u), attrs={value_const, pointer_const})
     assert py.symbol is u
     assert py.type == real
-    assert py.obey(value_const)
-    assert py.obey(pointer_const)
+    assert value_const in py.attrs
+    assert pointer_const in py.attrs
     assert py.func(*py.args) == py
 
 
@@ -322,8 +322,8 @@ def test_Declaration():
     assert Declaration(vn).variable.type == integer
 
     vuc = Variable(u, Type.from_expr(u), {value_const})
-    assert vuc.obey(value_const)
-    assert not vuc.obey(pointer_const)
+    assert value_const in vuc.attrs
+    assert pointer_const not in vuc.attrs
     decl = Declaration(vuc, 3.0)
     assert decl.variable == vuc
     assert isinstance(decl.value, Float)
@@ -482,7 +482,7 @@ def test_PrintStatement():
     ps = PrintStatement([n, x], fmt)
     assert str(ps.format_string) == fmt
     assert ps.print_args == Tuple(n, x)
-    assert ps.args == (Tuple(n, x), String(fmt))
+    assert ps.args == (Tuple(n, x), String(fmt), none)
     assert ps == PrintStatement((n, x), fmt)
     assert ps != PrintStatement([x, n], fmt)
     assert ps.func(*ps.args) == ps

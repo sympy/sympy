@@ -627,11 +627,11 @@ class Node(Token):
     def _construct_attrs(cls, args):
         return Tuple(*args)
 
-    def obey(self, *attrs):
-        """ Returns whether ``self.attrs`` contains all elements in attrs. """
-        if self.attrs == none:
-            return False
-        return all(attr in self.attrs for attr in attrs)  # self.attrs.contains(attr) == True
+    def attr_params(self, looking_for):
+        """ Returns the parameters of the Attribute with name ``looking_for`` in self.attrs """
+        for attr in self.attrs:
+            if attr.name == looking_for:
+                return attr.parameters
 
 
 class Type(Token):
@@ -1122,7 +1122,7 @@ class Pointer(Variable):
     """ Represents a pointer """
 
 
-class Declaration(Basic):
+class Declaration(Token):
     """ Represents a variable declaration
 
     Parameters
@@ -1285,6 +1285,14 @@ class Statement(Basic):
     nargs = 1
 
 
+class Stream(Token):
+    __slots__ = ['name']
+    _construct_name = String
+
+stdout = Stream('stdout')
+stderr = Stream('stderr')
+
+
 class PrintStatement(Token):
     """ Represents a print statement in the code.
 
@@ -1294,10 +1302,11 @@ class PrintStatement(Token):
     *args : Basic instances (or convertible to such through sympify)
     """
 
-    __slots__ = ['print_args', 'format_string']
-    defaults = {'format_string': none}
+    __slots__ = ['print_args', 'format_string', 'file']
+    defaults = {'format_string': none, 'file': none}
 
     _construct_format_string = String
+    _construct_file = Stream
 
     @classmethod
     def _construct_print_args(cls, args):

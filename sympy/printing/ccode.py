@@ -475,15 +475,15 @@ class C89CodePrinter(CodePrinter):
         var, val = expr.variable, expr.value
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
-                vc='const ' if var.obey(value_const) else '',
+                vc='const ' if value_const in var.attrs else '',
                 t=self._print(var.type),
-                pc=' const' if var.obey(pointer_const) else '',
-                r='restrict ' if var.obey(restrict) else '',
+                pc=' const' if pointer_const in var.attrs else '',
+                r='restrict ' if restrict in var.attrs else '',
                 s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
             result = '{vc}{t} {s}'.format(
-                vc='const ' if var.obey(value_const) else '',
+                vc='const ' if value_const in var.attrs else '',
                 t=self._print(var.type),
                 s=self._print(var.symbol)
             )

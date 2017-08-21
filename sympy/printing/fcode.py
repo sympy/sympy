@@ -30,17 +30,12 @@ from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.codegen.ast import (
     Assignment, Attribute, Declaration, Pointer, Type, value_const,
-    float32, float64, complex64, complex128, intc, real, integer, bool_, complex_
+    float32, float64, float80, complex64, complex128, int8, int16, int32, int64, intc, real, integer,  bool_, complex_
 )
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-pure = Attribute('pure')
-elemental = Attribute('elemental')  # (all elemental procedures are also pure)
-intent_in = Attribute('intent_in')
-intent_out = Attribute('intent_out')
-intent_inout = Attribute('intent_inout')
 
 known_functions = {
     "sin": "sin",
@@ -67,17 +62,22 @@ class FCodePrinter(CodePrinter):
     language = "Fortran"
 
     type_aliases = {
+        integer: int32,
         real: float64,
         complex_: complex128,
     }
 
     type_mappings = {
         intc: 'integer(c_int)',
-        float32: 'real(4)',
-        float64: 'real(8)',
-        complex64: 'complex(4)',
-        complex128: 'complex(8)',
-        integer: 'integer',
+        float32: 'real*4',
+        float64: 'real*8',
+        float80: 'real*10',
+        complex64: 'complex*8',
+        complex128: 'complex*16',
+        int8: 'integer*1',
+        int16: 'integer*2',
+        int32: 'integer*4',
+        int64: 'integer*8',
         bool_: 'logical'
     }
 
@@ -364,37 +364,26 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declaration(self, expr):
         var, val = expr.variable, expr.value
+        dim = var.attr_params('dimension')
         if isinstance(var, Pointer):
             raise NotImplementedError("Pointers are not available by default in Fortran.")
         if self._settings["standard"] >= 90:
-            result = '{t}{vc} :: {s}'.format(
+            result = '{t}{vc}{dim} :: {s}'.format(
                 t=self._print(var.type),
-                vc=', parameter' if var.obey(value_const) else '',
+                vc=', parameter' if value_const in var.attrs else '',
+                dim=', dimension(%s)' % ', '.join(map(self._print, dim)) if dim else '',
                 s=self._print(var.symbol)
             )
             if val is not None:
                 result += ' = %s' % self._print(val)
         else:
-            if var.obey(value_const) or val:
+            if value_const in var.attrs or val:
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
             result = ' '.join(self._print(var.type), self._print(var.symbol))
         return result
 
     def _print_While(self, expr):
         return 'do while ({condition})\n{body}\nend do'.format(**expr.kwargs(apply=self._print))
-
-    def _print_FunctionDefinition(self, expr):
-        if epxr.obey(elemental):
-            prefix = 'elemental '
-        elif expr.obey(pure):
-            prefix = 'pure '
-        else:
-            prefix = ''
-
-        return "{prefix}function {name}({args})\n{body}\nend function".format(
-            prefix=prefix, name=expr.name, args=', '.join(map(self._print, expr.inputs)),
-            body=self._print(expr.body)
-        )
 
     def _print_BooleanTrue(self, expr):
         return '.true.'
@@ -491,8 +480,8 @@ class FCodePrinter(CodePrinter):
         free = self._settings['source_format'] == 'free'
         code = [ line.lstrip(' \t') for line in code ]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
-        dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
+        inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else', 'program', 'interface')
+        dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else', 'end program', 'end interface')
 
         increase = [ int(any(map(line.startswith, inc_keyword)))
                      for line in code ]
@@ -531,6 +520,95 @@ class FCodePrinter(CodePrinter):
         if not free:
             return self._wrap_fortran(new_code)
         return new_code
+
+    def _print_GoTo(self, goto, *args, **kwargs):
+        if goto.expr:  # computed goto
+            return "go to (${labels}), ${expr}".format(
+                labels=', '.join(map(self._print, goto.labels)),
+                expr=self._print(goto.expr)
+            )
+        else:
+            lbl, = goto.labels
+            return "go to %s" % self._print(lbl, *args, **kwargs)
+
+    def _print_Program(self, prog, *args, **kwargs):
+        return (
+            "program {name}\n"
+            "{body}\n"
+            "end program"
+        ).format(**prog.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs)))
+
+
+    def _print_Stream(self, strm):
+        if strm.name == 'stdout' and standard >= 2003:
+            self.module_uses['iso_c_binding'].add('stdint=>input_unit')
+            return 'input_unit'
+        elif strm.name == 'stderr' and standard >= 2003:
+            self.module_uses['iso_c_binding'].add('stdint=>error_unit')
+            return 'error_unit'
+        else:
+            if strm.name == 'stdout':
+                return '*'
+            else:
+                return strm.name
+
+    def _print_PrintStatement(self, ps, *args, **kwargs):
+        if ps.format_string:
+            fmt = "'{0}'".format(ps.format_string)
+        else:
+            fmt = "*"
+        return "print {fmt}, {iolist}".format(fmt=fmt, iolist=', '.join(map(self._print, ps.print_args)))
+
+    def _print_ReturnStatement(self, rs, *args, **kwargs):
+        arg, = rs.args
+        return "{ret} = {arg}".format(
+            ret=kwargs.get('function_result_variable', 'sympy_result'),
+            arg=self._print(arg)
+        )
+
+    def _print_FortranReturnStatement(self, frs, *args, **kwargs):
+        arg, = frs.args
+        if arg:
+            return 'return %s' % self._print(arg, *args, **kwargs)
+        else:
+            return 'return'
+
+    def _function_head(self, fp, *args, **kwargs):
+        return (
+            "{return_type} function {name}({arg_names})\n"
+            "{arg_declarations}"
+        ).format(
+            return_type=self._print(fp.return_type),
+            name=self._print(fp.name),
+            arg_names=', '.join([self._print(arg.variable.symbol) for arg in fp.function_args]),
+            arg_declarations='\n'.join(map(self._print, fp.function_args))
+        )
+
+    def _print_FunctionPrototype(self, fp, *args, **kwargs):
+        return (
+            "interface\n"
+            "{function_head}\n"
+            "end function\n"
+            "end interface"
+        ).format(function_head=self._function_head(fp, *args, **kwarg))
+
+    def _print_FunctionDefinition(self, fd, *args, **kwargs):
+        if elemental in fd.attrs:
+            prefix = 'elemental '
+        elif pure in fd.attrs:
+            prefix = 'pure '
+        else:
+            prefix = ''
+
+        return (
+            "{prefix}{function_head}\n"
+            "{body}\n"
+            "end function\n"
+        ).format(
+            prefix=prefix,
+            function_head=self._function_head(fd, *args, **kwarg),
+            body=self._print(fd.body, *args, **kwargs)
+        )
 
 
 def fcode(expr, assign_to=None, **settings):

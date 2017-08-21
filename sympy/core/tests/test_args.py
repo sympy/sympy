@@ -276,6 +276,10 @@ def test_sympy__codegen__ast__Statement():
     assert _test_args(Statement(AddAugmentedAssignment(x, -1)))
 
 
+def test_sympy__codegen__ast__Stream():
+    from sympy.codegen.ast import Stream
+    assert _test_args(Stream('stdin'))
+
 def test_sympy__codegen__ast__PrintStatement():
     from sympy.codegen.ast import PrintStatement
     assert _test_args(PrintStatement([x, y]))
@@ -361,6 +365,37 @@ def test_sympy__codegen__cxxnodes__using():
     from sympy.codegen.cxxnodes import using
     assert _test_args(using('std::vector'))
     assert _test_args(using('std::vector', 'vec'))
+
+
+def test_sympy__codegen__fnodes__Program():
+    from sympy.codegen.fnodes import Program
+    assert _test_args(Program('foobar', []))
+
+
+def test_sympy__codegen__fnodes__Subroutine():
+    from sympy.codegen.fnodes import Subroutine
+    assert _test_args(Subroutine('foo', []))
+
+
+def test_sympy__codegen__fnodes__GoTo():
+    from sympy.codegen.fnodes import GoTo
+    assert _test_args(GoTo([10]))
+    assert _test_args(GoTo([10, 20], x > 1))
+
+
+def test_sympy__codegen__fnodes__FortranReturnStatement():
+    from sympy.codegen.fnodes import FortranReturnStatement
+    assert _test_args(FortranReturnStatement(10))
+
+
+def test_sympy__codegen__fnodes__Extent():
+    from sympy.codegen.fnodes import Extent
+    assert _test_args(Extent())
+    assert _test_args(Extent(None))
+    assert _test_args(Extent(':'))
+    assert _test_args(Extent(-3, 4))
+    assert _test_args(Extent(x, y))
+
 
 
 @XFAIL
