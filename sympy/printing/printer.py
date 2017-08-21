@@ -137,7 +137,7 @@ This is done by overriding the method ``_latex`` of ``Mod``.
     class ModOp(Mod):
         def _latex(self, printer=None):
             a, b = [printer.doprint(i) for i in self.args]
-            return "\operatorname{Mod}{\left( %s,%s \\\\right)}" % (a,b)
+            return r"\\operatorname{Mod}{\left( %s,%s \\\\right)}" % (a,b)
 
 
     x = Symbol('x')
