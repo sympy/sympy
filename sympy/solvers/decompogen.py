@@ -1,5 +1,5 @@
 from sympy.core import Function, Pow, sympify
-from sympy.polys import Poly, decompose, GeneratorsNeeded
+from sympy.polys import Poly, decompose
 
 
 def decompogen(f, symbol):
