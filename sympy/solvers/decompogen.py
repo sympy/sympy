@@ -37,25 +37,27 @@ def decompogen(f, symbol):
     if isinstance(f, (Function, Pow)):
         if f.args[0] == symbol:
             return [f]
-        try:
-            result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
-        except TypeError:
-            result = [f]
+
+        if f.is_Pow:
+            base, expo = f.args
+            if expo.has(symbol):
+                return [f]
+
+        result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
         return result
 
     # ===== Convert to Polynomial ===== #
-    try:
-        fp = Poly(f)
-    except GeneratorsNeeded:
-        return None
+    fp = Poly(f)
     gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
     if len(gens) == 1 and gens[0] != symbol:
+        if gens[0].is_Pow:
+            base, expo = gens[0].args
+            if expo.has(symbol):
+                return [f]
+
         f1 = f.subs(gens[0], symbol)
         f2 = gens[0]
-        try:
-            result += [f1] + decompogen(f2, symbol)
-        except TypeError:
-            result = [f]
+        result += [f1] + decompogen(f2, symbol)
         return result
 
     # ===== Polynomial decompose() ====== #
