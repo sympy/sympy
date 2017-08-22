@@ -353,20 +353,25 @@ class FpGroup(DefaultPrinting):
             self._perm_isomorphism = T
         return P, T
 
-    def _perm_group_list(self, method):
+    def _perm_group_list(self, method_name, *args):
         '''
-        Given a `PermutationGroup` method that returns a list of subgroups,
-        return a list of lists containing the generators of these subgroups
-        in terms of the generators of `self`.
+        Given the name of a `PermutationGroup` method (returning a subgroup
+        or a list of subgroups) and (optionally) additional arguments it takes,
+        return a list or a list of lists containing the generators of this (or
+        these) subgroups in terms of the generators of `self`.
 
         '''
+        from sympy.combinatorics import PermutationGroup
         P, T = self._to_perm_group()
-        perm_result = method(P)
+        perm_result = getattr(P, method_name)(*args)
+        single = False
+        if isinstance(perm_result, PermutationGroup):
+            perm_result, single = [perm_result], True
         result = []
         for group in perm_result:
             gens = group.generators
             result.append(T.invert(gens))
-        return result
+        return result[0] if single else result
 
     def derived_series(self):
         '''
@@ -374,8 +379,7 @@ class FpGroup(DefaultPrinting):
         of the subgroups in the derived series of `self`.
 
         '''
-        method = lambda x: x.derived_series()
-        return self._perm_group_list(method)
+        return self._perm_group_list('derived_series')
 
     def lower_central_series(self):
         '''
@@ -383,16 +387,14 @@ class FpGroup(DefaultPrinting):
         of the subgroups in the lower central series of `self`.
 
         '''
-        method = lambda x: x.lower_central_series()
-        return self._perm_group_list(method)
+        return self._perm_group_list('lower_central_series')
 
     def center(self):
         '''
         Return the list of generators of the center of `self`.
 
         '''
-        method = lambda x: [x.center()]
-        return self._perm_group_list(method)[0]
+        return self._perm_group_list('center')
 
 
     def derived_subgroup(self):
@@ -400,8 +402,7 @@ class FpGroup(DefaultPrinting):
         Return the list of generators of the derived subgroup of `self`.
 
         '''
-        method = lambda x: [x.derived_subgroup()]
-        return self._perm_group_list(method)[0]
+        return self._perm_group_list('derived_subgroup')
 
 
     def centralizer(self, other):
@@ -412,8 +413,7 @@ class FpGroup(DefaultPrinting):
         '''
         T = self._to_perm_group()[1]
         other = T(other)
-        method = lambda x: [x.centralizer(other)]
-        return self._perm_group_list(method)[0]
+        return self._perm_group_list('centralizer', other)
 
     def normal_closure(self, other):
         '''
@@ -423,8 +423,7 @@ class FpGroup(DefaultPrinting):
         '''
         T = self._to_perm_group()[1]
         other = T(other)
-        method = lambda x: [x.normal_closure(other)]
-        return self._perm_group_list(method)[0]
+        return self._perm_group_list('normal_closure', other)
 
     def _perm_property(self, attr):
         '''
