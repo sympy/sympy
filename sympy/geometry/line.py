@@ -185,7 +185,7 @@ class LinearEntity(GeometrySet):
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def arbitrary_point(self, parameter='t'):
-        """A parametrized point on the Line.
+        """A parameterized point on the Line.
 
         Parameters
         ==========
