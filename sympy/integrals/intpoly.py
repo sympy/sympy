@@ -134,7 +134,7 @@ def main_integrate3d(expr, facets, vertices, hp_params):
     >>> faces = cube[1:]
     >>> hp_params = hyperplane_parameters(faces, vertices)
     >>> main_integrate3d(1, faces, vertices, hp_params)
-    125
+    -125
     """
     dims = (x, y, z)
     dim_length = len(dims)
@@ -147,8 +147,8 @@ def main_integrate3d(expr, facets, vertices, hp_params):
             hp = hp_params[i]
             if hp[1] == S.Zero:
                 continue
-            poly_contribute += polygon_integrate(facet, i, facets,
-                                                 vertices, expr, deg) *\
+            pi = polygon_integrate(facet, hp, i, facets, vertices, expr, deg)
+            poly_contribute += pi *\
                 (hp[1] / norm(tuple(hp[0])))
             facet_count += 1
         poly_contribute /= (dim_length + deg)
@@ -156,7 +156,7 @@ def main_integrate3d(expr, facets, vertices, hp_params):
     return integral_value
 
 
-def polygon_integrate(facet, index, facets, vertices, expr, degree):
+def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
     """Helper function to integrate the input uni/bi/trivariate polynomial
     over a certain face of the 3-Polytope.
 
@@ -178,9 +178,10 @@ def polygon_integrate(facet, index, facets, vertices, expr, degree):
     >>> facet = cube[1]
     >>> facets = cube[1:]
     >>> vertices = cube[0]
-    >>> polygon_integrate(facet, 0, facets, vertices, 1, 0)
-    25
+    >>> polygon_integrate(facet, [(0, 1, 0), 5], 0, facets, vertices, 1, 0)
+    -25
     """
+
     if expr == S.Zero:
         return S.Zero
     result = S.Zero
@@ -191,19 +192,20 @@ def polygon_integrate(facet, index, facets, vertices, expr, degree):
         for j in range(m):
             if j != index and len(set(side).intersection(set(facets[j]))) == 2:
                 side = (vertices[side[0]], vertices[side[1]])
-                result += distance_to_side(x0, side) *\
-                          lineseg_integrate(facet, i, side, expr, degree)
+                result += distance_to_side(x0, side, hp_param[0]) *\
+                    lineseg_integrate(facet, i, side, expr, degree)
 
-    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] + diff(expr, z) * x0[2]
-    result += polygon_integrate(facet, index, facets, vertices, expr,
-                                degree - 1)
+    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] +\
+        diff(expr, z) * x0[2]
+    result += polygon_integrate(facet, hp_param, index, facets, vertices,
+                                expr, degree - 1)
     result /= (degree + 2)
     return result
 
 
-def distance_to_side(point, line_seg):
-    """Helper function to compute the distance between given 3D point and
-    a line segment.
+def distance_to_side(point, line_seg, A):
+    """Helper function to compute the signed distance between given 3D point
+    and a line segment.
 
     Parameters
     ===========
@@ -212,18 +214,19 @@ def distance_to_side(point, line_seg):
 
     >>> from sympy.integrals.intpoly import distance_to_side
     >>> point = (0, 0, 0)
-    >>> distance_to_side(point, [(0, 0, 1), (0, 1, 0)])
-    sqrt(2)/2
+    >>> distance_to_side(point, [(0, 0, 1), (0, 1, 0)], (1, 0, 0))
+    -sqrt(2)/2
     """
     x1, x2 = line_seg
-    num = norm(((point[1] - x1[1]) * (point[2] - x2[2]) -
-                (point[1] - x2[1]) * (point[2] - x1[2]),
-                (point[0] - x2[0]) * (point[2] - x1[2]) -
-                (point[0] - x1[0]) * (point[2] - x2[2]),
-                (point[0] - x1[0]) * (point[1] - x2[1]) -
-                (point[0] - x2[0]) * (point[1] - x1[1])))
-    denom = norm((x2[0] - x1[0], x2[1] - x1[1], x2[2] - x1[2]))
-    return S(num)/denom
+    rev_normal = [-1 * S(i)/norm(A) for i in A]
+    vector = [x2[i] - x1[i] for i in range(0, 3)]
+    vector = [vector[i]/norm(vector) for i in range(0, 3)]
+
+    n_side = cross_product((0, 0, 0), rev_normal, vector)
+    vectorx0 = [line_seg[0][i] - point[i] for i in range(0, 3)]
+    dot_product = sum([vectorx0[i] * n_side[i] for i in range(0, 3)])
+
+    return dot_product
 
 
 def lineseg_integrate(polygon, index, line_seg, expr, degree):
@@ -254,7 +257,8 @@ def lineseg_integrate(polygon, index, line_seg, expr, degree):
         result += distance * expr.subs(expr_dict)
     else:
         result += distance * expr
-    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] + diff(expr, z) * x0[2]
+    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] +\
+        diff(expr, z) * x0[2]
     result += lineseg_integrate(polygon, index, line_seg, expr, degree - 1)
     result /= (degree + 1)
     return result
@@ -478,8 +482,6 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
         return expr
 
     if not expr.is_number:
-        a, b = (S(a[0]), S(a[1])), S(b)
-
         x_index = monom_index - max_y_degree + \
             x_degree - 2 if x_degree >= 1 else 0
         y_index = monom_index - 1 if y_degree >= 1 else 0
@@ -572,12 +574,13 @@ def hyperplane_parameters(poly, vertices=None):
 
 def cross_product(v1, v2, v3):
     """Returns the cross-product of vectors (v2 - v1) and (v3 - v1)
+    That is : (v2 - v1) X (v3 - v1)
     """
     v2 = [v2[j] - v1[j] for j in range(0, 3)]
     v3 = [v3[j] - v1[j] for j in range(0, 3)]
-    return [v3[1] * v2[2] - v3[2] * v2[1],
-            v3[2] * v2[0] - v3[0] * v2[2],
-            v3[0] * v2[1] - v3[1] * v2[0]]
+    return [v3[2] * v2[1] - v3[1] * v2[2],
+            v3[0] * v2[2] - v3[2] * v2[0],
+            v3[1] * v2[0] - v3[0] * v2[1]]
 
 
 def best_origin(a, b, lineseg, expr):
@@ -881,7 +884,7 @@ def norm(point):
     sqrt(53)
     """
     half = S(1)/2
-    if isinstance(point, tuple):
+    if isinstance(point, (list, tuple)):
         return sum([coord ** 2 for coord in point]) ** half
     elif isinstance(point, Point):
         if isinstance(point, Point2D):
