@@ -101,7 +101,7 @@ from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
 __all__ = [
     # description of routines
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
-    "Argument", "InputArgument", "Result",
+    "Argument", "InputArgument", "OutputArgument", "Result",
     # routines -> code
     "CodeGen", "CCodeGen", "FCodeGen", "JuliaCodeGen", "OctaveCodeGen",
     "RustCodeGen",
