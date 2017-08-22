@@ -13,6 +13,7 @@ from sympy.combinatorics.rewritingsystem import RewritingSystem
 from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
+from sympy.combinatorics import PermutationGroup
 
 from itertools import product
 
@@ -361,7 +362,6 @@ class FpGroup(DefaultPrinting):
         these) subgroups in terms of the generators of `self`.
 
         '''
-        from sympy.combinatorics import PermutationGroup
         P, T = self._to_perm_group()
         perm_result = getattr(P, method_name)(*args)
         single = False
