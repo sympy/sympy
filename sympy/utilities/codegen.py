@@ -495,6 +495,12 @@ class Result(Variable, ResultBase):
                           dimensions=dimensions, precision=precision)
         ResultBase.__init__(self, expr, result_var)
 
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
+
 
 #
 # Transformation of routine objects into code
