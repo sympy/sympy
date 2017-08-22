@@ -13,6 +13,7 @@ from sympy.combinatorics.rewritingsystem import RewritingSystem
 from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
+from sympy.combinatorics import PermutationGroup
 
 from itertools import product
 
@@ -72,6 +73,7 @@ class FpGroup(DefaultPrinting):
         self._center = None
 
         self._rewriting_system = RewritingSystem(self)
+        self._perm_isomorphism = None
         return
 
     def _generators(self):
@@ -334,6 +336,7 @@ class FpGroup(DefaultPrinting):
             C = self.coset_enumeration(H, strategy)
             return len(C.table)
 
+
     def __str__(self):
         if self.free_group.rank > 30:
             str_form = "<fp group with %s generators>" % self.free_group.rank
@@ -342,6 +345,149 @@ class FpGroup(DefaultPrinting):
         return str_form
 
     __repr__ = __str__
+
+#==============================================================================
+#                       PERMUTATION GROUP METHODS
+#==============================================================================
+
+    def _to_perm_group(self):
+        '''
+        Return an isomorphic permutation group and the isomorphism.
+        The implementation is dependent on coset enumeration so
+        will only terminate for finite groups.
+
+        '''
+        from sympy.combinatorics import Permutation, PermutationGroup
+        from sympy.combinatorics.homomorphisms import homomorphism
+        from sympy import S
+        if self.order() == S.Infinity:
+            raise NotImplementedError("Permutation presentation of infinite "
+                                                  "groups is not implemented")
+        if self._perm_isomorphism:
+            T = self._perm_isomorphism
+            P = T.image()
+        else:
+            C = self.coset_table([])
+            gens = self.generators
+            images = [[C[i][2*gens.index(g)] for i in range(len(C))] for g in gens]
+            images = [Permutation(i) for i in images]
+            P = PermutationGroup(images)
+            T = homomorphism(self, P, gens, images, check=False)
+            self._perm_isomorphism = T
+        return P, T
+
+    def _perm_group_list(self, method_name, *args):
+        '''
+        Given the name of a `PermutationGroup` method (returning a subgroup
+        or a list of subgroups) and (optionally) additional arguments it takes,
+        return a list or a list of lists containing the generators of this (or
+        these) subgroups in terms of the generators of `self`.
+
+        '''
+        P, T = self._to_perm_group()
+        perm_result = getattr(P, method_name)(*args)
+        single = False
+        if isinstance(perm_result, PermutationGroup):
+            perm_result, single = [perm_result], True
+        result = []
+        for group in perm_result:
+            gens = group.generators
+            result.append(T.invert(gens))
+        return result[0] if single else result
+
+    def derived_series(self):
+        '''
+        Return the list of lists containing the generators
+        of the subgroups in the derived series of `self`.
+
+        '''
+        return self._perm_group_list('derived_series')
+
+    def lower_central_series(self):
+        '''
+        Return the list of lists containing the generators
+        of the subgroups in the lower central series of `self`.
+
+        '''
+        return self._perm_group_list('lower_central_series')
+
+    def center(self):
+        '''
+        Return the list of generators of the center of `self`.
+
+        '''
+        return self._perm_group_list('center')
+
+
+    def derived_subgroup(self):
+        '''
+        Return the list of generators of the derived subgroup of `self`.
+
+        '''
+        return self._perm_group_list('derived_subgroup')
+
+
+    def centralizer(self, other):
+        '''
+        Return the list of generators of the centralizer of `other`
+        (a list of elements of `self`) in `self`.
+
+        '''
+        T = self._to_perm_group()[1]
+        other = T(other)
+        return self._perm_group_list('centralizer', other)
+
+    def normal_closure(self, other):
+        '''
+        Return the list of generators of the normal closure of `other`
+        (a list of elements of `self`) in `self`.
+
+        '''
+        T = self._to_perm_group()[1]
+        other = T(other)
+        return self._perm_group_list('normal_closure', other)
+
+    def _perm_property(self, attr):
+        '''
+        Given an attribute of a `PermutationGroup`, return
+        its value for a permutation group isomorphic to `self`.
+
+        '''
+        P = self._to_perm_group()[0]
+        return getattr(P, attr)
+
+    @property
+    def is_abelian(self):
+        '''
+        Check if `self` is abelian.
+
+        '''
+        return self._perm_property("is_abelian")
+
+    @property
+    def is_nilpotent(self):
+        '''
+        Check if `self` is nilpotent.
+
+        '''
+        return self._perm_property("is_nilpotent")
+
+    @property
+    def is_solvable(self):
+        '''
+        Check if `self` is solvable.
+
+        '''
+        return self._perm_property("is_solvable")
+
+    @property
+    def elements(self):
+        '''
+        List the elements of `self`.
+
+        '''
+        P, T = self._to_perm_group()
+        return T.invert(P._elements)
 
 
 class FpSubgroup(DefaultPrinting):
