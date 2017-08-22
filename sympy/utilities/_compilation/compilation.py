@@ -156,7 +156,6 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
             Runner, extra_kwargs, vendor = \
                 get_mixed_fort_c_linker(
                     vendor=kwargs.get('vendor', None),
-                    metadir=kwargs.get('metadir', None),
                     cplus=cplus,
                     cwd=cwd,
                 )
@@ -298,7 +297,7 @@ extension_mapping = {
     '.f': (FortranCompilerRunner, None),
     '.for': (FortranCompilerRunner, None),
     '.ftn': (FortranCompilerRunner, None),
-    '.f90': (FortranCompilerRunner, 'f2008'),  # ifort only knows about .f90
+    '.f90': (FortranCompilerRunner, None),  # ifort only knows about .f90
     '.f95': (FortranCompilerRunner, 'f95'),
     '.f03': (FortranCompilerRunner, 'f2003'),
     '.f08': (FortranCompilerRunner, 'f2008'),

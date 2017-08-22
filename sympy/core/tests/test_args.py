@@ -280,10 +280,10 @@ def test_sympy__codegen__ast__Stream():
     from sympy.codegen.ast import Stream
     assert _test_args(Stream('stdin'))
 
-def test_sympy__codegen__ast__PrintStatement():
-    from sympy.codegen.ast import PrintStatement
-    assert _test_args(PrintStatement([x, y]))
-    assert _test_args(PrintStatement([x, y], "%d %d"))
+def test_sympy__codegen__ast__Print():
+    from sympy.codegen.ast import Print
+    assert _test_args(Print([x, y]))
+    assert _test_args(Print([x, y], "%d %d"))
 
 
 def test_sympy__codegen__ast__FunctionPrototype():
@@ -298,9 +298,9 @@ def test_sympy__codegen__ast__FunctionDefinition():
     assert _test_args(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)]))
 
 
-def test_sympy__codegen__ast__ReturnStatement():
-    from sympy.codegen.ast import ReturnStatement
-    assert _test_args(ReturnStatement(x))
+def test_sympy__codegen__ast__Return():
+    from sympy.codegen.ast import Return
+    assert _test_args(Return(x))
 
 
 def test_sympy__codegen__ast__FunctionCall():
@@ -371,6 +371,10 @@ def test_sympy__codegen__fnodes__Program():
     from sympy.codegen.fnodes import Program
     assert _test_args(Program('foobar', []))
 
+def test_sympy__codegen__fnodes__Module():
+    from sympy.codegen.fnodes import Module
+    assert _test_args(Module('foobar', [], []))
+
 
 def test_sympy__codegen__fnodes__Subroutine():
     from sympy.codegen.fnodes import Subroutine
@@ -383,9 +387,9 @@ def test_sympy__codegen__fnodes__GoTo():
     assert _test_args(GoTo([10, 20], x > 1))
 
 
-def test_sympy__codegen__fnodes__FortranReturnStatement():
-    from sympy.codegen.fnodes import FortranReturnStatement
-    assert _test_args(FortranReturnStatement(10))
+def test_sympy__codegen__fnodes__FortranReturn():
+    from sympy.codegen.fnodes import FortranReturn
+    assert _test_args(FortranReturn(10))
 
 
 def test_sympy__codegen__fnodes__Extent():

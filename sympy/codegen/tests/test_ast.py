@@ -12,7 +12,7 @@ from sympy.codegen.ast import (
     DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
     integer, real, complex_, int8, uint8, float16 as f16, float32 as f32,
     float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128,
-    While, Scope, String, PrintStatement, FunctionPrototype, FunctionDefinition, ReturnStatement,
+    While, Scope, String, Print, FunctionPrototype, FunctionDefinition, Return,
     FunctionCall, untyped, IntBaseType, intc, Node, none, NoneToken, Token
 )
 
@@ -477,18 +477,18 @@ def test_Scope():
     assert scp.func(*scp.args) == scp
 
 
-def test_PrintStatement():
+def test_Print():
     fmt = "%d %.3f"
-    ps = PrintStatement([n, x], fmt)
+    ps = Print([n, x], fmt)
     assert str(ps.format_string) == fmt
     assert ps.print_args == Tuple(n, x)
     assert ps.args == (Tuple(n, x), String(fmt), none)
-    assert ps == PrintStatement((n, x), fmt)
-    assert ps != PrintStatement([x, n], fmt)
+    assert ps == Print((n, x), fmt)
+    assert ps != Print([x, n], fmt)
     assert ps.func(*ps.args) == ps
 
-    ps2 = PrintStatement([n, x])
-    assert ps2 == PrintStatement([n, x])
+    ps2 = Print([n, x])
+    assert ps2 == Print([n, x])
     assert ps2 != ps
     assert ps2.format_string == None
 
@@ -507,7 +507,7 @@ def test_FunctionPrototype_and_FunctionDefinition():
     assert fp1.func(*fp1.args) == fp1
 
 
-    body = [Assignment(x, x**n), ReturnStatement(x)]
+    body = [Assignment(x, x**n), Return(x)]
     fd1 = FunctionDefinition(real, 'power', [dx, dn], body)
     assert fd1.return_type == real
     assert str(fd1.name) == 'power'
@@ -524,11 +524,11 @@ def test_FunctionPrototype_and_FunctionDefinition():
     assert fd2 == fd1
 
 
-def test_ReturnStatement():
-    rs = ReturnStatement(x)
+def test_Return():
+    rs = Return(x)
     assert rs.args == (x,)
-    assert rs == ReturnStatement(x)
-    assert rs != ReturnStatement(y)
+    assert rs == Return(x)
+    assert rs != Return(y)
     assert rs.func(*rs.args) == rs
 
 
@@ -555,6 +555,8 @@ def test_ast_replace():
     tree1 = CodeBlock(pwer, pcall)
     assert str(tree1.args[0].name) == 'pwer'
     assert str(tree1.args[1].name) == 'pwer'
+    for a, b in zip(tree1, [pwer, pcall]):
+        assert a == b
 
     tree2 = tree1.replace(pname, String('power'))
     assert str(tree1.args[0].name) == 'pwer'

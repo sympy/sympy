@@ -15,7 +15,7 @@ from sympy.utilities.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
-    While, Scope, PrintStatement, FunctionPrototype, FunctionDefinition, FunctionCall, Statement, ReturnStatement,
+    While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Statement, Return,
     real, float32, float64, float80, float128, intc
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
@@ -803,11 +803,6 @@ def test_ccode_codegen_ast():
 
     # explicit wrapping node for statement:
     assert ccode(Statement(x)) == 'x;'
-
-    # kwarg "statement" in node:
-    assert ccode(FunctionCall('pwer', [x], statement=False)) == 'pwer(x)'
-    assert ccode(FunctionCall('pwer', [x], statement=True)) == 'pwer(x);'
-
-    # Node with "statement" in the name:
-    assert ccode(PrintStatement([x, y], "%d %d")) == 'printf("%d %d", x, y);'
-    assert ccode(ReturnStatement(x)) == 'return x;'
+    assert ccode(Statement(Print([x, y], "%d %d"))) == 'printf("%d %d", x, y);'
+    assert ccode(Statement(FunctionCall('pwer', [x]))) == 'pwer(x);'
+    assert ccode(Statement(Return(x))) == 'return x;'

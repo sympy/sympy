@@ -4,8 +4,12 @@ import sys
 import pytest
 import sympy as sp
 
+from sympy.core.compatibility import exec_
 from sympy.codegen.ast import Assignment
 from sympy.codegen.algorithms import newtons_method, newtons_method_function
+from sympy.codegen.fnodes import bind_C
+from sympy.codegen.futils import render_as_module as f_module
+from sympy.codegen.pyutils import render_as_module as py_module
 from sympy.external import import_module
 from sympy.printing.ccode import ccode
 from sympy.utilities._compilation import compile_link_import_strings
@@ -38,6 +42,35 @@ def test_newtons_method_function__ccode():
                          "    return newton(x)\n"))
     ], compile_kwargs=compile_kw)
     assert abs(mod.py_newton(0.5) - 0.865474033102) < 1e-12
+
+
+def test_newtons_method_function__fcode():
+    x = sp.Symbol('x')
+    expr = sp.cos(x) - x**3
+    func = newtons_method_function(expr, x, attrs=[bind_C(name='newton')])
+
+    if not cython:
+        skip("cython not installed.")
+
+    f_mod = f_module([func], 'mod_newton')
+    mod = compile_link_import_strings([
+        ('newton.f90', f_mod),
+        ('_newton.pyx', ("cdef extern double newton(double*)\n"
+                         "def py_newton(double x):\n"
+                         "    return newton(&x)\n"))
+    ])
+    assert abs(mod.py_newton(0.5) - 0.865474033102) < 1e-12
+
+
+def test_newtons_method_function__pycode():
+    x = sp.Symbol('x')
+    expr = sp.cos(x) - x**3
+    func = newtons_method_function(expr, x)
+    py_mod = py_module(func)
+    namespace = {}
+    exec_(py_mod, namespace, namespace)
+    res = eval('newton(0.5)', namespace)
+    assert abs(res - 0.865474033102) < 1e-12
 
 
 def test_newtons_method_function__ccode_parameters():

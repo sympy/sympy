@@ -271,7 +271,7 @@ before_install:
   - |
     if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
         # this assumes TEST_AUTOWRAP runs in the same build as TEST_MATPLOTLIB
-        conda install libgfortran libgcc gcc cython;
+        conda install libgfortran libgcc gcc cython gfortran;
         pip install wurlitzer  # package for capturing C level output (tests for stdin/stderr)
     fi
   - |

@@ -6,7 +6,10 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
-from sympy.codegen.ast import Attribute, Declaration, Node, Statement, String, Token, Type, none, FunctionCall
+from sympy.codegen.ast import (
+    Attribute, CodeBlock, Declaration, FunctionCall, Node, none, Statement, String,
+    Token, Type
+)
 
 
 pure = Attribute('pure')
@@ -23,6 +26,13 @@ class Program(Token):
     __slots__ = ['name', 'body']
     _construct_name = String
     _construct_body = staticmethod(lambda body: Tuple(*body))
+
+
+class Module(Token):
+    __slots__ = ['name', 'declarations', 'definitions']
+    _construct_name = String
+    _construct_declarations = staticmethod(lambda arg: CodeBlock(*arg))
+    _construct_definitions = staticmethod(lambda arg: CodeBlock(*arg))
 
 
 class Subroutine(Token):
@@ -42,8 +52,8 @@ class GoTo(Token):
     _construct_expr = staticmethod(sympify)
 
 
-class FortranReturnStatement(Token):
-    """ AST node explicitly mapped to a fortran return statement.
+class FortranReturn(Token):
+    """ AST node explicitly mapped to a fortran "return".
 
     Because a return statement in fortran is different from C, and
     in order to aid reuse of our codegen ASTs the ordinary
@@ -61,6 +71,7 @@ class Extent(Basic):
 
     Examples
     --------
+    >>> from sympy.codegen.fnodes import Extent
     >>> e = Extent(-3, 3)  # -3, -2, -1, 0, 1, 2, 3
 
     """
@@ -99,6 +110,8 @@ def dimension(*args):
 
 assumed_size = dimension('*')
 
+def bind_C(name=None):
+    return Attribute('bind_C', [String(name)] if name else [])
 
 def _printable(arg):
     return String(arg) if isinstance(arg, string_types) else arg

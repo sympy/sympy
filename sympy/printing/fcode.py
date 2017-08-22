@@ -33,6 +33,7 @@ from sympy.codegen.ast import (
     float32, float64, float80, complex64, complex128, int8, int16, int32, int64, intc, real, integer,  bool_, complex_
 )
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
+from sympy.codegen.fnodes import elemental, pure
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -69,9 +70,9 @@ class FCodePrinter(CodePrinter):
 
     type_mappings = {
         intc: 'integer(c_int)',
-        float32: 'real*4',
-        float64: 'real*8',
-        float80: 'real*10',
+        float32: 'real*4',  # real(kind(0.e0))
+        float64: 'real*8',  # real(kind(0.d0))
+        float80: 'real*10', # real(kind(????))
         complex64: 'complex*8',
         complex128: 'complex*16',
         int8: 'integer*1',
@@ -146,7 +147,7 @@ class FCodePrinter(CodePrinter):
     def _declare_number_const(self, name, value):
         return "parameter ({0} = {1})".format(name, self._print(value))
 
-    def _print_NumberSymbol(self, expr):
+    def _print_NumberSymbol(self, expr, *args, **kwargs):
         # A Number symbol that is not implemented here or with _printmethod
         # is registered and evaluated
         self._number_symbols.add((expr, Float(expr.evalf(self._settings['precision']))))
@@ -170,7 +171,7 @@ class FCodePrinter(CodePrinter):
             close_lines.append("end do")
         return open_lines, close_lines
 
-    def _print_sign(self, expr):
+    def _print_sign(self, expr, *args, **kwargs):
         from sympy import Abs
         arg, = expr.args
         if arg.is_integer:
@@ -179,10 +180,10 @@ class FCodePrinter(CodePrinter):
             new_expr = merge(cmplx(literal_dp(0), literal_dp(0)), arg/Abs(arg), Eq(Abs(arg), literal_dp(0)))
         else:
             new_expr = merge(literal_dp(0), dsign(literal_dp(1), arg), Eq(arg, literal_dp(0)))
-        return self._print(new_expr)
+        return self._print(new_expr, *args, **kwargs)
 
 
-    def _print_Piecewise(self, expr):
+    def _print_Piecewise(self, expr, *args, **kwargs):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
@@ -195,12 +196,12 @@ class FCodePrinter(CodePrinter):
         if expr.has(Assignment):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
-                    lines.append("if (%s) then" % self._print(c))
+                    lines.append("if (%s) then" % self._print(c, *args, **kwargs))
                 elif i == len(expr.args) - 1 and c == True:
                     lines.append("else")
                 else:
-                    lines.append("else if (%s) then" % self._print(c))
-                lines.append(self._print(e))
+                    lines.append("else if (%s) then" % self._print(c, *args, **kwargs))
+                lines.append(self._print(e, *args, **kwargs))
             lines.append("end if")
             return "\n".join(lines)
         elif self._settings["standard"] >= 95:
@@ -210,12 +211,12 @@ class FCodePrinter(CodePrinter):
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
             pattern = "merge({T}, {F}, {COND})"
-            code = self._print(expr.args[-1].expr)
+            code = self._print(expr.args[-1].expr, *args, **kwargs)
             terms = list(expr.args[:-1])
             while terms:
                 e, c = terms.pop()
-                expr = self._print(e)
-                cond = self._print(c)
+                expr = self._print(e, *args, **kwargs)
+                cond = self._print(c, *args, **kwargs)
                 code = pattern.format(T=expr, F=code, COND=cond)
             return code
         else:
@@ -224,11 +225,11 @@ class FCodePrinter(CodePrinter):
                                       "inline operators is not supported in "
                                       "standards earlier than Fortran95.")
 
-    def _print_MatrixElement(self, expr):
+    def _print_MatrixElement(self, expr, *args, **kwargs):
         return "{0}({1}, {2})".format(self.parenthesize(expr.parent,
                 PRECEDENCE["Atom"], strict=True), expr.i + 1, expr.j + 1)
 
-    def _print_Add(self, expr):
+    def _print_Add(self, expr, *args, **kwargs):
         # purpose: print complex numbers nicely in Fortran.
         # collect the purely real and purely imaginary parts:
         pure_real = []
@@ -245,7 +246,7 @@ class FCodePrinter(CodePrinter):
             if len(mixed) > 0:
                 PREC = precedence(expr)
                 term = Add(*mixed)
-                t = self._print(term)
+                t = self._print(term, *args, **kwargs)
                 if t.startswith('-'):
                     sign = "-"
                     t = t[1:]
@@ -255,45 +256,45 @@ class FCodePrinter(CodePrinter):
                     t = "(%s)" % t
 
                 return "cmplx(%s,%s) %s %s" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
+                    self._print(Add(*pure_real), *args, **kwargs),
+                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary), *args, **kwargs),
                     sign, t,
                 )
             else:
                 return "cmplx(%s,%s)" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
+                    self._print(Add(*pure_real), *args, **kwargs),
+                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary), *args, **kwargs),
                 )
         else:
-            return CodePrinter._print_Add(self, expr)
+            return CodePrinter._print_Add(self, expr, *args, **kwargs)
 
-    def _print_Function(self, expr):
+    def _print_Function(self, expr, *args, **kwargs):
         # All constant function args are evaluated as floats
         prec =  self._settings['precision']
         args = [N(a, prec) for a in expr.args]
         eval_expr = expr.func(*args)
         if not isinstance(eval_expr, Function):
-            return self._print(eval_expr)
+            return self._print(eval_expr, *args, **kwargs)
         else:
-            return CodePrinter._print_Function(self, expr.func(*args))
+            return CodePrinter._print_Function(self, expr.func(*args), *args, **kwargs)
 
-    def _print_ImaginaryUnit(self, expr):
+    def _print_ImaginaryUnit(self, expr, *args, **kwargs):
         # purpose: print complex numbers nicely in Fortran.
         return "cmplx(0,1)"
 
-    def _print_int(self, expr):
+    def _print_int(self, expr, *args, **kwargs):
         return str(expr)
 
-    def _print_Mul(self, expr):
+    def _print_Mul(self, expr, *args, **kwargs):
         # purpose: print complex numbers nicely in Fortran.
         if expr.is_number and expr.is_imaginary:
             return "cmplx(0,%s)" % (
-                self._print(-S.ImaginaryUnit*expr)
+                self._print(-S.ImaginaryUnit*expr, *args, **kwargs)
             )
         else:
-            return CodePrinter._print_Mul(self, expr)
+            return CodePrinter._print_Mul(self, expr, *args, **kwargs)
 
-    def _print_Pow(self, expr):
+    def _print_Pow(self, expr, *args, **kwargs):
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
@@ -301,59 +302,60 @@ class FCodePrinter(CodePrinter):
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument
                 if expr.base.is_Number:
-                    return 'sqrt(%s.0d0)' % self._print(expr.base)
+                    return 'sqrt(%s.0d0)' % self._print(expr.base, *args, **kwargs)
                 else:
-                    return 'sqrt(dble(%s))' % self._print(expr.base)
+                    return 'sqrt(dble(%s))' % self._print(expr.base, *args, **kwargs)
             else:
-                return 'sqrt(%s)' % self._print(expr.base)
+                return 'sqrt(%s)' % self._print(expr.base, *args, **kwargs)
         else:
-            return CodePrinter._print_Pow(self, expr)
+            return CodePrinter._print_Pow(self, expr, *args, **kwargs)
 
-    def _print_Rational(self, expr):
+    def _print_Rational(self, expr, *args, **kwargs):
         p, q = int(expr.p), int(expr.q)
         return "%d.0d0/%d.0d0" % (p, q)
 
-    def _print_Float(self, expr):
-        printed = CodePrinter._print_Float(self, expr)
+    def _print_Float(self, expr, *args, **kwargs):
+        printed = CodePrinter._print_Float(self, expr, *args, **kwargs)
         e = printed.find('e')
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
 
-    def _print_Indexed(self, expr):
-        inds = [ self._print(i) for i in expr.indices ]
-        return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
+    def _print_Indexed(self, expr, *args, **kwargs):
+        inds = [ self._print(i, *args, **kwargs) for i in expr.indices ]
+        return "%s(%s)" % (self._print(expr.base.label, *args, **kwargs), ", ".join(inds))
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
+    def _print_Idx(self, expr, *args, **kwargs):
+        return self._print(expr.label, *args, **kwargs)
 
-    def _print_AugmentedAssignment(self, expr):
-        lhs_code = self._print(expr.lhs)
-        rhs_code = self._print(expr.rhs)
+    def _print_AugmentedAssignment(self, expr, *args, **kwargs):
+        lhs_code = self._print(expr.lhs, *args, **kwargs)
+        rhs_code = self._print(expr.rhs, *args, **kwargs)
         return self._get_statement("{0} = {0} {1} {2}".format(
-            *map(self._print, [lhs_code, expr._symbol, rhs_code])))
+            *map(lambda arg: self._print(arg, *args, **kwargs),
+                 [lhs_code, expr._symbol, rhs_code])))
 
-    def _print_For(self, expr):
-        target = self._print(expr.target)
+    def _print_For(self, expr, *args, **kwargs):
+        target = self._print(expr.target, *args, **kwargs)
         if isinstance(expr.iterable, Range):
             start, stop, step = expr.iterable.args
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        body = self._print(expr.body)
+        body = self._print(expr.body, *args, **kwargs)
         return ('do {target} = {start}, {stop}, {step}\n'
                 '{body}\n'
                 'end do').format(target=target, start=start, stop=stop,
                         step=step, body=body)
 
-    def _print_Equality(self, expr):
+    def _print_Equality(self, expr, *args, **kwargs):
         lhs, rhs = expr.args
-        return ' == '.join(map(self._print, (lhs, rhs)))
+        return ' == '.join(map(lambda arg: self._print(arg, *args, **kwargs), (lhs, rhs)))
 
-    def _print_Unequality(self, expr):
+    def _print_Unequality(self, expr, *args, **kwargs):
         lhs, rhs = expr.args
-        return ' /= '.join(map(self._print, (lhs, rhs)))
+        return ' /= '.join(map(lambda arg: self._print(arg, *args, **kwargs), (lhs, rhs)))
 
-    def _print_Type(self, type_):
+    def _print_Type(self, type_, *args, **kwargs):
         type_ = self.type_aliases.get(type_, type_)
         type_str = self.type_mappings.get(type_, type_.name)
         module_uses = self.type_modules.get(type_)
@@ -362,28 +364,32 @@ class FCodePrinter(CodePrinter):
                 self.module_uses[k].add(v)
         return type_str
 
-    def _print_Declaration(self, expr):
+    def _print_Declaration(self, expr, *args, **kwargs):
         var, val = expr.variable, expr.value
         dim = var.attr_params('dimension')
         if isinstance(var, Pointer):
             raise NotImplementedError("Pointers are not available by default in Fortran.")
         if self._settings["standard"] >= 90:
             result = '{t}{vc}{dim} :: {s}'.format(
-                t=self._print(var.type),
+                t=self._print(var.type, *args, **kwargs),
                 vc=', parameter' if value_const in var.attrs else '',
-                dim=', dimension(%s)' % ', '.join(map(self._print, dim)) if dim else '',
-                s=self._print(var.symbol)
+                dim=', dimension(%s)' % ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), dim)) if dim else '',
+                s=self._print(var.symbol, *args, **kwargs)
             )
-            if val is not None:
-                result += ' = %s' % self._print(val)
+            if val != None:
+                result += ' = %s' % self._print(val, *args, **kwargs)
         else:
             if value_const in var.attrs or val:
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
-            result = ' '.join(self._print(var.type), self._print(var.symbol))
+            result = ' '.join(map(lambda arg: self._print(arg, *args, **kwargs), [var.type, var.symbol]))
         return result
 
-    def _print_While(self, expr):
-        return 'do while ({condition})\n{body}\nend do'.format(**expr.kwargs(apply=self._print))
+    def _print_Infinity(self, expr, *args, **kwargs):
+        return '(huge(%s) + 1)' % literal_dp(0)
+
+    def _print_While(self, expr, *args, **kwargs):
+        return 'do while ({condition})\n{body}\nend do'.format(**expr.kwargs(
+            apply=lambda arg: self._print(arg, *args, **kwargs)))
 
     def _print_BooleanTrue(self, expr):
         return '.true.'
@@ -524,8 +530,8 @@ class FCodePrinter(CodePrinter):
     def _print_GoTo(self, goto, *args, **kwargs):
         if goto.expr:  # computed goto
             return "go to (${labels}), ${expr}".format(
-                labels=', '.join(map(self._print, goto.labels)),
-                expr=self._print(goto.expr)
+                labels=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), goto.labels)),
+                expr=self._print(goto.expr, *args, **kwargs)
             )
         else:
             lbl, = goto.labels
@@ -538,12 +544,20 @@ class FCodePrinter(CodePrinter):
             "end program"
         ).format(**prog.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs)))
 
+    def _print_Module(self, mod, *args, **kwargs):
+        return (
+            "module {name}\n"
+            "{declarations}\n"
+            "\ncontains\n\n"
+            "{definitions}\n"
+            "end module"
+        ).format(**mod.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs)))
 
     def _print_Stream(self, strm):
-        if strm.name == 'stdout' and standard >= 2003:
+        if strm.name == 'stdout' and self._settings["standard"] >= 2003:
             self.module_uses['iso_c_binding'].add('stdint=>input_unit')
             return 'input_unit'
-        elif strm.name == 'stderr' and standard >= 2003:
+        elif strm.name == 'stderr' and self._settings["standard"] >= 2003:
             self.module_uses['iso_c_binding'].add('stdint=>error_unit')
             return 'error_unit'
         else:
@@ -552,21 +566,22 @@ class FCodePrinter(CodePrinter):
             else:
                 return strm.name
 
-    def _print_PrintStatement(self, ps, *args, **kwargs):
+    def _print_Print(self, ps, *args, **kwargs):
         if ps.format_string:
             fmt = "'{0}'".format(ps.format_string)
         else:
             fmt = "*"
-        return "print {fmt}, {iolist}".format(fmt=fmt, iolist=', '.join(map(self._print, ps.print_args)))
+        return "print {fmt}, {iolist}".format(fmt=fmt, iolist=', '.join(
+            map(lambda arg: self._print(arg, *args, **kwargs), ps.print_args)))
 
-    def _print_ReturnStatement(self, rs, *args, **kwargs):
+    def _print_Return(self, rs, *args, **kwargs):
         arg, = rs.args
-        return "{ret} = {arg}".format(
-            ret=kwargs.get('function_result_variable', 'sympy_result'),
-            arg=self._print(arg)
+        return "{result_name} = {arg}".format(
+            result_name=kwargs.get('result_name', 'sympy_result'),
+            arg=self._print(arg, *args, **kwargs)
         )
 
-    def _print_FortranReturnStatement(self, frs, *args, **kwargs):
+    def _print_FortranReturn(self, frs, *args, **kwargs):
         arg, = frs.args
         if arg:
             return 'return %s' % self._print(arg, *args, **kwargs)
@@ -574,14 +589,22 @@ class FCodePrinter(CodePrinter):
             return 'return'
 
     def _function_head(self, fp, *args, **kwargs):
+        bind_C_params = fp.attr_params('bind_C')
+        if bind_C_params is None:
+            bind = ''
+        else:
+            bind = ' bind(C, name="%s")' % bind_C_params[0] if bind_C_params else ' bind(C)'
+
         return (
-            "{return_type} function {name}({arg_names})\n"
+            "{return_type} function {name}({arg_names}){result}{bind}\n"
             "{arg_declarations}"
         ).format(
-            return_type=self._print(fp.return_type),
-            name=self._print(fp.name),
-            arg_names=', '.join([self._print(arg.variable.symbol) for arg in fp.function_args]),
-            arg_declarations='\n'.join(map(self._print, fp.function_args))
+            return_type=self._print(fp.return_type, *args, **kwargs),
+            name=self._print(fp.name, *args, **kwargs),
+            arg_names=', '.join([self._print(arg.variable.symbol, *args, **kwargs) for arg in fp.function_args]),
+            result=' result(%s)' % kwargs['result_name'] if 'result_name' in kwargs else '',
+            bind=bind,
+            arg_declarations='\n'.join(map(lambda arg: self._print(arg, *args, **kwargs), fp.function_args))
         )
 
     def _print_FunctionPrototype(self, fp, *args, **kwargs):
@@ -606,8 +629,8 @@ class FCodePrinter(CodePrinter):
             "end function\n"
         ).format(
             prefix=prefix,
-            function_head=self._function_head(fd, *args, **kwarg),
-            body=self._print(fd.body, *args, **kwargs)
+            function_head=self._function_head(fd, *args, **kwargs),
+            body=self._print(fd.body, *args, result_name=fd.name, **kwargs)
         )
 
 

@@ -3,9 +3,9 @@ from __future__ import (absolute_import, division, print_function)
 from sympy import And, Gt, Lt, Abs, Dummy, oo, Tuple, Symbol, Function, Pow
 from sympy.codegen.ast import (
     Assignment, AddAugmentedAssignment, CodeBlock, Declaration, FunctionDefinition,
-    PrintStatement, ReturnStatement, Scope, While,
-    Variable, Pointer, real, Statement
+    Print, Return, Scope, Statement, While, Variable, Pointer, real
 )
+
 
 def _decl_real(arg, value=None):
     return Declaration(Variable(arg, type=real), value)
@@ -56,7 +56,7 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     delta_expr = -expr/expr.diff(wrt)
     body = [Assignment(delta, delta_expr), AddAugmentedAssignment(wrt, delta)]
     if debug:
-        prnt = PrintStatement([wrt, delta], r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d))
+        prnt = Statement(Print([wrt, delta], r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d)))
         body = [body[0], prnt] + body[1:]
     req = Gt(Abs(delta), atol)
     declars = [Statement(_decl_real(delta, oo))]
@@ -77,7 +77,8 @@ def _symbol_of(arg):
         arg = arg.symbol
     return arg
 
-def newtons_method_function(expr, wrt, args=None, func_name="newton", **kwargs):
+
+def newtons_method_function(expr, wrt, args=None, func_name="newton", attrs=Tuple(), **kwargs):
     """ Generates an AST for a function implementing the Newton-Raphson method.
 
     See also
@@ -100,4 +101,6 @@ def newtons_method_function(expr, wrt, args=None, func_name="newton", **kwargs):
     not_in_args = expr.free_symbols.difference(set(_symbol_of(arg) for arg in args))
     if not_in_args:
         raise ValueError("Missing symbols in args: %s" % ', '.join(map(str, not_in_args)))
-    return FunctionDefinition(real, func_name, tuple(map(_decl_real, args)), CodeBlock(algo, ReturnStatement(wrt)))
+    declars = tuple(map(_decl_real, args))
+    body = CodeBlock(algo, Statement(Return(wrt)))
+    return FunctionDefinition(real, func_name, declars, body, attrs=attrs)

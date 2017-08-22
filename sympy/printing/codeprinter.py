@@ -273,19 +273,19 @@ class CodePrinter(StrPrinter):
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
 
-    def _print_Dummy(self, expr):
+    def _print_Dummy(self, expr, *args, **kwargs):
         if expr.name.startswith('Dummy_'):
             return '_' + expr.name
         else:
             return '%s_%d' % (expr.name, expr.dummy_index)
 
-    def _print_CodeBlock(self, expr):
-        return '\n'.join([self._print(i) for i in expr.args])
+    def _print_CodeBlock(self, expr, *args, **kwargs):
+        return '\n'.join([self._print(i, *args, **kwargs) for i in expr.args])
 
-    def _print_String(self, string):
+    def _print_String(self, string, *args, **kwargs):
         return str(string)
 
-    def _print_Assignment(self, expr):
+    def _print_Assignment(self, expr, *args, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
@@ -301,14 +301,14 @@ class CodePrinter(StrPrinter):
                 expressions.append(Assignment(lhs, e))
                 conditions.append(c)
             temp = Piecewise(*zip(expressions, conditions))
-            return self._print(temp)
+            return self._print(temp, *args, **kwargs)
         elif isinstance(lhs, MatrixSymbol):
             # Here we form an Assignment for each element in the array,
             # printing each one.
             lines = []
             for (i, j) in self._traverse_matrix_indices(lhs):
                 temp = Assignment(lhs[i, j], rhs[i, j])
-                code0 = self._print(temp)
+                code0 = self._print(temp, *args, **kwargs)
                 lines.append(code0)
             return "\n".join(lines)
         elif self._settings["contract"] and (lhs.has(IndexedBase) or
@@ -317,13 +317,24 @@ class CodePrinter(StrPrinter):
             # print the required loops.
             return self._doprint_loops(rhs, lhs)
         else:
-            lhs_code = self._print(lhs)
-            rhs_code = self._print(rhs)
+            lhs_code = self._print(lhs, *args, **kwargs)
+            rhs_code = self._print(rhs, *args, **kwargs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
-    def _print_Symbol(self, expr):
+    def _print_AugmentedAssignment(self, expr, *args, **kwargs):
+        lhs_code = self._print(expr.lhs, *args, **kwargs)
+        rhs_code = self._print(expr.rhs, *args, **kwargs)
+        return self._get_statement("{0} {1} {2}".format(
+            *map(lambda arg: self._print(arg, *args, **kwargs),
+                 [lhs_code, expr.rel_op, rhs_code])))
 
-        name = super(CodePrinter, self)._print_Symbol(expr)
+    def _print_Statement(self, expr, *args, **kwargs):
+        arg, = expr.args
+        return self._get_statement(self._print(arg, *args, **kwargs))
+
+    def _print_Symbol(self, expr, *args, **kwargs):
+
+        name = super(CodePrinter, self)._print_Symbol(expr, *args, **kwargs)
 
         if name in self.reserved_words:
             if self._settings['error_on_reserved']:
@@ -334,7 +345,7 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
-    def _print_Function(self, expr):
+    def _print_Function(self, expr, *args, **kwargs):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
@@ -351,15 +362,15 @@ class CodePrinter(StrPrinter):
                     return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
-            return self._print(expr._imp_(*expr.args))
+            return self._print(expr._imp_(*expr.args), *args, **kwargs)
         else:
             return self._print_not_supported(expr)
 
     _print_Expr = _print_Function
 
-    def _print_NumberSymbol(self, expr):
+    def _print_NumberSymbol(self, expr, *args, **kwargs):
         if self._settings.get("inline", False):
-            return self._print(Float(expr.evalf(self._settings["precision"])))
+            return self._print(Float(expr.evalf(self._settings["precision"])), *args, **kwargs)
         else:
             # A Number symbol that is not implemented here or with _printmethod
             # is registered and evaluated
@@ -367,46 +378,46 @@ class CodePrinter(StrPrinter):
                 Float(expr.evalf(self._settings["precision"]))))
             return str(expr)
 
-    def _print_Catalan(self, expr):
-        return self._print_NumberSymbol(expr)
-    def _print_EulerGamma(self, expr):
-        return self._print_NumberSymbol(expr)
-    def _print_GoldenRatio(self, expr):
-        return self._print_NumberSymbol(expr)
-    def _print_Exp1(self, expr):
-        return self._print_NumberSymbol(expr)
-    def _print_Pi(self, expr):
-        return self._print_NumberSymbol(expr)
+    def _print_Catalan(self, expr, *args, **kwargs):
+        return self._print_NumberSymbol(expr, *args, **kwargs)
+    def _print_EulerGamma(self, expr, *args, **kwargs):
+        return self._print_NumberSymbol(expr, *args, **kwargs)
+    def _print_GoldenRatio(self, expr, *args, **kwargs):
+        return self._print_NumberSymbol(expr, *args, **kwargs)
+    def _print_Exp1(self, expr, *args, **kwargs):
+        return self._print_NumberSymbol(expr, *args, **kwargs)
+    def _print_Pi(self, expr, *args, **kwargs):
+        return self._print_NumberSymbol(expr, *args, **kwargs)
 
-    def _print_And(self, expr):
+    def _print_And(self, expr, *args, **kwargs):
         PREC = precedence(expr)
         return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
-    def _print_Or(self, expr):
+    def _print_Or(self, expr, *args, **kwargs):
         PREC = precedence(expr)
         return (" %s " % self._operators['or']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
-    def _print_Xor(self, expr):
+    def _print_Xor(self, expr, *args, **kwargs):
         if self._operators.get('xor') is None:
             return self._print_not_supported(expr)
         PREC = precedence(expr)
         return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
 
-    def _print_Equivalent(self, expr):
+    def _print_Equivalent(self, expr, *args, **kwargs):
         if self._operators.get('equivalent') is None:
             return self._print_not_supported(expr)
         PREC = precedence(expr)
         return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
 
-    def _print_Not(self, expr):
+    def _print_Not(self, expr, *args, **kwargs):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
-    def _print_Mul(self, expr):
+    def _print_Mul(self, expr, *args, **kwargs):
 
         prec = precedence(expr)
 
@@ -448,7 +459,7 @@ class CodePrinter(StrPrinter):
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
-    def _print_not_supported(self, expr):
+    def _print_not_supported(self, expr, *args, **kwargs):
         self._not_supported.add(expr)
         return self.emptyPrinter(expr)
 

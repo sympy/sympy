@@ -76,7 +76,7 @@ class CompilerRunner(object):
         else:
             # Find a compiler
             if preferred_vendor is None:
-                preferred_vendor = os.environ.get('COMPILER_VENDOR', None)
+                preferred_vendor = os.environ.get('SYMPY_COMPILER_VENDOR', None)
             self.compiler_name, self.compiler_binary, self.compiler_vendor = self.find_compiler(preferred_vendor)
             if self.compiler_binary is None:
                 raise ValueError("No compiler found (searched: {0})".format(', '.join(self.compiler_dict.values())))
@@ -256,17 +256,16 @@ class CppCompilerRunner(CompilerRunner):
 
 class FortranCompilerRunner(CompilerRunner):
 
-    standards = (None, 'f95', 'f2003', 'f2008')  # First is default (F77)
+    standards = (None, 'f77', 'f95', 'f2003', 'f2008')
 
     std_formater = {
-        'gfortran': '-std={}'.format,
-        'ifort': lambda x: '-stand f{}'.format(x[-2:]),  # f2008 => f08
+        'gfortran': lambda x: '-std=gnu' if x is None else '-std=legacy' if x == 'f77' else '-std={}'.format(x),
+        'ifort': lambda x: '-stand f08' if x is None else '-stand f{}'.format(x[-2:]),  # f2008 => f08
     }
 
     compiler_dict = OrderedDict([
         ('gnu', 'gfortran'),
         ('intel', 'ifort'),
-        ('llvm', 'gfortran')
     ])
 
     compiler_name_vendor_mapping = {

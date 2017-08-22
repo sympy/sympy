@@ -41,7 +41,7 @@ AST Type Tree
        |
        |--->Scope
        |
-       |--->PrintStatement
+       |--->Print
        |
        |--->FunctionPrototype
        |                    |--->FunctionDefinition
@@ -395,6 +395,9 @@ class CodeBlock(Basic):
         obj.right_hand_sides = Tuple(*right_hand_sides)
         return obj
 
+    def __iter__(self):
+        return iter(self.args)
+
     def _sympyrepr(self, printer, *args, **kwargs):
         il = kwargs.pop('indent_level', 0) + 4
         joiner = ',\n' + ' '*il
@@ -630,7 +633,7 @@ class Node(Token):
     def attr_params(self, looking_for):
         """ Returns the parameters of the Attribute with name ``looking_for`` in self.attrs """
         for attr in self.attrs:
-            if attr.name == looking_for:
+            if str(attr.name) == str(looking_for):
                 return attr.parameters
 
 
@@ -1073,12 +1076,12 @@ class Variable(Node):
     >>> v == Variable('i')
     False
     >>> from sympy.codegen.ast import value_const
-    >>> v.obey(value_const)
+    >>> value_const in v.attrs
     False
     >>> w = Variable('w', attrs=[value_const])
     >>> w
     Variable(w, attrs=(value_const,))
-    >>> w.obey(value_const)
+    >>> value_const in w.attrs
     True
 
     """
@@ -1127,8 +1130,8 @@ class Declaration(Token):
 
     Parameters
     ----------
-    var : Variable, Pointer or IndexedBase
-    val : Value (optional)
+    variable : Variable, Pointer or IndexedBase
+    value : Value (optional)
         Value to be assigned upon declaration.
 
     Examples
@@ -1138,7 +1141,7 @@ class Declaration(Token):
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True
-    >>> z.value is None
+    >>> z.value == None
     True
     >>> x = Symbol('x')
     >>> xvar = Variable(x)
@@ -1155,15 +1158,10 @@ class Declaration(Token):
     ValueError: Casting gives a significantly different value.
     """
 
-    nargs = (1, 2)
-
-    def __new__(cls, variable, value=None):
-        if isinstance(variable, Declaration) and value is None:
-            return variable
-        args = Variable(variable),
-        if value is not None:
-            args += (_sympify(value),)
-        return Basic.__new__(cls, *args)
+    __slots__ = ['variable', 'value']
+    defaults = {'value': none}
+    _construct_variable = Variable
+    _construct_value = staticmethod(_sympify)
 
     @classmethod
     def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True, **kwargs):
@@ -1185,7 +1183,7 @@ class Declaration(Token):
         >>> decl = Declaration.deduced(x)
         >>> decl.variable.type == real
         True
-        >>> decl.value is None
+        >>> decl.value == None
         True
         >>> n = Symbol('n', integer=True)
         >>> Declaration.deduced(n).variable
@@ -1210,18 +1208,6 @@ class Declaration(Token):
         var = Variable(symbol, type=type_, attrs=attrs)
         return cls(var, value, **kwargs)
 
-    @property
-    def variable(self):
-        """ Variable of the declaration """
-        return self.args[0]
-
-    @property
-    def value(self):
-        """ Initialization value of the declaration """
-        if len(self.args) == 2:
-            return self.args[1]
-        else:
-            return None
 
 class While(Token):
     """ Represents a 'for-loop' in the code.
@@ -1279,7 +1265,6 @@ class Scope(Token):
             return CodeBlock(*itr)
 
 
-
 class Statement(Basic):
     """ Represents a statement """
     nargs = 1
@@ -1293,8 +1278,8 @@ stdout = Stream('stdout')
 stderr = Stream('stderr')
 
 
-class PrintStatement(Token):
-    """ Represents a print statement in the code.
+class Print(Token):
+    """ Represents print command in the code.
 
     Parameters
     ----------
@@ -1326,7 +1311,7 @@ class FunctionPrototype(Node):
 
     """
 
-    __slots__ = ['return_type', 'name', 'function_args']
+    __slots__ = ['return_type', 'name', 'function_args', 'attrs']
 
     _construct_return_type = Type
     _construct_name = String
@@ -1361,7 +1346,7 @@ class FunctionDefinition(FunctionPrototype):
 
     """
 
-    __slots__ = FunctionPrototype.__slots__ + ['body']
+    __slots__ = FunctionPrototype.__slots__[:-1] + ['body', 'attrs']
 
     @classmethod
     def _construct_body(cls, itr):
@@ -1377,8 +1362,8 @@ class FunctionDefinition(FunctionPrototype):
         return cls(body=body, **func_proto.kwargs())
 
 
-class ReturnStatement(Basic):
-    """ Represents a return statement in the code. """
+class Return(Basic):
+    """ Represents a return command in the code. """
 
 
 class FunctionCall(Token):
@@ -1388,12 +1373,9 @@ class FunctionCall(Token):
     ----------
     name : str
     function_args : Tuple
-    statement : bool
 
     """
-    __slots__ = ['name', 'function_args', 'statement']
-    defaults = {'statement': false}
+    __slots__ = ['name', 'function_args']
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda fargs: Tuple(*fargs))
-    _construct_statement = staticmethod(lambda arg: true if arg else false)
