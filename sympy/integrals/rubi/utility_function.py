@@ -201,6 +201,9 @@ def FreeQ(nodes, var):
     else:
         return not nodes.has(var)
 
+def NFreeQ(nodes, var):
+    return not FreeQ(nodes, var)
+
 def List(*var):
     return list(var)
 
@@ -208,7 +211,7 @@ def Log(e):
     return log(e)
 
 def PositiveQ(var):
-    if var == zoo or var == oo:
+    if var.has(zoo) or var.has(oo):
         return False
     res = var > 0
     if not res.is_Relational:
@@ -2541,12 +2544,12 @@ def GeneralizedTrinomialDegree(u, x):
 def GeneralizedTrinomialParts(expr, x):
     expr = Expand(expr)
     if GeneralizedTrinomialMatchQ(expr, x):
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
+        a = Wild('a', exclude=[x, 0])
+        b = Wild('b', exclude=[x, 0])
         c = Wild('c', exclude=[x])
-        n = Wild('n', exclude=[x])
+        n = Wild('n', exclude=[x, 0])
         q = Wild('q', exclude=[x])
-        Match = expr.match(a*x**q+b*x**n+c*x**(2*n-q))
+        Match = expr.match(a*x**q + b*x**n+c*x**(2*n-q))
         if Match and expr.is_Add:
             return [Match[c], Match[b], Match[a], Match[n], 2*Match[n]-Match[q]]
     else:
