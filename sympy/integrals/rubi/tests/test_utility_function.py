@@ -1694,6 +1694,10 @@ def test_TrigSimplifyAux():
     assert TrigSimplifyAux(a*cos(x)**2 + a*sin(x)**2 + v) == a + v
     assert TrigSimplifyAux(x**2) == x**2
 
+def test_SubstFor():
+    assert SubstFor(x**2 + 1, tanh(x), x) == tanh(x)
+    assert SubstFor(x**2, sinh(x), x) == sinh(sqrt(x))
+
 def test_ExpandIntegrand():
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
     assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3

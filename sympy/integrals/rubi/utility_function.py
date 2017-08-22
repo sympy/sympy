@@ -5742,6 +5742,66 @@ def SplitSum(func, u):
         return [func(u), 0]
     return False
 
+def SubstFor(*args):
+    if len(args) == 4:
+        w, v, u, x = args
+        # u is a function of v. SubstFor(w,v,u,x) returns w times u with v replaced by x.
+        return SimplifyIntegrand(w*SubstFor(v, u, x), x)
+    v, u, x = args
+    # u is a function of v. SubstFor(v, u, x) returns u with v replaced by x.
+    if AtomQ(v):
+        return Subst(u, v, x)
+    elif Not(EqQ(FreeFactors(v, x), 1)):
+        return SubstFor(NonfreeFactors(v, x), u, x/FreeFactors(v, x))
+    elif SinQ(v):
+        return SubstForTrig(u, x, Sqrt(1 - x**2), v.args[0], x)
+    elif CosQ(v):
+        return SubstForTrig(u, Sqrt(1 - x**2), x, v.args[0], x)
+    elif TanQ(v):
+        return SubstForTrig(u, x/Sqrt(1 + x**2), 1/Sqrt(1 + x**2), v.args[0], x)
+    elif CotQ(v):
+        return SubstForTrig(u, 1/Sqrt(1 + x**2), x/Sqrt(1 + x**2), v.args[0], x)
+    elif SecQ(v):
+        return SubstForTrig(u, 1/Sqrt(1 - x**2), 1/x, v.args[0], x)
+    elif CscQ(v):
+        return SubstForTrig(u, 1/x, 1/Sqrt(1 - x**2), v.args[0], x)
+    elif SinhQ(v):
+        return SubstForHyperbolic(u, x, Sqrt(1 + x**2), v.args[0], x)
+    elif CoshQ(v):
+        return SubstForHyperbolic(u, Sqrt( - 1 + x**2), x, v.args[0], x)
+    elif TanhQ(v):
+        return SubstForHyperbolic(u, x/Sqrt(1 - x**2), 1/Sqrt(1 - x**2), v.args[0], x)
+    elif CothQ(v):
+        return SubstForHyperbolic(u, 1/Sqrt( - 1 + x**2), x/Sqrt( - 1 + x**2), v.args[0], x)
+    elif SechQ(v):
+        return SubstForHyperbolic(u, 1/Sqrt( - 1 + x**2), 1/x, v.args[0], x)
+    elif CschQ(v):
+        return SubstForHyperbolic(u, 1/x, 1/Sqrt(1 + x**2), v.args[0], x)
+    else:
+        return SubstForAux(u, v, x)
+
+def SubstForAux(u, v, x):
+    # u is a function of v. SubstForAux(u, v, x) returns u with v replaced by x.
+    if u==v:
+        return x
+    elif AtomQ(u):
+        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u - v.args[0]):
+            return x**Simplify(1/v.args[1])
+        else:
+            return u
+    elif PowerQ(u) and FreeQ(u.args[1], x):
+        if ZeroQ(u.args[0] - v):
+            return x**u.args[1]
+        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u.args[0] - v.args[0]):
+            return x**Simplify(u.args[1]/v.args[1])
+        return SubstForAux(u.args[0], v, x)**u.args[1]
+    elif ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
+        return FreeFactors(u, x)*SubstForAux(NonfreeFactors(u, x), v, x)
+    elif ProductQ(u) and ProductQ(v):
+        return SubstForAux(First(u), First(v), x)
+    else:
+        return u.func(*[SubstForAux(i, v, x) for i in u.args])
+
 def Complex(a, b):
     return a + I*b
 
