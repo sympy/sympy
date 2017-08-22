@@ -229,8 +229,10 @@ class LinearEntity(GeometrySet):
         """
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object '
-                             'and cannot be used as a parameter.' % t.name)
+            raise ValueError(filldedent('''
+                Symbol %s already appears in object
+                and cannot be used as a parameter.
+                ''' % t.name))
         # multiply on the right so the variable gets
         # combined with the coordinates of the point
         return self.p1 + (self.p2 - self.p1)*t
@@ -1826,8 +1828,10 @@ class Line2D(LinearEntity2D, Line):
             try:
                 p2 = Point(pt, dim=2)
             except (NotImplementedError, TypeError, ValueError):
-                raise ValueError('The 2nd argument was not a valid Point. '
-                                 'If it was a slope, enter it with keyword "slope".')
+                raise ValueError(filldedent('''
+                    The 2nd argument was not a valid Point.
+                    If it was a slope, enter it with keyword "slope".
+                    '''))
         elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_finite is False:
@@ -2432,6 +2436,7 @@ class Ray3D(LinearEntity3D, Ray):
     """
 
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
+        from sympy.utilities.misc import filldedent
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('If p1 is a LinearEntity, pt must be None')
@@ -2444,8 +2449,9 @@ class Ray3D(LinearEntity3D, Ray):
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
         else:
-            raise ValueError('A 2nd Point or keyword "direction_ratio" must'
-                             'be used.')
+            raise ValueError(filldedent('''
+                A 2nd Point or keyword "direction_ratio" must be used.
+            '''))
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
