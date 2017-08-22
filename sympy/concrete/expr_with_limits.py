@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 from sympy.matrices import Matrix
@@ -84,8 +84,7 @@ class ExprWithLimits(Expr):
             rhs = function.rhs
             return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
-        if isinstance(function, Piecewise):
-            function = piecewise_fold(function)
+        function = piecewise_fold(function)
 
 
         if function is S.NaN:
@@ -361,8 +360,7 @@ class AddWithLimits(ExprWithLimits):
             rhs = function.rhs
             return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
-        if isinstance(function, Piecewise):
-            function = piecewise_fold(function)
+        function = piecewise_fold(function)
 
         if function is S.NaN:
             return S.NaN

@@ -538,7 +538,9 @@ def piecewise_fold(expr):
 
     Piecewise
     """
-    if not isinstance(expr, Basic) or not expr.has(Piecewise):
+    from sympy.series.formal import FormalPowerSeries
+    if (not isinstance(expr, Basic) or not expr.has(Piecewise) or
+        isinstance(expr, FormalPowerSeries)):
         return expr
 
     new_args = []
