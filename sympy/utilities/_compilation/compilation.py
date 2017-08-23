@@ -3,6 +3,8 @@ from __future__ import (absolute_import, division, print_function)
 
 import os
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import warnings
@@ -514,18 +516,7 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
         mod = import_module_from_file(so)
     return mod
 
-
-def compile_link_import_strings(sources, build_dir=None, **kwargs):
-    """ Compiles, links and imports extension module from source.
-
-    Parameters
-    ----------
-    sources : iterable of name/source pair tuples
-    build_dir : string (default: None)
-        path to cache_dir. None implies use a temporary directory.
-    \\*\\*kwargs:
-        keyword arguments passed onto `compile_link_import_py_ext`
-    """
+def _write_sources_to_build_dir(sources, build_dir):
     build_dir = build_dir or tempfile.mkdtemp()
     if not os.path.isdir(build_dir):
         raise OSError("Non-existent directory: ", build_dir)
@@ -547,5 +538,74 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
                 fh.write(src)
                 open(dest+'.sha256', 'wt').write(sha256_in_mem)
         source_files.append(dest)
+    return source_files, build_dir
 
-    return compile_link_import_py_ext(source_files, build_dir=build_dir, **kwargs)
+
+def compile_link_import_strings(sources, build_dir=None, compile_kwargs=None):
+    """ Compiles, links and imports extension module from source.
+
+    Parameters
+    ----------
+    sources : iterable of name/source pair tuples
+    build_dir : string (default: None)
+        Path. ``None`` implies use a temporary directory.
+    compile_kwargs:
+        keyword arguments passed onto `compile_link_import_py_ext`
+
+    Returns
+    -------
+    mod : module
+        The compiled and imported extension module.
+    info : dict
+        Containing ``build_dir`` as 'build_dir'.
+
+    """
+    source_files, build_dir = _write_sources_to_build_dir(sources, build_dir)
+    mod = compile_link_import_py_ext(source_files, build_dir, **(compile_kwargs or {}))
+    info = dict(build_dir=build_dir)
+    return mod, info
+
+
+def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=None, link_kwargs=None):
+    """ Compiles, links and runs a program built from sources.
+
+    Parameters
+    ----------
+    sources : iterable of name/source pair tuples
+    build_dir : string (default: None)
+        Path. ``None`` implies use a temporary directory.
+    clean : bool
+        Whether to remove build_dir after use. This will only have an
+        effect if ``build_dir`` is ``None`` (which creates a temporary directory).
+        Passing ``clean == True`` and ``build_dir != None`` raises a ``ValueError``.
+        This will also set ``build_dir`` in returned info dictionary to ``None``.
+    compile_kwargs: dict
+        Keyword arguments passed onto ``compile_sources``
+    link_kwargs: dict
+        Keyword arguments passed onto ``link``
+
+    Returns
+    -------
+    (stdout, stderr): pair of strings
+    info: dict
+        Containing exit status as 'exit_status' and ``build_dir`` as 'build_dir'
+
+    """
+    if clean and build_dir is not None:
+        raise ValueError("Automatic removal of build_dir is only available for temporary directory.")
+    try:
+        source_files, build_dir = _write_sources_to_build_dir(sources, build_dir)
+        objs = compile_sources(list(map(get_abspath, source_files)), destdir=build_dir,
+                               cwd=build_dir, **(compile_kwargs or {}))
+        prog = link(objs, cwd=build_dir,
+                    fort=any_fortran_src(source_files),
+                    cplus=any_cplus_src(source_files), **(link_kwargs or {}))
+        p = subprocess.Popen([prog], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        exit_status = p.wait()
+        stdout, stderr = [txt.decode('utf-8') for txt in p.communicate()]
+    finally:
+        if clean:
+            shutil.rmtree(build_dir)
+            build_dir = None
+    info = dict(exit_status=exit_status, build_dir=build_dir)
+    return (stdout, stderr), info

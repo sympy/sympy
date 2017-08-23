@@ -488,12 +488,6 @@ class C89CodePrinter(CodePrinter):
             result += ' = %s' % self._print(val, *args, **kwargs)
         return result
 
-    def _print_Variable(self, expr, *args, **kwargs):
-        return self._print(expr.symbol, *args, **kwargs)
-
-    def _print_Pointer(self, expr, *args, **kwargs):
-        return self._print(expr.symbol, *args, **kwargs)
-
     def _print_Float(self, flt, *args, **kwargs):
         type_ = self.type_aliases.get(real, real)
         self.macros.update(self.type_macros.get(type_, set()))
@@ -515,6 +509,12 @@ class C89CodePrinter(CodePrinter):
     def _print_BooleanFalse(self, expr, *args, **kwargs):
         return 'false'
 
+    def _print_Element(self, elem, *args, **kwargs):
+        return "{symb}[{idxs}]".format(
+            symb=self._print(elem.symbol, *args, **kwargs),
+            idxs=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), elem.indices))
+        )
+
     def _print_While(self, expr, *args, **kwargs):
         return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(
             apply=lambda arg: self._print(arg, *args, **kwargs)))
@@ -531,7 +531,7 @@ class C89CodePrinter(CodePrinter):
         return "%s %s(%s)" % (
             tuple(map(lambda arg: self._print(arg, *args, **kwargs),
                       (expr.return_type, expr.name))) +
-            (', '.join(map(lambda arg: self._print(arg, *args, statement=False, **kwargs), expr.function_args)),)
+            (', '.join(map(lambda arg: self._print(arg, *args, statement=False, **kwargs), expr.parameters)),)
         )
 
     def _print_FunctionDefinition(self, expr, *args, **kwargs):
@@ -541,12 +541,6 @@ class C89CodePrinter(CodePrinter):
     def _print_Return(self, expr, *args, **kwargs):
         arg, = expr.args
         return 'return %s' % self._print(arg, *args, **kwargs)
-
-    def _print_FunctionCall(self, expr, *args, **kwargs):
-        return '%s(%s)' % (
-            expr.name,
-            ', '.join(map(lambda arg: self._print(arg, *args, **kwargs),
-                          expr.function_args)))
 
     def _print_CommaOperator(self, expr, *args, **kwargs):
         return '(%s)' % ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), expr.args))

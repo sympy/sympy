@@ -62,7 +62,8 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     declars = [Statement(_decl_real(delta, oo))]
     if itermax is not None:
         counter = counter or Dummy(integer=True)
-        declars.append(Declaration.deduced(counter, 0))
+        v_counter = Variable.deduced(counter, 0)
+        declars.append(Declaration(v_counter))
         body.append(AddAugmentedAssignment(counter, 1))
         req = And(req, Lt(counter, itermax))
     whl = While(req, CodeBlock(*body))
@@ -78,7 +79,7 @@ def _symbol_of(arg):
     return arg
 
 
-def newtons_method_function(expr, wrt, args=None, func_name="newton", attrs=Tuple(), **kwargs):
+def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tuple(), **kwargs):
     """ Generates an AST for a function implementing the Newton-Raphson method.
 
     See also
@@ -86,10 +87,10 @@ def newtons_method_function(expr, wrt, args=None, func_name="newton", attrs=Tupl
     - sympy.codegen.ast.newtons_method
 
     """
-    if args is None:
-        args = (wrt,)
+    if params is None:
+        params = (params,)
     pointer_subs = {p.symbol: Symbol('(*%s)' % p.symbol.name)
-                    for p in args if isinstance(p, Pointer)}
+                    for p in params if isinstance(p, Pointer)}
     delta = kwargs.pop('delta', None)
     if delta is None:
         delta = Symbol('d_' + wrt.name)
@@ -98,9 +99,9 @@ def newtons_method_function(expr, wrt, args=None, func_name="newton", attrs=Tupl
     algo = newtons_method(expr, wrt, delta=delta, **kwargs).xreplace(pointer_subs)
     if isinstance(algo, Scope):
         algo = algo.body
-    not_in_args = expr.free_symbols.difference(set(_symbol_of(arg) for arg in args))
-    if not_in_args:
-        raise ValueError("Missing symbols in args: %s" % ', '.join(map(str, not_in_args)))
-    declars = tuple(map(_decl_real, args))
+    not_in_params = expr.free_symbols.difference(set(_symbol_of(p) for p in params))
+    if not_in_params:
+        raise ValueError("Missing symbols in params: %s" % ', '.join(map(str, not_in_params)))
+    declars = tuple(map(Variable.deduced, params))
     body = CodeBlock(algo, Statement(Return(wrt)))
     return FunctionDefinition(real, func_name, declars, body, attrs=attrs)

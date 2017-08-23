@@ -13,7 +13,6 @@ from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp, log
-from .ast import Attribute
 
 
 def _expm1(x):
@@ -75,7 +74,6 @@ class expm1(Function):
 
     def _eval_is_finite(self):
         return self.args[0].is_finite
-
 
 
 def _log1p(x):

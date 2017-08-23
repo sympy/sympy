@@ -20,33 +20,34 @@ AST Type Tree
        |
        |--->CodeBlock
        |
-       |--->For
        |
        |--->Token
        |        |--->Attribute
+       |        |--->For
+       |        |--->String
        |        |--->Type
-       |                |--->IntBaseType
-       |                |              |--->_SizedIntType
-       |                |                               |--->SignedIntType
-       |                |                               |--->UnsignedIntType
-       |                |--->FloatType
-       |                             |--->ComplexType
+       |        |       |--->IntBaseType
+       |        |       |              |--->_SizedIntType
+       |        |       |                               |--->SignedIntType
+       |        |       |                               |--->UnsignedIntType
+       |        |       |--->FloatBaseType
+       |        |                        |--->FloatType
+       |        |                        |--->ComplexBaseType
+       |        |                                           |--->ComplexType
+       |        |--->NoneToken
+       |        |--->Node
+       |        |       |--->Variable
+       |        |       |           |---> Pointer
+       |        |       |--->FunctionPrototype
+       |        |                            |--->FunctionDefinition
+       |        |--->Declaration
+       |        |--->While
+       |        |--->Scope
+       |        |--->Stream
+       |        |--->Print
+       |        |--->FunctionCall
        |
-       |--->Variable
-       |           |---> Pointer
-       |
-       |--->Declaration
-       |
-       |--->While
-       |
-       |--->Scope
-       |
-       |--->Print
-       |
-       |--->FunctionPrototype
-       |                    |--->FunctionDefinition
-       |
-       |--->FunctionCall
+       |--->Return
 
 
 Predefined types
@@ -84,6 +85,10 @@ from sympy.core.sympify import _sympify, sympify
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
 
+
+def _mk_Tuple(args):
+    args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
+    return Tuple(*args)
 
 class Token(Basic):
     """ Base class for the AST types
@@ -248,7 +253,7 @@ class Assignment(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
         # Indexed types implement shape, but don't define it until later. This
@@ -626,9 +631,7 @@ class Node(Token):
 
     defaults = {'attrs': Tuple()}
 
-    @classmethod
-    def _construct_attrs(cls, args):
-        return Tuple(*args)
+    _construct_attrs = staticmethod(_mk_Tuple)
 
     def attr_params(self, looking_for):
         """ Returns the parameters of the Attribute with name ``looking_for`` in self.attrs """
@@ -1027,10 +1030,7 @@ class Attribute(Token):
     __slots__ = ['name', 'parameters']
     defaults = {'parameters': Tuple()}
     _construct_name = String
-
-    @classmethod
-    def _construct_parameters(cls, params):
-        return Tuple(*params)
+    _construct_parameters = staticmethod(_mk_Tuple)
 
     def _sympystr(self, printer, *args, **kwargs):
         return str(self.name)
@@ -1086,21 +1086,28 @@ class Variable(Node):
 
     """
 
-    __slots__ = ['symbol', 'type'] + Node.__slots__
+    __slots__ = ['symbol', 'type', 'value'] + Node.__slots__
     defaults = dict(chain(Node.defaults.items(), {
-        'type': untyped
+        'type': untyped,
+        'value': none
     }.items()))
 
     _construct_symbol = staticmethod(sympify)
 
     @classmethod
-    def deduced(cls, symbol, attrs=Tuple()):
+    def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True):
         """ Alt. constructor with type deduction from ``Type.from_expr``.
+
+        Deduces type primarily from ``symbol``, secondarily from ``value``.
 
         Parameters
         ----------
         symbol : Symbol
-        attrs : Tuple
+        value : expr
+            (optional) value of the variable.
+        attrs : iterable of Attribute instances
+        cast_check : bool
+            Whether to apply ``Type.cast_check`` on ``value``.
 
         Examples
         --------
@@ -1118,11 +1125,28 @@ class Variable(Node):
         True
 
         """
-        return cls(symbol, type=Type.from_expr(symbol), attrs=attrs)
+        if isinstance(symbol, Variable):
+            return symbol
+
+        try:
+            type_ = Type.from_expr(symbol)
+        except ValueError:
+            type_ = Type.from_expr(value)
+
+        if value is not None and cast_check:
+            value = type_.cast_check(value)
+        return cls(symbol, type=Type.from_expr(symbol), value=value, attrs=attrs)
 
 
 class Pointer(Variable):
-    """ Represents a pointer """
+    """ Represents a pointer. See ``Variable``. """
+
+
+class Element(Token):
+    """ Element in (a possible N-dimensional) array. """
+    __slots__ = ['symbol', 'indices']
+    _construct_symbol = staticmethod(sympify)
+    _construct_indices = staticmethod(_mk_Tuple)
 
 
 class Declaration(Token):
@@ -1130,9 +1154,7 @@ class Declaration(Token):
 
     Parameters
     ----------
-    variable : Variable, Pointer or IndexedBase
-    value : Value (optional)
-        Value to be assigned upon declaration.
+    variable : Variable
 
     Examples
     --------
@@ -1141,72 +1163,11 @@ class Declaration(Token):
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True
-    >>> z.value == None
+    >>> z.variable.value == None
     True
-    >>> x = Symbol('x')
-    >>> xvar = Variable(x)
-    >>> decl = Declaration.deduced(xvar, 3)
-    >>> decl.variable.type == integer
-    True
-    >>> k = Symbol('k', integer=True)
-    >>> k_decl1 = Declaration.deduced(k, 3.0)
-    >>> k_decl1.variable.type == integer
-    True
-    >>> k_decl2 = Declaration.deduced(k, 3.4)  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-      ...
-    ValueError: Casting gives a significantly different value.
     """
-
-    __slots__ = ['variable', 'value']
-    defaults = {'value': none}
+    __slots__ = ['variable']
     _construct_variable = Variable
-    _construct_value = staticmethod(_sympify)
-
-    @classmethod
-    def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True, **kwargs):
-        """ Deduces type primarily from ``symbol``, secondarily from ``value``.
-
-        Parameters
-        ----------
-        symbol : Symbol
-        value : expr
-            Value with which the variable will be initialized.
-        attrs : Tuple
-           Attributes (see ``Node``)
-
-        Examples
-        --------
-        >>> from sympy import Symbol
-        >>> from sympy.codegen.ast import Declaration, real, integer
-        >>> x = Symbol('x', real=True)
-        >>> decl = Declaration.deduced(x)
-        >>> decl.variable.type == real
-        True
-        >>> decl.value == None
-        True
-        >>> n = Symbol('n', integer=True)
-        >>> Declaration.deduced(n).variable
-        Variable(n, type=integer)
-        >>> n_decl = Declaration.deduced(n, 3.0)
-        >>> n_decl.value
-        3
-        >>> n_decl = Declaration.deduced(n, 3.4)  # doctest: +ELLIPSIS
-        Traceback (most recent call last):
-          ...
-        ValueError: Casting gives a significantly different value.
-        >>> n_decl = Declaration.deduced(n, 3.4, cast_check=False)
-
-        """
-        try:
-            type_ = Type.from_expr(symbol)
-        except ValueError:
-            type_ = Type.from_expr(value)
-
-        if value is not None and cast_check:
-            value = type_.cast_check(value)
-        var = Variable(symbol, type=type_, attrs=attrs)
-        return cls(var, value, **kwargs)
 
 
 class While(Token):
@@ -1292,10 +1253,7 @@ class Print(Token):
 
     _construct_format_string = String
     _construct_file = Stream
-
-    @classmethod
-    def _construct_print_args(cls, args):
-        return Tuple(*args)
+    _construct_print_args = staticmethod(_mk_Tuple)
 
 
 class FunctionPrototype(Node):
@@ -1307,23 +1265,24 @@ class FunctionPrototype(Node):
     ----------
     return_type : Type
     name : str
-    function_args : iterable of Declaration instances
+    parameters: iterable of Declaration instances
+    attrs : iterable of Attribute instances
 
     """
 
-    __slots__ = ['return_type', 'name', 'function_args', 'attrs']
+    __slots__ = ['return_type', 'name', 'parameters', 'attrs']
 
     _construct_return_type = Type
     _construct_name = String
 
     @staticmethod
-    def _construct_function_args(args):
-        return Tuple(*[Declaration(arg) for arg in args])
+    def _construct_parameters(args):
+        return Tuple(*[arg.variable if isinstance(arg, Declaration) else Variable.deduced(arg) for arg in args])
 
     def __new__(cls, *args, **kwargs):
         return Token.__new__(cls, *args, **kwargs)
-        if not all(isinstance(inp, Declaration) for inp in self.function_args):
-            raise TypeError("function_args need to be all instances of Declaration")
+        if not all(isinstance(inp, Variable) for inp in self.parameters):
+            raise TypeError("parameters need to be all instances of Declaration")
         if not isinstance(self.return_type, Type):
             raise TypeError("return_type should be an instance of Type")
 
@@ -1341,8 +1300,9 @@ class FunctionDefinition(FunctionPrototype):
     ----------
     return_type : Type
     name : str
-    function_args : iterable of Declaration instances
+    parameters: iterable of Variable instances
     body : CodeBlock or iterable
+    attrs : iterable of Attribute instances
 
     """
 
@@ -1378,4 +1338,4 @@ class FunctionCall(Token):
     __slots__ = ['name', 'function_args']
 
     _construct_name = String
-    _construct_function_args = staticmethod(lambda fargs: Tuple(*fargs))
+    _construct_function_args = staticmethod(_mk_Tuple)

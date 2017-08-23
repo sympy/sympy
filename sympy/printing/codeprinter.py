@@ -328,6 +328,15 @@ class CodePrinter(StrPrinter):
             *map(lambda arg: self._print(arg, *args, **kwargs),
                  [lhs_code, expr.rel_op, rhs_code])))
 
+    def _print_FunctionCall(self, expr, *args, **kwargs):
+        return '%s(%s)' % (
+            expr.name,
+            ', '.join(map(lambda arg: self._print(arg, *args, **kwargs),
+                          expr.function_args)))
+
+    def _print_Variable(self, expr, *args, **kwargs):
+        return self._print(expr.symbol, *args, **kwargs)
+
     def _print_Statement(self, expr, *args, **kwargs):
         arg, = expr.args
         return self._get_statement(self._print(arg, *args, **kwargs))

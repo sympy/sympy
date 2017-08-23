@@ -32,8 +32,7 @@ from sympy.codegen.ast import (
     Assignment, Attribute, Declaration, Pointer, Type, value_const,
     float32, float64, float80, complex64, complex128, int8, int16, int32, int64, intc, real, integer,  bool_, complex_
 )
-from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
-from sympy.codegen.fnodes import elemental, pure
+from sympy.codegen.fnodes import isign, dsign, cmplx, merge, literal_dp, elemental, pure, intent_in, intent_out, intent_inout
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -335,6 +334,27 @@ class FCodePrinter(CodePrinter):
             *map(lambda arg: self._print(arg, *args, **kwargs),
                  [lhs_code, expr._symbol, rhs_code])))
 
+    def _print_sum_(self, sm, *args, **kwargs):
+        params = self._print(sm.array, *args, **kwargs)
+        if sm.dim != None:
+            params += ', ' + self._print(sm.dim, *args, **kwargs)
+        if sm.mask != None:
+            params += ', mask=' + self._print(sm.mask, *args, **kwargs)
+        return '%s(%s)' % (sm.__class__.__name__.rstrip('_'), params)
+
+    def _print_product_(self, prod, *args, **kwargs):
+        return self._print_sum_(prod, *args, **kwargs)
+
+    def _print_Do(self, do, *args, **kwargs):
+        return (
+            'do {concurrent}{counter} = {first}, {last}, {step}\n'
+            '{body}\n'
+            'end do\n'
+        ).format(
+            concurrent='concurrent ' if do.concurrent else '',
+            **do.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs), exclude=('concurrent',))
+        )
+
     def _print_For(self, expr, *args, **kwargs):
         target = self._print(expr.target, *args, **kwargs)
         if isinstance(expr.iterable, Range):
@@ -364,16 +384,32 @@ class FCodePrinter(CodePrinter):
                 self.module_uses[k].add(v)
         return type_str
 
+    def _print_Element(self, elem, *args, **kwargs):
+        return '{symbol}({idxs})'.format(
+            symbol=self._print(elem.symbol, *args, **kwargs),
+            idxs=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), elem.indices))
+        )
+
     def _print_Declaration(self, expr, *args, **kwargs):
-        var, val = expr.variable, expr.value
+        var = expr.variable
+        val = var.value
         dim = var.attr_params('dimension')
+        intents = [intent in var.attrs for intent in (intent_in, intent_out, intent_inout)]
+        if intents.count(True) == 0:
+            intent = ''
+        elif intents.count(True) == 1:
+            intent = ', intent(%s)' % ['in', 'out', 'inout'][intents.index(True)]
+        else:
+            raise ValueError("Multiple intents specified for %s" % self)
+
         if isinstance(var, Pointer):
             raise NotImplementedError("Pointers are not available by default in Fortran.")
         if self._settings["standard"] >= 90:
-            result = '{t}{vc}{dim} :: {s}'.format(
+            result = '{t}{vc}{dim}{intent} :: {s}'.format(
                 t=self._print(var.type, *args, **kwargs),
                 vc=', parameter' if value_const in var.attrs else '',
                 dim=', dimension(%s)' % ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), dim)) if dim else '',
+                intent=intent,
                 s=self._print(var.symbol, *args, **kwargs)
             )
             if val != None:
@@ -383,6 +419,7 @@ class FCodePrinter(CodePrinter):
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
             result = ' '.join(map(lambda arg: self._print(arg, *args, **kwargs), [var.type, var.symbol]))
         return result
+
 
     def _print_Infinity(self, expr, *args, **kwargs):
         return '(huge(%s) + 1)' % literal_dp(0)
@@ -541,7 +578,7 @@ class FCodePrinter(CodePrinter):
         return (
             "program {name}\n"
             "{body}\n"
-            "end program"
+            "end program\n"
         ).format(**prog.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs)))
 
     def _print_Module(self, mod, *args, **kwargs):
@@ -550,7 +587,7 @@ class FCodePrinter(CodePrinter):
             "{declarations}\n"
             "\ncontains\n\n"
             "{definitions}\n"
-            "end module"
+            "end module\n"
         ).format(**mod.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs)))
 
     def _print_Stream(self, strm):
@@ -567,7 +604,7 @@ class FCodePrinter(CodePrinter):
                 return strm.name
 
     def _print_Print(self, ps, *args, **kwargs):
-        if ps.format_string:
+        if ps.format_string != None:
             fmt = "'{0}'".format(ps.format_string)
         else:
             fmt = "*"
@@ -588,7 +625,7 @@ class FCodePrinter(CodePrinter):
         else:
             return 'return'
 
-    def _function_head(self, fp, *args, **kwargs):
+    def _head(self, entity, fp, *args, **kwargs):
         bind_C_params = fp.attr_params('bind_C')
         if bind_C_params is None:
             bind = ''
@@ -596,24 +633,25 @@ class FCodePrinter(CodePrinter):
             bind = ' bind(C, name="%s")' % bind_C_params[0] if bind_C_params else ' bind(C)'
 
         return (
-            "{return_type} function {name}({arg_names}){result}{bind}\n"
+            "{entity}{name}({arg_names}){result}{bind}\n"
             "{arg_declarations}"
         ).format(
-            return_type=self._print(fp.return_type, *args, **kwargs),
+            entity=entity,
             name=self._print(fp.name, *args, **kwargs),
-            arg_names=', '.join([self._print(arg.variable.symbol, *args, **kwargs) for arg in fp.function_args]),
+            arg_names=', '.join([self._print(arg.symbol, *args, **kwargs) for arg in fp.parameters]),
             result=' result(%s)' % kwargs['result_name'] if 'result_name' in kwargs else '',
             bind=bind,
-            arg_declarations='\n'.join(map(lambda arg: self._print(arg, *args, **kwargs), fp.function_args))
+            arg_declarations='\n'.join(map(lambda arg: self._print(Declaration(arg), *args, **kwargs), fp.parameters))
         )
 
     def _print_FunctionPrototype(self, fp, *args, **kwargs):
+        entity = "{0} function ".format(self._print(fp.return_type, *args, **kwargs))
         return (
             "interface\n"
             "{function_head}\n"
             "end function\n"
             "end interface"
-        ).format(function_head=self._function_head(fp, *args, **kwarg))
+        ).format(function_head=self._head(entity, fp, *args, **kwarg))
 
     def _print_FunctionDefinition(self, fd, *args, **kwargs):
         if elemental in fd.attrs:
@@ -623,15 +661,43 @@ class FCodePrinter(CodePrinter):
         else:
             prefix = ''
 
+        entity = "{0} function ".format(self._print(fd.return_type, *args, **kwargs))
         return (
             "{prefix}{function_head}\n"
             "{body}\n"
             "end function\n"
         ).format(
             prefix=prefix,
-            function_head=self._function_head(fd, *args, **kwargs),
+            function_head=self._head(entity, fd, *args, **kwargs),
             body=self._print(fd.body, *args, result_name=fd.name, **kwargs)
         )
+
+    def _print_Subroutine(self, sub, *args, **kwargs):
+        return (
+            '{subroutine_head}\n'
+            '{body}\n'
+            'end subroutine\n'
+        ).format(
+            subroutine_head=self._head('subroutine ', sub, *args, **kwargs),
+            body=self._print(sub.body, *args, **kwargs)
+        )
+
+    def _print_SubroutineCall(self, scall, *args, **kwargs):
+        return 'call {name}({args})'.format(
+            name=self._print(scall.name, *args, **kwargs),
+            args=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), scall.subroutine_args))
+        )
+
+    def _print_use_rename(self, rnm, *args, **kwargs):
+        return "%s => %s" % tuple(map(lambda arg: self._print(arg, *args, **kwargs), rnm.args))
+
+    def _print_use(self, use, *args, **kwargs):
+        result = 'use %s' % self._print(use.namespace, *args, **kwargs)
+        if use.rename != None:
+            result += ', ' + ', '.join([self._print(rnm) for rnm in use.rename])
+        if use.only != None:
+            result += ', only: ' + ', '.join([self._print(nly) for nly in use.only])
+        return result
 
 
 def fcode(expr, assign_to=None, **settings):

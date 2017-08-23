@@ -296,6 +296,19 @@ def test_Variable():
     assert Variable.deduced(Symbol('x', real=True)).type == real
     assert a_i.func(*a_i.args) == a_i
 
+    v_n2 = Variable.deduced(n, value=3.5, cast_check=False)
+    assert v_n2.func(*v_n2.args) == v_n2
+    assert abs(v_n2.value - 3.5) < 1e-15
+    raises(ValueError, lambda: Variable.deduced(n, value=3.5, cast_check=True))
+
+    v_n3 = Vairable.deduced(n)
+    assert v_n3.type == integer
+    assert str(v_n3) == 'Variable(n, type=integer)'
+    assert Variable.deduced(z, value=3).type == integer
+    assert Variable.deduced(z, value=3.0).type == real
+    assert Variable.deduced(z, value=3.0+1j).type == complex_
+
+
 
 def test_Pointer():
     p = Pointer(x)
@@ -321,29 +334,24 @@ def test_Declaration():
     vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
 
-    vuc = Variable(u, Type.from_expr(u), {value_const})
+    vuc = Variable(u, Type.from_expr(u), value=3.0, attrs={value_const})
     assert value_const in vuc.attrs
     assert pointer_const not in vuc.attrs
-    decl = Declaration(vuc, 3.0)
+    decl = Declaration(vuc)
     assert decl.variable == vuc
-    assert isinstance(decl.value, Float)
-    assert decl.value == 3.0
+    assert isinstance(decl.variable.value, Float)
+    assert decl.variable.value == 3.0
     assert decl.func(*decl.args) == decl
 
-    vy = Variable(y, type=integer)
-    decl2 = Declaration(vy, 3)
+    vy = Variable(y, type=integer, value=3)
+    decl2 = Declaration(vy)
     assert decl2.variable == vy
-    assert decl2.value is Integer(3)
+    assert decl2.variable.value == Integer(3)
 
-    vi = Variable(i, type=Type.from_expr(i))
-    decl3 = Declaration(vi, 3.0)
+    vi = Variable(i, type=Type.from_expr(i), value=3.0)
+    decl3 = Declaration(vi)
     assert decl3.variable.type == integer
-    assert decl3.value == 3.0
-
-    decl4 = Declaration.deduced(n, value=3.5, cast_check=False)
-    assert decl4.func(*decl4.args) == decl4
-    assert abs(decl4.value - 3.5) < 1e-15
-    raises(ValueError, lambda: Declaration.deduced(n, value=3.5, cast_check=True))
+    assert decl3.variable.value == 3.0
 
 
 
@@ -351,14 +359,6 @@ def test_IntBaseType():
     assert intc.name == String('intc')
     assert intc.args == (intc.name,)
     assert str(IntBaseType('a').name) == 'a'
-
-def test_Declaration__deduced():
-    dn = Declaration.deduced(n)
-    assert dn.variable.type == integer
-    assert str(dn.variable) == 'Variable(n, type=integer)'
-    assert Declaration.deduced(z, 3).variable.type == integer
-    assert Declaration.deduced(z, 3.0).variable.type == real
-    assert Declaration.deduced(z, 3.0+1j).variable.type == complex_
 
 
 def test_FloatType():
@@ -495,26 +495,24 @@ def test_Print():
 
 def test_FunctionPrototype_and_FunctionDefinition():
     vx = Variable(x, type=real)
-    dx = Declaration(vx)
     vn = Variable(n, type=integer)
-    dn = Declaration(vn, 2)
-    fp1 = FunctionPrototype(real, 'power', [dx, dn])
+    fp1 = FunctionPrototype(real, 'power', [vx, vn])
     assert fp1.return_type == real
     assert fp1.name == String('power')
-    assert fp1.function_args == Tuple(dx, dn)
-    assert fp1 == FunctionPrototype(real, 'power', [dx, dn])
-    assert fp1 != FunctionPrototype(real, 'power', [dn, dx])
+    assert fp1.parameters == Tuple(vx, vn)
+    assert fp1 == FunctionPrototype(real, 'power', [vx, vn])
+    assert fp1 != FunctionPrototype(real, 'power', [vn, vx])
     assert fp1.func(*fp1.args) == fp1
 
 
     body = [Assignment(x, x**n), Return(x)]
-    fd1 = FunctionDefinition(real, 'power', [dx, dn], body)
+    fd1 = FunctionDefinition(real, 'power', [vx, vn], body)
     assert fd1.return_type == real
     assert str(fd1.name) == 'power'
-    assert fd1.function_args == Tuple(dx, dn)
+    assert fd1.parameters == Tuple(vx, vn)
     assert fd1.body == CodeBlock(*body)
-    assert fd1 == FunctionDefinition(real, 'power', [dx, dn], body)
-    assert fd1 != FunctionDefinition(real, 'power', [dx, dn], body[::-1])
+    assert fd1 == FunctionDefinition(real, 'power', [vx, vn], body)
+    assert fd1 != FunctionDefinition(real, 'power', [vx, vn], body[::-1])
     assert fd1.func(*fd1.args) == fd1
 
     fp2 = FunctionPrototype.from_FunctionDefinition(fd1)

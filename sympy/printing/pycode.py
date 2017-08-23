@@ -185,9 +185,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDefinition(self, fd, *args, **kwargs):
         body = '\n'.join(map(lambda arg: self._print(arg, *args, **kwargs), fd.body))
-        return "def {name}({args}):\n{body}".format(
+        return "def {name}({parameters}):\n{body}".format(
             name=self._print(fd.name, *args, **kwargs),
-            args=', '.join([self._print(decl.variable.symbol, *args, **kwargs) for decl in fd.function_args]),
+            parameters=', '.join([self._print(var.symbol, *args, **kwargs) for var in fd.parameters]),
             body=self._indent_codestring(body)
         )
 
