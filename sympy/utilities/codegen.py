@@ -541,7 +541,7 @@ class CodeGen(object):
         self.project = project
         self.cse = cse
 
-    def routine(self, name, expr, argument_sequence, global_vars):
+    def routine(self, name, expr, argument_sequence=None, global_vars=None):
         """Creates an Routine object that is appropriate for this language.
 
         This implementation is appropriate for at least C/Fortran.  Subclasses
@@ -556,6 +556,21 @@ class CodeGen(object):
 
         """
 
+        if self.cse:
+            from sympy.simplify.cse_main import cse
+            if isinstance(expr, Equality):
+                common, simplified = cse(expr.rhs)
+                expr = Equality(expr.lhs, simplified[0])
+            else:
+                common, simplified = cse(expr)
+                expr = simplified
+
+            local_vars = [Result(b,a) for a,b in common]
+            local_symbols = set([a for a,_ in common])
+            local_expressions = Tuple(*[b for _,b in common])
+        else:
+            local_expressions = Tuple()
+            
         if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
             if not expr:
                 raise ValueError("No expression given")
@@ -564,25 +579,17 @@ class CodeGen(object):
             expressions = Tuple(expr)
 
         if self.cse:
-            if isinstance(expr, Equality):
-                common, simplified = cse(expr.rhs)
-                expr = sm.Eq(expr.lhs, simplified[0])
-            else:
-                common, simplified = cse(expr)
-                expr = simplified
-
-            local_vars = [Result(b,a) for a,b in common]
-            local_symbols = set([a for a,_ in common])
+            assert {i.label for i in expressions.atoms(Idx)} == set(), "CSE and Indexed expressions do not play well together yet"
         else:
-            # local variables
+            # local variables for indexed expressions
             local_vars = {i.label for i in expressions.atoms(Idx)}
-            local_symbols = local_vars
-
+            local_symbols = local_vars            
+            
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_symbols - global_vars
+        symbols = (expressions.free_symbols | local_expressions.free_symbols) - local_symbols - global_vars
         new_symbols = set([])
         new_symbols.update(symbols)
 
@@ -619,8 +626,10 @@ class CodeGen(object):
                     output_args.append(
                         OutputArgument(symbol, out_arg, expr, dimensions=dims))
 
-                # avoid duplicate arguments
-                symbols.remove(symbol)
+                # remove duplicate arguments when they are not local variables
+                if symbol not in local_vars:
+                    # avoid duplicate arguments
+                    symbols.remove(symbol)
             elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
                 # Create a "dummy" MatrixSymbol to use as the Output arg
                 out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
@@ -648,7 +657,7 @@ class CodeGen(object):
                 metadata = {'dimensions': dims}
             else:
                 metadata = {}
-
+    
             arg_list.append(InputArgument(symbol, **metadata))
 
         output_args.sort(key=lambda x: str(x.name))
@@ -681,6 +690,8 @@ class CodeGen(object):
             arg_list = new_args
 
         return Routine(name, arg_list, return_val, local_vars, global_vars)
+
+
 
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
