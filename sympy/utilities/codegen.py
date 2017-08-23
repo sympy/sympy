@@ -531,7 +531,7 @@ class CodeGen(object):
                 raise ValueError("Failed to print %s" % str(s))
         return expr_str.strip()
 
-    def __init__(self, project="project"):
+    def __init__(self, project="project", cse=False):
         """Initialize a code generator.
 
         Derived classes will offer more options that affect the generated
@@ -539,6 +539,7 @@ class CodeGen(object):
 
         """
         self.project = project
+        self.cse = cse
 
     def routine(self, name, expr, argument_sequence, global_vars):
         """Creates an Routine object that is appropriate for this language.
@@ -554,6 +555,9 @@ class CodeGen(object):
         OutputArgument and InOutArguments.
 
         """
+
+        if self.cse:
+            return self.routine_cse(name, expr, argument_sequence, global_vars)
 
         if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
             if not expr:
@@ -668,6 +672,151 @@ class CodeGen(object):
             arg_list = new_args
 
         return Routine(name, arg_list, return_val, local_vars, global_vars)
+
+    def routine_cse(self, name, expr, argument_sequence=None, global_vars=None):
+        """Creates an Routine object that is appropriate for this language.
+        This implementation is appropriate for at least C/Fortran.  Subclasses
+        can override this if necessary.
+        Here, we assume at most one return value (the l-value) which must be
+        scalar.  Additional outputs are OutputArguments (e.g., pointers on
+        right-hand-side or pass-by-reference).  Matrices are always returned
+        via OutputArguments.  If ``argument_sequence`` is None, arguments will
+        be ordered alphabetically, but with all InputArguments first, and then
+        OutputArgument and InOutArguments.
+        """
+
+        from sympy import __version__ as sympy_version
+        from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
+        from sympy.core.compatibility import is_sequence, StringIO, string_types
+        from sympy.core.relational import Equality
+        from sympy.printing.codeprinter import AssignmentError
+        from sympy.printing.ccode import c_code_printers
+        from sympy.simplify.cse_main import cse
+        from sympy.tensor import Idx, Indexed, IndexedBase
+        from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
+                                    MatrixExpr, MatrixSlice)
+    
+        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
+            if not expr:
+                raise ValueError("No expression given")
+            expressions = Tuple(*expr)
+        else:
+            expressions = Tuple(expr)
+
+        common, simplified = cse(expr)
+        local_vars = [Result(b,a) for a,b in common]
+        local_symbols = set([a for a,_ in common])
+        expr = simplified
+
+        # global variables
+        global_vars = set() if global_vars is None else set(global_vars)
+
+        # symbols that should be arguments
+        symbols = expressions.free_symbols - local_symbols - global_vars
+        new_symbols = set([])
+        new_symbols.update(symbols)
+
+        for symbol in symbols:
+            if isinstance(symbol, Idx):
+                new_symbols.remove(symbol)
+                new_symbols.update(symbol.args[1].free_symbols)
+        symbols = new_symbols
+
+        # Decide whether to use output argument or return value
+        return_val = []
+        output_args = []
+        for expr in expressions:
+            if isinstance(expr, Equality):
+                out_arg = expr.lhs
+                if out_arg in local_vars: continue
+                expr = expr.rhs
+                print("{} = {}".format(out_arg, expr))
+                if isinstance(out_arg, Indexed):
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                    symbol = out_arg.base.label
+                elif isinstance(out_arg, Symbol):
+                    dims = []
+                    symbol = out_arg
+                elif isinstance(out_arg, MatrixSymbol):
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                    symbol = out_arg
+                else:
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
+
+                if expr.has(symbol):
+                    output_args.append(
+                        InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                else:
+                    output_args.append(
+                        OutputArgument(symbol, out_arg, expr, dimensions=dims))
+
+                # remove duplicate arguments when they are not local variables
+                if symbol not in local_vars:                    
+                    print("Removing output argument symbol {} from {}".format(symbol, symbols))
+                    # avoid duplicate arguments
+                    symbols.remove(symbol)
+            elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
+                # Create a "dummy" MatrixSymbol to use as the Output arg
+                out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
+                dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
+                output_args.append(
+                    OutputArgument(out_arg, out_arg, expr, dimensions=dims))
+            else:
+                return_val.append(Result(expr))
+
+        arg_list = []
+
+        # setup input argument list
+        array_symbols = {}
+        for array in expressions.atoms(Indexed):
+            array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
+
+        for symbol in sorted(symbols, key=str):
+            if symbol in array_symbols:
+                dims = []
+                array = array_symbols[symbol]
+                for dim in array.shape:
+                    dims.append((S.Zero, dim - 1))
+                metadata = {'dimensions': dims}
+            else:
+                metadata = {}
+
+            arg_list.append(InputArgument(symbol, **metadata))
+
+        output_args.sort(key=lambda x: str(x.name))
+        arg_list.extend(output_args)
+        
+        if argument_sequence is not None:
+            # if the user has supplied IndexedBase instances, we'll accept that
+            new_sequence = []
+            for arg in argument_sequence:
+                if isinstance(arg, IndexedBase):
+                    new_sequence.append(arg.label)
+                else:
+                    new_sequence.append(arg)
+            argument_sequence = new_sequence
+
+            missing = [x for x in arg_list if x.name not in argument_sequence]
+            if missing:
+                msg = "Argument list didn't specify: {0} "
+                msg = msg.format(", ".join([str(m.name) for m in missing]))
+                raise CodeGenArgumentListError(msg, missing)
+
+            # create redundant arguments to produce the requested sequence
+            name_arg_dict = {x.name: x for x in arg_list}
+            new_args = []
+            for symbol in argument_sequence:
+                try:
+                    new_args.append(name_arg_dict[symbol])
+                except KeyError:
+                    new_args.append(InputArgument(symbol))
+            arg_list = new_args
+
+        return Routine(name, arg_list, return_val, local_vars, global_vars)
+
 
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
@@ -797,8 +946,8 @@ class CCodeGen(CodeGen):
     standard = 'c99'
 
     def __init__(self, project="project", printer=None,
-                 preprocessor_statements=None):
-        super(CCodeGen, self).__init__(project=project)
+                 preprocessor_statements=None, cse=False):
+        super(CCodeGen, self).__init__(project=project, cse=cse)
         self.printer = printer or c_code_printers[self.standard.lower()]()
 
         self.preprocessor_statements = preprocessor_statements
@@ -862,8 +1011,52 @@ class CCodeGen(CodeGen):
         return []
 
     def _declare_locals(self, routine):
-        # loop variables are declared in loop statement
-        return []
+        
+        # Compose a list of symbols to be dereferenced in the function
+        # body. These are the arguments that were passed by a reference
+        # pointer, excluding arrays.
+        dereference = []
+        for arg in routine.arguments:
+            if isinstance(arg, ResultBase) and not arg.dimensions:
+                dereference.append(arg.name)
+        
+        code_lines = []
+        for result in routine.local_vars:
+
+            if isinstance(result, Result):
+                assign_to = result.name
+                t = result.get_datatype('c')
+                if isinstance(result.expr, (MatrixBase, MatrixExpr)):
+                    dims = result.expr.shape
+                    assert dims[1] == 1, "2D matrices not supported yet"
+                    code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
+                else:
+                    code_lines.append("{0} {1};\n".format(t, str(assign_to)))
+                return_val = assign_to
+            else:
+                assign_to = result.result_var
+            
+            try:
+                assign_to = result.result_var
+                constants, not_c, c_expr = self._printer_method_with_settings(
+                    'doprint', dict(human=False, dereference=dereference),
+                    result.expr, assign_to=assign_to)
+
+            except AssignmentError:
+                assign_to = result.result_var
+                code_lines.append(
+                    "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
+                constants, not_c, c_expr = self._printer_method_with_settings(
+                    'doprint', dict(human=False, dereference=dereference),
+                    result.expr, assign_to=assign_to)
+
+            for name, value in sorted(constants, key=str):
+                code_lines.append("double const %s = %s;\n" % (name, value))
+            
+            code_lines.append("%s\n" % c_expr)
+            
+        return code_lines
+
 
     def _call_printer(self, routine):
         code_lines = []
