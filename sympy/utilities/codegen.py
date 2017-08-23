@@ -117,7 +117,6 @@ __all__ = [
 
 class Routine(object):
     """Generic description of evaluation routine for set of expressions.
-
     A CodeGen class can translate instances of this class into code in a
     particular language.  The routine specification covers all the features
     present in these languages.  The CodeGen part must raise an exception
@@ -125,37 +124,30 @@ class Routine(object):
     example, multiple return values are possible in Python, but not in C or
     Fortran.  Another example: Fortran and Python support complex numbers,
     while C does not.
-
     """
 
     def __init__(self, name, arguments, results, local_vars, global_vars):
         """Initialize a Routine instance.
-
         Parameters
         ==========
-
         name : string
             Name of the routine.
-
         arguments : list of Arguments
             These are things that appear in arguments of a routine, often
             appearing on the right-hand side of a function call.  These are
             commonly InputArguments but in some languages, they can also be
             OutputArguments or InOutArguments (e.g., pass-by-reference in C
             code).
-
         results : list of Results
             These are the return values of the routine, often appearing on
             the left-hand side of a function call.  The difference between
             Results and OutputArguments and when you should use each is
             language-specific.
-
-        local_vars : list of Symbols
-            These are used internally by the routine.
-
+        local_vars : list of Results
+            These are variables that will be defined at the beginning of the
+            function.
         global_vars : list of Symbols
             Variables which will not be passed into the function.
-
         """
 
         # extract all input symbols and all symbols appearing in an expression
@@ -177,13 +169,20 @@ class Routine(object):
                 raise ValueError("Unknown Routine result: %s" % r)
             symbols.update(r.expr.free_symbols)
 
+        local_symbols = set([])
+        for r in local_vars:
+            if not isinstance(r, Result):
+                raise ValueError("Unknown Routine result: %s" % r)
+            symbols.update(r.expr.free_symbols)
+            local_symbols.add(r.name)
+
         symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
 
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
         # specify additional (unused) InputArguments or local_vars.
         notcovered = symbols.difference(
-            input_symbols.union(local_vars).union(global_vars))
+            input_symbols.union(local_symbols).union(global_vars))
         if notcovered != set([]):
             raise ValueError("Symbols needed for output are not in input " +
                              ", ".join([str(x) for x in notcovered]))
@@ -202,10 +201,8 @@ class Routine(object):
     @property
     def variables(self):
         """Returns a set of all variables possibly used in the routine.
-
         For routines with unnamed return values, the dummies that may or
         may not be used will be included in the set.
-
         """
         v = set(self.local_vars)
         for arg in self.arguments:
@@ -217,13 +214,13 @@ class Routine(object):
     @property
     def result_variables(self):
         """Returns a list of OutputArgument, InOutArgument and Result.
-
         If return values are present, they are at the end ot the list.
         """
         args = [arg for arg in self.arguments if isinstance(
             arg, (OutputArgument, InOutArgument))]
         args.extend(self.results)
         return args
+
 
 
 class DataType(object):
