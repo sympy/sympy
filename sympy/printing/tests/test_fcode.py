@@ -702,8 +702,8 @@ def test_fcode_Declaration():
 
 
     x, y = symbols('x y')
-    var2 = Variable(x, float32, {value_const})
-    dcl2b = Declaration(var2, 42)
+    var2 = Variable(x, float32, value=42, attrs={value_const})
+    dcl2b = Declaration(var2)
     check(dcl2b, 'real*4, parameter :: x = 42')
 
     var3 = Variable(y, type=bool_)

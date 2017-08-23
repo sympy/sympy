@@ -541,7 +541,7 @@ def _write_sources_to_build_dir(sources, build_dir):
     return source_files, build_dir
 
 
-def compile_link_import_strings(sources, build_dir=None, compile_kwargs=None):
+def compile_link_import_strings(sources, build_dir=None, **kwargs):
     """ Compiles, links and imports extension module from source.
 
     Parameters
@@ -549,8 +549,8 @@ def compile_link_import_strings(sources, build_dir=None, compile_kwargs=None):
     sources : iterable of name/source pair tuples
     build_dir : string (default: None)
         Path. ``None`` implies use a temporary directory.
-    compile_kwargs:
-        keyword arguments passed onto `compile_link_import_py_ext`
+    **kwargs:
+        Keyword arguments passed onto `compile_link_import_py_ext`.
 
     Returns
     -------
@@ -561,7 +561,7 @@ def compile_link_import_strings(sources, build_dir=None, compile_kwargs=None):
 
     """
     source_files, build_dir = _write_sources_to_build_dir(sources, build_dir)
-    mod = compile_link_import_py_ext(source_files, build_dir, **(compile_kwargs or {}))
+    mod = compile_link_import_py_ext(source_files, build_dir, **kwargs)
     info = dict(build_dir=build_dir)
     return mod, info
 

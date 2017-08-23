@@ -7,10 +7,6 @@ from sympy.codegen.ast import (
 )
 
 
-def _decl_real(arg, value=None):
-    return Declaration(Variable(arg, type=real), value)
-
-
 def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
                    itermax=None, counter=None):
     """ Generates an AST for Newton-Raphson method (a root-finding algorithm).
@@ -54,27 +50,27 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
         name_d = delta.name
 
     delta_expr = -expr/expr.diff(wrt)
-    body = [Assignment(delta, delta_expr), AddAugmentedAssignment(wrt, delta)]
+    whl_bdy = [Assignment(delta, delta_expr), AddAugmentedAssignment(wrt, delta)]
     if debug:
         prnt = Statement(Print([wrt, delta], r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d)))
-        body = [body[0], prnt] + body[1:]
+        whl_bdy = [whl_bdy[0], prnt] + whl_bdy[1:]
     req = Gt(Abs(delta), atol)
-    declars = [Statement(_decl_real(delta, oo))]
+    declars = [Statement(Declaration(Variable(delta, type=real, value=oo)))]
     if itermax is not None:
         counter = counter or Dummy(integer=True)
         v_counter = Variable.deduced(counter, 0)
         declars.append(Declaration(v_counter))
-        body.append(AddAugmentedAssignment(counter, 1))
+        whl_bdy.append(AddAugmentedAssignment(counter, 1))
         req = And(req, Lt(counter, itermax))
-    whl = While(req, CodeBlock(*body))
+    whl = While(req, CodeBlock(*whl_bdy))
     blck = declars + [whl]
     return Wrapper(CodeBlock(*blck))
 
 
 def _symbol_of(arg):
     if isinstance(arg, Declaration):
-        arg = arg.variable
-    if isinstance(arg, (Variable, Pointer)):
+        arg = arg.variable.symbol
+    if isinstance(arg, Variable):
         arg = arg.symbol
     return arg
 
@@ -88,7 +84,7 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
 
     """
     if params is None:
-        params = (params,)
+        params = (wrt,)
     pointer_subs = {p.symbol: Symbol('(*%s)' % p.symbol.name)
                     for p in params if isinstance(p, Pointer)}
     delta = kwargs.pop('delta', None)
@@ -102,6 +98,6 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
     not_in_params = expr.free_symbols.difference(set(_symbol_of(p) for p in params))
     if not_in_params:
         raise ValueError("Missing symbols in params: %s" % ', '.join(map(str, not_in_params)))
-    declars = tuple(map(Variable.deduced, params))
+    declars = tuple(Variable(p, real) for p in params)
     body = CodeBlock(algo, Statement(Return(wrt)))
     return FunctionDefinition(real, func_name, declars, body, attrs=attrs)

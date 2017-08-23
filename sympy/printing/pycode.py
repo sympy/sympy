@@ -201,7 +201,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Declaration(self, decl, *args, **kwargs):
         return '%s = %s' % (
             self._print(decl.variable.symbol, *args, **kwargs),
-            self._print(decl.value, *args, **kwargs)
+            self._print(decl.variable.value, *args, **kwargs)
         )
 
     def _print_Return(self, ret, *args, **kwargs):

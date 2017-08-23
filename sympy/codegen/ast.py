@@ -123,6 +123,8 @@ class Token(Basic):
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
+        if len(args) > len(cls.__slots__):
+            raise ValueError("Too many arguments (%d), expected at most %d" % (len(args), len(cls.__slots__)))
         args = [cls._construct(attr, arg) for attr, arg in zip(
             cls.__slots__, args + tuple([
                 kwargs.pop(k, cls.defaults[k]) if k in cls.defaults else kwargs.pop(k) for k
@@ -253,7 +255,7 @@ class Assignment(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element)
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
         # Indexed types implement shape, but don't define it until later. This
@@ -1093,6 +1095,7 @@ class Variable(Node):
     }.items()))
 
     _construct_symbol = staticmethod(sympify)
+    _construct_value = staticmethod(sympify)
 
     @classmethod
     def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True):
@@ -1135,7 +1138,7 @@ class Variable(Node):
 
         if value is not None and cast_check:
             value = type_.cast_check(value)
-        return cls(symbol, type=Type.from_expr(symbol), value=value, attrs=attrs)
+        return cls(symbol, type=type_, value=value, attrs=attrs)
 
 
 class Pointer(Variable):

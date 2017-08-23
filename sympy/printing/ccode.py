@@ -23,7 +23,7 @@ from sympy.codegen.ast import (
     Assignment, Pointer, Type, Variable, Declaration,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
-    int8, int16, int32, int64, uint8, uint16, uint32, uint64,
+    int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped
 )
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -254,8 +254,8 @@ class C89CodePrinter(CodePrinter):
 
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
-        var = Variable(name, type=type_, attrs={value_const})
-        decl = Declaration(var, value.evalf(type_.decimal_dig))
+        var = Variable(name, type=type_, value=value.evalf(type_.decimal_dig), attrs={value_const})
+        decl = Declaration(var)
         return self._get_statement(self._print(decl))
 
     def _format_code(self, lines):
@@ -465,9 +465,13 @@ class C89CodePrinter(CodePrinter):
         self.macros.update(self.type_macros.get(type_, set()))
         return self._print(self.type_mappings.get(type_, type_.name), *args, **kwargs)
 
-    def _print_Declaration(self, expr, *args, **kwargs):
+    def _print_Declaration(self, decl, *args, **kwargs):
         from sympy.codegen.cnodes import restrict
-        var, val = expr.variable, expr.value
+        var = decl.variable
+        val = var.value
+        if var.type == untyped:
+            raise ValueError("C does not support untyped variables")
+
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
                 vc='const ' if value_const in var.attrs else '',
@@ -531,7 +535,7 @@ class C89CodePrinter(CodePrinter):
         return "%s %s(%s)" % (
             tuple(map(lambda arg: self._print(arg, *args, **kwargs),
                       (expr.return_type, expr.name))) +
-            (', '.join(map(lambda arg: self._print(arg, *args, statement=False, **kwargs), expr.parameters)),)
+            (', '.join(map(lambda arg: self._print(Declaration(arg), *args, statement=False, **kwargs), expr.parameters)),)
         )
 
     def _print_FunctionDefinition(self, expr, *args, **kwargs):

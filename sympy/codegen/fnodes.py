@@ -233,12 +233,12 @@ class F95Function(FFunction):
 
 
 class isign(FFunction):
-    """ Fortran sign intrinsic with for integer arguments. """
+    """ Fortran sign intrinsic for integer arguments. """
     nargs = 2
 
 
 class dsign(FFunction):
-    """ Fortran sign intrinsic with for double precision arguments. """
+    """ Fortran sign intrinsic for double precision arguments. """
     nargs = 2
 
 

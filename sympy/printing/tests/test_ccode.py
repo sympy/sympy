@@ -679,7 +679,10 @@ def test_ccode_Declaration():
     var2 = Variable(x, type=float32, attrs={value_const})
     dcl2a = Declaration(var2)
     assert ccode(dcl2a) == 'const float x'
-    dcl2b = Declaration(var2, pi)
+    kw2b = var2.kwargs()
+    kw2b['value'] = pi
+    var2b = Variable(**kw2b)
+    dcl2b = Declaration(var2b)
     assert ccode(dcl2b) == 'const float x = M_PI'
 
     var3 = Variable(y, type=Type('bool'))
@@ -690,14 +693,15 @@ def test_ccode_Declaration():
     assert 'stdbool.h' in printer.headers
 
     u = symbols('u', real=True)
-    ptr4 = Pointer.deduced(u, {pointer_const, restrict})
+    ptr4 = Pointer.deduced(u, attrs={pointer_const, restrict})
     dcl4 = Declaration(ptr4)
     assert ccode(dcl4) == 'double * const restrict u'
 
-    var5 = Variable(x, Type('__float128'), {value_const})
+    var5 = Variable(x, Type('__float128'), attrs={value_const})
     dcl5a = Declaration(var5)
     assert ccode(dcl5a) == 'const __float128 x'
-    dcl5b = Declaration(var5, pi)
+    var5b = Variable(var5.symbol, var5.type, pi, attrs=var5.attrs)
+    dcl5b = Declaration(var5b)
     assert ccode(dcl5b) == 'const __float128 x = M_PI'
 
 
@@ -733,9 +737,11 @@ def test_C99CodePrinter_custom_type():
 
     dcl5a = Declaration(var5)
     assert ccode(dcl5a) == 'const _Float128 x'
-    dcl5b = Declaration(var5, pi)
+    var5b = Variable(x, f128, pi, attrs={value_const})
+    dcl5b = Declaration(var5b)
     assert p128.doprint(dcl5b) == 'const _Float128 x = M_PIf128'
-    dcl5c = Declaration(var5, Catalan.evalf(38))
+    var5b = Variable(x, f128, value=Catalan.evalf(38), attrs={value_const})
+    dcl5c = Declaration(var5b)
     assert p128.doprint(dcl5c) == 'const _Float128 x = %sQ' % Catalan.evalf(f128.decimal_dig)
 
 

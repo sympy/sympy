@@ -390,6 +390,9 @@ class FCodePrinter(CodePrinter):
             idxs=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), elem.indices))
         )
 
+    def _print_Extent(self, ext, *args, **kwargs):
+        return str(ext)
+
     def _print_Declaration(self, expr, *args, **kwargs):
         var = expr.variable
         val = var.value
@@ -418,6 +421,7 @@ class FCodePrinter(CodePrinter):
             if value_const in var.attrs or val:
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
             result = ' '.join(map(lambda arg: self._print(arg, *args, **kwargs), [var.type, var.symbol]))
+
         return result
 
 

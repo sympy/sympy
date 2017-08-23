@@ -301,7 +301,7 @@ def test_Variable():
     assert abs(v_n2.value - 3.5) < 1e-15
     raises(ValueError, lambda: Variable.deduced(n, value=3.5, cast_check=True))
 
-    v_n3 = Vairable.deduced(n)
+    v_n3 = Variable.deduced(n)
     assert v_n3.type == integer
     assert str(v_n3) == 'Variable(n, type=integer)'
     assert Variable.deduced(z, value=3).type == integer
@@ -352,6 +352,8 @@ def test_Declaration():
     decl3 = Declaration(vi)
     assert decl3.variable.type == integer
     assert decl3.variable.value == 3.0
+
+    raises(ValueError, lambda: Declaration(vi, 42))
 
 
 
