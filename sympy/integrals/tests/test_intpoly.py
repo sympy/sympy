@@ -149,7 +149,6 @@ def test_polytope_integrate():
     assert result_dict[expr3] == 1946257153/924
 
 
-@XFAIL
 def test_polytopes_intersecting_sides():
     #  Intersecting polygons not implemented yet in SymPy. Will be implemented
     #  soon. As of now, the intersection point will have to be manually

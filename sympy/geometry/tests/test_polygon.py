@@ -29,7 +29,7 @@ def test_polygon():
     # 2 "remove folded" tests
     assert Polygon(a, Point(3, 0), b, c) == t
     assert Polygon(a, b, Point(3, -1), b, c) == t
-    raises(GeometryError, lambda: Polygon((0, 0), (1, 0), (0, 1), (1, 1)))
+
     # remove multiple collinear points
     assert Polygon(Point(-4, 15), Point(-11, 15), Point(-15, 15),
         Point(-15, 33/5), Point(-15, -87/10), Point(-15, -15),
@@ -402,3 +402,48 @@ def test_intersection():
     assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) == [Point(-5/7, 6/7),
                                                                                     Segment(Point2D(0, 1), Point(1, 0))]
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
+
+
+def test_implicit_intersections():
+    poly1 = Polygon(Point(0, 0), Point(1, 0),
+                    Point(0, 1), Point(1, 1), ignore_intersection=False)
+    assert poly1.vertices == [Point2D(0, 0), Point2D(1, 0),
+                              Point2D(S(1)/2, S(1)/2), Point2D(0, 1),
+                              Point2D(1, 1), Point2D(S(1)/2, S(1)/2)]
+
+    poly2 = Polygon(Point(0, -3), Point(-1, -2), Point(2, 0), Point(-1, 2),
+                    Point(0, 3), ignore_intersection=False)
+    poly3 = Polygon(Point(0, -3), Point(-1, -2), Point(2, 0), Point(-1, 2),
+                    Point(0, 3))
+
+    assert poly2.vertices == [Point2D(0, -3), Point2D(-1, -2),
+                              Point2D(0, -4/3), Point2D(2, 0),
+                              Point2D(0, 4/3), Point2D(-1, 2),
+                              Point2D(0, 3), Point2D(0, 4/3),
+                              Point2D(0, -4/3)]
+    assert poly3.vertices == [Point2D(0, -3), Point2D(-1, -2),Point2D(2, 0),
+                              Point2D(-1, 2), Point2D(0, 3)]
+
+    assert len(Polygon((0, 2), (1, 0), (2, 2), (3, 0), (4, 2), (4, 1),
+                       (0, 1), ignore_intersection=False).sides) == 15
+
+    assert len(Polygon((1, 2), (4, 4), (4, 2),
+                       (2, 4), (2, 1), (5, 3),
+                       ignore_intersection=False).sides) == 20
+
+
+def test_area_implicit_intersecting_polygons():
+    assert Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(0, 1), Point2D(1, 1),
+                   ignore_intersection=False).area == S(1) / 2
+
+    assert Polygon((0, -3), (-1, -2), (2, 0),
+                   (-1, 2), (0, 3), ignore_intersection=False).area == S(13)/3
+
+    assert Polygon((22, 87), (6, 3), (98, 77), (20, 56),
+                   (96, 52), (79, 34), (46, 78), (52, 73),
+                   (81, 85), (90, 43), ignore_intersection=False).area == \
+        S(140721035628604449602641) / 50466690459292972480
+
+    assert Polygon((0, 0), (5, 0), (5, 4), (1, 4), (1, 2),
+                   (3, 2), (3, 3), (2, 3), (2, 1), (4, 1),
+                   (4, 5), (0, 5), ignore_intersection=False).area == 17

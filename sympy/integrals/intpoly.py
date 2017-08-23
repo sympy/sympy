@@ -61,7 +61,7 @@ def polytope_integrate(poly, expr, **kwargs):
     if isinstance(poly, Polygon):
         # For Vertex Representation
         hp_params = hyperplane_parameters(poly)
-        facets = poly.sides
+        facets = poly.directed_sides
     else:
         # For Hyperplane Representation
         plen = len(poly)
@@ -116,7 +116,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     >>> from sympy.geometry.polygon import Polygon
     >>> from sympy.geometry.point import Point
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
-    >>> facets = triangle.sides
+    >>> facets = triangle.directed_sides
     >>> hp_params = hyperplane_parameters(triangle)
     >>> main_integrate(x**2 + y**2, facets, hp_params)
     325/6
@@ -125,16 +125,13 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     dim_length = len(dims)
     result = {}
     integral_value = S.Zero
-
     if max_degree:
         y_degree = max_degree
         grad_terms = [[0, 0, 0, 0]] + \
             gradient_terms(max_degree)
-
         for facet_count, hp in enumerate(hp_params):
             a, b = hp[0], hp[1]
-            x0 = facets[facet_count].points[0]
-
+            x0 = facets[facet_count][0][0]
             for i, monom in enumerate(grad_terms):
                 #  Every monomial is a tuple :
                 #  (term, x_degree, y_degree, value over boundary)
@@ -195,7 +192,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     >>> from sympy.geometry.point import Point
     >>> from sympy.geometry.polygon import Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
-    >>> facets = triangle.sides
+    >>> facets = triangle.directed_sides
     >>> a, b = hyperplane_parameters(triangle)[0]
     >>> integration_reduction(facets, 0, a, b, 1, (x, y), 0)
     5
@@ -206,7 +203,10 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     a, b = (S(a[0]), S(a[1])), S(b)
 
     value = S.Zero
-    x0 = facets[index].points[0]
+    if isinstance(facets[index], Segment2D):
+        x0 = facets[index].points[0]
+    else:
+        x0 = facets[index][0][0]
     m = len(facets)
     gens = (x, y)
 
@@ -241,7 +241,7 @@ def left_integral(m, index, facets, x0, expr, gens):
     >>> from sympy.geometry.point import Point
     >>> from sympy.geometry.polygon import Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
-    >>> facets = triangle.sides
+    >>> facets = triangle.directed_sides
     >>> left_integral(3, 0, facets, facets[0].points[0], 1, (x, y))
     5
     """
@@ -249,7 +249,14 @@ def left_integral(m, index, facets, x0, expr, gens):
     for j in range(0, m):
         intersect = ()
         if j == (index - 1) % m or j == (index + 1) % m:
-            intersect = intersection(facets[index], facets[j])
+            if not isinstance(facets[index], Segment2D):
+                segment_i = Segment2D(facets[index][0][0],
+                                      facets[index][1][0], evaluate=True)
+                segment_j = Segment2D(facets[j][0][0],
+                                      facets[j][1][0], evaluate=True)
+                intersect = intersection(segment_i, segment_j)
+            else:
+                intersect = intersection(facets[index], facets[j])
         if intersect:
             distance_origin = norm(tuple(map(lambda x, y: x - y,
                                              intersect, x0)))
@@ -295,7 +302,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
     >>> from sympy.geometry.point import Point
     >>> from sympy.geometry.polygon import Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
-    >>> facets = triangle.sides
+    >>> facets = triangle.directed_sides
     >>> a, b = hyperplane_parameters(triangle)[0]
     >>> x0 = facets[0].points[0]
     >>> monomial_values = [[0, 0, 0, 0], [1, 0, 0, 5],\
