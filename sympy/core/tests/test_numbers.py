@@ -121,6 +121,13 @@ def test_mod():
     assert Integer(10) % 4 == Integer(2)
     assert 15 % Integer(4) == Integer(3)
 
+    h = Symbol('h')
+    m = h ** 2 % h
+    k = h ** -2 % h
+
+    assert m == h * (h % 1)
+    assert k != 0
+
 
 def test_divmod():
     assert divmod(S(12), S(8)) == Tuple(1, 4)
