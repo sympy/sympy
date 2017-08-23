@@ -28,10 +28,11 @@ class AssocOp(Basic):
     def __new__(cls, *args, **options):
         from sympy import Order
         args = list(map(_sympify, args))
-        args = [a for a in args if a is not cls.identity]
 
         if not options.pop('evaluate', global_evaluate[0]):
             return cls._from_args(args)
+
+        args = [a for a in args if a is not cls.identity]
 
         if len(args) == 0:
             return cls.identity

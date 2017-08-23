@@ -992,6 +992,8 @@ def fraction(expr, exact=False):
         else:
             numer.append(term)
     if exact:
+        numer = [a for a in numer if a is not Mul.identity]
+        denom = [a for a in denom if a is not Mul.identity]
         return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
     else:
         return Mul(*numer), Mul(*denom)

@@ -182,10 +182,13 @@ class Mul(Expr, AssocOp):
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
-                    if r is not S.One:  # 2-arg hack
+                    if r is not S.One and r is not S.NegativeOne:  # 2-arg hack
                         # leave the Mul as a Mul
                         rv = [cls(a*r, b, evaluate=False)], [], None
                     elif b.is_commutative:
+                        if r is S.NegativeOne:
+                            a = a * r
+
                         if a is S.One:
                             rv = [b], [], None
                         else:
