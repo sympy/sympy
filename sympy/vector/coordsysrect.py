@@ -950,7 +950,7 @@ class CoordSys3D(Basic):
                                vector_names=vector_names,
                                variable_names=variable_names)
 
-    def transform_to(self, name, transformation, variable_names=None, vector_names=None):
+    def create_new(self, name, transformation, variable_names=None, vector_names=None):
         """
         Returns a CoordSys3D which is connected to self by transformation.
 
@@ -974,7 +974,7 @@ class CoordSys3D(Basic):
 
         >>> from sympy.vector import CoordSys3D
         >>> a = CoordSys3D('a')
-        >>> b = a.transform_to('b', transformation='spherical')
+        >>> b = a.create_new('b', transformation='spherical')
         >>> b.transformation_to_parent()
         (b.x*sin(b.y)*cos(b.z), b.x*sin(b.y)*sin(b.z), b.x*cos(b.y))
         >>> b.transformation_from_parent()

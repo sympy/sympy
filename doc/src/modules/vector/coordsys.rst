@@ -194,12 +194,12 @@ rotate system by setting appropriate transformation equations.
   >>> B = CoordSys3D('A', transformation=lambda x,y,z: (x*sin(y), x*cos(y), z))
 
 
-In ``CoordSys3D`` is also dedicated method, ``transform_to`` which works
+In ``CoordSys3D`` is also dedicated method, ``create_new`` which works
 similarly to methods like ``locate_new``, ``orient_new_axis`` etc.
 
   >>> from sympy.vector import CoordSys3D
   >>> A = CoordSys3D('A')
-  >>> B = A.transform_to('B', transformation='spherical')
+  >>> B = A.create_new('B', transformation='spherical')
 
 Expression of quantities in different coordinate systems
 ========================================================

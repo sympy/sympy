@@ -293,9 +293,9 @@ def test_locatenew_point():
     assert p2.express_coordinates(C) == (-2*a + 1, -2*b, -2*c)
 
 
-def test_transform_to():
+def test_create_new():
     a = CoordSys3D('a')
-    c = a.transform_to('c', transformation='spherical')
+    c = a.create_new('c', transformation='spherical')
     assert c._parent == a
     assert c.transformation_to_parent() == \
            (c.x*sin(c.y)*cos(c.z), c.x*sin(c.y)*sin(c.z), c.x*cos(c.y))
