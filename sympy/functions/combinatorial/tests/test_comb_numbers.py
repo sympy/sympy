@@ -284,11 +284,16 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
 
+    raises(ValueError, lambda: euler(-2))
+    raises(ValueError, lambda: euler(-3))
+    raises(ValueError, lambda: euler(2.3))
+
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
 
     assert euler(n).rewrite(Sum) == euler(n)
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
+    n = Symbol('n', integer=True, nonnegative=True)
     assert euler(2*n + 1).rewrite(Sum) == 0
 
 
@@ -296,6 +301,13 @@ def test_euler():
 def test_euler_failing():
     # depends on dummy variables being implemented https://github.com/sympy/sympy/issues/5665
     assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+
+
+def test_euler_odd():
+    n = Symbol('n', odd=True, positive=True)
+    assert euler(n) == 0
+    n = Symbol('n', odd=True)
+    assert euler(n) != 0
 
 
 def test_catalan():

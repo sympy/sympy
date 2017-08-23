@@ -737,13 +737,19 @@ class euler(Function):
 
     @classmethod
     def eval(cls, m):
-        if m.is_odd:
+        if m.is_Number:
+            if m.is_Integer and m.is_nonnegative:
+                if m.is_odd:
+                    return S.Zero
+                from mpmath import mp
+                m = m._to_mpmath(mp.prec)
+                res = mp.eulernum(m, exact=True)
+                return Integer(res)
+            else:
+                raise ValueError("Euler numbers are defined only"
+                                 " for nonnegative integer indices.")
+        if m.is_odd and m.is_positive:
             return S.Zero
-        if m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            m = m._to_mpmath(mp.prec)
-            res = mp.eulernum(m, exact=True)
-            return Integer(res)
 
     def _eval_rewrite_as_Sum(self, arg):
         from sympy import Sum
