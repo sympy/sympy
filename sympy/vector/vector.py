@@ -56,7 +56,7 @@ class Vector(BasisDependent):
         {C.i: 3, C.j: 4, C.k: 5}
         >>> v = C.x*C.y*C.z*C.i
         >>> v.projections
-        {c.i: c.x*c.y*c.z, c.j: 0, c.k: 0}
+        {C.i: C.x*C.y*C.z, C.j: 0, C.k: 0}
         >>> v = Vector.zero
         >>> v.projections
         0

@@ -135,9 +135,10 @@ class CoordSys3D(Basic):
                 parent
             )
             r, l = transformation
-            print(l, type(l))
             if l is Vector.zero:
                 l = [S(0), S(0), S(0)]
+            else:
+                l = list(l.projections.values())
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
             lambda_inverse = lambda x,y,z: r.inv()*Matrix(
                 [x-l[0], y-l[1], z-l[2]])
