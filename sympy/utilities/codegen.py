@@ -643,9 +643,9 @@ class CodeGen(object):
 
         # setup input argument list
         array_symbols = {}
-        for array in expressions.atoms(Indexed):
+        for array in expressions.atoms(Indexed) | local_expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
-        for array in expressions.atoms(MatrixSymbol):
+        for array in expressions.atoms(MatrixSymbol) | local_expressions.atoms(MatrixSymbol):
             array_symbols[array] = array
 
         for symbol in sorted(symbols, key=str):
