@@ -921,8 +921,9 @@ class CCodeGen(CodeGen):
                     dims = result.expr.shape
                     assert dims[1] == 1, "2D matrices not supported yet"
                     code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
+                    prefix = ""
                 else:
-                    code_lines.append("{0} {1};\n".format(t, str(assign_to)))
+                    prefix = "const {0} ".format(t)
                 return_val = assign_to
             else:
                 assign_to = result.result_var
@@ -944,7 +945,7 @@ class CCodeGen(CodeGen):
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
             
-            code_lines.append("%s\n" % c_expr)
+            code_lines.append("{}{}\n".format(prefix, c_expr))
             
         return code_lines
 
