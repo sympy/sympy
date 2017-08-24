@@ -1815,8 +1815,14 @@ class LatexPrinter(Printer):
             denom = self._print(frac.denom)
             return r"\frac{%s}{%s}" % (numer, denom)
 
-    def _print_euler(self, expr):
-        return r"E_{%s}" % self._print(expr.args[0])
+    def _print_euler(self, expr, exp=None):
+        m, x = (expr.args[0], None) if len(expr.args) == 1 else expr.args
+        tex = r"E_{%s}" % self._print(m)
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        if x is not None:
+            tex = r"%s\left(%s\right)" % (tex, self._print(x))
+        return tex
 
     def _print_catalan(self, expr):
         return r"C_{%s}" % self._print(expr.args[0])
