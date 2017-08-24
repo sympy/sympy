@@ -416,8 +416,7 @@ class OutputArgument(Argument, ResultBase):
         ResultBase.__init__(self, expr, result_var)
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
-            self.result_var)
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.result_var, self.expr)
 
     __repr__ = __str__
 
