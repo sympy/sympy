@@ -188,7 +188,7 @@ class Mul(Expr, AssocOp):
                             rv = [b], [], None
                         else:
                             # leave the Mul as a Mul
-                            rv = [cls(a*r, b, evaluate=False)], [], None
+                            rv = [cls(a, b, evaluate=False)], [], None
                     elif b.is_commutative:
                         if a is S.One:
                             rv = [b], [], None
