@@ -20,7 +20,7 @@ from sympy.abc import x, y, z
 from sympy.polys.polytools import LC, gcd_list, degree_list
 
 
-def polytope_integrate(poly, expr, **kwargs):
+def polytope_integrate(poly, expr=None, **kwargs):
     """Integrates polynomials over 2/3-Polytopes.
 
     This function accepts the polytope in `poly` and the function in `expr`
@@ -89,9 +89,13 @@ def polytope_integrate(poly, expr, **kwargs):
 
     if max_degree is not None:
         result = {}
-        if not isinstance(expr, list):
+        if not isinstance(expr, list) and expr is not None:
             raise TypeError('Input polynomials must be list of expressions')
         result_dict = main_integrate(0, facets, hp_params, max_degree)
+
+        if expr is None:
+            return result_dict
+
         for poly in expr:
             if poly not in result:
                 if poly is S.Zero:
@@ -108,6 +112,8 @@ def polytope_integrate(poly, expr, **kwargs):
                 result[poly] = integral_value
         return result
 
+    if expr is None:
+        raise TypeError('Input expression be must be a valid SymPy expression')
     return main_integrate(expr, facets, hp_params)
 
 
