@@ -607,8 +607,9 @@ class CodeGen(object):
         else:
             expressions = Tuple(expr)
 
-        if self.cse and {i.label for i in expressions.atoms(Idx)} != set():
-            raise CodeGenError("CSE and Indexed expressions do not play well together yet")
+        if self.cse:
+            if {i.label for i in expressions.atoms(Idx)} != set():
+                raise CodeGenError("CSE and Indexed expressions do not play well together yet")
         else:
             # local variables for indexed expressions
             local_vars = {i.label for i in expressions.atoms(Idx)}
