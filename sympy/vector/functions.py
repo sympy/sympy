@@ -5,6 +5,24 @@ from sympy.vector.operators import gradient, curl, divergence
 from sympy import diff, integrate, S, simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
+from sympy import symbols
+
+
+def compose(expr, system):
+    from sympy.vector.operators import _get_coord_sys_from_expr
+
+    x, y, z = symbols('x y z')
+    systems = _path(next(iter(_get_coord_sys_from_expr(expr))), system)[1]
+    eq = (x, y, z)
+    for i, j in enumerate(systems[:-1]):
+        if j._parent == systems[i+1]:
+            eq = j._transformation_lambda(*eq)
+        else:
+            if systems[i+1].transformation_from_parent_function() is not None:
+                eq = systems[i+1]._transformation_from_parent_lambda(*eq)
+            else:
+                raise ValueError()
+    return eq
 
 
 def express(expr, system, system2=None, variables=False):

@@ -256,7 +256,7 @@ class Vector(BasisDependent):
         """
 
         from sympy.vector.operators import _get_coord_sys_from_expr
-        if self is Vector.zero:
+        if isinstance(self, VectorZero):
             return (S(0), S(0), S(0))
         base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])

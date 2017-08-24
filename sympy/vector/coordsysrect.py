@@ -141,8 +141,8 @@ class CoordSys3D(Basic):
             r, l = transformation
             l = l._projections
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
-            lambda_inverse = lambda x,y,z: r.inv()*Matrix(
-                [x-l[0], y-l[1], z-l[2]])
+            lambda_inverse = lambda x,y,z: tuple(r.inv()*Matrix(
+                [x-l[0], y-l[1], z-l[2]]))
         elif isinstance(transformation, Symbol):
             trname = transformation.name
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
