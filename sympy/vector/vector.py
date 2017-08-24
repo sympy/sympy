@@ -40,6 +40,34 @@ class Vector(BasisDependent):
         # subclass of Vector the instance belongs to.
         return self._components
 
+    @property
+    def projections(self):
+        """
+        Returns the components of this vector but the output includes
+        also zero values components.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
+        >>> v = 3*C.i + 4*C.j + 5*C.k
+        >>> v.projections
+        {C.i: 3, C.j: 4, C.k: 5}
+        >>> v = C.x*C.y*C.z*C.i
+        >>> v.projections
+        {c.i: c.x*c.y*c.z, c.j: 0, c.k: 0}
+        >>> v = Vector.zero
+        >>> v.projections
+        0
+        """
+
+        from sympy.vector.operators import _get_coord_sys_from_expr
+        if self is Vector.zero:
+            return S(0)
+        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+        return dict(zip(base_vec, [self.components[i] if i in self.components else S(0) for i in base_vec]))
+
     def magnitude(self):
         """
         Returns the magnitude of this vector.
