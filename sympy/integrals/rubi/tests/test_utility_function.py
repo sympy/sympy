@@ -1698,6 +1698,28 @@ def test_SubstFor():
     assert SubstFor(x**2 + 1, tanh(x), x) == tanh(x)
     assert SubstFor(x**2, sinh(x), x) == sinh(sqrt(x))
 
+def test_FresnelS():
+    assert  FresnelS(oo) == 1/2
+    assert FresnelS(0) == 0
+
+def test_FresnelC():
+    assert FresnelC(0) == 0
+    assert FresnelC(oo) == 1/2
+
+def test_Erfc():
+    assert Erfc(1) == 0.15729920705028513
+
+def test_Erfi():
+    assert Erfi(1) == 1.6504257587975428
+
+def test_Gamma():
+    assert Gamma(1, 7) == 0.00091188196555451624
+    assert Gamma(1) == 1
+    assert Gamma(1, 2, 3) == 0.085548214868748751
+
+def test_PolyLog():
+    assert PolyLog(2, 1) == 1.6449340668482264
+
 def test_ExpandIntegrand():
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
     assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3

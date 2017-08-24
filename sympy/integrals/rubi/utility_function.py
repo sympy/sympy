@@ -17,12 +17,14 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
+from sympy.functions.special.error_functions import fresnelc, fresnels
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
     Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo)
-from mpmath import appellf1
+from mpmath import appellf1, erfi, erfc, gammainc, polylog
+from sympy.functions.special.gamma_function import gamma
 from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
@@ -4458,19 +4460,18 @@ def TrigReduce(i):
     else:
         return i
 
-def FunctionOfTrig(u, *x):
+def FunctionOfTrig(u, *args):
     # If u is a function of trig functions of v where v is a linear function of x,
     # FunctionOfTrig[u,x] returns v; else it returns False.
-    if len(x) == 1:
-        x = x[0]
+    if len(args) == 1:
+        x = args[0]
         v = FunctionOfTrig(u, None, x)
         if v:
             return v
         else:
             return False
     else:
-        v = x[0]
-        x = x[1]
+        v, x = args
         if AtomQ(u):
             if u == x:
                 return False
@@ -5804,6 +5805,32 @@ def SubstForAux(u, v, x):
         return SubstForAux(First(u), First(v), x)
     else:
         return u.func(*[SubstForAux(i, v, x) for i in u.args])
+
+def FresnelS(x):
+    return fresnels(x)
+
+def FresnelC(x):
+    return fresnelc(x)
+
+def Erfc(x):
+    return erfc(x)
+
+def Erfi(x):
+    return erfi(x)
+
+def Gamma(*args):
+    if len(args) == 1:
+        a = args[0]
+        return gamma(a)
+    elif len(args) == 2:
+        a, x = args
+        return gammainc(a, x)
+    else:
+        a, x, y = args
+        return gammainc(a, x, y)
+
+def PolyLog(n, z):
+    return polylog(n, z)
 
 def Complex(a, b):
     return a + I*b
