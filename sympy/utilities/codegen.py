@@ -180,10 +180,11 @@ class Routine(object):
 
         local_symbols = set()
         for r in local_vars:
-            if not isinstance(r, Result):
-                raise ValueError("Unknown Routine result: %s" % r)
-            symbols.update(r.expr.free_symbols)
-            local_symbols.add(r.name)
+            if isinstance(r, Result):
+                symbols.update(r.expr.free_symbols)
+                local_symbols.add(r.name)
+            else:
+                local_symbols.add(r)
 
         symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
 
