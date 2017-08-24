@@ -3607,10 +3607,7 @@ class PermutationGroup(Basic):
         identity = Permutation(n-1)
         # the case of 2-sylow subgroups of alternating groups
         # needs special treatment
-        order = 1
-        for i in range(3, n+1):
-            order *= i
-        alt = p == 2 and self.order() == order
+        alt = p == 2 and all(g.is_even for g in self.generators)
 
         # find the presentation of n in base p
         coeffs = []
