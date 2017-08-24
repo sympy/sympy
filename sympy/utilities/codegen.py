@@ -573,7 +573,9 @@ class CodeGen(object):
             if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
                 if not expr:
                     raise ValueError("No expression given")
-                assert all([e.is_Equality for e in expr]), "Lists of expressions must all be Equalities"
+                for e in expr:
+                    if not e.is_Equality:
+                        raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
                 lhs = [e.lhs for e in expr]
 
                 # create a list of right hand sides and simplify them
@@ -605,8 +607,8 @@ class CodeGen(object):
         else:
             expressions = Tuple(expr)
 
-        if self.cse:
-            assert {i.label for i in expressions.atoms(Idx)} == set(), "CSE and Indexed expressions do not play well together yet"
+        if self.cse and {i.label for i in expressions.atoms(Idx)} != set():
+            raise CodeGenError("CSE and Indexed expressions do not play well together yet")
         else:
             # local variables for indexed expressions
             local_vars = {i.label for i in expressions.atoms(Idx)}
@@ -928,7 +930,8 @@ class CCodeGen(CodeGen):
                 t = result.get_datatype('c')
                 if isinstance(result.expr, (MatrixBase, MatrixExpr)):
                     dims = result.expr.shape
-                    assert dims[1] == 1, "2D matrices not supported yet"
+                    if dims[1] != 1:
+                        raise CodeGenError("Only column vectors are supported. {} as dimensions {}".format(result.expr, dims))
                     code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
                     prefix = ""
                 else:
