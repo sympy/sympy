@@ -833,6 +833,11 @@ def test_sylow_subgroup():
     assert G.order() % S.order() == 0
     assert G.order()/S.order() % 3 > 0
 
+    G = AlternatingGroup(100)
+    S = G.sylow_subgroup(2)
+    assert G.order() % S.order() == 0
+    assert G.order()/S.order() % 2 > 0
+
 def test_presentation():
     def _test(P):
         G = P.presentation()

@@ -3607,7 +3607,10 @@ class PermutationGroup(Basic):
         identity = Permutation(n-1)
         # the case of 2-sylow subgroups of alternating groups
         # needs special treatment
-        alt = p == 2 and identity(0, 1) not in self
+        order = 1
+        for i in range(3, n+1):
+            order *= i
+        alt = p == 2 and self.order() == order
 
         # find the presentation of n in base p
         coeffs = []
@@ -3617,14 +3620,25 @@ class PermutationGroup(Basic):
             m = m // p
 
         power = len(coeffs)-1
-        # gens[:i] is the generating set for a p-Sylow
-        # subgroup on [0..p**(i-1)-1]
+        # for a symmetric group, gens[:i] is the generating
+        # set for a p-Sylow subgroup on [0..p**(i-1)-1]. For
+        # alternating groups, it's the same generators without
+        # (0 1)
         for i in range(1, power+1):
             if i == 1 and alt:
                 # (0 1) shouldn't be added for alternating groups
                 continue
             gen = Permutation([(j + p**(i-1)) % p**i for j in range(p**i)])
             gens.append(identity*gen)
+
+        added = gens[:]
+
+        # add the other generators so that gens generates the 2-Sylow
+        # subgroup of an alternating group on [0..p**power-1]
+        if alt:
+            for gen in added:
+                gen = Permutation(0, 1)*gen*Permutation(0, 1)*gen
+                gens.append(gen)
 
         # the first point in the current part (see the algorithm
         # description in the docstring)
@@ -3641,17 +3655,18 @@ class PermutationGroup(Basic):
                     for i in range(p**power):
                         shift = shift(i, start + i)
 
-                for gen in gens[:power]:
-                    # shift the generator to the start of the
-                    # partition part
-                    gen = shift*gen*shift
-                    gens.append(gen)
                     if alt:
-                        gen = Permutation(0, 1)*gen*Permutation(0, 1)*gen
-                        if gen.is_identity:
-                            continue
-                        if not gen in gens:
-                            gens.append(gen)
+                        gen = Permutation(0, 1)*shift*Permutation(0, 1)*shift
+                        gens.append(gen)
+                        j = power - 1 # one less because (0 1) is missing
+                    else:
+                        j = power
+
+                    for gen in gens[:j]:
+                        # shift the generator to the start of the
+                        # partition part
+                        gen = shift*gen*shift
+                        gens.append(gen)
 
                 start += p**power
             power = power-1
