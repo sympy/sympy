@@ -694,9 +694,9 @@ class harmonic(Function):
 
 class euler(Function):
     r"""
-    Euler numbers
+    Euler numbers / Euler polynomials
 
-    The euler numbers are given by::
+    The Euler numbers are given by::
 
                   2*n+1   k
                    ___   ___            j          2*n+1
@@ -710,6 +710,24 @@ class euler(Function):
 
     * euler(n) gives the n-th Euler number, E_n
 
+    * euler(n, x) gives the n-th Euler polynomial, E_n(x)
+
+    Euler numbers and Euler polynomials are related by
+
+                n
+          E  = 2  E (1/2).
+           n       n
+
+    We compute symbolic Euler polynomials using [5]
+
+                    n
+                   ___         E
+                  \     / n \   k           n-k
+          E (x) =  )    |   | ---- (x - 1/2)   .
+           n      /___  \ k /   k
+                  k = 0        2
+
+
     Examples
     ========
 
@@ -721,6 +739,26 @@ class euler(Function):
     >>> euler(n+2*n)
     euler(3*n)
 
+    >>> x = Symbol("x")
+    >>> euler(n, x)
+    euler(n, x)
+
+    >>> euler(0, x)
+    1
+    >>> euler(1, x)
+    x - 1/2
+    >>> euler(2, x)
+    x**2 - x
+    >>> euler(3, x)
+    x**3 - 3*x**2/2 + 1/4
+    >>> euler(4, x)
+    x**4 - 2*x**3 + x
+
+    >>> euler(12, S.Half)
+    2702765/4096
+    >>> euler(12)
+    2702765
+
     References
     ==========
 
@@ -728,6 +766,7 @@ class euler(Function):
     .. [2] http://mathworld.wolfram.com/EulerNumber.html
     .. [3] http://en.wikipedia.org/wiki/Alternating_permutation
     .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [5] http://dlmf.nist.gov/24.2#ii
 
     See Also
     ========
@@ -736,20 +775,29 @@ class euler(Function):
     """
 
     @classmethod
-    def eval(cls, m):
+    def eval(cls, m, sym=None):
         if m.is_Number:
             if m.is_Integer and m.is_nonnegative:
-                if m.is_odd:
-                    return S.Zero
-                from mpmath import mp
-                m = m._to_mpmath(mp.prec)
-                res = mp.eulernum(m, exact=True)
-                return Integer(res)
+                # Euler numbers
+                if sym is None:
+                    if m.is_odd:
+                        return S.Zero
+                    from mpmath import mp
+                    m = m._to_mpmath(mp.prec)
+                    res = mp.eulernum(m, exact=True)
+                    return Integer(res)
+                # Euler polynomials
+                else:
+                    m, result = int(m), []
+                    for k in range(m + 1):
+                        result.append(binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k))
+                    return Add(*result).expand()
             else:
                 raise ValueError("Euler numbers are defined only"
                                  " for nonnegative integer indices.")
-        if m.is_odd and m.is_positive:
-            return S.Zero
+        if sym is None:
+            if m.is_odd and m.is_positive:
+                return S.Zero
 
     def _eval_rewrite_as_Sum(self, arg):
         from sympy import Sum

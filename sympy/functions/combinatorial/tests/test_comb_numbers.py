@@ -310,6 +310,15 @@ def test_euler_odd():
     assert euler(n) != 0
 
 
+def test_euler_polynomials():
+    assert euler(0, x) == 1
+    assert euler(1, x) == x - Rational(1, 2)
+    assert euler(2, x) == x**2 - x
+    assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
+    m = Symbol('m')
+    assert isinstance(euler(m, x), euler)
+
+
 def test_catalan():
     n = Symbol('n', integer=True)
     m = Symbol('n', integer=True, positive=True)
@@ -524,7 +533,6 @@ def test_issue_8496():
     k = Symbol("k")
 
     raises(TypeError, lambda: catalan(n, k))
-    raises(TypeError, lambda: euler(n, k))
 
 
 def test_issue_8601():
