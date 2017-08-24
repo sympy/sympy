@@ -8,7 +8,7 @@ matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf)
+from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, polylog)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly, quo, rem
@@ -158,6 +158,9 @@ def With(subs, expr):
             k = list(i.keys())[0]
             expr = expr.subs(k, i[k])
     return expr
+
+def Module(subs, expr):
+    return With(subs, expr)
 
 def Scan(f, expr):
     # evaluates f applied to each element of expr in turn.
@@ -426,8 +429,14 @@ def ArcCos(a):
 def ArcCsc(a):
     return acsc(a)
 
+def ArcSec(a):
+    return asec(a)
+
 def ArcCsch(a):
     return acsch(a)
+
+def ArcSech(a):
+    return asech(a)
 
 def Sinh(u):
     return sinh(u)
@@ -671,7 +680,7 @@ def InverseFunctionFreeQ(u, x):
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) | CalculusQ(u) | u.func == hyper | u.func == appellf1:
+        if InverseFunctionQ(u) or CalculusQ(u) or u.func == hyper or u.func == appellf1:
             return FreeQ(u, x)
         else:
             for i in u.args:
@@ -4158,7 +4167,6 @@ def PiecewiseLinearQ(*args):
         if len(match) == 3:
             if LinearQ(match[v_], x):
                 return True
-
     try:
         F = type(u)
         G = type(u.args[0])
@@ -6295,10 +6303,40 @@ def _TrigSimplifyAux():
 
     return replacer
 
-
 @doctest_depends_on(modules=('matchpy',))
 def TrigSimplifyAux(expr):
     return TrigSimplifyAux_replacer.replace(UtilityOperator(expr))
+
+def Gamma(u):
+    return gamma(u)
+
+def Cancel(expr):
+    return cancel(expr)
+
+def Part(lst, i):
+    if isinstance(lst, list):
+        return lst[i - 1] # Python list indexing starts 1 unit below Mathematica
+    elif AtomQ(lst):
+        return lst
+    return lst.args[i-1]
+
+def PolyLog(n, p, z=None):
+    return polylog(n, p)
+
+def D(f, x):
+    return f.diff(x)
+
+def FunctionOfTrigOfLinearQ(u, x):
+    return False
+
+def ElementaryFunctionQ(u):
+    return False
+
+def Dist(u):
+    return S(0)
+
+def SubstFor(w, v, u, x):
+    return S(0)
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()

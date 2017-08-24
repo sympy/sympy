@@ -93,6 +93,7 @@ modules = [
     'sympy.integrals.benchmarks',
     'sympy.integrals.rubi',
     'sympy.integrals.rubi.parsetools',
+    'sympy.integrals.rubi.rules',
     'sympy.interactive',
     'sympy.liealgebras',
     'sympy.logic',
