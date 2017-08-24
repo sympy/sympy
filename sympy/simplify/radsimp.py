@@ -987,13 +987,13 @@ def fraction(expr, exact=False):
                 numer.append(term)
         elif term.is_Rational:
             n, d = term.as_numer_denom()
-            numer.append(n)
-            denom.append(d)
+            if n is not S.One:
+                numer.append(n)
+            if d is not S.One:
+                denom.append(d)
         else:
             numer.append(term)
     if exact:
-        numer = [a for a in numer if a is not Mul.identity]
-        denom = [a for a in denom if a is not Mul.identity]
         return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
     else:
         return Mul(*numer), Mul(*denom)
