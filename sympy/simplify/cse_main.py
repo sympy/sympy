@@ -485,6 +485,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
     from sympy.matrices.expressions import MatrixExpr, MatrixSymbol, MatMul, MatAdd
+    from sympy.matrices.expressions.matexpr import MatrixElement
 
     if opt_subs is None:
         opt_subs = dict()
@@ -500,7 +501,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         if not isinstance(expr, (Basic, Unevaluated)):
             return
 
-        if isinstance(expr, Basic) and (expr.is_Atom or expr.is_Order):
+        if isinstance(expr, Basic) and (expr.is_Atom or expr.is_Order or isinstance(expr, MatrixSymbol) or isinstance(expr, MatrixElement)):
             if expr.is_Symbol:
                 excluded_symbols.add(expr)
             return
