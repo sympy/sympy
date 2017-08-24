@@ -937,7 +937,7 @@ class CCodeGen(CodeGen):
             if isinstance(result.expr, (MatrixBase, MatrixExpr)):
                 dims = result.expr.shape
                 if dims[1] != 1:
-                    raise CodeGenError("Only column vectors are supported. {} as dimensions {}".format(result.expr, dims))
+                    raise CodeGenError("Only column vectors are supported in local variabels. Local result {} has dimensions {}".format(result, dims))
                 code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
                 prefix = ""
             else:
