@@ -1006,6 +1006,8 @@ class Basic(with_metaclass(ManagedProperties)):
                     nonnumber = self.func(*nonnumber)
                     if coeff is S.One:
                         return nonnumber
+                    elif nonnumber is S.One:
+                        return coeff
                     else:
                         return self.func(coeff, nonnumber, evaluate=False)
                 return rv
