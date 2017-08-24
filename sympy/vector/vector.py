@@ -40,34 +40,6 @@ class Vector(BasisDependent):
         # subclass of Vector the instance belongs to.
         return self._components
 
-    @property
-    def projections(self):
-        """
-        Returns the components of this vector but the output includes
-        also zero values components.
-
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSys3D, Vector
-        >>> C = CoordSys3D('C')
-        >>> v1 = 3*C.i + 4*C.j + 5*C.k
-        >>> v1.projections
-        {C.i: 3, C.j: 4, C.k: 5}
-        >>> v2 = C.x*C.y*C.z*C.i
-        >>> v2.projections
-        {C.i: C.x*C.y*C.z, C.j: 0, C.k: 0}
-        >>> v3 = Vector.zero
-        >>> v3.projections
-        0
-        """
-
-        from sympy.vector.operators import _get_coord_sys_from_expr
-        if self is Vector.zero:
-            return S(0)
-        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
-        return dict(zip(base_vec, [self.components[i] if i in self.components else S(0) for i in base_vec]))
-
     def magnitude(self):
         """
         Returns the magnitude of this vector.
@@ -260,6 +232,34 @@ class Vector(BasisDependent):
             return self.dot(other) / self.dot(self)
         else:
             return self.dot(other) / self.dot(self) * self
+
+    @property
+    def _projections(self):
+        """
+        Returns the components of this vector but the output includes
+        also zero values components.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D, Vector
+        >>> C = CoordSys3D('C')
+        >>> v1 = 3*C.i + 4*C.j + 5*C.k
+        >>> v1._projections
+        (3, 4, 5)
+        >>> v2 = C.x*C.y*C.z*C.i
+        >>> v2._projections
+        (C.x*C.y*C.z, 0, 0)
+        >>> v3 = Vector.zero
+        >>> v3._projections
+        (0, 0, 0)
+        """
+
+        from sympy.vector.operators import _get_coord_sys_from_expr
+        if self is Vector.zero:
+            return (S(0), S(0), S(0))
+        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+        return tuple([self.dot(i) for i in base_vec])
 
     def __or__(self, other):
         return self.outer(other)
