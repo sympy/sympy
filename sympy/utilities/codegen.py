@@ -558,12 +558,28 @@ class CodeGen(object):
 
         if self.cse:
             from sympy.simplify.cse_main import cse
-            if isinstance(expr, Equality):
-                common, simplified = cse(expr.rhs)
-                expr = Equality(expr.lhs, simplified[0])
+
+            if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
+                if not expr:
+                    raise ValueError("No expression given")
+                assert all([e.is_Equality for e in expr]), "Lists of expressions must all be Equalities"
+                lhs = [e.lhs for e in expr]
+
+                # create a list of right hand sides and simplify them
+                rhs = [e.rhs for e in expr]
+                common, simplified = cse(rhs)
+
+                # pack the simplified expressions back up with their left hand sides
+                expr = [Equality(e.lhs, rhs) for e, rhs in zip(expr, simplified)]
             else:
-                common, simplified = cse(expr)
-                expr = simplified
+                rhs = [expr]
+
+                if isinstance(expr, Equality):
+                    common, simplified = cse(expr.rhs) #, ignore=in_out_args)
+                    expr = Equality(expr.lhs, simplified[0])
+                else:
+                    common, simplified = cse(expr)
+                    expr = simplified
 
             local_vars = [Result(b,a) for a,b in common]
             local_symbols = set([a for a,_ in common])
