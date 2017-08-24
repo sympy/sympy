@@ -926,34 +926,27 @@ class CCodeGen(CodeGen):
         code_lines = []
         for result in routine.local_vars:
 
-            if isinstance(result, Result):
-                assign_to = result.name
-                t = result.get_datatype('c')
-                if isinstance(result.expr, (MatrixBase, MatrixExpr)):
-                    dims = result.expr.shape
-                    if dims[1] != 1:
-                        raise CodeGenError("Only column vectors are supported. {} as dimensions {}".format(result.expr, dims))
-                    code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
-                    prefix = ""
-                else:
-                    prefix = "const {0} ".format(t)
-                return_val = assign_to
-            else:
-                assign_to = result.result_var
-            
-            try:
-                assign_to = result.result_var
-                constants, not_c, c_expr = self._printer_method_with_settings(
-                    'doprint', dict(human=False, dereference=dereference),
-                    result.expr, assign_to=assign_to)
+            # local variables that are simple symbols such as those used as indices into
+            # for loops are defined declared elsewhere.
+            if not isinstance(result, Result):
+                continue
 
-            except AssignmentError:
-                assign_to = result.result_var
-                code_lines.append(
-                    "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
-                constants, not_c, c_expr = self._printer_method_with_settings(
-                    'doprint', dict(human=False, dereference=dereference),
-                    result.expr, assign_to=assign_to)
+            if result.name != result.result_var:
+                raise CodeGen("Result variable and name should match: {}".format(result))
+            assign_to = result.name
+            t = result.get_datatype('c')
+            if isinstance(result.expr, (MatrixBase, MatrixExpr)):
+                dims = result.expr.shape
+                if dims[1] != 1:
+                    raise CodeGenError("Only column vectors are supported. {} as dimensions {}".format(result.expr, dims))
+                code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
+                prefix = ""
+            else:
+                prefix = "const {0} ".format(t)
+            
+            constants, not_c, c_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False, dereference=dereference),
+                result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
