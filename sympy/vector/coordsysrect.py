@@ -40,6 +40,10 @@ class CoordSys3D(Basic):
         name : str
             The name of the new CoordSys3D instance.
 
+        transformation : Lambda, Tuple, str
+            Transformation defined by transformation equations or chooesed
+            from predefined ones.
+
         location : Vector
             The position vector of the new system's origin wrt the parent
             instance.
@@ -443,9 +447,9 @@ class CoordSys3D(Basic):
         return self._transformation_lambda(*self.base_scalars())
 
     def transformation_from_parent(self):
-        if self.parent is None:
+        if self._parent is None:
             raise ValueError("no parent coordinate system, use `transformation_from_parent_function()`")
-        return self._transformation_from_parent_lambda(*self.parent.base_scalars())
+        return self._transformation_from_parent_lambda(*self._parent.base_scalars())
 
     def transformation_from_parent_function(self):
         return self._transformation_from_parent_lambda
@@ -945,6 +949,40 @@ class CoordSys3D(Basic):
                                location=location,
                                vector_names=vector_names,
                                variable_names=variable_names)
+
+    def create_new(self, name, transformation, variable_names=None, vector_names=None):
+        """
+        Returns a CoordSys3D which is connected to self by transformation.
+
+        Parameters
+        ==========
+
+        name : str
+            The name of the new CoordSys3D instance.
+
+        transformation : Lambda, Tuple, str
+            Transformation defined by transformation equations or chooesed
+            from predefined ones.
+
+        vector_names, variable_names : iterable(optional)
+            Iterables of 3 strings each, with custom names for base
+            vectors and base scalars of the new system respectively.
+            Used for simple str printing.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> a = CoordSys3D('a')
+        >>> b = a.create_new('b', transformation='spherical')
+        >>> b.transformation_to_parent()
+        (b.x*sin(b.y)*cos(b.z), b.x*sin(b.y)*sin(b.z), b.x*cos(b.y))
+        >>> b.transformation_from_parent()
+        (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
+
+        """
+        return CoordSys3D(name, parent=self, transformation=transformation,
+                          variable_names=variable_names, vector_names=vector_names)
 
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,

@@ -249,6 +249,7 @@ def test_vector_with_orientation():
     assert C.j.cross(A.i) == (sin(q2))*A.j + (-cos(q2))*A.k
     assert express(C.k.cross(A.i), C).trigsimp() == cos(q3)*C.j
 
+
 def test_orient_new_methods():
     N = CoordSys3D('N')
     orienter1 = AxisOrienter(q4, N.j)
@@ -290,6 +291,16 @@ def test_locatenew_point():
     p2 = p.locate_new('p2', A.i)
     assert p1.position_wrt(p2) == 2*v - A.i
     assert p2.express_coordinates(C) == (-2*a + 1, -2*b, -2*c)
+
+
+def test_create_new():
+    a = CoordSys3D('a')
+    c = a.create_new('c', transformation='spherical')
+    assert c._parent == a
+    assert c.transformation_to_parent() == \
+           (c.x*sin(c.y)*cos(c.z), c.x*sin(c.y)*sin(c.z), c.x*cos(c.y))
+    assert c.transformation_from_parent() == \
+           (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
 
 
 def test_evalf():
