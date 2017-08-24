@@ -49,16 +49,16 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSys3D
+        >>> from sympy.vector import CoordSys3D, Vector
         >>> C = CoordSys3D('C')
-        >>> v = 3*C.i + 4*C.j + 5*C.k
-        >>> v.projections
+        >>> v1 = 3*C.i + 4*C.j + 5*C.k
+        >>> v1.projections
         {C.i: 3, C.j: 4, C.k: 5}
-        >>> v = C.x*C.y*C.z*C.i
-        >>> v.projections
+        >>> v2 = C.x*C.y*C.z*C.i
+        >>> v2.projections
         {C.i: C.x*C.y*C.z, C.j: 0, C.k: 0}
-        >>> v = Vector.zero
-        >>> v.projections
+        >>> v3 = Vector.zero
+        >>> v3.projections
         0
         """
 

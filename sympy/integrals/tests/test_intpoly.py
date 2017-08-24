@@ -10,9 +10,9 @@ from sympy.integrals.intpoly import (decompose, best_origin,
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import XFAIL
 
 
 def test_decompose():
@@ -144,10 +144,40 @@ def test_polytope_integrate():
     expr3 = x**10 + x**9*y + x**8*y**2 + x**5*y**5
     polys.extend((expr1, expr2, expr3))
     result_dict = polytope_integrate(tri, polys, max_degree=10)
-    assert result_dict[expr1] == 615780107/594
-    assert result_dict[expr2] == 13062161/27
-    assert result_dict[expr3] == 1946257153/924
+    assert result_dict[expr1] == S(615780107)/594
+    assert result_dict[expr2] == S(13062161)/27
+    assert result_dict[expr3] == S(1946257153)/924
 
+    #  Tests for 3D polytopes
+    cube1 = [[(0, 0, 0), (0, 6, 6), (6, 6, 6), (3, 6, 0),
+              (0, 6, 0), (6, 0, 6), (3, 0, 0), (0, 0, 6)],
+             [1, 2, 3, 4], [3, 2, 5, 6], [1, 7, 5, 2], [0, 6, 5, 7],
+             [1, 4, 0, 7], [0, 4, 3, 6]]
+    assert polytope_integrate(cube1, 1) == S(162)
+
+    #  3D Test cases in Chin et al(2015)
+    cube2 = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),
+             (5, 0, 5), (5, 5, 0), (5, 5, 5)],
+             [3, 7, 6, 2], [1, 5, 7, 3], [5, 4, 6, 7], [0, 4, 5, 1],
+             [2, 0, 1, 3], [2, 6, 4, 0]]
+
+    cube3 = [[(0, 0, 0), (5, 0, 0), (5, 4, 0), (3, 2, 0), (3, 5, 0),
+              (0, 5, 0), (0, 0, 5), (5, 0, 5), (5, 4, 5), (3, 2, 5),
+              (3, 5, 5), (0, 5, 5)],
+             [6, 11, 5, 0], [1, 7, 6, 0], [5, 4, 3, 2, 1, 0], [11, 10, 4, 5],
+             [10, 9, 3, 4], [9, 8, 2, 3], [8, 7, 1, 2], [7, 8, 9, 10, 11, 6]]
+
+    cube4 = [[(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1),
+              (S(1) / 4, S(1) / 4, S(1) / 4)],
+             [0, 2, 1], [1, 3, 0], [4, 2, 3], [4, 3, 1],
+             [0, 1, 2], [2, 4, 1], [0, 3, 2]]
+
+    assert polytope_integrate(cube2, x ** 2 + y ** 2 + x * y + z ** 2) ==\
+           S(15625)/4
+    assert polytope_integrate(cube3, x ** 2 + y ** 2 + x * y + z ** 2) ==\
+           S(33835) / 12
+    assert polytope_integrate(cube4, x ** 2 + y ** 2 + x * y + z ** 2) ==\
+           S(37) / 960
 
 @XFAIL
 def test_polytopes_intersecting_sides():
