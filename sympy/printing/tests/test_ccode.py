@@ -14,7 +14,7 @@ from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
-    AddAugmentedAssignment, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
+    AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Statement, Return,
     real, float32, float64, float80, float128, intc
 )
@@ -298,6 +298,11 @@ def test_ccode_Indexed():
         Abase = IndexedBase('A', strides=(s, m, n), offset=o)
         assert ccode(Abase[i, j, k]) == 'A[m*j + n*k + o + s*i]'
         assert ccode(Abase[2, 3, k]) == 'A[3*m + n*k + o + 2*s]'
+
+
+def test_Element():
+    assert ccode(Element('x', 'ij')) == 'x[i][j]'
+    assert ccode(Element('x', 'ij', strides='kl', offset='o')) == 'x[i*k + j*l + o]'
 
 
 def test_ccode_Indexed_without_looking_for_contraction():
@@ -679,10 +684,7 @@ def test_ccode_Declaration():
     var2 = Variable(x, type=float32, attrs={value_const})
     dcl2a = Declaration(var2)
     assert ccode(dcl2a) == 'const float x'
-    kw2b = var2.kwargs()
-    kw2b['value'] = pi
-    var2b = Variable(**kw2b)
-    dcl2b = Declaration(var2b)
+    dcl2b = var2.as_Declaration(value=pi)
     assert ccode(dcl2b) == 'const float x = M_PI'
 
     var3 = Variable(y, type=Type('bool'))

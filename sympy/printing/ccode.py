@@ -514,9 +514,20 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_Element(self, elem, *args, **kwargs):
+        if elem.strides == None:
+            if elem.offset != None:
+                raise ValueError("Expected strides when offset is given")
+            idxs = ']['.join(map(lambda arg: self._print(arg, *args, **kwargs),
+                                 elem.indices))
+        else:
+            global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
+            if elem.offset != None:
+                global_idx += elem.offset
+            idxs = self._print(global_idx, *args, **kwargs)
+
         return "{symb}[{idxs}]".format(
             symb=self._print(elem.symbol, *args, **kwargs),
-            idxs=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), elem.indices))
+            idxs=idxs
         )
 
     def _print_While(self, expr, *args, **kwargs):

@@ -16,4 +16,4 @@ TODO:
 """
 
 from .compilation import compile_link_import_strings, compile_run_strings
-from .availablilty import has_fortran, has_c, has_cxx
+from .availability import has_fortran, has_c, has_cxx

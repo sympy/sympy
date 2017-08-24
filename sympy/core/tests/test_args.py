@@ -258,7 +258,6 @@ def test_sympy__codegen__ast__Declaration():
     from sympy.codegen.ast import Declaration, Variable, Type
     vx = Variable(x, type=Type('float'))
     assert _test_args(Declaration(vx))
-    assert _test_args(Declaration(vx, 3.0))
 
 
 def test_sympy__codegen__ast__While():
@@ -305,7 +304,12 @@ def test_sympy__codegen__ast__Return():
 
 def test_sympy__codegen__ast__FunctionCall():
     from sympy.codegen.ast import FunctionCall
-    assert _test_args(FunctionCall('pwer', [x], True))
+    assert _test_args(FunctionCall('pwer', [x]))
+
+
+def test_sympy__codegen__ast__Element():
+    from sympy.codegen.ast import Element
+    assert _test_args(Element('x', range(3)))
 
 
 def test_sympy__codegen__cnodes__CommaOperator():
@@ -378,7 +382,8 @@ def test_sympy__codegen__fnodes__Module():
 
 def test_sympy__codegen__fnodes__Subroutine():
     from sympy.codegen.fnodes import Subroutine
-    assert _test_args(Subroutine('foo', []))
+    x = symbols('x', real=True)
+    assert _test_args(Subroutine('foo', [x], []))
 
 
 def test_sympy__codegen__fnodes__GoTo():
@@ -400,6 +405,32 @@ def test_sympy__codegen__fnodes__Extent():
     assert _test_args(Extent(-3, 4))
     assert _test_args(Extent(x, y))
 
+
+def test_sympy__codegen__fnodes__use_rename():
+    from sympy.codegen.fnodes import use_rename
+    assert _test_args(use_rename('loc', 'glob'))
+
+def test_sympy__codegen__fnodes__use():
+    from sympy.codegen.fnodes import use
+    assert _test_args(use('modfoo', only='bar'))
+
+def test_sympy__codegen__fnodes__SubroutineCall():
+    from sympy.codegen.fnodes import SubroutineCall
+    assert _test_args(SubroutineCall('foo', ['bar', 'baz']))
+
+def test_sympy__codegen__fnodes__Do():
+    from sympy.codegen.fnodes import Do
+    assert _test_args(Do([], 'i', 1, 42))
+
+
+def test_sympy__codegen__fnodes__sum_():
+    from sympy.codegen.fnodes import sum_
+    assert _test_args(sum_('arr'))
+
+
+def test_sympy__codegen__fnodes__product_():
+    from sympy.codegen.fnodes import product_
+    assert _test_args(product_('arr'))
 
 
 @XFAIL
@@ -4014,53 +4045,53 @@ def test_sympy__codegen__cfunctions__hypot():
     assert _test_args(hypot(x, y))
 
 
-def test_sympy__codegen__ffunctions__FFunction():
-    from sympy.codegen.ffunctions import FFunction
+def test_sympy__codegen__fnodes__FFunction():
+    from sympy.codegen.fnodes import FFunction
     assert _test_args(FFunction('f'))
 
 
-def test_sympy__codegen__ffunctions__F95Function():
-    from sympy.codegen.ffunctions import F95Function
+def test_sympy__codegen__fnodes__F95Function():
+    from sympy.codegen.fnodes import F95Function
     assert _test_args(F95Function('f'))
 
 
-def test_sympy__codegen__ffunctions__isign():
-    from sympy.codegen.ffunctions import isign
+def test_sympy__codegen__fnodes__isign():
+    from sympy.codegen.fnodes import isign
     assert _test_args(isign(1, x))
 
 
-def test_sympy__codegen__ffunctions__dsign():
-    from sympy.codegen.ffunctions import dsign
+def test_sympy__codegen__fnodes__dsign():
+    from sympy.codegen.fnodes import dsign
     assert _test_args(dsign(1, x))
 
 
-def test_sympy__codegen__ffunctions__cmplx():
-    from sympy.codegen.ffunctions import cmplx
+def test_sympy__codegen__fnodes__cmplx():
+    from sympy.codegen.fnodes import cmplx
     assert _test_args(cmplx(x, y))
 
 
-def test_sympy__codegen__ffunctions__kind():
-    from sympy.codegen.ffunctions import kind
+def test_sympy__codegen__fnodes__kind():
+    from sympy.codegen.fnodes import kind
     assert _test_args(kind(x))
 
 
-def test_sympy__codegen__ffunctions__merge():
-    from sympy.codegen.ffunctions import merge
+def test_sympy__codegen__fnodes__merge():
+    from sympy.codegen.fnodes import merge
     assert _test_args(merge(1, 2, Eq(x, 0)))
 
 
-def test_sympy__codegen__ffunctions___literal():
-    from sympy.codegen.ffunctions import _literal
+def test_sympy__codegen__fnodes___literal():
+    from sympy.codegen.fnodes import _literal
     assert _test_args(_literal(1))
 
 
-def test_sympy__codegen__ffunctions__literal_sp():
-    from sympy.codegen.ffunctions import literal_sp
+def test_sympy__codegen__fnodes__literal_sp():
+    from sympy.codegen.fnodes import literal_sp
     assert _test_args(literal_sp(1))
 
 
-def test_sympy__codegen__ffunctions__literal_dp():
-    from sympy.codegen.ffunctions import literal_dp
+def test_sympy__codegen__fnodes__literal_dp():
+    from sympy.codegen.fnodes import literal_dp
     assert _test_args(literal_dp(1))
 
 

@@ -1140,16 +1140,58 @@ class Variable(Node):
             value = type_.cast_check(value)
         return cls(symbol, type=type_, value=value, attrs=attrs)
 
+    def as_Declaration(self, **kwargs):
+        """ Convenience method for creating a Declaration instance.
+
+        If the variable of the Declaration need to wrap a modified
+        variable keyword arguments may be passed (overriding e.g.
+        the ``value`` of the Variable instance).
+
+        Examples
+        --------
+        >>> from sympy.codegen.ast import Variable
+        >>> x = Variable('x')
+        >>> decl1 = x.as_Declaration()
+        >>> decl1.variable.value == None
+        True
+        >>> decl2 = x.as_Declaration(value=42.0)
+        >>> decl2.variable.value == 42
+        True
+
+        """
+        kw = self.kwargs()
+        kw.update(kwargs)
+        return Declaration(self.func(**kw))
+
 
 class Pointer(Variable):
     """ Represents a pointer. See ``Variable``. """
 
 
 class Element(Token):
-    """ Element in (a possible N-dimensional) array. """
-    __slots__ = ['symbol', 'indices']
+    """ Element in (a possibly N-dimensional) array.
+
+    Examples
+    --------
+    >>> from sympy.codegen.ast import Element
+    >>> elem = Element('x', 'ijk')
+    >>> elem.symbol.name == 'x'
+    True
+    >>> elem.indices
+    (i, j, k)
+    >>> from sympy import ccode
+    >>> ccode(elem)
+    x[i][j][k]
+    >>> ccode(Element('x', 'ijk', strides='lmn', offset='o'))
+    x[i*l + j*m + k*n + o]
+
+    """
+    __slots__ = ['symbol', 'indices', 'strides', 'offset']
+    defaults = {'strides': none, 'offset': none}
     _construct_symbol = staticmethod(sympify)
-    _construct_indices = staticmethod(_mk_Tuple)
+    _construct_indices = staticmethod(lambda arg: Tuple(*arg))
+    _construct_strides = staticmethod(lambda arg: Tuple(*arg))
+    _construct_offset = staticmethod(sympify)
 
 
 class Declaration(Token):

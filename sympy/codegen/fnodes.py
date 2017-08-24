@@ -78,16 +78,16 @@ class Subroutine(Node):
 class SubroutineCall(Token):
     __slots__ = ['name', 'subroutine_args']
     _construct_name = staticmethod(_name)
-    _construct_function_args = staticmethod(_mk_Tuple)
+    _construct_subroutine_args = staticmethod(_mk_Tuple)
 
 
 class Do(Token):
     __slots__ = ['body', 'counter', 'first', 'last', 'step', 'concurrent']
     defaults = {'step': Integer(1), 'concurrent': false}
     _construct_body = staticmethod(lambda body: CodeBlock(*body))
-    _construct_var = staticmethod(sympify)
-    _construct_start = staticmethod(sympify)
-    _construct_stop = staticmethod(sympify)
+    _construct_counter = staticmethod(sympify)
+    _construct_first = staticmethod(sympify)
+    _construct_last = staticmethod(sympify)
     _construct_step = staticmethod(sympify)
     _construct_concurrent = staticmethod(lambda arg: true if arg else false)
 
@@ -285,9 +285,11 @@ class sum_(Token):
     __slots__ = ['array', 'dim', 'mask']
     defaults = {'dim': none, 'mask': none}
     _construct_array = staticmethod(sympify)
+    _construct_dim = staticmethod(sympify)
 
 
 class product_(Token):
     __slots__ = ['array', 'dim', 'mask']
     defaults = {'dim': none, 'mask': none}
     _construct_array = staticmethod(sympify)
+    _construct_dim = staticmethod(sympify)

@@ -224,6 +224,9 @@ class PythonCodePrinter(CodePrinter):
         else:
             return self._print(strm.name, *args, **kwargs)
 
+    def _print_NoneToken(self, arg, *args, **kwargs):
+        return 'None'
+
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
 

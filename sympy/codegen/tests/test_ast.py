@@ -342,6 +342,8 @@ def test_Declaration():
     assert isinstance(decl.variable.value, Float)
     assert decl.variable.value == 3.0
     assert decl.func(*decl.args) == decl
+    assert vuc.as_Declaration() == decl
+    assert vuc.as_Declaration(value=None, attrs=None) == Declaration(vu)
 
     vy = Variable(y, type=integer, value=3)
     decl2 = Declaration(vy)
