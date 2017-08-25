@@ -213,8 +213,8 @@ def test_files():
         "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
-        # isympy executes ``from sympy import *``:
-        "%(sep)sbin%(sep)sisympy" % sepd,
+        # __main__ (was isympy) executes ``from sympy import *``:
+        "%(sep)ssympy%(sep)s__main__.py" % sepd,
         # these two are import timing tests:
         "%(sep)sbin%(sep)ssympy_time.py" % sepd,
         "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,
