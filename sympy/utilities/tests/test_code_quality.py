@@ -224,7 +224,7 @@ def test_files():
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
     ])
     check_files(top_level_files, test)
-    check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")
+    check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh", ".ps1"]), "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 
