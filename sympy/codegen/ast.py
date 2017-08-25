@@ -68,6 +68,51 @@ The other ``Type`` instances defined are:
 - ``complex64``: Complex number represented by two ``float32`` numbers
 - ``complex128``: Complex number represented by two ``float64`` numbers
 
+Using the nodes
+---------------
+It is possible to construct simple algorithms using the AST nodes. Let's construct a loop applying
+Newton's method::
+
+    >>> from sympy import symbols, cos
+    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print
+    >>> t, dx, x = symbols('tol delta val')
+    >>> expr = cos(x) - x**3
+    >>> whl = While(abs(dx) > t, [
+    ...     Assignment(dx, -expr/expr.diff(x)),
+    ...     aug_assign(x, '+', dx),
+    ...     Print([x])
+    ... ])
+    >>> from sympy.printing import pycode
+    >>> py_str = pycode(whl)
+    >>> print(py_str)
+    while abs(delta) > tol:
+        delta = (val**3 - math.cos(val))/(-3*val**2 - math.sin(val))
+        val += delta
+        print(val)
+    >>> import math
+    >>> tol, val, delta = 1e-5, 0.5, float('inf')
+    >>> exec(py_str)
+    1.1121416371
+    0.909672693737
+    0.867263818209
+    0.865477135298
+    0.865474033111
+    >>> print('%3.1g' % (math.cos(val) - val**3))
+    -3e-11
+
+If we want to generate Fortran code for the same while loop we simple call ``fcode``::
+
+    >>> from sympy.printing.fcode import fcode
+    >>> print(fcode(whl, standard=2003, source_format='free'))
+    do while (abs(delta) > tol)
+       delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
+       val = val + delta
+       print *, val
+    end do
+
+There is a function constructing a loop (or a complete function) like this in
+:mod:`sympy.codegen.algorithms`.
+
 """
 
 
@@ -93,7 +138,7 @@ def _mk_Tuple(args):
 class Token(Basic):
     """ Base class for the AST types
 
-    Defining fields are set in __slots__. Attributes (defined in __slots__) are
+    Defining fields are set in ``__slots__``. Attributes (defined in __slots__) are
     only allowed to contain instances of Basic (unless atomic, see ``String``).
     """
 
@@ -195,7 +240,18 @@ class Token(Basic):
 
 
 class NoneToken(Token):
+    """ The AST equivalence of Python's NoneType
 
+    The corresponding instance of Python's ``None`` is ``none``.
+
+    Examples
+    --------
+    >>> from sympy.codegen.ast import none, Variable
+    >>> from sympy.printing.pycode import pycode
+    >>> print(pycode(Variable('x').as_Declaration(value=none)))
+    x = None
+
+    """
     def __eq__(self, other):
         return other is None or isinstance(other, NoneToken)
 
@@ -627,7 +683,24 @@ class String(Token):
 
 
 class Node(Token):
-    """ Subclass of Token, carrying the attribute 'attrs' (Tuple) """
+    """ Subclass of Token, carrying the attribute 'attrs' (Tuple)
+
+    Examples
+    --------
+    >>> from sympy.codegen.ast import Node, value_const, pointer_const
+    >>> n1 = Node([value_const])
+    >>> n1.attr_params('value_const')  # get the parameters of attribute (by name)
+    ()
+    >>> from sympy.codegen.fnodes import dimension
+    >>> n2 = Node([value_const, dimension(5, 3)])
+    >>> n2.attr_params(value_const)  # get the parameters of attribute (by Attribute instance)
+    ()
+    >>> n2.attr_params('dimension')  # get the parameters of attribute (by name)
+    (5, 3)
+    >>> n2.attr_params(pointer_const) is None
+    True
+
+    """
 
     __slots__ = ['attrs']
 
@@ -831,6 +904,7 @@ class _SizedIntType(IntBaseType):
 
 
 class SignedIntType(_SizedIntType):
+    """ Represents a signed integer type. """
     @property
     def min(self):
         return -2**(self.nbits-1)
@@ -841,6 +915,7 @@ class SignedIntType(_SizedIntType):
 
 
 class UnsignedIntType(_SizedIntType):
+    """ Represents an unsigned integer type. """
     @property
     def min(self):
         return 0
@@ -852,10 +927,11 @@ class UnsignedIntType(_SizedIntType):
 two = Integer(2)
 
 class FloatBaseType(Type):
+    """ Represents a floating point number type. """
     cast_nocheck = Float
 
 class FloatType(FloatBaseType):
-    """ Represents a floating point value.
+    """ Represents a floating point type with fixed bit width.
 
     Base 2 & one sign bit is assumed.
 
@@ -952,6 +1028,7 @@ class FloatType(FloatBaseType):
         return ceiling((self.nmant + 1) * log(2)/log(10) + 1)
 
     def cast_nocheck(self, value):
+        """ Casts without checking if out of bounds or subnormal. """
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):
@@ -965,6 +1042,7 @@ class FloatType(FloatBaseType):
 class ComplexBaseType(FloatBaseType):
 
     def cast_nocheck(self, value):
+        """ Casts without checking if out of bounds or subnormal. """
         from sympy.functions import re, im
         return (
             super(ComplexBaseType, self).cast_nocheck(re(value)) +
@@ -979,7 +1057,6 @@ class ComplexBaseType(FloatBaseType):
 
 class ComplexType(ComplexBaseType, FloatType):
     """ Represents a complex floating point number. """
-
 
 
 # NumPy types:
@@ -1014,6 +1091,9 @@ bool_ = Type('bool')
 class Attribute(Token):
     """ Attribute (possibly parametrized)
 
+    For use with :class:`sympy.codegen.ast.Node` (which takes instances of
+    ``Attribute`` as ``attrs``).
+
     Parameters
     ----------
     name : str
@@ -1027,7 +1107,11 @@ class Attribute(Token):
     volatile
     >>> print(repr(volatile))
     Attribute(String('volatile'))
-
+    >>> a = Attribute('foo', [1, 2, 3])
+    >>> a
+    foo(1, 2, 3)
+    >>> a.parameters == (1, 2, 3)
+    True
     """
     __slots__ = ['name', 'parameters']
     defaults = {'parameters': Tuple()}
@@ -1035,8 +1119,11 @@ class Attribute(Token):
     _construct_parameters = staticmethod(_mk_Tuple)
 
     def _sympystr(self, printer, *args, **kwargs):
-        return str(self.name)
-
+        result = str(self.name)
+        if self.parameters:
+            result += '(%s)' % ', '.join(map(lambda arg: printer._print(
+                arg, *args, **kwargs), self.parameters))
+        return result
 
 value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
@@ -1085,6 +1172,8 @@ class Variable(Node):
     Variable(w, attrs=(value_const,))
     >>> value_const in w.attrs
     True
+    >>> w.as_Declaration(value=42)
+    Declaration(Variable(w, value=42, attrs=(value_const,)))
 
     """
 
@@ -1277,6 +1366,26 @@ class Statement(Basic):
 
 
 class Stream(Token):
+    """ Represents a stream.
+
+    There are two predefined Stream instances ``stdout`` & ``stderr``.
+
+    Parameters
+    ----------
+    name : str
+
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> from sympy.printing.pycode import pycode
+    >>> from sympy.codegen.ast import Print, stderr, String
+    >>> print(pycode(Print(['x'], file=stderr)))
+    print(x, file=sys.stderr)
+    >>> x = Symbol('x')
+    >>> print(pycode(Print([String('x')], file=stderr)))  # print literally "x"
+    print("x", file=sys.stderr)
+
+    """
     __slots__ = ['name']
     _construct_name = String
 
@@ -1291,6 +1400,14 @@ class Print(Token):
     ----------
     formatstring : str
     *args : Basic instances (or convertible to such through sympify)
+
+    Examples
+    --------
+    >>> from sympy.codegen.ast import Print
+    >>> from sympy.printing.pycode import pycode
+    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
+    print("coordinate: %12.5g %12.5g" % (x, y))
+
     """
 
     __slots__ = ['print_args', 'format_string', 'file']
@@ -1298,7 +1415,7 @@ class Print(Token):
 
     _construct_format_string = String
     _construct_file = Stream
-    _construct_print_args = staticmethod(_mk_Tuple)
+    _construct_print_args = staticmethod(lambda args: Tuple(*args))
 
 
 class FunctionPrototype(Node):
@@ -1310,8 +1427,18 @@ class FunctionPrototype(Node):
     ----------
     return_type : Type
     name : str
-    parameters: iterable of Declaration instances
+    parameters: iterable of Variable instances
     attrs : iterable of Attribute instances
+
+    Examples
+    --------
+    >>> from sympy import symbols
+    >>> from sympy.codegen.ast import real, FunctionPrototype
+    >>> from sympy.printing.ccode import ccode
+    >>> x, y = symbols('x y', real=True)
+    >>> fp = FunctionPrototype(real, 'foo', [x, y])
+    >>> ccode(fp)
+    'double foo(double x, double y)'
 
     """
 
@@ -1322,7 +1449,14 @@ class FunctionPrototype(Node):
 
     @staticmethod
     def _construct_parameters(args):
-        return Tuple(*[arg.variable if isinstance(arg, Declaration) else Variable.deduced(arg) for arg in args])
+        def _var(arg):
+            if isinstance(arg, Declaration):
+                return arg.variable
+            elif isinstance(arg, Variable):
+                return arg
+            else:
+                return Variable.deduced(arg)
+        return Tuple(*map(_var, args))
 
     def __new__(cls, *args, **kwargs):
         return Token.__new__(cls, *args, **kwargs)
@@ -1349,6 +1483,22 @@ class FunctionDefinition(FunctionPrototype):
     body : CodeBlock or iterable
     attrs : iterable of Attribute instances
 
+    Examples
+    --------
+    >>> from sympy import symbols
+    >>> from sympy.codegen.ast import real, FunctionPrototype
+    >>> from sympy.printing.ccode import ccode
+    >>> x, y = symbols('x y', real=True)
+    >>> fp = FunctionPrototype(real, 'foo', [x, y])
+    >>> ccode(fp)
+    'double foo(double x, double y)'
+    >>> from sympy.codegen.ast import FunctionDefinition, Return, Statement
+    >>> body = [Statement(Return(x*y))]
+    >>> fd = FunctionDefinition.from_FunctionPrototype(fp, body)
+    >>> print(ccode(fd))
+    double foo(double x, double y){
+        return x*y;
+    }
     """
 
     __slots__ = FunctionPrototype.__slots__[:-1] + ['body', 'attrs']
@@ -1379,8 +1529,16 @@ class FunctionCall(Token):
     name : str
     function_args : Tuple
 
+    Examples
+    --------
+    >>> from sympy.codegen.ast import FunctionCall
+    >>> from sympy.printing.pycode import pycode
+    >>> fcall = FunctionCall('foo', 'bar baz'.split())
+    >>> print(pycode(fcall))
+    foo(bar, baz)
+
     """
     __slots__ = ['name', 'function_args']
 
     _construct_name = String
-    _construct_function_args = staticmethod(_mk_Tuple)
+    _construct_function_args = staticmethod(lambda args: Tuple(*args))

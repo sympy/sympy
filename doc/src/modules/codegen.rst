@@ -56,23 +56,24 @@ Code printers (sympy.printing)
 ------------------------------
 
 This is where the meat of code generation is; the translation of SymPy
-expressions to specific languages. Supported languages are C
-(:py:func:`sympy.printing.ccode.ccode`), R 
-(:py:func:`sympy.printing.rcode.rcode`), Fortran 95
-(:py:func:`sympy.printing.fcode.fcode`), Javascript
-(:py:func:`sympy.printing.jscode.jscode`), Julia
-(:py:func:`sympy.printing.julia.julia_code`), Mathematica
-(:py:func:`sympy.printing.mathematica.mathematica_code`), Octave/Matlab
-(:py:func:`sympy.printing.octave.octave_code`), Rust
-(:py:func:`sympy.printing.rust.rust_code`), Python (print_python, which is
-actually more like a lightweight version of codegen for Python, and
+expressions to specific languages. Supported languages are
+C (:py:func:`sympy.printing.ccode.ccode`),
+C++ (:py:func:`sympy.printing.cxxcode.cxxcode`),
+R (:py:func:`sympy.printing.rcode.rcode`),
+Fortran 95 (:py:func:`sympy.printing.fcode.fcode`),
+Javascript (:py:func:`sympy.printing.jscode.jscode`),
+Julia (:py:func:`sympy.printing.julia.julia_code`),
+Mathematica (:py:func:`sympy.printing.mathematica.mathematica_code`),
+Octave/Matlab (:py:func:`sympy.printing.octave.octave_code`),
+Rust (:py:func:`sympy.printing.rust.rust_code`),
+Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
 (like NumPy), and theano
 (:py:func:`sympy.printing.theanocode.theano_function`). The code printers are
 special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
-(using the :class:`sympy.printing.codeprinter.Assignment` object).This serves as
+(using the :class:`sympy.codegen.ast.Assignment` object). This serves as
 building blocks for the code printers and hence the ``codegen`` module.  An
 example that shows the use of ``Assignment``::
 
@@ -556,21 +557,34 @@ There are other facilities available with Sympy to do efficient numeric
 computation. See :ref:`this<numeric_computation>` page for a comparison among them.
 
 
-Special (finite precision arithmetic) math functions
-----------------------------------------------------
+Special C math functions (sympy.codegen.cfunctions)
+---------------------------------------------------
 
 .. automodule:: sympy.codegen.cfunctions
     :members:
 
 
-Fortran specific functions
---------------------------
-
-.. automodule:: sympy.codegen.ffunctions
-    :members:
-
 Classes for abstract syntax trees (sympy.codegen.ast)
 -----------------------------------------------------
 
 .. automodule:: sympy.codegen.ast
+    :members:
+
+C specific AST nodes (sympy.codegen.cnodes)
+-------------------------------------------
+
+.. automodule:: sympy.codegen.cnodes
+    :members:
+
+Fortran specific AST nodes (sympy.codegen.fnodes)
+-------------------------------------------------
+
+.. automodule:: sympy.codegen.fnodes
+    :members:
+
+
+Algorithms (sympy.codegen.algorithms)
+-------------------------------------
+
+.. automodule:: sympy.codegen.algorithms
     :members:

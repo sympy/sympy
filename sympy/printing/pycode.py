@@ -210,22 +210,25 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Print(self, prnt, *args, **kwargs):
         print_args = ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), prnt.print_args))
-        if prnt.format_string:
+        if prnt.format_string != None:
             print_args = '"{0}" % ({1})'.format(str(prnt.format_string), print_args)
         if prnt.file != None:
             print_args += ', file=%s' % self._print(prnt.file, *args, **kwargs)
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm, *args, **kwargs):
-        if strm.name == 'stdout':
+        if str(strm.name) == 'stdout':
             return self._module_format('sys.stdout')
-        elif strm.name == 'stderr':
+        elif str(strm.name) == 'stderr':
             return self._module_format('sys.stderr')
         else:
             return self._print(strm.name, *args, **kwargs)
 
     def _print_NoneToken(self, arg, *args, **kwargs):
         return 'None'
+
+    def _print_String(self, arg, *args, **kwargs):
+        return '"%s"' % arg.text
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)

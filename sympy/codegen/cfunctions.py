@@ -1,5 +1,6 @@
 """
-Functions with corresponding implementations in C.
+This module contains SymPy functions mathcin corresponding special math functions in the
+C standard library (since C99, also available in C++11).
 
 The functions defined in this module allows the user to express functions such as ``expm1``
 as a SymPy function for symbolic manipulation.

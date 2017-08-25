@@ -6,6 +6,7 @@ from sympy.codegen.ast import (
     Print, Return, Scope, Statement, While, Variable, Pointer, real
 )
 
+""" This module collects functions for constructing ASTs representing algorithms. """
 
 def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
                    itermax=None, counter=None):
@@ -23,6 +24,16 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     expr : expression
     wrt : Symbol
         With respect to, i.e. what is the variable
+    atol : number or expr
+        Absolute tolerance (stopping criterion)
+    delta : Symbol
+        Will be a ``Dummy`` if ``None``.
+    debug : bool
+        Whether to print convergence information during iterations
+    itermax : number of expr
+        Maximum number of iterations.
+    counter : Symbol
+        Will be a ``Dummy`` if ``None``.
 
     Examples
     --------
@@ -77,6 +88,21 @@ def _symbol_of(arg):
 
 def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tuple(), **kwargs):
     """ Generates an AST for a function implementing the Newton-Raphson method.
+
+    Parameters
+    ----------
+    expr : expression
+    wrt : Symbol
+        With respect to, i.e. what is the variable
+    params : iterable of symbols
+        Symbols appearing in expr that are taken as constants during the iterations
+        (these will be accepted as parameters to the generated function).
+    func_name : str
+        Name of the generated function.
+    attrs : Tuple
+        Attribute instances passed as ``attrs`` to ``FunctionDefinition``.
+    \\*\\*kwargs :
+        Keyword arguments passed to :func:`sympy.codegen.algorithms.newtons_method`.
 
     See also
     ========
