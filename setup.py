@@ -45,8 +45,15 @@ extra_kwargs = {}
 try:
     from setuptools import setup, Command
     extra_kwargs['zip_safe'] = False
+    extra_kwargs['entry_points'] = {
+        'console_scripts': [
+            'isympy = sympy.__main__:main',
+        ]
+    }
 except ImportError:
     from distutils.core import setup, Command
+
+    extra_kwargs['scripts'] = ['bin/isympy']
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
@@ -342,7 +349,6 @@ if __name__ == '__main__':
           keywords="Math CAS",
           url='http://sympy.org',
           packages=['sympy'] + modules + tests,
-          scripts=['bin/isympy'],
           ext_modules=[],
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
