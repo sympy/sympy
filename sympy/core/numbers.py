@@ -2541,6 +2541,10 @@ class One(with_metaclass(Singleton, IntegerConstant)):
     def __neg__():
         return S.NegativeOne
 
+    @staticmethod
+    def __div__(other):
+        return Pow(other, -1)
+
     def _eval_power(self, expt):
         return self
 
