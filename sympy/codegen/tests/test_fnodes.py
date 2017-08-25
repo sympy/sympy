@@ -82,6 +82,10 @@ def test_Subroutine():
         SubroutineCall(sub, [v_x3]),
         Print([sum_(v_x3), v_x3])
     ])
+
+    if not has_fortran():
+        skip("No fortran compiler found.")
+
     (stdout, stderr), info = compile_run_strings([
         ('a.f90', fcode(mod, standard=90)),
         ('b.f90', fcode(prog, standard=90))

@@ -1181,9 +1181,9 @@ class Element(Token):
     (i, j, k)
     >>> from sympy import ccode
     >>> ccode(elem)
-    x[i][j][k]
+    'x[i][j][k]'
     >>> ccode(Element('x', 'ijk', strides='lmn', offset='o'))
-    x[i*l + j*m + k*n + o]
+    'x[i*l + j*m + k*n + o]'
 
     """
     __slots__ = ['symbol', 'indices', 'strides', 'offset']
