@@ -599,7 +599,7 @@ class CodeGen(object):
             local_expressions = Tuple(*[b for _,b in common])
         else:
             local_expressions = Tuple()
-            
+
         if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
             if not expr:
                 raise ValueError("No expression given")
@@ -613,8 +613,8 @@ class CodeGen(object):
         else:
             # local variables for indexed expressions
             local_vars = {i.label for i in expressions.atoms(Idx)}
-            local_symbols = local_vars            
-            
+            local_symbols = local_vars
+
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
 
@@ -922,7 +922,7 @@ class CCodeGen(CodeGen):
         for arg in routine.arguments:
             if isinstance(arg, ResultBase) and not arg.dimensions:
                 dereference.append(arg.name)
-        
+
         code_lines = []
         for result in routine.local_vars:
 
@@ -943,18 +943,17 @@ class CCodeGen(CodeGen):
                 prefix = ""
             else:
                 prefix = "const {0} ".format(t)
-            
+
             constants, not_c, c_expr = self._printer_method_with_settings(
                 'doprint', dict(human=False, dereference=dereference),
                 result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
-            
-            code_lines.append("{}{}\n".format(prefix, c_expr))
-            
-        return code_lines
 
+            code_lines.append("{}{}\n".format(prefix, c_expr))
+
+        return code_lines
 
     def _call_printer(self, routine):
         code_lines = []
