@@ -3619,21 +3619,14 @@ class PermutationGroup(Basic):
         power = len(coeffs)-1
         # for a symmetric group, gens[:i] is the generating
         # set for a p-Sylow subgroup on [0..p**(i-1)-1]. For
-        # alternating groups, it's the same generators without
-        # (0 1)
+        # alternating groups, the same is given by gens[:2*(i-1)]
         for i in range(1, power+1):
             if i == 1 and alt:
                 # (0 1) shouldn't be added for alternating groups
                 continue
             gen = Permutation([(j + p**(i-1)) % p**i for j in range(p**i)])
             gens.append(identity*gen)
-
-        added = gens[:]
-
-        # add the other generators so that gens generates the 2-Sylow
-        # subgroup of an alternating group on [0..p**power-1]
-        if alt:
-            for gen in added:
+            if alt:
                 gen = Permutation(0, 1)*gen*Permutation(0, 1)*gen
                 gens.append(gen)
 
@@ -3655,11 +3648,13 @@ class PermutationGroup(Basic):
                     if alt:
                         gen = Permutation(0, 1)*shift*Permutation(0, 1)*shift
                         gens.append(gen)
-                        j = power - 1 # one less because (0 1) is missing
+                        j = 2*(power - 1)
                     else:
                         j = power
 
-                    for gen in gens[:j]:
+                    for i, gen in enumerate(gens[:j]):
+                        if alt and i % 2 == 1:
+                            continue
                         # shift the generator to the start of the
                         # partition part
                         gen = shift*gen*shift
