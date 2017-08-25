@@ -1222,12 +1222,14 @@ def dup_factor_list(f, K0):
             if K0_inexact is None:
                 coeff = coeff/denom
             else:
+                num_factors = 0
                 for i, (f, k) in enumerate(factors):
                     f = dup_quo_ground(f, denom, K0)
                     f = dup_convert(f, K0, K0_inexact)
                     factors[i] = (f, k)
+                    num_factors += k
 
-                coeff = K0_inexact.convert(coeff, K0)
+                coeff = K0_inexact.convert(coeff*denom**(num_factors - 1), K0)
                 K0 = K0_inexact
 
     if j:
@@ -1301,12 +1303,14 @@ def dmp_factor_list(f, u, K0):
             if K0_inexact is None:
                 coeff = coeff/denom
             else:
+                num_factors = 0
                 for i, (f, k) in enumerate(factors):
                     f = dmp_quo_ground(f, denom, u, K0)
                     f = dmp_convert(f, u, K0, K0_inexact)
                     factors[i] = (f, k)
+                    num_factors += k
 
-                coeff = K0_inexact.convert(coeff, K0)
+                coeff = K0_inexact.convert(coeff*denom**(num_factors - 1), K0)
                 K0 = K0_inexact
 
     for i, j in enumerate(reversed(J)):
