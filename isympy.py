@@ -174,17 +174,6 @@ See also isympy --help.
 import os
 import sys
 
-# hook in-tree SymPy into Python path, if possible
-
-isympy_path = os.path.abspath(__file__)
-isympy_dir = os.path.dirname(isympy_path)
-sympy_top = os.path.split(isympy_dir)[0]
-sympy_dir = os.path.join(sympy_top, 'sympy')
-
-if os.path.isdir(sympy_dir):
-    sys.path.insert(0, sympy_top)
-
-# DO NOT IMPORT SYMPY HERE!
 
 def main():
     from optparse import OptionParser

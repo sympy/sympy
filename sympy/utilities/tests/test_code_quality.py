@@ -194,6 +194,7 @@ def test_files():
 
     # Files to test at top level
     top_level_files = [join(TOP_PATH, file) for file in [
+        "isympy.py",
         "build.py",
         "setup.py",
         "setupegg.py",
@@ -213,8 +214,8 @@ def test_files():
         "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
-        # __main__ (was isympy) executes ``from sympy import *``:
-        "%(sep)ssympy%(sep)s__main__.py" % sepd,
+        # isympy.py executes ``from sympy import *``:
+        "%(sep)sisympy.py" % sepd,
         # these two are import timing tests:
         "%(sep)sbin%(sep)ssympy_time.py" % sepd,
         "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,

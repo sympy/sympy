@@ -47,7 +47,7 @@ try:
     extra_kwargs['zip_safe'] = False
     extra_kwargs['entry_points'] = {
         'console_scripts': [
-            'isympy = sympy.__main__:main',
+            'isympy = isympy:main',
         ]
     }
 except ImportError:
@@ -348,6 +348,7 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='http://sympy.org',
+          py_modules = ['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
