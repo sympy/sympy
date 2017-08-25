@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # XXX: Don't put a newline here, or it will add an extra line with
 # isympy --help
 #  |
