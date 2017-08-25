@@ -8,18 +8,18 @@ from sympy.vector.dyadic import Dyadic
 from sympy import symbols
 
 
-def compose(expr, system):
+def _compose(expr, system, variables):
     from sympy.vector.operators import _get_coord_sys_from_expr
 
-    x, y, z = symbols('x y z')
-    systems = _path(next(iter(_get_coord_sys_from_expr(expr))), system)[1]
-    eq = (x, y, z)
-    for i, j in enumerate(systems[:-1]):
-        if j._parent == systems[i+1]:
+    systems = _path(next(iter(_get_coord_sys_from_expr(expr))), system)[1][::-1]
+    eq = lambda x, y, z: (x, y, z)
+    eq = eq(*variables)
+    for i, j in enumerate(systems[1:]):
+        if j._parent == systems[i]:
             eq = j._transformation_lambda(*eq)
         else:
-            if systems[i+1].transformation_from_parent_function() is not None:
-                eq = systems[i+1]._transformation_from_parent_lambda(*eq)
+            if systems[i].transformation_from_parent_function() is not None:
+                eq = systems[i]._transformation_from_parent_lambda(*eq)
             else:
                 raise ValueError()
     return eq
@@ -129,16 +129,15 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
-            expr = sympify(expr)
-            # Subsitute all the coordinate variables
+            from sympy.vector.operators import _get_coord_sys_from_expr
+            coord_sys = list(_get_coord_sys_from_expr(expr))
+            base_sc = [i.base_scalars() for i in coord_sys]
+            trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
+            trans_eq_dict = dict(zip([y for x in base_sc for y in x], [y for x in trans_eq for y in x]))
             for x in expr.atoms(BaseScalar):
                 if x.system != system:
-                    system_set.add(x.system)
-            subs_dict = {}
-            for f in system_set:
-                subs_dict.update(f.scalar_map(system))
-            return expr.subs(subs_dict)
+                    expr = expr.subs(x, trans_eq_dict[x])
+            return expr
         return expr
 
 
