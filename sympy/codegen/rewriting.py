@@ -12,11 +12,11 @@ from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 
 """
 Classes and functions useful for rewriting expressions for optimized code
-generation. Some languages (or standard thereof), e.g. C99, offer specialized
-math functions which may offer better performance and/or precision.
+generation. Some languages (or standards thereof), e.g. C99, offer specialized
+math functions for better performance and/or precision.
 
-Using the ``optimize`` function in this module together with a collection of
-rules (represented as instances of ``Optimization``) one can rewrite the
+Using the ``optimize`` function in this module, together with a collection of
+rules (represented as instances of ``Optimization``), one can rewrite the
 expressions for this purpose.
 
 Examples
