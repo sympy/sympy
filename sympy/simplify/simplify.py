@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -504,8 +504,19 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+
+    If rational=True, Floats will be recast as Rationals before simplification.
+    If rational=None, Floats will be recast as Rationals but the result will
+    be recast as Floats. If rational=False(default) then nothing will be done
+    to the Floats.
     """
     expr = sympify(expr)
+
+    # rationalize Floats
+    floats = False
+    if flags.get('rational', False) is not False and expr.has(Float):
+        floats = True
+        expr = nsimplify(expr, rational=True)
 
     try:
         return expr._eval_simplify(ratio=ratio, measure=measure)
@@ -609,6 +620,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
+
+    # restore floats
+    if floats and flags.get('rational', None) is None:
+        expr = nfloat(expr, exponent=False)
 
     return expr
 
