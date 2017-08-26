@@ -2445,7 +2445,8 @@ def test_factor():
     assert factor(sqrt(x**2)) == sqrt(x**2)
 
     # issue 13149
-    assert factor(expand((0.5*x+1)*(0.5*y+1))) == Mul(1.0, 0.5*x + 1.0, 0.5*y + 1.0, evaluate = False)
+    assert factor(expand((0.5*x+1)*(0.5*y+1))) == Mul(1.0, 0.5*x + 1.0,
+        0.5*y + 1.0, evaluate = False)
     assert factor(expand((0.5*x+0.5)**2)) == 0.25*(1.0*x + 1.0)**2
 
 
