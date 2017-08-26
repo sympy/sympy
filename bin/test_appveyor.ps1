@@ -10,7 +10,7 @@ if not sympy.test():
     @"
 print('Testing SLOW')
 import sympy
-if not sympy.test(split='$env:TEST_SLOW', slow=True, verbose=True):
+if not sympy.test(slow=True, verbose=True):
     raise Exception('Tests failed')
 "@ | python -We:invalid 2>&1 | Tee-Object -Variable output
 }
