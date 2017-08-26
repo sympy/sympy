@@ -1,3 +1,10 @@
+"""
+Python code printers
+
+This module contains python code printers for plain python as well as NumPy & SciPy enabled code.
+"""
+
+
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
@@ -237,6 +244,24 @@ for k in _known_constants_math:
 
 
 def pycode(expr, **settings):
+    """ Converts an expr to a string of Python code
+
+    Parameters
+    ----------
+    expr : Expr
+        A SymPy expression.
+    fully_qualified_modules : bool
+        Whether or not to write out full module names of functions
+        (``math.sin`` vs. ``sin``). default: ``True``.
+
+    Examples
+    --------
+    >>> from sympy import tan, Symbol
+    >>> from sympy.printing.pycode import pycode
+    >>> pycode(tan(Symbol('x')) + 1)
+    'math.tan(x) + 1'
+
+    """
     return PythonCodePrinter(settings).doprint(expr)
 
 

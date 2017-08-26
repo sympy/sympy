@@ -175,6 +175,14 @@ def test_sympy__codegen__ast__Token():
     assert _test_args(Token())
 
 
+def test_sympy__codegen__ast__ContinueToken():
+    from sympy.codegen.ast import ContinueToken
+    assert _test_args(ContinueToken())
+
+def test_sympy__codegen__ast__BreakToken():
+    from sympy.codegen.ast import BreakToken
+    assert _test_args(BreakToken())
+
 def test_sympy__codegen__ast__NoneToken():
     from sympy.codegen.ast import NoneToken
     assert _test_args(NoneToken())

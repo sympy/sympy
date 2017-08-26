@@ -243,11 +243,12 @@ class Token(Basic):
 
 
 class BreakToken(Token):
-    """ Represents 'break' in C/Python ('exit' in Fortran)
+    """ Represents 'break' in C/Python ('exit' in Fortran).
 
     Use the premade instance ``break_`` or instantiate manually.
 
     Examples
+    --------
     >>> from sympy.printing import ccode, fcode
     >>> from sympy.codegen.ast import break_
     >>> ccode(break_)
@@ -265,6 +266,7 @@ class ContinueToken(Token):
     Use the premade instance ``continue_`` or instantiate manually.
 
     Examples
+    --------
     >>> from sympy.printing import ccode, fcode
     >>> from sympy.codegen.ast import continue_
     >>> ccode(continue_)

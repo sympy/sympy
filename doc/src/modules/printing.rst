@@ -437,6 +437,12 @@ More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
 
 .. autofunction:: print_mathml
 
+PythonCodePrinter
+-----------------
+
+.. automodule:: sympy.printing.pycode
+    :members:
+
 PythonPrinter
 -------------
 

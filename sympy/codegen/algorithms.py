@@ -13,24 +13,20 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     """ Generates an AST for Newton-Raphson method (a root-finding algorithm).
 
     Returns an abstract syntax tree (AST) based on ``sympy.codegen.ast`` for Netwon's
-    method of root-finding based on the following formula:
-
-    .. math::
-
-        x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}
+    method of root-finding.
 
     Parameters
     ----------
     expr : expression
     wrt : Symbol
-        With respect to, i.e. what is the variable
+        With respect to, i.e. what is the variable.
     atol : number or expr
         Absolute tolerance (stopping criterion)
     delta : Symbol
         Will be a ``Dummy`` if ``None``.
     debug : bool
         Whether to print convergence information during iterations
-    itermax : number of expr
+    itermax : number or expr
         Maximum number of iterations.
     counter : Symbol
         Will be a ``Dummy`` if ``None``.

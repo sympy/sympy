@@ -577,7 +577,7 @@ C specific AST nodes (sympy.codegen.cnodes)
     :members:
 
 C++ specific AST nodes (sympy.codegen.cxxnodes)
--------------------------------------------
+-----------------------------------------------
 
 .. automodule:: sympy.codegen.cxxnodes
     :members:
