@@ -7,7 +7,7 @@ from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
 
 def test_combsimp():
-    from sympy.abc import n, k
+    n, k = symbols('n k', integer = True)
 
     assert combsimp(factorial(n)) == factorial(n)
     assert combsimp(binomial(n, k)) == binomial(n, k)
@@ -23,20 +23,32 @@ def test_combsimp():
     assert combsimp(factorial(n)*binomial(n + 1, k + 1)/binomial(n, k)) == \
         factorial(n + 1)/(1 + k)
 
-    assert combsimp(binomial(n - 1, k)) == -((-n + k)*binomial(n, k))/n
-
-    assert combsimp(binomial(n + 2, k + S(1)/2)) == 4*((n + 1)*(n + 2) *
-        binomial(n, k + S(1)/2))/((2*k - 2*n - 1)*(2*k - 2*n - 3))
+    assert combsimp(binomial(n + 2, k + S(1)/2)) == gamma(n + 3)/ \
+        (gamma(k + 3/2)*gamma(-k + n + 5/2))
     assert combsimp(binomial(n + 2, k + 2.0)) == \
-        -((1.0*n + 2.0)*binomial(n + 1.0, k + 2.0))/(k - n)
+        gamma(n + 3)/(gamma(k + 3.0)*gamma(-k + n + 1))
+
+    assert combsimp(factorial(n - S.Half)) == gamma(n + S.Half)
+    assert combsimp(factorial(n - S.Half), as_gamma = False) == \
+        factorial(n - S.Half)
+    assert combsimp(gamma(n + 3)) == factorial(n + 2)
+    assert combsimp(gamma(n + 3), as_gamma = True) == gamma(n + 3)
+    # issue 6658
+    assert combsimp(binomial(n, n - k)) == binomial(n, k)
+    # issue 6341, 7135
+    assert combsimp(factorial(n)/(factorial(k)*factorial(n - k))) == \
+        binomial(n, k)
+    assert combsimp(factorial(2*n)/factorial(n)**2) == binomial(2*n, n)
+    assert combsimp(factorial(n)/(factorial(k)*factorial(n - k)),
+        as_binomial = False) == factorial(n)/(factorial(k)*factorial(n - k))
+    # issue 11548
+    assert combsimp(binomial(0, x)) == sin(pi*x)/(pi*x)
 
     # coverage tests
     assert combsimp(factorial(n*(1 + n) - n**2 - n)) == 1
     assert combsimp(binomial(n + k - 2, n)) == \
-        k*(k - 1)*binomial(n + k, n)/((n + k)*(n + k - 1))
+        binomial(k + n - 2, n)
     i = Symbol('i', integer=True)
-    e = gamma(i + 3)
-    assert combsimp(e) == e
     e = gamma(exp(i))
     assert combsimp(e) == e
     e = gamma(n + S(1)/3)*gamma(n + S(2)/3)
@@ -125,11 +137,15 @@ def test_combsimp_gamma():
         gamma(k)*gamma(k + R(1, 3))*gamma(k + R(2, 3))/gamma(3*k/2)) == (
         3*2**(3*k + 1)*3**(-3*k - S.Half)*sqrt(pi)*gamma(3*k/2 + S.Half)/2)
 
+    # issue 6153
+    assert combsimp(gamma(S(1)/4)/gamma(S(5)/4)) == 4
+
 
 def test_issue_9699():
     n, k = symbols('n k', real=True)
     x, y = symbols('x, y')
-    assert combsimp((n + 1)*factorial(n)) == factorial(n + 1)
+    assert combsimp((n + 1)*factorial(n)) == gamma(n + 2)
     assert combsimp((x + 1)*factorial(x)/gamma(y)) == gamma(x + 2)/gamma(y)
-    assert combsimp(factorial(n)/n) == factorial(n - 1)
-    assert combsimp(rf(x + n, k)*binomial(n, k)) == binomial(n, k)*gamma(k + n + x)/gamma(n + x)
+    assert combsimp(factorial(n)/n) == gamma(n)
+    assert combsimp(rf(x + n, k)*binomial(n, k)) == gamma(n + 1)*gamma(k + n
+        + x)/(gamma(k + 1)*gamma(n + x)*gamma(-k + n + 1))

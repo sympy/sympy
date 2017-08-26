@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.compatibility import ordered, default_sort_key
+from sympy.core.basic import preorder_traversal
+from sympy.core.function import count_ops, expand_func
 from sympy.functions.combinatorial.factorials import binomial, CombinatorialFunction, factorial
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
@@ -13,7 +15,7 @@ from sympy.utilities.iterables import uniq
 
 
 @timethis('combsimp')
-def combsimp(expr):
+def combsimp(expr, as_gamma = None, as_binomial = True):
     r"""
     Simplify combinatorial expressions.
 
@@ -29,21 +31,23 @@ def combsimp(expr):
     the resulting rising factorial to cancel. Rising factorials with
     the second argument being an integer are expanded into polynomial
     forms and finally all other rising factorial are rewritten in terms
-    of more familiar functions. If the initial expression consisted of
-    gamma functions alone, the result is expressed in terms of gamma
-    functions. If the initial expression consists of gamma function
-    with some other combinatorial, the result is expressed in terms of
-    gamma functions.
+    of more familiar functions.
 
-    If the result is expressed using gamma functions, the following three
-    additional steps are performed:
+    If as_gamma is None, is_gamma is set to True if initial expression
+    consisted of combinatorial functions or gamma functions with non-
+    integer arguments.
+
+    If as_gamma is True, the following additional two steps are performed.
 
     1. Reduce the number of gammas by applying the reflection theorem
        gamma(x)*gamma(1-x) == pi/sin(pi*x).
     2. Reduce the number of gammas by applying the multiplication theorem
        gamma(x)*gamma(x+1/n)*...*gamma(x+(n-1)/n) == C*gamma(n*x).
-    3. Reduce the number of prefactors by absorbing them into gammas, where
-       possible.
+
+    Then it reduces the number of prefactors by absorbing them into gammas,
+    where possible and expands gammas with rational argument. If as_gamma
+    is False, it rewrites gammas to factorials and if as_binomial is True,
+    it finds (a+b)!/a!b! and replaces with binomial.
 
     All transformation rules can be found (or was derived from) here:
 
@@ -64,17 +68,11 @@ def combsimp(expr):
 
     """
 
-    # as a rule of thumb, if the expression contained gammas initially, it
-    # probably makes sense to retain them
-    as_gamma = expr.has(gamma)
-    as_factorial = expr.has(factorial)
-    as_binomial = expr.has(binomial)
+    if as_gamma is None:
+        as_gamma = any(isinstance(node, (gamma, CombinatorialFunction)) and
+            not all(arg.is_integer for arg in node.args)
+            for node in preorder_traversal(expr))
 
-
-    expr = expr.replace(binomial,
-        lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
-    expr = expr.replace(factorial,
-        lambda n: _rf(1, n.expand()))
     expr = expr.rewrite(gamma)
     expr = expr.replace(gamma,
         lambda n: _rf(1, (n - 1).expand()))
@@ -105,6 +103,10 @@ def combsimp(expr):
                 coeff *= _rf(n - ck - _k + 1, ck)/_rf(_k + 1, ck)
                 rewrite = True
                 k = _k
+
+        if count_ops(k) > count_ops(n - k):
+            rewrite = True
+            k = n - k
 
         if rewrite:
             return coeff*binomial(n, k)
@@ -220,166 +222,167 @@ def combsimp(expr):
 
         # =========== level 2 work: pure gamma manipulation =========
 
-        # Try to reduce the number of gamma factors by applying the
-        # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
-        for gammas, numer, denom in [(
-            numer_gammas, numer_others, denom_others),
-                (denom_gammas, denom_others, numer_others)]:
-            new = []
-            while gammas:
-                g1 = gammas.pop()
-                if g1.is_integer:
-                    new.append(g1)
-                    continue
-                for i, g2 in enumerate(gammas):
-                    n = g1 + g2 - 1
-                    if not n.is_Integer:
+        if as_gamma:
+            # Try to reduce the number of gamma factors by applying the
+            # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
+            for gammas, numer, denom in [(
+                numer_gammas, numer_others, denom_others),
+                    (denom_gammas, denom_others, numer_others)]:
+                new = []
+                while gammas:
+                    g1 = gammas.pop()
+                    if g1.is_integer:
+                        new.append(g1)
                         continue
-                    numer.append(S.Pi)
-                    denom.append(sin(S.Pi*g1))
-                    gammas.pop(i)
-                    if n > 0:
-                        for k in range(n):
-                            numer.append(1 - g1 + k)
-                    elif n < 0:
-                        for k in range(-n):
-                            denom.append(-g1 - k)
-                    break
-                else:
-                    new.append(g1)
-            # /!\ updating IN PLACE
-            gammas[:] = new
-
-        # Try to reduce the number of gammas by using the duplication
-        # theorem to cancel an upper and lower: gamma(2*s)/gamma(s) =
-        # 2**(2*s + 1)/(4*sqrt(pi))*gamma(s + 1/2). Although this could
-        # be done with higher argument ratios like gamma(3*x)/gamma(x),
-        # this would not reduce the number of gammas as in this case.
-        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
-                                denom_others),
-                               (denom_gammas, numer_gammas, denom_others,
-                                numer_others)]:
-
-            while True:
-                for x in ng:
-                    for y in dg:
-                        n = x - 2*y
-                        if n.is_Integer:
-                            break
+                    for i, g2 in enumerate(gammas):
+                        n = g1 + g2 - 1
+                        if not n.is_Integer:
+                            continue
+                        numer.append(S.Pi)
+                        denom.append(sin(S.Pi*g1))
+                        gammas.pop(i)
+                        if n > 0:
+                            for k in range(n):
+                                numer.append(1 - g1 + k)
+                        elif n < 0:
+                            for k in range(-n):
+                                denom.append(-g1 - k)
+                        break
                     else:
-                        continue
-                    break
-                else:
-                    break
-                ng.remove(x)
-                dg.remove(y)
-                if n > 0:
-                    for k in range(n):
-                        no.append(2*y + k)
-                elif n < 0:
-                    for k in range(-n):
-                        do.append(2*y - 1 - k)
-                ng.append(y + S(1)/2)
-                no.append(2**(2*y - 1))
-                do.append(sqrt(S.Pi))
+                        new.append(g1)
+                # /!\ updating IN PLACE
+                gammas[:] = new
 
-        # Try to reduce the number of gamma factors by applying the
-        # multiplication theorem (used when n gammas with args differing
-        # by 1/n mod 1 are encountered).
-        #
-        # run of 2 with args differing by 1/2
-        #
-        # >>> combsimp(gamma(x)*gamma(x+S.Half))
-        # 2*sqrt(2)*2**(-2*x - 1/2)*sqrt(pi)*gamma(2*x)
-        #
-        # run of 3 args differing by 1/3 (mod 1)
-        #
-        # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(2)/3))
-        # 6*3**(-3*x - 1/2)*pi*gamma(3*x)
-        # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(5)/3))
-        # 2*3**(-3*x - 1/2)*pi*(3*x + 2)*gamma(3*x)
-        #
-        def _run(coeffs):
-            # find runs in coeffs such that the difference in terms (mod 1)
-            # of t1, t2, ..., tn is 1/n
-            u = list(uniq(coeffs))
-            for i in range(len(u)):
-                dj = ([((u[j] - u[i]) % 1, j) for j in range(i + 1, len(u))])
-                for one, j in dj:
-                    if one.p == 1 and one.q != 1:
-                        n = one.q
-                        got = [i]
-                        get = list(range(1, n))
-                        for d, j in dj:
-                            m = n*d
-                            if m.is_Integer and m in get:
-                                get.remove(m)
-                                got.append(j)
-                                if not get:
-                                    break
+            # Try to reduce the number of gammas by using the duplication
+            # theorem to cancel an upper and lower: gamma(2*s)/gamma(s) =
+            # 2**(2*s + 1)/(4*sqrt(pi))*gamma(s + 1/2). Although this could
+            # be done with higher argument ratios like gamma(3*x)/gamma(x),
+            # this would not reduce the number of gammas as in this case.
+            for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
+                                    denom_others),
+                                   (denom_gammas, numer_gammas, denom_others,
+                                    numer_others)]:
+
+                while True:
+                    for x in ng:
+                        for y in dg:
+                            n = x - 2*y
+                            if n.is_Integer:
+                                break
                         else:
                             continue
-                        for i, j in enumerate(got):
-                            c = u[j]
-                            coeffs.remove(c)
-                            got[i] = c
-                        return one.q, got[0], got[1:]
-
-        def _mult_thm(gammas, numer, denom):
-            # pull off and analyze the leading coefficient from each gamma arg
-            # looking for runs in those Rationals
-
-            # expr -> coeff + resid -> rats[resid] = coeff
-            rats = {}
-            for g in gammas:
-                c, resid = g.as_coeff_Add()
-                rats.setdefault(resid, []).append(c)
-
-            # look for runs in Rationals for each resid
-            keys = sorted(rats, key=default_sort_key)
-            for resid in keys:
-                coeffs = list(sorted(rats[resid]))
-                new = []
-                while True:
-                    run = _run(coeffs)
-                    if run is None:
                         break
+                    else:
+                        break
+                    ng.remove(x)
+                    dg.remove(y)
+                    if n > 0:
+                        for k in range(n):
+                            no.append(2*y + k)
+                    elif n < 0:
+                        for k in range(-n):
+                            do.append(2*y - 1 - k)
+                    ng.append(y + S(1)/2)
+                    no.append(2**(2*y - 1))
+                    do.append(sqrt(S.Pi))
 
-                    # process the sequence that was found:
-                    # 1) convert all the gamma functions to have the right
-                    #    argument (could be off by an integer)
-                    # 2) append the factors corresponding to the theorem
-                    # 3) append the new gamma function
+            # Try to reduce the number of gamma factors by applying the
+            # multiplication theorem (used when n gammas with args differing
+            # by 1/n mod 1 are encountered).
+            #
+            # run of 2 with args differing by 1/2
+            #
+            # >>> combsimp(gamma(x)*gamma(x+S.Half))
+            # 2*sqrt(2)*2**(-2*x - 1/2)*sqrt(pi)*gamma(2*x)
+            #
+            # run of 3 args differing by 1/3 (mod 1)
+            #
+            # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(2)/3))
+            # 6*3**(-3*x - 1/2)*pi*gamma(3*x)
+            # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(5)/3))
+            # 2*3**(-3*x - 1/2)*pi*(3*x + 2)*gamma(3*x)
+            #
+            def _run(coeffs):
+                # find runs in coeffs such that the difference in terms (mod 1)
+                # of t1, t2, ..., tn is 1/n
+                u = list(uniq(coeffs))
+                for i in range(len(u)):
+                    dj = ([((u[j] - u[i]) % 1, j) for j in range(i + 1, len(u))])
+                    for one, j in dj:
+                        if one.p == 1 and one.q != 1:
+                            n = one.q
+                            got = [i]
+                            get = list(range(1, n))
+                            for d, j in dj:
+                                m = n*d
+                                if m.is_Integer and m in get:
+                                    get.remove(m)
+                                    got.append(j)
+                                    if not get:
+                                        break
+                            else:
+                                continue
+                            for i, j in enumerate(got):
+                                c = u[j]
+                                coeffs.remove(c)
+                                got[i] = c
+                            return one.q, got[0], got[1:]
 
-                    n, ui, other = run
+            def _mult_thm(gammas, numer, denom):
+                # pull off and analyze the leading coefficient from each gamma arg
+                # looking for runs in those Rationals
 
-                    # (1)
-                    for u in other:
-                        con = resid + u - 1
-                        for k in range(int(u - ui)):
-                            numer.append(con - k)
+                # expr -> coeff + resid -> rats[resid] = coeff
+                rats = {}
+                for g in gammas:
+                    c, resid = g.as_coeff_Add()
+                    rats.setdefault(resid, []).append(c)
 
-                    con = n*(resid + ui)  # for (2) and (3)
+                # look for runs in Rationals for each resid
+                keys = sorted(rats, key=default_sort_key)
+                for resid in keys:
+                    coeffs = list(sorted(rats[resid]))
+                    new = []
+                    while True:
+                        run = _run(coeffs)
+                        if run is None:
+                            break
 
-                    # (2)
-                    numer.append((2*S.Pi)**(S(n - 1)/2)*
-                                 n**(S(1)/2 - con))
-                    # (3)
-                    new.append(con)
+                        # process the sequence that was found:
+                        # 1) convert all the gamma functions to have the right
+                        #    argument (could be off by an integer)
+                        # 2) append the factors corresponding to the theorem
+                        # 3) append the new gamma function
 
-                # restore resid to coeffs
-                rats[resid] = [resid + c for c in coeffs] + new
+                        n, ui, other = run
 
-            # rebuild the gamma arguments
-            g = []
-            for resid in keys:
-                g += rats[resid]
-            # /!\ updating IN PLACE
-            gammas[:] = g
+                        # (1)
+                        for u in other:
+                            con = resid + u - 1
+                            for k in range(int(u - ui)):
+                                numer.append(con - k)
 
-        for l, numer, denom in [(numer_gammas, numer_others, denom_others),
-                                (denom_gammas, denom_others, numer_others)]:
-            _mult_thm(l, numer, denom)
+                        con = n*(resid + ui)  # for (2) and (3)
+
+                        # (2)
+                        numer.append((2*S.Pi)**(S(n - 1)/2)*
+                                     n**(S(1)/2 - con))
+                        # (3)
+                        new.append(con)
+
+                    # restore resid to coeffs
+                    rats[resid] = [resid + c for c in coeffs] + new
+
+                # rebuild the gamma arguments
+                g = []
+                for resid in keys:
+                    g += rats[resid]
+                # /!\ updating IN PLACE
+                gammas[:] = g
+
+            for l, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                    (denom_gammas, denom_others, numer_others)]:
+                _mult_thm(l, numer, denom)
 
         # =========== level >= 2 work: factor absorbtion =========
 
@@ -466,11 +469,70 @@ def combsimp(expr):
     if expr != was:
         expr = factor(expr)
 
+    expr = expr.replace(gamma,
+        lambda n: expand_func(gamma(n)) if n.is_Rational else gamma(n))
+
     if not as_gamma:
-        if as_factorial:
-            expr = expr.rewrite(factorial)
-        elif as_binomial:
-            expr = expr.rewrite(binomial)
+        expr = expr.rewrite(factorial)
+
+        if as_binomial:
+            from .simplify import bottom_up
+
+            def f(rv):
+                n, d = rv.as_numer_denom()
+
+                n_args = []
+                n_fact_args = []
+                if isinstance(n, (Mul, Pow, factorial)):
+                    for factor, exp in n.as_powers_dict().items():
+                        try:
+                            n_args.extend([factor]*exp)
+                            if isinstance(factor, factorial):
+                                n_fact_args.extend([factor.args[0]]*exp)
+                        except TypeError:
+                            n_args.append(factor**exp)
+                if not n_args or not n_fact_args:
+                    return rv
+
+                d_args = []
+                if isinstance(d, (Mul, Pow, factorial)):
+                    for factor, exp in d.as_powers_dict().items():
+                        try:
+                            d_args.extend([factor]*exp)
+                        except TypeError:
+                            n_args.append(factor**exp)
+                else:
+                    return rv
+
+                hit = False
+                for i in range(len(d_args)):
+                    ai = d_args[i]
+                    if not isinstance(ai, factorial):
+                        continue
+
+                    for j in range(i + 1, len(d_args)):
+                        aj = d_args[j]
+                        if not isinstance(aj, factorial):
+                            continue
+
+                        sum = ai.args[0] + aj.args[0]
+                        if sum in n_fact_args:
+                            n_args.remove(factorial(sum))
+                            n_fact_args.remove(sum)
+                            n_args.append(binomial(sum, ai.args[0] if count_ops(ai.args[0]) < count_ops(aj.args[0]) else aj.args[0]))
+
+                            d_args[i] = None
+                            d_args[j] = None
+                            hit = True
+                            break
+
+                if hit:
+                    n = Mul(*[_arg for _arg in n_args if _arg])
+                    d = Mul(*[_arg for _arg in d_args if _arg])
+                    return n/d
+                return rv
+
+            expr = bottom_up(expr, f)
 
     return expr
 
