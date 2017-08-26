@@ -3,6 +3,9 @@
 import os
 import sys
 
+# DO NOT IMPORT SYMPY HERE! Or the setting of the sympy environment variables
+# by the command line will break.
+
 # hook in-tree SymPy into Python path, if possible
 
 isympy_path = os.path.abspath(__file__)

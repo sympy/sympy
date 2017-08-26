@@ -174,6 +174,8 @@ See also isympy --help.
 import os
 import sys
 
+# DO NOT IMPORT SYMPY HERE! Or the setting of the sympy environment variables
+# by the command line will break.
 
 def main():
     from optparse import OptionParser
