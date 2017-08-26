@@ -104,6 +104,10 @@ def test_powsimp():
     # issue 10095
     assert powsimp((1/(2*E))**oo) == (exp(-1)/2)**oo
 
+    # PR 13131
+    eq = sin(2*x)**2*sin(2.0*x)**2
+    assert powsimp(eq) == eq
+
 
 def test_powsimp_negated_base():
     assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
