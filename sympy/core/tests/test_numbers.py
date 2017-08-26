@@ -8,6 +8,7 @@ from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
+from sympy.core.mod import Mod
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
@@ -124,9 +125,16 @@ def test_mod():
     h = Symbol('h')
     m = h ** 2 % h
     k = h ** -2 % h
+    l = Symbol('l', integer=True)
+    p = Symbol('p', integer=True, positive=True)
+    q = Symbol('q', integer=True, negative=True)
 
     assert m == h * (h % 1)
-    assert k != 0
+    assert k == Mod(h ** -2, h, evaluate=False)
+    assert Mod(l ** p, l) == 0
+    assert Mod(l ** 2, l) == 0
+    assert (l ** q % l) == Mod(l ** q, l, evaluate=False)
+    assert (l ** -2 % l) == Mod(l ** -2, l, evaluate=False)
 
 
 def test_divmod():
