@@ -280,16 +280,9 @@ class MpmathPrinter(PythonCodePrinter):
     printmethod = "_mpmathcode"
 
     _kf = dict(chain(
-        PythonCodePrinter._kf.items(),
+        _known_functions.items(),
         [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
     ))
-
-    def doprint(self, expr, **kwargs):
-        from sympy.functions import log
-        from sympy.codegen.cfunctions import log2, log1p
-        expr = expr.replace(log2, lambda arg: arg.rewrite(log))
-        expr = expr.replace(log1p, lambda arg: arg.rewrite(log))
-        return super(MpmathPrinter, self).doprint(expr, **kwargs)
 
     def _print_Integer(self, e, *args, **kwargs):
         return '%s(%d)' % (self._module_format('mpmath.mpf'), e)
@@ -316,6 +309,14 @@ class MpmathPrinter(PythonCodePrinter):
             self._module_format('mpmath.gammainc'),
             self._print(e.args[0], *args, **kwargs),
             self._print(e.args[1], *args, **kwargs))
+
+    def _print_log2(self, e):
+        return '{0}({1})/{0}(2)'.format(
+            self._module_format('mpmath.log'), self._print(e.args[0]))
+
+    def _print_log1p(self, e):
+        return '{0}({1}+1)'.format(
+            self._module_format('mpmath.log'), self._print(e.args[0]))
 
 for k in MpmathPrinter._kf:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)

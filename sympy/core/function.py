@@ -437,13 +437,12 @@ class Function(Application, Expr):
 
         evaluate = options.get('evaluate', global_evaluate[0])
         result = super(Function, cls).__new__(cls, *args, **options)
-        if not evaluate or not isinstance(result, cls):
-            return result
+        if evaluate and isinstance(result, cls) and result.args:
+            pr2 = min(cls._should_evalf(a) for a in result.args)
+            if pr2 > 0:
+                pr = max(cls._should_evalf(a) for a in result.args)
+                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
 
-        pr = max(cls._should_evalf(a) for a in result.args)
-        pr2 = min(cls._should_evalf(a) for a in result.args)
-        if pr2 > 0:
-            return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
     @classmethod

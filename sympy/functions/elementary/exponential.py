@@ -615,8 +615,8 @@ class log(Function):
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow or isinstance(arg, exp):
-            if force or (arg.exp.is_real and arg.base.is_positive) or \
-                    arg.base.is_polar:
+            if force or (arg.exp.is_real and (arg.base.is_positive or ((arg.exp+1)
+                .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
                 a = self.func(b)

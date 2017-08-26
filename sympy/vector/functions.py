@@ -48,7 +48,7 @@ def express(expr, system, system2=None, variables=False):
     >>> express(B.i, N)
     (cos(q))*N.i + (sin(q))*N.j
     >>> express(N.x, B, variables=True)
-    -sin(q)*B.y + cos(q)*B.x
+    B.x*cos(q) - B.y*sin(q)
     >>> d = N.i.outer(N.i)
     >>> express(d, B, N) == (cos(q))*(B.i|N.i) + (-sin(q))*(B.j|N.i)
     True
@@ -155,11 +155,15 @@ def directional_derivative(field, direction_vector):
     """
     from sympy.vector.operators import _get_coord_sys_from_expr
     coord_sys = _get_coord_sys_from_expr(field)
-    if coord_sys is not None:
+    if len(coord_sys) > 0:
+        # TODO: This gets a random coordinate system in case of multiple ones:
+        coord_sys = next(iter(coord_sys))
         field = express(field, coord_sys, variables=True)
-        out = Vector.dot(direction_vector, coord_sys._i) * diff(field, coord_sys._x)
-        out += Vector.dot(direction_vector, coord_sys._j) * diff(field, coord_sys._y)
-        out += Vector.dot(direction_vector, coord_sys._k) * diff(field, coord_sys._z)
+        i, j, k = coord_sys.base_vectors()
+        x, y, z = coord_sys.base_scalars()
+        out = Vector.dot(direction_vector, i) * diff(field, x)
+        out += Vector.dot(direction_vector, j) * diff(field, y)
+        out += Vector.dot(direction_vector, k) * diff(field, z)
         if out == 0 and isinstance(field, Vector):
             out = Vector.zero
         return out

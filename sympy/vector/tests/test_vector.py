@@ -17,7 +17,9 @@ def test_cross():
     v2 = C.x * i + C.y * j + C.z * k
     assert Cross(v1, v2) == Cross(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
     assert Cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
-    assert cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert cross(v1, v2) == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert Cross(v1, v2) == -Cross(v2, v1)
+    assert Cross(v1, v2) + Cross(v2, v1) == Vector.zero
 
 
 def test_dot():
@@ -26,6 +28,7 @@ def test_dot():
     assert Dot(v1, v2) == Dot(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
     assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
     assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v1, v2) == Dot(v2, v1)
 
 
 def test_vector_sympy():

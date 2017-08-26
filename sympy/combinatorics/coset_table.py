@@ -50,7 +50,7 @@ class CosetTable(DefaultPrinting):
     coset_table_max_limit = 4096000
     # maximum size of deduction stack above or equal to
     # which it is emptied
-    max_stack_size = 500
+    max_stack_size = 100
 
     def __init__(self, fp_grp, subgroup, max_cosets=None):
         if not max_cosets:
@@ -117,10 +117,10 @@ class CosetTable(DefaultPrinting):
         `\alpha \in \Omega` and `x \in A`.
 
         """
-        return not any([None in self.table[coset] for coset in self.omega])
+        return not any(None in self.table[coset] for coset in self.omega)
 
     # Pg. 153 [1]
-    def define(self, alpha, x, max_cosets=coset_table_max_limit):
+    def define(self, alpha, x):
         r"""
         This routine is used in the relator-based strategy of Todd-Coxeter
         algorithm if some `\alpha^x` is undefined. We check whether there is
@@ -140,7 +140,7 @@ class CosetTable(DefaultPrinting):
         A = self.A
         table = self.table
         len_table = len(table)
-        if len_table == self.coset_table_max_limit:
+        if len_table >= self.coset_table_max_limit:
             # abort the further generation of cosets
             raise ValueError("the coset enumeration has defined more than "
                     "%s cosets. Try with a greater value max number of cosets "
@@ -152,7 +152,7 @@ class CosetTable(DefaultPrinting):
         table[alpha][self.A_dict[x]] = beta
         table[beta][self.A_dict_inv[x]] = alpha
 
-    def define_c(self, alpha, x, max_cosets=coset_table_max_limit):
+    def define_c(self, alpha, x):
         r"""
         A variation of ``define`` routine, described on Pg. 165 [1], used in
         the coset table-based strategy of Todd-Coxeter algorithm. It differs
@@ -167,11 +167,11 @@ class CosetTable(DefaultPrinting):
         A = self.A
         table = self.table
         len_table = len(table)
-        if len_table == self.coset_table_max_limit:
+        if len_table >= self.coset_table_max_limit:
             # abort the further generation of cosets
             raise ValueError("the coset enumeration has defined more than "
                     "%s cosets. Try with a greater value max number of cosets "
-                    % max_cosets)
+                    % self.coset_table_max_limit)
         table.append([None]*len(A))
         # beta is the new coset generated
         beta = len_table
@@ -498,7 +498,7 @@ class CosetTable(DefaultPrinting):
                         table[nu][A_dict_inv[x]] = mu
 
     # method used in the HLT strategy
-    def scan_and_fill(self, alpha, word, max_cosets=coset_table_max_limit):
+    def scan_and_fill(self, alpha, word):
         """
         A modified version of ``scan`` routine used in the relator-based
         method of coset enumeration, described on pg. 162-163 [1], which
@@ -536,9 +536,9 @@ class CosetTable(DefaultPrinting):
                 table[f][A_dict[word[i]]] = b
                 table[b][A_dict_inv[word[i]]] = f
             else:
-                self.define(f, word[i], max_cosets=max_cosets)
+                self.define(f, word[i])
 
-    def scan_and_fill_c(self, alpha, word, max_cosets=coset_table_max_limit):
+    def scan_and_fill_c(self, alpha, word):
         """
         A modified version of ``scan`` routine, described on Pg. 165 second
         para. [1], with modification similar to that of ``scan_anf_fill`` the
@@ -579,7 +579,7 @@ class CosetTable(DefaultPrinting):
                 table[b][A_dict_inv[word[i]]] = f
                 self.deduction_stack.append((f, word[i]))
             else:
-                self.define_c(f, word[i], max_cosets=max_cosets)
+                self.define_c(f, word[i])
 
     # method used in the HLT strategy
     def look_ahead(self):
@@ -618,6 +618,7 @@ class CosetTable(DefaultPrinting):
             if len(self.deduction_stack) >= CosetTable.max_stack_size:
                 self.look_ahead()
                 del self.deduction_stack[:]
+                continue
             else:
                 alpha, x = self.deduction_stack.pop()
                 if p[alpha] == alpha:
@@ -765,12 +766,14 @@ class CosetTable(DefaultPrinting):
             R_set.difference_update(r)
         return R_c_list
 
+
 ###############################################################################
 #                           COSET ENUMERATION                                 #
 ###############################################################################
 
 # relator-based method
-def coset_enumeration_r(fp_grp, Y, max_cosets=None):
+def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
+                                                            incomplete=False):
     """
     This is easier of the two implemented methods of coset enumeration.
     and is often called the HLT method, after Hazelgrove, Leech, Trotter
@@ -778,6 +781,13 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None):
     whenever the scan is incomplete to enable the scan to complete; this way
     we fill in the gaps in the scan of the relator or subgroup generator,
     that's why the name relator-based method.
+
+    An instance of `CosetTable` for `fp_grp` can be passed as the keyword
+    argument `draft` in which case the coset enumeration will start with
+    that instance and attempt to complete it.
+
+    When `incomplete` is `True` and the function is unable to complete for
+    some reason, the partially complete table will be returned.
 
     # TODO: complete the docstring
 
@@ -915,6 +925,9 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None):
     """
     # 1. Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
+    if draft:
+        C.table = draft.table[:]
+        C.p = draft.p[:]
     R = fp_grp.relators
     A_dict = C.A_dict
     A_dict_inv = C.A_dict_inv
@@ -924,22 +937,28 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None):
     alpha = 0
     while alpha < C.n:
         if p[alpha] == alpha:
-            for w in R:
-                C.scan_and_fill(alpha, w)
-                # if α was eliminated during the scan then break
-                if p[alpha] < alpha:
-                    break
-            if p[alpha] == alpha:
-                for x in A_dict:
-                    if C.table[alpha][A_dict[x]] is None:
-                        C.define(alpha, x)
+            try:
+                for w in R:
+                    C.scan_and_fill(alpha, w)
+                    # if α was eliminated during the scan then break
+                    if p[alpha] < alpha:
+                        break
+                if p[alpha] == alpha:
+                    for x in A_dict:
+                        if C.table[alpha][A_dict[x]] is None:
+                            C.define(alpha, x)
+            except ValueError as e:
+                if incomplete:
+                    return C
+                raise e
         alpha += 1
     return C
 
 
 # Pg. 166
 # coset-table based method
-def coset_enumeration_c(fp_grp, Y, max_cosets=None):
+def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
+                                                            incomplete=False):
     """
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c
@@ -951,9 +970,16 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None):
 
     """
     # Initialize a coset table C for < X|R >
-    C = CosetTable(fp_grp, Y)
     X = fp_grp.generators
     R = fp_grp.relators
+    C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
+    if draft:
+        C.table = draft.table[:]
+        C.p = draft.p[:]
+        C.deduction_stack = draft.deduction_stack
+        for alpha, x in product(range(len(C.table)), X):
+            if not C.table[alpha][C.A_dict[x]] is None:
+                C.deduction_stack.append((alpha, x))
     A = C.A
     # replace all the elements by cyclic reductions
     R_cyc_red = [rel.identity_cyclic_reduction() for rel in R]
@@ -975,11 +1001,16 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None):
     alpha = 0
     while alpha < len(C.table):
         if C.p[alpha] == alpha:
-            for x in C.A:
-                if C.p[alpha] != alpha:
-                    break
-                if C.table[alpha][C.A_dict[x]] is None:
-                    C.define_c(alpha, x)
-                    C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
+            try:
+                for x in C.A:
+                    if C.p[alpha] != alpha:
+                        break
+                    if C.table[alpha][C.A_dict[x]] is None:
+                        C.define_c(alpha, x)
+                        C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
+            except ValueError as e:
+                if incomplete:
+                    return C
+                raise e
         alpha += 1
     return C

@@ -20,6 +20,7 @@ class StrPrinter(Printer):
     _default_settings = {
         "order": None,
         "full_prec": "auto",
+        "sympy_integers": False,
     }
 
     _relationals = dict()
@@ -555,6 +556,8 @@ class StrPrinter(Printer):
         if expr.q == 1:
             return str(expr.p)
         else:
+            if self._settings.get("sympy_integers", False):
+                return "S(%s)/%s" % (expr.p, expr.q)
             return "%s/%s" % (expr.p, expr.q)
 
     def _print_PythonRational(self, expr, *args, **kwargs):

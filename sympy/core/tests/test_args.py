@@ -1542,6 +1542,11 @@ def test_sympy__functions__elementary__hyperbolic__ReciprocalHyperbolicFunction(
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__hyperbolic__InverseHyperbolicFunction():
+    pass
+
+
 def test_sympy__functions__elementary__hyperbolic__acosh():
     from sympy.functions.elementary.hyperbolic import acosh
     assert _test_args(acosh(2))
@@ -4161,7 +4166,7 @@ def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
     from sympy.vector.coordsysrect import CoordSys3D
     C = CoordSys3D('C')
-    assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
+    assert _test_args(BaseVector(0, C, ' ', ' '))
 
 
 def test_sympy__vector__vector__VectorAdd():
@@ -4304,7 +4309,7 @@ def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
     from sympy.vector.coordsysrect import CoordSys3D
     C = CoordSys3D('C')
-    assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
+    assert _test_args(BaseScalar(0, C, ' ', ' '))
 
 
 def test_sympy__physics__wigner__Wigner3j():
