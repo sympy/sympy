@@ -382,7 +382,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, **flags):
     """
     Simplifies the given expression.
 
@@ -526,8 +526,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
                isinstance(expr.args[0], expr.inverse(argindex=1)):
                 return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure, fu=fu)
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                                measure=measure, **flags)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, **flags)
                          for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -564,8 +564,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
-    if expr.has(TrigonometricFunction) and not fu or expr.has(
-            HyperbolicFunction):
+    if expr.has(TrigonometricFunction) and not flags.get(
+            'fu', False) or expr.has(HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
     if expr.has(log):
