@@ -509,7 +509,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
     If rational=None, Floats will be recast as Rationals but the result will
     be recast as Floats. If rational=False(default) then nothing will be done
     to the Floats.
-    
+
     If recursive > 1, simplify will be called recursively until no further
     simplification is possible or recursion depth reaches the value of
     'recursive'. Note that simplify is an expensive function.
