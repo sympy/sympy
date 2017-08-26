@@ -1,22 +1,74 @@
 import os
-from sympy import Symbol
+import shutil
+from sympy import Symbol, symbols
 from sympy.codegen.ast import (
     Assignment, Print, Declaration, FunctionDefinition, Return, real,
-    FunctionCall, Variable, Element, integer
+    FunctionCall, Variable, Element, integer, value_const
 )
 from sympy.codegen.fnodes import (
-    isign, dsign, cmplx, kind, literal_dp, Program, Module, use, Subroutine,
-    dimension, assumed_extent, intent_out, size, Do, SubroutineCall, sum_
+    allocatable, ArrayConstructor, isign, dsign, cmplx, kind, literal_dp, Program, Module, use, Subroutine,
+    dimension, assumed_extent, ImpliedDoLoop, intent_out, size, Do, SubroutineCall, sum_,
+    array, sum_, size, bind_C
 )
+from sympy.codegen.futils import render_as_module
+from sympy.external import import_module
 from sympy.printing.fcode import fcode
-from sympy.utilities._compilation import compile_run_strings, has_fortran
+from sympy.utilities._compilation import has_fortran, compile_run_strings, compile_link_import_strings
 from sympy.utilities.pytest import skip
+
+cython = import_module('cython')
+np = import_module('numpy')
 
 
 def test_size():
     x = Symbol('x', real=True)
     sx = size(x)
     assert fcode(sx, source_format='free') == 'size(x)'
+
+
+def test_size_assumed_shape():
+    if not has_fortran():
+        skip("No fortran compiler found.")
+    a = Symbol('a', real=True)
+    body = [Return((sum_(a**2)/size(a))**.5)]
+    arr = array(a, dim=[':'], intent='in')
+    fd = FunctionDefinition(real, 'rms', [arr], body)
+    f_mod = render_as_module([fd], 'mod_rms')
+
+    (stdout, stderr), info = compile_run_strings([
+        ('rms.f90', render_as_module([fd], 'mod_rms')),
+        ('main.f90', (
+            'program myprog\n'
+            'use mod_rms, only: rms\n'
+            'real*8, dimension(4), parameter :: x = [4, 2, 2, 2]\n'
+            'print *, dsqrt(7d0) - rms(x)\n'
+            'end program\n'
+        ))
+    ], clean=True)
+    assert '0.00000' in stdout
+    assert stderr == ''
+    assert info['exit_status'] == os.EX_OK
+
+
+def test_ImpliedDoLoop():
+    if not has_fortran():
+        skip("No fortran compiler found.")
+
+    a, i = symbols('a i', integer=True)
+    idl = ImpliedDoLoop(i**3, i, -3, 3, 2)
+    ac = ArrayConstructor([-28, idl, 28])
+    a = array(a, dim=[':'], attrs=[allocatable])
+    prog = Program('idlprog', [
+        a.as_Declaration(),
+        Assignment(a, ac),
+        Print([a])
+    ])
+    fsrc = fcode(prog, standard=2003, source_format='free')
+    (stdout, stderr), info = compile_run_strings([('main.f90', fsrc)], clean=True)
+    for numstr in '-28 -27 -1 1 27 28'.split():
+        assert numstr in stdout
+    assert stderr == ''
+    assert info['exit_status'] == os.EX_OK
 
 
 def test_Program():
@@ -121,3 +173,31 @@ def test_kind():
 
 def test_literal_dp():
     assert fcode(literal_dp(0), source_format='free') == '0d0'
+
+def test_bind_C():
+    if not has_fortran():
+        skip("No fortran compiler found.")
+    if not cython:
+        skip("Cython not found.")
+    if not np:
+        skip("NumPy not found.")
+
+    a = Symbol('a', real=True)
+    s = Symbol('s', integer=True)
+    body = [Return((sum_(a**2)/s)**.5)]
+    arr = array(a, dim=[s], intent='in')
+    fd = FunctionDefinition(real, 'rms', [arr, s], body, attrs=[bind_C('rms')])
+    f_mod = render_as_module([fd], 'mod_rms')
+    try:
+        mod, info = compile_link_import_strings([
+            ('rms.f90', f_mod),
+            ('_rms.pyx', (
+                "cdef extern double rms(double*, int*)\n"
+                "def py_rms(double[::1] x):\n"
+                "    cdef int s = x.size\n"
+                "    return rms(&x[0], &s)\n"))
+        ])
+        assert abs(mod.py_rms(np.array([2., 4., 2., 2.])) - 7**0.5) < 1e-14
+    finally:
+        if info['build_dir']:
+            shutil.rmtree(info['build_dir'])

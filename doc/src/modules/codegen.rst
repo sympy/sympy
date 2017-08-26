@@ -576,6 +576,12 @@ C specific AST nodes (sympy.codegen.cnodes)
 .. automodule:: sympy.codegen.cnodes
     :members:
 
+C++ specific AST nodes (sympy.codegen.cxxnodes)
+-------------------------------------------
+
+.. automodule:: sympy.codegen.cxxnodes
+    :members:
+
 Fortran specific AST nodes (sympy.codegen.fnodes)
 -------------------------------------------------
 
@@ -587,4 +593,17 @@ Algorithms (sympy.codegen.algorithms)
 -------------------------------------
 
 .. automodule:: sympy.codegen.algorithms
+    :members:
+
+
+Python utilities (sympy.codegen.pyutils)
+----------------------------------------
+
+.. automodule:: sympy.codegen.pyutils
+    :members:
+
+Fortran utilities (sympy.codegen.futils)
+----------------------------------------
+
+.. automodule:: sympy.codegen.futils
     :members:

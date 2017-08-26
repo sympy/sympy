@@ -285,6 +285,9 @@ class CodePrinter(StrPrinter):
     def _print_String(self, string, *args, **kwargs):
         return str(string)
 
+    def _print_QuotedString(self, arg, *args, **kwargs):
+        return '"%s"' % arg.text
+
     def _print_Assignment(self, expr, *args, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol

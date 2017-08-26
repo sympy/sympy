@@ -2,8 +2,11 @@ from itertools import chain
 from sympy.core.symbol import Dummy
 from sympy.printing.pycode import PythonCodePrinter
 
+""" This module collects utilities for rendering Python code. """
+
 
 def render_as_module(content):
+    """ Renders python code as a module (with the required imports) """
     printer = PythonCodePrinter()
     pystr = printer.doprint(content)
     if printer._settings['fully_qualified_modules']:

@@ -46,7 +46,7 @@ def test_fcode_Pow():
     assert fcode(x**0.5) == '      sqrt(x)'
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
-    assert fcode(x**-1.0) == '      1.0/x'
+    assert fcode(x**-1.0) == '      1d0/x'
     assert fcode(x**-2.0, 'y', source_format='free') == 'y = x**(-2.0d0)'  # 2823
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 

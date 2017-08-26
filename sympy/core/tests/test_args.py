@@ -184,6 +184,10 @@ def test_sympy__codegen__ast__String():
     from sympy.codegen.ast import String
     assert _test_args(String('foobar'))
 
+def test_sympy__codegen__ast__QuotedString():
+    from sympy.codegen.ast import QuotedString
+    assert _test_args(QuotedString('foobar'))
+
 
 def test_sympy__codegen__ast__Node():
     from sympy.codegen.ast import Node
@@ -410,17 +414,33 @@ def test_sympy__codegen__fnodes__use_rename():
     from sympy.codegen.fnodes import use_rename
     assert _test_args(use_rename('loc', 'glob'))
 
+
 def test_sympy__codegen__fnodes__use():
     from sympy.codegen.fnodes import use
     assert _test_args(use('modfoo', only='bar'))
+
 
 def test_sympy__codegen__fnodes__SubroutineCall():
     from sympy.codegen.fnodes import SubroutineCall
     assert _test_args(SubroutineCall('foo', ['bar', 'baz']))
 
+
 def test_sympy__codegen__fnodes__Do():
     from sympy.codegen.fnodes import Do
     assert _test_args(Do([], 'i', 1, 42))
+
+
+def test_sympy__codegen__fnodes__ImpliedDoLoop():
+    from sympy.codegen.fnodes import ImpliedDoLoop
+    assert _test_args(ImpliedDoLoop('i', 'i', 1, 42))
+
+
+def test_sympy__codegen__fnodes__ArrayConstructor():
+    from sympy.codegen.fnodes import ArrayConstructor
+    assert _test_args(ArrayConstructor([1, 2, 3]))
+    from sympy.codegen.fnodes import ImpliedDoLoop
+    idl = ImpliedDoLoop('i', 'i', 1, 42)
+    assert _test_args(ArrayConstructor([1, idl, 3]))
 
 
 def test_sympy__codegen__fnodes__sum_():

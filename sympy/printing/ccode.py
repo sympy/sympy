@@ -539,14 +539,17 @@ class C89CodePrinter(CodePrinter):
 
     @requires(headers={'stdio.h'})
     def _print_Print(self, expr, *args, **kwargs):
-        return 'printf("%s", %s)' % (expr.format_string, ', '.join(map(
-            lambda arg: self._print(arg, *args, **kwargs), expr.print_args)))
+        return 'printf({fmt}, {pargs})'.format(
+            fmt=self._print(expr.format_string, *args, **kwargs),
+            pargs= ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), expr.print_args))
+        )
 
     def _print_FunctionPrototype(self, expr, *args, **kwargs):
+        pars = ', '.join(map(lambda arg: self._print(Declaration(arg), *args, **kwargs),
+                             expr.parameters))
         return "%s %s(%s)" % (
             tuple(map(lambda arg: self._print(arg, *args, **kwargs),
-                      (expr.return_type, expr.name))) +
-            (', '.join(map(lambda arg: self._print(Declaration(arg), *args, statement=False, **kwargs), expr.parameters)),)
+                      (expr.return_type, expr.name))) + (pars,)
         )
 
     def _print_FunctionDefinition(self, expr, *args, **kwargs):
@@ -561,7 +564,7 @@ class C89CodePrinter(CodePrinter):
         return '(%s)' % ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), expr.args))
 
     def _print_Label(self, expr, *args, **kwargs):
-        return '%s: ' % str(expr)
+        return '%s:' % str(expr)
 
     def _print_goto(self, expr, *args, **kwargs):
         return 'goto %s' % expr.label
@@ -587,6 +590,12 @@ class C89CodePrinter(CodePrinter):
             keyword=expr.__class__.__name__, name=expr.name, lines=';\n'.join(
                 [self._print(decl, *args, **kwargs) for decl in expr.declarations] + [''])
         )
+
+    def _print_BreakToken(self, _, *args, **kwargs):
+        return 'break'
+
+    def _print_ContinueToken(self, _, *args, **kwargs):
+        return 'continue'
 
     _print_union = _print_struct
 

@@ -13,48 +13,82 @@ restrict = Attribute('restrict')  # guarantees no pointer aliasing
 volatile = Attribute('volatile')
 static = Attribute('static')
 
-break_ = Statement(String('break'))
-continue_ = Statement(String('continue'))
-
 
 def alignof(arg):
+    """ Generate of FunctionCall instance for calling 'alignof' """
     return FunctionCall('alignof', [String(arg) if isinstance(arg, string_types) else arg])
 
 
 def sizeof(arg):
+    """ Generate of FunctionCall instance for calling 'sizeof'
+
+    Examples
+    --------
+    >>> from sympy.codegen.ast import real
+    >>> from sympy.codegen.cnodes import sizeof
+    >>> from sympy.printing.ccode import ccode
+    >>> ccode(sizeof(real))
+    'sizeof(double)'
+    """
     return FunctionCall('sizeof', [String(arg) if isinstance(arg, string_types) else arg])
 
 
 class CommaOperator(Basic):
+    """ Represents the comma operator in C """
     def __new__(cls, *args):
         return Basic.__new__(cls, *[sympify(arg) for arg in args])
 
 
 class Label(String):
-    """ Label for use with e.g. goto statement. """
+    """ Label for use with e.g. goto statement.
+
+    Examples
+    --------
+    >>> from sympy.codegen.cnodes import Label
+    >>> from sympy.printing.ccode import ccode
+    >>> print(ccode(Label('foo')))
+    foo:
+
+    """
 
 class goto(Token):
+    """ Represents goto in C """
     __slots__ = ['label']
     _construct_label = Label
 
 
 class PreDecrement(Basic):
+    """ Represents the pre-decrement oparator
+
+    Examples
+    --------
+    >>> from sympy.abc import x
+    >>> from sympy.codegen.cnodes import PreDecrement
+    >>> from sympy.printing.ccode import ccode
+    >>> ccode(PreDecrement(x))
+    '--(x)'
+
+    """
     nargs = 1
 
 
 class PostDecrement(Basic):
+    """ Represents the post-decrement oparator """
     nargs = 1
 
 
 class PreIncrement(Basic):
+    """ Represents the pre-increment oparator """
     nargs = 1
 
 
 class PostIncrement(Basic):
+    """ Represents the post-increment oparator """
     nargs = 1
 
 
 class struct(Node):
+    """ Represents a struct in C """
     __slots__ = ['name', 'declarations']
     defaults = {'name': none}
     _construct_name = String
@@ -65,4 +99,4 @@ class struct(Node):
 
 
 class union(struct):
-    pass
+    """ Represents a union in C """

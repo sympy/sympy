@@ -34,7 +34,6 @@ AST Type Tree
        |        |                        |--->FloatType
        |        |                        |--->ComplexBaseType
        |        |                                           |--->ComplexType
-       |        |--->NoneToken
        |        |--->Node
        |        |       |--->Variable
        |        |       |           |---> Pointer
@@ -46,6 +45,9 @@ AST Type Tree
        |        |--->Stream
        |        |--->Print
        |        |--->FunctionCall
+       |        |--->BreakToken
+       |        |--->ContinueToken
+       |        |--->NoneToken
        |
        |--->Return
 
@@ -123,6 +125,7 @@ from itertools import chain
 
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.compatibility import string_types
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
@@ -238,6 +241,39 @@ class Token(Basic):
     def kwargs(self, exclude=(), apply=lambda arg: arg):
         return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
 
+
+class BreakToken(Token):
+    """ Represents 'break' in C/Python ('exit' in Fortran)
+
+    Use the premade instance ``break_`` or instantiate manually.
+
+    Examples
+    >>> from sympy.printing import ccode, fcode
+    >>> from sympy.codegen.ast import break_
+    >>> ccode(break_)
+    'break'
+    >>> fcode(break_, source_format='free')
+    'exit'
+    """
+
+break_ = BreakToken()
+
+
+class ContinueToken(Token):
+    """ Represents 'continue' in C/Python ('cycle' in Fortran)
+
+    Use the premade instance ``continue_`` or instantiate manually.
+
+    Examples
+    >>> from sympy.printing import ccode, fcode
+    >>> from sympy.codegen.ast import continue_
+    >>> ccode(continue_)
+    'continue'
+    >>> fcode(continue_, source_format='free')
+    'cycle'
+    """
+
+continue_ = ContinueToken()
 
 class NoneToken(Token):
     """ The AST equivalence of Python's NoneType
@@ -680,6 +716,9 @@ class String(Token):
     def _sympystr(self, printer, *args, **kwargs):
         return self.text
 
+
+class QuotedString(String):
+    """ Represents a string which should be printed with quotes. """
 
 
 class Node(Token):
@@ -1378,11 +1417,11 @@ class Stream(Token):
     --------
     >>> from sympy import Symbol
     >>> from sympy.printing.pycode import pycode
-    >>> from sympy.codegen.ast import Print, stderr, String
+    >>> from sympy.codegen.ast import Print, stderr, QuotedString
     >>> print(pycode(Print(['x'], file=stderr)))
     print(x, file=sys.stderr)
     >>> x = Symbol('x')
-    >>> print(pycode(Print([String('x')], file=stderr)))  # print literally "x"
+    >>> print(pycode(Print([QuotedString('x')], file=stderr)))  # print literally "x"
     print("x", file=sys.stderr)
 
     """
@@ -1413,9 +1452,9 @@ class Print(Token):
     __slots__ = ['print_args', 'format_string', 'file']
     defaults = {'format_string': none, 'file': none}
 
-    _construct_format_string = String
+    _construct_print_args = staticmethod(_mk_Tuple)
+    _construct_format_string = QuotedString
     _construct_file = Stream
-    _construct_print_args = staticmethod(lambda args: Tuple(*args))
 
 
 class FunctionPrototype(Node):
@@ -1521,7 +1560,7 @@ class Return(Basic):
     """ Represents a return command in the code. """
 
 
-class FunctionCall(Token):
+class FunctionCall(Token, Expr):
     """ Represents a call to a function in the code.
 
     Parameters

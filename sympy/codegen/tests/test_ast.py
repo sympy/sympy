@@ -12,7 +12,7 @@ from sympy.codegen.ast import (
     DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
     integer, real, complex_, int8, uint8, float16 as f16, float32 as f32,
     float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128,
-    While, Scope, String, Print, FunctionPrototype, FunctionDefinition, Return,
+    While, Scope, String, Print, QuotedString, FunctionPrototype, FunctionDefinition, Return,
     FunctionCall, untyped, IntBaseType, intc, Node, none, NoneToken, Token
 )
 
@@ -486,7 +486,7 @@ def test_Print():
     ps = Print([n, x], fmt)
     assert str(ps.format_string) == fmt
     assert ps.print_args == Tuple(n, x)
-    assert ps.args == (Tuple(n, x), String(fmt), none)
+    assert ps.args == (Tuple(n, x), QuotedString(fmt), none)
     assert ps == Print((n, x), fmt)
     assert ps != Print([x, n], fmt)
     assert ps.func(*ps.args) == ps

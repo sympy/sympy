@@ -30,7 +30,7 @@ def test_goto_Label():
 
     l = Label(s)
     assert l.is_Atom
-    assert ccode(l) == 'early_exit: '
+    assert ccode(l) == 'early_exit:'
     assert g.label == l
     assert l == Label(s)
     assert l != Label('foobar')

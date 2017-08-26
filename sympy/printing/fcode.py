@@ -30,9 +30,13 @@ from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.codegen.ast import (
     Assignment, Attribute, Declaration, Pointer, Type, value_const,
-    float32, float64, float80, complex64, complex128, int8, int16, int32, int64, intc, real, integer,  bool_, complex_
+    float32, float64, float80, complex64, complex128, int8, int16, int32,
+    int64, intc, real, integer,  bool_, complex_
 )
-from sympy.codegen.fnodes import isign, dsign, cmplx, merge, literal_dp, elemental, pure, intent_in, intent_out, intent_inout
+from sympy.codegen.fnodes import (
+    allocatable, isign, dsign, cmplx, merge, literal_dp, elemental, pure,
+    intent_in, intent_out, intent_inout
+)
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -296,7 +300,10 @@ class FCodePrinter(CodePrinter):
     def _print_Pow(self, expr, *args, **kwargs):
         PREC = precedence(expr)
         if expr.exp == -1:
-            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
+            return '%s/%s' % (
+                self._print(literal_dp(1), *args, **kwargs),
+                self.parenthesize(expr.base, PREC)
+            )
         elif expr.exp == 0.5:
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument
@@ -346,13 +353,26 @@ class FCodePrinter(CodePrinter):
         return self._print_sum_(prod, *args, **kwargs)
 
     def _print_Do(self, do, *args, **kwargs):
+        excl = ['concurrent']
+        if do.step == 1:
+            excl.append('step')
+            step = ''
+        else:
+            step = ', {step}'
+
         return (
-            'do {concurrent}{counter} = {first}, {last}, {step}\n'
+            'do {concurrent}{counter} = {first}, {last}'+step+'\n'
             '{body}\n'
             'end do\n'
         ).format(
             concurrent='concurrent ' if do.concurrent else '',
-            **do.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs), exclude=('concurrent',))
+            **do.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs), exclude=excl)
+        )
+
+    def _print_ImpliedDoLoop(self, idl, *args, **kwargs):
+        step = '' if idl.step == 1 else ', {step}'
+        return ('({expr}, {counter} = {first}, {last}'+step+')').format(
+            **idl.kwargs(apply=lambda arg: self._print(arg, *args, **kwargs))
         )
 
     def _print_For(self, expr, *args, **kwargs):
@@ -408,11 +428,12 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, Pointer):
             raise NotImplementedError("Pointers are not available by default in Fortran.")
         if self._settings["standard"] >= 90:
-            result = '{t}{vc}{dim}{intent} :: {s}'.format(
+            result = '{t}{vc}{dim}{intent}{alloc} :: {s}'.format(
                 t=self._print(var.type, *args, **kwargs),
                 vc=', parameter' if value_const in var.attrs else '',
                 dim=', dimension(%s)' % ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), dim)) if dim else '',
                 intent=intent,
+                alloc=', allocatable' if allocatable in var.attrs else '',
                 s=self._print(var.symbol, *args, **kwargs)
             )
             if val != None:
@@ -426,7 +447,7 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Infinity(self, expr, *args, **kwargs):
-        return '(huge(%s) + 1)' % literal_dp(0)
+        return '(huge(%s) + 1)' % self._print(literal_dp(0), *args, **kwargs)
 
     def _print_While(self, expr, *args, **kwargs):
         return 'do while ({condition})\n{body}\nend do'.format(**expr.kwargs(
@@ -570,7 +591,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_GoTo(self, goto, *args, **kwargs):
         if goto.expr:  # computed goto
-            return "go to (${labels}), ${expr}".format(
+            return "go to ({labels}), {expr}".format(
                 labels=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), goto.labels)),
                 expr=self._print(goto.expr, *args, **kwargs)
             )
@@ -609,7 +630,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Print(self, ps, *args, **kwargs):
         if ps.format_string != None:
-            fmt = "'{0}'".format(ps.format_string)
+            fmt = self._print(ps.format_string, *args, **kwargs)
         else:
             fmt = "*"
         return "print {fmt}, {iolist}".format(fmt=fmt, iolist=', '.join(
@@ -702,6 +723,16 @@ class FCodePrinter(CodePrinter):
         if use.only != None:
             result += ', only: ' + ', '.join([self._print(nly) for nly in use.only])
         return result
+
+    def _print_BreakToken(self, _, *args, **kwargs):
+        return 'exit'
+
+    def _print_ContinueToken(self, _, *args, **kwargs):
+        return 'cycle'
+
+    def _print_ArrayConstructor(self, ac, *args, **kwargs):
+        fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
+        return fmtstr % ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), ac.elements))
 
 
 def fcode(expr, assign_to=None, **settings):
