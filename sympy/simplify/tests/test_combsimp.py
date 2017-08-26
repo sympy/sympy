@@ -1,7 +1,7 @@
 from sympy import (
     Rational, combsimp, factorial, gamma, binomial, Symbol, pi, S,
     sin, exp, powsimp, sqrt, sympify, FallingFactorial, RisingFactorial,
-    simplify, symbols, cos, rf)
+    simplify, symbols, cos, rf, Mul)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -28,7 +28,8 @@ def test_combsimp():
     assert combsimp(binomial(n + 2, k + S(1)/2)) == 4*((n + 1)*(n + 2) *
         binomial(n, k + S(1)/2))/((2*k - 2*n - 1)*(2*k - 2*n - 3))
     assert combsimp(binomial(n + 2, k + 2.0)) == \
-        -((1.0*n + 2.0)*binomial(n + 1.0, k + 2.0))/(k - n)
+        Mul(-2.0, 0.5*n + 1.0, binomial(n + 1.0, k + 2.0),
+        evaluate = False)/(k - n)
 
     # coverage tests
     assert combsimp(factorial(n*(1 + n) - n**2 - n)) == 1
