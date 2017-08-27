@@ -1,15 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function)
-from itertools import tee, chain
-try:
-    from itertools import filterfalse
-except ImportError:
-    def filterfalse(pred, iter):
-        return filter(lambda x: not pred(x), iter)
-
-from sympy import log, Add, exp, Max, Min, Wild, Pow, expand_log, Dummy
-from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
-
 """
 Classes and functions useful for rewriting expressions for optimized code
 generation. Some languages (or standards thereof), e.g. C99, offer specialized
@@ -17,23 +6,36 @@ math functions for better performance and/or precision.
 
 Using the ``optimize`` function in this module, together with a collection of
 rules (represented as instances of ``Optimization``), one can rewrite the
-expressions for this purpose.
+expressions for this purpose::
 
-Examples
---------
->>> from sympy import Symbol, exp, log
->>> from sympy.codegen.rewriting import optimize, c99_optims
->>> x = Symbol('x')
->>> optimize(3*exp(2*x) - 3, c99_optims)
-3*expm1(2*x)
->>> optimize(exp(2*x) - 3, c99_optims)
-exp(2*x) - 3
->>> optimize(log(3*x + 3), c99_optims)
-log(3) + log1p(x)
->>> optimize(log(2*x + 3), c99_optims)
-log(2*x + 3)
+    >>> from sympy import Symbol, exp, log
+    >>> from sympy.codegen.rewriting import optimize, optims_c99
+    >>> x = Symbol('x')
+    >>> optimize(3*exp(2*x) - 3, optims_c99)
+    3*expm1(2*x)
+    >>> optimize(exp(2*x) - 3, optims_c99)
+    exp(2*x) - 3
+    >>> optimize(log(3*x + 3), optims_c99)
+    log1p(x) + log(3)
+    >>> optimize(log(2*x + 3), optims_c99)
+    log(2*x + 3)
+
+The ``optims_c99`` imported above is tuple containing the following instances
+(which may be imported from ``sympy.codegen.rewriting``):
+
+- ``expm1_opt``
+- ``log1p_opt``
+- ``exp2_opt``
+- ``log2_opt``
+- ``log2const_opt``
+
 
 """
+from __future__ import (absolute_import, division, print_function)
+from itertools import tee, chain
+from sympy import log, Add, exp, Max, Min, Wild, Pow, expand_log, Dummy
+from sympy.core.compatibility import filterfalse
+from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 
 
 class Optimization(object):
@@ -43,7 +45,7 @@ class Optimization(object):
     as argument.
 
     Parameters
-    ----------
+    ==========
     cost_function : callable returning number
     priority : number
 
@@ -61,12 +63,13 @@ class ReplaceOptim(Optimization):
     :meth:`sympy.core.basic.Basic.replace`).
 
     Parameters
-    ----------
+    ==========
     query : first argument passed to replace
     value : second argument passed to replace
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol, Pow
     >>> from sympy.codegen.rewriting import ReplaceOptim
     >>> from sympy.codegen.cfunctions import exp2
@@ -91,13 +94,14 @@ def optimize(expr, optimizations):
     """ Apply optimizations to an expression.
 
     Parameters
-    ----------
+    ==========
     expr : expression
     optimizations : iterable of ``Optimization`` instances
         The optimizations will be sorted with respect to ``priority`` (highest first).
 
     Examples
-    --------
+    ========
+
     >>> from sympy import log, Symbol
     >>> from sympy.codegen.rewriting import optims_c99, optimize
     >>> x = Symbol('x')
