@@ -17,14 +17,13 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
-from sympy.functions.special.error_functions import fresnelc, fresnels
+from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
     Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo)
-from mpmath import appellf1, erfi, erfc, gammainc, polylog
-from sympy.functions.special.gamma_function import gamma
+from mpmath import appellf1, gammainc
 from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
@@ -5837,8 +5836,26 @@ def Gamma(*args):
         a, x, y = args
         return gammainc(a, x, y)
 
-def PolyLog(n, z):
-    return polylog(n, z)
+def FunctionOfTrigOfLinearQ(u, x):
+    # If u is an algebraic function of trig functions of a linear function of x, 
+    # FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
+    if FunctionOfTrig(u, None, x) and AlgebraicTrigFunctionQ(u, x) and FunctionOfLinear(FunctionOfTrig(u, None, x), x):
+        return True
+    else:
+        return False
+
+def ElementaryFunctionQ(u):
+    # ElementaryExpressionQ[u] returns True if u is a sum, product, or power and all the operands
+    # are elementary expressions; or if u is a call on a trig, hyperbolic, or inverse function
+    # and all the arguments are elementary expressions; else it returns False.
+    if AtomQ(u):
+        return True
+    elif SumQ(u) or ProductQ(u) or PowerQ(u) or TrigQ(u) or HyperbolicQ(u) or InverseFunctionQ(u):
+        for i in u.args:
+            if not ElementaryFunctionQ(i):
+                return False
+        return True
+    return False
 
 def Complex(a, b):
     return a + I*b
@@ -6307,9 +6324,6 @@ def _TrigSimplifyAux():
 def TrigSimplifyAux(expr):
     return TrigSimplifyAux_replacer.replace(UtilityOperator(expr))
 
-def Gamma(u):
-    return gamma(u)
-
 def Cancel(expr):
     return cancel(expr)
 
@@ -6326,16 +6340,7 @@ def PolyLog(n, p, z=None):
 def D(f, x):
     return f.diff(x)
 
-def FunctionOfTrigOfLinearQ(u, x):
-    return False
-
-def ElementaryFunctionQ(u):
-    return False
-
 def Dist(u):
-    return S(0)
-
-def SubstFor(w, v, u, x):
     return S(0)
 
 if matchpy:
