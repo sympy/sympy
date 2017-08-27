@@ -580,3 +580,35 @@ def annotated(letter):
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
+
+unicode_strings = {
+     'RightArrowWithStroke' :                  u"\N{RIGHTWARDS ARROW WITH STROKE}",
+     'NotSign' :                               u"\N{NOT SIGN}",
+     'LogicalAnd' :                            u"\N{LOGICAL AND}",
+     'LogicalOr' :                             u"\N{LOGICAL OR}",
+     'XOR' :                                   u"\N{XOR}",
+     'NAND' :                                  u"\N{NAND}",
+     'NOR' :                                   u"\N{NOR}",
+     'RightArrow' :                            u"\N{RIGHTWARDS ARROW}",
+     'RightArrowSpaces' :                      u"\N{RIGHTWARDS ARROW} ",
+     'IdenticalTo' :                           u"\N{IDENTICAL TO}",
+     'NotIdenticalTo' :                        u"\N{NOT IDENTICAL TO}",
+     'MultiplicationSign' :                    u"\N{MULTIPLICATION SIGN}",
+     'HorizontalEllipsis':                     u"\N{HORIZONTAL ELLIPSIS}",
+     'SmallElementOf' :                        u"\N{SMALL ELEMENT OF}",
+     'ElementOf' :                             u"\N{ELEMENT OF}",
+     'DoubleStruckItalicSmallD' :              u"\N{DOUBLE-STRUCK ITALIC SMALL D}",
+     'RightArrowFromBar' :                     u"\N{RIGHTWARDS ARROW FROM BAR}",
+     'BoxDrawingsLightDownAndHorizontal' :     u'\N{BOX DRAWINGS LIGHT DOWN AND HORIZONTAL}',
+     'SuperscriptPlusSign' :                   u'\N{SUPERSCRIPT PLUS SIGN}',
+     'SuperscriptMinus' :                      u'\N{SUPERSCRIPT MINUS}',
+     'Dagger' :                                u'\N{DAGGER}',
+     'RightParenthesisUpperHook':              u'\N{RIGHT PARENTHESIS UPPER HOOK}',
+     'SquareRoot' :                            u'\N{SQUARE ROOT}',
+     'DoubleStruckCapitalZ' :                  u'\N{DOUBLE-STRUCK CAPITAL Z}',
+     'DoubleStruckCapitalQ' :                  u'\N{DOUBLE-STRUCK CAPITAL Q}',
+     'DoubleStruckCapitalR' :                  u'\N{DOUBLE-STRUCK CAPITAL R}',
+     'DoubleStruckCapitalC' :                  u'\N{DOUBLE-STRUCK CAPITAL C}',
+     'DoubleStruckItalicSmallDSpaces' :        u'\N{DOUBLE-STRUCK ITALIC SMALL D} ',
+     'BoxDrawingsLightHorizontal&RightArrow' : u'\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{RIGHTWARDS ARROW}'
+ }
