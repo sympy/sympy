@@ -145,10 +145,10 @@ if matchpy:
 
         rubi = ManyToOneReplacer()
         rubi = integrand_simplification(rubi)
-        rubi = linear_products(rubi)
-        rubi = quadratic_products(rubi)
-        rubi = binomial_products(rubi)
-        rubi = trinomial_products(rubi)
+        #rubi = linear_products(rubi)
+        #rubi = quadratic_products(rubi)
+        #rubi = binomial_products(rubi)
+        #rubi = trinomial_products(rubi)
         #rubi = miscellaneous_algebraic(rubi)
         #rubi = exponential(rubi)
         #rubi = logarithms(rubi)
@@ -170,6 +170,12 @@ if matchpy:
 def rubi_integrate(expr, var, showsteps=False):
     '''
     Function for Rubi integeration.
+
+    Parameters
+    ==========
+    expr : intergand expression
+    var : variable of integration
+
     Returns Integral object if unable to integrate.
     '''
     if isinstance(expr, int) or isinstance(expr, float):
@@ -182,6 +188,14 @@ def rubi_integrate(expr, var, showsteps=False):
 
 @doctest_depends_on(modules=('matchpy',))
 def get_matching_rule_definition(expr, var):
+    '''
+    Returns the list or rules which match to `expr`.
+
+    Parameters
+    ==========
+    expr : intergand expression
+    var : variable of integration
+    '''
     matcher = rubi.matcher
     miter = matcher.match(Integral(expr, var))
     for fun, e in miter:
