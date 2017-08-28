@@ -135,11 +135,11 @@ def test_numbersymbol_c_code():
         "#include <math.h>\n"
         "double test() {\n"
         "   double test_result;\n"
-        "   double const Catalan = 0.915965594177219;\n"
+        "   double const Catalan = %s;\n"
         "   test_result = pow(M_PI, Catalan);\n"
         "   return test_result;\n"
         "}\n"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
@@ -570,6 +570,25 @@ def test_ccode_matrixsymbol_slice():
     )
     assert source == expected
 
+def test_ccode_cse():
+    a, b, c, d = symbols('a b c d')
+    e = MatrixSymbol('e', 3, 1)
+    name_expr = ("test", [Equality(e, Matrix([[a*b], [a*b + c*d], [a*b*c*d]]))])
+    generator = CCodeGen(cse=True)
+    result = codegen(name_expr, code_gen=generator, header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double a, double b, double c, double d, double *e) {\n'
+        '   const double x0 = a*b;\n'
+        '   const double x1 = c*d;\n'
+        '   e[0] = x0;\n'
+        '   e[1] = x0 + x1;\n'
+        '   e[2] = x0*x1;\n'
+        '}\n'
+    )
+    assert source == expected
 
 def test_empty_f_code():
     code_gen = FCodeGen()
@@ -624,11 +643,11 @@ def test_numbersymbol_f_code():
     expected = (
         "REAL*8 function test()\n"
         "implicit none\n"
-        "REAL*8, parameter :: Catalan = 0.915965594177219d0\n"
-        "REAL*8, parameter :: pi = 3.14159265358979d0\n"
+        "REAL*8, parameter :: Catalan = %sd0\n"
+        "REAL*8, parameter :: pi = %sd0\n"
         "test = pi**Catalan\n"
         "end function\n"
-    )
+    ) % (Catalan.evalf(17), pi.evalf(17))
     assert source == expected
 
 def test_erf_f_code():
@@ -751,7 +770,7 @@ def test_intrinsic_math_codegen():
         'REAL*8 function test_abs(x)\n'
         'implicit none\n'
         'REAL*8, intent(in) :: x\n'
-        'test_abs = Abs(x)\n'
+        'test_abs = abs(x)\n'
         'end function\n'
         'REAL*8 function test_acos(x)\n'
         'implicit none\n'
@@ -1441,3 +1460,49 @@ def test_global_vars():
                          global_vars=(z, t))
         source = result[0][1]
         assert source == expected
+
+def test_custom_codegen():
+    from sympy.printing.ccode import C99CodePrinter
+    from sympy.functions.elementary.exponential import exp
+
+    printer = C99CodePrinter(settings={'user_functions': {'exp': 'fastexp'}})
+
+    x, y = symbols('x y')
+    expr = exp(x + y)
+
+    # replace math.h with a different header
+    gen = C99CodeGen(printer=printer,
+                     preprocessor_statements=['#include "fastexp.h"'])
+
+    expected = (
+        '#include "expr.h"\n'
+        '#include "fastexp.h"\n'
+        'double expr(double x, double y) {\n'
+        '   double expr_result;\n'
+        '   expr_result = fastexp(x + y);\n'
+        '   return expr_result;\n'
+        '}\n'
+    )
+
+    result = codegen(('expr', expr), header=False, empty=False, code_gen=gen)
+    source = result[0][1]
+    assert source == expected
+
+    # use both math.h and an external header
+    gen = C99CodeGen(printer=printer)
+    gen.preprocessor_statements.append('#include "fastexp.h"')
+
+    expected = (
+        '#include "expr.h"\n'
+        '#include <math.h>\n'
+        '#include "fastexp.h"\n'
+        'double expr(double x, double y) {\n'
+        '   double expr_result;\n'
+        '   expr_result = fastexp(x + y);\n'
+        '   return expr_result;\n'
+        '}\n'
+    )
+
+    result = codegen(('expr', expr), header=False, empty=False, code_gen=gen)
+    source = result[0][1]
+    assert source == expected

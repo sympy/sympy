@@ -39,10 +39,10 @@ def test_jscode_constants_mathh():
 
 def test_jscode_constants_other():
     assert jscode(
-        2*GoldenRatio) == "var GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
-    assert jscode(2*Catalan) == "var Catalan = 0.915965594177219;\n2*Catalan"
+        2*GoldenRatio) == "var GoldenRatio = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
+    assert jscode(2*Catalan) == "var Catalan = %s;\n2*Catalan" % Catalan.evalf(17)
     assert jscode(
-        2*EulerGamma) == "var EulerGamma = 0.577215664901533;\n2*EulerGamma"
+        2*EulerGamma) == "var EulerGamma = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
 
 
 def test_jscode_Rational():
@@ -66,7 +66,7 @@ def test_jscode_inline_function():
     g = implemented_function('g', Lambda(x, 2*x))
     assert jscode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert jscode(g(x)) == "var Catalan = %s;\n2*x/Catalan" % Catalan.n()
+    assert jscode(g(x)) == "var Catalan = %s;\n2*x/Catalan" % Catalan.evalf(17)
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -364,3 +364,16 @@ def test_Matrix_printing():
         "M[6] = 2*q[4]/q[1];\n"
         "M[7] = Math.sqrt(q[0]) + 4;\n"
         "M[8] = 0;")
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(jscode(A[0, 0]) == "A[0]")
+    assert(jscode(3 * A[0, 0]) == "3*A[0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(jscode(F) == "((-1)*B + A)[0]")

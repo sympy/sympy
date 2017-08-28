@@ -2,12 +2,13 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin)
+                   AlgebraicNumber, simplify, sin, fibonacci, RealField)
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
-    mpf_norm, comp, mod_inverse)
+    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
+from sympy.core.mod import Mod
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
@@ -121,6 +122,20 @@ def test_mod():
     assert Integer(10) % 4 == Integer(2)
     assert 15 % Integer(4) == Integer(3)
 
+    h = Symbol('h')
+    m = h ** 2 % h
+    k = h ** -2 % h
+    l = Symbol('l', integer=True)
+    p = Symbol('p', integer=True, positive=True)
+    q = Symbol('q', integer=True, negative=True)
+
+    assert m == h * (h % 1)
+    assert k == Mod(h ** -2, h, evaluate=False)
+    assert Mod(l ** p, l) == 0
+    assert Mod(l ** 2, l) == 0
+    assert (l ** q % l) == Mod(l ** q, l, evaluate=False)
+    assert (l ** -2 % l) == Mod(l ** -2, l, evaluate=False)
+
 
 def test_divmod():
     assert divmod(S(12), S(8)) == Tuple(1, 4)
@@ -217,6 +232,24 @@ def test_igcd():
     for args in permutations((1, 2, None)):
         raises(ValueError, lambda: igcd(*args))
 
+
+def test_igcd_lehmer():
+    a, b = fibonacci(10001), fibonacci(10000)
+    # len(str(a)) == 2090
+    # small divisors, long Euclidean sequence
+    assert igcd_lehmer(a, b) == 1
+    c = fibonacci(100)
+    assert igcd_lehmer(a*c, b*c) == c
+    # big divisor
+    assert igcd_lehmer(a, 10**1000) == 1
+
+
+def test_igcd2():
+    # short loop
+    assert igcd2(2**100 - 1, 2**99 - 1) == 1
+    # Lehmer's algorithm
+    a, b = int(fibonacci(10001)), int(fibonacci(10000))
+    assert igcd2(a, b) == 1
 
 def test_ilcm():
     assert ilcm(0, 0) == 0
@@ -527,6 +560,12 @@ def test_float_mpf():
     mpmath.mp.dps = 15
 
     assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
+
+def test_Float_RealElement():
+    repi = RealField(dps=100)(pi.evalf(100))
+    # We still have to pass the precision because Float doesn't know what
+    # RealElement is, but make sure it keeps full precision from the result.
+    assert Float(repi, 100) == pi.evalf(100)
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))
@@ -1629,3 +1668,87 @@ def test_mod_inverse():
 
 def test_golden_ratio_rewrite_as_sqrt():
     assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half
+
+def test_comparisons_with_unknown_type():
+    class Foo(object):
+        """
+        Class that is unaware of Basic, and relies on both classes returning
+        the NotImplemented singleton for equivalence to evaluate to False.
+
+        """
+
+    ni, nf, nr = Integer(3), Float(1.0), Rational(1, 3)
+    foo = Foo()
+
+    for n in ni, nf, nr, oo, -oo, zoo, nan:
+        assert n != foo
+        assert foo != n
+        assert not n == foo
+        assert not foo == n
+        raises(TypeError, lambda: n < foo)
+        raises(TypeError, lambda: foo > n)
+        raises(TypeError, lambda: n > foo)
+        raises(TypeError, lambda: foo < n)
+        raises(TypeError, lambda: n <= foo)
+        raises(TypeError, lambda: foo >= n)
+        raises(TypeError, lambda: n >= foo)
+        raises(TypeError, lambda: foo <= n)
+
+    class Bar(object):
+        """
+        Class that considers itself equal to any instance of Number except
+        infinities and nans, and relies on sympy types returning the
+        NotImplemented singleton for symmetric equality relations.
+
+        """
+        def __eq__(self, other):
+            if other in (oo, -oo, zoo, nan):
+                return False
+            if isinstance(other, Number):
+                return True
+            return NotImplemented
+
+        def __ne__(self, other):
+            return not self == other
+
+    bar = Bar()
+
+    for n in ni, nf, nr:
+        assert n == bar
+        assert bar == n
+        assert not n != bar
+        assert not bar != n
+
+    for n in oo, -oo, zoo, nan:
+        assert n != bar
+        assert bar != n
+        assert not n == bar
+        assert not bar == n
+
+    for n in ni, nf, nr, oo, -oo, zoo, nan:
+        raises(TypeError, lambda: n < bar)
+        raises(TypeError, lambda: bar > n)
+        raises(TypeError, lambda: n > bar)
+        raises(TypeError, lambda: bar < n)
+        raises(TypeError, lambda: n <= bar)
+        raises(TypeError, lambda: bar >= n)
+        raises(TypeError, lambda: n >= bar)
+        raises(TypeError, lambda: bar <= n)
+
+def test_NumberSymbol_comparison():
+    rpi = Rational('905502432259640373/288230376151711744')
+    fpi = Float(float(pi))
+
+    assert (rpi == pi) == (pi == rpi)
+    assert (rpi != pi) == (pi != rpi)
+    assert (rpi < pi) == (pi > rpi)
+    assert (rpi <= pi) == (pi >= rpi)
+    assert (rpi > pi) == (pi < rpi)
+    assert (rpi >= pi) == (pi <= rpi)
+
+    assert (fpi == pi) == (pi == fpi)
+    assert (fpi != pi) == (pi != fpi)
+    assert (fpi < pi) == (pi > fpi)
+    assert (fpi <= pi) == (pi >= fpi)
+    assert (fpi > pi) == (pi < fpi)
+    assert (fpi >= pi) == (pi <= fpi)

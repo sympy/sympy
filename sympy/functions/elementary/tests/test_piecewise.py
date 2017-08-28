@@ -329,6 +329,10 @@ def test_piecewise_fold():
     assert integrate(
         piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
+    assert piecewise_fold(
+        Piecewise((1, y <= 0), (-Piecewise((2, y >= 0)), True)
+        )) == Piecewise((1, y <= 0), (-2, y >= 0))
+
 
 def test_piecewise_fold_piecewise_in_cond():
     p1 = Piecewise((cos(x), x < 0), (0, True))
@@ -338,16 +342,21 @@ def test_piecewise_fold_piecewise_in_cond():
     assert(p2.subs(x, 1) == 0.0)
     assert(p2.subs(x, -pi/4) == 1.0)
     p4 = Piecewise((0, Eq(p1, 0)), (1,True))
-    assert(piecewise_fold(p4) == Piecewise(
-        (0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))), (1, True)))
+    ans = piecewise_fold(p4)
+    for i in range(-1, 1):
+        assert ans.subs(x, i) == p4.subs(x, i)
 
     r1 = 1 < Piecewise((1, x < 1), (3, True))
-    assert(piecewise_fold(r1) == Not(x < 1))
+    ans = piecewise_fold(r1)
+    for i in range(2):
+        assert ans.subs(x, i) == r1.subs(x, i)
 
     p5 = Piecewise((1, x < 0), (3, True))
     p6 = Piecewise((1, x < 1), (3, True))
-    p7 = piecewise_fold(Piecewise((1, p5 < p6), (0, True)))
-    assert(Piecewise((1, And(Not(x < 1), x < 0)), (0, True)))
+    p7 = Piecewise((1, p5 < p6), (0, True))
+    ans = piecewise_fold(p7)
+    for i in range(-1, 2):
+        assert ans.subs(x, i) == p7.subs(x, i)
 
 
 @XFAIL
@@ -363,12 +372,8 @@ def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
     p2 = piecewise_fold(expand((1 - x)*p1))
-    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)),
-        (Piecewise((-x, Interval(0, 1, False, True).contains(x)), (0, True)), True))
-
-    p2 = expand(piecewise_fold((1 - x)*p1))
-    assert p2 == Piecewise(
-        (1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
+    assert p2 == Piecewise((1 - x, (x >= 0) & (x < 1)), (0, True))
+    assert p2 == expand(piecewise_fold((1 - x)*p1))
 
 
 def test_piecewise_duplicate():
@@ -495,3 +500,43 @@ def test_S_srepr_is_identity():
     p = Piecewise((10, Eq(x, 0)), (12, True))
     q = S(srepr(p))
     assert p == q
+
+
+def test_issue_10258():
+    assert Piecewise((0, x < 1), (1, True)).is_zero is None
+    assert Piecewise((-1, x < 1), (1, True)).is_zero is False
+    a = Symbol('a', zero=True)
+    assert Piecewise((0, x < 1), (a, True)).is_zero
+    assert Piecewise((1, x < 1), (a, x < 3)).is_zero is None
+    a = Symbol('a')
+    assert Piecewise((0, x < 1), (a, True)).is_zero is None
+    assert Piecewise((0, x < 1), (1, True)).is_nonzero is None
+    assert Piecewise((1, x < 1), (2, True)).is_nonzero
+    assert Piecewise((0, x < 1), (oo, True)).is_finite is None
+    assert Piecewise((0, x < 1), (1, True)).is_finite
+    b = Basic()
+    assert Piecewise((b, x < 1)).is_finite is None
+
+    # 10258
+    c = Piecewise((1, x < 0), (2, True)) < 3
+    assert c != True
+    assert piecewise_fold(c) == True
+
+
+def test_issue_10087():
+    a, b = Piecewise((x, x > 1), (2, True)), Piecewise((x, x > 3), (3, True))
+    m = a*b
+    f = piecewise_fold(m)
+    for i in (0, 2, 4):
+        assert m.subs(x, i) == f.subs(x, i)
+    m = a + b
+    f = piecewise_fold(m)
+    for i in (0, 2, 4):
+        assert m.subs(x, i) == f.subs(x, i)
+
+
+def test_issue_8919():
+    x, c_1, c_2, c_3, c_4 = symbols('x c_1:5')
+    f1 = Piecewise( (c_1, x < 1), (c_2, True))
+    f2 = Piecewise( (c_3, x < S(1)/3), (c_4, True))
+    assert integrate(f1*f2, (x, 0, 2)) == c_1*c_3/3 + 2*c_1*c_4/3 + c_2*c_4

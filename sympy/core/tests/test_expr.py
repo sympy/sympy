@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
+from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
                    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
                    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
                    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
@@ -1065,6 +1065,14 @@ def test_extractions():
     assert ((x + x*y)/y).could_extract_minus_sign() is False
     assert (x*(-x - x**3)).could_extract_minus_sign() is True
     assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
+
+    class sign_invariant(Function, Expr):
+        nargs = 1
+        def __neg__(self):
+            return self
+    foo = sign_invariant(x)
+    assert foo == -foo
+    assert foo.could_extract_minus_sign() is False
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.
@@ -1444,7 +1452,10 @@ def test_sort_key_atomic_expr():
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 
-def test_issue_4199():
+def test_eval_interval():
+    assert exp(x)._eval_interval(*Tuple(x, 0, 1)) == exp(1) - exp(0)
+
+    # issue 4199
     # first subs and limit gives NaN
     a = x/y
     assert a._eval_interval(x, S(0), oo)._eval_interval(y, oo, S(0)) is S.NaN
@@ -1522,6 +1533,8 @@ def test_is_constant():
     assert meter.is_constant() is True
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
+
+    assert Poly(3,x).is_constant() is True
 
 
 def test_equals():
@@ -1710,6 +1723,9 @@ def test_held_expression_UnevaluatedExpr():
     assert ue2.doit() == x**2
     assert ue2.doit(deep=False) == xx
 
+    x2 = UnevaluatedExpr(2)*2
+    assert type(x2) is Mul
+    assert x2.args == (2, UnevaluatedExpr(2))
 
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
@@ -1762,6 +1778,7 @@ def test_issue_1112():
     x = Symbol('x', positive=False)
     assert (x > 0) is S.false
 
+
 def test_issue_10161():
     x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
@@ -1772,6 +1789,13 @@ def test_issue_10755():
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
 
+
 def test_issue_11877():
     x = symbols('x')
     assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
+
+
+def test_normal():
+    x = symbols('x')
+    e = Mul(S.Half, 1 + x, evaluate=False)
+    assert e.normal() == e

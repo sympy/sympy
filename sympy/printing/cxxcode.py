@@ -3,6 +3,8 @@ from __future__ import (absolute_import, division, print_function)
 C++ code printer
 """
 from functools import wraps
+from itertools import chain
+from sympy.codegen.ast import Type
 from .ccode import C89CodePrinter, C99CodePrinter
 
 
@@ -27,7 +29,8 @@ reserved['C++11'] = reserved['C++98'][:] + [
     'alignas', 'alignof', 'char16_t', 'char32_t', 'constexpr', 'decltype',
     'noexcept', 'nullptr', 'static_assert', 'thread_local'
 ]
-reserved['C++17'] = []
+reserved['C++17'] = reserved['C++11'][:]
+reserved['C++17'].remove('register')
 # TM TS: atomic_cancel, atomic_commit, atomic_noexcept, synchronized
 # concepts TS: concept, requires
 # module TS: import, module
@@ -99,23 +102,49 @@ class CXX98CodePrinter(_CXXCodePrinterBase, C89CodePrinter):
     reserved_words = set(reserved['C++98'])
 
 
-_attach_print_methods(CXX98CodePrinter, _math_functions)
+# _attach_print_methods(CXX98CodePrinter, _math_functions)
 
 
 class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
     standard = 'C++11'
     reserved_words = set(reserved['C++11'])
+    type_mappings = dict(chain(
+        CXX98CodePrinter.type_mappings.items(),
+        {
+            Type('int8'): ('int8_t', {'cstdint'}),
+            Type('int16'): ('int16_t', {'cstdint'}),
+            Type('int32'): ('int32_t', {'cstdint'}),
+            Type('int64'): ('int64_t', {'cstdint'}),
+            Type('uint8'): ('uint8_t', {'cstdint'}),
+            Type('uint16'): ('uint16_t', {'cstdint'}),
+            Type('uint32'): ('uint32_t', {'cstdint'}),
+            Type('uint64'): ('uint64_t', {'cstdint'}),
+            Type('complex64'): ('std::complex<float>', {'complex'}),
+            Type('complex128'): ('std::complex<double>', {'complex'}),
+            Type('bool'): ('bool', None),
+        }.items()
+    ))
 
-
-_attach_print_methods(CXX11CodePrinter, _math_functions)
+# _attach_print_methods(CXX11CodePrinter, _math_functions)
 
 
 class CXX17CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
     standard = 'C++17'
     reserved_words = set(reserved['C++17'])
 
+    _kf = dict(C99CodePrinter._kf, **_math_functions['C++17'])
 
-_attach_print_methods(CXX17CodePrinter, _math_functions)
+    def _print_beta(self, expr):
+        return self._print_math_func(expr)
+
+    def _print_Ei(self, expr):
+        return self._print_math_func(expr)
+
+    def _print_zeta(self, expr):
+        return self._print_math_func(expr)
+
+
+# _attach_print_methods(CXX17CodePrinter, _math_functions)
 
 cxx_code_printers = {
     'c++98': CXX98CodePrinter,

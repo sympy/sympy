@@ -4,14 +4,15 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
+    E, cbrt)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -106,7 +107,7 @@ def test_solve_args():
     assert solve([x + y - 3, x - y - 5]) == {x: 4, y: -1}
     assert solve(x - exp(x), x, implicit=True) == [exp(x)]
     # no symbol to solve for
-    assert solve(42) == []
+    assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
     # duplicate symbols removed
     assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
@@ -706,15 +707,15 @@ def test_issue_5132():
     assert solve(eqs, set=True) == \
         ([x, y], set([
         (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(sqrt(-z**2 - sin(log(3)))), -log(3))]))
+        (log(-z**2 - sin(log(3)))/2, -log(3))]))
     assert solve(eqs, x, z, set=True) == \
         ([x], set([
         (log(-sqrt(-z**2 + sin(y))),),
-        (log(sqrt(-z**2 + sin(y))),)]))
+        (log(-z**2 + sin(y))/2,)]))
     assert set(solve(eqs, x, y)) == \
         set([
             (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(sqrt(-z**2 - sin(log(3)))), -log(3))])
+        (log(-z**2 - sin(log(3)))/2, -log(3))])
     assert set(solve(eqs, y, z)) == \
         set([
             (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
@@ -723,15 +724,15 @@ def test_issue_5132():
     assert solve(eqs, set=True) == ([x, y], set(
         [
         (log(-sqrt(-z - sin(log(3)))), -log(3)),
-            (log(sqrt(-z - sin(log(3)))), -log(3))]))
+            (log(-z - sin(log(3)))/2, -log(3))]))
     assert solve(eqs, x, z, set=True) == ([x], set(
         [
         (log(-sqrt(-z + sin(y))),),
-            (log(sqrt(-z + sin(y))),)]))
+            (log(-z + sin(y))/2,)]))
     assert set(solve(eqs, x, y)) == set(
         [
             (log(-sqrt(-z - sin(log(3)))), -log(3)),
-            (log(sqrt(-z - sin(log(3)))), -log(3))])
+            (log(-z - sin(log(3)))/2, -log(3))])
     assert solve(eqs, z, y) == \
         [(-exp(2*x) - sin(log(3)), -log(3))]
     assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4), set=True) == (
@@ -1302,7 +1303,7 @@ def test_issue_6060():
     )
     y = Symbol('y')
     assert solve(absxm3 - y, x) == [
-        Piecewise((-y + 3, y > 0), (S.NaN, True)),
+        Piecewise((-y + 3, -y < 0), (S.NaN, True)),
         Piecewise((y + 3, 0 <= y), (S.NaN, True))
     ]
     y = Symbol('y', positive=True)
@@ -1528,30 +1529,28 @@ def test_lambert_multivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
-    # these only give one of the solutions (see XFAIL below)
     assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3),
                                      -3*LambertW(-log(3)/3, -1)/log(3)]
-    #     replacing 3 with 2 in the above solution gives 2
     assert solve(x**2 - 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
     assert solve(-x**2 + 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
     assert solve(3**cos(x) - cos(x)**3) == [
         acos(-3*LambertW(-log(3)/3)/log(3)),
         acos(-3*LambertW(-log(3)/3, -1)/log(3))]
+    assert set(solve(3*log(x) - x*log(3))) == set(  # 2.478... and 3
+        [-3*LambertW(-log(3)/3)/log(3),
+        -3*LambertW(-log(3)/3, -1)/log(3)])
+    assert solve(LambertW(2*x) - y, x) == [y*exp(y)/2]
 
 
 @XFAIL
 def test_other_lambert():
     from sympy.abc import x
     assert solve(3*sin(x) - x*sin(3), x) == [3]
-    assert set(solve(3*log(x) - x*log(3))) == set(
-        [3, -3*LambertW(-log(3)/3)/log(3)])
     a = S(6)/5
     assert set(solve(x**a - a**x)) == set(
         [a, -a*LambertW(-log(a)/a)/log(a)])
     assert set(solve(3**cos(x) - cos(x)**3)) == set(
         [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))])
-    assert set(solve(x**2 - 2**x)) == set(
-        [2, -2/log(2)*LambertW(log(2)/2)])
 
 
 def test_rewrite_trig():
@@ -1778,23 +1777,45 @@ def test_issue_8828():
 
 def test_issue_2840_8155():
     assert solve(sin(3*x) + sin(6*x)) == [
-        0, -pi, pi, 2*pi, -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
-        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-S(1)/2 -
-        sqrt(3)*I/2), -2*I*log(-S(1)/2 + sqrt(3)*I/2), -2*I*log(S(1)/2 -
-        sqrt(3)*I/2), -2*I*log(S(1)/2 + sqrt(3)*I/2), -2*I*log(-sqrt(3)/2 - I/2),
-        -2*I*log(-sqrt(3)/2 + I/2), -2*I*log(sqrt(3)/2 - I/2),
-        -2*I*log(sqrt(3)/2 + I/2), -2*I*log(-sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(-sin(pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) -
-        I*cos(pi/18)), -2*I*log(sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
-        -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
+        0, -pi, pi, 14*pi/9, 16*pi/9, 2*pi, 2*I*(log(2) - log(-1 - sqrt(3)*I)),
+        2*I*(log(2) - log(-1 + sqrt(3)*I)), 2*I*(log(2) - log(1 - sqrt(3)*I)),
+        2*I*(log(2) - log(1 + sqrt(3)*I)), 2*I*(log(2) - log(-sqrt(3) - I)),
+        2*I*(log(2) - log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)),
+        2*I*(log(2) - log(sqrt(3) + I)), -2*I*log(-(-1)**(S(1)/9)), -2*I*log(
+        -(-1)**(S(2)/9)), -2*I*log(-sin(pi/18) - I*cos(pi/18)), -2*I*log(-sin(
+        pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) - I*cos(pi/18)), -2*I*log(
+        sin(pi/18) + I*cos(pi/18)), -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(
+        -I*pi/9)), -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
     assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
-        -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
+        0, -pi, pi, 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
+        log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
+        log(sqrt(3) + I))]
 
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
+
+def test_solve_inequality_list():
+    sol = And(S(0) < x, x < oo)
+    assert solve(x + 1 > 1) == sol
+    assert solve([x + 1 > 1]) == sol
+    assert solve([x + 1 > 1], x) == sol
+    assert solve([x + 1 > 1], [x]) == sol
+
+def test_issue_11538():
+    assert solve(x + E) == [-E]
+    assert solve(x**2 + E) == [-I*sqrt(E), I*sqrt(E)]
+    assert solve(x**3 + 2*E) == [
+        -cbrt(2 * E),
+        cbrt(2)*cbrt(E)/2 - cbrt(2)*sqrt(3)*I*cbrt(E)/2,
+        cbrt(2)*cbrt(E)/2 + cbrt(2)*sqrt(3)*I*cbrt(E)/2]
+    assert solve([x + 4, y + E], x, y) == {x: -4, y: -E}
+    assert solve([x**2 + 4, y + E], x, y) == [
+        (-2*I, -E), (2*I, -E)]
+
+    e1 = x - y**3 + 4
+    e2 = x + y + 4 + 4 * E
+    assert len(solve([e1, e2], x, y)) == 3
 
 
 def test_issue_12114():
@@ -1823,7 +1844,57 @@ def test_issue_12114():
                   d: -f/2 + sqrt(-3*f**2 + 6)/2,
                   e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
 
+
 def test_inf():
     assert solve(1 - oo*x) == []
     assert solve(oo*x, x) == []
     assert solve(oo*x - oo, x) == []
+
+
+def test_issue_12448():
+    f = Symbol('f')
+    fun = [f(i) for i in range(15)]
+    sym = symbols('x:15')
+    reps = dict(zip(fun, sym))
+
+    (x, y, z), c = sym[:3], sym[3:]
+    ssym = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    (x, y, z), c = fun[:3], fun[3:]
+    sfun = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    assert sfun[fun[0]].xreplace(reps).count_ops() == \
+        ssym[sym[0]].count_ops()
+
+
+def test_denoms():
+    assert denoms(x/2 + 1/y) == set([2, y])
+    assert denoms(x/2 + 1/y, y) == set([y])
+    assert denoms(x/2 + 1/y, [y]) == set([y])
+    assert denoms(1/x + 1/y + 1/z, [x, y]) == set([x, y])
+    assert denoms(1/x + 1/y + 1/z, x, y) == set([x, y])
+    assert denoms(1/x + 1/y + 1/z, set([x, y])) == set([x, y])
+
+def test_issue_12476():
+    x0, x1, x2, x3, x4, x5 = symbols('x0 x1 x2 x3 x4 x5')
+    eqns = [x0**2 - x0, x0*x1 - x1, x0*x2 - x2, x0*x3 - x3, x0*x4 - x4, x0*x5 - x5,
+            x0*x1 - x1, -x0/3 + x1**2 - 2*x2/3, x1*x2 - x1/3 - x2/3 - x3/3,
+            x1*x3 - x2/3 - x3/3 - x4/3, x1*x4 - 2*x3/3 - x5/3, x1*x5 - x4, x0*x2 - x2,
+            x1*x2 - x1/3 - x2/3 - x3/3, -x0/6 - x1/6 + x2**2 - x2/6 - x3/3 - x4/6,
+            -x1/6 + x2*x3 - x2/3 - x3/6 - x4/6 - x5/6, x2*x4 - x2/3 - x3/3 - x4/3,
+            x2*x5 - x3, x0*x3 - x3, x1*x3 - x2/3 - x3/3 - x4/3,
+            -x1/6 + x2*x3 - x2/3 - x3/6 - x4/6 - x5/6,
+            -x0/6 - x1/6 - x2/6 + x3**2 - x3/3 - x4/6, -x1/3 - x2/3 + x3*x4 - x3/3,
+            -x2 + x3*x5, x0*x4 - x4, x1*x4 - 2*x3/3 - x5/3, x2*x4 - x2/3 - x3/3 - x4/3,
+            -x1/3 - x2/3 + x3*x4 - x3/3, -x0/3 - 2*x2/3 + x4**2, -x1 + x4*x5, x0*x5 - x5,
+            x1*x5 - x4, x2*x5 - x3, -x2 + x3*x5, -x1 + x4*x5, -x0 + x5**2, x0 - 1]
+    sols = [{x0: 1, x3: S(1)/6, x2: S(1)/6, x4: -S(2)/3, x1: -S(2)/3, x5: 1},
+            {x0: 1, x3: S(1)/2, x2: -S(1)/2, x4: 0, x1: 0, x5: -1},
+            {x0: 1, x3: -S(1)/3, x2: -S(1)/3, x4: S(1)/3, x1: S(1)/3, x5: 1},
+            {x0: 1, x3: 1, x2: 1, x4: 1, x1: 1, x5: 1},
+            {x0: 1, x3: -S(1)/3, x2: S(1)/3, x4: sqrt(5)/3, x1: -sqrt(5)/3, x5: -1},
+            {x0: 1, x3: -S(1)/3, x2: S(1)/3, x4: -sqrt(5)/3, x1: sqrt(5)/3, x5: -1}]
+
+    assert solve(eqns) == sols

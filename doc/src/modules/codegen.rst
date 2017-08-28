@@ -63,7 +63,8 @@ expressions to specific languages. Supported languages are C
 (:py:func:`sympy.printing.jscode.jscode`), Julia
 (:py:func:`sympy.printing.julia.julia_code`), Mathematica
 (:py:func:`sympy.printing.mathematica.mathematica_code`), Octave/Matlab
-(:py:func:`sympy.printing.octave.octave_code`), Python (print_python, which is
+(:py:func:`sympy.printing.octave.octave_code`), Rust
+(:py:func:`sympy.printing.rust.rust_code`), Python (print_python, which is
 actually more like a lightweight version of codegen for Python, and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
 (like NumPy), and theano
@@ -93,10 +94,11 @@ Here is a simple example of printing a C version of a SymPy expression::
     -Z⋅e ⋅k
     ────────
       2⋅r
-    >>> ccode(expr, standard='C99')
-    -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to="E", standard='C99')
-    E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
+    >>> ccode(expr)
+    -1.0/2.0*Z*pow(e, 2)*k/r
+    >>> from sympy.codegen.ast import real, float80
+    >>> ccode(expr, assign_to="E", type_aliases={real: float80})
+    E = -1.0L/2.0L*Z*powl(e, 2)*k/r;
 
 To generate code with some math functions provided by e.g. the C99 standard we need
 to import functions from :mod:`sympy.codegen.cfunctions`::
@@ -201,6 +203,8 @@ how it works::
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
+    >>> print(rust_code(expr, assign_to="H_is"))
+    H_is = I*S*gamma_1*gamma_2*k*(3*beta.cos().powi(2) - 1)/r.powi(3);
     >>> print(mathematica_code(expr))
     I*S*gamma_1*gamma_2*k*(3*Cos[beta]^2 - 1)/r^3
 
@@ -551,8 +555,22 @@ available with ``autowrap``.
 There are other facilities available with Sympy to do efficient numeric
 computation. See :ref:`this<numeric_computation>` page for a comparison among them.
 
+
 Special (finite precision arithmetic) math functions
 ----------------------------------------------------
 
 .. automodule:: sympy.codegen.cfunctions
+    :members:
+
+
+Fortran specific functions
+--------------------------
+
+.. automodule:: sympy.codegen.ffunctions
+    :members:
+
+Classes for abstract syntax trees (sympy.codegen.ast)
+-----------------------------------------------------
+
+.. automodule:: sympy.codegen.ast
     :members:

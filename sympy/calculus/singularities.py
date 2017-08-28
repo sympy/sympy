@@ -32,7 +32,7 @@ def singularities(expression, symbol):
     ========
 
     >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol, I, sqrt
+    >>> from sympy import Symbol
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
@@ -43,6 +43,12 @@ def singularities(expression, symbol):
     {-I, I}
     >>> singularities(1/(y**3 + 1), y)
     {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
+
+    Notes
+    =====
+
+    This function does not find nonisolated singularities
+    nor does it find branch points of the expression.
 
     References
     ==========
@@ -58,6 +64,7 @@ def singularities(expression, symbol):
     else:
         return solveset(simplify(1 / expression), symbol)
 
+
 ###########################################################################
 ###################### DIFFERENTIAL CALCULUS METHODS ######################
 ###########################################################################
@@ -67,22 +74,23 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     """
     Helper function for functions checking function monotonicity.
 
-    It returns whether the interval in which function's derivative
-    satisfies given predicate is superset of given interval.
+    It returns a boolean indicating whether the interval in which
+    the function's derivative satisfies given predicate is a superset
+    of the given interval.
     """
     expression = sympify(expression)
+    free = expression.free_symbols
 
     if symbol is None:
-        free_variables = expression.free_symbols
-        if len(free_variables) > 1:
+        if len(free) > 1:
             raise NotImplementedError(
                 'The function has not yet been implemented'
                 ' for all multivariate expressions.'
             )
-        symbol = next(iter(free_variables)) if len(free_variables) == 1 else Symbol('x')
 
-    derivative = expression.diff(symbol)
-    predicate_interval = solveset(predicate(derivative), symbol, S.Reals)
+    x = symbol or (free.pop() if free else Symbol('x'))
+    derivative = expression.diff(x)
+    predicate_interval = solveset(predicate(derivative), x, S.Reals)
     return interval.is_subset(predicate_interval)
 
 
@@ -208,11 +216,13 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     """
     expression = sympify(expression)
 
-    if symbol is None and len(expression.free_symbols) > 1:
+    free = expression.free_symbols
+    if symbol is None and len(free) > 1:
         raise NotImplementedError(
             'is_monotonic has not yet been implemented'
             ' for all multivariate expressions.'
         )
 
-    return is_increasing(expression, interval, symbol) or \
-        is_decreasing(expression, interval, symbol)
+    x = symbol or (free.pop() if free else Symbol('x'))
+    turning_points = solveset(expression.diff(x), x, interval)
+    return interval.intersection(turning_points) is S.EmptySet
