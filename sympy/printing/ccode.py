@@ -39,7 +39,6 @@ known_functions_C89 = {
     "acos": "acos",
     "atan": "atan",
     "atan2": "atan2",
-    "exp": "exp",
     "log": "log",
     "sinh": "sinh",
     "cosh": "cosh",
@@ -256,6 +255,10 @@ class C89CodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
+
+        if expr.base is S.Exp1:
+            return "exp(%s)" % self._print(expr.exp)
+
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
         if expr.exp == -1:

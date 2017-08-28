@@ -47,7 +47,6 @@ known_functions = {
     "cosh": "cosh",
     "tanh": "tanh",
     "log": "log",
-    "exp": "exp",
     "erf": "erf",
     "Abs": "abs",
     "conjugate": "conjg"
@@ -288,6 +287,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
+        if expr.base is S.Exp1:
+            prec = self._settings['precision']
+            eval_expr = N(expr, prec)  # reconstruct `exp(e)`
+            if eval_expr.is_Pow:
+                return 'exp(%s)' % self._print(expr.exp)
+            else:
+                return self._print(eval_expr)
         if expr.exp == -1:
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:

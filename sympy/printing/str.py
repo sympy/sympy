@@ -490,6 +490,9 @@ class StrPrinter(Printer):
     def _print_Pow(self, expr, rational=False):
         PREC = precedence(expr)
 
+        if expr.base == S.Exp1:
+            return "exp(%s)" % self._print(expr.exp)
+
         if expr.exp is S.Half and not rational:
             return "sqrt(%s)" % self._print(expr.base)
 

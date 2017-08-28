@@ -23,7 +23,6 @@ if theano:
             sympy.ceiling: tt.ceil,
             sympy.floor: tt.floor,
             sympy.log: tt.log,
-            sympy.exp: tt.exp,
             sympy.sqrt: tt.sqrt,
             sympy.cos: tt.cos,
             sympy.acos: tt.arccos,
@@ -99,6 +98,11 @@ class TheanoPrinter(Printer):
         op = mapping[type(expr)]
         children = [self._print(arg, **kwargs) for arg in expr.args]
         return op(*children)
+
+    def _print_Pow(self, expr, **kwargs):
+        if expr.base == sympy.S.Exp1:
+            return tt.exp(self._print(expr.exp, **kwargs))
+        return self._print_Basic(expr, **kwargs)
 
     def _print_Number(self, n, **kwargs):
         return eval(str(n))
