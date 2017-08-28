@@ -750,10 +750,7 @@ def simplify_presentation(*args, **kwargs):
     `change_gens = True`.
 
     '''
-    change_gens = False
-    for k, v in kwargs.items():
-        if k == "change_gens":
-            change_gens = v
+    change_gens = kwargs.get("change_gens", False)
 
     if len(args) == 1:
         if not isinstance(args[0], FpGroup):
