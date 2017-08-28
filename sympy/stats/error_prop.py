@@ -82,7 +82,7 @@ def variance_prop(expr, consts=(), include_covar=False):
         b = args[1]
         v = var_args[0] * (expr * b / args[0])**2
         var_expr = simplify(v)
-    elif isinstance(expr, exp):
+    elif expr.is_Pow and expr.base is S.Exp1:
         var_expr = simplify(var_args[0] * expr**2)
     else:
         # unknown how to proceed, return variance of whole expr.
