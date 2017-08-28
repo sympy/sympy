@@ -17,9 +17,9 @@ def _compose(expr, system, variables):
     eq = eq(*variables)
     for i, j in enumerate(systems[1:]):
         if j._parent == systems[i]:
-            eq = j.transformation_from_parent_function()(*eq)
+            eq = j._transformation_lambda(*eq)
         else:
-            if systems[i].transformation_to_parent_function() is not None:
+            if systems[i].transformation_from_parent_function() is not None:
                 eq = systems[i].transformation_from_parent_function()(*eq)
             else:
                 raise ValueError()
@@ -103,7 +103,7 @@ def express(expr, system, system2=None, variables=False):
         # Re-express in this coordinate system
         coord_sys = list(_get_coord_sys_from_expr(expr))
         trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
-        jacobians = [Matrix(i).jacobian(Matrix(system.base_scalars())) for i in trans_eq]
+        jacobians = [Matrix(i).jacobian(Matrix(system.base_scalars())).transpose() for i in trans_eq]
         components = list(jacobians[0] * Matrix(expr._projections))
 
         return VectorAdd.fromiter([i[0]*i[1] for i in zip(system.base_vectors(), components)])
