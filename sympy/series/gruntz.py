@@ -243,7 +243,7 @@ def sign(e, x):
 @cacheit
 def limitinf(e, x):
     """Compute limit of the expression at the infinity."""
-    # TODO restore: assert x.is_real and x.is_positive
+    assert x.is_real and x.is_positive
 
     # Rewrite e in terms of tractable functions only:
     e = e.rewrite('tractable', deep=True)
@@ -369,18 +369,23 @@ def gruntz(e, z, z0, dir="+"):
         raise NotImplementedError("Second argument must be a Symbol")
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
-    if z0 == oo:
-        r = limitinf(e, z)
-    elif z0 == -oo:
-        r = limitinf(e.subs(z, -z), z)
-    else:
-        if str(dir) == "-":
-            e0 = e.subs(z, z0 - 1/z)
-        elif str(dir) == "+":
-            e0 = e.subs(z, z0 + 1/z)
+    newe, newz = e, z
+    if z0 == S.NegativeInfinity:
+        newe = e.subs(z, -z)
+    elif z0 != S.Infinity:
+        if str(dir) == "+":
+            newe = e.subs(z, z0 + 1 / z)
+        elif str(dir) == "-":
+            newe = e.subs(z, z0 - 1 / z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")
-        r = limitinf(e0, z)
+
+    if not z.is_positive or not z.is_finite:
+        # We need a fresh variable here to simplify expression further.
+        newz = Dummy(z.name, positive=True, finite=True)
+        newe = newe.subs(z, newz)
+
+    r = limitinf(newe, newz)
 
     # This is a bit of a heuristic for nice results... we always rewrite
     # tractable functions in terms of familiar intractable ones.

@@ -146,11 +146,30 @@ class Limit(Expr):
             z = z.doit(**hints)
             z0 = z0.doit(**hints)
 
+        if str(dir) == 'real':
+            right = limit(e, z, z0, "+")
+            left = limit(e, z, z0, "-")
+            if not (left - right).equals(0):
+                raise PoleError("left and right limits for expression %s at "
+                                "point %s=%s seems to be not equal" % (e, z, z0))
+            else:
+                return right
+
+        if z0.has(z):
+            newz = z.as_dummy()
+            r = limit(e.subs(z, newz), newz, z0, dir)
+            if r.func is Limit:
+                r = r.subs(newz, z)
+            return r
+
         if e == z:
             return z0
 
         if not e.has(z):
             return e
+
+        if z0 is S.NaN:
+            return S.NaN
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
@@ -160,28 +179,28 @@ class Limit(Expr):
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
         if e.is_Mul:
-            if abs(z0) is S.Infinity:
-                e = factor_terms(e)
-                e = e.rewrite(fibonacci, GoldenRatio)
-                ok = lambda w: (z in w.free_symbols and
-                                any(a.is_polynomial(z) or
-                                    any(z in m.free_symbols and m.is_polynomial(z)
-                                        for m in Mul.make_args(a))
-                                    for a in Add.make_args(w)))
+            if abs(z0) in (S.Infinity, S.NegativeInfinity):
+                # XXX todo: this should probably be stated in the
+                # negative -- i.e. to exclude expressions that should
+                # not be handled this way but I'm not sure what that
+                # condition is; when ok is True it means that the leading
+                # term approach is going to succeed (hopefully)
+                def ok(w):
+                    return (z in w.free_symbols and any(a.is_polynomial(z) or
+                            any(z in m.free_symbols and m.is_polynomial(z)
+                                for m in Mul.make_args(a))
+                            for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=True)
-                    if z0 is S.NegativeInfinity:
-                        inve = e.subs(z, -1/u)
-                    else:
+                    if z0 is S.Infinity:
                         inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
+                    else:
+                        inve = e.subs(z, -1/u)
+                    r = limit(inve.as_leading_term(u), u, S.Zero)
                     if isinstance(r, Limit):
                         return self
                     else:
                         return r
-
-        if e.is_Order:
-            return Order(limit(e.expr, z, z0), *e.args[1:])
 
         try:
             r = gruntz(e, z, z0, dir)
