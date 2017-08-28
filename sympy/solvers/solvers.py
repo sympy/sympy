@@ -1500,7 +1500,7 @@ def _solve(f, *symbols, **flags):
                 u = bases.pop()
                 t = Dummy('t')
                 inv = _solve(u - t, symbol, **flags)
-                if isinstance(u, (Pow, exp)):
+                if isinstance(u, Pow):
                     # this will be resolved by factor in _tsolve but we might
                     # as well try a simple expansion here to get things in
                     # order so something like the following will work now without
@@ -1516,7 +1516,7 @@ def _solve(f, *symbols, **flags):
                         e = expand_mul(e)
                         return expand_power_exp(b**e)
                     ftry = f_num.replace(
-                        lambda w: w.is_Pow or isinstance(w, exp),
+                        lambda w: w.is_Pow,
                         _expand).subs(u, t)
                     if not ftry.has(symbol):
                         soln = _solve(ftry, t, **flags)
