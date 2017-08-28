@@ -6,8 +6,10 @@ A tool to help keep .mailmap and AUTHORS up-to-date.
 See also bin/authors_update.py
 """
 
+import codecs
 import os
 import sys
+
 
 if sys.version_info < (3, 6):
     sys.exit("This script requires Python 3.6 or newer")
@@ -47,8 +49,8 @@ git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
 if LooseVersion(git_ver) < LooseVersion('1.8.4.2'):
     print(yellow("Please use a newer git version >= 1.8.4.2"))
 
-with open(os.path.realpath(os.path.join(__file__, os.path.pardir,
-    os.path.pardir, "AUTHORS"))) as fd:
+with codecs.open(os.path.realpath(os.path.join(__file__, os.path.pardir,
+    os.path.pardir, "AUTHORS")), encoding="utf-8") as fd:
     AUTHORS = fd.read()
 
 firstauthor = "Ondřej Čertík"
