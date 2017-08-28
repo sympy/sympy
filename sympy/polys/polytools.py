@@ -5778,7 +5778,7 @@ def _symbolic_factor_list(expr, opt, method):
         if arg.is_Mul:
             args.extend(arg.args)
             continue
-        if arg.is_Pow:
+        if arg.is_Pow and arg.base is not S.Exp1:
             base, exp = arg.args
             if base.is_Number and exp.is_Number:
                 coeff *= arg

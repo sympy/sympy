@@ -247,7 +247,7 @@ def get_indices(expr):
             return _get_indices_Mul(expr)
         elif expr.is_Add:
             return _get_indices_Add(expr)
-        elif expr.is_Pow or isinstance(expr, exp):
+        elif expr.is_Pow:
             return _get_indices_Pow(expr)
 
         elif isinstance(expr, Piecewise):
@@ -389,7 +389,7 @@ def get_contraction_structure(expr):
         if nested:
             result[expr] = nested
         return result
-    elif expr.is_Pow or isinstance(expr, exp):
+    elif expr.is_Pow:
         # recurse in base and exp separately.  If either has internal
         # contractions we must include ourselves as a key in the returned dict
         b, e = expr.as_base_exp()

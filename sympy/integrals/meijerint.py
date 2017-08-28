@@ -27,7 +27,7 @@ The main references for this are:
 """
 from __future__ import print_function, division
 
-from sympy.core import oo, S, pi, Expr
+from sympy.core import oo, S, pi, Expr, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
@@ -368,7 +368,8 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
+    return (set(e.func for e in expr.atoms(Function) if x in e.free_symbols) |
+            set(e.func for e in expr.atoms(Pow) if e.base is S.Exp1 and x in e.free_symbols))
 
 
 def _find_splitting_points(expr, x):
@@ -485,6 +486,9 @@ def _mul_as_two_parts(f):
     if len(gs) < 2:
         return None
     if len(gs) == 2:
+        if ((gs[0].is_Pow and gs[0].base is S.Exp1) and
+                (not gs[1].is_Pow or gs[1].base is not S.Exp1)):
+            gs = [gs[1], gs[0]]
         return [tuple(gs)]
     return [(Mul(*x), Mul(*y)) for (x, y) in multiset_partitions(gs, 2)]
 
@@ -1623,7 +1627,8 @@ def meijerint_indefinite(f, x):
             _rewrite_hyperbolics_as_exp(f), x)
         if rv:
             if not type(rv) is list:
-                return collect(factor_terms(rv), rv.atoms(exp))
+                return collect(factor_terms(rv),
+                               set(a for a in rv.atoms(Pow) if a.base is S.Exp1))
             results.extend(rv)
     if results:
         return next(ordered(results))
@@ -1848,7 +1853,8 @@ def meijerint_definite(f, x, a, b):
             _rewrite_hyperbolics_as_exp(f_), x_, a_, b_)
         if rv:
             if not type(rv) is list:
-                rv = (collect(factor_terms(rv[0]), rv[0].atoms(exp)),) + rv[1:]
+                rv = (collect(factor_terms(rv[0]),
+                              set(a for a in rv[0].atoms(Pow) if a.base is S.Exp1)),) + rv[1:]
                 return rv
             results.extend(rv)
     if results:
@@ -2045,13 +2051,13 @@ def meijerint_inversion(f, x, t):
         exponentials = []
         while args:
             arg = args.pop()
-            if isinstance(arg, exp):
+            if arg.is_Pow and arg.base is S.Exp1:
                 arg2 = expand(arg)
                 if arg2.is_Mul:
                     args += arg2.args
                     continue
                 try:
-                    a, b = _get_coeff_exp(arg.args[0], x)
+                    a, b = _get_coeff_exp(arg.exp, x)
                 except _CoeffExpValueError:
                     b = 0
                 if b == 1:

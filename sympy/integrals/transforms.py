@@ -573,13 +573,13 @@ def _rewrite_gamma(f, s, a, b):
         if not fact.has(s):
             ufacs += [fact]
         # exponentials
-        elif fact.is_Pow or isinstance(fact, exp_):
-            if fact.is_Pow:
+        elif fact.is_Pow:
+            if fact.is_Pow and fact.base is not S.Exp1:
                 base = fact.base
                 exp = fact.exp
             else:
                 base = exp_polar(1)
-                exp = fact.args[0]
+                exp = fact.exp
             if exp.is_Integer:
                 cond = is_numer
                 if exp < 0:
@@ -1182,10 +1182,8 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
             k = log(rel.lts)
             return Heaviside(-(t + k))
     f = f.replace(Heaviside, simp_heaviside)
-
-    def simp_exp(arg):
-        return expand_complex(exp(arg))
-    f = f.replace(exp, simp_exp)
+    f = f.replace(lambda expr: expr.is_Pow and expr.base is S.Exp1,
+                  lambda expr: expand_complex(exp(expr.exp)))
 
     # TODO it would be nice to fix cosh and sinh ... simplify messes these
     #      exponentials up

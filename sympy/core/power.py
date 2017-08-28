@@ -312,6 +312,8 @@ class Pow(Expr):
                     s = 1  # floor = 0
                 elif fuzzy_not(im(b).is_zero) and abs(e) == 2:
                     s = 1  # floor = 0
+                elif b.is_imaginary and (abs(e) == 2) == True:
+                    s = 1  # floor = 0
                 elif _half(other):
                     s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
                         S.Half - e*arg(b)/(2*S.Pi)))
@@ -423,15 +425,20 @@ class Pow(Expr):
             return check.is_Integer
 
     def _eval_is_real(self):
-        from sympy import arg, exp, log, Mul
+        from sympy import arg, log, Mul
+        if self.base is S.Exp1:
+            if self.exp.is_real:
+                return True
+            elif self.exp.is_imaginary:
+                arg2 = -2*S.ImaginaryUnit*self.exp/S.Pi
+                return arg2.is_even
         real_b = self.base.is_real
         if real_b is None:
-            if self.base.func == exp and self.base.args[0].is_imaginary:
+            if self.base.func == Pow and self.base.base is S.Exp1 and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
-            return
         real_e = self.exp.is_real
         if real_e is None:
-            return
+            return None
         if real_b and real_e:
             if self.base.is_positive:
                 return True
@@ -480,6 +487,8 @@ class Pow(Expr):
     def _eval_is_complex(self):
         if all(a.is_complex for a in self.args):
             return True
+        elif self.base is S.Exp1:
+            return self.exp.is_complex
 
     def _eval_is_imaginary(self):
         from sympy import arg, log
@@ -664,8 +673,8 @@ class Pow(Expr):
                     new_l.append(Pow(self.base, Add(*o_al), evaluate=False))
                     return Mul(*new_l)
 
-        if old.func is exp and self.exp.is_real and self.base.is_positive:
-            ct1 = old.args[0].as_independent(Symbol, as_Add=False)
+        if old.is_Pow and old.base is S.Exp1 and self.exp.is_real and self.base.is_positive:
+            ct1 = old.exp.as_independent(Symbol, as_Add=False)
             ct2 = (self.exp*log(self.base)).as_independent(
                 Symbol, as_Add=False)
             ok, pow, remainder_pow = _check(ct1, ct2, old)
@@ -990,7 +999,7 @@ class Pow(Expr):
             return result
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import atan2, cos, im, re, sin
+        from sympy import atan2, cos, im, re, sin, exp
         from sympy.polys.polytools import poly
 
         if self.exp.is_Integer:
@@ -1047,6 +1056,13 @@ class Pow(Expr):
             rp, tp = self.func(r, self.exp), t*self.exp
 
             return (rp*cos(tp), rp*sin(tp))
+        elif self.base is S.Exp1:
+            re, im = self.exp.as_real_imag()
+            if deep:
+                re = re.expand(deep, **hints)
+                im = im.expand(deep, **hints)
+            c, s = cos(im), sin(im)
+            return (exp(re)*c, exp(re)*s)
         else:
 
             if deep:
@@ -1104,6 +1120,15 @@ class Pow(Expr):
                     return True
             elif b.is_irrational:
                 return e.is_zero
+        elif b is S.Exp1:
+            s = self.func(*self.args)
+            if s.func == self.func:
+                if s.exp is S.Zero:
+                    return True
+                elif s.exp.is_rational and s.exp.is_nonzero:
+                    return False
+            else:
+                return s.is_rational
 
     def _eval_is_algebraic(self):
         def _is_one(expr):
@@ -1309,7 +1334,48 @@ class Pow(Expr):
                 return (1/denominator)._eval_nseries(x, n=n, logx=logx)
 
         if e.has(Symbol):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
+            from sympy import limit, oo
+            arg = e*log(b)
+            arg_series = arg._eval_nseries(x, n=n, logx=logx)
+            if arg_series.is_Order:
+                return 1 + arg_series
+            arg0 = limit(arg_series.removeO(), x, 0)
+            if arg0 in [-oo, oo]:
+                return self
+            t = Dummy("t")
+
+            def taylor_term(n, x, *previous_terms):
+                """
+                Calculates the next term in the Taylor series expansion.
+                """
+                from sympy import sympify, factorial
+                if n < 0:
+                    return S.Zero
+                if n == 0:
+                    return S.One
+                x = sympify(x)
+                if previous_terms:
+                    p = previous_terms[-1]
+                    if p is not None:
+                        return p*x/n
+                return x**n/factorial(n)
+
+            def _taylor(expr, x, n):
+                l = []
+                g = None
+                for i in range(n):
+                    g = taylor_term(i, expr.exp, g)
+                    g = g.nseries(x, n=n)
+                    l.append(g)
+                return Add(*l) + Order(x**n, x)
+
+            exp_series = _taylor(exp(t), t, n)
+            o = exp_series.getO()
+            exp_series = exp_series.removeO()
+            r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
+            r += Order(o.expr.subs(t, (arg_series - arg0)), x)
+            r = r.expand()
+            return powsimp(r, deep=True, combine='exp')
 
         # see if the base is as simple as possible
         bx = b
@@ -1332,7 +1398,7 @@ class Pow(Expr):
                 try:
                     n = int(n)
                 except TypeError:
-                    #well, the n is something more complicated (like 1+log(2))
+                    # well, the n is something more complicated (like 1+log(2))
                     try:
                         n = int(n.evalf()) + 1  # XXX why is 1 being added?
                     except TypeError:
@@ -1435,10 +1501,36 @@ class Pow(Expr):
         return expand_mul(r*b0**e) + order
 
     def _eval_as_leading_term(self, x):
-        from sympy import exp, log
+        from sympy import exp, log, Order
         if not self.exp.has(x):
             return self.func(self.base.as_leading_term(x), self.exp)
-        return exp(self.exp * log(self.base)).as_leading_term(x)
+        elif self.base is S.Exp1:
+            arg = self.exp
+            if arg.is_Add:
+                return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
+            arg = self.exp.as_leading_term(x)
+            if Order(1, x).contains(arg):
+                return S.One
+            return exp(arg)
+        else:
+            return exp(self.exp*log(self.base)).as_leading_term(x)
+
+    def _eval_rewrite_as_sin(self, base, exp):
+        from sympy import sin
+        if self.base is S.Exp1:
+            I = S.ImaginaryUnit
+            return sin(I*self.exp + S.Pi/2) - I*sin(I*self.exp)
+
+    def _eval_rewrite_as_cos(self, base, exp):
+        from sympy import cos
+        if self.base is S.Exp1:
+            I = S.ImaginaryUnit
+            return cos(I*self.exp) + I*cos(I*self.exp + S.Pi/2)
+
+    def _eval_rewrite_as_tanh(self, base, exp):
+        from sympy import tanh
+        if self.base is S.Exp1:
+            return (1 + tanh(self.exp/2))/(1 - tanh(self.exp/2))
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e
@@ -1488,23 +1580,26 @@ class Pow(Expr):
         >>> s = expand_power_base(_[1]); s.is_Mul, s
         (True, 2**y*(x + 1)**y)
 
-        See docstring of Expr.as_content_primitive for more examples.
+        See Also
+        ========
+
+        sympy.core.expr.Expr.as_content_primitive
         """
 
         b, e = self.as_base_exp()
         b = _keep_coeff(*b.as_content_primitive(radical=radical, clear=clear))
         ce, pe = e.as_content_primitive(radical=radical, clear=clear)
         if b.is_Rational:
-            #e
-            #= ce*pe
-            #= ce*(h + t)
-            #= ce*h + ce*t
-            #=> self
-            #= b**(ce*h)*b**(ce*t)
-            #= b**(cehp/cehq)*b**(ce*t)
-            #= b**(iceh+r/cehq)*b**(ce*t)
-            #= b**(iceh)*b**(r/cehq)*b**(ce*t)
-            #= b**(iceh)*b**(ce*t + r/cehq)
+            # e
+            # = ce*pe
+            # = ce*(h + t)
+            # = ce*h + ce*t
+            # => self
+            # = b**(ce*h)*b**(ce*t)
+            # = b**(cehp/cehq)*b**(ce*t)
+            # = b**(iceh+r/cehq)*b**(ce*t)
+            # = b**(iceh)*b**(r/cehq)*b**(ce*t)
+            # = b**(iceh)*b**(ce*t + r/cehq)
             h, t = pe.as_coeff_Add()
             if h.is_Rational:
                 ceh = ce*h

@@ -86,7 +86,7 @@ class Limit(Expr):
     Examples
     ========
 
-    >>> from sympy import Limit, sin, Symbol
+    >>> from sympy import Limit, sin
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
     Limit(sin(x)/x, x, 0)
@@ -128,7 +128,14 @@ class Limit(Expr):
 
 
     def doit(self, **hints):
-        """Evaluates limit"""
+        """Evaluates limit.
+
+        Notes
+        =====
+
+        First we handle some trivial cases (i.e. constant), then try
+        Gruntz algorithm (see the :py:mod:`~sympy.series.gruntz` module).
+        """
         from sympy.series.limitseq import limit_seq
         from sympy.functions import RisingFactorial
 

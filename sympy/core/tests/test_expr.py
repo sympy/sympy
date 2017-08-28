@@ -343,7 +343,7 @@ def test_atoms():
     assert (I*pi).atoms(NumberSymbol, I) == \
         (I*pi).atoms(I, NumberSymbol) == {pi, I}
 
-    assert exp(exp(x)).atoms(exp) == {exp(exp(x)), exp(x)}
+    assert exp(exp(x)).atoms(Pow) == {exp(exp(x)), exp(x)}
     assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == \
         {1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z}
 

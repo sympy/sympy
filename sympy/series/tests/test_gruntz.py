@@ -1,19 +1,20 @@
-from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
+"""
+This test suite is testing the Gruntz algorithm implementation using the
+bottom up approach.  See the documentation in the gruntz module.  The
+algorithm itself is highly recursive by nature, so ``compare()`` is
+logically the lowest part of the algorithm, yet in some sense it's the most
+complex part, because it needs to calculate a limit to return the result.
+"""
+
+from sympy import (Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma,
+                   S, atan, acot, pi, E, erf, sqrt, zeta, cos, cosh, cancel,
+                   coth, sinh, tanh, digamma, Integer, Ei, EulerGamma, Mul,
+                   Pow, Add, li, Li)
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
-from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
-    sign
+from sympy.series.gruntz import (compare, mrv, rewrite, mrv_leadterm, gruntz,
+    sign)
 from sympy.utilities.pytest import XFAIL, skip, slow
 
-"""
-This test suite is testing the limit algorithm using the bottom up approach.
-See the documentation in limits2.py. The algorithm itself is highly recursive
-by nature, so "compare" is logically the lowest part of the algorithm, yet in
-some sense it's the most complex part, because it needs to calculate a limit
-to return the result.
-
-Nevertheless, the rest of the algorithm depends on compare working correctly.
-"""
 
 x = Symbol('x', real=True)
 m = Symbol('m', real=True)
@@ -37,6 +38,9 @@ def test_gruntz_evaluation():
                   - exp(1/x - exp(-exp(x)))), x, oo) == 1
     # 8.3
     assert gruntz(exp(exp(x - exp(-x))/(1 - 1/x)) - exp(exp(x)), x, oo) == oo
+    # 8.4
+    assert gruntz(exp(exp(exp(x)/(1 - 1/x)))
+                  - exp(exp(exp(x)/(1 - 1/x - log(x)**(-log(x))))), x, oo) == -oo
     # 8.5
     assert gruntz(exp(exp(exp(x + exp(-x)))) / exp(exp(exp(x))), x, oo) == oo
     # 8.6
@@ -74,6 +78,10 @@ def test_gruntz_evaluation():
     # 8.17
     assert gruntz(exp(x*exp(-x)/(exp(-x) + exp(-2*x**2/(x + 1))))/exp(x), x, oo) \
         == 1
+    # 8.18
+    assert gruntz((exp(exp(-x/(1 + exp(-x))))*exp(-x/(1 + exp(-x/(1 + exp(-x)))))
+                   * exp(exp(-x + exp(-x/(1 + exp(-x))))))
+                  / (exp(-x/(1 + exp(-x))))**2 - exp(x) + x, x, oo) == 2
     # 8.19
     assert gruntz(log(x)*(log(log(x) + log(log(x))) - log(log(x)))
                   / (log(log(x) + log(log(log(x))))), x, oo) == 1
@@ -139,7 +147,17 @@ def test_gruntz_eval_special_fail():
     assert gruntz(
         exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) == -log(2)
 
-    # TODO 8.35 - 8.37 (bessel, max-min)
+    # TODO 8.36 - 8.37 (bessel, max-min)
+
+
+def test_gruntz_other():
+    assert gruntz(sqrt(log(x + 1)) - sqrt(log(x)), x, oo) == 0  # p12, 2.5
+    y = Symbol('y')
+    assert gruntz(((1 + 1/x)**y - 1)*x, x, oo) == y  # p12, 2.6
+    # TODO: p13, 2.7
+    n = Symbol('n', integer=True)
+    assert gruntz(x**n/exp(x), x, oo) == 0  # p14, 2.9
+    assert gruntz((1 + 1/x)*x - 1/log(1 + 1/x), x, oo) == S(1)/2  # p15, 2.10
 
 
 def test_gruntz_hyperbolic():
@@ -157,53 +175,49 @@ def test_gruntz_hyperbolic():
     assert gruntz(coth(x), x, -oo) == -1
 
 
-def test_compare1():
-    assert compare(2, x, x) == "<"
-    assert compare(x, exp(x), x) == "<"
-    assert compare(exp(x), exp(x**2), x) == "<"
-    assert compare(exp(x**2), exp(exp(x)), x) == "<"
-    assert compare(1, exp(exp(x)), x) == "<"
+def test_compare():
+    assert compare(Integer(2), x, x) < 0
+    assert compare(x, exp(x), x) < 0
+    assert compare(exp(x), exp(x**2), x) < 0
+    assert compare(exp(x**2), exp(exp(x)), x) < 0
+    assert compare(Integer(1), exp(exp(x)), x) < 0
 
-    assert compare(x, 2, x) == ">"
-    assert compare(exp(x), x, x) == ">"
-    assert compare(exp(x**2), exp(x), x) == ">"
-    assert compare(exp(exp(x)), exp(x**2), x) == ">"
-    assert compare(exp(exp(x)), 1, x) == ">"
+    assert compare(x, Integer(2), x) > 0
+    assert compare(exp(x), x, x) > 0
+    assert compare(exp(x**2), exp(x), x) > 0
+    assert compare(exp(exp(x)), exp(x**2), x) > 0
+    assert compare(exp(exp(x)), Integer(1), x) > 0
 
-    assert compare(2, 3, x) == "="
-    assert compare(3, -5, x) == "="
-    assert compare(2, -5, x) == "="
+    assert compare(Integer(2), Integer(3), x) == 0
+    assert compare(Integer(3), Integer(-5), x) == 0
+    assert compare(Integer(2), Integer(-5), x) == 0
 
-    assert compare(x, x**2, x) == "="
-    assert compare(x**2, x**3, x) == "="
-    assert compare(x**3, 1/x, x) == "="
-    assert compare(1/x, x**m, x) == "="
-    assert compare(x**m, -x, x) == "="
+    assert compare(x, x**2, x) == 0
+    assert compare(x**2, x**3, x) == 0
+    assert compare(x**3, 1/x, x) == 0
+    assert compare(1/x, x**m, x) == 0
+    assert compare(x**m, -x, x) == 0
 
-    assert compare(exp(x), exp(-x), x) == "="
-    assert compare(exp(-x), exp(2*x), x) == "="
-    assert compare(exp(2*x), exp(x)**2, x) == "="
-    assert compare(exp(x)**2, exp(x + exp(-x)), x) == "="
-    assert compare(exp(x), exp(x + exp(-x)), x) == "="
+    assert compare(exp(x), exp(-x), x) == 0
+    assert compare(exp(-x), exp(2*x), x) == 0
+    assert compare(exp(2*x), exp(x)**2, x) == 0
+    assert compare(exp(x)**2, exp(x + exp(-x)), x) == 0
+    assert compare(exp(x), exp(x + exp(-x)), x) == 0
 
-    assert compare(exp(x**2), 1/exp(x**2), x) == "="
+    assert compare(exp(x**2), 1/exp(x**2), x) == 0
 
+    assert compare(exp(x), x**5, x) > 0
+    assert compare(exp(x**2), exp(x)**2, x) > 0
+    assert compare(exp(x), exp(x + exp(-x)), x) == 0
+    assert compare(exp(x + exp(-x)), exp(x), x) == 0
+    assert compare(exp(x + exp(-x)), exp(-x), x) == 0
+    assert compare(exp(-x), x, x) > 0
+    assert compare(x, exp(-x), x) < 0
+    assert compare(exp(x + 1/x), x, x) > 0
+    assert compare(exp(-exp(x)), exp(x), x) > 0
+    assert compare(exp(exp(-exp(x)) + x), exp(-exp(x)), x) < 0
 
-def test_compare2():
-    assert compare(exp(x), x**5, x) == ">"
-    assert compare(exp(x**2), exp(x)**2, x) == ">"
-    assert compare(exp(x), exp(x + exp(-x)), x) == "="
-    assert compare(exp(x + exp(-x)), exp(x), x) == "="
-    assert compare(exp(x + exp(-x)), exp(-x), x) == "="
-    assert compare(exp(-x), x, x) == ">"
-    assert compare(x, exp(-x), x) == "<"
-    assert compare(exp(x + 1/x), x, x) == ">"
-    assert compare(exp(-exp(x)), exp(x), x) == ">"
-    assert compare(exp(exp(-exp(x)) + x), exp(-exp(x)), x) == "<"
-
-
-def test_compare3():
-    assert compare(exp(exp(x)), exp(x + exp(-exp(x))), x) == ">"
+    assert compare(exp(exp(x)), exp(x + exp(-exp(x))), x) > 0
 
 
 def test_sign1():
@@ -219,8 +233,6 @@ def test_sign1():
     assert sign(sin(1/x), x) == 1
     assert sign((x**Integer(2)), x) == 1
 
-
-def test_sign2():
     assert sign(x, x) == 1
     assert sign(-x, x) == -1
     y = Symbol("y", positive=True)
@@ -230,94 +242,77 @@ def test_sign2():
     assert sign(-y*x, x) == -1
 
 
-def mmrv(a, b):
-    return set(mrv(a, b)[0].keys())
+def test_mrv():
+    assert mrv(x, x) == {x}
+    assert mrv(x + 1/x, x) == {x}
+    assert mrv(x**2, x) == {x}
+    assert mrv(log(x), x) == {x}
+    assert mrv(exp(x), x) == {exp(x)}
+    assert mrv(exp(-x), x) == {exp(-x)}
+    assert mrv(exp(x**2), x) == {exp(x**2)}
+    assert mrv(-exp(1/x), x) == {x}
+    assert mrv(exp(x + 1/x), x) == {exp(x + 1/x)}
 
+    assert mrv(exp(x + exp(-exp(x))), x) == {exp(-exp(x))}
+    assert mrv(exp(x + exp(-x)), x) == {exp(x + exp(-x)), exp(-x)}
+    assert mrv(exp(1/x + exp(-x)), x) == {exp(-x)}
 
-def test_mrv1():
-    assert mmrv(x, x) == {x}
-    assert mmrv(x + 1/x, x) == {x}
-    assert mmrv(x**2, x) == {x}
-    assert mmrv(log(x), x) == {x}
-    assert mmrv(exp(x), x) == {exp(x)}
-    assert mmrv(exp(-x), x) == {exp(-x)}
-    assert mmrv(exp(x**2), x) == {exp(x**2)}
-    assert mmrv(-exp(1/x), x) == {x}
-    assert mmrv(exp(x + 1/x), x) == {exp(x + 1/x)}
+    assert mrv(exp(x + exp(-x**2)), x) == {exp(-x**2)}
 
-
-def test_mrv2a():
-    assert mmrv(exp(x + exp(-exp(x))), x) == {exp(-exp(x))}
-    assert mmrv(exp(x + exp(-x)), x) == {exp(x + exp(-x)), exp(-x)}
-    assert mmrv(exp(1/x + exp(-x)), x) == {exp(-x)}
-
-#sometimes infinite recursion due to log(exp(x**2)) not simplifying
-
-
-def test_mrv2b():
-    assert mmrv(exp(x + exp(-x**2)), x) == {exp(-x**2)}
-
-#sometimes infinite recursion due to log(exp(x**2)) not simplifying
-
-
-def test_mrv2c():
-    assert mmrv(
+    assert mrv(
         exp(-x + 1/x**2) - exp(x + 1/x), x) == {exp(x + 1/x), exp(1/x**2 - x)}
 
-#sometimes infinite recursion due to log(exp(x**2)) not simplifying
-
-
-def test_mrv3():
-    assert mmrv(exp(x**2) + x*exp(x) + log(x)**x/x, x) == {exp(x**2)}
-    assert mmrv(
+    assert mrv(exp(x**2) + x*exp(x) + exp(x*log(log(x)))/x, x) == {exp(x**2)}
+    assert mrv(
         exp(x)*(exp(1/x + exp(-x)) - exp(1/x)), x) == {exp(x), exp(-x)}
-    assert mmrv(log(
+    assert mrv(log(
         x**2 + 2*exp(exp(3*x**3*log(x)))), x) == {exp(exp(3*x**3*log(x)))}
-    assert mmrv(log(x - log(x))/log(x), x) == {x}
-    assert mmrv(
+    assert mrv(log(x - log(x))/log(x), x) == {x}
+    assert mrv(
         (exp(1/x - exp(-x)) - exp(1/x))*exp(x), x) == {exp(x), exp(-x)}
-    assert mmrv(
+    assert mrv(
         1/exp(-x + exp(-x)) - exp(x), x) == {exp(x), exp(-x), exp(x - exp(-x))}
-    assert mmrv(log(log(x*exp(x*exp(x)) + 1)), x) == {exp(x*exp(x))}
-    assert mmrv(exp(exp(log(log(x) + 1/x))), x) == {x}
+    assert mrv(log(log(x*exp(x*exp(x)) + 1)), x) == {exp(x*exp(x))}
+    assert mrv(exp(exp(log(log(x) + 1/x))), x) == {x}
 
-
-def test_mrv4():
-    ln = log
-    assert mmrv((ln(ln(x) + ln(ln(x))) - ln(ln(x)))/ln(ln(x) + ln(ln(ln(x))))*ln(x),
-            x) == {x}
-    assert mmrv(log(log(x*exp(x*exp(x)) + 1)) - exp(exp(log(log(x) + 1/x))), x) == \
+    assert mrv((log(log(x) + log(log(x))) - log(log(x)))
+               / log(log(x) + log(log(log(x))))*log(x), x) == {x}
+    assert mrv(log(log(x*exp(x*exp(x)) + 1)) - exp(exp(log(log(x) + 1/x))), x) == \
         {exp(x*exp(x))}
 
-
-def mrewrite(a, b, c):
-    return rewrite(a[1], a[0], b, c)
+@XFAIL
+def test_mrv_Gruntz_3_21():
+    _sskip()
+    # Gruntz: p47, 3.21
+    h = exp(-x/(1 + exp(-x)))
+    e = Mul(exp(h), exp(-x/(1 + h)), exp(exp(-x + h)),
+            Pow(h, -2, evaluate=False), evaluate=False) - exp(x) + x
+    assert mrv(e, x) == {exp(-x + h), exp(-x/(1 + h)), h, exp(x), exp(-x)}
 
 
 def test_rewrite1():
+    assert rewrite(S.One, x, m) == (1, None)
+
     e = exp(x)
-    assert mrewrite(mrv(e, x), x, m) == (1/m, -x)
+    assert rewrite(e, x, m) == (1/m, -x)
     e = exp(x**2)
-    assert mrewrite(mrv(e, x), x, m) == (1/m, -x**2)
+    assert rewrite(e, x, m) == (1/m, -x**2)
     e = exp(x + 1/x)
-    assert mrewrite(mrv(e, x), x, m) == (1/m, -x - 1/x)
+    assert rewrite(e, x, m) == (1/m, -x - 1/x)
     e = 1/exp(-x + exp(-x)) - exp(x)
-    assert mrewrite(mrv(e, x), x, m) == (1/(m*exp(m)) - 1/m, -x)
+    assert rewrite(e, x, m) == (Add(1/(m*exp(m)), -1/m, evaluate=False), -x)
 
-
-def test_rewrite2():
     e = exp(x)*log(log(exp(x)))
-    assert mmrv(e, x) == {exp(x)}
-    assert mrewrite(mrv(e, x), x, m) == (1/m*log(x), -x)
+    assert mrv(e, x) == {exp(x)}
+    assert rewrite(e, x, m) == (1/m*log(x), -x)
 
-#sometimes infinite recursion due to log(exp(x**2)) not simplifying
+# sometimes infinite recursion due to log(exp(x**2)) not simplifying
 
 
 def test_rewrite3():
     e = exp(-x + 1/x**2) - exp(x + 1/x)
-    #both of these are correct and should be equivalent:
-    assert mrewrite(mrv(e, x), x, m) in [(-1/m + m*exp(
-        1/x + 1/x**2), -x - 1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
+    # both of these are correct and should be equivalent:
+    assert rewrite(e, x, m) == (Add(m*exp(1/x + x**(-2)), -1/m, evaluate=False), -x - 1/x)
 
 
 def test_mrv_leadterm1():
@@ -328,14 +323,14 @@ def test_mrv_leadterm1():
 
 
 def test_mrv_leadterm2():
-    #Gruntz: p51, 3.25
+    # Gruntz: p51, 3.25
     assert mrv_leadterm((log(exp(x) + x) - x)/log(exp(x) + log(x))*exp(x), x) == \
         (1, 0)
 
 
 def test_mrv_leadterm3():
-    #Gruntz: p56, 3.27
-    assert mmrv(exp(-x + exp(-x)*exp(-x*log(x))), x) == {exp(-x - x*log(x))}
+    # Gruntz: p56, 3.27
+    assert mrv(exp(-x + exp(-x)*exp(-x*log(x))), x) == {exp(-x*log(x))}
     assert mrv_leadterm(exp(-x + exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
 
 
@@ -379,6 +374,13 @@ def test_limit4():
     #issue 3463
     assert gruntz((3**(1/x) + 5**(1/x))**x, x, 0) == 5
 
+    assert gruntz(Ei(x + exp(-x))*exp(-x)*x, x, oo) == 1
+
+    assert gruntz(1/li(x), x, oo) == 0
+    assert gruntz(1/Li(x), x, oo) == 0
+
+    # issue skirpichev/omg#56
+    assert gruntz((log(E + 1/x) - 1)**(1 - sqrt(E + 1/x)), x, oo) == oo
 
 @XFAIL
 def test_MrvTestCase_page47_ex3_21():
@@ -390,12 +392,12 @@ def test_MrvTestCase_page47_ex3_21():
 
 
 def test_I():
-    from sympy.functions import sign as sgn
+    from sympy.functions import sign
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
-    assert gruntz(y*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo).simplify() == sgn(y)*I*oo
+    assert gruntz(y*I*x, x, oo) == sign(y)*I*oo
+    assert gruntz(y*3*I*x, x, oo) == sign(y)*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo).simplify() == sign(y)*I*oo
 
 
 def test_issue_4814():
