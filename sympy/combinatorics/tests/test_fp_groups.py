@@ -159,6 +159,9 @@ def test_order():
     f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
     assert f.order() == 2000
 
+    f = FpGroup(F, [])
+    assert f.order() == S.Infinity
+
 def test_fp_subgroup():
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
