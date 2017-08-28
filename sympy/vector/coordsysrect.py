@@ -446,15 +446,15 @@ class CoordSys3D(Basic):
         return self._lame_coefficients
 
     def transformation_to_parent(self):
-        if self._parent is None:
-            raise ValueError("No parent coordinate system, use `transformation_from_parent_function()`")
-        return self._transformation_to_parent_lambda(*self._parent.base_scalars())
+        return self._transformation_to_parent_lambda(*self.base_scalars())
 
     def transformation_to_parent_function(self):
         return self._transformation_to_parent_lambda
 
     def transformation_from_parent(self):
-        return self._transformation_lambda(*self.base_scalars())
+        if self._parent is None:
+            raise ValueError("No parent coordinate system, use `transformation_from_parent_function()`")
+        return self._transformation_lambda(*self._parent.base_scalars())
 
     def transformation_from_parent_function(self):
         return self._transformation_lambda

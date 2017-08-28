@@ -6,6 +6,7 @@ from sympy import diff, integrate, S, simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 from sympy import symbols
+from sympy.matrices import Matrix
 
 
 def _compose(expr, system, variables):
@@ -72,6 +73,8 @@ def express(expr, system, system2=None, variables=False):
     True
 
     """
+    from sympy.vector.operators import _get_coord_sys_from_expr
+    from sympy.vector.vector import VectorAdd
 
     if expr == 0 or expr == Vector.zero:
         return expr
@@ -98,15 +101,12 @@ def express(expr, system, system2=None, variables=False):
                 subs_dict.update(f.scalar_map(system))
             expr = expr.subs(subs_dict)
         # Re-express in this coordinate system
-        outvec = Vector.zero
-        parts = expr.separate()
-        for x in parts:
-            if x != system:
-                temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
-                outvec += matrix_to_vector(temp, system)
-            else:
-                outvec += parts[x]
-        return outvec
+        coord_sys = list(_get_coord_sys_from_expr(expr))
+        trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
+        jacobians = [Matrix(i).jacobian(Matrix(system.base_scalars())) for i in trans_eq]
+        components = list(jacobians[0] * Matrix(expr._projections))
+
+        return VectorAdd.fromiter([i[0]*i[1] for i in zip(system.base_vectors(), components)])
 
     elif isinstance(expr, Dyadic):
         if system2 is None:
@@ -129,7 +129,6 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            from sympy.vector.operators import _get_coord_sys_from_expr
             coord_sys = list(_get_coord_sys_from_expr(expr))
             base_sc = [i.base_scalars() for i in coord_sys]
             trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
