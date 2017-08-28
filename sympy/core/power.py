@@ -572,6 +572,7 @@ class Pow(Expr):
 
     def _eval_subs(self, old, new):
         from sympy import exp, log, Symbol
+
         def _check(ct1, ct2, old):
             """Return (bool, pow, remainder_pow) where, if bool is True, then the
             exponent of Pow `old` will combine with `pow` so the substitution
@@ -628,6 +629,11 @@ class Pow(Expr):
                         pass
 
             return False, None, None
+
+        # Maintain replacements like: `.subs(exp, sin)`
+        if old == exp:
+            if self.base is S.Exp1:
+                return new(self.exp._subs(old, new))
 
         if old == self.base:
             return new**self.exp._subs(old, new)

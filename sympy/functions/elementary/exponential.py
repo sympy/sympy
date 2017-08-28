@@ -186,7 +186,7 @@ class exp_polar(ExpBase):
         return ExpBase.as_base_exp(self)
 
 
-def exp(arg, **kwargs):
+class exp(Function):
     """
     The exponential function, :math:`e^x`.
 
@@ -195,7 +195,8 @@ def exp(arg, **kwargs):
 
     sympy.functions.elementary.exponential.log
     """
-    return Pow(S.Exp1, arg, **kwargs)
+    def __new__(cls, arg, **kwargs):
+        return Pow(S.Exp1, arg, **kwargs)
 
 
 class log(Function):
