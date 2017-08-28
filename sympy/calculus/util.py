@@ -348,6 +348,8 @@ def periodicity(f, symbol, check=False):
         period=periodicity(f,symbol)
         if (period is not None) and (isinstance(f,sin) or isinstance(f,cos) or isinstance(f,sec) or isinstance(f,csc)):
             return period/2
+        else:
+            return period
 
     if f.is_Pow:
         base, expo = f.args
