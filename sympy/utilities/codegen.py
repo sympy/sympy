@@ -101,7 +101,7 @@ from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
 __all__ = [
     # description of routines
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
-    "Argument", "InputArgument", "Result",
+    "Argument", "InputArgument", "OutputArgument", "Result",
     # routines -> code
     "CodeGen", "CCodeGen", "FCodeGen", "JuliaCodeGen", "OctaveCodeGen",
     "RustCodeGen",
@@ -150,8 +150,9 @@ class Routine(object):
             Results and OutputArguments and when you should use each is
             language-specific.
 
-        local_vars : list of Symbols
-            These are used internally by the routine.
+        local_vars : list of Results
+            These are variables that will be defined at the beginning of the
+            function.
 
         global_vars : list of Symbols
             Variables which will not be passed into the function.
@@ -177,13 +178,21 @@ class Routine(object):
                 raise ValueError("Unknown Routine result: %s" % r)
             symbols.update(r.expr.free_symbols)
 
+        local_symbols = set()
+        for r in local_vars:
+            if isinstance(r, Result):
+                symbols.update(r.expr.free_symbols)
+                local_symbols.add(r.name)
+            else:
+                local_symbols.add(r)
+
         symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
 
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
         # specify additional (unused) InputArguments or local_vars.
         notcovered = symbols.difference(
-            input_symbols.union(local_vars).union(global_vars))
+            input_symbols.union(local_symbols).union(global_vars))
         if notcovered != set([]):
             raise ValueError("Symbols needed for output are not in input " +
                              ", ".join([str(x) for x in notcovered]))
@@ -407,8 +416,7 @@ class OutputArgument(Argument, ResultBase):
         ResultBase.__init__(self, expr, result_var)
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
-            self.result_var)
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.result_var, self.expr)
 
     __repr__ = __str__
 
@@ -495,6 +503,12 @@ class Result(Variable, ResultBase):
                           dimensions=dimensions, precision=precision)
         ResultBase.__init__(self, expr, result_var)
 
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.expr, self.name,
+            self.result_var)
+
+    __repr__ = __str__
+
 
 #
 # Transformation of routine objects into code
@@ -528,7 +542,7 @@ class CodeGen(object):
                 raise ValueError("Failed to print %s" % str(s))
         return expr_str.strip()
 
-    def __init__(self, project="project"):
+    def __init__(self, project="project", cse=False):
         """Initialize a code generator.
 
         Derived classes will offer more options that affect the generated
@@ -536,8 +550,9 @@ class CodeGen(object):
 
         """
         self.project = project
+        self.cse = cse
 
-    def routine(self, name, expr, argument_sequence, global_vars):
+    def routine(self, name, expr, argument_sequence=None, global_vars=None):
         """Creates an Routine object that is appropriate for this language.
 
         This implementation is appropriate for at least C/Fortran.  Subclasses
@@ -552,6 +567,39 @@ class CodeGen(object):
 
         """
 
+        if self.cse:
+            from sympy.simplify.cse_main import cse
+
+            if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
+                if not expr:
+                    raise ValueError("No expression given")
+                for e in expr:
+                    if not e.is_Equality:
+                        raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
+                lhs = [e.lhs for e in expr]
+
+                # create a list of right hand sides and simplify them
+                rhs = [e.rhs for e in expr]
+                common, simplified = cse(rhs)
+
+                # pack the simplified expressions back up with their left hand sides
+                expr = [Equality(e.lhs, rhs) for e, rhs in zip(expr, simplified)]
+            else:
+                rhs = [expr]
+
+                if isinstance(expr, Equality):
+                    common, simplified = cse(expr.rhs) #, ignore=in_out_args)
+                    expr = Equality(expr.lhs, simplified[0])
+                else:
+                    common, simplified = cse(expr)
+                    expr = simplified
+
+            local_vars = [Result(b,a) for a,b in common]
+            local_symbols = set([a for a,_ in common])
+            local_expressions = Tuple(*[b for _,b in common])
+        else:
+            local_expressions = Tuple()
+
         if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
             if not expr:
                 raise ValueError("No expression given")
@@ -559,14 +607,19 @@ class CodeGen(object):
         else:
             expressions = Tuple(expr)
 
-        # local variables
-        local_vars = {i.label for i in expressions.atoms(Idx)}
+        if self.cse:
+            if {i.label for i in expressions.atoms(Idx)} != set():
+                raise CodeGenError("CSE and Indexed expressions do not play well together yet")
+        else:
+            # local variables for indexed expressions
+            local_vars = {i.label for i in expressions.atoms(Idx)}
+            local_symbols = local_vars
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = (expressions.free_symbols | local_expressions.free_symbols) - local_symbols - global_vars
         new_symbols = set([])
         new_symbols.update(symbols)
 
@@ -603,8 +656,10 @@ class CodeGen(object):
                     output_args.append(
                         OutputArgument(symbol, out_arg, expr, dimensions=dims))
 
-                # avoid duplicate arguments
-                symbols.remove(symbol)
+                # remove duplicate arguments when they are not local variables
+                if symbol not in local_vars:
+                    # avoid duplicate arguments
+                    symbols.remove(symbol)
             elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
                 # Create a "dummy" MatrixSymbol to use as the Output arg
                 out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
@@ -618,9 +673,9 @@ class CodeGen(object):
 
         # setup input argument list
         array_symbols = {}
-        for array in expressions.atoms(Indexed):
+        for array in expressions.atoms(Indexed) | local_expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
-        for array in expressions.atoms(MatrixSymbol):
+        for array in expressions.atoms(MatrixSymbol) | local_expressions.atoms(MatrixSymbol):
             array_symbols[array] = array
 
         for symbol in sorted(symbols, key=str):
@@ -794,8 +849,8 @@ class CCodeGen(CodeGen):
     standard = 'c99'
 
     def __init__(self, project="project", printer=None,
-                 preprocessor_statements=None):
-        super(CCodeGen, self).__init__(project=project)
+                 preprocessor_statements=None, cse=False):
+        super(CCodeGen, self).__init__(project=project, cse=cse)
         self.printer = printer or c_code_printers[self.standard.lower()]()
 
         self.preprocessor_statements = preprocessor_statements
@@ -859,8 +914,46 @@ class CCodeGen(CodeGen):
         return []
 
     def _declare_locals(self, routine):
-        # loop variables are declared in loop statement
-        return []
+
+        # Compose a list of symbols to be dereferenced in the function
+        # body. These are the arguments that were passed by a reference
+        # pointer, excluding arrays.
+        dereference = []
+        for arg in routine.arguments:
+            if isinstance(arg, ResultBase) and not arg.dimensions:
+                dereference.append(arg.name)
+
+        code_lines = []
+        for result in routine.local_vars:
+
+            # local variables that are simple symbols such as those used as indices into
+            # for loops are defined declared elsewhere.
+            if not isinstance(result, Result):
+                continue
+
+            if result.name != result.result_var:
+                raise CodeGen("Result variable and name should match: {}".format(result))
+            assign_to = result.name
+            t = result.get_datatype('c')
+            if isinstance(result.expr, (MatrixBase, MatrixExpr)):
+                dims = result.expr.shape
+                if dims[1] != 1:
+                    raise CodeGenError("Only column vectors are supported in local variabels. Local result {} has dimensions {}".format(result, dims))
+                code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
+                prefix = ""
+            else:
+                prefix = "const {0} ".format(t)
+
+            constants, not_c, c_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False, dereference=dereference),
+                result.expr, assign_to=assign_to)
+
+            for name, value in sorted(constants, key=str):
+                code_lines.append("double const %s = %s;\n" % (name, value))
+
+            code_lines.append("{}{}\n".format(prefix, c_expr))
+
+        return code_lines
 
     def _call_printer(self, routine):
         code_lines = []
