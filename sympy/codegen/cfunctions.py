@@ -69,8 +69,8 @@ class expm1(Function):
 
     @classmethod
     def eval(cls, arg):
-        exp_arg = exp.eval(arg)
-        if exp_arg is not None:
+        exp_arg = exp(arg)
+        if len(exp_arg.free_symbols) == 0:
             return exp_arg - S.One
 
     def _eval_is_real(self):
