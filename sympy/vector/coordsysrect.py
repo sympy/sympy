@@ -212,7 +212,7 @@ class CoordSys3D(Basic):
         obj._transformation = transformation
         obj._transformation_lambda = lambda_transformation
         obj._lame_coefficients = lambda_lame(x1, x2, x3)
-        obj._transformation_to_parent_lambda = lambda_inverse
+        obj._transformation_from_parent_lambda = lambda_inverse
 
         setattr(obj, variable_names[0], x1)
         setattr(obj, variable_names[1], x2)
@@ -446,18 +446,15 @@ class CoordSys3D(Basic):
         return self._lame_coefficients
 
     def transformation_to_parent(self):
-        return self._transformation_to_parent_lambda(*self.base_scalars())
-
-    def transformation_to_parent_function(self):
-        return self._transformation_to_parent_lambda
+        return self._transformation_lambda(*self.base_scalars())
 
     def transformation_from_parent(self):
         if self._parent is None:
-            raise ValueError("No parent coordinate system, use `transformation_from_parent_function()`")
-        return self._transformation_lambda(*self._parent.base_scalars())
+            raise ValueError("no parent coordinate system, use `transformation_from_parent_function()`")
+        return self._transformation_from_parent_lambda(*self._parent.base_scalars())
 
     def transformation_from_parent_function(self):
-        return self._transformation_lambda
+        return self._transformation_from_parent_lambda
 
     def rotation_matrix(self, other):
         """

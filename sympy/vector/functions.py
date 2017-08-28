@@ -17,9 +17,9 @@ def _compose(expr, system, variables):
     eq = eq(*variables)
     for i, j in enumerate(systems[1:]):
         if j._parent == systems[i]:
-            eq = j.transformation_to_parent_function()(*eq)
+            eq = j.transformation_from_parent_function()(*eq)
         else:
-            if systems[i].transformation_from_parent_function() is not None:
+            if systems[i].transformation_to_parent_function() is not None:
                 eq = systems[i].transformation_from_parent_function()(*eq)
             else:
                 raise ValueError()
