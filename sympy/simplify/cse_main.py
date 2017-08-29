@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
-from sympy.core import Tuple
+from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
@@ -303,8 +303,6 @@ def match_common_args(func_class, funcs, opt_subs):
 
     changed = set()
 
-    from sumpy.tools import OrderedSet
-
     for i in range(len(funcs)):
         common_arg_candidates_counts = arg_tracker.get_common_arg_candidates(
                 arg_tracker.func_to_argset[i], i + 1, threshold=2)
@@ -397,7 +395,6 @@ def opt_cse(exprs, order='canonical'):
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     opt_subs = dict()
 
-    from sumpy.tools import OrderedSet
     adds = OrderedSet()
     muls = OrderedSet()
 
