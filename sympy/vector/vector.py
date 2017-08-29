@@ -258,7 +258,12 @@ class Vector(BasisDependent):
         from sympy.vector.operators import _get_coord_sys_from_expr
         if isinstance(self, VectorZero):
             return (S(0), S(0), S(0))
-        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+
+        if isinstance(self, BaseVector):
+            coord_sys = next(iter(_get_coord_sys_from_expr(self)))
+        else:
+            coord_sys = next(iter(_get_coord_sys_from_expr([i for i in self.args if isinstance(i, Vector)][0])))
+        base_vec = coord_sys.base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
     def __or__(self, other):

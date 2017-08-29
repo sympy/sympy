@@ -1,11 +1,9 @@
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.scalar import BaseScalar
-from sympy.vector.vector import Vector, BaseVector
-from sympy.vector.operators import gradient, curl, divergence
+from sympy.vector.vector import Vector, BaseVector, VectorAdd
+from sympy.vector.operators import curl, divergence
 from sympy import diff, integrate, S, simplify
-from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
-from sympy import symbols
 from sympy.matrices import Matrix
 
 
@@ -74,7 +72,6 @@ def express(expr, system, system2=None, variables=False):
 
     """
     from sympy.vector.operators import _get_coord_sys_from_expr
-    from sympy.vector.vector import VectorAdd
 
     if expr == 0 or expr == Vector.zero:
         return expr
@@ -91,22 +88,26 @@ def express(expr, system, system2=None, variables=False):
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
+            coord_sys = list(_get_coord_sys_from_expr(expr))
+            base_sc = [i.base_scalars() for i in coord_sys]
+            trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
+            trans_eq_dict = dict(zip([y for x in base_sc for y in x], [y for x in trans_eq for y in x]))
+            for x in expr.atoms(BaseScalar):
                 if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
-            subs_dict = {}
-            for f in system_list:
-                subs_dict.update(f.scalar_map(system))
-            expr = expr.subs(subs_dict)
+                    expr = expr.subs(x, trans_eq_dict[x])
         # Re-express in this coordinate system
-        coord_sys = list(_get_coord_sys_from_expr(expr))
-        trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
-        jacobians = [Matrix(i).jacobian(Matrix(system.base_scalars())).transpose() for i in trans_eq]
-        components = list(jacobians[0] * Matrix(expr._projections))
 
-        return VectorAdd.fromiter([i[0]*i[1] for i in zip(system.base_vectors(), components)])
+        if isinstance(expr, VectorAdd):
+            return VectorAdd.fromiter([express(i, system=system) for i in expr.args])
+        else:
+            if isinstance(expr, BaseVector):
+                vector = expr
+            else:
+                vector = [i for i in expr.args if isinstance(i, Vector)][0]
+            trans_eq = _compose(vector, system, system.base_scalars())
+            jacobian = Matrix(trans_eq).jacobian(Matrix(system.base_scalars())).transpose()
+            components = list(jacobian * Matrix(expr._projections))
+            return VectorAdd.fromiter([i[0]*i[1] for i in zip(system.base_vectors(), components)])
 
     elif isinstance(expr, Dyadic):
         if system2 is None:
