@@ -884,19 +884,26 @@ def first_in_class(C, Y=[]):
 #                    Simplifying Presentation
 #========================================================================
 
-def simplify_presentation(*args):
+def simplify_presentation(*args, **kwargs):
     '''
     For an instance of `FpGroup`, return a simplified isomorphic copy of
     the group (e.g. remove redundant generators or relators). Alternatively,
     a list of generators and relators can be passed in which case the
     simplified lists will be returned.
 
+    By default, the generators of the group are unchanged. If you would
+    like to remove redundant generators, set the keyword argument
+    `change_gens = True`.
+
     '''
+    change_gens = kwargs.get("change_gens", False)
+
     if len(args) == 1:
         if not isinstance(args[0], FpGroup):
             raise TypeError("The argument must be an instance of FpGroup")
         G = args[0]
-        gens, rels = simplify_presentation(G.generators, G.relators)
+        gens, rels = simplify_presentation(G.generators, G.relators,
+                                              change_gens=change_gens)
         if gens:
             return FpGroup(gens[0].group, rels)
         return FpGroup([])
@@ -914,22 +921,23 @@ def simplify_presentation(*args):
     prev_rels = []
     while not set(prev_rels) == set(rels):
         prev_rels = rels
-        while not set(prev_gens) == set(gens):
+        while change_gens and not set(prev_gens) == set(gens):
             prev_gens = gens
             gens, rels = elimination_technique_1(gens, rels, identity)
         rels = _simplify_relators(rels, identity)
 
-    syms = [g.array_form[0][0] for g in gens]
-    F = free_group(syms)[0]
-    identity = F.identity
-    gens = F.generators
-    subs = dict(zip(syms, gens))
-    for j, r in enumerate(rels):
-        a = r.array_form
-        rel = identity
-        for sym, p in a:
-            rel = rel*subs[sym]**p
-        rels[j] = rel
+    if change_gens:
+        syms = [g.array_form[0][0] for g in gens]
+        F = free_group(syms)[0]
+        identity = F.identity
+        gens = F.generators
+        subs = dict(zip(syms, gens))
+        for j, r in enumerate(rels):
+            a = r.array_form
+            rel = identity
+            for sym, p in a:
+                rel = rel*subs[sym]**p
+            rels[j] = rel
     return gens, rels
 
 def _simplify_relators(rels, identity):
@@ -1240,7 +1248,7 @@ def reidemeister_presentation(fp_grp, H, C=None):
     define_schreier_generators(C)
     reidemeister_relators(C)
     gens, rels = C._schreier_generators, C._reidemeister_relators
-    gens, rels = simplify_presentation(gens, rels)
+    gens, rels = simplify_presentation(gens, rels, change_gens=True)
 
     C.schreier_generators = tuple(gens)
     C.reidemeister_relators = tuple(rels)
