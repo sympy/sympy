@@ -45,7 +45,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group, sift, public
+from sympy.utilities import group, sift, public,filldedent
 
 import sympy.polys
 import mpmath
@@ -4426,6 +4426,10 @@ def degree(f, gen=0):
             p, _ = poly_from_expr(f.as_expr())
         if gen not in p.gens:
             return S.Zero
+
+    if len(f.free_symbols)>1 and  sympify(gen).is_Number and not f.is_Poly:
+        raise TypeError(filldedent('''a symbolic generator of interest is required for a multivariate
+         expression, e.g. degree(x + y**2, gen=x) not degree(x + y**2, gen=0)'''))
 
     return Integer(p.degree(gen))
 
