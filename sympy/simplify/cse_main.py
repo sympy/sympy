@@ -273,6 +273,9 @@ class Unevaluated(object):
         return "Uneval<{}>({})".format(
                 self.func, ", ".join(str(a) for a in self.args))
 
+    def as_unevaluated_basic(self):
+        return self.func(*self.args, evaluate=False)
+
     __repr__ = __str__
 
 
@@ -389,8 +392,9 @@ def opt_cse(exprs, order='canonical'):
     >>> from sympy.simplify.cse_main import opt_cse
     >>> from sympy.abc import x
     >>> opt_subs = opt_cse([x**-2])
-    >>> print(opt_subs)
-    {x**(-2): 1/(x**2)}
+    >>> k, v = list(opt_subs.keys())[0], list(opt_subs.values())[0]
+    >>> print((k, v.as_unevaluated_basic()))
+    (x**(-2), 1/(x**2))
     """
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     opt_subs = dict()
@@ -432,7 +436,7 @@ def opt_cse(exprs, order='canonical'):
             adds.add(expr)
 
         elif isinstance(expr, (Pow, MatPow)):
-            base, exp = expr.args
+            base, exp = expr.base, expr.exp
             if _coeff_isneg(exp):
                 opt_subs[expr] = Unevaluated(Pow, (Pow(base, -exp), -1))
 
