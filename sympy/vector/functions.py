@@ -15,10 +15,10 @@ def _compose(expr, system, variables):
     eq = eq(*variables)
     for i, j in enumerate(systems[1:]):
         if j._parent == systems[i]:
-            eq = j._transformation_lambda(*eq)
+            eq = j._transformation_from_parent_lambda(*eq)
         else:
-            if systems[i].transformation_from_parent_function() is not None:
-                eq = systems[i].transformation_from_parent_function()(*eq)
+            if systems[i]._transformation_lambda is not None:
+                eq = systems[i]._transformation_lambda(*eq)
             else:
                 raise ValueError()
     return eq

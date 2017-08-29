@@ -318,7 +318,7 @@ class CoordSys3D(Basic):
         try:
             solved = solve([equations[0] - x, equations[1] - y, equations[2] - z], (x1, x2, x3), dict=True)[0]
             solved = solved[x1], solved[x2], solved[x3]
-            self._transformation_from_parent_lambda = \
+            self._transformation_lambda = \
                 lambda x1, x2, x3: tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved)
         except:
             raise ValueError('Wrong set of parameters.')
@@ -446,15 +446,17 @@ class CoordSys3D(Basic):
         return self._lame_coefficients
 
     def transformation_to_parent(self):
-        return self._transformation_lambda(*self.base_scalars())
+        return self._transformation_from_parent_lambda(*self.base_scalars())
 
     def transformation_from_parent(self):
+        if self._transformation_lambda is None:
+            raise ValueError('Inverse transformation is not defined. Use _calculate_inv_trans_equations()')
         if self._parent is None:
             raise ValueError("no parent coordinate system, use `transformation_from_parent_function()`")
-        return self._transformation_from_parent_lambda(*self._parent.base_scalars())
+        return self._transformation_lambda(*self._parent.base_scalars())
 
     def transformation_from_parent_function(self):
-        return self._transformation_from_parent_lambda
+        return self._transformation_lambda
 
     def rotation_matrix(self, other):
         """

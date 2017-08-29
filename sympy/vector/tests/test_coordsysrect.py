@@ -10,7 +10,7 @@ from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-
+from sympy.core import S
 
 x, y, z = symbols('x y z')
 a, b, c, q = symbols('a b c q')
@@ -487,18 +487,24 @@ def test_translation_trans_equations():
 def test_transformation_functions():
     C = CoordSys3D("C")
     D = C.locate_new("D", 3 * C.i)
-    assert D.transformation_from_parent() == (C.x + 3, C.y, C.z)
-    assert D.transformation_to_parent() == (D.x - 3, D.y, D.z)
-    assert express(C.x, D, variables=True) == D.x + 3
-    assert express(D.x, C, variables=True) == C.x - 3
+    assert D.transformation_from_parent() == (C.x - 3, C.y, C.z)
+    assert D.transformation_to_parent() == (D.x + 3, D.y, D.z)
+    assert express(C.x, D, variables=True) == D.x - 3
+    assert express(D.x, C, variables=True) == C.x + 3
     E = C.orient_new_axis('E', q1, C.k)
     assert E.transformation_from_parent() == (C.x*cos(q1) - C.y*sin(q1), C.x*sin(q1) + C.y*cos(q1), C.z)
     assert E.transformation_to_parent() == (E.x*cos(q1) + E.y*sin(q1), -E.x*sin(q1) + E.y*cos(q1), E.z)
     assert express(C.x, E, variables=True) == E.x*cos(q1) - E.y*sin(q1)
     assert express(E.x, C, variables=True) == C.x*cos(q1) + C.y*sin(q1)
-    F = C.create_new("D", lambda x, y, z: (x**3, y, z))
+    F = C.create_new("F", lambda x, y, z: (x**3, y, z))
     F._calculate_inv_trans_equations()
-    assert F.transformation_from_parent() == (C.x**(1/3), C.y, C.z)
+    assert F.transformation_from_parent() == (C.x**(S(1)/3), C.y, C.z)
     assert F.transformation_to_parent() == (F.x**3, F.y, F.z)
     assert express(C.x, F, variables=True) == F.x**(1/3)
     assert express(F.x, C, variables=True) == C.x**3
+    G = C.create_new('G', lambda r, theta, phi: (
+                    r * sin(theta) * cos(phi),
+                    r * sin(theta) * sin(phi),
+                    r * cos(theta)))
+    assert raises(ValueError, lambda: F.transformation_from_parent())
+    assert F.transformation_to_parent() == (G.x*sin(G.y)*cos(G.z), G.x*sin(G.y)*sin(G.z), G.x*cos(G.y))
