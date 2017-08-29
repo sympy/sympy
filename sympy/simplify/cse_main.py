@@ -236,7 +236,7 @@ class FuncArgTracker(object):
         """
         iarg = iter(argset)
 
-        indices = set(
+        indices = OrderedSet(
             fi for fi in self.arg_to_funcset[next(iarg)])
 
         if restrict_to_funcset is not None:
