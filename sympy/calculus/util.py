@@ -345,11 +345,15 @@ def periodicity(f, symbol, check=False):
             pass
     if isinstance(f,Abs):
         f=f.args[0]
+        if isinstance(f,sec):
+            f=cos(f.args[0])
+        if isinstance(f,csc):
+            f=sin(f.args[0])
         period=periodicity(f,symbol)
-        if (period is not None) and (isinstance(f,sin) or isinstance(f,cos) or isinstance(f,sec) or isinstance(f,csc)):
-            return period/2
-        else:
-            return period
+        if (period is not None) and (isinstance(f,sin) or isinstance(f,cos)):
+            if f.subs(symbol, symbol + period/2) in [f,-f]:
+                return period/2
+        return period
 
     if f.is_Pow:
         base, expo = f.args
