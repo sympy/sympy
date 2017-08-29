@@ -554,7 +554,7 @@ def exptrigsimp(expr, simplify=True):
     for ei in ex:
         e2 = ei**-2
         if e2 in ex:
-            a = e2.args[0]/2 if not e2 is S.Exp1 else S.Half
+            a = e2.exp/2 if not e2 is S.Exp1 else S.Half
             newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
             newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
     ## exp ratios to tan and tanh
@@ -562,7 +562,7 @@ def exptrigsimp(expr, simplify=True):
         n, d = ei - 1, ei + 1
         et = n/d
         etinv = d/n  # not 1/et or else recursion errors arise
-        a = ei.args[0] if (ei.is_Pow and ei.base is S.Exp1) else S.One
+        a = ei.exp if (ei.is_Pow and ei.base is S.Exp1) else S.One
         if a.is_Mul or a is S.ImaginaryUnit:
             c = a.as_coefficient(I)
             if c:

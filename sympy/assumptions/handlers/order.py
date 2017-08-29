@@ -3,6 +3,7 @@ AskHandlers related to order relations: positive, negative, etc.
 """
 from __future__ import print_function, division
 
+from sympy import S
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
@@ -287,21 +288,20 @@ class AskPositiveHandler(CommonHandler):
     def Pow(expr, assumptions):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
+        if expr.base is S.Exp1:
+            if ask(Q.real(expr.exp), assumptions):
+                return True
+            if ask(Q.imaginary(expr.exp), assumptions):
+                return False
         if ask(Q.positive(expr.base), assumptions):
             if ask(Q.real(expr.exp), assumptions):
                 return True
+            # TODO: is this case missing `Q.imaginary(expr.base)`?
         if ask(Q.negative(expr.base), assumptions):
             if ask(Q.even(expr.exp), assumptions):
                 return True
             if ask(Q.odd(expr.exp), assumptions):
                 return False
-
-    @staticmethod
-    def exp(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
-            return True
-        if ask(Q.imaginary(expr.args[0]), assumptions):
-            return False
 
     @staticmethod
     def log(expr, assumptions):

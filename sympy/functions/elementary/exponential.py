@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.core.add import Add
-from sympy.core.function import Lambda, Function, ArgumentIndexError
+from sympy.core.function import Lambda, Function, ArgumentIndexError, FunctionClass
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Integer
 from sympy.core.power import Pow
@@ -10,6 +10,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 from sympy.core.logic import fuzzy_not
+from sympy.core.compatibility import with_metaclass
 
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -186,7 +187,12 @@ class exp_polar(ExpBase):
         return ExpBase.as_base_exp(self)
 
 
-class exp(Function):
+class ExpMeta(FunctionClass):
+    def __instancecheck__(cls, instance):
+        return isinstance(instance, Pow) and instance.base is S.Exp1
+
+
+class exp(with_metaclass(ExpMeta, Function)):
     """
     The exponential function, :math:`e^x`.
 
