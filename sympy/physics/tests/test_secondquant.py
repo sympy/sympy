@@ -235,7 +235,7 @@ def test_commutation():
     c = Commutator(F(m), Fd(m))
     assert c == +1 - 2*NO(Fd(m)*F(m))
     c = Commutator(Fd(m), F(m))
-    assert c == -1 + 2*NO(Fd(m)*F(m))
+    assert c.expand() == -1 + 2*NO(Fd(m)*F(m))
 
     C = Commutator
     X, Y, Z = symbols('X,Y,Z', commutative=False)
