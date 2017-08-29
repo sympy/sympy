@@ -328,9 +328,10 @@ def periodicity(f, symbol, check=False):
 
     """
     from sympy import simplify, lcm_list
+    from sympy.functions.elementary.complexes import Abs
     from sympy.functions.elementary.trigonometric import TrigonometricFunction,sin,cos,csc,sec
     from sympy.solvers.decompogen import decompogen
-    from sympy.functions.elementary.complexes import Abs
+    
     orig_f = f
     f = simplify(orig_f)
     period = None
@@ -343,6 +344,7 @@ def periodicity(f, symbol, check=False):
             period = f.period(symbol)
         except NotImplementedError:
             pass
+            
     if isinstance(f,Abs):
         f=f.args[0]
         if isinstance(f,sec):
