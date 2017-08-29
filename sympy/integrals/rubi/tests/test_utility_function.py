@@ -1695,15 +1695,43 @@ def test_TrigSimplifyAux():
     assert TrigSimplifyAux(a*cos(x)**2 + a*sin(x)**2 + v) == a + v
     assert TrigSimplifyAux(x**2) == x**2
 
+def test_SubstFor():
+    assert SubstFor(x**2 + 1, tanh(x), x) == tanh(x)
+    assert SubstFor(x**2, sinh(x), x) == sinh(sqrt(x))
+
+def test_FresnelS():
+    assert  FresnelS(oo) == 1/2
+    assert FresnelS(0) == 0
+
+def test_FresnelC():
+    assert FresnelC(0) == 0
+    assert FresnelC(oo) == 1/2
+
+def test_Erfc():
+    assert Erfc(0) == 1
+    assert Erfc(oo) == 0
+
+def test_Erfi():
+    assert Erfi(oo) == oo
+    assert Erfi(0) == 0
+
+def test_Gamma():
+    assert Gamma(1, 7) == 0.00091188196555451624
+    assert Gamma(1) == 1
+    assert Gamma(1, 2, 3) == 0.085548214868748751
+    assert Gamma(u) == gamma(u)
+
+def test_ElementaryFunctionQ():
+    assert  ElementaryFunctionQ(x + y)
+    assert ElementaryFunctionQ(sin(x + y))
+    assert not ElementaryFunctionQ(E**(x*a))
+
 def test_Part():
     assert Part([1, 2, 3], 1) == 1
     assert Part(a*b, 1) == a
 
 def test_PolyLog():
     assert PolyLog(a, b) == polylog(a, b)
-
-def test_Gamma():
-    assert Gamma(u) == gamma(u)
 
 def test_ExpandIntegrand():
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2

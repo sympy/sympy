@@ -17,12 +17,13 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
 from sympy.core.expr import UnevaluatedExpr
+from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
     Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
     Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo)
-from mpmath import appellf1
+from mpmath import appellf1, gammainc
 from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
@@ -4466,19 +4467,18 @@ def TrigReduce(i):
     else:
         return i
 
-def FunctionOfTrig(u, *x):
+def FunctionOfTrig(u, *args):
     # If u is a function of trig functions of v where v is a linear function of x,
     # FunctionOfTrig[u,x] returns v; else it returns False.
-    if len(x) == 1:
-        x = x[0]
+    if len(args) == 1:
+        x = args[0]
         v = FunctionOfTrig(u, None, x)
         if v:
             return v
         else:
             return False
     else:
-        v = x[0]
-        x = x[1]
+        v, x = args
         if AtomQ(u):
             if u == x:
                 return False
@@ -5753,6 +5753,110 @@ def SplitSum(func, u):
         return [func(u), 0]
     return False
 
+def SubstFor(*args):
+    if len(args) == 4:
+        w, v, u, x = args
+        # u is a function of v. SubstFor(w,v,u,x) returns w times u with v replaced by x.
+        return SimplifyIntegrand(w*SubstFor(v, u, x), x)
+    v, u, x = args
+    # u is a function of v. SubstFor(v, u, x) returns u with v replaced by x.
+    if AtomQ(v):
+        return Subst(u, v, x)
+    elif Not(EqQ(FreeFactors(v, x), 1)):
+        return SubstFor(NonfreeFactors(v, x), u, x/FreeFactors(v, x))
+    elif SinQ(v):
+        return SubstForTrig(u, x, Sqrt(1 - x**2), v.args[0], x)
+    elif CosQ(v):
+        return SubstForTrig(u, Sqrt(1 - x**2), x, v.args[0], x)
+    elif TanQ(v):
+        return SubstForTrig(u, x/Sqrt(1 + x**2), 1/Sqrt(1 + x**2), v.args[0], x)
+    elif CotQ(v):
+        return SubstForTrig(u, 1/Sqrt(1 + x**2), x/Sqrt(1 + x**2), v.args[0], x)
+    elif SecQ(v):
+        return SubstForTrig(u, 1/Sqrt(1 - x**2), 1/x, v.args[0], x)
+    elif CscQ(v):
+        return SubstForTrig(u, 1/x, 1/Sqrt(1 - x**2), v.args[0], x)
+    elif SinhQ(v):
+        return SubstForHyperbolic(u, x, Sqrt(1 + x**2), v.args[0], x)
+    elif CoshQ(v):
+        return SubstForHyperbolic(u, Sqrt( - 1 + x**2), x, v.args[0], x)
+    elif TanhQ(v):
+        return SubstForHyperbolic(u, x/Sqrt(1 - x**2), 1/Sqrt(1 - x**2), v.args[0], x)
+    elif CothQ(v):
+        return SubstForHyperbolic(u, 1/Sqrt( - 1 + x**2), x/Sqrt( - 1 + x**2), v.args[0], x)
+    elif SechQ(v):
+        return SubstForHyperbolic(u, 1/Sqrt( - 1 + x**2), 1/x, v.args[0], x)
+    elif CschQ(v):
+        return SubstForHyperbolic(u, 1/x, 1/Sqrt(1 + x**2), v.args[0], x)
+    else:
+        return SubstForAux(u, v, x)
+
+def SubstForAux(u, v, x):
+    # u is a function of v. SubstForAux(u, v, x) returns u with v replaced by x.
+    if u==v:
+        return x
+    elif AtomQ(u):
+        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u - v.args[0]):
+            return x**Simplify(1/v.args[1])
+        else:
+            return u
+    elif PowerQ(u) and FreeQ(u.args[1], x):
+        if ZeroQ(u.args[0] - v):
+            return x**u.args[1]
+        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u.args[0] - v.args[0]):
+            return x**Simplify(u.args[1]/v.args[1])
+        return SubstForAux(u.args[0], v, x)**u.args[1]
+    elif ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
+        return FreeFactors(u, x)*SubstForAux(NonfreeFactors(u, x), v, x)
+    elif ProductQ(u) and ProductQ(v):
+        return SubstForAux(First(u), First(v), x)
+    else:
+        return u.func(*[SubstForAux(i, v, x) for i in u.args])
+
+def FresnelS(x):
+    return fresnels(x)
+
+def FresnelC(x):
+    return fresnelc(x)
+
+def Erfc(x):
+    return erfc(x)
+
+def Erfi(x):
+    return erfi(x)
+
+def Gamma(*args):
+    if len(args) == 1:
+        a = args[0]
+        return gamma(a)
+    elif len(args) == 2:
+        a, x = args
+        return gammainc(a, x)
+    else:
+        a, x, y = args
+        return gammainc(a, x, y)
+
+def FunctionOfTrigOfLinearQ(u, x):
+    # If u is an algebraic function of trig functions of a linear function of x, 
+    # FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
+    if FunctionOfTrig(u, None, x) and AlgebraicTrigFunctionQ(u, x) and FunctionOfLinear(FunctionOfTrig(u, None, x), x):
+        return True
+    else:
+        return False
+
+def ElementaryFunctionQ(u):
+    # ElementaryExpressionQ[u] returns True if u is a sum, product, or power and all the operands
+    # are elementary expressions; or if u is a call on a trig, hyperbolic, or inverse function
+    # and all the arguments are elementary expressions; else it returns False.
+    if AtomQ(u):
+        return True
+    elif SumQ(u) or ProductQ(u) or PowerQ(u) or TrigQ(u) or HyperbolicQ(u) or InverseFunctionQ(u):
+        for i in u.args:
+            if not ElementaryFunctionQ(i):
+                return False
+        return True
+    return False
+
 def Complex(a, b):
     return a + I*b
 
@@ -6220,9 +6324,6 @@ def _TrigSimplifyAux():
 def TrigSimplifyAux(expr):
     return TrigSimplifyAux_replacer.replace(UtilityOperator(expr))
 
-def Gamma(u):
-    return gamma(u)
-
 def Cancel(expr):
     return cancel(expr)
 
@@ -6239,16 +6340,7 @@ def PolyLog(n, p, z=None):
 def D(f, x):
     return f.diff(x)
 
-def FunctionOfTrigOfLinearQ(u, x):
-    return False
-
-def ElementaryFunctionQ(u):
-    return False
-
 def Dist(u):
-    return S(0)
-
-def SubstFor(w, v, u, x):
     return S(0)
 
 if matchpy:
