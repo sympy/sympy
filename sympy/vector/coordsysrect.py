@@ -142,7 +142,7 @@ class CoordSys3D(Basic):
             l = l._projections
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
             lambda_inverse = lambda x,y,z: tuple(CoordSys3D._inverse_rotation_matrix(r)*Matrix(
-                [x+l[0], y+l[1], z+l[2]]))
+                [x-l[0], y-l[1], z-l[2]]))
         elif isinstance(transformation, Symbol):
             trname = transformation.name
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
@@ -210,9 +210,9 @@ class CoordSys3D(Basic):
         obj._base_scalars = (x1, x2, x3)
 
         obj._transformation = transformation
-        obj._transformation_lambda = lambda_transformation
+        obj._transformation_lambda = lambda_inverse
         obj._lame_coefficients = lambda_lame(x1, x2, x3)
-        obj._transformation_from_parent_lambda = lambda_inverse
+        obj._transformation_from_parent_lambda = lambda_transformation
 
         setattr(obj, variable_names[0], x1)
         setattr(obj, variable_names[1], x2)
@@ -1003,9 +1003,9 @@ class CoordSys3D(Basic):
 
         dx, dy, dz = [translation.dot(i) for i in parent.base_vectors()]
         t = lambda x, y, z: (
-            x - dx,
-            y - dy,
-            z - dz,
+            x + dx,
+            y + dy,
+            z + dz,
         )
         return lambda x, y, z: t(*r(x, y, z))
 
