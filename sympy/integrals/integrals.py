@@ -23,6 +23,7 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.functions.elementary.exponential import log
 from sympy.series import limit
 from sympy.series.order import Order
+from sympy.series.formal import FormalPowerSeries
 
 
 class Integral(AddWithLimits):
@@ -400,6 +401,12 @@ class Integral(AddWithLimits):
 
         if isinstance(function, MatrixBase):
             return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
+
+        if isinstance(function, FormalPowerSeries):
+            if any(len(xab) > 1 for xab in self.limits):
+                return function.integrate(self.limits[0])
+            else:
+                return function.integrate(self.limits[0][0])
 
         # There is no trivial answer, so continue
 
