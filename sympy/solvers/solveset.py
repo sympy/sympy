@@ -243,7 +243,7 @@ def _invert_complex(f, g_ys, symbol):
 
     if hasattr(f, 'inverse') and \
        not isinstance(f, TrigonometricFunction) and \
-       not isinstance(f, Pow) and f.base is not S.Exp1:
+       not (isinstance(f, Pow) and f.base is S.Exp1):
         if len(f.args) > 1:
             raise ValueError("Only functions with one argument are supported.")
         return _invert_complex(f.args[0],
@@ -254,7 +254,7 @@ def _invert_complex(f, g_ys, symbol):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-            return _invert_complex(f.args[0], exp_invs, symbol)
+            return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 

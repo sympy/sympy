@@ -196,6 +196,11 @@ class exp(Function):
     sympy.functions.elementary.exponential.log
     """
     def __new__(cls, arg, **kwargs):
+        from sympy.calculus import AccumBounds
+
+        if isinstance(arg, AccumBounds):
+            return AccumBounds(exp(arg.min), exp(arg.max))
+
         return Pow(S.Exp1, arg, **kwargs)
 
 

@@ -562,7 +562,7 @@ def exptrigsimp(expr, simplify=True):
         n, d = ei - 1, ei + 1
         et = n/d
         etinv = d/n  # not 1/et or else recursion errors arise
-        a = ei.args[0] if ei.func is exp else S.One
+        a = ei.args[0] if (ei.is_Pow and ei.base is S.Exp1) else S.One
         if a.is_Mul or a is S.ImaginaryUnit:
             c = a.as_coefficient(I)
             if c:

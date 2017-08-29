@@ -7,7 +7,7 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
 from sympy.functions.elementary.exponential import exp, log
-from sympy import I
+from sympy import I, S
 
 
 class AskIntegerHandler(CommonHandler):
@@ -245,8 +245,8 @@ class AskRealHandler(CommonHandler):
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
 
-        if expr.base.func == exp:
-            if ask(Q.imaginary(expr.base.args[0]), assumptions):
+        if expr.base.is_Pow and expr.base.base is S.Exp1:
+            if ask(Q.imaginary(expr.base.base), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return True
             # If the i = (exp's arg)/(I*pi) is an integer or half-integer
@@ -496,8 +496,8 @@ class AskImaginaryHandler(CommonHandler):
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
 
-        if expr.base.func == exp:
-            if ask(Q.imaginary(expr.base.args[0]), assumptions):
+        if expr.base.is_Pow and expr.base.base is S.Exp1:
+            if ask(Q.imaginary(expr.base.base), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return False
                 i = expr.base.args[0]/I/pi
@@ -542,7 +542,7 @@ class AskImaginaryHandler(CommonHandler):
         # return ask(Q.nonpositive(expr.args[0]), assumptions)
         # but ask(Q.nonpositive(exp(x)), Q.imaginary(x)) -> None;
         # it should return True since exp(x) will be either 0 or complex
-        if expr.args[0].func == exp:
+        if expr.args[0].is_Pow and expr.args[0].base is S.Exp1:
             if expr.args[0].args[0] in [I, -I]:
                 return True
         im = ask(Q.imaginary(expr.args[0]), assumptions)

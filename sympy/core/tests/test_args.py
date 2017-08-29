@@ -1290,6 +1290,11 @@ def test_sympy__functions__elementary__exponential__LambertW():
 @SKIP("abstract class")
 def test_sympy__functions__elementary__exponential__ExpBase():
     pass
+ 
+
+def test_sympy__functions__elementary__exponential__exp():
+    from sympy.functions.elementary.exponential import exp
+    assert _test_args(exp(2))
 
 
 def test_sympy__functions__elementary__exponential__exp_polar():
