@@ -27,8 +27,8 @@ from __future__ import print_function, division
 
 from sympy import real_roots, default_sort_key
 from sympy.abc import z
-from sympy.core.function import Lambda, Function
-from sympy.core.numbers import ilcm, oo
+from sympy.core.function import Lambda
+from sympy.core.numbers import ilcm, oo, I
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -219,7 +219,7 @@ class DifferentialExtension(object):
         self.reset()
         exp_new_extension, log_new_extension, tan_new_extension = True, True, True
 
-        if rewrite_complex:
+        if rewrite_complex or I in self.f.atoms():
             rewritables = {
                 (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
                 (asin, acos, acot, atan): log,
@@ -228,7 +228,6 @@ class DifferentialExtension(object):
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
         else:
-            self.newf = self.newf.replace(tan, Tan)
             if any(i.has(x) for i in self.f.atoms(sin, cos, atan, asin, acos)):
                 raise NotImplementedError("Trigonometric extensions are not "
                 "supported (yet!)")
@@ -393,9 +392,7 @@ class DifferentialExtension(object):
         return exps, pows, numpows, sympows, log_new_extension
 
     def _rewrite_tans(self, tans):
-        # should this include 'tan'? (investigate here)
-        # I think it can be removed
-        atoms = self.newf.atoms(UnevaluatedTan, tan)
+        atoms = self.newf.atoms(tan)
         tans = update_sets(tans, atoms,
             lambda i: i.args[0].is_rational_function(*self.T) and
             i.args[0].has(*self.T))
@@ -479,9 +476,9 @@ class DifferentialExtension(object):
                 i = Dummy("i")
             else:
                 i = Symbol('i')
-            self.Tfuncs += [Lambda(i, UnevaluatedTan(arg.subs(self.x, i)))]
+            self.Tfuncs += [Lambda(i, tan(arg.subs(self.x, i)))]
             self.newf = self.newf.xreplace(
-                    dict((UnevaluatedTan(tanarg), rewrite_tans(p, self.t)) for tanarg, p in others))
+                    dict((tan(tanarg), rewrite_tans(p, self.t)) for tanarg, p in others))
             new_extension = True
 
         return new_extension
@@ -763,28 +760,6 @@ class DifferentialExtension(object):
         self.d = self.D[self.level]
         self.case = self.cases[self.level]
         return None
-
-
-class UnevaluatedTan(Function):
-    """
-    Used to avoid auto-simplification of tangents of the type
-    'tan(I*x)'.
-
-    Examples
-    ========
-
-    >>> from sympy import tan, tanh
-    >>> from sympy.integrals.risch import UnevaluatedTan
-    >>> UnevaluatedTan(I*x)
-    UnevaluatedTan(I*x)
-
-    >>> tan(I*x)
-    I*tanh(x)
-    """
-    pass
-
-
-Tan = UnevaluatedTan
 
 
 def rewrite_tans(n, t):
