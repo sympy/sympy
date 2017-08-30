@@ -44,14 +44,14 @@ def decompogen(f, symbol):
     fp = Poly(f)
     gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
 
-    if len(gens) == 1 and gens[0] != symbol and (not isinstance(f,Relational)):
+    if len(gens) == 1 and gens[0] != symbol and (not isinstance(f, Relational)):
         f1 = f.subs(gens[0], symbol)
         f2 = gens[0]
         result += [f1] + decompogen(f2, symbol)
         return result
 
     # ===== Polynomial decompose() ====== #
-    if not isinstance(f,Relational):
+    if not isinstance(f, Relational):
         try:
             result += decompose(f)
             return result
