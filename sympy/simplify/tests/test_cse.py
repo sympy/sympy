@@ -269,17 +269,6 @@ def test_postprocess():
         [x1 + exp(x1/x0) + cos(x0), z - 2, x1*x2]]
 
 
-def _check_cse(output, exprs):
-    replacements, reduced_exprs = output
-    for i in range(len(replacements)):
-        replacements = \
-            [(expr[0], expr[1].subs(*replacements[i])) for expr in replacements]
-
-    recreated_exprs = reduced_exprs[0].subs(dict(replacements))
-    for i in range(len(exprs)):
-        assert recreated_exprs[i] == exprs[i]
-
-
 def test_issue_4499():
     # previously, this gave 16 constants
     from sympy.abc import a, b
@@ -301,8 +290,7 @@ def test_issue_4499():
         x7*B(b - 1, x4)), (x9, x7*B(b, x4)), (x10, B(x3, x4))],
         [(a, a + S(1)/2, x0, b, x3, x5*x8,
         x4*x5*x9, x10*x4*x8, x10*x9, 1, 0, S(1)/2, z/2, x1 + 1, b + x6, x6)])
-    assert count_ops(c) <= 33
-    _check_cse(c, t)
+    assert ans == c
 
 
 def test_issue_6169():
