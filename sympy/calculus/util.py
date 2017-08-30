@@ -345,15 +345,15 @@ def periodicity(f, symbol, check=False):
         except NotImplementedError:
             pass
 
-    if isinstance(f,Abs):
-        f=f.args[0]
-        if isinstance(f,sec):
-            f=cos(f.args[0])
-        if isinstance(f,csc):
-            f=sin(f.args[0])
-        period=periodicity(f,symbol)
-        if (period is not None) and (isinstance(f,sin) or isinstance(f,cos)):
-            if f.subs(symbol, symbol + period/2) in [f,-f]:
+    if isinstance(f, Abs):
+        f = f.args[0]
+        if isinstance(f, sec):
+            f = cos(f.args[0])
+        if isinstance(f, csc):
+            f = sin(f.args[0])
+        period = periodicity(f, symbol)
+        if (period is not None) and (isinstance(f, sin) or isinstance(f, cos)):
+            if f.subs(symbol, symbol + period/2) in [f, -f]:
                 return period/2
         return period
 
