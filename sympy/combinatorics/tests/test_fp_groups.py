@@ -163,6 +163,9 @@ def test_order():
     f = FpGroup(F, [])
     assert f.order() == S.Infinity
 
+    f = FpGroup(free_group('')[0], [])
+    assert f.order() == 1
+
 def test_fp_subgroup():
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])

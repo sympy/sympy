@@ -129,7 +129,10 @@ class FpGroup(DefaultPrinting):
         if not all([g.group == self.free_group for g in gens]):
                 raise ValueError("Given generators are not members of the group")
         g, rels = reidemeister_presentation(self, gens, C=C)
-        g = FpGroup(g[0].group, rels)
+        if g:
+            g = FpGroup(g[0].group, rels)
+        else:
+            g = FpGroup(free_group('')[0], [])
         return g
 
     def coset_enumeration(self, H, strategy="relator_based", max_cosets=None,
@@ -212,6 +215,8 @@ class FpGroup(DefaultPrinting):
             return self._order
         if self._coset_table != None:
             self._order = len(self._coset_table.table)
+        elif len(self.generators) == 0:
+            self._order = 1
         elif len(self.relators) == 0:
             self._order = S.Infinity
         elif len(self.generators) == 1:
