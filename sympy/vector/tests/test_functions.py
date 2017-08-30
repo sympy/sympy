@@ -192,27 +192,27 @@ def test_compose():
     g = a.orient_new_axis('g', q2, a.i)
 
     v1 = b.x * b.i + b.z * b.k
-    assert _compose(v1, a, (x, y, z)) == (x + 1, y + 1, z)
+    assert _compose(v1, a, (x, y, z)) == (x - 1, y - 1, z)
 
     v2 = a.x * a.i + a.z * a.k
-    assert _compose(v2, b, (x, y, z)) == (x - 1, y - 1, z)
+    assert _compose(v2, b, (x, y, z)) == (x + 1, y + 1, z)
 
     v3 = c.y * c.i + c.k
     assert _compose(v3, b, (x, y, z)) == (x * cos(q0) - z * sin(q0), y, x * sin(q0) + z * cos(q0))
 
-    assert _compose(v3, a, (x, y, z)) == (-z*sin(q0) + (x + 1)*cos(q0), y + 1, z*cos(q0) + (x + 1)*sin(q0))
+    assert _compose(v3, a, (x, y, z)) == (-z*sin(q0) + (x - 1)*cos(q0), y - 1, z*cos(q0) + (x - 1)*sin(q0))
     assert simplify(_compose(v3, e, (x, y, z))) == \
            (x * cos(q0 - q1) - z * sin(q0 - q1), y, x * sin(q0 - q1) + z * cos(q0 - q1))
 
     v4 = 3 * d.x * d.i + d.j
     assert _compose(v4, c, (x, y, z)) == (x * sin(y) * cos(z), x * sin(y) * sin(z), x * cos(y))
     assert _compose(v4, a, (x, y, z)) == \
-            ((-z*sin(q0) + (x + 1)*cos(q0))*sin(y + 1)*cos(z*cos(q0) + (x + 1)*sin(q0)),
-            (-z*sin(q0) + (x + 1)*cos(q0))*sin(y + 1)*sin(z*cos(q0) + (x + 1)*sin(q0)),
-            (-z*sin(q0) + (x + 1)*cos(q0))*cos(y + 1))
+            ((-z*sin(q0) + (x - 1)*cos(q0))*sin(y - 1)*cos(z*cos(q0) + (x - 1)*sin(q0)),
+            (-z*sin(q0) + (x - 1)*cos(q0))*sin(y - 1)*sin(z*cos(q0) + (x - 1)*sin(q0)),
+            (-z*sin(q0) + (x - 1)*cos(q0))*cos(y - 1))
 
     v5 = f.i
     assert simplify(_compose(v5, g, (x, y, z))) == \
-           (((x + 1)*cos(q1) - (y*sin(q2) + z*cos(q2))*sin(q1))*cos(y*cos(q2) - z*sin(q2) + 1),
-            ((x + 1)*cos(q1) - (y*sin(q2) + z*cos(q2))*sin(q1))*sin(y*cos(q2) - z*sin(q2) + 1),
-            (x +1)*sin(q1) + (y*sin(q2) + z*cos(q2))*cos(q1))
+           (((x - 1)*cos(q1) - (y*sin(q2) + z*cos(q2))*sin(q1))*cos(y*cos(q2) - z*sin(q2) - 1),
+            ((x - 1)*cos(q1) - (y*sin(q2) + z*cos(q2))*sin(q1))*sin(y*cos(q2) - z*sin(q2) - 1),
+            (x - 1)*sin(q1) + (y*sin(q2) + z*cos(q2))*cos(q1))
