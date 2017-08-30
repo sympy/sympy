@@ -145,22 +145,22 @@ class CoordSys3D(Basic):
                 [x-l[0], y-l[1], z-l[2]]))
         elif isinstance(transformation, Symbol):
             trname = transformation.name
-            lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
+            lambda_transformation = CoordSys3D._set_inv_trans_equations(trname)
             lambda_lame = CoordSys3D._get_lame_coeff(trname)
-            lambda_inverse = CoordSys3D._set_inv_trans_equations(trname)
+            lambda_inverse = CoordSys3D._get_transformation_lambdas(trname)
         elif isinstance(transformation, Lambda):
             if not CoordSys3D._check_orthogonality(transformation):
                 raise ValueError("The transformation equation does not "
                                  "create orthogonal coordinate system")
-            lambda_transformation = transformation
-            lambda_lame = CoordSys3D._calculate_lame_coeff(lambda_transformation)
-            lambda_inverse = None
+            lambda_transformation = None
+            lambda_inverse = transformation
+            lambda_lame = CoordSys3D._calculate_lame_coeff(lambda_inverse)
         else:
-            lambda_transformation = lambda x, y, z: transformation(x, y, z)
+            lambda_transformation = None
+            lambda_inverse = lambda x, y, z: transformation(x, y, z)
             lambda_lame = CoordSys3D._get_lame_coeff(transformation)
-            lambda_inverse = None
 
-        # All systems that are defined as 'roots' are unequal, unless
+        # All systems that are defined as 'roots' areinverseunequal, unless
         # they have the same name.
         # Systems defined at same orientation/position wrt the same
         # 'parent' are equal, irrespective of the name.
@@ -449,6 +449,9 @@ class CoordSys3D(Basic):
         return self._transformation_lambda(*self.base_scalars())
 
     def transformation_from_parent(self):
+        if self._transformation_from_parent_lambda is None:
+            # TODO: specify how to calculate it
+            raise ValueError("no inverse transformation has been calculated.")
         if self._parent is None:
             raise ValueError("no parent coordinate system, use `transformation_from_parent_function()`")
         return self._transformation_from_parent_lambda(*self._parent.base_scalars())
