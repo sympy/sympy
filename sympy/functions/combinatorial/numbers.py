@@ -799,16 +799,18 @@ class euler(Function):
             if m.is_odd and m.is_positive:
                 return S.Zero
 
-    def _eval_rewrite_as_Sum(self, arg):
+    def _eval_rewrite_as_Sum(self, n, x=None):
         from sympy import Sum
-        if arg.is_even:
+        if x is None and n.is_even:
             k = Dummy("k", integer=True)
             j = Dummy("j", integer=True)
-            n = self.args[0] / 2
+            n = n / 2
             Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
-
             return Em
+        if x:
+            k = Dummy("k", integer=True)
+            return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
 
     def _eval_evalf(self, prec):
         m = self.args[0]

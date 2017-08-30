@@ -319,6 +319,12 @@ def test_euler_polynomials():
     assert isinstance(euler(m, x), euler)
 
 
+def test_euler_polynomial_rewrite():
+    m = Symbol('m')
+    A = euler(m, x).rewrite('Sum');
+    assert A.subs({m:3, x:5}).doit() == euler(3, 5)
+
+
 def test_catalan():
     n = Symbol('n', integer=True)
     m = Symbol('n', integer=True, positive=True)
