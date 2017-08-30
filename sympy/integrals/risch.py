@@ -28,7 +28,7 @@ from __future__ import print_function, division
 from sympy import real_roots, default_sort_key
 from sympy.abc import z
 from sympy.core.function import Lambda
-from sympy.core.numbers import ilcm, oo
+from sympy.core.numbers import ilcm, oo, I
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -218,14 +218,14 @@ class DifferentialExtension(object):
         self.dummy = dummy
         self.reset()
         exp_new_extension, log_new_extension = True, True
-        if rewrite_complex:
+        if rewrite_complex or I in self.f.atoms():
             rewritables = {
                 (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
                 (asin, acos, acot, atan): log,
             }
         # rewrite the trigonometric components
             for candidates, rule in rewritables.items():
-                self.newf = self.newf.rewrite(candidates, rule)
+                self.newf = cancel(self.newf.rewrite(candidates, rule))
         else:
             if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
                 raise NotImplementedError("Trigonometric extensions are not "
