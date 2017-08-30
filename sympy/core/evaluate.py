@@ -2,24 +2,16 @@ from .cache import clear_cache
 from contextlib import contextmanager
 
 
-class _global_evaluate(list):
-    """ The cache must be cleared whenever global_evaluate is changed. """
+class _global_function(list):
+    """ The cache must be cleared whenever _global_function is changed. """
 
     def __setitem__(self, key, value):
         clear_cache()
         super(_global_evaluate, self).__setitem__(key, value)
 
 
-class _global_distribute(list):
-    """ The cache must be cleared whenever global_distribute is changed. """
-
-    def __setitem__(self, key, value):
-        clear_cache()
-        super(_global_distribute, self).__setitem__(key, value)
-
-
-global_evaluate = _global_evaluate([True])
-global_distribute = _global_distribute([True])
+global_evaluate = _global_function([True])
+global_distribute = _global_function([True])
 
 
 @contextmanager
