@@ -133,7 +133,7 @@ class CoordSys3D(Basic):
             transformation = Tuple(rotation_matrix, location)
 
         if isinstance(transformation, Tuple):
-            lambda_transformation = CoordSys3D._compose_rotation_and_translation(
+            lambda_inverse = CoordSys3D._compose_rotation_and_translation(
                 transformation[0],
                 transformation[1],
                 parent
@@ -141,7 +141,7 @@ class CoordSys3D(Basic):
             r, l = transformation
             l = l._projections
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
-            lambda_inverse = lambda x,y,z: tuple(CoordSys3D._inverse_rotation_matrix(r)*Matrix(
+            lambda_transformation = lambda x,y,z: tuple(CoordSys3D._inverse_rotation_matrix(r)*Matrix(
                 [x-l[0], y-l[1], z-l[2]]))
         elif isinstance(transformation, Symbol):
             trname = transformation.name
@@ -318,7 +318,7 @@ class CoordSys3D(Basic):
         try:
             solved = solve([equations[0] - x, equations[1] - y, equations[2] - z], (x1, x2, x3), dict=True)[0]
             solved = solved[x1], solved[x2], solved[x3]
-            self._transformation_lambda = \
+            self._transformation_from_parent_lambda = \
                 lambda x1, x2, x3: tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved)
         except:
             raise ValueError('Wrong set of parameters.')
