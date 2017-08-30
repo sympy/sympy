@@ -11,7 +11,7 @@ from sympy.core.compatibility import ordered
 from sympy import symbols, simplify, solve
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
-from sympy.geometry.line import Line, Line2D, LinearEntity2D, Ray2D, Segment2D, LinearEntity3D
+from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.util import _symbol
 from sympy.geometry.ellipse import Ellipse
 
