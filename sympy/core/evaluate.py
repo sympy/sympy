@@ -8,7 +8,7 @@ class _global_function(list):
     def __setitem__(self, key, value):
         if (self[key] != value):
             clear_cache()
-        super(_global_evaluate, self).__setitem__(key, value)
+        super(_global_function, self).__setitem__(key, value)
 
 
 global_evaluate = _global_function([True])
