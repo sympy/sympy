@@ -6,7 +6,8 @@ class _global_function(list):
     """ The cache must be cleared whenever _global_function is changed. """
 
     def __setitem__(self, key, value):
-        clear_cache()
+        if (self[key] != value):
+            clear_cache()
         super(_global_evaluate, self).__setitem__(key, value)
 
 
