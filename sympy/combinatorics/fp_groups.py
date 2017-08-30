@@ -215,10 +215,8 @@ class FpGroup(DefaultPrinting):
             return self._order
         if self._coset_table != None:
             self._order = len(self._coset_table.table)
-        elif len(self.generators) == 0:
-            self._order = 1
         elif len(self.relators) == 0:
-            self._order = S.Infinity
+            self._order = self.free_group.order()
         elif len(self.generators) == 1:
             self._order = gcd([r.array_form[0][1] for r in self.relators])
         elif self._is_infinite():
