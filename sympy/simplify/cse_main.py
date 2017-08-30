@@ -154,7 +154,7 @@ class FuncArgTracker(object):
         self.func_to_argset = []
 
         for func_i, func in enumerate(funcs):
-            func_argset = set()
+            func_argset = OrderedSet()
 
             for func_arg in func.args:
                 arg_number = self.get_or_add_value_number(func_arg)
@@ -178,7 +178,7 @@ class FuncArgTracker(object):
         value_number = self.value_numbers.setdefault(value, nvalues)
         if value_number == nvalues:
             self.value_number_to_value.append(value)
-            self.arg_to_funcset.append(set())
+            self.arg_to_funcset.append(OrderedSet())
         return value_number
 
     def stop_arg_tracking(self, func_i):
@@ -251,7 +251,7 @@ class FuncArgTracker(object):
         """
         Update a function with a new set of arguments.
         """
-        new_args = set(new_argset)
+        new_args = OrderedSet(new_argset)
         old_args = self.func_to_argset[func_i]
 
         for deleted_arg in old_args - new_args:
@@ -305,7 +305,7 @@ def match_common_args(func_class, funcs, opt_subs):
     funcs = sorted(funcs, key=lambda f: len(f.args))
     arg_tracker = FuncArgTracker(funcs)
 
-    changed = set()
+    changed = OrderedSet()
 
     for i in range(len(funcs)):
         common_arg_candidates_counts = arg_tracker.get_common_arg_candidates(
@@ -337,7 +337,7 @@ def match_common_args(func_class, funcs, opt_subs):
                 com_func = Unevaluated(
                         func_class, arg_tracker.get_args_in_value_order(com_args))
                 com_func_number = arg_tracker.get_or_add_value_number(com_func)
-                arg_tracker.update_func_argset(i, diff_i | set([com_func_number]))
+                arg_tracker.update_func_argset(i, diff_i | OrderedSet([com_func_number]))
                 changed.add(i)
             else:
                 # Treat the whole expression as a CSE.
@@ -352,13 +352,13 @@ def match_common_args(func_class, funcs, opt_subs):
                 com_func_number = arg_tracker.get_or_add_value_number(funcs[i])
 
             diff_j = arg_tracker.func_to_argset[j].difference(com_args)
-            arg_tracker.update_func_argset(j, diff_j | set([com_func_number]))
+            arg_tracker.update_func_argset(j, diff_j | OrderedSet([com_func_number]))
             changed.add(j)
 
             for k in arg_tracker.get_subset_candidates(
                     com_args, common_arg_candidates):
                 diff_k = arg_tracker.func_to_argset[k].difference(com_args)
-                arg_tracker.update_func_argset(k, diff_k | set([com_func_number]))
+                arg_tracker.update_func_argset(k, diff_k | OrderedSet([com_func_number]))
                 changed.add(k)
 
         if i in changed:
@@ -402,7 +402,7 @@ def opt_cse(exprs, order='canonical'):
     adds = OrderedSet()
     muls = OrderedSet()
 
-    seen_subexp = set()
+    seen_subexp = OrderedSet()
 
     def _find_opts(expr):
 
@@ -445,7 +445,7 @@ def opt_cse(exprs, order='canonical'):
             _find_opts(e)
 
     # split muls into commutative
-    comutative_muls = set()
+    comutative_muls = OrderedSet()
     for m in muls:
         c, nc = m.args_cnc(cset=True)
         if c:
@@ -491,10 +491,10 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
     ## Find repeated sub-expressions
 
-    to_eliminate = set()
+    to_eliminate = OrderedSet()
 
-    seen_subexp = set()
-    excluded_symbols = set()
+    seen_subexp = OrderedSet()
+    excluded_symbols = OrderedSet()
 
     def _find_repeated(expr):
         if not isinstance(expr, (Basic, Unevaluated)):

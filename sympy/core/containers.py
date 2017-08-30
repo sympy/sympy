@@ -328,3 +328,21 @@ class OrderedSet(collections.MutableSet):
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
+
+    def intersection(self, other):
+        result = []
+        for val in self:
+            if val in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def difference(self, other):
+        result = []
+        for val in self:
+            if val not in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def update(self, iterable):
+        for val in iterable:
+            self.add(val)
