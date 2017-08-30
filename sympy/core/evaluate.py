@@ -50,7 +50,8 @@ def distribute(x):
     """ Control automatic distribution of Number over Add
 
     This context managers controls whether or not Mul distribute Number over
-    Add
+    Add. Plan is to avoid distributing Number over Add in all of sympy. Once
+    that is done, this contextmanager will be removed.
 
     Examples
     ========
