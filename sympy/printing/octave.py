@@ -442,6 +442,14 @@ class OctaveCodePrinter(CodePrinter):
         return "airy(3, %s)" % self._print(expr.args[0])
 
 
+    def _print_expint(self, expr):
+        mu, x = expr.args
+        if mu != 1:
+            # they only implement nu = 1
+            return self._print_not_supported(expr)
+        return "expint(%s)" % self._print(x)
+
+
     def _print_LambertW(self, expr):
         # argument order is reversed
         args = ", ".join([self._print(x) for x in reversed(expr.args)])

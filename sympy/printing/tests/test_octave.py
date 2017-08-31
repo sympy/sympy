@@ -2,7 +2,7 @@ from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
-                             sinc, Max, Min, arg, im, re)
+                             sinc, Max, Min, arg, im, re, expint)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -319,6 +319,20 @@ def test_octave_not_supported():
         "% Not supported in Octave:\n"
         "% Derivative\n"
         "Derivative(f(x), x)"
+    )
+
+
+def test_octave_expint():
+    assert mcode(expint(1, x)) == "expint(x)"
+    assert mcode(expint(2, x)) == (
+        "% Not supported in Octave:\n"
+        "% expint\n"
+        "expint(2, x)"
+    )
+    assert mcode(expint(y, x)) == (
+        "% Not supported in Octave:\n"
+        "% expint\n"
+        "expint(y, x)"
     )
 
 
