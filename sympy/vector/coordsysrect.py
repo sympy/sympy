@@ -313,7 +313,7 @@ class CoordSys3D(Basic):
         x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy, reals=True)
         x, y, z = symbols("x, y, z", cls=Dummy)
 
-        equations = self._transformation(x1, x2, x3)
+        equations = self._transformation_lambda(x1, x2, x3)
 
         try:
             solved = solve([equations[0] - x, equations[1] - y, equations[2] - z], (x1, x2, x3), dict=True)[0]

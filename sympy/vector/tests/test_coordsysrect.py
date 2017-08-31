@@ -11,6 +11,8 @@ from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.core import S
+from sympy import Tuple
+
 
 x, y, z = symbols('x y z')
 a, b, c, q = symbols('a b c q')
@@ -496,6 +498,15 @@ def test_transformation_functions():
     assert E.transformation_to_parent() == (E.x*cos(q1) + E.y*sin(q1), -E.x*sin(q1) + E.y*cos(q1), E.z)
     assert express(C.x, E, variables=True) == E.x*cos(q1) - E.y*sin(q1)
     assert express(E.x, C, variables=True) == C.x*cos(q1) + C.y*sin(q1)
+    E = C.create_new('E', transformation=Tuple(Matrix([
+        [cos(q), sin(q), 0],
+        [-sin(q), cos(q), 0],
+        [0, 0, 1]]), Vector.zero))
+    E._calculate_inv_trans_equations()
+    assert E.transformation_to_parent() == (E.x*cos(q) + E.y*sin(q), -E.x*sin(q) + E.y*cos(q), E.z)
+    assert E.transformation_from_parent() == (C.x*cos(q) - C.y*sin(q), C.x*sin(q) + C.y*cos(q), C.z)
+    assert express(E.x, C, variables=True) == C.x*cos(q) + C.y*sin(q)
+    assert express(C.x, E, variables=True) == E.x*cos(q) - E.y*sin(q)
     F = C.create_new("F", lambda x, y, z: (x**3, y, z))
     F._calculate_inv_trans_equations()
     assert F.transformation_from_parent() == (C.x**(S(1)/3), C.y, C.z)
