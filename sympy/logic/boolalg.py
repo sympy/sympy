@@ -84,7 +84,14 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    is_Atom = True
     _op_priority = 11  # higher than Expr
+
+    def simplify(self, *a, **kw):
+        return self
+
+    def expand(self, *a, **kw):
+        return self
 
     @property
     def canonical(self):
@@ -367,7 +374,7 @@ class And(LatticeOp, BooleanFunction):
         >>> from sympy import And, Symbol
         >>> x = Symbol('x', real=True)
         >>> And(x<2, x>-2).as_set()
-        (-2, 2)
+        Interval.open(-2, 2)
         """
         from sympy.sets.sets import Intersection
         if len(self.free_symbols) == 1:
@@ -438,7 +445,7 @@ class Or(LatticeOp, BooleanFunction):
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
         >>> Or(x>2, x<-2).as_set()
-        (-oo, -2) U (2, oo)
+        Union(Interval.open(-oo, -2), Interval.open(2, oo))
         """
         from sympy.sets.sets import Union
         if len(self.free_symbols) == 1:
@@ -531,7 +538,7 @@ class Not(BooleanFunction):
         >>> from sympy import Not, Symbol
         >>> x = Symbol('x', real=True)
         >>> Not(x>0).as_set()
-        (-oo, 0]
+        Interval(-oo, 0)
         """
         if len(self.free_symbols) == 1:
             return self.args[0].as_set().complement(S.Reals)
@@ -973,6 +980,10 @@ class ITE(BooleanFunction):
     def _eval_derivative(self, x):
         return self.func(self.args[0], *[a.diff(x) for a in self.args[1:]])
 
+    def _eval_rewrite_as_Piecewise(self, *args):
+        from sympy.functions import Piecewise
+        return Piecewise((args[1], args[0]), (args[2], True))
+
     # the diff method below is copied from Expr class
     def diff(self, *symbols, **assumptions):
         new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
@@ -1314,7 +1325,7 @@ def eliminate_implications(expr):
     >>> eliminate_implications(Equivalent(A, B, C))
     (A | ~C) & (B | ~A) & (C | ~B)
     """
-    return to_nnf(expr)
+    return to_nnf(expr, simplify=False)
 
 
 def is_literal(expr):
@@ -1505,7 +1516,7 @@ def _check_pair(minterm1, minterm2):
 
 def _convert_to_varsSOP(minterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
     """
     temp = []
@@ -1521,7 +1532,7 @@ def _convert_to_varsSOP(minterm, variables):
 
 def _convert_to_varsPOS(maxterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for POS).
     """
     temp = []

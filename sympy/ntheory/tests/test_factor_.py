@@ -1,6 +1,7 @@
 from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
     Mul, S, Pow, sieve, Symbol, summation, Dummy,
     factorial as fac)
+from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
 
@@ -12,7 +13,7 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega)
+    udivisor_count, primenu, primeomega, small_trailing)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -66,7 +67,7 @@ def multiproduct(seq=(), start=1):
     return units * multiproduct(multi)**2
 
 
-def test_trailing():
+def test_trailing_bitcount():
     assert trailing(0) == 0
     assert trailing(1) == 0
     assert trailing(-1) == 0
@@ -78,6 +79,10 @@ def test_trailing():
         assert trailing((1 << i) * 31337) == i
     assert trailing((1 << 1000001)) == 1000001
     assert trailing((1 << 273956)*7**37) == 273956
+    # issue 12709
+    big = small_trailing[-1]*2
+    assert trailing(-big) == trailing(big)
+    assert bitcount(-big) == bitcount(big)
 
 
 def test_multiplicity():
@@ -154,6 +159,20 @@ def test_factorint():
     assert factorint(5951757) == {3: 1, 7: 1, 29: 2, 337: 1}
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
+
+    assert factorint(0, multiple=True) == [0]
+    assert factorint(1, multiple=True) == []
+    assert factorint(-1, multiple=True) == [-1]
+    assert factorint(-2, multiple=True) == [-1, 2]
+    assert factorint(-16, multiple=True) == [-1, 2, 2, 2, 2]
+    assert factorint(2, multiple=True) == [2]
+    assert factorint(24, multiple=True) == [2, 2, 2, 3]
+    assert factorint(126, multiple=True) == [2, 3, 3, 7]
+    assert factorint(123456, multiple=True) == [2, 2, 2, 2, 2, 2, 3, 643]
+    assert factorint(5951757, multiple=True) == [3, 7, 29, 29, 337]
+    assert factorint(64015937, multiple=True) == [7993, 8009]
+    assert factorint(2**(2**6) + 1, multiple=True) == [274177, 67280421310721]
+
     assert multiproduct(factorint(fac(200))) == fac(200)
     for b, e in factorint(fac(150)).items():
         assert e == fac_multiplicity(150, b)
@@ -287,6 +306,9 @@ def test_totient():
     assert totient(5009) == 5008
     assert totient(2**100) == 2**99
 
+    raises(ValueError, lambda: totient(30.1))
+    raises(ValueError, lambda: totient(20.001))
+
     m = Symbol("m", integer=True)
     assert totient(m)
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
@@ -294,6 +316,16 @@ def test_totient():
 
     n = Symbol("n", integer=True, positive=True)
     assert totient(n).is_integer
+
+    x=Symbol("x", integer=False)
+    raises(ValueError, lambda: totient(x))
+
+    y=Symbol("y", positive=False)
+    raises(ValueError, lambda: totient(y))
+
+    z=Symbol("z", positive=True, integer=True)
+    raises(ValueError, lambda: totient(2**(-z)))
+
 
 def test_reduced_totient():
     assert [reduced_totient(k) for k in range(1, 16)] == \
@@ -423,6 +455,13 @@ def test_factorrat():
     assert str(factorrat(S(1)/1, visual=True)) == '1'
     assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
     assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
+
+    assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
+    assert factorrat(S(1)/1, multiple=True) == []
+    assert factorrat(S(25)/14, multiple=True) == [1/7, 1/2, 5, 5]
+    assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
+    assert factorrat(S(-25)/14/9, multiple=True) == \
+        [-1, 1/7, 1/3, 1/3, 1/2, 5, 5]
 
 
 def test_visual_io():

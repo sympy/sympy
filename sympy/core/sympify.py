@@ -50,6 +50,7 @@ class CantSympify(object):
     """
     pass
 
+
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
@@ -256,6 +257,24 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         else:
             return a
 
+    # Support for basic numpy datatypes
+    if type(a).__module__ == 'numpy':
+        import numpy as np
+        if np.isscalar(a):
+            if not isinstance(a, np.floating):
+                func = converter[complex] if np.iscomplex(a) else sympify
+                return func(np.asscalar(a))
+            else:
+                try:
+                    from sympy.core.numbers import Float
+                    prec = np.finfo(a).nmant
+                    a = str(list(np.reshape(np.asarray(a),
+                                            (1, np.size(a)))[0]))[1:-1]
+                    return Float(a, precision=prec)
+                except NotImplementedError:
+                    raise SympifyError('Translation for numpy float : %s '
+                                       'is not implemented' % a)
+
     try:
         return converter[cls](a)
     except KeyError:
@@ -282,6 +301,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if strict:
         raise SympifyError(a)
+
+    try:
+        from ..tensor.array import Array
+        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+    except AttributeError:
+        pass
 
     if iterable(a):
         try:

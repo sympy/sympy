@@ -2,18 +2,19 @@ from itertools import product
 import math
 
 import mpmath
-
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq)
+    DotProduct, Eq, Dummy)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
+from sympy.functions.special.gamma_functions import uppergamma,lowergamma
+
 import sympy
 
 
@@ -52,9 +53,17 @@ def test_str_args():
     raises(TypeError, lambda: f(0))
 
 
-def test_own_namespace():
+def test_own_namespace_1():
     myfunc = lambda x: 1
     f = lambdify(x, sin(x), {"sin": myfunc})
+    assert f(0.1) == 1
+    assert f(100) == 1
+
+
+def test_own_namespace_2():
+    def myfunc(x):
+        return 1
+    f = lambdify(x, sin(x), {'sin': myfunc})
     assert f(0.1) == 1
     assert f(100) == 1
 
@@ -293,7 +302,7 @@ def test_math():
 
 def test_sin():
     f = lambdify(x, sin(x)**2)
-    assert isinstance(f(2), float)
+    assert isinstance(f(2), (float, mpmath.ctx_mp_python.mpf))
     f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)
 
@@ -356,15 +365,18 @@ def test_numpy_old_matrix():
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
-    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.matrix}, 'numpy'])
+    f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
 def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
-    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    lambdify([x, y], p, modules='numpy')(0, 1)
+    p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
+    f = lambdify([x, y], p, modules='numpy')
+    numpy.seterr(divide='ignore')
+    assert str(float(f(0,1))) == 'inf'
+    numpy.seterr(divide='warn')
 
 def test_issue9474():
     mods = [None, 'math']
@@ -606,7 +618,7 @@ def test_imps():
     func = sympy.Function('myfunc')
     assert not hasattr(func, '_imp_')
     my_f = implemented_function(func, lambda x: 2*x)
-    assert hasattr(func, '_imp_')
+    assert hasattr(my_f, '_imp_')
     # Error for functions with same name and different implementation
     f2 = implemented_function("f", lambda x: x + 101)
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
@@ -698,19 +710,23 @@ def test_python_keywords():
 
 def test_lambdify_docstring():
     func = lambdify((w, x, y, z), w + x + y + z)
-    assert func.__doc__ == (
-            "Created with lambdify. Signature:\n\n"
-            "func(w, x, y, z)\n\n"
-            "Expression:\n\n"
-            "w + x + y + z")
+    ref = (
+        "Created with lambdify. Signature:\n\n"
+        "func(w, x, y, z)\n\n"
+        "Expression:\n\n"
+        "w + x + y + z"
+    ).splitlines()
+    assert func.__doc__.splitlines()[:len(ref)] == ref
     syms = symbols('a1:26')
     func = lambdify(syms, sum(syms))
-    assert func.__doc__ == (
-            "Created with lambdify. Signature:\n\n"
-            "func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,\n"
-            "        a16, a17, a18, a19, a20, a21, a22, a23, a24, a25)\n\n"
-            "Expression:\n\n"
-            "a1 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a2 + a20 +...")
+    ref = (
+        "Created with lambdify. Signature:\n\n"
+        "func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,\n"
+        "        a16, a17, a18, a19, a20, a21, a22, a23, a24, a25)\n\n"
+        "Expression:\n\n"
+        "a1 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a2 + a20 +..."
+    ).splitlines()
+    assert func.__doc__.splitlines()[:len(ref)] == ref
 
 
 #================== Test special printers ==========================
@@ -774,3 +790,20 @@ def test_Indexed():
     i, j = symbols('i j')
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
+
+def test_issue_12173():
+    #test for issue 12173
+    exp1 = lambdify((x, y), uppergamma(x, y),"mpmath")(1, 2)
+    exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
+    assert exp1 == uppergamma(1, 2).evalf()
+    assert exp2 == lowergamma(1, 2).evalf()
+
+def test_lambdify_dummy_arg():
+    d1 = Dummy()
+    f1 = lambdify(d1, d1 + 1, dummify=False)
+    assert f1(2) == 3
+    f1b = lambdify(d1, d1 + 1)
+    assert f1b(2) == 3
+    d2 = Dummy('x')
+    f2 = lambdify(d2, d2 + 1)
+    assert f2(2) == 3

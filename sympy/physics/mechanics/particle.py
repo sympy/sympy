@@ -1,10 +1,9 @@
 from __future__ import print_function, division
 
-__all__ = ['Particle']
-
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+__all__ = ['Particle']
 
 
 class Particle(object):
@@ -61,22 +60,6 @@ class Particle(object):
     def mass(self, value):
         self._mass = sympify(value)
 
-    def get_mass(self):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics." +
-                    "Particle.get_mass(self)",
-                useinstead="property sympy.physics.mechanics.Particle.mass",
-                deprecated_since_version="1.0", issue=9800).warn()
-        return self.mass
-
-    def set_mass(self, value):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics." +
-                    "Particle.set_mass(self, value)",
-                useinstead="property sympy.physics.mechanics.Particle.mass",
-                deprecated_since_version="1.0", issue=9800).warn()
-        self.mass = value
-
     @property
     def point(self):
         """Point of the particle."""
@@ -87,22 +70,6 @@ class Particle(object):
         if not isinstance(p, Point):
             raise TypeError("Particle point attribute must be a Point object.")
         self._point = p
-
-    def get_point(self):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics." +
-                    "Particle.get_point(self)",
-                useinstead="property sympy.physics.mechanics.Particle.point",
-                deprecated_since_version="1.0", issue=9800).warn()
-        return self.point
-
-    def set_point(self, p):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics.Particle." +
-                    "set_point(self, p)",
-                useinstead="property sympy.physics.mechanics.Particle.point",
-                deprecated_since_version="1.0", issue=9800).warn()
-        self.point = p
 
     def linear_momentum(self, frame):
         """Linear momentum of the particle.
@@ -256,12 +223,3 @@ class Particle(object):
         """
 
         self._pe = sympify(scalar)
-
-    def set_potential_energy(self, scalar):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics." +
-                    "Particle.set_potential_energy(self, scalar)",
-                useinstead="property sympy.physics.mechanics." +
-                    "Particle.potential_energy",
-                deprecated_since_version="1.0", issue=9800).warn()
-        self.potential_energy = scalar

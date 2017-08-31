@@ -468,7 +468,7 @@ def rs_swap(a, b):
 
 
 def given(expr, condition=None, **kwargs):
-    """ Conditional Random Expression
+    r""" Conditional Random Expression
     From a random expression and a condition on that expression creates a new
     probability space from the condition and returns the same expression on that
     conditional probability space.
@@ -785,10 +785,11 @@ def where(condition, given_condition=None, **kwargs):
     Domain: (-1 < x) & (x < 1)
 
     >>> where(X**2<1).set
-    (-1, 1)
+    Interval.open(-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
-    Domain: ((Eq(a, 1)) & (Eq(b, 1))) | ((Eq(a, 1)) & (Eq(b, 2))) | ((Eq(a, 2)) & (Eq(b, 2)))    """
+    Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
+    """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)

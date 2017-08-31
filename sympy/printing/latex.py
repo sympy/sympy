@@ -228,13 +228,13 @@ class LatexPrinter(Printer):
         """
         from sympy import Integral, Piecewise, Product, Sum
 
-        if expr.is_Add:
+        if expr.is_Mul:
+            if not first and _coeff_isneg(expr):
+                return True
+        elif precedence_traditional(expr) < PRECEDENCE["Mul"]:
             return True
         elif expr.is_Relational:
             return True
-        elif expr.is_Mul:
-            if not first and _coeff_isneg(expr):
-                return True
         if expr.is_Piecewise:
             return True
         if any([expr.has(x) for x in (Mod,)]):
@@ -347,6 +347,7 @@ class LatexPrinter(Printer):
         else:
             return str_real
 
+
     def _print_ComplexFloat(self, expr):
         #return self._print(expr.real + expr.imag*I)
         istr = self._print(S.ImaginaryUnit)
@@ -356,6 +357,32 @@ class LatexPrinter(Printer):
         else:
             return '%s + %s %s' % (self._print(expr.real),
                                   self._print(expr.imag), istr)
+
+
+    def _print_Cross(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s \times %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+                                  self.parenthesize(vec2, PRECEDENCE['Mul']))
+
+    def _print_Curl(self, expr):
+        vec = expr._expr
+        return r"\nabla\times %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
+
+    def _print_Divergence(self, expr):
+        vec = expr._expr
+        return r"\nabla\cdot %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
+
+    def _print_Dot(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s \cdot %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+                                  self.parenthesize(vec2, PRECEDENCE['Mul']))
+
+    def _print_Gradient(self, expr):
+        func = expr._expr
+        return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+
 
     def _print_Mul(self, expr):
         include_parens = False
@@ -470,6 +497,9 @@ class LatexPrinter(Printer):
             and expr.exp.is_Rational \
                 and expr.exp.q != 1:
             base, p, q = self.parenthesize(expr.base, PRECEDENCE['Pow']), expr.exp.p, expr.exp.q
+            #fixes issue #12886, adds parentheses before superscripts raised to powers
+            if '^' in base and expr.base.is_Symbol:
+                base = r"\left(%s\right)" % base
             if expr.base.is_Function:
                 return self._print(expr.base, "%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
@@ -491,9 +521,13 @@ class LatexPrinter(Printer):
                     if tex[:1] == "-":
                         return tex[1:].strip()
                 tex = r"%s^{%s}"
+                #fixes issue #12886, adds parentheses before superscripts raised to powers
+                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+                if '^' in base and expr.base.is_Symbol:
+                    base = r"\left(%s\right)" % base
+                exp = self._print(expr.exp)
 
-                return tex % (self.parenthesize(expr.base, PRECEDENCE['Pow']),
-                              self._print(expr.exp))
+                return tex % (base, exp)
 
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])
@@ -667,7 +701,7 @@ class LatexPrinter(Printer):
             return r"%s %s" % (tex, self._print(e))
 
     def _hprint_Function(self, func):
-        '''
+        r'''
         Logic to decide how to render a function to latex
           - if it is a recognized latex name, use the appropriate latex command
           - if it is a single letter, just use that letter
@@ -685,7 +719,7 @@ class LatexPrinter(Printer):
         return name
 
     def _print_Function(self, expr, exp=None):
-        '''
+        r'''
         Render functions to LaTeX, handling functions that LaTeX knows about
         e.g., sin, cos, ... by using the proper LaTeX command (\sin, \cos, ...).
         For single-letter function names, render them as regular LaTeX math
@@ -821,7 +855,7 @@ class LatexPrinter(Printer):
     _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
-        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Func'])
+        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
 
         return self._do_exponent(tex, exp)
 
@@ -1366,11 +1400,13 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_Matrix = _print_MatrixBase
+    _print_ImmutableMatrix = _print_ImmutableDenseMatrix \
+                           = _print_Matrix \
+                           = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '_{%s, %s}'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '_{%s, %s}' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):
@@ -1403,7 +1439,7 @@ class LatexPrinter(Printer):
         if not isinstance(mat, MatrixSymbol):
             return r"\left(%s\right)^\dag" % self._print(mat)
         else:
-            return "%s^\dag" % self._print(mat)
+            return r"%s^\dag" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         terms = list(expr.args)
@@ -1433,7 +1469,7 @@ class LatexPrinter(Printer):
             if isinstance(x, (Add, MatAdd, MatMul)):
                 return r"\left(%s\right)" % self._print(x)
             return self._print(x)
-        return ' \circ '.join(map(parens, expr.args))
+        return r' \circ '.join(map(parens, expr.args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1612,11 +1648,11 @@ class LatexPrinter(Printer):
     def _print_SeqFormula(self, s):
         if s.start is S.NegativeInfinity:
             stop = s.stop
-            printset = ('\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
+            printset = (r'\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
                 s.coeff(stop - 1), s.coeff(stop))
         elif s.stop is S.Infinity or s.length > 4:
             printset = s[:4]
-            printset.append('\ldots')
+            printset.append(r'\ldots')
         else:
             printset = tuple(s)
 
@@ -1705,7 +1741,7 @@ class LatexPrinter(Printer):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
     def _print_FourierSeries(self, s):
-        return self._print_Add(s.truncate()) + self._print(' + \ldots')
+        return self._print_Add(s.truncate()) + self._print(r' + \ldots')
 
     def _print_FormalPowerSeries(self, s):
         return self._print_Add(s.infinite)

@@ -468,6 +468,8 @@ def test_Poly_free_symbols():
     assert Poly(x**2 + sin(y*z)).free_symbols == {x, y, z}
     assert Poly(x**2 + sin(y*z), x).free_symbols == {x, y, z}
     assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == {x, y, z}
+    assert Poly(1 + x + x**2, x, y, z).free_symbols == {x}
+    assert Poly(x + sin(y), z).free_symbols == {x, y}
 
 
 def test_PurePoly_free_symbols():
@@ -851,9 +853,10 @@ def test_Poly_reorder():
 def test_Poly_ltrim():
     f = Poly(y**2 + y*z**2, x, y, z).ltrim(y)
     assert f.as_expr() == y**2 + y*z**2 and f.gens == (y, z)
+    assert Poly(x*y - x, z, x, y).ltrim(1) == Poly(x*y - x, x, y)
 
     raises(PolynomialError, lambda: Poly(x*y**2 + y**2, x, y).ltrim(y))
-
+    raises(PolynomialError, lambda: Poly(x*y - x, x, y).ltrim(-1))
 
 def test_Poly_has_only_gens():
     assert Poly(x*y + 1, x, y, z).has_only_gens(x, y) is True
@@ -1155,17 +1158,26 @@ def test_Poly_degree():
     assert Poly(2*y, x, y).degree(gen=y) == 1
     assert Poly(x*y, x, y).degree(gen=y) == 1
 
+    assert degree(0, x) == -oo
     assert degree(1, x) == 0
     assert degree(x, x) == 1
 
-    assert degree(x*y**2, gen=x) == 1
-    assert degree(x*y**2, gen=y) == 2
+    assert degree(x*y**2, x) == 1
+    assert degree(x*y**2, y) == 2
+    assert degree(x*y**2, z) == 0
 
-    assert degree(x*y**2, x, y) == 1
-    assert degree(x*y**2, y, x) == 2
+    assert degree(y**2+x**3) == 3
+    assert degree(y**2+x**3, 1) == 2
+    assert degree(pi) == 1
 
-    raises(ComputationFailed, lambda: degree(1))
+    raises(PolynomialError, lambda: degree(x, 1.1))
 
+    assert degree(Poly(0,x),z) == -oo
+    assert degree(Poly(1,x),z) == 0
+    assert degree(Poly(x**2+y**3,y)) == 3
+    assert degree(Poly(y**2 + x**3, y, x), 1) == 3
+    assert degree(Poly(y**2 + x**3, x), z) == 0
+    assert degree(Poly(y**2 + x**3 + z**4, x), z) == 4
 
 def test_Poly_degree_list():
     assert Poly(0, x).degree_list() == (-oo,)
@@ -1699,6 +1711,10 @@ def test_div():
     assert q.get_domain().is_ZZ
     q = f.exquo(g)
     assert q.get_domain().is_ZZ
+
+    f, g = Poly(x+y, x), Poly(2*x+y, x)
+    q, r = f.div(g)
+    assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
 
 def test_gcdex():
@@ -2427,6 +2443,11 @@ def test_factor():
     assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
 
     assert factor(sqrt(x**2)) == sqrt(x**2)
+
+    # issue 13149
+    assert factor(expand((0.5*x+1)*(0.5*y+1))) == Mul(1.0, 0.5*x + 1.0,
+        0.5*y + 1.0, evaluate = False)
+    assert factor(expand((0.5*x+0.5)**2)) == 0.25*(1.0*x + 1.0)**2
 
 
 def test_factor_large():
@@ -3198,3 +3219,8 @@ def test_factor_terms():
 def test_issue_11198():
     assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
     assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])
+
+def test_Poly_precision():
+    # Make sure Poly doesn't lose precision
+    p = Poly(pi.evalf(100)*x)
+    assert p.as_expr() == pi.evalf(100)*x

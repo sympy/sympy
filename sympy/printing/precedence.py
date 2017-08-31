@@ -41,7 +41,9 @@ PRECEDENCE_VALUES = {
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
     "MatPow": PRECEDENCE["Pow"],
-    "HadamardProduct": PRECEDENCE["Mul"]
+    "HadamardProduct": PRECEDENCE["Mul"],
+    "Equality": PRECEDENCE["Mul"],
+    "Unequality": PRECEDENCE["Mul"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -140,6 +142,8 @@ def precedence_traditional(item):
 
     if isinstance(item, (Integral, Sum, Product, Limit, Derivative)):
         return PRECEDENCE["Mul"]
+    if (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence", "Curl")):
+        return PRECEDENCE["Mul"]-1
     elif isinstance(item, UnevaluatedExpr):
         return precedence_traditional(item.args[0])
     else:

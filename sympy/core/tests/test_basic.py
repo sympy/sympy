@@ -38,6 +38,43 @@ def test_equality():
     assert Basic() != 0
     assert not(Basic() == 0)
 
+    class Foo(object):
+        """
+        Class that is unaware of Basic, and relies on both classes returning
+        the NotImplemented singleton for equivalence to evaluate to False.
+
+        """
+
+    b = Basic()
+    foo = Foo()
+
+    assert b != foo
+    assert foo != b
+    assert not b == foo
+    assert not foo == b
+
+    class Bar(object):
+        """
+        Class that considers itself equal to any instance of Basic, and relies
+        on Basic returning the NotImplemented singleton in order to achieve
+        a symmetric equivalence relation.
+
+        """
+        def __eq__(self, other):
+            if isinstance(other, Basic):
+                return True
+            return NotImplemented
+
+        def __ne__(self, other):
+            return not self == other
+
+    bar = Bar()
+
+    assert b == bar
+    assert bar == b
+    assert not b != bar
+    assert not bar != b
+
 
 def test_matches_basic():
     instances = [Basic(b1, b1, b2), Basic(b1, b2, b1), Basic(b2, b1, b1),
