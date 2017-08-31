@@ -9,7 +9,8 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
+from sympy.core.function import (expand_log, count_ops, _mexpand, _coeff_isneg,
+    nfloat, expand_complex)
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -566,6 +567,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
         return expr
 
     expr = factor_terms(expr, sign=False)
+    expr = expand_complex(expr)
 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
