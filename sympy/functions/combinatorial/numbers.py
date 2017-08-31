@@ -727,6 +727,9 @@ class euler(Function):
            n      /___  \ k /   k
                   k = 0        2
 
+    However, *numerical* evaluation of the Euler polynomial is
+    computed more efficiently and more accurately using `mpmath`
+    routines.
 
     Examples
     ========
@@ -786,7 +789,18 @@ class euler(Function):
                     m = m._to_mpmath(mp.prec)
                     res = mp.eulernum(m, exact=True)
                     return Integer(res)
-                # Euler polynomials
+                # Euler polynomial: numerical evaluation
+                elif sym.is_Float or (sym.is_number and sym.is_complex \
+                        and all([a.is_Float for a in sym.as_real_imag()])):
+                    # TODO: ComplexFloat would be nice here (#12192)
+                    from mpmath import mp
+                    from sympy import Expr
+                    m = int(m)
+                    prec = sym._prec if sym.is_Float else min([a._prec for a in sym.as_real_imag()])
+                    with workprec(prec):
+                        res = mp.eulerpoly(m, sym)
+                    return Expr._from_mpmath(res, prec)
+                # Euler polynomial: symbolic
                 else:
                     m, result = int(m), []
                     for k in range(m + 1):
@@ -813,14 +827,22 @@ class euler(Function):
             return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
 
     def _eval_evalf(self, prec):
-        m = self.args[0]
+        m, x = (self.args[0], None) if len(self.args) == 1 else self.args
 
-        if m.is_Integer and m.is_nonnegative:
+        if x is None and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
             from sympy import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
                 res = mp.eulernum(m)
+            return Expr._from_mpmath(res, prec)
+        if x and x.is_number and m.is_Integer and m.is_nonnegative:
+            from mpmath import mp
+            from sympy import Expr
+            m = int(m)
+            x = x._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.eulerpoly(m, x)
             return Expr._from_mpmath(res, prec)
 
 #----------------------------------------------------------------------------#

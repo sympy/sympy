@@ -317,6 +317,11 @@ def test_euler_polynomials():
     assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
     m = Symbol('m')
     assert isinstance(euler(m, x), euler)
+    A = euler(19, S.Pi).evalf(64)  # proxy for exact
+    B = euler(19, S.Pi.evalf(32))
+    assert abs((A - B)/A) < 1e-31  # expect low relative error
+    C = euler(19, S.Pi, evaluate=False).evalf(32)
+    assert abs((A - C)/A) < 1e-31
 
 
 def test_euler_polynomial_rewrite():
