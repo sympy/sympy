@@ -85,6 +85,9 @@ def test_periodicity():
     assert periodicity(cos(sec(x) - csc(2*x)), x) == 2*pi
     assert periodicity(tan(sin(2*x)), x) == pi
     assert periodicity(2*tan(x)**2, x) == pi
+    assert periodicity(sin(x%4),x)==4
+    assert periodicity(sin(x)%4,x)==2*pi
+    assert periodicity(tan((3*x-2)%4),x)==4/3
 
     assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
     assert periodicity(tan(x), y) == S.Zero
@@ -98,6 +101,8 @@ def test_periodicity():
     assert periodicity(Abs(x), x) is None
     assert periodicity(Abs(x**2 - 1), x) is None
 
+    assert periodicity((x**2+4)%2,x) is None
+    assert periodicity((E**x)%3,x) is None
 
 def test_periodicity_check():
     x = Symbol('x')
