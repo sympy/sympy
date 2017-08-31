@@ -591,7 +591,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
     if expr.has(Product):
         expr = product_simplify(expr)
 
-    short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+    short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), powdenest(expr), expr)
     short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
     if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
