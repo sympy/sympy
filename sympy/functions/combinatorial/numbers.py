@@ -734,7 +734,7 @@ class euler(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, S
     >>> from sympy.functions import euler
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
