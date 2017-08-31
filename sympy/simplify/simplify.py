@@ -27,7 +27,7 @@ from sympy.utilities.iterables import has_variety
 
 from sympy.simplify.radsimp import radsimp, fraction
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.simplify.powsimp import powsimp
+from sympy.simplify.powsimp import powsimp, powdenest
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.combsimp import combsimp
@@ -509,10 +509,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
     If rational=None, Floats will be recast as Rationals but the result will
     be recast as Floats. If rational=False(default) then nothing will be done
     to the Floats.
-
-    If recursive > 1, simplify will be called recursively until no further
-    simplification is possible or recursion depth reaches the value of
-    'recursive'. Note that simplify is an expensive function.
     """
     expr = sympify(expr)
 
@@ -596,6 +592,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
         expr = product_simplify(expr)
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+    short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
     if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
         short = exptrigsimp(short, simplify=False)
@@ -628,10 +625,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, **flags):
     # restore floats
     if floats and flags.get('rational', None) is None:
         expr = nfloat(expr, exponent=False)
-
-    if flags.get('recursive', 1) > 1 and expr != original_expr:
-        flags['recursive'] -= 1
-        return simplify(expr, ratio=ratio, measure=measure, **flags)
 
     return expr
 
