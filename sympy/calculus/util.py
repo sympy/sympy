@@ -346,14 +346,15 @@ def periodicity(f, symbol, check=False):
             pass
 
     if isinstance(f, Abs):
-        f = f.args[0]
-        if isinstance(f, sec):
-            f = cos(f.args[0])
-        if isinstance(f, csc):
-            f = sin(f.args[0])
-        period = periodicity(f, symbol)
-        if (period is not None) and (isinstance(f, sin) or isinstance(f, cos)):
-            if f.subs(symbol, symbol + period/2) in [f, -f]:
+        arg = f.args[0]
+        new_f = arg
+        if isinstance(arg, sec):
+            new_f = cos(arg.args[0])
+        if isinstance(arg, csc):
+            new_f = sin(arg.args[0])
+        period = periodicity(new_f, symbol)
+        if (period is not None) and (isinstance(new_f, sin) or isinstance(new_f, cos)):
+            if new_f.subs(symbol, symbol + period/2) in [new_f, -new_f]:
                 return period/2
         return period
 
