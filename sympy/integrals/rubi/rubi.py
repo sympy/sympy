@@ -4,13 +4,14 @@ from sympy.utilities.decorator import doctest_depends_on
 import inspect, re
 
 if matchpy:
-    Pattern, ReplacementRule, ManyToOneReplacer = matchpy.Pattern, matchpy.ReplacementRule, matchpy.ManyToOneReplacer
-    from matchpy import Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint
+    from matchpy import (Operation, CommutativeOperation, AssociativeOperation,
+        ManyToOneReplacer, OneIdentityOperation, CustomConstraint)
     from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
-    from sympy import Pow, Add, Integral, Basic, Mul, S, Or, And, symbols, fresnels, fresnelc, erfc, erfi
-    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, exp, log, gamma)
-    from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
-    from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
+    from sympy import Pow, Add, Integral, Basic, Mul, S
+    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf,
+        exp, log, gamma, acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh,
+        tanh, coth, sech, csch, atan, acsc, asin, acot, acos, asec, fresnels,
+        fresnelc, erfc, erfi)
 
     Operation.register(Integral)
     register_operation_iterator(Integral, lambda a: (a._args[0],) + a._args[1], lambda a: len((a._args[0],) + a._args[1]))
@@ -132,7 +133,12 @@ if matchpy:
     @doctest_depends_on(modules=('matchpy',))
     def rubi_object():
         '''
-        Returns rubi ManyToOneReplacer by adding all rules form different modules
+        Returns rubi ManyToOneReplacer by adding all rules form different modules.
+
+        Uncomment the lines to add integration capabilities of that module.
+
+        Currently, there are some issues with integrand_simplification, special_function,
+        derivative, miscellaneous_integration. Hence they are commented.
         '''
         #from sympy.integrals.rubi.rules.integrand_simplification import integrand_simplification
         from sympy.integrals.rubi.rules.linear_products import linear_products
@@ -159,8 +165,8 @@ if matchpy:
         rubi = linear_products(rubi)
         rubi = quadratic_products(rubi)
         rubi = binomial_products(rubi)
-        rubi = trinomial_products(rubi)
-        rubi = miscellaneous_algebraic(rubi)
+        #rubi = trinomial_products(rubi)
+        #rubi = miscellaneous_algebraic(rubi)
         #rubi = exponential(rubi)
         #rubi = logarithms(rubi)
         #rubi = sine(rubi)
@@ -180,7 +186,10 @@ if matchpy:
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
     '''
-    Function for Rubi integeration.
+    Rule based algorithm for integration. Integrates the expression by appling
+    transformation rules to the expression.
+
+    Returns `Integrate` if an expression cannot be integrated.
 
     Parameters
     ==========

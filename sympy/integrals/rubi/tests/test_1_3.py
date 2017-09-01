@@ -190,7 +190,7 @@ def test_diff():
         [x**(S(5)/S(2))*(A + B*x)/(a + b*x), x, S(6), - S(2)/S(3)*a*(A*b - a*B)*x**(S(3)/S(2))/b**S(3) + S(2)/S(5)*(A*b - a*B)*x**(S(5)/S(2))/b**S(2) + S(2)/S(7)*B*x**(S(7)/S(2))/b - S(2)*a**(S(5)/S(2))*(A*b - a*B)*arctan(sqrt(b)*sqrt(x)/sqrt(a))/b**(S(9)/S(2)) + S(2)*a**S(2)*(A*b - a*B)*sqrt(x)/b**S(4)],
         [(a + b*x)**S(2)/((c + d*x)**S(2)*sqrt(e + f*x)), x, S(4), (b*c - a*d)*(S(4)*b*d*e - S(3)*b*c*f - a*d*f)*arctanh(sqrt(d)*sqrt(e + f*x)/sqrt(d*e - c*f))/(d**(S(5)/S(2))*(d*e - c*f)**(S(3)/S(2))) + S(2)*b**S(2)*sqrt(e + f*x)/(d**S(2)*f) - (b*c - a*d)**S(2)*sqrt(e + f*x)/(d**S(2)*(d*e - c*f)*(c + d*x))],
     ]
-    
+
     for i in test:
         r = rubi_integrate(i[0], i[1])
         if len(i) == 5:

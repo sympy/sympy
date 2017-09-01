@@ -6,7 +6,6 @@ See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Int
 from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
-
 from sympy.functions.elementary.integers import floor, frac
 from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, polylog)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
@@ -24,7 +23,7 @@ from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
     Add, hyper, Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp,
     factorint, Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi,
     zoo, oo, Integral)
-from mpmath import appellf1, gammainc
+from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
@@ -42,6 +41,9 @@ if matchpy:
         commutative=False
         associative=True
 
+    Operation.register(Integral)
+    register_operation_iterator(Integral, lambda a: (a._args[0],) + a._args[1], lambda a: len((a._args[0],) + a._args[1]))
+
     Operation.register(Pow)
     OneIdentityOperation.register(Pow)
     register_operation_iterator(Pow, lambda a: a._args, lambda a: len(a._args))
@@ -57,6 +59,27 @@ if matchpy:
     CommutativeOperation.register(Mul)
     AssociativeOperation.register(Mul)
     register_operation_iterator(Mul, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(exp)
+    register_operation_iterator(exp, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(log)
+    register_operation_iterator(log, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(gamma)
+    register_operation_iterator(gamma, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(fresnels)
+    register_operation_iterator(fresnels, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(fresnelc)
+    register_operation_iterator(fresnelc, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(erfc)
+    register_operation_iterator(erfc, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(erfi)
+    register_operation_iterator(erfi, lambda a: a._args, lambda a: len(a._args))
 
     Operation.register(sin)
     register_operation_iterator(sin, lambda a: a._args, lambda a: len(a._args))
