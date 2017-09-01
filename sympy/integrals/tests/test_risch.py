@@ -569,8 +569,7 @@ def test_DifferentialExtension_misc():
     assert DifferentialExtension(S.Zero, x)._important_attrs == \
         (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
     assert DifferentialExtension(tan(atan(x).rewrite(log)), x)._important_attrs == \
-        (Poly(x, x, domain='ZZ'), Poly(1, x, domain='ZZ'), 
-        [Poly(1, x, domain='ZZ')], [x], [], [], [None], [None])
+        (Poly(x, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
 
 
 def test_DifferentialExtension_Rothstein():
