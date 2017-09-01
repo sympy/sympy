@@ -69,12 +69,22 @@ class Mod(Function):
                     return rv
 
             # by difference
-            d = p - q
-            if d.is_negative:
-                if q.is_negative:
-                    return d
-                elif q.is_positive:
-                    return p
+            # -2|q| < p < 2|q|
+            d = abs(p)
+            for _ in range(2):
+                d -= abs(q)
+                if d.is_negative:
+                    if q.is_positive:
+                        if p.is_positive:
+                            return d + q
+                        elif p.is_negative:
+                            return -d
+                    elif q.is_negative:
+                        if p.is_positive:
+                            return d
+                        elif p.is_negative:
+                            return -d + q
+                    break
 
         rv = doit(p, q)
         if rv is not None:

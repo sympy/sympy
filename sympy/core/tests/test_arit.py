@@ -1555,11 +1555,15 @@ def test_Mod():
     # known difference
     assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
     p = symbols('p', positive=True)
-    assert Mod(p + 1, p + 3) == p + 1
-    n = symbols('n', negative=True)
-    assert Mod(n - 3, n - 1) == -2
-    assert Mod(n - 2*p, n - p) == -p
-    assert Mod(p - 2*n, p - n) == -n
+    assert Mod(2, p + 3) == 2
+    assert Mod(-2, p + 3) == p + 1
+    assert Mod(2, -p - 3) == -p - 1
+    assert Mod(-2, -p - 3) == -2
+    assert Mod(p + 5, p + 3) == 2
+    assert Mod(-p - 5, p + 3) == p + 1
+    assert Mod(p + 5, -p - 3) == -p - 1
+    assert Mod(-p - 5, -p - 3) == -2
+    assert Mod(p + 1, p - 1).func is Mod
 
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)
