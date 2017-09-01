@@ -708,28 +708,20 @@ class euler(Function):
           E     = 0
            2n+1
 
-    * euler(n) gives the n-th Euler number, E_n
-
-    * euler(n, x) gives the n-th Euler polynomial, E_n(x)
-
     Euler numbers and Euler polynomials are related by
 
-                n
-          E  = 2  E (1/2).
-           n       n
+    .. math:: E_n = 2^n E_n\left(\frac{1}{2}\right).
 
     We compute symbolic Euler polynomials using [5]
 
-                    n
-                   ___         E
-                  \     / n \   k           n-k
-          E (x) =  )    |   | ---- (x - 1/2)   .
-           n      /___  \ k /   k
-                  k = 0        2
+    .. math:: E_n(x) = \sum_{k=0}^n \binom{n}{k} \frac{E_k}{2^k}
+                       \left(x - \frac{1}{2}\right)^{n-k}.
 
-    However, *numerical* evaluation of the Euler polynomial is
-    computed more efficiently and more accurately using `mpmath`
-    routines.
+    However, numerical evaluation of the Euler polynomial is computed
+    more efficiently (and more accurately) using the mpmath library.
+
+    * euler(n) gives the n-th Euler number, `E_n`.
+    * euler(n, x) gives the n-th Euler polynomial, `E_n(x)`.
 
     Examples
     ========
