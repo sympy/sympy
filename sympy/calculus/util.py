@@ -362,7 +362,6 @@ def periodicity(f, symbol, check=False):
                 return period/2
             return period
 
-
     if f.is_Pow:
         base, expo = f.args
         base_has_sym = base.has(symbol)
