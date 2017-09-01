@@ -520,6 +520,9 @@ def test_composite():
     x = Dummy(integer=True, positive=True, prime=False)
     assert x.is_composite is None # x could be 1
     assert (x + 1).is_composite is None
+    x = Dummy(positive=True, even=True, prime=False)
+    assert x.is_integer is True
+    assert x.is_composite is True
 
 
 def test_prime_symbol():
