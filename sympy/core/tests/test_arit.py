@@ -1617,6 +1617,9 @@ def test_Mod():
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
     assert (factorial(n) % n).equals(0) is not False
+    # modular exponentiation
+    assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
+
 
     # symbolic with known parity
     n = Symbol('n', even=True)

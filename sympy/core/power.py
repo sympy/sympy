@@ -343,6 +343,13 @@ class Pow(Expr):
             if q.is_integer and self.base % q == 0:
                 return S.Zero
 
+            '''
+            For unevaluated Integer power, use built-in pow modular
+            exponentiation.
+            '''
+            if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
+                return pow(int(self.base), int(self.exp), int(q))
+
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
             return self.base.is_even
