@@ -379,7 +379,7 @@ def periodicity(f, symbol, check=False):
         a, n = f.args
 
         if a == symbol:
-            period  = n
+            period = n
         elif isinstance(a, TrigonometricFunction):
             period = periodicity(a, symbol)
         elif degree(a, symbol) == 1: #check if 'f' is linear in 'symbol'
