@@ -1616,10 +1616,21 @@ def test_Mod():
 
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
-    assert (factorial(n) % n).equals(0) is not False
+    assert factorial(n) % n == 0
+    assert factorial(n + 2) % n == 0
+    assert (factorial(n + 4) % (n + 5)).func is Mod
+
     # modular exponentiation
     assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
 
+    # Wilson's theorem
+    factorial(18042, evaluate=False) % 18043 == 18042
+    p = Symbol('n', prime=True)
+    factorial(p - 1) % p == p - 1
+    factorial(p - 1) % -p == -1
+    (factorial(3, evaluate=False) % 4).doit() == 2
+    n = Symbol('n', composite=True, odd=True)
+    factorial(n - 1) % n == 0
 
     # symbolic with known parity
     n = Symbol('n', even=True)
