@@ -338,6 +338,11 @@ class Pow(Expr):
         if s is not None:
             return s*Pow(b, e*other)
 
+    def _eval_Mod(self, q):
+        if self.exp.is_integer and self.exp.is_positive:
+            if q.is_integer and self.base % q == 0:
+                return S.Zero
+
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
             return self.base.is_even

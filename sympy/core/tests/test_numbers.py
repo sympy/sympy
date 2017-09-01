@@ -121,20 +121,6 @@ def test_mod():
     assert Integer(10) % 4 == Integer(2)
     assert 15 % Integer(4) == Integer(3)
 
-    h = Symbol('h')
-    m = h ** 2 % h
-    k = h ** -2 % h
-    l = Symbol('l', integer=True)
-    p = Symbol('p', integer=True, positive=True)
-    q = Symbol('q', integer=True, negative=True)
-
-    assert m == h * (h % 1)
-    assert k == Mod(h ** -2, h, evaluate=False)
-    assert Mod(l ** p, l) == 0
-    assert Mod(l ** 2, l) == 0
-    assert (l ** q % l) == Mod(l ** q, l, evaluate=False)
-    assert (l ** -2 % l) == Mod(l ** -2, l, evaluate=False)
-
 
 def test_divmod():
     assert divmod(S(12), S(8)) == Tuple(1, 4)

@@ -1513,8 +1513,16 @@ def test_Mod():
     assert Mod(1, nan) == nan
     assert Mod(nan, nan) == nan
 
+    Mod(0, x) == 0
     with raises(ZeroDivisionError):
         Mod(x, 0)
+
+    k = Symbol('k', integer=True)
+    m = Symbol('m', integer=True, positive=True)
+    assert (x**m % x).func is Mod
+    assert (k**(-m) % k).func is Mod
+    assert k**m % k == 0
+    assert (-2*k)**m % k == 0
 
     # Float handling
     point3 = Float(3.3) % 1

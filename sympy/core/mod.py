@@ -40,10 +40,7 @@ class Mod(Function):
                 raise ZeroDivisionError("Modulo by zero")
             if p.is_infinite or q.is_infinite or p is nan or q is nan:
                 return nan
-            if (p == q or p == -q or
-                    p.is_Pow and p.exp.is_integer and p.base == q and q.is_integer
-                    and p.exp.is_positive or
-                    p.is_integer and q == 1):
+            if p == S.Zero or p == q or p == -q or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
@@ -54,6 +51,11 @@ class Mod(Function):
                         return S.Zero
                     elif p.is_odd:
                         return S.One
+
+            if hasattr(p, '_eval_Mod'):
+                rv = getattr(p, '_eval_Mod')(q)
+                if rv is not None:
+                    return rv
 
             # by ratio
             r = p/q
