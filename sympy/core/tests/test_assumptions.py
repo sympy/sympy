@@ -994,10 +994,14 @@ def test_issues_8632_8633_8638_8675_8992():
     assert (n - 3).is_nonpositive
 
 
-def test_issue_9115():
+def test_issue_9115_9150():
     n = Dummy('n', integer=True, nonnegative=True)
     assert (factorial(n) >= 1) == True
     assert (factorial(n) < 1) == False
+
+    assert factorial(n + 1).is_even is None
+    assert factorial(n + 2).is_even is True
+    assert factorial(n + 2) >= 2
 
 
 def test_issue_9165():

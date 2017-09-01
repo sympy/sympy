@@ -189,9 +189,14 @@ class factorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_is_even(self):
+        x = self.args[0]
+        if x.is_integer and x.is_nonnegative:
+            return (x - 2).is_nonnegative
+
     def _eval_is_composite(self):
         x = self.args[0]
-        if x.is_integer:
+        if x.is_integer and x.is_nonnegative:
             return (x - 3).is_nonnegative
 
     def _eval_is_real(self):
