@@ -26,6 +26,7 @@ from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, hypergeom, rubi_test
 from sympy import pi as Pi
 from sympy import S, hyper, I, simplify, exp_polar, symbols
+from sympy.utilities.pytest import XFAIL
 
 a, b, c, d, e, f, m, n, x, u = symbols('a b c d e f m n x u')
 
@@ -77,6 +78,7 @@ def test_2():
         else:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
 
+@XFAIL
 def test_3():
     test = [
         [x**m*(a + b*x), x, S(2), a*x**(S(1) + m)/(S(1) + m) + b*x**(S(2) + m)/(S(2) + m)],

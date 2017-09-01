@@ -48,6 +48,7 @@ def test_1():
         #[(a + b*x)**m*(c + d*x)**n*(e + f*x)**p/(g + h*x), x, S(0), Integrate((a + b*x)**m*(c + d*x)**n*(e + f*x)**p/(g + h*x), x)]
         [(c + d*x)**( - S(4) - m)*(e + f*x)**m*(g + h*x), x, S(3), - (d*g - c*h)*(c + d*x)**( - S(3) - m)*(e + f*x)**(S(1) + m)/(d*(d*e - c*f)*(S(3) + m)) + (c*f*h*(S(1) + m) + d*(S(2)*f*g - e*h*(S(3) + m)))*(c + d*x)**( - S(2) - m)*(e + f*x)**(S(1) + m)/(d*(d*e - c*f)**S(2)*(S(2) + m)*(S(3) + m)) - f*(c*f*h*(S(1) + m) + d*(S(2)*f*g - e*h*(S(3) + m)))*(c + d*x)**( - S(1) - m)*(e + f*x)**(S(1) + m)/(d*(d*e - c*f)**S(3)*(S(1) + m)*(S(2) + m)*(S(3) + m))],
     ]
+
     for i in test:
         r = rubi_integrate(i[0], i[1])
         if len(i) == 5:
@@ -60,6 +61,7 @@ def test_numerical():
         #[S(1)/((a + b*x)*sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x, S(1), - S(2)*EllipticPi(sqrt( - f/(d*e - c*f))*sqrt(c + d*x), - b*(d*e - c*f)/((b*c - a*d)*f), sqrt((d*e - c*f)*h/(f*(d*g - c*h))))*sqrt(d*(e + f*x)/(d*e - c*f))*sqrt(d*(g + h*x)/(d*g - c*h))/((b*c - a*d)*sqrt( - f/(d*e - c*f))*sqrt(e + f*x)*sqrt(g + h*x))],
         #[S(1)/(sqrt(a + b*x)*sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x, S(2), - S(2)*(a + b*x)*sqrt(cos(arctan(sqrt(b*e - a*f)*sqrt(g + h*x)/(sqrt(f*g - e*h)*sqrt(a + b*x))))**S(2))/cos(arctan(sqrt(b*e - a*f)*sqrt(g + h*x)/(sqrt(f*g - e*h)*sqrt(a + b*x))))*EllipticF(sin(arctan(sqrt(b*e - a*f)*sqrt(g + h*x)/(sqrt(f*g - e*h)*sqrt(a + b*x)))), sqrt((d*e - c*f)*(b*g - a*h)/((b*e - a*f)*(d*g - c*h))))*sqrt(f*g - e*h)*sqrt((b*g - a*h)*(c + d*x)/((d*g - c*h)*(a + b*x)))*sqrt((b*g - a*h)*(e + f*x)/((f*g - e*h)*(a + b*x)))*sqrt(S(1) + (b*c - a*d)*(g + h*x)/((d*g - c*h)*(a + b*x)))/((b*g - a*h)*sqrt(b*e - a*f)*sqrt(c + d*x)*sqrt(e + f*x)*sqrt((S(1) + (b*c - a*d)*(g + h*x)/((d*g - c*h)*(a + b*x)))/(S(1) + (b*e - a*f)*(g + h*x)/((f*g - e*h)*(a + b*x))))*sqrt(S(1) + (b*e - a*f)*(g + h*x)/((f*g - e*h)*(a + b*x))))],
     ]
+    
     for i in test:
         r = rubi_integrate(i[0], i[1])
         if len(i) == 5:

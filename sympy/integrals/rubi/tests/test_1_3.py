@@ -176,6 +176,7 @@ def test_simplify():
         [x**S(3)*(c + d*x)**S(3)/(a + b*x)**S(3), x, S(2), (b*c - a*d)*(b**S(2)*c**S(2) - S(8)*a*b*c*d + S(10)*a**S(2)*d**S(2))*x/b**S(6) + S(3)/S(2)*d*(b*c - S(2)*a*d)*(b*c - a*d)*x**S(2)/b**S(5) + d**S(2)*(b*c - a*d)*x**S(3)/b**S(4) + S(1)/S(4)*d**S(3)*x**S(4)/b**S(3) + S(1)/S(2)*a**S(3)*(b*c - a*d)**S(3)/(b**S(7)*(a + b*x)**S(2)) - S(3)*a**S(2)*(b*c - S(2)*a*d)*(b*c - a*d)**S(2)/(b**S(7)*(a + b*x)) - S(3)*a*(b*c - a*d)*(b**S(2)*c**S(2) - S(5)*a*b*c*d + S(5)*a**S(2)*d**S(2))*log(a + b*x)/b**S(7)],
         [(S(2) + S(3)*x)**S(8)*(S(3) + S(5)*x)/(S(1) - S(2)*x)**S(3), x, S(2), S(63412811)/S(2048)/(S(1) - S(2)*x)**S(2) + ( - S(246239357)/S(1024))/(S(1) - S(2)*x) - S(120864213)/S(256)*x - S(118841283)/S(512)*x**S(2) - S(16042509)/S(128)*x**S(3) - S(7568235)/S(128)*x**S(4) - S(213597)/S(10)*x**S(5) - S(162567)/S(32)*x**S(6) - S(32805)/S(56)*x**S(7) - S(106237047)/S(256)*log(S(1) - S(2)*x)],
     ]
+
     for i in test:
         r = rubi_integrate(i[0], i[1])
         if len(i) == 5:
@@ -189,6 +190,7 @@ def test_diff():
         [x**(S(5)/S(2))*(A + B*x)/(a + b*x), x, S(6), - S(2)/S(3)*a*(A*b - a*B)*x**(S(3)/S(2))/b**S(3) + S(2)/S(5)*(A*b - a*B)*x**(S(5)/S(2))/b**S(2) + S(2)/S(7)*B*x**(S(7)/S(2))/b - S(2)*a**(S(5)/S(2))*(A*b - a*B)*arctan(sqrt(b)*sqrt(x)/sqrt(a))/b**(S(9)/S(2)) + S(2)*a**S(2)*(A*b - a*B)*sqrt(x)/b**S(4)],
         [(a + b*x)**S(2)/((c + d*x)**S(2)*sqrt(e + f*x)), x, S(4), (b*c - a*d)*(S(4)*b*d*e - S(3)*b*c*f - a*d*f)*arctanh(sqrt(d)*sqrt(e + f*x)/sqrt(d*e - c*f))/(d**(S(5)/S(2))*(d*e - c*f)**(S(3)/S(2))) + S(2)*b**S(2)*sqrt(e + f*x)/(d**S(2)*f) - (b*c - a*d)**S(2)*sqrt(e + f*x)/(d**S(2)*(d*e - c*f)*(c + d*x))],
     ]
+    
     for i in test:
         r = rubi_integrate(i[0], i[1])
         if len(i) == 5:

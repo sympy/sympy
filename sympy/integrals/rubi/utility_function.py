@@ -20,15 +20,15 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
-from sympy import (exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Add, hyper,
-    Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp, factorint,
-    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo)
+from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
+    Add, hyper, Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp,
+    factorint, Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi,
+    zoo, oo, Integral)
 from mpmath import appellf1, gammainc
 from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
 from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
 from sympy.strategies import distribute
-from sympy import Basic
 from random import randint
 
 if matchpy:
@@ -146,16 +146,13 @@ def Set(expr, value):
     return {expr: value}
 
 def With(subs, expr):
-    if isinstance(subs, bool):
-        print('Not Implemented')
-        return 0
     if isinstance(subs, dict):
         k = list(subs.keys())[0]
-        expr = expr.subs(k, subs[k])
+        expr = expr.xreplace({k: subs[k]})
     else:
         for i in subs:
             k = list(i.keys())[0]
-            expr = expr.subs(k, i[k])
+            expr = expr.xreplace({k: i[k]})
     return expr
 
 def Module(subs, expr):
@@ -314,7 +311,7 @@ def NonsumQ(expr):
 def Subst(a, x, y):
     if None in [a, x, y]:
         return None
-    return a.subs(x, y)
+    return a.xreplace({x: y})
 
 def First(expr, d=None):
     # gives the first element if it exists, or d otherwise.
@@ -352,7 +349,9 @@ def SqrtNumberSumQ(u):
     return SumQ(u) and SqrtNumberQ(First(u)) and SqrtNumberQ(Rest(u)) or ProductQ(u) and SqrtNumberQ(First(u)) and SqrtNumberSumQ(Rest(u))
 
 def LinearQ(expr, x):
-    if expr.is_polynomial(x):
+    if isinstance(expr, list):
+        return all(LinearQ(i, x) for i in expr)
+    elif expr.is_polynomial(x):
         if degree(Poly(expr, x), gen=x) == 1:
             return True
     return False
@@ -1272,7 +1271,7 @@ def FreeFactors(u, x):
     elif FreeQ(u, x):
         return u
     else:
-        return 1
+        return S(1)
 
 def NonfreeFactors(u, x):
     # returns the product of the factors of u not free of x.
@@ -1600,10 +1599,12 @@ def PolynomialDivide(p_, q_, x):
 
 def BinomialQ(u, x, n=None):
     if ListQ(u):
-        for i in u.args:
+        for i in u:
             if Not(BinomialQ(i, x, n)):
                 return False
         return True
+    elif NumberQ(x):
+        return False
     return ListQ(BinomialParts(u, x))
 
 def TrinomialQ(u, x):
@@ -3122,7 +3123,7 @@ def MergeFactors(u, v):
 
 def TrigSimplifyQ(u):
     # (* TrigSimplifyQ[u] returns True if TrigSimplify[u] actually simplifies u; else False. *)
-    return ActivateTrig(u) == TrigSimplify(u)
+    return ActivateTrig(u) != TrigSimplify(u)
 
 def TrigSimplify(u):
     # (* TrigSimplify[u] returns a bottom-up trig simplification of u. *)
@@ -3625,7 +3626,6 @@ def ExpandToSum(u, *x):
             expr += i[0]*x**i[4] + i[1]*x**i[3] + i[2]*x**(2*i[3]-i[4])
             return expr
         else:
-            #print("Warning: Unrecognized expression for expansion")
             return Expand(u)
     else:
         v = x[0]
@@ -4351,7 +4351,7 @@ def AbsurdNumberGCDList(lst1, lst2):
     return AbsurdNumberGCDList(lst1, Rest(lst2))
 
 def ExpandTrigExpand(u, F, v, m, n, x):
-    w = Expand(TrigExpand(F.subs(x, n*x))**m).subs(x, v)
+    w = Expand(TrigExpand(F.xreplace({x: n*x}))**m).xreplace({x: v})
     if SumQ(w):
         t = 0
         for i in w.args:
@@ -4395,7 +4395,7 @@ def NormalizeTrig(v, x):
     M = v.match(expr)
     if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and Exponent(M[F].args[0], x)>0:
         u = M[F].args[0]
-        return M[a]*M[F].subs(u, ExpandToSum(u, x))**M[n]
+        return M[a]*M[F].xreplace({u: ExpandToSum(u, x)})**M[n]
     else:
         return v
 
@@ -5237,7 +5237,7 @@ def IntTerm(expr, x):
             t += IntTerm(i, x)
         return t
     else:
-        return Dist(FreeFactors(u,x), Int(NonfreeFactors(u,x), x), x)
+        return Dist(FreeFactors(u,x), Integral(NonfreeFactors(u,x), x), x)
 
 def Map2(f, lst1, lst2):
     result = []
@@ -5829,15 +5829,12 @@ def Gamma(*args):
     if len(args) == 1:
         a = args[0]
         return gamma(a)
-    elif len(args) == 2:
-        a, x = args
-        return gammainc(a, x)
     else:
-        a, x, y = args
-        return gammainc(a, x, y)
+        print('gammainc is not implemented in SymPy')
+        return S(0)
 
 def FunctionOfTrigOfLinearQ(u, x):
-    # If u is an algebraic function of trig functions of a linear function of x, 
+    # If u is an algebraic function of trig functions of a linear function of x,
     # FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
     if FunctionOfTrig(u, None, x) and AlgebraicTrigFunctionQ(u, x) and FunctionOfLinear(FunctionOfTrig(u, None, x), x):
         return True
