@@ -1513,6 +1513,9 @@ def test_Mod():
     assert Mod(1, nan) == nan
     assert Mod(nan, nan) == nan
 
+    with raises(ZeroDivisionError):
+        Mod(x, 0)
+
     # Float handling
     point3 = Float(3.3) % 1
     assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)

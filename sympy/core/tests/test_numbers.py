@@ -77,7 +77,6 @@ def test_mod():
 
     p = Symbol('p', infinite=True)
 
-    assert zoo % 0 == nan
     assert oo % oo == nan
     assert zoo % oo == nan
     assert 5 % oo == nan
