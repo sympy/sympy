@@ -376,14 +376,14 @@ def periodicity(f, symbol, check=False):
         period = _periodicity(g.args, symbol)
 
     elif isinstance(f, Mod):
-        a,n=f.args
+        a, n = f.args
 
-        if a==symbol:
-                period=n
-        elif isinstance(a,TrigonometricFunction):
-            period=periodicity(a,symbol)
-        elif degree(a,symbol)==1: #check if 'f' is linear in 'symbol'
-            period=Abs(n/a.coeff(symbol))
+        if a == symbol:
+            period  = n
+        elif isinstance(a, TrigonometricFunction):
+            period = periodicity(a, symbol)
+        elif degree(a, symbol) == 1: #check if 'f' is linear in 'symbol'
+            period = Abs(n/a.coeff(symbol))
 
     elif period is None:
         from sympy.solvers.decompogen import compogen
