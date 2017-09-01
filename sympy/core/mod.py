@@ -92,11 +92,20 @@ class Mod(Function):
 
         # denest
         if p.func is cls:
-            # easy
             qinner = p.args[1]
-            if qinner == q:
+            if qinner % q == 0:
+                return cls(p.args[0], q)
+            elif (qinner*(q - qinner)).is_nonnegative:
+                # |qinner| < |q| and have same sign
                 return p
-            # XXX other possibilities?
+        elif (-p).func is cls:
+            qinner = (-p).args[1]
+            if qinner % q == 0:
+                return cls(-(-p).args[0], q)
+            elif (qinner*(q + qinner)).is_nonpositive:
+                # |qinner| < |q| and have different sign
+                return p
+        # XXX other possibilities?
 
         # extract gcd; any further simplification should be done by the user
         G = gcd(p, q)

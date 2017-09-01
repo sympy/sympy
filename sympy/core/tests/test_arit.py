@@ -1544,13 +1544,18 @@ def test_Mod():
             assert Mod(3*x + y, 9).subs(reps) == (3*_x + _y) % 9
 
     # denesting
-    #   easy case
-    assert Mod(Mod(x, y), y) == Mod(x, y)
-    #   in case someone attempts more denesting
-    for i in [-3, -2, 2, 3]:
-        for j in [-3, -2, 2, 3]:
-            for k in range(3):
-                assert Mod(Mod(k, i), j) == (k % i) % j
+    t = Symbol('t', real=True)
+    assert Mod(Mod(x, t), t) == Mod(x, t)
+    assert Mod(-Mod(x, t), t) == Mod(-x, t)
+    assert Mod(Mod(x, 2*t), t) == Mod(x, t)
+    assert Mod(-Mod(x, 2*t), t) == Mod(-x, t)
+    assert Mod(Mod(x, t), 2*t) == Mod(x, t)
+    assert Mod(-Mod(x, t), -2*t) == -Mod(x, t)
+    for i in [-4, -2, 2, 4]:
+        for j in [-4, -2, 2, 4]:
+            for k in range(4):
+                assert Mod(Mod(x, i), j).subs({x: k}) == (k % i) % j
+                assert Mod(-Mod(x, i), j).subs({x: k}) == -(k % i) % j
 
     # known difference
     assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
