@@ -94,18 +94,10 @@ def test_periodicity():
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
 
-    assert periodicity(Abs(sin(x)),x) == pi
-    assert periodicity(Abs(cos(x)),x) == pi
-    assert periodicity(Abs(sec(x)),x) == pi
-    assert periodicity(Abs(csc(x)),x) == pi
-    assert periodicity(Abs(sin(x))+tan(x),x) == pi
+    assert periodicity(Abs(sin(Abs(sin(x)))),x) == pi
+    assert all(periodicity(Abs(f(x)),x) == pi for f in (cos, sin, sec, csc, tan, cot))
     assert periodicity(Abs(sin(tan(x))),x) == pi
-    assert periodicity(Abs(sin(x))+Abs(cos(x)),x) == pi
-    assert periodicity(Abs(sin(cos(x))),x) == pi
-    assert periodicity(Abs(sin(Abs(cos(x)))),x) == pi
-    assert periodicity(Abs(sin(Abs(sec(x)))),x) == 2*pi
     assert periodicity(Abs(sin(sin(x)+tan(x))), x) == 2*pi
-    assert periodicity(Abs(sin(Abs(sin(x))+tan(x))),x) == pi
 
     assert periodicity(x>2,x) is None
     assert periodicity(sin(x)>S.Half,x) is None

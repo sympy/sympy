@@ -331,6 +331,7 @@ def periodicity(f, symbol, check=False):
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions.elementary.trigonometric import TrigonometricFunction,sin,cos,csc,sec
     from sympy.solvers.decompogen import decompogen
+    from sympy.core.relational import Eq
 
     orig_f = f
     f = simplify(orig_f)
@@ -348,15 +349,19 @@ def periodicity(f, symbol, check=False):
     if isinstance(f, Abs):
         arg = f.args[0]
         new_f = arg
-        if isinstance(arg, sec):
-            new_f = cos(arg.args[0])
-        if isinstance(arg, csc):
+        if isinstance(arg, (sec, csc, cos)):
             new_f = sin(arg.args[0])
         period = periodicity(new_f, symbol)
-        if (period is not None) and (isinstance(new_f, sin) or isinstance(new_f, cos)):
-            if new_f.subs(symbol, symbol + period/2) in [new_f, -new_f]:
+        if period is not None and isinstance(new_f, sin):
+            test = Abs(new_f.subs(symbol, symbol + period/2)) == Abs(new_f)
+            if check and test:
+                raise NotImplementedError(filldedent('''
+                    The period of the given function cannot be verified.
+                    Set check=False to obtain the value.'''))
+            elif test:
                 return period/2
-        return period
+            return period
+
 
     if f.is_Pow:
         base, expo = f.args
