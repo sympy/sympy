@@ -9,7 +9,8 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
+from sympy.core.function import (expand_log, count_ops, _mexpand, _coeff_isneg,
+    nfloat, expand_complex)
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -27,7 +28,7 @@ from sympy.utilities.iterables import has_variety
 
 from sympy.simplify.radsimp import radsimp, fraction
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.simplify.powsimp import powsimp
+from sympy.simplify.powsimp import powsimp, powdenest
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.combsimp import combsimp
@@ -382,7 +383,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, **flags):
     """
     Simplifies the given expression.
 
@@ -504,8 +505,19 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+
+    If rational=True, Floats will be recast as Rationals before simplification.
+    If rational=None, Floats will be recast as Rationals but the result will
+    be recast as Floats. If rational=False(default) then nothing will be done
+    to the Floats.
     """
     expr = sympify(expr)
+
+    # rationalize Floats
+    floats = False
+    if flags.get('rational', False) is not False and expr.has(Float):
+        floats = True
+        expr = nsimplify(expr, rational=True)
 
     try:
         return expr._eval_simplify(ratio=ratio, measure=measure)
@@ -526,8 +538,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
                isinstance(expr.args[0], expr.inverse(argindex=1)):
                 return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure, fu=fu)
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                                measure=measure, **flags)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, **flags)
                          for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -555,6 +567,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         return expr
 
     expr = factor_terms(expr, sign=False)
+    expr = expand_complex(expr)
 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
@@ -564,8 +577,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
-    if expr.has(TrigonometricFunction) and not fu or expr.has(
-            HyperbolicFunction):
+    if expr.has(TrigonometricFunction) and not flags.get(
+            'fu', False) or expr.has(HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
     if expr.has(log):
@@ -580,7 +593,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(Product):
         expr = product_simplify(expr)
 
-    short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+    short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), powdenest(expr), expr)
+    short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
     if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
         short = exptrigsimp(short, simplify=False)
@@ -609,6 +623,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
+
+    # restore floats
+    if floats and flags.get('rational', None) is None:
+        expr = nfloat(expr, exponent=False)
 
     return expr
 
