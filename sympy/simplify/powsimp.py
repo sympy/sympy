@@ -116,7 +116,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     if deep or expr.is_Add or expr.is_Mul and _y not in expr.args:
         expr = expr.func(*[recurse(w) for w in expr.args])
 
-    if expr.is_Pow:
+    if expr.is_Pow and expr.base is not S.Exp1:
         return recurse(expr*_y, deep=False)/_y
 
     if not expr.is_Mul:
@@ -134,7 +134,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if term.is_Rational:
                 coeff *= term
                 continue
-            if term.is_Pow:
+            if term.is_Pow and term.base is not S.Exp1:
                 term = _denest_pow(term)
             if term.is_commutative:
                 b, e = term.as_base_exp()
@@ -379,15 +379,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if term.is_commutative:
                 c_powers.append(list(term.as_base_exp()))
             else:
-                # This is the logic that combines bases that are
-                # different and non-commutative, but with equal and
-                # commutative exponents: A**x*B**x == (A*B)**x.
-                if nc_part:
-                    b1, e1 = nc_part[-1].as_base_exp()
-                    b2, e2 = term.as_base_exp()
-                    if (e1 == e2 and e2.is_commutative):
-                        nc_part[-1] = Pow(b1*b2, e1)
-                        continue
                 nc_part.append(term)
 
         # Pull out numerical coefficients from exponent if assumptions allow

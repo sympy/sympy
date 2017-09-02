@@ -493,7 +493,7 @@ def trigsimp(expr, **opts):
             if e.is_Atom:
                 return e
             args = [traverse(x) for x in e.args]
-            if e.is_Function or e.is_Pow:
+            if e.is_Function or (e.is_Pow and e.base is not S.Exp1):
                 args = [trigsimp_groebner(x, **opts) for x in args]
             return e.func(*args)
         new = traverse(ex)
@@ -689,7 +689,7 @@ def trigsimp_old(expr, **opts):
             if e.is_Atom:
                 return e
             args = [traverse(x) for x in e.args]
-            if e.is_Function or e.is_Pow:
+            if e.is_Function or (e.is_Pow and e.base is not S.Exp1):
                 args = [trigsimp_groebner(x, **opts) for x in args]
             return e.func(*args)
         if deep:
@@ -828,7 +828,7 @@ def _replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph):
     gargs = defaultdict(int)
     args = []
     for x in expr.args:
-        if x.is_Pow or x.func in (f, g):
+        if (x.is_Pow and x.base is not S.Exp1) or x.func in (f, g):
             b, e = x.as_base_exp()
             if b.is_positive or e.is_integer:
                 if b.func == f:
@@ -1025,7 +1025,7 @@ def __trigsimp(expr, deep=False):
                 m = expr.match(pattern)
                 m.setdefault(c, S.Zero)
 
-    elif expr.is_Mul or expr.is_Pow or deep and expr.args:
+    elif expr.is_Mul or (expr.is_Pow and expr.base is not S.Exp1) or deep and expr.args:
         expr = expr.func(*[_trigsimp(a, deep) for a in expr.args])
 
     try:
