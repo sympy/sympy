@@ -1018,14 +1018,16 @@ def PerfectSquareQ(u):
     # (* If u is a rational number whose squareroot is rational or if u is of the form u1^n1 u2^n2 ...
     # and n1, n2, ... are even, PerfectSquareQ[u] returns True; else it returns False. *)
     if RationalQ(u):
-        return u > 0 and RationalQ(Sqrt(u))
+        return Greater(u, 0) and RationalQ(Sqrt(u))
     elif PowerQ(u):
         return EvenQ(u.args[1])
     elif ProductQ(u):
-        return PerfectSquareQ(First(u)) & PerfectSquareQ(Rest(u))
+        return PerfectSquareQ(First(u)) and PerfectSquareQ(Rest(u))
     elif SumQ(u):
         s = Simplify(u)
-        return NonsumQ(s) & PerfectSquareQ(s)
+        if NonsumQ(s):
+            return PerfectSquareQ(s)
+        return False
     else:
         return False
 
@@ -1825,7 +1827,6 @@ def ExpandIntegrand(expr, x, extra=None):
         else:
             return expr*FreeTerms(w, x) + MergeMonomials(expr*r, x)
 
-
     u_ =  Wild('c', exclude=[0, 1])
     a_ =  Wild('c', exclude=[x])
     b_ =  Wild('c', exclude=[x, 0])
@@ -1871,7 +1872,6 @@ def ExpandIntegrand(expr, x, extra=None):
                 else:
                     return x**m*F**(a + b*(c + d*x)**n)*v
             return ExpandIntegrand(F**(a + b*(c + d*x)**n), x**m*(e + f*x)**p, x)
-
 
     F_ =  Wild('F', exclude=[x, 0, 1])
     b_ =  Wild('b', exclude=[x, 0])
@@ -2183,7 +2183,6 @@ def ExpandIntegrand(expr, x, extra=None):
             F, m, a, b, G, n = tuple([match[i] for i in keys])
             if ((1/F).args == G.args and F*G ==1 and IntegersQ(m, n)):
                 return ReplaceAll(ExpandIntegrand((a + b*x)**n/x**m, x), {x: G})
-
 
     a_ = Wild('a', exclude=[x, 0])
     b_ = Wild('b', exclude=[x, 0])
@@ -6360,8 +6359,8 @@ def PolyLog(n, p, z=None):
 def D(f, x):
     return f.diff(x)
 
-def Dist(u):
-    return S(0)
+def Dist(u, v, x):
+    return Mul(u, v)
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
