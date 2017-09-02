@@ -114,6 +114,7 @@ def test_periodicity_check():
     assert periodicity(sin(x) + cos(x), x, check=True) == 2*pi
     raises(NotImplementedError, lambda: periodicity(sec(x), x, check=True))
     raises(NotImplementedError, lambda: periodicity(sin(x*y), x, check=True))
+    raises(NotImplementedError, lambda: periodicity(Abs(sec(sec(x))), x, check=True))
 
 
 def test_lcim():
