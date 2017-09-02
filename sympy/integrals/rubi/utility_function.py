@@ -258,6 +258,20 @@ def IntegersQ(*var):
     return all(IntegerQ(i) for i in var)
 
 def ComplexNumberQ(*var):
+    """
+    ComplexNumberQ(m, n,...) returns True if m, n, ... are all explicit complex numbers, else it returns False.
+
+    Examples
+    ========
+
+    >>> from sympy import *
+    >>> from sympy.abc import  a, b
+    >>> ComplexNumberQ(1 + I*2, I)
+    True
+    >>> ComplexNumberQ(a + b, I)
+    False
+
+    """
     return all((im(i)!=0) for i in var)
 
 def PureComplexNumberQ(*var):
@@ -337,7 +351,20 @@ def Subst(a, x, y):
     return a.xreplace({x: y})
 
 def First(expr, d=None):
-    # gives the first element if it exists, or d otherwise.
+    """
+    Gives the first element if it exists, or d otherwise.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import First
+    >>> from sympy.abc import  a, b, c
+    >>> First(a + b + c)
+    a
+    assert First(a*b*c)
+    a
+
+    """
     if isinstance(expr, list):
         return expr[0]
     else:
@@ -348,6 +375,20 @@ def First(expr, d=None):
             return expr.args[0]
 
 def Rest(expr):
+    """
+    Gives rest of the elements if it exists
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import Rest
+    >>> from sympy.abc import  a, b, c
+    >>> Rest(a + b + c)
+    b + c
+    >>> Rest(a*b*c)
+    b*c
+
+    """
     if isinstance(expr, list):
         return expr[1:]
     else:
@@ -372,6 +413,22 @@ def SqrtNumberSumQ(u):
     return SumQ(u) and SqrtNumberQ(First(u)) and SqrtNumberQ(Rest(u)) or ProductQ(u) and SqrtNumberQ(First(u)) and SqrtNumberSumQ(Rest(u))
 
 def LinearQ(expr, x):
+    """
+    LinearQ(expr, x) returns True iff u is a polynomial of degree 1.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import LinearQ
+    >>> from sympy.abc import  x, y, a
+    >>> LinearQ(a, x)
+    False
+    >>> LinearQ(3*x + y**2, x)
+    True
+    >>> LinearQ(3*x + y**2, y)
+    False
+
+    """
     if isinstance(expr, list):
         return all(LinearQ(i, x) for i in expr)
     elif expr.is_polynomial(x):
@@ -386,6 +443,25 @@ def ArcCosh(a):
     return acosh(a)
 
 def Coefficient(expr, var, n=1):
+    """
+    Coefficient(expr, var) gives the coefficient of form in the polynomial expr.
+    Coefficient(expr, var, n) gives the coefficient of var**n in expr.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import Coefficient
+    >>> from sympy.abc import  x, a, b, c
+    >>> Coefficient(7 + 2*x + 4*x**3, x, 1)
+    2
+    >>> Coefficient(a + b*x + c*x**3, x, 0)
+    a
+    >>> Coefficient(a + b*x + c*x**3, x, 4)
+    0
+    >>> Coefficient(b*x + c*x**3, x, 3)
+    c
+
+    """
     a = Poly(expr, var)
     if (degree(a) - n) < 0:
         return 0
@@ -514,6 +590,19 @@ def GreaterEqual(*args):
     return True
 
 def FractionQ(*args):
+    """
+    FractionQ(m, n,...) returns True if m, n, ... are all explicit fractions, else it returns False.
+
+    Examples
+    ========
+
+    >>> from sympy import *
+    >>> FractionQ(S('3'))
+    False
+    >>> FractionQ(S('3')/S('2'))
+    True
+
+    """
     return all(i.is_Rational for i in args) and all(Denominator(i)!= S(1) for i in args)
 
 def IntLinearcQ(a, b, c, d, m, n, x):
@@ -526,6 +615,20 @@ def Expand(expr):
     return expr.expand()
 
 def IndependentQ(u, x):
+    """
+    If u is free from x IndependentQ(u, x) returns True else False.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import IndependentQ
+    >>> from sympy.abc import  x, a, b
+    >>> IndependentQ(a + b*x, x)
+    False
+    >>> IndependentQ(a + b, x)
+    True
+
+    """
     return FreeQ(u, x)
 
 def PowerQ(expr):
@@ -660,7 +763,21 @@ def NumericQ(u):
     return N(u).is_number
 
 def Length(expr):
-    # returns number of elements in the experssion
+    """
+    Returns number of elements in the experssion just as sympy's len.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import Length
+    >>> from from sympy.abc import  x, a, b
+    >>> from sympy import *
+    >>> Length(a + b)
+    2
+    >>> Length(sin(a)*cos(a))
+    2
+
+    """
     if isinstance(expr, list):
         return len(expr)
     return len(expr.args)
@@ -1623,6 +1740,20 @@ def PolynomialDivide(p_, q_, x):
     return result
 
 def BinomialQ(u, x, n=None):
+    """
+    If u is equivalent to an expression of the form a + b*x**n, BinomialQ(u, x, n) returns True, else it returns False.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import BinomialQ
+    >>> from sympy.abc import  x
+    >>> BinomialQ(x**9, x)
+    True
+    >>> BinomialQ((1 + x)**3, x)
+    False
+
+    """
     if ListQ(u):
         for i in u:
             if Not(BinomialQ(i, x, n)):
@@ -1633,8 +1764,21 @@ def BinomialQ(u, x, n=None):
     return ListQ(BinomialParts(u, x))
 
 def TrinomialQ(u, x):
-    # * If u is equivalent to an expression of the form a+b*x^n+c*x^(2*n) where n, b and c are not 0, *)
-    # (* TrinomialQ[u,x] returns True; else it returns False. *)
+    """
+    If u is equivalent to an expression of the form a + b*x**n + c*x**(2*n) where n, b and c are not 0,
+    TrinomialQ(u, x) returns True, else it returns False.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import TrinomialQ
+    >>> from sympy.abc import x
+    >>> TrinomialQ((7 + 2*x**6 + 3*x**12), x)
+    True
+    >>> TrinomialQ(x**2, x)
+    False
+
+    """
     if ListQ(u):
         for i in u.args:
             if Not(TrinomialQ(i, x, n)):
@@ -1649,15 +1793,39 @@ def TrinomialQ(u, x):
     return ListQ(TrinomialParts(u,x)) and Not(QuadraticQ(u, x)) and Not(check)
 
 def GeneralizedBinomialQ(u, x):
-    # (* If u is equivalent to an expression of the form a*x^q+b*x^n where n, q and b are not 0, *)
-    # (* GeneralizedBinomialQ[u,x] returns True; else it returns False. *)
+    """
+    If u is equivalent to an expression of the form a*x**q+b*x**n where n, q and b are not 0,
+    GeneralizedBinomialQ(u, x) returns True, else it returns False.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import GeneralizedBinomialQ
+    >>> from sympy.abc import a, x, q, b, n
+    >>>  GeneralizedBinomialQ(a*x**q + b*x**n, x)
+    True
+    >>> GeneralizedBinomialQ(a*x**q, x)
+    False
+
+    """
     if ListQ(u):
         return all(GeneralizedBinomialQ(i, x) for i in u)
     return ListQ(GeneralizedBinomialParts(u, x))
 
 def GeneralizedTrinomialQ(u, x):
-    # (* If u is equivalent to an expression of the form a*x^q+b*x^n+c*x^(2*n-q) where n, q, b and c are not 0, *)
-    # (* GeneralizedTrinomialQ[u,x] returns True; else it returns False. *)
+    """
+    If u is equivalent to an expression of the form a*x**q+b*x**n+c*x**(2*n-q) where n, q, b and c are not 0,
+    GeneralizedTrinomialQ(u, x) returns True, else it returns False.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import GeneralizedTrinomialQ
+    >>> from sympy.abc import x
+    >>> GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
+    False
+
+    """
     if ListQ(u):
         return all(GeneralizedTrinomialQ(i, x) for i in u)
     return ListQ(GeneralizedTrinomialParts(u, x))
@@ -1743,9 +1911,24 @@ def Reverse(u):
         return u.func(*list(reversed(l)))
 
 def RationalFunctionExponents(u, x):
-    # (* u is a polynomial or rational function of x. *)
-    # (* RationalFunctionExponents[u,x] returns a list of the exponent of the *)
-    # (* numerator of u and the exponent of the denominator of u. *)
+    """
+    u is a polynomial or rational function of x.
+    RationalFunctionExponents(u, x) returns a list of the exponent of the
+    numerator of u and the exponent of the denominator of u.
+
+    Examples
+    ========
+
+    >>> form sympy.integrals.rubi.utility_function import RationalFunctionExponents
+    >>> from sympy.abc import  x, a
+    >>> RationalFunctionExponents(x, x)
+    [1, 0]
+    >>> RationalFunctionExponents(x**(-1), x)
+    [0, 1]
+    >>> RationalFunctionExponents(x**(-1)*a, x)
+    [0, 1]
+
+    """
     if PolynomialQ(u, x):
         return [Exponent(u, x), 0]
     elif IntegerPowerQ(u):
@@ -1767,8 +1950,8 @@ def RationalFunctionExponents(u, x):
     return [0, 0]
 
 def RationalFunctionExpand(expr, x):
-    # (* u is a polynomial or rational function of x. *)
-    # (* RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors. *)
+    # expr is a polynomial or rational function of x.
+    # RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors.
     u_ = Wild('u', exclude=[1, 0])
     v_ = Wild('v', exclude=[1, 0])
     n_ = Wild('n', exclude=[x, 1, -1, 0])
@@ -2501,6 +2684,22 @@ def SimplerSqrtQ(u, v):
         return Not(OrderedQ([v, u]))
 
 def SumSimplerQ(u, v):
+    """
+    If u + v is simpler than u, SumSimplerQ(u, v) returns True, else it returns False.
+    If for every term w of v there is a term of u equal to n*w where n<-1/2, u + v will be simpler than u.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import SumSimplerQ
+    >>> from sympy.abc import x
+    >>> from sympy import *
+    >>> SumSimplerQ(S(4 + x),S(3 + x**3))
+    False
+    >>> SumSimplerQ(S(4 + x), S(3 - x))
+    True
+
+    """
     if RationalQ(u, v):
         if v == S(0):
             return False
