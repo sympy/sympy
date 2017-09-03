@@ -265,10 +265,10 @@ def ComplexNumberQ(*var):
     ========
 
     >>> from sympy import *
-    >>> from sympy.abc import  a, b
+    >>> from sympy.integrals.rubi.utility_function import ComplexNumberQ
     >>> ComplexNumberQ(1 + I*2, I)
     True
-    >>> ComplexNumberQ(a + b, I)
+    >>> ComplexNumberQ(2, I)
     False
 
     """
@@ -361,7 +361,7 @@ def First(expr, d=None):
     >>> from sympy.abc import  a, b, c
     >>> First(a + b + c)
     a
-    assert First(a*b*c)
+    >>> First(a*b*c)
     a
 
     """
@@ -597,6 +597,7 @@ def FractionQ(*args):
     ========
 
     >>> from sympy import *
+    >>> from sympy.integrals.rubi.utility_function import FractionQ
     >>> FractionQ(S('3'))
     False
     >>> FractionQ(S('3')/S('2'))
@@ -770,7 +771,7 @@ def Length(expr):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import Length
-    >>> from from sympy.abc import  x, a, b
+    >>> from sympy.abc import  x, a, b
     >>> from sympy import *
     >>> Length(a + b)
     2
@@ -1416,7 +1417,22 @@ def FreeFactors(u, x):
         return S(1)
 
 def NonfreeFactors(u, x):
-    # returns the product of the factors of u not free of x.
+    """
+    Returns the product of the factors of u not free of x.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import NonfreeFactors
+    >>> from sympy.abc import  x, a, b
+    >>> NonfreeFactors(a, x)
+    1
+    >>> NonfreeFactors(x + a, x)
+    a + x
+    >>> NonfreeFactors(a*b*x, x)
+    x
+
+    """
     if ProductQ(u):
         result = 1
         for i in u.args:
@@ -1487,7 +1503,22 @@ def RemoveContent(u, x):
 
 
 def FreeTerms(u, x):
-    # returns the sum of the terms of u free of x.
+    """
+    Returns the sum of the terms of u free of x.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import FreeTerms
+    >>> from sympy.abc import  x, a, b
+    >>> FreeTerms(a, x)
+    a
+    >>> FreeTerms(x*a, x)
+    0
+    >>> FreeTerms(a*x + b, x)
+    b
+
+    """
     if SumQ(u):
         result = 0
         for i in u.args:
@@ -1648,7 +1679,19 @@ def RemainingFactors(u):
     return S(1)
 
 def LeadBase(u):
-    # returns the base of the leading factor of u.
+    """
+    returns the base of the leading factor of u.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import LeadBase
+    >>> from sympy.abc import  a, b, c
+    >>> LeadBase(a**b)
+    a
+    >>> LeadBase(a**b*c)
+    a
+    """
     v = LeadFactor(u)
     if PowerQ(v):
         return v.base
@@ -1802,8 +1845,6 @@ def GeneralizedBinomialQ(u, x):
 
     >>> from sympy.integrals.rubi.utility_function import GeneralizedBinomialQ
     >>> from sympy.abc import a, x, q, b, n
-    >>>  GeneralizedBinomialQ(a*x**q + b*x**n, x)
-    True
     >>> GeneralizedBinomialQ(a*x**q, x)
     False
 
@@ -1918,8 +1959,7 @@ def RationalFunctionExponents(u, x):
 
     Examples
     ========
-
-    >>> form sympy.integrals.rubi.utility_function import RationalFunctionExponents
+    >>> from sympy.integrals.rubi.utility_function import RationalFunctionExponents
     >>> from sympy.abc import  x, a
     >>> RationalFunctionExponents(x, x)
     [1, 0]
@@ -2807,7 +2847,19 @@ def MonomialSumQ(u, x):
         return True
 
 def MinimumMonomialExponent(u, x):
-    # u is sum whose terms are monomials.  MinimumMonomialExponent(u, x) returns the exponent of the term having the smallest exponent
+    """
+    u is sum whose terms are monomials.  MinimumMonomialExponent(u, x) returns the exponent of the term having the smallest exponent
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import MinimumMonomialExponent
+    >>> from sympy.abc import  x
+    >>> MinimumMonomialExponent(x**2 + 5*x**2 + 3*x**5, x)
+    2
+    >>> MinimumMonomialExponent(x**2 + 5*x**2 + 1, x)
+    0
+    """
     lst = []
     for i in u.args:
         lst = lst + [MonomialExponent(i, x)]
@@ -3019,7 +3071,21 @@ def AlgebraicFunctionFactors(u, x, flag=False):
     return 1
 
 def NonalgebraicFunctionFactors(u, x):
-    # (* NonalgebraicFunctionFactors[u,x] returns the product of the factors of u that are not algebraic functions of x. *)
+    """
+    NonalgebraicFunctionFactors[u,x] returns the product of the factors of u that are not algebraic functions of x.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import NonalgebraicFunctionFactors
+    >>> from sympy.abc import  x
+    >>> from sympy import *
+    >>> NonalgebraicFunctionFactors(sin(x), x)
+    sin(x)
+    >>> NonalgebraicFunctionFactors(x, x)
+    1
+
+    """
     if ProductQ(u):
         result = 1
         for i in u.args:
@@ -3174,8 +3240,22 @@ def FactorAbsurdNumber(m):
     return CombineExponents
 
 def SubstForInverseFunction(*args):
-    # (* SubstForInverseFunction[u,v,w,x] returns u with subexpressions equal to v replaced by x
-    # and x replaced by w. *)
+    """
+    SubstForInverseFunction(u, v, w, x) returns u with subexpressions equal to v replaced by x and x replaced by w.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import SubstForInverseFunction
+    >>> from sympy.abc import  x, a, b
+    >>> SubstForInverseFunction(a, a, b, x)
+    a
+    >>> SubstForInverseFunction(x**a, x**a, b, x)
+    x
+    >>> SubstForInverseFunction(a*x**a, a, b, x)
+    a*b**a
+
+    """
     if len(args) == 3:
         u, v, x = args[0], args[1], args[2]
         return SubstForInverseFunction(u, v, (-Coefficient(v.args[0], x, 0) + InverseFunction(Head(v))(x))/Coefficient(v.args[0], x, 1), x)
@@ -3452,7 +3532,23 @@ def PolynomialInAuxQ(u, v, x):
     return False
 
 def PolynomialInQ(u, v, x):
-    # If u is a polynomial in v[x], PolynomialInQ[u,v,x] returns True; else it returns False.
+    """
+    If u is a polynomial in v(x), PolynomialInQ(u, v, x) returns True, else it returns False.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import PolynomialInQ
+    >>> from sympy.abc import  x
+    >>> from sympy import *
+    >>> PolynomialInQ(S(1), log(x), x)
+    True
+    >>> PolynomialInQ(log(x), log(x), x)
+    True
+    >>> PolynomialInQ(1 + log(x)**2, log(x), x)
+    True
+
+    """
     return PolynomialInAuxQ(u, NonfreeFactors(NonfreeTerms(v, x), x), x)
 
 def ExponentInAux(u, v, x):
@@ -3506,7 +3602,20 @@ def DistributeDegree(u, m):
     return u**m
 
 def FunctionOfPower(*args):
-    # FunctionOfPower[u,x] returns the gcd of the integer degrees of x in u.
+    """
+    FunctionOfPower[u,x] returns the gcd of the integer degrees of x in u.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import FunctionOfPower
+    >>> from sympy.abc import  x
+    >>> FunctionOfPower(x, x)
+    1
+    >>> FunctionOfPower(x**3, x)
+    3
+
+    """
     if len(args) == 2:
         return FunctionOfPower(args[0], None, args[1])
 
@@ -3527,8 +3636,19 @@ def FunctionOfPower(*args):
     return tmp
 
 def DivideDegreesOfFactors(u, n):
-    # DivideDegreesOfFactors[u,n] returns the product of the base of the factors of u raised to
-    # the degree of the factors divided by n.
+    """
+    DivideDegreesOfFactors[u,n] returns the product of the base of the factors of u raised to the degree of the factors divided by n.
+
+    Examples
+    ========
+
+    >>> from sympy import *
+    >>> from sympy.integrals.rubi.utility_function import DivideDegreesOfFactors
+    >>> from sympy.abc import a, b
+    >>> DivideDegreesOfFactors(a**b, S(3))
+    a**(b/3)
+
+    """
     if ProductQ(u):
         return Mul(*[LeadBase(i)**(LeadDegree(i)/n) for i in u.args])
     return LeadBase(u)**(LeadDegree(u)/n)
@@ -4094,9 +4214,24 @@ def FunctionOfTanhQ(u, v, x):
     return all(FunctionOfTanhQ(i, v, x) for i in u.args)
 
 def FunctionOfTanhWeight(u, v, x):
-    # (* u is a function of the form f[Tanh[v],Coth[v]] where f is independent of x.
-    # FunctionOfTanhWeight[u,v,x] returns a nonnegative number if u is best considered a function
-    # of Tanh[v]; else it returns a negative number. *)
+    """
+    u is a function of the form f(tanh(v), coth(v)) where f is independent of x.
+    FunctionOfTanhWeight(u, v, x) returns a nonnegative number if u is best considered a function of tanh(v), else it returns a negative number.
+
+    Examples
+    ========
+
+    >>> from sympy import *
+    >>> from sympy.abc import x
+    >>> from sympy.integrals.rubi.utility_function import FunctionOfTanhWeight
+    >>> FunctionOfTanhWeight(x, log(x), x)
+    0
+    >>> FunctionOfTanhWeight(sinh(log(x)), log(x), x)
+    0
+    >>> FunctionOfTanhWeight(tanh(log(x)), log(x), x)
+    1
+
+    """
     if AtomQ(u):
         return S(0)
     elif CalculusQ(u):
@@ -4259,8 +4394,7 @@ def SubstForFractionalPowerOfLinear(u, x):
     return [NonfreeFactors(tmp, x), n, lst[1], FreeFactors(tmp, x)/b]
 
 def FractionalPowerOfLinear(u, n, v, x):
-    # (* If u has a subexpression of the form (a+b*x)^(m/n),
-    # FractionalPowerOfLinear[u,1,False,x] returns {n,a+b*x}; else it returns False. *)
+    # If u has a subexpression of the form (a + b*x)**(m/n), FractionalPowerOfLinear(u, 1, False, x) returns [n, a + b*x], else it returns False.
     if AtomQ(u) or FreeQ(u, x):
         return [n, v]
     elif CalculusQ(u):
@@ -4641,6 +4775,23 @@ def ExpandTrigToExp(u, *args):
         return ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x),x)
 
 def TrigReduce(i):
+    """
+    TrigReduce(expr) rewrites products and powers of trigonometric functions in expr in terms of trigonometric functions with combined arguments.
+
+    Examples
+    ========
+
+    >>> from sympy import *
+    >>> from sympy.integrals.rubi.utility_function import TrigReduce
+    >>> from sympy.abc import x
+    >>> TrigReduce(cos(x)**2)
+    cos(2*x)/2 + 1/2
+    >>> TrigReduce(cos(x)**2*sin(x))
+    sin(x)/4 + sin(3*x)/4
+    >>> TrigReduce(cos(x)**2+sin(x))
+    sin(x) + cos(2*x)/2 + 1/2
+
+    """
     if SumQ(i):
         t = 0
         for k in i.args:
