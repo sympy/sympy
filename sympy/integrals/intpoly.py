@@ -14,6 +14,7 @@ from __future__ import print_function, division
 from functools import cmp_to_key
 
 from sympy.core import S, diff, Expr, Symbol
+from sympy.simplify.simplify import nsimplify
 from sympy.geometry import Segment2D, Polygon, Point, Point2D
 from sympy.abc import x, y, z
 
@@ -112,6 +113,7 @@ def polytope_integrate(poly, expr=None, **kwargs):
                 integral_value = S.Zero
                 monoms = decompose(poly, separate=True)
                 for monom in monoms:
+                    monom = nsimplify(monom)
                     coeff, m = strip(monom)
                     integral_value += result_dict[m] * coeff
                 result[poly] = integral_value
@@ -131,13 +133,13 @@ def strip(monom):
         return monom, 1
     else:
         coeff = LC(monom)
-        return coeff, monom / coeff
+        return coeff, S(monom) / coeff
 
 
 def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
     """Function to translate the problem of integrating uni/bi/tri-variate
     polynomials over a 3-Polytope to integrating over its faces.
-    This is done using Generalized Stokes's Theorem and Euler's Theorem.
+    This is done using Generalized Stokes' Theorem and Euler's Theorem.
 
     Parameters
     ===========
@@ -145,6 +147,10 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
     facets : Faces of the 3-Polytope(expressed as indices of `vertices`)
     vertices : Vertices that constitute the Polytope
     hp_params : Hyperplane Parameters of the facets
+
+    Optional Parameters
+    -------------------
+    max_degree : Max degree of constituent monomial in given list of polynomial
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import main_integrate3d, \
@@ -165,8 +171,8 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
     if max_degree:
         grad_terms = gradient_terms(max_degree, 3)
         flat_list = [term for z_terms in grad_terms
-                          for x_term in z_terms
-                          for term in x_term]
+                     for x_term in z_terms
+                     for term in x_term]
 
         for term in flat_list:
             result[term[0]] = 0
@@ -186,9 +192,9 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
                     value_over_face = \
                         integration_reduction_dynamic(facets, facet_count, a,
                                                       b, expr, degree, dims,
-                                                      x_index, y_index, z_index,
-                                                      x0, grad_terms, i,
-                                                      vertices, hp)
+                                                      x_index, y_index,
+                                                      z_index, x0, grad_terms,
+                                                      i, vertices, hp)
                 monom[7] = value_over_face
                 result[expr] += value_over_face * \
                     (b / norm(a)) / (dim_length + x_d + y_d + z_d)
@@ -244,8 +250,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     integral_value = S.Zero
 
     if max_degree:
-        grad_terms = [[0, 0, 0, 0]] + \
-            gradient_terms(max_degree)
+        grad_terms = [[0, 0, 0, 0]] + gradient_terms(max_degree)
 
         for facet_count, hp in enumerate(hp_params):
             a, b = hp[0], hp[1]
@@ -267,86 +272,6 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                                                       y_d, max_degree, x0,
                                                       grad_terms, i)
                 monom[3] = value_over_boundary
-                if value is not None:
-                    result[m] += value_over_boundary * \
-                                        (b / norm(a)) / (dim_length + degree)
-                else:
-                    result[m] = value_over_boundary * \
-                                (b / norm(a)) / (dim_length + degree)
-        return result
-    else:
-        polynomials = decompose(expr)
-        for deg in polynomials:
-            poly_contribute = S.Zero
-            facet_count = 0
-            for hp in hp_params:
-                value_over_boundary = integration_reduction(facets,
-                                                            facet_count,
-                                                            hp[0], hp[1],
-                                                            polynomials[deg],
-                                                            dims, deg)
-                poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
-                facet_count += 1
-            poly_contribute /= (dim_length + deg)
-            integral_value += poly_contribute
-    return integral_value
-
-
-def main_integrate(expr, facets, hp_params, max_degree=None):
-    """Function to translate the problem of integrating univariate/bivariate
-    polynomials over a 2-Polytope to integrating over its boundary facets.
-    This is done using Generalized Stokes's Theorem and Euler's Theorem.
-
-    Parameters
-    ===========
-    expr : The input polynomial
-    facets : Facets(Line Segments) of the 2-Polytope
-    hp_params : Hyperplane Parameters of the facets
-
-    Optional Parameters:
-    --------------------
-    max_degree : The maximum degree of any monomial of the input polynomial.
-
-    >>> from sympy.abc import x, y
-    >>> from sympy.integrals.intpoly import main_integrate,\
-    hyperplane_parameters
-    >>> from sympy.geometry.polygon import Polygon
-    >>> from sympy.geometry.point import Point
-    >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
-    >>> facets = triangle.sides
-    >>> hp_params = hyperplane_parameters(triangle)
-    >>> main_integrate(x**2 + y**2, facets, hp_params)
-    325/6
-    """
-    dims = (x, y)
-    dim_length = len(dims)
-    result = {}
-    integral_value = S.Zero
-
-    if max_degree:
-        y_degree = max_degree
-        grad_terms = [[0, 0, 0, 0]] + \
-            gradient_terms(max_degree)
-
-        for facet_count, hp in enumerate(hp_params):
-            a, b = hp[0], hp[1]
-            x0 = facets[facet_count].points[0]
-
-            for i, monom in enumerate(grad_terms):
-                #  Every monomial is a tuple :
-                #  (term, x_degree, y_degree, value over boundary)
-                m, x_d, y_d, _ = monom
-                value = result.get(m, None)
-                if b is S.Zero:
-                    value_over_boundary = S.Zero
-                else:
-                    value_over_boundary = \
-                        integration_reduction_dynamic(facets, facet_count, a,
-                                                      b, m, dims, x_d, y_d,
-                                                      y_degree, x0,
-                                                      grad_terms, i)
-                monom[3] = value_over_boundary
-                degree = x_d + y_d
                 if value is not None:
                     result[m] += value_over_boundary * \
                                         (b / norm(a)) / (dim_length + degree)
@@ -405,7 +330,7 @@ def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
     for i in range(len(facet)):
         side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
         result += distance_to_side(x0, side, hp_param[0]) *\
-                  lineseg_integrate(facet, i, side, expr, degree)
+            lineseg_integrate(facet, i, side, expr, degree)
     if not expr.is_number:
         expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] +\
             diff(expr, z) * x0[2]
@@ -538,12 +463,12 @@ def left_integral2D(m, index, facets, x0, expr, gens):
     gens : Generators which generate the polynomial
 
     >>> from sympy.abc import x, y
-    >>> from sympy.integrals.intpoly import left_integral
+    >>> from sympy.integrals.intpoly import left_integral2D
     >>> from sympy.geometry.point import Point
     >>> from sympy.geometry.polygon import Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
-    >>> left_integral(3, 0, facets, facets[0].points[0], 1, (x, y))
+    >>> left_integral2D(3, 0, facets, facets[0].points[0], 1, (x, y))
     5
     """
     value = S.Zero
@@ -583,6 +508,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
     index : Index of facet to find intersections with.(Used in left_integral())
     a, b : Hyperplane parameters
     expr : Input monomial
+    degree : Total degree of `expr`
     dims : Tuple denoting axes variables
     x_index : Exponent of 'x' in expr
     y_index : Exponent of 'y' in expr
@@ -590,7 +516,11 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
     x0 : First point on facets[index]
     monomial_values : List of monomial values constituting the polynomial
     monom_index : Index of monomial whose integration is being found.
+
+    Optional Parameters
+    -------------------
     vertices : Coordinates of vertices constituting the 3-Polytope
+    hp_param : Hyperplane Parameter of the face of the facets[index]
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import integration_reduction_dynamic,\
@@ -603,8 +533,8 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
     >>> x0 = facets[0].points[0]
     >>> monomial_values = [[0, 0, 0, 0], [1, 0, 0, 5],\
                            [y, 0, 1, 15], [x, 1, 0, None]]
-    >>> integration_reduction_dynamic(facets, 0, a, b, x, (x, y), 1, 0, 1, x0,\
-                                      monomial_values, 3)
+    >>> integration_reduction_dynamic(facets, 0, a, b, x, 1, (x, y), 1, 0, 1,\
+                                      x0, monomial_values, 3)
     25/2
     """
     value = S.Zero
@@ -614,30 +544,29 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
         return expr
 
     if len(dims) == 2:
-        degree = x_index + y_index
         if not expr.is_number:
+            _, x_degree, y_degree, _ = monomial_values[monom_index]
             x_index = monom_index - max_index + \
-                x_index - 2 if x_index > 0 else 0
-            y_index = monom_index - 1 if y_index > 0 else 0
-
+                x_index - 2 if x_degree > 0 else 0
+            y_index = monom_index - 1 if y_degree > 0 else 0
             x_value, y_value =\
                 monomial_values[x_index][3], monomial_values[y_index][3]
 
-            value += x_index * x_value * x0[0] + y_index * y_value * x0[1]
+            value += x_degree * x_value * x0[0] + y_degree * y_value * x0[1]
 
         value += left_integral2D(m, index, facets, x0, expr, dims)
     else:
-        # For the 3D use case the max_y_degree contains the z_degree of the term
+        # For 3D use case the max_index contains the z_degree of the term
         z_index = max_index
         if not expr.is_number:
             x_degree, y_degree, z_degree = y_index,\
                                            z_index - x_index - y_index, x_index
             x_value = monomial_values[z_index - 1][y_index - 1][x_index][7]\
-                      if x_degree > 0 else 0
+                if x_degree > 0 else 0
             y_value = monomial_values[z_index - 1][y_index][x_index][7]\
-                      if y_degree > 0 else 0
+                if y_degree > 0 else 0
             z_value = monomial_values[z_index - 1][y_index][x_index - 1][7]\
-                      if z_degree > 0 else 0
+                if z_degree > 0 else 0
 
             value += x_degree * x_value * x0[0] + y_degree * y_value * x0[1] \
                 + z_degree * z_value * x0[2]
@@ -648,32 +577,64 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
 
 
 def left_integral3D(facets, index, expr, vertices, hp_param, degree):
+    """Computes the left integral of Eq 10 in Chin et al.
+    For the 3D case, this is the sum of the integral values over constituting
+    line segments of the face (which is accessed by facets[index]) multiplied
+    by the distance between the first point of facet and that line segment.
+
+    Parameters
+    ===========
+    facets : List of faces of the 3-Polytope.
+    index : Index of face over which integral is to be calculated.
+    expr : Input polynomial
+    vertices : List of vertices that constitute the 3-Polytope
+    hp_param : The hyperplane parameters of the face
+    degree : Degree of the expr
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import left_integral3D
+    >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+                 (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+                 [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+                 [3, 1, 0, 2], [0, 4, 6, 2]]
+    >>> facets = cube[1:]
+    >>> vertices = cube[0]
+    >>> left_integral3D(facets, 3, 1, vertices, ([0, -1, 0], -5), 0)
+    -50
+    """
     value = S.Zero
     facet = facets[index]
     x0 = vertices[facet[0]]
     for i in range(len(facet)):
         side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
         value += distance_to_side(x0, side, hp_param[0]) * \
-                 lineseg_integrate(facet, i, side, expr, degree)
+            lineseg_integrate(facet, i, side, expr, degree)
     return value
 
 
 def gradient_terms(binomial_power=0, no_of_gens=2):
     """Returns a list of all the possible monomials between
-    0 and y**binomial_power
+    0 and y**binomial_power for 2D case and z**binomial_power
+    for 3D case.
 
-    Parameters
-    ===========
+    Optional Parameters
+    -------------------
     binomial_power : Power upto which terms are generated.
+    no_of_gens : Denotes whether terms are being generated for 2D or 3D case.
 
     Examples
     ========
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import gradient_terms
     >>> gradient_terms(2)
-    [[1, 0, 0, None], [y, 0, 1, None], [y**2, 0, 2, None], [x, 1, 0, None],\
-    [x*y, 1, 1, None], [x**2, 2, 0, None]]
-
+    [[1, 0, 0, 0], [y, 0, 1, 0], [y**2, 0, 2, 0], [x, 1, 0, 0],
+    [x*y, 1, 1, 0], [x**2, 2, 0, 0]]
+    >>> gradient_terms(2, 3)
+    [[[[1, 0, 0, 0, 0, 0, 0, 0]]], [[[y, 0, 1, 0, 1, 0, 0, 0],
+    [z, 0, 0, 1, 1, 0, 1, 0]], [[x, 1, 0, 0, 1, 1, 0, 0]]],
+    [[[y**2, 0, 2, 0, 2, 0, 0, 0], [y*z, 0, 1, 1, 2, 0, 1, 0],
+    [z**2, 0, 0, 2, 2, 0, 2, 0]], [[x*y, 1, 1, 0, 2, 1, 0, 0],
+    [x*z, 1, 0, 1, 2, 1, 1, 0]], [[x**2, 2, 0, 0, 2, 2, 0, 0]]]]
     """
     if no_of_gens == 2:
         count = 0
@@ -696,15 +657,16 @@ def gradient_terms(binomial_power=0, no_of_gens=2):
 
 def hyperplane_parameters(poly, vertices=None):
     """A helper function to return the hyperplane parameters
-    of which the facets of the polygon are a part of.
-    Currently works for only 2-Polytopes.
+    of which the facets of the polytope are a part of.
+
     Parameters
     ==========
-    poly : The input Polygon
+    poly : The input 2/3-Polytope
 
     Optional Parameters
     ----------------------
-    vertices :  Vertex indices of faces of 3-Polytope
+    vertices :  Vertex indices of 3-Polytope
+
     Examples
     ========
     >>> from sympy.geometry.point import Point
@@ -712,6 +674,13 @@ def hyperplane_parameters(poly, vertices=None):
     >>> from sympy.integrals.intpoly import hyperplane_parameters
     >>> hyperplane_parameters(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)))
     [((0, 1), 3), ((1, -2), -1), ((-2, -1), -3)]
+    >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+                (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+                [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+                [3, 1, 0, 2], [0, 4, 6, 2]]
+    >>> hyperplane_parameters(cube[1:], cube[0])
+    [([0, -1, 0], -5), ([0, 0, -1], -5), ([-1, 0, 0], -5),
+    ([0, 1, 0], 0), ([1, 0, 0], 0), ([0, 0, 1], 0)]
     """
     if isinstance(poly, Polygon):
         vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon
