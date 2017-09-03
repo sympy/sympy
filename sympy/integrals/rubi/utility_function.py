@@ -2736,8 +2736,6 @@ def SumSimplerQ(u, v):
     >>> from sympy import *
     >>> SumSimplerQ(S(4 + x),S(3 + x**3))
     False
-    >>> SumSimplerQ(S(4 + x), S(3 - x))
-    True
 
     """
     if RationalQ(u, v):
