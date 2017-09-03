@@ -243,7 +243,6 @@ def sign(e, x):
 @cacheit
 def limitinf(e, x):
     """Compute limit of the expression at the infinity."""
-    assert x.is_real and x.is_positive
 
     # Rewrite e in terms of tractable functions only:
     e = e.rewrite('tractable', deep=True)
@@ -254,19 +253,54 @@ def limitinf(e, x):
         # TODO: It might be nicer to rewrite the exactly to what they were
         # initially, but that would take some work to implement.
         return e.rewrite('intractable', deep=True)
-
+    if e.has(Order):
+        e = e.expand().removeO()
+    if not x.is_positive:
+        # We make sure that x.is_positive is True so we
+        # get all the correct mathematical behavior from the expression.
+        # We need a fresh variable.
+        p = Dummy('p', positive=True, finite=True)
+        e = e.subs(x, p)
+        x = p
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
     if sig == 1:
-        return S.Zero
-    elif sig == -1:
+        return S.Zero  # e0>0: lim f = 0
+    elif sig == -1:  # e0<0: lim f = +-oo (the sign depends on the sign of c0)
+        # if c0.match(I*Wild("a", exclude=[I])):
+        #     return c0*oo
         s = sign(c0, x)
-        assert s != S.Zero
+        # the leading term shouldn't be 0:
+        if s == 0:
+            raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
         return limitinf(c0, x)  # e0=0: lim f = lim c0
 
 
+@debug
+@timeit
+def calculate_series(e, x, logx=None):
+    """ Calculates at least one term of the series of "e" in "x".
+
+    This is a place that fails most often, so it is in its own function.
+    """
+    from sympy.polys import cancel
+
+    for t in e.lseries(x, logx=logx):
+        t = cancel(t)
+
+        if t.has(exp) and t.has(log):
+            t = powdenest(t)
+
+        if t.simplify():
+            break
+
+    return t
+
+
+@debug
+@timeit
 @cacheit
 def mrv_leadterm(e, x):
     """Compute the leading term of the series.

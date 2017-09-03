@@ -2562,8 +2562,13 @@ def count_ops(expr, visual=False):
                 ops.append(DIV)
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if (a is S.Exp1) or (a.is_Pow and a.base is S.Exp1):
+            if a is S.Exp1:
                 ops.append(EXP)
+                continue
+            if a.is_Pow and a.base is S.Exp1:
+                ops.append(EXP)
+                args.append(a.exp)
+                continue
             elif (a.is_Mul or
                 a.is_Pow or
                 a.is_Function or

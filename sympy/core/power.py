@@ -19,7 +19,6 @@ from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from math import sqrt as _sqrt
 
 
-
 def isqrt(n):
     """Return the largest integer less than or equal to sqrt(n)."""
     if n < 17984395633462800708566937239552:
@@ -492,6 +491,10 @@ class Pow(Expr):
 
     def _eval_is_imaginary(self):
         from sympy import arg, log
+        if self.base is S.Exp1:
+            if self.exp.is_real:
+                return False
+            return None
         if self.base.is_imaginary:
             if self.exp.is_integer:
                 odd = self.exp.is_odd
@@ -631,11 +634,17 @@ class Pow(Expr):
             return False, None, None
 
         # Maintain replacements like: `.subs(exp, sin)`
-        if old == exp:
+        if old == exp and new.is_Function:
             if self.base is S.Exp1:
                 return new(self.exp._subs(old, new))
 
-        if old == self.base:
+        if self.base is S.Exp1 and new.is_Function:
+            if old is exp or old is S.Exp1:
+                return new(self.exp._subs(old, new))
+            else:
+                return self.base**self.exp._subs(old, new)
+
+        if old == self.base or (old is exp and self.base is S.Exp1):
             return new**self.exp._subs(old, new)
 
         # issue 10829: (4**x - 3*y + 2).subs(2**x, y) -> y**2 - 3*y + 2
@@ -1089,6 +1098,13 @@ class Pow(Expr):
         return self * (dexp * log(self.base) + dbase * self.exp/self.base)
 
     def _eval_evalf(self, prec):
+        if self.base is S.Exp1:
+            import mpmath
+            a = self.exp._to_mpmath(prec + 5)
+            with mpmath.workprec(prec):
+                v = mpmath.exp(a)
+            return Expr._from_mpmath(v, prec)
+
         base, exp = self.as_base_exp()
         base = base._evalf(prec)
         if not exp.is_Integer:
@@ -1144,6 +1160,16 @@ class Pow(Expr):
                 # when the operation is not allowed
                 return False
 
+        if self.base is S.Exp1:
+            s = self.func(*self.args)
+            if s.func == self.func:
+                if fuzzy_not(self.exp.is_zero):
+                    if self.exp.is_algebraic:
+                        return False
+                    elif (self.exp / S.Pi).is_rational:
+                        return False
+            else:
+                return s.is_algebraic
         if self.base.is_zero or _is_one(self.base):
             return True
         elif self.exp.is_rational:

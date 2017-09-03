@@ -2438,7 +2438,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         for i in range(1, len(args)):
             sol *= expr_to_holonomic(args[i], x=x, initcond=False, domain=domain)
 
-    elif f is Pow:
+    elif f is Pow and (func.base is not S.Exp1):
         sol = sol**args[1]
     sol.x0 = x0
     if not sol:
