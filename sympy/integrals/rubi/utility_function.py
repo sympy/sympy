@@ -264,8 +264,8 @@ def ComplexNumberQ(*var):
     Examples
     ========
 
-    >>> from sympy import *
     >>> from sympy.integrals.rubi.utility_function import ComplexNumberQ
+    >>> from sympy import I
     >>> ComplexNumberQ(1 + I*2, I)
     True
     >>> ComplexNumberQ(2, I)
@@ -596,7 +596,7 @@ def FractionQ(*args):
     Examples
     ========
 
-    >>> from sympy import *
+    >>> from sympy import S
     >>> from sympy.integrals.rubi.utility_function import FractionQ
     >>> FractionQ(S('3'))
     False
@@ -772,7 +772,7 @@ def Length(expr):
 
     >>> from sympy.integrals.rubi.utility_function import Length
     >>> from sympy.abc import  x, a, b
-    >>> from sympy import *
+    >>> from sympy import cos, sin
     >>> Length(a + b)
     2
     >>> Length(sin(a)*cos(a))
@@ -2733,7 +2733,7 @@ def SumSimplerQ(u, v):
 
     >>> from sympy.integrals.rubi.utility_function import SumSimplerQ
     >>> from sympy.abc import x
-    >>> from sympy import *
+    >>> from sympy import S
     >>> SumSimplerQ(S(4 + x),S(3 + x**3))
     False
 
@@ -3077,7 +3077,7 @@ def NonalgebraicFunctionFactors(u, x):
 
     >>> from sympy.integrals.rubi.utility_function import NonalgebraicFunctionFactors
     >>> from sympy.abc import  x
-    >>> from sympy import *
+    >>> from sympy import sin
     >>> NonalgebraicFunctionFactors(sin(x), x)
     sin(x)
     >>> NonalgebraicFunctionFactors(x, x)
@@ -3538,7 +3538,7 @@ def PolynomialInQ(u, v, x):
 
     >>> from sympy.integrals.rubi.utility_function import PolynomialInQ
     >>> from sympy.abc import  x
-    >>> from sympy import *
+    >>> from sympy import log, S
     >>> PolynomialInQ(S(1), log(x), x)
     True
     >>> PolynomialInQ(log(x), log(x), x)
@@ -3640,7 +3640,7 @@ def DivideDegreesOfFactors(u, n):
     Examples
     ========
 
-    >>> from sympy import *
+    >>> from sympy import S
     >>> from sympy.integrals.rubi.utility_function import DivideDegreesOfFactors
     >>> from sympy.abc import a, b
     >>> DivideDegreesOfFactors(a**b, S(3))
@@ -4219,7 +4219,7 @@ def FunctionOfTanhWeight(u, v, x):
     Examples
     ========
 
-    >>> from sympy import *
+    >>> from sympy import sinh, log, tanh
     >>> from sympy.abc import x
     >>> from sympy.integrals.rubi.utility_function import FunctionOfTanhWeight
     >>> FunctionOfTanhWeight(x, log(x), x)
@@ -4779,7 +4779,7 @@ def TrigReduce(i):
     Examples
     ========
 
-    >>> from sympy import *
+    >>> from sympy import sin, cos
     >>> from sympy.integrals.rubi.utility_function import TrigReduce
     >>> from sympy.abc import x
     >>> TrigReduce(cos(x)**2)
