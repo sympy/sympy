@@ -167,6 +167,9 @@ class PermutationGroup(Basic):
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
+
+        # finite presentation of the group as an instance of `FpGroup`
+        obj._fp_presentation = None
         return obj
 
     def __getitem__(self, i):
@@ -3815,6 +3818,9 @@ class PermutationGroup(Basic):
         from sympy.combinatorics.homomorphisms import homomorphism
         from itertools import product
 
+        if G._fp_presentation:
+            return G._fp_presentation
+
         def _factor_group_by_rels(G, rels):
             if isinstance(G, FpGroup):
                 return FpGroup(G.free_group, list(uniq(
@@ -3913,7 +3919,8 @@ class PermutationGroup(Basic):
             C_p = G_p.coset_enumeration([], strategy="coset_table",
                                 draft=C_p, max_cosets=n, incomplete=True)
 
-        return simplify_presentation(G_p)
+        G._fp_presentation = simplify_presentation(G_p)
+        return G._fp_presentation
 
 
 def _orbit(degree, generators, alpha, action='tuples'):

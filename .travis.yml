@@ -13,7 +13,6 @@ dist: trusty
 
 python:
   - 2.7
-  - 3.3
   - 3.4
   - 3.5
   - 3.6
@@ -288,6 +287,9 @@ before_install:
       sudo apt-add-repository -y ppa:aims/sagemath;
       sudo apt-get update;
       sudo apt-get install -y sagemath-upstream-binary;
+    fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+      pip install matchpy;
     fi
 install:
   # If a command fails, fail the build.
