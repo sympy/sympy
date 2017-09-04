@@ -45,8 +45,8 @@ def change_mul(node, x):
     new_args = []
     dirac = None
 
-    #Sorting is needed so that we consistently collapse the same delta;
-    #However, we must preserve the ordering of non-commutative terms
+    # Sorting is needed so that we consistently collapse the same delta;
+    # However, we must preserve the ordering of non-commutative terms
     c, nc = node.args_cnc()
     sorted_args = sorted(c, key=default_sort_key)
     sorted_args.extend(nc)

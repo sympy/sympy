@@ -345,6 +345,13 @@ class Pow(Expr):
 
     def _eval_is_positive(self):
         from sympy import log
+        if self.base is S.Exp1:
+            if self.exp.is_real:
+                return self.exp is not S.NegativeInfinity
+            elif self.exp.is_imaginary:
+                arg2 = -S.ImaginaryUnit * self.exp / S.Pi
+                return arg2.is_even
+            return None
         if self.base == self.exp:
             if self.base.is_nonnegative:
                 return True
@@ -557,6 +564,11 @@ class Pow(Expr):
                 return True
 
     def _eval_is_prime(self):
+        if self.base is S.Exp1:
+            p = self.func(self.base, self.exp)
+            if p.is_Pow:
+                return None
+            return p.is_prime
         if self.exp == S.One:
             return self.base.is_prime
         if self.is_number:
@@ -722,6 +734,10 @@ class Pow(Expr):
         if b.is_Rational and b.p == 1 and b.q != 1:
             return Integer(b.q), -e
         return b, e
+
+    @property
+    def is_exp(self):
+        return self.base is S.Exp1
 
     def _eval_adjoint(self):
         from sympy.functions.elementary.complexes import adjoint
@@ -1129,6 +1145,13 @@ class Pow(Expr):
         p = self.func(*self.as_base_exp())  # in case it's unevaluated
         if not p.is_Pow:
             return p.is_rational
+
+        if p.base is S.Exp1:
+            if p.exp is S.Zero:
+                return True
+            elif p.exp.is_rational and fuzzy_not(p.exp.is_zero):
+                return False
+
         b, e = p.as_base_exp()
         if e.is_Rational and b.is_Rational:
             # we didn't check that e is not an Integer
@@ -1142,17 +1165,9 @@ class Pow(Expr):
                     return True
             elif b.is_irrational:
                 return e.is_zero
-        elif b is S.Exp1:
-            s = self.func(*self.args)
-            if s.func == self.func:
-                if s.exp is S.Zero:
-                    return True
-                elif s.exp.is_rational and s.exp.is_nonzero:
-                    return False
-            else:
-                return s.is_rational
 
     def _eval_is_algebraic(self):
+
         def _is_one(expr):
             try:
                 return (expr - 1).is_zero
@@ -1162,12 +1177,13 @@ class Pow(Expr):
 
         if self.base is S.Exp1:
             s = self.func(*self.args)
-            if s.func == self.func:
+            if s.is_Pow:
                 if fuzzy_not(self.exp.is_zero):
                     if self.exp.is_algebraic:
                         return False
                     elif (self.exp / S.Pi).is_rational:
                         return False
+                return None
             else:
                 return s.is_algebraic
         if self.base.is_zero or _is_one(self.base):

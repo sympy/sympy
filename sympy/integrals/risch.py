@@ -362,8 +362,10 @@ class DifferentialExtension(object):
                     self.newf = self.newf.xreplace({old: new})
                     self.backsubs += [(new, old)]
                     log_new_extension = self._log_part([log(i.base)])
-                    exps = update_sets(exps, self.newf.atoms(exp), lambda i:
-                        i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
+                    exps = update_sets(exps, {a for a in self.newf.atoms(Pow)
+                                             if a.base is S.Exp1},
+                                       lambda i: (i.exp.is_rational_function(*self.T) and
+                                                  i.exp.has(*self.T)))
                     continue
                 ans, u, const = A
                 newterm = exp(i.exp*(log(const) + u))

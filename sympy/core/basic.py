@@ -60,6 +60,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Add = False
     is_Mul = False
     is_Pow = False
+    is_exp = False
     is_Number = False
     is_Float = False
     is_Rational = False

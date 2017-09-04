@@ -201,13 +201,31 @@ class exp(with_metaclass(ExpMeta, Function)):
 
     sympy.functions.elementary.exponential.log
     """
-    def __new__(cls, arg, **kwargs):
+    is_exp = True
+
+    @classmethod
+    def eval(cls, arg, **kwargs):
         from sympy.calculus import AccumBounds
+        from sympy import MatrixBase, Integral
 
         if isinstance(arg, AccumBounds):
             return AccumBounds(exp(arg.min), exp(arg.max))
 
+        if isinstance(arg, MatrixBase):
+            return arg.exp()
+
+        if isinstance(arg, Integral):
+            return
+
         return Pow(S.Exp1, arg, **kwargs)
+
+    @property
+    def exp(self):
+        return self.args[0]
+
+    @property
+    def base(self):
+        return S.Exp1
 
 
 class log(Function):
