@@ -486,12 +486,12 @@ def test_polytope_integrate():
 
     #  Tests for many polynomials with maximum degree given(2D case).
     assert polytope_integrate(cube2, [x**2, y*z], max_degree=2) == \
-        {y * z: 3125 / 4, x ** 2: 3125 / 3}
+        {y * z: 3125 / S(4), x ** 2: 3125 / S(3)}
 
     assert polytope_integrate(cube2, max_degree=2) == \
-        {1: 125, x: 625 / 2, x * z: 3125 / 4, y: 625 / 2, y * z: 3125 / 4,
-         z ** 2: 3125 / 3, y ** 2: 3125 / 3, z: 625 / 2, x * y: 3125 / 4,
-         x ** 2: 3125 / 3}
+        {1: 125, x: 625 / S(2), x * z: 3125 / S(4), y: 625 / S(2),
+         y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / 3,
+         z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
 
 
 @XFAIL
