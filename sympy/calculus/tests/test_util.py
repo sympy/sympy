@@ -1,5 +1,5 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs)
+                   cot, sec, csc, Abs, symbols)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds)
 from sympy.core import Add, Mul, Pow
@@ -11,7 +11,7 @@ a = Symbol('a', real=True)
 
 
 def test_function_range():
-    x = Symbol('x')
+    x, y, a, b = symbols('x y a b')
     assert function_range(sin(x), x, Interval(-pi/2, pi/2)) == Interval(-1, 1)
     assert function_range(sin(x), x, Interval(0, pi)) == Interval(0, 1)
     assert function_range(tan(x), x, Interval(0, pi)) == Interval(-oo, oo)
@@ -21,6 +21,7 @@ def test_function_range():
     assert function_range(exp(x), x, Interval(-1, 1)) == Interval(exp(-1), exp(1))
     assert function_range(log(x) - x, x, S.Reals) == Interval(-oo, -1)
     assert function_range(sqrt(3*x - 1), x, Interval(0, 2)) == Interval(0, sqrt(5))
+    raises(NotImplementedError, lambda : function_range((a*x + b)*(exp(x) - 3), x, S.Reals))
 
 
 def test_continuous_domain():
