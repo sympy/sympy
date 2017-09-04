@@ -1168,8 +1168,8 @@ def test_Poly_degree():
 
     assert degree(pi) == 1
 
-    raises(TypeError, lambda: degree(y**2+x**3))
-    raises(TypeError, lambda: degree(y**2+x**3, 1))
+    raises(TypeError, lambda: degree(y**2 + x**3))
+    raises(TypeError, lambda: degree(y**2 + x**3, 1))
     raises(PolynomialError, lambda: degree(x, 1.1))
 
     assert degree(Poly(0,x),z) == -oo
