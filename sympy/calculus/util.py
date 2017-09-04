@@ -329,7 +329,7 @@ def periodicity(f, symbol, check=False):
     """
     from sympy import simplify, lcm_list
     from sympy.functions.elementary.complexes import Abs
-    from sympy.functions.elementary.trigonometric import TrigonometricFunction,sin,cos,csc,sec
+    from sympy.functions.elementary.trigonometric import (TrigonometricFunction, sin, cos, csc, sec)
     from sympy.solvers.decompogen import decompogen
 
     orig_f = f
@@ -347,12 +347,19 @@ def periodicity(f, symbol, check=False):
 
     if isinstance(f, Abs):
         arg = f.args[0]
-        new_f = arg
         if isinstance(arg, (sec, csc, cos)):
-            new_f = sin(arg.args[0])
-        period = periodicity(new_f, symbol)
-        if period is not None and isinstance(new_f, sin):
-            test = Abs(new_f.subs(symbol, symbol + period/2)) == Abs(new_f)
+            # all but tan and cot might have a
+            # a period that is half as large
+            # so recast as sin
+            arg = sin(arg.args[0])
+        period = periodicity(arg, symbol)
+        if period is not None and isinstance(arg, sin):
+            # the argument of Abs was a trigonometric other than
+            # cot or tan; test to see if the half-period
+            # is valid. Abs(arg) has behaviour equivalent to
+            # orig_f, so use that for test:
+            new_f = Abs(arg)
+            test = new_f.subs(symbol, symbol + period/2) == new_f
             if check and (not test):
                 raise NotImplementedError(filldedent('''
                     The period of the given function cannot be verified.
