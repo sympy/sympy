@@ -264,11 +264,6 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
     define a homomorphism.
 
     '''
-    if check and isinstance(domain, PermutationGroup):
-        raise NotImplementedError("Checking if the homomorphism is well-defined "
-            "is not implemented for permutation groups. Use check=False if you "
-            "would like to create the homomorphism")
-
     if not isinstance(domain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")
     if not isinstance(codomain, (PermutationGroup, FpGroup, FreeGroup)):
@@ -295,8 +290,13 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
     return GroupHomomorphism(domain, codomain, images)
 
 def _check_homomorphism(domain, codomain, images):
-    rels = domain.relators
+    if hasattr(domain, 'relators'):
+        rels = domain.relators
+    else:
+        gens = domain.presentation().generators
+        rels = domain.presentation().relators
     identity = codomain.identity
+
     def _image(r):
         if r.is_identity:
             return identity
@@ -315,10 +315,14 @@ def _check_homomorphism(domain, codomain, images):
             # both indices
             while i < len(r):
                 power = r_arr[j][1]
-                if r[i] in images:
-                    w = w*images[r[i]]**power
+                if isinstance(domain, PermutationGroup):
+                    s = domain.generators[gens.index(r[i])]
                 else:
-                    w = w*images[r[i]**-1]**power
+                    s = r[i]
+                if s in images:
+                    w = w*images[s]**power
+                else:
+                    w = w*images[s**-1]**power
                 i += abs(power)
                 j += 1
             return w

@@ -227,6 +227,9 @@ def test_evalf_bugs():
     assert ((oo*I).n() == S.Infinity*I)
     assert ((oo+oo*I).n() == S.Infinity + S.Infinity*I)
 
+    #issue 11518
+    assert NS(2*x**2.5, 5) == '2.0000*x**2.5000'
+
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)

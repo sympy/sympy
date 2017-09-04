@@ -148,6 +148,25 @@ def test_polytope_integrate():
     assert result_dict[expr2] == S(13062161)/27
     assert result_dict[expr3] == S(1946257153)/924
 
+    #  Tests when all integral of all monomials up to a max_degree is to be
+    #  calculated.
+    assert polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
+                                      Point(1, 1), Point(1, 0)),
+                              max_degree=4) == {0: 0, 1: 1, x: S(1) / 2,
+                                                x ** 2 * y ** 2: S(1) / 9,
+                                                x ** 4: S(1) / 5,
+                                                y ** 4: S(1) / 5,
+                                                y: S(1) / 2,
+                                                x * y ** 2: S(1) / 6,
+                                                y ** 2: S(1) / 3,
+                                                x ** 3: S(1) / 4,
+                                                x ** 2 * y: S(1) / 6,
+                                                x ** 3 * y: S(1) / 8,
+                                                x * y: S(1) / 4,
+                                                y ** 3: S(1) / 4,
+                                                x ** 2: S(1) / 3,
+                                                x * y ** 3: S(1) / 8}
+
     #  Tests for 3D polytopes
     cube1 = [[(0, 0, 0), (0, 6, 6), (6, 6, 6), (3, 6, 0),
               (0, 6, 0), (6, 0, 6), (3, 0, 0), (0, 0, 6)],

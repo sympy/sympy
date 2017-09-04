@@ -7,12 +7,11 @@ Contains
 
 from __future__ import division, print_function
 from sympy.core import S
-from sympy.core.numbers import oo
 from sympy.core.compatibility import ordered
 from sympy import symbols, simplify, solve
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
-from sympy.geometry.line import Line, Line2D, LinearEntity2D, Ray2D, Segment2D, LinearEntity3D
+from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.util import _symbol
 from sympy.geometry.ellipse import Ellipse
 
@@ -81,6 +80,23 @@ class Parabola(GeometrySet):
 
     @property
     def ambient_dimension(self):
+        """Returns the ambient dimension of parabola.
+
+        Returns
+        =======
+
+        ambient_dimension : integer
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> f1 = Point(0, 0)
+        >>> p1 = Parabola(f1, Line(Point(5, 8), Point(7, 8)))
+        >>> p1.ambient_dimension
+        2
+
+        """
         return S(2)
 
     @property

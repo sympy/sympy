@@ -1818,8 +1818,11 @@ class LatexPrinter(Printer):
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])
 
-    def _print_catalan(self, expr):
-        return r"C_{%s}" % self._print(expr.args[0])
+    def _print_catalan(self, expr, exp=None):
+        tex = r"C_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_MellinTransform(self, expr):
         return r"\mathcal{M}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))

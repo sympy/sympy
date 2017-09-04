@@ -532,6 +532,8 @@ class StrPrinter(Printer):
         return str(expr)
 
     def _print_Integer(self, expr, *args, **kwargs):
+        if self._settings.get("sympy_integers", False):
+            return "S(%s)" % (expr)
         return str(expr.p)
 
     def _print_Integers(self, expr, *args, **kwargs):
@@ -726,7 +728,13 @@ class StrPrinter(Printer):
     def _print_WildFunction(self, expr, *args, **kwargs):
         return expr.name + '_'
 
+<<<<<<< HEAD
     def _print_Zero(self, expr, *args, **kwargs):
+=======
+    def _print_Zero(self, expr):
+        if self._settings.get("sympy_integers", False):
+            return "S(0)"
+>>>>>>> master
         return "0"
 
     def _print_DMP(self, p, *args, **kwargs):
