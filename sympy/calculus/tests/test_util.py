@@ -88,6 +88,8 @@ def test_periodicity():
     assert periodicity(sin(x%4), x) == 4
     assert periodicity(sin(x)%4, x) == 2*pi
     assert periodicity(tan((3*x-2)%4), x) == 4/3
+    assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
+    assert periodicity((x**2+1) % x, x) == None
 
     assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
     assert periodicity(tan(x), y) == S.Zero
