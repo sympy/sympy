@@ -407,8 +407,11 @@ class DifferentialExtension(object):
             self.newf = self.newf.xreplace(
                     dict((tan(tanarg), rewrite_tans(mul, tan(arg))) for tanarg, mul in others))
 
-        # could this be simply 'atoms = {tan(arg) for arg, others in ip}'?
         tans = {tan(arg) for arg, others in ip}
+        args = [arg[0] for arg in ip]
+
+        for arg in args:
+            arga, argd = frac_in(arg, self.t)
 
         return tans
 
