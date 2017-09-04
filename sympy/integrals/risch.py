@@ -161,7 +161,7 @@ class DifferentialExtension(object):
         'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts', 'dummy')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=False):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -219,14 +219,19 @@ class DifferentialExtension(object):
         self.reset()
         exp_new_extension, log_new_extension, tan_new_extension = True, True, True
 
-        if rewrite_complex or I in self.f.atoms():
+        # case of 'automatic' choosing
+        if rewrite_complex is None:
+            rewrite_complex = I in self.f.atoms()
+
+        if rewrite_complex:
             rewritables = {
                 (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
                 (asin, acos, acot, atan): log,
             }
-        # rewrite the trigonometric components
+            # rewrite the trigonometric components
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
+            self.newf = cancel(self.newf)
         else:
             if any(i.has(x) for i in self.f.atoms(sin, cos, asin, acos)):
                 raise NotImplementedError("Trigonometric extensions are not "
@@ -1722,7 +1727,7 @@ class NonElementaryIntegral(Integral):
 
 
 def risch_integrate(f, x, extension=None, handle_first='log',
-                    separate_integral=False, rewrite_complex=False,
+                    separate_integral=False, rewrite_complex=None,
                     conds='piecewise'):
     r"""
     The Risch Integration Algorithm.

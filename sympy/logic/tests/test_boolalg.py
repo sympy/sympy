@@ -5,6 +5,7 @@ from sympy.core.numbers import oo
 from sympy.core.relational import Equality
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions import Piecewise
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
@@ -503,6 +504,10 @@ def test_ITE():
     x = symbols('x')
     assert ITE(x, A, B) == Not(x)
     assert ITE(x, B, A) == x
+
+def test_ITE_rewrite_Piecewise():
+
+    assert ITE(A, B, C).rewrite(Piecewise) == Piecewise((B, A), (C, True))
 
 
 def test_ITE_diff():

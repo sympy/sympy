@@ -306,6 +306,9 @@ def test_totient():
     assert totient(5009) == 5008
     assert totient(2**100) == 2**99
 
+    raises(ValueError, lambda: totient(30.1))
+    raises(ValueError, lambda: totient(20.001))
+
     m = Symbol("m", integer=True)
     assert totient(m)
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
@@ -313,6 +316,16 @@ def test_totient():
 
     n = Symbol("n", integer=True, positive=True)
     assert totient(n).is_integer
+
+    x=Symbol("x", integer=False)
+    raises(ValueError, lambda: totient(x))
+
+    y=Symbol("y", positive=False)
+    raises(ValueError, lambda: totient(y))
+
+    z=Symbol("z", positive=True, integer=True)
+    raises(ValueError, lambda: totient(2**(-z)))
+
 
 def test_reduced_totient():
     assert [reduced_totient(k) for k in range(1, 16)] == \

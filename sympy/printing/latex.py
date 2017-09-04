@@ -228,13 +228,13 @@ class LatexPrinter(Printer):
         """
         from sympy import Integral, Piecewise, Product, Sum
 
-        if expr.is_Add:
+        if expr.is_Mul:
+            if not first and _coeff_isneg(expr):
+                return True
+        elif precedence_traditional(expr) < PRECEDENCE["Mul"]:
             return True
         elif expr.is_Relational:
             return True
-        elif expr.is_Mul:
-            if not first and _coeff_isneg(expr):
-                return True
         if expr.is_Piecewise:
             return True
         if any([expr.has(x) for x in (Mod,)]):
@@ -346,6 +346,30 @@ class LatexPrinter(Printer):
             return r"- \infty"
         else:
             return str_real
+
+    def _print_Cross(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s \times %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+                                  self.parenthesize(vec2, PRECEDENCE['Mul']))
+
+    def _print_Curl(self, expr):
+        vec = expr._expr
+        return r"\nabla\times %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
+
+    def _print_Divergence(self, expr):
+        vec = expr._expr
+        return r"\nabla\cdot %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
+
+    def _print_Dot(self, expr):
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        return r"%s \cdot %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+                                  self.parenthesize(vec2, PRECEDENCE['Mul']))
+
+    def _print_Gradient(self, expr):
+        func = expr._expr
+        return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
         include_parens = False
@@ -1794,8 +1818,11 @@ class LatexPrinter(Printer):
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])
 
-    def _print_catalan(self, expr):
-        return r"C_{%s}" % self._print(expr.args[0])
+    def _print_catalan(self, expr, exp=None):
+        tex = r"C_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_MellinTransform(self, expr):
         return r"\mathcal{M}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))

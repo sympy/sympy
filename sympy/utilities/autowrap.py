@@ -612,14 +612,14 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
 
     helps = []
     for name_h, expr_h, args_h in helpers:
-        helps.append(make_routine(name_h, expr_h, args_h))
+        helps.append(code_gen.routine(name_h, expr_h, args_h))
 
     for name_h, expr_h, args_h in helpers:
         if expr.has(expr_h):
             name_h = binary_function(name_h, expr_h, backend='dummy')
             expr = expr.subs(expr_h, name_h(*args_h))
     try:
-        routine = make_routine('autofunc', expr, args)
+        routine = code_gen.routine('autofunc', expr, args)
     except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
@@ -629,7 +629,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
             if not isinstance(missing, OutputArgument):
                 raise
             new_args.append(missing.name)
-        routine = make_routine('autofunc', expr, args + new_args)
+        routine = code_gen.routine('autofunc', expr, args + new_args)
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 

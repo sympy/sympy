@@ -313,7 +313,7 @@ class Basic(with_metaclass(ManagedProperties)):
             try:
                 other = _sympify(other)
             except SympifyError:
-                return False    # sympy != other
+                return NotImplemented
 
             if type(self) != type(other):
                 return False
@@ -329,7 +329,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
            but faster
         """
-        return not self.__eq__(other)
+        return not self == other
 
     def dummy_eq(self, other, symbol=None):
         """
@@ -1180,7 +1180,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
     def _has_matcher(self):
         """Helper for .has()"""
-        return self.__eq__
+        return lambda other: self == other
 
     def replace(self, query, value, map=False, simultaneous=True, exact=False):
         """

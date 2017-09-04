@@ -437,13 +437,12 @@ class Function(Application, Expr):
 
         evaluate = options.get('evaluate', global_evaluate[0])
         result = super(Function, cls).__new__(cls, *args, **options)
-        if not evaluate or not isinstance(result, cls):
-            return result
+        if evaluate and isinstance(result, cls) and result.args:
+            pr2 = min(cls._should_evalf(a) for a in result.args)
+            if pr2 > 0:
+                pr = max(cls._should_evalf(a) for a in result.args)
+                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
 
-        pr = max(cls._should_evalf(a) for a in result.args)
-        pr2 = min(cls._should_evalf(a) for a in result.args)
-        if pr2 > 0:
-            return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
     @classmethod
@@ -967,7 +966,7 @@ class Derivative(Expr):
     identically equal.  However this is the wrong way to think of this.  Think
     of it instead as if we have something like this::
 
-        >>> from sympy.abc import c, s
+        >>> from sympy.abc import c, s, u, x
         >>> def F(u):
         ...     return 2*u
         ...
@@ -980,7 +979,7 @@ class Derivative(Expr):
         2*sqrt(-sin(x)**2 + 1)
         >>> F(c).diff(c)
         2
-        >>> F(c).diff(c)
+        >>> F(cos(x)).diff(cos(x))
         2
         >>> G(s).diff(c)
         0

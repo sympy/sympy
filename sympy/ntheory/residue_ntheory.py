@@ -72,11 +72,12 @@ def _primitive_root_prime_iter(p):
     >>> list(_primitive_root_prime_iter(19))
     [2, 3, 10, 13, 14, 15]
     """
-    p = as_int(p)
+    # it is assumed that p is an int
     v = [(p - 1) // i for i in factorint(p - 1).keys()]
     a = 2
     while a < p:
         for pw in v:
+            # a TypeError below may indicate that p was not an int
             if pow(a, pw, p) == 1:
                 break
         else:
@@ -626,7 +627,7 @@ def is_nthpow_residue(a, n, m):
     .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
 
     """
-    a, n, m = [as_int(i) for i in (a, n, m)]
+    a, n, m = as_int(a), as_int(n), as_int(m)
     if m <= 0:
         raise ValueError('m must be > 0')
     if n < 0:
@@ -766,8 +767,9 @@ def nthroot_mod(a, n, p, all_roots=False):
     23
     """
     from sympy.core.numbers import igcdex
+    a, n, p = as_int(a), as_int(n), as_int(p)
     if n == 2:
-        return sqrt_mod(a, p , all_roots)
+        return sqrt_mod(a, p, all_roots)
     f = totient(p)
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
@@ -817,6 +819,7 @@ def quadratic_residues(p):
     >>> quadratic_residues(7)
     [0, 1, 2, 4]
     """
+    p = as_int(p)
     r = set()
     for i in range(p // 2 + 1):
         r.add(pow(i, 2, p))
@@ -1282,6 +1285,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     3
 
     """
+    n, a, b = as_int(n), as_int(a), as_int(b)
     if order is None:
         order = n_order(b, n)
 

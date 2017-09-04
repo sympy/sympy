@@ -1,6 +1,6 @@
 """
 Module to implement integration of uni/bivariate polynomials over
-2D Polytopes(Polygons).
+2D Polytopes and uni/bi/trivariate polynomials over 3D Polytopes.
 
 Uses evaluation techniques as described in Chin et al(2015)[1]
 
@@ -14,27 +14,26 @@ from __future__ import print_function, division
 from functools import cmp_to_key
 
 from sympy.core import S, diff, Expr, Symbol
-
-from sympy.geometry import Segment2D, Polygon, Point
-from sympy.abc import x, y
+from sympy.geometry import Segment2D, Polygon, Point, Point2D
+from sympy.abc import x, y, z
 
 from sympy.polys.polytools import LC, gcd_list, degree_list
 
 
-def polytope_integrate(poly, expr, **kwargs):
-    """Integrates homogeneous functions over polytopes.
+def polytope_integrate(poly, expr=None, **kwargs):
+    """Integrates polynomials over 2/3-Polytopes.
 
-    This function accepts the polytope in `poly` (currently only polygons are
-    implemented) and the function in `expr` (currently only
-    univariate/bivariate polynomials are implemented) and returns the exact
-    integral of `expr` over `poly`.
+    This function accepts the polytope in `poly` and the function in `expr`
+    (uni/bi/trivariate polynomials are implemented) and returns
+    the exact integral of `expr` over `poly`.
     Parameters
     ==========
     poly : The input Polygon.
     expr : The input polynomial.
 
     Optional Parameters:
-    clockwise : Binary value to sort input points of the polygon clockwise.
+    --------------------
+    clockwise : Binary value to sort input points of the 2-Polytope clockwise.
     max_degree : The maximum degree of any monomial of the input polynomial.
     Examples
     ========
@@ -53,53 +52,228 @@ def polytope_integrate(poly, expr, **kwargs):
     clockwise = kwargs.get('clockwise', False)
     max_degree = kwargs.get('max_degree', None)
 
-    if clockwise is True and isinstance(poly, Polygon):
-        poly = clockwise_sort(poly)
+    if clockwise is True:
+        if isinstance(poly, Polygon):
+            poly = point_sort(poly)
+        else:
+            raise TypeError("clockwise=True works for only 2-Polytope"
+                            "V-representation input")
 
     expr = S(expr)
 
     if isinstance(poly, Polygon):
-        # For Vertex Representation
+        # For Vertex Representation(2D case)
         hp_params = hyperplane_parameters(poly)
         facets = poly.sides
-    else:
-        # For Hyperplane Representation
+    elif len(poly[0]) == 2:
+        # For Hyperplane Representation(2D case)
         plen = len(poly)
-        intersections = [intersection(poly[(i - 1) % plen], poly[i])
-                         for i in range(0, plen)]
-        hp_params = poly
-        lints = len(intersections)
-        facets = [Segment2D(intersections[i], intersections[(i + 1) % lints])
-                  for i in range(0, lints)]
+        if len(poly[0][0]) == 2:
+            intersections = [intersection(poly[(i - 1) % plen], poly[i],
+                                          "plane2D")
+                             for i in range(0, plen)]
+            hp_params = poly
+            lints = len(intersections)
+            facets = [Segment2D(intersections[i],
+                                intersections[(i + 1) % lints])
+                      for i in range(0, lints)]
+        else:
+            raise NotImplementedError("Integration for H-representation 3D"
+                                      "case not implemented yet.")
+    else:
+        # For Vertex Representation(3D case)
+        vertices = poly[0]
+        facets = poly[1:]
+        hp_params = hyperplane_parameters(facets, vertices)
+        return main_integrate3d(expr, facets, vertices, hp_params)
 
     if max_degree is not None:
         result = {}
-        if not isinstance(expr, list):
+        if not isinstance(expr, list) and expr is not None:
             raise TypeError('Input polynomials must be list of expressions')
         result_dict = main_integrate(0, facets, hp_params, max_degree)
-        for polys in expr:
-            if polys not in result:
-                if polys is S.Zero:
+
+        if expr is None:
+            return result_dict
+
+        for poly in expr:
+            if poly not in result:
+                if poly is S.Zero:
                     result[S.Zero] = S.Zero
                     continue
                 integral_value = S.Zero
-                monoms = decompose(polys, separate=True)
+                monoms = decompose(poly, separate=True)
                 for monom in monoms:
                     if monom.is_number:
                         integral_value += result_dict[1] * monom
                     else:
                         coeff = LC(monom)
                         integral_value += result_dict[monom / coeff] * coeff
-                result[polys] = integral_value
+                result[poly] = integral_value
         return result
 
+    if expr is None:
+        raise TypeError('Input expression be must be a valid SymPy expression')
     return main_integrate(expr, facets, hp_params)
+
+
+def main_integrate3d(expr, facets, vertices, hp_params):
+    """Function to translate the problem of integrating uni/bi/tri-variate
+    polynomials over a 3-Polytope to integrating over its faces.
+    This is done using Generalized Stokes's Theorem and Euler's Theorem.
+
+    Parameters
+    ===========
+    expr : The input polynomial
+    facets : Faces of the 3-Polytope(expressed as indices of `vertices`)
+    vertices : Vertices that constitute the Polytope
+    hp_params : Hyperplane Parameters of the facets
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import main_integrate3d, \
+    hyperplane_parameters
+    >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+                (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+                [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+                [3, 1, 0, 2], [0, 4, 6, 2]]
+    >>> vertices = cube[0]
+    >>> faces = cube[1:]
+    >>> hp_params = hyperplane_parameters(faces, vertices)
+    >>> main_integrate3d(1, faces, vertices, hp_params)
+    -125
+    """
+    dims = (x, y, z)
+    dim_length = len(dims)
+    integral_value = S.Zero
+    polynomials = decompose(expr)
+    for deg in polynomials:
+        poly_contribute = S.Zero
+        facet_count = 0
+        for i, facet in enumerate(facets):
+            hp = hp_params[i]
+            if hp[1] == S.Zero:
+                continue
+            pi = polygon_integrate(facet, hp, i, facets, vertices, expr, deg)
+            poly_contribute += pi *\
+                (hp[1] / norm(tuple(hp[0])))
+            facet_count += 1
+        poly_contribute /= (dim_length + deg)
+        integral_value += poly_contribute
+    return integral_value
+
+
+def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
+    """Helper function to integrate the input uni/bi/trivariate polynomial
+    over a certain face of the 3-Polytope.
+
+    Parameters
+    ===========
+    facet : Particular face of the 3-Polytope over which `expr` is integrated
+    index : The index of `facet` in `facets`
+    facets : Faces of the 3-Polytope(expressed as indices of `vertices`)
+    vertices : Vertices that constitute the facet
+    expr : The input polynomial
+    degree : Degree of `expr`
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.intpoly import polygon_integrate
+    >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+                 (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+                 [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+                 [3, 1, 0, 2], [0, 4, 6, 2]]
+    >>> facet = cube[1]
+    >>> facets = cube[1:]
+    >>> vertices = cube[0]
+    >>> polygon_integrate(facet, [(0, 1, 0), 5], 0, facets, vertices, 1, 0)
+    -25
+    """
+
+    if expr == S.Zero:
+        return S.Zero
+    result = S.Zero
+    m = len(facets)
+    x0 = vertices[facet[0]]
+    for i in range(len(facet)):
+        side = (facet[i], facet[(i + 1) % len(facet)])
+        for j in range(m):
+            if j != index and len(set(side).intersection(set(facets[j]))) == 2:
+                side = (vertices[side[0]], vertices[side[1]])
+                result += distance_to_side(x0, side, hp_param[0]) *\
+                    lineseg_integrate(facet, i, side, expr, degree)
+
+    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] +\
+        diff(expr, z) * x0[2]
+    result += polygon_integrate(facet, hp_param, index, facets, vertices,
+                                expr, degree - 1)
+    result /= (degree + 2)
+    return result
+
+
+def distance_to_side(point, line_seg, A):
+    """Helper function to compute the signed distance between given 3D point
+    and a line segment.
+
+    Parameters
+    ===========
+    point : 3D Point
+    line_seg : Line Segment
+
+    >>> from sympy.integrals.intpoly import distance_to_side
+    >>> point = (0, 0, 0)
+    >>> distance_to_side(point, [(0, 0, 1), (0, 1, 0)], (1, 0, 0))
+    -sqrt(2)/2
+    """
+    x1, x2 = line_seg
+    rev_normal = [-1 * S(i)/norm(A) for i in A]
+    vector = [x2[i] - x1[i] for i in range(0, 3)]
+    vector = [vector[i]/norm(vector) for i in range(0, 3)]
+
+    n_side = cross_product((0, 0, 0), rev_normal, vector)
+    vectorx0 = [line_seg[0][i] - point[i] for i in range(0, 3)]
+    dot_product = sum([vectorx0[i] * n_side[i] for i in range(0, 3)])
+
+    return dot_product
+
+
+def lineseg_integrate(polygon, index, line_seg, expr, degree):
+    """Helper function to compute the line integral of `expr` over `line_seg`
+
+    Parameters
+    ===========
+    polygon : Face of a 3-Polytope
+    index : index of line_seg in polygon
+    line_seg : Line Segment
+
+    >>> from sympy.integrals.intpoly import lineseg_integrate
+    >>> polygon = [(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)]
+    >>> line_seg = [(0, 5, 0), (5, 5, 0)]
+    >>> lineseg_integrate(polygon, 0, line_seg, 1, 0)
+    5
+    """
+    if expr == S.Zero:
+        return S.Zero
+    result = S.Zero
+    x0 = line_seg[0]
+    distance = norm(tuple([line_seg[1][i] - line_seg[0][i] for i in
+                           range(3)]))
+    if isinstance(expr, Expr):
+        expr_dict = {x: line_seg[1][0],
+                     y: line_seg[1][1],
+                     z: line_seg[1][2]}
+        result += distance * expr.subs(expr_dict)
+    else:
+        result += distance * expr
+    expr = diff(expr, x) * x0[0] + diff(expr, y) * x0[1] +\
+        diff(expr, z) * x0[2]
+    result += lineseg_integrate(polygon, index, line_seg, expr, degree - 1)
+    result /= (degree + 1)
+    return result
 
 
 def main_integrate(expr, facets, hp_params, max_degree=None):
     """Function to translate the problem of integrating univariate/bivariate
-    polynomials over a 2-Polytope to integrating over it's boundary facets.
-    This is done using Generalized Stokes Theorem and Euler Theorem.
+    polynomials over a 2-Polytope to integrating over its boundary facets.
+    This is done using Generalized Stokes's Theorem and Euler's Theorem.
 
     Parameters
     ===========
@@ -108,6 +282,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     hp_params : Hyperplane Parameters of the facets
 
     Optional Parameters:
+    --------------------
     max_degree : The maximum degree of any monomial of the input polynomial.
 
     >>> from sympy.abc import x, y
@@ -249,7 +424,7 @@ def left_integral(m, index, facets, x0, expr, gens):
     for j in range(0, m):
         intersect = ()
         if j == (index - 1) % m or j == (index + 1) % m:
-            intersect = intersection(facets[index], facets[j])
+            intersect = intersection(facets[index], facets[j], "segment2D")
         if intersect:
             distance_origin = norm(tuple(map(lambda x, y: x - y,
                                              intersect, x0)))
@@ -273,7 +448,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
                                   x0, monomial_values, monom_index):
     """The same integration_reduction function which uses a dynamic
     programming approach to compute terms by using the values of the integral
-    the gradient of previous terms.
+    of previously computed terms.
 
     Parameters
     ===========
@@ -313,8 +488,6 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
         return expr
 
     if not expr.is_number:
-        a, b = (S(a[0]), S(a[1])), S(b)
-
         x_index = monom_index - max_y_degree + \
             x_degree - 2 if x_degree >= 1 else 0
         y_index = monom_index - 1 if y_degree >= 1 else 0
@@ -330,8 +503,8 @@ def integration_reduction_dynamic(facets, index, a, b, expr,
 
 
 def gradient_terms(binomial_power=0):
-    """Returns a list of all the possible
-    monomials between 0 and y**binomial_power
+    """Returns a list of all the possible monomials between
+    0 and y**binomial_power
 
     Parameters
     ===========
@@ -354,7 +527,7 @@ def gradient_terms(binomial_power=0):
     return terms
 
 
-def hyperplane_parameters(poly):
+def hyperplane_parameters(poly, vertices=None):
     """A helper function to return the hyperplane parameters
     of which the facets of the polygon are a part of.
     Currently works for only 2-Polytopes.
@@ -362,6 +535,9 @@ def hyperplane_parameters(poly):
     ==========
     poly : The input Polygon
 
+    Optional Parameters
+    ----------------------
+    vertices :  Vertex indices of faces of 3-Polytope
     Examples
     ========
     >>> from sympy.geometry.point import Point
@@ -370,27 +546,52 @@ def hyperplane_parameters(poly):
     >>> hyperplane_parameters(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)))
     [((0, 1), 3), ((1, -2), -1), ((-2, -1), -3)]
     """
-    vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon.
-    params = [None] * (len(vertices) - 1)
-    for i in range(len(vertices) - 1):
-        v1 = vertices[i]
-        v2 = vertices[i + 1]
+    if isinstance(poly, Polygon):
+        vertices = list(poly.vertices) + [poly.vertices[0]]  # Close the polygon
+        params = [None] * (len(vertices) - 1)
 
-        a1 = v1[1] - v2[1]
-        a2 = v2[0] - v1[0]
-        b = v2[0] * v1[1] - v2[1] * v1[0]
+        for i in range(len(vertices) - 1):
+            v1 = vertices[i]
+            v2 = vertices[i + 1]
 
-        factor = gcd_list([a1, a2, b])
+            a1 = v1[1] - v2[1]
+            a2 = v2[0] - v1[0]
+            b = v2[0] * v1[1] - v2[1] * v1[0]
 
-        b = S(b)/factor
-        a = (S(a1)/factor, S(a2)/factor)
-        params[i] = (a, b)
+            factor = gcd_list([a1, a2, b])
 
+            b = S(b) / factor
+            a = (S(a1) / factor, S(a2) / factor)
+            params[i] = (a, b)
+    else:
+        params = [None] * len(poly)
+        for i, polygon in enumerate(poly):
+            v1, v2, v3 = [vertices[vertex] for vertex in polygon[:3]]
+            normal = cross_product(v1, v2, v3)
+            b = sum([normal[j] * v1[j] for j in range(0, 3)])
+            fac = gcd_list(normal)
+            if fac is S.Zero:
+                fac = 1
+            normal = [j / fac for j in normal]
+            b = b / fac
+            params[i] = (normal, b)
     return params
 
 
+def cross_product(v1, v2, v3):
+    """Returns the cross-product of vectors (v2 - v1) and (v3 - v1)
+    That is : (v2 - v1) X (v3 - v1)
+    """
+    v2 = [v2[j] - v1[j] for j in range(0, 3)]
+    v3 = [v3[j] - v1[j] for j in range(0, 3)]
+    return [v3[2] * v2[1] - v3[1] * v2[2],
+            v3[0] * v2[2] - v3[2] * v2[0],
+            v3[1] * v2[0] - v3[0] * v2[1]]
+
+
 def best_origin(a, b, lineseg, expr):
-    """Helper method for polytope_integrate.
+    """Helper method for polytope_integrate. Currently not used in the main
+    algorithm.
     Returns a point on the lineseg whose vector inner product with the
     divergence of `expr` yields an expression with the least maximum
     total power.
@@ -431,6 +632,7 @@ def best_origin(a, b, lineseg, expr):
     (0, 3.0)
     """
     a1, b1 = lineseg.points[0]
+
     def x_axis_cut(ls):
         """Returns the point where the input line segment
         intersects the x-axis.
@@ -545,7 +747,7 @@ def decompose(expr, separate=False):
     expr : Polynomial(SymPy expression)
 
     Optional Parameters :
-
+    ---------------------
     separate : If True then simply return a list of the constituent monomials
                If not then break up the polynomial into constituent homogeneous
                polynomials.
@@ -597,55 +799,80 @@ def decompose(expr, separate=False):
     return poly_dict
 
 
-def clockwise_sort(poly):
-    """Returns the same polygon with points sorted in clockwise order.
+def point_sort(poly, normal=None, clockwise=True):
+    """Returns the same polygon with points sorted in clockwise or
+    anti-clockwise order.
 
     Note that it's necessary for input points to be sorted in some order
-    (clockwise or anti-clockwise) for the algorithm to work. As a convention
-    algorithm has been implemented keeping clockwise orientation in mind.
+    (clockwise or anti-clockwise) for the integration algorithm to work.
+    As a convention algorithm has been implemented keeping clockwise
+    orientation in mind.
 
     Parameters
     ==========
-    poly: 2-Polytope
+    poly: 2D or 3D Polygon
+
+    Optional Parameters:
+    ---------------------
+    normal : The normal of the plane which the 3-Polytope is a part of.
+    clockwise : Returns points sorted in clockwise order if True and
+    anti-clockwise if False.
 
     Examples
     ========
-    >>> from sympy.integrals.intpoly import clockwise_sort
+    >>> from sympy.integrals.intpoly import point_sort
     >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
-    >>> clockwise_sort(Polygon(Point(0, 0), Point(1, 0), Point(1, 1)))
-    Triangle(Point2D(1, 1), Point2D(1, 0), Point2D(0, 0))
-
+    >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
+    [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
     """
-    n = len(poly.vertices)
-    vertices = list(poly.vertices)
-    center = Point(sum(map(lambda vertex: vertex.x, poly.vertices)) / n,
-                   sum(map(lambda vertex: vertex.y, poly.vertices)) / n)
+    n = len(poly)
+    if n < 2:
+        return poly
 
-    def compareTo(a, b):
+    order = S(1) if clockwise else S(-1)
+    dim = len(poly[0])
+    if dim == 2:
+        center = Point(sum(map(lambda vertex: vertex.x, poly)) / n,
+                       sum(map(lambda vertex: vertex.y, poly)) / n)
+    else:
+        center = Point(sum(map(lambda vertex: vertex.x, poly)) / n,
+                       sum(map(lambda vertex: vertex.y, poly)) / n,
+                       sum(map(lambda vertex: vertex.z, poly)) / n)
+
+    def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
-            return S(-1)
+            return -order
         elif a.x - center.x < S.Zero and b.x - center.x >= S.Zero:
-            return S(1)
+            return order
         elif a.x - center.x == S.Zero and b.x - center.x == S.Zero:
             if a.y - center.y >= S.Zero or b.y - center.y >= S.Zero:
-                return S(-1) if a.y > b.y else S(1)
-            return S(-1) if b.y > a.y else S(1)
+                return -order if a.y > b.y else order
+            return -order if b.y > a.y else order
 
         det = (a.x - center.x) * (b.y - center.y) -\
               (b.x - center.x) * (a.y - center.y)
         if det < S.Zero:
-            return S(-1)
+            return -order
         elif det > S.Zero:
-            return S(1)
+            return order
 
         first = (a.x - center.x) * (a.x - center.x) +\
                 (a.y - center.y) * (a.y - center.y)
         second = (b.x - center.x) * (b.x - center.x) +\
                  (b.y - center.y) * (b.y - center.y)
-        return S(-1) if first > second else S(1)
+        return -order if first > second else order
 
-    return Polygon(*sorted(vertices, key=cmp_to_key(compareTo)))
+    def compare3d(a, b):
+        det = cross_product(center, a, b)
+        dot_product = sum([det[i] * normal[i] for i in range(0, 3)])
+        if dot_product < S.Zero:
+            return -order
+        elif dot_product > S.Zero:
+            return order
+
+    if dim == 2:
+        return sorted(poly, key=cmp_to_key(compare))
+    return sorted(poly, key=cmp_to_key(compare3d))
 
 
 def norm(point):
@@ -653,7 +880,7 @@ def norm(point):
 
     Parameters
     ==========
-    point: This denotes a point in the dimensional space.
+    point: This denotes a point in the dimension_al spac_e.
 
     Examples
     ========
@@ -661,28 +888,31 @@ def norm(point):
     >>> from sympy.geometry.point import Point
     >>> norm(Point(2, 7))
     sqrt(53)
-
     """
     half = S(1)/2
-    if isinstance(point, tuple):
-        return (point[0] ** 2 + point[1] ** 2) ** half
+    if isinstance(point, (list, tuple)):
+        return sum([coord ** 2 for coord in point]) ** half
     elif isinstance(point, Point):
-        return (point.x ** 2 + point.y ** 2) ** half
+        if isinstance(point, Point2D):
+            return (point.x ** 2 + point.y ** 2) ** half
+        else:
+            return (point.x ** 2 + point.y ** 2 + point.z) ** half
     elif isinstance(point, dict):
         return sum(i**2 for i in point.values()) ** half
 
 
-def intersection(lineseg_1, lineseg_2):
-    """Returns intersection between lines of which
-    the input line segments are a part of.
-    Note that this function is meant for use in integration_reduction
-    and at that point in the calling function the lines denoted by the
-    segments surely intersect within segment boundaries. Coincident lines
-    are taken to be non-intersecting.
+def intersection(geom_1, geom_2, intersection_type):
+    """Returns intersection between geometric objects.
+
+    Note that this function is meant for use in integration_reduction and
+    at that point in the calling function the lines denoted by the segments
+    surely intersect within segment boundaries. Coincident lines are taken
+    to be non-intersecting. Also, the hyperplane intersection for 2D case is
+    also implemented.
 
     Parameters
     ==========
-    lineseg_1, lineseg_2: The input line segments
+    geom_1, geom_2: The input line segments
 
     Examples
     ========
@@ -691,34 +921,41 @@ def intersection(lineseg_1, lineseg_2):
     >>> from sympy.geometry.line import Segment2D
     >>> l1 = Segment2D(Point(1, 1), Point(3, 5))
     >>> l2 = Segment2D(Point(2, 0), Point(2, 5))
-    >>> intersection(l1, l2)
+    >>> intersection(l1, l2, "segment2D")
     (2, 3)
-
+    >>> p1 = ((-1, 0), 0)
+    >>> p2 = ((0, 1), 1)
+    >>> intersection(p1, p2, "plane2D")
+    (0, 1)
     """
-    if isinstance(lineseg_1, Segment2D):
-        x1, y1 = lineseg_1.points[0]
-        x2, y2 = lineseg_1.points[1]
-        x3, y3 = lineseg_2.points[0]
-        x4, y4 = lineseg_2.points[1]
-    else:
-        a1x, a1y = S(lineseg_1[0][0]), S(lineseg_1[0][1])
-        a2x, a2y = S(lineseg_2[0][0]), S(lineseg_2[0][1])
-        b1, b2 = S(lineseg_1[1]), S(lineseg_2[1])
+    if intersection_type[:-2] == "segment":
+        if intersection_type == "segment2D":
+            x1, y1 = geom_1.points[0]
+            x2, y2 = geom_1.points[1]
+            x3, y3 = geom_2.points[0]
+            x4, y4 = geom_2.points[1]
+        elif intersection_type == "segment3D":
+            x1, y1, z1 = geom_1.points[0]
+            x2, y2, z2 = geom_1.points[1]
+            x3, y3, z3 = geom_2.points[0]
+            x4, y4, z4 = geom_2.points[1]
 
-        denom = a1x * a2y - a2x * a1y
+        denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
         if denom:
-            return (S(b1 * a2y - b2 * a1y) / denom,
-                    S(b2 * a1x - b1 * a2x) / denom)
-        return ()
+            t1 = x1 * y2 - y1 * x2
+            t2 = x3 * y4 - x4 * y3
+            return (S(t1 * (x3 - x4) - t2 * (x1 - x2)) / denom,
+                    S(t1 * (y3 - y4) - t2 * (y1 - y2)) / denom)
+    if intersection_type[:-2] == "plane":
+        if intersection_type == "plane2D":  # Intersection of hyperplanes
+            a1x, a1y = geom_1[0]
+            a2x, a2y = geom_2[0]
+            b1, b2 = S(geom_1[1]), S(geom_2[1])
 
-    denom = (x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4)
-
-    if denom:
-        t1 = x1*y2 - y1*x2
-        t2 = x3*y4 - x4*y3
-        return(S(t1*(x3 - x4) - t2*(x1 - x2))/denom,
-               S(t1*(y3 - y4) - t2*(y1 - y2))/denom)
-    return ()
+            denom = a1x * a2y - a2x * a1y
+            if denom:
+                return (S(b1 * a2y - b2 * a1y) / denom,
+                        S(b2 * a1x - b1 * a2x) / denom)
 
 
 def is_vertex(ent):

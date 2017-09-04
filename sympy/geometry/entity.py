@@ -100,11 +100,12 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def __getnewargs__(self):
+        """Returns a tuple that will be passed to __new__ on unpickling."""
         return tuple(self.args)
 
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
-        return not self.__eq__(o)
+        return not self == o
 
     def __new__(cls, *args, **kwargs):
         # Points are sequences, but they should not
@@ -119,9 +120,11 @@ class GeometryEntity(Basic):
         return Basic.__new__(cls, *args)
 
     def __radd__(self, a):
+        """Implementation of reverse add method."""
         return a.__add__(self)
 
     def __rdiv__(self, a):
+        """Implementation of reverse division method."""
         return a.__div__(self)
 
     def __repr__(self):
@@ -130,9 +133,11 @@ class GeometryEntity(Basic):
         return type(self).__name__ + repr(self.args)
 
     def __rmul__(self, a):
+        """Implementation of reverse multiplication method."""
         return a.__mul__(self)
 
     def __rsub__(self, a):
+        """Implementation of reverse substraction method."""
         return a.__sub__(self)
 
     def __str__(self):
@@ -344,6 +349,32 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def reflect(self, line):
+        """
+        Reflects an object across a line.
+
+        Parameters
+        ==========
+
+        line: Line
+
+        Examples
+        ========
+
+        >>> from sympy import pi, sqrt, Line, RegularPolygon
+        >>> l = Line((0, pi), slope=sqrt(2))
+        >>> pent = RegularPolygon((1, 2), 1, 5)
+        >>> rpent = pent.reflect(l)
+        >>> rpent
+        RegularPolygon(Point2D(-2*sqrt(2)*pi/3 - 1/3 + 4*sqrt(2)/3, 2/3 + 2*sqrt(2)/3 + 2*pi/3), -1, 5, -pi/5 + acos(1/3))
+
+        >>> from sympy import pi, Line, Circle, Point
+        >>> l = Line((0, pi), slope=1)
+        >>> circ = Circle(Point(0, 0), 5)
+        >>> rcirc = circ.reflect(l)
+        >>> rcirc
+        Circle(Point2D(-pi, pi), -5)
+
+        """
         from sympy import atan, Point, Dummy, oo
 
         g = self

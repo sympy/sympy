@@ -3,7 +3,7 @@ More about Coordinate Systems
 =============================
 
 We will now look at how we can initialize new coordinate systems in
-:mod:`sympy.vector`, positioned and oriented in user-defined
+:mod:`sympy.vector`, transformed in user-defined
 ways with respect to already-existing systems.
 
 Locating new systems
@@ -67,7 +67,7 @@ The orientation is shown in the diagram below:
 There are two ways to achieve this.
 
 Using a method of CoordSys3D directly
---------------------------------------------
+-------------------------------------
 
 This is the easiest, cleanest, and hence the recommended way of doing
 it.
@@ -177,6 +177,29 @@ location of the new systems.
   (-2*sin(a))*C.i + (-2*cos(a))*C.j
 
 More on the ``express`` function in a bit.
+
+Transforming new system
+=======================
+
+The most general way of creating user-defined system is to use
+``transformation`` parameter in ``CoordSys3D``. Here we can define
+any transformation equations. If we are interested in some typical
+curvilinear coordinate system different that Cartesian, we can also
+use some predefined ones. It could be also possible to translate or
+rotate system by setting appropriate transformation equations.
+
+  >>> from sympy.vector import CoordSys3D
+  >>> from sympy import sin, cos
+  >>> A = CoordSys3D('A', transformation='spherical')
+  >>> B = CoordSys3D('A', transformation=lambda x,y,z: (x*sin(y), x*cos(y), z))
+
+
+In ``CoordSys3D`` is also dedicated method, ``create_new`` which works
+similarly to methods like ``locate_new``, ``orient_new_axis`` etc.
+
+  >>> from sympy.vector import CoordSys3D
+  >>> A = CoordSys3D('A')
+  >>> B = A.create_new('B', transformation='spherical')
 
 Expression of quantities in different coordinate systems
 ========================================================
