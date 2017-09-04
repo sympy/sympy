@@ -72,8 +72,8 @@ def test_polytope_integrate():
                                       Point(sqrt(3), 0)), 1) == 3
 
     hexagon = Polygon(Point(0, 0), Point(-sqrt(3) / 2, S(1)/2),
-                      Point(-sqrt(3) / 2, 3 / 2), Point(0, 2),
-                      Point(sqrt(3) / 2, 3 / 2), Point(sqrt(3) / 2, S(1)/2))
+                      Point(-sqrt(3) / 2, S(3) / 2), Point(0, 2),
+                      Point(sqrt(3) / 2, S(3) / 2), Point(sqrt(3) / 2, S(1)/2))
 
     assert polytope_integrate(hexagon, 1) == S(3*sqrt(3)) / 2
 
@@ -87,12 +87,12 @@ def test_polytope_integrate():
     assert polytope_integrate([((-1, 0), 0), ((0, sqrt(3)), 3),
                                ((sqrt(3), 0), 3), ((0, -1), 0)], 1) == 3
 
-    hexagon = [((-1 / 2, -sqrt(3) / 2), 0),
+    hexagon = [((-S(1) / 2, -sqrt(3) / 2), 0),
                ((-1, 0), sqrt(3) / 2),
-               ((-1 / 2, sqrt(3) / 2), sqrt(3)),
-               ((1 / 2, sqrt(3) / 2), sqrt(3)),
+               ((-S(1) / 2, sqrt(3) / 2), sqrt(3)),
+               ((S(1) / 2, sqrt(3) / 2), sqrt(3)),
                ((1, 0), sqrt(3) / 2),
-               ((1 / 2, -sqrt(3) / 2), 0)]
+               ((S(1) / 2, -sqrt(3) / 2), 0)]
     assert polytope_integrate(hexagon, 1) == S(3*sqrt(3)) / 2
 
     #  Non-convex polytopes
@@ -490,7 +490,7 @@ def test_polytope_integrate():
 
     assert polytope_integrate(cube2, max_degree=2) == \
         {1: 125, x: 625 / S(2), x * z: 3125 / S(4), y: 625 / S(2),
-         y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / 3,
+         y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / S(3),
          z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
 
 
