@@ -966,7 +966,7 @@ class Derivative(Expr):
     identically equal.  However this is the wrong way to think of this.  Think
     of it instead as if we have something like this::
 
-        >>> from sympy.abc import c, s
+        >>> from sympy.abc import c, s, u, x
         >>> def F(u):
         ...     return 2*u
         ...
@@ -979,7 +979,7 @@ class Derivative(Expr):
         2*sqrt(-sin(x)**2 + 1)
         >>> F(c).diff(c)
         2
-        >>> F(c).diff(c)
+        >>> F(cos(x)).diff(cos(x))
         2
         >>> G(s).diff(c)
         0
