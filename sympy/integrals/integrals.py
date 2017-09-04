@@ -783,7 +783,15 @@ class Integral(AddWithLimits):
             else:
                 if i:
                     # There was a nonelementary integral. Try integrating it.
-                    return result + i.doit(risch=False)
+
+                    # if no part of the NonElementaryIntegral is integrated by
+                    # the Risch algorithm, then use the original function to
+                    # integrate, instead of re-written one
+                    if result == 0:
+                        from sympy.integrals.risch import NonElementaryIntegral
+                        return NonElementaryIntegral(f, x).doit(risch=False)
+                    else:
+                        return result + i.doit(risch=False)
                 else:
                     return result
 
