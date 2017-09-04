@@ -228,7 +228,7 @@ class DifferentialExtension(object):
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
         else:
-            if any(i.has(x) for i in self.f.atoms(sin, cos, atan, asin, acos)):
+            if any(i.has(x) for i in self.f.atoms(sin, cos, asin, acos)):
                 raise NotImplementedError("Trigonometric extensions are not "
                 "supported (yet!)")
 
@@ -396,6 +396,17 @@ class DifferentialExtension(object):
         tans = update_sets(tans, atoms,
             lambda i: i.args[0].is_rational_function(*self.T) and
             i.args[0].has(*self.T))
+        tanargs = [arg for tan_func in tans for arg in tan_func.args]
+        ip = integer_powers(tanargs)
+        for arg, others in  ip:
+            for tan_arg, mul in others:
+                self.newf = self.newf.replace(tan(tan_arg), rewrite_tans(mul, tan(arg)))
+
+        # could this be simply 'atoms = {tan(arg) for arg, others in ip}'?
+        atoms = self.newf.atoms(tan)
+        tans = update_sets(tans, atoms,
+            lambda i: i.args[0].is_rational_function(*self.T) and
+            i.args[0].has(*self.T))
 
         return tans
 
@@ -452,6 +463,8 @@ class DifferentialExtension(object):
 
         new_extension = False
         restart = False
+
+        # NO need for this
         tanargs = [i.args[0] for i in tans]
         ip = integer_powers(tanargs)
 
