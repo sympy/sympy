@@ -484,8 +484,7 @@ class DifferentialExtension(object):
             else:
                 i = Symbol('i')
             self.Tfuncs += [Lambda(i, tan(arg.subs(self.x, i)))]
-            self.newf = self.newf.xreplace(
-                    dict((tan(tanarg), rewrite_tans(p, self.t)) for tanarg, p in others))
+            self.newf = self.newf.replace(tan(arg), self.t)
             new_extension = True
 
         return new_extension
