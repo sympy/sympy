@@ -399,14 +399,11 @@ class DifferentialExtension(object):
         tanargs = [arg for tan_func in tans for arg in tan_func.args]
         ip = integer_powers(tanargs)
         for arg, others in  ip:
-            for tan_arg, mul in others:
-                self.newf = self.newf.replace(tan(tan_arg), rewrite_tans(mul, tan(arg)))
+            self.newf = self.newf.xreplace(
+                    dict((tan(tanarg), rewrite_tans(mul, tan(arg))) for tanarg, mul in others))
 
         # could this be simply 'atoms = {tan(arg) for arg, others in ip}'?
-        atoms = self.newf.atoms(tan)
-        tans = update_sets(tans, atoms,
-            lambda i: i.args[0].is_rational_function(*self.T) and
-            i.args[0].has(*self.T))
+        tans = {tan(arg) for arg, others in ip}
 
         return tans
 
@@ -464,12 +461,9 @@ class DifferentialExtension(object):
         new_extension = False
         restart = False
 
-        # NO need for this
         tanargs = [i.args[0] for i in tans]
-        ip = integer_powers(tanargs)
 
-        for arg, others in ip:
-            others.sort(key=lambda i: i[1])
+        for arg in tanargs:
 
             arga, argd = frac_in(arg, self.t)
             # in _exp_part we have 'is_log_deriv_k_t_radical' here
