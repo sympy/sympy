@@ -563,9 +563,6 @@ class Pow(Expr):
         if self.base.is_integer and self.exp.is_integer and (self.exp-1).is_positive:
             return False
 
-        if self.is_number:
-            return self.doit().is_prime
-
     def _eval_is_composite(self):
         """
         A power is composite if both base and exponent are greater than 1
@@ -574,9 +571,6 @@ class Pow(Expr):
             ((self.base-1).is_positive and (self.exp-1).is_positive or
             (self.base+1).is_negative and self.exp.is_positive and self.exp.is_even)):
             return True
-
-        if self.is_number:
-            return self.doit().is_composite
 
     def _eval_is_polar(self):
         return self.base.is_polar

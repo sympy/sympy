@@ -1315,29 +1315,7 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
-    def _eval_is_prime(self):
-        if self.is_number:
-            """
-            If input is a number that is not completely simplified.
-            e.g. Mul(sqrt(3), sqrt(3), evaluate=False)
-            So we manually evaluate it and return whether that is prime or not.
-            """
-            # Note: `doit()` was not used due to test failing (Infinite Recursion)
-            r = S.One
-            for arg in self.args:
-                r *= arg
-            return r.is_prime
-
     def _eval_is_composite(self):
-        if self.is_number:
-            """
-            Same as _eval_is_prime
-            """
-            r = S.One
-            for arg in self.args:
-                r *= arg
-            return r.is_composite
-
         if self.is_integer and self.is_positive:
             """
             Here we count the number of arguments that have a minimum value

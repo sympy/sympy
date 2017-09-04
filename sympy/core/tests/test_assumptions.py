@@ -779,13 +779,6 @@ def test_Mul_is_prime_composite():
     assert ( (x+1)*(y+1) ).is_prime is None
     assert ( (x+1)*(y+1) ).is_composite is None
 
-    assert Mul(6, S.Half, evaluate=False).is_prime is True
-    assert Mul(6, S.Half, evaluate=False).is_composite is False
-    assert Mul(sqrt(3), sqrt(3), evaluate=False).is_prime is True
-    assert Mul(sqrt(3), sqrt(3), evaluate=False).is_composite is False
-    assert Mul(5, S.Half, evaluate=False).is_prime is False
-    assert Mul(5, S.Half, evaluate=False).is_composite is False
-
 def test_Pow_is_prime_composite():
     from sympy import Pow
     x = Symbol('x', positive=True, integer=True)
@@ -798,13 +791,6 @@ def test_Pow_is_prime_composite():
 
     x = Symbol('x', positive=True)
     assert (x**y).is_prime is None
-
-    assert Pow(6, S.One, evaluate=False).is_prime is False
-    assert Pow(6, S.One, evaluate=False).is_composite is True
-    assert Pow(9, S.Half, evaluate=False).is_prime is True
-    assert Pow(9, S.Half, evaluate=False).is_composite is False
-    assert Pow(5, S.One, evaluate=False).is_prime is True
-    assert Pow(5, S.One, evaluate=False).is_composite is False
 
 
 def test_Mul_is_infinite():
