@@ -10,7 +10,7 @@ from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 
 
@@ -1152,6 +1152,8 @@ def test_issue_8901():
 
 @slow
 def test_issue_7130():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
