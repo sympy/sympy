@@ -338,6 +338,18 @@ class Pow(Expr):
         if s is not None:
             return s*Pow(b, e*other)
 
+    def _eval_Mod(self, q):
+        if self.exp.is_integer and self.exp.is_positive:
+            if q.is_integer and self.base % q == 0:
+                return S.Zero
+
+            '''
+            For unevaluated Integer power, use built-in pow modular
+            exponentiation.
+            '''
+            if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
+                return pow(int(self.base), int(self.exp), int(q))
+
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
             return self.base.is_even
@@ -545,18 +557,20 @@ class Pow(Expr):
                 return True
 
     def _eval_is_prime(self):
-        if self.exp == S.One:
-            return self.base.is_prime
-        if self.is_number:
-            return self.doit().is_prime
+        '''
+        An integer raised to the n(>=2)-th power cannot be a prime.
+        '''
+        if self.base.is_integer and self.exp.is_integer and (self.exp-1).is_positive:
+            return False
 
-        if self.is_integer and self.is_positive:
-            """
-            a Power will be non-prime only if both base and exponent
-            are greater than 1
-            """
-            if (self.base-1).is_positive or (self.exp-1).is_positive:
-                return False
+    def _eval_is_composite(self):
+        """
+        A power is composite if both base and exponent are greater than 1
+        """
+        if (self.base.is_integer and self.exp.is_integer and
+            ((self.base-1).is_positive and (self.exp-1).is_positive or
+            (self.base+1).is_negative and self.exp.is_positive and self.exp.is_even)):
+            return True
 
     def _eval_is_polar(self):
         return self.base.is_polar
