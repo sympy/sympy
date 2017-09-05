@@ -27,6 +27,7 @@ The main references for this are:
 """
 from __future__ import print_function, division
 
+from sympy import exp
 from sympy.core import oo, S, pi, Expr, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
@@ -38,7 +39,6 @@ from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
-from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.hyperbolic import \
     _rewrite_hyperbolics_as_exp, HyperbolicFunction
@@ -288,6 +288,8 @@ def _mytype(f, x):
         return ()
     elif f.is_Function:
         return (type(f),)
+    elif f.is_Pow and f.base is S.Exp1:
+        return (exp,)
     else:
         types = [_mytype(a, x) for a in f.args]
         res = []

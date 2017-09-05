@@ -548,6 +548,10 @@ class Pow(Expr):
                 return True
 
     def _eval_is_finite(self):
+        if self.base is S.Exp1:
+            if self.exp.is_negative:
+                return True
+            return self.exp.is_finite
         if self.exp.is_negative:
             if self.base.is_zero:
                 return False
@@ -1033,6 +1037,14 @@ class Pow(Expr):
         from sympy import atan2, cos, im, re, sin, exp
         from sympy.polys.polytools import poly
 
+        if self.base is S.Exp1:
+            re, im = self.exp.as_real_imag()
+            if deep:
+                re = re.expand(deep, **hints)
+                im = im.expand(deep, **hints)
+            c, s = cos(im), sin(im)
+            return (exp(re)*c, exp(re)*s)
+
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
@@ -1087,13 +1099,6 @@ class Pow(Expr):
             rp, tp = self.func(r, self.exp), t*self.exp
 
             return (rp*cos(tp), rp*sin(tp))
-        elif self.base is S.Exp1:
-            re, im = self.exp.as_real_imag()
-            if deep:
-                re = re.expand(deep, **hints)
-                im = im.expand(deep, **hints)
-            c, s = cos(im), sin(im)
-            return (exp(re)*c, exp(re)*s)
         else:
 
             if deep:

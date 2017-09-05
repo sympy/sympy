@@ -40,7 +40,7 @@ To make a function work with rs_series you need to do two things::
 Look at rs_sin and rs_series for further reference.
 
 """
-
+from sympy import S
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
 from sympy.polys.polyerrors import DomainError
@@ -1860,13 +1860,15 @@ def rs_min_pow(expr, series_rs, a):
 
 
 def _rs_series(expr, series_rs, a, prec):
+    from sympy import Pow
     # TODO Use _parallel_dict_from_expr instead of sring as sring is
     # inefficient. For details, read the todo in sring.
     args = expr.args
     R = series_rs.ring
 
     # expr does not contain any function to be expanded
-    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+    if not any(arg.has(Function) or arg.has(exp) for arg in args) and \
+        not (expr.is_Function or (expr.is_Pow and expr.base is S.Exp1)):
         return series_rs
 
     if not expr.has(a):
@@ -1931,6 +1933,16 @@ def _rs_series(expr, series_rs, a, prec):
         return series
 
     elif expr.is_Pow:
+        if expr.base is S.Exp1:
+            # Horrible code: repetition of `if expr.is_Function`:
+            R1, series = sring(expr.exp, domain=QQ, expand=False, series=True)
+            series_inner = _rs_series(expr.exp, series, a, prec)
+
+            R = R.compose(R1).compose(series_inner.ring)
+            series_inner = series_inner.set_ring(R)
+            series = rs_exp(series_inner, R(a), prec)
+            return series
+
         R1, _ = sring(expr.base, domain=QQ, expand=False, series=True)
         R = R.compose(R1)
         series_inner = _rs_series(expr.base, R(expr.base), a, prec)
