@@ -1756,7 +1756,10 @@ def test_positive():
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
     assert ask(Q.positive(exp(x)), Q.imaginary(x)) is None
     assert ask(Q.positive(exp(2*pi*I, evaluate=False)), Q.imaginary(x)) is True
-    assert ask(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x))
+    assert ask(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x)) is True
+    assert ask(Q.positive(exp(x*pi*I)), Q.even(x)) is True
+    assert ask(Q.positive(exp(x*pi*I)), Q.odd(x)) is False
+    assert ask(Q.positive(exp(x*pi*I)), Q.real(x)) is None
 
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
