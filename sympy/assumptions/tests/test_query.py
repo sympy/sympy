@@ -1754,6 +1754,9 @@ def test_positive():
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
+    assert ask(Q.positive(exp(x)), Q.imaginary(x)) is None
+    assert ask(Q.positive(exp(2*pi*I, evaluate=False)), Q.imaginary(x)) is True
+    assert ask(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x))
 
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
@@ -1851,6 +1854,7 @@ def test_real_functions():
     assert ask(Q.real(exp(x)), Q.real(x)) is True
     assert ask(Q.real(x + exp(x)), Q.real(x)) is True
     assert ask(Q.real(exp(2*pi*I, evaluate=False))) is True
+    assert ask(Q.real(exp(pi*I, evaluate=False))) is True
     assert ask(Q.real(exp(pi*I/2, evaluate=False))) is False
 
     # logarithm
@@ -1859,7 +1863,7 @@ def test_real_functions():
     assert ask(Q.real(log(I + 1))) is False
     assert ask(Q.real(log(x)), Q.complex(x)) is None
     assert ask(Q.real(log(x)), Q.imaginary(x)) is False
-    assert ask(Q.real(log(exp(x))), Q.imaginary(x)) is False  # exp(x) will be 0 or a + I*b
+    assert ask(Q.real(log(exp(x))), Q.imaginary(x)) is None  # exp(2*pi*I) is 1, log(exp(pi*I)) is pi*I (disregarding periodicity)
     assert ask(Q.real(log(exp(x))), Q.complex(x)) is None
     eq = Pow(exp(2*pi*I*x, evaluate=False), x, evaluate=False)
     assert ask(Q.real(eq), Q.integer(x)) is True
