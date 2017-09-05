@@ -302,10 +302,7 @@ class AskPositiveHandler(CommonHandler):
             return True
         if ask(Q.imaginary(expr.args[0]), assumptions):
             from sympy import pi, I
-            odd_imaginary = ask(Q.even(expr.args[0]/(I*pi)), assumptions)
-            if odd_imaginary is not None:
-                return odd_imaginary
-            return None
+            return ask(Q.even(expr.args[0]/(I*pi)), assumptions)
 
     @staticmethod
     def log(expr, assumptions):
