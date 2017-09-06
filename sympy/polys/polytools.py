@@ -4425,8 +4425,7 @@ def degree(f, gen=0):
             p, _ = poly_from_expr(f.as_expr())
         if gen not in p.gens:
             return S.Zero
-
-    elif len(f.free_symbols) > 1 and  sympify(gen).is_Number and not f.is_Poly:
+    elif not f.is_Poly and len(f.free_symbols) > 1:
         raise TypeError(filldedent('''
          A symbolic generator of interest is required for a multivariate
          expression like func = %s, e.g. degree(func, gen = %s) instead of
