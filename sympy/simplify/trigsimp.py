@@ -513,12 +513,9 @@ def trigsimp(expr, **opts):
     return trigsimpfunc(expr)
 
 
-def exptrigsimp(expr, simplify=True):
+def exptrigsimp(expr):
     """
     Simplifies exponential / trigonometric / hyperbolic functions.
-    When ``simplify`` is True (default) the expression obtained after the
-    simplification step will be then be passed through simplify to
-    precondition it so the final transformations will be applied.
 
     Examples
     ========
@@ -543,9 +540,6 @@ def exptrigsimp(expr, simplify=True):
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
-
-    if simplify:
-        newexpr = newexpr.simplify()
 
     # conversion from exp to hyperbolic
     ex = newexpr.atoms(exp, S.Exp1)
