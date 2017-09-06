@@ -1,6 +1,6 @@
 from sympy.core import Function, Pow, sympify
-from sympy.polys import Poly, decompose
 from sympy.core.relational import Relational
+from sympy.polys import Poly, decompose
 
 def decompogen(f, symbol):
     """
@@ -32,7 +32,8 @@ def decompogen(f, symbol):
     """
     f = sympify(f)
     result = []
-
+    if isinstance(f, Relational):
+        return None
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
         if f.args[0] == symbol:
@@ -44,21 +45,18 @@ def decompogen(f, symbol):
     fp = Poly(f)
     gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
 
-    if len(gens) == 1 and gens[0] != symbol and (not isinstance(f, Relational)):
+    if len(gens) == 1 and gens[0] != symbol:
         f1 = f.subs(gens[0], symbol)
         f2 = gens[0]
         result += [f1] + decompogen(f2, symbol)
         return result
 
     # ===== Polynomial decompose() ====== #
-    if not isinstance(f, Relational):
-        try:
-            result += decompose(f)
-            return result
-        except ValueError:
-            return [f]
-    else:
-        return []
+    try:
+        result += decompose(f)
+        return result
+    except ValueError:
+        return [f]
 
 
 def compogen(g_s, symbol):

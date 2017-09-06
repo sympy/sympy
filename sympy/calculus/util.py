@@ -331,6 +331,7 @@ def periodicity(f, symbol, check=False):
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions.elementary.trigonometric import (TrigonometricFunction, sin, cos, csc, sec)
     from sympy.solvers.decompogen import decompogen
+    from sympy.core.relational import Relational
 
     orig_f = f
     f = simplify(orig_f)
@@ -338,7 +339,8 @@ def periodicity(f, symbol, check=False):
 
     if not f.has(symbol):
         return S.Zero
-
+    if isinstance(f, Relational):
+        f = (f.lhs - f.rhs)
     if isinstance(f, TrigonometricFunction):
         try:
             period = f.period(symbol)
