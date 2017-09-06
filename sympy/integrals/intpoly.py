@@ -6,7 +6,11 @@ Uses evaluation techniques as described in Chin et al(2015)[1]
 
 References
 ===========
-[1] : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
+[1] : Chin, Eric B., Jean B. Lasserre, and N. Sukumar. "Numerical integration
+of homogeneous functions on convex and nonconvex polygons and polyhedra."
+Computational Mechanics 56.6 (2015): 967-981
+
+PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
 
 from __future__ import print_function, division

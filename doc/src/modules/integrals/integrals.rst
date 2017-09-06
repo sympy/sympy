@@ -133,6 +133,8 @@ Integration over Polytopes
 .. module:: sympy.integrals.intpoly
 
 The ``intpoly`` module in SymPy implements methods to calculate the integral of a polynomial over 2/3-Polytopes.
+Uses evaluation techniques as described in Chin et al(2015)[1]
+
 The input for 2-Polytope or Polygon uses the already existing ``Polygon`` data structure in SymPy. See
 :mod:`sympy.geometry.polygon` for how to create a polygon.
 
@@ -152,6 +154,12 @@ Principal method in this module is :func:`polytope_integrate`
   - ``polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x)`` returns the integral of :math:`x` over the triangle with vertices (0, 0), (0, 1) and (1, 0)
 
   - ``polytope_integrate(cube, x + y + z)`` returns the integral of :math:`x + y + z` over the unit cube.
+
+References
+----------
+[1] : Chin, Eric B., Jean B. Lasserre, and N. Sukumar. "Numerical integration of homogeneous functions on convex and nonconvex polygons and polyhedra." Computational Mechanics 56.6 (2015): 967-981
+
+PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 
 Examples
 --------
