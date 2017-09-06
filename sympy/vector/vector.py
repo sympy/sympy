@@ -537,7 +537,7 @@ def cross(vect1, vect2):
         try:
             from .functions import express
             return cross(express(vect1, vect2._sys), vect2)
-        except:
+        except Exception:
             return Cross(vect1, vect2)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return Vector.zero
@@ -577,7 +577,7 @@ def dot(vect1, vect2):
         try:
             from .functions import express
             return dot(vect1, express(vect2, vect1._sys))
-        except:
+        except Exception:
             return Dot(vect1, vect2)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return S.Zero

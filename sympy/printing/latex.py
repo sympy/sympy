@@ -1603,7 +1603,7 @@ class LatexPrinter(Printer):
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))
-            except:
+            except Exception:
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):

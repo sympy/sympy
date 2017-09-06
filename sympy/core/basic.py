@@ -1615,7 +1615,7 @@ class Basic(with_metaclass(ManagedProperties)):
             else:
                 try:
                     rule = '_eval_rewrite_as_' + args[-1].__name__
-                except:
+                except AttributeError:
                     rule = '_eval_rewrite_as_' + args[-1].__class__.__name__
 
             if not pattern:

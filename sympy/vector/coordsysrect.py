@@ -416,7 +416,7 @@ class CoordSys3D(Basic):
             for i in parent.base_vectors():
                 try:
                     vec_norm_projections.append(sign * vec_component[i])
-                except:
+                except Exception:
                     vec_norm_projections.append(0)
             return tuple([sum(i) for i in zip(vec_norm_projections, vector)])
 
