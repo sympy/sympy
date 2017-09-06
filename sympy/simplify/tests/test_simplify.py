@@ -152,6 +152,13 @@ def test_simplify_measure():
     assert measure2(simplify(expr2, measure=measure2)) <= measure2(expr2)
 
 
+def test_simplify_rational():
+    expr = 2**x*2.**y
+    assert simplify(expr, rational = True) == 2**(x+y)
+    assert simplify(expr, rational = None) == 2.0**(x+y)
+    assert simplify(expr, rational = False) == expr
+
+
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
         (1 + E)*exp(-Rational(3, 2))

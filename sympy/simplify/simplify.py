@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -382,7 +382,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     """
     Simplifies the given expression.
 
@@ -504,6 +504,11 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+
+    If rational=True, Floats will be recast as Rationals before simplification.
+    If rational=None, Floats will be recast as Rationals but the result will
+    be recast as Floats. If rational=False(default) then nothing will be done
+    to the Floats.
     """
     expr = sympify(expr)
 
@@ -526,8 +531,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
             if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
                isinstance(expr.args[0], expr.inverse(argindex=1)):
                 return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure)
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure)
+                                measure=measure, rational=rational)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
                          for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -540,6 +545,12 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
+
+    # rationalize Floats
+    floats = False
+    if rational is not False and expr.has(Float):
+        floats = True
+        expr = nsimplify(expr, rational=True)
 
     expr = bottom_up(expr, lambda w: w.normal())
     expr = Mul(*powsimp(expr).as_content_primitive())
@@ -608,6 +619,10 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
+
+    # restore floats
+    if floats and rational is None:
+        expr = nfloat(expr, exponent=False)
 
     return expr
 
