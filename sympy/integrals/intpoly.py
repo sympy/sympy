@@ -2,7 +2,8 @@
 Module to implement integration of uni/bivariate polynomials over
 2D Polytopes and uni/bi/trivariate polynomials over 3D Polytopes.
 
-Uses evaluation techniques as described in Chin et al(2015)[1]
+Uses evaluation techniques as described in Chin et al. (2015) [1].
+
 
 References
 ===========

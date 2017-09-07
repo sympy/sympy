@@ -133,7 +133,7 @@ Integration over Polytopes
 .. module:: sympy.integrals.intpoly
 
 The ``intpoly`` module in SymPy implements methods to calculate the integral of a polynomial over 2/3-Polytopes.
-Uses evaluation techniques as described in Chin et al(2015)[1]
+Uses evaluation techniques as described in Chin et al. (2015) [1].
 
 The input for 2-Polytope or Polygon uses the already existing ``Polygon`` data structure in SymPy. See
 :mod:`sympy.geometry.polygon` for how to create a polygon.
