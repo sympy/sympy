@@ -402,7 +402,7 @@ def opt_cse(exprs, order='canonical'):
     adds = OrderedSet()
     muls = OrderedSet()
 
-    seen_subexp = OrderedSet()
+    seen_subexp = set()
 
     def _find_opts(expr):
 
@@ -491,10 +491,10 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
     ## Find repeated sub-expressions
 
-    to_eliminate = OrderedSet()
+    to_eliminate = set()
 
-    seen_subexp = OrderedSet()
-    excluded_symbols = OrderedSet()
+    seen_subexp = set()
+    excluded_symbols = set()
 
     def _find_repeated(expr):
         if not isinstance(expr, (Basic, Unevaluated)):
