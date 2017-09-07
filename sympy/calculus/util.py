@@ -337,10 +337,12 @@ def periodicity(f, symbol, check=False):
     f = simplify(orig_f)
     period = None
 
-    if not f.has(symbol):
+    if symbol not in f.free_symbols:
         return S.Zero
+    
     if isinstance(f, Relational):
-        f = (f.lhs - f.rhs)
+        f = f.lhs - f.rhs
+    
     if isinstance(f, TrigonometricFunction):
         try:
             period = f.period(symbol)
