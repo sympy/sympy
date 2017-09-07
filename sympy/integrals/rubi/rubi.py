@@ -198,7 +198,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
-    if isinstance(expr, int) or isinstance(expr, float) or (not expr.has(var)):
+    if isinstance(expr, int) or isinstance(expr, float):
         return S(expr)*var
 
     result = rubi.replace(Integral(expr, var))
