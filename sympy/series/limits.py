@@ -8,7 +8,7 @@ from sympy.core.numbers import GoldenRatio, Float, Rational
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
-from .gruntz import gruntz, limitinf
+from sympy.series.gruntz import gruntz, limitinf
 from sympy.core.exprtools import factor_terms
 from sympy.simplify.ratsimp import ratsimp
 from sympy.polys import PolynomialError
@@ -149,13 +149,6 @@ class Limit(Expr):
             e = e.subs({k: Rational(k) for k in e.atoms(Float)},
                        simultaneous=True)
 
-        if z0.has(z):
-            newz = z.as_dummy()
-            r = limit(e.subs(z, newz), newz, z0, dir)
-            if r.func is Limit:
-                r = r.subs(newz, z)
-            return r
-
         if e == z:
             return z0
 
@@ -180,26 +173,31 @@ class Limit(Expr):
                     order = limit(order.expr, z, z0, dir)
                     e = e.removeO() + order
 
+        if e.is_Mul:
+            if abs(z0) is S.Infinity:
+                e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
+                ok = lambda w: (z in w.free_symbols and
+                                any(a.is_polynomial(z) or
+                                    any(z in m.free_symbols and m.is_polynomial(z)
+                                        for m in Mul.make_args(a))
+                                    for a in Add.make_args(w)))
+                if all(ok(w) for w in e.as_numer_denom()):
+                    u = Dummy(positive=True)
+                    if z0 is S.NegativeInfinity:
+                        inve = e.subs(z, -1/u)
+                    else:
+                        inve = e.subs(z, 1/u)
+                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
+                    if isinstance(r, Limit):
+                        return self
+                    else:
+                        return r
+
         try:
-            # Convert to the limit z->oo and use Gruntz algorithm.
-            newe, newz = e, z
-            if z0 == S.NegativeInfinity:
-                newe = e.subs(z, -z)
-            elif z0 != S.Infinity:
-                if str(dir) == "+":
-                    newe = e.subs(z, z0 + 1/z)
-                else:
-                    newe = e.subs(z, z0 - 1/z)
-
-            newe = factor_terms(newe)
-            newe = newe.rewrite(fibonacci, GoldenRatio)
-
-            if not z.is_positive or not z.is_finite:
-                # We need a fresh variable here to simplify expression further.
-                newz = Dummy(z.name, positive=True, finite=True)
-                newe = newe.subs(z, newz)
-
-            r = limitinf(newe, newz)
+            r = gruntz(e, z, z0, dir)
+            if r is S.NaN:
+                raise PoleError()
         except (PoleError, ValueError):
             r = heuristics(e, z, z0, dir)
             if r is None:

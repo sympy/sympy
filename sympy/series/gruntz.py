@@ -118,6 +118,7 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
+from sympy import Float
 from sympy.core import S, oo, Dummy, Mul, Add, evaluate
 from sympy.core.compatibility import default_sort_key
 from sympy.functions import log, exp, sign as sgn
@@ -134,7 +135,8 @@ from sympy.utilities.misc import debug_decorator as debug
 
 
 def compare(a, b, x):
-    r"""Determine order relation between two functons.
+    r"""
+    Determine order relation between two functons.
 
     Returns
     =======
@@ -142,6 +144,23 @@ def compare(a, b, x):
     {1, 0, -1}
         Respectively, if `a(x) \succ b(x)`, `a(x) \asymp b(x)`
         or `b(x) \succ a(x)`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, exp
+
+    >>> x = Symbol('x', real=True, positive=True)
+    >>> m = Symbol('m', real=True, positive=True)
+
+    >>> compare(x, x**2, x)
+    0
+    >>> compare(1/x, x**m, x)
+    0
+    >>> compare(exp(x), exp(x**2), x)
+    -1
+    >>> compare(exp(x), x**5, x)
+    1
     """
     # The log(exp(...)) must always be simplified here for termination.
     la = a.exp if a.is_Pow and a.base is S.Exp1 else log(a)
@@ -157,7 +176,21 @@ def compare(a, b, x):
 
 
 def mrv(e, x):
-    """Calculate the MRV set of expression."""
+    """
+    Calculate the MRV set of expression.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, exp, log
+
+    >>> x = Symbol('x', real=True, positive=True)
+
+    >>> mrv(log(x - log(x))/log(x), x)
+    {x}
+    >>> mrv(exp(x + exp(-x)), x)
+    {exp(-x), E**(x + exp(-x))}
+    """
     if not e.has(x):
         return set()
     elif e == x:
@@ -180,23 +213,18 @@ def mrv(e, x):
         return mrv(e.args[0], x)
     elif e.is_Function:
         return reduce(lambda a, b: mrv_max(a, b, x), [mrv(a, x) for a in e.args])
-    raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
+    else:
+        raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
 
 
 def mrv_max(f, g, x):
     """Computes the maximum of two MRV sets."""
-    if not f:
-        return g
-    elif not g:
-        return f
-    elif f & g:
+    if not f or not g or f & g:
         return f | g
 
     c = compare(list(f)[0], list(g)[0], x)
-    if c > 0:
-        return f
-    elif c < 0:
-        return g
+    if c:
+        return f if c > 0 else g
     else:
         return f | g
 
@@ -242,7 +270,23 @@ def sign(e, x):
 @timeit
 @cacheit
 def limitinf(e, x):
-    """Compute limit of the expression at the infinity."""
+    """
+    Compute limit of the expression at the infinity.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, exp, log
+
+    >>> x = Symbol('x', real=True, positive=True)
+
+    >>> limitinf(exp(x)*(exp(1/x - exp(-x)) - exp(1/x)), x)
+    -1
+    >>> limitinf(x/log(x**(log(x**(log(2)/log(x))))), x)
+    oo
+    """
+    assert x.is_real and x.is_positive
+    assert not e.has(Float)
 
     # Rewrite e in terms of tractable functions only:
     e = e.rewrite('tractable', deep=True)
@@ -253,29 +297,19 @@ def limitinf(e, x):
         # TODO: It might be nicer to rewrite the exactly to what they were
         # initially, but that would take some work to implement.
         return e.rewrite('intractable', deep=True)
-    if e.has(Order):
-        e = e.expand().removeO()
-    if not x.is_positive:
-        # We make sure that x.is_positive is True so we
-        # get all the correct mathematical behavior from the expression.
-        # We need a fresh variable.
-        p = Dummy('p', positive=True, finite=True)
-        e = e.subs(x, p)
-        x = p
+
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
     if sig == 1:
-        return S.Zero  # e0>0: lim f = 0
-    elif sig == -1:  # e0<0: lim f = +-oo (the sign depends on the sign of c0)
-        # if c0.match(I*Wild("a", exclude=[I])):
-        #     return c0*oo
+        return S.Zero
+    elif sig == -1:
         s = sign(c0, x)
-        # the leading term shouldn't be 0:
-        if s == 0:
-            raise ValueError("Leading term should not be 0")
-        return s*oo
+        assert s != S.Zero
+        return s*S.Infinity
     elif sig == 0:
-        return limitinf(c0, x)  # e0=0: lim f = lim c0
+        return limitinf(c0, x)
+    else:
+        raise NotImplementedError('Result depends on the sign of %s' % sig)
 
 
 @debug
@@ -303,7 +337,8 @@ def calculate_series(e, x, logx=None):
 @timeit
 @cacheit
 def mrv_leadterm(e, x):
-    """Compute the leading term of the series.
+    """
+    Compute the leading term of the series.
 
     Returns
     =======
@@ -312,9 +347,19 @@ def mrv_leadterm(e, x):
         The leading term `c_0 w^{e_0}` of the series of `e` in terms
         of the most rapidly varying subexpression `w` in form of
         the pair ``(c0, e0)`` of Expr.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, exp
+
+    >>> x = Symbol('x', real=True, positive=True)
+
+    >>> mrv_leadterm(1/exp(-x + exp(-x)) - exp(x), x)
+    (-1, 0)
     """
     if not e.has(x):
-        return (e, S.Zero)
+        return e, S.Zero
 
     e = e.replace(lambda f: f.is_Pow and f.base != S.Exp1 and f.exp.has(x),
                   lambda f: exp(log(f.base)*f.exp))
@@ -333,7 +378,8 @@ def mrv_leadterm(e, x):
 
 
 def rewrite(e, x, w):
-    """Rewrites expression in terms of the most rapidly varying subexpression.
+    r"""
+    Rewrites expression in terms of the most rapidly varying subexpression.
 
     Parameters
     ==========
@@ -351,6 +397,19 @@ def rewrite(e, x, w):
 
     tuple
         A pair: rewritten (in `w`) expression and `\log(w)`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, exp
+
+    >>> x = Symbol('x', real=True, positive=True)
+    >>> m = Symbol('m', real=True, positive=True)
+
+    >>> rewrite(exp(x), x, m)
+    (1/m, -x)
+    >>> rewrite(exp(x)*log(log(exp(x))), x, m)
+    (log(x)/m, -x)
     """
     Omega = mrv(e, x)
     if not Omega:
@@ -359,7 +418,7 @@ def rewrite(e, x, w):
     assert all(e.has(t) for t in Omega)
 
     if x in Omega:
-        # Moving up in the asymptotical scale (exponentiate e and Omega):
+        # Moving up in the asymptotical scale:
         with evaluate(False):
             e = e.xreplace({x: exp(x)})
             Omega = {s.xreplace({x: exp(x)}) for s in Omega}
@@ -403,23 +462,23 @@ def gruntz(e, z, z0, dir="+"):
         raise NotImplementedError("Second argument must be a Symbol")
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
-    newe, newz = e, z
     if z0 == S.NegativeInfinity:
-        newe = e.subs(z, -z)
+        e = e.subs(z, -z)
     elif z0 != S.Infinity:
         if str(dir) == "+":
-            newe = e.subs(z, z0 + 1 / z)
+            e = e.subs(z, z0 + 1 / z)
         elif str(dir) == "-":
-            newe = e.subs(z, z0 - 1 / z)
+            e = e.subs(z, z0 - 1 / z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")
 
     if not z.is_positive or not z.is_finite:
         # We need a fresh variable here to simplify expression further.
         newz = Dummy(z.name, positive=True, finite=True)
-        newe = newe.subs(z, newz)
+        e = e.subs(z, newz)
+        z = newz
 
-    r = limitinf(newe, newz)
+    r = limitinf(e, z)
 
     # This is a bit of a heuristic for nice results... we always rewrite
     # tractable functions in terms of familiar intractable ones.
