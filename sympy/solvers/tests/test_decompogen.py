@@ -18,8 +18,10 @@ def test_decompogen():
 
 def test_expo():
     assert decompogen(2**x, x) == [2**x]
+    assert decompogen(2**(x+1), x) == [2**x, x+1]
     assert decompogen(2**x - 10, x) == [2**x - 10]
-    assert decompogen(2**(x+3) + 4, x) == [2**(x+3) + 4]
+    assert decompogen(2**(x+3) - 4, x) == [2**x - 4, x+3]
+    assert decompogen(2**4**(x+1) - 16, x) == [2**x - 16, 4**x, x + 1]
 
 
 def test_decompogen_poly():
