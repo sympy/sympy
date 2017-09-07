@@ -37,9 +37,9 @@ def decompogen(f, symbol):
         raise TypeError('expecting Expr but got: `%s`' % func_name(f))
     if symbol not in f.free_symbols:
         return [f]
-    
+
     result = []
-    
+
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
         if f.args[0] == symbol:

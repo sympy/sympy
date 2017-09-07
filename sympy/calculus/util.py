@@ -342,7 +342,7 @@ def periodicity(f, symbol, check=False):
 
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
-    
+
     if isinstance(f, TrigonometricFunction):
         try:
             period = f.period(symbol)
