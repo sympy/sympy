@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
 
-import pytest
 from sympy import log, exp, Symbol, Pow
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
 from sympy.codegen.rewriting import optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99
