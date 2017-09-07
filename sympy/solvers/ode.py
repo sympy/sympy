@@ -2792,7 +2792,9 @@ def constantsimp(expr, constants):
         rexpr = rexpr[0]
         for s in commons:
             cs = list(s[1].atoms(Symbol))
-            if len(cs) == 1 and cs[0] in Cs:
+            if len(cs) == 1 and cs[0] in Cs and \
+                cs[0] not in rexpr.atoms(Symbol) and \
+                not any(cs[0] in ex for ex in commons if ex != s):
                 rexpr = rexpr.subs(s[0], cs[0])
             else:
                 rexpr = rexpr.subs(*s)
