@@ -1,6 +1,5 @@
-from sympy.core import Function, Pow, sympify
+from sympy.core import (Function, Pow, sympify, Expr)
 from sympy.core.relational import Relational
-from sympy.core.expr import Expr
 from sympy.polys import Poly, decompose
 
 def decompogen(f, symbol):
@@ -32,7 +31,7 @@ def decompogen(f, symbol):
 
     """
     if not isinstance(f, Expr):
-        raise TypeError('decompogen must be Expr only, got: %s' % f.__class__.__name__)
+        raise TypeError('decompogen must take Expr only, got: %s' % f.__class__.__name__)
     f = sympify(f)
     result = []
     if isinstance(f, Relational):
