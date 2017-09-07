@@ -512,10 +512,10 @@ class AskImaginaryHandler(CommonHandler):
             return AskImaginaryHandler._number(expr, assumptions)
 
         if expr.base.is_Pow and expr.base.base is S.Exp1:
-            if ask(Q.imaginary(expr.base.base), assumptions):
+            if ask(Q.imaginary(expr.base.exp), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return False
-                i = expr.base.args[0]/I/pi
+                i = expr.base.exp/I/pi
                 if ask(Q.integer(2*i), assumptions):
                     return ask(Q.imaginary(((-1)**i)**expr.exp), assumptions)
 
@@ -558,7 +558,7 @@ class AskImaginaryHandler(CommonHandler):
         # but ask(Q.nonpositive(exp(x)), Q.imaginary(x)) -> None;
         # it should return True since exp(x) will be either 0 or complex
         if expr.args[0].is_Pow and expr.args[0].base is S.Exp1:
-            if expr.args[0].args[0] in [I, -I]:
+            if expr.args[0].exp in [I, -I]:
                 return True
         im = ask(Q.imaginary(expr.args[0]), assumptions)
         if im is False:

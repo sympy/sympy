@@ -176,6 +176,8 @@ def test_gruntz_hyperbolic():
 
 
 def test_compare():
+    x = Symbol("x", positive=True)
+
     assert compare(Integer(2), x, x) < 0
     assert compare(x, exp(x), x) < 0
     assert compare(exp(x), exp(x**2), x) < 0
@@ -221,6 +223,8 @@ def test_compare():
 
 
 def test_sign1():
+    x = Symbol("x", positive=True)
+
     assert sign(Rational(0), x) == 0
     assert sign(Rational(3), x) == 1
     assert sign(Rational(-5), x) == -1
@@ -243,6 +247,8 @@ def test_sign1():
 
 
 def test_mrv():
+    x = Symbol("x", positive=True)
+
     assert mrv(x, x) == {x}
     assert mrv(x + 1/x, x) == {x}
     assert mrv(x**2, x) == {x}
@@ -291,6 +297,8 @@ def test_mrv_Gruntz_3_21():
 
 
 def test_rewrite1():
+    x = Symbol("x", positive=True)
+
     assert rewrite(S.One, x, m) == (1, None)
 
     e = exp(x)
@@ -310,12 +318,16 @@ def test_rewrite1():
 
 
 def test_rewrite3():
+    x = Symbol("x", positive=True)
+
     e = exp(-x + 1/x**2) - exp(x + 1/x)
     # both of these are correct and should be equivalent:
     assert rewrite(e, x, m) == (Add(m*exp(1/x + x**(-2)), -1/m, evaluate=False), -x - 1/x)
 
 
 def test_mrv_leadterm1():
+    x = Symbol("x", positive=True)
+
     assert mrv_leadterm(-exp(1/x), x) == (-1, 0)
     assert mrv_leadterm(1/exp(-x + exp(-x)) - exp(x), x) == (-1, 0)
     assert mrv_leadterm(
@@ -323,12 +335,14 @@ def test_mrv_leadterm1():
 
 
 def test_mrv_leadterm2():
+    x = Symbol("x", positive=True)
     # Gruntz: p51, 3.25
     assert mrv_leadterm((log(exp(x) + x) - x)/log(exp(x) + log(x))*exp(x), x) == \
         (1, 0)
 
 
 def test_mrv_leadterm3():
+    x = Symbol("x", positive=True)
     # Gruntz: p56, 3.27
     assert mrv(exp(-x + exp(-x)*exp(-x*log(x))), x) == {exp(-x*log(x))}
     assert mrv_leadterm(exp(-x + exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
