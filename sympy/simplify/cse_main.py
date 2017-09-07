@@ -445,7 +445,7 @@ def opt_cse(exprs, order='canonical'):
             _find_opts(e)
 
     # split muls into commutative
-    comutative_muls = OrderedSet()
+    commutative_muls = OrderedSet()
     for m in muls:
         c, nc = m.args_cnc(cset=True)
         if c:
@@ -457,10 +457,10 @@ def opt_cse(exprs, order='canonical'):
                     new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
                 opt_subs[m] = new_obj
             if len(c) > 1:
-                comutative_muls.add(c_mul)
+                commutative_muls.add(c_mul)
 
     match_common_args(Add, adds, opt_subs)
-    match_common_args(Mul, comutative_muls, opt_subs)
+    match_common_args(Mul, commutative_muls, opt_subs)
 
     return opt_subs
 
