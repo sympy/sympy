@@ -1819,6 +1819,36 @@ E         \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = euler(n, x)
+    ascii_str = \
+"""\
+E (x)\n\
+ n   \
+"""
+    ucode_str = \
+u("""\
+E (x)\n\
+ n   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = euler(n, x/2)
+    ascii_str = \
+"""\
+  /x\\\n\
+E |-|\n\
+ n\\2/\
+"""
+    ucode_str = \
+u("""\
+  ⎛x⎞\n\
+E ⎜─⎟\n\
+ n⎝2⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
 
 def test_pretty_sqrt():
     expr = sqrt(2)
