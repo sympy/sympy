@@ -21,7 +21,7 @@ class Quantity(AtomicExpr):
     is_commutative = True
     is_real = True
     is_number = False
-    is_nonzero = True
+    #is_nonzero = True
     _diff_wrt = True
 
     def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, **assumptions):
