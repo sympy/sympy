@@ -503,6 +503,11 @@ class AskImaginaryHandler(CommonHandler):
         Negative**(Integer/2) -> Imaginary
         Negative**Real        -> not Imaginary if exponent is not Rational
         """
+        if expr.base is S.Exp1:
+            # Exponential:
+            a = expr.exp / I / pi
+            return ask(Q.integer(2 * a) & ~Q.integer(a), assumptions)
+
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
 
@@ -558,11 +563,6 @@ class AskImaginaryHandler(CommonHandler):
         im = ask(Q.imaginary(expr.args[0]), assumptions)
         if im is False:
             return False
-
-    @staticmethod
-    def exp(expr, assumptions):
-        a = expr.args[0]/I/pi
-        return ask(Q.integer(2*a) & ~Q.integer(a), assumptions)
 
     @staticmethod
     def Number(expr, assumptions):

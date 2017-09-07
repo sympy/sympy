@@ -203,19 +203,17 @@ class exp(with_metaclass(ExpMeta, Function)):
     """
     is_exp = True
 
-    @classmethod
-    def eval(cls, arg, **kwargs):
+    def __new__(cls, arg, **kwargs):
         from sympy.calculus import AccumBounds
         from sympy import MatrixBase, Integral
 
         if isinstance(arg, AccumBounds):
+            # TODO: move this to Pow?
             return AccumBounds(exp(arg.min), exp(arg.max))
 
         if isinstance(arg, MatrixBase):
+            # TODO: move this to Pow?
             return arg.exp()
-
-        if isinstance(arg, Integral):
-            return
 
         return Pow(S.Exp1, arg, **kwargs)
 

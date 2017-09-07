@@ -102,6 +102,11 @@ class AskNegativeHandler(CommonHandler):
         Real ** Odd  -> same_as_base
         NonNegative ** Positive -> NonNegative
         """
+        if expr.base is S.Exp1:
+            # Exponential is always positive:
+            if ask(Q.real(expr.exp), assumptions):
+                return False
+
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
         if ask(Q.real(expr.base), assumptions):
@@ -115,10 +120,6 @@ class AskNegativeHandler(CommonHandler):
 
     ImaginaryUnit, Abs = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
-    @staticmethod
-    def exp(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
-            return False
 
 
 class AskNonNegativeHandler(CommonHandler):

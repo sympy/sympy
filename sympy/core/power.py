@@ -235,10 +235,12 @@ class Pow(Expr):
 
     @property
     def base(self):
+        """Returns base of the power expression."""
         return self._args[0]
 
     @property
     def exp(self):
+        """Returns exponent of the power expression."""
         return self._args[1]
 
     @classmethod
@@ -503,8 +505,9 @@ class Pow(Expr):
             return i.is_integer
 
     def _eval_is_complex(self):
-        if all(a.is_complex for a in self.args):
-            return True
+        from sympy import log
+        if self.base.is_complex:
+            return (log(self.base)*self.exp).is_complex
 
     def _eval_is_imaginary(self):
         from sympy import arg, log
@@ -1128,7 +1131,10 @@ class Pow(Expr):
     def _eval_evalf(self, prec):
         if self.base is S.Exp1:
             import mpmath
-            a = self.exp._to_mpmath(prec + 5)
+            try:
+                a = self.exp._to_mpmath(prec + 5)
+            except ValueError:
+                return
             with mpmath.workprec(prec):
                 v = mpmath.exp(a)
             return Expr._from_mpmath(v, prec)
