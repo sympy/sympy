@@ -1731,8 +1731,8 @@ def check_linear_2eq_order2(eq, func, func_coef):
                 if e.has(t):
                     tpart = e.as_independent(t, Mul)[1]
                     for i in Mul.make_args(tpart):
-                        # This is supposed to replace `i.has(exp)`:
-                        if i.has(Pow) and i.has(S.Exp1):
+                        # Something is supposed to replace `i.has(exp)`:
+                        if i.has(exp):
                             b, e = i.as_base_exp()
                             co = e.coeff(t)
                             if co and not co.has(t) and co.has(I):
