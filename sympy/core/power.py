@@ -511,7 +511,7 @@ class Pow(Expr):
         if self.base is S.Exp1:
             if self.exp.is_real:
                 return False
-            return (2*self.exp/(S.Pi*S.I)).is_odd
+            return (2*self.exp/(S.Pi*S.ImaginaryUnit)).is_odd
         if self.base.is_imaginary:
             if self.exp.is_integer:
                 odd = self.exp.is_odd

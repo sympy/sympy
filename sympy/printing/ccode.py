@@ -256,11 +256,11 @@ class C89CodePrinter(CodePrinter):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
 
-        if expr.base is S.Exp1:
-            return "exp(%s)" % self._print(expr.exp)
-
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
+
+        if expr.base is S.Exp1:
+            return "exp%s(%s)" % (suffix, self._print(expr.exp))
         if expr.exp == -1:
             return '1.0%s/%s' % (suffix.upper(), self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
