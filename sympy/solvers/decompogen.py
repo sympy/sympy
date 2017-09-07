@@ -1,6 +1,8 @@
 from sympy.core import (Function, Pow, sympify, Expr)
 from sympy.core.relational import Relational
 from sympy.polys import Poly, decompose
+from sympy.utilities.misc import func_name
+
 
 def decompogen(f, symbol):
     """
@@ -30,12 +32,14 @@ def decompogen(f, symbol):
     [x**2 - x - 1, x**2 + x]
 
     """
-    if not isinstance(f, Expr):
-        raise TypeError('decompogen must take Expr only, got: %s' % f.__class__.__name__)
     f = sympify(f)
+    if not isinstance(f, Expr) or isinstance(f, Relational):
+        raise TypeError('expecting Expr but got: `%s`' % func_name(f))
+    if symbol not in f.free_symbols:
+        return [f]
+    
     result = []
-    if isinstance(f, Relational):
-        return None
+    
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
         if f.args[0] == symbol:
