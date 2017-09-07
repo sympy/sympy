@@ -339,7 +339,7 @@ def periodicity(f, symbol, check=False):
 
     if symbol not in f.free_symbols:
         return S.Zero
-    
+
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
     
