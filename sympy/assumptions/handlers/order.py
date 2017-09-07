@@ -289,11 +289,11 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
         if expr.base is S.Exp1:
-            if ask(Q.real(expr.args[0]), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
                 return True
-            if ask(Q.imaginary(expr.args[0]), assumptions):
+            if ask(Q.imaginary(expr.exp), assumptions):
                 from sympy import pi, I
-                return ask(Q.even(expr.args[0] / (I * pi)), assumptions)
+                return ask(Q.even(expr.exp / (I * pi)), assumptions)
         if ask(Q.positive(expr.base), assumptions):
             if ask(Q.real(expr.exp), assumptions):
                 return True

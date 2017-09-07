@@ -160,10 +160,10 @@ def _partition(predicate, iterable):
 
 
 def _try_expm1(expr):
-    protected, old_new =  expr.replace(exp, lambda arg: Dummy(), map=True)
+    protected, old_new = expr.replace(exp, lambda *arg: Dummy(), map=True)
     factored = protected.factor()
     new_old = {v: k for k, v in old_new.items()}
-    return factored.replace(_d - 1, lambda d: expm1(new_old[d].args[0])).xreplace(new_old)
+    return factored.replace(_d - 1, lambda d: expm1(new_old[d].exp)).xreplace(new_old)
 
 
 def _expm1_value(e):
