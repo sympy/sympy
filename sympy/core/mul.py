@@ -174,6 +174,7 @@ class Mul(Expr, AssocOp):
         """
 
         from sympy.calculus.util import AccumBounds
+        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -268,6 +269,10 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
+                coeff = o.__mul__(coeff)
+                continue
+
+            elif isinstance(o, MatrixExpr):
                 coeff = o.__mul__(coeff)
                 continue
 
