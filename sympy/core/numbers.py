@@ -1474,12 +1474,14 @@ class ComplexFloat(Number):
 
     is_ComplexFloat = True
 
-    def __new__(cls, real, imag=None, dps=None, prec=None):
-        if dps is not None and prec is not None:
+    def __new__(cls, real, imag=None, dps=None, precision=None):
+        if dps is not None and precision is not None:
                 raise ValueError('Both decimal and binary precision supplied. '
                                  'Can only pass one of them.')
         if dps is not None:
             prec = mlib.libmpf.dps_to_prec(dps)
+        else:
+            prec = precision
 
         if imag is None:
             if isinstance(real, string_types):
@@ -1503,16 +1505,16 @@ class ComplexFloat(Number):
                 pass
             elif isinstance(real, Float):
                 prec = real._prec
-                imag = Float(imag, prec=prec_to_dps(prec))  # TODO #12227
+                imag = Float(imag, precision=prec)
             elif isinstance(imag, Float):
                 prec = imag._prec
-                real = Float(real, prec=prec_to_dps(prec))  # TODO #12227
+                real = Float(real, precision=prec)
             else:
                 real = Float(real)
                 imag = Float(imag)
         else:
-            real = Float(real, prec=prec_to_dps(prec))  # TODO #12227
-            imag = Float(imag, prec=prec_to_dps(prec))  # TODO #12227
+            real = Float(real, precision=prec)
+            imag = Float(imag, precision=prec)
         if real is S.NaN or imag is S.NaN:
             return S.NaN
         obj = Expr.__new__(cls)

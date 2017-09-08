@@ -123,8 +123,8 @@ def test_ComplexFloat_arithmetic():
 def test_ComplexFloat_dps_and_prec():
     from sympy import srepr
     assert (srepr(ComplexFloat(S(2)/3, 0.0, dps=15)) ==
-            srepr(ComplexFloat(S(2)/3, 0.0, prec=53)))
-    raises(ValueError, lambda: ComplexFloat(1, 2, dps=15, prec=64))
+            srepr(ComplexFloat(S(2)/3, 0.0, precision=53)))
+    raises(ValueError, lambda: ComplexFloat(1, 2, dps=15, precision=64))
 
 
 def test_ComplexFloat_powers():
@@ -339,7 +339,7 @@ def test_ComplexFloat_printing():
     from sympy import srepr, pretty, latex
     z = ComplexFloat('1.25', '2.5')
     assert srepr(z) == \
-        "ComplexFloat(Float('1.25', prec=15), Float('2.5', prec=15))"
+        "ComplexFloat(Float('1.25', precision=53), Float('2.5', precision=53))"
     assert str(z) == "1.25+2.5j"
     assert pretty(z) == u'1.25 + 2.5ⅈ'
     assert latex(z) == "1.25 + 2.5 i"
