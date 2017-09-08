@@ -870,11 +870,12 @@ class Mul(Expr, AssocOp):
         else:
             plain = self.func(*plain)
             if sums:
+                deep = hints.get("deep", False)
                 terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
                     t = self.func(plain, term)
-                    if t.is_Mul and any(a.is_Add for a in t.args):
+                    if t.is_Mul and any(a.is_Add for a in t.args) and deep:
                         t = t._eval_expand_mul()
                     args.append(t)
                 return Add(*args)
