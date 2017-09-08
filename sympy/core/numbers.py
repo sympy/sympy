@@ -1495,10 +1495,11 @@ class ComplexFloat(Number):
                     imag = 0
             elif isinstance(real, tuple):  # TODO: quack quack
                 real, imag = real
-            elif isinstance(real, (complex, mpmath.mpc)):
-                real, imag = real.real, real.imag
             else:
-                real, imag = real.as_real_imag()
+                try:
+                    real, imag = real.real, real.imag
+                except AttributeError:
+                    real, imag = real.as_real_imag()
         if prec is None:
             if isinstance(real, Float) and isinstance(imag, Float):
                 # no checks done; assume precisions are as desired by user
