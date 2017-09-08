@@ -1053,7 +1053,10 @@ class Float(Number):
             if precision < num._prec:
                 _mpf_ = mpf_norm(_mpf_, precision)
         else:
-            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
+            try:
+                _mpf_ = num._as_mpf_val(precision)
+            except (NotImplementedError, AttributeError):
+                _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         # special cases
         if _mpf_ == _mpf_zero:
