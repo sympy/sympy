@@ -4431,6 +4431,21 @@ def degree(f, gen=0):
 
 
 @public
+def total_degree(f, *gen):
+    f = sympify(f)
+    if f.is_Poly:
+        p = f.args[0]
+        gen += f.gens
+        rv = Poly(p, gen).total_degree()
+    elif f.is_Number:
+        rv = 0
+    else:
+        rv = Poly(f, gen).total_degree()
+
+    return Integer(rv)
+
+
+@public
 def degree_list(f, *gens, **args):
     """
     Return a list of degrees of ``f`` in all variables.
