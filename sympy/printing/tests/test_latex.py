@@ -8,7 +8,7 @@ from sympy import (
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
-    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
+    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
@@ -1114,6 +1114,13 @@ def test_settings():
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
+    assert latex(catalan(n)**2) == r"C_{n}^{2}"
+
+
+def test_latex_euler():
+    assert latex(euler(n)) == r"E_{n}"
+    assert latex(euler(n, x)) == r"E_{n}\left(x\right)"
+    assert latex(euler(n, x)**2) == r"E_{n}^{2}\left(x\right)"
 
 
 def test_lamda():

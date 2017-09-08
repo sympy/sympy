@@ -189,15 +189,39 @@ class factorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_is_even(self):
+        x = self.args[0]
+        if x.is_integer and x.is_nonnegative:
+            return (x - 2).is_nonnegative
+
     def _eval_is_composite(self):
         x = self.args[0]
-        if x.is_integer:
+        if x.is_integer and x.is_nonnegative:
             return (x - 3).is_nonnegative
 
     def _eval_is_real(self):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
+
+    def _eval_Mod(self, q):
+        x = self.args[0]
+        if x.is_integer and x.is_nonnegative and q.is_integer:
+            aq = abs(q)
+            d = x - aq
+            if d.is_nonnegative:
+                return 0
+            elif d == -1:
+                '''
+                Apply Wilson's theorem-if a natural number n > 1
+                is a prime number, (n-1)! = -1 mod n-and its
+                inverse-if n > 4 is a composite number,
+                (n-1)! = 0 mod n
+                '''
+                if aq.is_prime:
+                    return -1 % q
+                elif aq.is_composite and (aq - 6).is_nonnegative:
+                    return 0
 
 
 class MultiFactorial(CombinatorialFunction):

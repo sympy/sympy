@@ -12,6 +12,7 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce, range
 from .expr import Expr
+from .evaluate import global_distribute
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -185,18 +186,15 @@ class Mul(Expr, AssocOp):
                     if r is not S.One:  # 2-arg hack
                         # leave the Mul as a Mul
                         rv = [cls(a*r, b, evaluate=False)], [], None
-                    elif b.is_commutative:
-                        if a is S.One:
-                            rv = [b], [], None
-                        else:
-                            r, b = b.as_coeff_Add()
-                            bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                            _addsort(bargs)
-                            ar = a*r
-                            if ar:
-                                bargs.insert(0, ar)
-                            bargs = [Add._from_args(bargs)]
-                            rv = bargs, [], None
+                    elif global_distribute[0] and b.is_commutative:
+                        r, b = b.as_coeff_Add()
+                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
+                        _addsort(bargs)
+                        ar = a*r
+                        if ar:
+                            bargs.insert(0, ar)
+                        bargs = [Add._from_args(bargs)]
+                        rv = bargs, [], None
             if rv:
                 return rv
 
@@ -616,7 +614,7 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (not nc_part and len(c_part) == 2 and c_part[0].is_Number and
+        if (global_distribute[0] and not nc_part and len(c_part) == 2 and c_part[0].is_Number and
                 c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
@@ -1324,28 +1322,12 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
-    def _eval_is_prime(self):
-        """
-        If product is a positive integer, multiplication
-        will never result in a prime number.
-        """
-        if self.is_number:
-            """
-            If input is a number that is not completely simplified.
-            e.g. Mul(sqrt(3), sqrt(3), evaluate=False)
-            So we manually evaluate it and return whether that is prime or not.
-            """
-            # Note: `doit()` was not used due to test failing (Infinite Recursion)
-            r = S.One
-            for arg in self.args:
-                r *= arg
-            return r.is_prime
-
+    def _eval_is_composite(self):
         if self.is_integer and self.is_positive:
             """
             Here we count the number of arguments that have a minimum value
             greater than two.
-            If there are more than one of such a symbol then the result is not prime.
+            If there are more than one of such a symbol then the result is composite.
             Else, the result cannot be determined.
             """
             number_of_args = 0 # count of symbols with minimum value greater than one
@@ -1354,7 +1336,7 @@ class Mul(Expr, AssocOp):
                     number_of_args += 1
 
             if number_of_args > 1:
-                return False
+                return True
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign

@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
     Symbol, Lambda, sin, Eq, Piecewise, factor, expand_log, cancel,
-    expand, diff, pi)
+    expand, diff, pi, atan)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -568,6 +568,8 @@ def test_DifferentialExtension_misc():
         [Lambda(i, log(i))], [], [None, 'log'], [None, x])]
     assert DifferentialExtension(S.Zero, x)._important_attrs == \
         (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
+    assert DifferentialExtension(tan(atan(x).rewrite(log)), x)._important_attrs == \
+        (Poly(x, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
 
 
 def test_DifferentialExtension_Rothstein():

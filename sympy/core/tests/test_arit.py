@@ -1513,6 +1513,17 @@ def test_Mod():
     assert Mod(1, nan) == nan
     assert Mod(nan, nan) == nan
 
+    Mod(0, x) == 0
+    with raises(ZeroDivisionError):
+        Mod(x, 0)
+
+    k = Symbol('k', integer=True)
+    m = Symbol('m', integer=True, positive=True)
+    assert (x**m % x).func is Mod
+    assert (k**(-m) % k).func is Mod
+    assert k**m % k == 0
+    assert (-2*k)**m % k == 0
+
     # Float handling
     point3 = Float(3.3) % 1
     assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
@@ -1541,22 +1552,31 @@ def test_Mod():
             assert Mod(3*x + y, 9).subs(reps) == (3*_x + _y) % 9
 
     # denesting
-    #   easy case
-    assert Mod(Mod(x, y), y) == Mod(x, y)
-    #   in case someone attempts more denesting
-    for i in [-3, -2, 2, 3]:
-        for j in [-3, -2, 2, 3]:
-            for k in range(3):
-                assert Mod(Mod(k, i), j) == (k % i) % j
+    t = Symbol('t', real=True)
+    assert Mod(Mod(x, t), t) == Mod(x, t)
+    assert Mod(-Mod(x, t), t) == Mod(-x, t)
+    assert Mod(Mod(x, 2*t), t) == Mod(x, t)
+    assert Mod(-Mod(x, 2*t), t) == Mod(-x, t)
+    assert Mod(Mod(x, t), 2*t) == Mod(x, t)
+    assert Mod(-Mod(x, t), -2*t) == -Mod(x, t)
+    for i in [-4, -2, 2, 4]:
+        for j in [-4, -2, 2, 4]:
+            for k in range(4):
+                assert Mod(Mod(x, i), j).subs({x: k}) == (k % i) % j
+                assert Mod(-Mod(x, i), j).subs({x: k}) == -(k % i) % j
 
     # known difference
     assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
     p = symbols('p', positive=True)
-    assert Mod(p + 1, p + 3) == p + 1
-    n = symbols('n', negative=True)
-    assert Mod(n - 3, n - 1) == -2
-    assert Mod(n - 2*p, n - p) == -p
-    assert Mod(p - 2*n, p - n) == -n
+    assert Mod(2, p + 3) == 2
+    assert Mod(-2, p + 3) == p + 1
+    assert Mod(2, -p - 3) == -p - 1
+    assert Mod(-2, -p - 3) == -2
+    assert Mod(p + 5, p + 3) == 2
+    assert Mod(-p - 5, p + 3) == p + 1
+    assert Mod(p + 5, -p - 3) == -p - 1
+    assert Mod(-p - 5, -p - 3) == -2
+    assert Mod(p + 1, p - 1).func is Mod
 
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)
@@ -1596,7 +1616,21 @@ def test_Mod():
 
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
-    assert (factorial(n) % n).equals(0) is not False
+    assert factorial(n) % n == 0
+    assert factorial(n + 2) % n == 0
+    assert (factorial(n + 4) % (n + 5)).func is Mod
+
+    # modular exponentiation
+    assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
+
+    # Wilson's theorem
+    factorial(18042, evaluate=False) % 18043 == 18042
+    p = Symbol('n', prime=True)
+    factorial(p - 1) % p == p - 1
+    factorial(p - 1) % -p == -1
+    (factorial(3, evaluate=False) % 4).doit() == 2
+    n = Symbol('n', composite=True, odd=True)
+    factorial(n - 1) % n == 0
 
     # symbolic with known parity
     n = Symbol('n', even=True)

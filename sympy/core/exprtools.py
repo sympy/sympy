@@ -79,9 +79,17 @@ def _monotonic_sign(self):
                 return S(3)
             else:
                 return S(2)
+        elif s.is_composite:
+            if s.is_odd:
+                return S(9)
+            else:
+                return S(4)
         elif s.is_positive:
             if s.is_even:
-                return S(2)
+                if s.is_prime is False:
+                    return S(4)
+                else:
+                    return S(2)
             elif s.is_integer:
                 return S.One
             else:

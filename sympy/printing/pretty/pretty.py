@@ -2020,6 +2020,16 @@ class PrettyPrinter(Printer):
         pform_arg = prettyForm(" "*arg.width())
         pform_arg = prettyForm(*pform_arg.below(arg))
         pform = prettyForm(*pform.right(pform_arg))
+        if len(e.args) == 1:
+            return pform
+        m, x = e.args
+        # TODO: copy-pasted from _print_Function: can we do better?
+        prettyFunc = pform
+        prettyArgs = prettyForm(*self._print_seq([x]).parens())
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
         return pform
 
     def _print_catalan(self, e):
