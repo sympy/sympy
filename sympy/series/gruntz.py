@@ -189,7 +189,7 @@ def mrv(e, x):
     >>> mrv(log(x - log(x))/log(x), x)
     {x}
     >>> mrv(exp(x + exp(-x)), x)
-    {exp(-x), E**(x + exp(-x))}
+    {exp(-x), exp(x + exp(-x))}
     """
     if not e.has(x):
         return set()
