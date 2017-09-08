@@ -1,6 +1,6 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
+    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
@@ -248,7 +248,6 @@ def test_quintics_1():
     # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
     assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) == \
         CRootOf(x**5 + 3*x**3 + 7, 0).n()
-
 
 
 def test_highorder_poly():
@@ -1295,21 +1294,6 @@ def test_issue_6056():
         -log(2)/2 + log(-1 + I),])
 
 
-def test_issue_6060():
-    x = Symbol('x')
-    absxm3 = Piecewise(
-        (x - 3, S(0) <= x - 3),
-        (3 - x, S(0) > x - 3)
-    )
-    y = Symbol('y')
-    assert solve(absxm3 - y, x) == [
-        Piecewise((-y + 3, -y < 0), (S.NaN, True)),
-        Piecewise((y + 3, 0 <= y), (S.NaN, True))
-    ]
-    y = Symbol('y', positive=True)
-    assert solve(absxm3 - y, x) == [-y + 3, y + 3]
-
-
 def test_issue_5673():
     eq = -x + exp(exp(LambertW(log(x)))*LambertW(log(x)))
     assert checksol(eq, x, 2) is True
@@ -1418,6 +1402,7 @@ def test_issue_6644():
     sol = solve(eq, q, simplify=False, check=False)
     assert len(sol) == 5
 
+
 def test_issue_6752():
     assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
     assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]
@@ -1477,12 +1462,6 @@ def test_issues_6819_6820_6821_6248_8692():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
-
-
-def test_issue_6989():
-    f = Function('f')
-    assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
-        [Piecewise((-1, x > 0), (0, True))]
 
 
 def test_lambert_multivariate():
@@ -1640,11 +1619,6 @@ def test_det_quick():
     assert det_perm(s) == det_minor(s) == s.det()
 
 
-def test_piecewise():
-    # if no symbol is given the piecewise detection must still work
-    assert solve(Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3) == [-1, 5]
-
-
 def test_real_imag_splitting():
     a, b = symbols('a b', real=True)
     assert solve(sqrt(a**2 + b**2) - 3, a) == \
@@ -1702,10 +1676,6 @@ def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
     raises(TypeError, lambda: nsolve((x - y + 3,x + y,z - y),(x,y,z),(-50,50)))
     raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
-
-def test_issue_8587():
-    f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
-    assert solve(f - 1) == [1/sqrt(2)]
 
 
 def test_high_order_multivariate():
@@ -1795,12 +1765,14 @@ def test_issue_2840_8155():
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
 
+
 def test_solve_inequality_list():
     sol = And(S(0) < x, x < oo)
     assert solve(x + 1 > 1) == sol
     assert solve([x + 1 > 1]) == sol
     assert solve([x + 1 > 1], x) == sol
     assert solve([x + 1 > 1], [x]) == sol
+
 
 def test_issue_11538():
     assert solve(x + E) == [-E]
@@ -1876,6 +1848,7 @@ def test_denoms():
     assert denoms(1/x + 1/y + 1/z, [x, y]) == set([x, y])
     assert denoms(1/x + 1/y + 1/z, x, y) == set([x, y])
     assert denoms(1/x + 1/y + 1/z, set([x, y])) == set([x, y])
+
 
 def test_issue_12476():
     x0, x1, x2, x3, x4, x5 = symbols('x0 x1 x2 x3 x4 x5')
