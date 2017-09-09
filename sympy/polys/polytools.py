@@ -4433,19 +4433,37 @@ def degree(f, gen=0):
 @public
 def total_degree(f, *gens):
     """
-    Return the total_degree of ``f`` in given variables.
+    Return the total_degree of ``f`` in then given variables.
 
     Examples
     ========
     >>> from sympy import total_degree, Poly
     >>> from sympy.abc import x, y, z
 
-    >>> total_degree(x*y + z**3, x, y)
-    2
-    >>> total_degree(Poly(y**2 + x**3 + z**4, x), z)
-    4
     >>> total_degree(1)
     0
+    >>> total_degree(x + x*y)
+    2
+    >>> total_degree(x + x*y, x)
+    1
+
+    If the expression is a Poly and no variables are given
+    then the generators of the Poly will be used:
+
+    >>> p = Poly(x + x*y, y)
+    >>> total_degree(p)
+    1
+
+    To deal with the underlying expression of the Poly, convert
+    it to an Expr:
+
+    >>> total_degeree(p.as_expr())
+    2
+
+    This is done automatically if any variables are given:
+
+    >>> total_degree(p, x)
+    1
 
     See also
     ========
