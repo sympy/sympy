@@ -4457,7 +4457,7 @@ def total_degree(f, *gens):
     To deal with the underlying expression of the Poly, convert
     it to an Expr:
 
-    >>> total_degeree(p.as_expr())
+    >>> total_degree(p.as_expr())
     2
 
     This is done automatically if any variables are given:
