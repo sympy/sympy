@@ -19,6 +19,10 @@ if matchpy:
 
 def linear_products(rubi):
 
+    pattern8 = Pattern(Integral(a_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)))
+    rule8 = ReplacementRule(pattern8, lambda a, x : a*x)
+    rubi.add(rule8)
+
     pattern12 = Pattern(Integral(a_*u_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)))
     rule12 = ReplacementRule(pattern12, lambda a, x, u : a*Int(u, x))
     rubi.add(rule12)

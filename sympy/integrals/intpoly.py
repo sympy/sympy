@@ -2,11 +2,16 @@
 Module to implement integration of uni/bivariate polynomials over
 2D Polytopes and uni/bi/trivariate polynomials over 3D Polytopes.
 
-Uses evaluation techniques as described in Chin et al(2015)[1]
+Uses evaluation techniques as described in Chin et al. (2015) [1].
+
 
 References
 ===========
-[1] : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
+[1] : Chin, Eric B., Jean B. Lasserre, and N. Sukumar. "Numerical integration
+of homogeneous functions on convex and nonconvex polygons and polyhedra."
+Computational Mechanics 56.6 (2015): 967-981
+
+PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
 
 from __future__ import print_function, division
@@ -27,17 +32,21 @@ def polytope_integrate(poly, expr=None, **kwargs):
     This function accepts the polytope in `poly` and the function in `expr`
     (uni/bi/trivariate polynomials are implemented) and returns
     the exact integral of `expr` over `poly`.
+
     Parameters
     ==========
+
     poly : The input Polygon.
+
     expr : The input polynomial.
 
-    Optional Parameters:
-    --------------------
-    clockwise : Binary value to sort input points of the 2-Polytope clockwise.
-    max_degree : The maximum degree of any monomial of the input polynomial.
+    clockwise : Binary value to sort input points of 2-Polytope clockwise.(Optional)
+
+    max_degree : The maximum degree of any monomial of the input polynomial.(Optional)
+
     Examples
     ========
+
     >>> from sympy.abc import x, y
     >>> from sympy.geometry.polygon import Polygon
     >>> from sympy.geometry.point import Point
@@ -143,6 +152,7 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
 
     Parameters
     ===========
+
     expr : The input polynomial
     facets : Faces of the 3-Polytope(expressed as indices of `vertices`)
     vertices : Vertices that constitute the Polytope
@@ -151,6 +161,9 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
     Optional Parameters
     -------------------
     max_degree : Max degree of constituent monomial in given list of polynomial
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import main_integrate3d, \
@@ -303,12 +316,16 @@ def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
 
     Parameters
     ===========
+
     facet : Particular face of the 3-Polytope over which `expr` is integrated
     index : The index of `facet` in `facets`
     facets : Faces of the 3-Polytope(expressed as indices of `vertices`)
     vertices : Vertices that constitute the facet
     expr : The input polynomial
     degree : Degree of `expr`
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import polygon_integrate
@@ -346,8 +363,12 @@ def distance_to_side(point, line_seg, A):
 
     Parameters
     ===========
+
     point : 3D Point
     line_seg : Line Segment
+
+    Examples
+    ========
 
     >>> from sympy.integrals.intpoly import distance_to_side
     >>> point = (0, 0, 0)
@@ -371,9 +392,13 @@ def lineseg_integrate(polygon, index, line_seg, expr, degree):
 
     Parameters
     ===========
+
     polygon : Face of a 3-Polytope
     index : index of line_seg in polygon
     line_seg : Line Segment
+
+    Examples
+    ========
 
     >>> from sympy.integrals.intpoly import lineseg_integrate
     >>> polygon = [(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)]
@@ -409,6 +434,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
 
     Parameters
     ===========
+
     facets : List of facets of the polytope.
     index : Index referencing the facet to integrate the expression over.
     a : Hyperplane parameter denoting direction.
@@ -416,6 +442,9 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     expr : The expression to integrate over the facet.
     dims : List of symbols denoting axes.
     degree : Degree of the homogeneous polynomial.
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import integration_reduction,\
@@ -455,12 +484,16 @@ def left_integral2D(m, index, facets, x0, expr, gens):
 
     Parameters
     ===========
+
     m : No. of hyperplanes.
     index : Index of facet to find intersections with.
     facets : List of facets(Line Segments in 2D case).
     x0 : First point on facet referenced by index.
     expr : Input polynomial
     gens : Generators which generate the polynomial
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import left_integral2D
@@ -504,6 +537,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
 
     Parameters
     ===========
+
     facets : Facets of the Polytope
     index : Index of facet to find intersections with.(Used in left_integral())
     a, b : Hyperplane parameters
@@ -521,6 +555,9 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
     -------------------
     vertices : Coordinates of vertices constituting the 3-Polytope
     hp_param : Hyperplane Parameter of the face of the facets[index]
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import integration_reduction_dynamic,\
@@ -617,13 +654,15 @@ def gradient_terms(binomial_power=0, no_of_gens=2):
     0 and y**binomial_power for 2D case and z**binomial_power
     for 3D case.
 
-    Optional Parameters
-    -------------------
+    Parameters
+    ===========
+
     binomial_power : Power upto which terms are generated.
     no_of_gens : Denotes whether terms are being generated for 2D or 3D case.
 
     Examples
     ========
+
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import gradient_terms
     >>> gradient_terms(2)
@@ -662,13 +701,11 @@ def hyperplane_parameters(poly, vertices=None):
     Parameters
     ==========
     poly : The input 2/3-Polytope
-
-    Optional Parameters
-    ----------------------
     vertices :  Vertex indices of 3-Polytope
 
     Examples
     ========
+
     >>> from sympy.geometry.point import Point
     >>> from sympy.geometry.polygon import Polygon
     >>> from sympy.integrals.intpoly import hyperplane_parameters
@@ -731,14 +768,18 @@ def best_origin(a, b, lineseg, expr):
     Returns a point on the lineseg whose vector inner product with the
     divergence of `expr` yields an expression with the least maximum
     total power.
+
     Parameters
     ==========
+
     a : Hyperplane parameter denoting direction.
     b : Hyperplane parameter denoting distance.
     lineseg : Line segment on which to find the origin.
     expr : The expression which determines the best point.
+
     Algorithm(currently works only for 2D use case)
     ===============================================
+
     1 > Firstly, check for edge cases. Here that would refer to vertical
         or horizontal lines.
 
@@ -756,8 +797,10 @@ def best_origin(a, b, lineseg, expr):
         constraints then pick the first boundary point of the line segement.
         Actually, any point lying on the segment can be picked as best origin
         in the last case.
+
     Examples
     ========
+
     >>> from sympy.integrals.intpoly import best_origin
     >>> from sympy.abc import x, y
     >>> from sympy.geometry.line import Segment2D
@@ -878,6 +921,7 @@ def decompose(expr, separate=False):
     smaller or equal degree.
     Returns a dictionary with keys as the degree of the smaller
     constituting polynomials. Values are the constituting polynomials.
+
     Parameters
     ==========
     expr : Polynomial(SymPy expression)
@@ -887,8 +931,10 @@ def decompose(expr, separate=False):
     separate : If True then simply return a list of the constituent monomials
                If not then break up the polynomial into constituent homogeneous
                polynomials.
+
     Examples
     ========
+
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import decompose
     >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5)
@@ -945,16 +991,19 @@ def point_sort(poly, normal=None, clockwise=True):
 
     Parameters
     ==========
+
     poly: 2D or 3D Polygon
 
     Optional Parameters:
     ---------------------
+
     normal : The normal of the plane which the 3-Polytope is a part of.
     clockwise : Returns points sorted in clockwise order if True and
     anti-clockwise if False.
 
     Examples
     ========
+
     >>> from sympy.integrals.intpoly import point_sort
     >>> from sympy.geometry.point import Point
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
@@ -1015,10 +1064,12 @@ def norm(point):
 
     Parameters
     ==========
+
     point: This denotes a point in the dimension_al spac_e.
 
     Examples
     ========
+
     >>> from sympy.integrals.intpoly import norm
     >>> from sympy.geometry.point import Point
     >>> norm(Point(2, 7))
@@ -1047,10 +1098,12 @@ def intersection(geom_1, geom_2, intersection_type):
 
     Parameters
     ==========
+
     geom_1, geom_2: The input line segments
 
     Examples
     ========
+
     >>> from sympy.integrals.intpoly import intersection
     >>> from sympy.geometry.point import Point
     >>> from sympy.geometry.line import Segment2D
@@ -1097,10 +1150,12 @@ def is_vertex(ent):
     """If the input entity is a vertex return True
     Parameter
     =========
+
     ent : Denotes a geometric entity representing a point
 
     Examples
     ========
+
     >>> from sympy.geometry.point import Point
     >>> from sympy.integrals.intpoly import is_vertex
     >>> is_vertex((2, 3))
@@ -1121,8 +1176,10 @@ def is_vertex(ent):
 def plot_polytope(poly):
     """Plots the 2D polytope using the functions written in plotting
     module which in turn uses matplotlib backend.
+
     Parameter
     =========
+
     poly: Denotes a 2-Polytope
     """
     from sympy.plotting.plot import Plot, List2DSeries
@@ -1141,8 +1198,10 @@ def plot_polytope(poly):
 def plot_polynomial(expr):
     """Plots the polynomial using the functions written in
     plotting module which in turn uses matplotlib backend.
+
     Parameter
     =========
+
     expr: Denotes a polynomial(SymPy expression)
     """
     from sympy.plotting.plot import plot3d, plot
