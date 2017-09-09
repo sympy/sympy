@@ -402,8 +402,6 @@ def test_to_nnf():
     assert ITE(A, 0, 1).to_nnf() == ~A
     # although ITE can hold non-Boolean, it will complain if
     # an attempt is made to convert the ITE to Boolean nnf
-    assert ITE(A < 1, [1], []).subs(A, 0) == [1]
-    assert ITE(A < 1, [1], []).subs(A, 2) == []
     raises(TypeError, lambda: ITE(A < 1, [1], B).to_nnf())
 
 

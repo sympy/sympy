@@ -6,7 +6,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import combinations, product
 
-from sympy.core.basic import Atom, Basic
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
@@ -1010,13 +1010,7 @@ class ITE(BooleanFunction):
                 return Not(a)
 
     def to_nnf(self, simplify=True):
-        B = _bool(self)
-        if not isinstance(B, ITE):
-            try:
-                return B.to_nnf()
-            except AttributeError:
-                return B
-        a, b, c = B.args
+        a, b, c = _bool(self).args
         return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
 
     def _eval_derivative(self, x):
