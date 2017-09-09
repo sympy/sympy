@@ -144,7 +144,8 @@ class Add(Expr, AssocOp):
                 continue
 
             elif isinstance(o, MatrixExpr):
-                coeff = o.__add__(coeff)
+                # can't add 0 to Matrix so make sure coeff is not 0
+                coeff = o.__add__(coeff) if coeff else o
                 continue
 
             elif o is S.ComplexInfinity:
