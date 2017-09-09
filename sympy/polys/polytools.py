@@ -4432,6 +4432,24 @@ def degree(f, gen=0):
 
 @public
 def total_degree(f, *gens):
+    """
+    Return the total_degree of ``f`` in given variables.
+
+    Examples
+    ========
+
+    >>> total_degree(x*y + z**3, x, y)
+    2
+    >>> total_degree(Poly(y**2 + x**3 + z**4, x), z)
+    4
+    >>> total_degree(1)
+    0
+
+    See also
+    ========
+    degree
+    """
+
     p = sympify(f)
     if p.is_Poly:
         p = p.as_expr()
