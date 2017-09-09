@@ -20,6 +20,16 @@ __all__ = (
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
 
+def _canonical(cond):
+    # return a condition in which all relationals are canonical
+    try:
+        reps = dict([(r, r.canonical)
+            for r in cond.atoms(Relational)])
+        return cond.xreplace(reps)
+    except AttributeError:
+        return cond
+
+
 class Relational(Boolean, Expr, EvalfMixin):
     """Base class for all relation types.
 

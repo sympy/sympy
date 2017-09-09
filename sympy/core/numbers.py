@@ -1183,13 +1183,11 @@ class Float(Number):
         if isinstance(other, Rational) and other.q != 1 and global_evaluate[0]:
             # calculate mod with Rationals, *then* round the result
             return Float(Rational.__mod__(Rational(self), other),
-                prec_to_dps(self._prec))
+                         precision=self._prec)
         if isinstance(other, Float) and global_evaluate[0]:
             r = self/other
             if r == int(r):
-                prec = max([prec_to_dps(i)
-                    for i in (self._prec, other._prec)])
-                return Float(0, prec)
+                return Float(0, precision=max(self._prec, other._prec))
         if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
@@ -1640,7 +1638,7 @@ class Rational(Number):
             if isinstance(other, Float):
                 # calculate mod with Rationals, *then* round the answer
                 return Float(self.__mod__(Rational(other)),
-                    prec_to_dps(other._prec))
+                             precision=other._prec)
             return Number.__mod__(self, other)
         return Number.__mod__(self, other)
 

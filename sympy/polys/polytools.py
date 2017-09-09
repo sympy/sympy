@@ -45,7 +45,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group, sift, public
+from sympy.utilities import group, sift, public, filldedent
 
 import sympy.polys
 import mpmath
@@ -56,8 +56,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable, range
-
+from sympy.core.compatibility import iterable, range, ordered
 
 @public
 class Poly(Expr):
@@ -4426,6 +4425,12 @@ def degree(f, gen=0):
             p, _ = poly_from_expr(f.as_expr())
         if gen not in p.gens:
             return S.Zero
+    elif not f.is_Poly and len(f.free_symbols) > 1:
+        raise TypeError(filldedent('''
+         A symbolic generator of interest is required for a multivariate
+         expression like func = %s, e.g. degree(func, gen = %s) instead of
+         degree(func, gen = %s).
+        ''' % (f, next(ordered(f.free_symbols)), gen)))
 
     return Integer(p.degree(gen))
 

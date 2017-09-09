@@ -174,6 +174,7 @@ class Mul(Expr, AssocOp):
         """
 
         from sympy.calculus.util import AccumBounds
+        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -268,6 +269,10 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
+                coeff = o.__mul__(coeff)
+                continue
+
+            elif isinstance(o, MatrixExpr):
                 coeff = o.__mul__(coeff)
                 continue
 
@@ -870,11 +875,12 @@ class Mul(Expr, AssocOp):
         else:
             plain = self.func(*plain)
             if sums:
+                deep = hints.get("deep", False)
                 terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
                     t = self.func(plain, term)
-                    if t.is_Mul and any(a.is_Add for a in t.args):
+                    if t.is_Mul and any(a.is_Add for a in t.args) and deep:
                         t = t._eval_expand_mul()
                     args.append(t)
                 return Add(*args)

@@ -2,10 +2,11 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol, S
+    cos, exp, Abs, Not, Symbol, S, sqrt
 )
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
+
 
 x, y = symbols('x y')
 z = symbols('z', nonzero=True)
@@ -13,7 +14,7 @@ z = symbols('z', nonzero=True)
 
 def test_piecewise():
 
-    # Test canonization
+    # Test canonicalization
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
@@ -303,17 +304,52 @@ def test_piecewise_solve():
                   (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
     assert solve(g, x) == [5]
 
-# See issue 4352 (enhance the solver to handle inequalities).
+    # if no symbol is given the piecewise detection must still work
+    assert solve(Piecewise((x - 2, x > 2), (2 - x, True)) - 3) == [-1, 5]
 
-
-@XFAIL
-def test_piecewise_solve2():
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
-    assert solve(f, x) == [2, Interval(0, oo, True, True)]
+    assert solve(f, x) == [2, Piecewise((x, x < 0), (S.NaN, True))]
+    f = Piecewise(((x - 2)**2, x >= 0), (0, x > -1), (x + 3, True))
+    assert solve(f, x) == [
+        -3, 2, Piecewise((x, (x > -1) & (x < 0)), (S.NaN, True))]
+    f = Piecewise(((x - 2)**2, x >= 0), (0, x < 3), (x + 3, True))
+    assert solve(f, x) == [
+        2, Piecewise((x, (x < 0) & (x < 3)), (S.NaN, True))]
+
+    def nona(ans):
+        return list(filter(lambda x: x is not S.NaN, ans))
+    p = Piecewise((x**2 - 4, x < y), (x - 2, True))
+    ans = solve(p, x)
+    assert nona([i.subs(y, -2) for i in ans]) == [2]
+    assert nona([i.subs(y, 2) for i in ans]) == [-2, 2]
+    assert nona([i.subs(y, 3) for i in ans]) == [-2, 2]
+    assert ans == [
+        Piecewise((-2, y > -2), (S.NaN, True)),
+        Piecewise((2, y <= 2), (S.NaN, True)),
+        Piecewise((2, y > 2), (S.NaN, True))]
+
+    # issue 6060
+    absxm3 = Piecewise(
+        (x - 3, S(0) <= x - 3),
+        (3 - x, S(0) > x - 3)
+    )
+    assert solve(absxm3 - y, x) == [
+        Piecewise((-y + 3, -y < 0), (S.NaN, True)),
+        Piecewise((y + 3, y >= 0), (S.NaN, True))]
+    p = Symbol('p', positive=True)
+    assert solve(absxm3 - p, x) == [-p + 3, p + 3]
+
+    # issue 6989
+    f = Function('f')
+    assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
+        [Piecewise((-1, x > 0), (0, True))]
+
+    # issue 8587
+    f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
+    assert solve(f - 1) == [1/sqrt(2)]
 
 
 def test_piecewise_fold():
-
     p = Piecewise((x, x < 1), (1, 1 <= x))
 
     assert piecewise_fold(x*p) == Piecewise((x**2, x < 1), (x, 1 <= x))
