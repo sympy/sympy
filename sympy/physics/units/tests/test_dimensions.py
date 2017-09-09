@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from sympy import S, Symbol, sqrt, sympify
-from sympy.physics.units.dimensions import Dimension, length, time
+from sympy import S, Symbol, sqrt
+from sympy.physics.units.dimensions import Dimension, length, time, SI_dimensional_dependencies
 from sympy.utilities.pytest import raises
 
 
 def test_definition():
+    # TODO: filterwarnings this:
     assert length.get_dimensional_dependencies() == {"length": 1}
+    assert SI_dimensional_dependencies.get_dimensional_dependencies(length) == {"length": 1}
     assert length.name == Symbol("length")
     assert length.symbol == Symbol("L")
 
     halflength = sqrt(length)
+    # TODO: filterwarnings this:
     assert halflength.get_dimensional_dependencies() == {'length': S.Half}
+    assert SI_dimensional_dependencies.get_dimensional_dependencies(halflength) == {'length': S.Half}
 
 
 def test_error_definition():

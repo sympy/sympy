@@ -10,6 +10,7 @@ from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
     Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
+from sympy.physics.units.dimensions import SI_dimensional_dependencies
 from sympy.physics.units.prefixes import Prefix
 
 
@@ -24,7 +25,7 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
-    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, **assumptions):
+    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, dim_deps=SI_dimensional_dependencies, **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
@@ -36,15 +37,15 @@ class Quantity(AtomicExpr):
                 raise ValueError("expected dimension or 1")
         else:
             for dim_sym in dimension.name.atoms(Symbol):
-                if dim_sym.name not in dimensions.Dimension._dimensional_dependencies:
-                    raise ValueError("Dimension %s is not registered in the"
+                if dim_sym not in dim_deps._dimensional_dependencies:
+                    raise ValueError("Dimension %s is not registered in the "
                                      "dimensional dependency tree." % dim_sym)
 
         scale_factor = sympify(scale_factor)
 
         dimex = Quantity.get_dimensional_expr(scale_factor)
         if dimex != 1:
-            if dimension != Dimension(dimex):
+            if not SI_dimensional_dependencies.equivalent_dims(dimension, Dimension(dimex)):
                 raise ValueError("quantity value and dimension mismatch")
 
         # replace all prefixes by their ratio to canonical units:
@@ -146,7 +147,7 @@ class Quantity(AtomicExpr):
                 addend_factor, addend_dim = \
                     Quantity._collect_factor_and_dimension(addend)
                 if dim != addend_dim:
-                    raise TypeError(
+                    raise ValueError(
                         'Dimension of "{0}" is {1}, '
                         'but it should be {2}'.format(
                             addend, addend_dim.name, dim.name))
@@ -213,6 +214,7 @@ def _Quantity_constructor_postprocessor_Add(expr):
     if len(deset) > 1:
         raise ValueError("summation of quantities of incompatible dimensions")
     return expr
+
 
 Basic._constructor_postprocessor_mapping[Quantity] = {
     "Add" : [_Quantity_constructor_postprocessor_Add],

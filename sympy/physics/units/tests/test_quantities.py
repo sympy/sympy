@@ -117,7 +117,8 @@ def test_add_sub():
     # TODO: eventually add this:
     # assert (u - v).convert_to(u) == S.Half*u
 
-def test_abs():
+
+def test_quantity_abs():
     v_w1 = Quantity('v_w1', length/time, meter/second)
     v_w2 = Quantity('v_w2', length/time, meter/second)
     v_w3 = Quantity('v_w3', length/time, meter/second)
