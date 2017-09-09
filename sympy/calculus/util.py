@@ -416,12 +416,19 @@ def periodicity(f, symbol, check=False):
 
     if period is not None:
         if check:
-            if orig_f.subs(symbol, symbol + period) == orig_f:
+            new_f = orig_f.subs(symbol, symbol + period)
+            if new_f.equals(orig_f):
                 return period
             else:
                 raise NotImplementedError(filldedent('''
                     The period of the given function cannot be verified.
-                    Set check=False to obtain the value.'''))
+                    When `%s` was replaced with `%s + %s` in `%s`, the result
+                    was `%s` which was not recognized as being the same as
+                    the original function.
+                    So either the period was wrong or the two forms were
+                    not recognized as being equal.
+                    Set check=False to obtain the value.''' %
+                    (symbol, symbol, period, orig_f, new_f)))
 
         return period
 
