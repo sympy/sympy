@@ -4431,16 +4431,16 @@ def degree(f, gen=0):
 
 
 @public
-def total_degree(f, *gen):
-    f = sympify(f)
-    if f.is_Poly:
-        p = f.args[0]
-        gen += f.gens
-        rv = Poly(p, gen).total_degree()
-    elif f.is_Number:
+def total_degree(f, *gens):
+    p = sympify(f)
+    if p.is_Poly:
+        p = p.as_expr()
+    if p.is_Number:
         rv = 0
     else:
-        rv = Poly(f, gen).total_degree()
+        if f.is_Poly:
+            gens = gens or f.gens
+        rv = Poly(p, gens).total_degree()
 
     return Integer(rv)
 

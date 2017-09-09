@@ -1211,6 +1211,7 @@ def test_Poly_total_degree():
     assert total_degree(Poly(y**2 + x**3 + z**4)) == 4
     assert total_degree(Poly(y**2 + x**3 + z**4, x)) == 3
     assert total_degree(Poly(y**2 + x**3 + z**4, x), z) == 4
+    assert total_degree(Poly(x**9 + x*z*y + x**3*z**2 + z**7,x), z) == 7
 
 def test_Poly_homogenize():
     assert Poly(x**2+y).homogenize(z) == Poly(x**2+y*z)
