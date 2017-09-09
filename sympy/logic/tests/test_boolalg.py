@@ -15,13 +15,14 @@ from sympy.logic.boolalg import (
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
-    truth_table)
+    truth_table, _bool)
 
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
 
 
-A, B, C, D= symbols('A,B,C,D')
+A, B, C, D = symbols('A:D')
+x, y, z = symbols('x:z')
 
 
 def test_overloading():
@@ -37,7 +38,6 @@ def test_overloading():
 
 
 def test_And():
-
     assert And() is true
     assert And(A) == A
     assert And(True) is true
@@ -50,8 +50,8 @@ def test_And():
     assert And(True, True, True) is true
     assert And(True, True, A) == A
     assert And(True, False, A) is false
-    assert And(2, A) == A
-    assert And(2, 3) is true
+    assert And(1, A) == A
+    raises(TypeError, lambda: And(2, A))
     assert And(A < 1, A >= 1) is false
     e = A > 1
     assert And(e, e.canonical) == e.canonical
@@ -60,7 +60,6 @@ def test_And():
 
 
 def test_Or():
-
     assert Or() is false
     assert Or(A) == A
     assert Or(True) is true
@@ -73,7 +72,8 @@ def test_Or():
     assert Or(True, False, False) is true
     assert Or(True, False, A) is true
     assert Or(False, False, A) == A
-    assert Or(2, A) is true
+    assert Or(1, A) is true
+    raises(TypeError, lambda: Or(2, A))
     assert Or(A < 1, A >= 1) is true
     e = A > 1
     assert Or(e, e.canonical) == e
@@ -82,7 +82,6 @@ def test_Or():
 
 
 def test_Xor():
-
     assert Xor() is false
     assert Xor(A) == A
     assert Xor(A, A) is false
@@ -108,7 +107,6 @@ def test_Xor():
 
 
 def test_Not():
-
     raises(TypeError, lambda: Not(True, False))
     assert Not(True) is false
     assert Not(False) is true
@@ -118,7 +116,6 @@ def test_Not():
 
 
 def test_Nand():
-
     assert Nand() is false
     assert Nand(A) == ~A
     assert Nand(True) is false
@@ -134,7 +131,6 @@ def test_Nand():
 
 
 def test_Nor():
-
     assert Nor() is true
     assert Nor(A) == ~A
     assert Nor(True) is false
@@ -149,7 +145,6 @@ def test_Nor():
     assert Nor(True, False, A) is false
 
 def test_Xnor():
-
     assert Xnor() is true
     assert Xnor(A) == ~A
     assert Xnor(A, A) is true
@@ -168,7 +163,6 @@ def test_Xnor():
 
 
 def test_Implies():
-
     raises(ValueError, lambda: Implies(A, B, C))
     assert Implies(True, True) is true
     assert Implies(True, False) is false
@@ -184,7 +178,6 @@ def test_Implies():
 
 
 def test_Equivalent():
-
     assert Equivalent(A, B) == Equivalent(B, A) == Equivalent(A, B, A)
     assert Equivalent() is true
     assert Equivalent(A, A) == Equivalent(A) is true
@@ -246,9 +239,9 @@ def test_simplification():
     assert simplify_logic(And(Equality(A, B), C)) == And(Equality(A, B), C)
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
            == And(Equality(A, 3), Or(B, C))
-    e = And(A, x**2 - x)
-    assert simplify_logic(e) == And(A, x*(x - 1))
-    assert simplify_logic(e, deep=False) == e
+    b = (~x & ~y & ~z) | ( ~x & ~y & z)
+    e = And(A, b)
+    assert simplify_logic(e) == A & ~x & ~y
 
     # check input
     ans = SOPform([x, y], [[1, 0]])
@@ -304,7 +297,6 @@ def test_bool_symbol():
 
 
 def test_is_boolean():
-
     assert true.is_Boolean
     assert (A & B).is_Boolean
     assert (A | B).is_Boolean
@@ -313,7 +305,6 @@ def test_is_boolean():
 
 
 def test_subs():
-
     assert (A & B).subs(A, True) == B
     assert (A & B).subs(A, False) is false
     assert (A & B).subs(B, True) == A
@@ -346,7 +337,6 @@ def test_and_associativity():
 
 
 def test_or_assicativity():
-
     assert ((A | B) | C) == (A | (B | C))
 
 
@@ -383,7 +373,6 @@ def test_disjuncts():
 
 
 def test_distribute():
-
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
     assert distribute_or_over_and(And(A, Or(B, C))) == Or(And(A, B), And(A, C))
 
@@ -409,10 +398,16 @@ def test_to_nnf():
     assert to_nnf((A >> B) ^ (B >> A)) == (A & ~B) | (~A & B)
     assert to_nnf((A >> B) ^ (B >> A), False) == \
             (~A | ~B | A | B) & ((A & ~B) | (~A & B))
+    assert ITE(A, 1, 0).to_nnf() == A
+    assert ITE(A, 0, 1).to_nnf() == ~A
+    # although ITE can hold non-Boolean, it will complain if
+    # an attempt is made to convert the ITE to Boolean nnf
+    assert ITE(A < 1, [1], []).subs(A, 0) == [1]
+    assert ITE(A < 1, [1], []).subs(A, 2) == []
+    raises(TypeError, lambda: ITE(A < 1, [1], B).to_nnf())
 
 
 def test_to_cnf():
-
     assert to_cnf(~(B | C)) == And(Not(B), Not(C))
     assert to_cnf((A & B) | C) == And(Or(A, C), Or(B, C))
     assert to_cnf(A >> B) == (~A) | B
@@ -427,7 +422,6 @@ def test_to_cnf():
 
 
 def test_to_dnf():
-
     assert to_dnf(~(B | C)) == And(Not(B), Not(C))
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
     assert to_dnf(A >> B) == (~A) | B
@@ -504,9 +498,14 @@ def test_ITE():
     x = symbols('x')
     assert ITE(x, A, B) == Not(x)
     assert ITE(x, B, A) == x
+    assert ITE(1, x, y) == x
+    assert ITE(0, x, y) == y
+    raises(TypeError, lambda: ITE(2, x, y))
+    assert ITE(x, [], ()).subs(x, 1) == []
+    assert ITE(x, [], ()).subs(x, 0) == ()
+
 
 def test_ITE_rewrite_Piecewise():
-
     assert ITE(A, B, C).rewrite(Piecewise) == Piecewise((B, A), (C, True))
 
 
@@ -785,6 +784,18 @@ def test_expand_relational():
     assert r.expand() is S.false
     assert (q > 0).expand() is S.true
 
+
 def test_issue_12717():
     assert S.true.is_Atom == True
     assert S.false.is_Atom == True
+
+
+def test__bool():
+    nz = symbols('nz', nonzero=True)
+    assert all(_bool(i) is S.true for i in (True, S.true, 1, nz))
+    z = symbols('z', zero=True)
+    assert all(_bool(i) is S.false for i in (False, S.false, 0, z))
+    x = symbols('x')
+    assert all(_bool(i) == i for i in (x, x < 0))
+    for i in (2, S(2), x + 1, []):
+        raises(TypeError, lambda: _bool(i))
