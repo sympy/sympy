@@ -603,10 +603,11 @@ class Expr(Basic, EvalfMixin):
                 return False
         return True
 
-    def equals(self, other, failing_expression=False):
+    def equals(self, other, failing_expression=False, rewrite=False):
         """Return True if self == other, False if it doesn't, or None. If
         failing_expression is True then the expression which did not simplify
-        to a 0 will be returned instead of None.
+        to a 0 will be returned instead of None. If rewrite is True then it
+        attempts to rewrite the expression when simplifying it.
 
         If ``self`` is a Number (or complex number) that is not zero, then
         the result is False.
@@ -631,7 +632,7 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = factor_terms(simplify(self - other), radical=True)
+        diff = factor_terms(simplify(self - other, rewrite=rewrite), radical=True)
 
         if not diff:
             return True
