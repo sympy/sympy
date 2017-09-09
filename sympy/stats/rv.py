@@ -739,7 +739,6 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     ========
 
     >>> from sympy.stats import density, Die, Normal, cdf
-    >>> from sympy import Symbol
 
     >>> D = Die('D', 6)
     >>> X = Normal('X', 0, 1)

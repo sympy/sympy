@@ -660,3 +660,21 @@ def test_issue_10003():
     G = Gamma('g', 1, 2)
     assert P(X < -1) == S.Zero
     assert P(G < -1) == S.Zero
+
+
+def test_precomputed_cdf():
+    x = symbols("x", real=True, finite=True)
+    mu = symbols("mu", real=True, finite=True)
+    sigma, xm, alpha = symbols("sigma xm alpha", positive=True, finite=True)
+    n = symbols("n", integer=True, positive=True, finite=True)
+    distribs = [
+            Normal("X", mu, sigma),
+            Pareto("P", xm, alpha),
+            ChiSquared("C", n),
+            Exponential("E", sigma),
+            # LogNormal("L", mu, sigma),
+    ]
+    for X in distribs:
+        compdiff = cdf(X)(x) - simplify(X.pspace.density.compute_cdf()(x))
+        compdiff = simplify(compdiff.rewrite(erfc))
+        assert compdiff == 0
