@@ -1270,6 +1270,10 @@ class Pow(Expr):
     def matches(self, expr, repl_dict={}, old=False):
         expr = _sympify(expr)
 
+        if self.base is S.Exp1:
+            from sympy import Basic
+            return Basic.matches(self, expr, repl_dict, old)
+
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
             d = repl_dict.copy()
