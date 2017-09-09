@@ -94,6 +94,14 @@ def test_periodicity():
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
 
+    assert periodicity(Abs(sin(Abs(sin(x)))),x) == pi
+    assert all(periodicity(Abs(f(x)),x) == pi for f in (
+        cos, sin, sec, csc, tan, cot))
+    assert periodicity(Abs(sin(tan(x))), x) == pi
+    assert periodicity(Abs(sin(sin(x) + tan(x))), x) == 2*pi
+    assert periodicity(sin(x) > S.Half, x) is 2*pi
+
+    assert periodicity(x > 2, x) is None
     assert periodicity(x**3 - x**2 + 1, x) is None
     assert periodicity(Abs(x), x) is None
     assert periodicity(Abs(x**2 - 1), x) is None
@@ -105,8 +113,9 @@ def test_periodicity_check():
 
     assert periodicity(tan(x), x, check=True) == pi
     assert periodicity(sin(x) + cos(x), x, check=True) == 2*pi
-    raises(NotImplementedError, lambda: periodicity(sec(x), x, check=True))
-    raises(NotImplementedError, lambda: periodicity(sin(x*y), x, check=True))
+    assert periodicity(sec(x), x) == 2*pi
+    assert periodicity(sin(x*y), x) == 2*pi/abs(y)
+    assert periodicity(Abs(sec(sec(x))), x) == pi
 
 
 def test_lcim():
