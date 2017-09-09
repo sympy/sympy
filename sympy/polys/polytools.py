@@ -4433,7 +4433,7 @@ def degree(f, gen=0):
 @public
 def total_degree(f, *gens):
     """
-    Return the total_degree of ``f`` in then given variables.
+    Return the total_degree of ``f`` in the given variables.
 
     Examples
     ========
