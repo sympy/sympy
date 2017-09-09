@@ -28,4 +28,6 @@ from .powsimp import powsimp, powdenest
 
 from .combsimp import combsimp
 
+from .combsimp import gammasimp
+
 from .ratsimp import ratsimp, ratsimpmodprime
