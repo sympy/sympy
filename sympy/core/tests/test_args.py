@@ -3236,6 +3236,12 @@ def test_sympy__physics__units__dimensions__Dimension():
     assert _test_args(Dimension("length", "L"))
 
 
+def test_sympy__physics__units__dimensions__DimensionSystem():
+    from sympy.physics.units.dimensions import DimensionSystem
+    from sympy.physics.units.dimensions import length, time, velocity
+    assert _test_args(DimensionSystem((length, time), (velocity,)))
+
+
 def test_sympy__physics__units__quantities__Quantity():
     from sympy.physics.units.quantities import Quantity
     from sympy.physics.units import length

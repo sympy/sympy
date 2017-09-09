@@ -12,14 +12,14 @@ from sympy.physics.units import DimensionSystem, UnitSystem
 from sympy.physics.units.definitions import G, Hz, J, N, Pa, W, c, g, kg, m, s
 from sympy.physics.units.dimensions import (
     acceleration, action, energy, force, frequency, length, mass, momentum,
-    power, pressure, time, velocity)
+    power, pressure, time, velocity, dimsys_MKS)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 
 dims = (velocity, acceleration, momentum, force, energy, power, pressure,
         frequency, action)
 
 # dimension system
-_mks_dim = DimensionSystem(base=(length, mass, time), dims=dims, name="MKS")
+_mks_dim = dimsys_MKS
 
 units = [m, g, s, J, N, W, Pa, Hz]
 all_units = []

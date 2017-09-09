@@ -16,7 +16,7 @@ from __future__ import division
 
 import collections
 
-from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict
+from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
 from sympy.core.compatibility import reduce, string_types
 from sympy.core.expr import Expr
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -107,7 +107,7 @@ class Dimension(Expr):
 
     def __eq__(self, other):
         if isinstance(other, Dimension):
-            return self.get_dimensional_dependencies() == other.get_dimensional_dependencies()
+            return self.name == other.name
         return False
 
     def __str__(self):
@@ -130,15 +130,18 @@ class Dimension(Expr):
             deprecated_since_version="1.2",
             issue=99999,
             feature="do not call ._register_as_base_dim()",
-            useinstead="DimensionalDependency"
+            useinstead="DimensionSystem"
         )#.warn()
         if not self.name.is_Symbol:
             raise TypeError("Base dimensions need to have symbolic name")
 
         name = self.name
-        if name in SI_dimensional_dependencies._dimensional_dependencies:
+        if name in dimsys_default.dimensional_dependencies:
             raise IndexError("already in dependecies dict")
-        SI_dimensional_dependencies._dimensional_dependencies[name] = {name: 1}
+        # Horrible code:
+        d = dict(dimsys_default.dimensional_dependencies)
+        d[name] = Dict({name: 1})
+        dimsys_default._args = (dimsys_default.args[:2] + (Dict(d),))
 
     def __add__(self, other):
         """Define the addition for Dimension.
@@ -191,10 +194,10 @@ class Dimension(Expr):
             deprecated_since_version="1.2",
             issue=99999,
             feature="do not call",
-            useinstead="DimensionalDependency"
+            useinstead="DimensionSystem"
         )#.warn()
         name = self.name
-        dimdep = self._get_dimensional_dependencies_for_name(name)
+        dimdep = dimsys_default.get_dimensional_dependencies(name)
         if mark_dimensionless and dimdep == {}:
             return {'dimensionless': 1}
         return {str(i): j for i, j in dimdep.items()}
@@ -211,9 +214,9 @@ class Dimension(Expr):
             deprecated_since_version="1.2",
             issue=99999,
             feature="do not call from `Dimension` objects.",
-            useinstead="DimensionalDependency"
+            useinstead="DimensionSystem"
         )#.warn()
-        return SI_dimensional_dependencies.get_dimensional_dependencies(name)
+        return dimsys_default.get_dimensional_dependencies(name)
 
     @property
     def is_dimensionless(self, dimensional_dependencies=None):
@@ -230,7 +233,7 @@ class Dimension(Expr):
                 issue=99999,
                 feature="wrong class",
             )#.warn()
-            dimensional_dependencies=SI_dimensional_dependencies
+            dimensional_dependencies=dimsys_default
         return dimensional_dependencies.get_dimensional_dependencies(self) == {}
 
     @property
@@ -293,47 +296,90 @@ information = Dimension(name='information')
 # dimensional dependency dictionary.
 
 
-class DimensionalDependency(Basic):
-    """
-    Class to track dimensional dependencies.
+class DimensionSystem(Basic):
+    r"""
+    DimensionSystem represents a coherent set of dimensions.
+
+    The constructor takes three parameters:
+
+    - base dimensions;
+    - derived dimensions: these are defined in terms of the base dimensions
+      (for example velocity is defined from the division of length by time);
+    - dependency of dimensions: how the derived dimensions depend
+      on the base dimensions.
+
+    Optionally either the ``derived_dims`` or the ``dimensional_dependencies``
+    may be omitted.
     """
 
-    def __new__(cls, base_dims, derived_dims):
-        dimensional_dependencies = {}
-        base_dims = list(base_dims)
+    def __new__(cls, base_dims, derived_dims=[], dimensional_dependencies={}, name=None, descr=None):
+        dimensional_dependencies = dict(dimensional_dependencies)
+
+        if (name is not None) or (descr is not None):
+            SymPyDeprecationWarning(
+                deprecated_since_version="1.2",
+                issue=99999,
+                useinstead="do not define a `name` or `descr`",
+            )#.warn()
 
         def parse_dim(dim):
             if isinstance(dim, string_types):
-                dim = Symbol(dim)
+                dim = Dimension(Symbol(dim))
             elif isinstance(dim, Dimension):
-                dim = dim.name
+                dim = dim
             elif isinstance(dim, Symbol):
-                pass
+                dim = Dimension(dim)
             else:
                 raise TypeError("%s wrong type" % dim)
             return dim
 
+        base_dims = [parse_dim(i) for i in base_dims]
+        derived_dims = [parse_dim(i) for i in derived_dims]
+
         for dim in base_dims:
-            if not dim.name.is_Symbol:
-                raise TypeError("Base dimensions need to have symbolic name")
-            dim_name = parse_dim(dim)
-            if dim_name in dimensional_dependencies:
+            dim = dim.name
+            if (dim in dimensional_dependencies
+                and (len(dimensional_dependencies[dim]) != 1 or
+                dimensional_dependencies[dim].get(dim, None) != 1)):
                 raise IndexError("Repeated value in base dimensions")
-            dimensional_dependencies[dim_name] = Dict({dim_name: 1})
+            dimensional_dependencies[dim] = Dict({dim: 1})
 
-        for dim, deps in derived_dims.items():
+        def parse_dim_name(dim):
+            if isinstance(dim, Dimension):
+                return dim.name
+            elif isinstance(dim, string_types):
+                return Symbol(dim)
+            elif isinstance(dim, Symbol):
+                return dim
+            else:
+                raise TypeError("unrecognized type %s for %s" % (type(dim), dim))
+
+        for dim in dimensional_dependencies.keys():
             dim = parse_dim(dim)
+            if (dim not in derived_dims) and (dim not in base_dims):
+                derived_dims.append(dim)
 
-            if dim in dimensional_dependencies:
-                raise IndexError("Dependent dimension is already among base dimensions")
-            if len(deps) == 1 and str(dim.name) in deps:
-                raise ValueError("Dimension %s appears to be a base dimension" % dim)
-            dimensional_dependencies[dim] = Dict(deps)
+        def parse_dict(d):
+            return Dict({parse_dim_name(i): j for i, j in d.items()})
+
+        # Make sure everything is a SymPy type:
+        dimensional_dependencies = {parse_dim_name(i): parse_dict(j) for i, j in
+                                    dimensional_dependencies.items()}
+
+        for dim in derived_dims:
+            if dim in base_dims:
+                raise ValueError("Dimension %s both in base and derived" % dim)
+            if dim.name not in dimensional_dependencies:
+                # TODO: should this raise a warning?
+                dimensional_dependencies[dim] = Dict({dim.name: 1})
+
+        base_dims.sort(key=default_sort_key)
+        derived_dims.sort(key=default_sort_key)
 
         base_dims = Tuple(*base_dims)
-        derived_dims = Dict({i: Dict(j) for i, j in derived_dims.items()})
-        obj = Basic.__new__(cls, base_dims, derived_dims)
-        obj._dimensional_dependencies = dimensional_dependencies
+        derived_dims = Tuple(*derived_dims)
+        dimensional_dependencies = Dict({i: Dict(j) for i, j in dimensional_dependencies.items()})
+        obj = Basic.__new__(cls, base_dims, derived_dims, dimensional_dependencies)
         return obj
 
     @property
@@ -344,10 +390,14 @@ class DimensionalDependency(Basic):
     def derived_dims(self):
         return self.args[1]
 
+    @property
+    def dimensional_dependencies(self):
+        return self.args[2]
+
     def _get_dimensional_dependencies_for_name(self, name):
 
         if name.is_Symbol:
-            return dict(self._dimensional_dependencies.get(name, {}))
+            return dict(self.dimensional_dependencies.get(name, {}))
 
         if name.is_Number:
             return {}
@@ -378,6 +428,8 @@ class DimensionalDependency(Basic):
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         if isinstance(name, Dimension):
             name = name.name
+        if isinstance(name, string_types):
+            name = Symbol(name)
 
         dimdep = self._get_dimensional_dependencies_for_name(name)
         if mark_dimensionless and dimdep == {}:
@@ -389,188 +441,101 @@ class DimensionalDependency(Basic):
         deps2 = self.get_dimensional_dependencies(dim2)
         return deps1 == deps2
 
+    def extend(self, new_base_dims, new_derived_dims=[], new_dim_deps={}, name=None, description=None):
+        if (name is not None) or (description is not None):
+            SymPyDeprecationWarning(
+                deprecated_since_version="1.2",
+                issue=99999,
+                feature="name and descriptions of DimensionSystem",
+                useinstead="do not specify `name` or `description`",
+            )#.warn()
 
-SI_dimensional_dependencies = DimensionalDependency(
-    [
-        # Dimensional dependencies for MKS base dimensions
-        length,
-        mass,
-        time,
+        deps = dict(self.dimensional_dependencies)
+        deps.update(new_dim_deps)
 
-        # Dimensional dependencies for base dimensions (MKSA not in MKS)
-        current,
-
-        # Dimensional dependencies for other base dimensions:
-        temperature,
-        amount_of_substance,
-        luminous_intensity,
-        information,
-    ], dict(
-        # Dimensional dependencies for derived dimensions
-        velocity=dict(length=1, time=-1),
-        acceleration=dict(length=1, time=-2),
-        momentum=dict(mass=1, length=1, time=-1),
-        force=dict(mass=1, length=1, time=-2),
-        energy=dict(mass=1, length=2, time=-2),
-        power=dict(length=2, mass=1, time=-3),
-        pressure=dict(mass=1, length=-1, time=-2),
-        frequency=dict(time=-1),
-        action=dict(length=2, mass=1, time=-1),
-        volume=dict(length=3),
-
-        # Dimensional dependencies for derived dimensions
-        voltage=dict(mass=1, length=2, current=-1, time=-3),
-        impedance=dict(mass=1, length=2, current=-2, time=-3),
-        conductance=dict(mass=-1, length=-2, current=2, time=3),
-        capacitance=dict(mass=-1, length=-2, current=2, time=4),
-        inductance=dict(mass=1, length=2, current=-2, time=-2),
-        charge=dict(current=1, time=1),
-        magnetic_density=dict(mass=1, current=-1, time=-2),
-        magnetic_flux=dict(length=2, mass=1, current=-1, time=-2),
-    ))
-
-
-class DimensionSystem(object):
-    """
-    DimensionSystem represents a coherent set of dimensions.
-
-    In a system dimensions are of three types:
-
-    - base dimensions;
-    - derived dimensions: these are defined in terms of the base dimensions
-      (for example velocity is defined from the division of length by time);
-    - canonical dimensions: these are used to define systems because one has
-      to start somewhere: we can not build ex nihilo a system (see the
-      discussion in the documentation for more details).
-
-    All intermediate computations will use the canonical basis, but at the end
-    one can choose to print result in some other basis.
-
-    In a system dimensions can be represented as a vector, where the components
-    represent the powers associated to each base dimension.
-    """
-
-    def __init__(self, base, dims=(), name="", descr=""):
-        """
-        Initialize the dimension system.
-
-        It is important that base units have a name or a symbol such that
-        one can sort them in a unique way to define the vector basis.
-        """
-
-        self.name = name
-        self.descr = descr
-
-        self._base_dims = self.sort_dims(base)
-        # base is first such that named dimension are keeped
-        self._dims = tuple(set(base) | set(dims))
-
-        if self.is_consistent is False:
-            raise ValueError("The system with basis '%s' is not consistent"
-                             % str(self._base_dims))
-
-    def __str__(self):
-        """
-        Return the name of the system.
-
-        If it does not exist, then it makes a list of symbols (or names) of
-        the base dimensions.
-        """
-
-        if self.name != "":
-            return self.name
-        else:
-            return "DimensionSystem(%s)" % ", ".join(str(d) for d in self._base_dims)
-
-    def __repr__(self):
-        return "<DimensionSystem: %s>" % repr(self._base_dims)
-
-    def __getitem__(self, key):
-        """
-        Shortcut to the get_dim method, using key access.
-        """
-
-        d = self.get_dim(key)
-
-        #TODO: really want to raise an error?
-        if d is None:
-            raise KeyError(key)
-
-        return d
-
-    def __call__(self, unit):
-        """
-        Wrapper to the method print_dim_base
-        """
-
-        return self.print_dim_base(unit)
-
-    def get_dim(self, dim):
-        """
-        Find a specific dimension which is part of the system.
-
-        dim can be a string or a dimension object. If no dimension is found,
-        then return None.
-        """
-
-        #TODO: if the argument is a list, return a list of all matching dims
-
-        found_dim = None
-
-        #TODO: use copy instead of direct assignment for found_dim?
-        if isinstance(dim, string_types):
-            dim = Symbol(dim)
-
-        if dim.is_Symbol:
-            for d in self._dims:
-                if dim in (d.name, d.symbol):
-                    found_dim = d
-                    break
-        elif isinstance(dim, Dimension):
-            for i, idim in enumerate(self._dims):
-                if dim.get_dimensional_dependencies() == idim.get_dimensional_dependencies():
-                    return idim
-
-        return found_dim
-
-    def extend(self, base, dims=(), name='', description=''):
-        """
-        Extend the current system into a new one.
-
-        Take the base and normal units of the current system to merge
-        them to the base and normal units given in argument.
-        If not provided, name and description are overriden by empty strings.
-        """
-
-        base = self._base_dims + tuple(base)
-        dims = self._dims + tuple(dims)
-
-        return DimensionSystem(base, dims, name, description)
+        return DimensionSystem(
+            tuple(self.base_dims) + tuple(new_base_dims),
+            tuple(self.derived_dims) + tuple(new_derived_dims),
+            deps
+        )
 
     @staticmethod
     def sort_dims(dims):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         Sort dimensions given in argument using their str function.
 
         This function will ensure that we get always the same tuple for a given
         set of dimensions.
         """
-
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.2",
+            issue=99999,
+            feature="sort_dims",
+            useinstead="sorted(..., key=default_sort_key)",
+        )#.warn()
         return tuple(sorted(dims, key=str))
+
+    def __getitem__(self, key):
+        """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
+        Shortcut to the get_dim method, using key access.
+        """
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.2",
+            issue=99999,
+            feature="the get [ ] operator",
+            useinstead="the dimension definition",
+        )#.warn()
+        d = self.get_dim(key)
+        #TODO: really want to raise an error?
+        if d is None:
+            raise KeyError(key)
+        return d
+
+    def __call__(self, unit):
+        """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
+        Wrapper to the method print_dim_base
+        """
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.2",
+            issue=99999,
+            feature="call DimensionSystem",
+            useinstead="the dimension definition",
+        )#.warn()
+        return self.print_dim_base(unit)
 
     @property
     def list_can_dims(self):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         List all canonical dimension names.
         """
         dimset = set([])
-        for i in self._base_dims:
-            dimset.update(set(i.get_dimensional_dependencies().keys()))
-        return tuple(sorted(dimset))
+        for i in self.base_dims:
+            dimset.update(set(dimsys_default.get_dimensional_dependencies(i).keys()))
+        return tuple(sorted(dimset, key=str))
 
     @property
     def inv_can_transf_matrix(self):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         Compute the inverse transformation matrix from the base to the
         canonical dimension basis.
 
@@ -578,20 +543,21 @@ class DimensionSystem(object):
         dimensions in canonical basis.
 
         This matrix will almost never be used because dimensions are always
-        define with respect to the canonical basis, so no work has to be done
+        defined with respect to the canonical basis, so no work has to be done
         to get them in this basis. Nonetheless if this matrix is not square
         (or not invertible) it means that we have chosen a bad basis.
         """
-
         matrix = reduce(lambda x, y: x.row_join(y),
-                        [self.dim_can_vector(d) for d in self._base_dims])
-
+                        [self.dim_can_vector(d) for d in self.base_dims])
         return matrix
 
-    #@cacheit
     @property
     def can_transf_matrix(self):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         Return the canonical transformation matrix from the canonical to the
         base dimension basis.
 
@@ -601,22 +567,30 @@ class DimensionSystem(object):
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
         return reduce(lambda x, y: x.row_join(y),
-                      [self.dim_can_vector(d) for d in self._base_dims]
+                      [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
                       ).inv()
 
     def dim_can_vector(self, dim):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         Dimensional representation in terms of the canonical base dimensions.
         """
 
         vec = []
         for d in self.list_can_dims:
-            vec.append(dim.get_dimensional_dependencies().get(d, 0))
-
+            vec.append(dimsys_default.get_dimensional_dependencies(dim).get(d, 0))
         return Matrix(vec)
 
     def dim_vector(self, dim):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
+
         Vector representation in terms of the base dimensions.
         """
         return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
@@ -626,7 +600,7 @@ class DimensionSystem(object):
         Give the string expression of a dimension in term of the basis symbols.
         """
         dims = self.dim_vector(dim)
-        symbols = [i.symbol if i.symbol is not None else i.name for i in self._base_dims]
+        symbols = [i.symbol if i.symbol is not None else i.name for i in self.base_dims]
         res = S.One
         for (s, p) in zip(symbols, dims):
             res *= s**p
@@ -635,23 +609,74 @@ class DimensionSystem(object):
     @property
     def dim(self):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         Give the dimension of the system.
 
         That is return the number of dimensions forming the basis.
         """
-
-        return len(self._base_dims)
+        return len(self.base_dims)
 
     @property
     def is_consistent(self):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         Check if the system is well defined.
         """
 
         # not enough or too many base dimensions compared to independent
         # dimensions
         # in vector language: the set of vectors do not form a basis
-        if self.inv_can_transf_matrix.is_square is False:
-            return False
+        return self.inv_can_transf_matrix.is_square
 
-        return True
+
+dimsys_MKS = DimensionSystem([
+    # Dimensional dependencies for MKS base dimensions
+    length,
+    mass,
+    time,
+], dimensional_dependencies=dict(
+    # Dimensional dependencies for derived dimensions
+    velocity=dict(length=1, time=-1),
+    acceleration=dict(length=1, time=-2),
+    momentum=dict(mass=1, length=1, time=-1),
+    force=dict(mass=1, length=1, time=-2),
+    energy=dict(mass=1, length=2, time=-2),
+    power=dict(length=2, mass=1, time=-3),
+    pressure=dict(mass=1, length=-1, time=-2),
+    frequency=dict(time=-1),
+    action=dict(length=2, mass=1, time=-1),
+    volume=dict(length=3),
+))
+
+dimsys_MKSA = dimsys_MKS.extend([
+    # Dimensional dependencies for base dimensions (MKSA not in MKS)
+    current,
+], new_dim_deps=dict(
+    # Dimensional dependencies for derived dimensions
+    voltage=dict(mass=1, length=2, current=-1, time=-3),
+    impedance=dict(mass=1, length=2, current=-2, time=-3),
+    conductance=dict(mass=-1, length=-2, current=2, time=3),
+    capacitance=dict(mass=-1, length=-2, current=2, time=4),
+    inductance=dict(mass=1, length=2, current=-2, time=-2),
+    charge=dict(current=1, time=1),
+    magnetic_density=dict(mass=1, current=-1, time=-2),
+    magnetic_flux=dict(length=2, mass=1, current=-1, time=-2),
+))
+
+dimsys_SI = dimsys_MKSA.extend(
+    [
+        # Dimensional dependencies for other base dimensions:
+        temperature,
+        amount_of_substance,
+        luminous_intensity,
+    ])
+
+dimsys_default = dimsys_SI.extend(
+    [information],
+)

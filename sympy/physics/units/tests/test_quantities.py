@@ -261,12 +261,6 @@ def test_sum_of_incompatible_quantities():
         assert i in Basic._constructor_postprocessor_mapping
 
 
-def test_quantity_dimension_not_registered():
-    d = Dimension("someDimension")
-    raises(ValueError, lambda: Quantity("q", d, 1))
-    raises(ValueError, lambda: Quantity("q", d/length, 1))
-
-
 def test_quantity_postprocessing():
     q1 = Quantity('q1', length*pressure**2*temperature/time)
     q2 = Quantity('q2', energy*pressure*temperature/(length**2*time))

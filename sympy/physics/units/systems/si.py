@@ -22,7 +22,7 @@ from __future__ import division
 
 from sympy.physics.units.definitions import K, cd, lux, mol
 from sympy.physics.units.dimensions import (
-    amount_of_substance, luminous_intensity, temperature)
+    amount_of_substance, luminous_intensity, temperature, dimsys_SI)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mksa import MKSA, _mksa_dim
 
@@ -30,7 +30,7 @@ derived_dims = ()
 base_dims = (amount_of_substance, luminous_intensity, temperature)
 
 # dimension system
-_si_dim = _mksa_dim.extend(base=base_dims, dims=derived_dims, name='SI')
+_si_dim = dimsys_SI
 
 
 units = [mol, cd, K, lux]
