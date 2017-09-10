@@ -534,8 +534,8 @@ def test_sympy__core__power__Pow():
     assert _test_args(Pow(x, 2))
 
 
-def test_sympy__core__quaternion__Quaternion():
-    from sympy.core.quaternion import Quaternion
+def test_sympy__algebra__quaternion__Quaternion():
+    from sympy.algebra.quaternion import Quaternion
     assert _test_args(Quaternion(x, 1, 2, 3))
 
 

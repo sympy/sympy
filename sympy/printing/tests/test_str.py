@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -19,7 +19,7 @@ from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 from sympy import MatrixSymbol
 
-x, y, z, w = symbols('x,y,z,w')
+x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
 
 
@@ -581,6 +581,15 @@ def test_tuple():
     assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
+
+
+def test_Quaternion_str_printer():
+    q = Quaternion(x, y, z, t)
+    assert str(q) == "x + y*i + z*j + t*k"
+    q = Quaternion(x,y,z,x*t)
+    assert str(q) == "x + y*i + z*j + t*x*k"
+    q = Quaternion(x,y,z,x+t)
+    assert str(q) == "x + y*i + z*j + (t + x)*k"
 
 
 def test_Quantity_str():

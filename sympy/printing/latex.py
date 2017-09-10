@@ -1951,14 +1951,11 @@ class LatexPrinter(Printer):
             '{' + self._print(x) + '}' for [x] in m._module.gens)
 
     def _print_Quaternion(self, expr):
-        m = max(len(str(expr.a)), len(str(expr.b)),
-                len(str(expr.c)), len(str(expr.d)))
-        if(m < 20):
-            return str(expr.a) + ' + ' + '(' + str(expr.b) + ')i + ' \
-                + '(' + str(expr.c) + ')j + ' + '(' + str(expr.d) + ')k'
-
-        return str(expr.a) + '\n+ ' + '(' + str(expr.b) + ')i\n+ ' \
-            + '(' + str(expr.c) + ')j\n+ ' + '(' + str(expr.d) + ')k'
+        # TODO: This expression is potentially confusing,
+        # shall we print it as `Quaternion( ... )`?
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...

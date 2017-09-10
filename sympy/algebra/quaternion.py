@@ -6,15 +6,14 @@ from __future__ import print_function
 
 from sympy.core.expr import Expr
 from sympy import Rational
-from sympy import re, im
+from sympy import re, im, conjugate
 from sympy import sqrt, sin, cos, acos, asin, exp, ln
 from sympy import trigsimp
 from sympy import diff, integrate
-from sympy import Matrix
+from sympy import Matrix, Add, Mul
 from sympy import symbols, sympify
 from sympy.printing.latex import latex
 from sympy.printing import StrPrinter
-from sympy import sstr
 
 
 class Quaternion(Expr):
@@ -25,11 +24,14 @@ class Quaternion(Expr):
     Example
     ========
 
-    >>> from sympy.polys.domains.quaternion import Quaternion
+    >>> from sympy.algebra.quaternion import Quaternion
     >>> q = Quaternion(1, 2, 3, 4)
-    >>> print(q)
-    1 + (2)i + (3)j + (4)k
+    >>> q
+    1 + 2*i + 3*j + 4*k
     """
+    _op_priority = 11.0
+
+    is_commutative = False
 
     def __new__(cls, a=0, b=0, c=0, d=0):
         a = sympify(a)
@@ -68,13 +70,10 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion.from_axis_angle((2, 4, 6), 2)
-        >>> print(q)
-        cos(1)
-        + (sqrt(14)*sin(1)/14)i
-        + (sqrt(14)*sin(1)/7)j
-        + (3*sqrt(14)*sin(1)/14)k
+        >>> q
+        cos(1) + sqrt(14)*sin(1)/14*i + sqrt(14)*sin(1)/7*j + 3*sqrt(14)*sin(1)/14*k
         """
         (x, y, z) = vector
         norm = sqrt(x ** 2 + y ** 2 + z ** 2)
@@ -95,15 +94,15 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> from sympy import Matrix
         >>> M = Matrix([[4, 6, 2], [1, 8, 6], [5, 2, 7]])
         >>> q = Quaternion.from_matrix(M)
-        >>> print(q)
+        >>> q
         sqrt(238**(1/3) + 19)/2
-        + (0)i
-        + (-sqrt(-3 + 238**(1/3))/2)j
-        + (-sqrt(-5 + 238**(1/3))/2)k
+        + 0*i
+        + (-sqrt(-3 + 238**(1/3))/2)*j
+        + (-sqrt(-5 + 238**(1/3))/2)*k
         """
 
         absQ = M.det() ** Rational(1, 3)
@@ -146,17 +145,23 @@ class Quaternion(Expr):
     def __add__(self, other):
         return self.add(other)
 
+    def __radd__(self, other):
+        return self.add(other)
+
     def __sub__(self, other):
         return self.add(other * -1)
 
     def __mul__(self, other):
-        return self.mul(other)
+        return self._generic_mul(self, other)
+
+    def __rmul__(self, other):
+        return self._generic_mul(other, self)
 
     def __pow__(self, p):
         return self.pow(p)
 
-    def __repr__(self):
-        return sstr(self)
+    def __neg__(self):
+        return Quaternion(-self._a, -self._b, -self._c, -self.d)
 
     def _eval_Integral(self, *args):
         return self.integrate(*args)
@@ -170,20 +175,20 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> from sympy import symbols
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
-        >>> print(q1.add(q2))
-        6 + (8)i + (10)j + (12)k
-        >>> print(q1.add(5))
-        6 + (2)i + (3)j + (4)k
+        >>> q1.add(q2)
+        6 + 8*i + 10*j + 12*k
+        >>> q1 + 5
+        6 + 2*i + 3*j + 4*k
         >>> x = symbols('x', real = True)
-        >>> print(q1.add(x))
-        x + 1 + (2)i + (3)j + (4)k
+        >>> q1.add(x)
+        (x + 1) + 2*i + 3*j + 4*k
         """
         q1 = self
-        q2 = other
+        q2 = sympify(other)
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
@@ -202,20 +207,39 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> from sympy import symbols
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
-        >>> print(q1.mul(q2))
-        -60 + (12)i + (30)j + (24)k
-        >>> print(q1.mul(2))
-        2 + (4)i + (6)j + (8)k
+        >>> q1.mul(q2)
+        (-60) + 12*i + 30*j + 24*k
+        >>> q1.mul(2)
+        2 + 4*i + 6*j + 8*k
         >>> x = symbols('x', real = True)
-        >>> print(q1.mul(x))
-        x + (2*x)i + (3*x)j + (4*x)k
+        >>> q1.mul(x)
+        x + 2*x*i + 3*x*j + 4*x*k
         """
-        q1 = self
-        q2 = other
+        return self._generic_mul(self, other)
+
+    @staticmethod
+    def _generic_mul(q1, q2):
+
+        q1 = sympify(q1)
+        q2 = sympify(q2)
+
+        # None is a Quaternion:
+        if not isinstance(q1, Quaternion) and not isinstance(q2, Quaternion):
+            return q1*q2
+
+        # If q1 is a number or a sympy expression instead of a quaternion
+        if not isinstance(q1, Quaternion):
+            if q1.is_complex:
+                return Quaternion(-im(q1) * q2.b + re(q1) * q2.a, im(q1)
+                                  * q2.a + re(q1) * q2.b, -im(q1) * q2.d
+                                  + re(q1) * q2.c, im(q1) * q2.c + re(q1)
+                                  * q2.d)
+            else:
+                return Mul(q1, q2)
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
@@ -263,10 +287,10 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> print(q.pow(4))
-        668 + (-224)i + (-336)j + (-448)k
+        >>> q.pow(4)
+        668 + (-224)*i + (-336)*j + (-448)*k
         """
         q = self
         if p == -1:
@@ -287,14 +311,13 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> print(q.exp())
+        >>> q.exp()
         E*cos(sqrt(29))
-        + (2*sqrt(29)*E*sin(sqrt(29))/29)i
-        + (3*sqrt(29)*E*sin(sqrt(29))/29)j
-        + (4*sqrt(29)*E*sin(sqrt(29))/29)k
-
+        + 2*sqrt(29)*E*sin(sqrt(29))/29*i
+        + 3*sqrt(29)*E*sin(sqrt(29))/29*j
+        + 4*sqrt(29)*E*sin(sqrt(29))/29*k
         """
         # exp(q) = e^a(cos||v|| + v/||v||*sin||v||)
         q = self
@@ -312,14 +335,13 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> print(q.ln())
+        >>> q.ln()
         log(sqrt(30))
-        + (2*sqrt(29)*acos(sqrt(30)/30)/29)i
-        + (3*sqrt(29)*acos(sqrt(30)/30)/29)j
-        + (4*sqrt(29)*acos(sqrt(30)/30)/29)k
-
+        + 2*sqrt(29)*acos(sqrt(30)/30)/29*i
+        + 3*sqrt(29)*acos(sqrt(30)/30)/29*j
+        + 4*sqrt(29)*acos(sqrt(30)/30)/29*k
         """
         # ln(q) = ln||q|| + v/||v||*arccos(a/||q||)
         q = self
@@ -338,14 +360,13 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> print(q.pow_cos_sin(4))
+        >>> q.pow_cos_sin(4)
         900*cos(4*acos(sqrt(30)/30))
-        + (1800*sqrt(29)*sin(4*acos(sqrt(30)/30))/29)i
-        + (2700*sqrt(29)*sin(4*acos(sqrt(30)/30))/29)j
-        + (3600*sqrt(29)*sin(4*acos(sqrt(30)/30))/29)k
-
+        + 1800*sqrt(29)*sin(4*acos(sqrt(30)/30))/29*i
+        + 2700*sqrt(29)*sin(4*acos(sqrt(30)/30))/29*j
+        + 3600*sqrt(29)*sin(4*acos(sqrt(30)/30))/29*k
         """
         # q = ||q||*(cos(a) + u*sin(a))
         # q^p = ||q||^p * (cos(p*a) + u*sin(p*a))
@@ -355,9 +376,9 @@ class Quaternion(Expr):
         q2 = Quaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm() ** p)
 
-    def _eval_derivative(self, x):
-        return Quaternion(diff(self.a, x), diff(self.b, x),
-                          diff(self.c, x), diff(self.d, x))
+    def diff(self, *args):
+        return Quaternion(diff(self.a, *args), diff(self.b, *args),
+                          diff(self.c, *args), diff(self.d, *args))
 
     def integrate(self, *args):
         # TODO: is this expression correct?
@@ -371,12 +392,12 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> print(Quaternion.rotate((1, 2, 4), q))
+        >>> Quaternion.rotate((1, 2, 4), q)
         (38/15, 8/3, 41/15)
         >>> (axis, angle) = q.to_axis_angle()
-        >>> print(Quaternion.rotate((1, 2, 4), (axis, angle)))
+        >>> Quaternion.rotate((1, 2, 4), (axis, angle))
         (38/15, 8/3, 41/15)
         """
         if isinstance(r, tuple):
@@ -385,7 +406,7 @@ class Quaternion(Expr):
         else:
             # if r is a quaternion
             q = r.normalize()
-        pout = q * Quaternion(0, pin[0], pin[1], pin[2]) * q.conj()
+        pout = q * Quaternion(0, pin[0], pin[1], pin[2]) * conjugate(q)
         return (pout.b, pout.c, pout.d)
 
     def to_axis_angle(self):
@@ -394,12 +415,12 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> (axis, angle) = q.to_axis_angle()
-        >>> print(axis)
+        >>> axis
         (2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
-        >>> print(angle)
+        >>> angle
         2*acos(sqrt(30)/30)
         """
         q = self
@@ -429,10 +450,13 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> print(q.to_matrix())
-        Matrix([[-2/5, 2/5, 11/5], [2, -1/5, 2], [1, 14/5, 0]])
+        >>> q.to_matrix()
+        Matrix([
+        [-2/5,  2/5, 11/5],
+        [   2, -1/5,    2],
+        [   1, 14/5,    0]])
         """
         q = self
         sqa = sqrt(q.a ** 2)
@@ -470,10 +494,14 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.polys.domains.quaternion import Quaternion
+        >>> from sympy.algebra.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> print(q.to_matrix_4x4((1, 4, 8)))
-        Matrix([[-2/5, 2/5, 11/5, -89/5], [2, -1/5, 2, -66/5], [1, 14/5, 0, -21/5], [0, 0, 0, 1]])
+        >>> q.to_matrix_4x4((1, 4, 8))
+        Matrix([
+        [-2/5,  2/5, 11/5, -89/5],
+        [   2, -1/5,    2, -66/5],
+        [   1, 14/5,    0, -21/5],
+        [   0,    0,    0,     1]])
         """
 
         q = self

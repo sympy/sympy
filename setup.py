@@ -70,6 +70,7 @@ if sys.version_info[:2] < (2, 7):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_module_list.py
 modules = [
+    'sympy.algebra',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',

@@ -714,11 +714,9 @@ class StrPrinter(Printer):
         return "%s" % expr.name
 
     def _print_Quaternion(self, expr):
-        i, j, k = symbols('i j k')
-        # TODO: This expression is potentially confusing,
-        # shall we print it as `Quaternion( ... )`?
-        return latex(expr.a) + '+' + latex(expr.b * i) + '+' + \
-            latex(expr.c * j) + '+' + latex(expr.d * k)
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_Dimension(self, expr):
         return str(expr)
