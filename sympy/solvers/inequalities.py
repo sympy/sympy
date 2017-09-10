@@ -440,10 +440,12 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
+    from sympy import I
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
     from sympy.solvers.solveset import solveset_real, solvify
+    from sympy.solvers.solvers import solve
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -571,6 +573,24 @@ The inequality cannot be solved using solve_univariate_inequality.
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 
+            #If expr contains imaginary coefficients
+            #Only real values of x for which the imaginary part is 0 are taken
+            make_real = S.Reals
+            if expanded_e.coeff(I) != S.Zero:
+                im_sol = FiniteSet()
+
+                for z in solve(expanded_e.coeff(I), gen):
+                    if z not in singularities and valid(z) and z.is_real:
+                        im_sol += FiniteSet(z)
+
+                if len(im_sol) == 0:
+                    raise ValueError(filldedent('''
+%s contains imaginary parts which cannot be made 0 for any value of %s
+satisfying the inequality, leading to relations like I < 0.
+                '''  % (expr.subs(gen, _gen), _gen)))
+
+                make_real = make_real.intersect(im_sol)
+
             empty = sol_sets = [S.EmptySet]
 
             start = domain.inf
@@ -603,7 +623,11 @@ The inequality cannot be solved using solve_univariate_inequality.
             if valid(_pt(start, end)):
                 sol_sets.append(Interval.open(start, end))
 
-            rv = Union(*sol_sets).subs(gen, _gen)
+            if expanded_e.coeff(I) != S.Zero:
+                rv = (make_real)
+
+            else:
+                rv = (Union(*sol_sets)).intersect(make_real).subs(gen, _gen)
 
     return rv if not relational else rv.as_relational(_gen)
 
