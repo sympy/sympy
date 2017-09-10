@@ -1789,7 +1789,7 @@ class NormalDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
-        return -erfc(sqrt(2)*(-mean + x)/(2*std))/2 + 1
+        return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
 
 
 def Normal(name, mean, std):

@@ -121,7 +121,7 @@ def test_cdf():
     X = Normal('x', 0, 1)
 
     d = cdf(X)
-    assert P(X < 1) == d(1)
+    assert P(X < 1) == d(1).rewrite(erfc)
     assert d(0) == S.Half
 
     d = cdf(X, X > 0)  # given X>0
@@ -620,7 +620,7 @@ def test_density_unevaluated():
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
-    assert nd.cdf(x) == (1 - erfc(sqrt(2)*x/2))/2 + S.One/2
+    assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
     assert isinstance(nd.sample(), float) or nd.sample().is_Number
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
