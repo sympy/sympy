@@ -194,11 +194,7 @@ class StrPrinter(Printer):
         return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
-        left = '<'
-        right = '>'
-
-        return "%s%s, %s%s" % \
-                (left, self._print(i.min), self._print(i.max), right)
+        return "AccumBounds(%s, %s)" % (self._print(i.min), self._print(i.max))
 
     def _print_Inverse(self, I):
         return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])

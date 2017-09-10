@@ -1652,7 +1652,7 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
-    def _print_AccumuBounds(self, i):
+    def _print_AccumulationBounds(self, i):
         left = '<'
         right = '>'
 

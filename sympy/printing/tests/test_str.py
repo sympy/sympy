@@ -167,8 +167,8 @@ def test_Interval():
 
 def test_AccumBounds():
     a = Symbol('a', real=True)
-    assert str(AccumBounds(0, a)) == "<0, a>"
-    assert str(AccumBounds(0, 1)) == "<0, 1>"
+    assert str(AccumBounds(0, a)) == "AccumBounds(0, a)"
+    assert str(AccumBounds(0, 1)) == "AccumBounds(0, 1)"
 
 
 def test_Lambda():
