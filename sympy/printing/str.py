@@ -713,6 +713,13 @@ class StrPrinter(Printer):
     def _print_Quantity(self, expr):
         return "%s" % expr.name
 
+    def _print_Quaternion(self, expr):
+        i, j, k = symbols('i j k')
+        # TODO: This expression is potentially confusing,
+        # shall we print it as `Quaternion( ... )`?
+        return latex(expr.a) + '+' + latex(expr.b * i) + '+' + \
+            latex(expr.c * j) + '+' + latex(expr.d * k)
+
     def _print_Dimension(self, expr):
         return str(expr)
 

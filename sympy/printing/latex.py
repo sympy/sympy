@@ -1950,6 +1950,16 @@ class LatexPrinter(Printer):
         return r"\left< %s \right>" % ",".join(
             '{' + self._print(x) + '}' for [x] in m._module.gens)
 
+    def _print_Quaternion(self, expr):
+        m = max(len(str(expr.a)), len(str(expr.b)),
+                len(str(expr.c)), len(str(expr.d)))
+        if(m < 20):
+            return str(expr.a) + ' + ' + '(' + str(expr.b) + ')i + ' \
+                + '(' + str(expr.c) + ')j + ' + '(' + str(expr.d) + ')k'
+
+        return str(expr.a) + '\n+ ' + '(' + str(expr.b) + ')i\n+ ' \
+            + '(' + str(expr.c) + ')j\n+ ' + '(' + str(expr.d) + ')k'
+
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...
         return r"\frac{%s}{%s}" % (self._print(R.ring), self._print(R.base_ideal))

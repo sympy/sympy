@@ -4,21 +4,20 @@
 
 from __future__ import print_function
 
-from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy import Rational
 from sympy import re, im
 from sympy import sqrt, sin, cos, acos, asin, exp, ln
 from sympy import trigsimp
 from sympy import diff, integrate
 from sympy import Matrix
-from sympy import symbols
-from sympy.printing.latex import LatexPrinter, latex
+from sympy import symbols, sympify
+from sympy.printing.latex import latex
 from sympy.printing import StrPrinter
 from sympy import sstr
 
 
-class Quaternion(Basic):
-
+class Quaternion(Expr):
     """Provides basic quaternion operations.
     Quaternion objects can be instantiated as Quaternion(a, b, c, d)
     as in (a + b*i + c*j + d*k).
@@ -32,18 +31,35 @@ class Quaternion(Basic):
     1 + (2)i + (3)j + (4)k
     """
 
-    def __init__(
-        self,
-        a=0,
-        b=0,
-        c=0,
-        d=0,
-    ):
+    def __new__(cls, a=0, b=0, c=0, d=0):
+        a = sympify(a)
+        b = sympify(b)
+        c = sympify(c)
+        d = sympify(d)
 
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
+        obj = Expr.__new__(cls, a, b, c, d)
+
+        obj._a = a
+        obj._b = b
+        obj._c = c
+        obj._d = d
+        return obj
+
+    @property
+    def a(self):
+        return self._a
+
+    @property
+    def b(self):
+        return self._b
+
+    @property
+    def c(self):
+        return self._c
+
+    @property
+    def d(self):
+        return self._d
 
     @classmethod
     def from_axis_angle(cls, vector, angle):
@@ -169,12 +185,13 @@ class Quaternion(Basic):
         q1 = self
         q2 = other
 
-        # If q1 or q2 is a number or a sympy expression instead of a quaternion
-        if not isinstance(q1, Quaternion):
-            return Quaternion(re(q1) + q2.a, im(q1) + q2.b, q2.c, q2.d)
-
+        # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
+            if q2.is_complex:
+                return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
+            else:
+                # q2 is something strange, do not evaluate:
+                return Add(q1, q2)
 
         return Quaternion(q1.a + q2.a, q1.b + q2.b, q1.c + q2.c, q1.d
                           + q2.d)
@@ -200,17 +217,15 @@ class Quaternion(Basic):
         q1 = self
         q2 = other
 
-        # If q1 or q2 is a number or a sympy expression instead of a quaternion
-        if not isinstance(q1, Quaternion):
-            return Quaternion(-im(q1) * q2.b + re(q1) * q2.a, im(q1)
-                              * q2.a + re(q1) * q2.b, -im(q1) * q2.d
-                              + re(q1) * q2.c, im(q1) * q2.c + re(q1)
-                              * q2.d)
+        # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            return Quaternion(-q1.b * im(q2) + q1.a * re(q2), q1.b
-                              * re(q2) + q1.a * im(q2), q1.c * re(q2)
-                              + q1.d * im(q2), -q1.c * im(q2) + q1.d
-                              * re(q2))
+            if q2.is_complex:
+                return Quaternion(-q1.b * im(q2) + q1.a * re(q2), q1.b
+                                  * re(q2) + q1.a * im(q2), q1.c * re(q2)
+                                  + q1.d * im(q2), -q1.c * im(q2) + q1.d
+                                  * re(q2))
+            else:
+                return Mul(q1, q2)
 
         return Quaternion(-q1.b * q2.b - q1.c * q2.c - q1.d * q2.d
                           + q1.a * q2.a, q1.b * q2.a + q1.c * q2.d
@@ -219,7 +234,7 @@ class Quaternion(Basic):
                           q1.b * q2.c - q1.c * q2.b + q1.d * q2.a
                           + q1.a * q2.d)
 
-    def conj(self):
+    def _eval_conjugate(self):
         """Returns the conjugate of the quaternion."""
         q = self
         return Quaternion(q.a, -q.b, -q.c, -q.d)
@@ -340,11 +355,12 @@ class Quaternion(Basic):
         q2 = Quaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm() ** p)
 
-    def diff(self, *args):
-        return Quaternion(diff(self.a, *args), diff(self.b, *args),
-                          diff(self.c, *args), diff(self.d, *args))
+    def _eval_derivative(self, x):
+        return Quaternion(diff(self.a, x), diff(self.b, x),
+                          diff(self.c, x), diff(self.d, x))
 
     def integrate(self, *args):
+        # TODO: is this expression correct?
         return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
                           integrate(self.c, *args), integrate(self.d, *args))
 
@@ -496,29 +512,3 @@ class Quaternion(Basic):
 
         return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
                        [m20, m21, m22, m23], [m30, m31, m32, m33]])
-
-class CustomLatexPrinter(LatexPrinter):
-
-    def _print_Quaternion(self, expr):
-        i, j, k = symbols('i j k')
-        return latex(expr.a) + '+' + latex(expr.b * i) + '+' + \
-            latex(expr.c * j) + '+' + latex(expr.d * k)
-
-class CustomStrPrinter(StrPrinter):
-    def _print_Quaternion(self, expr):
-        m = max(len(str(expr.a)), len(str(expr.b)),
-                len(str(expr.c)), len(str(expr.d)))
-        if(m < 20):
-            return str(expr.a) + ' + ' + '(' + str(expr.b) + ')i + ' \
-                + '(' + str(expr.c) + ')j + ' + '(' + str(expr.d) + ')k'
-
-        return str(expr.a) + '\n+ ' + '(' + str(expr.b) + ')i\n+ ' \
-            + '(' + str(expr.c) + ')j\n+ ' + '(' + str(expr.d) + ')k'
-
-Basic.__str__ = lambda self: CustomStrPrinter().doprint(self)
-
-def printing_mode(mode):
-    if(mode == 'str'):
-        Basic.__str__ = lambda self: CustomStrPrinter().doprint(self)
-    elif(mode == 'latex'):
-        Basic.__str__ = lambda self: CustomLatexPrinter().doprint(self)
