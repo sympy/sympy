@@ -2211,6 +2211,12 @@ def test_gff():
     raises(NotImplementedError, lambda: gff(f))
 
 
+def test_norm():
+    a, b = sqrt(2), sqrt(3)
+    f = Poly(a*x + b*y, x, y, extension=(a, b))
+    assert f.norm() == Poly(4*x**4 - 12*x**2*y**2 + 9*y**4, x, y, domain='QQ')
+
+
 def test_sqf_norm():
     assert sqf_norm(x**2 - 2, extension=sqrt(3)) == \
         (1, x**2 - 2*sqrt(3)*x + 1, x**4 - 10*x**2 + 1)
