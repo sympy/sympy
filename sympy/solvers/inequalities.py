@@ -625,7 +625,6 @@ satisfying the inequality, leading to relations like I < 0.
 
             if expanded_e.coeff(I) != S.Zero:
                 rv = (make_real)
-
             else:
                 rv = (Union(*sol_sets)).intersect(make_real).subs(gen, _gen)
 
