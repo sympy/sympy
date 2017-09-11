@@ -153,7 +153,7 @@ Principal method in this module is :func:`polytope_integrate`
 
   - ``polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x)`` returns the integral of :math:`x` over the triangle with vertices (0, 0), (0, 1) and (1, 0)
 
-  - ``polytope_integrate(cube, x + y + z)`` returns the integral of :math:`x + y + z` over the unit cube.
+  - ``polytope_integrate(unit_cube, x + y + z)`` returns the integral of :math:`x + y + z` over the unit cube.
 
 References
 ----------
@@ -177,6 +177,7 @@ Single Polynomial::
     7/24
 
 List of specified polynomials::
+
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [3, x*y + y**2, x**4], max_degree=4)
               4               2
     {3: 3/2, x : 1/30, x*y + y : 1/8}
@@ -184,7 +185,6 @@ List of specified polynomials::
                            2              3  689    4               2
     {1.125: 9/16, x: 1/6, x : 1/12, 6.89*x : ----, x : 1/30, x*y + y : 1/8}
                                              2000
-
 
 Computing all monomials up to a maximum degree::
 
