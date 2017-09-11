@@ -942,6 +942,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     ``factorint`` also periodically checks if the remaining part is
     a prime number or a perfect power, and in those cases stops.
 
+    For unevaluated factorial, it uses Legendre's formula(theorem).
+
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
 
@@ -999,6 +1001,28 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return factordict
 
     assert use_trial or use_rho or use_pm1
+
+    # for unevaluated factorial, if n < 20!, direct computation is faster
+    # since it uses lookup table
+    from sympy.functions.combinatorial.factorials import factorial
+    if isinstance(n, factorial) and n.args[0].is_Integer and n.args[0] >= 20:
+        x = n.args[0]
+        factors = {}
+        for p in sieve.primerange(2, x):
+            m = 0
+            d = p
+            q = x // p
+            while q != 0:
+                m += q
+                d *= p
+                q = x // d
+            factors[p] = m
+        if factors and verbose:
+            for k in sorted(factors):
+                print(factor_msg % (k, factors[k]))
+        if verbose:
+            print(complete_msg)
+        return factors
 
     n = as_int(n)
     if limit:

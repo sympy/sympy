@@ -27,8 +27,8 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
                    "erfc", "erfi", "erf", "erfinv", "erfcinv",
                    "besseli", "besselj", "besselk", "bessely",
-                   "exp", "factorial", "floor", "fresnelc", "fresnels",
-                   "gamma", "log", "polylog", "sign", "zeta"]
+                   "euler", "exp", "factorial", "floor", "fresnelc",
+                   "fresnels", "gamma", "log", "polylog", "sign", "zeta"]
 
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).

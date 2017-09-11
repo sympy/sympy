@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -382,7 +382,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     """
     Simplifies the given expression.
 
@@ -504,6 +504,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+
+    If rational=True, Floats will be recast as Rationals before simplification.
+    If rational=None, Floats will be recast as Rationals but the result will
+    be recast as Floats. If rational=False(default) then nothing will be done
+    to the Floats.
     """
     expr = sympify(expr)
 
@@ -526,8 +531,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
                isinstance(expr.args[0], expr.inverse(argindex=1)):
                 return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure, fu=fu)
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                                measure=measure, rational=rational)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
                          for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -540,6 +545,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
+
+    # rationalize Floats
+    floats = False
+    if rational is not False and expr.has(Float):
+        floats = True
+        expr = nsimplify(expr, rational=True)
 
     expr = bottom_up(expr, lambda w: w.normal())
     expr = Mul(*powsimp(expr).as_content_primitive())
@@ -564,8 +575,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
-    if expr.has(TrigonometricFunction) and not fu or expr.has(
-            HyperbolicFunction):
+    if expr.has(TrigonometricFunction, HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
     if expr.has(log):
@@ -581,9 +591,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         expr = product_simplify(expr)
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+    short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
     if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
-        short = exptrigsimp(short, simplify=False)
+        short = exptrigsimp(short)
 
     # get rid of hollow 2-arg Mul factorization
     hollow_mul = Transform(
@@ -609,6 +620,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
+
+    # restore floats
+    if floats and rational is None:
+        expr = nfloat(expr, exponent=False)
 
     return expr
 
@@ -1078,7 +1093,7 @@ def besselsimp(expr):
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) == S(1)/2:
-                return exptrigsimp(trigsimp(unpolarify(
+                return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))
             elif nu.is_Integer and nu > 1:

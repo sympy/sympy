@@ -174,6 +174,7 @@ class Mul(Expr, AssocOp):
         """
 
         from sympy.calculus.util import AccumBounds
+        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -268,6 +269,10 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
+                coeff = o.__mul__(coeff)
+                continue
+
+            elif isinstance(o, MatrixExpr):
                 coeff = o.__mul__(coeff)
                 continue
 
@@ -870,11 +875,12 @@ class Mul(Expr, AssocOp):
         else:
             plain = self.func(*plain)
             if sums:
+                deep = hints.get("deep", False)
                 terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
                     t = self.func(plain, term)
-                    if t.is_Mul and any(a.is_Add for a in t.args):
+                    if t.is_Mul and any(a.is_Add for a in t.args) and deep:
                         t = t._eval_expand_mul()
                     args.append(t)
                 return Add(*args)
@@ -1315,28 +1321,12 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
-    def _eval_is_prime(self):
-        """
-        If product is a positive integer, multiplication
-        will never result in a prime number.
-        """
-        if self.is_number:
-            """
-            If input is a number that is not completely simplified.
-            e.g. Mul(sqrt(3), sqrt(3), evaluate=False)
-            So we manually evaluate it and return whether that is prime or not.
-            """
-            # Note: `doit()` was not used due to test failing (Infinite Recursion)
-            r = S.One
-            for arg in self.args:
-                r *= arg
-            return r.is_prime
-
+    def _eval_is_composite(self):
         if self.is_integer and self.is_positive:
             """
             Here we count the number of arguments that have a minimum value
             greater than two.
-            If there are more than one of such a symbol then the result is not prime.
+            If there are more than one of such a symbol then the result is composite.
             Else, the result cannot be determined.
             """
             number_of_args = 0 # count of symbols with minimum value greater than one
@@ -1345,7 +1335,7 @@ class Mul(Expr, AssocOp):
                     number_of_args += 1
 
             if number_of_args > 1:
-                return False
+                return True
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign

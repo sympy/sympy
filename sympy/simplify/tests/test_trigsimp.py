@@ -361,6 +361,8 @@ def test_exptrigsimp():
 
     assert exptrigsimp(exp(x) + exp(-x)) == 2*cosh(x)
     assert exptrigsimp(exp(x) - exp(-x)) == 2*sinh(x)
+    assert exptrigsimp((2*exp(x)-2*exp(-x))/(exp(x)+exp(-x))) == 2*tanh(x)
+    assert exptrigsimp((2*exp(2*x)-2)/(exp(2*x)+1)) == 2*tanh(x)
     e = [cos(x) + I*sin(x), cos(x) - I*sin(x),
          cosh(x) - sinh(x), cosh(x) + sinh(x)]
     ok = [exp(I*x), exp(-I*x), exp(-x), exp(x)]
@@ -378,12 +380,8 @@ def test_exptrigsimp():
     for a in (1, I, x, I*x, 1 + I):
         w = exp(a)
         eq = y*(w - 1/w)/(w + 1/w)
-        s = simplify(eq)
-        assert s == exptrigsimp(eq)
-        res.append(s)
-        sinv = simplify(1/eq)
-        assert sinv == exptrigsimp(1/eq)
-        res.append(sinv)
+        res.append(simplify(eq))
+        res.append(simplify(1/eq))
     assert all(valid(i, j) for i, j in zip(res, ok))
 
     for a in range(1, 3):
