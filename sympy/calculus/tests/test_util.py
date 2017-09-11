@@ -21,7 +21,7 @@ def test_function_range():
     assert function_range(exp(x), x, Interval(-1, 1)) == Interval(exp(-1), exp(1))
     assert function_range(log(x) - x, x, S.Reals) == Interval(-oo, -1)
     assert function_range(sqrt(3*x - 1), x, Interval(0, 2)) == Interval(0, sqrt(5))
-    raises(NotImplementedError, lambda : function_range((a*x + b)*(exp(x) - 3), x, S.Reals))
+    raises(NotImplementedError, lambda : function_range(exp(x)*(sin(x)-cos(x))/2 - x, x, S.Reals))
 
 
 def test_continuous_domain():
