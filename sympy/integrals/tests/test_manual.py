@@ -324,3 +324,7 @@ def test_issue_12899():
 
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
+
+
+def test_issue_13297():
+    assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6
