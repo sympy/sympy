@@ -332,6 +332,9 @@ def periodicity(f, symbol, check=False):
     from sympy.functions.elementary.trigonometric import (
         TrigonometricFunction, sin, cos, csc, sec)
     from sympy.solvers.decompogen import decompogen
+    from sympy.core import Mod
+    from sympy.polys.polytools import degree
+    from sympy.core.function import diff
     from sympy.core.relational import Relational
 
     def _check(orig_f, period):
@@ -416,6 +419,17 @@ def periodicity(f, symbol, check=False):
             return periodicity(g, symbol)
 
         period = _periodicity(g.args, symbol)
+
+    elif isinstance(f, Mod):
+        a, n = f.args
+
+        if a == symbol:
+            period = n
+        elif isinstance(a, TrigonometricFunction):
+            period = periodicity(a, symbol)
+        #check if 'f' is linear in 'symbol'
+        elif degree(a, symbol) == 1 and symbol not in n.free_symbols:
+            period = Abs(n / a.diff(symbol))
 
     elif period is None:
         from sympy.solvers.decompogen import compogen
