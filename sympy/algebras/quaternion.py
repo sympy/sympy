@@ -24,7 +24,7 @@ class Quaternion(Expr):
     Example
     ========
 
-    >>> from sympy.algebra.quaternion import Quaternion
+    >>> from sympy.algebras.quaternion import Quaternion
     >>> q = Quaternion(1, 2, 3, 4)
     >>> q
     1 + 2*i + 3*j + 4*k
@@ -70,7 +70,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion.from_axis_angle((2, 4, 6), 2)
         >>> q
         cos(1) + sqrt(14)*sin(1)/14*i + sqrt(14)*sin(1)/7*j + 3*sqrt(14)*sin(1)/14*k
@@ -94,7 +94,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import Matrix
         >>> M = Matrix([[4, 6, 2], [1, 8, 6], [5, 2, 7]])
         >>> q = Quaternion.from_matrix(M)
@@ -175,7 +175,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
@@ -207,7 +207,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
@@ -287,7 +287,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.pow(4)
         668 + (-224)*i + (-336)*j + (-448)*k
@@ -311,7 +311,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.exp()
         E*cos(sqrt(29))
@@ -335,7 +335,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.ln()
         log(sqrt(30))
@@ -360,7 +360,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.pow_cos_sin(4)
         900*cos(4*acos(sqrt(30)/30))
@@ -392,7 +392,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> Quaternion.rotate((1, 2, 4), q)
         (38/15, 8/3, 41/15)
@@ -415,7 +415,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> (axis, angle) = q.to_axis_angle()
         >>> axis
@@ -450,7 +450,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.to_matrix()
         Matrix([
@@ -494,7 +494,7 @@ class Quaternion(Expr):
         Example
         ========
 
-        >>> from sympy.algebra.quaternion import Quaternion
+        >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.to_matrix_4x4((1, 4, 8))
         Matrix([

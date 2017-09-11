@@ -1,4 +1,4 @@
-from sympy.algebra.quaternion import Quaternion
+from sympy.algebras.quaternion import Quaternion
 from sympy import symbols, re, im, Add, Mul, I
 
 
