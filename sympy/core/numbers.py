@@ -947,6 +947,7 @@ class Float(Number):
                             issue=12820,
                             deprecated_since_version="1.1").warn()
             dps = prec
+        del prec  # avoid using this deprecated kwarg
 
         if dps is not None and precision is not None:
             raise ValueError('Both decimal and binary precision supplied. '
@@ -1052,7 +1053,7 @@ class Float(Number):
             if precision < num._prec:
                 _mpf_ = mpf_norm(_mpf_, precision)
         else:
-            _mpf_ = mpmath.mpf(num, prec=prec)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         # special cases
         if _mpf_ == _mpf_zero:
