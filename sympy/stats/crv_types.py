@@ -756,12 +756,12 @@ def Erlang(name, k, l):
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /     -2*I*pi*k                       -2*I*pi*k
-    |  k*e         *lowergamma(k, 0)   k*e         *lowergamma(k, l*z)
-    |- ----------------------------- + -------------------------------  for z >= 0
-    <           gamma(k + 1)                     gamma(k + 1)
+    /   -2*I*pi*k
+    |k*e         *lowergamma(k, l*z)
+    |-------------------------------  for z >= 0
+    <          gamma(k + 1)
     |
-    |                                0                                  otherwise
+    |               0                 otherwise
     \
 
     >>> simplify(E(X))
@@ -1137,13 +1137,13 @@ def Gamma(name, k, theta):
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /                                   /     z  \
-    |                       k*lowergamma|k, -----|
-    |  k*lowergamma(k, 0)               \   theta/
-    <- ------------------ + ----------------------  for z >= 0
-    |     gamma(k + 1)           gamma(k + 1)
+    /            /     z  \
+    |k*lowergamma|k, -----|
+    |            \   theta/
+    <----------------------  for z >= 0
+    |     gamma(k + 1)
     |
-    \                      0                        otherwise
+    \          0             otherwise
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
