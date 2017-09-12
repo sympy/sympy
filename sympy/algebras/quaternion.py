@@ -39,13 +39,19 @@ class Quaternion(Expr):
         c = sympify(c)
         d = sympify(d)
 
-        obj = Expr.__new__(cls, a, b, c, d)
+        if((not(a.is_real) and not(a.is_real is None))
+                or (not(b.is_real) and not(b.is_real is None))
+                or (not(c.is_real) and not(c.is_real is None))
+                or (not(d.is_real) and not(d.is_real is None))):
+            print("Invalid arguments passed.")
+        else:
+            obj = Expr.__new__(cls, a, b, c, d)
 
-        obj._a = a
-        obj._b = b
-        obj._c = c
-        obj._d = d
-        return obj
+            obj._a = a
+            obj._b = b
+            obj._c = c
+            obj._d = d
+            return obj
 
     @property
     def a(self):
@@ -124,10 +130,10 @@ class Quaternion(Expr):
 
         # Takes the sign from the second term and sets the sign of the first
         # without altering the magnitude.
-        
+
         if y == 0:
             return 0
-        return x if x*y > 0 else -x
+        return x if x * y > 0 else -x
 
     def __add__(self, other):
         return self.add(other)
@@ -216,7 +222,7 @@ class Quaternion(Expr):
 
         # None is a Quaternion:
         if not isinstance(q1, Quaternion) and not isinstance(q2, Quaternion):
-            return q1*q2
+            return q1 * q2
 
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
@@ -417,7 +423,7 @@ class Quaternion(Expr):
                 # avoid error with acos
                 # axis and angle of rotation of q and q*-1 will be the same
                 q = q * -1
-        except:
+        except BaseException:
             pass
 
         q = q.normalize()
