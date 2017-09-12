@@ -87,6 +87,9 @@ class Quantity(AtomicExpr):
         """
         return self._scale_factor
 
+    def _eval_is_zero(self):
+        return self.scale_factor.is_zero
+
     def _eval_is_positive(self):
         return self.scale_factor.is_positive
 
