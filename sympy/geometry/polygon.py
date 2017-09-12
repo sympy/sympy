@@ -2217,6 +2217,26 @@ class Triangle(Polygon):
         return Circle(self.incenter, self.inradius)
 
     @property
+    def excircles(self):
+        """The excircles of a triangle.
+        
+        An excircle of the triangle is a circle lying outside the triangle, 
+        tangent to one of its sides and tangent to the extensions of the 
+        other two.
+        
+        Returns
+        =======
+        
+        excircles : an array of Circle objects
+        
+        See Also
+        ========
+        
+        sympy.geometry.polygon.Triangle.incircle
+         
+        """
+
+    @property
     def medians(self):
         """The medians of the triangle.
 
