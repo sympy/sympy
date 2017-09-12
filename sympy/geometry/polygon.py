@@ -2233,8 +2233,19 @@ class Triangle(Polygon):
         ========
         
         sympy.geometry.polygon.Triangle.incircle
-         
+        
+        Examples
+        ========
+        
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.excircles
+        
         """
+
+        s = self.sides
+        return s
 
     @property
     def medians(self):
