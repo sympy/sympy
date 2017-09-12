@@ -39,7 +39,7 @@ class Quaternion(Expr):
         c = sympify(c)
         d = sympify(d)
 
-        if any(i.is_real is False for i in [a, b, c, d]):
+        if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be real")
         else:
             obj = Expr.__new__(cls, a, b, c, d)
