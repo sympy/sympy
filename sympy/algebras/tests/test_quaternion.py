@@ -4,9 +4,7 @@ from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E
 from sympy import Matrix
 from sympy import diff, integrate
 
-
 x, y, z, w = symbols("x y z w")
-
 
 def test_quaternion_construction():
     q = Quaternion(x, y, z, w)
