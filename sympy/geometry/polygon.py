@@ -2219,29 +2219,29 @@ class Triangle(Polygon):
     @property
     def excircles(self):
         """The excircles of a triangle.
-        
-        An excircle of the triangle is a circle lying outside the triangle, 
-        tangent to one of its sides and tangent to the extensions of the 
+
+        An excircle of the triangle is a circle lying outside the triangle,
+        tangent to one of its sides and tangent to the extensions of the
         other two.
-        
+
         Returns
         =======
-        
+
         excircles : an array of Circle objects
-        
+
         See Also
         ========
-        
+
         sympy.geometry.polygon.Triangle.incircle
-        
+
         Examples
         ========
-        
+
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.excircles
-        
+
         """
 
         s = self.sides
