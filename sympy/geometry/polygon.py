@@ -18,6 +18,8 @@ from .ellipse import Circle
 from .line import Line, Segment
 from .util import _symbol
 
+from sympy import sqrt
+
 import warnings
 
 
@@ -2217,7 +2219,7 @@ class Triangle(Polygon):
         return Circle(self.incenter, self.inradius)
 
     @property
-    def excircles(self):
+    def excircle(self):
         """The excircles of a triangle.
 
         An excircle of the triangle is a circle lying outside the triangle,
@@ -2227,7 +2229,7 @@ class Triangle(Polygon):
         Returns
         =======
 
-        excircles : an array of Circle objects
+        excircle : an array of Circle objects
 
         See Also
         ========
@@ -2240,12 +2242,23 @@ class Triangle(Polygon):
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
-        >>> t.excircles
+        >>> t.excircle
+
+        References
+        ==========
+        
+        [1] http://mathworld.wolfram.com/Exradius.html
 
         """
 
-        s = self.sides
-        return s
+        side = self.sides
+        a = side[0].length
+        b = side[1].length
+        c = side[2].length
+        s = (a + b + c)/2
+        exradius = sqrt(s*(s-b)*(s-c)/(s-a))
+
+        return exradius
 
     @property
     def medians(self):
