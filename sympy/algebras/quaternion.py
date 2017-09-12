@@ -117,7 +117,7 @@ class Quaternion(Expr):
         c = Quaternion.__copysign(c, M[0, 2] - M[2, 0])
         d = Quaternion.__copysign(d, M[1, 0] - M[0, 1])
 
-        return Quaternion(sympify(a), sympify(b), sympify(c), sympify(d))
+        return Quaternion(a, b, c, d)
 
     @staticmethod
     def __copysign(x, y):
