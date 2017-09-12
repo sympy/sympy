@@ -117,30 +117,17 @@ class Quaternion(Expr):
         c = Quaternion.__copysign(c, M[0, 2] - M[2, 0])
         d = Quaternion.__copysign(d, M[1, 0] - M[0, 1])
 
-        return Quaternion(a, b, c, d)
+        return Quaternion(sympify(a), sympify(b), sympify(c), sympify(d))
 
     @staticmethod
     def __copysign(x, y):
 
         # Takes the sign from the second term and sets the sign of the first
         # without altering the magnitude.
-
-        if y < 0:
-            if x < 0:
-                return x
-            elif x > 0:
-                return -x
-            else:
-                return 0
-        elif y > 0:
-            if x > 0:
-                return x
-            elif x < 0:
-                return -x
-            else:
-                return 0
-        else:
+        
+        if y == 0:
             return 0
+        return x if x*y > 0 else -x
 
     def __add__(self, other):
         return self.add(other)
@@ -278,7 +265,7 @@ class Quaternion(Expr):
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
-        return q.conj() * (1 / q.norm() ** 2)
+        return conjugate(q) * (1 / q.norm() ** 2)
 
     def pow(self, p):
         """Finds the pth power of the quaternion.
@@ -372,7 +359,7 @@ class Quaternion(Expr):
         # q^p = ||q||^p * (cos(p*a) + u*sin(p*a))
 
         q = self
-        (v, angle) = Quaternion.to_axis_angle(q)
+        (v, angle) = q.to_axis_angle()
         q2 = Quaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm() ** p)
 
@@ -424,10 +411,14 @@ class Quaternion(Expr):
         2*acos(sqrt(30)/30)
         """
         q = self
-        if q.a < 0:
-            # avoid error with arccos
-            # axis and angle of rotation of q and q*-1 will be the same
-            q = q * -1
+        try:
+            # Skips it if it doesn't know whether q.a is negative
+            if q.a < 0:
+                # avoid error with acos
+                # axis and angle of rotation of q and q*-1 will be the same
+                q = q * -1
+        except:
+            pass
 
         q = q.normalize()
         angle = trigsimp(2 * acos(q.a))
