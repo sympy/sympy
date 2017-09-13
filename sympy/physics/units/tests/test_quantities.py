@@ -19,6 +19,13 @@ from sympy.utilities.pytest import XFAIL, raises
 k = PREFIXES["k"]
 
 
+def test_is_zero():
+    tim1 = Quantity('tim1', time, second)
+    tim2 = Quantity('tim2', time, 0)
+    assert tim1.is_zero == False
+    assert tim2.is_zero == True
+
+
 def test_str_repr():
     assert str(kg) == "kilogram"
 
@@ -85,6 +92,12 @@ def test_abbrev():
 
 
 def test_print():
+    u = Quantity("unitname", length, 10, "dam")
+    assert repr(u) == "unitname"
+    assert str(u) == "unitname"
+
+
+def test_print_abbrev():
     u = Quantity("unitname", length, 10, "dam")
     assert repr(u) == "unitname"
     assert str(u) == "unitname"
