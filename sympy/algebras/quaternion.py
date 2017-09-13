@@ -33,7 +33,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_elements = True):
         a = sympify(a)
         b = sympify(b)
         c = sympify(c)
@@ -42,13 +42,18 @@ class Quaternion(Expr):
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
         else:
+            if any(i.is_real is False for i in [a, b, c, d]):
+                real_elements = False
+                
             obj = Expr.__new__(cls, a, b, c, d)
 
             obj._a = a
             obj._b = b
             obj._c = c
             obj._d = d
+            obj._real_elements = real_elements
             return obj
+            
 
     @property
     def a(self):
@@ -65,6 +70,9 @@ class Quaternion(Expr):
     @property
     def d(self):
         return self._d
+    @property
+    def real_elements(self):
+        return self._real_elements
 
     @classmethod
     def from_axis_angle(cls, vector, angle):
@@ -182,11 +190,14 @@ class Quaternion(Expr):
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q2.is_complex:
-                return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
+            if q1.real_elements:
+                if q2.is_complex:
+                    return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
+                else:
+                    # q2 is something strange, do not evaluate:
+                    return Add(q1, q2)
             else:
-                # q2 is something strange, do not evaluate:
-                return Add(q1, q2)
+                return Quaternion(q1.a + q2, q1.b, q1.c, q1.d)
 
         return Quaternion(q1.a + q2.a, q1.b + q2.b, q1.c + q2.c, q1.d
                           + q2.d)

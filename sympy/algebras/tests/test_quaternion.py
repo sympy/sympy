@@ -37,6 +37,12 @@ def test_quaternion_complex_real_addition():
 
     assert -q == Quaternion(-x, -y, -z, -w)
 
+    q1 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I)
+    assert q1 + (2 + 3*I) == Quaternion(5 + 7*I, 2 + 5*I, 0, 7 + 8*I)
+
+    q2 = Quaternion(1, 4, 7, 8)
+    assert q2 + (2 + 3*I) == Quaternion(3, 7, 7, 8)
+
 
 def test_quaternion_functions():
     q = Quaternion(x, y, z, w)
