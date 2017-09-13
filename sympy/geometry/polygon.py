@@ -2256,7 +2256,7 @@ class Triangle(Polygon):
         a = side[0].length
         b = side[1].length
         c = side[2].length
-        s = (a + b + c)/2
+        s = (a+b+c)/2
         area = self.area
         exradii = {area/(s-a), area/(s-b), area/(s-c)}
 
