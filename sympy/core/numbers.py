@@ -1017,6 +1017,8 @@ class Float(Number):
         if precision is None or precision == '':
             precision = mlib.libmpf.dps_to_prec(dps)
 
+        precision = int(precision)
+
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, string_types):
