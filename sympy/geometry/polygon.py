@@ -2256,10 +2256,6 @@ class Triangle(Polygon):
         a = side[0].length
         b = side[1].length
         c = side[2].length
-
-        # Well, we might as well use this:
-        # http://artofproblemsolving.com/wiki/index.php?title=Excircle
-
         s = (a + b + c)/2
         area = self.area
         exradiusA = area/(s - a)
