@@ -2219,8 +2219,8 @@ class Triangle(Polygon):
         return Circle(self.incenter, self.inradius)
 
     @property
-    def excircle(self):
-        """The excircles of a triangle.
+    def exradius(self):
+        """The radius of excircles of a triangle.
 
         An excircle of the triangle is a circle lying outside the triangle,
         tangent to one of its sides and tangent to the extensions of the
@@ -2229,12 +2229,12 @@ class Triangle(Polygon):
         Returns
         =======
 
-        excircle : an array of Circle objects
+        exradius : radius of a Circle object.
 
         See Also
         ========
 
-        sympy.geometry.polygon.Triangle.incircle
+        sympy.geometry.polygon.Triangle.inradius
 
         Examples
         ========
@@ -2248,6 +2248,7 @@ class Triangle(Polygon):
         ==========
         
         [1] http://mathworld.wolfram.com/Exradius.html
+        [2] http://mathworld.wolfram.com/Excircles.html
 
         """
 
