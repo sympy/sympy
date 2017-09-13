@@ -270,7 +270,10 @@ class Dict(Basic):
 
 class OrderedSet(collections.MutableSet):
     def __init__(self, iterable=None):
-        self.map = collections.OrderedDict((item, None) for item in iterable)
+        if iterable:
+            self.map = collections.OrderedDict((item, None) for item in iterable)
+        else:
+            self.map = collections.OrderedDict()
 
     def __len__(self):
         return len(self.map)
@@ -287,4 +290,9 @@ class OrderedSet(collections.MutableSet):
     def __iter__(self):
         for key in self.map.keys():
             yield key
+
+    def __repr__(self):
+        if not self.map:
+            return '%s()' % (self.__class__.__name__,)
+        return '%s(%r)' % (self.__class__.__name__, list(self.map.keys()))
 
