@@ -2,7 +2,8 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin, fibonacci, RealField)
+                   AlgebraicNumber, simplify, sin, fibonacci, RealField,
+                   sympify, srepr)
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
@@ -1737,3 +1738,10 @@ def test_NumberSymbol_comparison():
     assert (fpi <= pi) == (pi >= fpi)
     assert (fpi > pi) == (pi < fpi)
     assert (fpi >= pi) == (pi <= fpi)
+
+def test_Integer_precision():
+    # Make sure Integer inputs for keyword args work
+    assert Float('1.0', dps=Integer(15))._prec == 53
+    assert Float('1.0', precision=Integer(15))._prec == 15
+    assert type(Float('1.0', precision=Integer(15))._prec) == int
+    assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
