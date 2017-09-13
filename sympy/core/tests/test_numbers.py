@@ -1740,7 +1740,7 @@ def test_NumberSymbol_comparison():
     assert (fpi >= pi) == (pi <= fpi)
 
 def test_Integer_precision():
-    # Make sure none of these crash
+    # Make sure Integer inputs for keyword args work
     assert Float('1.0', dps=Integer(15))._prec == 53
     assert Float('1.0', precision=Integer(15))._prec == 15
     assert type(Float('1.0', precision=Integer(15))._prec) == int
