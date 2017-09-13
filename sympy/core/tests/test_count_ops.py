@@ -95,17 +95,17 @@ def test_count_ops_visual():
     assert count(Basic()) == 0
     assert count(Basic(Basic(),Basic(x,x+y))) == ADD + 2*BASIC
     assert count(Basic(x, x + y)) == ADD + BASIC
-    assert count(Or(x,y)) == OR
-    assert count(And(x,y)) == AND
-    assert count(And(x**y,z)) == AND + POW
-    assert count(Or(x,Or(y,And(z,a)))) == AND + OR
-    assert count(Nor(x,y)) == NOT + OR
-    assert count(Nand(x,y)) == NOT + AND
-    assert count(Xor(x,y)) == XOR
-    assert count(Implies(x,y)) == IMPLIES
-    assert count(Equivalent(x,y)) == EQUIVALENT
-    assert count(ITE(x,y,z)) == ITE
-    assert count([Or(x,y), And(x,y), Basic(x+y)]) == ADD + AND + BASIC + OR
+    assert count(Or(x, y)) == OR
+    assert count(And(x, y)) == AND
+    assert count(Or(x, Or(y, And(z, a)))) == AND + OR
+    assert count(Nor(x, y)) == NOT + OR
+    assert count(Nand(x, y)) == NOT + AND
+    assert count(Xor(x, y)) == XOR
+    assert count(Implies(x, y)) == IMPLIES
+    assert count(Equivalent(x, y)) == EQUIVALENT
+    assert count(ITE(x, y, z)) == ITE
+    assert count([Or(x, y), And(x, y), Basic(x + y)]
+        ) == ADD + AND + BASIC + OR
 
     assert count(Basic(Tuple(x))) == BASIC + TUPLE
     #It checks that TUPLE is counted as an operation.

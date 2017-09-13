@@ -16,6 +16,41 @@ from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 
 
+def _bool(e):
+    """Like bool, return the Boolean value of an expression, e,
+    which can be any instance of Boolean or bool.
+
+    Examples
+    ========
+
+    >>> from sympy import true, false, nan
+    >>> from sympy.logic.boolalg import _bool as Bool
+    >>> from sympy.abc import x
+    >>> Bool(1) is true
+    True
+    >>> Bool(x)
+    x
+    >>> Bool(2)
+    Traceback (most recent call last):
+    ...
+    TypeError: expecting bool, Boolean or ITE, not `2`
+    """
+    from sympy.core.symbol import Symbol
+    if e == True:
+        return S.true
+    if e == False:
+        return S.false
+    if isinstance(e, Symbol):
+        z = e.is_zero
+        if z is None:
+            return e
+        return S.false if z else S.true
+    if isinstance(e, ITE):
+        return ITE(*map(_bool, e.args))
+    if isinstance(e, Boolean):
+        return e
+    raise TypeError('expecting bool, Boolean or ITE, not `%s`' % e)
+
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
@@ -77,6 +112,10 @@ class Boolean(Basic):
             raise NotImplementedError('handling of relationals')
         return self.atoms() == other.atoms() and \
                 not satisfiable(Not(Equivalent(self, other)))
+
+    def to_nnf(self):
+        # override where necessary
+        return self
 
 
 class BooleanAtom(Boolean):
@@ -349,10 +388,7 @@ class And(LatticeOp, BooleanFunction):
     def _new_args_filter(cls, args):
         newargs = []
         rel = []
-        for x in reversed(list(args)):
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
-                continue
+        for x in reversed(list(map(_bool, args))):
             if x.is_Relational:
                 c = x.canonical
                 if c in rel:
@@ -420,10 +456,7 @@ class Or(LatticeOp, BooleanFunction):
     def _new_args_filter(cls, args):
         newargs = []
         rel = []
-        for x in args:
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
-                continue
+        for x in map(_bool, args):
             if x.is_Relational:
                 c = x.canonical
                 if c in rel:
@@ -935,7 +968,8 @@ class ITE(BooleanFunction):
     If then else clause.
 
     ITE(A, B, C) evaluates and returns the result of B if A is true
-    else it returns the result of C
+    else it returns the result of C. A is enforced to be a Boolean
+    but B and C can be arbitrary expressions.
 
     Examples
     ========
@@ -954,16 +988,18 @@ class ITE(BooleanFunction):
     y
     >>> ITE(x, y, y)
     y
+    >>> ITE(True, [], ())
+    []
     """
     @classmethod
     def eval(cls, *args):
-        try:
-            a, b, c = args
-        except ValueError:
+        if len(args) != 3:
             raise ValueError("ITE expects exactly 3 arguments")
-        if a == True:
+        a, b, c= args
+        a = _bool(a)
+        if a is S.true:
             return b
-        if a == False:
+        if a is S.false:
             return c
         if b == c:
             return b
@@ -974,7 +1010,7 @@ class ITE(BooleanFunction):
                 return Not(a)
 
     def to_nnf(self, simplify=True):
-        a, b, c = self.args
+        a, b, c = _bool(self).args
         return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
 
     def _eval_derivative(self, x):
@@ -1741,9 +1777,6 @@ def simplify_logic(expr, form=None, deep=True):
         If 'cnf' or 'dnf', the simplest expression in the corresponding
         normal form is returned; if None, the answer is returned
         according to the form with fewest args (in CNF by default).
-    deep : boolean (default True)
-        indicates whether to recursively simplify any
-        non-boolean functions contained within the input.
 
     Examples
     ========
@@ -1772,9 +1805,6 @@ def simplify_logic(expr, form=None, deep=True):
             t = list(t)
             if expr.xreplace(dict(zip(variables, t))) == True:
                 truthtable.append(t)
-        if deep:
-            from sympy.simplify.simplify import simplify
-            variables = [simplify(v) for v in variables]
         if form == 'dnf' or \
            (form is None and len(truthtable) >= (2 ** (len(variables) - 1))):
             return SOPform(variables, truthtable)
