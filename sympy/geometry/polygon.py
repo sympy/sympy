@@ -2242,7 +2242,7 @@ class Triangle(Polygon):
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
-        >>> t.excircle
+        >>> t.exradius
 
         References
         ==========
@@ -2258,11 +2258,9 @@ class Triangle(Polygon):
         c = side[2].length
         s = (a + b + c)/2
         area = self.area
-        exradiusA = area/(s - a)
-        exradiusB = area/(s - b)
-        exradiusC = area/(s - c)
+        exradii = {area/(s-a), area/(s-b), area/(s-c)}
 
-        return exradiusA
+        return exradii
 
     @property
     def medians(self):
