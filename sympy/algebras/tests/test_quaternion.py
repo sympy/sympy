@@ -42,7 +42,8 @@ def test_quaternion_complex_real_addition():
 
     assert q1 + (2 + 3*I) == Quaternion(5 + 7*I, 2 + 5*I, 0, 7 + 8*I)
     assert q2 + (2 + 3*I) == Quaternion(3, 7, 7, 8)
-    assert q1 * (2 + 3*I) == Quaternion((2 + 3*I)*(3 + 4*I), 2 + 5*I, 0, 7 + 8*I)
+    assert q1 * (2 + 3*I) == \
+    Quaternion((2 + 3*I)*(3 + 4*I), (2 + 3*I)*(2 + 5*I), 0, (2 + 3*I)*(7 + 8*I))
     assert q2 * (2 + 3*I) == Quaternion(-10, 11, 38, -5)
 
 def test_quaternion_functions():

@@ -237,7 +237,7 @@ class Quaternion(Expr):
                 else:
                     return Mul(q1, q2)
             else:
-                return Quaternion(q1 * q2.a, q2.b, q2.c, q2.d)
+                return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
 
 
         # If q2 is a number or a sympy expression instead of a quaternion
@@ -248,7 +248,7 @@ class Quaternion(Expr):
                 else:
                     return Mul(q1, q2)
             else:
-                return Quaternion(q2 * q1.a, q1.b, q1.c, q1.d)
+                return Quaternion(q2 * q1.a, q2 * q1.b, q2 * q1.c, q2 * q1.d)
 
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
