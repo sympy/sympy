@@ -33,7 +33,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_elements = True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field = True):
         a = sympify(a)
         b = sympify(b)
         c = sympify(c)
@@ -43,17 +43,14 @@ class Quaternion(Expr):
             raise ValueError("arguments have to be commutative")
         else:
             if any(i.is_real is False for i in [a, b, c, d]):
-                real_elements = False
-                
+                real_field = False
             obj = Expr.__new__(cls, a, b, c, d)
-
             obj._a = a
             obj._b = b
             obj._c = c
             obj._d = d
-            obj._real_elements = real_elements
+            obj._real_field = real_field
             return obj
-            
 
     @property
     def a(self):
@@ -71,8 +68,8 @@ class Quaternion(Expr):
     def d(self):
         return self._d
     @property
-    def real_elements(self):
-        return self._real_elements
+    def real_field(self):
+        return self._real_field
 
     @classmethod
     def from_axis_angle(cls, vector, angle):
@@ -190,7 +187,7 @@ class Quaternion(Expr):
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q1.real_elements:
+            if q1.real_field:
                 if q2.is_complex:
                     return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
                 else:
@@ -234,23 +231,24 @@ class Quaternion(Expr):
 
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
-            if q1.is_complex:
-                return Quaternion(-im(q1)*q2.b + re(q1)*q2.a,
-                                  im(q1)* q2.a + re(q1)*q2.b,
-                                  -im(q1)*q2.d + re(q1)*q2.c,
-                                  im(q1) * q2.c + re(q1)*q2.d)
+            if q2.real_field:
+                if q1.is_complex:
+                    return q2 * Quaternion(re(q1), im(q1), 0, 0)
+                else:
+                    return Mul(q1, q2)
             else:
-                return Mul(q1, q2)
+                return Quaternion(q1 * q2.a, q2.b, q2.c, q2.d)
+
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q2.is_complex:
-                return Quaternion(-q1.b*im(q2) + q1.a*re(q2),
-                                  q1.b*re(q2) + q1.a*im(q2),
-                                  q1.c*re(q2)+ q1.d*im(q2),
-                                  -q1.c*im(q2) + q1.d*re(q2))
+            if q1.real_field:
+                if q2.is_complex:
+                    return q1 * Quaternion(re(q2), im(q2), 0, 0)
+                else:
+                    return Mul(q1, q2)
             else:
-                return Mul(q1, q2)
+                return Quaternion(q2 * q1.a, q1.b, q1.c, q1.d)
 
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
