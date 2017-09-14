@@ -193,8 +193,16 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_nonzero:
             return S.Zero
+        c, nc = arg.args_cnc()
+        if c and c[0] == -1:
+            # keep this fast and simple instead of using
+            # could_extract_minus_sign
+            return cls(-arg, k) if k else cls(-arg)
         if fuzzy_not(im(arg).is_zero):
-            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
+            raise ValueError(filldedent('''
+                Function defined only for Real Values.
+                Complex part: %s  found in %s .''' % (
+                repr(im(arg)), repr(arg))))
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
     def simplify(self, x):
