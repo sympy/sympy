@@ -208,7 +208,7 @@ class DiracDelta(Function):
             if k % 2 == 1:
                 return -cls(-arg, k)
             elif k % 2 == 0:
-                return cls(-arg)
+                return cls(-arg, k) if k else cls(-arg)
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
     def simplify(self, x):
