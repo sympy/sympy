@@ -285,7 +285,10 @@ class OrderedSet(collections.MutableSet):
         self.map[key] = None
 
     def discard(self, key):
-        self.pop(key)
+        self.map.pop(key)
+
+    def pop(self, last=True):
+        return self.map.popitem(last=last)[0]
 
     def __iter__(self):
         for key in self.map.keys():
@@ -296,3 +299,20 @@ class OrderedSet(collections.MutableSet):
             return '%s()' % (self.__class__.__name__,)
         return '%s(%r)' % (self.__class__.__name__, list(self.map.keys()))
 
+    def intersection(self, other):
+        result = []
+        for val in self:
+            if val in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def difference(self, other):
+        result = []
+        for val in self:
+            if val not in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def update(self, iterable):
+        for val in iterable:
+            self.add(val)
