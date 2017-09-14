@@ -614,6 +614,10 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
+    def _eval_rewrite_as_Piecewise(self, *args):
+        from sympy.functions import Piecewise
+        return Piecewise((args[0], args[0]>args[1]), (args[1], True))
+
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
 
@@ -673,6 +677,10 @@ class Min(MinMaxBase, Application):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
+
+    def _eval_rewrite_as_Piecewise(self, *args):
+        from sympy.functions import Piecewise
+        return Piecewise((args[0], args[0]<args[1]), (args[1], True))
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)
