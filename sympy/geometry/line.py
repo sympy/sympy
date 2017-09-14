@@ -1479,18 +1479,21 @@ class Segment(LinearEntity):
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
-            if Point.is_collinear(other, self.p1, self.p2):
-                d1, d2 = other - self.p1, other - self.p2
-                d = self.p2 - self.p1
-                # without the call to simplify, sympy cannot tell that an expression
-                # like (a+b)*(a/2+b/2) is always non-negative.  If it cannot be
-                # determined, raise an Undecidable error
-                try:
-                    # the triangle inequality says that |d1|+|d2| >= |d| and is strict
-                    # only if other lies in the line segment
-                    return bool(simplify(Eq(abs(d1) + abs(d2) - abs(d), 0)))
-                except TypeError:
-                    raise Undecidable("Cannot determine if {} is in {}".format(other, self))
+            d1, d2 = other - self.p1, other - self.p2
+            d = self.p2 - self.p1
+            r = (simplify(d.dot(d1)).is_nonnegative and
+                 simplify((-d).dot(d2)).is_nonnegative and
+                 Point.is_collinear(other, self.p1, self.p2))
+            if r is not None:
+                return bool(r)
+            # TODO: c.f. previous commit c5f0b00fbce9bdd253eb9c2465339c84ffad443d
+            # If still undecided, try triangle inequality |d1|+|d2| >= |d| which
+            # is equal iff 'other' lies in the line segment.  Might cost more
+            # than above due to additional sqrts.
+            #try:
+            #    return bool(simplify(Eq(abs(d1) + abs(d2) - abs(d), 0)))
+            #except TypeError:
+            raise Undecidable("Cannot determine if {} is in {}".format(other, self))
         if isinstance(other, Segment):
             return other.p1 in self and other.p2 in self
 
