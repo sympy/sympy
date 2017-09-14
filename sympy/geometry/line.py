@@ -1488,7 +1488,7 @@ class Segment(LinearEntity):
                 try:
                     # the triangle inequality says that |d1|+|d2| >= |d| and is strict
                     # only if other lies in the line segment
-                    return bool(Eq(simplify(abs(d1) + abs(d2) - abs(d)), 0))
+                    return bool(simplify(Eq(abs(d1) + abs(d2) - abs(d), 0)))
                 except TypeError:
                     raise Undecidable("Cannot determine if {} is in {}".format(other, self))
         if isinstance(other, Segment):

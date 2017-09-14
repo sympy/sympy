@@ -534,6 +534,10 @@ def test_Float():
     raises(ValueError, lambda: Float("1.23", dps=3, precision=""))
     raises(ValueError, lambda: Float("1.23", dps="", precision=""))
 
+    # from NumberSymbol
+    assert same_and_same_prec(Float(pi, 32), pi.evalf(32))
+    assert same_and_same_prec(Float(Catalan), Catalan.evalf())
+
 
 @conserve_mpmath_dps
 def test_float_mpf():
