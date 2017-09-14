@@ -58,6 +58,7 @@ def test_DiracDelta():
 
     assert DiracDelta(2*x) != DiracDelta(x)  # scaling property
     assert DiracDelta(x) == DiracDelta(-x)  # even function
+    assert DiracDelta(-x, 1) == -DiracDelta(x, 1)  # odd deriv is odd
     assert DiracDelta(-oo*x) == DiracDelta(oo*x)
     assert DiracDelta(x - y) != DiracDelta(y - x)
     assert signsimp(DiracDelta(x - y) - DiracDelta(y - x)) == 0

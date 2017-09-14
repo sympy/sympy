@@ -40,16 +40,19 @@ class DiracDelta(Function):
 
     DiracDelta function has the following properties:
 
-    1) ``diff(Heaviside(x),x) = DiracDelta(x)``
-    2) ``integrate(DiracDelta(x-a)*f(x),(x,-oo,oo)) = f(a)`` and
-       ``integrate(DiracDelta(x-a)*f(x),(x,a-e,a+e)) = f(a)``
+    1) ``diff(Heaviside(x), x) = DiracDelta(x)``
+    2) ``integrate(DiracDelta(x - a)*f(x),(x, -oo, oo)) = f(a)`` and
+       ``integrate(DiracDelta(x - a)*f(x),(x, a - e, a + e)) = f(a)``
     3) ``DiracDelta(x) = 0`` for all ``x != 0``
-    4) ``DiracDelta(g(x)) = Sum_i(DiracDelta(x-x_i)/abs(g'(x_i)))``
+    4) ``DiracDelta(g(x)) = Sum_i(DiracDelta(x - x_i)/abs(g'(x_i)))``
        Where ``x_i``-s are the roots of ``g``
+    5) ``DiracDelta(-x) = DiracDelta(x)``
 
     Derivatives of ``k``-th order of DiracDelta have the following property:
 
-    5) ``DiracDelta(x,k) = 0``, for all ``x != 0``
+    6) ``DiracDelta(x, k) = 0``, for all ``x != 0``
+    7) ``DiracDelta(-x, k) = -DiracDelta(x, k)`` for odd ``k``
+    8) ``DiracDelta(-x, k) = DiracDelta(x, k)`` for even ``k``
 
     Examples
     ========
@@ -156,13 +159,13 @@ class DiracDelta(Function):
         >>> DiracDelta(x)
         DiracDelta(x)
 
-        >>> DiracDelta(x,1)
-        DiracDelta(x, 1)
+        >>> DiracDelta(-x, 1)
+        -DiracDelta(x, 1)
 
         >>> DiracDelta(1)
         0
 
-        >>> DiracDelta(5,1)
+        >>> DiracDelta(5, 1)
         0
 
         >>> DiracDelta(0)
@@ -193,16 +196,19 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_nonzero:
             return S.Zero
-        c, nc = arg.args_cnc()
-        if c and c[0] == -1:
-            # keep this fast and simple instead of using
-            # could_extract_minus_sign
-            return cls(-arg, k) if k else cls(-arg)
         if fuzzy_not(im(arg).is_zero):
             raise ValueError(filldedent('''
                 Function defined only for Real Values.
                 Complex part: %s  found in %s .''' % (
                 repr(im(arg)), repr(arg))))
+        c, nc = arg.args_cnc()
+        if c and c[0] == -1:
+            # keep this fast and simple instead of using
+            # could_extract_minus_sign
+            if k % 2 == 1:
+                return -cls(-arg, k)
+            elif k % 2 == 0:
+                return cls(-arg)
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
     def simplify(self, x):
