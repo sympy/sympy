@@ -2247,7 +2247,7 @@ class Triangle(Polygon):
 
         References
         ==========
-        
+
         [1] http://mathworld.wolfram.com/Exradius.html
         [2] http://mathworld.wolfram.com/Excircles.html
 
