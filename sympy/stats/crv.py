@@ -208,8 +208,15 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
+    def _cdf(self, x):
+        return None
+
     def cdf(self, x, **kwargs):
         """ Cumulative density function """
+        if len(kwargs) == 0:
+            cdf = self._cdf(x)
+            if cdf is not None:
+                return cdf
         return self.compute_cdf(**kwargs)(x)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
@@ -381,7 +388,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
-            return self.distribution.compute_cdf(**kwargs)
+            z = symbols("z", real=True, finite=True, cls=Dummy)
+            return Lambda(z, self.distribution.cdf(z, **kwargs))
         else:
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 

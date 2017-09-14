@@ -1238,6 +1238,16 @@ class Pow(Expr):
             return True
 
     def as_numer_denom(self):
+        # exponent handling
+        if self.base is S.Exp1:
+            exp = self.exp
+            neg_exp = exp.is_negative
+            if not neg_exp and not (-exp).is_negative:
+                neg_exp = _coeff_isneg(exp)
+            if neg_exp:
+                return S.One, self.func(S.Exp1, -exp)
+            return self, S.One
+
         if not self.is_commutative:
             return self, S.One
         base, exp = self.as_base_exp()
@@ -1265,6 +1275,11 @@ class Pow(Expr):
         if neg_exp:
             n, d = d, n
             exp = -exp
+        if exp.is_infinite:
+            if n is S.One and d is not S.One:
+                return n, self.func(d, exp)
+            if n is not S.One and d is S.One:
+                return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
     def matches(self, expr, repl_dict={}, old=False):

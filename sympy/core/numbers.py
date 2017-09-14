@@ -947,6 +947,7 @@ class Float(Number):
                             issue=12820,
                             deprecated_since_version="1.1").warn()
             dps = prec
+        del prec  # avoid using this deprecated kwarg
 
         if dps is not None and precision is not None:
             raise ValueError('Both decimal and binary precision supplied. '
@@ -1016,6 +1017,8 @@ class Float(Number):
         if precision is None or precision == '':
             precision = mlib.libmpf.dps_to_prec(dps)
 
+        precision = int(precision)
+
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, string_types):
@@ -1032,8 +1035,6 @@ class Float(Number):
                     _mpf_ = _mpf_ninf
             else:
                 raise ValueError("unexpected decimal value %s" % str(num))
-        elif isinstance(num, Rational):
-            _mpf_ = mlib.from_rational(num.p, num.q, precision, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
             if type(num[1]) is str:
                 # it's a hexadecimal (coming from a pickled object)
@@ -1047,12 +1048,11 @@ class Float(Number):
                     return Float._new(num, precision)
                 else:
                     return (S.NegativeOne**num[0]*num[1]*S(2)**num[2]).evalf(precision)
-        elif isinstance(num, Float):
-            _mpf_ = num._mpf_
-            if precision < num._prec:
-                _mpf_ = mpf_norm(_mpf_, precision)
         else:
-            _mpf_ = mpmath.mpf(num, prec=prec)._mpf_
+            try:
+                _mpf_ = num._as_mpf_val(precision)
+            except (NotImplementedError, AttributeError):
+                _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         # special cases
         if _mpf_ == _mpf_zero:
@@ -1945,7 +1945,7 @@ class Integer(Rational):
     __slots__ = ['p']
 
     def _as_mpf_val(self, prec):
-        return mlib.from_int(self.p, prec)
+        return mlib.from_int(self.p, prec, rnd)
 
     def _mpmath_(self, prec, rnd):
         return mpmath.make_mpf(self._as_mpf_val(prec))
