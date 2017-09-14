@@ -286,6 +286,13 @@ def test_contains():
         assert len(w) == 1
 
 
+def test_contains_nonreal_symbols():
+    u, v, w, z = symbols('u, v, w, z')
+    l = Segment(Point(u, w), Point(v, z))
+    p = Point(2*u/3 + v/3, 2*w/3 + z/3)
+    assert l.contains(p)
+
+
 def test_distance_2d():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
