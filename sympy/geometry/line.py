@@ -1487,14 +1487,13 @@ class Segment(LinearEntity):
                      simplify((-d).dot(d2)).is_nonnegative)
                 if r is not None:
                     return bool(r)
-                # TODO: c.f. previous commit c5f0b00fbce9bdd253eb9c2465339c84ffad443d
                 # If still undecided, try triangle inequality |d1|+|d2| >= |d|,
                 # equal iff 'other' lies in the segment.  Might be less robust
                 # than above but covers non-real Symbols.
-                #try:
-                #    return bool(simplify(Eq(abs(d1) + abs(d2) - abs(d), 0)))
-                #except TypeError:
-                raise Undecidable("Cannot determine if {} is in {}".format(other, self))
+                try:
+                    return bool(simplify(Eq(abs(d1) + abs(d2) - abs(d), 0)))
+                except TypeError:
+                    raise Undecidable("Cannot determine if {} is in {}".format(other, self))
         if isinstance(other, Segment):
             return other.p1 in self and other.p2 in self
 
