@@ -7,6 +7,7 @@ from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
+from sympy.sets.conditionset import ConditionSet
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
 
@@ -138,7 +139,12 @@ def function_range(f, symbol, domain):
             else:
                 vals += FiniteSet(f.subs(symbol, limit_point))
 
-        critical_points += solveset(f.diff(symbol), symbol, domain)
+        solution = solveset(f.diff(symbol), symbol, domain)
+
+        if isinstance(solution, ConditionSet):
+            raise NotImplementedError('Unable to find critical points for %s'.format(f))
+
+        critical_points += solution
 
         for critical_point in critical_points:
             vals += FiniteSet(f.subs(symbol, critical_point))
