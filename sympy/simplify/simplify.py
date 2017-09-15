@@ -376,7 +376,7 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, Expr) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a) for a in e.args])
+        return e.func(*[signsimp(a, evaluate) for a in e.args])
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
