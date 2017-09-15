@@ -230,6 +230,10 @@ def test_rewrite():
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
     assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a>=b), (b, True))
     assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a<=b), (b, True))
+    assert Max(a).rewrite(Piecewise) == a
+    assert Min(b).rewrite(Piecewise) == b
+    raises(NotImplementedError, lambda: Max(a,b,x).rewrite(Piecewise))
+    raises(NotImplementedError, lambda: Min(a,b,x).rewrite(Piecewise))
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
