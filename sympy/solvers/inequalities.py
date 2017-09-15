@@ -7,7 +7,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt, Ne
 from sympy.sets import Interval
-from sympy.sets.sets import FiniteSet, Union
+from sympy.sets.sets import FiniteSet, Union, EmptySet
 from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
@@ -440,11 +440,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
-    from sympy import I
+    from sympy import im
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solveset_real, solvify
+    from sympy.solvers.solveset import solveset_real, solvify, solveset
     from sympy.solvers.solvers import solve
 
     # This keeps the function independent of the assumptions about `gen`.
@@ -576,14 +576,29 @@ The inequality cannot be solved using solve_univariate_inequality.
             #If expr contains imaginary coefficients
             #Only real values of x for which the imaginary part is 0 are taken
             make_real = S.Reals
-            if expanded_e.coeff(I) != S.Zero:
+            if im(expanded_e) != S.Zero:
                 im_sol = FiniteSet()
+                a = solveset(im(expanded_e), gen, domain)
+                if not isinstance(a, Interval):
+                    for z in a:
+                        if z not in singularities and valid(z) and z.is_real:
+                            im_sol += FiniteSet(z)
+                else:
+                    start, end = a.inf, a.sup
+                    for z in critical_points + FiniteSet(end):
+                        if z != end:
+                            pt = _pt(start, z)
+                            if pt not in singularities and valid(pt) and pt.is_real:
+                                if valid(start) and valid(z):
+                                    im_sol += Interval(start, z)
+                                elif valid(start) and not valid(z):
+                                    im_sol += Interval.Ropen(start, z)
+                                elif not valid(start) and valid(z):
+                                    im_sol += Interval.Lopen(start, z)
+                                else:
+                                    im_sol += Interval.open(start, z)
 
-                for z in solve(expanded_e.coeff(I), gen):
-                    if z not in singularities and valid(z) and z.is_real:
-                        im_sol += FiniteSet(z)
-
-                if len(im_sol) == 0:
+                if isinstance(im_sol, EmptySet):
                     raise ValueError(filldedent('''
 %s contains imaginary parts which cannot be made 0 for any value of %s
 satisfying the inequality, leading to relations like I < 0.
@@ -623,7 +638,7 @@ satisfying the inequality, leading to relations like I < 0.
             if valid(_pt(start, end)):
                 sol_sets.append(Interval.open(start, end))
 
-            if expanded_e.coeff(I) != S.Zero:
+            if im(expanded_e) != S.Zero:
                 rv = (make_real)
             else:
                 rv = (Union(*sol_sets)).intersect(make_real).subs(gen, _gen)
