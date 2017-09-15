@@ -3,6 +3,7 @@ from sympy import symbols, re, im, Add, Mul, I
 from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E
 from sympy import Matrix
 from sympy import diff, integrate
+from sympy import S
 
 x, y, z, w = symbols("x y z w")
 
@@ -37,7 +38,7 @@ def test_quaternion_complex_real_addition():
 
     assert -q == Quaternion(-x, -y, -z, -w)
 
-    q1 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I)
+    q1 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
     q2 = Quaternion(1, 4, 7, 8)
 
     assert q1 + (2 + 3*I) == Quaternion(5 + 7*I, 2 + 5*I, 0, 7 + 8*I)
@@ -88,11 +89,11 @@ def test_quaternion_conversions():
     ((2 * sqrt(29)/29, 3 * sqrt(29)/29, 4 * sqrt(29)/29),
                                    2 * acos(sqrt(30)/30))
 
-    assert q1.to_matrix() == Matrix([[-2/5, 2/5, 11/5],
-                                     [2, -1/5, 2],
-                                     [1, 14/5, 0]])
+    assert q1.to_matrix() == Matrix([[-S(2)/5, S(2)/5, S(11)/5],
+                                     [S(2), -S(1)/5, S(2)],
+                                     [S(1), S(14)/5, S(0)]])
 
-    assert q1.to_matrix_4x4((1, 1, 1)) == Matrix([[-2/5, 2/5, 11/5, -6/5],
-                                                  [2, -1/5, 2, -14/5],
-                                                  [1, 14/5, 0, -14/5],
-                                                  [0, 0, 0, 1]])
+    assert q1.to_matrix_4x4((1, 1, 1)) == Matrix([[-S(2)/5, S(2)/5, S(11)/5, -S(6)/5],
+                                                  [S(2), -S(1)/5, S(2), -S(14)/5],
+                                                  [S(1), S(14)/5, S(0), -S(14)/5],
+                                                  [S(0), S(0), S(0), S(1)]])

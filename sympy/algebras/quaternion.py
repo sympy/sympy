@@ -1,7 +1,6 @@
 # References :
 # http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
 # https://en.wikipedia.org/wiki/Quaternion
-
 from __future__ import print_function
 
 from sympy.core.expr import Expr
@@ -28,6 +27,19 @@ class Quaternion(Expr):
     >>> q = Quaternion(1, 2, 3, 4)
     >>> q
     1 + 2*i + 3*j + 4*k
+
+    Quaternions over complex fields can be defined as :
+    ========
+    
+    >>> from sympy.algebras.quaternion import Quaternion
+    >>> from sympy import symbols, I
+    >>> x = symbols('x')
+    >>> q1 = Quaternion(x, x**3, x, x**2, real_field = False)
+    >>> q2 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
+    >>> q1
+    x + x**3*i + x*j + x**2*k
+    >>> q2
+    (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
     """
     _op_priority = 11.0
 
@@ -42,8 +54,6 @@ class Quaternion(Expr):
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
         else:
-            if any(i.is_real is False for i in [a, b, c, d]):
-                real_field = False
             obj = Expr.__new__(cls, a, b, c, d)
             obj._a = a
             obj._b = b
@@ -181,6 +191,15 @@ class Quaternion(Expr):
         >>> x = symbols('x', real = True)
         >>> q1.add(x)
         (x + 1) + 2*i + 3*j + 4*k
+
+        Quaternions over complex fields :
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import I
+        >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
+        >>> q3.add(2 + 3*I)
+        (5 + 7*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
         """
         q1 = self
         q2 = sympify(other)
@@ -216,6 +235,14 @@ class Quaternion(Expr):
         >>> x = symbols('x', real = True)
         >>> q1.mul(x)
         x + 2*x*i + 3*x*j + 4*x*k
+
+        Quaternions over complex fields :
+        ========
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import I
+        >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
+        >>> q3.mul(2 + 3*I)
+        (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
         """
         return self._generic_mul(self, other)
 
