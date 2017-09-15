@@ -2,6 +2,7 @@ from sympy.core import (Function, Pow, sympify, Expr)
 from sympy.core.relational import Relational
 from sympy.polys import Poly, decompose
 from sympy.utilities.misc import func_name
+from sympy import S
 
 
 def decompogen(f, symbol):
@@ -42,6 +43,8 @@ def decompogen(f, symbol):
 
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
+        if f.is_Pow and f.base is S.Exp1 and f.exp == symbol:
+            return [f]
         if f.args[0] == symbol:
             return [f]
         result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)

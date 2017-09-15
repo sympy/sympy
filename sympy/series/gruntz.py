@@ -149,6 +149,7 @@ def compare(a, b, x):
     ========
 
     >>> from sympy import Symbol, exp
+    >>> from sympy.series.gruntz import compare
 
     >>> x = Symbol('x', real=True, positive=True)
     >>> m = Symbol('m', real=True, positive=True)
@@ -183,6 +184,7 @@ def mrv(e, x):
     ========
 
     >>> from sympy import Symbol, exp, log
+    >>> from sympy.series.gruntz import mrv
 
     >>> x = Symbol('x', real=True, positive=True)
 
@@ -277,6 +279,7 @@ def limitinf(e, x):
     ========
 
     >>> from sympy import Symbol, exp, log
+    >>> from sympy.series.gruntz import limitinf
 
     >>> x = Symbol('x', real=True, positive=True)
 
@@ -352,6 +355,7 @@ def mrv_leadterm(e, x):
     ========
 
     >>> from sympy import Symbol, exp
+    >>> from sympy.series.gruntz import mrv_leadterm
 
     >>> x = Symbol('x', real=True, positive=True)
 
@@ -401,7 +405,8 @@ def rewrite(e, x, w):
     Examples
     ========
 
-    >>> from sympy import Symbol, exp
+    >>> from sympy import Symbol, exp, log
+    >>> from sympy.series.gruntz import rewrite
 
     >>> x = Symbol('x', real=True, positive=True)
     >>> m = Symbol('m', real=True, positive=True)
