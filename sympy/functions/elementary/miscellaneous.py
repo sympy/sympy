@@ -16,13 +16,13 @@ from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.utilities import filldedent
 
 
 def _minmax_as_Piecewise(op, *args):
     # helper for min/max rewriting
+    from sympy.functions.elementary.piecewise import Piecewise
     p = args = list(args)
     while len(p) > 1:
         p = []
