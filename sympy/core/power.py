@@ -249,6 +249,26 @@ class Pow(Expr):
 
     def _eval_refine(self, assumptions):
         from sympy.assumptions.ask import ask, Q
+        if self.base is S.Exp1:
+            arg = self.exp
+            if arg.is_Mul:
+                Ioo = S.ImaginaryUnit*S.Infinity
+                if arg in [Ioo, -Ioo]:
+                    return S.NaN
+
+                coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+                if coeff:
+                    if ask(Q.integer(2*coeff)):
+                        if ask(Q.even(coeff)):
+                            return S.One
+                        elif ask(Q.odd(coeff)):
+                            return S.NegativeOne
+                        elif ask(Q.even(coeff + S.Half)):
+                            return -S.ImaginaryUnit
+                        elif ask(Q.odd(coeff + S.Half)):
+                            return S.ImaginaryUnit
+
+
         b, e = self.as_base_exp()
         if ask(Q.integer(e), assumptions) and _coeff_isneg(b):
             if ask(Q.even(e), assumptions):
@@ -364,7 +384,9 @@ class Pow(Expr):
             if self.exp.is_real:
                 return self.exp is not S.NegativeInfinity
             elif self.exp.is_imaginary:
-                return (-S.ImaginaryUnit * self.exp / S.Pi).is_even
+                arg2 = -S.ImaginaryUnit * self.exp / S.Pi
+                return arg2.is_even
+            return None
         if self.base == self.exp:
             if self.base.is_nonnegative:
                 return True
@@ -390,6 +412,13 @@ class Pow(Expr):
                 return log(self.base).is_imaginary
 
     def _eval_is_negative(self):
+        if self.base is S.Exp1:
+            if self.exp.is_real:
+                return self.exp is S.NegativeInfinity
+            elif self.exp.is_imaginary:
+                arg2 = -S.ImaginaryUnit * self.exp / S.Pi
+                return arg2.is_odd
+            return None
         if self.base.is_negative:
             if self.exp.is_odd:
                 return True
@@ -409,6 +438,8 @@ class Pow(Expr):
                 return False
 
     def _eval_is_zero(self):
+        if self.base is S.Exp1:
+            return self.exp is S.NegativeInfinity
         if self.base.is_zero:
             if self.exp.is_positive:
                 return True
@@ -449,7 +480,8 @@ class Pow(Expr):
             if self.exp.is_real:
                 return True
             elif self.exp.is_imaginary:
-                return (-S.ImaginaryUnit*self.exp/S.Pi).is_integer
+                arg2 = -S(2) * S.ImaginaryUnit * self.exp / S.Pi
+                return arg2.is_even
             else:
                 return None
         real_b = self.base.is_real
@@ -1327,8 +1359,50 @@ class Pow(Expr):
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
         # where e_i are numbers (not necessarily integers) and c_i are
         # expressions involving only numbers, the log function, and log(x).
-        from sympy import ceiling, collect, exp, log, O, Order, powsimp
+        from sympy import ceiling, collect, exp, log, O, Order, powsimp, limit, oo
+
+        def taylor_term(n, x, *previous_terms):
+            """
+            Calculates the next term in the Taylor series expansion.
+            """
+            from sympy import sympify, factorial
+            if n < 0:
+                return S.Zero
+            if n == 0:
+                return S.One
+            x = sympify(x)
+            if previous_terms:
+                p = previous_terms[-1]
+                if p is not None:
+                    return p*x/n
+            return x**n/factorial(n)
+
+        def _taylor(x, n):
+            l = []
+            g = None
+            for i in range(n):
+                g = taylor_term(i, x, g)
+                g = g.nseries(x, n=n)
+                l.append(g)
+            return Add(*l) + Order(x**n, x)
+
         b, e = self.args
+        if b is S.Exp1:
+            arg = self.exp
+            arg_series = arg._eval_nseries(x, n=n, logx=logx)
+            if arg_series.is_Order:
+                return 1 + arg_series
+            arg0 = limit(arg_series.removeO(), x, 0)
+            if arg0 in [-oo, oo]:
+                return self
+            t = Dummy("t")
+            exp_series = _taylor(t, n)
+            o = exp_series.getO()
+            exp_series = exp_series.removeO()
+            r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
+            r += Order(o.expr.subs(t, (arg_series - arg0)), x)
+            r = r.expand()
+            return powsimp(r, deep=True, combine='exp')
         if e.is_Integer:
             if e > 0:
                 # positive integer powers are easy to expand, e.g.:
@@ -1428,33 +1502,7 @@ class Pow(Expr):
             if arg0 in [-oo, oo]:
                 return self
             t = Dummy("t")
-
-            def taylor_term(n, x, *previous_terms):
-                """
-                Calculates the next term in the Taylor series expansion.
-                """
-                from sympy import sympify, factorial
-                if n < 0:
-                    return S.Zero
-                if n == 0:
-                    return S.One
-                x = sympify(x)
-                if previous_terms:
-                    p = previous_terms[-1]
-                    if p is not None:
-                        return p*x/n
-                return x**n/factorial(n)
-
-            def _taylor(expr, x, n):
-                l = []
-                g = None
-                for i in range(n):
-                    g = taylor_term(i, expr.exp, g)
-                    g = g.nseries(x, n=n)
-                    l.append(g)
-                return Add(*l) + Order(x**n, x)
-
-            exp_series = _taylor(exp(t), t, n)
+            exp_series = _taylor(t, n)
             o = exp_series.getO()
             exp_series = exp_series.removeO()
             r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
@@ -1620,7 +1668,19 @@ class Pow(Expr):
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         from sympy import binomial
-        return binomial(self.exp, n) * self.func(x, n)
+        if self.base is S.Exp1:
+            if n < 0:
+                return S.Zero
+            if n == 0:
+                return S.One
+            x = sympify(x)
+            if previous_terms:
+                p = previous_terms[-1]
+                if p is not None:
+                    return p * x / n
+            return x**n/factorial(n)
+        else:
+            return binomial(self.exp, n) * self.func(x, n)
 
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
