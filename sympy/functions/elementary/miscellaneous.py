@@ -9,15 +9,32 @@ from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Equality
+from sympy.core.relational import Equality, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.utilities import filldedent
+
+
+def _minmax_as_Piecewise(op, *args):
+    # helper for min/max rewriting
+    p = args = list(args)
+    while len(p) > 1:
+        p = []
+        while args:
+            if len(args) == 1:
+                p.append(args.pop())
+            else:
+                a, b = args.pop(0), args.pop()
+                p.append(Piecewise((a, Relational(a, b, op)), (b, True)))
+        args = p
+    return p[0]
+
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
@@ -616,15 +633,7 @@ class Max(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args):
-        from sympy.functions import Piecewise
-        if len(args) == 1:
-            return args[0]
-        elif len(args) == 2:
-            return Piecewise((args[0], args[0] >= args[1]), (args[1], True))
-        else:
-            raise NotImplementedError(filldedent('''
-                Piecewise for more than two arguments
-                is not supported'''))
+        return _minmax_as_Piecewise('>=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
@@ -687,15 +696,7 @@ class Min(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args):
-        from sympy.functions import Piecewise
-        if len(args) == 1:
-            return args[0]
-        elif len(args) == 2:
-            return Piecewise((args[0], args[0] <= args[1]), (args[1], True))
-        else:
-            raise NotImplementedError(filldedent('''
-                Piecewise for more than two arguments
-                is not supported'''))
+        return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)
