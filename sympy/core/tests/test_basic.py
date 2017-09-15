@@ -228,12 +228,15 @@ def test_rewrite():
     assert f1.rewrite([cos],sin) == sin(x) + sin(x + pi/2, evaluate=False)
     f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
-    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a>=b), (b, True))
-    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a<=b), (b, True))
-    assert Max(a).rewrite(Piecewise) == a
-    assert Min(b).rewrite(Piecewise) == b
-    raises(NotImplementedError, lambda: Max(a,b,x).rewrite(Piecewise))
-    raises(NotImplementedError, lambda: Min(a,b,x).rewrite(Piecewise))
+    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
+    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a <= b), (b, True))
+    assert Max(a, b, x).rewrite(Piecewise) == Piecewise(
+        (Piecewise((a, a >= x), (x, True)),
+         Piecewise((a, a >= x), (x, True)) >= b), (b, True))
+    assert Min(a, b, x).rewrite(Piecewise) == Piecewise(
+        (Piecewise((a, a <= x), (x, True)),
+         Piecewise((a, a <= x), (x, True)) <= b), (b, True))
+
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
