@@ -550,7 +550,7 @@ def exptrigsimp(expr):
         def signlog(expr, sign=1):
             if expr is S.Exp1:
                 return sign, 1
-            elif expr.is_Pow:
+            elif expr.is_Pow and expr.base is S.Exp1:
                 return sign, expr.exp
             elif sign == 1:
                 return signlog(-expr, sign=-1)

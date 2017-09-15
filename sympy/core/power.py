@@ -360,9 +360,6 @@ class Pow(Expr):
             return s*Pow(b, e*other)
 
     def _eval_Mod(self, q):
-        if self.base is S.Exp1:
-            raise NotImplementedError
-
         if self.exp.is_integer and self.exp.is_positive:
             if q.is_integer and self.base % q == 0:
                 return S.Zero
