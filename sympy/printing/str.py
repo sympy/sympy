@@ -512,7 +512,12 @@ class StrPrinter(Printer):
             # but just check to be sure.
             if e.startswith('(Rational'):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
-        return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
+
+        if expr.base.is_Pow and expr.base.base is S.Exp1:
+            b = self._print(expr.base)
+        else:
+            b = self.parenthesize(expr.base, PREC, strict=False)
+        return '%s**%s' % (b, e)
 
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])
