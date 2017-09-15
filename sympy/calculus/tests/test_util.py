@@ -1,5 +1,5 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs)
+                   cot, sec, csc, Abs, symbols)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds)
 from sympy.core import Add, Mul, Pow
@@ -11,7 +11,7 @@ a = Symbol('a', real=True)
 
 
 def test_function_range():
-    x = Symbol('x')
+    x, y, a, b = symbols('x y a b')
     assert function_range(sin(x), x, Interval(-pi/2, pi/2)) == Interval(-1, 1)
     assert function_range(sin(x), x, Interval(0, pi)) == Interval(0, 1)
     assert function_range(tan(x), x, Interval(0, pi)) == Interval(-oo, oo)
@@ -21,6 +21,7 @@ def test_function_range():
     assert function_range(exp(x), x, Interval(-1, 1)) == Interval(exp(-1), exp(1))
     assert function_range(log(x) - x, x, S.Reals) == Interval(-oo, -1)
     assert function_range(sqrt(3*x - 1), x, Interval(0, 2)) == Interval(0, sqrt(5))
+    raises(NotImplementedError, lambda : function_range(exp(x)*(sin(x)-cos(x))/2 - x, x, S.Reals))
 
 
 def test_continuous_domain():
@@ -85,6 +86,11 @@ def test_periodicity():
     assert periodicity(cos(sec(x) - csc(2*x)), x) == 2*pi
     assert periodicity(tan(sin(2*x)), x) == pi
     assert periodicity(2*tan(x)**2, x) == pi
+    assert periodicity(sin(x%4), x) == 4
+    assert periodicity(sin(x)%4, x) == 2*pi
+    assert periodicity(tan((3*x-2)%4), x) == 4/3
+    assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
+    assert periodicity((x**2+1) % x, x) == None
 
     assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
     assert periodicity(tan(x), y) == S.Zero
@@ -94,10 +100,20 @@ def test_periodicity():
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
 
+    assert periodicity(Abs(sin(Abs(sin(x)))),x) == pi
+    assert all(periodicity(Abs(f(x)),x) == pi for f in (
+        cos, sin, sec, csc, tan, cot))
+    assert periodicity(Abs(sin(tan(x))), x) == pi
+    assert periodicity(Abs(sin(sin(x) + tan(x))), x) == 2*pi
+    assert periodicity(sin(x) > S.Half, x) is 2*pi
+
+    assert periodicity(x > 2, x) is None
     assert periodicity(x**3 - x**2 + 1, x) is None
     assert periodicity(Abs(x), x) is None
     assert periodicity(Abs(x**2 - 1), x) is None
 
+    assert periodicity((x**2 + 4)%2, x) is None
+    assert periodicity((E**x)%3, x) is None
 
 def test_periodicity_check():
     x = Symbol('x')
@@ -105,8 +121,9 @@ def test_periodicity_check():
 
     assert periodicity(tan(x), x, check=True) == pi
     assert periodicity(sin(x) + cos(x), x, check=True) == 2*pi
-    raises(NotImplementedError, lambda: periodicity(sec(x), x, check=True))
-    raises(NotImplementedError, lambda: periodicity(sin(x*y), x, check=True))
+    assert periodicity(sec(x), x) == 2*pi
+    assert periodicity(sin(x*y), x) == 2*pi/abs(y)
+    assert periodicity(Abs(sec(sec(x))), x) == pi
 
 
 def test_lcim():

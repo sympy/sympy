@@ -7,6 +7,7 @@ from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
+from sympy.sets.conditionset import ConditionSet
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
 
@@ -138,7 +139,12 @@ def function_range(f, symbol, domain):
             else:
                 vals += FiniteSet(f.subs(symbol, limit_point))
 
-        critical_points += solveset(f.diff(symbol), symbol, domain)
+        solution = solveset(f.diff(symbol), symbol, domain)
+
+        if isinstance(solution, ConditionSet):
+            raise NotImplementedError('Unable to find critical points for %s'.format(f))
+
+        critical_points += solution
 
         for critical_point in critical_points:
             vals += FiniteSet(f.subs(symbol, critical_point))
@@ -328,21 +334,68 @@ def periodicity(f, symbol, check=False):
 
     """
     from sympy import simplify, lcm_list
-    from sympy.functions.elementary.trigonometric import TrigonometricFunction
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.trigonometric import (
+        TrigonometricFunction, sin, cos, csc, sec)
     from sympy.solvers.decompogen import decompogen
+    from sympy.core import Mod
+    from sympy.polys.polytools import degree
+    from sympy.core.function import diff
+    from sympy.core.relational import Relational
+
+    def _check(orig_f, period):
+        '''Return the checked period or raise an error.'''
+        new_f = orig_f.subs(symbol, symbol + period)
+        if new_f.equals(orig_f):
+            return period
+        else:
+            raise NotImplementedError(filldedent('''
+                The period of the given function cannot be verified.
+                When `%s` was replaced with `%s + %s` in `%s`, the result
+                was `%s` which was not recognized as being the same as
+                the original function.
+                So either the period was wrong or the two forms were
+                not recognized as being equal.
+                Set check=False to obtain the value.''' %
+                (symbol, symbol, period, orig_f, new_f)))
 
     orig_f = f
     f = simplify(orig_f)
     period = None
 
-    if not f.has(symbol):
+    if symbol not in f.free_symbols:
         return S.Zero
+
+    if isinstance(f, Relational):
+        f = f.lhs - f.rhs
 
     if isinstance(f, TrigonometricFunction):
         try:
             period = f.period(symbol)
         except NotImplementedError:
             pass
+
+    if isinstance(f, Abs):
+        arg = f.args[0]
+        if isinstance(arg, (sec, csc, cos)):
+            # all but tan and cot might have a
+            # a period that is half as large
+            # so recast as sin
+            arg = sin(arg.args[0])
+        period = periodicity(arg, symbol)
+        if period is not None and isinstance(arg, sin):
+            # the argument of Abs was a trigonometric other than
+            # cot or tan; test to see if the half-period
+            # is valid. Abs(arg) has behaviour equivalent to
+            # orig_f, so use that for test:
+            orig_f = Abs(arg)
+            try:
+                return _check(orig_f, period/2)
+            except NotImplementedError as err:
+                if check:
+                    raise NotImplementedError(err)
+            # else let new orig_f and period be
+            # checked below
 
     if f.is_Pow:
         base, expo = f.args
@@ -373,6 +426,17 @@ def periodicity(f, symbol, check=False):
 
         period = _periodicity(g.args, symbol)
 
+    elif isinstance(f, Mod):
+        a, n = f.args
+
+        if a == symbol:
+            period = n
+        elif isinstance(a, TrigonometricFunction):
+            period = periodicity(a, symbol)
+        #check if 'f' is linear in 'symbol'
+        elif degree(a, symbol) == 1 and symbol not in n.free_symbols:
+            period = Abs(n / a.diff(symbol))
+
     elif period is None:
         from sympy.solvers.decompogen import compogen
         g_s = decompogen(f, symbol)
@@ -388,14 +452,7 @@ def periodicity(f, symbol, check=False):
 
     if period is not None:
         if check:
-            if orig_f.subs(symbol, symbol + period) == orig_f:
-                return period
-
-            else:
-                raise NotImplementedError(filldedent('''
-                    The period of the given function cannot be verified.
-                    Set check=False to obtain the value.'''))
-
+            return _check(orig_f, period)
         return period
 
     return None

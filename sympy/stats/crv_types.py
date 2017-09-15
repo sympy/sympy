@@ -46,7 +46,7 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic)
+                   Lambda, Basic, lowergamma, erf, erfc)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
@@ -598,6 +598,13 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
         k = self.k
         return 1/(2**(k/2)*gamma(k/2))*x**(k/2 - 1)*exp(-x/2)
 
+    def _cdf(self, x):
+        k = self.k
+        return Piecewise(
+                (S.One/gamma(k/2)*lowergamma(k/2, x/2), x>=0),
+                (0, True)
+        )
+
 
 def ChiSquared(name, k):
     r"""
@@ -756,12 +763,12 @@ def Erlang(name, k, l):
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /     -2*I*pi*k                       -2*I*pi*k
-    |  k*e         *lowergamma(k, 0)   k*e         *lowergamma(k, l*z)
-    |- ----------------------------- + -------------------------------  for z >= 0
-    <           gamma(k + 1)                     gamma(k + 1)
+    /   -2*I*pi*k
+    |k*e         *lowergamma(k, l*z)
+    |-------------------------------  for z >= 0
+    <          gamma(k + 1)
     |
-    |                                0                                  otherwise
+    |               0                 otherwise
     \
 
     >>> simplify(E(X))
@@ -797,6 +804,12 @@ class ExponentialDistribution(SingleContinuousDistribution):
 
     def sample(self):
         return random.expovariate(self.rate)
+
+    def _cdf(self, x):
+        return Piecewise(
+                (S.One - exp(-self.rate*x), x>=0),
+                (0, True),
+        )
 
 
 def Exponential(name, rate):
@@ -870,6 +883,7 @@ def Exponential(name, rate):
 #-------------------------------------------------------------------------------
 # F distribution ---------------------------------------------------------------
 
+
 class FDistributionDistribution(SingleContinuousDistribution):
     _argnames = ('d1', 'd2')
 
@@ -879,6 +893,7 @@ class FDistributionDistribution(SingleContinuousDistribution):
         d1, d2 = self.d1, self.d2
         return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
                / (x * beta_fn(d1/2, d2/2)))
+
 
 def FDistribution(name, d1, d2):
     r"""
@@ -1137,13 +1152,13 @@ def Gamma(name, k, theta):
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /                                   /     z  \
-    |                       k*lowergamma|k, -----|
-    |  k*lowergamma(k, 0)               \   theta/
-    <- ------------------ + ----------------------  for z >= 0
-    |     gamma(k + 1)           gamma(k + 1)
+    /            /     z  \
+    |k*lowergamma|k, -----|
+    |            \   theta/
+    <----------------------  for z >= 0
+    |     gamma(k + 1)
     |
-    \                      0                        otherwise
+    \          0             otherwise
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
@@ -1542,6 +1557,13 @@ class LogNormalDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.lognormvariate(self.mean, self.std)
 
+    def _cdf(self, x):
+        mean, std = self.mean, self.std
+        return Piecewise(
+                (S.Half + S.Half*erf((log(x) - mean)/sqrt(2)/std), x>0),
+                (S.Zero, True)
+        )
+
 
 def LogNormal(name, mean, std):
     r"""
@@ -1765,6 +1787,10 @@ class NormalDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.normalvariate(self.mean, self.std)
 
+    def _cdf(self, x):
+        mean, std = self.mean, self.std
+        return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
+
 
 def Normal(name, mean, std):
     r"""
@@ -1855,6 +1881,13 @@ class ParetoDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.paretovariate(self.alpha)
 
+    def _cdf(self, x):
+        xm, alpha = self.xm, self.alpha
+        return Piecewise(
+                (S.One - xm**alpha/x**alpha, x>=xm),
+                (0, True),
+        )
+
 
 def Pareto(name, xm, alpha):
     r"""
@@ -1920,6 +1953,7 @@ class QuadraticUDistribution(SingleContinuousDistribution):
                   (alpha * (x-beta)**2, And(a<=x, x<=b)),
                   (S.Zero, True))
 
+
 def QuadraticU(name, a, b):
     r"""
     Create a Continuous Random Variable with a U-quadratic distribution.
@@ -1976,6 +2010,7 @@ def QuadraticU(name, a, b):
 
 #-------------------------------------------------------------------------------
 # RaisedCosine distribution ----------------------------------------------------
+
 
 class RaisedCosineDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 's')
@@ -2113,6 +2148,7 @@ def Rayleigh(name, sigma):
 #-------------------------------------------------------------------------------
 # Shifted Gompertz distribution ------------------------------------------------
 
+
 class ShiftedGompertzDistribution(SingleContinuousDistribution):
     _argnames = ('b', 'eta')
 
@@ -2126,6 +2162,7 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         b, eta = self.b, self.eta
         return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
+
 
 def ShiftedGompertz(name, b, eta):
     r"""
@@ -2489,6 +2526,7 @@ def UniformSum(name, n):
 
 #-------------------------------------------------------------------------------
 # VonMises distribution --------------------------------------------------------
+
 
 class VonMisesDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'k')

@@ -99,6 +99,7 @@ def tn_branch(s, func):
 
 def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
+    assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert td(lowergamma(x, randcplx()), x)

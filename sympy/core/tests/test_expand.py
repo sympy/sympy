@@ -195,6 +195,8 @@ def test_expand_arit():
                     z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
     assert e.expand(power_exp=False, power_base=False, deep=False) == x* \
         (x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
+    e = x * (x + (y + 1)**2)
+    assert e.expand(deep=False) == x**2 + x*(y + 1)**2
     e = (x*(y + z))**z
     assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y +
                     z)**z, (x*y + x*z)**z]
