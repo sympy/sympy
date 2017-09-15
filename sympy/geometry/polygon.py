@@ -2243,7 +2243,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradius
-        {6/(2 + sqrt(10)), 6/(-2 + sqrt(10)), 6/(-sqrt(10) + 4)}
+        {-2 + sqrt(10), 2 + sqrt(10), sqrt(10) + 4}
 
         References
         ==========
@@ -2261,7 +2261,7 @@ class Triangle(Polygon):
         area = self.area
         exradii = {area/(s-a), area/(s-b), area/(s-c)}
 
-        return exradii
+        return simplify(exradii)
 
     @property
     def medians(self):
