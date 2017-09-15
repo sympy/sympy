@@ -2,7 +2,7 @@ from sympy.algebras.quaternion import Quaternion
 from sympy import symbols, re, im, Add, Mul, I
 from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E, pi
 from sympy import Matrix
-from sympy import diff, integrate
+from sympy import diff, integrate, trigsimp
 from sympy import S, Rational
 
 x, y, z, w = symbols("x y z w")
@@ -15,9 +15,9 @@ def test_quaternion_construction():
     assert q2 == Quaternion(Rational(1/2), Rational(1/2),
                             Rational(1/2), Rational(1,2))
 
-    M = Matrix([[1, 0, 0], [0, 0, 0], [0, 0, 1]])
-    q3 = Quaternion.from_matrix(M)
-    assert q3 == Quaternion(sqrt(2)/2, 0, 0, 0)
+    M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
+    q3 = trigsimp(Quaternion.from_matrix(M))
+    assert q3 == Quaternion(sqrt(2)*sqrt(cos(x) + 1)/2, 0, 0, sqrt(-2*cos(x) + 2)/2)
 
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
