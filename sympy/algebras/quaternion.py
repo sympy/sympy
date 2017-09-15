@@ -30,7 +30,6 @@ class Quaternion(Expr):
 
     Quaternions over complex fields can be defined as :
     ========
-    
     >>> from sympy.algebras.quaternion import Quaternion
     >>> from sympy import symbols, I
     >>> x = symbols('x')
