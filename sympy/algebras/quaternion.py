@@ -13,6 +13,7 @@ from sympy import Matrix, Add, Mul
 from sympy import symbols, sympify
 from sympy.printing.latex import latex
 from sympy.printing import StrPrinter
+from sympy import simplify
 
 
 class Quaternion(Expr):
@@ -88,9 +89,10 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion.from_axis_angle((2, 4, 6), 2)
+        >>> from sympy import pi, sqrt
+        >>> q = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
         >>> q
-        cos(1) + sqrt(14)*sin(1)/14*i + sqrt(14)*sin(1)/7*j + 3*sqrt(14)*sin(1)/14*k
+        1/2 + 1/2*i + 1/2*j + 1/2*k
         """
         (x, y, z) = vector
         norm = sqrt(x**2 + y**2 + z**2)
@@ -101,7 +103,7 @@ class Quaternion(Expr):
         c = y * s
         d = z * s
 
-        return cls(a, b, c, d)
+        return cls(a, b, c, d).normalize()
 
     @classmethod
     def from_matrix(cls, M):
@@ -112,27 +114,28 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> from sympy import Matrix
-        >>> M = Matrix([[4, 6, 2], [1, 8, 6], [5, 2, 7]])
-        >>> q = Quaternion.from_matrix(M)
+        >>> from sympy import Matrix, symbols, cos, sin, trigsimp
+        >>> x = symbols('x')
+        >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
+        >>> q = trigsimp(Quaternion.from_matrix(M))
         >>> q
-        sqrt(238**(1/3) + 19)/2
-        + 0*i
-        + (-sqrt(-3 + 238**(1/3))/2)*j
-        + (-sqrt(-5 + 238**(1/3))/2)*k
+        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(-2*cos(x) + 2)/2*k
         """
 
         absQ = M.det()**Rational(1, 3)
-        # The max( 0, ... ) is just a safeguard against rounding error.
 
-        a = sqrt(max(0, absQ + M[0, 0] + M[1, 1] + M[2, 2])) / 2
-        b = sqrt(max(0, absQ + M[0, 0] - M[1, 1] - M[2, 2])) / 2
-        c = sqrt(max(0, absQ - M[0, 0] + M[1, 1] - M[2, 2])) / 2
-        d = sqrt(max(0, absQ - M[0, 0] - M[1, 1] + M[2, 2])) / 2
+        a = sqrt(absQ + M[0, 0] + M[1, 1] + M[2, 2]) / 2
+        b = sqrt(absQ + M[0, 0] - M[1, 1] - M[2, 2]) / 2
+        c = sqrt(absQ - M[0, 0] + M[1, 1] - M[2, 2]) / 2
+        d = sqrt(absQ - M[0, 0] - M[1, 1] + M[2, 2]) / 2
 
-        b = Quaternion.__copysign(b, M[2, 1] - M[1, 2])
-        c = Quaternion.__copysign(c, M[0, 2] - M[2, 0])
-        d = Quaternion.__copysign(d, M[1, 0] - M[0, 1])
+        try:
+            b = Quaternion.__copysign(b, M[2, 1] - M[1, 2])
+            c = Quaternion.__copysign(c, M[0, 2] - M[2, 0])
+            d = Quaternion.__copysign(d, M[1, 0] - M[0, 1])
+
+        except Exception:
+            pass
 
         return Quaternion(a, b, c, d)
 
@@ -416,12 +419,14 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 2, 3, 4)
-        >>> Quaternion.rotate((1, 2, 4), q)
-        (38/15, 8/3, 41/15)
+        >>> from sympy import symbols, trigsimp, cos, sin
+        >>> x = symbols('x')
+        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
+        >>> trigsimp(Quaternion.rotate((1, 1, 1), q))
+        (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         >>> (axis, angle) = q.to_axis_angle()
-        >>> Quaternion.rotate((1, 2, 4), (axis, angle))
-        (38/15, 8/3, 41/15)
+        >>> trigsimp(Quaternion.rotate((1, 1, 1), (axis, angle)))
+        (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         """
         if isinstance(r, tuple):
             # if r is of the form (vector, angle)
@@ -439,12 +444,12 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 2, 3, 4)
+        >>> q = Quaternion(1, 1, 1, 1)
         >>> (axis, angle) = q.to_axis_angle()
         >>> axis
-        (2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
+        (sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)
         >>> angle
-        2*acos(sqrt(30)/30)
+        2*pi/3
         """
         q = self
         try:
@@ -471,99 +476,66 @@ class Quaternion(Expr):
 
         return t
 
-    def to_matrix(self):
-        """ Returns the equivalent rotation transformation matrix of the quaternion
+    def to_rotation_matrix(self, v = None):
+        """Returns the equivalent rotation transformation matrix of the quaternion
+        which represenets rotation about the origin if v is not passed.
 
         Example
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 2, 3, 4)
-        >>> q.to_matrix()
+        >>> from sympy import symbols, trigsimp, cos, sin
+        >>> x = symbols('x')
+        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
+        >>> trigsimp(q.to_rotation_matrix())
         Matrix([
-        [-2/5,  2/5, 11/5],
-        [   2, -1/5,    2],
-        [   1, 14/5,    0]])
-        """
-        q = self
-        sqa = sqrt(q.a**2)
-        sqb = sqrt(q.b**2)
-        sqc = sqrt(q.c**2)
-        sqd = sqrt(q.d**2)
+        [cos(x), -sin(x), 0],
+        [sin(x),  cos(x), 0],
+        [     0,       0, 1]])
 
-        invs = 1 / (sqa + sqb + sqc + sqd)
-        m00 = (sqb - sqc - sqd + sqa) * invs
-        m11 = (-sqb + sqc - sqd + sqa) * invs
-        m22 = (-sqb - sqc + sqd + sqa) * invs
-
-        tmp1 = q.b * q.c
-        tmp2 = q.d * q.a
-        m10 = 2 * (tmp1 + tmp2) * invs
-        m01 = 2 * (tmp1 - tmp2) * invs
-
-        tmp1 = q.b * q.d
-        tmp2 = q.c * q.a
-        m20 = 2 * (tmp1 - tmp2) * invs
-        m02 = 2 * (tmp1 + tmp2) * invs
-
-        tmp1 = q.c * q.d
-        tmp2 = q.b * q.a
-        m21 = 2 * (tmp1 + tmp2) * invs
-        m12 = 2 * (tmp1 - tmp2) * invs
-
-        return Matrix([[m00, m01, m02], [m10, m11, m12], [m20, m21,
-                                                          m22]])
-
-    def to_matrix_4x4(self, v):
-        """ Generates a 4x4 transformation matrix (used for rotation about a point
-        other than the origin) from a quaternion and the position vector of the point.
+        Generates a 4x4 transformation matrix (used for rotation about a point
+        other than the origin) if the point(v) is passed as an argument.
 
         Example
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 2, 3, 4)
-        >>> q.to_matrix_4x4((1, 4, 8))
-        Matrix([
-        [-2/5,  2/5, 11/5, -89/5],
-        [   2, -1/5,    2, -66/5],
-        [   1, 14/5,    0, -21/5],
-        [   0,    0,    0,     1]])
+        >>> from sympy import symbols, trigsimp, cos, sin
+        >>> x = symbols('x')
+        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
+        >>> trigsimp(q.to_rotation_matrix((1, 1, 1)))
+         Matrix([
+        [cos(x), -sin(x), 0, -sqrt(2)*cos(x + pi/4) + 1],
+        [sin(x),  cos(x), 0, -sqrt(2)*sin(x + pi/4) + 1],
+        [     0,       0, 1,                          0],
+        [     0,       0, 0,                          1]])
         """
 
         q = self
-        sqa = sqrt(q.a**2)
-        sqb = sqrt(q.b**2)
-        sqc = sqrt(q.c**2)
-        sqd = sqrt(q.d**2)
+        s = q.norm()**-2
+        m00 = 1 - 2*s*(q.c**2 + q.d**2)
+        m01 = 2*s*(q.b*q.c - q.d*q.a)
+        m02 = 2*s*(q.b*q.d + q.c*q.a)
 
-        invs = 1 / (sqa + sqb + sqc + sqd)
-        m00 = (sqb - sqc - sqd + sqa) * invs
-        m11 = (-sqb + sqc - sqd + sqa) * invs
-        m22 = (-sqb - sqc + sqd + sqa) * invs
+        m10 = 2*s*(q.b*q.c + q.d*q.a)
+        m11 = 1 - 2*s*(q.b**2 + q.d**2)
+        m12 = 2*s*(q.c*q.d + q.b*q.a)
 
-        tmp1 = q.b * q.c
-        tmp2 = q.d * q.a
-        m10 = 2 * (tmp1 + tmp2) * invs
-        m01 = 2 * (tmp1 - tmp2) * invs
+        m20 = 2*s*(q.b*q.d - q.c*q.a)
+        m21 = 2*s*(q.c*q.d + q.b*q.a)
+        m22 = 1 - 2*s*(q.b**2 + q.c**2)
 
-        tmp1 = q.b * q.d
-        tmp2 = q.c * q.a
-        m20 = 2 * (tmp1 - tmp2) * invs
-        m02 = 2 * (tmp1 + tmp2) * invs
+        if not v:
+            return Matrix([[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]])
 
-        tmp1 = q.c * q.d
-        tmp2 = q.b * q.a
-        m21 = 2 * (tmp1 + tmp2) * invs
-        m12 = 2 * (tmp1 - tmp2) * invs
+        else:
+            (x, y, z) = v
 
-        (x, y, z) = v
+            m03 = x - x*m00 - y*m01 - z*m02
+            m13 = y - x*m10 - y*m11 - z*m12
+            m23 = z - x*m20 - y*m21 - z*m22
+            m30 = m31 = m32 = 0
+            m33 = 1
 
-        m03 = x - x*m00 - y*m01 - z*m02
-        m13 = y - x*m10 - y*m11 - z*m12
-        m23 = z - x*m20 - y*m21 - z*m22
-        m30 = m31 = m32 = 0
-        m33 = 1
-
-        return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
-                       [m20, m21, m22, m23], [m30, m31, m32, m33]])
+            return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
+                          [m20, m21, m22, m23], [m30, m31, m32, m33]])

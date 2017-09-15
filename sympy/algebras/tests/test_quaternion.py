@@ -1,9 +1,9 @@
 from sympy.algebras.quaternion import Quaternion
 from sympy import symbols, re, im, Add, Mul, I
-from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E
+from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E, pi
 from sympy import Matrix
 from sympy import diff, integrate
-from sympy import S
+from sympy import S, Rational
 
 x, y, z, w = symbols("x y z w")
 
@@ -11,15 +11,13 @@ def test_quaternion_construction():
     q = Quaternion(x, y, z, w)
     assert q + q == Quaternion(2*x, 2*y, 2*z, 2*w)
 
-    q2 = Quaternion.from_axis_angle((1, 4, 5), 2)
-    assert q2 == Quaternion(cos(1),
-                            sqrt(42) * sin(1) / 42,
-                            2 * sqrt(42) * sin(1) / 21,
-                            5 * sqrt(42) * sin(1) / 42)
+    q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
+    assert q2 == Quaternion(Rational(1/2), Rational(1/2),
+                            Rational(1/2), Rational(1,2))
 
-    q3 = Quaternion.from_matrix(Matrix([[1, 2, 3], [0, 1, 4], [5, 6, 0]]))
-    assert q3 == Quaternion(sqrt(3)/2, 1/2, -1/2, 0)
-
+    M = Matrix([[1, 0, 0], [0, 0, 0], [0, 0, 1]])
+    q3 = Quaternion.from_matrix(M)
+    assert q3 == Quaternion(sqrt(2)/2, 0, 0, 0)
 
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
@@ -85,15 +83,16 @@ def test_quaternion_functions():
 def test_quaternion_conversions():
     q1 = Quaternion(1, 2, 3, 4)
 
-    assert q1.to_axis_angle() == \
-    ((2 * sqrt(29)/29, 3 * sqrt(29)/29, 4 * sqrt(29)/29),
+    assert q1.to_axis_angle() == ((2 * sqrt(29)/29,
+                                   3 * sqrt(29)/29,
+                                   4 * sqrt(29)/29),
                                    2 * acos(sqrt(30)/30))
 
-    assert q1.to_matrix() == Matrix([[-S(2)/5, S(2)/5, S(11)/5],
-                                     [S(2), -S(1)/5, S(2)],
-                                     [S(1), S(14)/5, S(0)]])
+    assert q1.to_rotation_matrix() == Matrix([[-S(2)/3, S(2)/15, S(11)/15],
+                                     [S(2)/3, -S(1)/3, S(14)/15],
+                                     [S(1)/3, S(14)/15, S(2)/15]])
 
-    assert q1.to_matrix_4x4((1, 1, 1)) == Matrix([[-S(2)/5, S(2)/5, S(11)/5, -S(6)/5],
-                                                  [S(2), -S(1)/5, S(2), -S(14)/5],
-                                                  [S(1), S(14)/5, S(0), -S(14)/5],
+    assert q1.to_rotation_matrix((1, 1, 1)) == Matrix([[-S(2)/3, S(2)/15, S(11)/15, S(4)/5],
+                                                  [S(2)/3, -S(1)/3, S(14)/15, -S(4)/15],
+                                                  [S(1)/3, S(14)/15, S(2)/15, -S(2)/5],
                                                   [S(0), S(0), S(0), S(1)]])
