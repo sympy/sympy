@@ -2219,7 +2219,7 @@ class Triangle(Polygon):
         return Circle(self.incenter, self.inradius)
 
     @property
-    def exradius(self):
+    def exradii(self):
         """The radius of excircles of a triangle.
 
         An excircle of the triangle is a circle lying outside the triangle,
@@ -2242,7 +2242,7 @@ class Triangle(Polygon):
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
-        >>> t.exradius
+        >>> t.exradii
         {-2 + sqrt(10), 2 + sqrt(10), sqrt(10) + 4}
 
         References
