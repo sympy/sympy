@@ -577,26 +577,34 @@ The inequality cannot be solved using solve_univariate_inequality.
             #Only real values of x for which the imaginary part is 0 are taken
             make_real = S.Reals
             if im(expanded_e) != S.Zero:
+                check = True
                 im_sol = FiniteSet()
-                a = solveset(im(expanded_e), gen, domain)
-                if not isinstance(a, Interval):
-                    for z in a:
-                        if z not in singularities and valid(z) and z.is_real:
-                            im_sol += FiniteSet(z)
-                else:
-                    start, end = a.inf, a.sup
-                    for z in critical_points + FiniteSet(end):
-                        if z != end:
-                            pt = _pt(start, z)
-                            if pt not in singularities and valid(pt) and pt.is_real:
-                                if valid(start) and valid(z):
-                                    im_sol += Interval(start, z)
-                                elif valid(start) and not valid(z):
-                                    im_sol += Interval.Ropen(start, z)
-                                elif not valid(start) and valid(z):
-                                    im_sol += Interval.Lopen(start, z)
-                                else:
-                                    im_sol += Interval.open(start, z)
+                try:
+                    a = solveset(im(expanded_e), gen, domain)
+                    if not isinstance(a, Interval):
+                        for z in a:
+                            if z not in singularities and valid(z) and z.is_real:
+                                im_sol += FiniteSet(z)
+                    else:
+                        start, end = a.inf, a.sup
+                        for z in _nsort(critical_points + FiniteSet(end)):
+                            if start != end:
+                                pt = _pt(start, z)
+                                if pt not in singularities and valid(pt) and pt.is_real:
+                                    if valid(start) and valid(z):
+                                        im_sol += Interval(start, z)
+                                    elif valid(start) and not valid(z):
+                                        im_sol += Interval.Ropen(start, z)
+                                    elif not valid(start) and valid(z):
+                                        im_sol += Interval.Lopen(start, z)
+                                    else:
+                                        im_sol += Interval.open(start, z)
+                            start = z
+                        for s in singularities:
+                            im_sol -= FiniteSet(s)
+                except (TypeError):
+                    im_sol = S.Reals
+                    check = False
 
                 if isinstance(im_sol, EmptySet):
                     raise ValueError(filldedent('''
@@ -638,7 +646,7 @@ satisfying the inequality, leading to relations like I < 0.
             if valid(_pt(start, end)):
                 sol_sets.append(Interval.open(start, end))
 
-            if im(expanded_e) != S.Zero:
+            if im(expanded_e) != S.Zero and check:
                 rv = (make_real)
             else:
                 rv = (Union(*sol_sets)).intersect(make_real).subs(gen, _gen)
