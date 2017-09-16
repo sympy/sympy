@@ -383,6 +383,7 @@ def signsimp(expr, evaluate=None):
 
 
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
+    # type: (object, object, object, object) -> object
     """
     Simplifies the given expression.
 

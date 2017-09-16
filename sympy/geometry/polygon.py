@@ -2229,7 +2229,7 @@ class Triangle(Polygon):
         Returns
         =======
 
-        exradius : radius of a Circle object.
+        exradii : dict
 
         See Also
         ========
@@ -2243,7 +2243,9 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradii
-        {-2 + sqrt(10), 2 + sqrt(10), sqrt(10) + 4}
+        {Segment2D(Point2D(0, 0), Point2D(0, 2)): -2 + sqrt(10), 
+        Segment2D(Point2D(0, 2), Point2D(6, 0)): sqrt(10) + 4, 
+        Segment2D(Point2D(0, 0), Point2D(6, 0)): 2 + sqrt(10)}
 
         References
         ==========
@@ -2259,9 +2261,11 @@ class Triangle(Polygon):
         c = side[2].length
         s = (a+b+c)/2
         area = self.area
-        exradii = {self.sides[0]: area/(s-a), self.sides[1]: area/(s-b), self.side[2]: area/(s-c)}
+        exradii = {self.sides[0]: simplify(area/(s-a)),
+                   self.sides[1]: simplify(area/(s-b)),
+                   self.sides[2]: simplify(area/(s-c))}
 
-        return simplify(exradii)
+        return exradii
 
     @property
     def medians(self):
