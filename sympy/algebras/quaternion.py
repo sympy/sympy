@@ -13,7 +13,6 @@ from sympy import Matrix, Add, Mul
 from sympy import symbols, sympify
 from sympy.printing.latex import latex
 from sympy.printing import StrPrinter
-from sympy import simplify
 
 
 class Quaternion(Expr):
