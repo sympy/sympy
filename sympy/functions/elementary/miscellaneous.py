@@ -29,6 +29,7 @@ def _minmax_as_Piecewise(op, *args):
         ec.append((a, And(*c)))
     return Piecewise(*ec)
 
+
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
     The identity function
