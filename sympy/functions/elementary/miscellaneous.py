@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Equality
+from sympy.core.relational import Equality, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
@@ -17,6 +17,18 @@ from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And
+
+def _minmax_as_Piecewise(op, *args):
+    # helper for Min/Max rewrite as Piecewise
+    from sympy.functions.elementary.piecewise import Piecewise
+    ec = []
+    for i, a in enumerate(args):
+        c = []
+        for j in range(i + 1, len(args)):
+            c.append(Relational(a, args[j], op))
+        ec.append((a, And(*c)))
+    return Piecewise(*ec)
+
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
@@ -614,6 +626,9 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
+    def _eval_rewrite_as_Piecewise(self, *args):
+        return _minmax_as_Piecewise('>=', *args)
+
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
 
@@ -673,6 +688,9 @@ class Min(MinMaxBase, Application):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
+
+    def _eval_rewrite_as_Piecewise(self, *args):
+        return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)
