@@ -1,8 +1,8 @@
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     inertia, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, simplify, Function, \
-        Derivative, Matrix
+from sympy.core.backend import symbols, pi, sin, cos, tan
+from sympy import simplify, Function, Derivative, Matrix
 
 
 def test_disc_on_an_incline_plane():
@@ -15,7 +15,7 @@ def test_disc_on_an_incline_plane():
     # gravitational constant.
     y, theta = dynamicsymbols('y theta')
     yd, thetad = dynamicsymbols('y theta', 1)
-    m, g, R, l, alpha = symbols('m g R l alpha')
+    m, g, R, l, alpha = symbols('m g R l alpha', real=True)
 
     # Next, we create the inertial reference frame 'N'. A reference frame 'A'
     # is attached to the inclined plane. Finally a frame is created which is attached to the disk.
@@ -64,7 +64,7 @@ def test_simp_pen():
     # inertial frame.
     q, u = dynamicsymbols('q u')
     qd, ud = dynamicsymbols('q u ', 1)
-    l, m, g = symbols('l m g')
+    l, m, g = symbols('l m g', real=True)
 
     # We then create the inertial frame and a frame attached to the massless
     # string following which we define the inertial angular velocity of the
@@ -97,7 +97,7 @@ def test_simp_pen():
 def test_nonminimal_pendulum():
     q1, q2 = dynamicsymbols('q1:3')
     q1d, q2d = dynamicsymbols('q1:3', level=1)
-    L, m, t = symbols('L, m, t')
+    L, m, t = symbols('L, m, t', real=True)
     g = 9.8
     # Compose World Frame
     N = ReferenceFrame('N')
@@ -138,7 +138,7 @@ def test_dub_pen():
     q1dd, q2dd = dynamicsymbols('q1 q2', 2)
     u1, u2 = dynamicsymbols('u1 u2')
     u1d, u2d = dynamicsymbols('u1 u2', 1)
-    l, m, g = symbols('l m g')
+    l, m, g = symbols('l m g', real=True)
 
     N = ReferenceFrame('N')
     A = N.orientnew('A', 'Axis', [q1, N.z])
@@ -181,7 +181,7 @@ def test_rolling_disc():
     # disc's mass and radius, and the local gravity.
     q1, q2, q3 = dynamicsymbols('q1 q2 q3')
     q1d, q2d, q3d = dynamicsymbols('q1 q2 q3', 1)
-    r, m, g = symbols('r m g')
+    r, m, g = symbols('r m g', real=True)
 
     # The kinematics are formed by a series of simple rotations. Each simple
     # rotation creates a new frame, and the next rotation is defined by the new
@@ -211,19 +211,20 @@ def test_rolling_disc():
     BodyD.potential_energy = - m * g * r * cos(q2)
     Lag = Lagrangian(N, BodyD)
     q = [q1, q2, q3]
-    q1 = Function('q1')
-    q2 = Function('q2')
-    q3 = Function('q3')
+    q1 = Function('q1', real=True)
+    q2 = Function('q2', real=True)
+    q3 = Function('q3', real=True)
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
     RHS = l.rhs()
     RHS.simplify()
-    t = symbols('t')
+    t = dynamicsymbols.t
 
     assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
-    assert RHS[4].simplify() == (
-        (-8*g*sin(q2(t)) + r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
-        12*cos(q2(t))*Derivative(q3(t), t))*Derivative(q1(t), t))/(10*r))
-    assert RHS[5] == (-5*cos(q2(t))*Derivative(q1(t), t) + 6*tan(q2(t)
-        )*Derivative(q3(t), t) + 4*Derivative(q1(t), t)/cos(q2(t))
-        )*Derivative(q2(t), t)
+    assert RHS[4].simplify() == ((-8*g*sin(q2(t)) +
+                                  r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
+                                  12*cos(q2(t))*Derivative(q3(t), t)) *
+                                  Derivative(q1(t), t))/(10*r))
+    assert RHS[5] == (-5*cos(q2(t))*Derivative(q1(t), t) +
+                      6*tan(q2(t))*Derivative(q3(t), t) +
+                      4*Derivative(q1(t), t)/cos(q2(t)))*Derivative(q2(t), t)

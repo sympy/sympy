@@ -9,11 +9,24 @@ from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
 from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
            'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
-           'init_vprinting']
+           'init_vprinting', 'get_time', 'set_time']
+
+
+def get_time():
+    """Returns the symbol used for time dependence in the physics vectors and
+    dyadics."""
+    return dynamicsymbols.t
+
+
+def set_time(sym=Symbol('t', real=True)):
+    """Sets the symbol used for time dependence in the physics vectors and
+    dyadics."""
+    dynamicsymbols.t = sym
 
 
 def cross(vec1, vec2):
@@ -179,7 +192,7 @@ def time_derivative(expr, frame, order=1):
 
     """
 
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     _check_frame(frame)
 
     if order == 0:
@@ -276,7 +289,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
             raise ValueError('Need 3 coordinates for body or space')
         # Actual hard-coded kinematic differential equations
         q1, q2, q3 = coords
-        q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
+        q1d, q2d, q3d = [diff(i, dynamicsymbols.t) for i in coords]
         w1, w2, w3 = speeds
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
@@ -364,7 +377,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         w = Matrix(speeds + [0])
         E = Matrix([[e0, -e3, e2, e1], [e3, e0, -e1, e2], [-e2, e1, e0, e3],
             [-e1, -e2, -e3, e0]])
-        edots = Matrix([diff(i, dynamicsymbols._t) for i in [e1, e2, e3, e0]])
+        edots = Matrix([diff(i, dynamicsymbols.t) for i in [e1, e2, e3, e0]])
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
@@ -387,7 +400,7 @@ def get_motion_params(frame, **kwargs):
     If any of the boundary conditions are not provided, they are taken
     to be zero by default (zero vectors, in case of vectorial inputs). If
     the boundary conditions are also functions of time, they are converted
-    to constants by substituting the time values in the dynamicsymbols._t
+    to constants by substituting the time values in the dynamicsymbols.t
     time Symbol.
 
     This function can also be used for calculating rotational motion
@@ -501,16 +514,16 @@ def get_motion_params(frame, **kwargs):
     if mode == 2:
         vel = _process_vector_differential(kwargs['acceleration'],
                                            kwargs['velocity'],
-                                           dynamicsymbols._t,
+                                           dynamicsymbols.t,
                                            kwargs['timevalue2'], frame)[2]
         pos = _process_vector_differential(vel, kwargs['position'],
-                                           dynamicsymbols._t,
+                                           dynamicsymbols.t,
                                            kwargs['timevalue1'], frame)[2]
         return (kwargs['acceleration'], vel, pos)
     elif mode == 1:
         return _process_vector_differential(kwargs['velocity'],
                                             kwargs['position'],
-                                            dynamicsymbols._t,
+                                            dynamicsymbols.t,
                                             kwargs['timevalue1'], frame)
     else:
         vel = time_derivative(kwargs['position'], frame)
@@ -572,42 +585,100 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0):
-    """Uses symbols and Function for functions of time.
-
-    Creates a SymPy UndefinedFunction, which is then initialized as a function
-    of a variable, the default being Symbol('t').
-
-    Parameters
-    ==========
-
-    names : str
-        Names of the dynamic symbols you want to create; works the same way as
-        inputs to symbols
-    level : int
-        Level of differentiation of the returned function; d/dt once of t,
-        twice of t, etc.
-
-    Examples
-    ========
-
-    >>> from sympy.physics.vector import dynamicsymbols
-    >>> from sympy import diff, Symbol
-    >>> q1 = dynamicsymbols('q1')
-    >>> q1
-    q1(t)
-    >>> diff(q1, Symbol('t'))
-    Derivative(q1(t), t)
-
+class _dynamicsymbols_class(object):
+    """The class used to manage the dynamicsymbols time symbol attribute.
     """
-    esses = symbols(names, cls=Function)
-    t = dynamicsymbols._t
-    if iterable(esses):
-        esses = [reduce(diff, [t] * level, e(t)) for e in esses]
-        return esses
-    else:
-        return reduce(diff, [t] * level, esses(t))
 
+    def __init__(self):
+        self._time_symbol = Symbol('t', real=True)
+        self._str = '\''
 
-dynamicsymbols._t = Symbol('t')
-dynamicsymbols._str = '\''
+    def _get_time_symbol(self):
+        return self._time_symbol
+
+    def _set_time_symbol(self, value):
+        self._time_symbol = value
+
+    def _get_time_symbol_dep(self):
+        SymPyDeprecationWarning(
+                feature="Attribute sympy.physics.vector.dynamicsymbols._t",
+                useinstead="attribute sympy.physics.vector.dynamicsymbols.t",
+                deprecated_since_version="1.1.0").warn()
+        return self._get_time_symbol()
+
+    def _set_time_symbol_dep(self, value):
+        SymPyDeprecationWarning(
+                feature="Attribute sympy.physics.vector.dynamicsymbols._t",
+                useinstead="attribute sympy.physics.vector.dynamicsymbols.t",
+                deprecated_since_version="1.1.0").warn()
+        return self._set_time_symbol(value)
+
+    t = property(_get_time_symbol, _set_time_symbol)
+    _t = property(_get_time_symbol_dep, _set_time_symbol_dep)
+
+    def __call__(self, names, level=0, real=True, **kwargs):
+        """Returns a tuple of functions of time or their derivatives. This is a
+        convenience function that is analogous to ``symbols()``. It allows the
+        user to avoid typing::
+
+            >>> t = symbols('t', real=True) #doctest: +SKIP
+            >>> F = symbols('F', real=True, cls=Function)(t) #doctest: +SKIP
+
+        and simply type::
+
+            >>> F = dynamicsymbols('F') #doctest: +SKIP
+
+        Parameters
+        ==========
+        names : str
+            Names of the dynamic symbols you want to create. This works the same
+            way as inputs to ``symbols()``.
+        level : int
+            Order of differentiation of the returned function(s).
+        real : boolean, optional
+            By default the functions are assumed to be real.
+        kwargs : key value pairs
+            Any options that can be passed to ``symbols()`` except for ``cls``.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import dynamicsymbols, get_time
+        >>> from sympy import diff, Symbol
+        >>> q1 = dynamicsymbols('q1')
+        >>> q1
+        q1(t)
+        >>> diff(q1, get_time())
+        Derivative(q1(t), t)
+        >>> q1d = dynamicsymbols('q1', level=1)
+        >>> q1d
+        Derivative(q1(t), t)
+
+        Notes
+        =====
+
+        The default time symbol is stored on the function, i.e.::
+
+            >>> dynamicsymbols.t #doctest: +SKIP
+            t
+
+        It can be changed by overriding the attribute::
+
+            >>> dynamicsymbols.t = symbols('T', real=False) #doctest: +SKIP
+
+        The functions ``get_time()`` and ``set_time`` can also be used to do
+        this.
+
+        """
+        kwargs.pop('cls', None)
+
+        esses = symbols(names, cls=Function, real=real, **kwargs)
+
+        t = self._time_symbol
+
+        if iterable(esses):
+            return tuple([reduce(diff, [t] * level, e(t)) for e in esses])
+        else:
+            return reduce(diff, [t] * level, esses(t))
+
+dynamicsymbols = _dynamicsymbols_class()

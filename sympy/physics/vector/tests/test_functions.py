@@ -1,10 +1,11 @@
-from sympy import S, Integral, sin, cos, pi, sqrt, symbols
+from sympy import S, Integral, sin, cos, pi, sqrt, symbols, Symbol
 from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector
 from sympy.physics.vector.functions import (cross, dot, express,
                                             time_derivative,
                                             kinematic_equations, outer,
                                             partial_velocity,
-                                            get_motion_params, dynamicsymbols)
+                                            get_motion_params, dynamicsymbols,
+                                            get_time, set_time)
 from sympy.utilities.pytest import raises
 
 Vector.simp = True
@@ -13,6 +14,28 @@ N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [q1, N.z])
 B = A.orientnew('B', 'Axis', [q2, A.x])
 C = B.orientnew('C', 'Axis', [q3, B.y])
+
+
+def test_get_set_time():
+    T = Symbol('T')
+    t = Symbol('t', real=True)
+
+    assert get_time() == t
+
+    set_time(T)
+    assert get_time() == T
+    q = dynamicsymbols('q')
+    q.diff(T)
+
+    set_time(t)
+    assert get_time() == t
+    q = dynamicsymbols('q')
+    q.diff(t)
+
+    set_time()
+    assert get_time() == t
+    q = dynamicsymbols('q')
+    q.diff(t)
 
 
 def test_dot():
@@ -376,7 +399,7 @@ def test_time_derivative():
 
 def test_get_motion_methods():
     #Initialization
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     s1, s2, s3 = symbols('s1 s2 s3')
     S1, S2, S3 = symbols('S1 S2 S3')
     S4, S5, S6 = symbols('S4 S5 S6')
