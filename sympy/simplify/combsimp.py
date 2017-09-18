@@ -9,8 +9,7 @@ from sympy.polys import factor, cancel
 from sympy.utilities.timeutils import timethis
 from sympy.utilities.iterables import sift
 from sympy.utilities.iterables import uniq
-
-
+from sympy.abc import n, k
 
 @timethis('combsimp')
 def combsimp(expr):
@@ -66,9 +65,15 @@ def combsimp(expr):
 
     # as a rule of thumb, if the expression contained gammas initially, it
     # probably makes sense to retain them
-    as_gamma = expr.has(gamma)
     as_factorial = expr.has(factorial)
     as_binomial = expr.has(binomial)
+    as_gamma = expr.has(gamma)
+
+    if as_gamma:
+        return gammasimp(expr)
+
+    if expr.has("rewrite(factorial)") and as_binomial:
+        return expr
 
 
     expr = expr.replace(binomial,
@@ -77,14 +82,12 @@ def combsimp(expr):
         lambda n: _rf(1, n.expand()))
     expr = expr.rewrite(gamma)
     expr = expr.replace(gamma,
-        lambda n: _rf(1, (n - 1).expand()))
+            lambda n: _rf(1, (n - 1).expand()))
 
-    if as_gamma:
-        expr = expr.replace(_rf,
-            lambda a, b: gamma(a + b)/gamma(a))
-    else:
-        expr = expr.replace(_rf,
-            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+    expr = expr.replace(_rf,
+        lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+    expr = expr.replace(_rf,
+        lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
 
     def rule(n, k):
         coeff, rewrite = S.One, False
@@ -110,6 +113,195 @@ def combsimp(expr):
             return coeff*binomial(n, k)
 
     expr = expr.replace(binomial, rule)
+
+    def rule_gamma(expr, level=0):
+        """ Simplify products of gamma functions further. """
+
+        if expr.is_Atom:
+            return expr
+
+
+        def factorial_factor(x):
+            # return True if there is a factorial factor in shallow args
+            if x.func is factorial:
+                return True
+            if x.is_Add or x.is_Mul:
+                return any(factorial_factor(xi) for xi in x.args)
+            if x.is_Pow and (x.exp.is_integer or x.base.is_positive):
+                return factorial_factor(x.base)
+            return False
+
+        # recursion step
+        if level == 0:
+            expr = expr.func(*[rule_gamma(x, level + 1) for x in expr.args])
+            level += 1
+
+        if not expr.is_Mul:
+            return expr
+
+        # non-commutative step
+        if level == 1:
+            args, nc = expr.args_cnc()
+            if not args:
+                return expr
+            if nc:
+                return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
+            level += 1
+        # iteration until constant
+        if level == 3:
+            while True:
+                was = expr
+                expr = rule_gamma(expr, 4)
+                if expr == was:
+                    return expr
+
+        numer_gammas = []
+        denom_gammas = []
+        numer_others = []
+        denom_others = []
+        def explicate(p):
+            if p is S.One:
+                return None, []
+            b, e = p.as_base_exp()
+            if e.is_Integer:
+                if b.func is gamma:
+                    return True, [b.args[0]]*e
+                else:
+                    return False, [b]*e
+            else:
+                return False, [p]
+
+        newargs = list(ordered(expr.args))
+        while newargs:
+            n, d = newargs.pop().as_numer_denom()
+            isg, l = explicate(n)
+            if isg:
+                numer_gammas.extend(l)
+            elif isg is False:
+                numer_others.extend(l)
+            isg, l = explicate(d)
+            if isg:
+                denom_gammas.extend(l)
+            elif isg is False:
+                denom_others.extend(l)
+        # =========== level >= 2 work: factor absorbtion =========
+        if level >= 2:
+            # Try to absorb factors into the gammas: x*gamma(x) -> gamma(x + 1)
+            # and gamma(x)/(x - 1) -> gamma(x - 1)
+            # This code (in particular repeated calls to find_fuzzy) can be very
+            # slow.
+            def find_fuzzy(l, x):
+                if not l:
+                    return
+                S1, T1 = compute_ST(x)
+                for y in l:
+                    S2, T2 = inv[y]
+                    if T1 != T2 or (not S1.intersection(S2) and
+                                    (S1 != set() or S2 != set())):
+                        continue
+                    # XXX we want some simplification (e.g. cancel or
+                    # simplify) but no matter what it's slow.
+                    a = len(cancel(x/y).free_symbols)
+                    b = len(x.free_symbols)
+                    c = len(y.free_symbols)
+                    # TODO is there a better heuristic?
+                    if a == 0 and (b > 0 or c > 0):
+                        return y
+
+            # We thus try to avoid expensive calls by building the following
+            # "invariants": For every factor or gamma function argument
+            #   - the set of free symbols S
+            #   - the set of functional components T
+            # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
+            # or S1 == S2 == emptyset)
+            inv = {}
+
+            def compute_ST(expr):
+                if expr in inv:
+                    return inv[expr]
+                return (expr.free_symbols, expr.atoms(Function).union(
+                        set(e.exp for e in expr.atoms(Pow))))
+
+            def update_ST(expr):
+                inv[expr] = compute_ST(expr)
+            for expr in numer_gammas + denom_gammas + numer_others + denom_others:
+                update_ST(expr)
+
+            for gammas, numer, denom in [(
+                numer_gammas, numer_others, denom_others),
+                    (denom_gammas, denom_others, numer_others)]:
+                new = []
+                while gammas:
+                    g = gammas.pop()
+                    cont = True
+                    while cont:
+                        cont = False
+                        y = find_fuzzy(numer, g)
+                        if y is not None:
+                            numer.remove(y)
+                            if y != g:
+                                numer.append(y/g)
+                                update_ST(y/g)
+                            g += 1
+                            cont = True
+                        y = find_fuzzy(denom, g - 1)
+                        if y is not None:
+                            denom.remove(y)
+                            if y != g - 1:
+                                numer.append((g - 1)/y)
+                                update_ST((g - 1)/y)
+                            g -= 1
+                            cont = True
+                    new.append(g)
+                # /!\ updating IN PLACE
+                gammas[:] = new
+
+        # =========== rebuild expr ==================================
+
+        return Mul(*[gamma(g) for g in numer_gammas]) \
+            / Mul(*[gamma(g) for g in denom_gammas]) \
+            * Mul(*numer_others) / Mul(*denom_others)
+
+    # (for some reason we cannot use Basic.replace in this case)
+    was = factor(expr)
+    expr = rule_gamma(was)
+    if expr != was:
+        expr = factor(expr)
+
+    if as_factorial:
+        expr = expr.rewrite(factorial)
+    elif as_binomial:
+        expr = expr.rewrite(binomial)
+
+    return expr
+
+def gammasimp(expr):
+    """
+    New gammasimp function Fixes issue #6341
+    """
+
+    # as a rule of thumb, if the expression contained gammas initially, it
+    # probably makes sense to retain them
+    as_gamma = expr.has(gamma)
+    as_factorial = expr.has(factorial)
+    as_binomial = expr.has(binomial)
+
+
+    expr = expr.replace(binomial,
+        lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
+    expr = expr.replace(factorial,
+        lambda n: _rf(1, n.expand()))
+    expr = expr.rewrite(gamma)
+    expr = expr.replace(gamma,
+        lambda n: _rf(1, (n - 1).expand()))
+
+    if as_gamma:
+        expr = expr.replace(_rf,
+            lambda a, b: gamma(a + b)/gamma(a))
+    else:
+        expr = expr.replace(_rf,
+            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+
 
     def rule_gamma(expr, level=0):
         """ Simplify products of gamma functions further. """
