@@ -2239,13 +2239,11 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy.geometry import Point, Triangle, Segment2D, Point2D
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
-        >>> t.exradii
-        {Segment2D(Point2D(0, 0), Point2D(0, 2)): -2 + sqrt(10), 
-        Segment2D(Point2D(0, 2), Point2D(6, 0)): sqrt(10) + 4, 
-        Segment2D(Point2D(0, 0), Point2D(6, 0)): 2 + sqrt(10)}
+        >>> t.exradii[Segment2D(Point2D(0, 0), Point2D(0, 2))]
+        -2 + sqrt(10)
 
         References
         ==========
