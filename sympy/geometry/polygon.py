@@ -1677,6 +1677,7 @@ class Triangle(Polygon):
     circumcircle
     inradius
     incircle
+    exradii
     medians
     medial
     nine_point_circle
