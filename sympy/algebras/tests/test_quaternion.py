@@ -96,3 +96,10 @@ def test_quaternion_conversions():
                                                   [S(2)/3, -S(1)/3, S(14)/15, -S(4)/15],
                                                   [S(1)/3, S(14)/15, S(2)/15, -S(2)/5],
                                                   [S(0), S(0), S(0), S(1)]])
+
+    theta = symbols("theta", real=True)
+    q2 = Quaternion(cos(theta/2), 0, 0, sin(theta/2))
+    assert trigsimp(q2.to_rotation_matrix()) == Matrix(
+            [[cos(theta), -sin(theta), 0], [sin(theta), cos(theta), 0], [0, 0, 1]])
+    # TODO:
+    # assert q2.to_axis_angle() == ((0, 0, 1), theta)
