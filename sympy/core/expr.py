@@ -2832,8 +2832,13 @@ class Expr(Basic, EvalfMixin):
         for t in self.lseries(x, logx=d):
             t = t.cancel()
 
-            if t.simplify():
+            is_zero = t.equals(0)
+            if is_zero is True:
+                continue
+            elif is_zero is False:
                 break
+            else:
+                raise NotImplementedError("Zero-decision problem for %s" % t)
 
         if logx is None:
             t = t.subs(d, log(x))

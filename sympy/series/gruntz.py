@@ -121,7 +121,7 @@ from __future__ import print_function, division
 from sympy import Float
 from sympy.core import S, oo, Dummy, Mul, Add, evaluate
 from sympy.core.compatibility import default_sort_key
-from sympy.functions import log, exp, sign as sgn
+from sympy.functions import log, exp, sign as sgn, Abs
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
 from sympy.core.cache import cacheit
@@ -244,8 +244,8 @@ def sign(e, x):
         One or minus one, if `e > 0` or `e < 0` for `x` sufficiently
         large and zero if `e` is *constantly* zero for `x\to\infty`.
 
-    The result of this function is currently undefined if `e` changes sign
-    arbitarily often at infinity (e.g. `sin(x)`).
+        The result of this function is currently undefined if `e` changes
+        sign arbitrarily often at infinity (e.g. `\sin(x)`).
 
     Note that this returns zero only if e is *constantly* zero
     for x sufficiently large. [If e is constant, of course, this is just
@@ -293,6 +293,13 @@ def limitinf(e, x):
 
     # Rewrite e in terms of tractable functions only:
     e = e.rewrite('tractable', deep=True)
+
+    def transform_abs(f):
+        s = sgn(limitinf(f.args[0], x))
+        return s*f.args[0] if s in (1, -1) else f
+
+    e = e.replace(lambda f: isinstance(f, Abs) and f.has(x),
+                  transform_abs)
 
     if not e.has(x):
         # This is a bit of a heuristic for nice results.  We always rewrite
@@ -365,7 +372,7 @@ def mrv_leadterm(e, x):
     if not e.has(x):
         return e, S.Zero
 
-    e = e.replace(lambda f: f.is_Pow and f.base != S.Exp1 and f.exp.has(x),
+    e = e.replace(lambda f: f.is_Pow and f.exp.has(x),
                   lambda f: exp(log(f.base)*f.exp))
     e = e.replace(lambda f: f.is_Mul and sum(a.is_Pow for a in f.args) > 1,
                   lambda f: Mul(exp(Add(*[a.exp for a in f.args if a.is_Pow and a.base is S.Exp1])),
