@@ -632,7 +632,7 @@ def ChiSquared(name, k):
     ========
 
     >>> from sympy.stats import ChiSquared, density, E, variance
-    >>> from sympy import Symbol, simplify, combsimp, expand_func
+    >>> from sympy import Symbol, simplify, gammasimp, expand_func
 
     >>> k = Symbol("k", integer=True, positive=True)
     >>> z = Symbol("z")
@@ -642,7 +642,7 @@ def ChiSquared(name, k):
     >>> density(X)(z)
     2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
 
-    >>> combsimp(E(X))
+    >>> gammasimp(E(X))
     k
 
     >>> simplify(expand_func(variance(X)))

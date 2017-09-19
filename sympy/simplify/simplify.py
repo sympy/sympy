@@ -582,6 +582,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
     if expr.has(CombinatorialFunction, gamma):
+        # expression with gamma functions or non-integer arguments is
+        # automatically passed to gammasimp
         expr = combsimp(expr)
 
     if expr.has(Sum):
