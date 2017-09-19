@@ -2243,7 +2243,7 @@ class Triangle(Polygon):
         >>> from sympy.geometry import Point, Triangle, Segment2D, Point2D
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
-        >>> t.exradii[Segment2D(Point2D(0, 0), Point2D(0, 2))]
+        >>> t.exradii[t.sides[2]]
         -2 + sqrt(10)
 
         References
