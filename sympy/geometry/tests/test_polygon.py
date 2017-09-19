@@ -218,9 +218,7 @@ def test_polygon():
     assert t3.inradius == t3.incircle.radius == x1**2/((2 + sqrt(2))*Abs(x1))
 
     # Exradius
-    assert t1.exradii == {Segment2D(Point2D(0, 0), Point2D(0, 5)): 5*sqrt(2)/2,
-                          Segment2D(Point2D(0, 5), Point2D(5, 0)): 5*sqrt(2)/2 + 5,
-                          Segment2D(Point2D(0, 0), Point2D(5, 0)): 5*sqrt(2)/2}
+    assert t1.exradii[t.sides[2]] == 5*sqrt(2)/2
 
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
