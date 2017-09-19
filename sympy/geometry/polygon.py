@@ -2240,6 +2240,9 @@ class Triangle(Polygon):
         Examples
         ========
 
+        The exradius touches the side of the triangle to which it is keyed, e.g.
+        the exradius touching side 2 is:
+
         >>> from sympy.geometry import Point, Triangle, Segment2D, Point2D
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
