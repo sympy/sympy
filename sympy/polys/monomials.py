@@ -37,6 +37,7 @@ def itermonomials(variables, degree):
     Consider monomials in commutative variables `x` and `y`
     and non-commutative variables `a` and `b`::
 
+        >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
         >>> from sympy.polys.orderings import monomial_key
         >>> from sympy.abc import x, y
@@ -48,8 +49,8 @@ def itermonomials(variables, degree):
         [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
         >>> a, b = symbols('a, b', commutative=False)
-        >>> sorted(itermonomials([a, b, x], 2))
-        [1, a, b, x, a**2, a*b, b*a, b**2, xa, xb, x**2]
+        >>> itermonomials([a, b, x], 2)
+        {1, a, a**2, b, b**2, x, x**2, a*b, b*a, x*a, x*b}
 
 
     """
