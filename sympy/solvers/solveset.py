@@ -895,6 +895,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
+    rev_indexed_dummy = {}
+
     if symbol is None:
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
@@ -902,6 +904,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
+    elif getattr(symbol, 'is_Indexed', False):
+        d = Dummy("%s_%s" % (symbol.base, symbol.indices))
+        rev_indexed_dummy[d] = symbol
+        f = f.subs(symbol, d)
+        symbol = d
     elif not getattr(symbol, 'is_Symbol', False):
         raise ValueError('A Symbol must be given, not type %s: %s' %
             (type(symbol), symbol))
@@ -922,7 +929,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return _solveset(f, symbol, domain, _check=True)
+    solution = _solveset(f, symbol, domain, _check=True)
+
+    if rev_indexed_dummy:
+        solution = solution.subs(rev_indexed_dummy)
+    return solution
 
 
 def solveset_real(f, symbol):

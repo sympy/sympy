@@ -1059,6 +1059,15 @@ def solve(f, *symbols, **flags):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
 
+    # Case of `Indexed` objects:
+    reverse_indexed_repl = {}
+    for i, sym in enumerate(symbols):
+        if sym.is_Indexed:
+            d = Dummy("%s_%s" % (sym.base, sym.indices))
+            f = [fi.subs(sym, d) for fi in f]
+            symbols[i] = d
+            reverse_indexed_repl[d] = sym
+
     #
     # try to get a solution
     ###########################################################################
@@ -1066,6 +1075,17 @@ def solve(f, *symbols, **flags):
         solution = _solve(f[0], *symbols, **flags)
     else:
         solution = _solve_system(f, symbols, **flags)
+
+    # Restore `Indexed` objects:
+    if reverse_indexed_repl:
+
+        def rev_subs(expr):
+            if isinstance(expr, (list, tuple)):
+                return [rev_subs(i) for i in expr]
+            elif isinstance(expr, dict):
+                return {rev_subs(i): rev_subs(j) for i, j in expr.items()}
+            return expr.subs(reverse_indexed_repl)
+        solution = rev_subs(solution)
 
     #
     # postprocessing
