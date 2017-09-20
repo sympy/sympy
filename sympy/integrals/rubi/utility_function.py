@@ -11,23 +11,22 @@ from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly, quo, rem
-from sympy.simplify.simplify import fraction, simplify, cancel, factor, nthroot
+from sympy.simplify.simplify import fraction, simplify, cancel, factor
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
-from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
-from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
-    Add, hyper, Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp,
-    factorint, Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi,
+from sympy import (Basic, exp, N, Wild, Sum, S, I, Mul,
+    Add, hyper, symbols, sqf_list, sqf, gcd, factorint,
+    Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi,
     zoo, oo, Integral)
 from mpmath import appellf1
-from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
-from sympy.polys.polytools import poly_from_expr
+from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
+#from sympy.polys.polytools import poly_from_expr
 from sympy.utilities.iterables import flatten
-from sympy.strategies import distribute
+#from sympy.strategies import distribute
 from random import randint
 
 if matchpy:
@@ -1806,7 +1805,7 @@ def BinomialQ(u, x, n=None):
         return False
     return ListQ(BinomialParts(u, x))
 
-def TrinomialQ(u, x):
+def TrinomialQ(u, x, n=None):
     """
     If u is equivalent to an expression of the form a + b*x**n + c*x**(2*n) where n, b and c are not 0,
     TrinomialQ(u, x) returns True, else it returns False.
@@ -2122,7 +2121,7 @@ def ExpandIntegrand(expr, x, extra=None):
             else:
                 return Expand(F**(b*(c + d*x)**n), x, x**m*(e + f*x)**p)
 
-    k, q, i = symbols('k q i')
+    k, q = symbols('k q')
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x, 0])
     c_ = Wild('c', exclude=[x])
@@ -2507,7 +2506,7 @@ def ExpandIntegrand(expr, x, extra=None):
                 if n/g == 2:
                     return s/(2*b*(r + s*u**g)) - s/(2*b*(r - s*u**g))
                 else:
-                    if CoprimeQ[m+g,n]:
+                    if CoprimeQ(m + g, n):
                         return Sum(r*(r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r - (-1)**(2*k*g/n)*s*u**g)),(k,1,n/g)).doit()
                     else:
                         return Sum(r*(r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r - s*u**g)),(k,1,n/g)).doit()
@@ -2797,9 +2796,9 @@ def GeneralizedBinomialParts(expr, x):
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
         n = Wild('n', exclude=[x])
-        m = Wild('m', exclude=[x])
+        #m = Wild('m', exclude=[x])
         q = Wild('q', exclude=[x])
-        u = Wild('u')
+        #u = Wild('u')
         Match = expr.match(a*x**q + b*x**n)
         if Match and PosQ(Match[q] - Match[n]):
             return [Match[b], Match[a], Match[q], Match[n]]
@@ -3256,7 +3255,7 @@ def SubstForInverseFunction(*args):
     """
     if len(args) == 3:
         u, v, x = args[0], args[1], args[2]
-        return SubstForInverseFunction(u, v, (-Coefficient(v.args[0], x, 0) + InverseFunction(Head(v))(x))/Coefficient(v.args[0], x, 1), x)
+        return SubstForInverseFunction(u, v, (-Coefficient(v.args[0], x, 0) + InverseFunctionQ(Head(v))(x))/Coefficient(v.args[0], x, 1), x)
     elif len(args) == 4:
         u, v, w, x = args[0], args[1], args[2], args[3]
         if AtomQ(u):
@@ -4174,7 +4173,7 @@ def OddHyperbolicPowerQ(u, v, x):
     if PowerQ(u):
         return OddQ(u.args[1]) and OddHyperbolicPowerQ(u.base, v, x)
     if ProductQ(u):
-        if Not(Eq(FreeFactors(u, x), 1)):
+        if Not(EqQ(FreeFactors(u, x), 1)):
             return OddHyperbolicPowerQ(NonfreeFactors(u, x), v, x)
         lst = []
         for i in u.args:
@@ -4184,7 +4183,7 @@ def OddHyperbolicPowerQ(u, v, x):
             return True
         return Length(lst)==1 and OddHyperbolicPowerQ(lst[0], v, x)
     if SumQ(u):
-        return All(OddHyperbolicPowerQ(i, v, x) for i in u.args)
+        return all(OddHyperbolicPowerQ(i, v, x) for i in u.args)
     return False
 
 def FunctionOfTanhQ(u, v, x):
@@ -4540,7 +4539,7 @@ def KnownTrigIntegrandQ(lst, u, x):
     A_ = Wild('A', exclude=[x])
     B_ = Wild('B', exclude=[x])
     C_ = Wild('C', exclude=[x])
-    F_ = Wild('F')
+    #F_ = Wild('F')
 
     match = u.match((a_ + b_*func_)**m_)
     if match:
@@ -5224,7 +5223,7 @@ def FunctionOfDensePolynomialsQ(u, x):
         return True
     if PolynomialQ(u, x):
         return Length(Exponent(u,x,List))>1
-    return all(FunctionOfDensePolynomialsQ(i, v, x) for i in u.args)
+    return all(FunctionOfDensePolynomialsQ(i, x) for i in u.args)
 
 def FunctionOfLog(u, *args):
     # If u (x) is equivalent to an expression of the form f (Log[a*x^n]), FunctionOfLog[u,x] returns
@@ -5339,6 +5338,7 @@ def EulerIntegrandQ(expr, x):
 
 def FunctionOfSquareRootOfQuadratic(u, *args):
     if len(args) == 1:
+        x = True
         x == args[0]
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
@@ -5607,7 +5607,7 @@ def IntTerm(expr, x):
             t += IntTerm(i, x)
         return t
     else:
-        return Dist(FreeFactors(u,x), Integral(NonfreeFactors(u,x), x), x)
+        return Dist(FreeFactors(expr,x), Integral(NonfreeFactors(expr,x), x), x)
 
 def Map2(f, lst1, lst2):
     result = []
@@ -6161,28 +6161,6 @@ def SubstFor(*args):
     else:
         return SubstForAux(u, v, x)
 
-def SubstForAux(u, v, x):
-    # u is a function of v. SubstForAux(u, v, x) returns u with v replaced by x.
-    if u==v:
-        return x
-    elif AtomQ(u):
-        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u - v.args[0]):
-            return x**Simplify(1/v.args[1])
-        else:
-            return u
-    elif PowerQ(u) and FreeQ(u.args[1], x):
-        if ZeroQ(u.args[0] - v):
-            return x**u.args[1]
-        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u.args[0] - v.args[0]):
-            return x**Simplify(u.args[1]/v.args[1])
-        return SubstForAux(u.args[0], v, x)**u.args[1]
-    elif ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
-        return FreeFactors(u, x)*SubstForAux(NonfreeFactors(u, x), v, x)
-    elif ProductQ(u) and ProductQ(v):
-        return SubstForAux(First(u), First(v), x)
-    else:
-        return u.func(*[SubstForAux(i, v, x) for i in u.args])
-
 def FresnelS(x):
     return fresnels(x)
 
@@ -6276,19 +6254,19 @@ def _FixSimplify():
     replacer.add(rule1)
 
     pattern2 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(v)), CustomConstraint(lambda u: PositiveQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
-    rule2 = ReplacementRule(pattern2, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(u, Mul(m, Pow(GCD(m, n), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, n), S(-1)))))))), Condition(FixSimplify(Mul(w, Pow(S('z'), GCD(m, n)))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    rule2 = ReplacementRule(pattern2, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(u, Mul(m, Pow(GCD(m, n), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, n), S(-1)))))))), Condition(FixSimplify(Mul(w, Pow(S('z'), GCD(m, n)))), Order(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
     replacer.add(rule2)
 
     pattern3 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(Mul(S(1), Pow(v, S(-1))))), CustomConstraint(lambda u: PositiveQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
-    rule3 = ReplacementRule(pattern3, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(u, Mul(m, Pow(GCD(m, Mul(S(-1), n)), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, Mul(S(-1), n)), S(-1)))))))), Condition(FixSimplify(Mul(w, Pow(S('z'), GCD(m, Mul(S(-1), n))))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    rule3 = ReplacementRule(pattern3, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(u, Mul(m, Pow(GCD(m, Mul(S(-1), n)), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, Mul(S(-1), n)), S(-1)))))))), Condition(FixSimplify(Mul(w, Pow(S('z'), GCD(m, Mul(S(-1), n))))), Order(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
     replacer.add(rule3)
 
     pattern4 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(v)), CustomConstraint(lambda u: NegativeQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
-    rule4 = ReplacementRule(pattern4, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(Mul(S(-1), u), Mul(m, Pow(GCD(m, n), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, n), S(-1)))))))), Condition(FixSimplify(Mul(Mul(S(-1), w), Pow(S('z'), GCD(m, n)))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    rule4 = ReplacementRule(pattern4, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(Mul(S(-1), u), Mul(m, Pow(GCD(m, n), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, n), S(-1)))))))), Condition(FixSimplify(Mul(Mul(S(-1), w), Pow(S('z'), GCD(m, n)))), Order(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
     replacer.add(rule4)
 
     pattern5 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(u_, WC('m', S(1))), Pow(v_, n_))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda n: FractionQ(n)), CustomConstraint(lambda u: SqrtNumberSumQ(u)), CustomConstraint(lambda v: SqrtNumberSumQ(Mul(S(1), Pow(v, S(-1))))), CustomConstraint(lambda u: NegativeQ(u)), CustomConstraint(lambda v: PositiveQ(v)))
-    rule5 = ReplacementRule(pattern5, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(Mul(S(-1), u), Mul(m, Pow(GCD(m, Mul(S(-1), n)), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, Mul(S(-1), n)), S(-1)))))))), Condition(FixSimplify(Mul(Mul(S(-1), w), Pow(S('z'), GCD(m, Mul(S(-1), n))))), Or(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
+    rule5 = ReplacementRule(pattern5, lambda n, m, u, v, w : With(List(Set(S('z'), Simplify(Mul(Pow(Mul(S(-1), u), Mul(m, Pow(GCD(m, Mul(S(-1), n)), S(-1)))), Pow(v, Mul(n, Pow(GCD(m, Mul(S(-1), n)), S(-1)))))))), Condition(FixSimplify(Mul(Mul(S(-1), w), Pow(S('z'), GCD(m, Mul(S(-1), n))))), Order(AbsurdNumberQ(S('z')), SqrtNumberSumQ(S('z'))))))
     replacer.add(rule5)
 
     pattern6 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(a_, m_), Pow(Add(Mul(WC('v', S(1)), Pow(b_, n_)), u_), WC('p', S(1))))), CustomConstraint(lambda a, b, n, m: RationalQ(a, b, m, n)), CustomConstraint(lambda a: Greater(a, S(0))), CustomConstraint(lambda b: Greater(b, S(0))), CustomConstraint(lambda p: PositiveIntegerQ(p)))

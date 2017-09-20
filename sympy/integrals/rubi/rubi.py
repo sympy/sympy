@@ -5,11 +5,11 @@ import inspect, re
 
 if matchpy:
     from matchpy import (Operation, CommutativeOperation, AssociativeOperation,
-        ManyToOneReplacer, OneIdentityOperation, CustomConstraint)
+        ManyToOneReplacer, OneIdentityOperation)
     from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
     from sympy import Pow, Add, Integral, Basic, Mul, S
-    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf,
-        exp, log, gamma, acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh,
+    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, exp,
+        gamma, acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh,
         tanh, coth, sech, csch, atan, acsc, asin, acot, acos, asec, fresnels,
         fresnelc, erfc, erfi)
 
@@ -144,6 +144,7 @@ if matchpy:
         from sympy.integrals.rubi.rules.linear_products import linear_products
         from sympy.integrals.rubi.rules.quadratic_products import quadratic_products
         from sympy.integrals.rubi.rules.binomial_products import binomial_products
+        '''
         from sympy.integrals.rubi.rules.trinomial_products import trinomial_products
         from sympy.integrals.rubi.rules.miscellaneous_algebraic import miscellaneous_algebraic
         from sympy.integrals.rubi.rules.exponential import exponential
@@ -154,10 +155,11 @@ if matchpy:
         from sympy.integrals.rubi.rules.miscellaneous_trig import miscellaneous_trig
         from sympy.integrals.rubi.rules.inverse_trig import inverse_trig
         from sympy.integrals.rubi.rules.hyperbolic import hyperbolic
-        from sympy.integrals.rubi.rules.inverse_hyperbolic import inverse_hyperbolic
+        '''
+        #from sympy.integrals.rubi.rules.inverse_hyperbolic import inverse_hyperbolic
         #from sympy.integrals.rubi.rules.special_function import special_function
         #from sympy.integrals.rubi.rules.derivative import derivative
-        from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
+        #from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
         #from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
 
         rubi = ManyToOneReplacer()
