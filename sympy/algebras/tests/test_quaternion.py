@@ -60,6 +60,11 @@ def test_quaternion_functions():
                2 * sqrt(29) * E * sin(sqrt(29)) / 29,
                3 * sqrt(29) * E * sin(sqrt(29)) / 29,
                4 * sqrt(29) * E * sin(sqrt(29)) / 29)
+    assert q1._ln() == \
+    Quaternion(log(sqrt(30)),
+               2 * sqrt(29) * acos(sqrt(30)/30) / 29,
+               3 * sqrt(29) * acos(sqrt(30)/30) / 29,
+               4 * sqrt(29) * acos(sqrt(30)/30) / 29)
 
     assert q1.pow_cos_sin(2) == \
     Quaternion(30 * cos(2 * acos(sqrt(30)/30)),
@@ -69,7 +74,7 @@ def test_quaternion_functions():
 
     assert diff(Quaternion(x, x, x, x), x) == Quaternion(1, 1, 1, 1)
 
-    assert integrate(Quaternion(x,x,x,x),x) == \
+    assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
     assert Quaternion.rotate_point((1, 1, 1), q1) == (1 / 5, 1, 7 / 5)
