@@ -16,7 +16,7 @@ def test_quaternion_construction():
                             Rational(1/2), Rational(1,2))
 
     M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
-    q3 = trigsimp(Quaternion.from_matrix(M))
+    q3 = trigsimp(Quaternion.from_rotation_matrix(M))
     assert q3 == Quaternion(sqrt(2)*sqrt(cos(x) + 1)/2, 0, 0, sqrt(-2*cos(x) + 2)/2)
 
 def test_quaternion_complex_real_addition():
@@ -53,18 +53,13 @@ def test_quaternion_functions():
     assert q.norm() == sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.normalize() == Quaternion(x, y, z, w) / sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
+    assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
 
     assert q1.exp() == \
     Quaternion(E * cos(sqrt(29)),
                2 * sqrt(29) * E * sin(sqrt(29)) / 29,
                3 * sqrt(29) * E * sin(sqrt(29)) / 29,
                4 * sqrt(29) * E * sin(sqrt(29)) / 29)
-
-    assert q1.ln() == \
-    Quaternion(log(sqrt(30)),
-    2 * sqrt(29) * acos(sqrt(30)/30) / 29,
-    3 * sqrt(29) * acos(sqrt(30)/30) / 29,
-    4 * sqrt(29) * acos(sqrt(30)/30) / 29)
 
     assert q1.pow_cos_sin(2) == \
     Quaternion(30 * cos(2 * acos(sqrt(30)/30)),
@@ -77,7 +72,7 @@ def test_quaternion_functions():
     assert integrate(Quaternion(x,x,x,x),x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
-    assert Quaternion.rotate((1, 1, 1), q1) == (1 / 5, 1, 7 / 5)
+    assert Quaternion.rotate_point((1, 1, 1), q1) == (1 / 5, 1, 7 / 5)
 
 
 def test_quaternion_conversions():

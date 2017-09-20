@@ -105,7 +105,7 @@ class Quaternion(Expr):
         return cls(a, b, c, d).normalize()
 
     @classmethod
-    def from_matrix(cls, M):
+    def from_rotation_matrix(cls, M):
         """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
         only if the matrix is special orthogonal (orthogonal and det(M) = 1).
 
@@ -116,7 +116,7 @@ class Quaternion(Expr):
         >>> from sympy import Matrix, symbols, cos, sin, trigsimp
         >>> x = symbols('x')
         >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
-        >>> q = trigsimp(Quaternion.from_matrix(M))
+        >>> q = trigsimp(Quaternion.from_rotation_matrix(M))
         >>> q
         sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(-2*cos(x) + 2)/2*k
         """
@@ -354,21 +354,21 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def ln(self):
-        """Returns the natural logarithm of the quaternion (ln(q)).
+    def _ln(self):
+        """Returns the natural logarithm of the quaternion (_ln(q)).
 
         Example
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
-        >>> q.ln()
+        >>> q._ln()
         log(sqrt(30))
         + 2*sqrt(29)*acos(sqrt(30)/30)/29*i
         + 3*sqrt(29)*acos(sqrt(30)/30)/29*j
         + 4*sqrt(29)*acos(sqrt(30)/30)/29*k
         """
-        # ln(q) = ln||q|| + v/||v||*arccos(a/||q||)
+        # _ln(q) = _ln||q|| + v/||v||*arccos(a/||q||)
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()
@@ -411,7 +411,7 @@ class Quaternion(Expr):
                           integrate(self.c, *args), integrate(self.d, *args))
 
     @staticmethod
-    def rotate(pin, r):
+    def rotate_point(pin, r):
         """Returns the coordinates of the point pin(a 3 tuple) after rotation.
 
         Example
@@ -421,10 +421,10 @@ class Quaternion(Expr):
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
-        >>> trigsimp(Quaternion.rotate((1, 1, 1), q))
+        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), q))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         >>> (axis, angle) = q.to_axis_angle()
-        >>> trigsimp(Quaternion.rotate((1, 1, 1), (axis, angle)))
+        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         """
         if isinstance(r, tuple):
