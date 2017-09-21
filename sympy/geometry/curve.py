@@ -8,11 +8,13 @@ Curve
 
 from __future__ import division, print_function
 
-from sympy.core import sympify
+from sympy import sqrt
+from sympy.core import sympify, diff
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
+from sympy.integrals import integrate
 
 from .util import _symbol
 
@@ -242,6 +244,22 @@ class Curve(GeometrySet):
 
         """
         return self.args[1][0]
+
+    @property
+    def length(self):
+        """The curve length.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import cos, sin
+        >>> from sympy.abc import t
+        >>> Curve((t, t), (t, 0, 1)).length
+        sqrt(2)
+        """
+        integrand = sqrt(sum(diff(func, self.limits[0])**2 for func in self.functions))
+        return integrate(integrand, self.limits)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the curve.
