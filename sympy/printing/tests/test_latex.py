@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, Quaternion)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -1649,3 +1649,12 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
+
+
+def test_Quaternion_latex_printing():
+    q = Quaternion(x, y, z, t)
+    assert latex(q) == "x + y i + z j + t k"
+    q = Quaternion(x,y,z,x*t)
+    assert latex(q) == "x + y i + z j + t x k"
+    q = Quaternion(x,y,z,x+t)
+    assert latex(q) == r"x + y i + z j + \left(t + x\right) k"
