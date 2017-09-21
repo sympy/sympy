@@ -1,4 +1,4 @@
-"""Curves in 2-dimensional Euclidean space.
+"""Curves in N-dimensional Euclidean space.
 
 Contains
 ========
@@ -8,13 +8,11 @@ Curve
 
 from __future__ import division, print_function
 
-from sympy import sqrt
-from sympy.core import sympify, diff
+from sympy import sqrt, sympify, Matrix
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
-from sympy.integrals import integrate
 
 from .util import _symbol
 
@@ -31,7 +29,19 @@ class Curve(GeometrySet):
     function : list of functions
     limits : 3-tuple
         Function parameter and lower and upper bounds.
-
+    length: number or sympy expression
+        Arc length of the curve over the limits.
+    tangent: Matrix
+        Tangent vector to the curve at an arbitrary point.
+    normal: Matrix
+        Normal vector to the curve at an arbitrary point.
+    binormal: Matrix
+        Binormal vector to the curve at an arbitrary point.
+    curvature: number or sympy expression
+        Curvature of the curve at an arbitrary point.
+    torsion: number or sympy expression
+        Torsion of the curve at an arbitrary point.
+    
     Attributes
     ==========
 
@@ -65,24 +75,27 @@ class Curve(GeometrySet):
     (t, 0, 2)
     >>> C.parameter
     t
+    >>> C.length
+    2
     >>> C = Curve((t, interpolate([1, 4, 9, 16], t)), (t, 0, 1)); C
     Curve((t, t**2), (t, 0, 1))
     >>> C.subs(t, 4)
     Point2D(4, 16)
     >>> C.arbitrary_point(a)
     Point2D(a, a**2)
+
     """
 
     def __new__(cls, function, limits):
         fun = sympify(function)
-        if not is_sequence(fun) or len(fun) != 2:
-            raise ValueError("Function argument should be (x(t), y(t)) "
-                "but got %s" % str(function))
+        if not is_sequence(fun):
+            raise ValueError("Function argument should be (x(t), y(t), ...) "
+                             "but got %s" % str(function))
         if not is_sequence(limits) or len(limits) != 3:
             raise ValueError("Limit argument should be (t, tmin, tmax) "
-                "but got %s" % str(limits))
+                             "but got %s" % str(limits))
 
-        return GeometryEntity.__new__(cls, Tuple(*fun), Tuple(*limits))
+        return GeometryEntity.__new__(cls, Matrix(fun), Tuple(*limits))
 
     def _eval_subs(self, old, new):
         if old == self.parameter:
@@ -139,16 +152,16 @@ class Curve(GeometrySet):
         tnew = _symbol(parameter, self.parameter)
         t = self.parameter
         if (tnew.name != t.name and
-                tnew.name in (f.name for f in self.free_symbols)):
+                    tnew.name in (f.name for f in self.free_symbols)):
             raise ValueError('Symbol %s already appears in object '
-                'and cannot be used as a parameter.' % tnew.name)
+                             'and cannot be used as a parameter.' % tnew.name)
         return Point(*[w.subs(t, tnew) for w in self.functions])
 
     @property
     def free_symbols(self):
         """
         Return a set of symbols other than the bound symbols used to
-        parametrically define the Curve.
+        parametrically define the curve.
 
         Examples
         ========
@@ -161,7 +174,7 @@ class Curve(GeometrySet):
         {a}
         """
         free = set()
-        for a in self.functions + self.limits[1:]:
+        for a in tuple(self.functions) + self.limits[1:]:
             free |= a.free_symbols
         free = free.difference({self.parameter})
         return free
@@ -173,7 +186,7 @@ class Curve(GeometrySet):
         Returns
         =======
 
-        functions : list of parameterized coordinate functions.
+        functions : Vector of parameterized coordinate functions.
 
         See Also
         ========
@@ -190,7 +203,7 @@ class Curve(GeometrySet):
         (t, t**2)
 
         """
-        return self.args[0]
+        return Matrix(self.args[0])
 
     @property
     def limits(self):
@@ -253,13 +266,95 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy import cos, sin
         >>> from sympy.abc import t
         >>> Curve((t, t), (t, 0, 1)).length
         sqrt(2)
         """
-        integrand = sqrt(sum(diff(func, self.limits[0])**2 for func in self.functions))
-        return integrate(integrand, self.limits)
+        return self.tangent.norm().integrate(self.limits).simplify()
+
+    @property
+    def tangent(self):
+        """The tangent vector to the curve.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import t
+        >>> Curve((t, 1/t), (t, 0, 1)).tangent
+        Matrix([[1], [-1/t**2]])
+        """
+        return self.functions.diff(self.parameter)
+
+    @property
+    def normal(self):
+        """The normal vector to the curve.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import t
+        >>> Curve((t, 1/t), (t, 0, 1)).normal
+        Matrix([[0], [2/t**3]])
+        """
+        return self.tangent.diff(self.parameter)
+
+    @property
+    def binormal(self):
+        """The binormal vector to the curve.
+
+        Raises
+        ======
+
+        ValueError
+            When dimension is not 3.
+            
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import t
+        >>> Curve((t, 1/t, t), (t, 0, 1)).binormal
+        Matrix([[-2/t**3], [0], [2/t**3]])
+        """
+        return self.tangent.cross(self.normal)
+
+    @property
+    def curvature(self):
+        """The curvature of the curve.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import t
+        >>> Curve((t, t**2), (t, 0, 1)).normal
+        2/(4*t**2 + 1)**(3/2)
+        """
+        tangent_vector = self.tangent
+        unit_tangent = tangent_vector / tangent_vector.norm()
+        return (unit_tangent.diff(self.parameter).norm() / tangent_vector.norm()).simplify()
+
+    @property
+    def torsion(self):
+        """The torsion of the curve.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import t
+        >>> from sympy import cos,sin
+        >>> Curve((cos(t), sin(t), t), (t, 0, 1)).torsion
+        sqrt(2)/2
+        """
+        normal_vector = self.normal
+        normal_unit_vector = normal_vector / normal_vector.norm()
+        binormal_vector = self.binormal
+        binormal_unit_vector = binormal_vector / binormal_vector.norm()
+
+        return -normal_unit_vector.dot(binormal_unit_vector.diff(self.parameter)).simplify()
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the curve.
@@ -314,7 +409,7 @@ class Curve(GeometrySet):
         if pt:
             pt = -Point(pt, dim=2)
         else:
-            pt = Point(0,0)
+            pt = Point(0, 0)
         rv = self.translate(*pt.args)
         f = list(rv.functions)
         f.append(0)
@@ -327,7 +422,7 @@ class Curve(GeometrySet):
         return rv
 
     def scale(self, x=1, y=1, pt=None):
-        """Override GeometryEntity.scale since Curve is not made up of Points.
+        """Override GeometryEntity.scale since curve is not made up of Points.
 
         Examples
         ========
@@ -342,19 +437,88 @@ class Curve(GeometrySet):
             pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         fx, fy = self.functions
-        return self.func((fx*x, fy*y), self.limits)
+        return self.func((fx * x, fy * y), self.limits)
 
     def translate(self, x=0, y=0):
-        """Translate the Curve by (x, y).
+        """Translate the curve by (x, y).
 
         Examples
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy import pi
         >>> from sympy.abc import x
         >>> Curve((x, x), (x, 0, 1)).translate(1, 2)
         Curve((x + 1, x + 2), (x, 0, 1))
         """
         fx, fy = self.functions
         return self.func((fx + x, fy + y), self.limits)
+
+    def line_integral(self, base_function, variables):
+        """Line integral of the curve over a given base function.
+
+        Parameters
+        ==========
+
+        base_function : SymPy expression, required
+            The function to be integrated over.
+        variables : sequence of symbols, required
+            Ordered sequence of symbols used in the base function corresponding to the order of
+            functions in the curve definition.
+
+        Raises
+        ======
+
+        ValueError
+            When the dimension of the curve does not match the number of variables given.
+            
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import x,y,z,t
+        >>> Curve((t, t + 1, t + 2), (t, 0, 2)).line_integral(x + y + z, (x, y, z))
+        12*sqrt(3)
+        """
+        if len(variables) != len(self.functions):
+            raise ValueError('Number of variables does not match curve dimension.')
+
+        function_subs = base_function.subs(zip(variables, self.functions))
+        integrand = (function_subs * self.tangent.norm()).simplify()
+
+        return integrand.integrate(self.limits)
+
+    def vector_line_integral(self, vector_field, variables):
+        """Line integral of the curve over a given vector field.
+
+        Parameters
+        ==========
+
+        vector_field : sequence of expressions, required
+            The vector field to be integrated over.
+        variables : sequence of symbols, required
+            Ordered sequence of symbols used in the vector field corresponding to the order of
+            functions in the curve definition.
+
+        Raises
+        ======
+
+        ValueError
+            When the dimension of the curve does not match the dimension of the vector field.
+            When the dimension of the curve does not match the number of variables given.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import x,y,z,t
+        >>> Curve((4 * t - 1, 2 - 2 * t, t), (t, 0, 1)).vector_line_integral((x * z, 0, -y * z), (x, y, z))
+        3
+        """
+        if len(variables) != len(self.functions):
+            raise ValueError('Number of variables does not match curve dimension.')
+        if len(vector_field) != len(self.functions):
+            raise ValueError('Dimension of vector field does not match curve dimension.')
+
+        function_subs = Matrix(vector_field).subs(list(zip(variables, self.functions)))
+        integrand = (function_subs.dot(self.tangent)).simplify()
+        return integrand.integrate(self.limits)
