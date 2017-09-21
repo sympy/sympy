@@ -43,7 +43,7 @@ class Curve(GeometrySet):
         Curvature of the curve at an arbitrary point.
     torsion: number or sympy expression
         Torsion of the curve at an arbitrary point.
-    
+
     Attributes
     ==========
 
@@ -73,13 +73,13 @@ class Curve(GeometrySet):
     >>> from sympy.geometry import Curve
     >>> C = Curve((sin(t), cos(t)), (t, 0, 2))
     >>> C.functions
-    (sin(t), cos(t))
+    Matrix([
+    [sin(t)],
+    [cos(t)]])
     >>> C.limits
     (t, 0, 2)
     >>> C.parameter
     t
-    >>> C.length
-    2
     >>> C = Curve((t, interpolate([1, 4, 9, 16], t)), (t, 0, 1)); C
     Curve((t, t**2), (t, 0, 1))
     >>> C.subs(t, 4)
@@ -203,8 +203,9 @@ class Curve(GeometrySet):
         >>> from sympy.geometry import Curve
         >>> C = Curve((t, t**2), (t, 0, 2))
         >>> C.functions
-        (t, t**2)
-
+        Matrix([
+        [   t],
+        [t**2]])
         """
         return Matrix(self.args[0])
 
@@ -305,7 +306,9 @@ class Curve(GeometrySet):
         >>> from sympy.geometry.curve import Curve
         >>> from sympy.abc import t
         >>> Curve((t, 1/t), (t, 0, 1)).tangent
-        Matrix([[1], [-1/t**2]])
+        Matrix([
+        [      1],
+        [-1/t**2]])
         """
         return self.functions.diff(self.parameter)
 
@@ -319,7 +322,9 @@ class Curve(GeometrySet):
         >>> from sympy.geometry.curve import Curve
         >>> from sympy.abc import t
         >>> Curve((t, 1/t), (t, 0, 1)).normal
-        Matrix([[0], [2/t**3]])
+        Matrix([
+        [     0],
+        [2/t**3]])
         """
         return self.tangent.diff(self.parameter)
 
@@ -339,7 +344,10 @@ class Curve(GeometrySet):
         >>> from sympy.geometry.curve import Curve
         >>> from sympy.abc import t
         >>> Curve((t, 1/t, t), (t, 0, 1)).binormal
-        Matrix([[-2/t**3], [0], [2/t**3]])
+        Matrix([
+        [-2/t**3],
+        [      0],
+        [ 2/t**3]])
         """
         if self.dimension != 3:
             raise ValueError("Binormal vector can only be calculated in 3 dimensions.")
@@ -353,8 +361,9 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy.abc import t
-        >>> Curve((t, t**2), (t, 0, 1)).normal
+        >>> from sympy import Symbol
+        >>> t = Symbol('t', real=True)
+        >>> Curve((t, t**2), (t, 0, 1)).curvature
         2/(4*t**2 + 1)**(3/2)
         """
         tangent_vector = self.tangent
@@ -375,8 +384,8 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy.abc import t
-        >>> from sympy import cos,sin
+        >>> from sympy import cos,sin,Symbol
+        >>> t = Symbol('t', real=True)
         >>> Curve((cos(t), sin(t), t), (t, 0, 1)).torsion
         sqrt(2)/2
         """
