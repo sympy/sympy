@@ -511,6 +511,9 @@ class Curve(GeometrySet):
         >>> Curve((t, t + 1, t + 2), (t, 0, 2)).line_integral(x + y + z, (x, y, z))
         12*sqrt(3)
         """
+        if not is_sequence(variables):
+            variables = [variables]
+
         if len(variables) != self.dimension:
             raise ValueError('Number of variables does not match curve dimension.')
 
@@ -546,6 +549,11 @@ class Curve(GeometrySet):
         >>> Curve((4 * t - 1, 2 - 2 * t, t), (t, 0, 1)).vector_line_integral((x * z, 0, -y * z), (x, y, z))
         3
         """
+        if not is_sequence(vector_field):
+            vector_field = [vector_field]
+        if not is_sequence(variables):
+            variables = [variables]
+
         if len(variables) != self.dimension:
             raise ValueError('Number of variables does not match curve dimension.')
         if len(vector_field) != self.dimension:

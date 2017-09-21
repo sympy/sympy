@@ -169,6 +169,11 @@ def test_line_integral():
     c2 = Curve((t, t + 1, t + 2), (t, 0, 2))
     assert c2.line_integral(x + y + z, (x, y, z)) == 12 * sqrt(3)
 
+    c3 = Curve((t,), (t, 0, 1))
+    assert c3.line_integral(x, x) == sympify(1)/2
+
+    raises(ValueError, lambda: c1.line_integral(x, x))
+
 
 def test_vector_line_integral():
     t = Symbol('t', real=True)
@@ -176,8 +181,14 @@ def test_vector_line_integral():
     y = Symbol('y', real=True)
     z = Symbol('z', real=True)
 
-    c3 = Curve((t, t ** 2, t ** 3), (t, 0, 1))
-    assert c3.vector_line_integral([8 * x ** 2 * y * z, 5 * z, -4 * x * y], (x, y, z)) == 1
+    c1 = Curve((t, t ** 2, t ** 3), (t, 0, 1))
+    assert c1.vector_line_integral([8 * x ** 2 * y * z, 5 * z, -4 * x * y], (x, y, z)) == 1
 
-    c4 = Curve((4 * t - 1, 2 - 2 * t, t), (t, 0, 1))
-    assert c4.vector_line_integral((x * z, 0, -y * z), (x, y, z)) == 3
+    c2 = Curve((4 * t - 1, 2 - 2 * t, t), (t, 0, 1))
+    assert c2.vector_line_integral((x * z, 0, -y * z), (x, y, z)) == 3
+
+    c3 = Curve((t + 1,), (t, 0, 1))
+    assert c3.vector_line_integral(x*y, y) == 3*x/2
+
+    raises(ValueError, lambda: c1.vector_line_integral([x], (x, y, z)))
+    raises(ValueError, lambda: c1.vector_line_integral([x, y, z], (x)))
