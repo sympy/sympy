@@ -276,6 +276,10 @@ def test_hyperbolic_simp():
     assert trigsimp(y*tanh(x)**2/sinh(x)**2) == y/cosh(x)**2
     assert trigsimp(coth(x)/cosh(x)) == 1/sinh(x)
 
+    for a in (pi/6*I, pi/4*I, pi/3*I):
+        assert trigsimp(sinh(a)*cosh(x) + cosh(a)*sinh(x)) == sinh(x + a)
+        assert trigsimp(-sinh(a)*cosh(x) + cosh(a)*sinh(x)) == sinh(x - a)
+
     e = 2*cosh(x)**2 - 2*sinh(x)**2
     assert trigsimp(log(e)) == log(2)
 
