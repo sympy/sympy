@@ -2,7 +2,6 @@ from __future__ import division
 
 from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Matrix, sin, cos, sympify
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
-from sympy.matrices.common import ShapeError
 from sympy.utilities.pytest import raises, slow
 
 
@@ -131,7 +130,7 @@ def test_binormal():
     c2 = Curve((1, t, t ** 2), (t, 0, 1))
     assert c2.binormal == Matrix([[2], [0], [0]])
 
-    raises(ShapeError, lambda: Curve((t,), (t, 0, 1)).binormal)
+    raises(ValueError, lambda: Curve((t,), (t, 0, 1)).binormal)
 
 
 def test_curvature():
@@ -154,6 +153,8 @@ def test_torsion():
 
     c2 = Curve((a * cos(t), a * sin(t), b * t), (t, 0, 1))
     assert c2.torsion == b / sqrt(a ** 2 + b ** 2)
+
+    raises(ValueError, lambda: Curve((t,), (t, 0, 1)).torsion)
 
 
 def test_line_integral():

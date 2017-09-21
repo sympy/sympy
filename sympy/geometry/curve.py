@@ -29,6 +29,8 @@ class Curve(GeometrySet):
     function : list of functions
     limits : 3-tuple
         Function parameter and lower and upper bounds.
+    dimension: integer
+        Dimension of the curve (corresponding to the number of functions used in its definition).
     length: number or sympy expression
         Arc length of the curve over the limits.
     tangent: Matrix
@@ -259,6 +261,26 @@ class Curve(GeometrySet):
         return self.args[1][0]
 
     @property
+    def dimension(self):
+        """ The dimension of the curve.
+        
+        Returns
+        =======
+
+        dimension : Integer
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve([t, t, t], (t, 0, 2))
+        >>> C.dimension
+        3
+        """
+        return len(self.functions)
+
+    @property
     def length(self):
         """The curve length.
 
@@ -318,6 +340,8 @@ class Curve(GeometrySet):
         >>> Curve((t, 1/t, t), (t, 0, 1)).binormal
         Matrix([[-2/t**3], [0], [2/t**3]])
         """
+        if self.dimension != 3:
+            raise ValueError("Binormal vector can only be calculated in 3 dimensions.")
         return self.tangent.cross(self.normal)
 
     @property
@@ -340,6 +364,12 @@ class Curve(GeometrySet):
     def torsion(self):
         """The torsion of the curve.
 
+        Raises
+        ======
+
+        ValueError
+            When dimension is not 3.
+            
         Examples
         ========
 
@@ -349,6 +379,8 @@ class Curve(GeometrySet):
         >>> Curve((cos(t), sin(t), t), (t, 0, 1)).torsion
         sqrt(2)/2
         """
+        if self.dimension != 3:
+            raise ValueError("Torsion can only be calculated in 3 dimensions.")
         normal_vector = self.normal
         normal_unit_vector = normal_vector / normal_vector.norm()
         binormal_vector = self.binormal
