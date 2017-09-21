@@ -51,7 +51,7 @@ class Curve(GeometrySet):
     parameter
     limits
     dimension
-    
+
     Raises
     ======
 
@@ -265,7 +265,7 @@ class Curve(GeometrySet):
     @property
     def dimension(self):
         """ The dimension of the curve.
-        
+
         Returns
         =======
 
@@ -337,7 +337,7 @@ class Curve(GeometrySet):
 
         ValueError
             When dimension is not 3.
-            
+
         Examples
         ========
 
@@ -379,7 +379,7 @@ class Curve(GeometrySet):
 
         ValueError
             When dimension is not 3.
-            
+
         Examples
         ========
 
