@@ -511,7 +511,7 @@ class Curve(GeometrySet):
         >>> Curve((t, t + 1, t + 2), (t, 0, 2)).line_integral(x + y + z, (x, y, z))
         12*sqrt(3)
         """
-        if len(variables) != len(self.functions):
+        if len(variables) != self.dimension:
             raise ValueError('Number of variables does not match curve dimension.')
 
         function_subs = base_function.subs(zip(variables, self.functions))
@@ -546,9 +546,9 @@ class Curve(GeometrySet):
         >>> Curve((4 * t - 1, 2 - 2 * t, t), (t, 0, 1)).vector_line_integral((x * z, 0, -y * z), (x, y, z))
         3
         """
-        if len(variables) != len(self.functions):
+        if len(variables) != self.dimension:
             raise ValueError('Number of variables does not match curve dimension.')
-        if len(vector_field) != len(self.functions):
+        if len(vector_field) != self.dimension:
             raise ValueError('Dimension of vector field does not match curve dimension.')
 
         function_subs = Matrix(vector_field).subs(list(zip(variables, self.functions)))
