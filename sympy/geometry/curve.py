@@ -29,6 +29,8 @@ class Curve(GeometrySet):
     function : list of functions
     limits : 3-tuple
         Function parameter and lower and upper bounds.
+    dimension: integer
+        Dimension of the curve (corresponding to the number of functions used in its definition).
     length: number or sympy expression
         Arc length of the curve over the limits.
     tangent: Matrix
@@ -49,7 +51,7 @@ class Curve(GeometrySet):
     parameter
     limits
     dimension
-
+    
     Raises
     ======
 
