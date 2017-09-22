@@ -2287,6 +2287,10 @@ class Triangle(Polygon):
 
         sympy.geometry.polygon.Triangle.exradii
 
+        References
+        ==========
+
+        [1] http://mathworld.wolfram.com/Excircles.html
 
         """
         return 0
