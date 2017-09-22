@@ -11,7 +11,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     minute, pressure, quart, s, second, speed_of_light, temperature, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
 
-from sympy.physics.units.dimensions import Dimension, charge, length, time
+from sympy.physics.units.dimensions import Dimension, charge, length, time, dimsys_default
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
 from sympy.utilities.pytest import XFAIL, raises
@@ -43,7 +43,7 @@ def test_convert_to():
 
 
 def test_Quantity_definition():
-    q = Quantity("s10", time, 10, "sabbr")
+    q = Quantity("s10", time, 10, abbrev="sabbr")
 
     assert q.scale_factor == 10
     assert q.dimension == time
@@ -73,33 +73,33 @@ def test_abbrev():
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("u")
 
-    u = Quantity("u", length, 2, "om")
+    u = Quantity("u", length, 2, abbrev="om")
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("om")
     assert u.scale_factor == 2
     assert isinstance(u.scale_factor, Number)
 
-    u = Quantity("u", length, 3*kilo, "ikm")
+    u = Quantity("u", length, 3*kilo, abbrev="ikm")
     assert u.abbrev == Symbol("ikm")
     assert u.scale_factor == 3000
 
 
 def test_print():
-    u = Quantity("unitname", length, 10, "dam")
+    u = Quantity("unitname", length, 10, abbrev="dam")
     assert repr(u) == "unitname"
     assert str(u) == "unitname"
 
 
 def test_Quantity_eq():
-    u = Quantity("u", length, 10, "dam")
+    u = Quantity("u", length, 10, abbrev="dam")
 
     v = Quantity("v1", length, 10)
     assert u != v
 
-    v = Quantity("v2", time, 10, "ds")
+    v = Quantity("v2", time, 10, abbrev="ds")
     assert u != v
 
-    v = Quantity("v3", length, 1, "dm")
+    v = Quantity("v3", length, 1, abbrev="dm")
     assert u != v
 
 
@@ -125,7 +125,7 @@ def test_quantity_abs():
     expr = v_w3 - Abs(v_w1 - v_w2)
 
     Dq = Dimension(Quantity.get_dimensional_expr(expr))
-    assert Dimension.get_dimensional_dependencies(Dq) == {
+    assert dimsys_default.get_dimensional_dependencies(Dq) == {
         'length': 1,
         'time': -1,
     }
@@ -267,7 +267,7 @@ def test_quantity_postprocessing():
     assert q1 + q2
     q = q1 + q2
     Dq = Dimension(Quantity.get_dimensional_expr(q))
-    assert Dimension.get_dimensional_dependencies(Dq) == {
+    assert dimsys_default.get_dimensional_dependencies(Dq) == {
         'length': -1,
         'mass': 2,
         'temperature': 1,

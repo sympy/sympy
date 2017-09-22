@@ -88,10 +88,10 @@ class UnitSystem(object):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
-            issue=99999,
+            issue=13336,
             feature="print_unit_base",
             useinstead="convert_to",
-        )#.warn()
+        ).warn()
         from sympy.physics.units import convert_to
         return convert_to(unit, self._base_units)
 

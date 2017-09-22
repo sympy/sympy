@@ -48,14 +48,20 @@ class Dimension(Expr):
         >>> velocity = length / time
         >>> velocity
         Dimension(length/time)
-        >>> velocity.get_dimensional_dependencies()
+
+    It is possible to use a dimension system object to get the dimensionsal
+    dependencies of a dimension, for example the dimension system used by the
+    SI units convention can be used:
+
+        >>> from sympy.physics.units.dimensions import dimsys_SI
+        >>> dimsys_SI.get_dimensional_dependencies(velocity)
         {'length': 1, 'time': -1}
         >>> length + length
         Dimension(length)
         >>> l2 = length**2
         >>> l2
         Dimension(length**2)
-        >>> l2.get_dimensional_dependencies()
+        >>> dimsys_SI.get_dimensional_dependencies(l2)
         {'length': 2}
 
     """
@@ -128,10 +134,10 @@ class Dimension(Expr):
     def _register_as_base_dim(self):
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
-            issue=99999,
+            issue=13336,
             feature="do not call ._register_as_base_dim()",
             useinstead="DimensionSystem"
-        )#.warn()
+        ).warn()
         if not self.name.is_Symbol:
             raise TypeError("Base dimensions need to have symbolic name")
 
@@ -192,10 +198,10 @@ class Dimension(Expr):
     def get_dimensional_dependencies(self, mark_dimensionless=False):
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
-            issue=99999,
+            issue=13336,
             feature="do not call",
             useinstead="DimensionSystem"
-        )#.warn()
+        ).warn()
         name = self.name
         dimdep = dimsys_default.get_dimensional_dependencies(name)
         if mark_dimensionless and dimdep == {}:
@@ -212,10 +218,10 @@ class Dimension(Expr):
     def _get_dimensional_dependencies_for_name(cls, name):
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
-            issue=99999,
+            issue=13336,
             feature="do not call from `Dimension` objects.",
             useinstead="DimensionSystem"
-        )#.warn()
+        ).warn()
         return dimsys_default.get_dimensional_dependencies(name)
 
     @property
@@ -230,14 +236,13 @@ class Dimension(Expr):
         if dimensional_dependencies is None:
             SymPyDeprecationWarning(
                 deprecated_since_version="1.2",
-                issue=99999,
+                issue=13336,
                 feature="wrong class",
-            )#.warn()
+            ).warn()
             dimensional_dependencies=dimsys_default
         return dimensional_dependencies.get_dimensional_dependencies(self) == {}
 
-    @property
-    def has_integer_powers(self):
+    def has_integer_powers(self, dim_sys):
         """
         Check if the dimension object has only integer powers.
 
@@ -246,7 +251,7 @@ class Dimension(Expr):
         final result is well-defined.
         """
 
-        for dpow in self.get_dimensional_dependencies().values():
+        for dpow in dim_sys.get_dimensional_dependencies(self).values():
             if not isinstance(dpow, (int, Integer)):
                 return False
         else:
@@ -318,9 +323,9 @@ class DimensionSystem(Basic):
         if (name is not None) or (descr is not None):
             SymPyDeprecationWarning(
                 deprecated_since_version="1.2",
-                issue=99999,
+                issue=13336,
                 useinstead="do not define a `name` or `descr`",
-            )#.warn()
+            ).warn()
 
         def parse_dim(dim):
             if isinstance(dim, string_types):
@@ -404,24 +409,24 @@ class DimensionSystem(Basic):
 
         if name.is_Mul:
             ret = collections.defaultdict(int)
-            dicts = [Dimension._get_dimensional_dependencies_for_name(i) for i in name.args]
+            dicts = [dimsys_default._get_dimensional_dependencies_for_name(i) for i in name.args]
             for d in dicts:
                 for k, v in d.items():
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if name.is_Pow:
-            dim = Dimension._get_dimensional_dependencies_for_name(name.base)
+            dim = dimsys_default._get_dimensional_dependencies_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
 
         if name.is_Function:
             args = (Dimension._from_dimensional_dependencies(
-                Dimension._get_dimensional_dependencies_for_name(arg)
+                dimsys_default._get_dimensional_dependencies_for_name(arg)
             ) for arg in name.args)
             result = name.func(*args)
 
             if isinstance(result, Dimension):
-                return result.get_dimensional_dependencies()
+                return dimsys_default.get_dimensional_dependencies(result)
             # TODO shall we consider a result that is not a dimension?
             # return Dimension._get_dimensional_dependencies_for_name(result)
 
@@ -445,10 +450,10 @@ class DimensionSystem(Basic):
         if (name is not None) or (description is not None):
             SymPyDeprecationWarning(
                 deprecated_since_version="1.2",
-                issue=99999,
+                issue=13336,
                 feature="name and descriptions of DimensionSystem",
                 useinstead="do not specify `name` or `description`",
-            )#.warn()
+            ).warn()
 
         deps = dict(self.dimensional_dependencies)
         deps.update(new_dim_deps)
@@ -473,10 +478,10 @@ class DimensionSystem(Basic):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
-            issue=99999,
+            issue=13336,
             feature="sort_dims",
             useinstead="sorted(..., key=default_sort_key)",
-        )#.warn()
+        ).warn()
         return tuple(sorted(dims, key=str))
 
     def __getitem__(self, key):
@@ -489,10 +494,10 @@ class DimensionSystem(Basic):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
-            issue=99999,
+            issue=13336,
             feature="the get [ ] operator",
             useinstead="the dimension definition",
-        )#.warn()
+        ).warn()
         d = self.get_dim(key)
         #TODO: really want to raise an error?
         if d is None:
@@ -509,11 +514,21 @@ class DimensionSystem(Basic):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
-            issue=99999,
+            issue=13336,
             feature="call DimensionSystem",
             useinstead="the dimension definition",
-        )#.warn()
+        ).warn()
         return self.print_dim_base(unit)
+
+    def is_dimensionless(self, dimension):
+        """
+        Check if the dimension object really has a dimension.
+
+        A dimension should have at least one component with non-zero power.
+        """
+        if dimension.name == 1:
+            return True
+        return self.get_dimensional_dependencies(dimension) == {}
 
     @property
     def list_can_dims(self):

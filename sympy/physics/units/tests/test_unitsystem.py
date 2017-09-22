@@ -22,7 +22,7 @@ def test_definition():
     assert ms.name == "MS"
     assert ms.descr == "MS system"
 
-    assert ms._system.base_dims == DimensionSystem.sort_dims(base_dim)
+    assert ms._system.base_dims == base_dim
     assert ms._system.derived_dims == (velocity,)
 
 

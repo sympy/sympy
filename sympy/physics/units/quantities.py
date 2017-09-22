@@ -10,13 +10,13 @@ from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
     Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
-from sympy.physics.units.dimensions import dimsys_default
+from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 
 
 class Quantity(AtomicExpr):
     """
-    Physical quantity.
+    Physical quantity: can be a unit of measure, a constant or a generic quantity.
     """
 
     is_commutative = True
@@ -29,6 +29,9 @@ class Quantity(AtomicExpr):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
+
+        if not isinstance(dim_sys, DimensionSystem):
+            raise TypeError("%s is not a DimensionSystem" % dim_sys)
 
         if not isinstance(dimension, dimensions.Dimension):
             if dimension == 1:
@@ -62,6 +65,7 @@ class Quantity(AtomicExpr):
         obj._name = name
         obj._dimension = dimension
         obj._scale_factor = scale_factor
+        obj._dim_sys = dim_sys
         obj._abbrev = abbrev
         return obj
 
@@ -72,6 +76,10 @@ class Quantity(AtomicExpr):
     @property
     def dimension(self):
         return self._dimension
+
+    @property
+    def dim_sys(self):
+        return self._dim_sys
 
     @property
     def abbrev(self):
@@ -98,7 +106,7 @@ class Quantity(AtomicExpr):
     def _eval_Abs(self):
         # FIXME prefer usage of self.__class__ or type(self) instead
         return self.func(self.name, self.dimension, Abs(self.scale_factor),
-                         self.abbrev)
+                         self.abbrev, self.dim_sys)
 
     @staticmethod
     def get_dimensional_expr(expr):
@@ -202,9 +210,9 @@ def _Quantity_constructor_postprocessor_Add(expr):
     # expressions like `meter + second` to be created.
 
     deset = {
-        tuple(sorted(Dimension(
-            Quantity.get_dimensional_expr(i) if not i.is_number else 1
-        ).get_dimensional_dependencies().items()))
+        tuple(sorted(dimsys_default.get_dimensional_dependencies(
+            Dimension(Quantity.get_dimensional_expr(i) if not i.is_number else 1
+        )).items()))
         for i in expr.args
         if i.free_symbols == set()  # do not raise if there are symbols
                     # (free symbols could contain the units corrections)

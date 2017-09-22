@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import warnings
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import Matrix, eye, symbols
 from sympy.physics.units.dimensions import (
@@ -8,8 +11,10 @@ from sympy.utilities.pytest import raises
 
 
 def test_call():
-    mksa = DimensionSystem((length, time, mass, current), (action,))
-    assert mksa(action) == mksa.print_dim_base(action)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        mksa = DimensionSystem((length, time, mass, current), (action,))
+        assert mksa(action) == mksa.print_dim_base(action)
 
 
 def test_extend():
@@ -23,7 +28,9 @@ def test_extend():
 
 
 def test_sort_dims():
-    assert (DimensionSystem.sort_dims((length, velocity, time))
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        assert (DimensionSystem.sort_dims((length, velocity, time))
                                       == (length, time, velocity))
 
 
