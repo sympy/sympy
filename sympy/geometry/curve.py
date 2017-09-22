@@ -93,10 +93,10 @@ class Curve(GeometrySet):
         fun = sympify(function)
         if not is_sequence(fun):
             raise ValueError("Function argument should be (x(t), y(t), ...) "
-                             "but got %s" % str(function))
+                             "but got %s"%str(function))
         if not is_sequence(limits) or len(limits) != 3:
             raise ValueError("Limit argument should be (t, tmin, tmax) "
-                             "but got %s" % str(limits))
+                             "but got %s"%str(limits))
 
         return GeometryEntity.__new__(cls, Matrix(fun), Tuple(*limits))
 
@@ -157,7 +157,7 @@ class Curve(GeometrySet):
         if (tnew.name != t.name and
                     tnew.name in (f.name for f in self.free_symbols)):
             raise ValueError('Symbol %s already appears in object '
-                             'and cannot be used as a parameter.' % tnew.name)
+                             'and cannot be used as a parameter.'%tnew.name)
         return Point(*[w.subs(t, tnew) for w in self.functions])
 
     @property
@@ -367,8 +367,8 @@ class Curve(GeometrySet):
         2/(4*t**2 + 1)**(3/2)
         """
         tangent_vector = self.tangent
-        unit_tangent = tangent_vector / tangent_vector.norm()
-        return (unit_tangent.diff(self.parameter).norm() / tangent_vector.norm()).simplify()
+        unit_tangent = tangent_vector/tangent_vector.norm()
+        return (unit_tangent.diff(self.parameter).norm()/tangent_vector.norm()).simplify()
 
     @property
     def torsion(self):
@@ -392,9 +392,9 @@ class Curve(GeometrySet):
         if self.dimension != 3:
             raise ValueError("Torsion can only be calculated in 3 dimensions.")
         normal_vector = self.normal
-        normal_unit_vector = normal_vector / normal_vector.norm()
+        normal_unit_vector = normal_vector/normal_vector.norm()
         binormal_vector = self.binormal
-        binormal_unit_vector = binormal_vector / binormal_vector.norm()
+        binormal_unit_vector = binormal_vector/binormal_vector.norm()
 
         return -normal_unit_vector.dot(binormal_unit_vector.diff(self.parameter)).simplify()
 
@@ -479,7 +479,7 @@ class Curve(GeometrySet):
             pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         fx, fy = self.functions
-        return self.func((fx * x, fy * y), self.limits)
+        return self.func((fx*x, fy*y), self.limits)
 
     def translate(self, x=0, y=0):
         """Translate the curve by (x, y).
