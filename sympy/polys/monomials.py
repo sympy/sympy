@@ -54,7 +54,9 @@ def itermonomials(variables, degree):
 
 
     """
-    if not variables or degree < 1:
+    if degree < 0:
+        return set()
+    if not variables or degree == 0:
         return {S(1)}
     # Force to list in case of passed tuple or other incompatible collection
     variables = list(variables) + [S(1)]

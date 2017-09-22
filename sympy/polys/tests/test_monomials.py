@@ -17,11 +17,13 @@ from sympy.utilities.pytest import raises
 
 
 def test_monomials():
+    assert itermonomials([], -1) == set()
     assert itermonomials([], 0) == {S(1)}
     assert itermonomials([], 1) == {S(1)}
     assert itermonomials([], 2) == {S(1)}
     assert itermonomials([], 3) == {S(1)}
 
+    assert itermonomials([x], -1) == set()
     assert itermonomials([x], 0) == {S(1)}
     assert itermonomials([x], 1) == {S(1), x}
     assert itermonomials([x], 2) == {S(1), x, x**2}
