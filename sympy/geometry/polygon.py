@@ -2270,7 +2270,7 @@ class Triangle(Polygon):
         return exradii
 
     @property
-    def excenter(self):
+    def excenters(self):
         """Excenters of the triangle.
 
         An excenter is a point at which the line bisecting one interior angle meets the 
@@ -2280,7 +2280,7 @@ class Triangle(Polygon):
         Returns
         =======
 
-        excenter : dict
+        excenters : dict
 
         See Also
         ========
