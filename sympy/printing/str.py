@@ -707,7 +707,7 @@ class StrPrinter(Printer):
         return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
-        return "%s" % expr.name
+        return "%s" % expr.abbrev
 
     def _print_Quaternion(self, expr):
         s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]

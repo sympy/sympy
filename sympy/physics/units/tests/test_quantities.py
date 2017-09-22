@@ -7,9 +7,9 @@ from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
     volume)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
-    day, energy, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
-    minute, pressure, quart, s, second, speed_of_light, temperature, bit,
-    byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
+    day, energy, foot, grams, hour, inch, kilogram, kg, km, m, meter, mile,
+    millimeter, minute, pressure, quart, s, second, speed_of_light, temperature,
+    bit, byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
 
 from sympy.physics.units.dimensions import Dimension, charge, length, time
 from sympy.physics.units.prefixes import PREFIXES, kilo
@@ -20,7 +20,7 @@ k = PREFIXES["k"]
 
 
 def test_str_repr():
-    assert str(kg) == "kilogram"
+    assert str(kilogram) == "kg"
 
 def test_eq():
     # simple test
@@ -86,8 +86,8 @@ def test_abbrev():
 
 def test_print():
     u = Quantity("unitname", length, 10, "dam")
-    assert repr(u) == "unitname"
-    assert str(u) == "unitname"
+    assert repr(u) == "dam"
+    assert str(u) == "dam"
 
 
 def test_Quantity_eq():
