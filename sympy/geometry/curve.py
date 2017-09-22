@@ -294,39 +294,47 @@ class Curve(GeometrySet):
         >>> Curve((t, t), (t, 0, 1)).length
         sqrt(2)
         """
-        return self.tangent.norm().integrate(self.limits).simplify()
+        return self.functions.diff(self.parameter).norm().integrate(self.limits).simplify()
 
     @property
     def tangent(self):
-        """The tangent vector to the curve.
+        """The unit tangent vector to the curve.
 
         Examples
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy.abc import t
+        >>> from sympy import Symbol
+        >>> t = Symbol('t', positive=True)
         >>> Curve((t, 1/t), (t, 0, 1)).tangent
         Matrix([
-        [      1],
-        [-1/t**2]])
+        [t**2/sqrt(t**4 + 1)],
+        [  -1/sqrt(t**4 + 1)]])
         """
-        return self.functions.diff(self.parameter)
+        result = self.functions.diff(self.parameter)
+        result = result/result.norm()
+        result.simplify()
+        return result
 
     @property
     def normal(self):
-        """The normal vector to the curve.
+        """The unit normal vector to the curve.
 
         Examples
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy.abc import t
+        >>> from sympy import Symbol
+        >>> t = Symbol('t', positive=True)
         >>> Curve((t, 1/t), (t, 0, 1)).normal
         Matrix([
-        [     0],
-        [2/t**3]])
+        [   1/sqrt(t**4 + 1)],
+        [t**2/sqrt(t**4 + 1)]])
         """
-        return self.tangent.diff(self.parameter)
+        tangent_derivative = self.tangent.diff(self.parameter)
+        result = tangent_derivative/tangent_derivative.norm()
+        result.simplify()
+        return result
 
     @property
     def binormal(self):
@@ -342,16 +350,19 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy.abc import t
+        >>> from sympy import Symbol
+        >>> t = Symbol('t', positive=True)
         >>> Curve((t, 1/t, t), (t, 0, 1)).binormal
         Matrix([
-        [-2/t**3],
-        [      0],
-        [ 2/t**3]])
+        [-sqrt(2)/2],
+        [         0],
+        [ sqrt(2)/2]])
         """
         if self.dimension != 3:
             raise ValueError("Binormal vector can only be calculated in 3 dimensions.")
-        return self.tangent.cross(self.normal)
+        result = self.tangent.cross(self.normal)
+        result.simplify()
+        return result
 
     @property
     def curvature(self):
@@ -366,9 +377,7 @@ class Curve(GeometrySet):
         >>> Curve((t, t**2), (t, 0, 1)).curvature
         2/(4*t**2 + 1)**(3/2)
         """
-        tangent_vector = self.tangent
-        unit_tangent = tangent_vector/tangent_vector.norm()
-        return (unit_tangent.diff(self.parameter).norm()/tangent_vector.norm()).simplify()
+        return (self.tangent.diff(self.parameter).norm()/self.functions.diff(self.parameter).norm()).simplify()
 
     @property
     def torsion(self):

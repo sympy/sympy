@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Matrix, sin, cos
+from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Matrix, sin, cos, Abs
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
 from sympy.utilities.pytest import raises, slow
 
@@ -102,39 +102,38 @@ def test_length():
 
 
 def test_tangent():
-    t = Symbol('t', real=True)
+    t = Symbol('t', positive=True)
 
     c1 = Curve((t,), (t, 0, 1))
     assert c1.tangent == Matrix([[1]])
 
     c2 = Curve((t, 3*sin(t), 3*cos(t), t**2), (t, 0, 1))
-    assert c2.tangent == Matrix([[1], [3*cos(t)], [-3*sin(t)], [2*t]])
+    assert c2.tangent == Matrix([[1/sqrt(4*t**2 + 10)], [3*cos(t)/sqrt(4*t**2 + 10)], [-3*sin(t)/sqrt(4*t**2 + 10)], [2*t/sqrt(4*t**2 + 10)]])
 
 
 def test_normal():
-    t = Symbol('t', real=True)
+    t = Symbol('t', positive=True)
 
-    c1 = Curve((t,), (t, 0, 1))
-    assert c1.normal == Matrix([[0]])
+    c1 = Curve((t,cos(t)), (t, 0, 1))
+    assert c1.normal == Matrix([[-sqrt(2)*sin(2*t)/(2*sqrt(-cos(2*t) + 3)*Abs(cos(t)))], [-cos(t)/(sqrt(sin(t)**2 + 1)*Abs(cos(t)))]])
 
-    c2 = Curve((t, t**2, cos(t), sin(t)), (t, 0, 1))
-    assert c2.normal == Matrix([[0], [2], [-cos(t)], [-sin(t)]])
-
+    c2 = Curve((t**2, t**3), (t, 0, 1))
+    assert c2.normal == Matrix([[-3*t/sqrt(9*t**2 + 4)], [2/sqrt(9*t**2 + 4)]])
 
 def test_binormal():
-    t = Symbol('t', real=True)
+    t = Symbol('t', positive=True)
 
-    c1 = Curve((t, t, t), (t, 0, 1))
-    assert c1.binormal == Matrix([[0], [0], [0]])
+    c1 = Curve((t, 3*cos(t), -3*sin(t)), (t, 0, 1))
+    assert c1.binormal == Matrix([[-3*sqrt(10)/10], [-sqrt(10)*sin(t)/10], [-sqrt(10)*cos(t)/10]])
 
     c2 = Curve((1, t, t**2), (t, 0, 1))
-    assert c2.binormal == Matrix([[2], [0], [0]])
+    assert c2.binormal == Matrix([[1], [0], [0]])
 
     raises(ValueError, lambda: Curve((t,), (t, 0, 1)).binormal)
 
 
 def test_curvature():
-    t = Symbol('t', real=True)
+    t = Symbol('t', positive=True)
 
     c1 = Curve((t,), (t, 0, 1))
     assert c1.curvature == 0
