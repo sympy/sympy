@@ -2277,6 +2277,17 @@ class Triangle(Polygon):
         bisectors of the two exterior angles on the opposite side. This point is the center
         of excircle. Every triangle has three excenters and three excircles.
 
+        Returns
+        =======
+
+        excenter : dict
+
+        See Also
+        ========
+
+        sympy.geometry.polygon.Triangle.exradii
+
+
         """
         return 0
 
