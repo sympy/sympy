@@ -2293,7 +2293,13 @@ class Triangle(Polygon):
         [1] http://mathworld.wolfram.com/Excircles.html
 
         """
-        return 0
+        s = self.sides
+        v = self.vertices
+        a = s[0].length
+        b = s[1].length
+        c = s[2].length
+        test = [s, v]
+        return test
 
     @property
     def medians(self):
