@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import warnings
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy import Rational
 from sympy.physics.units.definitions import c, kg, m, s
 from sympy.physics.units.dimensions import (
@@ -38,11 +41,13 @@ def test_str_repr():
 
 
 def test_print_unit_base():
-    A = Quantity("A", current, 1)
-    Js = Quantity("Js", action, 1)
-    mksa = UnitSystem((m, kg, s, A), (Js,))
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        A = Quantity("A", current, 1)
+        Js = Quantity("Js", action, 1)
+        mksa = UnitSystem((m, kg, s, A), (Js,))
 
-    assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
+        assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
 
 
 def test_extend():
