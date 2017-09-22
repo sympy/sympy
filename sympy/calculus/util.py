@@ -584,16 +584,16 @@ class AccumulationBounds(AtomicExpr):
     >>> from sympy.abc import x
 
     >>> AccumBounds(0, 1) + AccumBounds(1, 2)
-    <1, 3>
+    AccumBounds(1, 3)
 
     >>> AccumBounds(0, 1) - AccumBounds(0, 2)
-    <-2, 1>
+    AccumBounds(-2, 1)
 
     >>> AccumBounds(-2, 3)*AccumBounds(-1, 1)
-    <-3, 3>
+    AccumBounds(-3, 3)
 
     >>> AccumBounds(1, 2)*AccumBounds(3, 5)
-    <3, 10>
+    AccumBounds(3, 10)
 
     The exponentiation of AccumulationBounds is defined
     as follows:
@@ -610,18 +610,18 @@ class AccumulationBounds(AtomicExpr):
     AccumulationBounds object is neglected.
 
     >>> AccumBounds(-1, 4)**(S(1)/2)
-    <0, 2>
+    AccumBounds(0, 2)
 
     >>> AccumBounds(1, 2)**2
-    <1, 4>
+    AccumBounds(1, 4)
 
     >>> AccumBounds(-1, oo)**(-1)
-    <-oo, oo>
+    AccumBounds(-oo, oo)
 
     Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
 
     >>> AccumBounds(-1, 1)**2
-    <0, 1>
+    AccumBounds(0, 1)
 
     >>> AccumBounds(1, 3) < 4
     True
@@ -634,13 +634,13 @@ class AccumulationBounds(AtomicExpr):
     is defined as `f(\langle a, b\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
-    <1/2, sqrt(3)/2>
+    AccumBounds(1/2, sqrt(3)/2)
 
     >>> exp(AccumBounds(0, 1))
-    <1, E>
+    AccumBounds(1, E)
 
     >>> log(AccumBounds(1, E))
-    <0, 1>
+    AccumBounds(0, 1)
 
     Some symbol in an expression can be substituted for a AccumulationBounds
     object. But it doesn't necessarily evaluate the AccumulationBounds for
@@ -650,10 +650,10 @@ class AccumulationBounds(AtomicExpr):
     the form it is used for substituion. For example:
 
     >>> (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1))
-    <-1, 4>
+    AccumBounds(-1, 4)
 
     >>> ((x + 1)**2).subs(x, AccumBounds(-1, 1))
-    <0, 4>
+    AccumBounds(0, 4)
 
     References
     ==========
@@ -1230,7 +1230,7 @@ class AccumulationBounds(AtomicExpr):
 
         >>> from sympy import AccumBounds, FiniteSet
         >>> AccumBounds(1, 3).intersection(AccumBounds(2, 4))
-        <2, 3>
+        AccumBounds(2, 3)
 
         >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
         EmptySet()
