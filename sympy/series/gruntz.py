@@ -122,6 +122,7 @@ from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
+from sympy.simplify.simplify import simplify
 from sympy import cacheit
 
 from sympy.core.compatibility import reduce
@@ -426,6 +427,7 @@ def limitinf(e, x):
         e = e.subs(x, p)
         x = p
     c0, e0 = mrv_leadterm(e, x)
+    c0 = simplify(c0)
     sig = sign(e0, x)
     if sig == 1:
         return S.Zero  # e0>0: lim f = 0
