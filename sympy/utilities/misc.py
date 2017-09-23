@@ -233,6 +233,8 @@ def func_name(x):
     typ = type(x)
     if str(typ).startswith("<type '"):
         typ = str(typ).split("'")[1].split("'")[0]
+    elif str(typ).startswith("<class '"):
+        typ = str(typ).split("'")[1].split("'")[0]
     return getattr(getattr(x, 'func', x), '__name__', typ)
 
 
