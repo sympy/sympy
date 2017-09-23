@@ -18,7 +18,7 @@ from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, er
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
-    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E,
+    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, igcd,
     expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
@@ -6690,6 +6690,9 @@ def PureFunctionOfCothQ(u, v, x):
     elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
         return CothQ(u)
     return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
+
+def CoprimeQ(*args):
+    return igcd(args) == 1
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()

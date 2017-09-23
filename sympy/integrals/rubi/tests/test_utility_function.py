@@ -1717,6 +1717,9 @@ def test_PureFunctionOfCothQ():
     assert PureFunctionOfCothQ(a + coth(v), v, x)
     assert not PureFunctionOfCothQ(sin(v), v, x)
 
+def test_CoprimeQ():
+    assert CoprimeQ(S(8), S(9), S(11))
+
 def test_ExpandIntegrand():
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
     assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3
