@@ -17,7 +17,8 @@ from __future__ import print_function, division
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, range)
 from sympy.core.sympify import sympify
-from sympy.core import S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
+from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
+    Pow, Unequality)
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
@@ -243,14 +244,25 @@ def checksol(f, symbol, sol=None, **flags):
 
     if isinstance(f, Poly):
         f = f.as_expr()
-    elif isinstance(f, Equality):
-        f = f.lhs - f.rhs
+    elif isinstance(f, (Equality, Unequality)):
+        args = f.args
+        if f.rhs in (S.true, S.false):
+            args = args[1], args[0]
+        B, E = args
+        if B in (S.true, S.false):
+            if not (E.is_Symbol or E.is_Relational) and isinstance(E, Expr):
+                # Equality is always false since an expression can never
+                # be a Boolean
+                f = S.false
+        else:
+            f = Add(f.lhs, -f.rhs, evaluate=False)
 
-
-    if not f:
+    if isinstance(f, BooleanAtom):
+        return bool(f)
+    elif not f.is_Relational and not f:
         return True
 
-    if sol and not f.has(*list(sol.keys())):
+    if sol and not f.free_symbols & set(sol.keys()):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
         return None
 
@@ -340,6 +352,8 @@ def checksol(f, symbol, sol=None, **flags):
         elif val.is_Rational:
             return val == 0
         if numerical and not val.free_symbols:
+            if val in (S.true, S.false):
+                return bool(val)
             return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
         was = val
 
@@ -905,15 +919,44 @@ def solve(f, *symbols, **flags):
     # preprocess equation(s)
     ###########################################################################
     for i, fi in enumerate(f):
-        if isinstance(fi, Equality):
+        if isinstance(fi, (Equality, Unequality)):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
-                f[i] = fi.lhs - fi.rhs
+                fi = fi.lhs - fi.rhs
             else:
-                f[i] = Add(fi.lhs, -fi.rhs, evaluate=False)
-        elif isinstance(fi, Poly):
-            f[i] = fi.as_expr()
-        elif isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
+                args = fi.args
+                if args[1] in (S.true, S.false):
+                    args = args[1], args[0]
+                L, R = args
+                if L in (S.false, S.true):
+                    if isinstance(fi, Unequality):
+                        L = ~L
+                    if R.is_Relational:
+                        fi = ~R if L is S.false else R
+                    elif R.is_Symbol:
+                        return L
+                    elif R.is_Boolean and (~R).is_Symbol:
+                        return ~L
+                    elif isinstance(R, Expr):
+                        # an expression cannot be a Boolean
+                        raise TypeError(filldedent('''
+                            This equality cannot be solved since
+                            symbols in an Expr cannot take on Boolean
+                            values.
+                        '''))
+                    else:
+                        raise NotImplementedError(filldedent('''
+                            Unanticipated argument of Eq when other arg
+                            is True or False.
+                        '''))
+                else:
+                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
+            f[i] = fi
+
+        if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
+
+        if isinstance(fi, Poly):
+            f[i] = fi.as_expr()
 
         # rewrite hyperbolics in terms of exp
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
@@ -1388,7 +1431,10 @@ def _solve(f, *symbols, **flags):
     elif f.is_Piecewise:
         result = set()
         for i, (expr, cond) in enumerate(f.args):
-            candidates = _solve(expr, symbol, **flags) if expr else [symbol]
+            if expr.is_zero:
+                raise NotImplementedError(
+                    'solve cannot represent interval solutions')
+            candidates = _solve(expr, symbol, **flags)
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
             args = [~c for _, c in f.args[:i]] + [cond]
@@ -1398,7 +1444,13 @@ def _solve(f, *symbols, **flags):
                     # an unconditional value was already there
                     continue
                 try:
-                    v = _canonical(cond.subs(symbol, candidate))
+                    v = cond.subs(symbol, candidate)
+                    try:
+                        # unconditionally take the simplification of v
+                        v = v._eval_simpify(
+                            ratio=2, measure=lambda x: 1)
+                    except AttributeError:
+                        pass
                 except TypeError:
                     # incompatible type with condition(s)
                     continue
