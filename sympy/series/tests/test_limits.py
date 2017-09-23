@@ -505,3 +505,8 @@ def test_issue_6599():
 def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, -oo) == 2
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo
+
+
+def test_sympyissue_13332():
+    assert limit(sqrt(30)*5**(-5*n - 1)*(46656*n)**n*(5*n + 2)**(5*n + 5*S.Half) *
+                 (6*n + 2)**(-6*n - 5*S.Half), n, oo) == Rational(25, 36)
