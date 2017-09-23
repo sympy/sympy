@@ -508,5 +508,5 @@ def test_issue_12555():
 
 
 def test_sympyissue_13332():
-    assert limit(sqrt(30)*5**(-5*n - 1)*(46656*n)**n*(5*n + 2)**(5*n + 5*S.Half) *
-                 (6*n + 2)**(-6*n - 5*S.Half), n, oo) == Rational(25, 36)
+    assert limit(sqrt(30)*5**(-5*x - 1)*(46656*x)**x*(5*x + 2)**(5*x + 5*S.Half) *
+                 (6*x + 2)**(-6*x - 5*S.Half), x, oo) == Rational(25, 36)
