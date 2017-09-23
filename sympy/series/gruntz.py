@@ -410,7 +410,7 @@ def sign(e, x):
 @debug
 @timeit
 @cacheit
-def limitinf(e, x):
+def limitinf(e, x,prev=None):
     """Limit e(x) for x-> oo"""
     # rewrite e in terms of tractable functions only
     e = e.rewrite('tractable', deep=True)
@@ -427,7 +427,6 @@ def limitinf(e, x):
         e = e.subs(x, p)
         x = p
     c0, e0 = mrv_leadterm(e, x)
-    c0 = simplify(c0)
     sig = sign(e0, x)
     if sig == 1:
         return S.Zero  # e0>0: lim f = 0
@@ -440,7 +439,10 @@ def limitinf(e, x):
             raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
-        return limitinf(c0, x)  # e0=0: lim f = lim c0
+        prevExpr = c0
+        if c0 != prev:
+            c0 = simplify(c0)
+        return limitinf(c0, x, prev=prevExpr)  # e0=0: lim f = lim c0
 
 
 def moveup2(s, x):

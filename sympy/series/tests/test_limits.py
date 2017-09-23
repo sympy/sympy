@@ -105,7 +105,7 @@ def test_basic5():
 
 
 def test_issue_3885():
-    assert limit(x*y + x*z, z, 2) == x*y + 2*x
+    assert limit(x*y + x*z, z, 2) == x*(y + 2)
 
 def test_issue_10382():
     n = Symbol('n', integer=True)
@@ -507,6 +507,6 @@ def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo
 
 
-def test_sympyissue_13332():
+def test_issue_13332():
     assert limit(sqrt(30)*5**(-5*x - 1)*(46656*x)**x*(5*x + 2)**(5*x + 5*S.Half) *
-                 (6*x + 2)**(-6*x - 5*S.Half), x, oo) == Rational(25, 36)
+                (6*x + 2)**(-6*x - 5*S.Half), x, oo) == Rational(25, 36)
