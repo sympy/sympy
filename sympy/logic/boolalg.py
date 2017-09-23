@@ -455,6 +455,10 @@ class Or(LatticeOp, BooleanFunction):
                                       " implemented for multivariate"
                                       " expressions")
 
+    @property
+    def binary_symbols(self):
+        return set().union(*[i.binary_symbols for i in self.args])
+
 
 class Not(BooleanFunction):
     """
