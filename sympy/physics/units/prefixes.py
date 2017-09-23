@@ -133,7 +133,8 @@ def prefix_unit(unit, prefixes):
 
     for prefix_abbr, prefix in prefixes.items():
         prefixed_units.append(Quantity("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor * prefix,
-                                       "%s%s" % (prefix.abbrev, unit.abbrev)))
+                                       abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+                                       ))
 
     return prefixed_units
 
