@@ -1,5 +1,5 @@
 import warnings
-from sympy.core import (pi, oo, symbols, Rational, Integer, Float,
+from sympy.core import (S, pi, oo, symbols, Rational, Integer, Float,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
 from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
                              ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
@@ -144,6 +144,10 @@ def test_ccode_user_functions():
 
 
 def test_ccode_boolean():
+    assert ccode(True) == "true"
+    assert ccode(S.true) == "true"
+    assert ccode(False) == "false"
+    assert ccode(S.false) == "false"
     assert ccode(x & y) == "x && y"
     assert ccode(x | y) == "x || y"
     assert ccode(~x) == "!x"

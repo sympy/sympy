@@ -1,4 +1,4 @@
-from sympy.core import (pi, oo, Symbol, symbols, Rational, Integer,
+from sympy.core import (S, pi, oo, Symbol, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              gamma, sign, Max)
@@ -122,8 +122,13 @@ def test_rcode_user_functions():
 
 
 def test_rcode_boolean():
+    assert rcode(True) == "True"
+    assert rcode(S.true) == "True"
+    assert rcode(False) == "False"
+    assert rcode(S.false) == "False"
     assert rcode(x & y) == "x & y"
     assert rcode(x | y) == "x | y"
+    assert rcode(~x) == "!x"
     assert rcode(x & y & z) == "x & y & z"
     assert rcode(x | y | z) == "x | y | z"
     assert rcode((x & y) | z) == "z | x & y"
