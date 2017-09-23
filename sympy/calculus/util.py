@@ -11,7 +11,6 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
 
-
 def continuous_domain(f, symbol, domain):
     """
     Returns the intervals in the given domain for which the function
@@ -38,8 +37,8 @@ def continuous_domain(f, symbol, domain):
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
     from sympy.solvers.solveset import solveset, _has_rational_power
-    from sympy.simplify.radsimp import denom
-    from sympy.polys.rationaltools import together
+    from sympy import denom
+    from sympy import together
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
@@ -64,17 +63,17 @@ def continuous_domain(f, symbol, domain):
         sings = S.EmptySet
         if f.has(Abs):
             sings = solveset(1/f, symbol, domain) + \
-                solveset(denom(together(f)), symbol, S.Reals)
+                solveset(denom(together(f)), symbol, domain)
         else:
             for atom in f.atoms(Pow):
                 predicate, denomin = _has_rational_power(atom, symbol)
                 if predicate and denomin == 2:
                     sings = solveset(1/f, symbol, domain) +\
-                        solveset(denom(together(f)), symbol, S.Reals)
+                        solveset(denom(together(f)), symbol, domain)
                     break
             else:
                 sings = Intersection(solveset(1/f, symbol), domain) + \
-                    solveset(denom(together(f)), symbol, S.Reals)
+                    solveset(denom(together(f)), symbol, domain)
 
     except BaseException:
         raise NotImplementedError(
