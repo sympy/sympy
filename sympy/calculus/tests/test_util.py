@@ -104,8 +104,8 @@ def test_periodicity():
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
 
-    assert periodicity(Abs(sin(Abs(sin(x)))),x) == pi
-    assert all(periodicity(Abs(f(x)),x) == pi for f in (
+    assert periodicity(Abs(sin(Abs(sin(x)))), x) == pi
+    assert all(periodicity(Abs(f(x)), x) == pi for f in (
         cos, sin, sec, csc, tan, cot))
     assert periodicity(Abs(sin(tan(x))), x) == pi
     assert periodicity(Abs(sin(sin(x) + tan(x))), x) == 2*pi
