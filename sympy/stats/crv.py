@@ -299,8 +299,9 @@ class ContinuousPSpace(PSpace):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
-    def probability(self, condition, **kwargs):
-        z = Dummy('z', real=True, finite=True)
+    def probability(self, condition, 
+                    dummy_symbol=Dummy('z', real=True, finite=True), **kwargs):
+        z = dummy_symbol
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
@@ -337,11 +338,13 @@ class ContinuousPSpace(PSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
 
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        new_condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
 
-        domain = ConditionalContinuousDomain(self.domain, condition)
+        domain = ConditionalContinuousDomain(self.domain, new_condition)
         if normalize:
-            pdf = self.pdf / domain.integrate(self.pdf, **kwargs)
+            dummy = Dummy(str(self.symbol), real=True, finite=True)
+            pdf = self.pdf / self.probability(condition, 
+                                              dummy_symbol=dummy,**kwargs)
             density = Lambda(domain.symbols, pdf)
 
         return ContinuousPSpace(domain, density)
