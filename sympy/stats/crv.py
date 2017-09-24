@@ -343,7 +343,11 @@ class ContinuousPSpace(PSpace):
 
         domain = ConditionalContinuousDomain(self.domain, new_condition)
         if normalize:
-            dummy = Dummy(str(self.symbol), real=True, finite=True)
+            dummy = None
+            # if single variabled
+            if len(self.values) == 1:
+                name = str([rv.symbol for rv in self.values][0])
+                dummy = Dummy(name, real=True, finite=True)
             pdf = self.pdf / self.probability(condition, 
                                               dummy_symbol=dummy,**kwargs)
             density = Lambda(domain.symbols, pdf)
