@@ -6692,7 +6692,7 @@ def PureFunctionOfCothQ(u, v, x):
     return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
 
 def CoprimeQ(*args):
-    return igcd(args) == 1
+    return igcd(*args) == 1
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
