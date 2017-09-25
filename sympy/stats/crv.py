@@ -341,10 +341,9 @@ class ContinuousPSpace(PSpace):
         condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
         domain    = ConditionalContinuousDomain(self.domain, condition)
 
-        
         if normalize:
             # create a clone of the variable to
-            # make sure that variables in nested integrals are different. 
+            # make sure that variables in nested integrals are different.
             # this makes sure that they are evaluated separately
             to_dummy    = lambda rv: Dummy(str(rv.symbol))
             replacement = {rv.symbol: to_dummy(rv) for rv in self.values}
