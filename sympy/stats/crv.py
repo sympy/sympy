@@ -299,10 +299,8 @@ class ContinuousPSpace(PSpace):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
-    def probability(self, condition, 
-                    dummy_symbol=None, **kwargs):
-        z = (dummy_symbol if dummy_symbol else 
-                            Dummy('z', real=True, finite=True))
+    def probability(self, condition, **kwargs):
+        z = Dummy('z', real=True, finite=True)
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
