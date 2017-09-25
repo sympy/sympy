@@ -552,7 +552,8 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import E, Die
+    >>> from sympy.stats import E, Die, Uniform
+    >>> from sympy import Rational
     >>> X = Die('X', 6)
     >>> E(X)
     7/2
@@ -561,6 +562,9 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
 
     >>> E(X, X > 3) # Expectation of X given that it is above 3
     5
+    >>> X = Uniform('X', 0, 1)
+    >>> E(X, X > Rational(1,2), evaluate=True) == Rational(3,4)
+    True
     """
 
     if not random_symbols(expr):  # expr isn't random?
