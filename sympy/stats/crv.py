@@ -299,7 +299,7 @@ class ContinuousPSpace(PSpace):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
-    def probability(self, condition,
+    def probability(self, condition, 
                     dummy_symbol=None, **kwargs):
         z = (dummy_symbol if dummy_symbol else 
                             Dummy('z', real=True, finite=True))
@@ -337,19 +337,26 @@ class ContinuousPSpace(PSpace):
         interval = interval.intersect(self.domain.set)
         return SingleContinuousDomain(rv.symbol, interval)
 
+
     def conditional_space(self, condition, normalize=True, **kwargs):
 
-        new_condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        domain    = ConditionalContinuousDomain(self.domain, condition)
 
-        domain = ConditionalContinuousDomain(self.domain, new_condition)
+        
         if normalize:
-            dummy = None
-            # if single variabled
-            if len(self.values) == 1:
-                name = str([rv.symbol for rv in self.values][0])
-                dummy = Dummy(name, real=True, finite=True)
-            pdf = self.pdf / self.probability(condition,
-                                              dummy_symbol=dummy,**kwargs)
+            # create a clone of the variable to
+            # make sure that variables in nested integrals are different. 
+            # this makes sure that they are evaluated separately
+            to_dummy    = lambda rv: Dummy(str(rv.symbol))
+            replacement = {rv.symbol: to_dummy(rv) for rv in self.values}
+            clone       = self.xreplace(replacement)
+            clone_domain = ConditionalContinuousDomain(
+                                clone.domain, condition.xreplace(replacement))
+
+            normalizer = clone_domain.integrate(clone.pdf, **kwargs)
+
+            pdf = self.pdf / normalizer
             density = Lambda(domain.symbols, pdf)
 
         return ContinuousPSpace(domain, density)
