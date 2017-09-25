@@ -343,13 +343,14 @@ class ContinuousPSpace(PSpace):
 
         if normalize:
             # create a clone of the variable to
-            # make sure that variables in nested integrals are different.
+            # make sure that variables in nested integrals 
+            # are different from the one old side in integral.
             # this makes sure that they are evaluated separately
             to_dummy = lambda rv: Dummy(str(rv.symbol))
             replacement = {rv.symbol: to_dummy(rv) for rv in self.values}
             clone = self.xreplace(replacement)
             clone_domain = ConditionalContinuousDomain(
-                                clone.domain, condition.xreplace(replacement))
+                               clone.domain, condition.xreplace(replacement))
 
             pdf = self.pdf / clone_domain.integrate(clone.pdf, **kwargs)
             density = Lambda(domain.symbols, pdf)
