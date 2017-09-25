@@ -302,7 +302,7 @@ def test_math():
 
 def test_sin():
     f = lambdify(x, sin(x)**2)
-    assert isinstance(f(2), (float, mpmath.ctx_mp_python.mpf))
+    assert isinstance(f(2), float)
     f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)
 
