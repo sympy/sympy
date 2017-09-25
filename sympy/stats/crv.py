@@ -351,7 +351,7 @@ class ContinuousPSpace(PSpace):
             replacement = {rv.symbol: to_dummy(rv) for rv in self.values}
             clone = self.xreplace(replacement)
             clone_domain = ConditionalContinuousDomain(
-                                clone.domain, condition.xreplace(replacement))
+                            clone.domain, condition.xreplace(replacement))
 
             pdf = self.pdf / clone_domain.integrate(clone.pdf, **kwargs)
             density = Lambda(domain.symbols, pdf)
