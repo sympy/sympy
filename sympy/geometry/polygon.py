@@ -2298,13 +2298,9 @@ class Triangle(Polygon):
         a = s[0].length
         b = s[1].length
         c = s[2].length
-        x1 = v[0].x
-        x2 = v[1].x
-        x3 = v[2].x
-        y1 = v[0].y
-        y2 = v[1].y
-        y3 = v[2].y
-        test = [v[0].x, v[1].x, v[2].x, v[0].y, v[1].y, v[2].y]
+        x = [v[0].x, v[1].x, v[2].x]
+        y = [v[0].y, v[1].y, v[2].y]
+        test = [x[0], x[1], x[2]]
         return test
 
     @property
