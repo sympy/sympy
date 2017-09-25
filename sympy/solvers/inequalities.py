@@ -587,22 +587,21 @@ The inequality cannot be solved using solve_univariate_inequality.
                                 im_sol += FiniteSet(z)
                     else:
                         start, end = a.inf, a.sup
-                        valid_start = valid(start)
                         for z in _nsort(critical_points + FiniteSet(end)):
+                            valid_start = valid(start)
                             if start != end:
                                 valid_z = valid(z)
                                 pt = _pt(start, z)
-                                if pt not in singularities and valid(pt) and pt.is_real:
+                                if pt not in singularities and pt.is_real and valid(pt):
                                     if valid_start and valid_z:
                                         im_sol += Interval(start, z)
-                                    elif valid_start and not valid_z:
+                                    elif valid_start:
                                         im_sol += Interval.Ropen(start, z)
-                                    elif not valid_start and valid_z:
+                                    elif valid_z:
                                         im_sol += Interval.Lopen(start, z)
                                     else:
                                         im_sol += Interval.open(start, z)
                             start = z
-                            valid_start = valid(start)
                         for s in singularities:
                             im_sol -= FiniteSet(s)
                 except (TypeError):
