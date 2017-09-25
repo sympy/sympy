@@ -19,9 +19,9 @@ permille = Quantity("permille", 1, Rational(1, 1000))
 # Angular units (dimensionless)
 
 rad = radian = radians = Quantity("radian", 1, 1)
-deg = degree = degrees = Quantity("degree", 1, pi/180, "deg")
-sr = steradian = steradians = Quantity("steradian", 1, 1, "sr")
-mil = angular_mil = angular_mils = Quantity("angular_mil", 1, 2*pi/6400, "mil")
+deg = degree = degrees = Quantity("degree", 1, pi/180, abbrev="deg")
+sr = steradian = steradians = Quantity("steradian", 1, 1, abbrev="sr")
+mil = angular_mil = angular_mils = Quantity("angular_mil", 1, 2*pi/6400, abbrev="mil")
 
 # Base units:
 
@@ -29,22 +29,22 @@ m = meter = meters = Quantity("meter", length, 1, abbrev="m")
 kg = kilogram = kilograms = Quantity("kilogram", mass, kilo, abbrev="kg")
 s = second = seconds = Quantity("second", time, 1, abbrev="s")
 A = ampere = amperes = Quantity("ampere", current, 1, abbrev='A')
-K = kelvin = kelvins = Quantity('kelvin', temperature, 1, 'K')
-mol = mole = moles = Quantity("mole", amount_of_substance, 1, "mol")
-cd = candela = candelas = Quantity("candela", luminous_intensity, 1, "cd")
+K = kelvin = kelvins = Quantity('kelvin', temperature, 1, abbrev='K')
+mol = mole = moles = Quantity("mole", amount_of_substance, 1, abbrev="mol")
+cd = candela = candelas = Quantity("candela", luminous_intensity, 1, abbrev="cd")
 
 # gram; used to define its prefixed units
 
-g = gram = grams = Quantity("gram", mass, 1, "g")
-mg = milligram = milligrams = Quantity("milligram", mass, milli*gram, "mg")
-ug = microgram = micrograms = Quantity("microgram", mass, micro*gram, "ug")
+g = gram = grams = Quantity("gram", mass, 1, abbrev="g")
+mg = milligram = milligrams = Quantity("milligram", mass, milli*gram, abbrev="mg")
+ug = microgram = micrograms = Quantity("microgram", mass, micro*gram, abbrev="ug")
 
 # derived units
-newton = newtons = N = Quantity("newton", force, kilogram*meter/second**2, "N")
-joule = joules = J = Quantity("joule", energy, newton*meter, "J")
-watt = watts = W = Quantity("watt", power, joule/second, "W")
-pascal = pascals = Pa = pa = Quantity("pascal", pressure, newton/meter**2, "Pa")
-hertz = hz = Hz = Quantity("hertz", frequency, 1, "Hz")
+newton = newtons = N = Quantity("newton", force, kilogram*meter/second**2, abbrev="N")
+joule = joules = J = Quantity("joule", energy, newton*meter, abbrev="J")
+watt = watts = W = Quantity("watt", power, joule/second, abbrev="W")
+pascal = pascals = Pa = pa = Quantity("pascal", pressure, newton/meter**2, abbrev="Pa")
+hertz = hz = Hz = Quantity("hertz", frequency, 1, abbrev="Hz")
 
 # MKSA extension to MKS: derived units
 
@@ -64,17 +64,17 @@ lux = lx = Quantity("lux", luminous_intensity/length**2, steradian*candela/meter
 
 # Common length units
 
-km = kilometer = kilometers = Quantity("kilometer", length, kilo*meter, "km")
-dm = decimeter = decimeters = Quantity("decimeter", length, deci*meter, "dm")
-cm = centimeter = centimeters = Quantity("centimeter", length, centi*meter, "cm")
-mm = millimeter = millimeters = Quantity("millimeter", length, milli*meter, "mm")
-um = micrometer = micrometers = micron = microns = Quantity("micrometer", length, micro*meter, "um")
-nm = nanometer = nanometers = Quantity("nanometer", length, nano*meter, "nn")
-pm = picometer = picometers = Quantity("picometer", length, pico*meter, "pm")
+km = kilometer = kilometers = Quantity("kilometer", length, kilo*meter, abbrev="km")
+dm = decimeter = decimeters = Quantity("decimeter", length, deci*meter, abbrev="dm")
+cm = centimeter = centimeters = Quantity("centimeter", length, centi*meter, abbrev="cm")
+mm = millimeter = millimeters = Quantity("millimeter", length, milli*meter, abbrev="mm")
+um = micrometer = micrometers = micron = microns = Quantity("micrometer", length, micro*meter, abbrev="um")
+nm = nanometer = nanometers = Quantity("nanometer", length, nano*meter, abbrev="nn")
+pm = picometer = picometers = Quantity("picometer", length, pico*meter, abbrev="pm")
 
-ft = foot = feet = Quantity("foot", length, Rational(3048, 10000)*meter, "ft")
+ft = foot = feet = Quantity("foot", length, Rational(3048, 10000)*meter, abbrev="ft")
 inch = inches = Quantity("inch", length, foot/12)
-yd = yard = yards = Quantity("yard", length, 3*feet, "yd")
+yd = yard = yards = Quantity("yard", length, 3*feet, abbrev="yd")
 mi = mile = miles = Quantity("mile", length, 5280*feet)
 nmi = nautical_mile = nautical_miles = Quantity("nautical_mile", length, 6076*feet)
 
@@ -87,10 +87,10 @@ ml = milliliter = milliliters = Quantity("milliliter", length**3, liter / 1000)
 
 # Common time units
 
-ms = millisecond = milliseconds = Quantity("millisecond", time, milli*second, "ms")
-us = microsecond = microseconds = Quantity("microsecond", time, micro*second, "us")
-ns = nanosecond = nanoseconds = Quantity("nanosecond", time, nano*second, "ns")
-ps = picosecond = picoseconds = Quantity("picosecond", time, pico*second, "ps")
+ms = millisecond = milliseconds = Quantity("millisecond", time, milli*second, abbrev="ms")
+us = microsecond = microseconds = Quantity("microsecond", time, micro*second, abbrev="us")
+ns = nanosecond = nanoseconds = Quantity("nanosecond", time, nano*second, abbrev="ns")
+ps = picosecond = picoseconds = Quantity("picosecond", time, pico*second, abbrev="ps")
 
 minute = minutes = Quantity("minute", time, 60*second)
 h = hour = hours = Quantity("hour", time, 60*minute)
@@ -139,7 +139,7 @@ josephson_constant = Quantity("josephson_constant", frequency/voltage, 483597.85
 # Von Klitzing constant
 von_klitzing_constant = Quantity("von_klitzing_constant", voltage/current, 25812.8074555*ohm, abbrev="R_k")
 # Acceleration due to gravity (on the Earth surface)
-gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", acceleration, 9.80665*meter/second**2, "g")
+gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", acceleration, 9.80665*meter/second**2, abbrev="g")
 # magnetic constant:
 u0 = magnetic_constant = Quantity("magnetic_constant", force/current**2, 4*pi/10**7 * newton/ampere**2)
 # electric constat:
@@ -147,12 +147,12 @@ e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity", c
 # vacuum impedance:
 Z0 = vacuum_impedance = Quantity("vacuum_impedance", impedance, u0 * c)
 # Coulomb's constant:
-coulomb_constant = electric_force_constant = Quantity("coulomb_constant", force*length**2/charge**2, 1/(4*pi*vacuum_permittivity), "k_e")
+coulomb_constant = electric_force_constant = Quantity("coulomb_constant", force*length**2/charge**2, 1/(4*pi*vacuum_permittivity), abbrev="k_e")
 
-atmosphere = atmospheres = atm = Quantity("atmosphere", pressure, 101325 * pascal, "atm")
+atmosphere = atmospheres = atm = Quantity("atmosphere", pressure, 101325 * pascal, abbrev="atm")
 
-kPa = kilopascal = Quantity("kilopascal", pressure, kilo*Pa, "kPa")
-bar = bars = Quantity("bar", pressure, 100*kPa, "bar")
+kPa = kilopascal = Quantity("kilopascal", pressure, kilo*Pa, abbrev="kPa")
+bar = bars = Quantity("bar", pressure, 100*kPa, abbrev="bar")
 pound = pounds = Quantity("pound", mass, 0.45359237 * kg)  # exact
 psi = Quantity("psi", pressure, pound * gee / inch ** 2)
 dHg0 = 13.5951  # approx value at 0 C
@@ -162,14 +162,14 @@ quart = quarts = Quantity("quart", length**3, Rational(231, 4) * inch**3)
 
 # Other convenient units and magnitudes
 
-ly = lightyear = lightyears = Quantity("lightyear", length, speed_of_light*julian_year, "ly")
-au = astronomical_unit = astronomical_units = Quantity("astronomical_unit", length, 149597870691*meter, "AU")
+ly = lightyear = lightyears = Quantity("lightyear", length, speed_of_light*julian_year, abbrev="ly")
+au = astronomical_unit = astronomical_units = Quantity("astronomical_unit", length, 149597870691*meter, abbrev="AU")
 
 # Planck units:
-planck_mass = Quantity("planck_mass", mass, sqrt(hbar*speed_of_light/G), "m_P")
-planck_time = Quantity("planck_time", time, sqrt(hbar*G/speed_of_light**5), "t_P")
-planck_temperature = Quantity("planck_temperature", temperature, sqrt(hbar*speed_of_light**5/G/boltzmann**2), "T_P")
-planck_length = Quantity("planck_length", length, sqrt(hbar*G/speed_of_light**3), "l_P")
+planck_mass = Quantity("planck_mass", mass, sqrt(hbar*speed_of_light/G), abbrev="m_P")
+planck_time = Quantity("planck_time", time, sqrt(hbar*G/speed_of_light**5), abbrev="t_P")
+planck_temperature = Quantity("planck_temperature", temperature, sqrt(hbar*speed_of_light**5/G/boltzmann**2), abbrev="T_P")
+planck_length = Quantity("planck_length", length, sqrt(hbar*G/speed_of_light**3), abbrev="l_P")
 # TODO: add more from https://en.wikipedia.org/wiki/Planck_units
 
 # Information theory units:

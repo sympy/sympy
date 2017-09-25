@@ -534,6 +534,11 @@ def test_sympy__core__power__Pow():
     assert _test_args(Pow(x, 2))
 
 
+def test_sympy__algebras__quaternion__Quaternion():
+    from sympy.algebras.quaternion import Quaternion
+    assert _test_args(Quaternion(x, 1, 2, 3))
+
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
@@ -3236,6 +3241,12 @@ def test_sympy__physics__units__dimensions__Dimension():
     assert _test_args(Dimension("length", "L"))
 
 
+def test_sympy__physics__units__dimensions__DimensionSystem():
+    from sympy.physics.units.dimensions import DimensionSystem
+    from sympy.physics.units.dimensions import length, time, velocity
+    assert _test_args(DimensionSystem((length, time), (velocity,)))
+
+
 def test_sympy__physics__units__quantities__Quantity():
     from sympy.physics.units.quantities import Quantity
     from sympy.physics.units import length
@@ -4090,3 +4101,7 @@ def test_sympy__vector__scalar__BaseScalar():
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
+
+def test_sympy__integrals__rubi__symbol__matchpyWC():
+    from sympy.integrals.rubi.symbol import matchpyWC
+    assert _test_args(matchpyWC(1, True, 'a'))

@@ -1018,10 +1018,10 @@ class tan(TrigonometricFunction):
             x, m = _peeloff_pi(arg)
             if m:
                 tanm = tan(m)
-                tanx = tan(x)
                 if tanm is S.ComplexInfinity:
                     return -cot(x)
-                return (tanm + tanx)/(1 - tanm*tanx)
+                else: # tanm == 0
+                    return tan(x)
 
         if arg.func is atan:
             return arg.args[0]
@@ -1300,14 +1300,10 @@ class cot(TrigonometricFunction):
             x, m = _peeloff_pi(arg)
             if m:
                 cotm = cot(m)
-                if cotm == 0:
-                    return -tan(x)
-                cotx = cot(x)
                 if cotm is S.ComplexInfinity:
-                    return cotx
-                if cotm.is_Rational:
-                    return (cotm*cotx - 1) / (cotm + cotx)
-            return None
+                    return cot(x)
+                else: # cotm == 0
+                    return -tan(x)
 
         if arg.func is acot:
             return arg.args[0]

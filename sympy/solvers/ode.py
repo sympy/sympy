@@ -2792,7 +2792,9 @@ def constantsimp(expr, constants):
         rexpr = rexpr[0]
         for s in commons:
             cs = list(s[1].atoms(Symbol))
-            if len(cs) == 1 and cs[0] in Cs:
+            if len(cs) == 1 and cs[0] in Cs and \
+                cs[0] not in rexpr.atoms(Symbol) and \
+                not any(cs[0] in ex for ex in commons if ex != s):
                 rexpr = rexpr.subs(s[0], cs[0])
             else:
                 rexpr = rexpr.subs(*s)
@@ -3539,12 +3541,12 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
     >>> sol = dsolve(genform, y)
     >>> pprint(sol, wrap_line=False)
-                                             /        __________________       \
-                       __________________    |       /                2        |
-                      /                2     |     \/  4*b*d - (a + c)  *log(x)|
-           -a - c + \/  4*b*d - (a + c)  *tan|C1 + ----------------------------|
-                                             \                 2*a             /
-    f(x) = ---------------------------------------------------------------------
+            /                                 /        __________________       \\
+            |           __________________    |       /                2        ||
+            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
+           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
+            \                                 \                 2*a             //
+    f(x) = ------------------------------------------------------------------------
                                             2*b*x
 
     >>> checkodesol(genform, sol, order=1)[0]

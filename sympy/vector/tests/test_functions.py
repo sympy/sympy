@@ -204,7 +204,7 @@ def test_compose():
     assert simplify(_compose(v3, e, (x, y, z))) == \
            (x * cos(q0 - q1) - z * sin(q0 - q1), y, x * sin(q0 - q1) + z * cos(q0 - q1))
 
-    v4 = 3 * d.x * d.i + d.j
+    v4 = 3 * d.r * d.i + d.j
     assert _compose(v4, c, (x, y, z)) == (x * sin(y) * cos(z), x * sin(y) * sin(z), x * cos(y))
     assert _compose(v4, a, (x, y, z)) == \
             ((-z*sin(q0) + (x - 1)*cos(q0))*sin(y - 1)*cos(z*cos(q0) + (x - 1)*sin(q0)),

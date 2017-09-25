@@ -3150,6 +3150,11 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import combsimp
         return combsimp(self)
 
+    def gammasimp(self):
+        """See the gammasimp function in sympy.simplify"""
+        from sympy.simplify import gammasimp
+        return gammasimp(self)
+
     def factor(self, *gens, **args):
         """See the factor() function in sympy.polys.polytools"""
         from sympy.polys import factor

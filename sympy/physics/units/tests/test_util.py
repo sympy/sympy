@@ -2,12 +2,17 @@
 
 from __future__ import division
 
+import warnings
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 from sympy import Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
     second, speed_of_light, steradian, time)
+from sympy.physics.units.dimensions import dimsys_default
 from sympy.physics.units.util import convert_to, dim_simplify
 
 
@@ -20,30 +25,43 @@ T = time
 
 
 def test_dim_simplify_add():
-    assert dim_simplify(Add(L, L)) == L
-    assert dim_simplify(L + L) == L
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        assert dim_simplify(Add(L, L)) == L
+        assert dim_simplify(L + L) == L
 
 
 def test_dim_simplify_mul():
-    assert dim_simplify(Mul(L, T)) == L*T
-    assert dim_simplify(L*T) == L*T
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        assert dim_simplify(Mul(L, T)) == L*T
+        assert dim_simplify(L*T) == L*T
 
 
 def test_dim_simplify_pow():
-    assert dim_simplify(Pow(L, 2)) == L**2
-    assert dim_simplify(L**2) == L**2
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        assert dim_simplify(Pow(L, 2)) == L**2
+        assert dim_simplify(L**2) == L**2
 
 
 def test_dim_simplify_rec():
-    assert dim_simplify(Mul(Add(L, L), T)) == L*T
-    assert dim_simplify((L + L) * T) == L*T
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        assert dim_simplify(Mul(Add(L, L), T)) == L*T
+        assert dim_simplify((L + L) * T) == L*T
 
 
 def test_dim_simplify_dimless():
     # TODO: this should be somehow simplified on its own,
     # without the need of calling `dim_simplify`:
-    assert dim_simplify(sin(L*L**-1)**2*L).get_dimensional_dependencies() == L.get_dimensional_dependencies()
-    assert dim_simplify(sin(L * L**(-1))**2 * L).get_dimensional_dependencies() == L.get_dimensional_dependencies()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+
+        assert dim_simplify(sin(L*L**-1)**2*L).get_dimensional_dependencies()\
+               == dimsys_default.get_dimensional_dependencies(L)
+        assert dim_simplify(sin(L * L**(-1))**2 * L).get_dimensional_dependencies()\
+               == dimsys_default.get_dimensional_dependencies(L)
 
 
 def test_convert_to_quantities():

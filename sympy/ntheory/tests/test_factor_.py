@@ -174,13 +174,17 @@ def test_factorint():
     assert factorint(2**(2**6) + 1, multiple=True) == [274177, 67280421310721]
 
     assert multiproduct(factorint(fac(200))) == fac(200)
+    assert multiproduct(factorint(fac(200, evaluate=False))) == fac(200)
     for b, e in factorint(fac(150)).items():
+        assert e == fac_multiplicity(150, b)
+    for b, e in factorint(fac(150, evaluate=False)).items():
         assert e == fac_multiplicity(150, b)
     assert factorint(103005006059**7) == {103005006059: 7}
     assert factorint(31337**191) == {31337: 191}
     assert factorint(2**1000 * 3**500 * 257**127 * 383**60) == \
         {2: 1000, 3: 500, 257: 127, 383: 60}
     assert len(factorint(fac(10000))) == 1229
+    assert len(factorint(fac(10000, evaluate=False))) == 1229
     assert factorint(12932983746293756928584532764589230) == \
         {2: 1, 5: 1, 73: 1, 727719592270351: 1, 63564265087747: 1, 383: 1}
     assert factorint(727719592270351) == {727719592270351: 1}

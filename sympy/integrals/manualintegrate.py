@@ -322,10 +322,9 @@ def inverse_trig_rule(integral):
 
 def add_rule(integral):
     integrand, symbol = integral
-    return AddRule(
-        [integral_steps(g, symbol)
-         for g in integrand.as_ordered_terms()],
-        integrand, symbol)
+    results = [integral_steps(g, symbol)
+              for g in integrand.as_ordered_terms()]
+    return None if None in results else AddRule(results, integrand, symbol)
 
 def mul_rule(integral):
     integrand, symbol = integral

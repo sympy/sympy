@@ -300,7 +300,7 @@ def test_create_new():
     c = a.create_new('c', transformation='spherical')
     assert c._parent == a
     assert c.transformation_to_parent() == \
-           (c.x*sin(c.y)*cos(c.z), c.x*sin(c.y)*sin(c.z), c.x*cos(c.y))
+           (c.r*sin(c.theta)*cos(c.phi), c.r*sin(c.theta)*sin(c.phi), c.r*cos(c.theta))
     assert c.transformation_from_parent() == \
            (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
 
@@ -314,13 +314,13 @@ def test_evalf():
 
 def test_lame_coefficients():
     a = CoordSys3D('a', 'spherical')
-    assert a.lame_coefficients() == (1, a.x, sin(a.y)*a.x)
+    assert a.lame_coefficients() == (1, a.r, sin(a.theta)*a.r)
     a = CoordSys3D('a')
     assert a.lame_coefficients() == (1, 1, 1)
     a = CoordSys3D('a', 'cartesian')
     assert a.lame_coefficients() == (1, 1, 1)
     a = CoordSys3D('a', 'cylindrical')
-    assert a.lame_coefficients() == (1, a.y, 1)
+    assert a.lame_coefficients() == (1, a.theta, 1)
 
 
 def test_transformation_equations():
@@ -373,7 +373,7 @@ def test_transformation_equations():
     x, y, z = symbols('x y z')
     a = CoordSys3D('a', ((x, y, z), (x, y, z)))
     a._calculate_inv_trans_equations()
-    assert a.transformation_to_parent() == (a.x, a.y, a.z)
+    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
     assert a.lame_coefficients() == (1, 1, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
     r, theta, z = symbols("r theta z")
@@ -395,7 +395,7 @@ def test_transformation_equations():
 
     # Cartesian with `lambda`
     a = CoordSys3D('a', lambda x, y, z: (x, y, z))
-    assert a.transformation_to_parent() == (a.x, a.y, a.z)
+    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
     assert a.lame_coefficients() == (1, 1, 1)
     a._calculate_inv_trans_equations()
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
@@ -470,22 +470,6 @@ def test_rotation_trans_equations():
            (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)
 
 
-def test_translation_trans_equations():
-    a = CoordSys3D('a')
-    assert a._translation_trans_equations(a, a._origin, a.base_scalars()) == (a.x, a.y, a.z)
-    b = a.locate_new('b', None)
-    assert b._translation_trans_equations(a, b._origin, b.base_scalars()) == (b.x, b.y, b.z)
-    assert b._translation_trans_equations(a, b._origin, b.base_scalars(), inverse=True) == (b.x, b.y, b.z)
-    c = a.locate_new('c', (a.i + a.j + a.k))
-    assert c._translation_trans_equations(a, c._origin, c.base_scalars()) ==\
-           (c.x + 1, c.y + 1, c.z + 1)
-    d = a.locate_new('d', (a.i + a.j + Vector.zero))
-    assert d._translation_trans_equations(a, d._origin, d.base_scalars()) ==\
-           (d.x + 1, d.y + 1, d.z)
-    assert d._translation_trans_equations(a, d._origin, d.base_scalars(), inverse=True) ==\
-           (d.x - 1, d.y - 1, d.z)
-
-
 def test_transformation_functions():
     C = CoordSys3D("C")
     D = C.locate_new("D", 3 * C.i)
@@ -510,18 +494,18 @@ def test_transformation_functions():
     F = C.create_new("F", lambda x, y, z: (x**3, y, z))
     F._calculate_inv_trans_equations()
     assert F.transformation_from_parent() == (C.x**(S(1)/3), C.y, C.z)
-    assert F.transformation_to_parent() == (F.x**3, F.y, F.z)
-    assert express(C.x, F, variables=True) == F.x**(1/3)
-    assert express(F.x, C, variables=True) == C.x**3
+    assert F.transformation_to_parent() == (F.x1**3, F.x2, F.x3)
+    assert express(C.x, F, variables=True) == F.x1**(1/3)
+    assert express(F.x1, C, variables=True) == C.x**3
     G = C.create_new('G', lambda r, theta, phi: (
                     r * sin(theta) * cos(phi),
                     r * sin(theta) * sin(phi),
                     r * cos(theta)))
     # assert raises(ValueError, lambda: G.transformation_from_parent())
-    assert G.transformation_to_parent() == (G.x*sin(G.y)*cos(G.z), G.x*sin(G.y)*sin(G.z), G.x*cos(G.y))
+    assert G.transformation_to_parent() == (G.x1*sin(G.x2)*cos(G.x3), G.x1*sin(G.x2)*sin(G.x3), G.x1*cos(G.x2))
     H = C.create_new("H", lambda x, y, z: (x-3, y, z))
     H._calculate_inv_trans_equations()
     assert H.transformation_from_parent() == (C.x + 3, C.y, C.z)
-    assert H.transformation_to_parent() == (H.x - 3, H.y, H.z)
-    assert express(C.x, H, variables=True) == H.x + 3
-    assert express(H.x, C, variables=True) == C.x - 3
+    assert H.transformation_to_parent() == (H.x1 - 3, H.x2, H.x3)
+    assert express(C.x, H, variables=True) == H.x1 + 3
+    assert express(H.x1, C, variables=True) == C.x - 3

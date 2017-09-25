@@ -332,9 +332,7 @@ class AssocOp(Basic):
                         args.append(a)
                     else:
                         args.append(newa)
-                if not _aresame(tuple(args), tail_args):
-                    tail = self.func(*args)
-                return self.func(x, tail)
+                return self.func(x, *args)
 
         # this is the same as above, but there were no pure-number args to
         # deal with
@@ -345,9 +343,7 @@ class AssocOp(Basic):
                 args.append(a)
             else:
                 args.append(newa)
-        if not _aresame(tuple(args), self.args):
-            return self.func(*args)
-        return self
+        return self.func(*args)
 
     @classmethod
     def make_args(cls, expr):
