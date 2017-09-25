@@ -343,8 +343,10 @@ class ContinuousPSpace(PSpace):
 
         if normalize:
             # create a clone of the variable to
-            # make sure that variables in nested integrals are different.
+            # make sure that variables in nested integrals are different
+            # from the variables outside the integral
             # this makes sure that they are evaluated separately
+            # and in the correct order
             to_dummy = lambda rv: Dummy(str(rv.symbol))
             replacement = {rv.symbol: to_dummy(rv) for rv in self.values}
             clone = self.xreplace(replacement)
