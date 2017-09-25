@@ -49,9 +49,9 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Lambda, Basic, lowergamma, erf, erfc)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
-from .crv import (SingleContinuousPSpace, SingleContinuousDistribution,
+from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from .rv import _value_check
+from sympy.stats.rv import _value_check
 import random
 
 oo = S.Infinity

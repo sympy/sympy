@@ -339,21 +339,19 @@ class ContinuousPSpace(PSpace):
     def conditional_space(self, condition, normalize=True, **kwargs):
 
         condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
-        domain    = ConditionalContinuousDomain(self.domain, condition)
+        domain = ConditionalContinuousDomain(self.domain, condition)
 
         if normalize:
             # create a clone of the variable to
             # make sure that variables in nested integrals are different.
             # this makes sure that they are evaluated separately
-            to_dummy    = lambda rv: Dummy(str(rv.symbol))
+            to_dummy = lambda rv: Dummy(str(rv.symbol))
             replacement = {rv.symbol: to_dummy(rv) for rv in self.values}
-            clone       = self.xreplace(replacement)
+            clone = self.xreplace(replacement)
             clone_domain = ConditionalContinuousDomain(
                                 clone.domain, condition.xreplace(replacement))
 
-            normalizer = clone_domain.integrate(clone.pdf, **kwargs)
-
-            pdf = self.pdf / normalizer
+            pdf = self.pdf / clone_domain.integrate(clone.pdf, **kwargs)
             density = Lambda(domain.symbols, pdf)
 
         return ContinuousPSpace(domain, density)
