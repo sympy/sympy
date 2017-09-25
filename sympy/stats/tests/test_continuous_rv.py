@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func)
+                   floor, expand_func, Rational)
 
 
 from sympy.stats.crv_types import NormalDistribution
