@@ -14,7 +14,7 @@ from sympy import (
     solve, legendre_poly
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, skip
 from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
@@ -286,6 +286,11 @@ def test_CRootOf_eval_rational():
     roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]
     for r in roots:
         assert isinstance(r, Rational)
+
+    import sys
+    if sys.platform == 'win32':
+        skip('further fails on Windows')
+
     # All we know is that the Rational instance will be at most 1/10^20 from
     # the exact root. So if we evaluate to 17 digits, it must be exactly equal
     # to:

@@ -15,7 +15,8 @@ try:
 except ImportError:
     USE_PYTEST = False
 
-ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER',
+    os.getenv('APPVEYOR_BUILD_NUMBER', None))
 
 if not USE_PYTEST:
     def raises(expectedException, code=None):

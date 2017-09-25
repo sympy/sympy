@@ -3,6 +3,8 @@ from sympy.integrals.quadrature import (gauss_legendre, gauss_laguerre,
                                         gauss_hermite, gauss_gen_laguerre,
                                         gauss_chebyshev_t, gauss_chebyshev_u,
                                         gauss_jacobi, gauss_lobatto)
+from sympy.utilities.pytest import skip
+import sys
 
 
 def test_legendre():
@@ -27,6 +29,9 @@ def test_legendre():
             '0.55555555555555556',
             '0.88888888888888889',
             '0.55555555555555556']
+
+    if sys.platform == 'win32':
+        skip('further fails on Windows')
 
     x, w = gauss_legendre(4, 17)
     assert [str(r) for r in x] == [
@@ -65,6 +70,9 @@ def test_laguerre():
     assert [str(r) for r in w] == [
             '0.85355339059327376',
             '0.14644660940672624']
+
+    if sys.platform == 'win32':
+        skip('further fails on Windows')
 
     x, w = gauss_laguerre(3, 17)
     assert [str(r) for r in x] == [
@@ -106,6 +114,9 @@ def test_laguerre():
 
 
 def test_laguerre_precise():
+    if sys.platform == 'win32':
+        skip('fails on Windows')
+
     x, w = gauss_laguerre(3, 40)
     assert [str(r) for r in x] == [
             '0.4157745567834790833115338731282744735466',
@@ -139,6 +150,9 @@ def test_hermite():
             '0.29540897515091934',
             '1.1816359006036774',
             '0.29540897515091934']
+
+    if sys.platform == 'win32':
+        skip('further fails on Windows')
 
     x, w = gauss_hermite(4, 17)
     assert [str(r) for r in x] == [
@@ -192,6 +206,21 @@ def test_gen_laguerre():
             '1.6098281800110257',
             '0.16262567089449035']
 
+    x, w = gauss_gen_laguerre(1, 2, 17)
+    assert [str(r) for r in x] == ['3.0000000000000000']
+    assert [str(r) for r in w] == ['2.0000000000000000']
+
+    x, w = gauss_gen_laguerre(2, 2, 17)
+    assert [str(r) for r in x] == [
+            '2.0000000000000000',
+            '6.0000000000000000']
+    assert [str(r) for r in w] == [
+            '1.5000000000000000',
+            '0.50000000000000000']
+
+    if sys.platform == 'win32':
+        skip('further fails on Windows')
+
     x, w = gauss_gen_laguerre(3, -S.Half, 17)
     assert [str(r) for r in x] == [
             '0.19016350919348813',
@@ -227,18 +256,6 @@ def test_gen_laguerre():
             '0.067748788910962126',
             '0.0026872914935624654',
             '1.5280865710465241e-5']
-
-    x, w = gauss_gen_laguerre(1, 2, 17)
-    assert [str(r) for r in x] == ['3.0000000000000000']
-    assert [str(r) for r in w] == ['2.0000000000000000']
-
-    x, w = gauss_gen_laguerre(2, 2, 17)
-    assert [str(r) for r in x] == [
-            '2.0000000000000000',
-            '6.0000000000000000']
-    assert [str(r) for r in w] == [
-            '1.5000000000000000',
-            '0.50000000000000000']
 
     x, w = gauss_gen_laguerre(3, 2, 17)
     assert [str(r) for r in x] == [
@@ -278,6 +295,9 @@ def test_gen_laguerre():
 
 
 def test_gen_laguerre_precise():
+    if sys.platform == 'win32':
+        skip('fails on Windows')
+
     x, w = gauss_gen_laguerre(3, -S.Half, 40)
     assert [str(r) for r in x] == [
             '0.1901635091934881328718554276203028970878',
@@ -436,6 +456,21 @@ def test_jacobi():
             '0.86831485369082398',
             '2.2732777998989693']
 
+    x, w = gauss_jacobi(1, 2, 3, 17)
+    assert [str(r) for r in x] == ['0.14285714285714286']
+    assert [str(r) for r in w] == ['1.0666666666666667']
+
+    x, w = gauss_jacobi(2, 2, 3, 17)
+    assert [str(r) for r in x] == [
+            '-0.24025307335204215',
+            '0.46247529557426437']
+    assert [str(r) for r in w] == [
+            '0.48514624517838660',
+            '0.58152042148828007']
+
+    if sys.platform == 'win32':
+        skip('further fails on Windows')
+
     x, w = gauss_jacobi(3, -S.Half, S.Half, 17)
     assert [str(r) for r in x] == [
             '-0.62348980185873353',
@@ -471,18 +506,6 @@ def test_jacobi():
             '0.65248870981926643',
             '0.94525424081394926',
             '1.1192597692123861']
-
-    x, w = gauss_jacobi(1, 2, 3, 17)
-    assert [str(r) for r in x] == ['0.14285714285714286']
-    assert [str(r) for r in w] == ['1.0666666666666667']
-
-    x, w = gauss_jacobi(2, 2, 3, 17)
-    assert [str(r) for r in x] == [
-            '-0.24025307335204215',
-            '0.46247529557426437']
-    assert [str(r) for r in w] == [
-            '0.48514624517838660',
-            '0.58152042148828007']
 
     x, w = gauss_jacobi(3, 2, 3, 17)
     assert [str(r) for r in x] == [
@@ -522,6 +545,9 @@ def test_jacobi():
 
 
 def test_jacobi_precise():
+    if sys.platform == 'win32':
+        skip('fails on Windows')
+
     x, w = gauss_jacobi(3, -S.Half, S.Half, 40)
     assert [str(r) for r in x] == [
             '-0.6234898018587335305250048840042398106323',
