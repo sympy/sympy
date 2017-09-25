@@ -299,7 +299,7 @@ class ContinuousPSpace(PSpace):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
-    def probability(self, condition, 
+    def probability(self, condition,
                     dummy_symbol=None, **kwargs):
         z = (dummy_symbol if dummy_symbol else 
                             Dummy('z', real=True, finite=True))
@@ -348,7 +348,7 @@ class ContinuousPSpace(PSpace):
             if len(self.values) == 1:
                 name = str([rv.symbol for rv in self.values][0])
                 dummy = Dummy(name, real=True, finite=True)
-            pdf = self.pdf / self.probability(condition, 
+            pdf = self.pdf / self.probability(condition,
                                               dummy_symbol=dummy,**kwargs)
             density = Lambda(domain.symbols, pdf)
 
