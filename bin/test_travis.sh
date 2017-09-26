@@ -69,6 +69,38 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
+if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
+    cat << EOF | python
+print('Testing NUMPY')
+import sympy
+if not (sympy.test('*numpy*', 'sympy/matrices/', 'sympy/physics/quantum/',
+        'sympy/core/tests/test_sympify.py', 'sympy/utilities/tests/test_lambdify.py',
+        blacklist=['sympy/physics/quantum/tests/test_circuitplot.py']) and sympy.
+        doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
+    raise Exception('Tests failed')
+EOF
+fi
+
+if [[ "${TEST_OPT_DEPENDENCY}" == *"scipy"* ]]; then
+    cat << EOF | python
+print('Testing SCIPY')
+import sympy
+# scipy matrices are tested in numpy testing
+if not sympy.test('sympy/external/tests/test_scipy.py'):
+    raise Exception('Tests failed')
+EOF
+fi
+
+if [[ "${TEST_OPT_DEPENDENCY}" == *"llvmlite"* ]]; then
+    cat << EOF | python
+print('Testing LLVMJIT')
+import sympy
+if not (sympy.test('sympy/printing/tests/test_llvmjit.py')
+        and sympy.doctest('sympy/printing/llvmjitcode.py')):
+    raise Exception('Tests failed')
+EOF
+fi
+
 if [[ "${TEST_OPT_DEPENDENCY}" == *"theano"* ]]; then
     cat << EOF | python
 print('Testing THEANO')
@@ -98,8 +130,8 @@ matplotlib.use("Agg")
 import sympy
 # Unfortunately, we have to use subprocess=False so that the above will be
 # applied, so no hash randomization here.
-if not (sympy.test('sympy/plotting', subprocess=False) and
-    sympy.doctest('sympy/plotting', subprocess=False)):
+if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitplot.py',
+    subprocess=False) and sympy.doctest('sympy/plotting', subprocess=False)):
     raise Exception('Tests failed')
 EOF
 fi
@@ -108,7 +140,8 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"autowrap"* ]]; then
     cat << EOF | python
 print('Testing AUTOWRAP')
 import sympy
-if not sympy.test('sympy/external/tests/test_autowrap.py'):
+if not (sympy.test('sympy/external/tests/test_autowrap.py')
+        and sympy.doctest('sympy/utilities/autowrap.py')):
     raise Exception('Tests failed')
 EOF
 fi
