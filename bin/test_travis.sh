@@ -159,10 +159,9 @@ fi
 
 
 if [[ "${TEST_OPT_DEPENDENCY}" == *"symengine"* ]]; then
-    echo "Testing SYMENGINE"
     export USE_SYMENGINE=1
     cat << EOF | python
-print('Testing SymEngine')
+print('Testing SYMENGINE')
 import sympy
 if not sympy.test('sympy/physics/mechanics'):
     raise Exception('Tests failed')
