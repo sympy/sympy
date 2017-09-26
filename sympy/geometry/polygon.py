@@ -2302,9 +2302,12 @@ class Triangle(Polygon):
         y = [v[0].y, v[1].y, v[2].y]
 
         excenters = {
-            0: simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
-            1: simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
-            2: simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c))
+            "x1": simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
+            "x2": simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
+            "x3": simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c)),
+            "y1": simplify(-a*y[0]+b*y[1]+c*y[2]/(-a+b+c)),
+            "y2": simplify(a*y[0]-b*y[1]+c*y[2]/(a-b+c)),
+            "y3": simplify(a*y[0]+b*y[1]-c*y[2]/(a+b-c))
         }
 
         return excenters
