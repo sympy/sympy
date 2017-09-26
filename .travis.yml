@@ -288,6 +288,7 @@ install:
       pip install --upgrade setuptools;
       python -We:invalid -m compileall -f sympy/ || (echo "ERROR Invalid escape sequence found. You likely need to use a raw string." && exit 1);
       python -We:invalid setup.py install;
+      pip list --format=columns;
     fi
 script:
   # Don't run doctr if the build fails
