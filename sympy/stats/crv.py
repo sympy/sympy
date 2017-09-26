@@ -348,7 +348,7 @@ class ContinuousPSpace(PSpace):
             # this makes sure that they are evaluated separately
             # and in the correct order
             replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
-            clone        = self.xreplace(replacement)
+            clone = self.xreplace(replacement)
             clone_domain = ConditionalContinuousDomain(
                             clone.domain, condition.xreplace(replacement))
 
