@@ -2300,8 +2300,14 @@ class Triangle(Polygon):
         c = s[2].length
         x = [v[0].x, v[1].x, v[2].x]
         y = [v[0].y, v[1].y, v[2].y]
-        test = [x[0], x[1], x[2]]
-        return test
+
+        excenters = {
+            0: simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
+            1: simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
+            2: simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c))
+        }
+
+        return excenters
 
     @property
     def medians(self):
