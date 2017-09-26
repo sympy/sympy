@@ -347,9 +347,8 @@ class ContinuousPSpace(PSpace):
             # from the variables outside the integral
             # this makes sure that they are evaluated separately
             # and in the correct order
-            to_dummy = lambda rv: Dummy(str(rv.symbol))
-            replacement = {rv.symbol: to_dummy(rv) for rv in self.values}
-            clone = self.xreplace(replacement)
+            replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
+            clone        = self.xreplace(replacement)
             clone_domain = ConditionalContinuousDomain(
                             clone.domain, condition.xreplace(replacement))
 
