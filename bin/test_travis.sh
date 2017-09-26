@@ -69,7 +69,7 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-if [[ "${TEST_THEANO}" == "true" ]]; then
+if [[ "${TEST_OPT_DEPENDENCY}" == *"theano"* ]]; then
     cat << EOF | python
 print('Testing THEANO')
 import sympy
@@ -78,7 +78,7 @@ if not sympy.test('*theano*'):
 EOF
 fi
 
-if [[ "${TEST_GMPY}" == "true" ]]; then
+if [[ "${TEST_OPT_DEPENDENCY}" == *"gmpy"* ]]; then
     cat << EOF | python
 print('Testing GMPY')
 import sympy
@@ -87,7 +87,7 @@ if not (sympy.test('sympy/polys/') and sympy.doctest('sympy/polys/')):
 EOF
 fi
 
-if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
+if [[ "${TEST_OPT_DEPENDENCY}" == *"matplotlib"* ]]; then
     cat << EOF | python
 print('Testing MATPLOTLIB')
 # Set matplotlib so that it works correctly in headless Travis. We have to do
@@ -104,7 +104,7 @@ if not (sympy.test('sympy/plotting', subprocess=False) and
 EOF
 fi
 
-if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+if [[ "${TEST_OPT_DEPENDENCY}" == *"autowrap"* ]]; then
     cat << EOF | python
 print('Testing AUTOWRAP')
 import sympy
@@ -125,7 +125,7 @@ EOF
 fi
 
 
-if [[ "${TEST_SYMENGINE}" == "true" ]]; then
+if [[ "${TEST_OPT_DEPENDENCY}" == *"symengine"* ]]; then
     echo "Testing SYMENGINE"
     export USE_SYMENGINE=1
     cat << EOF | python
