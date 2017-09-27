@@ -587,11 +587,17 @@ def test_issue_8449():
 
 def test_simplify():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    r = S(1) < -x
-    # until relationals have an _eval_simplify method
-    # if there is no simplification to do on either side
-    # the only the canonical form is returned
-    assert simplify(r) == r.canonical
+    r = S(1) < x
+    # canonical operations are not the same as simplification,
+    # so if there is no simplification, canonicalization will
+    # not be done
+    assert simplify(r) != r.canonical
+    # this is not a random test; in _eval_simplify
+    # this will simplify to S.false and that is the
+    # reason for the 'if r.is_Relational' in Relational's
+    # _eval_simplify routine
+    assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
+        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
 
 
 def test_equals():
