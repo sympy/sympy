@@ -2291,12 +2291,7 @@ class PermutationGroup(Basic):
 
         # rewrite result so that block representatives are minimal
         new_reps = {}
-        for i, r in enumerate(parents):
-            if r not in new_reps:
-                new_reps[r] = i
-            if new_reps[r] != r:
-                parents[i] = new_reps[r]
-        return parents
+        return [new_reps.setdefault(r, i) for i, r in enumerate(parents)]
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
