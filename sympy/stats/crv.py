@@ -345,8 +345,8 @@ class ContinuousPSpace(PSpace):
             # this makes sure that they are evaluated separately
             # and in the correct order
             replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
-            pdf = self.pdf / domain.integrate(self.pdf, **kwargs)    \
-                                             .xreplace(replacement)
+            norm = domain.integrate(self.pdf, **kwargs)
+            pdf = self.pdf / norm.xreplace(replacement)
             density = Lambda(domain.symbols, pdf)
 
         return ContinuousPSpace(domain, density)
