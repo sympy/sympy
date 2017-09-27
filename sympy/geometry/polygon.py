@@ -2293,6 +2293,7 @@ class Triangle(Polygon):
         [1] http://mathworld.wolfram.com/Excircles.html
 
         """
+
         s = self.sides
         v = self.vertices
         a = s[0].length
