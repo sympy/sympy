@@ -1,21 +1,34 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple
-from sympy.core.relational import Equality, Relational
+from sympy.core import Basic, S, Function, diff, Tuple, Symbol
+from sympy.core.basic import as_Basic
+from sympy.core.relational import Equality, Relational, _canonical
+from sympy.core.sympify import _sympify, SympifyError
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not, Or,
-    true, false)
+from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
+    true, false, Not, Or, ITE, simplify_logic)
 from sympy.core.compatibility import default_sort_key, range
+from sympy.utilities.misc import func_name, filldedent
 
 
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
     def __new__(cls, expr, cond):
+        expr = as_Basic(expr)
         if cond == True:
             return Tuple.__new__(cls, expr, true)
         elif cond == False:
             return Tuple.__new__(cls, expr, false)
+        elif isinstance(cond, Basic) and cond.has(Piecewise):
+            cond = piecewise_fold(cond)
+            if isinstance(cond, Piecewise):
+                cond = cond.rewrite(ITE)
+
+        if not isinstance(cond, Boolean):
+            raise TypeError(filldedent('''
+                Second argument must be a Boolean,
+                not `%s`''' % func_name(cond)))
         return Tuple.__new__(cls, expr, cond)
 
     @property
@@ -70,20 +83,43 @@ class Piecewise(Function):
     Examples
     ========
 
-      >>> from sympy import Piecewise, log
-      >>> from sympy.abc import x
-      >>> f = x**2
-      >>> g = log(x)
-      >>> p = Piecewise( (0, x<-1), (f, x<=1), (g, True))
-      >>> p.subs(x,1)
-      1
-      >>> p.subs(x,5)
-      log(5)
+    >>> from sympy import Piecewise, log, ITE, piecewise_fold
+    >>> from sympy.abc import x, y
+    >>> f = x**2
+    >>> g = log(x)
+    >>> p = Piecewise((0, x < -1), (f, x <= 1), (g, True))
+    >>> p.subs(x,1)
+    1
+    >>> p.subs(x,5)
+    log(5)
+
+    Booleans can contain Piecewise elements:
+
+    >>> cond = (x < y).subs(x, Piecewise((2, x < 0), (3, True))); cond
+    Piecewise((2, x < 0), (3, True)) < y
+
+    The folded version of this results in a Piecewise whose
+    expressions are Booleans:
+
+    >>> folded_cond = piecewise_fold(cond); folded_cond
+    Piecewise((2 < y, x < 0), (3 < y, True))
+
+    When a Boolean containing Piecewise (like cond) or a Piecewise
+    with Boolean expressions (like folded_cond) is used as a condition,
+    it is converted to an equivalent ITE object:
+
+    >>> Piecewise((1, folded_cond))
+    Piecewise((1, ITE(x < 0, y > 2, y > 3)))
+
+    When a condition is an ITE, it will be converted to a simplified
+    Boolean expression:
+
+    >>> piecewise_fold(_)
+    Piecewise((1, ((x >= 0) | (y > 2)) & ((y > 3) | (x < 0))))
 
     See Also
     ========
-
-    piecewise_fold
+    piecewise_fold, ITE
     """
 
     nargs = None
@@ -96,14 +132,10 @@ class Piecewise(Function):
             # ec could be a ExprCondPair or a tuple
             pair = ExprCondPair(*getattr(ec, 'args', ec))
             cond = pair.cond
-            if cond == false:
+            if cond is false:
                 continue
-            if not isinstance(cond, (bool, Relational, Boolean)):
-                raise TypeError(
-                    "Cond %s is of type %s, but must be a Relational,"
-                    " Boolean, or a built-in bool." % (cond, type(cond)))
             newargs.append(pair)
-            if cond == True:
+            if cond is true:
                 break
 
         if options.pop('evaluate', True):
@@ -442,21 +474,19 @@ class Piecewise(Function):
         return self.func(*[(e**s, c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
-        """
-        Piecewise conditions may contain bool which are not of Basic type.
-        """
+        # this is strictly not necessary, but we can keep track
+        # of whether True or False conditions arise and be
+        # somewhat more efficient by avoiding other substitutions
+        # and avoiding invalid conditions that appear after a
+        # True condition
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-            if isinstance(c, bool):
-                pass
-            elif isinstance(c, Basic):
-                c = c._subs(old, new)
+            c = c._subs(old, new)
             if c != False:
                 e = e._subs(old, new)
-            args[i] = e, c
+            args[i] = (e, c)
             if c == True:
-                return self.func(*args)
-
+                break
         return self.func(*args)
 
     def _eval_transpose(self):
@@ -504,10 +534,12 @@ class Piecewise(Function):
         if cond == True:
             return True
         if isinstance(cond, Equality):
-            diff = cond.lhs - cond.rhs
-            if diff.is_commutative:
-                return diff.is_zero
-        return None
+            try:
+                diff = cond.lhs - cond.rhs
+                if diff.is_commutative:
+                    return diff.is_zero
+            except TypeError:
+                pass
 
     def as_expr_set_pairs(self):
         exp_sets = []
@@ -518,11 +550,57 @@ class Piecewise(Function):
             exp_sets.append((expr, cond_int))
         return exp_sets
 
+    def _eval_rewrite_as_ITE(self, *args):
+        byfree = {}
+        args = list(args)
+        default = any(c == True for b, c in args)
+        for i, (b, c) in enumerate(args):
+            if not isinstance(b, Boolean) and b != True:
+                raise TypeError(filldedent('''
+                    Expecting Boolean or bool but got `%s`
+                    ''' % func_name(b)))
+            if c == True:
+                break
+            # loop over independent conditions for this b
+            for c in c.args if isinstance(c, Or) else [c]:
+                free = c.free_symbols
+                x = free.pop()
+                try:
+                    byfree[x] = byfree.setdefault(
+                        x, S.EmptySet).union(c.as_set())
+                except NotImplementedError:
+                    if not default:
+                        raise NotImplementedError(filldedent('''
+                            A method to determine whether a multivariate
+                            conditional is consistent with a complete coverage
+                            of all variables has not been implemented so the
+                            rewrite is being stopped after encountering `%s`.
+                            This error would not occur if a default expression
+                            like `(foo, True)` were given.
+                            ''' % c))
+                if byfree[x] in (S.UniversalSet, S.Reals):
+                    # collapse the ith condition to True and break
+                    args[i] = list(args[i])
+                    c = args[i][1] = True
+                    break
+            if c == True:
+                break
+        if c != True:
+            raise ValueError(filldedent('''
+                Conditions must cover all reals or a final default
+                condition `(foo, True)` must be given.
+                '''))
+        last, _ = args[i]  # ignore all past ith arg
+        for a, c in reversed(args[:i]):
+            last = ITE(c, a, last)
+        return _canonical(last)
+
 
 def piecewise_fold(expr):
     """
     Takes an expression containing a piecewise function and returns the
-    expression in piecewise form.
+    expression in piecewise form. In addition, any ITE conditions are
+    rewritten in negation normal form and simplified.
 
     Examples
     ========
@@ -546,6 +624,13 @@ def piecewise_fold(expr):
         for e, c in expr.args:
             if not isinstance(e, Piecewise):
                 e = piecewise_fold(e)
+            # we don't keep Piecewise in condition because
+            # it has to be checked to see that it's complete
+            # and we convert it to ITE at that time
+            assert not c.has(Piecewise)  # pragma: no cover
+            if isinstance(c, ITE):
+                c = c.to_nnf()
+                c = simplify_logic(c, form='cnf')
             if isinstance(e, Piecewise):
                 new_args.extend([(piecewise_fold(ei), And(ci, c))
                     for ei, ci in e.args])
@@ -556,7 +641,7 @@ def piecewise_fold(expr):
         folded = list(map(piecewise_fold, expr.args))
         for ec in cartes(*[
                 (i.args if isinstance(i, Piecewise) else
-                 [(i, S.true)]) for i in folded]):
+                 [(i, true)]) for i in folded]):
             e, c = zip(*ec)
             new_args.append((expr.func(*e), And(*c)))
 

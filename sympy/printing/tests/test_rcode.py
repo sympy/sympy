@@ -188,9 +188,9 @@ def test_rcode_Piecewise_deep():
 
 
 def test_rcode_ITE():
-    expr = ITE(x < 1, x, x**2)
+    expr = ITE(x < 1, y, z)
     p = rcode(expr)
-    ref="ifelse(x < 1,x,x^2)"
+    ref="ifelse(x < 1,y,z)"
     assert p == ref
 
 

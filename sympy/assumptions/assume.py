@@ -111,6 +111,15 @@ class AppliedPredicate(Boolean):
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
 
+    @property
+    def binary_symbols(self):
+        from sympy.core.relational import Eq, Ne
+        if self.func.name in ['is_true', 'is_false']:
+            i = self.arg
+            if i.is_Boolean or i.is_Symbol or isinstance(i, (Eq, Ne)):
+                return i.binary_symbols
+        return set()
+
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.

@@ -286,6 +286,8 @@ class Symbol(AtomicExpr, Boolean):
     def free_symbols(self):
         return {self}
 
+    binary_symbols = free_symbols  # in this case, not always
+
 
 class Dummy(Symbol):
     """Dummy symbols are each unique, even if they have the same name:

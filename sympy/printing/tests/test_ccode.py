@@ -251,13 +251,13 @@ def test_ccode_Piecewise_deep():
 
 
 def test_ccode_ITE():
-    expr = ITE(x < 1, x, x**2)
+    expr = ITE(x < 1, y, z)
     assert ccode(expr) == (
             "((x < 1) ? (\n"
-            "   x\n"
+            "   y\n"
             ")\n"
             ": (\n"
-            "   pow(x, 2)\n"
+            "   z\n"
             "))")
 
 

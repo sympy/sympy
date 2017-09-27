@@ -1,4 +1,4 @@
-from sympy import Symbol, Contains, S, Interval, FiniteSet, oo
+from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
 
 
 def test_contains_basic():

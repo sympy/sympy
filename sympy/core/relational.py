@@ -235,6 +235,10 @@ class Relational(Boolean, Expr, EvalfMixin):
 
         return solve_univariate_inequality(self, sym, relational=False)
 
+    @property
+    def binary_symbols(self):
+        # override where necessary
+        return set()
 
 Rel = Relational
 
@@ -381,6 +385,15 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
+    @property
+    def binary_symbols(self):
+        if S.true in self.args or S.false in self.args:
+            if self.lhs.is_Symbol:
+                return set([self.lhs])
+            elif self.rhs.is_Symbol:
+                return set([self.rhs])
+        return set()
+
 Eq = Equality
 
 
@@ -434,6 +447,15 @@ class Unequality(Relational):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs != rhs)
+
+    @property
+    def binary_symbols(self):
+        if S.true in self.args or S.false in self.args:
+            if self.lhs.is_Symbol:
+                return set([self.lhs])
+            elif self.rhs.is_Symbol:
+                return set([self.rhs])
+        return set()
 
 Ne = Unequality
 
