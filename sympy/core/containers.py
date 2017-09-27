@@ -13,6 +13,8 @@ from sympy.core.compatibility import as_int, range
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
+import collections
+
 
 class Tuple(Basic):
     """
@@ -264,3 +266,53 @@ class Dict(Basic):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
+
+
+class OrderedSet(collections.MutableSet):
+    def __init__(self, iterable=None):
+        if iterable:
+            self.map = collections.OrderedDict((item, None) for item in iterable)
+        else:
+            self.map = collections.OrderedDict()
+
+    def __len__(self):
+        return len(self.map)
+
+    def __contains__(self, key):
+        return key in self.map
+
+    def add(self, key):
+        self.map[key] = None
+
+    def discard(self, key):
+        self.map.pop(key)
+
+    def pop(self, last=True):
+        return self.map.popitem(last=last)[0]
+
+    def __iter__(self):
+        for key in self.map.keys():
+            yield key
+
+    def __repr__(self):
+        if not self.map:
+            return '%s()' % (self.__class__.__name__,)
+        return '%s(%r)' % (self.__class__.__name__, list(self.map.keys()))
+
+    def intersection(self, other):
+        result = []
+        for val in self:
+            if val in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def difference(self, other):
+        result = []
+        for val in self:
+            if val not in other:
+                result.append(val)
+        return self.__class__(result)
+
+    def update(self, iterable):
+        for val in iterable:
+            self.add(val)

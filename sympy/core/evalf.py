@@ -751,9 +751,9 @@ def evalf_trig(v, prec, options):
     TODO: should also handle tan of complex arguments.
     """
     from sympy import cos, sin
-    if v.func is cos:
+    if isinstance(v, cos):
         func = mpf_cos
-    elif v.func is sin:
+    elif isinstance(v, sin):
         func = mpf_sin
     else:
         raise NotImplementedError
@@ -767,9 +767,9 @@ def evalf_trig(v, prec, options):
             v = v.subs(options['subs'])
         return evalf(v._eval_evalf(prec), prec, options)
     if not re:
-        if v.func is cos:
+        if isinstance(v, cos):
             return fone, None, prec, None
-        elif v.func is sin:
+        elif isinstance(v, sin):
             return None, None, None, None
         else:
             raise NotImplementedError

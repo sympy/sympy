@@ -2749,7 +2749,7 @@ def test_user_infinitesimals():
 
 def test_issue_7081():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
-    assert dsolve(eq) == Eq(f(x), (C1 - x**2)/(C1 + x**2))
+    assert dsolve(eq) == Eq(f(x), -1/(-C1 + x**2)*(C1 + x**2))
 
 
 def test_2nd_power_series_ordinary():

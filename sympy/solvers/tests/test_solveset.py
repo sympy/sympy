@@ -1570,6 +1570,11 @@ def test_issue_12429():
     assert eq == sol
 
 
+def test_solveset_arg():
+    assert solveset(arg(x), x, S.Reals)  == Interval.open(0, oo)
+    assert solveset(arg(4*x -3), x) == Interval.open(3/4, oo)
+
+
 def test__is_finite_with_finite_vars():
     f = _is_finite_with_finite_vars
     # issue 12482

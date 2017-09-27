@@ -206,9 +206,6 @@ class MpmathPrinter(PythonCodePrinter):
         [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
     ))
 
-    def _print_Integer(self, e):
-        return '%s(%d)' % (self._module_format('mpmath.mpf'), e)
-
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
         # the caller of the lambdified function will have set it to sufficient
