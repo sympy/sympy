@@ -678,7 +678,7 @@ class Pow(Expr):
                     new_l.append(Pow(self.base, Add(*o_al), evaluate=False))
                     return Mul(*new_l)
 
-        if isinstance(old,exp) and self.exp.is_real and self.base.is_positive:
+        if isinstance(old, exp) and self.exp.is_real and self.base.is_positive:
             ct1 = old.args[0].as_independent(Symbol, as_Add=False)
             ct2 = (self.exp*log(self.base)).as_independent(
                 Symbol, as_Add=False)
