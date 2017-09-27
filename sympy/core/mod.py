@@ -93,14 +93,14 @@ class Mod(Function):
             return rv
 
         # denest
-		if isinstance(p,cls):
+        if isinstance(p, cls):
             qinner = p.args[1]
             if qinner % q == 0:
                 return cls(p.args[0], q)
             elif (qinner*(q - qinner)).is_nonnegative:
                 # |qinner| < |q| and have same sign
                 return p
-		elif isinstance((-p),cls):
+        elif isinstance((-p), cls):
             qinner = (-p).args[1]
             if qinner % q == 0:
                 return cls(-(-p).args[0], q)
