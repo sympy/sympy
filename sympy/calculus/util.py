@@ -10,6 +10,8 @@ from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
 from sympy.sets.conditionset import ConditionSet
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
+from sympy.simplify.radsimp import denom
+from sympy.polys.rationaltools import together
 
 def continuous_domain(f, symbol, domain):
     """
@@ -37,8 +39,6 @@ def continuous_domain(f, symbol, domain):
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
     from sympy.solvers.solveset import solveset, _has_rational_power
-    from sympy import denom
-    from sympy import together
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
