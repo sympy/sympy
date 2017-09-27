@@ -212,11 +212,11 @@ class Pow(Expr):
                 return S.One
             else:
                 # recognize base as E
-				if not e.is_Atom and b is not S.Expl and not(instance(b,exp_polar)):
+                if not e.is_Atom and b is not S.Expl and not(instance(b,exp_polar)):
                     from sympy import numer, denom, log, sign, im, factor_terms
                     c, ex = factor_terms(e, sign=False).as_coeff_Mul()
                     den = denom(ex)
-					if isinstance(den,log) and den.args[0] == b:
+                    if isinstance(den, log) and den.args[0] == b:
                         return S.Exp1**(c*numer(ex))
                     elif den.is_Add:
                         s = sign(im(b))
