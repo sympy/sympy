@@ -13,14 +13,10 @@ from .pretty.pretty_symbology import greek_unicode
 from .conventions import split_super_sub, requires_partial
 
 
-class MathMLPrinter(Printer):
-    """Prints an expression to the MathML markup language
-
-    Whenever possible tries to use Content markup and not Presentation markup.
-
-    References: https://www.w3.org/TR/MathML3/
+class DomPrinter(Printer):
     """
-    printmethod = "_mathml"
+    Base class for printers printing XML-like output.
+    """
     _default_settings = {
         "order": None,
         "encoding": "utf-8"
@@ -40,6 +36,16 @@ class MathMLPrinter(Printer):
         xmlbstr = unistr.encode('ascii', 'xmlcharrefreplace')
         res = xmlbstr.decode()
         return res
+
+
+class MathMLPrinter(DomPrinter):
+    """Prints an expression to the MathML markup language
+
+    Whenever possible tries to use Content markup and not Presentation markup.
+
+    References: https://www.w3.org/TR/MathML3/
+    """
+    printmethod = "_mathml"
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
