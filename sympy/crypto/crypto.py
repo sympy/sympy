@@ -344,7 +344,7 @@ def decipher_affine(msg, key, symbols=None):
 
 
 def encipher_substitution(msg, old, new=None):
-    """
+    r"""
     Returns the ciphertext obtained by replacing each character that
     appears in ``old`` with the corresponding character in ``new``.
     If ``old`` is a mapping, then new is ignored and the replacements
@@ -553,6 +553,7 @@ def encipher_vigenere(msg, key, symbols=None):
     .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
     .. [2] http://web.archive.org/web/20071116100808/
        http://filebox.vt.edu/users/batman/kryptos.html
+       (short URL: https://goo.gl/ijr22d)
 
     """
     msg, key, A = _prep(msg, key, symbols)
@@ -1406,7 +1407,7 @@ morse_char = {
     "---..": "8", "----.": "9",
     ".-.-.-": ".", "--..--": ",",
     "---...": ":", "-.-.-.": ";",
-    "..--..": "?", "-...-": "-",
+    "..--..": "?", "-....-": "-",
     "..--.-": "_", "-.--.": "(",
     "-.--.-": ")", ".----.": "'",
     "-...-": "=", ".-.-.": "+",
@@ -1741,7 +1742,7 @@ def lfsr_connection_polynomial(s):
 
 
 def elgamal_private_key(digit=10, seed=None):
-    """
+    r"""
     Return three number tuple as private key.
 
     Elgamal encryption is based on the mathmatical problem
@@ -1812,7 +1813,7 @@ def elgamal_public_key(key):
 
 
 def encipher_elgamal(i, key, seed=None):
-    """
+    r"""
     Encrypt message with public key
 
     ``i`` is a plaintext message expressed as an integer.
@@ -1906,7 +1907,7 @@ def decipher_elgamal(msg, key):
 ################ Diffie-Hellman Key Exchange  #########################
 
 def dh_private_key(digit=10, seed=None):
-    """
+    r"""
     Return three integer tuple as private key.
 
     Diffie-Hellman key exchange is based on the mathematical problem

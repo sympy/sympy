@@ -129,6 +129,7 @@ def test_evalf_logs():
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
     assert NS('log(-1 + 0.00001)', 2) == '-1.0e-5 + 3.1*I'
     assert NS('log(100, 10, evaluate=False)', 15) == '2.00000000000000'
+    assert NS('-2*I*log(-(-1)**(S(1)/9))', 15) == '-5.58505360638185'
 
 
 def test_evalf_trig():
@@ -225,6 +226,9 @@ def test_evalf_bugs():
     #issue 5412
     assert ((oo*I).n() == S.Infinity*I)
     assert ((oo+oo*I).n() == S.Infinity + S.Infinity*I)
+
+    #issue 11518
+    assert NS(2*x**2.5, 5) == '2.0000*x**2.5000'
 
 
 def test_evalf_integer_parts():

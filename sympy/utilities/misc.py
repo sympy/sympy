@@ -44,7 +44,7 @@ def rawlines(s):
     >>> from sympy.utilities.misc import rawlines
     >>> from sympy import TableForm
     >>> s = str(TableForm([[1, 10]], headings=(None, ['a', 'bee'])))
-    >>> print(rawlines(s)) # the \\ appears as \ when printed
+    >>> print(rawlines(s))
     (
         'a bee\\n'
         '-----\\n'
@@ -343,15 +343,7 @@ def translate(s, a, b=None, c=None):
     >>> translate(abc, {'ab': 'x', 'bc': 'y'}) in ('xc', 'ay')
     True
     """
-    from sympy.core.compatibility import maketrans
-
-    # when support for Python 2 is dropped, this try/except can be
-    #removed
-    try:
-        ''.translate(None, '')
-        py3 = False
-    except TypeError:
-        py3 = True
+    from sympy.core.compatibility import maketrans, PY3
 
     mr = {}
     if a is None:
@@ -374,7 +366,7 @@ def translate(s, a, b=None, c=None):
                 a = b = ''
         else:
             assert len(a) == len(b)
-    if py3:
+    if PY3:
         if c:
             s = s.translate(maketrans('', '', c))
         s = replace(s, mr)

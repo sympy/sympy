@@ -47,6 +47,17 @@ def test_general_function():
     assert edxdx == diff(diff(nu(x), x), x)
     assert edxdy == 0
 
+def test_general_function_nullary():
+    nu = Function('nu')
+
+    e = nu()
+    edx = e.diff(x)
+    edxdx = e.diff(x).diff(x)
+    assert e == nu()
+    assert edx != nu()
+    assert edx == 0
+    assert edxdx == 0
+
 
 def test_derivative_subs_bug():
     e = diff(g(x), x)
@@ -98,6 +109,15 @@ def test_diff_symbols():
 def test_Function():
     class myfunc(Function):
         @classmethod
+        def eval(cls):  # zero args
+            return
+
+    assert myfunc.nargs == FiniteSet(0)
+    assert myfunc().nargs == FiniteSet(0)
+    raises(TypeError, lambda: myfunc(x).nargs)
+
+    class myfunc(Function):
+        @classmethod
         def eval(cls, x):  # one arg
             return
 
@@ -136,6 +156,12 @@ def test_Lambda():
     assert e(x) == x**2
     assert e(y) == y**2
 
+    assert Lambda((), 42)() == 42
+    assert Lambda((), 42) == Lambda((), 42)
+    assert Lambda((), 42) != Lambda((), 43)
+    assert Lambda((), f(x))() == f(x)
+    assert Lambda((), 42).nargs == FiniteSet(0)
+
     assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
@@ -161,6 +187,7 @@ def test_Lambda():
     assert Lambda(x, 1)(1) is S.One
 
 
+
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
     assert Lambda(x, 2*x) is not S.IdentityFunction
@@ -170,11 +197,14 @@ def test_IdentityFunction():
 def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
     assert Lambda(x, x*y).free_symbols == {y}
+    assert Lambda((), 42).free_symbols == set()
+    assert Lambda((), x*y).free_symbols == {x,y}
 
 
 def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
     raises(TypeError, lambda: Lambda((x, y), x + y)(x))
+    raises(TypeError, lambda: Lambda((), 42)(x))
 
 
 def test_Lambda_equality():
@@ -698,6 +728,7 @@ def test_mexpand():
     assert _mexpand(1) is S.One
     assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
 
+
 def test_issue_8469():
     # This should not take forever to run
     N = 40
@@ -707,6 +738,7 @@ def test_issue_8469():
     ws = symbols(['w%i'%i for i in range(N)])
     import functools
     expr = functools.reduce(g,ws)
+
 
 def test_should_evalf():
     # This should not take forever to run (see #8506)
@@ -804,3 +836,56 @@ def test_Derivative_as_finite_difference():
     xm, xp, ym, yp = x-half, x+half, y-half, y+half
     ref2 = f(xm, ym) + f(xp, yp) - f(xp, ym) - f(xm, yp)
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
+
+
+def test_issue_11159():
+    # Tests Application._eval_subs
+    expr1 = E
+    expr0 = expr1 * expr1
+    expr1 = expr0.subs(expr1,expr0)
+    assert expr0 == expr1
+
+
+def test_issue_12005():
+    e1 = Subs(Derivative(f(x), x), (x,), (x,))
+    assert e1.diff(x) == Derivative(f(x), x, x)
+    e2 = Subs(Derivative(f(x), x), (x,), (x**2 + 1,))
+    assert e2.diff(x) == 2*x*Subs(Derivative(f(x), x, x), (x,), (x**2 + 1,))
+    e3 = Subs(Derivative(f(x) + y**2 - y, y), (y,), (y**2,))
+    assert e3.diff(y) == 4*y
+    e4 = Subs(Derivative(f(x + y), y), (y,), (x**2))
+    assert e4.diff(y) == S.Zero
+    e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
+    assert e5.diff(x) == Derivative(f(x), x, x)
+    assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+
+def test_undefined_function_eq():
+    f = Function('f')
+    f2 = Function('f')
+    g = Function('g')
+    f_real = Function('f', is_real=True)
+
+    # This test may only be meaningful if the cache is turned off
+    assert f == f2
+    assert hash(f) == hash(f2)
+    assert f == f
+
+    assert f != g
+
+    assert f != f_real
+
+def test_function_assumptions():
+    x = Symbol('x')
+    f = Function('f')
+    f_real = Function('f', real=True)
+
+    assert f != f_real
+    assert f(x) != f_real(x)
+
+    assert f(x).is_real is None
+    assert f_real(x).is_real is True
+
+    # Can also do it this way, but it won't be equal to f_real because of the
+    # way UndefinedFunction.__new__ works.
+    f_real2 = Function('f', is_real=True)
+    assert f_real2(x).is_real is True

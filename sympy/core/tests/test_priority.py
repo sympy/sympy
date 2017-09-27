@@ -47,6 +47,9 @@ class Higher(Expr):
     def __rdiv__(self, other):
         return self.result
 
+    def _eval_is_commutative(self):
+        return True
+
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 

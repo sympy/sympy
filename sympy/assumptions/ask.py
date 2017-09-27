@@ -1232,7 +1232,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     False
     >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
     True
-    >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
+    >>> ask(Q.prime(4*x), Q.integer(x))
     False
 
     **Remarks**

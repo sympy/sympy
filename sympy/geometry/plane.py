@@ -7,12 +7,13 @@ Plane
 """
 from __future__ import division, print_function
 
+from sympy import simplify
 from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.solvers import solve
+from sympy.solvers import solve, linsolve
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 
@@ -279,6 +280,31 @@ class Plane(GeometryEntity):
             f = sqrt(sum([i**2 for i in self.normal_vector]))
             return abs(e / f)
 
+    def equals(self, o):
+        """
+        Returns True if self and o are the same mathematical entities.
+
+        Examples
+        ========
+
+        >>> from sympy import Plane, Point3D
+        >>> a = Plane(Point3D(1, 2, 3), normal_vector=(1, 1, 1))
+        >>> b = Plane(Point3D(1, 2, 3), normal_vector=(2, 2, 2))
+        >>> c = Plane(Point3D(1, 2, 3), normal_vector=(-1, 4, 6))
+        >>> a.equals(a)
+        True
+        >>> a.equals(b)
+        True
+        >>> a.equals(c)
+        False
+        """
+        if isinstance(o, Plane):
+            a = self.equation()
+            b = o.equation()
+            return simplify(a / b).is_constant()
+        else:
+            return False
+
     def equation(self, x=None, y=None, z=None):
         """The equation of the Plane.
 
@@ -366,7 +392,7 @@ class Plane(GeometryEntity):
                         return []  # e.g. a segment might not intersect a plane
                     return [p]
         if isinstance(o, Plane):
-            if o == self:
+            if self.equals(o):
                 return [self]
             if self.is_parallel(o):
                 return []
@@ -376,21 +402,9 @@ class Plane(GeometryEntity):
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
                 e = o.equation(x, y, z)
-
-                # TODO: Replace solve with solveset, when this line is tested
-                f = solve((d.subs(z, 0), e.subs(z, 0)), [x, y])
-                if len(f) == 2:
-                    return [Line3D(Point3D(f[x], f[y], 0), direction_ratio=c)]
-
-                # TODO: Replace solve with solveset, when this line is tested
-                g = solve((d.subs(y, 0), e.subs(y, 0)),[x, z])
-                if len(g) == 2:
-                    return [Line3D(Point3D(g[x], 0, g[z]), direction_ratio=c)]
-
-                # TODO: Replace solve with solveset, when this line is tested
-                h = solve((d.subs(x, 0), e.subs(x, 0)),[y, z])
-                if len(h) == 2:
-                    return [Line3D(Point3D(0, h[y], h[z]), direction_ratio=c)]
+                result = list(linsolve([d, e], x, y, z))[0]
+                for i in (x, y, z): result = result.subs(i, 0)
+                return [Line3D(Point3D(result), direction_ratio=c)]
 
     def is_coplanar(self, o):
         """ Returns True if `o` is coplanar with self, else False.

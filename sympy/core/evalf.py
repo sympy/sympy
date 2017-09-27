@@ -32,7 +32,9 @@ rnd = round_nearest
 
 
 def bitcount(n):
-    return mpmath_bitcount(int(n))
+    """Return smallest integer, b, such that |n|/2**b < 1.
+    """
+    return mpmath_bitcount(abs(int(n)))
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
@@ -209,10 +211,18 @@ def complex_accuracy(result):
 
 def get_abs(expr, prec, options):
     re, im, re_acc, im_acc = evalf(expr, prec + 2, options)
+
     if not re:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
-        return libmp.mpc_abs((re, im), prec), None, re_acc, None
+        if expr.is_number:
+            abs_expr, _, acc, _ = evalf(abs(N(expr, prec + 2)),
+                                        prec + 2, options)
+            return abs_expr, None, acc, None
+        else:
+            if 'subs' in options:
+                return libmp.mpc_abs((re, im), prec), None, re_acc, None
+            return abs(expr), None, prec, None
     elif re:
         return mpf_abs(re), None, re_acc, None
     else:
@@ -741,9 +751,9 @@ def evalf_trig(v, prec, options):
     TODO: should also handle tan of complex arguments.
     """
     from sympy import cos, sin
-    if v.func is cos:
+    if isinstance(v, cos):
         func = mpf_cos
-    elif v.func is sin:
+    elif isinstance(v, sin):
         func = mpf_sin
     else:
         raise NotImplementedError
@@ -757,9 +767,9 @@ def evalf_trig(v, prec, options):
             v = v.subs(options['subs'])
         return evalf(v._eval_evalf(prec), prec, options)
     if not re:
-        if v.func is cos:
+        if isinstance(v, cos):
             return fone, None, prec, None
-        elif v.func is sin:
+        elif isinstance(v, sin):
             return None, None, None, None
         else:
             raise NotImplementedError
@@ -815,7 +825,7 @@ def evalf_log(expr, prec, options):
 
     re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
-    if prec - size > workprec:
+    if prec - size > workprec and re != fzero:
         # We actually need to compute 1+x accurately, not x
         arg = Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, _, _ = evalf_add(arg, prec, options)
@@ -1461,7 +1471,7 @@ class EvalfMixin(object):
 
 
 def N(x, n=15, **options):
-    """
+    r"""
     Calls x.evalf(n, \*\*options).
 
     Both .n() and N() are equivalent to .evalf(); use the one that you like better.

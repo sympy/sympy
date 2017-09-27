@@ -45,7 +45,7 @@ def components(f, x):
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)
-    set([x, sin(x), cos(x)])
+    {x, sin(x), cos(x)}
 
     See Also
     ========

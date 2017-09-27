@@ -16,7 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
-from sympy.utilities.pytest import raises, XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1410,6 +1410,7 @@ def test_hermitian():
         Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) is True
 
 
+@slow
 def test_imaginary():
     assert ask(Q.imaginary(x)) is None
     assert ask(Q.imaginary(x), Q.real(x)) is False
@@ -1705,10 +1706,12 @@ def test_prime():
     assert ask(Q.prime(x), Q.integer(x)) is None
     assert ask(Q.prime(x), ~Q.integer(x)) is False
 
-    assert ask(Q.prime(2*x), Q.integer(x)) is False
+    assert ask(Q.prime(2*x), Q.integer(x)) is None
     assert ask(Q.prime(x*y)) is None
     assert ask(Q.prime(x*y), Q.prime(x)) is None
-    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is False
+    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.prime(4*x), Q.integer(x)) is False
+    assert ask(Q.prime(4*x)) is None
 
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False
@@ -1751,6 +1754,12 @@ def test_positive():
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
+    assert ask(Q.positive(exp(x)), Q.imaginary(x)) is None
+    assert ask(Q.positive(exp(2*pi*I, evaluate=False)), Q.imaginary(x)) is True
+    assert ask(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x)) is True
+    assert ask(Q.positive(exp(x*pi*I)), Q.even(x)) is True
+    assert ask(Q.positive(exp(x*pi*I)), Q.odd(x)) is False
+    assert ask(Q.positive(exp(x*pi*I)), Q.real(x)) is None
 
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
@@ -1776,6 +1785,7 @@ def test_nonpositive():
     assert ask(Q.nonpositive(sqrt(-1))) is False
     assert ask(Q.nonpositive(x), Q.imaginary(x)) is False
 
+
 def test_nonnegative():
     assert ask(Q.nonnegative(-1)) is False
     assert ask(Q.nonnegative(0))
@@ -1785,7 +1795,7 @@ def test_nonnegative():
     assert ask(Q.nonnegative(sqrt(-1))) is False
     assert ask(Q.nonnegative(x), Q.imaginary(x)) is False
 
-def test_real():
+def test_real_basic():
     assert ask(Q.real(x)) is None
     assert ask(Q.real(x), Q.real(x)) is True
     assert ask(Q.real(x), Q.nonzero(x)) is True
@@ -1807,6 +1817,8 @@ def test_real():
     assert ask(Q.real(I*x), Q.imaginary(x)) is True
     assert ask(Q.real(I*x), Q.complex(x)) is None
 
+@slow
+def test_real_pow():
     assert ask(Q.real(x**2), Q.real(x)) is True
     assert ask(Q.real(sqrt(x)), Q.negative(x)) is False
     assert ask(Q.real(x**y), Q.real(x) & Q.integer(y)) is True
@@ -1833,6 +1845,7 @@ def test_real():
     assert ask(Q.real(x**i), Q.imaginary(i)) is None  # x could be 0
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
 
+def test_real_functions():
     # trigonometric functions
     assert ask(Q.real(sin(x))) is None
     assert ask(Q.real(cos(x))) is None
@@ -1844,6 +1857,7 @@ def test_real():
     assert ask(Q.real(exp(x)), Q.real(x)) is True
     assert ask(Q.real(x + exp(x)), Q.real(x)) is True
     assert ask(Q.real(exp(2*pi*I, evaluate=False))) is True
+    assert ask(Q.real(exp(pi*I, evaluate=False))) is True
     assert ask(Q.real(exp(pi*I/2, evaluate=False))) is False
 
     # logarithm
@@ -1852,7 +1866,7 @@ def test_real():
     assert ask(Q.real(log(I + 1))) is False
     assert ask(Q.real(log(x)), Q.complex(x)) is None
     assert ask(Q.real(log(x)), Q.imaginary(x)) is False
-    assert ask(Q.real(log(exp(x))), Q.imaginary(x)) is False  # exp(x) will be 0 or a + I*b
+    assert ask(Q.real(log(exp(x))), Q.imaginary(x)) is None  # exp(2*pi*I) is 1, log(exp(pi*I)) is pi*I (disregarding periodicity)
     assert ask(Q.real(log(exp(x))), Q.complex(x)) is None
     eq = Pow(exp(2*pi*I*x, evaluate=False), x, evaluate=False)
     assert ask(Q.real(eq), Q.integer(x)) is True

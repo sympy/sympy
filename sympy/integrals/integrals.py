@@ -23,6 +23,7 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.functions.elementary.exponential import log
 from sympy.series import limit
 from sympy.series.order import Order
+from sympy.series.formal import FormalPowerSeries
 
 
 class Integral(AddWithLimits):
@@ -92,7 +93,7 @@ class Integral(AddWithLimits):
         >>> from sympy import Integral
         >>> from sympy.abc import x, y
         >>> Integral(x, (x, y, 1)).free_symbols
-        set([y])
+        {y}
 
         See Also
         ========
@@ -401,6 +402,12 @@ class Integral(AddWithLimits):
         if isinstance(function, MatrixBase):
             return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
 
+        if isinstance(function, FormalPowerSeries):
+            if any(len(xab) > 1 for xab in self.limits):
+                return function.integrate(self.limits[0])
+            else:
+                return function.integrate(self.limits[0][0])
+
         # There is no trivial answer, so continue
 
         undone_limits = []
@@ -592,7 +599,7 @@ class Integral(AddWithLimits):
         The previous must be true since there is no y in the evaluated integral:
 
         >>> i.free_symbols
-        set([x])
+        {x}
         >>> i.doit()
         2*x**3/3 - x/2 - 1/6
 
@@ -783,7 +790,15 @@ class Integral(AddWithLimits):
             else:
                 if i:
                     # There was a nonelementary integral. Try integrating it.
-                    return result + i.doit(risch=False)
+
+                    # if no part of the NonElementaryIntegral is integrated by
+                    # the Risch algorithm, then use the original function to
+                    # integrate, instead of re-written one
+                    if result == 0:
+                        from sympy.integrals.risch import NonElementaryIntegral
+                        return NonElementaryIntegral(f, x).doit(risch=False)
+                    else:
+                        return result + i.doit(risch=False)
                 else:
                     return result
 
