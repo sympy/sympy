@@ -35,6 +35,10 @@ def test_continuous_domain():
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
         Interval(1/4, oo, True, True)
     assert continuous_domain(1/sqrt(x - 3), x, S.Reals) == Interval(3, oo, True, True)
+    assert continuous_domain(1/x - 2, x, S.Reals) == \
+        Union(Interval.open(-oo, 0), Interval.open(0, oo))
+    assert continuous_domain(1/(x**2 - 4) + 2, x, S.Reals) == \
+        Union(Interval.open(-oo, -2), Interval.open(-2, 2), Interval.open(2, oo))
 
 
 def test_not_empty_in():
