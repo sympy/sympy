@@ -39,6 +39,7 @@ from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 IS_WINDOWS = (os.name == 'nt')
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
 # emperically generated list of the proportion of time spent running
 # an even split of tests.  This should periodically be regenerated.
@@ -513,6 +514,10 @@ def _test(*paths, **kwargs):
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     fail_on_timeout = kwargs.get("fail_on_timeout", False)
+    if ON_TRAVIS and timeout is False:
+        # Travis times out if no activity is seen for 10 minutes.
+        timeout = 595
+        fail_on_timeout = True
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
