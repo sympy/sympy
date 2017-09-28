@@ -2273,7 +2273,7 @@ class Triangle(Polygon):
     def excenters(self):
         """Excenters of the triangle.
 
-        An excenter is a point at which the line bisecting one interior angle meets the 
+        An excenter is a point at which the line bisecting one interior angle meets the
         bisectors of the two exterior angles on the opposite side. This point is the center
         of excircle. Every triangle has three excenters and three excircles.
 
