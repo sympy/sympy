@@ -308,7 +308,12 @@ class Indexed(Expr):
 
     @property
     def free_symbols(self):
-        return {self} | self.base.free_symbols | set(self.indices)
+        base_free_symbols = self.base.free_symbols
+        indices_free_symbols = {fs for i in self.indices for fs in i.free_symbols}
+        if base_free_symbols:
+            return {self} | base_free_symbols | indices_free_symbols
+        else:
+            return base_free_symbols | indices_free_symbols
 
 
 class IndexedBase(Expr, NotIterable):
