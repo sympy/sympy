@@ -2285,10 +2285,10 @@ class Triangle(Polygon):
 
         Examples
         ========
-        
-        The center of excircle is called the excenter relative to the vertex. The center is 
+
+        The center of excircle is called the excenter relative to the vertex. The center is
         keyed, e.g. the excenter of a circle touching side 0 is:
-        
+
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
