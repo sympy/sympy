@@ -4369,8 +4369,8 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
         # Matrix Norms
         else:
             if ord == 1:  # Maximum column sum
-                def maxcol(x) : return sum(self.applyfunc(lambda y : abs(y)).col(x))
-                return max(list(map(maxcol, range(self.cols))))
+                return Max(*[sum(self.col(i).applyfunc(abs))
+                            for i in range(self.cols)])
 
             elif ord == 2:  # Spectral Norm
                 # Maximum singular value

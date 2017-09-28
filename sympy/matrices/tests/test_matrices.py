@@ -2057,6 +2057,10 @@ def test_matrix_norm():
                     (abs(alpha) * X.norm(order)))
                 assert dif == 0
 
+    # ord=1
+    M = Matrix(3, 3, [1, 3, 0, -2, -1, 0, 3, 9, 6])
+    assert M.norm(1) == 13
+
 
 def test_singular_values():
     x = Symbol('x', real=True)
