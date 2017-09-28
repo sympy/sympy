@@ -3364,7 +3364,7 @@ class MatrixBase(MatrixDeprecated,
         'fro'  Frobenius norm                - does not exist
         inf    --                            max(abs(x))
         -inf   --                            min(abs(x))
-        1      --                            as below
+        1      maximum column sum            as below
         -1     --                            as below
         2      2-norm (largest sing. value)  as below
         -2     smallest singular value       as below
@@ -3422,7 +3422,22 @@ class MatrixBase(MatrixDeprecated,
 
         # Matrix Norms
         else:
-            if ord == 2:  # Spectral Norm
+            if ord == 1: #maximum column sum
+                k = 0
+                max_= 0
+                for i in range(self.shape[1]):
+                    sum_ = 0
+                    a = k
+                    for j in range(self.shape[0]):
+                        sum_ += abs(self[a])
+                        a += self.shape[1]
+                    if(max_ <= sum_):
+                        max_ = sum_
+                    k+=1
+
+                return max_
+
+            elif ord == 2:  # Spectral Norm
                 # Maximum singular value
                 return Max(*self.singular_values())
 
