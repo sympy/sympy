@@ -2281,7 +2281,15 @@ class Triangle(Polygon):
         =======
 
         excenters : dict
-
+        
+        Examples
+        ========
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.excenters[t.sides[0]]
+        Point2D(12*sqrt(10), 2/3 + sqrt(10)/3)
+        
         See Also
         ========
 
