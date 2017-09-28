@@ -337,15 +337,15 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(exp(x), x)
 
     """
-    from sympy import simplify, lcm_list
+    from sympy.core.function import diff
+    from sympy.core.mod import Mod
+    from sympy.core.relational import Relational
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions.elementary.trigonometric import (
         TrigonometricFunction, sin, cos, csc, sec)
+    from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
-    from sympy.core import Mod
-    from sympy.polys.polytools import degree
-    from sympy.core.function import diff
-    from sympy.core.relational import Relational
+    from sympy.polys.polytools import degree, lcm_list
 
     def _check(orig_f, period):
         '''Return the checked period or raise an error.'''
@@ -364,14 +364,15 @@ def periodicity(f, symbol, check=False):
                 (symbol, symbol, period, orig_f, new_f)))
 
     orig_f = f
-    f = simplify(orig_f)
     period = None
-
-    if symbol not in f.free_symbols:
-        return S.Zero
 
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
+
+    f = simplify(f)
+
+    if symbol not in f.free_symbols:
+        return S.Zero
 
     if isinstance(f, TrigonometricFunction):
         try:
