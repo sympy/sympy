@@ -187,6 +187,13 @@ def test_pow3():
     assert sqrt(2)**3 == sqrt(8)
 
 
+def test_mod_pow():
+    assert pow(S(4), 13, 497) == pow(4, 13, 497)
+    assert pow(S(4), -3, 497)*4**3%497 == 1
+    assert pow(x, y, z) == x**y%z
+    assert pow(S(3.2), 2.1, 1.9) == 0.1031015682350942
+
+
 def test_pow_E():
     assert 2**(y/log(2)) == S.Exp1**y
     assert 2**(y/log(2)/3) == S.Exp1**(y/3)

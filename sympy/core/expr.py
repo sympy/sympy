@@ -144,9 +144,25 @@ class Expr(Basic, EvalfMixin):
     def __rmul__(self, other):
         return Mul(other, self)
 
+    def __pow__(self, other, mod=None):
+        if mod is None:
+            return self.___pow__(other)
+        try:
+            _self, other, mod = as_int(self), as_int(other), as_int(mod)
+            if other >= 0:
+                return pow(_self, other, mod)
+            else:
+                from sympy.core.numbers import mod_inverse
+                return mod_inverse(pow(_self, -other, mod), mod)
+        except ValueError:
+            power = self.___pow__(other)
+            if power is NotImplemented:
+                return NotImplemented
+            return power%mod
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
-    def __pow__(self, other):
+    def ___pow__(self, other):
         return Pow(self, other)
 
     @_sympifyit('other', NotImplemented)
