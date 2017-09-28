@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func)
+                   floor, expand_func, Rational)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -661,7 +661,6 @@ def test_issue_10003():
     assert P(X < -1) == S.Zero
     assert P(G < -1) == S.Zero
 
-
 def test_precomputed_cdf():
     x = symbols("x", real=True, finite=True)
     mu = symbols("mu", real=True, finite=True)
@@ -678,3 +677,8 @@ def test_precomputed_cdf():
         compdiff = cdf(X)(x) - simplify(X.pspace.density.compute_cdf()(x))
         compdiff = simplify(compdiff.rewrite(erfc))
         assert compdiff == 0
+
+def test_issue_13324():
+    X = Uniform('X', 0, 1)
+    assert E(X, X > Rational(1,2)) == Rational(3,4)
+    assert E(X, X > 0) == Rational(1,2)
