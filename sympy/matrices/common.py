@@ -1789,6 +1789,12 @@ class MatrixOperations(MatrixRequired):
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
 
+        `args` is either:
+          - two arguments, e.g. foo.subs(old, new)
+          - one iterable argument, e.g. foo.subs(iterable).
+
+        The substitution is applied to each element of the matrix as implemented in core.basic.subs.
+
         Examples
         ========
 
@@ -1801,7 +1807,18 @@ class MatrixOperations(MatrixRequired):
         >>> Matrix(_).subs(y, x)
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.subs(*args, **kwargs))
+
+        if len(args) == 1:
+            sequence = args[0]
+            # test if the sequence is a generator
+            if hasattr(sequence, '__iter__') and not hasattr(sequence, '__len__'):
+                sequence = list(sequence)
+        elif len(args) == 2:
+            sequence = [args]
+        else:
+            raise ValueError("subs accepts either 1 or 2 arguments")
+
+        return self.applyfunc(lambda x: x.subs(sequence, **kwargs))
 
     def trace(self):
         """
