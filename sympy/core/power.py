@@ -212,7 +212,7 @@ class Pow(Expr):
                 return S.One
             else:
                 # recognize base as E
-                if not e.is_Atom and b is not S.Exp1 and not instance(b, exp_polar):
+                if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
                     from sympy import numer, denom, log, sign, im, factor_terms
                     c, ex = factor_terms(e, sign=False).as_coeff_Mul()
                     den = denom(ex)
