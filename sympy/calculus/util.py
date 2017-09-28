@@ -114,7 +114,11 @@ def function_range(f, symbol, domain):
 
     vals = S.EmptySet
     period = periodicity(f, symbol)
-    if not any(period is i for i in (None, S.Zero)):
+    if period is S.Zero:
+        # the expression is constant wrt symbol
+        return FiniteSet(f.expand())
+
+    if period is not None:
         inf = domain.inf
         inf_period = S.Zero if inf.is_infinite else inf
         sup_period = inf_period + period
