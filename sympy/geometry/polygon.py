@@ -2312,9 +2312,9 @@ class Triangle(Polygon):
         }
 
         excenters = {
-            0: Point(exc_coords["x1"], exc_coords["y1"]),
-            1: Point(exc_coords["x2"], exc_coords["y2"]),
-            2: Point(exc_coords["x3"], exc_coords["y3"])
+            s[0]: Point(exc_coords["x1"], exc_coords["y1"]),
+            s[1]: Point(exc_coords["x2"], exc_coords["y2"]),
+            s[2]: Point(exc_coords["x3"], exc_coords["y3"])
         }
 
         return excenters
