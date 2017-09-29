@@ -783,7 +783,7 @@ class erfinv(Function):
 
         # Try to pull out factors of -1
         nz = z.extract_multiplicatively(-1)
-        if nz is not None and ((isinstance(nz, erf)) and (nz.args[0]).is_real):
+        if nz is not None and (isinstance(nz, erf) and (nz.args[0]).is_real):
             return -nz.args[0]
 
     def _eval_rewrite_as_erfcinv(self, z):
