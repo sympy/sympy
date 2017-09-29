@@ -571,8 +571,8 @@ def _test(*paths, **kwargs):
 
     t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout, fail_on_timeout=
-        fail_on_timeout, slow=slow, enhance_asserts=enhance_asserts))
+    return int(not t.test(sort=sort, timeout=timeout, slow=slow,
+        enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
 def doctest(*paths, **kwargs):
@@ -1067,8 +1067,8 @@ class SymPyTests(object):
         else:
             self._slow_threshold = 10
 
-    def test(self, sort=False, timeout=False, fail_on_timeout=False, slow=False,
-            enhance_asserts=False):
+    def test(self, sort=False, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -1084,8 +1084,8 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, fail_on_timeout, slow,
-                    enhance_asserts)
+                self.test_file(f, sort, timeout, slow,
+                    enhance_asserts, fail_on_timeout)
             except KeyboardInterrupt:
                 print(" interrupted by user")
                 self._reporter.finish()
@@ -1123,8 +1123,8 @@ class SymPyTests(object):
         new_tree = Transform().visit(tree)
         return fix_missing_locations(new_tree)
 
-    def test_file(self, filename, sort=True, timeout=False, fail_on_timeout=False,
-            slow=False, enhance_asserts=False):
+    def test_file(self, filename, sort=True, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         reporter = self._reporter
         funcs = []
         try:
