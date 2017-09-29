@@ -778,7 +778,7 @@ class erfinv(Function):
         elif z is S.One:
             return S.Infinity
 
-        if (isinstance(z, erf)) and z.args[0].is_real:
+        if isinstance(z, erf) and z.args[0].is_real:
             return z.args[0]
 
         # Try to pull out factors of -1
