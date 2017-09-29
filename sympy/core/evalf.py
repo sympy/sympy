@@ -371,11 +371,7 @@ def get_integer_part(expr, no, options, return_ints=False):
                 x = fzero
             nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
-        if nint != fzero:
-            return nint, fastlog(nint) + 10
-        else:
-            # avoid calculating fastlog(fzero)
-            return nint, 10
+        return nint, INF
 
     re_, im_, re_acc, im_acc = None, None, None, None
 
