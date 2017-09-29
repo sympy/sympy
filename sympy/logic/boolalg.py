@@ -1271,7 +1271,7 @@ def _is_form(expr, function1, function2):
     # Special case of a single expression of function2
     if expr.func is function2:
         for lit in expr.args:
-            if lit.func is Not:
+            if isinstance(lit, Not):
                 if not lit.args[0].is_Atom:
                     return False
             else:
@@ -1280,7 +1280,7 @@ def _is_form(expr, function1, function2):
         return True
 
     # Special case of a single negation
-    if expr.func is Not:
+    if isinstance(expr, Not):
         if not expr.args[0].is_Atom:
             return False
 
@@ -1290,13 +1290,13 @@ def _is_form(expr, function1, function2):
     for cls in expr.args:
         if cls.is_Atom:
             continue
-        if cls.func is Not:
+        if isinstance(cls, Not):
             if not cls.args[0].is_Atom:
                 return False
         elif cls.func is not function2:
             return False
         for lit in cls.args:
-            if lit.func is Not:
+            if isinstance(lit, Not):
                 if not lit.args[0].is_Atom:
                     return False
             else:
@@ -1373,7 +1373,7 @@ def to_int_repr(clauses, symbols):
     symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
 
     def append_symbol(arg, symbols):
-        if arg.func is Not:
+        if isinstance(arg, Not):
             return -symbols[arg.args[0]]
         else:
             return symbols[arg]
@@ -1813,7 +1813,7 @@ def _finger(eq):
         elif a.is_Not:
             d[a.args[0]][1] += 1
         else:
-            o = len(a.args) + sum(ai.func is Not for ai in a.args)
+            o = len(a.args) + sum(isinstance(ai, Not) for ai in a.args)
             for ai in a.args:
                 if ai.is_Symbol:
                     d[ai][2] += 1

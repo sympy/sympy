@@ -329,30 +329,30 @@ class sin(TrigonometricFunction):
             if m:
                 return sin(m)*cos(x) + cos(m)*sin(x)
 
-        if arg.func is asin:
+        if isinstance(arg, asin):
             return arg.args[0]
 
-        if arg.func is atan:
+        if isinstance(arg, atan):
             x = arg.args[0]
             return x / sqrt(1 + x**2)
 
-        if arg.func is atan2:
+        if isinstance(arg, atan2):
             y, x = arg.args
             return y / sqrt(x**2 + y**2)
 
-        if arg.func is acos:
+        if isinstance(arg, acos):
             x = arg.args[0]
             return sqrt(1 - x**2)
 
-        if arg.func is acot:
+        if isinstance(arg, acot):
             x = arg.args[0]
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
-        if arg.func is acsc:
+        if isinstance(arg, acsc):
             x = arg.args[0]
             return 1 / x
 
-        if arg.func is asec:
+        if isinstance(arg, asec):
             x = arg.args[0]
             return sqrt(1 - 1 / x**2)
 
@@ -377,7 +377,7 @@ class sin(TrigonometricFunction):
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
     def _eval_rewrite_as_Pow(self, arg):
-        if arg.func is log:
+        if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
             return I*x**-I / 2 - I*x**I /2
@@ -622,30 +622,30 @@ class cos(TrigonometricFunction):
             if m:
                 return cos(m)*cos(x) - sin(m)*sin(x)
 
-        if arg.func is acos:
+        if isinstance(arg, acos):
             return arg.args[0]
 
-        if arg.func is atan:
+        if isinstance(arg, atan):
             x = arg.args[0]
             return 1 / sqrt(1 + x**2)
 
-        if arg.func is atan2:
+        if isinstance(arg, atan2):
             y, x = arg.args
             return x / sqrt(x**2 + y**2)
 
-        if arg.func is asin:
+        if isinstance(arg, asin):
             x = arg.args[0]
             return sqrt(1 - x ** 2)
 
-        if arg.func is acot:
+        if isinstance(arg, acot):
             x = arg.args[0]
             return 1 / sqrt(1 + 1 / x**2)
 
-        if arg.func is acsc:
+        if isinstance(arg, acsc):
             x = arg.args[0]
             return sqrt(1 - 1 / x**2)
 
-        if arg.func is asec:
+        if isinstance(arg, asec):
             x = arg.args[0]
             return 1 / x
 
@@ -670,7 +670,7 @@ class cos(TrigonometricFunction):
         return (exp(arg*I) + exp(-arg*I)) / 2
 
     def _eval_rewrite_as_Pow(self, arg):
-        if arg.func is log:
+        if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
             return x**I/2 + x**-I/2
@@ -1023,30 +1023,30 @@ class tan(TrigonometricFunction):
                 else: # tanm == 0
                     return tan(x)
 
-        if arg.func is atan:
+        if isinstance(arg, atan):
             return arg.args[0]
 
-        if arg.func is atan2:
+        if isinstance(arg, atan2):
             y, x = arg.args
             return y/x
 
-        if arg.func is asin:
+        if isinstance(arg, asin):
             x = arg.args[0]
             return x / sqrt(1 - x**2)
 
-        if arg.func is acos:
+        if isinstance(arg, acos):
             x = arg.args[0]
             return sqrt(1 - x**2) / x
 
-        if arg.func is acot:
+        if isinstance(arg, acot):
             x = arg.args[0]
             return 1 / x
 
-        if arg.func is acsc:
+        if isinstance(arg, acsc):
             x = arg.args[0]
             return 1 / (sqrt(1 - 1 / x**2) * x)
 
-        if arg.func is asec:
+        if isinstance(arg, asec):
             x = arg.args[0]
             return sqrt(1 - 1 / x**2) * x
 
@@ -1073,7 +1073,7 @@ class tan(TrigonometricFunction):
         return Function._eval_nseries(self, x, n=n, logx=logx)
 
     def _eval_rewrite_as_Pow(self, arg):
-        if arg.func is log:
+        if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
             return I*(x**-I - x**I)/(x**-I + x**I)
@@ -1305,30 +1305,30 @@ class cot(TrigonometricFunction):
                 else: # cotm == 0
                     return -tan(x)
 
-        if arg.func is acot:
+        if isinstance(arg, acot):
             return arg.args[0]
 
-        if arg.func is atan:
+        if isinstance(arg, atan):
             x = arg.args[0]
             return 1 / x
 
-        if arg.func is atan2:
+        if isinstance(arg, atan2):
             y, x = arg.args
             return x/y
 
-        if arg.func is asin:
+        if isinstance(arg,asin):
             x = arg.args[0]
             return sqrt(1 - x**2) / x
 
-        if arg.func is acos:
+        if isinstance(arg, acos):
             x = arg.args[0]
             return x / sqrt(1 - x**2)
 
-        if arg.func is acsc:
+        if isinstance(arg, acsc):
             x = arg.args[0]
             return sqrt(1 - 1 / x**2) * x
 
-        if arg.func is asec:
+        if isinstance(arg, asec):
             x = arg.args[0]
             return 1 / (sqrt(1 - 1 / x**2) * x)
 
@@ -1373,7 +1373,7 @@ class cot(TrigonometricFunction):
         return I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_Pow(self, arg):
-        if arg.func is log:
+        if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
             return -I*(x**-I + x**I)/(x**-I - x**I)
