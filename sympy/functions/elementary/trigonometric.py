@@ -1316,7 +1316,7 @@ class cot(TrigonometricFunction):
             y, x = arg.args
             return x/y
 
-        if isinstance(arg,asin):
+        if isinstance(arg, asin):
             x = arg.args[0]
             return sqrt(1 - x**2) / x
 
