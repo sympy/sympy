@@ -1066,9 +1066,9 @@ def _distribute(info):
     """
     Distributes info[1] over info[2] with respect to info[0].
     """
-    if info[0].func is info[2]:
+    if isinstance(info[0], info[2]):
         for arg in info[0].args:
-            if arg.func is info[1]:
+            if isinstance(arg, info[1]):
                 conj = arg
                 break
         else:
@@ -1076,7 +1076,7 @@ def _distribute(info):
         rest = info[2](*[a for a in info[0].args if a is not conj])
         return info[1](*list(map(_distribute,
             [(info[2](c, rest), info[1], info[2]) for c in conj.args])))
-    elif info[0].func is info[1]:
+    elif isinstance(info[0], info[1]):
         return info[1](*list(map(_distribute,
             [(x, info[1], info[2]) for x in info[0].args])))
     else:
@@ -1269,7 +1269,7 @@ def _is_form(expr, function1, function2):
         return True
 
     # Special case of a single expression of function2
-    if expr.func is function2:
+    if isinstance(expr, function2):
         for lit in expr.args:
             if isinstance(lit, Not):
                 if not lit.args[0].is_Atom:
@@ -1284,7 +1284,7 @@ def _is_form(expr, function1, function2):
         if not expr.args[0].is_Atom:
             return False
 
-    if expr.func is not function1:
+    if not isinstance(expr, function1):
         return False
 
     for cls in expr.args:
@@ -1293,7 +1293,7 @@ def _is_form(expr, function1, function2):
         if isinstance(cls, Not):
             if not cls.args[0].is_Atom:
                 return False
-        elif cls.func is not function2:
+        elif not isinstance(cls, function2):
             return False
         for lit in cls.args:
             if isinstance(lit, Not):

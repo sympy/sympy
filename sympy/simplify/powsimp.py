@@ -675,7 +675,7 @@ def _denest_pow(eq):
 
     # now put the log back together again
     if isinstance(glogb, log) or not glogb.is_Mul:
-        if glogb.args[0].is_Pow or glogb.args[0].func is exp:
+        if glogb.args[0].is_Pow or isinstance(glogb.args[0], exp):
             glogb = _denest_pow(glogb.args[0])
             if (abs(glogb.exp) < 1) == True:
                 return Pow(glogb.base, glogb.exp*e)

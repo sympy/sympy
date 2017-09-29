@@ -323,7 +323,7 @@ def TR2i(rv, half=False):
                 k.func in (sin, cos) or (half and
                 k.is_Add and
                 len(k.args) >= 2 and
-                any(any(ai.func is cos or ai.is_Pow and ai.base is cos
+                any(any(isinstance(ai, cos) or ai.is_Pow and ai.base is cos
                 for ai in Mul.make_args(a)) for a in k.args))))
 
         n = n.as_powers_dict()
@@ -379,7 +379,7 @@ def TR2i(rv, half=False):
                     t.append(tan(k.args[0])**-n[k])
                     n[k] = d[a] = None
             elif half and k.is_Add and k.args[0] is S.One and \
-                    k.args[1].func is cos:
+                    isinstance(k.args[1], cos):
                 a = sin(k.args[1].args[0], evaluate=False)
                 if a in d and d[a] == n[k] and (d[a].is_integer or \
                         a.is_positive):
@@ -1479,7 +1479,7 @@ def TR15(rv, max=4, pow=False):
     """
 
     def f(rv):
-        if not (isinstance(rv, Pow) and rv.base.func is sin):
+        if not (isinstance(rv, Pow) and isinstance(rv.base, sin)):
             return rv
 
         ia = 1/rv
@@ -1508,7 +1508,7 @@ def TR16(rv, max=4, pow=False):
     """
 
     def f(rv):
-        if not (isinstance(rv, Pow) and rv.base.func is cos):
+        if not (isinstance(rv, Pow) and isinstance(rv.base, cos)):
             return rv
 
         ia = 1/rv
@@ -1541,11 +1541,11 @@ def TR111(rv):
             (rv.base.is_positive or rv.exp.is_integer and rv.exp.is_negative)):
             return rv
 
-        if rv.base.func is tan:
+        if isinstance(rv.base, tan):
             return cot(rv.base.args[0])**-rv.exp
-        elif rv.base.func is sin:
+        elif isinstance(rv.base, sin):
             return csc(rv.base.args[0])**-rv.exp
-        elif rv.base.func is cos:
+        elif isinstance(rv.base, cos):
             return sec(rv.base.args[0])**-rv.exp
         return rv
 
@@ -1928,7 +1928,7 @@ def trig_split(a, b, two=False):
     if not two:  # need cos(x) and cos(y) or sin(x) and sin(y)
         c = ca or sa
         s = cb or sb
-        if c.func is not s.func:
+        if not isinstance(c, s.func):
             return None
         return gcd, n1, n2, c.args[0], s.args[0], isinstance(c, cos)
     else:
@@ -1939,7 +1939,7 @@ def trig_split(a, b, two=False):
                 args = {j.args for j in (ca, sa)}
                 if not all(i.args in args for i in (cb, sb)):
                     return
-                return gcd, n1, n2, ca.args[0], sa.args[0], ca.func is sa.func
+                return gcd, n1, n2, ca.args[0], sa.args[0], isinstance(ca, sa.func)
         if ca and sa or cb and sb or \
             two and (ca is None and sa is None or cb is None and sb is None):
             return

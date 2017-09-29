@@ -638,12 +638,12 @@ class Pow(Expr):
             return new**self.exp._subs(old, new)
 
         # issue 10829: (4**x - 3*y + 2).subs(2**x, y) -> y**2 - 3*y + 2
-        if old.func is self.func and self.exp == old.exp:
+        if isinstance(old, self.func) and self.exp == old.exp:
             l = log(self.base, old.base)
             if l.is_Number:
                 return Pow(new, l)
 
-        if old.func is self.func and self.base == old.base:
+        if isinstance(old, self.func) and self.base == old.base:
             if self.exp.is_Add is False:
                 ct1 = self.exp.as_independent(Symbol, as_Add=False)
                 ct2 = old.exp.as_independent(Symbol, as_Add=False)

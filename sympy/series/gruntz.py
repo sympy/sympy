@@ -275,7 +275,7 @@ def mrv(e, x):
     elif isinstance(e, exp):
         # We know from the theory of this algorithm that exp(log(...)) may always
         # be simplified here, and doing so is vital for termination.
-        if e.args[0].func is log:
+        if isinstance(e.args[0], log):
             return mrv(e.args[0].args[0], x)
         # if a product has an infinite factor the result will be
         # infinite if there is no zero, otherwise NaN; here, we
