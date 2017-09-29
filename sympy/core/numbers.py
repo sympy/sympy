@@ -3469,9 +3469,80 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
         elif issubclass(number_cls, Rational):
             pass
 
-    def _eval_power(self, expt):
-        from sympy import exp
-        return exp(expt)
+    def _eval_power(self, arg):
+        from sympy.functions.elementary.exponential import log
+        from sympy import Add, Mul, Pow
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Zero:
+                return S.One
+            elif arg is S.One:
+                return S.Exp1
+            elif arg is S.Infinity:
+                return S.Infinity
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+        elif arg.func is log:
+            return arg.args[0]
+        elif arg.is_Mul:
+            Ioo = S.ImaginaryUnit*S.Infinity
+            if arg in [Ioo, -Ioo]:
+                return S.NaN
+
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            if coeff:
+                if (2*coeff).is_integer:
+                    if coeff.is_even:
+                        return S.One
+                    elif coeff.is_odd:
+                        return S.NegativeOne
+                    elif (coeff + S.Half).is_even:
+                        return -S.ImaginaryUnit
+                    elif (coeff + S.Half).is_odd:
+                        return S.ImaginaryUnit
+
+            # Warning: code in risch.py will be very sensitive to changes
+            # in this (see DifferentialExtension).
+
+            # look for a single log factor
+
+            coeff, terms = arg.as_coeff_Mul()
+
+            # but it can't be multiplied by oo
+            if coeff in [S.NegativeInfinity, S.Infinity]:
+                return None
+
+            coeffs, log_term = [coeff], None
+            for term in Mul.make_args(terms):
+                if term.func is log:
+                    if log_term is None:
+                        log_term = term.args[0]
+                    else:
+                        return None
+                elif term.is_comparable:
+                    coeffs.append(term)
+                else:
+                    return None
+
+            return log_term**Mul(*coeffs) if log_term else None
+        elif arg.is_Add:
+            out = []
+            add = []
+            for a in arg.args:
+                if a is S.One:
+                    add.append(a)
+                    continue
+                newa = self**a
+                if newa.is_Pow and newa.base is self:
+                    add.append(a)
+                else:
+                    out.append(newa)
+            if out:
+                return Mul(*out)*Pow(self, Add(*add), evaluate=False)
+        elif arg.is_Matrix:
+            from sympy import Matrix
+            return arg.exp()
 
     def _eval_rewrite_as_sin(self):
         from sympy import sin

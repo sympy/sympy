@@ -4,11 +4,11 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.core.numbers import GoldenRatio
+from sympy.core.numbers import GoldenRatio, Float, Rational
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
-from .gruntz import gruntz
+from sympy.series.gruntz import gruntz, limitinf
 from sympy.core.exprtools import factor_terms
 from sympy.simplify.ratsimp import ratsimp
 from sympy.polys import PolynomialError
@@ -86,7 +86,7 @@ class Limit(Expr):
     Examples
     ========
 
-    >>> from sympy import Limit, sin, Symbol
+    >>> from sympy import Limit, sin
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
     Limit(sin(x)/x, x, 0)
@@ -117,7 +117,6 @@ class Limit(Expr):
         obj._args = (e, z, z0, dir)
         return obj
 
-
     @property
     def free_symbols(self):
         e = self.args[0]
@@ -126,9 +125,15 @@ class Limit(Expr):
         isyms.update(self.args[2].free_symbols)
         return isyms
 
-
     def doit(self, **hints):
-        """Evaluates limit"""
+        """Evaluates limit.
+
+        Notes
+        =====
+
+        First we handle some trivial cases (i.e. constant), then try
+        Gruntz algorithm (see the :py:mod:`~sympy.series.gruntz` module).
+        """
         from sympy.series.limitseq import limit_seq
         from sympy.functions import RisingFactorial
 
@@ -139,11 +144,19 @@ class Limit(Expr):
             z = z.doit(**hints)
             z0 = z0.doit(**hints)
 
+        has_Floats = e.has(Float)
+        if has_Floats:
+            e = e.subs({k: Rational(k) for k in e.atoms(Float)},
+                       simultaneous=True)
+
         if e == z:
             return z0
 
         if not e.has(z):
             return e
+
+        if z0 is S.NaN:
+            return S.NaN
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
@@ -151,6 +164,14 @@ class Limit(Expr):
         # differs from gamma) so only rewrite for positive z0.
         if z0.is_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
+
+        if e.has(Order):
+            e = e.expand()
+            order = e.getO()
+            if order:
+                if (z, z0) in zip(order.variables, order.point):
+                    order = limit(order.expr, z, z0, dir)
+                    e = e.removeO() + order
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
@@ -173,9 +194,6 @@ class Limit(Expr):
                     else:
                         return r
 
-        if e.is_Order:
-            return Order(limit(e.expr, z, z0), *e.args[1:])
-
         try:
             r = gruntz(e, z, z0, dir)
             if r is S.NaN:
@@ -193,5 +211,8 @@ class Limit(Expr):
                     raise NotImplementedError()
             else:
                 raise NotImplementedError()
+
+        if has_Floats:
+            r = r.evalf()
 
         return r

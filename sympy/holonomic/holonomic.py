@@ -2386,7 +2386,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         _create_table(_lookup_table, domain=domain)
 
     # use the table directly to convert to Holonomic
-    if func.is_Function:
+    if func.is_Function or (func.is_Pow and func.base is S.Exp1):
         f = func.subs(x, x_1)
         t = _mytype(f, x_1)
         if t in _lookup_table:
@@ -2409,8 +2409,13 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
                 _y0 = _find_conditions(func, x, x0, lenics)
             return HolonomicFunction(sol.annihilator, x, x0, _y0)
 
+        if func.is_Pow:
+            farg = func.exp
+        else:
+            farg = func.args[0]
+
         if y0 or not initcond:
-            sol = sol.composition(func.args[0])
+            sol = sol.composition(farg)
             if y0:
                 sol.y0 = y0
             sol.x0 = x0
@@ -2422,7 +2427,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         while not _y0:
             x0 += 1
             _y0 = _find_conditions(func, x, x0, lenics)
-        return sol.composition(func.args[0], x0, _y0)
+        return sol.composition(farg, x0, _y0)
 
     # iterate through the expression recursively
     args = func.args
@@ -2438,7 +2443,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         for i in range(1, len(args)):
             sol *= expr_to_holonomic(args[i], x=x, initcond=False, domain=domain)
 
-    elif f is Pow:
+    elif f is Pow and (func.base is not S.Exp1):
         sol = sol**args[1]
     sol.x0 = x0
     if not sol:

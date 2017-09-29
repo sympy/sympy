@@ -1553,6 +1553,11 @@ class PrettyPrinter(Printer):
     def _print_Pow(self, power):
         from sympy.simplify.simplify import fraction
         b, e = power.as_base_exp()
+
+        if b == S.Exp1:
+            base = prettyForm(pretty_atom('Exp1', 'e'))
+            return base ** self._print(e)
+
         if power.is_commutative:
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)

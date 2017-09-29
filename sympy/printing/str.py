@@ -486,6 +486,9 @@ class StrPrinter(Printer):
     def _print_Pow(self, expr, rational=False):
         PREC = precedence(expr)
 
+        if expr.base == S.Exp1:
+            return "exp(%s)" % self._print(expr.exp)
+
         if expr.exp is S.Half and not rational:
             return "sqrt(%s)" % self._print(expr.base)
 
@@ -505,7 +508,12 @@ class StrPrinter(Printer):
             # but just check to be sure.
             if e.startswith('(Rational'):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
-        return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
+
+        if expr.base.is_Pow and expr.base.base is S.Exp1:
+            b = self._print(expr.base)
+        else:
+            b = self.parenthesize(expr.base, PREC, strict=False)
+        return '%s**%s' % (b, e)
 
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])

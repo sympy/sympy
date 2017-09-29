@@ -306,7 +306,7 @@ class sign(Function):
             if arg.func is sign:
                 return arg
         if arg.is_imaginary:
-            if arg.is_Pow and arg.exp is S.Half:
+            if arg.is_Pow and arg.base is not S.Exp1 and arg.exp is S.Half:
                 # we catch this because non-trivial sqrt args are not expanded
                 # e.g. sqrt(1-sqrt(2)) --x-->  to I*sqrt(sqrt(2) - 1)
                 return S.ImaginaryUnit
@@ -464,6 +464,8 @@ class Abs(Function):
         if arg is S.ComplexInfinity:
             return S.Infinity
         if arg.is_Pow:
+            if arg.base is S.Exp1:
+                return exp(re(arg.exp))
             base, exponent = arg.as_base_exp()
             if base.is_real:
                 if exponent.is_integer:
@@ -479,8 +481,6 @@ class Abs(Function):
                 if base.is_negative:
                     return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
                 return
-        if isinstance(arg, exp):
-            return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
             return
         if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
@@ -871,7 +871,7 @@ class periodic_argument(Function):
                 unbranched += arg(a)
             elif a.func is exp_polar:
                 unbranched += a.exp.as_real_imag()[1]
-            elif a.is_Pow:
+            elif a.is_Pow and a.base is not S.Exp1:
                 re, im = a.exp.as_real_imag()
                 unbranched += re*unbranched_argument(
                     a.base) + im*log(abs(a.base))
@@ -1029,6 +1029,8 @@ def _polarify(eq, lift, pause=False):
         return r
     elif eq.is_Function:
         return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
+    elif eq.is_Pow and eq.base is S.Exp1:
+        return exp(_polarify(eq.exp, lift, pause=False))
     elif isinstance(eq, Integral):
         # Don't lift the integration variable
         func = _polarify(eq.function, lift, pause=pause)
@@ -1110,6 +1112,8 @@ def _unpolarify(eq, exponents_only, pause=False):
             return _unpolarify(eq.args[0], exponents_only)
 
     if eq.is_Pow:
+        if eq.base is S.Exp1:
+            return exp(_unpolarify(eq.exp, exponents_only, exponents_only))
         expo = _unpolarify(eq.exp, exponents_only)
         base = _unpolarify(eq.base, exponents_only,
             not (expo.is_integer and not pause))

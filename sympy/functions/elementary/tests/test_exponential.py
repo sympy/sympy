@@ -49,7 +49,6 @@ def test_exp_log():
     assert log(exp(x)) == x
     assert exp(log(x)) == x
     assert log(x).inverse() == exp
-    assert exp(x).inverse() == log
 
     y = Symbol("y", polar=True)
     z = Symbol("z")

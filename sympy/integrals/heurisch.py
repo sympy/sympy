@@ -370,20 +370,21 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
                         if M is not None:
                             terms.add( x*(li(M[a]*x**M[b]) - (M[a]*x**M[b])**(-1/M[b])*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
-                            #terms.add( x*(li(M[a]*x**M[b]) - (x**M[b])**(-1/M[b])*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
-                            #terms.add( x*(li(M[a]*x**M[b]) - x*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
-                            #terms.add( li(M[a]*x**M[b]) - Ei((M[b]+1)*log(M[a]*x**M[b])/M[b]) )
+                            # terms.add( x*(li(M[a]*x**M[b]) - (x**M[b])**(-1/M[b])*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
+                            # terms.add( x*(li(M[a]*x**M[b]) - x*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
+                            # terms.add( li(M[a]*x**M[b]) - Ei((M[b]+1)*log(M[a]*x**M[b])/M[b]) )
 
-                    elif g.func is exp:
-                        M = g.args[0].match(a*x**2)
+                elif g.is_Pow:
+                    if g.base is S.Exp1:
+                        M = g.exp.match(a*x**2)
 
                         if M is not None:
                             if M[a].is_positive:
                                 terms.add(erfi(sqrt(M[a])*x))
-                            else: # M[a].is_negative or unknown
+                            else:  # M[a].is_negative or unknown
                                 terms.add(erf(sqrt(-M[a])*x))
 
-                        M = g.args[0].match(a*x**2 + b*x + c)
+                        M = g.exp.match(a*x**2 + b*x + c)
 
                         if M is not None:
                             if M[a].is_positive:
@@ -393,7 +394,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                                 terms.add(sqrt(pi/4*(-M[a]))*exp(M[c] - M[b]**2/(4*M[a]))*
                                           erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
 
-                        M = g.args[0].match(a*log(x)**2)
+                        M = g.exp.match(a*log(x)**2)
 
                         if M is not None:
                             if M[a].is_positive:
@@ -401,8 +402,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             if M[a].is_negative:
                                 terms.add(erf(sqrt(-M[a])*log(x) - 1/(2*sqrt(-M[a]))))
 
-                elif g.is_Pow:
-                    if g.exp.is_Rational and g.exp.q == 2:
+                    elif g.exp.is_Rational and g.exp.q == 2:
                         M = g.base.match(a*x**2 + b)
 
                         if M is not None and M[b].is_positive:

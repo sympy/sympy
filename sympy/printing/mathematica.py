@@ -3,13 +3,14 @@ Mathematica code printer
 """
 
 from __future__ import print_function, division
+
+from sympy import S
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
-    "exp": [(lambda x: True, "Exp")],
     "log": [(lambda x: True, "Log")],
     "sin": [(lambda x: True, "Sin")],
     "cos": [(lambda x: True, "Cos")],
@@ -64,6 +65,8 @@ class MCodePrinter(CodePrinter):
     doprint = StrPrinter.doprint
 
     def _print_Pow(self, expr):
+        if expr.base is S.Exp1:
+            return 'Exp[%s]' % self._print(expr.exp)
         PREC = precedence(expr)
         return '%s^%s' % (self.parenthesize(expr.base, PREC),
                           self.parenthesize(expr.exp, PREC))

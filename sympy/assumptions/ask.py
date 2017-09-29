@@ -1276,7 +1276,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if local_facts is None:
         return satask(proposition, assumptions=assumptions, context=context)
 
-
     # See if there's a straight-forward conclusion we can make for the inference
     if local_facts.is_Atom:
         if key in known_facts_dict[local_facts]:

@@ -76,8 +76,9 @@ known_functions = {
             (lambda base, exp: exp == Rational(1, 3), "cbrt", 2),    # x ** (1/3)
             (lambda base, exp: base == S.One*2, "exp2", 3),          # 2 ** x
             (lambda base, exp: exp.is_integer, "powi", 1),           # x ** y, for i32
-            (lambda base, exp: not exp.is_integer, "powf", 1)],      # x ** y, for f64
-    "exp": [(lambda exp: True, "exp", 2)],   # e ** x
+            (lambda base, exp: base is S.Exp1, "exp", 3),               # exp(x)
+            (lambda base, exp: not exp.is_integer, "powf", 1),       # x ** y, for f64
+        ],
     "log": "ln",
     "": "log",          # number.log(base)
     "": "log2",

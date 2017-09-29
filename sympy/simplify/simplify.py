@@ -527,7 +527,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
 
-    if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+    if not isinstance(expr, (Add, Mul, Pow, ExpBase, exp)):
         if isinstance(expr, Function) and hasattr(expr, "inverse"):
             if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
                isinstance(expr.args[0], expr.inverse(argindex=1)):
@@ -596,7 +596,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
-    if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
+    if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase, exp):
         short = exptrigsimp(short)
 
     # get rid of hollow 2-arg Mul factorization

@@ -1260,8 +1260,8 @@ u("""\
 """)
     ucode_str_2 = \
 u("""\
- x     \n\
-ℯ + 2⋅x\
+ x      \n\
+ℯ  + 2⋅x\
 """)
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]

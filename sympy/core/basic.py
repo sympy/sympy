@@ -60,6 +60,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Add = False
     is_Mul = False
     is_Pow = False
+    is_exp = False
     is_Number = False
     is_Float = False
     is_Rational = False
@@ -535,6 +536,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """Helper for rcall method.
         """
         from sympy import Symbol
+
         def the_call_method_is_overridden(expr):
             for cls in getmro(type(expr)):
                 if '__call__' in cls.__dict__:
@@ -1081,6 +1083,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         See Also
         ========
+
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         subs: substitution of subexpressions as defined by the objects

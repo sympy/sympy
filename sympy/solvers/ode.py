@@ -1695,6 +1695,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
                 # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
                 return "type7"
 
+
 def check_linear_2eq_order2(eq, func, func_coef):
     x = func[0].func
     y = func[1].func
@@ -1730,6 +1731,7 @@ def check_linear_2eq_order2(eq, func, func_coef):
                 if e.has(t):
                     tpart = e.as_independent(t, Mul)[1]
                     for i in Mul.make_args(tpart):
+                        # Something is supposed to replace `i.has(exp)`:
                         if i.has(exp):
                             b, e = i.as_base_exp()
                             co = e.coeff(t)
@@ -2625,12 +2627,13 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 def _get_constant_subexpressions(expr, Cs):
     Cs = set(Cs)
     Ces = []
+
     def _recursive_walk(expr):
         expr_syms = expr.free_symbols
         if len(expr_syms) > 0 and expr_syms.issubset(Cs):
             Ces.append(expr)
         else:
-            if expr.func == exp:
+            if expr.is_Pow and expr.base is S.Exp1:
                 expr = expr.expand(mul=True)
             if expr.func in (Add, Mul):
                 d = sift(expr.args, lambda i : i.free_symbols.issubset(Cs))
@@ -2811,10 +2814,10 @@ def constantsimp(expr, constants):
             infac = False
             asfac = False
             for m in new_expr.args:
-                if m.func is exp:
+                if m.is_Pow and m.base is S.Exp1:
                     asfac = True
                 elif m.is_Add:
-                    infac = any(fi.func is exp for t in m.args
+                    infac = any(fi.is_Pow and fi.base is S.Exp1 for t in m.args
                         for fi in Mul.make_args(t))
                 if asfac and infac:
                     new_expr = expr
@@ -5023,8 +5026,13 @@ def _undetermined_coefficients_match(expr, x):
                             foundtrig = True
             return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Function:
-            if expr.func in (sin, cos, exp):
+            if expr.func in (sin, cos):
                 if expr.args[0].match(a*x + b):
+                    return True
+                else:
+                    return False
+            elif expr.is_Pow and expr.base is S.Exp1:
+                if expr.exp.match(a*x + b):
                     return True
                 else:
                     return False

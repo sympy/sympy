@@ -1,6 +1,6 @@
 """Pauli operators and states"""
 
-from sympy import I, Mul, Add, Pow, exp, Integer
+from sympy import I, Mul, Add, Pow, Integer
 from sympy.physics.quantum import Operator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
@@ -640,7 +640,7 @@ def qsimplify_pauli(e):
     if isinstance(e, Operator):
         return e
 
-    if isinstance(e, (Add, Pow, exp)):
+    if isinstance(e, (Add, Pow)):
         t = type(e)
         return t(*(qsimplify_pauli(arg) for arg in e.args))
 

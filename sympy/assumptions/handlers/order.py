@@ -3,6 +3,7 @@ AskHandlers related to order relations: positive, negative, etc.
 """
 from __future__ import print_function, division
 
+from sympy import S
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
@@ -101,6 +102,11 @@ class AskNegativeHandler(CommonHandler):
         Real ** Odd  -> same_as_base
         NonNegative ** Positive -> NonNegative
         """
+        if expr.base is S.Exp1:
+            # Exponential is always positive:
+            if ask(Q.real(expr.exp), assumptions):
+                return False
+
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
         if ask(Q.real(expr.base), assumptions):
@@ -114,10 +120,6 @@ class AskNegativeHandler(CommonHandler):
 
     ImaginaryUnit, Abs = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
-    @staticmethod
-    def exp(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
-            return False
 
 
 class AskNonNegativeHandler(CommonHandler):
@@ -287,6 +289,12 @@ class AskPositiveHandler(CommonHandler):
     def Pow(expr, assumptions):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
+        if expr.base is S.Exp1:
+            if ask(Q.real(expr.exp), assumptions):
+                return True
+            if ask(Q.imaginary(expr.exp), assumptions):
+                from sympy import pi, I
+                return ask(Q.even(expr.exp / (I * pi)), assumptions)
         if ask(Q.positive(expr.base), assumptions):
             if ask(Q.real(expr.exp), assumptions):
                 return True
@@ -295,14 +303,6 @@ class AskPositiveHandler(CommonHandler):
                 return True
             if ask(Q.odd(expr.exp), assumptions):
                 return False
-
-    @staticmethod
-    def exp(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
-            return True
-        if ask(Q.imaginary(expr.args[0]), assumptions):
-            from sympy import pi, I
-            return ask(Q.even(expr.args[0]/(I*pi)), assumptions)
 
     @staticmethod
     def log(expr, assumptions):

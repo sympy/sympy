@@ -65,7 +65,11 @@ class Expr(Basic, EvalfMixin):
         coeff, expr = self.as_coeff_Mul()
 
         if expr.is_Pow:
-            expr, exp = expr.args
+            if expr.base is S.Exp1:
+                # If we remove this, many doctests will go crazy:
+                expr, exp = Function("exp")(expr.exp), S.One
+            else:
+                expr, exp = expr.args
         else:
             expr, exp = expr, S.One
 
@@ -2822,18 +2826,24 @@ class Expr(Basic, EvalfMixin):
         This is a wrapper to compute a series first.
         """
         from sympy import Dummy, log
-        from sympy.series.gruntz import calculate_series
 
-        if self.removeO() == 0:
-            return self
+        d = logx if logx else Dummy('logx')
+
+        for t in self.lseries(x, logx=d):
+            t = t.cancel()
+
+            is_zero = t.equals(0)
+            if is_zero is True:
+                continue
+            elif is_zero is False:
+                break
+            else:
+                raise NotImplementedError("Zero-decision problem for %s" % t)
 
         if logx is None:
-            d = Dummy('logx')
-            s = calculate_series(self, x, d).subs(d, log(x))
-        else:
-            s = calculate_series(self, x, logx)
+            t = t.subs(d, log(x))
 
-        return s.as_leading_term(x)
+        return t.as_leading_term(x)
 
     @cacheit
     def as_leading_term(self, *symbols):

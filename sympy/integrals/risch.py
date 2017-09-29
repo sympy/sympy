@@ -302,8 +302,8 @@ class DifferentialExtension(object):
 
         from sympy.integrals.prde import is_deriv_k
 
-        ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
-            if (i.base.is_Pow or i.base.func is exp and i.exp.is_Rational)]
+        ratpows = [i for i in self.newf.atoms(Pow)
+                   if (i.base.is_Pow and i.exp.is_Rational)]
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
@@ -323,10 +323,10 @@ class DifferentialExtension(object):
 
         # TODO: This probably doesn't need to be completely recomputed at
         # each pass.
-        exps = update_sets(exps, self.newf.atoms(exp),
+        exps = update_sets(exps, set(a for a in self.newf.atoms(Pow) if a.base is S.Exp1),
             lambda i: i.exp.is_rational_function(*self.T) and
             i.exp.has(*self.T))
-        pows = update_sets(pows, self.newf.atoms(Pow),
+        pows = update_sets(pows, set(a for a in self.newf.atoms(Pow) if a.base is not S.Exp1),
             lambda i: i.exp.is_rational_function(*self.T) and
             i.exp.has(*self.T))
         numpows = update_sets(numpows, set(pows),
@@ -362,8 +362,10 @@ class DifferentialExtension(object):
                     self.newf = self.newf.xreplace({old: new})
                     self.backsubs += [(new, old)]
                     log_new_extension = self._log_part([log(i.base)])
-                    exps = update_sets(exps, self.newf.atoms(exp), lambda i:
-                        i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
+                    exps = update_sets(exps, {a for a in self.newf.atoms(Pow)
+                                             if a.base is S.Exp1},
+                                       lambda i: (i.exp.is_rational_function(*self.T) and
+                                                  i.exp.has(*self.T)))
                     continue
                 ans, u, const = A
                 newterm = exp(i.exp*(log(const) + u))
@@ -400,6 +402,7 @@ class DifferentialExtension(object):
             i.args[0].has(*self.T))
         symlogs = update_sets(symlogs, atoms,
             lambda i: i.has(*self.T) and i.args[0].is_Pow and
+              i.args[0].base is not S.Exp1 and
             i.args[0].base.is_rational_function(*self.T) and
             not i.args[0].exp.is_Integer)
 

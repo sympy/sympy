@@ -72,6 +72,7 @@ def evaluates(rule):
         return func
     return _evaluates
 
+
 def contains_dont_know(rule):
     if isinstance(rule, DontKnowRule):
         return True
@@ -84,6 +85,7 @@ def contains_dont_know(rule):
                 if any(contains_dont_know(i) for i in val):
                     return True
     return False
+
 
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
@@ -113,6 +115,7 @@ def manual_diff(f, symbol):
 # Method based on that on SIN, described in "Symbolic Integration: The
 # Stormy Decade"
 
+
 def find_substitutions(integrand, symbol, u_var):
     results = []
 
@@ -131,7 +134,7 @@ def find_substitutions(integrand, symbol, u_var):
     def possible_subterms(term):
         if isinstance(term, (TrigonometricFunction,
                              sympy.asin, sympy.acos, sympy.atan,
-                             sympy.exp, sympy.log, sympy.Heaviside)):
+                             sympy.log, sympy.Heaviside)):
             return [term.args[0]]
         elif isinstance(term, sympy.Mul):
             r = []
@@ -167,6 +170,7 @@ def find_substitutions(integrand, symbol, u_var):
 
     return results
 
+
 def rewriter(condition, rewrite):
     """Strategy that rewrites an integrand."""
     def _rewriter(integral):
@@ -181,6 +185,7 @@ def rewriter(condition, rewrite):
                         substep,
                         integrand, symbol)
     return _rewriter
+
 
 def proxy_rewriter(condition, rewrite):
     """Strategy that rewrites an integrand based on some other criteria."""
@@ -197,6 +202,7 @@ def proxy_rewriter(condition, rewrite):
                     integrand, symbol)
     return _proxy_rewriter
 
+
 def multiplexer(conditions):
     """Apply the rule that matches the condition, else None"""
     def multiplexer_rl(expr):
@@ -204,6 +210,7 @@ def multiplexer(conditions):
             if key(expr):
                 return rule(expr)
     return multiplexer_rl
+
 
 def alternatives(*rules):
     """Strategy that makes an AlternativeRule out of multiple possible results."""
@@ -224,9 +231,11 @@ def alternatives(*rules):
                 return AlternativeRule(alts, *integral)
     return _alternatives
 
+
 def constant_rule(integral):
     integrand, symbol = integral
     return ConstantRule(integral.integrand, *integral)
+
 
 def power_rule(integral):
     integrand, symbol = integral
@@ -349,7 +358,7 @@ def _parts_rule(integrand, symbol):
         if algebraic:
             u = sympy.Mul(*algebraic)
             dv = (integrand / u).cancel()
-            if not u.is_polynomial() and isinstance(dv, sympy.exp):
+            if not u.is_polynomial() and isinstance(dv, sympy.Pow) and dv.base is sympy.S.Exp1:
                 return
             return u, dv
 
@@ -365,10 +374,16 @@ def _parts_rule(integrand, symbol):
 
         return pull_out_u_rl
 
+    def pull_out_pow(integrand):
+        pows = [arg for arg in integrand.args if arg.is_Pow and arg.base is sympy.E]
+        if pows:
+            u = sympy.Mul(*pows)
+            dv = integrand/u
+            return u, dv
+
     liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan, sympy.asin, sympy.acos),
                    pull_out_algebraic, pull_out_u(sympy.sin, sympy.cos),
-                   pull_out_u(sympy.exp)]
-
+                   pull_out_pow]
 
     dummy = sympy.Dummy("temporary")
     # we can integrate log(x) and atan(x) by setting dv = 1
@@ -397,6 +412,7 @@ def _parts_rule(integrand, symbol):
                     v = _manualintegrate(v_step)
 
                     return u, dv, v, du, v_step
+
 
 def parts_rule(integral):
     integrand, symbol = integral
@@ -501,6 +517,7 @@ def trig_rule(integral):
         integrand, symbol
     )
 
+
 def trig_product_rule(integral):
     integrand, symbol = integral
 
@@ -576,12 +593,14 @@ def make_wilds(symbol):
 
     return a, b, m, n
 
+
 @sympy.cacheit
 def sincos_pattern(symbol):
     a, b, m, n = make_wilds(symbol)
     pattern = sympy.sin(a*symbol)**m * sympy.cos(b*symbol)**n
 
     return pattern, a, b, m, n
+
 
 @sympy.cacheit
 def tansec_pattern(symbol):
@@ -590,12 +609,14 @@ def tansec_pattern(symbol):
 
     return pattern, a, b, m, n
 
+
 @sympy.cacheit
 def cotcsc_pattern(symbol):
     a, b, m, n = make_wilds(symbol)
     pattern = sympy.cot(a*symbol)**m * sympy.csc(b*symbol)**n
 
     return pattern, a, b, m, n
+
 
 @sympy.cacheit
 def heaviside_pattern(symbol):
@@ -606,10 +627,12 @@ def heaviside_pattern(symbol):
 
     return pattern, m, b, g
 
+
 def uncurry(func):
     def uncurry_rl(args):
         return func(*args)
     return uncurry_rl
+
 
 def trig_rewriter(rewrite):
     def trig_rewriter_rl(args):
@@ -672,6 +695,7 @@ cotcsc_cotodd = trig_rewriter(
                                     sympy.cot(a*symbol) *
                                     sympy.csc(b*symbol) ** n ))
 
+
 def trig_sincos_rule(integral):
     integrand, symbol = integral
 
@@ -686,6 +710,7 @@ def trig_sincos_rule(integral):
                 sincos_sinodd_condition: sincos_sinodd,
                 sincos_cosodd_condition: sincos_cosodd
             })((a, b, m, n, integrand, symbol))
+
 
 def trig_tansec_rule(integral):
     integrand, symbol = integral
@@ -706,6 +731,7 @@ def trig_tansec_rule(integral):
                 tan_tansquared_condition: tan_tansquared
             })((a, b, m, n, integrand, symbol))
 
+
 def trig_cotcsc_rule(integral):
     integrand, symbol = integral
     integrand = integrand.subs({
@@ -724,6 +750,7 @@ def trig_cotcsc_rule(integral):
                 cotcsc_cotodd_condition: cotcsc_cotodd,
                 cotcsc_csceven_condition: cotcsc_csceven
             })((a, b, m, n, integrand, symbol))
+
 
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
@@ -789,6 +816,7 @@ def trig_substitution_rule(integral):
                             theta, x_func, replaced, substep, restriction,
                             integrand, symbol)
 
+
 def heaviside_rule(integral):
     integrand, symbol = integral
     pattern, m, b, g = heaviside_pattern(symbol)
@@ -799,6 +827,7 @@ def heaviside_rule(integral):
         result = _manualintegrate(v_step)
         m, b = match[m], match[b]
         return HeavisideRule(m*symbol + b, -b/m, result, integrand, symbol)
+
 
 def substitution_rule(integral):
     integrand, symbol = integral
@@ -847,16 +876,6 @@ def substitution_rule(integral):
         elif ways:
             return ways[0]
 
-    elif integrand.has(sympy.exp):
-        u_func = sympy.exp(symbol)
-        c = 1
-        substituted = integrand / u_func.diff(symbol)
-        substituted = substituted.subs(u_func, u_var)
-
-        if symbol not in substituted.free_symbols:
-            return URule(u_var, u_func, c,
-                         integral_steps(substituted, u_var),
-                         integrand, symbol)
 
 partial_fractions_rule = rewriter(
     lambda integrand, symbol: integrand.is_rational_function(),
@@ -969,7 +988,7 @@ def integral_steps(integrand, symbol, **options):
         elif symbol not in integrand.free_symbols:
             return sympy.Number
         else:
-            for cls in (sympy.Pow, sympy.Symbol, sympy.exp, sympy.log,
+            for cls in (sympy.Pow, sympy.Symbol, sympy.log,
                         sympy.Add, sympy.Mul, sympy.atan, sympy.asin, sympy.acos, sympy.Heaviside):
                 if isinstance(integrand, cls):
                     return cls
@@ -985,7 +1004,6 @@ def integral_steps(integrand, symbol, **options):
             sympy.Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule), \
                               null_safe(quadratic_denom_rule)),
             sympy.Symbol: power_rule,
-            sympy.exp: exp_rule,
             sympy.Add: add_rule,
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
                               null_safe(heaviside_rule), null_safe(quadratic_denom_rule), \
