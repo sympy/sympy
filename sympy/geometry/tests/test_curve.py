@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh
+from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Matrix, sin, cos, Abs
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
 from sympy.utilities.pytest import raises, slow
 
@@ -14,7 +14,7 @@ def test_curve():
     c = Curve([2*s, s**2], (z, 0, 2))
 
     assert c.parameter == z
-    assert c.functions == (2*s, s**2)
+    assert c.functions == Matrix((2*s, s**2))
     assert c.arbitrary_point() == Point(2*s, s**2)
     assert c.arbitrary_point(z) == Point(2*s, s**2)
 
@@ -22,7 +22,7 @@ def test_curve():
     c = Curve([2*s, s**2], (s, 0, 2))
 
     assert c.parameter == s
-    assert c.functions == (2*s, s**2)
+    assert c.functions == Matrix((2*s, s**2))
     t = Symbol('t')
     # the t returned as assumptions
     assert c.arbitrary_point() != Point(2*t, t**2)
@@ -37,12 +37,12 @@ def test_curve():
 
     assert Curve([x, x], (x, 0, 1)).rotate(pi/2, (1, 2)).scale(2, 3).translate(
         1, 3).arbitrary_point(s) == \
-        Line((0, 0), (1, 1)).rotate(pi/2, (1, 2)).scale(2, 3).translate(
-            1, 3).arbitrary_point(s) == \
-        Point(-2*s + 7, 3*s + 6)
+           Line((0, 0), (1, 1)).rotate(pi/2, (1, 2)).scale(2, 3).translate(
+               1, 3).arbitrary_point(s) == \
+           Point(-2*s + 7, 3*s + 6)
 
     raises(ValueError, lambda: Curve((s), (s, 1, 2)))
-    raises(ValueError, lambda: Curve((x, x * 2), (1, x)))
+    raises(ValueError, lambda: Curve((x, x*2), (1, x)))
 
     raises(ValueError, lambda: Curve((s, s + t), (s, 1, 2)).arbitrary_point())
     raises(ValueError, lambda: Curve((s, s + t), (t, 1, 2)).arbitrary_point(s))
@@ -60,14 +60,14 @@ def test_free_symbols():
     assert Curve((a*s, b*s), (s, c, d)).free_symbols == {a, b, c, d}
     assert Ellipse((a, b), c, d).free_symbols == {a, b, c, d}
     assert Ellipse((a, b), c, eccentricity=d).free_symbols == \
-        {a, b, c, d}
+           {a, b, c, d}
     assert Ellipse((a, b), vradius=c, eccentricity=d).free_symbols == \
-        {a, b, c, d}
+           {a, b, c, d}
     assert Circle((a, b), c).free_symbols == {a, b, c}
     assert Circle((a, b), (c, d), (e, f)).free_symbols == \
-        {e, d, c, b, f, a}
+           {e, d, c, b, f, a}
     assert Polygon((a, b), (c, d), (e, f)).free_symbols == \
-        {e, b, d, f, a, c}
+           {e, b, d, f, a, c}
     assert RegularPolygon((a, b), c, d, e).free_symbols == {e, a, b, c, d}
 
 
@@ -83,9 +83,9 @@ def test_transform():
     assert [c.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts
     assert [cout.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts_out
     assert Curve((x + y, 3*x), (x, 0, 1)).subs(y, S.Half) == \
-        Curve((x + 1/2, 3*x), (x, 0, 1))
+           Curve((x + 1/2, 3*x), (x, 0, 1))
     assert Curve((x, 3*x), (x, 0, 1)).translate(4, 5) == \
-        Curve((x + 4, 3*x + 5), (x, 0, 1))
+           Curve((x + 4, 3*x + 5), (x, 0, 1))
 
 
 def test_length():
@@ -97,5 +97,60 @@ def test_length():
     c2 = Curve((t, t), (t, 0, 1))
     assert c2.length == sqrt(2)
 
-    c3 = Curve((t ** 2, t), (t, 2, 5))
-    assert c3.length == -sqrt(17) - asinh(4) / 4 + asinh(10) / 4 + 5 * sqrt(101) / 2
+    c3 = Curve((t**2, t), (t, 2, 5))
+    assert c3.length == -sqrt(17) - asinh(4)/4 + asinh(10)/4 + 5*sqrt(101)/2
+
+
+def test_tangent():
+    t = Symbol('t', positive=True)
+
+    c1 = Curve((t,), (t, 0, 1))
+    assert c1.tangent == Matrix([[1]])
+
+    c2 = Curve((t, 3*sin(t), 3*cos(t), t**2), (t, 0, 1))
+    assert c2.tangent == Matrix([[1/sqrt(4*t**2 + 10)], [3*cos(t)/sqrt(4*t**2 + 10)], [-3*sin(t)/sqrt(4*t**2 + 10)], [2*t/sqrt(4*t**2 + 10)]])
+
+
+def test_normal():
+    t = Symbol('t', positive=True)
+
+    c1 = Curve((t,cos(t)), (t, 0, 1))
+    assert c1.normal == Matrix([[-sqrt(2)*sin(2*t)/(2*sqrt(-cos(2*t) + 3)*Abs(cos(t)))], [-cos(t)/(sqrt(sin(t)**2 + 1)*Abs(cos(t)))]])
+
+    c2 = Curve((t**2, t**3), (t, 0, 1))
+    assert c2.normal == Matrix([[-3*t/sqrt(9*t**2 + 4)], [2/sqrt(9*t**2 + 4)]])
+
+def test_binormal():
+    t = Symbol('t', positive=True)
+
+    c1 = Curve((t, 3*cos(t), -3*sin(t)), (t, 0, 1))
+    assert c1.binormal == Matrix([[-3*sqrt(10)/10], [-sqrt(10)*sin(t)/10], [-sqrt(10)*cos(t)/10]])
+
+    c2 = Curve((1, t, t**2), (t, 0, 1))
+    assert c2.binormal == Matrix([[1], [0], [0]])
+
+    raises(ValueError, lambda: Curve((t,), (t, 0, 1)).binormal)
+
+
+def test_curvature():
+    t = Symbol('t', positive=True)
+
+    c1 = Curve((t,), (t, 0, 1))
+    assert c1.curvature == 0
+
+    c2 = Curve((t, t**2), (t, 0, 1))
+    assert c2.curvature == 2/(4*t**2 + 1)**(S(3)/2)
+
+
+def test_torsion():
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    t = Symbol('t', real=True)
+
+    c1 = Curve((t, t**2, t**2), (t, 0, 1))
+    assert c1.torsion == 0
+
+    c2 = Curve((a*cos(t), a*sin(t), b*t), (t, 0, 1))
+    assert c2.torsion == b/sqrt(a**2 + b**2)
+
+    raises(ValueError, lambda: Curve((t,), (t, 0, 1)).torsion)
