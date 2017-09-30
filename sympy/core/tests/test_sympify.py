@@ -26,6 +26,7 @@ def test_issue_3538():
     assert v == exp(x)
     assert type(v) == type(exp(x))
     assert str(type(v)) == str(type(exp(x)))
+    print('here')
 
 
 def test_sympify1():

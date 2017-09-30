@@ -1749,3 +1749,42 @@ def test_Integer_precision():
     assert Float('1.0', precision=Integer(15))._prec == 15
     assert type(Float('1.0', precision=Integer(15))._prec) == int
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
+
+def test_numpy():
+    from sympy.utilities.pytest import skip
+    np = import_module('numpy')
+
+    def equal(x, y):
+        return x == y and type(x) == type(y)
+
+    if not np:
+        skip('numpy not installed.Abort numpy tests.')
+
+    assert Float(np.bool_(1)) is S(True)
+    try:
+        assert equal(
+            Float(np.int_(1234567891234567891)), S(1234567891234567891))
+        assert equal(
+            Float(np.intp(1234567891234567891)), S(1234567891234567891))
+    except OverflowError:
+        # May fail on 32-bit systems: Python int too large to convert to C long
+        pass
+    assert equal(Float(np.intc(1234567891)), S(1234567891))
+    assert equal(Float(np.int8(-123)), S(-123))
+    assert equal(Float(np.int16(-12345)), S(-12345))
+    assert equal(Float(np.int32(-1234567891)), S(-1234567891))
+    assert equal(
+        Float(np.int64(-1234567891234567891)), S(-1234567891234567891))
+    assert equal(Float(np.uint8(123)), S(123))
+    assert equal(Float(np.uint16(12345)), S(12345))
+    assert equal(Float(np.uint32(1234567891)), S(1234567891))
+    assert equal(
+        Float(np.uint64(1234567891234567891)), S(1234567891234567891))
+    assert equal(Float(np.float32(1.123456)), Float(1.123456, precision=24))
+    assert equal(Float(np.float64(1.1234567891234)),
+                 Float(1.1234567891234, precision=53))
+    assert equal(Float(np.longdouble(1.123456789)),
+                 Float(1.123456789, precision=80))
+    assert equal(Float(np.complex64(1 + 2j)), S(1.0 + 2.0 * I))
+    assert equal(Float(np.complex128(1 + 2j)), S(1.0 + 2.0 * I))
+    assert equal(Float(np.longcomplex(1 + 2j)), S(1.0 + 2.0 * I))

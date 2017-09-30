@@ -975,6 +975,9 @@ class Float(Number):
 
         if dps is None and precision is None:
             dps = 15
+            if type(num).__module__ == 'numpy':
+                from .sympify import convert_np_to_sympy_float
+                return convert_np_to_sympy_float(num)
             if isinstance(num, Float):
                 return num
             if isinstance(num, string_types) and _literal_float(num):
@@ -1020,6 +1023,8 @@ class Float(Number):
         precision = int(precision)
 
         if isinstance(num, float):
+            _mpf_ = mlib.from_float(num, precision, rnd)
+        elif type(num).__module__ == 'numpy':
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, string_types):
             _mpf_ = mlib.from_str(num, precision, rnd)
