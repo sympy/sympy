@@ -1752,8 +1752,7 @@ def test_Integer_precision():
 
 def test_numpy():
     from sympy.utilities.pytest import skip
-    np = import_module('numpy')
-
+    import numpy as np
     def equal(x, y):
         return x == y and type(x) == type(y)
 
@@ -1788,3 +1787,4 @@ def test_numpy():
     assert equal(Float(np.complex64(1 + 2j)), S(1.0 + 2.0 * I))
     assert equal(Float(np.complex128(1 + 2j)), S(1.0 + 2.0 * I))
     assert equal(Float(np.longcomplex(1 + 2j)), S(1.0 + 2.0 * I))
+
