@@ -24,7 +24,7 @@ def _common_new(cls, function, *symbols, **assumptions):
     both ExprWithLimits and AddWithLimits."""
     function = sympify(function)
 
-    if hasattr(function, 'func') and function.func is Equality:
+    if hasattr(function, 'func') and isinstance(function, Equality):
         lhs = function.lhs
         rhs = function.rhs
         return Equality(cls(lhs, *symbols, **assumptions), \
