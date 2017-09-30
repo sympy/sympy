@@ -8,7 +8,7 @@ from sympy.functions.elementary.integers import floor
 
 class Higher(Integer):
     '''
-    Integer of value -1 and _op_priority 20
+    Integer of value 1 and _op_priority 20
 
     Operations handled by this class return 1 and reverse operations return 2
     '''
