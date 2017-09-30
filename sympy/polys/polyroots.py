@@ -1013,9 +1013,8 @@ def roots(f, *gens, **flags):
                                 for root in _try_decompose(f):
                                     _update_dict(result, root, 1)
                         else:
-                            for factor, k in factors:
-                                for r in _try_heuristics(Poly(factor, f.gen, field=True)):
-                                    _update_dict(result, r, k)
+                            for r in _try_heuristics(Poly(factors[0][0], f.gen, field=True)):
+                                _update_dict(result, r, 1)
                     else:
                         for root in _try_decompose(f):
                             _update_dict(result, root, 1)
