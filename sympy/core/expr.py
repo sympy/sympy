@@ -161,9 +161,10 @@ class Expr(Basic, EvalfMixin):
                 return mod_inverse(pow(_self, -other, mod), mod)
         except ValueError:
             power = self._pow(other)
-            if power is NotImplemented:
+            try:
+                return power%mod
+            except TypeError:
                 return NotImplemented
-            return power%mod
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')

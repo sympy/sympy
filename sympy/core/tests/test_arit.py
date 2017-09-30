@@ -192,6 +192,8 @@ def test_mod_pow():
     assert pow(S(4), -3, 497)*4**3%497 == 1
     assert pow(x, y, z) == x**y%z
     assert pow(S(3.2), 2.1, 1.9) == 0.1031015682350942
+    raises(TypeError, lambda: pow(S(4), "13", 497))
+    raises(TypeError, lambda: pow(S(4), 13, "497"))
 
 
 def test_pow_E():
