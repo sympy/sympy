@@ -310,6 +310,10 @@ def test_solve_univariate_inequality():
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
     raises(TypeError, lambda: isolve(x - I < 0, x))
 
+    # make sure iter_solutions gets a default value
+    raises(NotImplementedError, lambda: isolve(
+        Eq(cos(x)**2 + sin(x)**2, 1), x))
+
 
 def test_trig_inequalities():
     # all the inequalities are solved in a periodic interval.
