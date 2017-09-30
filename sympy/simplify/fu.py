@@ -1934,7 +1934,7 @@ def trig_split(a, b, two=False):
     else:
         if not coa and not cob:
             if (ca and cb and sa and sb):
-                if not ((ca.func is sa.func) is (cb.func is sb.func)):
+                if isinstance(ca, sa.func) is not isinstance(cb, sb.func):
                     return
                 args = {j.args for j in (ca, sa)}
                 if not all(i.args in args for i in (cb, sb)):
