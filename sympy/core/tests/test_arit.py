@@ -188,10 +188,13 @@ def test_pow3():
 
 
 def test_mod_pow():
-    assert pow(S(4), 13, 497) == pow(4, 13, 497)
-    assert pow(S(4), -3, 497)*4**3%497 == 1
+    for s, t, u, v in [(4, 13, 497, 445), (4, -3, 497, 365),
+            (3.2, 2.1, 1.9, 0.1031015682350942), (S(3)/2, 5, S(5)/6, S(3)/32)]:
+        assert pow(S(s), t, u) == v
+        assert pow(S(s), S(t), u) == v
+        assert pow(S(s), t, S(u)) == v
+        assert pow(S(s), S(t), S(u)) == v
     assert pow(x, y, z) == x**y%z
-    assert pow(S(3.2), 2.1, 1.9) == 0.1031015682350942
     raises(TypeError, lambda: pow(S(4), "13", 497))
     raises(TypeError, lambda: pow(S(4), 13, "497"))
 
