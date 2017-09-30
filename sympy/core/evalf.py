@@ -1309,6 +1309,8 @@ def evalf(x, prec, options):
             elif im.is_number:
                 im = im._to_mpmath(prec, allow_ints=False)._mpf_
                 imprec = prec
+            else:
+                raise NotImplementedError
             r = re, im, reprec, imprec
         except AttributeError:
             raise NotImplementedError
