@@ -1301,6 +1301,8 @@ def evalf(x, prec, options):
             elif re.is_number:
                 re = re._to_mpmath(prec, allow_ints=False)._mpf_
                 reprec = prec
+            else:
+                raise NotImplementedError
             if im == 0:
                 im = None
                 imprec = None
