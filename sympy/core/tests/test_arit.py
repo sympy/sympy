@@ -194,6 +194,7 @@ def test_mod_pow():
         assert pow(S(s), S(t), u) == v
         assert pow(S(s), t, S(u)) == v
         assert pow(S(s), S(t), S(u)) == v
+    assert pow(S(2), S(10000000000), S(3)) == 1
     assert pow(x, y, z) == x**y%z
     raises(TypeError, lambda: pow(S(4), "13", 497))
     raises(TypeError, lambda: pow(S(4), 13, "497"))
@@ -1634,6 +1635,7 @@ def test_Mod():
 
     # modular exponentiation
     assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
+    assert Mod(Pow(2, 10000000000, evaluate=False), 3) == 1
 
     # Wilson's theorem
     factorial(18042, evaluate=False) % 18043 == 18042
