@@ -635,12 +635,12 @@ def _condsimp(cond):
                         if arg2 == arg3:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[1] == r and \
-                                arg2.func is And and arg2.args[0] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[1] == r and \
+                                isinstance(arg2, And) and arg2.args[0] in arg3.args:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[0] == r and \
-                                arg2.func is And and arg2.args[1] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[0] == r and \
+                                isinstance(arg2, And) and arg2.args[1] in arg3.args:
                             otherlist += [k]
                             break
                 if len(otherlist) != len(otherargs) + 1:
@@ -661,7 +661,7 @@ def _condsimp(cond):
             return orig
         m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
-            if expr.func is periodic_argument and not expr.args[0].is_polar \
+            if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
                     and expr.args[1] == oo:
                 return (expr.args[0] > 0)
             return orig
@@ -845,7 +845,7 @@ def _int0oo_1(g, x):
     gamma(-a)*gamma(c + 1)/(y*gamma(-d)*gamma(b + 1))
     """
     # See [L, section 5.6.1]. Note that s=1.
-    from sympy import gamma, combsimp, unpolarify
+    from sympy import gamma, gammasimp, unpolarify
     eta, _ = _get_coeff_exp(g.argument, x)
     res = 1/eta
     # XXX TODO we should reduce order first
@@ -857,7 +857,7 @@ def _int0oo_1(g, x):
         res /= gamma(1 - b - 1)
     for a in g.aother:
         res /= gamma(a + 1)
-    return combsimp(unpolarify(res))
+    return gammasimp(unpolarify(res))
 
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):

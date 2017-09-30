@@ -212,11 +212,11 @@ class Pow(Expr):
                 return S.One
             else:
                 # recognize base as E
-                if not e.is_Atom and b is not S.Exp1 and b.func is not exp_polar:
+                if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
                     from sympy import numer, denom, log, sign, im, factor_terms
                     c, ex = factor_terms(e, sign=False).as_coeff_Mul()
                     den = denom(ex)
-                    if den.func is log and den.args[0] == b:
+                    if isinstance(den, log) and den.args[0] == b:
                         return S.Exp1**(c*numer(ex))
                     elif den.is_Add:
                         s = sign(im(b))
@@ -337,6 +337,18 @@ class Pow(Expr):
 
         if s is not None:
             return s*Pow(b, e*other)
+
+    def _eval_Mod(self, q):
+        if self.exp.is_integer and self.exp.is_positive:
+            if q.is_integer and self.base % q == 0:
+                return S.Zero
+
+            '''
+            For unevaluated Integer power, use built-in pow modular
+            exponentiation.
+            '''
+            if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
+                return pow(int(self.base), int(self.exp), int(q))
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
@@ -545,18 +557,20 @@ class Pow(Expr):
                 return True
 
     def _eval_is_prime(self):
-        if self.exp == S.One:
-            return self.base.is_prime
-        if self.is_number:
-            return self.doit().is_prime
+        '''
+        An integer raised to the n(>=2)-th power cannot be a prime.
+        '''
+        if self.base.is_integer and self.exp.is_integer and (self.exp-1).is_positive:
+            return False
 
-        if self.is_integer and self.is_positive:
-            """
-            a Power will be non-prime only if both base and exponent
-            are greater than 1
-            """
-            if (self.base-1).is_positive or (self.exp-1).is_positive:
-                return False
+    def _eval_is_composite(self):
+        """
+        A power is composite if both base and exponent are greater than 1
+        """
+        if (self.base.is_integer and self.exp.is_integer and
+            ((self.base-1).is_positive and (self.exp-1).is_positive or
+            (self.base+1).is_negative and self.exp.is_positive and self.exp.is_even)):
+            return True
 
     def _eval_is_polar(self):
         return self.base.is_polar
@@ -624,12 +638,12 @@ class Pow(Expr):
             return new**self.exp._subs(old, new)
 
         # issue 10829: (4**x - 3*y + 2).subs(2**x, y) -> y**2 - 3*y + 2
-        if old.func is self.func and self.exp == old.exp:
+        if isinstance(old, self.func) and self.exp == old.exp:
             l = log(self.base, old.base)
             if l.is_Number:
                 return Pow(new, l)
 
-        if old.func is self.func and self.base == old.base:
+        if isinstance(old, self.func) and self.base == old.base:
             if self.exp.is_Add is False:
                 ct1 = self.exp.as_independent(Symbol, as_Add=False)
                 ct2 = old.exp.as_independent(Symbol, as_Add=False)
@@ -664,7 +678,7 @@ class Pow(Expr):
                     new_l.append(Pow(self.base, Add(*o_al), evaluate=False))
                     return Mul(*new_l)
 
-        if old.func is exp and self.exp.is_real and self.base.is_positive:
+        if isinstance(old, exp) and self.exp.is_real and self.base.is_positive:
             ct1 = old.args[0].as_independent(Symbol, as_Add=False)
             ct2 = (self.exp*log(self.base)).as_independent(
                 Symbol, as_Add=False)
@@ -1174,6 +1188,11 @@ class Pow(Expr):
         if neg_exp:
             n, d = d, n
             exp = -exp
+        if exp.is_infinite:
+            if n is S.One and d is not S.One:
+                return n, self.func(d, exp)
+            if n is not S.One and d is S.One:
+                return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
     def matches(self, expr, repl_dict={}, old=False):

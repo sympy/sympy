@@ -72,8 +72,8 @@ def test_polytope_integrate():
                                       Point(sqrt(3), 0)), 1) == 3
 
     hexagon = Polygon(Point(0, 0), Point(-sqrt(3) / 2, S(1)/2),
-                      Point(-sqrt(3) / 2, 3 / 2), Point(0, 2),
-                      Point(sqrt(3) / 2, 3 / 2), Point(sqrt(3) / 2, S(1)/2))
+                      Point(-sqrt(3) / 2, S(3) / 2), Point(0, 2),
+                      Point(sqrt(3) / 2, S(3) / 2), Point(sqrt(3) / 2, S(1)/2))
 
     assert polytope_integrate(hexagon, 1) == S(3*sqrt(3)) / 2
 
@@ -87,12 +87,12 @@ def test_polytope_integrate():
     assert polytope_integrate([((-1, 0), 0), ((0, sqrt(3)), 3),
                                ((sqrt(3), 0), 3), ((0, -1), 0)], 1) == 3
 
-    hexagon = [((-1 / 2, -sqrt(3) / 2), 0),
+    hexagon = [((-S(1) / 2, -sqrt(3) / 2), 0),
                ((-1, 0), sqrt(3) / 2),
-               ((-1 / 2, sqrt(3) / 2), sqrt(3)),
-               ((1 / 2, sqrt(3) / 2), sqrt(3)),
+               ((-S(1) / 2, sqrt(3) / 2), sqrt(3)),
+               ((S(1) / 2, sqrt(3) / 2), sqrt(3)),
                ((1, 0), sqrt(3) / 2),
-               ((1 / 2, -sqrt(3) / 2), 0)]
+               ((S(1) / 2, -sqrt(3) / 2), 0)]
     assert polytope_integrate(hexagon, 1) == S(3*sqrt(3)) / 2
 
     #  Non-convex polytopes
@@ -136,7 +136,7 @@ def test_polytope_integrate():
     assert polytope_integrate(fig4, x**2 + x*y + y**2) ==\
         S(180742845225803)/(10**12)
 
-    #  Tests for many polynomials with maximum degree given.
+    #  Tests for many polynomials with maximum degree given(2D case).
     tri = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     polys = []
     expr1 = x**9*y + x**7*y**3 + 2*x**2*y**8
@@ -147,6 +147,25 @@ def test_polytope_integrate():
     assert result_dict[expr1] == S(615780107)/594
     assert result_dict[expr2] == S(13062161)/27
     assert result_dict[expr3] == S(1946257153)/924
+
+    #  Tests when all integral of all monomials up to a max_degree is to be
+    #  calculated.
+    assert polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
+                                      Point(1, 1), Point(1, 0)),
+                              max_degree=4) == {0: 0, 1: 1, x: S(1) / 2,
+                                                x ** 2 * y ** 2: S(1) / 9,
+                                                x ** 4: S(1) / 5,
+                                                y ** 4: S(1) / 5,
+                                                y: S(1) / 2,
+                                                x * y ** 2: S(1) / 6,
+                                                y ** 2: S(1) / 3,
+                                                x ** 3: S(1) / 4,
+                                                x ** 2 * y: S(1) / 6,
+                                                x ** 3 * y: S(1) / 8,
+                                                x * y: S(1) / 4,
+                                                y ** 3: S(1) / 4,
+                                                x ** 2: S(1) / 3,
+                                                x * y ** 3: S(1) / 8}
 
     #  Tests for 3D polytopes
     cube1 = [[(0, 0, 0), (0, 6, 6), (6, 6, 6), (3, 6, 0),
@@ -464,6 +483,16 @@ def test_polytope_integrate():
     assert Abs(polytope_integrate(echidnahedron, 1) - 51.4057647468726) < 1e-12
     assert Abs(polytope_integrate(echidnahedron, expr) - 253.569603474519) <\
     1e-12
+
+    #  Tests for many polynomials with maximum degree given(2D case).
+    assert polytope_integrate(cube2, [x**2, y*z], max_degree=2) == \
+        {y * z: 3125 / S(4), x ** 2: 3125 / S(3)}
+
+    assert polytope_integrate(cube2, max_degree=2) == \
+        {1: 125, x: 625 / S(2), x * z: 3125 / S(4), y: 625 / S(2),
+         y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / S(3),
+         z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
+
 
 @XFAIL
 def test_polytopes_intersecting_sides():

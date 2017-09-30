@@ -13,7 +13,6 @@ dist: trusty
 
 python:
   - 2.7
-  - 3.3
   - 3.4
   - 3.5
   - 3.6
@@ -22,12 +21,10 @@ matrix:
   include:
     - python: 2.7
       env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_THEANO="true"
         - TEST_ASCII="true"
-        - TEST_AUTOWRAP="true"
-        - TEST_SYMENGINE="true"
+        # space separated list of optional dependencies(conda packages) to install and test
+        # autowrap installs libgfortran libgcc gcc cython
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.*"
       addons:
         apt:
           packages:
@@ -38,12 +35,8 @@ matrix:
             - gfortran
     - python: 3.5
       env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_THEANO="true"
         - TEST_ASCII="true"
-        - TEST_AUTOWRAP="true"
-        - TEST_SYMENGINE="true"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.*"
       addons:
         apt:
           packages:
@@ -238,7 +231,7 @@ before_install:
       pip install "sphinx" "docutils" doctr;
     fi
   - |
-    if [[ "${TEST_MATPLOTLIB}" == "true" || "${TEST_SYMENGINE}" == "true" ]]; then
+    if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -251,27 +244,12 @@ before_install:
         hash -r;
         conda config --set always_yes yes --set changeps1 no;
         conda update -q conda;
+        conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
         conda info -a;
-        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION matplotlib numpy scipy pip llvmlite;
+        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython};
         source activate test-environment;
-    fi
-  - if [[ "${TEST_GMPY}" == "true" ]]; then
-        conda install gmpy2 -c conda-forge;
-    fi
-  - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
-        conda config --add channels conda-forge;
-        conda config --add channels symengine/label/dev;
-        conda install python-symengine=0.3.*;
-    fi
-  - |
-    if [[ "${TEST_THEANO}" == "true" ]]; then
-        # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
-        conda install theano;
-    fi
-  - |
-    if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
-        # this assumes TEST_AUTOWRAP runs in the same build as TEST_MATPLOTLIB
-        conda install libgfortran libgcc gcc cython;
+    elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
+        pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
     fi
   - |
     if [[ "${TEST_TENSORFLOW}" == "true" ]]; then
@@ -288,6 +266,9 @@ before_install:
       sudo apt-add-repository -y ppa:aims/sagemath;
       sudo apt-get update;
       sudo apt-get install -y sagemath-upstream-binary;
+    fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+      pip install matchpy;
     fi
 install:
   # If a command fails, fail the build.
@@ -307,6 +288,7 @@ install:
       pip install --upgrade setuptools;
       python -We:invalid -m compileall -f sympy/ || (echo "ERROR Invalid escape sequence found. You likely need to use a raw string." && exit 1);
       python -We:invalid setup.py install;
+      pip list --format=columns;
     fi
 script:
   # Don't run doctr if the build fails

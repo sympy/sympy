@@ -8,7 +8,7 @@ from sympy import (
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
-    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
+    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, Quaternion)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -1114,6 +1114,13 @@ def test_settings():
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
+    assert latex(catalan(n)**2) == r"C_{n}^{2}"
+
+
+def test_latex_euler():
+    assert latex(euler(n)) == r"E_{n}"
+    assert latex(euler(n, x)) == r"E_{n}\left(x\right)"
+    assert latex(euler(n, x)**2) == r"E_{n}^{2}\left(x\right)"
 
 
 def test_lamda():
@@ -1642,3 +1649,12 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
+
+
+def test_Quaternion_latex_printing():
+    q = Quaternion(x, y, z, t)
+    assert latex(q) == "x + y i + z j + t k"
+    q = Quaternion(x,y,z,x*t)
+    assert latex(q) == "x + y i + z j + t x k"
+    q = Quaternion(x,y,z,x+t)
+    assert latex(q) == r"x + y i + z j + \left(t + x\right) k"

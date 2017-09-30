@@ -9,6 +9,7 @@ from sympy import (
     cos,
     expand,
     factor,
+    gammasimp,
     posify,
     radsimp,
     ratsimp,
@@ -63,6 +64,10 @@ def test_collect():
 
 def test_combsimp():
     assert combsimp(A*B - B*A) == A*B - B*A
+
+
+def test_gammasimp():
+    assert gammasimp(A*B - B*A) == A*B - B*A
 
 
 def test_conjugate():

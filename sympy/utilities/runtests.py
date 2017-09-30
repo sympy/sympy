@@ -2112,6 +2112,8 @@ class PyTestReporter(Reporter):
                 import gmpy2 as gmpy
             version = gmpy.version()
         self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
+        numpy = import_module('numpy')
+        self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION

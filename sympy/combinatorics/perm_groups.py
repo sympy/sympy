@@ -167,6 +167,9 @@ class PermutationGroup(Basic):
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
+
+        # finite presentation of the group as an instance of `FpGroup`
+        obj._fp_presentation = None
         return obj
 
     def __getitem__(self, i):
@@ -1891,7 +1894,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> DihedralGroup(6).minimal_blocks()
-        [[0, 3, 0, 3, 0, 3], [0, 4, 2, 0, 4, 2]]
+        [[0, 1, 0, 1, 0, 1], [0, 1, 2, 0, 1, 2]]
         >>> G = PermutationGroup(Permutation(1,2,5))
         >>> G.minimal_blocks()
         False
@@ -2239,7 +2242,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.minimal_block([0, 5])
-        [0, 6, 2, 8, 4, 0, 6, 2, 8, 4]
+        [0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
         >>> D.minimal_block([0, 1])
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -2285,7 +2288,10 @@ class PermutationGroup(Basic):
             # force path compression to get the final state of the equivalence
             # relation
             self._union_find_rep(i, parents)
-        return parents
+
+        # rewrite result so that block representatives are minimal
+        new_reps = {}
+        return [new_reps.setdefault(r, i) for i, r in enumerate(parents)]
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
@@ -3815,6 +3821,9 @@ class PermutationGroup(Basic):
         from sympy.combinatorics.homomorphisms import homomorphism
         from itertools import product
 
+        if G._fp_presentation:
+            return G._fp_presentation
+
         def _factor_group_by_rels(G, rels):
             if isinstance(G, FpGroup):
                 return FpGroup(G.free_group, list(uniq(
@@ -3913,7 +3922,8 @@ class PermutationGroup(Basic):
             C_p = G_p.coset_enumeration([], strategy="coset_table",
                                 draft=C_p, max_cosets=n, incomplete=True)
 
-        return simplify_presentation(G_p)
+        G._fp_presentation = simplify_presentation(G_p)
+        return G._fp_presentation
 
 
 def _orbit(degree, generators, alpha, action='tuples'):

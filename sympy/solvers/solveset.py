@@ -700,6 +700,9 @@ def _solveset(f, symbol, domain, _check=False):
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
+    elif isinstance(f, arg):
+        a = f.args[0]
+        result = solveset_real(a > 0, symbol)
     elif f.is_Piecewise:
         dom = domain
         result = EmptySet()

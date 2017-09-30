@@ -284,11 +284,16 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
 
+    raises(ValueError, lambda: euler(-2))
+    raises(ValueError, lambda: euler(-3))
+    raises(ValueError, lambda: euler(2.3))
+
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
 
     assert euler(n).rewrite(Sum) == euler(n)
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
+    n = Symbol('n', integer=True, nonnegative=True)
     assert euler(2*n + 1).rewrite(Sum) == 0
 
 
@@ -296,6 +301,34 @@ def test_euler():
 def test_euler_failing():
     # depends on dummy variables being implemented https://github.com/sympy/sympy/issues/5665
     assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+
+
+def test_euler_odd():
+    n = Symbol('n', odd=True, positive=True)
+    assert euler(n) == 0
+    n = Symbol('n', odd=True)
+    assert euler(n) != 0
+
+
+def test_euler_polynomials():
+    assert euler(0, x) == 1
+    assert euler(1, x) == x - Rational(1, 2)
+    assert euler(2, x) == x**2 - x
+    assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
+    m = Symbol('m')
+    assert isinstance(euler(m, x), euler)
+    from sympy import Float
+    A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
+    B = euler(19, S.Pi.evalf(32))
+    assert abs((A - B)/A) < 1e-31  # expect low relative error
+    C = euler(19, S.Pi, evaluate=False).evalf(32)
+    assert abs((A - C)/A) < 1e-31
+
+
+def test_euler_polynomial_rewrite():
+    m = Symbol('m')
+    A = euler(m, x).rewrite('Sum');
+    assert A.subs({m:3, x:5}).doit() == euler(3, 5)
 
 
 def test_catalan():
@@ -512,7 +545,6 @@ def test_issue_8496():
     k = Symbol("k")
 
     raises(TypeError, lambda: catalan(n, k))
-    raises(TypeError, lambda: euler(n, k))
 
 
 def test_issue_8601():

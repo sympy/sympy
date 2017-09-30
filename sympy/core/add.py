@@ -144,7 +144,8 @@ class Add(Expr, AssocOp):
                 continue
 
             elif isinstance(o, MatrixExpr):
-                coeff = o.__add__(coeff)
+                # can't add 0 to Matrix so make sure coeff is not 0
+                coeff = o.__add__(coeff) if coeff else o
                 continue
 
             elif o is S.ComplexInfinity:
@@ -858,7 +859,7 @@ class Add(Expr, AssocOp):
         return self.func(*[t.transpose() for t in self.args])
 
     def __neg__(self):
-        return self.func(*[-t for t in self.args])
+        return self*(-1)
 
     def _sage_(self):
         s = 0

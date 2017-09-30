@@ -208,8 +208,15 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
+    def _cdf(self, x):
+        return None
+
     def cdf(self, x, **kwargs):
         """ Cumulative density function """
+        if len(kwargs) == 0:
+            cdf = self._cdf(x)
+            if cdf is not None:
+                return cdf
         return self.compute_cdf(**kwargs)(x)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
@@ -329,12 +336,17 @@ class ContinuousPSpace(PSpace):
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
-
         condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
-
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
-            pdf = self.pdf / domain.integrate(self.pdf, **kwargs)
+            # create a clone of the variable to
+            # make sure that variables in nested integrals are different
+            # from the variables outside the integral
+            # this makes sure that they are evaluated separately
+            # and in the correct order
+            replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
+            norm = domain.integrate(self.pdf, **kwargs)
+            pdf = self.pdf / norm.xreplace(replacement)
             density = Lambda(domain.symbols, pdf)
 
         return ContinuousPSpace(domain, density)
@@ -381,7 +393,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
-            return self.distribution.compute_cdf(**kwargs)
+            z = symbols("z", real=True, finite=True, cls=Dummy)
+            return Lambda(z, self.distribution.cdf(z, **kwargs))
         else:
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 

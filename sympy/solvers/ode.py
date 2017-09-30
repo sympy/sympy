@@ -2270,7 +2270,7 @@ def odesimp(eq, func, order, constants, hint):
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
                 newi = logcombine(eqi, force=True)
-                if newi.lhs.func is log and newi.rhs == 0:
+                if isinstance(newi.lhs, log) and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
@@ -2653,7 +2653,7 @@ def __remove_linear_redundancies(expr, Cs):
     Cs = [i for i in Cs if cnts[i] > 0]
 
     def _linear(expr):
-        if expr.func is Add:
+        if isinstance(expr, Add):
             xs = [i for i in Cs if expr.count(i)==cnts[i] \
                 and 0 == expr.diff(i, 2)]
             d = {}
@@ -2675,10 +2675,10 @@ def __remove_linear_redundancies(expr, Cs):
         expr = _linear(expr)
         return expr
 
-    if expr.func is Equality:
+    if isinstance(expr, Equality):
         lhs, rhs = [_recursive_walk(i) for i in expr.args]
         f = lambda i: isinstance(i, Number) or i in Cs
-        if lhs.func is Symbol and lhs in Cs:
+        if isinstance(lhs, Symbol) and lhs in Cs:
             rhs, lhs = lhs, rhs
         if lhs.func in (Add, Symbol) and rhs.func in (Add, Symbol):
             dlhs = sift([lhs] if isinstance(lhs, AtomicExpr) else lhs.args, f)
@@ -2792,7 +2792,9 @@ def constantsimp(expr, constants):
         rexpr = rexpr[0]
         for s in commons:
             cs = list(s[1].atoms(Symbol))
-            if len(cs) == 1 and cs[0] in Cs:
+            if len(cs) == 1 and cs[0] in Cs and \
+                cs[0] not in rexpr.atoms(Symbol) and \
+                not any(cs[0] in ex for ex in commons if ex != s):
                 rexpr = rexpr.subs(s[0], cs[0])
             else:
                 rexpr = rexpr.subs(*s)
@@ -2809,10 +2811,10 @@ def constantsimp(expr, constants):
             infac = False
             asfac = False
             for m in new_expr.args:
-                if m.func is exp:
+                if isinstance(m, exp):
                     asfac = True
                 elif m.is_Add:
-                    infac = any(fi.func is exp for t in m.args
+                    infac = any(isinstance(fi, exp) for t in m.args
                         for fi in Mul.make_args(t))
                 if asfac and infac:
                     new_expr = expr
@@ -3539,12 +3541,12 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
     >>> sol = dsolve(genform, y)
     >>> pprint(sol, wrap_line=False)
-                                             /        __________________       \
-                       __________________    |       /                2        |
-                      /                2     |     \/  4*b*d - (a + c)  *log(x)|
-           -a - c + \/  4*b*d - (a + c)  *tan|C1 + ----------------------------|
-                                             \                 2*a             /
-    f(x) = ---------------------------------------------------------------------
+            /                                 /        __________________       \\
+            |           __________________    |       /                2        ||
+            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
+           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
+            \                                 \                 2*a             //
+    f(x) = ------------------------------------------------------------------------
                                             2*b*x
 
     >>> checkodesol(genform, sol, order=1)[0]

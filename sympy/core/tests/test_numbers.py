@@ -2,7 +2,8 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin, fibonacci, RealField)
+                   AlgebraicNumber, simplify, sin, fibonacci, RealField,
+                   sympify, srepr)
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
@@ -77,7 +78,6 @@ def test_mod():
 
     p = Symbol('p', infinite=True)
 
-    assert zoo % 0 == nan
     assert oo % oo == nan
     assert zoo % oo == nan
     assert 5 % oo == nan
@@ -121,20 +121,6 @@ def test_mod():
     assert Integer(3).__rmod__(Integer(10)) == Integer(1)
     assert Integer(10) % 4 == Integer(2)
     assert 15 % Integer(4) == Integer(3)
-
-    h = Symbol('h')
-    m = h ** 2 % h
-    k = h ** -2 % h
-    l = Symbol('l', integer=True)
-    p = Symbol('p', integer=True, positive=True)
-    q = Symbol('q', integer=True, negative=True)
-
-    assert m == h * (h % 1)
-    assert k == Mod(h ** -2, h, evaluate=False)
-    assert Mod(l ** p, l) == 0
-    assert Mod(l ** 2, l) == 0
-    assert (l ** q % l) == Mod(l ** q, l, evaluate=False)
-    assert (l ** -2 % l) == Mod(l ** -2, l, evaluate=False)
 
 
 def test_divmod():
@@ -547,6 +533,10 @@ def test_Float():
     raises(ValueError, lambda: Float("1.23", dps="", precision=10))
     raises(ValueError, lambda: Float("1.23", dps=3, precision=""))
     raises(ValueError, lambda: Float("1.23", dps="", precision=""))
+
+    # from NumberSymbol
+    assert same_and_same_prec(Float(pi, 32), pi.evalf(32))
+    assert same_and_same_prec(Float(Catalan), Catalan.evalf())
 
 
 @conserve_mpmath_dps
@@ -1752,3 +1742,10 @@ def test_NumberSymbol_comparison():
     assert (fpi <= pi) == (pi >= fpi)
     assert (fpi > pi) == (pi < fpi)
     assert (fpi >= pi) == (pi <= fpi)
+
+def test_Integer_precision():
+    # Make sure Integer inputs for keyword args work
+    assert Float('1.0', dps=Integer(15))._prec == 53
+    assert Float('1.0', precision=Integer(15))._prec == 15
+    assert type(Float('1.0', precision=Integer(15))._prec) == int
+    assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)

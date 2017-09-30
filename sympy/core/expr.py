@@ -2256,7 +2256,7 @@ class Expr(Basic, EvalfMixin):
         args = Mul.make_args(self)
         exps = []
         for arg in args:
-            if arg.func is exp_polar:
+            if isinstance(arg, exp_polar):
                 exps += [arg.exp]
             else:
                 res *= arg
@@ -3149,6 +3149,11 @@ class Expr(Basic, EvalfMixin):
         """See the combsimp function in sympy.simplify"""
         from sympy.simplify import combsimp
         return combsimp(self)
+
+    def gammasimp(self):
+        """See the gammasimp function in sympy.simplify"""
+        from sympy.simplify import gammasimp
+        return gammasimp(self)
 
     def factor(self, *gens, **args):
         """See the factor() function in sympy.polys.polytools"""

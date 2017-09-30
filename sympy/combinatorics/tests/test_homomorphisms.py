@@ -45,7 +45,7 @@ def test_homomorphism():
     D = DihedralGroup(8)
     p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
     P = PermutationGroup(p)
-    T = homomorphism(P, D, [p], [p], check=False)
+    T = homomorphism(P, D, [p], [p])
     assert T.is_injective()
     assert not T.is_isomorphism()
     assert T.invert(p**3) == p**3

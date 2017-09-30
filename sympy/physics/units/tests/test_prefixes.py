@@ -32,9 +32,9 @@ def test_prefix_unit():
 
     pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
 
-    res = [Quantity("millimeter", length, PREFIXES["m"], "mm"),
-           Quantity("centimeter", length, PREFIXES["c"], "cm"),
-           Quantity("decimeter", length, PREFIXES["d"], "dm")]
+    res = [Quantity("millimeter", length, PREFIXES["m"], abbrev="mm"),
+           Quantity("centimeter", length, PREFIXES["c"], abbrev="cm"),
+           Quantity("decimeter", length, PREFIXES["d"], abbrev="dm")]
 
     prefs = prefix_unit(m, pref)
     assert set(prefs) == set(res)

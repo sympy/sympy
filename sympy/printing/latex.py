@@ -1815,11 +1815,20 @@ class LatexPrinter(Printer):
             denom = self._print(frac.denom)
             return r"\frac{%s}{%s}" % (numer, denom)
 
-    def _print_euler(self, expr):
-        return r"E_{%s}" % self._print(expr.args[0])
+    def _print_euler(self, expr, exp=None):
+        m, x = (expr.args[0], None) if len(expr.args) == 1 else expr.args
+        tex = r"E_{%s}" % self._print(m)
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        if x is not None:
+            tex = r"%s\left(%s\right)" % (tex, self._print(x))
+        return tex
 
-    def _print_catalan(self, expr):
-        return r"C_{%s}" % self._print(expr.args[0])
+    def _print_catalan(self, expr, exp=None):
+        tex = r"C_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_MellinTransform(self, expr):
         return r"\mathcal{M}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
@@ -1940,6 +1949,13 @@ class LatexPrinter(Printer):
     def _print_ModuleImplementedIdeal(self, m):
         return r"\left< %s \right>" % ",".join(
             '{' + self._print(x) + '}' for [x] in m._module.gens)
+
+    def _print_Quaternion(self, expr):
+        # TODO: This expression is potentially confusing,
+        # shall we print it as `Quaternion( ... )`?
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...

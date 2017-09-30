@@ -70,6 +70,7 @@ if sys.version_info[:2] < (2, 7):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_module_list.py
 modules = [
+    'sympy.algebras',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',
@@ -94,6 +95,9 @@ modules = [
     'sympy.holonomic',
     'sympy.integrals',
     'sympy.integrals.benchmarks',
+    'sympy.integrals.rubi',
+    'sympy.integrals.rubi.parsetools',
+    'sympy.integrals.rubi.rules',
     'sympy.interactive',
     'sympy.liealgebras',
     'sympy.logic',
@@ -264,6 +268,7 @@ class run_benchmarks(Command):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
+    'sympy.algebras.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
@@ -280,6 +285,8 @@ tests = [
     'sympy.functions.special.tests',
     'sympy.geometry.tests',
     'sympy.holonomic.tests',
+    'sympy.integrals.rubi.parsetools.tests',
+    'sympy.integrals.rubi.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
     'sympy.liealgebras.tests',
