@@ -120,14 +120,15 @@ class StrPrinter(Printer):
 
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
-        except Exception:
-            try:
-                return ('Domain: ' + self._print(d.symbols) + ' in ' +
+        elif hasattr(d, 'set'):
+            return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))
-            except:
-                return 'Domain on ' + self._print(d.symbols)
+        elif hasattr(d, 'symbols'):
+            return 'Domain on ' + self._print(d.symbols)
+        else:
+            return self._print(None)
 
     def _print_Dummy(self, expr):
         return '_' + expr.name
