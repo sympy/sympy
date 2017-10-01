@@ -500,8 +500,9 @@ def test_issue_8821_highprec_from_str():
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
 
-'''
+
 def test_issue_10295():
+    print('was here')
     if not numpy:
         skip("numpy not installed.")
 
@@ -530,7 +531,7 @@ def test_issue_10295():
     a2.resize(2, 4, 3)
     assert sympify(a1) == ImmutableDenseNDimArray([1, 2, 3])
     assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
-'''
+
 
 def test_Range():
     # Only works in Python 3 where range returns a range type
