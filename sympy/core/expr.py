@@ -204,7 +204,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__floordiv__')
     def __rfloordiv__(self, other):
         from sympy.functions.elementary.integers import floor
-        return floor(self / other)
+        return floor(other / self)
 
     def __int__(self):
         # Although we only need to round to the units position, we'll
