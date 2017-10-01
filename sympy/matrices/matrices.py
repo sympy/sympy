@@ -3364,7 +3364,7 @@ class MatrixBase(MatrixDeprecated,
         'fro'  Frobenius norm                - does not exist
         inf    --                            max(abs(x))
         -inf   --                            min(abs(x))
-        1      --                            as below
+        1      maximum column sum            as below
         -1     --                            as below
         2      2-norm (largest sing. value)  as below
         -2     smallest singular value       as below
@@ -3382,7 +3382,9 @@ class MatrixBase(MatrixDeprecated,
         >>> v.norm(10)
         (sin(x)**10 + cos(x)**10)**(1/10)
         >>> A = Matrix([[1, 1], [1, 1]])
-        >>> A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        >>> A.norm(1) # maximum sum of absolute values of A is 2
+        2
+        >>> A.norm(2) # Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
         >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
         0
@@ -3422,7 +3424,11 @@ class MatrixBase(MatrixDeprecated,
 
         # Matrix Norms
         else:
-            if ord == 2:  # Spectral Norm
+            if ord == 1:  # Maximum column sum
+                m = self.applyfunc(abs)
+                return Max(*[sum(m.col(i)) for i in range(m.cols)])
+
+            elif ord == 2:  # Spectral Norm
                 # Maximum singular value
                 return Max(*self.singular_values())
 

@@ -306,9 +306,14 @@ class Indexed(Expr):
         indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
-    # @property
-    # def free_symbols(self):
-    #     return {self.base}
+    @property
+    def free_symbols(self):
+        base_free_symbols = self.base.free_symbols
+        indices_free_symbols = {fs for i in self.indices for fs in i.free_symbols}
+        if base_free_symbols:
+            return {self} | base_free_symbols | indices_free_symbols
+        else:
+            return base_free_symbols | indices_free_symbols
 
 
 class IndexedBase(Expr, NotIterable):

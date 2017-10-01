@@ -10,7 +10,8 @@ from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
 from sympy.sets.conditionset import ConditionSet
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
-
+from sympy.simplify.radsimp import denom
+from sympy.polys.rationaltools import together
 
 def continuous_domain(f, symbol, domain):
     """
@@ -42,9 +43,9 @@ def continuous_domain(f, symbol, domain):
     if domain.is_subset(S.Reals):
         constrained_interval = domain
         for atom in f.atoms(Pow):
-            predicate, denom = _has_rational_power(atom, symbol)
+            predicate, denomin = _has_rational_power(atom, symbol)
             constraint = S.EmptySet
-            if predicate and denom == 2:
+            if predicate and denomin == 2:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
                 constrained_interval = Intersection(constraint,
@@ -61,17 +62,20 @@ def continuous_domain(f, symbol, domain):
     try:
         sings = S.EmptySet
         if f.has(Abs):
-            sings = solveset(1/f, symbol, domain)
+            sings = solveset(1/f, symbol, domain) + \
+                solveset(denom(together(f)), symbol, domain)
         else:
             for atom in f.atoms(Pow):
-                predicate, denom = _has_rational_power(atom, symbol)
-                if predicate and denom == 2:
-                    sings = solveset(1/f, symbol, domain)
+                predicate, denomin = _has_rational_power(atom, symbol)
+                if predicate and denomin == 2:
+                    sings = solveset(1/f, symbol, domain) +\
+                        solveset(denom(together(f)), symbol, domain)
                     break
             else:
-                sings = Intersection(solveset(1/f, symbol), domain)
+                sings = Intersection(solveset(1/f, symbol), domain) + \
+                    solveset(denom(together(f)), symbol, domain)
 
-    except BaseException:
+    except NotImplementedError:
         raise NotImplementedError(
             "Methods for determining the continuous domains"
             " of this function have not been developed.")

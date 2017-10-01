@@ -302,7 +302,7 @@ def test_math():
 
 def test_sin():
     f = lambdify(x, sin(x)**2)
-    assert isinstance(f(2), (float, mpmath.ctx_mp_python.mpf))
+    assert isinstance(f(2), float)
     f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)
 
@@ -389,10 +389,6 @@ def test_issue9474():
         assert f(2) == 0.5
         f = lambdify(x, floor(sympy.S(1)/x), modules=mod)
         assert f(2) == 0
-
-    if mpmath:
-        f = lambdify(x, sympy.S(1)/sympy.Abs(x), modules=['mpmath'])
-        assert isinstance(f(2), mpmath.mpf)
 
     for absfunc, modules in product([Abs, abs], mods):
         f = lambdify(x, absfunc(x), modules=modules)

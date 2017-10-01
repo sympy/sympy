@@ -7,7 +7,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt, Ne
 from sympy.sets import Interval
-from sympy.sets.sets import FiniteSet, Union
+from sympy.sets.sets import FiniteSet, Union, EmptySet
 from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
@@ -440,10 +440,12 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
+    from sympy import im
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solveset_real, solvify
+    from sympy.solvers.solveset import solveset_real, solvify, solveset
+    from sympy.solvers.solvers import solve
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -571,6 +573,49 @@ The inequality cannot be solved using solve_univariate_inequality.
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 
+            #If expr contains imaginary coefficients
+            #Only real values of x for which the imaginary part is 0 are taken
+            make_real = S.Reals
+            if im(expanded_e) != S.Zero:
+                check = True
+                im_sol = FiniteSet()
+                try:
+                    a = solveset(im(expanded_e), gen, domain)
+                    if not isinstance(a, Interval):
+                        for z in a:
+                            if z not in singularities and valid(z) and z.is_real:
+                                im_sol += FiniteSet(z)
+                    else:
+                        start, end = a.inf, a.sup
+                        for z in _nsort(critical_points + FiniteSet(end)):
+                            valid_start = valid(start)
+                            if start != end:
+                                valid_z = valid(z)
+                                pt = _pt(start, z)
+                                if pt not in singularities and pt.is_real and valid(pt):
+                                    if valid_start and valid_z:
+                                        im_sol += Interval(start, z)
+                                    elif valid_start:
+                                        im_sol += Interval.Ropen(start, z)
+                                    elif valid_z:
+                                        im_sol += Interval.Lopen(start, z)
+                                    else:
+                                        im_sol += Interval.open(start, z)
+                            start = z
+                        for s in singularities:
+                            im_sol -= FiniteSet(s)
+                except (TypeError):
+                    im_sol = S.Reals
+                    check = False
+
+                if isinstance(im_sol, EmptySet):
+                    raise ValueError(filldedent('''
+%s contains imaginary parts which cannot be made 0 for any value of %s
+satisfying the inequality, leading to relations like I < 0.
+                '''  % (expr.subs(gen, _gen), _gen)))
+
+                make_real = make_real.intersect(im_sol)
+
             empty = sol_sets = [S.EmptySet]
 
             start = domain.inf
@@ -603,7 +648,10 @@ The inequality cannot be solved using solve_univariate_inequality.
             if valid(_pt(start, end)):
                 sol_sets.append(Interval.open(start, end))
 
-            rv = Union(*sol_sets).subs(gen, _gen)
+            if im(expanded_e) != S.Zero and check:
+                rv = (make_real)
+            else:
+                rv = (Union(*sol_sets)).intersect(make_real).subs(gen, _gen)
 
     return rv if not relational else rv.as_relational(_gen)
 

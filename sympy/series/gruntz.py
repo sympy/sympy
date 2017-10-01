@@ -137,9 +137,9 @@ def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
     la, lb = log(a), log(b)
-    if isinstance(a, Basic) and a.func is exp:
+    if isinstance(a, Basic) and isinstance(a, exp):
         la = a.args[0]
-    if isinstance(b, Basic) and b.func is exp:
+    if isinstance(b, Basic) and isinstance(b, exp):
         lb = b.args[0]
 
     c = limitinf(la/lb, x)
@@ -270,13 +270,13 @@ def mrv(e, x):
         else:
             s, expr = mrv(b, x)
             return s, expr**e
-    elif e.func is log:
+    elif isinstance(e, log):
         s, expr = mrv(e.args[0], x)
         return s, log(expr)
-    elif e.func is exp:
+    elif isinstance(e, exp):
         # We know from the theory of this algorithm that exp(log(...)) may always
         # be simplified here, and doing so is vital for termination.
-        if e.args[0].func is log:
+        if isinstance(e.args[0], log):
             return mrv(e.args[0].args[0], x)
         # if a product has an infinite factor the result will be
         # infinite if there is no zero, otherwise NaN; here, we
@@ -391,7 +391,7 @@ def sign(e, x):
         if not sa:
             return 0
         return sa * sign(b, x)
-    elif e.func is exp:
+    elif isinstance(e, exp):
         return 1
     elif e.is_Pow:
         s = sign(e.base, x)
@@ -399,7 +399,7 @@ def sign(e, x):
             return 1
         if e.exp.is_Integer:
             return s**e.exp
-    elif e.func is log:
+    elif isinstance(e, log):
         return sign(e.args[0] - 1, x)
 
     # if all else fails, do it the hard way
@@ -572,7 +572,7 @@ def rewrite(e, Omega, x, wsym):
         raise ValueError("Length can not be 0")
     # all items in Omega must be exponentials
     for t in Omega.keys():
-        if not t.func is exp:
+        if not isinstance(t, exp):
             raise ValueError("Value should be exp")
     rewrites = Omega.rewrites
     Omega = list(Omega.items())
@@ -597,7 +597,7 @@ def rewrite(e, Omega, x, wsym):
             denominators.append(c.q)
         arg = f.args[0]
         if var in rewrites:
-            if not rewrites[var].func is exp:
+            if not isinstance(rewrites[var], exp):
                 raise ValueError("Value should be exp")
             arg = rewrites[var].args[0]
         O2.append((var, exp((arg - c*g.args[0]).expand())*wsym**c))

@@ -59,7 +59,7 @@ import warnings
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
-    return isinstance(e, Expr) and (e.is_Pow or e.func is exp)
+    return isinstance(e, Expr) and (e.is_Pow or isinstance(e, exp))
 
 
 def _simple_dens(f, symbols):
@@ -2533,7 +2533,7 @@ def _tsolve(eq, sym, **flags):
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', True))
                 if f.count(log) != lhs.count(log):
-                    if f.func is log:
+                    if isinstance(f, log):
                         return _solve(f.args[0] - exp(rhs), sym, **flags)
                     return _tsolve(f - rhs, sym)
 
@@ -2587,7 +2587,7 @@ def _tsolve(eq, sym, **flags):
         g = _filtered_gens(eq.as_poly(), sym)
         up_or_log = set()
         for gi in g:
-            if gi.func is exp or gi.func is log:
+            if isinstance(gi, exp) or isinstance(gi, log):
                 up_or_log.add(gi)
             elif gi.is_Pow:
                 gisimp = powdenest(expand_power_exp(gi))
@@ -2980,7 +2980,7 @@ def _invert(eq, *symbols, **kwargs):
                 #
                 rhs = lhs.inverse()(rhs)
                 lhs = lhs.args[0]
-            elif lhs.func is atan2:
+            elif isinstance(lhs, atan2):
                 y, x = lhs.args
                 lhs = 2*atan(y/(sqrt(x**2 + y**2) + x))
         if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:

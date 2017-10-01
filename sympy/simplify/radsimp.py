@@ -240,7 +240,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                     rat_expo, sym_expo = coeff, tail
                 else:
                     sym_expo = expr.exp
-        elif expr.func is exp:
+        elif isinstance(expr, exp):
             arg = expr.args[0]
             if arg.is_Rational:
                 sexpr, rat_expo = S.Exp1, arg
@@ -965,7 +965,7 @@ def fraction(expr, exact=False):
     numer, denom = [], []
 
     for term in Mul.make_args(expr):
-        if term.is_commutative and (term.is_Pow or term.func is exp):
+        if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
             b, ex = term.as_base_exp()
             if ex.is_negative:
                 if ex is S.NegativeOne:
