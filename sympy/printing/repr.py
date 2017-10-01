@@ -225,6 +225,16 @@ class ReprPrinter(Printer):
             ringstr = ""
         return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
 
+    def _print_MonogenicFiniteExtension(self, ext):
+        # The expanded tree shown by srepr(ext.modulus)
+        # is not practical.
+        return "FiniteExtension(%s)" % str(ext.modulus)
+
+    def _print_ExtensionElement(self, f):
+        rep = self._print(f.rep)
+        ext = self._print(f.ext)
+        return "ExtElem(%s, %s)" % (rep, ext)
+
 
 def srepr(expr, **settings):
     """return expr in repr form"""
