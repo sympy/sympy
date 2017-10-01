@@ -1012,6 +1012,9 @@ def roots(f, *gens, **flags):
                             if not result:
                                 for root in _try_decompose(f):
                                     _update_dict(result, root, 1)
+                        else:
+                            for r in _try_heuristics(f):
+                                _update_dict(result, r, 1)
                     else:
                         for root in _try_decompose(f):
                             _update_dict(result, root, 1)
