@@ -229,7 +229,7 @@ def test_evalf_bugs():
 
     #issue 11518
     assert NS(2*x**2.5, 5) == '2.0000*x**2.5000'
-    
+
     #issue 13076
     assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
