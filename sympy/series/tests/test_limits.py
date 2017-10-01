@@ -203,6 +203,7 @@ def test_exponential():
     assert limit((1 + x/(2*n + 1))**n, n, oo) == exp(x/2)
     assert limit(((x - 1)/(x + 1))**x, x, oo) == exp(-2)
     assert limit(1 + (1 + 1/x)**x, x, oo) == 1 + S.Exp1
+    assert limit((2 + 6*x)**x/(6*x)**x, x, oo) == exp(S('1/3'))
 
 
 @XFAIL

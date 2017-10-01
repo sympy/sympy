@@ -410,7 +410,7 @@ def sign(e, x):
 @debug
 @timeit
 @cacheit
-def limitinf(e, x):
+def limitinf(e, x,simp=False):
     """Limit e(x) for x-> oo"""
     # rewrite e in terms of tractable functions only
     e = e.rewrite('tractable', deep=True)
@@ -439,34 +439,9 @@ def limitinf(e, x):
             raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
-        return limitinf(c0, x)  # e0=0: lim f = lim c0
-
-
-def limitinf_simplify(e, x):
-    if not e.has(x):
-        return e  # e is a constant
-    if not x.is_positive:
-        # We make sure that x.is_positive is True so we
-        # get all the correct mathematical behavior from the expression.
-        # We need a fresh variable.
-        p = Dummy('p', positive=True, finite=True)
-        e = e.subs(x, p)
-        x = p
-    c0, e0 = mrv_leadterm(e, x)
-    sig = sign(e0, x)
-    if sig == 1:
-        return S.Zero  # e0>0: lim f = 0
-    elif sig == -1:  # e0<0: lim f = +-oo (the sign depends on the sign of c0)
-        if c0.match(I*Wild("a", exclude=[I])):
-            return c0*oo
-        s = sign(c0, x)
-        # the leading term shouldn't be 0:
-        if s == 0:
-            raise ValueError("Leading term should not be 0")
-        return s*oo
-    elif sig == 0:
-        c0 = simplify(c0)
-        return limitinf_simplify(c0, x)  # e0=0: lim f = lim c0
+        if simp:
+            c0 = simplify(c0)
+        return limitinf(c0, x, simp)  # e0=0: lim f = lim c0
 
 
 def moveup2(s, x):
@@ -676,16 +651,16 @@ def gruntz(e, z, z0, dir="+"):
         try:
             r = limitinf(e, z)
         except ValueError:
-            r = limitinf_simplify(e, z)
+            r = limitinf(e, z, simp=True)
         if r is None:
-            r = limitinf_simplify(e, z)
+            r = limitinf(e, z, simp=True)
     elif z0 == -oo:
         try:
             r = limitinf(e.subs(z, -z), z)
         except ValueError:
-            r = limitinf_simplify(e.subs(z, -z), z)
+            r = limitinf(e.subs(z, -z), z, simp=True)
         if r is None:
-            r = limitinf_simplify(e.subs(z, -z), z)
+            r = limitinf(e.subs(z, -z), z, simp=True)
     else:
         if str(dir) == "-":
             e0 = e.subs(z, z0 - 1/z)
