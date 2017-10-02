@@ -1346,7 +1346,7 @@ def _check_antecedents_inversion(g, x):
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z):
-        return And(*[statement(a - 1, 0, z) for a in g.an])
+        return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def H(z):
         return statement(theta, -sigma, 1/sigma, z)
