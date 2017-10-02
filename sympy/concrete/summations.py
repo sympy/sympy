@@ -424,16 +424,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         except NotImplementedError:
             pass
 
-        ### ----------- Raabe's test ---------------- ###
-        lim_val = Limit(sym * (simplify(sequence_term/sequence_term.subs(sym, sym + 1))
-                            - S(1)), sym, S.Infinity)
-        val = lim_val.doit()
-        if val.is_number:
-            if val > 1:
-                return S.true
-            if val < 1:
-                return S.false
-
         order = O(sequence_term, (sym, S.Infinity))
 
         ### --------- p-series test (1/n**p) ---------- ###
@@ -458,6 +448,16 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if lim_evaluated < 1:
                 return S.true
             if lim_evaluated > 1:
+                return S.false
+
+        ### ----------- Raabe's test ---------------- ###
+        lim_val = Limit(sym * (simplify(sequence_term/sequence_term.subs(sym, sym + 1))
+                            - S(1)), sym, S.Infinity)
+        val = lim_val.doit()
+        if val.is_number:
+            if val > 1:
+                return S.true
+            if val < 1:
                 return S.false
 
         ### ------------- alternating series test ----------- ###
