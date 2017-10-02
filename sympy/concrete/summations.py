@@ -425,7 +425,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             pass
 
         ### ----------- Raabe's test ---------------- ###
-        lim_val = Limit(sym * (sequence_term/sequence_term.subs(sym, sym + 1)
+        lim_val = Limit(sym * (simplify(sequence_term/sequence_term.subs(sym, sym + 1))
                             - S(1)), sym, S.Infinity)
         val = lim_val.doit()
         if val.is_number:
