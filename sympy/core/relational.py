@@ -319,7 +319,7 @@ class Equality(Relational):
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
                 return S.true
-            elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+            elif any(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
                 return S.false
 
             # check finiteness
