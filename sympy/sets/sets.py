@@ -713,7 +713,7 @@ class ProductSet(Set):
         Examples
         ========
 
-        >>> from sympy import Interval, ProductSet
+        >>> from sympy import Interval
         >>> I = Interval(0, 1) * Interval(0, 2)
         >>> I.sets
         ([0, 1], [0, 2])
