@@ -250,14 +250,23 @@ def test_differential_operators_curvilinear_system():
            (sin(A.theta)*A.r + cos(A.theta)*A.r*A.theta)/(sin(A.theta)*A.r**2) + 9*A.phi + A.theta/sin(A.theta)
     assert divergence(Vector.zero) == 0
     assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
-    # Test for cylindrical coordinate system and divergence
-    assert divergence(B.r*B.i + B.theta*B.j + B.z*B.k) == 2 + 1/B.theta
-    assert divergence(B.r*B.j + B.z*B.k) == 1
-    # Test for spherical coordinate system and divergence
+    # Test for spherical coordinate system and curl
     assert curl(A.r*A.i + A.theta*A.j + A.phi*A.k) == \
            (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + A.theta/A.r*A.k
     assert curl(A.r*A.j + A.phi*A.k) == (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + 2*A.k
 
+    # Test for cylindrical coordinate system and gradient
+    assert gradient(0*B.r + 0*B.theta+0*B.z) == Vector.zero
+    assert gradient(B.r*B.theta*B.z) == B.theta*B.z*B.i + B.z*B.j + B.r*B.theta*B.k
+    assert gradient(3*B.r) == 3*B.i
+    assert gradient(2*B.theta) == 2/B.r * B.j
+    assert gradient(4*B.z) == 4*B.k
+    # Test for cylindrical coordinate system and divergence
+    assert divergence(B.r*B.i + B.theta*B.j + B.z*B.k) == 3 + 1/B.r
+    assert divergence(B.r*B.j + B.z*B.k) == 1
+    # Test for cylindrical coordinate system and curl
+    assert curl(B.r*B.j + B.z*B.k) == 2*B.k
+    assert curl(3*B.i + 2/B.r*B.j + 4*B.k) == Vector.zero
 
 def test_mixed_coordinates():
     # gradient
