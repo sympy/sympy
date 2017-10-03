@@ -2272,11 +2272,10 @@ class Triangle(Polygon):
     @property
     def excenters(self):
         """Excenters of the triangle.
-
-        An excenter is a point at which the line bisecting one interior angle meets the
-        bisectors of the two exterior angles on the opposite side. This point is the center
-        of excircle. Every triangle has three excenters and three excircles.
-
+        
+        An excenter is the center of a circle that is tangent to a side of the 
+        triangle and the extensions of the other two sides.
+             
         Returns
         =======
 
@@ -2286,8 +2285,9 @@ class Triangle(Polygon):
         Examples
         ========
 
-        The center of excircle is called the excenter relative to the vertex. The center is
-        keyed, e.g. the excenter of a circle touching side 0 is:
+        The excenters are keyed to the side of the triangle to which their corresponding 
+        excircle is tangent: The center is keyed, e.g. the excenter of a circle touching 
+        side 0 is:
 
         >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
