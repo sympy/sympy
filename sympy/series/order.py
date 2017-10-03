@@ -386,7 +386,7 @@ class Order(Expr):
                 l = ratio.limit(s, point)
                 from sympy.series.limits import Limit
 
-		l = Limit(ratio, s, point).doit(heuristics=False)
+                l = Limit(ratio, s, point).doit(heuristics=False)
                 if not isinstance(l, Limit):
                     l = l != 0
                 else:
