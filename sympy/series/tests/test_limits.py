@@ -485,7 +485,6 @@ def test_issue_9205():
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
-<<<<<<< HEAD
 def test_limit_seq():
     assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == S.Infinity
