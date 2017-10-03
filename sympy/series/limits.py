@@ -152,6 +152,9 @@ class Limit(Expr):
         if z0.is_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
+        if e.is_Mul and abs(z0) is S.Infinity:
+                e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])

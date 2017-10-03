@@ -351,9 +351,9 @@ def test_issue_5955():
     assert limit((x**100/((x + 1)**100 + exp(-x))), x, oo) == 1
 
 
-@pytest.mark.slow
-@pytest.mark.xfail
-@pytest.mark.skipif(os.getenv('TRAVIS_BUILD_NUMBER'), reason="Too slow for travis.")
+#@pytest.mark.slow
+#@pytest.mark.xfail
+#@pytest.mark.skipif(os.getenv('TRAVIS_BUILD_NUMBER'), reason="Too slow for travis.")
 def test_issue_5955_slow():
     assert limit((x**1000/((x + 1)**1000 + exp(-x))), x, oo) == 1
 
@@ -514,10 +514,6 @@ def test_issue_6599():
 def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, -oo) == 2
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo
-
-
-def test_issue_10610():
-    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == Rational(1, 3)
 
 
 def test_issue_9075():
