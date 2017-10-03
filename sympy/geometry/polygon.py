@@ -2272,10 +2272,10 @@ class Triangle(Polygon):
     @property
     def excenters(self):
         """Excenters of the triangle.
-        
-        An excenter is the center of a circle that is tangent to a side of the 
+
+        An excenter is the center of a circle that is tangent to a side of the
         triangle and the extensions of the other two sides.
-             
+
         Returns
         =======
 
@@ -2285,8 +2285,8 @@ class Triangle(Polygon):
         Examples
         ========
 
-        The excenters are keyed to the side of the triangle to which their corresponding 
-        excircle is tangent: The center is keyed, e.g. the excenter of a circle touching 
+        The excenters are keyed to the side of the triangle to which their corresponding
+        excircle is tangent: The center is keyed, e.g. the excenter of a circle touching
         side 0 is:
 
         >>> from sympy.geometry import Point, Triangle
