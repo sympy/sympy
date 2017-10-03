@@ -21,6 +21,8 @@ class StrPrinter(Printer):
         "order": None,
         "full_prec": "auto",
         "sympy_integers": False,
+        "abbreviate_and": True,     # Currently needed for experimental_lambdify.py
+        "abbreviate_or": True,      # TODO: Find a better solution for this
     }
 
     _relationals = dict()
@@ -79,10 +81,16 @@ class StrPrinter(Printer):
         return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
 
     def _print_And(self, expr):
-        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
+        if self._settings.get("abbreviate_and", True):
+            return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
+        else:
+            return self._print_Basic(expr)
 
     def _print_Or(self, expr):
-        return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
+        if self._settings.get("abbreviate_or", True):
+            return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
+        else:
+            return self._print_Basic(expr)
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
