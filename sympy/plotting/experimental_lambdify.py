@@ -272,21 +272,12 @@ class Lambdifier(object):
         # Constructing the translation dictionaries and making the translation
         self.dict_str = self.get_dict_str()
         self.dict_fun = self.get_dict_fun()
-        exprstr = str(expr)
-        ## The regular "and" and "or" operators don't work correctly on tuples either!
-        # the & and | operators don't work on tuples, see discussion #12108
-        # exprstr = exprstr.replace(" & "," and ").replace(" | "," or ")
-        ## This function only works for the very specific case of not having
-        ## And and Or in the same expression and not nesting them at all. It's by no means
-        ## a real bug fix and needs to be entirely rewritten, or another solution needs to
-        ## be taken.
-        def replaceAndOr(exprstr):
-            if ' & ' in exprstr:
-                exprstr = "And(%s)" % exprstr.replace(" & ", ", ")
-            elif ' | ' in exprstr:
-                exprstr = "Or(%s)" % exprstr.replace(" | ", ", ")
-            return exprstr
-        exprstr = replaceAndOr(exprstr)
+        
+        # The abbreviate_and and abbreviate_or settings are used to avoid having to handle
+        # & and | for tuples, since simply replacing them with "and" and "or" doesn't lead to
+        # the expected results
+        from sympy.printing.str import sstr
+        exprstr = sstr(expr, abbreviate_and=False, abbreviate_or=False)
 
         newexpr = self.tree2str_translate(self.str2tree(exprstr))
 
