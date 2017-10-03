@@ -254,7 +254,7 @@ class FreeGroup(DefaultPrinting):
     @property
     def elements(self):
         """
-        Returns the elements of the free group.
+        Return the elements of the free group.
 
         Examples
         ========
