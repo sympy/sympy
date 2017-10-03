@@ -242,9 +242,9 @@ class FreeGroup(DefaultPrinting):
         oo
 
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> F, x, y = free_group("x, y")
-        >>> (x ** 0).order()
+        >>> free_group("")[0].order()
         1
+
         """
         if self.rank == 0:
             return 1
