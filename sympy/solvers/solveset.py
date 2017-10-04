@@ -1288,15 +1288,17 @@ def linsolve(system, *symbols):
 
         # 3). List of equations Form
         if not system[0].is_Matrix:
-            for eq in system:
+            system = list(system)
+            for i, eq in enumerate(system):
                 try:
-                    Poly(eq, symbols)
+                    # since we are checking it, we might as well take the
+                    # expanded expr that it will give
+                    system[i] = Poly(eq, symbols).as_expr()
                     if any (degree(eq, sym) > 1 for sym in symbols):
-                        raise ValueError(filldedent(
-'%s contains non-linear terms of variables to  be evaluated') %(eq))
+                        raise PolynomialError
                 except PolynomialError:
                         raise ValueError(filldedent(
-'%s contains non-linear terms of variables to  be evaluated') %(eq))
+'%s contains non-linear terms of variables to be evaluated') %(eq))
             A, b = linear_eq_to_matrix(system, symbols)
 
     else:
