@@ -209,7 +209,7 @@ class SubsSet(dict):
     def do_subs(self, e):
         """Substitute the variables with expressions"""
         for expr, var in self.items():
-            e = e.subs(var, expr)
+            e = e.xreplace({var: expr})
         return e
 
     def meets(self, s2):
@@ -223,12 +223,12 @@ class SubsSet(dict):
         for expr, var in s2.items():
             if expr in self:
                 if exps:
-                    exps = exps.subs(var, res[expr])
+                    exps = exps.xreplace({var: res[expr]})
                 tr[var] = res[expr]
             else:
                 res[expr] = var
         for var, rewr in s2.rewrites.items():
-            res.rewrites[var] = rewr.subs(tr)
+            res.rewrites[var] = rewr.xreplace(tr)
         return res, exps
 
     def copy(self):
@@ -447,14 +447,14 @@ def limitinf(e, x,simp=False):
 def moveup2(s, x):
     r = SubsSet()
     for expr, var in s.items():
-        r[expr.subs(x, exp(x))] = var
+        r[expr.xreplace({x: exp(x)})] = var
     for var, expr in s.rewrites.items():
-        r.rewrites[var] = s.rewrites[var].subs(x, exp(x))
+        r.rewrites[var] = s.rewrites[var].xreplace({x: exp(x)})
     return r
 
 
 def moveup(l, x):
-    return [(e.subs(x, exp(x))) for e in l]
+    return [e.xreplace({x: exp(x)}) for e in l]
 
 
 @debug
@@ -605,11 +605,11 @@ def rewrite(e, Omega, x, wsym):
     # them in "e" and substitute them for our rewriting, stored in O2
 
     # the following powsimp is necessary to automatically combine exponentials,
-    # so that the .subs() below succeeds:
+    # so that the .xreplace() below succeeds:
     # TODO this should not be necessary
     f = powsimp(e, deep=True, combine='exp')
     for a, b in O2:
-        f = f.subs(a, b)
+        f = f.xreplace({a: b})
 
     for _, var in Omega:
         assert not f.has(var)
@@ -622,7 +622,7 @@ def rewrite(e, Omega, x, wsym):
     # Some parts of sympy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
-    f = f.subs(wsym, wsym**exponent)
+    f = f.xreplace({wsym: wsym**exponent})
     logw /= exponent
 
     return f, logw

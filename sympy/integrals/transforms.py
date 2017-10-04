@@ -916,17 +916,17 @@ def _simplifyconds(expr, s, a):
         if isinstance(ex2, Abs):
             ex2 = ex2.args[0]
         if ex1.has(s):
-            try:
-                return bigger(1/ex2, 1/ex1)
-            except TypeError:
-                return None
+            return bigger(1/ex2, 1/ex1)
         n = power(ex2)
         if n is None:
             return None
-        if n > 0 and (abs(ex1) <= abs(a)**n) == True:
-            return False
-        if n < 0 and (abs(ex1) >= abs(a)**n) == True:
-            return True
+        try:
+            if n > 0 and (abs(ex1) <= abs(a)**n) == True:
+                return False
+            if n < 0 and (abs(ex1) >= abs(a)**n) == True:
+                return True
+        except TypeError:
+            pass
 
     def replie(x, y):
         """ simplify x < y """
