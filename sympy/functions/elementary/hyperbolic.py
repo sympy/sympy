@@ -220,6 +220,19 @@ class cosh(HyperbolicFunction):
 
         re, im = arg.as_real_imag()
         im_mod = im % (2*pi)
+
+        if im_mod == 0:
+            return True
+
+        if re == 0:
+            try:
+                if im_mod < pi/2 or im_mod > 3*pi/2:
+                    return True
+                elif im_mod >= pi/2 or im_mod <= 3*pi/2:
+                    return False
+            except:
+                pass
+
         return Or(And(Eq(re, 0), Or(im_mod < pi/2, im_mod > 3*pi/2)), Eq(im_mod, 0))
 
 
@@ -234,6 +247,19 @@ class cosh(HyperbolicFunction):
 
         re, im = arg.as_real_imag()
         im_mod = im % (2*pi)
+
+        if im_mod == 0:
+            return True
+
+        if re == 0:
+            try:
+                if im_mod <= pi/2 or im_mod >= 3*pi/2:
+                    return True
+                elif im_mod > pi/2 or im_mod < 3*pi/2:
+                    return False
+            except:
+                pass
+
         return Or(And(Eq(re, 0), Or(im_mod <= pi/2, im_mod >= 3*pi/2)), Eq(im_mod, 0))
 
 
