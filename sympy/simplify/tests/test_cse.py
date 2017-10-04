@@ -525,4 +525,4 @@ def test_issue_13000():
 
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
-    assert cse(eq)[0][0][1] == x + y
+    assert cse(eq) == ([(x0, x + y)], [x0**2])
