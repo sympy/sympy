@@ -551,13 +551,11 @@ def test_sympify_set():
 def test_numpy():
     from sympy.utilities.pytest import skip
     np = import_module('numpy')
-
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
 
     def equal(x, y):
         return x == y and type(x) == type(y)
-
-    if not np:
-        skip('numpy not installed.Abort numpy tests.')
 
     assert sympify(np.bool_(1)) is S(True)
     try:
