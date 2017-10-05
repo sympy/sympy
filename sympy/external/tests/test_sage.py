@@ -34,7 +34,7 @@ import sympy
 
 from sympy.utilities.pytest import XFAIL
 
-def in_sage_assert_equal(lhs, rhs):
+def is_trivially_equal(lhs, rhs):
     """
     True if lhs and rhs are trivially equal.
 
@@ -82,7 +82,7 @@ def check_expression(expr, var_symbols, only_from_sympy=False):
     # Do the actual checks:
     if not only_from_sympy:
         assert sympy.S(e_sage) == e_sympy
-    in_sage_assert_equal(e_sage, sage.SR(e_sympy))
+    is_trivially_equal(e_sage, sage.SR(e_sympy))
 
 
 def test_basics():
@@ -116,40 +116,40 @@ def test_real():
 
 def test_E():
     assert sympy.sympify(sage.e) == sympy.E
-    in_sage_assert_equal(sage.e, sage.SR(sympy.E))
+    is_trivially_equal(sage.e, sage.SR(sympy.E))
 
 
 def test_pi():
     assert sympy.sympify(sage.pi) == sympy.pi
-    in_sage_assert_equal(sage.pi, sage.SR(sympy.pi))
+    is_trivially_equal(sage.pi, sage.SR(sympy.pi))
 
 
 def test_euler_gamma():
     assert sympy.sympify(sage.euler_gamma) == sympy.EulerGamma
-    in_sage_assert_equal(sage.euler_gamma, sage.SR(sympy.EulerGamma))
+    is_trivially_equal(sage.euler_gamma, sage.SR(sympy.EulerGamma))
 
 
 def test_oo():
     assert sympy.sympify(sage.oo) == sympy.oo
-    in_sage_assert_equal(sage.oo, sage.SR(sympy.oo))
+    assert sage.oo == sage.SR(sympy.oo).pyobject()
     assert sympy.sympify(-sage.oo) == -sympy.oo
-    in_sage_assert_equal(-sage.oo, sage.SR(-sympy.oo))
+    assert -sage.oo == sage.SR(-sympy.oo).pyobject()
     #assert sympy.sympify(sage.UnsignedInfinityRing.gen()) == sympy.zoo
     #assert sage.UnsignedInfinityRing.gen() == sage.SR(sympy.zoo)
 
 def test_NaN():
     assert sympy.sympify(sage.NaN) == sympy.nan
-    in_sage_assert_equal(sage.NaN, sage.SR(sympy.nan))
+    is_trivially_equal(sage.NaN, sage.SR(sympy.nan))
 
 
 def test_Catalan():
     assert sympy.sympify(sage.catalan) == sympy.Catalan
-    in_sage_assert_equal(sage.catalan, sage.SR(sympy.Catalan))
+    is_trivially_equal(sage.catalan, sage.SR(sympy.Catalan))
 
 
 def test_GoldenRation():
     assert sympy.sympify(sage.golden_ratio) == sympy.GoldenRatio
-    in_sage_assert_equal(sage.golden_ratio, sage.SR(sympy.GoldenRatio))
+    is_trivially_equal(sage.golden_ratio, sage.SR(sympy.GoldenRatio))
 
 
 def test_functions():
@@ -204,7 +204,7 @@ def test_issue_4023():
     i = sympy.integrate(log(x)/a, (x, a, a + 1))
     i2 = sympy.simplify(i)
     s = sage.SR(i2)
-    in_sage_assert_equal(s, (a*log(1 + a) - a*log(a) + log(1 + a) - 1)/a)
+    is_trivially_equal(s, -log(a) + log(a + 1) + log(a + 1)/a - 1/a)
 
 def test_integral():
     #test Sympy-->Sage
@@ -228,7 +228,7 @@ def test_undefined_function():
     sf = sage.function('f')
     x = sympy.symbols('x')
     sx = sage.var('x')
-    in_sage_assert_equal(sf(sx), f(x)._sage_())
+    is_trivially_equal(sf(sx), f(x)._sage_())
     #assert bool(f == sympy.sympify(sf))
 
 def test_abstract_function():
