@@ -1759,26 +1759,26 @@ def test_numpy():
     if not np:
         skip('numpy not installed.Abort numpy tests.')
 
-    assert Float(np.bool_(1)) is S(True)
+    assert Float(np.bool_(1)) is S(True) 
     try:
         assert equal(
-            Float(np.int_(1234567891234567891)), S(1234567891234567891))
+            Float(np.int_(12345678912345678)), S(12345678912345678.))
         assert equal(
-            Float(np.intp(1234567891234567891)), S(1234567891234567891))
+            Float(np.intp(12345678912345678)), S(12345678912345678.))
     except OverflowError:
         # May fail on 32-bit systems: Python int too large to convert to C long
         pass
-    assert equal(Float(np.intc(1234567891)), S(1234567891))
-    assert equal(Float(np.int8(-123)), S(-123))
-    assert equal(Float(np.int16(-12345)), S(-12345))
-    assert equal(Float(np.int32(-1234567891)), S(-1234567891))
+    assert equal(Float(np.intc(1234567891)), S(1234567891.))
+    assert equal(Float(np.int8(-123)), S(-123.))
+    assert equal(Float(np.int16(-12345)), S(-12345.))
+    assert equal(Float(np.int32(-1234567891)), S(-1234567891.))
     assert equal(
-        Float(np.int64(-1234567891234567891)), S(-1234567891234567891))
-    assert equal(Float(np.uint8(123)), S(123))
-    assert equal(Float(np.uint16(12345)), S(12345))
-    assert equal(Float(np.uint32(1234567891)), S(1234567891))
+        Float(np.int64(-12345678912345678)), S(-12345678912345678.))
+    assert equal(Float(np.uint8(123)), S(123.))
+    assert equal(Float(np.uint16(12345)), S(12345.))
+    assert equal(Float(np.uint32(1234567891)), S(1234567891.))
     assert equal(
-        Float(np.uint64(1234567891234567891)), S(1234567891234567891))
+        Float(np.uint64(1234567891234567891)), S(1234567891234567891.))
     assert equal(Float(np.float32(1.123456)), Float(1.123456, precision=24))
     assert equal(Float(np.float64(1.1234567891234)),
                  Float(1.1234567891234, precision=53))

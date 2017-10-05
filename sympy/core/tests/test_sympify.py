@@ -2,7 +2,7 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS, convert_np_to_sympy_float
+from sympy.core.sympify import sympify, _sympify, SympifyError, kernS, convert_numpy_to_sympy
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -552,52 +552,52 @@ def test_sympify_set():
 
 def test_numpy():
     from sympy.utilities.pytest import skip
-    #np = import_module('numpy')
+    np = import_module('numpy')
 
 
     def equal(x, y):
         return x == y and type(x) == type(y)
 
-    if not numpy:
-        skip('numpy not installed.Abort numpy tests.')
+    if not np:
+        skip('np not installed.Abort np tests.')
 
-    assert sympify(numpy.bool_(1)) is S(True)
+    assert sympify(np.bool_(1)) is S(True)
     try:
         assert equal(
-            sympify(numpy.int_(1234567891234567891)), S(1234567891234567891))
+            sympify(np.int_(1234567891234567891)), S(1234567891234567891))
         assert equal(
-            sympify(numpy.intp(1234567891234567891)), S(1234567891234567891))
+            sympify(np.intp(1234567891234567891)), S(1234567891234567891))
     except OverflowError:
         # May fail on 32-bit systems: Python int too large to convert to C long
         pass
-    assert equal(sympify(numpy.intc(1234567891)), S(1234567891))
-    assert equal(sympify(numpy.int8(-123)), S(-123))
-    assert equal(sympify(numpy.int16(-12345)), S(-12345))
-    assert equal(sympify(numpy.int32(-1234567891)), S(-1234567891))
+    assert equal(sympify(np.intc(1234567891)), S(1234567891))
+    assert equal(sympify(np.int8(-123)), S(-123))
+    assert equal(sympify(np.int16(-12345)), S(-12345))
+    assert equal(sympify(np.int32(-1234567891)), S(-1234567891))
     assert equal(
-        sympify(numpy.int64(-1234567891234567891)), S(-1234567891234567891))
-    assert equal(sympify(numpy.uint8(123)), S(123))
-    assert equal(sympify(numpy.uint16(12345)), S(12345))
-    assert equal(sympify(numpy.uint32(1234567891)), S(1234567891))
+        sympify(np.int64(-1234567891234567891)), S(-1234567891234567891))
+    assert equal(sympify(np.uint8(123)), S(123))
+    assert equal(sympify(np.uint16(12345)), S(12345))
+    assert equal(sympify(np.uint32(1234567891)), S(1234567891))
     assert equal(
-        sympify(numpy.uint64(1234567891234567891)), S(1234567891234567891))
-    assert equal(sympify(numpy.float32(1.123456)), Float(1.123456, precision=24))
-    assert equal(sympify(numpy.float64(1.1234567891234)),
+        sympify(np.uint64(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.float32(1.123456)), Float(1.123456, precision=24))
+    assert equal(sympify(np.float64(1.1234567891234)),
                 Float(1.1234567891234, precision=53))
-    assert equal(sympify(numpy.longdouble(1.123456789)),
+    assert equal(sympify(np.longdouble(1.123456789)),
                  Float(1.123456789, precision=80))
-    assert equal(sympify(numpy.complex64(1 + 2j)), S(1.0 + 2.0*I))
-    assert equal(sympify(numpy.complex128(1 + 2j)), S(1.0 + 2.0*I))
-    assert equal(sympify(numpy.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
 
     try:
-        assert equal(sympify(numpy.float96(1.123456789)),
+        assert equal(sympify(np.float96(1.123456789)),
                     Float(1.123456789, precision=80))
     except AttributeError:  #float96 does not exist on all platforms
         pass
 
     try:
-        assert equal(sympify(numpy.float128(1.123456789123)),
+        assert equal(sympify(np.float128(1.123456789123)),
                     Float(1.123456789123, precision=80))
     except AttributeError:  #float128 does not exist on all platforms
         pass

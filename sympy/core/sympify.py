@@ -52,7 +52,7 @@ class CantSympify(object):
 
 # Support for basic numpy datatypes
 
-def convert_np_to_sympy_float(a):
+def convert_numpy_to_sympy(a):
     import numpy as np
     if not isinstance(a, np.floating):
         func = converter[complex] if np.iscomplex(a) else sympify
@@ -276,23 +276,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
-            return convert_np_to_sympy_float(a)
-        '''import numpy 
-        if numpy.isscalar(a):
-            if not isinstance(a, numpy.floating):
-                func = converter[complex] if numpy.iscomplex(a) else sympify
-                return func(numpy.asscalar(a))
-            else:
-                try:
-                    from sympy.core.numbers import Float
-                    prec = numpy.finfo(a).nmant
-                    a = str(list(numpy.reshape(numpy.asarray(a),
-                                            (1, numpy.size(a)))[0]))[1:-1]
-                    return Float(a, precision=prec)
-                except NotImplementedError:
-                    raise SympifyError('Translation for numpy float : %s '
-                                       'is not implemented' % a)
-           '''     
+            return convert_numpy_to_sympy(a)
+
     try:
         return converter[cls](a)
     except KeyError:
