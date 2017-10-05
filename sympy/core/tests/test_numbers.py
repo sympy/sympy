@@ -1753,13 +1753,14 @@ def test_numpy():
     from sympy.external import import_module
     from sympy.utilities.pytest import skip
     np = import_module('numpy')
+    
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
+
     def equal(x, y):
         return x == y and type(x) == type(y)
-
-    if not np:
-        skip('numpy not installed.Abort numpy tests.')
-
-    assert Float(np.bool_(1)) is S(True)
+    print(type(S(123)))
+    print(type(Float(np.int_(123))))
     try:
         assert equal(
             Float(np.int_(12345678912345678)), S(12345678912345678.))

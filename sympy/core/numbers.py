@@ -977,10 +977,7 @@ class Float(Number):
             dps = 15
             if type(num).__module__ == 'numpy':
                 from .sympify import convert_numpy_to_sympy
-                if not type(num).__name__=='bool_':
-                    return 1.0*convert_numpy_to_sympy(num)
-                else:
-                    return convert_numpy_to_sympy(num)
+                return 1.0*convert_numpy_to_sympy(num)
             if isinstance(num, Float):
                 return num
             if isinstance(num, string_types) and _literal_float(num):

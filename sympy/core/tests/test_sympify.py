@@ -2,7 +2,7 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS, convert_numpy_to_sympy
+from sympy.core.sympify import sympify, _sympify, SympifyError, kernS 
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -502,14 +502,12 @@ def test_issue_8821_highprec_from_str():
 
 
 def test_issue_10295():
-    print('was here')
     if not numpy:
         skip("numpy not installed.")
 
     A = numpy.array([[1, 3, -1],
                      [0, 1, 7]])
     sA = S(A)
-    print(type(sA))
     assert sA.shape == (2, 3)
     for (ri, ci), val in numpy.ndenumerate(A):
         assert sA[ri, ci] == val
@@ -554,12 +552,11 @@ def test_numpy():
     from sympy.utilities.pytest import skip
     np = import_module('numpy')
 
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
 
     def equal(x, y):
         return x == y and type(x) == type(y)
-
-    if not np:
-        skip('np not installed.Abort np tests.')
 
     assert sympify(np.bool_(1)) is S(True)
     try:
