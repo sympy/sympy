@@ -58,21 +58,17 @@ def convert_numpy_types(a):
     Examples
     ========
 
-    >>> import sympy as sp
-    >>> import numpy as np
+    >>> from sympy import Float
+    >>> from numpy import int64, float128, float32
 
-    >>> sp.Float(np.int64(5))
+    >>> Float(np.int64(5))
     5.00000000000000
 
-    >>> sp.Float(np.float128(5))
+    >>> Float(np.float128(5))
     5.00000000000000000
 
-    >>> sp.Float(np.float32(5))
+    >>> Float(np.float32(5))
     5.00000
-
-    >>> x = sp.symbols('x')
-    >>> print(x * np.int64(1))
-    x
     """
     import numpy as np
     if not isinstance(a, np.floating):
@@ -299,7 +295,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     # Support for basic numpy datatypes
     if type(a).__module__ == 'numpy':
         import numpy as np
-        if np.isscalar(a): return convert_numpy_types(a)
+        if np.isscalar(a):
+            return convert_numpy_types(a)
 
     try:
         return converter[cls](a)
