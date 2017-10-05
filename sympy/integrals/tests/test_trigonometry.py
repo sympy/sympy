@@ -49,6 +49,10 @@ def test_trigintegrate_odd():
     assert trigintegrate(sin(x)**3 * cos(x)**7, x) == \
         cos(x)**10/10 - cos(x)**8/8
 
+    # both n, m are odd and -ve, and not necessarily equal
+    assert trigintegrate(sin(x)**-1*cos(x)**-1, x) == \
+        -log(sin(x)**2 - 1)/2 + log(sin(x))
+
 
 def test_trigintegrate_even():
     assert trigintegrate(sin(x)**2, x) == x/2 - cos(x)*sin(x)/2
