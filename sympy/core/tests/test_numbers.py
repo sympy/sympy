@@ -16,7 +16,6 @@ from sympy.utilities.pytest import XFAIL, raises
 
 from mpmath import mpf
 import mpmath
-from sympy.external import import_module
 
 
 t = Symbol('t', real=False)
@@ -1751,6 +1750,7 @@ def test_Integer_precision():
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
 
 def test_numpy():
+    from sympy.external import import_module
     from sympy.utilities.pytest import skip
     np = import_module('numpy')
     def equal(x, y):

@@ -8,8 +8,6 @@ from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
-from sympy.external import import_module
-
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -55,7 +53,9 @@ class CantSympify(object):
 # Support for basic numpy datatypes
 
 def convert_numpy_to_sympy(a):
-    np=import_module('numpy')
+    assert type(a).__module__ == 'numpy'
+    from sympy.external import import_module
+    np = import_module('numpy')
     if not isinstance(a, np.floating):
         func = converter[complex] if np.iscomplex(a) else sympify
         return func(np.asscalar(a))
