@@ -35,6 +35,7 @@ message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
+message_func_is = "File contains '.func is': %s, line %s."
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -135,6 +136,7 @@ def test_files():
       o name of arg-less test suite functions start with _ or test_
       o no duplicate function names that start with test_
       o no assignments to self variable in class methods
+      o no lines contain ".func is" except in the test suite
     """
 
     def test(fname):
@@ -178,6 +180,8 @@ def test_files():
             if (implicit_test_re.search(line) and
                     not filter(lambda ex: ex in fname, import_exclude)):
                 assert False, message_implicit % (fname, idx + 1)
+            if ".func is" in line and "test" not in fname:
+                assert False, message_func_is % (fname, idx + 1)
 
             result = old_raise_re.search(line)
 
