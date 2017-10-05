@@ -46,6 +46,7 @@ old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 test_ok_def_re = re.compile(r'^def\s+test_.*:$')
 test_file_re = re.compile(r'.*[/\\]test_.*\.py$')
+func_is_re = re.compile(r'\.\s*func\s+is')
 
 
 def tab_in_leading(s):
@@ -180,7 +181,7 @@ def test_files():
             if (implicit_test_re.search(line) and
                     not filter(lambda ex: ex in fname, import_exclude)):
                 assert False, message_implicit % (fname, idx + 1)
-            if ".func is" in line and "test" not in fname:
+            if func_is_re.search(line) and not test_file_re.search(fname):
                 assert False, message_func_is % (fname, idx + 1)
 
             result = old_raise_re.search(line)
