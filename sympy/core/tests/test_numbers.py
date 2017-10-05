@@ -1759,7 +1759,7 @@ def test_numpy():
     if not np:
         skip('numpy not installed.Abort numpy tests.')
 
-    assert Float(np.bool_(1)) is S(True) 
+    assert Float(np.bool_(1)) is S(True)
     try:
         assert equal(
             Float(np.int_(12345678912345678)), S(12345678912345678.))
@@ -1787,4 +1787,3 @@ def test_numpy():
     assert equal(Float(np.complex64(1 + 2j)), S(1.0 + 2.0 * I))
     assert equal(Float(np.complex128(1 + 2j)), S(1.0 + 2.0 * I))
     assert equal(Float(np.longcomplex(1 + 2j)), S(1.0 + 2.0 * I))
-
