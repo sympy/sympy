@@ -244,7 +244,7 @@ system consists of a particle Pa and a RigidBody A. ::
   >> I = outer(N.z, N.z)
   >> A = RigidBody('A', Ac, a, M, (I, Ac))
 
-Then one can either choose to evaluate the the momenta of individual components
+Then one can either choose to evaluate the momenta of individual components
 of the system or of the entire system itself. ::
 
   >> linear_momentum(N,A)

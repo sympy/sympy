@@ -147,7 +147,8 @@ class NDimArray(object):
             pass
 
         else:
-            raise TypeError("Data type not understood")
+            shape = ()
+            iterable = (iterable,)
 
         if isinstance(shape, (int, Integer)):
             shape = (shape,)
@@ -256,20 +257,6 @@ class NDimArray(object):
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
-        out_str = ''
-
-        # forming output string
-        for i, el in enumerate(self):
-
-            out_str += str(el) + '  '
-            chidx = i+1
-            for sh in reversed(self.shape):
-                if chidx % sh == 0:
-                    out_str += '\n'
-                    chidx //= sh
-
-        return out_str
-
     def __repr__(self):
         return self.__str__()
 
@@ -350,6 +337,10 @@ class NDimArray(object):
     def __rdiv__(self, other):
         raise NotImplementedError('unsupported operation on NDimArray')
 
+    def __neg__(self):
+        result_list = [-i for i in self]
+        return type(self)(result_list, self.shape)
+
     def __eq__(self, other):
         """
         NDimArray instances can be compared to each other.
@@ -376,7 +367,7 @@ class NDimArray(object):
         return (self.shape == other.shape) and (list(self) == list(other))
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -411,6 +402,9 @@ class NDimArray(object):
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
+
+    def __hash__(self):
+        return Basic.__hash__(self)
 
 
 from sympy.core.numbers import Integer

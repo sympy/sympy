@@ -15,23 +15,19 @@ class CartanType_generator(Basic):
         if n < 0:
             raise ValueError("Lie algebra rank cannot be negative")
         if letter == "A":
-            if n >= 0:
-                from . import type_a
-                return type_a.TypeA(n)
+            from . import type_a
+            return type_a.TypeA(n)
         if letter == "B":
-            if n >= 0:
-                from . import type_b
-                return type_b.TypeB(n)
+            from . import type_b
+            return type_b.TypeB(n)
 
         if letter == "C":
-            if n >= 0:
-                from . import type_c
-                return type_c.TypeC(n)
+            from . import type_c
+            return type_c.TypeC(n)
 
         if letter == "D":
-            if n >= 0:
-                from . import type_d
-                return type_d.TypeD(n)
+            from . import type_d
+            return type_d.TypeD(n)
 
         if letter == "E":
             if n >= 6 and n <= 8:

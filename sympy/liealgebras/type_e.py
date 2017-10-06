@@ -1,7 +1,6 @@
-from sympy.core import Rational
 from sympy.core.compatibility import range
 from .cartan_type import Standard_Cartan
-from sympy.matrices import eye
+from sympy.core.backend import eye, Rational
 
 
 class TypeE(Standard_Cartan):

@@ -7,7 +7,6 @@ from sympy.assumptions.ask import _extract_facts, Q
 from sympy.core import symbols
 from sympy.logic.boolalg import Or
 from sympy.printing import pretty
-from sympy.assumptions.ask import Q
 from sympy.utilities.pytest import XFAIL
 
 
@@ -21,7 +20,7 @@ def test_equal():
 def test_pretty():
     assert pretty(Q.positive(x)) == "Q.positive(x)"
     assert pretty(
-        set([Q.positive, Q.integer])) == "set([Q.integer, Q.positive])"
+        set([Q.positive, Q.integer])) == "{Q.integer, Q.positive}"
 
 
 def test_extract_facts():
