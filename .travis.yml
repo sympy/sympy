@@ -267,9 +267,6 @@ before_install:
       sudo apt-get update;
       sudo apt-get install -y sagemath-upstream-binary;
     fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      pip install matchpy;
-    fi
 install:
   # If a command fails, fail the build.
   - set -e
