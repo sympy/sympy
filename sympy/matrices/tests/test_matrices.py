@@ -1728,8 +1728,12 @@ def test_Matrix_berkowitz_charpoly():
     assert type(charpoly) is PurePoly
 
     A = Matrix([[1, 3], [2, 0]])
-
     assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)
+
+    A = Matrix([[1, 2], [x, 0]])
+    p = A.charpoly(x)
+    assert p.gen != x
+    assert p.as_expr().subs(p.gen, x) == x**2 - 3*x
 
 
 def test_exp():
@@ -2751,6 +2755,14 @@ def test_gauss_jordan_solve():
                          [-2*w['tau0'] - 3*w['tau1'] - 1/S(4)],
                          [w['tau0']], [w['tau1']]])
     assert params == Matrix([[w['tau0']], [w['tau1']]])
+    # watch out for clashing symbols
+    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau1')
+    M = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
+    A = M[:, :-1]
+    b = M[:, -1:]
+    sol, params = A.gauss_jordan_solve(b)
+    assert params == Matrix(3, 1, [x0, x1, x2])
+    assert sol == Matrix(5, 1, [x1, 0, x0, _x0, x2])
 
     # Rectangular, wide, reduced rank, no solution
     A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])

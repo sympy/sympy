@@ -1055,10 +1055,32 @@ def test_linsolve():
     a, b, c, d, e = symbols('a, b, c, d, e')
     Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
     assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
+    raises(IndexError, lambda: linsolve(Augmatrix, a, b, c))
+
+    x0, x1, x2, _x0 = symbols('tau0 tau1 tau2 _tau0')
+    assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
+        ) == FiniteSet((x0, 0, x1, _x0, x2))
+    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau0')
+    assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
+        ) == FiniteSet((x0, 0, x1, _x0, x2))
+    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau1')
+    assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
+        ) == FiniteSet((x0, 0, x1, _x0, x2))
+    # symbols can be given as generators
+    x0, x2, x4 = symbols('x0, x2, x4')
+    assert linsolve(Augmatrix, numbered_symbols('x')
+        ) == FiniteSet((x0, 0, x2, 0, x4))
+    Augmatrix[-1, -1] = x0
+    # use Dummy to avoid clash; the names may clash but the symbols
+    # will not
+    Augmatrix[-1, -1] = symbols('_x0')
+    assert len(linsolve(
+        Augmatrix, numbered_symbols('x', cls=Dummy)).free_symbols) == 4
 
     # Issue #12604
     f = Function('f')
     assert linsolve([f(x) - 5], f(x)) == FiniteSet((5,))
+
 
 def test_solve_decomposition():
     x = Symbol('x')

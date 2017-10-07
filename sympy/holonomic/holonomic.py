@@ -1222,10 +1222,10 @@ class HolonomicFunction(object):
 
             # check for linear relations
             system.append(coeffs)
-            sol_tuple = (Matrix(system).transpose()).gauss_jordan_solve(homogeneous)
-            sol = sol_tuple[0]
+            sol, taus = (Matrix(system).transpose()
+                ).gauss_jordan_solve(homogeneous)
 
-        tau = sol.atoms(Dummy).pop()
+        tau = list(taus)[0]
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
