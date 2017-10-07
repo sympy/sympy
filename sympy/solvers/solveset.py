@@ -35,6 +35,8 @@ from sympy.utilities import filldedent
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
+from types import GeneratorType
+
 
 def _invert(f_x, y, x, domain=S.Complexes):
     r"""
@@ -1280,9 +1282,11 @@ def linsolve(system, *symbols):
     # If second argument is an iterable
     if symbols and hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
+    sym_gen = isinstance(symbols, GeneratorType)
 
     swap = {}
-    b = needed_msg = None
+    b = None  # if we don't get b the input was bad
+    syms_needed_msg = None
 
     # unpack system
 
@@ -1294,11 +1298,11 @@ def linsolve(system, *symbols):
 
         # 2). (eq1, eq2, ...)
         if not isinstance(system[0], Matrix):
-            if not symbols:
+            if sym_gen or not symbols:
                 raise ValueError(filldedent('''
-                    When passing a system of equations, the symbols
-                    for which a solution is being sought must be
-                    given, too.
+                    When passing a system of equations, the explicit
+                    symbols for which a solution is being sought must
+                    be given as a sequence, too.
                 '''))
             system = list(system)
             for i, eq in enumerate(system):
@@ -1315,17 +1319,28 @@ def linsolve(system, *symbols):
                     ''') % eq)
             system, symbols, swap = recast_to_symbols(system, symbols)
             A, b = linear_eq_to_matrix(system, symbols)
-            needed_msg = 'free symbols in the equations provided'
+            syms_needed_msg = 'free symbols in the equations provided'
 
     elif isinstance(system, Matrix) and not (
-            symbols and isinstance(symbols[0], Matrix)):
+            symbols and not isinstance(symbols, GeneratorType) and
+            isinstance(symbols[0], Matrix)):
         # 3). A augmented with b
         A, b = system[:, :-1], system[:, -1:]
 
     if b is None:
         raise ValueError("Invalid arguments")
 
-    needed_msg  = needed_msg or 'columns of A'
+    syms_needed_msg  = syms_needed_msg or 'columns of A'
+
+    if sym_gen:
+        symbols = [next(symbols) for i in range(A.cols)]
+        if any(set(symbols) & (A.free_symbols | b.free_symbols)):
+            raise ValueError(filldedent('''
+                At least one of the symbols provided
+                already appears in the system to be solved.
+                One way to avoid this is to use Dummy symbols in
+                the generator, e.g. numbered_symbols('%s', cls=Dummy)
+            ''' % symbols[0].name.rstrip('1234567890')))
 
     try:
         solution, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
@@ -1341,7 +1356,7 @@ def linsolve(system, *symbols):
             # params       [x, y, z]
             # free_symbols [2, 0, 4]
             # idx          [1, 0, 2]
-            idx = list(zip(*sorted(zip(free_syms, range(len(free_syms)))))[1])
+            idx = list(zip(*sorted(zip(free_syms, range(len(free_syms))))))[1]
             # simultaneous replacements {y: x, x: y, z: z}
             replace_dict = dict(zip(symbols, [symbols[i] for i in idx]))
         elif len(symbols) >= A.cols:
@@ -1350,7 +1365,7 @@ def linsolve(system, *symbols):
             raise IndexError(filldedent('''
                 the number of symbols passed should have a length
                 equal to the number of %s.
-                ''' % needed_msg))
+                ''' % syms_needed_msg))
         solution = [sol.xreplace(replace_dict) for sol in solution]
 
     solution = [simplify(sol).xreplace(swap) for sol in solution]

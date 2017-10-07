@@ -1,21 +1,30 @@
-from sympy import (
-    Abs, Dummy, Eq, Gt, Function, Mod,
-    LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sec, sqrt, symbols,
-    tan, tanh, atan2, arg,
-    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
-    oo, Indexed)
-
-from sympy.core.function import nfloat
-from sympy.core.relational import Unequality as Ne
-from sympy.functions.elementary.complexes import im, re
-from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
-
+from sympy.core.function import (Function, Lambda, nfloat)
+from sympy.core.mod import Mod
+from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Gt,
+    Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, arg, im, re)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
+    atanh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (
+    TrigonometricFunction, acos, acot, acsc, asec, asin, atan, atan2,
+    cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.error_functions import (erf, erfc,
+    erfcinv, erfinv)
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
-
-from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
+from sympy.sets.conditionset import ConditionSet
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
+    Intersection, Interval, Union, imageset)
+from sympy.tensor.indexed import Indexed
+from sympy.utilities.iterables import numbered_symbols
 
 from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
