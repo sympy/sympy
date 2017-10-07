@@ -941,7 +941,6 @@ def test_is_convergent():
     assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() is S.false
     assert Sum(2/(n*log(n)*log(log(n))**2), (n, 5, oo)).is_convergent() is S.true
     assert Sum(2/(n*log(n)**2), (n, 2, oo)).is_convergent() is S.true
-    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() is S.true
     assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() is S.false
     assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() is S.false
     assert Sum(2/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
@@ -976,6 +975,7 @@ def test_convergent_failing():
 
     # Raabe's test
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
+    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() is S.true
     # Dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
