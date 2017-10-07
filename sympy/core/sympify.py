@@ -8,7 +8,6 @@ from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
-
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
@@ -52,23 +51,19 @@ class CantSympify(object):
 
 
 def convert_numpy_types(a):
-    """
-    Converts a numpy datatype input to an appropriate sympy type.
+    """Converts a numpy datatype input to an appropriate sympy type.
 
     Examples
     ========
 
-    >>> from sympy import Float
-    >>> from numpy import int64, float128, float32
+    >>> from sympy.core.sympify import convert_numpy_types
 
-    >>> Float(np.int64(5))
+    >>> convert_numpy_types(numpy.int64(5))
     5.00000000000000
 
-    >>> Float(np.float128(5))
-    5.00000000000000000
-
-    >>> Float(np.float32(5))
+    >>> convert_numpy_types(numpy.float32(5))
     5.00000
+
     """
     import numpy as np
     if not isinstance(a, np.floating):
@@ -84,6 +79,8 @@ def convert_numpy_types(a):
         except NotImplementedError:
             raise SympifyError('Translation for numpy float : %s '
                                'is not implemented' % a)
+# doctests must be set manually here to avoid circular imports
+convert_numpy_types._doctest_depends_on = {'modules': ['numpy']}
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
@@ -293,6 +290,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
 
     # Support for basic numpy datatypes
+    # Note that this check exists to avoid importing NumPy when not necessary
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):

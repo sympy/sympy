@@ -968,7 +968,7 @@ class Float(Number):
         elif num is S.NegativeInfinity:
             num = '-inf'
         elif type(num).__module__ == 'numpy': # support for numpy datatypes
-            num = sympify(num)
+            num = convert_numpy_types(num)
         elif isinstance(num, mpmath.mpf):
             if precision is None:
                 if dps is None:
