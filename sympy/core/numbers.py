@@ -8,7 +8,7 @@ import re as regex
 from collections import defaultdict
 
 from .containers import Tuple
-from .sympify import converter, sympify, _sympify, SympifyError
+from .sympify import converter, sympify, _sympify, SympifyError, convert_numpy_to_sympy
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
 from .decorators import _sympifyit
@@ -967,6 +967,8 @@ class Float(Number):
             num = '+inf'
         elif num is S.NegativeInfinity:
             num = '-inf'
+        elif type(num).__module__ == 'numpy':
+            num = convert_numpy_to_sympy(num)
         elif isinstance(num, mpmath.mpf):
             if precision is None:
                 if dps is None:
@@ -976,8 +978,7 @@ class Float(Number):
         if dps is None and precision is None:
             dps = 15
             if type(num).__module__ == 'numpy':
-                from .sympify import convert_numpy_to_sympy
-                return 1.0*convert_numpy_to_sympy(num)
+                return convert_numpy_to_sympy(num)
             if isinstance(num, Float):
                 return num
             if isinstance(num, string_types) and _literal_float(num):
@@ -1023,8 +1024,6 @@ class Float(Number):
         precision = int(precision)
 
         if isinstance(num, float):
-            _mpf_ = mlib.from_float(num, precision, rnd)
-        elif type(num).__module__ == 'numpy':
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, string_types):
             _mpf_ = mlib.from_str(num, precision, rnd)
