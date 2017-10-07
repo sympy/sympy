@@ -1653,7 +1653,7 @@ class Expr(Basic, EvalfMixin):
             return S.Zero, S.Zero
 
         func = self.func
-        if hint.get('as_Add', func is Add):
+        if hint.get('as_Add', isinstance(self, Add) ):
             want = Add
         else:
             want = Mul
