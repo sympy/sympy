@@ -1014,6 +1014,11 @@ def test_linsolve():
     # raise ValueError for garbage value
     raises(ValueError, lambda: linsolve(Eqns[0], x1, x2, x3, x4))
 
+    #raise ValueError if equations are non-linear in given variables
+    raises(ValueError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
+    raises(ValueError, lambda: linsolve([cos(x) + y, x + y], [x, y]))
+    assert linsolve([x + z - 1, x ** 2 + y - 3], [z, y]) == {(-x + 1, -x**2 + 3)}
+
     # Fully symbolic test
     a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     A = Matrix([[a, b], [c, d]])
