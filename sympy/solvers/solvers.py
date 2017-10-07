@@ -57,6 +57,46 @@ from collections import defaultdict
 import warnings
 
 
+def recast_to_symbols(eqs, symbols):
+    """Return (e, s, d) where e and s are versions of eqs and
+    symbols in which any non-Symbol objects in symbols have
+    been replaced with generic Dummy symbols and d is a dictionary
+    that can be used to restore the original expressions.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solvers import recast_to_symbols
+    >>> from sympy import symbols, Function
+    >>> x, y = symbols('x y')
+    >>> fx = Function('f')(x)
+    >>> eqs, syms = [fx + 1, x, y], [fx, y]
+    >>> e, s, d = recast_to_symbols(eqs, syms); (e, s, d)
+    ([_X0 + 1, x, y], [_X0, y], {_X0: f(x)})
+
+    The original equations and symbols can be restored using d:
+
+    >>> assert [i.xreplace(d) for i in eqs] == eqs
+    >>> assert [d.get(i, i) for i in s] == syms
+    """
+    if not iterable(eqs) and iterable(symbols):
+        raise ValueError('Both eqs and symbols must be iterable')
+    new_symbols = list(symbols)
+    swap_sym = {}
+    for i, s in enumerate(symbols):
+        if not isinstance(s, Symbol) and s not in swap_sym:
+            swap_sym[s] = Dummy('X%d' % i)
+            new_symbols[i] = swap_sym[s]
+    new_f = []
+    for i in eqs:
+        try:
+            new_f.append(i.subs(swap_sym))
+        except AttributeError:
+            new_f.append(i)
+    swap_sym = {v: k for k, v in swap_sym.items()}
+    return new_f, new_symbols, swap_sym
+
+
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
     return isinstance(e, Expr) and (e.is_Pow or isinstance(e, exp))
@@ -948,23 +988,7 @@ def solve(f, *symbols, **flags):
         symbols = sorted(symbols, key=default_sort_key)
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
-    symbols_new = []
-    symbol_swapped = False
-    for i, s in enumerate(symbols):
-        if s.is_Symbol:
-            s_new = s
-        else:
-            symbol_swapped = True
-            s_new = Dummy('X%d' % i)
-        symbols_new.append(s_new)
-
-    if symbol_swapped:
-        swap_sym = list(zip(symbols, symbols_new))
-        f = [fi.subs(swap_sym) for fi in f]
-        symbols = symbols_new
-        swap_sym = {v: k for k, v in swap_sym}
-    else:
-        swap_sym = {}
+    f, symbols, swap_sym = recast_to_symbols(f, symbols)
 
     # this is needed in the next two events
     symset = set(symbols)
@@ -1106,14 +1130,14 @@ def solve(f, *symbols, **flags):
     #
     # ** unless there were Derivatives with the symbols, but those were handled
     #    above.
-    if symbol_swapped:
-        symbols = [swap_sym[k] for k in symbols]
+    if swap_sym:
+        symbols = [swap_sym.get(k, k) for k in symbols]
         if type(solution) is dict:
-            solution = dict([(swap_sym[k], v.subs(swap_sym))
+            solution = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                              for k, v in solution.items()])
         elif solution and type(solution) is list and type(solution[0]) is dict:
             for i, sol in enumerate(solution):
-                solution[i] = dict([(swap_sym[k], v.subs(swap_sym))
+                solution[i] = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                               for k, v in sol.items()])
 
     # undo the dictionary solutions returned when the system was only partially

@@ -5,7 +5,7 @@ from sympy import (
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
-    oo)
+    oo, Indexed)
 
 from sympy.core.function import nfloat
 from sympy.core.relational import Unequality as Ne
@@ -245,13 +245,14 @@ def test_is_function_class_equation():
 
 
 def test_garbage_input():
-    raises(ValueError, lambda: solveset_real(x, 1))
     raises(ValueError, lambda: solveset_real([x], x))
-    raises(ValueError, lambda: solveset_real(x, pi))
-    raises(ValueError, lambda: solveset_real(x, x**2))
+    assert solveset_real(x, 1) == S.EmptySet
+    assert solveset_real(x - 1, 1) == FiniteSet(x)
+    assert solveset_real(x, pi) == S.EmptySet
+    assert solveset_real(x, x**2) == S.EmptySet
 
     raises(ValueError, lambda: solveset_complex([x], x))
-    raises(ValueError, lambda: solveset_complex(x, pi))
+    assert solveset_complex(x, pi) == S.EmptySet
 
 
 def test_solve_mul():
@@ -884,7 +885,8 @@ def test_solve_lambert():
 def test_solveset():
     x = Symbol('x')
     raises(ValueError, lambda: solveset(x + y))
-    raises(ValueError, lambda: solveset(x, 1))
+    assert solveset(x, 1) == S.EmptySet
+    assert solveset(x - 1, 1) == FiniteSet(x)
 
     assert solveset(0, domain=S.Reals) == S.Reals
     assert solveset(1) == S.EmptySet
@@ -894,6 +896,9 @@ def test_solveset():
     assert solveset(exp(x) - 1, domain=S.Reals) == FiniteSet(0)
     assert solveset(exp(x) - 1, x, S.Reals) == FiniteSet(0)
     assert solveset(Eq(exp(x), 1), x, S.Reals) == FiniteSet(0)
+    assert solveset(exp(x) - 1, exp(x), S.Reals) == FiniteSet(1)
+    A = Indexed('A', x)
+    assert solveset(A - 1, A, S.Reals) == FiniteSet(1)
 
     assert solveset(x - 1 >= 0, x, S.Reals) == Interval(1, oo)
     assert solveset(exp(x) - 1 >= 0, x, S.Reals) == Interval(0, oo)
@@ -1004,15 +1009,21 @@ def test_linsolve():
             2*x1 + 4*x2 + 6*x4 - 4]
 
     sol = FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
-    assert linsolve(M, (x1, x2, x3, x4)) == sol
     assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
+    assert linsolve(Eqns, *(x1, x2, x3, x4)) == sol
     assert linsolve(system1, (x1, x2, x3, x4)) == sol
-
-    # raise ValueError if, A & b is not given as tuple
-    raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
+    assert linsolve(system1, *(x1, x2, x3, x4)) == sol
+    # issue 9667 - symbols can be Dummy symbols
+    x1, x2, x3, x4 = symbols('x:4', cls=Dummy)
+    assert linsolve(system1, x1, x2, x3, x4) == FiniteSet(
+        (-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
 
     # raise ValueError for garbage value
-    raises(ValueError, lambda: linsolve(Eqns[0], x1, x2, x3, x4))
+    raises(ValueError, lambda: linsolve(Eqns))
+    raises(ValueError, lambda: linsolve(x1))
+    raises(ValueError, lambda: linsolve(x1, x2))
+    raises(ValueError, lambda: linsolve((A,), x1, x2))
+    raises(ValueError, lambda: linsolve(A, b, x1, x2))
 
     #raise ValueError if equations are non-linear in given variables
     raises(ValueError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
@@ -1026,14 +1037,6 @@ def test_linsolve():
     system2 = (A, B)
     sol = FiniteSet(((-b*f + d*e)/(a*d - b*c), (a*f - c*e)/(a*d - b*c)))
     assert linsolve(system2, [x, y]) == sol
-
-    # Test for Dummy Symbols issue #9667
-    x1 = Dummy('x1')
-    x2 = Dummy('x2')
-    x3 = Dummy('x3')
-    x4 = Dummy('x4')
-
-    assert linsolve(system1, x1, x2, x3, x4) == FiniteSet((-2*x2 - 3*x4 + 2, x2, 2*x4 + 5, x4))
 
     # No solution
     A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
@@ -1126,15 +1129,20 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([0, x - y], x, y) == soln
     assert nonlinsolve([x - y, x - y], x, y) == soln
     assert nonlinsolve([x, 0], x, y) == FiniteSet((0, y))
+    f = Function('f')
+    assert nonlinsolve([f(x), 0], f(x), y) == FiniteSet((0, y))
+    assert nonlinsolve([f(x), 0], f(x), f(y)) == FiniteSet((0, f(y)))
+    A = Indexed('A', x)
+    assert nonlinsolve([A, 0], A, y) == FiniteSet((0, y))
+    assert nonlinsolve([x**2 -1], [sin(x)]) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 -1], sin(x)) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 -1], 1) == FiniteSet((x**2,))
+    assert nonlinsolve([x**2 -1], x + y) == FiniteSet((S.EmptySet,))
 
 
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
-    raises(ValueError, lambda: nonlinsolve([x**2 -1], [sin(x)]))
-    raises(ValueError, lambda: nonlinsolve([x**2 -1], sin(x)))
-    raises(ValueError, lambda: nonlinsolve([x**2 -1], 1))
-    raises(ValueError, lambda: nonlinsolve([x**2 -1], x + y))
 
 
 def test_trig_system():
@@ -1532,8 +1540,11 @@ def test_simplification():
 
 def test_issue_10555():
     f = Function('f')
+    g = Function('g')
     assert solveset(f(x) - pi/2, x, S.Reals) == \
         ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
+    assert solveset(f(g(x)) - pi/2, g(x), S.Reals) == \
+        ConditionSet(g(x), Eq(2*f(g(x)) - pi, 0), S.Reals)
 
 
 def test_issue_8715():
