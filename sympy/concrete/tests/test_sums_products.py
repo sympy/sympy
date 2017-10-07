@@ -973,12 +973,17 @@ def test_convergent_failing():
     assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
     # is_decreasing is not handling "is_decreasing(1)", so raises error
 
-    # Raabe's test
-    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
-    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() is S.true
     # Dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
+
+
+@XFAIL
+def test_convergent_failing_raabe():
+    # Issue 13403
+    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
+    # Issue 13416
+    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() is S.true
 
 
 def test_issue_6966():
