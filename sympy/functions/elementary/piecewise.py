@@ -462,20 +462,20 @@ class Piecewise(Function):
     def _eval_transpose(self):
         return self.func(*[(e.transpose(), c) for e, c in self.args])
 
-    def _eval_template_is_attr(self, is_attr, when_multiple=None):
+    def _eval_template_is_attr(self, is_attr):
         b = None
         for expr, _ in self.args:
             a = getattr(expr, is_attr)
             if a is None:
-                return None
+                return
             if b is None:
                 b = a
             elif b is not a:
-                return when_multiple
+                return
         return b
 
     _eval_is_finite = lambda self: self._eval_template_is_attr(
-        'is_finite', when_multiple=False)
+        'is_finite')
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
     _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
     _eval_is_imaginary = lambda self: self._eval_template_is_attr(
@@ -489,13 +489,13 @@ class Piecewise(Function):
     _eval_is_nonpositive = lambda self: self._eval_template_is_attr(
         'is_nonpositive')
     _eval_is_nonzero = lambda self: self._eval_template_is_attr(
-        'is_nonzero', when_multiple=True)
+        'is_nonzero')
     _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
     _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
     _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
     _eval_is_zero = lambda self: self._eval_template_is_attr(
-        'is_zero', when_multiple=False)
+        'is_zero')
 
     @classmethod
     def __eval_cond(cls, cond):
@@ -504,9 +504,6 @@ class Piecewise(Function):
         if cond == True:
             return True
         if isinstance(cond, Equality):
-            if checksol(cond, {}, minimal=True):
-                # the equality is trivially solved
-                return True
             diff = cond.lhs - cond.rhs
             if diff.is_commutative:
                 return diff.is_zero
@@ -543,33 +540,24 @@ def piecewise_fold(expr):
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
-    new_args = list(map(piecewise_fold, expr.args))
-    if expr.func is ExprCondPair:
-        return ExprCondPair(*new_args)
-    piecewise_args = []
-    for n, arg in enumerate(new_args):
-        if isinstance(arg, Piecewise):
-            piecewise_args.append(n)
-    if len(piecewise_args) > 0:
-        n = piecewise_args[0]
-        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n + 1:])), c)
-                    for e, c in new_args[n].args]
-        if isinstance(expr, Boolean):
-            # If expr is Boolean, we must return some kind of PiecewiseBoolean.
-            # This is constructed by means of Or, And and Not.
-            # piecewise_fold(0 < Piecewise( (sin(x), x<0), (cos(x), True)))
-            # can't return Piecewise((0 < sin(x), x < 0), (0 < cos(x), True))
-            # but instead Or(And(x < 0, 0 < sin(x)), And(0 < cos(x), Not(x<0)))
-            other = True
-            rtn = False
-            for e, c in new_args:
-                rtn = Or(rtn, And(other, c, e))
-                other = And(other, Not(c))
-            if len(piecewise_args) > 1:
-                return piecewise_fold(rtn)
-            return rtn
-        if len(piecewise_args) > 1:
-            return piecewise_fold(Piecewise(*new_args))
-        return Piecewise(*new_args)
+
+    new_args = []
+    if isinstance(expr, (ExprCondPair, Piecewise)):
+        for e, c in expr.args:
+            if not isinstance(e, Piecewise):
+                e = piecewise_fold(e)
+            if isinstance(e, Piecewise):
+                new_args.extend([(piecewise_fold(ei), And(ci, c))
+                    for ei, ci in e.args])
+            else:
+                new_args.append((e, c))
     else:
-        return expr.func(*new_args)
+        from sympy.utilities.iterables import cartes
+        folded = list(map(piecewise_fold, expr.args))
+        for ec in cartes(*[
+                (i.args if isinstance(i, Piecewise) else
+                 [(i, S.true)]) for i in folded]):
+            e, c = zip(*ec)
+            new_args.append((expr.func(*e), And(*c)))
+
+    return Piecewise(*new_args)

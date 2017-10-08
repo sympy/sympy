@@ -85,7 +85,7 @@ def dominant(expr, n):
     term0 = terms[-1]
     comp = [term0]  # comparable terms
     for t in terms[:-1]:
-        e = (term0 / t).combsimp()
+        e = (term0 / t).gammasimp()
         l = limit_seq(e, n)
         if l is S.Zero:
             term0 = t
@@ -179,7 +179,7 @@ def limit_seq(expr, n=None, trials=5):
             return None
 
         num, den = (difference_delta(t.expand(), n) for t in [num, den])
-        expr = (num / den).combsimp()
+        expr = (num / den).gammasimp()
 
         if not expr.has(Sum):
             result = _limit_inf(expr, n)
@@ -196,4 +196,4 @@ def limit_seq(expr, n=None, trials=5):
         if den is None:
             return None
 
-        expr = (num / den).combsimp()
+        expr = (num / den).gammasimp()

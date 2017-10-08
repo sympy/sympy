@@ -91,6 +91,7 @@ class Add(Expr, AssocOp):
 
         """
         from sympy.calculus.util import AccumBounds
+        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -140,6 +141,11 @@ class Add(Expr, AssocOp):
 
             elif isinstance(o, AccumBounds):
                 coeff = o.__add__(coeff)
+                continue
+
+            elif isinstance(o, MatrixExpr):
+                # can't add 0 to Matrix so make sure coeff is not 0
+                coeff = o.__add__(coeff) if coeff else o
                 continue
 
             elif o is S.ComplexInfinity:
@@ -345,6 +351,30 @@ class Add(Expr, AssocOp):
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
     # issue 5524.
 
+    def _eval_power(self, e):
+        if e.is_Rational and self.is_number:
+            from sympy.core.evalf import pure_complex
+            from sympy.core.mul import _unevaluated_Mul
+            from sympy.core.exprtools import factor_terms
+            from sympy.core.function import expand_multinomial
+            from sympy.functions.elementary.complexes import sign
+            from sympy.functions.elementary.miscellaneous import sqrt
+            ri = pure_complex(self)
+            if ri:
+                r, i = ri
+                if e.q == 2:
+                    D = sqrt(r**2 + i**2)
+                    if D.is_Rational:
+                        # (r, i, D) is a Pythagorean triple
+                        root = sqrt(factor_terms((D - r)/2))**e.p
+                        return root*expand_multinomial((
+                            # principle value
+                            (D + r)/abs(i) + sign(i)*S.ImaginaryUnit)**e.p)
+                elif e == -1:
+                    return _unevaluated_Mul(
+                        r - i*S.ImaginaryUnit,
+                        1/(r**2 + i**2))
+
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
@@ -480,9 +510,10 @@ class Add(Expr, AssocOp):
                 im_I.append(a*S.ImaginaryUnit)
             else:
                 return
-        if self.func(*nz).is_zero:
+        b = self.func(*nz)
+        if b.is_zero:
             return fuzzy_not(self.func(*im_I).is_zero)
-        elif self.func(*nz).is_zero is False:
+        elif b.is_zero is False:
             return False
 
     def _eval_is_zero(self):
@@ -510,12 +541,15 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if self.func(*nz).is_zero:
+        if len(nz) == len(self.args):
+            return None
+        b = self.func(*nz)
+        if b.is_zero:
             if not im_or_z and not im:
                 return True
             if im and not im_or_z:
                 return False
-        if self.func(*nz).is_zero is False:
+        if b.is_zero is False:
             return False
 
     def _eval_is_odd(self):
@@ -547,11 +581,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_positive and a.is_nonnegative:
+                if s != self and s.is_positive and a.is_nonnegative:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_positive:
+                    if v is not None and v != self and v.is_positive:
                         return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
@@ -600,11 +634,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonnegative:
+                    if s != self and s.is_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonnegative:
+                        if v is not None and v != self and v.is_nonnegative:
                             return True
 
     def _eval_is_nonpositive(self):
@@ -615,11 +649,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonpositive:
+                    if s != self and s.is_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonpositive:
+                        if v is not None and v != self and v.is_nonpositive:
                             return True
 
     def _eval_is_negative(self):
@@ -631,11 +665,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_negative and a.is_nonpositive:
+                if s != self and s.is_negative and a.is_nonpositive:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_negative:
+                    if v is not None and v != self and v.is_negative:
                         return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
@@ -678,6 +712,9 @@ class Add(Expr, AssocOp):
 
     def _eval_subs(self, old, new):
         if not old.is_Add:
+            if old is S.Infinity and -old in self.args:
+                # foo - oo is foo + (-oo) internally
+                return self.xreplace({-old: -new})
             return None
 
         coeff_self, terms_self = self.as_coeff_Add()
@@ -822,7 +859,7 @@ class Add(Expr, AssocOp):
         return self.func(*[t.transpose() for t in self.args])
 
     def __neg__(self):
-        return self.func(*[-t for t in self.args])
+        return self*(-1)
 
     def _sage_(self):
         s = 0
@@ -990,6 +1027,22 @@ class Add(Expr, AssocOp):
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
         return self.func(*[dd(a, n, step) for a in self.args])
+
+    @property
+    def _mpc_(self):
+        """
+        Convert self to an mpmath mpc if possible
+        """
+        from sympy.core.numbers import I, Float
+        re_part, rest = self.as_coeff_Add()
+        im_part, imag_unit = rest.as_coeff_Mul()
+        if not imag_unit == I:
+            # ValueError may seem more reasonable but since it's a @property,
+            # we need to use AttributeError to keep from confusing things like
+            # hasattr.
+            raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
+
+        return (Float(re_part)._mpf_, Float(im_part)._mpf_)
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

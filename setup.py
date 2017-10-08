@@ -2,9 +2,9 @@
 """Distutils based setup script for SymPy.
 
 This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
-python mechanism for installing packages.  Optionally, you can use
-Setuptools (http://pythonhosted.org/setuptools/setuptools.html) to automatically
-handle dependencies.  For the easiest installation
+python mechanism for installing packages. Optionally, you can use
+Setuptools (http://pythonhosted.org/setuptools/setuptools.html)
+to automatically handle dependencies. For the easiest installation
 just type the command (you'll probably need root privileges for that):
 
     python setup.py install
@@ -40,8 +40,11 @@ mpmath_version = '0.19'
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
+extra_kwargs = {}
+
 try:
     from setuptools import setup, Command
+    extra_kwargs['zip_safe'] = False
 except ImportError:
     from distutils.core import setup, Command
 
@@ -52,19 +55,22 @@ except ImportError:
         if mpmath.__version__ < LooseVersion(mpmath_version):
             raise ImportError
     except ImportError:
-        print("Please install the mpmath package with a version >= %s" % mpmath_version)
+        print("Please install the mpmath package with a version >= %s"
+              % mpmath_version)
         sys.exit(-1)
 
 PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2, 7):
-    print("SymPy requires Python 2.7 or newer. Python %d.%d detected" % sys.version_info[:2])
+    print("SymPy requires Python 2.7 or newer. Python %d.%d detected"
+          % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_module_list.py
 modules = [
+    'sympy.algebras',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',
@@ -89,6 +95,9 @@ modules = [
     'sympy.holonomic',
     'sympy.integrals',
     'sympy.integrals.benchmarks',
+    'sympy.integrals.rubi',
+    'sympy.integrals.rubi.parsetools',
+    'sympy.integrals.rubi.rules',
     'sympy.interactive',
     'sympy.liealgebras',
     'sympy.logic',
@@ -105,8 +114,8 @@ modules = [
     'sympy.physics.mechanics',
     'sympy.physics.optics',
     'sympy.physics.quantum',
-    'sympy.physics.unitsystems',
-    'sympy.physics.unitsystems.systems',
+    'sympy.physics.units',
+    'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
     'sympy.plotting.intervalmath',
@@ -134,6 +143,7 @@ modules = [
     'sympy.utilities.mathml',
     'sympy.vector',
 ]
+
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -189,7 +199,8 @@ class clean(Command):
                     os.remove(os.path.join(root, file))
 
         os.chdir(dir_setup)
-        names = ["python-build-stamp-2.4", "MANIFEST", "build", "dist", "doc/_build", "sample.tex"]
+        names = ["python-build-stamp-2.4", "MANIFEST", "build",
+                 "dist", "doc/_build", "sample.tex"]
 
         for f in names:
             if os.path.isfile(f):
@@ -197,7 +208,7 @@ class clean(Command):
             elif os.path.isdir(f):
                 shutil.rmtree(f)
 
-        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules", \
+        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules",
                                            "physics", "vector", "*.pdf")):
             if os.path.isfile(name):
                 os.remove(name)
@@ -257,6 +268,7 @@ class run_benchmarks(Command):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
+    'sympy.algebras.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
@@ -273,6 +285,8 @@ tests = [
     'sympy.functions.special.tests',
     'sympy.geometry.tests',
     'sympy.holonomic.tests',
+    'sympy.integrals.rubi.parsetools.tests',
+    'sympy.integrals.rubi.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
     'sympy.liealgebras.tests',
@@ -287,7 +301,7 @@ tests = [
     'sympy.physics.optics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
-    'sympy.physics.unitsystems.tests',
+    'sympy.physics.units.tests',
     'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
@@ -354,13 +368,14 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.6',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.2',
             'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
             ],
-          install_requires=['mpmath>=%s' % mpmath_version]
+          install_requires=['mpmath>=%s' % mpmath_version],
+          **extra_kwargs
           )

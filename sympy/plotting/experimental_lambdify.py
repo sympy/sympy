@@ -211,7 +211,9 @@ class lambdify(object):
             elif isinstance(e, TypeError) and ('no ordering relation is'
                                                ' defined for complex numbers'
                                                in str(e) or 'unorderable '
-                                               'types' in str(e)):
+                                               'types' in str(e) or "'>' not "
+                                               "supported between instances of"
+                                               in str(e)):
                 self.lambda_func = experimental_lambdify(self.args, self.expr,
                                                          use_evalf=True,
                                                          use_python_math=True)
@@ -271,6 +273,9 @@ class Lambdifier(object):
         self.dict_str = self.get_dict_str()
         self.dict_fun = self.get_dict_fun()
         exprstr = str(expr)
+        # the & and | operators don't work on tuples, see discussion #12108
+        exprstr = exprstr.replace(" & "," and ").replace(" | "," or ")
+
         newexpr = self.tree2str_translate(self.str2tree(exprstr))
 
         # Constructing the namespaces

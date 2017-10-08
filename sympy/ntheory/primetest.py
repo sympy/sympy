@@ -38,7 +38,7 @@ def is_square(n, prep=True):
             return True
     m = n & 127
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
-        m = n % 63;
+        m = n % 63
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
             from sympy.ntheory import perfect_power
             if perfect_power(n, [2]):
@@ -483,14 +483,7 @@ def isprime(n):
     if n < 2809:
         return True
     if n <= 23001:
-        return pow(2, n, n) == 2 and n not in [341, 561, 645, 1105, 1387, 1729,
-                                               1905, 2047, 2465, 2701, 2821,
-                                               3277, 4033, 4369, 4371, 4681,
-                                               5461, 6601, 7957, 8321, 8481,
-                                               8911, 10261, 10585, 11305,
-                                               12801, 13741, 13747, 13981,
-                                               14491, 15709, 15841, 16705,
-                                               18705, 18721, 19951, 23001]
+        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s

@@ -25,7 +25,9 @@ from sympy.core.containers import Dict
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, substitution, nonlinsolve, solvify)
+    solveset, solve_decomposition, substitution, nonlinsolve, solvify,
+    _is_finite_with_finite_vars)
+
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -168,6 +170,9 @@ def test_invert_complex():
     raises(ValueError, lambda: invert_complex(x, x, x))
     raises(ValueError, lambda: invert_complex(x, x, 1))
 
+    # https://github.com/skirpichev/omg/issues/16
+    assert invert_complex(sinh(x), 0, x) != (x, FiniteSet(0))
+
 
 def test_domain_check():
     assert domain_check(1/(1 + (1/(x+1))**2), x, -1) is False
@@ -175,6 +180,9 @@ def test_domain_check():
     assert domain_check(x, x, oo) is False
     assert domain_check(0, x, oo) is False
 
+def test_issue_11536():
+    assert solveset(0**x - 100, x, S.Reals) == ConditionSet(x, Eq(0**x - 100, 0), S.Reals)
+    assert solveset(0**x - 1, x, S.Reals) == FiniteSet(0)
 
 def test_is_function_class_equation():
     from sympy.abc import x, a
@@ -496,6 +504,9 @@ def test_solveset_real_gen_is_pow():
 
 
 def test_no_sol():
+    assert solveset(1 - oo*x) == EmptySet()
+    assert solveset(oo*x, x) == EmptySet()
+    assert solveset(oo*x - oo, x) == EmptySet()
     assert solveset_real(4, x) == EmptySet()
     assert solveset_real(exp(x), x) == EmptySet()
     assert solveset_real(x**2 + 1, x) == EmptySet()
@@ -576,12 +587,10 @@ def test_solve_abs():
     raises(ValueError, lambda: solveset(abs(x) - 1, x))
 
 
-@XFAIL
 def test_issue_9565():
     assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) == Interval(-1, 2)
 
 
-@XFAIL
 def test_issue_10069():
     eq = abs(1/(x - 1)) - 1 > 0
     u = Union(Interval.open(0, 1), Interval.open(1, 2))
@@ -708,7 +717,7 @@ def test_solveset_complex_exp():
 def test_solve_complex_log():
     assert solveset_complex(log(x), x) == FiniteSet(1)
     assert solveset_complex(1 - log(a + 4*x**2), x) == \
-        FiniteSet(-sqrt(-a/4 + E/4), sqrt(-a/4 + E/4))
+        FiniteSet(-sqrt(-a + E)/2, sqrt(-a + E)/2)
 
 
 def test_solve_complex_sqrt():
@@ -999,14 +1008,16 @@ def test_linsolve():
     assert linsolve(Eqns, (x1, x2, x3, x4)) == sol
     assert linsolve(system1, (x1, x2, x3, x4)) == sol
 
-    # raise ValueError if no symbols are given
-    raises(ValueError, lambda: linsolve(system1))
-
     # raise ValueError if, A & b is not given as tuple
     raises(ValueError, lambda: linsolve(A, b, x1, x2, x3, x4))
 
     # raise ValueError for garbage value
     raises(ValueError, lambda: linsolve(Eqns[0], x1, x2, x3, x4))
+
+    #raise ValueError if equations are non-linear in given variables
+    raises(ValueError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
+    raises(ValueError, lambda: linsolve([cos(x) + y, x + y], [x, y]))
+    assert linsolve([x + z - 1, x ** 2 + y - 3], [z, y]) == {(-x + 1, -x**2 + 3)}
 
     # Fully symbolic test
     a, b, c, d, e, f = symbols('a, b, c, d, e, f')
@@ -1045,6 +1056,9 @@ def test_linsolve():
     Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
     assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
 
+    # Issue #12604
+    f = Function('f')
+    assert linsolve([f(x) - 5], f(x)) == FiniteSet((5,))
 
 def test_solve_decomposition():
     x = Symbol('x')
@@ -1527,3 +1541,51 @@ def test_issue_11534():
     soln = Complement(FiniteSet(-y/sqrt(y**2 + 1), y/sqrt(y**2 + 1)), FiniteSet(-1, 1))
     assert solveset(eq, x, S.Reals) == soln
     assert solveset(eq2, x, S.Reals) == soln
+
+
+def test_issue_10477():
+    assert solveset((x**2 + 4*x - 3)/x < 2, x, S.Reals) == \
+        Union(Interval.open(-oo, -3), Interval.open(0, 1))
+
+
+def test_issue_10671():
+    assert solveset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
+    i = Interval(1, 10)
+    assert solveset((1/x).diff(x) < 0, x, i) == i
+
+
+def test_issue_11064():
+    eq = x + sqrt(x**2 - 5)
+    assert solveset(eq > 0, x, S.Reals) == \
+        Interval(sqrt(5), oo)
+    assert solveset(eq < 0, x, S.Reals) == \
+        Interval(-oo, -sqrt(5))
+    assert solveset(eq > sqrt(5), x, S.Reals) == \
+        Interval.Lopen(sqrt(5), oo)
+
+
+def test_issue_12478():
+    eq = sqrt(x - 2) + 2
+    soln = solveset_real(eq, x)
+    assert soln is S.EmptySet
+    assert solveset(eq < 0, x, S.Reals) is S.EmptySet
+    assert solveset(eq > 0, x, S.Reals) == Interval(2, oo)
+
+
+def test_issue_12429():
+    eq = solveset(log(x)/x <= 0, x, S.Reals)
+    sol = Interval.Lopen(0, 1)
+    assert eq == sol
+
+
+def test_solveset_arg():
+    assert solveset(arg(x), x, S.Reals)  == Interval.open(0, oo)
+    assert solveset(arg(4*x -3), x) == Interval.open(3/4, oo)
+
+
+def test__is_finite_with_finite_vars():
+    f = _is_finite_with_finite_vars
+    # issue 12482
+    assert all(f(1/x) is None for x in (
+        Dummy(), Dummy(real=True), Dummy(complex=True)))
+    assert f(1/Dummy(real=False)) is True  # b/c it's finite but not 0

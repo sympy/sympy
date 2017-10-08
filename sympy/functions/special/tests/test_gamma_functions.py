@@ -99,6 +99,7 @@ def tn_branch(s, func):
 
 def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
+    assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert td(lowergamma(x, randcplx()), x)
@@ -400,7 +401,7 @@ def test_issue_8657():
     m = Symbol('m', integer=True)
     o = Symbol('o', positive=True)
     p = Symbol('p', negative=True, integer=False)
-    assert gamma(n).is_real is None
+    assert gamma(n).is_real is False
     assert gamma(m).is_real is None
     assert gamma(o).is_real is True
     assert gamma(p).is_real is True
