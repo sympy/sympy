@@ -977,8 +977,6 @@ class Float(Number):
 
         if dps is None and precision is None:
             dps = 15
-            if type(num).__module__ == 'numpy':
-                return convert_numpy_to_sympy(num)
             if isinstance(num, Float):
                 return num
             if isinstance(num, string_types) and _literal_float(num):

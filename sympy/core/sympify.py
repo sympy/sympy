@@ -50,8 +50,8 @@ class CantSympify(object):
     """
     pass
 
-# Support for basic numpy datatypes
 
+# Support for basic numpy datatypes
 def convert_numpy_to_sympy(a):
     assert type(a).__module__ == 'numpy'
     from sympy.external import import_module

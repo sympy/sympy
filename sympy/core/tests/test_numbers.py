@@ -18,6 +18,7 @@ from mpmath import mpf
 import mpmath
 
 
+
 t = Symbol('t', real=False)
 
 def same_and_same_prec(a, b):
@@ -1758,6 +1759,7 @@ def test_numpy_to_float():
 
     from sympy.external import import_module
     np = import_module('numpy')
+    assert(np is not None)
     testnum = 123456789
 
     a1 = np.float32(testnum)
@@ -1768,55 +1770,15 @@ def test_numpy_to_float():
     check_approximate_equality(a3, testnum)
 
     fromnumpy = Float(a3)
-    fromS = Float(S(testnum), precision = fromnumpy._prec)
+    fromS = Float(S(testnum), precision=fromnumpy._prec)
     assert(fromnumpy._prec == 63)
     assert(fromnumpy == fromS)
 
-    fromnumpy = Float(a3, precision = 10)
-    fromS = Float(S(testnum), precision = fromnumpy._prec)
+    fromnumpy = Float(a3, precision=10)
+    fromS = Float(S(testnum), precision=fromnumpy._prec)
     assert(fromnumpy._prec == 10)
     assert(fromnumpy == fromS)
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
-'''
-def test_numpy():
-    from sympy.external import import_module
-    from sympy.utilities.pytest import skip
-    np = import_module('numpy')
-    
-    if not np:
-        skip('numpy not installed. Abort numpy tests.')
 
-    def equal(x, y):
-        return x == y and type(x) == type(y)
-    print(type(S(123)))
-    print(type(Float(np.int_(123))))
-    try:
-        assert equal(
-            Float(np.int_(12345678912345678)), S(12345678912345678.))
-        assert equal(
-            Float(np.intp(12345678912345678)), S(12345678912345678.))
-    except OverflowError:
-        # May fail on 32-bit systems: Python int too large to convert to C long
-        pass
-    assert equal(Float(np.intc(1234567891)), S(1234567891.))
-    assert equal(Float(np.int8(-123)), S(-123.))
-    assert equal(Float(np.int16(-12345)), S(-12345.))
-    assert equal(Float(np.int32(-1234567891)), S(-1234567891.))
-    assert equal(
-        Float(np.int64(-12345678912345678)), S(-12345678912345678.))
-    assert equal(Float(np.uint8(123)), S(123.))
-    assert equal(Float(np.uint16(12345)), S(12345.))
-    assert equal(Float(np.uint32(1234567891)), S(1234567891.))
-    assert equal(
-        Float(np.uint64(1234567891234567891)), S(1234567891234567891.))
-    assert equal(Float(np.float32(1.123456)), Float(1.123456, precision=24))
-    assert equal(Float(np.float64(1.1234567891234)),
-                 Float(1.1234567891234, precision=53))
-    assert equal(Float(np.longdouble(1.123456789)),
-                 Float(1.123456789, precision=80))
- #   assert equal(Float(np.complex64(1 + 2j)), S(1.0 + 2.0 * I))
- #   assert equal(Float(np.complex128(1 + 2j)), S(1.0 + 2.0 * I))
- #   assert equal(Float(np.longcomplex(1 + 2j)), S(1.0 + 2.0 * I))
- '''
