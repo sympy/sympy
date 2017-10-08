@@ -454,14 +454,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         lim_val = Limit(sym * (sequence_term/sequence_term.subs(sym, sym + 1)
                             - S(1)), sym, S.Infinity)
         val = lim_val.doit()
-        if val.is_number:
+        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        if val.is_number and dict_val is None:
             if val > 1:
                 return S.true
             if val < 1:
                 return S.false
 
         ### ------------- alternating series test ----------- ###
-        dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
 
