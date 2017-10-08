@@ -1220,12 +1220,12 @@ def test_separable1():
     sol2 = Eq(f(x), C1*x)
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
-    sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
+    sol5 = Eq(f(x), C1/cos(x) - 2)
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
     assert dsolve(eq4, hint='separable', simplify=False) == sol4
-    assert dsolve(eq5, hint='separable') == simplify(sol5).expand()
+    assert dsolve(eq5, hint='separable') == sol5
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
@@ -1250,7 +1250,7 @@ def test_separable2():
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9str = ("Eq(Integral(cos(_y)/tan(_y), (_y, f(x))), "
                 "C1 + Integral(-E*exp(x), x))")
-    sol10 = Eq(-log(-1 + sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
+    sol10 = Eq(-log(cos(f(x))), C1 - log(- a**2 + x**2)/2)
     assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
     assert dsolve(eq8, hint='separable', simplify=False) == sol8
@@ -1265,10 +1265,10 @@ def test_separable3():
     eq11 = f(x).diff(x) - f(x)*tan(x)
     eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
     eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
-    sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
-    sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
-    sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2 - 1)/2)
-    assert dsolve(eq11, hint='separable') == simplify(sol11)
+    sol11 = Eq(f(x), C1/cos(x))
+    sol12 = Eq(log(sin(f(x))), C1 + 2*x + 2*log(x - 1))
+    sol13 = Eq(log(log(f(x))), C1 + log(sin(x)))
+    assert dsolve(eq11, hint='separable') == sol11
     assert dsolve(eq12, hint='separable', simplify=False) == sol12
     assert dsolve(eq13, hint='separable', simplify=False) == sol13
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
@@ -1294,7 +1294,7 @@ def test_separable5():
     sol15 = Eq(f(x), -1 + C1*exp(-x**2/2))
     sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
     sol17 = Eq(f(x), C1*exp(-x))
-    sol18 = Eq(-log(-1 + sin(2*f(x))**2)/4, C1 + log(-1 + sin(x)**2)/2)
+    sol18 = Eq(-log(cos(2*f(x)))/2, C1 + log(cos(x)))
     sol19 = Eq(f(x), (C1*exp(-x) - x + 1)/(x - 1))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
@@ -2406,11 +2406,8 @@ def test_exact_enhancement():
     eq = (x + 2)*sin(f) + df*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs == [
-        -acos(-sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
-        -acos(sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
-        acos(-sqrt(C1*exp(-2*x)/x**4 + 1)),
-        acos(sqrt(C1*exp(-2*x)/x**4 + 1))]
-
+        -asin(C1*exp(-x)/x**2) + pi,
+        asin(C1*exp(-x)/x**2)]
 
 def test_separable_reduced():
     f = Function('f')

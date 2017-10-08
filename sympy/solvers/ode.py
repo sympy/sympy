@@ -566,7 +566,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='1st_exact')
     [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [Eq(f(x), -acos(C1/sqrt(-cos(x)**2)) + 2*pi), Eq(f(x), acos(C1/sqrt(-cos(x)**2)))]
+    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
