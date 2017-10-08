@@ -87,21 +87,25 @@ def _symbol(s, matching_symbol=None, **assumptions):
 def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
     """Return a symbol which, when printed, will have a name unique
     from any other already in the expressions given. The name is made
-    unique by prepending underscores.
+    unique by prepending underscores (default) but this can be
+    customized with the keyword 'modify'.
 
     Parameters
     ==========
 
         xname : a string or a Symbol (when symbol xname <- str(xname))
         compare : a single arg function that takes a symbol and returns
-            a string to be compared with xname
-        modify : a single arg function that changes its string arg in
-            some way (default is to preppend underscores)
+            a string to be compared with xname (the default is the str
+            function which indicates how the name will look when it
+            is printed, e.g. this includes underscores that appear on
+            Dummy symbols)
+        modify : a single arg function that changes its string argument
+            in some way (the default is to preppend underscores)
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import _uniquely_named_symbol as usym
+    >>> from sympy.core.symbol import _uniquely_named_symbol as usym, Dummy
     >>> from sympy.abc import x
     >>> usym('x', x)
     _x

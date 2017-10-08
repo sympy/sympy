@@ -361,4 +361,8 @@ def test__uniquely_named_symbol_and__symbol():
     r = Symbol('x', real=True)
     assert F(('x', r)).is_real
     assert F(('x', r), real=False).is_real
+    assert F('x1', Symbol('x1'),
+        compare=lambda i: str(i).rstrip('1')).name == 'x1'
+    assert F('x1', Symbol('x1'),
+        modify=lambda i: i + '_').name == 'x1_'
     assert _symbol(x, _x) == x

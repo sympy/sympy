@@ -2606,13 +2606,9 @@ class MatrixBase(MatrixDeprecated,
 
         # Free parameters
         # what are current unnumbered free symbol names?
-        free_basenames = [str(i).rstrip('1234567890') for i in aug.free_symbols]
-        # preppend 'tau' with underscores if it matches any current base name
-        stau = 'tau'
-        while stau in free_basenames:
-            stau = '_' + stau
-        # create the matrix of numbered tau symbols, tau0, tau1, etc...
-        gen = numbered_symbols(stau)
+        name = _uniquely_named_symbol('tau', aug,
+            compare=lambda i: str(i).rstrip('1234567890')).name
+        gen = numbered_symbols(name)
         tau = Matrix([next(gen) for k in range(col - rank)]).reshape(col - rank, 1)
 
         # Full parametric solution
