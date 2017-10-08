@@ -1759,7 +1759,10 @@ def test_numpy_to_float():
 
     from sympy.external import import_module
     np = import_module('numpy')
-    assert(np is not None)
+    
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
+
     testnum = 123456789
 
     a1 = np.float32(testnum)
