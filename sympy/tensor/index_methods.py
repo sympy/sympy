@@ -33,7 +33,7 @@ def _remove_repeated(inds):
     >>> from sympy.tensor.index_methods import _remove_repeated
     >>> l1 = [1, 2, 3, 2]
     >>> _remove_repeated(l1)
-    (set([1, 3]), (2,))
+    ({1, 3}, (2,))
 
     """
     sum_index = {}
@@ -55,9 +55,9 @@ def _get_indices_Mul(expr, return_dummies=False):
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Mul(x[i, k]*y[j, k])
-    (set([i, j]), {})
+    ({i, j}, {})
     >>> _get_indices_Mul(x[i, k]*y[j, k], return_dummies=True)
-    (set([i, j]), {}, (k,))
+    ({i, j}, {}, (k,))
 
     """
 
@@ -112,11 +112,11 @@ def _get_indices_Pow(expr):
     >>> x = IndexedBase('x')
     >>> i, j, k = map(Idx, ['i', 'j', 'k'])
     >>> _get_indices_Pow(exp(A[i, j]*x[j]))
-    (set([i]), {})
+    ({i}, {})
     >>> _get_indices_Pow(Pow(x[i], x[i]))
-    (set([i]), {})
+    ({i}, {})
     >>> _get_indices_Pow(Pow(A[i, j]*x[j], x[i]))
-    (set([i]), {})
+    ({i}, {})
 
     """
     base, exp = expr.as_base_exp()
@@ -151,7 +151,7 @@ def _get_indices_Add(expr):
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Add(x[i] + x[k]*y[i, k])
-    (set([i]), {})
+    ({i}, {})
 
     """
 
@@ -200,7 +200,7 @@ def get_indices(expr):
     outer indices.  Else an IndexConformanceException is raised.
 
     >>> get_indices(x[i] + A[i, j]*y[j])
-    (set([i]), {})
+    ({i}, {})
 
     :Exceptions:
 
@@ -216,7 +216,7 @@ def get_indices(expr):
        summed first, so that the following expression is handled gracefully:
 
        >>> get_indices((x[i] + A[i, j]*y[j])*x[j])
-       (set([i, j]), {})
+       ({i, j}, {})
 
        This is correct and may appear convenient, but you need to be careful
        with this as SymPy will happily .expand() the product, if requested.  The
@@ -308,9 +308,9 @@ def get_contraction_structure(expr):
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])
     >>> get_contraction_structure(x[i]*y[i] + A[j, j])
-    {(i,): set([x[i]*y[i]]), (j,): set([A[j, j]])}
+    {(i,): {x[i]*y[i]}, (j,): {A[j, j]}}
     >>> get_contraction_structure(x[i]*y[j])
-    {None: set([x[i]*y[j]])}
+    {None: {x[i]*y[j]}}
 
     A multiplication of contracted factors results in nested dicts representing
     the internal contractions.
@@ -322,12 +322,12 @@ def get_contraction_structure(expr):
     In this case, the product has no contractions:
 
     >>> d[None]
-    set([x[i, i]*y[j, j]])
+    {x[i, i]*y[j, j]}
 
     Factors are contracted "first":
 
     >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)
-    [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
+    [{(i,): {x[i, i]}}, {(j,): {y[j, j]}}]
 
     A parenthesized Add object is also returned as a nested dictionary.  The
     term containing the parenthesis is a Mul with a contraction among the
@@ -338,21 +338,21 @@ def get_contraction_structure(expr):
     >>> sorted(d.keys(), key=default_sort_key)
     [(A[i, j]*x[j] + y[i])*x[i], (i,)]
     >>> d[(i,)]
-    set([(A[i, j]*x[j] + y[i])*x[i]])
+    {(A[i, j]*x[j] + y[i])*x[i]}
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
-    [{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]
+    [{None: {y[i]}, (j,): {A[i, j]*x[j]}}]
 
     Powers with contractions in either base or exponent will also be found as
     keys in the dictionary, mapping to a list of results from recursive calls:
 
     >>> d = get_contraction_structure(A[j, j]**A[i, i])
     >>> d[None]
-    set([A[j, j]**A[i, i]])
+    {A[j, j]**A[i, i]}
     >>> nested_contractions = d[A[j, j]**A[i, i]]
     >>> nested_contractions[0]
-    {(j,): set([A[j, j]])}
+    {(j,): {A[j, j]}}
     >>> nested_contractions[1]
-    {(i,): set([A[i, i]])}
+    {(i,): {A[i, i]}}
 
     The description of the contraction structure may appear complicated when
     represented with a string in the above examples, but it is easy to iterate

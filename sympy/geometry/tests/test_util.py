@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sqrt, Derivative
-from sympy.geometry import Point, Point2D, Polygon, Segment, convex_hull, intersection, centroid
+from sympy.geometry import Point, Point2D, Line, Circle ,Polygon, Segment, convex_hull, intersection, centroid
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
@@ -23,21 +23,36 @@ def test_idiff():
     assert idiff(x + t + y, [y, t], x) == -Derivative(t, x) - 1
 
 
-def test_util():
-    # coverage for some leftover functions in sympy.geometry.util
+def test_intersection():
     assert intersection(Point(0, 0)) == []
-    raises(ValueError, lambda: intersection(Point(0, 0), 3))
+    raises(TypeError, lambda: intersection(Point(0, 0), 3))
+    assert intersection(
+            Segment((0, 0), (2, 0)),
+            Segment((-1, 0), (1, 0)),
+            Line((0, 0), (0, 1)), pairwise=True) == [
+        Point(0, 0), Segment((0, 0), (1, 0))]
+    assert intersection(
+            Line((0, 0), (0, 1)),
+            Segment((0, 0), (2, 0)),
+            Segment((-1, 0), (1, 0)), pairwise=True) == [
+        Point(0, 0), Segment((0, 0), (1, 0))]
+    assert intersection(
+            Line((0, 0), (0, 1)),
+            Segment((0, 0), (2, 0)),
+            Segment((-1, 0), (1, 0)),
+            Line((0, 0), slope=1), pairwise=True) == [
+        Point(0, 0), Segment((0, 0), (1, 0))]
 
 
 def test_convex_hull():
-    raises(ValueError, lambda: convex_hull(Point(0, 0), 3))
+    raises(TypeError, lambda: convex_hull(Point(0, 0), 3))
     points = [(1, -1), (1, -2), (3, -1), (-5, -2), (15, -4)]
     assert convex_hull(*points, **dict(polygon=False)) == (
         [Point2D(-5, -2), Point2D(1, -1), Point2D(3, -1), Point2D(15, -4)],
         [Point2D(-5, -2), Point2D(15, -4)])
 
 
-def test_util_centroid():
+def test_centroid():
     p = Polygon((0, 0), (10, 0), (10, 10))
     q = p.translate(0, 20)
     assert centroid(p, q) == Point(20, 40)/3

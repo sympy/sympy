@@ -11,6 +11,7 @@ See the webpage for more information and documentation:
 
 """
 
+
 from __future__ import absolute_import, print_function
 del absolute_import, print_function
 
@@ -72,6 +73,7 @@ from .integrals import *
 from .tensor import *
 from .parsing import *
 from .calculus import *
+from .algebras import *
 # Adds about .04-.05 seconds of import time
 # from combinatorics import *
 # This module is slow to import:
@@ -79,8 +81,8 @@ from .calculus import *
 from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import ccode, fcode, jscode, julia_code, mathematica_code, \
-    octave_code, latex, preview
+from .printing import rcode, ccode, fcode, jscode, julia_code, mathematica_code, \
+    octave_code, latex, preview, rust_code, mathml, glsl_code, cxxcode
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
 

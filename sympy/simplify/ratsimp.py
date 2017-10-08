@@ -104,7 +104,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         return [Monomial(s).as_expr(*opt.gens) for s in S] + staircase(n - 1)
 
     def _ratsimpmodprime(a, b, allsol, N=0, D=0):
-        """
+        r"""
         Computes a rational simplification of ``a/b`` which minimizes
         the sum of the total degrees of the numerator and the denominator.
 
@@ -201,7 +201,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         return (num/denom).cancel()
 
     c, d, allsol = _ratsimpmodprime(
-        Poly(num, opt.gens), Poly(denom, opt.gens), [])
+        Poly(num, opt.gens, domain=opt.domain), Poly(denom, opt.gens, domain=opt.domain), [])
     if not quick and allsol:
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
@@ -210,9 +210,11 @@ def ratsimpmodprime(expr, G, *gens, **args):
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 
-    if not domain.has_Field:
+    if not domain.is_Field:
         cn, c = c.clear_denoms(convert=True)
         dn, d = d.clear_denoms(convert=True)
-    r = Rational(cn, dn)
+        r = Rational(cn, dn)
+    else:
+        r = Rational(1)
 
     return (c*r.q)/(d*r.p)

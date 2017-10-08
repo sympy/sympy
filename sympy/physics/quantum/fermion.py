@@ -1,6 +1,5 @@
 """Fermionic quantum operators."""
 
-from sympy.core.compatibility import u
 from sympy import Integer
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, Ket, Bra

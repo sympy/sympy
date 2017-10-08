@@ -1,10 +1,11 @@
 from sympy.core import symbols, Symbol, Tuple, oo
 from sympy.core.compatibility import iterable, range
 from sympy.tensor.indexed import IndexException
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order
+from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
+    GreaterThan, StrictLessThan, Range, Array
 
 
 def test_Idx_construction():
@@ -13,7 +14,7 @@ def test_Idx_construction():
     assert Idx(i, a) == Idx(i, (0, a - 1))
     assert Idx(i, oo) == Idx(i, (0, oo))
 
-    x = symbols('x')
+    x = symbols('x', integer=False)
     raises(TypeError, lambda: Idx(x))
     raises(TypeError, lambda: Idx(0.5))
     raises(TypeError, lambda: Idx(i, x))
@@ -62,6 +63,83 @@ def test_Idx_fixed_bounds():
     assert Idx(x, (1, 5)).upper == 5
     assert Idx(x, (-oo, oo)).lower == -oo
     assert Idx(x, (-oo, oo)).upper == oo
+
+
+def test_Idx_inequalities():
+    i14 = Idx("i14", (1, 4))
+    i79 = Idx("i79", (7, 9))
+    i46 = Idx("i46", (4, 6))
+    i35 = Idx("i35", (3, 5))
+
+    assert i14 <= 5
+    assert i14 < 5
+    assert not (i14 >= 5)
+    assert not (i14 > 5)
+
+    assert 5 >= i14
+    assert 5 > i14
+    assert not (5 <= i14)
+    assert not (5 < i14)
+
+    assert LessThan(i14, 5)
+    assert StrictLessThan(i14, 5)
+    assert not GreaterThan(i14, 5)
+    assert not StrictGreaterThan(i14, 5)
+
+    assert i14 <= 4
+    assert isinstance(i14 < 4, StrictLessThan)
+    assert isinstance(i14 >= 4, GreaterThan)
+    assert not (i14 > 4)
+
+    assert isinstance(i14 <= 1, LessThan)
+    assert not (i14 < 1)
+    assert i14 >= 1
+    assert isinstance(i14 > 1, StrictGreaterThan)
+
+    assert not (i14 <= 0)
+    assert not (i14 < 0)
+    assert i14 >= 0
+    assert i14 > 0
+
+    from sympy.abc import x
+
+    assert isinstance(i14 < x, StrictLessThan)
+    assert isinstance(i14 > x, StrictGreaterThan)
+    assert isinstance(i14 <= x, LessThan)
+    assert isinstance(i14 >= x, GreaterThan)
+
+    assert i14 < i79
+    assert i14 <= i79
+    assert not (i14 > i79)
+    assert not (i14 >= i79)
+
+    assert i14 <= i46
+    assert isinstance(i14 < i46, StrictLessThan)
+    assert isinstance(i14 >= i46, GreaterThan)
+    assert not (i14 > i46)
+
+    assert isinstance(i14 < i35, StrictLessThan)
+    assert isinstance(i14 > i35, StrictGreaterThan)
+    assert isinstance(i14 <= i35, LessThan)
+    assert isinstance(i14 >= i35, GreaterThan)
+
+    iNone1 = Idx("iNone1")
+    iNone2 = Idx("iNone2")
+
+    assert isinstance(iNone1 < iNone2, StrictLessThan)
+    assert isinstance(iNone1 > iNone2, StrictGreaterThan)
+    assert isinstance(iNone1 <= iNone2, LessThan)
+    assert isinstance(iNone1 >= iNone2, GreaterThan)
+
+
+@XFAIL
+def test_Idx_inequalities_current_fails():
+    i14 = Idx("i14", (1, 4))
+
+    assert S(5) >= i14
+    assert S(5) > i14
+    assert not (S(5) <= i14)
+    assert not (S(5) < i14)
 
 
 def test_Idx_func_args():
@@ -129,6 +207,7 @@ def test_Indexed_constructor():
     assert A == Indexed(IndexedBase('A'), i, j)
     raises(TypeError, lambda: Indexed(A, i, j))
     raises(IndexException, lambda: Indexed("A"))
+    assert A.free_symbols == {A, A.base.label, i, j}
 
 
 def test_Indexed_func_args():
@@ -264,3 +343,29 @@ def test_indexed_series():
     A = IndexedBase("A")
     i = symbols("i", integer=True)
     assert sin(A[i]).series(A[i]) == A[i] - A[i]**3/6 + A[i]**5/120 + Order(A[i]**6, A[i])
+
+
+def test_indexed_is_constant():
+    A = IndexedBase("A")
+    i, j, k = symbols("i,j,k")
+    assert not A[i].is_constant()
+    assert A[i].is_constant(j)
+    assert not A[1+2*i, k].is_constant()
+    assert not A[1+2*i, k].is_constant(i)
+    assert A[1+2*i, k].is_constant(j)
+    assert not A[1+2*i, k].is_constant(k)
+
+
+def test_issue_12533():
+    d = IndexedBase('d')
+    assert IndexedBase(range(5)) == Range(0, 5, 1)
+    assert d[0].subs(Symbol("d"), range(5)) == 0
+    assert d[0].subs(d, range(5)) == 0
+    assert d[1].subs(d, range(5)) == 1
+    assert Indexed(Range(5), 2) == 2
+
+
+def test_issue_12780():
+    n = symbols("n")
+    i = Idx("i", (0, n))
+    raises(TypeError, lambda: i.subs(n, 1.5))

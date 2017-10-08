@@ -10,7 +10,7 @@
 """
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
-    det_quick, inv_quick
+    det_quick, inv_quick, check_assumptions
 
 from .diophantine import diophantine
 
