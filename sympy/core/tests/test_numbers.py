@@ -1749,3 +1749,38 @@ def test_Integer_precision():
     assert Float('1.0', precision=Integer(15))._prec == 15
     assert type(Float('1.0', precision=Integer(15))._prec) == int
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
+
+def test_numpy_to_float():
+    def check_approximate_equality(numpyval, testnum):
+            fromnumpy = Float(numpyval)
+            fromS = Float(S(testnum), precision = fromnumpy._prec)
+            assert (np.finfo(numpyval).nmant == fromnumpy._prec)
+            assert(abs(fromnumpy-fromS)/fromS<2**(-fromnumpy._prec+1))
+
+    from sympy.external import import_module
+    np = import_module('numpy')
+
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
+
+    testnum = 123456789
+
+    a1 = np.float32(testnum)
+    check_approximate_equality(a1, testnum)
+    a2 = np.float64(testnum)
+    check_approximate_equality(a2, testnum)
+    a3 = np.float128(testnum)
+    check_approximate_equality(a3, testnum)
+
+    fromnumpy = Float(a3)
+    fromS = Float(S(testnum), precision=fromnumpy._prec)
+    assert(fromnumpy._prec == 63)
+    assert(fromnumpy == fromS)
+
+    fromnumpy = Float(a3, precision=10)
+    fromS = Float(S(testnum), precision=fromnumpy._prec)
+    assert(fromnumpy._prec == 10)
+    assert(fromnumpy == fromS)
+
+    raises(TypeError, lambda: Float(np.complex64(1+2j)))
+    raises(TypeError, lambda: Float(np.complex128(1+2j)))
