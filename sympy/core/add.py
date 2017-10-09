@@ -831,6 +831,7 @@ class Add(Expr, AssocOp):
         new_expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
 
         if new_expr and (new_expr is not S.NaN):
+            #to check if the leading term cancel each other out
             if new_expr.is_Add:
                 final_leading_term = [t for t in new_expr.args]
             else:
