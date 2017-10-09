@@ -9,4 +9,3 @@ FAQ
 
 `FAQ <https://github.com/sympy/sympy/wiki/Faq>`_ is one of the most useful
 wiki pages. It has answers to frequently-asked questions.
-

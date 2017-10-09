@@ -1,16 +1,18 @@
 from __future__ import print_function, division
 
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import factorial, exp, Basic, Range, S, oo, sympify
+from sympy import factorial, exp, S, sympify
 from sympy.stats.rv import _value_check
 
 __all__ = ['Geometric', 'Poisson']
+
 
 def rv(symbol, cls, *args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
     return SingleDiscretePSpace(symbol, dist).value
+
 
 class PoissonDistribution(SingleDiscreteDistribution):
     _argnames = ('lamda',)
@@ -23,6 +25,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
+
 
 def Poisson(name, lamda):
     r"""
@@ -71,23 +74,24 @@ def Poisson(name, lamda):
     """
     return rv(name, PoissonDistribution, lamda)
 
+
 class GeometricDistribution(SingleDiscreteDistribution):
     _argnames = ('p',)
     set = S.Naturals
 
     @staticmethod
     def check(p):
-        # _value_check(0 < p <= 1, "p must be between 0 and 1")
-        pass
+        _value_check(0 < p and p <= 1, "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
+
 
 def Geometric(name, p):
     r"""
     Create a discrete random variable with a Geometric distribution.
 
-    The density of the Poisson distribution is given by
+    The density of the Geometric distribution is given by
 
     .. math::
         f(k) := p (1 - p)^{k - 1}

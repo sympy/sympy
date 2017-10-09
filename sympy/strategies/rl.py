@@ -54,6 +54,7 @@ def glom(key, count, combine):
     3*x + 5
 
     Wait, how are key, count and combine supposed to work?
+
     >>> key(2*x)
     x
     >>> count(2*x)
@@ -155,5 +156,5 @@ def rebuild(expr):
     """
     try:
         return type(expr)(*list(map(rebuild, expr.args)))
-    except:
+    except Exception:
         return expr

@@ -1,15 +1,18 @@
 from __future__ import print_function, division
 
+import os
 from os.path import join
 import tempfile
 import shutil
+import io
 from io import BytesIO
 
 try:
-    from subprocess import STDOUT, CalledProcessError
-    from sympy.core.compatibility import check_output
+    from subprocess import STDOUT, CalledProcessError, check_output
 except ImportError:
     pass
+
+from sympy.core.compatibility import unicode, u_decode
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
@@ -139,11 +142,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
                     "specified filename", deprecated_since_version="0.7.3",
                     useinstead="viewer=\"file\" and filename=\"desiredname\"",
-                    issue=3919).warn()
+                    issue=7018).warn()
         elif viewer == "StringIO":
             SymPyDeprecationWarning(feature="The preview() viewer StringIO",
                 useinstead="BytesIO", deprecated_since_version="0.7.4",
-                issue=3984).warn()
+                issue=7083).warn()
             viewer = "BytesIO"
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "
@@ -183,8 +186,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         workdir = tempfile.mkdtemp()
 
-        with open(join(workdir, 'texput.tex'), 'w') as fh:
-            fh.write(latex_main % latex_string)
+        with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
+            fh.write(unicode(latex_main) % u_decode(latex_string))
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
@@ -193,8 +196,17 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             raise RuntimeError("latex program is not installed")
 
         try:
+            # Avoid showing a cmd.exe window when running this
+            # on Windows
+            if os.name == 'nt':
+                creation_flag = 0x08000000 # CREATE_NO_WINDOW
+            else:
+                creation_flag = 0 # Default value
             check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'], cwd=workdir, stderr=STDOUT)
+                          'texput.tex'],
+                         cwd=workdir,
+                         stderr=STDOUT,
+                         creationflags=creation_flag)
         except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
@@ -204,16 +216,21 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             defaultoptions = {
                 "ps": [],
                 "pdf": [],
-                "png": ["-T", "tight", "-z", "9", "--truecolor"]
+                "png": ["-T", "tight", "-z", "9", "--truecolor"],
+                "svg": ["--no-fonts"],
             }
 
             commandend = {
                 "ps": ["-o", "texput.ps", "texput.dvi"],
                 "pdf": ["texput.dvi", "texput.pdf"],
-                "png": ["-o", "texput.png", "texput.dvi"]
+                "png": ["-o", "texput.png", "texput.dvi"],
+                "svg": ["-o", "texput.svg", "texput.dvi"],
             }
 
-            cmd = ["dvi" + output]
+            if output == "svg":
+                cmd = ["dvisvgm"]
+            else:
+                cmd = ["dvi" + output]
             if not find_executable(cmd[0]):
                 raise RuntimeError("%s is not installed" % cmd[0])
             try:
@@ -226,7 +243,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise SystemError("Invalid output format: %s" % output)
 
             try:
-                check_output(cmd, cwd=workdir, stderr=STDOUT)
+                # Avoid showing a cmd.exe window when running this
+                # on Windows
+                if os.name == 'nt':
+                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
+                else:
+                    creation_flag = 0 # Default value
+                check_output(cmd, cwd=workdir, stderr=STDOUT,
+                             creationflags=creation_flag)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
@@ -260,11 +284,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             offset = 25
 
+            config = gl.Config(double_buffer=False)
             win = window.Window(
                 width=img.width + 2*offset,
                 height=img.height + 2*offset,
                 caption="sympy",
-                resizable=False
+                resizable=False,
+                config=config
             )
 
             win.set_vsync(False)
@@ -301,7 +327,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             win.close()
         else:
             try:
-                check_output([viewer, src], cwd=workdir, stderr=STDOUT)
+                # Avoid showing a cmd.exe window when running this
+                # on Windows
+                if os.name == 'nt':
+                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
+                else:
+                    creation_flag = 0 # Default value
+                check_output([viewer, src], cwd=workdir, stderr=STDOUT,
+                             creationflags=creation_flag)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %

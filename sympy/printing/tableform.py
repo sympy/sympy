@@ -1,15 +1,17 @@
 from __future__ import print_function, division
 
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import range
 
 from types import FunctionType
 
 
 class TableForm(object):
-    """
+    r"""
     Create a nice table representation of data.
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy import TableForm
     >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
@@ -22,10 +24,10 @@ class TableForm(object):
     format (ascii, latex, html, ...).
 
     >>> print(t.as_latex())
-    \\begin{tabular}{l l}
-    $5$ & $7$ \\\\
-    $4$ & $2$ \\\\
-    $10$ & $3$ \\\\
+    \begin{tabular}{l l}
+    $5$ & $7$ \\
+    $4$ & $2$ \\
+    $10$ & $3$ \\
     \end{tabular}
 
     """
@@ -213,6 +215,7 @@ class TableForm(object):
 
         Examples
         ========
+
         >>> from sympy import TableForm
         >>> t = TableForm([[5, 7], [4, 2], [10, 3]], headings='automatic')
         >>> t
@@ -242,7 +245,8 @@ class TableForm(object):
         """
         Returns the string representation of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import TableForm
         >>> t = TableForm([[5, 7], [4, 2], [10, 3]])

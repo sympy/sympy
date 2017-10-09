@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import Set, Dict, Tuple
-from sympy.liealgebras.cartan_type import Standard_Cartan, CartanType
-from sympy.matrices import eye
+from sympy.core.compatibility import range
+from sympy.liealgebras.cartan_type import Standard_Cartan
+from sympy.core.backend import eye
 
 
 class TypeA(Standard_Cartan):
@@ -13,16 +13,17 @@ class TypeA(Standard_Cartan):
     """
 
     def __new__(cls, n):
-        assert n >= 1
+        if n < 1:
+            raise ValueError("n can not be less than 1")
         return Standard_Cartan.__new__(cls, "A", n)
 
 
     def dimension(self):
-        """
-        Return the dimension of the vector space
-        V underlying the Lie algebra
-        Example
+        """Dimension of the vector space V underlying the Lie algebra
+
+        Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A4")
         >>> c.dimension()
@@ -64,6 +65,7 @@ class TypeA(Standard_Cartan):
 
         Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A4")
         >>> c.simple_root(1)
@@ -80,8 +82,9 @@ class TypeA(Standard_Cartan):
         by multiplying all the positive roots by -1 we
         get the negative roots.
 
-        Example
-        ======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
@@ -120,8 +123,9 @@ class TypeA(Standard_Cartan):
         roots, (alpha[1], ...., alpha[l]).  Then the ijth
         entry of the Cartan matrix is (<alpha[i],alpha[j]>).
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('A4')
         >>> c.cartan_matrix()

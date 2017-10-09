@@ -1,23 +1,20 @@
 """For more tests on satisfiability, see test_dimacs"""
 
 from sympy import symbols, Q
-from sympy.logic.boolalg import Or, Equivalent, Implies, And
-from sympy.logic.inference import is_literal, literal_symbol, \
-     pl_true, satisfiable, PropKB
+from sympy.core.compatibility import range
+from sympy.logic.boolalg import And, Implies, Equivalent, true, false
+from sympy.logic.inference import literal_symbol, \
+     pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
+from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
 from sympy.utilities.pytest import raises
 
 
 def test_literal():
     A, B = symbols('A,B')
-    assert is_literal(True) is True
-    assert is_literal(False) is True
-    assert is_literal(A) is True
-    assert is_literal(~A) is True
-    assert is_literal(Or(A, B)) is False
     assert literal_symbol(True) is True
     assert literal_symbol(False) is False
     assert literal_symbol(A) is A
@@ -109,9 +106,35 @@ def test_dpll_satisfiable():
     assert dpll_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
 
+def test_dpll2_satisfiable():
+    A, B, C = symbols('A,B,C')
+    assert dpll2_satisfiable( A & ~A ) is False
+    assert dpll2_satisfiable( A & ~B ) == {A: True, B: False}
+    assert dpll2_satisfiable(
+        A | B ) in ({A: True}, {B: True}, {A: True, B: True})
+    assert dpll2_satisfiable(
+        (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
+    assert dpll2_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False, C: True},
+        {A: True, B: True, C: True})
+    assert dpll2_satisfiable( A & B & C  ) == {A: True, B: True, C: True}
+    assert dpll2_satisfiable( (A | B) & (A >> B) ) in ({B: True, A: False},
+        {B: True, A: True})
+    assert dpll2_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
+    assert dpll2_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+
+
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
     assert satisfiable(A & (A >> B) & ~B) is False
+
+
+def test_valid():
+    A, B, C = symbols('A,B,C')
+    assert valid(A >> (B >> A)) is True
+    assert valid((A >> (B >> C)) >> ((A >> B) >> (A >> C))) is True
+    assert valid((~B >> ~A) >> (A >> B)) is True
+    assert valid(A | B | C) is False
+    assert valid(A >> B) is False
 
 
 def test_pl_true():
@@ -139,6 +162,13 @@ def test_pl_true():
     assert pl_true(Equivalent(A, B), {A: None}) is None
     assert pl_true(Equivalent(A, B), {A: True, B: None}) is None
 
+    # Test for deep
+    assert pl_true(A | B, {A: False}, deep=True) is None
+    assert pl_true(~A & ~B, {A: False}, deep=True) is None
+    assert pl_true(A | B, {A: False, B: False}, deep=True) is False
+    assert pl_true(A & B & (~A | ~B), {A: True}, deep=True) is False
+    assert pl_true((C >> A) >> (B >> A), {C: True}, deep=True) is True
+
 
 def test_pl_true_wrong_input():
     from sympy import pi
@@ -147,33 +177,35 @@ def test_pl_true_wrong_input():
     raises(ValueError, lambda: pl_true(42))
 
 
+def test_entails():
+    A, B, C = symbols('A, B, C')
+    assert entails(A, [A >> B, ~B]) is False
+    assert entails(B, [Equivalent(A, B), A]) is True
+    assert entails((A >> B) >> (~A >> ~B)) is False
+    assert entails((A >> B) >> (~B >> ~A)) is True
+
+
 def test_PropKB():
     A, B, C = symbols('A,B,C')
     kb = PropKB()
+    assert kb.ask(A >> B) is False
+    assert kb.ask(A >> (B >> A)) is True
     kb.tell(A >> B)
     kb.tell(B >> C)
-    assert kb.ask(A) is True
-    assert kb.ask(B) is True
-    assert kb.ask(C) is True
-    assert kb.ask(~A) is True
-    assert kb.ask(~B) is True
-    assert kb.ask(~C) is True
+    assert kb.ask(A) is False
+    assert kb.ask(B) is False
+    assert kb.ask(C) is False
+    assert kb.ask(~A) is False
+    assert kb.ask(~B) is False
+    assert kb.ask(~C) is False
+    assert kb.ask(A >> C) is True
     kb.tell(A)
     assert kb.ask(A) is True
     assert kb.ask(B) is True
     assert kb.ask(C) is True
     assert kb.ask(~C) is False
     kb.retract(A)
-    assert kb.ask(~C) is True
-
-    kb2 = PropKB(Equivalent(A, B))
-    assert kb2.ask(A) is True
-    assert kb2.ask(B) is True
-    kb2.tell(A)
-    assert kb2.ask(A) is True
-
-    kb3 = PropKB()
-    kb3.tell(A)
+    assert kb.ask(C) is False
 
 
 def test_propKB_tolerant():
@@ -199,5 +231,41 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
 
 def test_satisfiable_bool():
-    assert satisfiable(True) == {}
-    assert satisfiable(False) == False
+    from sympy.core.singleton import S
+    assert satisfiable(true) == {true: true}
+    assert satisfiable(S.true) == {true: true}
+    assert satisfiable(false) is False
+    assert satisfiable(S.false) is False
+
+
+def test_satisfiable_all_models():
+    from sympy.abc import A, B
+    assert next(satisfiable(False, all_models=True)) is False
+    assert list(satisfiable((A >> ~A) & A , all_models=True)) == [False]
+    assert list(satisfiable(True, all_models=True)) == [{true: true}]
+
+    models = [{A: True, B: False}, {A: False, B: True}]
+    result = satisfiable(A ^ B, all_models=True)
+    models.remove(next(result))
+    models.remove(next(result))
+    raises(StopIteration, lambda: next(result))
+    assert not models
+
+    assert list(satisfiable(Equivalent(A, B), all_models=True)) == \
+    [{A: False, B: False}, {A: True, B: True}]
+
+    models = [{A: False, B: False}, {A: False, B: True}, {A: True, B: True}]
+    for model in satisfiable(A >> B, all_models=True):
+        models.remove(model)
+    assert not models
+
+    # This is a santiy test to check that only the required number
+    # of solutions are generated. The expr below has 2**100 - 1 models
+    # which would time out the test if all are generated at once.
+    from sympy import numbered_symbols
+    from sympy.logic.boolalg import Or
+    sym = numbered_symbols()
+    X = [next(sym) for i in range(100)]
+    result = satisfiable(Or(*X), all_models=True)
+    for i in range(10):
+        assert next(result)

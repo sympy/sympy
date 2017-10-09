@@ -2,12 +2,15 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
+from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
+from sympy.core.compatibility import range
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy.utilities.misc import filldedent
 
 
 def _sympifyit(arg, retval=None):
@@ -49,6 +52,11 @@ class MatrixExpr(Basic):
         Inverse
     """
 
+    # Should not be considered iterable by the
+    # sympy.core.compatibility.iterable function. Subclass that actually are
+    # iterable (i.e., explicit matrices) should set this to True.
+    _iterable = False
+
     _op_priority = 11.0
 
     is_Matrix = True
@@ -62,8 +70,12 @@ class MatrixExpr(Basic):
 
     is_commutative = False
 
-    # The following is adapted from the core Expr object
 
+    def __new__(cls, *args, **kwargs):
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args, **kwargs)
+
+    # The following is adapted from the core Expr object
     def __neg__(self):
         return MatMul(S.NegativeOne, self).doit()
 
@@ -96,8 +108,18 @@ class MatrixExpr(Basic):
         return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __matmul__(self, other):
+        return MatMul(self, other).doit()
+
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        return MatMul(other, self).doit()
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmatmul__(self, other):
         return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
@@ -105,7 +127,9 @@ class MatrixExpr(Basic):
     def __pow__(self, other):
         if not self.is_square:
             raise ShapeError("Power of non-square matrix %s" % self)
-        if other is S.NegativeOne:
+        elif self.is_Identity:
+            return self
+        elif other is S.NegativeOne:
             return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
@@ -149,6 +173,12 @@ class MatrixExpr(Basic):
         from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
+    def as_real_imag(self):
+        from sympy import I
+        real = (S(1)/2) * (self + self._eval_conjugate())
+        im = (self - self._eval_conjugate())/(2*I)
+        return (real, im)
+
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)
@@ -176,6 +206,10 @@ class MatrixExpr(Basic):
     def adjoint(self):
         return adjoint(self)
 
+    def as_coeff_Mul(self, rational=False):
+        """Efficiently extract the coefficient of a product. """
+        return S.One, self
+
     def conjugate(self):
         return conjugate(self)
 
@@ -196,8 +230,9 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                (0 <= i) is not False and (i < self.rows) is not False and
-                (0 <= j) is not False and (j < self.cols) is not False)
+                (self.rows is None or
+                (0 <= i) != False and (i < self.rows) != False) and
+                (0 <= j) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -209,17 +244,36 @@ class MatrixExpr(Basic):
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
             i, j = sympify(i), sympify(j)
-            if self.valid_index(i, j) is not False:
+            if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
+        elif isinstance(key, (int, Integer)):
+            # row-wise decomposition of matrix
+            rows, cols = self.shape
+            # allow single indexing if number of columns is known
+            if not isinstance(cols, Integer):
+                raise IndexError(filldedent('''
+                    Single indexing is only supported when the number
+                    of columns is known.'''))
+            key = sympify(key)
+            i = key // cols
+            j = key % cols
+            if self.valid_index(i, j) != False:
+                return self._entry(i, j)
+            else:
+                raise IndexError("Invalid index %s" % key)
+        elif isinstance(key, (Symbol, Expr)):
+                raise IndexError(filldedent('''
+                    Only integers may be used when addressing the matrix
+                    with a single index.'''))
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):
         """
         Returns a dense Matrix with elements represented explicitly
 
-        Returns an object of type ImmutableMatrix.
+        Returns an object of type ImmutableDenseMatrix.
 
         Examples
         ========
@@ -239,8 +293,8 @@ class MatrixExpr(Basic):
         as_mutable: returns mutable Matrix type
 
         """
-        from sympy.matrices.immutable import ImmutableMatrix
-        return ImmutableMatrix([[    self[i, j]
+        from sympy.matrices.immutable import ImmutableDenseMatrix
+        return ImmutableDenseMatrix([[    self[i, j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
@@ -265,7 +319,7 @@ class MatrixExpr(Basic):
 
         See Also
         ========
-        as_explicit: returns ImmutableMatrix
+        as_explicit: returns ImmutableDenseMatrix
         """
         return self.as_explicit().as_mutable()
 
@@ -300,6 +354,38 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
     _diff_wrt = True
+    is_symbol = True
+    is_commutative = True
+
+    def __new__(cls, name, n, m):
+        n, m = map(sympify, (n, m))
+        from sympy import MatrixBase
+        if isinstance(name, (MatrixBase,)):
+            if n.is_Integer and m.is_Integer:
+                return name[n, m]
+        name = sympify(name)
+        obj = Expr.__new__(cls, name, n, m)
+        return obj
+
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return args[0][args[1], args[2]]
+
+    def _eval_derivative(self, v):
+        if not isinstance(v, MatrixElement):
+            from sympy import MatrixBase
+            if isinstance(self.parent, MatrixBase):
+                return self.parent.diff(v)[self.i, self.j]
+            return S.Zero
+
+        if self.args[0] != v.args[0]:
+            return S.Zero
+
+        return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
 
 
 class MatrixSymbol(MatrixExpr):
@@ -399,10 +485,12 @@ class Identity(MatrixExpr):
         return self
 
     def _entry(self, i, j):
-        if i == j:
+        eq = Eq(i, j)
+        if eq is S.true:
             return S.One
-        else:
+        elif eq is S.false:
             return S.Zero
+        return KroneckerDelta(i, j)
 
     def _eval_determinant(self):
         return S.One
@@ -436,6 +524,8 @@ class ZeroMatrix(MatrixExpr):
             raise ShapeError("Power of non-square matrix %s" % self)
         if other == 0:
             return Identity(self.rows)
+        if other < 1:
+            raise ValueError("Matrix det == 0; not invertible.")
         return self
 
     def _eval_transpose(self):

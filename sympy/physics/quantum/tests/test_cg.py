@@ -2,8 +2,10 @@ from __future__ import division
 from sympy import S, sqrt, Sum, symbols
 from sympy.physics.quantum.cg import Wigner3j, Wigner6j, Wigner9j, CG, cg_simp
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.utilities.pytest import slow
 
 
+@slow
 def test_cg_simp_add():
     j, m1, m1p, m2, m2p = symbols('j m1 m1p m2 m2p')
     # Test Varshalovich 8.7.1 Eq 1
@@ -169,6 +171,7 @@ def test_cg_simp_sum():
 def test_doit():
     assert Wigner3j(1/2, -1/2, 1/2, 1/2, 0, 0).doit() == -sqrt(2)/2
     assert Wigner6j(1, 2, 3, 2, 1, 2).doit() == sqrt(21)/105
+    assert Wigner6j(3, 1, 2, 2, 2, 1).doit() == sqrt(21) / 105
     assert Wigner9j(
         2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0).doit() == sqrt(2)/12
     assert CG(1/2, 1/2, 1/2, -1/2, 1, 0).doit() == sqrt(2)/2

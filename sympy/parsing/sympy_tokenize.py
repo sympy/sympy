@@ -204,7 +204,8 @@ class Untokenizer:
 
     def add_whitespace(self, start):
         row, col = start
-        assert row <= self.prev_row
+        if row > self.prev_row:
+            raise ValueError("row should not be greater than prev_row")
         col_offset = col - self.prev_col
         if col_offset:
             self.tokens.append(" " * col_offset)
@@ -278,7 +279,8 @@ def untokenize(iterable):
         newcode = untokenize(t1)
         readline = iter(newcode.splitlines(1)).next
         t2 = [tok[:2] for tok in generate_tokens(readline)]
-        assert t1 == t2
+        if t1 != t2:
+            raise ValueError("t1 should be equal to t2")
     """
     ut = Untokenizer()
     return ut.untokenize(iterable)
@@ -395,7 +397,8 @@ def generate_tokens(readline):
                 elif initial in '\r\n':
                     yield (NL if parenlev > 0 else NEWLINE, token, spos, epos, line)
                 elif initial == '#':
-                    assert not token.endswith("\n")
+                    if token.endswith("\n"):
+                        raise ValueError("Token should not end with \n")
                     yield (COMMENT, token, spos, epos, line)
                 elif token in triple_quoted:
                     endprog = endprogs[token]

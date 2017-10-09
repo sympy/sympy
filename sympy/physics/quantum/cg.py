@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -147,7 +148,7 @@ class Wigner3j(Expr):
 
 
 class CG(Wigner3j):
-    """Class for Clebsch-Gordan coefficient
+    r"""Class for Clebsch-Gordan coefficient
 
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
@@ -155,7 +156,7 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\\rangle
+        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\rangle
 
     Parameters
     ==========
@@ -303,7 +304,7 @@ class Wigner6j(Expr):
     def doit(self, **hints):
         if self.is_symbolic:
             raise ValueError("Coefficients must be numerical")
-        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j3)
+        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j23)
 
 
 class Wigner9j(Expr):
@@ -627,7 +628,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             indicies = [ term[0] for term in cg_index]
             indicies.sort()
             indicies.reverse()
-            [ term_list.pop(i) for i in indicies ]
+            [ term_list.pop(j) for j in indicies ]
             for term in cg_index:
                 if abs(term[2]) > min_lt:
                     term_list.append( (term[2] - min_lt*term[3]) * term[1] )

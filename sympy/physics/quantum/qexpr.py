@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence, string_types, u
+from sympy.core.compatibility import is_sequence, string_types
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -94,9 +94,11 @@ class QExpr(Expr):
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u('')
+    _label_separator = u''
 
-    is_commutative = False
+    @property
+    def free_symbols(self):
+        return {self}
 
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.
@@ -321,15 +323,15 @@ class QExpr(Expr):
         return self
 
     def _eval_rewrite(self, pattern, rule, **hints):
-        # TODO: Make Basic.rewrite get the rule using the class name rather
-        # than str(). See L1072 of basic.py.
-        # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
             args = [ a._eval_rewrite(pattern, rule, **hints)
-                     for a in self.args ]
+                    for a in self.args ]
         else:
             args = self.args
 
+        # TODO: Make Basic.rewrite use hints in evaluating
+        # self.rule(*args, **hints), not having hints breaks spin state
+        # (un)coupling on rewrite
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
                 rewritten = getattr(self, rule)(*args, **hints)

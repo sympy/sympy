@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 import sys
 import functools
+import os
 
 from sympy.core.compatibility import get_function_name
 
@@ -13,6 +14,8 @@ try:
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
+
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
 if not USE_PYTEST:
     def raises(expectedException, code=None):
@@ -144,6 +147,7 @@ if not USE_PYTEST:
             func()
 
         func_wrapper = functools.update_wrapper(func_wrapper, func)
+        func_wrapper.__wrapped__ = func
         return func_wrapper
 
 else:

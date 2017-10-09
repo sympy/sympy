@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
 from util import interpolate, rinterpolate, create_bounds, update_bounds
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 class ColorGradient(object):
@@ -14,9 +14,10 @@ class ColorGradient(object):
             self.colors = list(args)
             self.intervals = [0.0, 1.0]
         elif len(args) > 0:
-            assert len(args) % 2 == 0
-            self.colors = [args[i] for i in xrange(1, len(args), 2)]
-            self.intervals = [args[i] for i in xrange(0, len(args), 2)]
+            if len(args) % 2 != 0:
+                raise ValueError("len(args) should be even")
+            self.colors = [args[i] for i in range(1, len(args), 2)]
+            self.intervals = [args[i] for i in range(0, len(args), 2)]
         assert len(self.colors) == len(self.intervals)
 
     def copy(self):
@@ -116,7 +117,7 @@ class ColorScheme(object):
         elif len(lists) == 3:
             try:
                 (r1, r2), (g1, g2), (b1, b2) = lists
-            except:
+            except Exception:
                 raise ValueError("If three color arguments are given, "
                                  "they must be given in the format "
                                  "(r1, r2), (g1, g2), (b1, b2). To create "
@@ -214,7 +215,8 @@ class ColorScheme(object):
             raise ValueError("Color function is not callable.")
         try:
             result = self.f(0, 0, 0, 0, 0)
-            assert len(result) == 3
+            if len(result) != 3:
+                raise ValueError("length should be equal to 3")
         except TypeError as te:
             raise ValueError("Color function needs to accept x,y,z,u,v, "
                              "as arguments even if it doesn't use all of them.")
@@ -227,7 +229,6 @@ class ColorScheme(object):
         try:
             return self.f(x, y, z, u, v)
         except Exception as e:
-            #print e
             return None
 
     def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):
@@ -242,7 +243,7 @@ class ColorScheme(object):
             set_len(len(u_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if verts[_u] is None:
                 cverts.append(None)
             else:
@@ -256,7 +257,7 @@ class ColorScheme(object):
             if callable(inc_pos):
                 inc_pos()
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if cverts[_u] is not None:
                 for _c in range(3):
                     # scale from [f_min, f_max] to [0,1]
@@ -280,9 +281,9 @@ class ColorScheme(object):
             set_len(len(u_set)*len(v_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             column = list()
-            for _v in xrange(len(v_set)):
+            for _v in range(len(v_set)):
                 if verts[_u][_v] is None:
                     column.append(None)
                 else:
@@ -297,8 +298,8 @@ class ColorScheme(object):
                     inc_pos()
             cverts.append(column)
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
-            for _v in xrange(len(v_set)):
+        for _u in range(len(u_set)):
+            for _v in range(len(v_set)):
                 if cverts[_u][_v] is not None:
                     # scale from [f_min, f_max] to [0,1]
                     for _c in range(3):

@@ -1,8 +1,10 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
-    count_ops, S, And, I, pi, Eq
+    count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
+    Equivalent, MatrixSymbol, Symbol, ITE
+from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
-
+a, b, c = symbols('a,b,c')
 
 def test_count_ops_non_visual():
     def count(val):
@@ -14,12 +16,24 @@ def test_count_ops_non_visual():
     assert count(x + y*x + 2*y) == 4
     assert count({x + y: x}) == 1
     assert count({x + y: S(2) + x}) is not S.One
+    assert count(Or(x,y)) == 1
+    assert count(And(x,y)) == 1
+    assert count(Not(x)) == 1
+    assert count(Nor(x,y)) == 2
+    assert count(Nand(x,y)) == 2
+    assert count(Xor(x,y)) == 1
+    assert count(Implies(x,y)) == 1
+    assert count(Equivalent(x,y)) == 1
+    assert count(ITE(x,y,z)) == 1
+    assert count(ITE(True,x,y)) == 0
 
 
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
         'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
+    NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, ITE, BASIC, TUPLE = symbols(
+        'Not Or And Xor Implies Equivalent ITE Basic Tuple'.upper())
 
     def count(val):
         return count_ops(val, visual=True)
@@ -78,7 +92,38 @@ def test_count_ops_visual():
     assert count([x + 1, sin(x)*y, None]) == SIN + ADD + MUL
     assert count([]) is S.Zero
 
-    # XXX: These are a bit surprising, only Expr-compatible ops are counted.
-    assert count(And(x, y, z)) == 0
-    assert count(Basic(x, x + y)) == ADD
+    assert count(Basic()) == 0
+    assert count(Basic(Basic(),Basic(x,x+y))) == ADD + 2*BASIC
+    assert count(Basic(x, x + y)) == ADD + BASIC
+    assert count(Or(x,y)) == OR
+    assert count(And(x,y)) == AND
+    assert count(And(x**y,z)) == AND + POW
+    assert count(Or(x,Or(y,And(z,a)))) == AND + OR
+    assert count(Nor(x,y)) == NOT + OR
+    assert count(Nand(x,y)) == NOT + AND
+    assert count(Xor(x,y)) == XOR
+    assert count(Implies(x,y)) == IMPLIES
+    assert count(Equivalent(x,y)) == EQUIVALENT
+    assert count(ITE(x,y,z)) == ITE
+    assert count([Or(x,y), And(x,y), Basic(x+y)]) == ADD + AND + BASIC + OR
+
+    assert count(Basic(Tuple(x))) == BASIC + TUPLE
+    #It checks that TUPLE is counted as an operation.
+
     assert count(Eq(x + y, S(2))) == ADD
+
+
+def test_issue_9324():
+    def count(val):
+        return count_ops(val, visual=False)
+
+    M = MatrixSymbol('M', 10, 10)
+    assert count(M[0, 0]) == 0
+    assert count(2 * M[0, 0] + M[5, 7]) == 2
+    P = MatrixSymbol('P', 3, 3)
+    Q = MatrixSymbol('Q', 3, 3)
+    assert count(P + Q) == 3
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True)
+    M = MatrixSymbol('M', m + n, m * m)
+    assert count(M[0, 1]) == 2

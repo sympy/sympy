@@ -16,7 +16,7 @@ def treeapply(tree, join, leaf=identity):
     Keys are containers/iterables.  Values are functions [a] -> a.
 
     Examples
-    --------
+    ========
 
     >>> from sympy.strategies.tree import treeapply
     >>> tree = [(3, 2), (4, 1)]
@@ -71,8 +71,8 @@ def greedy(tree, objective=identity, **kwargs):
     "Better" is determined by the objective keyword.  This function makes
     choices to minimize the objective.  It defaults to the identity.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy.strategies.tree import greedy
     >>> inc    = lambda x: x + 1
@@ -86,7 +86,7 @@ def greedy(tree, objective=identity, **kwargs):
     >>> fn(1)  # lowest value comes from dec then double
     0
 
-    This funcion selects between options in a tuple.  The result is chosen that
+    This function selects between options in a tuple.  The result is chosen that
     minimizes the objective function.
 
     >>> fn = greedy(tree, objective=lambda x: -x)  # maximize

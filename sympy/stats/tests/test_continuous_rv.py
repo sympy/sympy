@@ -1,21 +1,21 @@
+from __future__ import division
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Kumaraswamy, Laplace, Logistic,
+                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, StudentT,
-                         Triangular, Uniform, UniformSum, VonMises, Weibull,
-                         WignerSemicircle, correlation, moment, cmoment,
-                         smoment)
+                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
+                         StudentT, Triangular, Uniform, UniformSum,
+                         VonMises, Weibull, WignerSemicircle, correlation,
+                         moment, cmoment, smoment)
 
-from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
-                   Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor)
+                   floor, expand_func, Rational)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -23,7 +23,7 @@ from sympy.stats.rv import ProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 oo = S.Infinity
 
@@ -31,8 +31,8 @@ x, y, z = map(Symbol, 'xyz')
 
 
 def test_single_normal():
-    mu = Symbol('mu', real=True, bounded=True)
-    sigma = Symbol('sigma', real=True, positive=True, bounded=True)
+    mu = Symbol('mu', real=True, finite=True)
+    sigma = Symbol('sigma', real=True, positive=True, finite=True)
     X = Normal('x', 0, 1)
     Y = X*sigma + mu
 
@@ -41,7 +41,7 @@ def test_single_normal():
     pdf = density(Y)
     x = Symbol('x')
     assert (pdf(x) ==
-            2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
+            2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
 
@@ -73,6 +73,7 @@ def test_ContinuousDomain():
     assert Y.pspace.domain.set == Interval(0, oo)
 
 
+@slow
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
 
@@ -97,13 +98,13 @@ def test_multiple_normal():
 
 @slow
 def test_symbolic():
-    mu1, mu2 = symbols('mu1 mu2', real=True, bounded=True)
-    s1, s2 = symbols('sigma1 sigma2', real=True, bounded=True, positive=True)
-    rate = Symbol('lambda', real=True, positive=True, bounded=True)
+    mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
+    s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, positive=True)
+    rate = Symbol('lambda', real=True, positive=True, finite=True)
     X = Normal('x', mu1, s1)
     Y = Normal('y', mu2, s2)
     Z = Exponential('z', rate)
-    a, b, c = symbols('a b c', real=True, bounded=True)
+    a, b, c = symbols('a b c', real=True, finite=True)
 
     assert E(X) == mu1
     assert E(X + Y) == mu1 + mu2
@@ -120,7 +121,7 @@ def test_cdf():
     X = Normal('x', 0, 1)
 
     d = cdf(X)
-    assert P(X < 1) == d(1)
+    assert P(X < 1) == d(1).rewrite(erfc)
     assert d(0) == S.Half
 
     d = cdf(X, X > 0)  # given X>0
@@ -194,17 +195,16 @@ def test_beta():
     # Full symbolic solution is too much, test with numeric version
     a, b = 1, 2
     B = Beta('x', a, b)
-    assert E(B) == a / S(a + b)
-    assert variance(B) == (a*b) / S((a + b)**2 * (a + b + 1))
+    assert expand_func(E(B)) == a / S(a + b)
+    assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
 
 
 def test_betaprime():
     alpha = Symbol("alpha", positive=True)
-    beta = Symbol("beta", positive=True)
+    betap = Symbol("beta", positive=True)
 
-    X = BetaPrime('x', alpha, beta)
-    assert density(X)(x) == (x**(alpha - 1)*(x + 1)**(-alpha - beta)
-                          *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    X = BetaPrime('x', alpha, betap)
+    assert density(X)(x) == x**(alpha - 1)*(x + 1)**(-alpha - betap)/beta(alpha, betap)
 
 
 def test_cauchy():
@@ -251,7 +251,7 @@ def test_erlang():
     assert density(X)(x) == x**(k - 1)*l**k*exp(-x*l)/gamma(k)
 
 def test_exponential():
-    rate = Symbol('lambda', positive=True, real=True, bounded=True)
+    rate = Symbol('lambda', positive=True, real=True, finite=True)
     X = Exponential('x', rate)
 
     assert E(X) == 1/rate
@@ -271,17 +271,16 @@ def test_f_distribution():
     d2 = Symbol("d2", positive=True)
 
     X = FDistribution("x", d1, d2)
-    assert density(X)(x) == (d2**(d2/2)*sqrt((x*d1)**d1 *
-        (x*d1 + d2)**(-d1 - d2))*gamma(d1/2 + d2/2)/(x*gamma(d1/2)*gamma(d2/2)))
+    assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
+                             /(x*beta(d1/2, d2/2)))
 
 def test_fisher_z():
     d1 = Symbol("d1", positive=True)
     d2 = Symbol("d2", positive=True)
 
     X = FisherZ("x", d1, d2)
-    assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*
-            (d1*exp(2*x) + d2)**(-d1/2 - d2/2)*
-             exp(x*d1)*gamma(d1/2 + d2/2)/(gamma(d1/2)*gamma(d2/2)))
+    assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*(d1*exp(2*x) + d2)
+                             **(-d1/2 - d2/2)*exp(d1*x)/beta(d1/2, d2/2))
 
 def test_frechet():
     a = Symbol("a", positive=True)
@@ -304,7 +303,7 @@ def test_gamma():
     # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)
 
-    k, theta = symbols('k theta', real=True, bounded=True, positive=True)
+    k, theta = symbols('k theta', real=True, finite=True, positive=True)
     X = Gamma('x', k, theta)
     assert simplify(E(X)) == k*theta
     # can't get things to simplify on this one so we use subs
@@ -318,6 +317,20 @@ def test_gamma_inverse():
 
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
+
+def test_gompertz():
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=True)
+
+    X = Gompertz("x", b, eta)
+    assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
+
+def test_gumbel():
+    beta = Symbol("beta", positive=True)
+    mu = Symbol("mu")
+    x = Symbol("x")
+    X = Gumbel("x", beta, mu)
+    assert simplify(density(X)(x)) == exp((beta*exp((mu - x)/beta) + mu - x)/beta)/beta
 
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
@@ -341,8 +354,8 @@ def test_logistic():
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
 
 def test_lognormal():
-    mean = Symbol('mu', real=True, bounded=True)
-    std = Symbol('sigma', positive=True, real=True, bounded=True)
+    mean = Symbol('mu', real=True, finite=True)
+    std = Symbol('sigma', positive=True, real=True, finite=True)
     X = LogNormal('x', mean, std)
     # The sympy integrator can't do this too well
     #assert E(X) == exp(mean+std**2/2)
@@ -391,7 +404,7 @@ def test_nakagami():
 
 
 def test_pareto():
-    xm, beta = symbols('xm beta', positive=True, bounded=True)
+    xm, beta = symbols('xm beta', positive=True, finite=True)
     alpha = beta + 5
     X = Pareto('x', xm, alpha)
 
@@ -431,13 +444,17 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+def test_shiftedgompertz():
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=True)
+    X = ShiftedGompertz("x", b, eta)
+    assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
-    assert density(X)(x) == ((x**2/nu + 1)**(-nu/2 - S.Half)
-                        *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
 
 
 @XFAIL
@@ -463,8 +480,8 @@ def test_quadratic_u():
                           And(x <= b, a <= x)), (0, True)))
 
 def test_uniform():
-    l = Symbol('l', real=True, bounded=True)
-    w = Symbol('w', positive=True, bounded=True)
+    l = Symbol('l', real=True, finite=True)
+    w = Symbol('w', positive=True, finite=True)
     X = Uniform('x', l, l + w)
 
     assert simplify(E(X)) == l + w/2
@@ -476,7 +493,7 @@ def test_uniform():
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
 
-@XFAIL
+
 def test_uniform_P():
     """ This stopped working because SingleContinuousPSpace.compute_density no
     longer calls integrate on a DiracDelta but rather just solves directly.
@@ -486,8 +503,8 @@ def test_uniform_P():
     I decided to regress on this class for general cleanliness (and I suspect
     speed) of the algorithm.
     """
-    l = Symbol('l', real=True, bounded=True)
-    w = Symbol('w', positive=True, bounded=True)
+    l = Symbol('l', real=True, finite=True)
+    w = Symbol('w', positive=True, finite=True)
     X = Uniform('x', l, l + w)
     assert P(X < l) == 0 and P(X > l + w) == 0
 
@@ -525,7 +542,7 @@ def test_weibull_numeric():
     bvals = [S.Half, 1, S(3)/2, 5]
     for b in bvals:
         X = Weibull('x', a, b)
-        assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
+        assert simplify(E(X)) == expand_func(a * gamma(1 + 1/S(b)))
         assert simplify(variance(X)) == simplify(
             a**2 * gamma(1 + 2/S(b)) - E(X)**2)
         # Not testing Skew... it's slow with int/frac values > 3/2
@@ -552,22 +569,23 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     for var in variables:
-        for i in xrange(niter):
+        for i in range(niter):
             assert sample(var) in var.pspace.domain.set
 
 
 def test_input_value_assertions():
     a, b = symbols('a b')
     p, q = symbols('p q', positive=True)
+    m, n = symbols('m n', positive=False, real=True)
 
     raises(ValueError, lambda: Normal('x', 3, 0))
-    raises(ValueError, lambda: Normal('x', a, b))
+    raises(ValueError, lambda: Normal('x', m, n))
     Normal('X', a, p)  # No error raised
-    raises(ValueError, lambda: Exponential('x', a))
+    raises(ValueError, lambda: Exponential('x', m))
     Exponential('Ex', p)  # No error raised
     for fn in [Pareto, Weibull, Beta, Gamma]:
-        raises(ValueError, lambda: fn('x', a, p))
-        raises(ValueError, lambda: fn('x', p, a))
+        raises(ValueError, lambda: fn('x', m, p))
+        raises(ValueError, lambda: fn('x', p, n))
         fn('x', p, q)  # No error raised
 
 
@@ -635,3 +653,32 @@ def test_difficult_univariate():
     assert density(x**3)
     assert density(exp(x**2))
     assert density(log(x))
+
+
+def test_issue_10003():
+    X = Exponential('x', 3)
+    G = Gamma('g', 1, 2)
+    assert P(X < -1) == S.Zero
+    assert P(G < -1) == S.Zero
+
+def test_precomputed_cdf():
+    x = symbols("x", real=True, finite=True)
+    mu = symbols("mu", real=True, finite=True)
+    sigma, xm, alpha = symbols("sigma xm alpha", positive=True, finite=True)
+    n = symbols("n", integer=True, positive=True, finite=True)
+    distribs = [
+            Normal("X", mu, sigma),
+            Pareto("P", xm, alpha),
+            ChiSquared("C", n),
+            Exponential("E", sigma),
+            # LogNormal("L", mu, sigma),
+    ]
+    for X in distribs:
+        compdiff = cdf(X)(x) - simplify(X.pspace.density.compute_cdf()(x))
+        compdiff = simplify(compdiff.rewrite(erfc))
+        assert compdiff == 0
+
+def test_issue_13324():
+    X = Uniform('X', 0, 1)
+    assert E(X, X > Rational(1,2)) == Rational(3,4)
+    assert E(X, X > 0) == Rational(1,2)

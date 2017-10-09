@@ -2,12 +2,12 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.monomials import monomial_mul, monomial_div, monomial_lcm, monomial_divides, term_div
+from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, term_div
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
 from sympy.core.symbol import Dummy
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 def groebner(seq, ring, method=None):
     """
@@ -34,7 +34,7 @@ def groebner(seq, ring, method=None):
 
     domain, orig = ring.domain, None
 
-    if not domain.has_Field or not domain.has_assoc_Field:
+    if not domain.is_Field or not domain.has_assoc_Field:
         try:
             orig, ring = ring, ring.clone(domain=domain.get_field())
         except DomainError:
@@ -609,7 +609,7 @@ def _f5b(F, ring):
         F = B
         B = []
 
-        for i in xrange(len(F)):
+        for i in range(len(F)):
             p = F[i]
             r = p.rem(F[:i])
 
@@ -620,11 +620,11 @@ def _f5b(F, ring):
             break
 
     # basis
-    B = [lbp(sig(ring.zero_monom, i + 1), F[i], i + 1) for i in xrange(len(F))]
+    B = [lbp(sig(ring.zero_monom, i + 1), F[i], i + 1) for i in range(len(F))]
     B.sort(key=lambda f: order(Polyn(f).LM), reverse=True)
 
     # critical pairs
-    CP = [critical_pair(B[i], B[j], ring) for i in xrange(len(B)) for j in xrange(i + 1, len(B))]
+    CP = [critical_pair(B[i], B[j], ring) for i in range(len(B)) for j in range(i + 1, len(B))]
     CP.sort(key=lambda cp: cp_key(cp, ring), reverse=True)
 
     k = len(B)
@@ -731,8 +731,8 @@ def is_groebner(G, ring):
     """
     Check if G is a Groebner basis.
     """
-    for i in xrange(len(G)):
-        for j in xrange(i + 1, len(G)):
+    for i in range(len(G)):
+        for j in range(i + 1, len(G)):
             s = spoly(G[i], G[j])
             s = s.rem(G)
             if s:
@@ -797,7 +797,8 @@ def groebner_lcm(f, g):
     1. [Cox97]_
 
     """
-    assert f.ring == g.ring
+    if f.ring != g.ring:
+        raise ValueError("Values should be equal")
 
     ring = f.ring
     domain = ring.domain
@@ -839,20 +840,22 @@ def groebner_lcm(f, g):
 
 def groebner_gcd(f, g):
     """Computes GCD of two polynomials using Groebner bases. """
-    assert f.ring == g.ring
+    if f.ring != g.ring:
+        raise ValueError("Values should be equal")
     domain = f.ring.domain
 
-    if not domain.has_Field:
+    if not domain.is_Field:
         fc, f = f.primitive()
         gc, g = g.primitive()
         gcd = domain.gcd(fc, gc)
 
     H = (f*g).quo([groebner_lcm(f, g)])
 
-    assert len(H) == 1
+    if len(H) != 1:
+        raise ValueError("Length should be 1")
     h = H[0]
 
-    if not domain.has_Field:
+    if not domain.is_Field:
         return gcd*h
     else:
         return h.monic()

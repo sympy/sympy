@@ -1,9 +1,18 @@
-from __future__ import print_function, division
+"""
+This module implements sums and products containing the Kronecker Delta function.
 
-from sympy.core import Add, Interval, Mul, S, Dummy, symbols
+References
+==========
+
+- http://mathworld.wolfram.com/KroneckerDelta.html
+
+"""
+from __future__ import print_function, division
+from sympy.core import Add, Mul, S, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, range
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
+from sympy.sets import Interval
 
 
 @cacheit
@@ -61,8 +70,8 @@ def _extract_delta(expr, index):
         return (None, expr)
     if isinstance(expr, KroneckerDelta):
         return (expr, S(1))
-    assert expr.is_Mul
-
+    if not expr.is_Mul:
+        raise ValueError("Incorrect expr")
     delta = None
     terms = []
 
@@ -166,7 +175,7 @@ def deltaproduct(f, limit):
     """
     from sympy.concrete.products import product
 
-    if ((limit[2] - limit[1]) < 0) is True:
+    if ((limit[2] - limit[1]) < 0) == True:
         return S.One
 
     if not f.has(KroneckerDelta):
@@ -257,16 +266,17 @@ def deltasummation(f, limit, no_piecewise=False):
     Examples
     ========
 
-    >>> from sympy import oo
-    >>> from sympy.abc import i, j, k
+    >>> from sympy import oo, symbols
+    >>> from sympy.abc import k
+    >>> i, j = symbols('i, j', integer=True, finite=True)
     >>> from sympy.concrete.delta import deltasummation
     >>> from sympy import KroneckerDelta, Piecewise
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
     1
     >>> deltasummation(KroneckerDelta(i, k), (k, 0, oo))
-    Piecewise((1, i >= 0), (0, True))
+    Piecewise((1, 0 <= i), (0, True))
     >>> deltasummation(KroneckerDelta(i, k), (k, 1, 3))
-    Piecewise((1, And(1 <= i, i <= 3)), (0, True))
+    Piecewise((1, (1 <= i) & (i <= 3)), (0, True))
     >>> deltasummation(k*KroneckerDelta(i, j)*KroneckerDelta(j, k), (k, -oo, oo))
     j*KroneckerDelta(i, j)
     >>> deltasummation(j*KroneckerDelta(i, j), (j, -oo, oo))
@@ -284,7 +294,7 @@ def deltasummation(f, limit, no_piecewise=False):
     from sympy.concrete.summations import summation
     from sympy.solvers import solve
 
-    if ((limit[2] - limit[1]) < 0) is True:
+    if ((limit[2] - limit[1]) < 0) == True:
         return S.Zero
 
     if not f.has(KroneckerDelta):

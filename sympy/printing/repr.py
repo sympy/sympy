@@ -9,8 +9,9 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from .printer import Printer
-import sympy.mpmath.libmp as mlib
-from sympy.mpmath.libmp import prec_to_dps, repr_dps
+import mpmath.libmp as mlib
+from mpmath.libmp import repr_dps
+from sympy.core.compatibility import range
 
 
 class ReprPrinter(Printer):
@@ -49,6 +50,9 @@ class ReprPrinter(Printer):
         args = map(self._print, args)
         return "Add(%s)" % ", ".join(args)
 
+    def _print_Cycle(self, expr):
+        return expr.__repr__()
+
     def _print_Function(self, expr):
         r = self._print(expr.func)
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
@@ -79,6 +83,12 @@ class ReprPrinter(Printer):
         return "[%s]" % self.reprify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
+        # special case for some empty matrices
+        if (expr.rows == 0) ^ (expr.cols == 0):
+            return '%s(%s, %s, %s)' % (expr.__class__.__name__,
+                                       self._print(expr.rows),
+                                       self._print(expr.cols),
+                                       self._print([]))
         l = []
         for i in range(expr.rows):
             l.append([])
@@ -125,16 +135,25 @@ class ReprPrinter(Printer):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
-        dps = prec_to_dps(expr._prec)
         r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
-        return "%s('%s', prec=%i)" % (expr.__class__.__name__, r, dps)
+        return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        d = expr._assumptions.generator
+        # print the dummy_index like it was an assumption
+        if expr.is_Dummy:
+            d['dummy_index'] = expr.dummy_index
+
+        if d == {}:
+            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s)" % (expr.__class__.__name__,
+                                   self._print(expr.name), ', '.join(attr))
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
@@ -155,8 +174,8 @@ class ReprPrinter(Printer):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)
 
     def _print_AlgebraicNumber(self, expr):
-        return "%s(%s, %s)" % (self.__class__.__name__,
-            self._print(self.coeffs()), self._print(expr.root))
+        return "%s(%s, %s)" % (expr.__class__.__name__,
+            self._print(expr.root), self._print(expr.coeffs()))
 
     def _print_PolyRing(self, ring):
         return "%s(%s, %s, %s)" % (ring.__class__.__name__,
@@ -179,6 +198,33 @@ class ReprPrinter(Printer):
         numer = self._print(numer_terms)
         denom = self._print(denom_terms)
         return "%s(%s, %s, %s)" % (frac.__class__.__name__, self._print(frac.field), numer, denom)
+
+    def _print_FractionField(self, domain):
+        cls = domain.__class__.__name__
+        field = self._print(domain.field)
+        return "%s(%s)" % (cls, field)
+
+    def _print_PolynomialRingBase(self, ring):
+        cls = ring.__class__.__name__
+        dom = self._print(ring.domain)
+        gens = ', '.join(map(self._print, ring.gens))
+        order = str(ring.order)
+        if order != ring.default_order:
+            orderstr = ", order=" + order
+        else:
+            orderstr = ""
+        return "%s(%s, %s%s)" % (cls, dom, gens, orderstr)
+
+    def _print_DMP(self, p):
+        cls = p.__class__.__name__
+        rep = self._print(p.rep)
+        dom = self._print(p.dom)
+        if p.ring is not None:
+            ringstr = ", ring=" + self._print(p.ring)
+        else:
+            ringstr = ""
+        return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+
 
 def srepr(expr, **settings):
     """return expr in repr form"""

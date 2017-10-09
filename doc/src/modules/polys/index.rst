@@ -25,4 +25,5 @@ Contents
     reference.rst
     agca.rst
     internals.rst
+    ringseries.rst
     literature.rst

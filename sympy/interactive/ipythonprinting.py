@@ -46,6 +46,6 @@ def load_ipython_extension(ip):
         feature="using %load_ext sympy.interactive.ipythonprinting",
         useinstead="from sympy import init_printing ; init_printing()",
         deprecated_since_version="0.7.3",
-        issue=3914
+        issue=7013
     ).warn()
     init_printing(ip=ip)

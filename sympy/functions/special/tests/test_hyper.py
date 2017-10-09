@@ -2,10 +2,10 @@ from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
                    cos, sqrt, symbols, oo, Derivative, gamma, O)
 from sympy.series.limits import limit
 from sympy.abc import x, z, k
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import (
     random_complex_number as randcplx,
-    test_numerically as tn,
+    verify_numerically as tn,
     test_derivative_numerically as td)
 
 
@@ -133,6 +133,10 @@ def test_meijer():
     assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
 
+    # test exceptions
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((oo,), (2, 0)), x))
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((1,), (2, 0)), x))
+
     # differentiation
     g = meijerg((randcplx(),), (randcplx() + 2*I,), Tuple(),
                 (randcplx(), randcplx()), z)
@@ -206,6 +210,7 @@ def test_hyper_unpolarify():
     assert hyper([0, 1], [0], a).argument == a
 
 
+@slow
 def test_hyperrep():
     from sympy.functions.special.hyper import (HyperRep, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
@@ -294,6 +299,7 @@ def test_hyperrep():
     assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [S(3)/2], z), z)
 
 
+@slow
 def test_meijerg_eval():
     from sympy import besseli, exp_polar
     from sympy.abc import l
@@ -330,6 +336,6 @@ def test_limits():
            hyper((1,), (S(4)/3, S(5)/3), 0) + \
            9*k**2*hyper((2,), (S(7)/3, S(8)/3), 0)/20 + \
            81*k**4*hyper((3,), (S(10)/3, S(11)/3), 0)/1120 + \
-           O(k**6) # issue 3251
+           O(k**6) # issue 6350
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
-            meijerg(((), ()), ((1,), (0,)), 0) # issue 2953
+            meijerg(((), ()), ((1,), (0,)), 0) # issue 6052

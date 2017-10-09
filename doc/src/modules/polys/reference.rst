@@ -31,6 +31,8 @@ Basic polynomial manipulation functions
 .. autofunction:: subresultants
 .. autofunction:: resultant
 .. autofunction:: discriminant
+.. autofunction:: sympy.polys.dispersion.dispersion
+.. autofunction:: sympy.polys.dispersion.dispersionset
 .. autofunction:: terms_gcd
 .. autofunction:: cofactors
 .. autofunction:: gcd
@@ -128,7 +130,10 @@ Formal manipulation of roots of polynomials
 
 .. currentmodule:: sympy.polys.rootoftools
 
+.. autofunction:: rootof
 .. autoclass:: RootOf
+   :members:
+.. autoclass:: ComplexRootOf
 .. autoclass:: RootSum
 
 Symbolic root-finding algorithms
@@ -177,3 +182,11 @@ Partial fraction decomposition
 .. autofunction:: apart
 .. autofunction:: apart_list
 .. autofunction:: assemble_partfrac_list
+
+Dispersion of Polynomials
+=========================
+
+.. currentmodule:: sympy.polys.dispersion
+
+.. autofunction:: dispersionset
+.. autofunction:: dispersion

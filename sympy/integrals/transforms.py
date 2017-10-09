@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, range
 from sympy.core.function import Function
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
@@ -12,6 +12,7 @@ from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
+from sympy.matrices.matrices import MatrixBase
 
 
 ##########################################################################
@@ -52,8 +53,6 @@ class IntegralTransform(Function):
     number and possibly a convergence condition.
     """
 
-    nargs = 3
-
     @property
     def function(self):
         """ The function to be transformed. """
@@ -75,8 +74,8 @@ class IntegralTransform(Function):
         This method returns the symbols that will exist when the transform
         is evaluated.
         """
-        return self.function.free_symbols.union(set([self.transform_variable])) \
-            - set([self.function_variable])
+        return self.function.free_symbols.union({self.transform_variable}) \
+            - {self.function_variable}
 
     def _compute_transform(self, f, x, s, **hints):
         raise NotImplementedError
@@ -85,7 +84,6 @@ class IntegralTransform(Function):
         raise NotImplementedError
 
     def _collapse_extra(self, extra):
-        from sympy import And
         cond = And(*extra)
         if cond == False:
             raise IntegralTransformError(self.__class__.name, None, '')
@@ -248,13 +246,13 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
                 d_ = d.replace(
                     re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
                 if not d.is_Relational or \
-                    d.rel_op not in ('>', '>=', '<', '<=') \
+                    d.rel_op in ('==', '!=') \
                         or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                        soln.rel_op not in ('>', '>=', '<', '<='):
+                        soln.rel_op in ('==', '!='):
                     aux_ += [d]
                     continue
                 if soln.lts == t:
@@ -296,11 +294,10 @@ class MellinTransform(IntegralTransform):
         return _mellin_transform(f, x, s, **hints)
 
     def _as_integral(self, f, x, s):
-        from sympy import Integral
         return Integral(f*x**(s - 1), (x, 0, oo))
 
     def _collapse_extra(self, extra):
-        from sympy import And, Max, Min
+        from sympy import Max, Min
         a = []
         b = []
         cond = []
@@ -388,7 +385,7 @@ def _rewrite_sin(m_n, s, a, b):
     # we create an undefined function!
     # So we try to write this in such a way that the gammas are
     # eminently on the right side of the strip.
-    from sympy import expand_mul, pi, ceiling, gamma, re
+    from sympy import expand_mul, pi, ceiling, gamma
     m, n = m_n
 
     m = expand_mul(m/pi)
@@ -452,7 +449,7 @@ def _rewrite_gamma(f, s, a, b):
     (([], []), ([], []), 1/2, 1, 8)
     """
     from itertools import repeat
-    from sympy import (Poly, gamma, Mul, re, RootOf, exp as exp_, E, expand,
+    from sympy import (Poly, gamma, Mul, re, CRootOf, exp as exp_, expand,
                        roots, ilcm, pi, sin, cos, tan, cot, igcd, exp_polar)
     # Our strategy will be as follows:
     # 1) Guess a constant c such that the inversion integral should be
@@ -472,13 +469,15 @@ def _rewrite_gamma(f, s, a, b):
         """
         # heuristically, this is the best chance for us to solve the inequalities
         c = expand(re(c))
+        if a_ is None and b_ is oo:
+            return True
         if a_ is None:
             return c < b_
         if b_ is None:
             return c <= a_
-        if (c >= b_) is True:
+        if (c >= b_) == True:
             return False
-        if (c <= a_) is True:
+        if (c <= a_) == True:
             return True
         if is_numer:
             return None
@@ -507,15 +506,16 @@ def _rewrite_gamma(f, s, a, b):
             arg = arg.as_independent(s)[1]
         coeff, _ = arg.as_coeff_mul(s)
         s_multipliers += [coeff/pi]
-    s_multipliers = [abs(x) for x in s_multipliers if x.is_real]
+    s_multipliers = [abs(x) if x.is_real else x for x in s_multipliers]
     common_coefficient = S(1)
     for x in s_multipliers:
         if not x.is_Rational:
             common_coefficient = x
             break
     s_multipliers = [x/common_coefficient for x in s_multipliers]
-    if any(not x.is_Rational for x in s_multipliers):
-        raise NotImplementedError
+    if (any(not x.is_Rational for x in s_multipliers) or
+        not common_coefficient.is_real):
+        raise IntegralTransformError("Gamma", None, "Nonrational multiplier")
     s_multiplier = common_coefficient/reduce(ilcm, [S(x.q)
                                              for x in s_multipliers], S(1))
     if s_multiplier == common_coefficient:
@@ -599,12 +599,12 @@ def _rewrite_gamma(f, s, a, b):
             p = Poly(fact, s)
             if p.degree() != 1:
                 # We completely factor the poly. For this we need the roots.
-                # Now roots() only works in some cases (low degree), and RootOf
+                # Now roots() only works in some cases (low degree), and CRootOf
                 # only works without parameters. So try both...
                 coeff = p.LT()[1]
                 rs = roots(p, s)
                 if len(rs) != p.degree():
-                    rs = RootOf.all_roots(p)
+                    rs = CRootOf.all_roots(p)
                 ufacs += [coeff]
                 args += [(s - c, is_numer) for c in rs]
                 continue
@@ -622,8 +622,8 @@ def _rewrite_gamma(f, s, a, b):
         elif isinstance(fact, gamma):
             a, b = linear_arg(fact.args[0])
             if is_numer:
-                if (a > 0 and (left(-b/a, is_numer) is False)) or \
-                   (a < 0 and (left(-b/a, is_numer) is True)):
+                if (a > 0 and (left(-b/a, is_numer) == False)) or \
+                   (a < 0 and (left(-b/a, is_numer) == True)):
                     raise NotImplementedError(
                         'Gammas partially over the strip.')
             ugammas += [(a, b)]
@@ -668,7 +668,8 @@ def _rewrite_gamma(f, s, a, b):
                 p = abs(S(a))
                 newa = a/p
                 newc = c/p
-                assert a.is_Integer
+                if not a.is_Integer:
+                    raise TypeError("a is not an integer")
                 for k in range(p):
                     gammas += [(newa, newc + k/p)]
                 if is_numer:
@@ -702,7 +703,7 @@ def _rewrite_gamma(f, s, a, b):
 def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
     """ A helper for the real inverse_mellin_transform function, this one here
         assumes x to be real and positive. """
-    from sympy import (expand, expand_mul, hyperexpand, meijerg, And, Or,
+    from sympy import (expand, expand_mul, hyperexpand, meijerg,
                        arg, pi, re, factor, Heaviside, gamma, Add)
     x = _dummy('t', 'inverse-mellin-transform', F, positive=True)
     # Actually, we won't try integration at all. Instead we use the definition
@@ -768,8 +769,6 @@ class InverseMellinTransform(IntegralTransform):
     :func:`inverse_mellin_transform` docstring.
     """
 
-    nargs = 5
-
     _name = 'Inverse Mellin'
     _none_sentinel = Dummy('None')
     _c = Dummy('c')
@@ -808,7 +807,7 @@ class InverseMellinTransform(IntegralTransform):
         return _inverse_mellin_transform(F, s, x, strip, **hints)
 
     def _as_integral(self, F, s, x):
-        from sympy import Integral, I, oo
+        from sympy import I
         c = self.__class__._c
         return Integral(F*x**(-s), (s, c - I*oo, c + I*oo))
 
@@ -894,7 +893,7 @@ def _simplifyconds(expr, s, a):
     >>> simp(Ne(1, x**3), x, 2)
     True
     >>> simp(Ne(1, x**3), x, 0)
-    1 != x**3
+    Ne(1, x**3)
     """
     from sympy.core.relational import ( StrictGreaterThan, StrictLessThan,
         Unequality )
@@ -912,24 +911,27 @@ def _simplifyconds(expr, s, a):
             Else return None. """
         if ex1.has(s) and ex2.has(s):
             return None
-        if ex1.func is Abs:
+        if isinstance(ex1, Abs):
             ex1 = ex1.args[0]
-        if ex2.func is Abs:
+        if isinstance(ex2, Abs):
             ex2 = ex2.args[0]
         if ex1.has(s):
             return bigger(1/ex2, 1/ex1)
         n = power(ex2)
         if n is None:
             return None
-        if n > 0 and (abs(ex1) <= abs(a)**n) is True:
-            return False
-        if n < 0 and (abs(ex1) >= abs(a)**n) is True:
-            return True
+        try:
+            if n > 0 and (abs(ex1) <= abs(a)**n) == True:
+                return False
+            if n < 0 and (abs(ex1) >= abs(a)**n) == True:
+                return True
+        except TypeError:
+            pass
 
     def replie(x, y):
         """ simplify x < y """
-        if not (x.is_positive or x.func is Abs) \
-                or not (y.is_positive or y.func is Abs):
+        if not (x.is_positive or isinstance(x, Abs)) \
+                or not (y.is_positive or isinstance(y, Abs)):
             return (x < y)
         r = bigger(x, y)
         if r is not None:
@@ -937,13 +939,14 @@ def _simplifyconds(expr, s, a):
         return (x < y)
 
     def replue(x, y):
-        if bigger(x, y) in (True, False):
+        b = bigger(x, y)
+        if b == True or b == False:
             return True
         return Unequality(x, y)
 
     def repl(ex, *args):
-        if isinstance(ex, bool):
-            return ex
+        if ex == True or ex == False:
+            return bool(ex)
         return ex.replace(*args)
     expr = repl(expr, StrictLessThan, replie)
     expr = repl(expr, StrictGreaterThan, lambda x, y: replie(y, x))
@@ -954,7 +957,7 @@ def _simplifyconds(expr, s, a):
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
-    from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
+    from sympy import (re, Max, exp, pi, Min, periodic_argument as arg,
                        cos, Wild, symbols, polar_lift)
     s = Dummy('s')
     F = integrate(exp(-s*t) * f, (t, 0, oo))
@@ -991,25 +994,25 @@ def _laplace_transform(f, t, s_, simplify=True):
                 if not m:
                     m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) <= w2)
                 if m:
-                    if m[q] > 0 and m[w2]/m[p] == pi/2:
+                    if m[q].is_positive and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0
                 m = d.match(
                     0 < cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
                 if not m:
                     m = d.match(0 < cos(abs(
                         arg(polar_lift(s)**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
-                if m and all(m[wild] > 0 for wild in [w1, w2, w3, w4, w5]):
+                if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(
                     re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
                 if not d.is_Relational or \
-                    d.rel_op not in ('>', '>=', '<', '<=') \
+                    d.rel_op in ('==', '!=') \
                         or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                        soln.rel_op not in ('>', '>=', '<', '<='):
+                        soln.rel_op in ('==', '!='):
                     aux_ += [d]
                     continue
                 if soln.lts == t:
@@ -1030,7 +1033,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     conds = conds2
 
     def cnt(expr):
-        if isinstance(expr, bool):
+        if expr == True or expr == False:
             return 0
         return expr.count_ops()
     conds.sort(key=lambda x: (-x[0], cnt(x[1])))
@@ -1040,8 +1043,8 @@ def _laplace_transform(f, t, s_, simplify=True):
     a, aux = conds[0]
 
     def sbs(expr):
-        if isinstance(expr, bool):
-            return expr
+        if expr == S.true or expr == S.false:
+            return bool(expr)
         return expr.subs(s, s_)
     if simplify:
         F = _simplifyconds(F, s, a)
@@ -1065,11 +1068,11 @@ class LaplaceTransform(IntegralTransform):
         return _laplace_transform(f, t, s, **hints)
 
     def _as_integral(self, f, t, s):
-        from sympy import Integral, exp
+        from sympy import exp
         return Integral(f*exp(-s*t), (t, 0, oo))
 
     def _collapse_extra(self, extra):
-        from sympy import And, Max
+        from sympy import Max
         conds = []
         planes = []
         for plane, cond in extra:
@@ -1114,6 +1117,8 @@ def laplace_transform(f, t, s, **hints):
     inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
     """
+    if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
+        return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
     return LaplaceTransform(f, t, s).doit(**hints)
 
 
@@ -1198,8 +1203,6 @@ class InverseLaplaceTransform(IntegralTransform):
     :func:`inverse_laplace_transform` docstring.
     """
 
-    nargs = 4
-
     _name = 'Inverse Laplace'
     _none_sentinel = Dummy('None')
     _c = Dummy('c')
@@ -1220,7 +1223,7 @@ class InverseLaplaceTransform(IntegralTransform):
         return _inverse_laplace_transform(F, s, t, self.fundamental_plane, **hints)
 
     def _as_integral(self, F, s, t):
-        from sympy import I, Integral, exp
+        from sympy import I, exp
         c = self.__class__._c
         return Integral(exp(s*t)*F, (s, c - I*oo, c + I*oo))
 
@@ -1263,6 +1266,8 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     laplace_transform
     hankel_transform, inverse_hankel_transform
     """
+    if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
+        return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
 
 
@@ -1279,7 +1284,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     For suitable choice of a and b, this reduces to the standard Fourier
     and inverse Fourier transforms.
     """
-    from sympy import exp, I, oo
+    from sympy import exp, I
     F = integrate(a*f*exp(b*I*x*k), (x, -oo, oo))
 
     if not F.has(Integral):
@@ -1296,19 +1301,25 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
 
 
 class FourierTypeTransform(IntegralTransform):
-    """ Base class for Fourier transforms.
-        Specify cls._a and cls._b.
-    """
+    """ Base class for Fourier transforms."""
+
+    def a(self):
+        raise NotImplementedError(
+            "Class %s must implement a(self) but does not" % self.__class__)
+
+    def b(self):
+        raise NotImplementedError(
+            "Class %s must implement b(self) but does not" % self.__class__)
 
     def _compute_transform(self, f, x, k, **hints):
         return _fourier_transform(f, x, k,
-                                  self.__class__._a, self.__class__._b,
+                                  self.a(), self.b(),
                                   self.__class__._name, **hints)
 
     def _as_integral(self, f, x, k):
-        from sympy import Integral, exp, I
-        a = self.__class__._a
-        b = self.__class__._b
+        from sympy import exp, I
+        a = self.a()
+        b = self.b()
         return Integral(a*f*exp(b*I*x*k), (x, -oo, oo))
 
 
@@ -1323,8 +1334,12 @@ class FourierTransform(FourierTypeTransform):
     """
 
     _name = 'Fourier'
-    _a = 1
-    _b = -2*S.Pi
+
+    def a(self):
+        return 1
+
+    def b(self):
+        return -2*S.Pi
 
 
 def fourier_transform(f, x, k, **hints):
@@ -1374,8 +1389,12 @@ class InverseFourierTransform(FourierTypeTransform):
     """
 
     _name = 'Inverse Fourier'
-    _a = 1
-    _b = 2*S.Pi
+
+    def a(self):
+        return 1
+
+    def b(self):
+        return 2*S.Pi
 
 
 def inverse_fourier_transform(F, k, x, **hints):
@@ -1418,7 +1437,7 @@ def inverse_fourier_transform(F, k, x, **hints):
 # Fourier Sine and Cosine Transform
 ##########################################################################
 
-from sympy import sin, cos, sqrt, pi, I, oo
+from sympy import sin, cos, sqrt, pi
 
 
 @_noconds_(True)
@@ -1449,19 +1468,27 @@ def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
 class SineCosineTypeTransform(IntegralTransform):
     """
     Base class for sine and cosine transforms.
-    Specify cls._a and cls._b and cls._kern.
+    Specify cls._kern.
     """
+
+    def a(self):
+        raise NotImplementedError(
+            "Class %s must implement a(self) but does not" % self.__class__)
+
+    def b(self):
+        raise NotImplementedError(
+            "Class %s must implement b(self) but does not" % self.__class__)
+
 
     def _compute_transform(self, f, x, k, **hints):
         return _sine_cosine_transform(f, x, k,
-                                      self.__class__._a, self.__class__._b,
+                                      self.a(), self.b(),
                                       self.__class__._kern,
                                       self.__class__._name, **hints)
 
     def _as_integral(self, f, x, k):
-        from sympy import Integral, exp, I
-        a = self.__class__._a
-        b = self.__class__._b
+        a = self.a()
+        b = self.b()
         K = self.__class__._kern
         return Integral(a*f*K(b*x*k), (x, 0, oo))
 
@@ -1478,8 +1505,12 @@ class SineTransform(SineCosineTypeTransform):
 
     _name = 'Sine'
     _kern = sin
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def sine_transform(f, x, k, **hints):
@@ -1527,8 +1558,12 @@ class InverseSineTransform(SineCosineTypeTransform):
 
     _name = 'Inverse Sine'
     _kern = sin
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def inverse_sine_transform(F, k, x, **hints):
@@ -1577,8 +1612,12 @@ class CosineTransform(SineCosineTypeTransform):
 
     _name = 'Cosine'
     _kern = cos
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def cosine_transform(f, x, k, **hints):
@@ -1626,8 +1665,12 @@ class InverseCosineTransform(SineCosineTypeTransform):
 
     _name = 'Inverse Cosine'
     _kern = cos
-    _a = sqrt(2)/sqrt(pi)
-    _b = 1
+
+    def a(self):
+        return sqrt(2)/sqrt(pi)
+
+    def b(self):
+        return 1
 
 
 def inverse_cosine_transform(F, k, x, **hints):
@@ -1669,12 +1712,12 @@ def inverse_cosine_transform(F, k, x, **hints):
 
 @_noconds_(True)
 def _hankel_transform(f, r, k, nu, name, simplify=True):
-    """
+    r"""
     Compute a general Hankel transform
 
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.
     """
-    from sympy import besselj, oo
+    from sympy import besselj
     F = integrate(f*besselj(nu, k*r)*r, (r, 0, oo))
 
     if not F.has(Integral):
@@ -1695,8 +1738,6 @@ class HankelTypeTransform(IntegralTransform):
     Base class for Hankel transforms.
     """
 
-    nargs = 4
-
     def doit(self, **hints):
         return self._compute_transform(self.function,
                                        self.function_variable,
@@ -1708,7 +1749,7 @@ class HankelTypeTransform(IntegralTransform):
         return _hankel_transform(f, r, k, nu, self._name, **hints)
 
     def _as_integral(self, f, r, k, nu):
-        from sympy import Integral, besselj, oo
+        from sympy import besselj
         return Integral(f*besselj(nu, k*r)*r, (r, 0, oo))
 
     @property

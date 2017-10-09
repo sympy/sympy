@@ -1,11 +1,11 @@
-from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, atan, gamma,
+from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
     atanh, hyper, meijerg, O)
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
-                                      test_numerically as tn)
-from sympy.abc import x, y, z, m, n
+                                      verify_numerically as tn)
+from sympy.abc import z, m, n
 
 i = Symbol('i', integer=True)
 j = Symbol('k', integer=True, positive=True)
@@ -89,8 +89,10 @@ def test_E():
 
     mi = Symbol('m', real=False)
     assert E(z, mi).conjugate() == E(z.conjugate(), mi.conjugate())
+    assert E(mi).conjugate() == E(mi.conjugate())
     mr = Symbol('m', real=True, negative=True)
     assert E(z, mr).conjugate() == E(z.conjugate(), mr)
+    assert E(mr).conjugate() == E(mr)
 
     assert E(z).rewrite(hyper) == (pi/2)*hyper((-S.Half, S.Half), (S.One,), z)
     assert tn(E(z), (pi/2)*hyper((-S.Half, S.Half), (S.One,), z))

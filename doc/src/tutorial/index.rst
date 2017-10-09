@@ -9,9 +9,9 @@
 
    preliminaries.rst
    intro.rst
-   printing.rst
    gotchas.rst
    basic_operations.rst
+   printing.rst
    simplification.rst
    calculus.rst
    solvers.rst
