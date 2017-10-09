@@ -2334,19 +2334,19 @@ def Trapezoidal(name, a, b, c, d):
     >>> X = Trapezoidal("x", a,b,c,d)
 
     >>> pprint(density(X)(z), use_unicode=False)
-    /        -2*a + 2*z                                
-    |-------------------------  for And(a <= z, z < b) 
-    |(-a + b)*(-a - b + c + d)                         
-    |                                                  
-    |           2                                      
-    |     --------------        for And(b <= z, z < c) 
-    <     -a - b + c + d                               
-    |                                                  
-    |        2*d - 2*z                                 
+    /        -2*a + 2*z
+    |-------------------------  for And(a <= z, z < b)
+    |(-a + b)*(-a - b + c + d)
+    |
+    |           2
+    |     --------------        for And(b <= z, z < c)
+    <     -a - b + c + d
+    |
+    |        2*d - 2*z
     |-------------------------  for And(c <= z, z <= d)
-    |(-c + d)*(-a - b + c + d)                         
-    |                                                  
-    \            0                     otherwise   
+    |(-c + d)*(-a - b + c + d)
+    |
+    \            0                     otherwise
 
     References
     ==========
