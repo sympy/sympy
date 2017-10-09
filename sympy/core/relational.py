@@ -235,6 +235,11 @@ class Relational(Boolean, Expr, EvalfMixin):
 
         return solve_univariate_inequality(self, sym, relational=False)
 
+    def _sage_(self):
+       from operator import eq, ne, gt, lt, ge, le
+       ops = {Eq : eq, Ne : ne, Gt : gt, Lt : lt, Ge : ge, Le : le}
+       return ops.get(self.func)(self.lhs._sage_(), self.rhs._sage_())
+
 
 Rel = Relational
 
