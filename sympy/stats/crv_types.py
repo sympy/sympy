@@ -34,6 +34,7 @@ RaisedCosine
 Rayleigh
 ShiftedGompertz
 StudentT
+Trapezoidal
 Triangular
 Uniform
 UniformSum
@@ -88,6 +89,7 @@ __all__ = ['ContinuousRV',
 'Rayleigh',
 'StudentT',
 'ShiftedGompertz',
+'Trapezoidal',
 'Triangular',
 'Uniform',
 'UniformSum',
