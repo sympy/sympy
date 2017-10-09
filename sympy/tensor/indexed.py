@@ -136,7 +136,6 @@ class Indexed(Expr):
     """
     is_commutative = True
     is_Indexed = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
 
@@ -369,7 +368,6 @@ class IndexedBase(Expr, NotIterable):
 
     """
     is_commutative = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
 
@@ -560,7 +558,6 @@ class Idx(Expr):
     is_integer = True
     is_finite = True
     is_real = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
     _diff_wrt = True
