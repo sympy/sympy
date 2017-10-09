@@ -122,6 +122,7 @@ from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
+from sympy.simplify.simplify import simplify
 from sympy import cacheit
 
 from sympy.core.compatibility import reduce
@@ -409,7 +410,7 @@ def sign(e, x):
 @debug
 @timeit
 @cacheit
-def limitinf(e, x):
+def limitinf(e, x,simp=False):
     """Limit e(x) for x-> oo"""
     # rewrite e in terms of tractable functions only
     e = e.rewrite('tractable', deep=True)
@@ -438,7 +439,9 @@ def limitinf(e, x):
             raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
-        return limitinf(c0, x)  # e0=0: lim f = lim c0
+        if simp:
+            c0 = simplify(c0)
+        return limitinf(c0, x, simp)  # e0=0: lim f = lim c0
 
 
 def moveup2(s, x):
@@ -645,9 +648,19 @@ def gruntz(e, z, z0, dir="+"):
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
     if z0 == oo:
-        r = limitinf(e, z)
+        try:
+            r = limitinf(e, z)
+        except ValueError:
+            r = limitinf(e, z, simp=True)
+        if r is None:
+            r = limitinf(e, z, simp=True)
     elif z0 == -oo:
-        r = limitinf(e.subs(z, -z), z)
+        try:
+            r = limitinf(e.subs(z, -z), z)
+        except ValueError:
+            r = limitinf(e.subs(z, -z), z, simp=True)
+        if r is None:
+            r = limitinf(e.subs(z, -z), z, simp=True)
     else:
         if str(dir) == "-":
             e0 = e.subs(z, z0 - 1/z)
