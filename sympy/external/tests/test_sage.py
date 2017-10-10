@@ -248,7 +248,7 @@ def test_relational():
     assert (sx > 0) == sage.SR(sympy.Gt(x, 0))
     assert sympy.sympify(sx < 0) == sympy.Lt(x, 0)
     assert (sx < 0) == sage.SR(sympy.Lt(x, 0))
-    
+
 
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.
