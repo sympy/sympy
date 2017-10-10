@@ -763,6 +763,13 @@ def test_solve_trig():
         imageset(Lambda(n, 2*n*pi), S.Integers)
 
 
+def test_issue_13084():
+    n = Dummy('n')
+    f1 = sin(2*x)**2 + 2* sin(2*x) + 1
+    f2 = sin(2*x) + 1
+    assert solveset(f1, x, S.Reals) == ImageSet(Lambda(n, n*pi + 3*pi/4), S.Integers)
+    assert solveset(f1, x, S.Reals) == ImageSet(Lambda(n, n*pi + 3*pi/4), S.Integers)
+
 @XFAIL
 def test_solve_trig_abs():
     assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
