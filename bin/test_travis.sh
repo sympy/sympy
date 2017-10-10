@@ -24,7 +24,6 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
-    ./bin/test -k tensorflow
 fi
 
 # We change directories to make sure that we test the installed version of
@@ -67,6 +66,7 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
+# lambdify with tensorflow is tested here
 if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
     cat << EOF | python
 print('Testing NUMPY')
