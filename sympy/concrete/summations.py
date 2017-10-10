@@ -438,7 +438,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if p2_series_test is not None:
             if p2_series_test[p] > 1:
                 return S.true
-            if p2_series_test[p] < 1:
+            if p2_series_test[p] <= 1:
                 return S.false
 
         ### ----------- Cauchy's root test ---------------- ###
