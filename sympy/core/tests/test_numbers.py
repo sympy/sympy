@@ -1751,36 +1751,30 @@ def test_Integer_precision():
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
 
 def test_numpy_to_float():
-    def check_approximate_equality(numpyval, testnum):
-            fromnumpy = Float(numpyval)
-            fromS = Float(S(testnum), precision = fromnumpy._prec)
-            assert (np.finfo(numpyval).nmant == fromnumpy._prec)
-            assert(abs(fromnumpy-fromS)/fromS<2**(-fromnumpy._prec+1))
-
+    from sympy.utilities.pytest import skip
     from sympy.external import import_module
     np = import_module('numpy')
-
     if not np:
         skip('numpy not installed. Abort numpy tests.')
 
-    testnum = 123456789
+    def check_prec_and_relerr(npval, ratval):
+        prec = np.finfo(npval).nmant
+        x = Float(npval)
+        assert x._prec == prec
+        y = Float(ratval, precision=prec)
+        assert abs((x - y)/y) < 2**(-(prec+1))
 
-    a1 = np.float32(testnum)
-    check_approximate_equality(a1, testnum)
-    a2 = np.float64(testnum)
-    check_approximate_equality(a2, testnum)
-    a3 = np.float128(testnum)
-    check_approximate_equality(a3, testnum)
+    check_prec_and_relerr(np.float32(2)/3, S(2)/3)
+    check_prec_and_relerr(np.float64(2)/3, S(2)/3)
+    check_prec_and_relerr(np.float128(2)/3, S(2)/3)
 
-    fromnumpy = Float(a3)
-    fromS = Float(S(testnum), precision=fromnumpy._prec)
-    assert(fromnumpy._prec == 63)
-    assert(fromnumpy == fromS)
+    # float128 more precise than double (how much more is arch dep)
+    x = np.float128(2)/3
+    y = Float(x)
+    assert y._prec > 53
 
-    fromnumpy = Float(a3, precision=10)
-    fromS = Float(S(testnum), precision=fromnumpy._prec)
-    assert(fromnumpy._prec == 10)
-    assert(fromnumpy == fromS)
+    y = Float(x, precision=10)
+    assert same_and_same_prec(y, Float(S(2)/3, precision=10))
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
