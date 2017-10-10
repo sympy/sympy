@@ -130,8 +130,10 @@ def _import(module, reload="False"):
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
     except KeyError:
-        raise NameError(
-            "The Sympy object does not have a equivalent numerical implementation in the supplied modules: '%s'. You can either supply your own function or add a module that has an implementation." % module)
+        raise NameError("The SymPy object does not have an equivalent "
+                "numerical implementation in the supplied modules: '%s'. "
+                "You can either supply your own function or add a module "
+                "that has an implementation." % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
