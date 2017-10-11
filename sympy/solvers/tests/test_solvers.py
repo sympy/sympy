@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt)
+    E, cbrt, Indexed)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
@@ -1871,3 +1871,13 @@ def test_issue_12476():
             {x0: 1, x3: -S(1)/3, x2: S(1)/3, x4: -sqrt(5)/3, x1: sqrt(5)/3, x5: -1}]
 
     assert solve(eqns) == sols
+
+
+def test_solvers_with_Indexed():
+    i = symbols("i")
+    r = Indexed("r", i)
+    s = Indexed("s", i)
+    assert solve(r, r) == [0]
+    assert solve(r**2 - 1, r) == [-1, 1]
+    assert solve(exp(r) - 10, r) == [log(10)]
+    assert solve(r + s**2*x - y, [r, s]) == [{r: -s**2*x + y}]

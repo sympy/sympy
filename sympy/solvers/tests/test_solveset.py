@@ -5,7 +5,7 @@ from sympy import (
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
-    oo)
+    oo, Indexed)
 
 from sympy.core.function import nfloat
 from sympy.core.relational import Unequality as Ne
@@ -1589,3 +1589,10 @@ def test__is_finite_with_finite_vars():
     assert all(f(1/x) is None for x in (
         Dummy(), Dummy(real=True), Dummy(complex=True)))
     assert f(1/Dummy(real=False)) is True  # b/c it's finite but not 0
+
+
+def test_solveset_Indexed():
+    i = symbols("i")
+    r = Indexed("r", i)
+    assert solveset(r, r) == {0}
+    assert solveset(r ** 2 - 1, r) == {-1, 1}
