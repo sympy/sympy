@@ -707,3 +707,27 @@ def test_issue_10927():
     x = symbols('x')
     assert str(Eq(x, oo)) == 'Eq(x, oo)'
     assert str(Eq(x, -oo)) == 'Eq(x, -oo)'
+
+
+def test_issues_13081_12583_12534():
+    # 13081
+    r = Rational('905502432259640373/288230376151711744')
+    assert (r < pi) is S.false
+    assert (r > pi) is S.true
+    # 12583
+    v = sqrt(2)
+    u = sqrt(v) + 2/sqrt(10 - 8/sqrt(2 - v) + 4*v*(1/sqrt(2 - v) - 1))
+    assert (u >= 0) is S.true
+    # 12534
+    G = [Rational(pi.n(i)) > pi for i in (100, 101)]
+    L = [Rational(pi.n(i)) < pi for i in (100, 101)]
+    assert G == [False, True]
+    assert all(i is not j for i, j in zip(L, G))
+    G = [pi.n(i) > pi for i in (100, 101)]
+    L = [pi.n(i) < pi for i in (100, 101)]
+    assert G == [False, True]
+    assert all(i is not j for i, j in zip(L, G))
+    G = [pi.n(100) > pi.n(101)]
+    L = [pi.n(100) < pi.n(101)]
+    assert G == [True]
+    assert all(i is not j for i, j in zip(L, G))

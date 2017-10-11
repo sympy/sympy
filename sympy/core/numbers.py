@@ -3365,10 +3365,6 @@ class NumberSymbol(AtomicExpr):
                     return S.false
                 if other > u:
                     return S.true
-            return _sympify(self.evalf() < other)
-        if other.is_real and other.is_number:
-            other = other.evalf()
-            return _sympify(self.evalf() < other)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -3378,10 +3374,6 @@ class NumberSymbol(AtomicExpr):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if self is other:
             return S.true
-        if other.is_real and other.is_number:
-            other = other.evalf()
-        if isinstance(other, Number):
-            return _sympify(self.evalf() <= other)
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
