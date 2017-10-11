@@ -15,7 +15,7 @@ from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
 from sympy.utilities.misc import func_name, filldedent
 
@@ -2164,7 +2164,6 @@ def imageset(*args):
     """
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
-    from sympy.geometry.util import _uniquely_named_symbol
 
     if len(args) not in (2, 3):
         raise ValueError('imageset expects 2 or 3 args, got: %s' % len(args))

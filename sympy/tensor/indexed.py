@@ -136,7 +136,6 @@ class Indexed(Expr):
     """
     is_commutative = True
     is_Indexed = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
 
@@ -309,11 +308,12 @@ class Indexed(Expr):
     @property
     def free_symbols(self):
         base_free_symbols = self.base.free_symbols
-        indices_free_symbols = {fs for i in self.indices for fs in i.free_symbols}
+        indices_free_symbols = {
+            fs for i in self.indices for fs in i.free_symbols}
         if base_free_symbols:
             return {self} | base_free_symbols | indices_free_symbols
         else:
-            return base_free_symbols | indices_free_symbols
+            return indices_free_symbols
 
 
 class IndexedBase(Expr, NotIterable):
@@ -368,7 +368,6 @@ class IndexedBase(Expr, NotIterable):
 
     """
     is_commutative = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
 
@@ -559,7 +558,6 @@ class Idx(Expr):
     is_integer = True
     is_finite = True
     is_real = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
     _diff_wrt = True
