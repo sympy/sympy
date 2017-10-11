@@ -100,14 +100,14 @@ def test_del_operator():
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
 
     # Tests for laplacian on scalar fields
-    assert laplacian(x*y*z, C) == S.Zero
-    assert laplacian(x**2, C) == S(2)
-    assert laplacian(x**2*y**2*z**2, C) == \
+    assert laplacian(x*y*z) == S.Zero
+    assert laplacian(x**2) == S(2)
+    assert laplacian(x**2*y**2*z**2) == \
                     2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
 
     # Tests for laplacian on vector fields
-    assert laplacian(x*y*z*(i + j + k), C) == Vector.zero
-    assert laplacian(x*y**2*z*(i + j + k), C) == \
+    assert laplacian(x*y*z*(i + j + k)) == Vector.zero
+    assert laplacian(x*y**2*z*(i + j + k)) == \
                             2*x*z*i + 2*x*z*j + 2*x*z*k
 
 

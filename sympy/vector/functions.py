@@ -1,4 +1,5 @@
 from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
@@ -173,7 +174,7 @@ def directional_derivative(field, direction_vector):
         return S(0)
 
 
-def laplacian(expr, coord_sys):
+def laplacian(expr):
     """
     Returns the laplacian of the given field computed wrt
     the base scalars of the given coordinate system.
@@ -181,28 +182,26 @@ def laplacian(expr, coord_sys):
     Parameters
     ==========
 
-    expr : Sympy Expr or Vector
+    expr : SymPy Expr or Vector
         expr denotes a scalar or vector field.
-    coord_sys : CoordSysCartesian
-        The laplacian is calculated wrt this coordinate system.
 
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, laplacian
-    >>> R = CoordSysCartesian('R')
+    >>> from sympy.vector import CoordSys3D, laplacian
+    >>> R = CoordSys3D('R')
     >>> f = R.x**2*R.y**5*R.z
-    >>> laplacian(f, R)
+    >>> laplacian(f)
     20*R.x**2*R.y**3*R.z + 2*R.y**5*R.z
     >>> f = R.x**2*R.i + R.y**3*R.j + R.z**4*R.k
-    >>> laplacian(f, R)
+    >>> laplacian(f)
     2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
 
     """
+    delop = Del()
     if expr.is_Vector:
-        return (gradient(divergence(expr, coord_sys), coord_sys) -
-                curl(curl(expr, coord_sys), coord_sys)).doit()
-    return coord_sys.delop.dot(coord_sys.delop(expr)).doit()
+        return (gradient(divergence(expr)) - curl(curl(expr))).doit()
+    return delop.dot(delop(expr)).doit()
 
 
 def is_conservative(field):
