@@ -84,7 +84,14 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    is_Atom = True
     _op_priority = 11  # higher than Expr
+
+    def simplify(self, *a, **kw):
+        return self
+
+    def expand(self, *a, **kw):
+        return self
 
     @property
     def canonical(self):
@@ -367,7 +374,7 @@ class And(LatticeOp, BooleanFunction):
         >>> from sympy import And, Symbol
         >>> x = Symbol('x', real=True)
         >>> And(x<2, x>-2).as_set()
-        (-2, 2)
+        Interval.open(-2, 2)
         """
         from sympy.sets.sets import Intersection
         if len(self.free_symbols) == 1:
@@ -438,7 +445,7 @@ class Or(LatticeOp, BooleanFunction):
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
         >>> Or(x>2, x<-2).as_set()
-        (-oo, -2) U (2, oo)
+        Union(Interval.open(-oo, -2), Interval.open(2, oo))
         """
         from sympy.sets.sets import Union
         if len(self.free_symbols) == 1:
@@ -531,7 +538,7 @@ class Not(BooleanFunction):
         >>> from sympy import Not, Symbol
         >>> x = Symbol('x', real=True)
         >>> Not(x>0).as_set()
-        (-oo, 0]
+        Interval(-oo, 0)
         """
         if len(self.free_symbols) == 1:
             return self.args[0].as_set().complement(S.Reals)
@@ -973,6 +980,10 @@ class ITE(BooleanFunction):
     def _eval_derivative(self, x):
         return self.func(self.args[0], *[a.diff(x) for a in self.args[1:]])
 
+    def _eval_rewrite_as_Piecewise(self, *args):
+        from sympy.functions import Piecewise
+        return Piecewise((args[1], args[0]), (args[2], True))
+
     # the diff method below is copied from Expr class
     def diff(self, *symbols, **assumptions):
         new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
@@ -1055,9 +1066,9 @@ def _distribute(info):
     """
     Distributes info[1] over info[2] with respect to info[0].
     """
-    if info[0].func is info[2]:
+    if isinstance(info[0], info[2]):
         for arg in info[0].args:
-            if arg.func is info[1]:
+            if isinstance(arg, info[1]):
                 conj = arg
                 break
         else:
@@ -1065,7 +1076,7 @@ def _distribute(info):
         rest = info[2](*[a for a in info[0].args if a is not conj])
         return info[1](*list(map(_distribute,
             [(info[2](c, rest), info[1], info[2]) for c in conj.args])))
-    elif info[0].func is info[1]:
+    elif isinstance(info[0], info[1]):
         return info[1](*list(map(_distribute,
             [(x, info[1], info[2]) for x in info[0].args])))
     else:
@@ -1258,9 +1269,9 @@ def _is_form(expr, function1, function2):
         return True
 
     # Special case of a single expression of function2
-    if expr.func is function2:
+    if isinstance(expr, function2):
         for lit in expr.args:
-            if lit.func is Not:
+            if isinstance(lit, Not):
                 if not lit.args[0].is_Atom:
                     return False
             else:
@@ -1269,23 +1280,23 @@ def _is_form(expr, function1, function2):
         return True
 
     # Special case of a single negation
-    if expr.func is Not:
+    if isinstance(expr, Not):
         if not expr.args[0].is_Atom:
             return False
 
-    if expr.func is not function1:
+    if not isinstance(expr, function1):
         return False
 
     for cls in expr.args:
         if cls.is_Atom:
             continue
-        if cls.func is Not:
+        if isinstance(cls, Not):
             if not cls.args[0].is_Atom:
                 return False
-        elif cls.func is not function2:
+        elif not isinstance(cls, function2):
             return False
         for lit in cls.args:
-            if lit.func is Not:
+            if isinstance(lit, Not):
                 if not lit.args[0].is_Atom:
                     return False
             else:
@@ -1314,7 +1325,7 @@ def eliminate_implications(expr):
     >>> eliminate_implications(Equivalent(A, B, C))
     (A | ~C) & (B | ~A) & (C | ~B)
     """
-    return to_nnf(expr)
+    return to_nnf(expr, simplify=False)
 
 
 def is_literal(expr):
@@ -1362,7 +1373,7 @@ def to_int_repr(clauses, symbols):
     symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
 
     def append_symbol(arg, symbols):
-        if arg.func is Not:
+        if isinstance(arg, Not):
             return -symbols[arg.args[0]]
         else:
             return symbols[arg]
@@ -1505,7 +1516,7 @@ def _check_pair(minterm1, minterm2):
 
 def _convert_to_varsSOP(minterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
     """
     temp = []
@@ -1521,7 +1532,7 @@ def _convert_to_varsSOP(minterm, variables):
 
 def _convert_to_varsPOS(maxterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for POS).
     """
     temp = []
@@ -1802,7 +1813,7 @@ def _finger(eq):
         elif a.is_Not:
             d[a.args[0]][1] += 1
         else:
-            o = len(a.args) + sum(ai.func is Not for ai in a.args)
+            o = len(a.args) + sum(isinstance(ai, Not) for ai in a.args)
             for ai in a.args:
                 if ai.is_Symbol:
                     d[ai][2] += 1

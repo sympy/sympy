@@ -635,12 +635,12 @@ def _condsimp(cond):
                         if arg2 == arg3:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[1] == r and \
-                                arg2.func is And and arg2.args[0] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[1] == r and \
+                                isinstance(arg2, And) and arg2.args[0] in arg3.args:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[0] == r and \
-                                arg2.func is And and arg2.args[1] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[0] == r and \
+                                isinstance(arg2, And) and arg2.args[1] in arg3.args:
                             otherlist += [k]
                             break
                 if len(otherlist) != len(otherargs) + 1:
@@ -661,7 +661,7 @@ def _condsimp(cond):
             return orig
         m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
-            if expr.func is periodic_argument and not expr.args[0].is_polar \
+            if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
                     and expr.args[1] == oo:
                 return (expr.args[0] > 0)
             return orig
@@ -717,7 +717,7 @@ def _rewrite_saxena_1(fac, po, g, x):
 
 
 def _check_antecedents_1(g, x, helper=False):
-    """
+    r"""
     Return a condition under which the mellin transform of g exists.
     Any power of x has already been absorbed into the G function,
     so this is just int_0^\infty g dx.
@@ -834,7 +834,7 @@ def _check_antecedents_1(g, x, helper=False):
 
 
 def _int0oo_1(g, x):
-    """
+    r"""
     Evaluate int_0^\infty g dx using G functions,
     assuming the necessary conditions are fulfilled.
 
@@ -845,7 +845,7 @@ def _int0oo_1(g, x):
     gamma(-a)*gamma(c + 1)/(y*gamma(-d)*gamma(b + 1))
     """
     # See [L, section 5.6.1]. Note that s=1.
-    from sympy import gamma, combsimp, unpolarify
+    from sympy import gamma, gammasimp, unpolarify
     eta, _ = _get_coeff_exp(g.argument, x)
     res = 1/eta
     # XXX TODO we should reduce order first
@@ -857,7 +857,7 @@ def _int0oo_1(g, x):
         res /= gamma(1 - b - 1)
     for a in g.aother:
         res /= gamma(a + 1)
-    return combsimp(unpolarify(res))
+    return gammasimp(unpolarify(res))
 
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
@@ -1346,7 +1346,7 @@ def _check_antecedents_inversion(g, x):
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z):
-        return And(*[statement(a - 1, 0, z) for a in g.an])
+        return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def H(z):
         return statement(theta, -sigma, 1/sigma, z)
@@ -2010,7 +2010,7 @@ def _meijerint_definite_4(f, x, only_double=False):
 
 
 def meijerint_inversion(f, x, t):
-    """
+    r"""
     Compute the inverse laplace transform
     :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
     for real c larger than the real part of all singularities of f.

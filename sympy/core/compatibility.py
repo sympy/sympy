@@ -69,6 +69,7 @@ if PY3:
     integer_types = (int,)
     string_types = (str,)
     long = int
+    int_info = sys.int_info
 
     # String / unicode compatibility
     unicode = str
@@ -100,6 +101,7 @@ else:
     integer_types = (int, long)
     string_types = (str, unicode)
     long = long
+    int_info = sys.long_info
 
     # String / unicode compatibility
     unicode = unicode
@@ -858,3 +860,9 @@ def lru_cache(maxsize=100, typed=False):
 if sys.version_info[:2] >= (3, 3):
     # 3.2 has an lru_cache with an incompatible API
     from functools import lru_cache
+
+try:
+    from itertools import filterfalse
+except ImportError:
+    def filterfalse(pred, itr):
+        return filter(lambda x: not pred(x), itr)

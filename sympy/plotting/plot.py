@@ -942,8 +942,7 @@ class MatplotlibBackend(BaseBackend):
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        self.ax.contour(xarray, yarray, zarray,
-                                contours=(0, 0), fill=False, cmap=colormap)
+                        self.ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
                         self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
@@ -1082,12 +1081,12 @@ plot_backends = {
 
 def centers_of_segments(array):
     np = import_module('numpy')
-    return np.average(np.vstack((array[:-1], array[1:])), 0)
+    return np.mean(np.vstack((array[:-1], array[1:])), 0)
 
 
 def centers_of_faces(array):
     np = import_module('numpy')
-    return np.average(np.dstack((array[:-1, :-1],
+    return np.mean(np.dstack((array[:-1, :-1],
                                  array[1:, :-1],
                                  array[:-1, 1: ],
                                  array[:-1, :-1],

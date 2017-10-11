@@ -76,7 +76,7 @@ def sdm_monomial_deg(M):
 
 
 def sdm_monomial_lcm(A, B):
-    """
+    r"""
     Return the "least common multiple" of ``A`` and ``B``.
 
     IF `A = M e_j` and `B = N e_j`, where `M` and `N` are polynomial monomials,

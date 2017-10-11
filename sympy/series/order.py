@@ -303,8 +303,8 @@ class Order(Expr):
         if order_symbols is None:
             order_symbols = self.args[1:]
         else:
-            if not all(o[1] == order_symbols[0][1] for o in order_symbols) and \
-               not all(p == self.point[0] for p in self.point):
+            if (not all(o[1] == order_symbols[0][1] for o in order_symbols) and
+                    not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
             if order_symbols and order_symbols[0][1] != self.point[0]:
@@ -325,7 +325,7 @@ class Order(Expr):
 
     @cacheit
     def contains(self, expr):
-        """
+        r"""
         Return True if expr belongs to Order(self.expr, \*self.variables).
         Return False if self belongs to expr.
         Return None if the inclusion relation cannot be determined
@@ -337,8 +337,8 @@ class Order(Expr):
         if expr is S.NaN:
             return False
         if expr.is_Order:
-            if not all(p == expr.point[0] for p in expr.point) and \
-               not all(p == self.point[0] for p in self.point):
+            if (not all(p == expr.point[0] for p in expr.point) and
+                   not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
             else:
@@ -356,7 +356,7 @@ class Order(Expr):
                 return all([x in self.args[1:] for x in expr.args[1:]])
             if expr.expr.is_Add:
                 return all([self.contains(x) for x in expr.expr.args])
-            if self.expr.is_Add:
+            if self.expr.is_Add and point == S.Zero:
                 return any([self.func(x, *self.args[1:]).contains(expr)
                             for x in self.expr.args])
             if self.variables and expr.variables:
@@ -383,8 +383,8 @@ class Order(Expr):
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                l = ratio.limit(s, point)
                 from sympy.series.limits import Limit
+                l = Limit(ratio, s, point).doit(heuristics=False)
                 if not isinstance(l, Limit):
                     l = l != 0
                 else:

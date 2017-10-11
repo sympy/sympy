@@ -191,7 +191,6 @@ One level up, we see we have ``Mul(-1, Pow(x, 2))``.  There is no subtraction
 class in SymPy.  ``x - y`` is represented as ``x + -y``, or, more completely,
 ``x + -1*y``, i.e., ``Add(x, Mul(-1, y))``.
 
-    >>> expr = x - y
     >>> srepr(x - y)
     "Add(Symbol('x'), Mul(Integer(-1), Symbol('y')))"
 
@@ -274,7 +273,7 @@ when we divide by 2, it is represented as multiplying by 1/2.
 
 Finally, one last note.  You may have noticed that the order we entered our
 expression and the order that it came out from ``srepr`` or in the graph were
-different.  You may have also noticed this phenonemon earlier in the
+different.  You may have also noticed this phenomenon earlier in the
 tutorial.  For example
 
      >>> 1 + x

@@ -52,19 +52,19 @@ def change_mul(node, x):
     sorted_args.extend(nc)
 
     for arg in sorted_args:
-        if arg.is_Pow and arg.base.func is DiracDelta:
+        if arg.is_Pow and isinstance(arg.base, DiracDelta):
             new_args.append(arg.func(arg.base, arg.exp - 1))
             arg = arg.base
-        if dirac is None and (arg.func is DiracDelta and arg.is_simple(x)):
+        if dirac is None and (isinstance(arg, DiracDelta) and arg.is_simple(x)):
             dirac = arg
         else:
             new_args.append(arg)
     if not dirac:  # there was no simple dirac
         new_args = []
         for arg in sorted_args:
-            if arg.func is DiracDelta:
+            if isinstance(arg, DiracDelta):
                 new_args.append(arg.expand(diracdelta=True, wrt=x))
-            elif arg.is_Pow and arg.base.func is DiracDelta:
+            elif arg.is_Pow and isinstance(arg.base, DiracDelta):
                 new_args.append(arg.func(arg.base.expand(diracdelta=True, wrt=x), arg.exp))
             else:
                 new_args.append(arg)
