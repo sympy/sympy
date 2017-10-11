@@ -169,8 +169,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         solvefun = Function('F')
 
     # See the docstring of _desolve for more details.
-    hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, type='pde', **kwargs)
+    hints = _desolve(eq, func=func, hint=hint, simplify=True,
+                     type='pde', **kwargs)
     eq = hints.pop('eq', False)
     all_ = hints.pop('all', False)
 
@@ -181,7 +181,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         failed_hints = {}
         gethints = classify_pde(eq, dict=True)
         pdedict.update({'order': gethints['order'],
-            'default': gethints['default']})
+                        'default': gethints['default']})
         for hint in hints:
             try:
                 rv = _helper_simplify(eq, hint, hints[hint]['func'],
@@ -194,8 +194,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return pdedict
 
     else:
-        return _helper_simplify(eq, hints['hint'],
-            hints['func'], hints['order'], hints[hints['hint']], solvefun)
+        return _helper_simplify(eq, hints['hint'], hints['func'],
+                                hints['order'], hints[hints['hint']], solvefun)
 
 
 def _helper_simplify(eq, hint, func, order, match, solvefun):
@@ -573,7 +573,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     function in `x` and `y`.
 
     The general solution of the PDE is:
-    
+
     .. math::
         f(x, y) = \left. \left[F(\eta) + \frac{1}{b^2 + c^2}
         \int^{b x + c y} G\left (\frac{b \xi + c \eta}{b^2 + c^2},
@@ -581,7 +581,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         e^{\frac{a \xi}{b^2 + c^2}}\, d\xi\right)
         e^{- \frac{a \xi}{b^2 + c^2}}
         \right|_{\substack{ \eta=- b y + c x\\ \xi=b x + c y }}
-    
+
     and can be found in sympy with ``pdsolve``::
 
         >>> from sympy.solvers import pdsolve
@@ -684,7 +684,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
                 + c(x, y) f(x, y) - G(x, y)
 
     where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary
-    functions     in `x` and `y`. This PDE is converted into an ODE by
+    functions in `x` and `y`. This PDE is converted into an ODE by
     making the following transformation.
 
     1. `\xi` as `x`
