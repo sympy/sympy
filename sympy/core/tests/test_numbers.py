@@ -1764,6 +1764,7 @@ def test_numpy_to_float():
         y = Float(ratval, precision=prec)
         assert abs((x - y)/y) < 2**(-(prec+1))
 
+    check_prec_and_relerr(np.float16(2)/3, S(2)/3)
     check_prec_and_relerr(np.float32(2)/3, S(2)/3)
     check_prec_and_relerr(np.float64(2)/3, S(2)/3)
     check_prec_and_relerr(np.float128(2)/3, S(2)/3)
