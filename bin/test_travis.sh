@@ -33,16 +33,21 @@ mkdir empty
 cd empty
 
 if [[ "${TEST_ASCII}" == "true" ]]; then
-    export OLD_LANG=$LANG
-    export LANG=c
+    export OLD_LC_ALL=$LC_ALL
+    export LC_ALL=C
     cat <<EOF | python
 print('Testing ASCII')
+try:
+    print(u'\u2713')
+except UnicodeEncodeError:
+    pass
+else:
+    raise Exception('Not an ASCII-only environment')
 import sympy
-sympy.test('print')
+if not (sympy.test('print') and sympy.doctest()):
+    raise Exception('Tests failed')
 EOF
-    cd ..
-    bin/doctest
-    export LANG=$OLD_LANG
+    export LC_ALL=$OLD_LC_ALL
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
