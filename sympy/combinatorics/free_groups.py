@@ -212,7 +212,7 @@ class FreeGroup(DefaultPrinting):
         return self is other
 
     def index(self, gen):
-        """Returns the index of the generator `gen` from ``(f_0, ..., f_(n-1))``.
+        """Return the index of the generator `gen` from ``(f_0, ..., f_(n-1))``.
 
         Examples
         ========
@@ -231,7 +231,7 @@ class FreeGroup(DefaultPrinting):
             raise ValueError("expected a generator of Free Group %s, got %s" % (self, gen))
 
     def order(self):
-        """Returns the order of the free group.
+        """Return the order of the free group.
 
         Examples
         ========
@@ -241,7 +241,6 @@ class FreeGroup(DefaultPrinting):
         >>> F.order()
         oo
 
-        >>> from sympy.combinatorics.free_groups import free_group
         >>> free_group("")[0].order()
         1
 
