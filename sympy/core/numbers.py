@@ -3369,14 +3369,6 @@ class NumberSymbol(AtomicExpr):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if self is other:
             return S.false
-        if isinstance(other, Number):
-            approx = self.approximation_interval(other.__class__)
-            if approx is not None:
-                l, u = approx
-                if other < l:
-                    return S.false
-                if other > u:
-                    return S.true
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
