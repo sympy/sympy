@@ -73,6 +73,11 @@ def test_bell():
     assert bell(1, x) == x
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
+    assert bell(oo) == S.Infinity
+    raises(ValueError, lambda: bell(oo, x))
+
+    raises(ValueError, lambda: bell(-1))
+    raises(ValueError, lambda: bell(S(1)/2))
 
     X = symbols('x:6')
     # X = (x0, x1, .. x5)
@@ -98,10 +103,6 @@ def test_bell():
     # For nonintegers, there are significant precision errors
     for i in [0, 2, 3, 7, 13, 42, 55]:
         assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
-
-    # For negative numbers, the formula does not hold
-    m = Symbol('m', integer=True)
-    assert bell(-1).evalf() == bell(m).rewrite(Sum).evalf(subs={m: -1})
 
     # issue 9184
     n = Dummy('n')
