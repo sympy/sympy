@@ -1283,7 +1283,10 @@ class Float(Number):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
-        if other.is_comparable:
+        if other.is_Rational and not other.is_Integer:
+            self *= other.q
+            other = _sympify(other.p)
+        elif other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
@@ -1297,7 +1300,10 @@ class Float(Number):
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
-        if other.is_comparable:
+        if other.is_Rational and not other.is_Integer:
+            self *= other.q
+            other = _sympify(other.p)
+        elif other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
@@ -1311,7 +1317,10 @@ class Float(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        if other.is_real and other.is_number:
+        if other.is_Rational:
+            self *= other.q
+            other = _sympify(other.p)
+        elif other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
@@ -1325,7 +1334,10 @@ class Float(Number):
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        if other.is_real and other.is_number:
+        if other.is_Rational:
+            self *= other.q
+            other = _sympify(other.p)
+        elif other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
