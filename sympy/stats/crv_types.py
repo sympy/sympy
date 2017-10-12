@@ -2309,10 +2309,10 @@ def Trapezoidal(name, a, b, c, d):
     Parameters
     ==========
 
-    a : Real number, :math:`a \in \left(-\infty, \infty\right)`
-    b : Real number, :math:`b \geq a`
-    c : Real number, :math:`c \geq d`
-    d : Real number, :math:`d \geq c`
+    a : Real number, :math:`a < d`
+    b : Real number, :math:`a <= b < c`
+    c : Real number, :math:`b < c <= d`
+    d : Real number
 
     Returns
     =======
