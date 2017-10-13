@@ -2,7 +2,7 @@ from sympy import (Derivative as D, Eq, exp, sin,
     Function, Symbol, symbols, cos, log)
 from sympy.core import S
 from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
-    pdsolve, classify_pde, checkpdesol)
+    pdsolve, classify_pde, checkpdesol, pde_separate)
 from sympy.utilities.pytest import raises
 
 
@@ -15,6 +15,14 @@ def test_pde_separate_add():
     eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
     res = pde_separate_add(eq, u(x, t), [X(x), T(t)])
     assert res == [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
+
+
+def test_pde_separate():
+    x, y, z, t = symbols("x,y,z,t")
+    F, T, X, Y, Z, u = map(Function, 'FTXYZu')
+
+    eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
+    raises(ValueError, lambda: pde_separate(eq, u(x, t), [X(x), T(t)], 'div'))
 
 
 def test_pde_separate_mul():
