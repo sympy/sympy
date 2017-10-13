@@ -821,7 +821,9 @@ class Add(Expr, AssocOp):
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        new_expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
+        leading_term = [(t, t.as_leading_term(x)) for t in expr.args]
+
+        new_expr = expr.func(*[t for _, t in leading_term]).removeO()
 
         if new_expr and (new_expr is not S.NaN):
             #to check if the leading term cancel each other out
@@ -831,7 +833,6 @@ class Add(Expr, AssocOp):
                 final_leading_term = [new_expr]
 
             if len(expr.args) != len(final_leading_term):
-                leading_term = [(t, t.as_leading_term(x)) for t in expr.args]
                 canceled_term = [(s, t) for s, t in leading_term if t not in final_leading_term]
                 expr_sum = expr.func(*[t for _, t in canceled_term])
                 if expr_sum == S(0):
