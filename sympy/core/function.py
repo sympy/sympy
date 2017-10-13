@@ -456,17 +456,15 @@ class Function(Application, Expr):
 
         Returns the precision to evalf to, or -1 if it shouldn't evalf.
         """
-        from sympy.core.symbol import Wild
+        from sympy.core.evalf import pure_complex
         if arg.is_Float:
             return arg._prec
         if not arg.is_Add:
             return -1
-        # Don't use as_real_imag() here, that's too much work
-        a, b = Wild('a'), Wild('b')
-        m = arg.match(a + b*S.ImaginaryUnit)
-        if not m or not (m[a].is_Float or m[b].is_Float):
+        m = pure_complex(arg)
+        if m is None or not (m[0].is_Float or m[1].is_Float):
             return -1
-        l = [m[i]._prec for i in m if m[i].is_Float]
+        l = [i._prec for i in m if i.is_Float]
         l.append(-1)
         return max(l)
 
