@@ -100,21 +100,24 @@ class BooleanAtom(Boolean):
     def _noop(self, other=None):
         raise TypeError('BooleanAtom not allowed in this context.')
 
-    __add__ = _noop
-    __radd__ = _noop
-    __sub__ = _noop
-    __rsub__ = _noop
-    __mul__ = _noop
-    __rmul__ = _noop
-    __pow__ = _noop
-    __rpow__ = _noop
-    __rdiv__ = _noop
-    __truediv__ = _noop
-    __div__ = _noop
-    __rtruediv__ = _noop
-    __mod__ = _noop
-    __rmod__ = _noop
-    _eval_power = _noop
+    def __int__(self):
+        return int(bool(self))
+
+    __add__ = lambda s, o: int(s) + o
+    __radd__ = lambda s, o: o + int(s)
+    __sub__ = lambda s, o: int(s) - o
+    __rsub__ = lambda s, o: o - int(s)
+    __mul__ = lambda s, o: int(s) * o
+    __rmul__ = lambda s, o: o * int(s)
+    __pow__ = lambda s, o: int(s) ** o
+    __rpow__ = lambda s, o: o ** int(s)
+    __div__ = lambda s, o: int(s) / o
+    __rdiv__ = lambda s, o: o / int(s)
+    __mod__ = lambda s, o: int(s) % o
+    __rmod__ = lambda s, o: o % int(s)
+    __neg__ = lambda s: -int(s)
+    __pos__ = lambda s: int(s)
+    __abs__ = lambda s: int(s)
 
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):

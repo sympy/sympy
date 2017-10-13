@@ -760,21 +760,27 @@ def test_truth_table():
 def test_issue_8571():
     x = symbols('x')
     for t in (S.true, S.false):
-        raises(TypeError, lambda: +t)
-        raises(TypeError, lambda: -t)
-        raises(TypeError, lambda: abs(t))
-        # use int(bool(t)) to get 0 or 1
-        raises(TypeError, lambda: int(t))
-
+        assert +t == int(t)
+        assert -t == -int(t)
+        assert abs(t) == int(t)
         for o in [S.Zero, S.One, x]:
-            for _ in range(2):
-                raises(TypeError, lambda: o + t)
-                raises(TypeError, lambda: o - t)
-                raises(TypeError, lambda: o % t)
-                raises(TypeError, lambda: o*t)
-                raises(TypeError, lambda: o/t)
-                raises(TypeError, lambda: o**t)
-                o, t = t, o  # do again in reversed order
+                assert o + t == o + int(t)
+                assert o - t == o - int(t)
+                if t:
+                    assert o % t == o % int(t)
+                    assert o / t == o / int(t)
+                    assert o // t == o // int(t)
+                assert o * t == o * int(t)
+                assert o ** t == o ** int(t)
+
+                assert t + o == int(t) + o
+                assert t - o == int(t) - o
+                assert t * o == int(t) * o
+                if o:
+                    assert t % o == int(t) % o
+                    assert t / o == int(t) / o
+                    assert t // o == int(t) // o
+                assert t ** o == int(t) ** o
 
 
 def test_expand_relational():
