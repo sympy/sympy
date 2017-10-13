@@ -534,7 +534,6 @@ def test_piecewise_evaluate():
     assert p != x
     assert p.is_Piecewise
     assert all(isinstance(i, Basic) for i in p.args)
-    assert Piecewise((1, Eq(1, True))).args == ((1, Eq(1, True)),)
 
 
 def test_as_expr_set_pairs():

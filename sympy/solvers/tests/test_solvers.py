@@ -570,8 +570,6 @@ def test_solve_inequalities():
     assert solve(Eq(True, ~x)) == False
     assert solve(Ne(True, x)) == False
 
-    raises(TypeError, lambda: solve(Eq(x + 1, True)))
-
 
 def test_issue_4793():
     assert solve(1/x) == []
@@ -1089,7 +1087,7 @@ def test_checksol():
     x, y, r, t = symbols('x, y, r, t')
     eq = r - x**2 - y**2
     dict_var_soln = {y: - sqrt(r) / sqrt(tan(t)**2 + 1),
-                            x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
+        x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
     assert checksol(eq, dict_var_soln) == True
     assert checksol(Eq(x, False), {x: False}) is True
     assert checksol(Ne(x, False), {x: False}) is False
@@ -1097,9 +1095,7 @@ def test_checksol():
     assert checksol(Eq(x < 1, True), {x: 1}) is False
     assert checksol(Eq(x < 1, False), {x: 1}) is True
     assert checksol(Eq(x < 1, False), {x: 0}) is False
-    # expressions are not Booleans
-    assert checksol(Eq(x + 1, False), {x: -1}) is False
-    assert checksol(Eq(x + 1, True), {x: 0}) is False
+    assert checksol(Eq(x + 1, x**2 + 1), {x: 1}) is True
 
 
 def test__invert():
