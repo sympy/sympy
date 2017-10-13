@@ -181,7 +181,7 @@ planck_force = Quantity("planck_force", force, planck_energy / planck_length, ab
 planck_power = Quantity("planck_power", power, planck_energy / planck_time, abbrev="P_P")
 planck_density = Quantity("planck_density", mass/length**3, planck_mass / planck_length**3, abbrev="rho_P")
 planck_energy_density = Quantity("planck_energy_density", energy / length**3, planck_energy / planck_length**3, abbrev="rho^E_P")
-planck_intensity = Quantity("planck_intensity", mass / time**3, planck_energy_density * speed_of_light, abbrev="I_P")
+planck_intensity = Quantity("planck_intensity", mass * time**(-3), planck_energy_density * speed_of_light, abbrev="I_P")
 planck_angular_frequency = Quantity("planck_angular_frequency", 1 / time, 1 / planck_time, abbrev="omega_P")
 planck_pressure = Quantity("planck_pressure", pressure, planck_force / planck_length**2, abbrev="p_P")
 planck_current = Quantity("planck_current", current, planck_charge / planck_time, abbrev="I_P")
