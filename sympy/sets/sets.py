@@ -2000,12 +2000,12 @@ class FiniteSet(Set, EvalfMixin):
         """
         r = false
         for e in self._elements:
+            # override global evaluation so we can use Eq to do
+            # do the evaluation
             t = Eq(e, other, evaluate=True)
-            if isinstance(t, Eq):
-                t = t.simplify()
-            if t == true:
+            if t is true:
                 return t
-            elif t != false:
+            elif t is not false:
                 r = None
         return r
 
