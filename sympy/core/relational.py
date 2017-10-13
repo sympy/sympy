@@ -48,7 +48,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
-    >>> Rel(y, x+x**2, '==')
+    >>> Rel(y, x + x**2, '==')
     Eq(y, x**2 + x)
 
     """
