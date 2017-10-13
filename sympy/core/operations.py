@@ -405,6 +405,10 @@ class LatticeOp(AssocOp):
     def __new__(cls, *args, **options):
         args = (_sympify(arg) for arg in args)
         try:
+            # /!\ args is a generator and _new_args_filter
+            # must be careful to handle as such; this
+            # is done so short-circuiting can be done
+            # without having to sympify all values
             _args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
             return sympify(cls.zero)
