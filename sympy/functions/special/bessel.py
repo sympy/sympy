@@ -669,13 +669,16 @@ class jn(SphericalBesselBase):
 
     """
     @classmethod
-    #check for z=0
     def eval(cls, nu, z):
+        # check for z=0
         if z.is_zero:
-            if nu.is_zero:#jn(0,0)=1
+            if nu.is_zero: # jn(0,0)=1
                 return S.One
-            elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:#jn(n,0)=0
-                return S.Zero
+            elif nu.is_number:
+                if nu.is_positive or re(nu).is_positive:
+                    return S.Zero
+                else:
+                    return S.ComplexInfinity
 
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)

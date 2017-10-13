@@ -219,6 +219,15 @@ def myn(n, z):
 
 def test_jn():
     z = symbols("z")
+    assert jn(0, 0) == 1
+    assert jn(1, 0) == 0
+    assert jn(pi, 0) == 0
+    assert jn(S(1)/2, 0) == 0
+    assert jn(1 + I, 0) == 0
+    assert jn(1 - I, 0) == 0
+    assert jn(-1, 0) == S.ComplexInfinity
+    assert jn(z, 0) == jn(z, 0, evaluate=False)
+
     assert mjn(0, z) == sin(z)/z
     assert mjn(1, z) == sin(z)/z**2 - cos(z)/z
     assert mjn(2, z) == (3/z**3 - 1/z)*sin(z) - (3/z**2) * cos(z)
