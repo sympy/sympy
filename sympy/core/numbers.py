@@ -1257,13 +1257,13 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
             return other.__eq__(self)
-        if isinstance(other, Float):
+        if other.is_Float:
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
-        if isinstance(other, Number):
+        if other.is_Number:
             # numbers should compare at the same precision;
             # all _as_mpf_val routines should be sure to abide
             # by the request to change the prec if necessary; if
@@ -1281,14 +1281,14 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__lt__(self)
         if other.is_Rational and not other.is_Integer:
             self *= other.q
             other = _sympify(other.p)
         elif other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
+        if other.is_Number and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__gt__(self, other)
@@ -1298,14 +1298,14 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__le__(self)
         if other.is_Rational and not other.is_Integer:
             self *= other.q
             other = _sympify(other.p)
         elif other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
+        if other.is_Number and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__ge__(self, other)
@@ -1315,14 +1315,14 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__gt__(self)
-        if other.is_Rational:
+        if other.is_Rational and not other.is_Integer:
             self *= other.q
             other = _sympify(other.p)
         elif other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
+        if other.is_Number and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__lt__(self, other)
@@ -1332,14 +1332,14 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__ge__(self)
-        if other.is_Rational:
+        if other.is_Rational and not other.is_Integer:
             self *= other.q
             other = _sympify(other.p)
         elif other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
+        if other.is_Number and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__le__(self, other)
@@ -1730,16 +1730,16 @@ class Rational(Number):
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
             return other.__eq__(self)
-        if isinstance(other, Number):
-            if isinstance(other, Rational):
+        if other.is_Number:
+            if other.is_Rational:
                 # a Rational is always in reduced form so will never be 2/4
                 # so we can just check equivalence of args
                 return self.p == other.p and self.q == other.q
-            if isinstance(other, Float):
+            if other.is_Float:
                 return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
         return False
 
@@ -1751,13 +1751,13 @@ class Rational(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__lt__(self)
         expr = self
-        if isinstance(other, Number):
-            if isinstance(other, Rational):
+        if other.is_Number:
+            if other.is_Rational:
                 return _sympify(bool(self.p*other.q > self.q*other.p))
-            if isinstance(other, Float):
+            if other.is_Float:
                 return _sympify(bool(mlib.mpf_gt(
                     self._as_mpf_val(other._prec), other._mpf_)))
         elif other.is_number and other.is_real:
@@ -1769,13 +1769,13 @@ class Rational(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__le__(self)
         expr = self
-        if isinstance(other, Number):
-            if isinstance(other, Rational):
+        if other.is_Number:
+            if other.is_Rational:
                  return _sympify(bool(self.p*other.q >= self.q*other.p))
-            if isinstance(other, Float):
+            if other.is_Float:
                 return _sympify(bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_)))
         elif other.is_number and other.is_real:
@@ -1787,13 +1787,13 @@ class Rational(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__gt__(self)
         expr = self
-        if isinstance(other, Number):
-            if isinstance(other, Rational):
+        if other.is_Number:
+            if other.is_Rational:
                 return _sympify(bool(self.p*other.q < self.q*other.p))
-            if isinstance(other, Float):
+            if other.is_Float:
                 return _sympify(bool(mlib.mpf_lt(
                     self._as_mpf_val(other._prec), other._mpf_)))
         elif other.is_number and other.is_real:
@@ -1806,12 +1806,12 @@ class Rational(Number):
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         expr = self
-        if isinstance(other, NumberSymbol):
+        if other.is_NumberSymbol:
             return other.__ge__(self)
-        elif isinstance(other, Number):
-            if isinstance(other, Rational):
+        elif other.is_Number:
+            if other.is_Rational:
                 return _sympify(bool(self.p*other.q <= self.q*other.p))
-            if isinstance(other, Float):
+            if other.is_Float:
                 return _sympify(bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_)))
         elif other.is_number and other.is_real:
@@ -2129,7 +2129,7 @@ class Integer(Rational):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if isinstance(other, Integer):
+        if other.is_Integer:
             return _sympify(self.p > other.p)
         return Rational.__gt__(self, other)
 
@@ -2138,7 +2138,7 @@ class Integer(Rational):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if isinstance(other, Integer):
+        if other.is_Integer:
             return _sympify(self.p < other.p)
         return Rational.__lt__(self, other)
 
@@ -2147,7 +2147,7 @@ class Integer(Rational):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if isinstance(other, Integer):
+        if other.is_Integer:
             return _sympify(self.p >= other.p)
         return Rational.__ge__(self, other)
 
@@ -2156,7 +2156,7 @@ class Integer(Rational):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if isinstance(other, Integer):
+        if other.is_Integer:
             return _sympify(self.p <= other.p)
         return Rational.__le__(self, other)
 
@@ -3354,7 +3354,7 @@ class NumberSymbol(AtomicExpr):
             return NotImplemented
         if self is other:
             return True
-        if isinstance(other, Number) and self.is_irrational:
+        if other.is_Number and self.is_irrational:
             return False
 
         return False    # NumberSymbol != non-(Number|self)
