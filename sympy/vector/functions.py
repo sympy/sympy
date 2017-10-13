@@ -176,7 +176,7 @@ def directional_derivative(field, direction_vector):
 
 def laplacian(expr):
     """
-    Returns the laplacian of the given field computed wrt
+    Return the laplacian of the given field computed in terms of
     the base scalars of the given coordinate system.
 
     Parameters
