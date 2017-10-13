@@ -319,7 +319,9 @@ class Equality(Relational):
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
                 return S.true
-            elif isinstance(lhs, Boolean) != isinstance(rhs, Boolean):
+            elif not (lhs.is_Symbol or rhs.is_Symbol) and (
+                    isinstance(lhs, Boolean) !=
+                    isinstance(rhs, Boolean)):
                 return S.false
 
             # check finiteness
