@@ -242,15 +242,32 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     Examples
     ========
 
-    >>> from sympy import sympify, true, Or
+    >>> from sympy import sympify, true, false, Or
     >>> sympify(True)
     True
-    >>> ~true
-    False
-    >>> ~True
-    -2
-    >>> Or(True, False)
+    >>> _ is True, _ is true
+    (False, True)
+
+    >>> Or(true, false)
     True
+    >>> _ is true
+    True
+
+    Python operators give a boolean result for true but a
+    bitwise result for True
+
+    >>> ~true, ~True
+    (False, -2)
+    >>> true >> true, True >> True
+    (True, 0)
+
+    Python operators give a boolean result for true but a
+    bitwise result for True
+
+    >>> ~true, ~True
+    (False, -2)
+    >>> true >> true, True >> True
+    (True, 0)
 
     See Also
     ========
@@ -296,15 +313,24 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     Examples
     ========
 
-    >>> from sympy import sympify, false, Or, true
+    >>> from sympy import sympify, true, false, Or
     >>> sympify(False)
     False
-    >>> false >> false
+    >>> _ is False, _ is false
+    (False, True)
+
+    >>> Or(true, false)
     True
-    >>> False >> False
-    0
-    >>> Or(True, False)
+    >>> _ is true
     True
+
+    Python operators give a boolean result for false but a
+    bitwise result for False
+
+    >>> ~false, ~False
+    (True, -1)
+    >>> false >> false, False >> False
+    (True, 0)
 
     See Also
     ========
