@@ -590,8 +590,9 @@ def test_simplify():
     r = S(1) < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
-    # not be done
-    assert simplify(r) != r.canonical
+    # be done unless the measure forbids it
+    assert simplify(r) == r.canonical
+    assert simplify(r, ratio=0) != r.canonical
     # this is not a random test; in _eval_simplify
     # this will simplify to S.false and that is the
     # reason for the 'if r.is_Relational' in Relational's

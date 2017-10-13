@@ -1,6 +1,6 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
     count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
-    Equivalent, MatrixSymbol, Symbol, ITE
+    Equivalent, MatrixSymbol, Symbol, ITE, Rel
 from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
@@ -16,6 +16,7 @@ def test_count_ops_non_visual():
     assert count(x + y*x + 2*y) == 4
     assert count({x + y: x}) == 1
     assert count({x + y: S(2) + x}) is not S.One
+    assert count(x < y) == 1
     assert count(Or(x,y)) == 1
     assert count(And(x,y)) == 1
     assert count(Not(x)) == 1
@@ -32,6 +33,7 @@ def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
         'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
+    LT, LE, GT, GE, EQ, NE = symbols('LT LE GT GE EQ NE')
     NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, ITE, BASIC, TUPLE = symbols(
         'Not Or And Xor Implies Equivalent ITE Basic Tuple'.upper())
 
@@ -95,6 +97,8 @@ def test_count_ops_visual():
     assert count(Basic()) == 0
     assert count(Basic(Basic(),Basic(x,x+y))) == ADD + 2*BASIC
     assert count(Basic(x, x + y)) == ADD + BASIC
+    assert [count(Rel(x, y, op)) for op in '< <= > >= == <> !='.split()
+        ] == [LT, LE, GT, GE, EQ, NE, NE]
     assert count(Or(x, y)) == OR
     assert count(And(x, y)) == AND
     assert count(Or(x, Or(y, And(z, a)))) == AND + OR
@@ -110,7 +114,7 @@ def test_count_ops_visual():
     assert count(Basic(Tuple(x))) == BASIC + TUPLE
     #It checks that TUPLE is counted as an operation.
 
-    assert count(Eq(x + y, S(2))) == ADD
+    assert count(Eq(x + y, S(2))) == ADD + EQ
 
 
 def test_issue_9324():
