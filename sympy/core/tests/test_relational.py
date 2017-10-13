@@ -726,3 +726,14 @@ def test_binary_symbols():
             assert eq.binary_symbols == ans
             assert eq.reversed.binary_symbols == ans
         assert f(x, 1).binary_symbols == set()
+
+
+def test_rel_args():
+    # can't have Boolean args; this is automatic with Python 3
+    # so this test and the __lt__, etc..., definitions in
+    # relational.py and boolalg.py which are marked with ///
+    # can be removed.
+    for op in ['<', '<=', '>', '>=']:
+        for b in (S.true, x < 1, And(x, y)):
+            for v in (0.1, 1, 2**32, t, S(1)):
+                raises(TypeError, lambda: Relational(b, v, op))

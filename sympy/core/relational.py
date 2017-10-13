@@ -67,9 +67,31 @@ class Relational(Boolean, Expr, EvalfMixin):
         # corresponding to that operator and delegate to it
         try:
             cls = cls.ValidRelationOperator[rop]
-            return cls(lhs, rhs, **assumptions)
+            rv = cls(lhs, rhs, **assumptions)
+            # /// drop when Py2 is no longer supported
+            # validate that Booleans are not being used in a relational
+            # other than Eq/Ne;
+            if isinstance(rv, (Eq, Ne)):
+                pass
+            elif isinstance(rv, Relational):  # could it be otherwise?
+                from sympy.core.symbol import Symbol
+                from sympy.logic.boolalg import Boolean
+                from sympy.utilities.misc import filldedent
+                for a in rv.args:
+                    if isinstance(a, Symbol):
+                        continue
+                    if isinstance(a, Boolean):
+                        from sympy.utilities.misc import filldedent
+                        raise TypeError(filldedent('''
+                            A Boolean argument can only be used in
+                            Eq and Ne; all other relationals expect
+                            real expressions.
+                        '''))
+            # \\\
+            return rv
         except KeyError:
-            raise ValueError("Invalid relational operator symbol: %r" % rop)
+            raise ValueError(
+                "Invalid relational operator symbol: %r" % rop)
 
     @property
     def lhs(self):

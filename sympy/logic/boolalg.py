@@ -167,6 +167,20 @@ class BooleanAtom(Boolean):
     __rmod__ = _noop
     _eval_power = _noop
 
+    # /// drop when Py2 is no longer supported
+    def __lt__(self, other):
+        from sympy.utilities.misc import filldedent
+        raise TypeError(filldedent('''
+            A Boolean argument can only be used in
+            Eq and Ne; all other relationals expect
+            real expressions.
+        '''))
+
+    __le__ = __lt__
+    __gt__ = __lt__
+    __ge__ = __lt__
+    # \\\
+
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
@@ -338,6 +352,19 @@ class BooleanFunction(Application, Boolean):
 
     def _eval_simplify(self, ratio, measure):
         return simplify_logic(self)
+
+    # /// drop when Py2 is no longer supported
+    def __lt__(self, other):
+        from sympy.utilities.misc import filldedent
+        raise TypeError(filldedent('''
+            A Boolean argument can only be used in
+            Eq and Ne; all other relationals expect
+            real expressions.
+        '''))
+    __le__ = __lt__
+    __ge__ = __lt__
+    __gt__ = __lt__
+    # \\\
 
     @classmethod
     def binary_check_and_simplify(self, *args):
