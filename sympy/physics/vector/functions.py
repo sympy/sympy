@@ -188,14 +188,15 @@ def time_derivative(expr, frame, order=1):
         raise ValueError("Unsupported value of order entered")
 
     if isinstance(expr, Vector):
-        outvec = Vector(0)
+        outlist = []
         for i, v in enumerate(expr.args):
             if v[1] == frame:
-                outvec += Vector([(express(v[0], frame,
-                                           variables=True).diff(t), frame)])
+                outlist += [(express(v[0], frame,
+                                           variables=True).diff(t), frame)]
             else:
-                outvec += time_derivative(Vector([v]), v[1]) + \
-                    (v[1].ang_vel_in(frame) ^ Vector([v]))
+                outlist += (time_derivative(Vector([v]), v[1]) + \
+                    (v[1].ang_vel_in(frame) ^ Vector([v]))).args
+        outvec = Vector(outlist)
         return time_derivative(outvec, frame, order - 1)
 
     if isinstance(expr, Dyadic):

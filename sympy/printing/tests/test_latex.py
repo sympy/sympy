@@ -8,7 +8,7 @@ from sympy import (
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
-    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
+    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
@@ -16,13 +16,14 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, Quaternion)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
-from sympy.printing.latex import latex, translate
+from sympy.printing.latex import (latex, translate, greek_letters_set,
+                                  tex_greek_dictionary)
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableSparseNDimArray, MutableDenseNDimArray)
 from sympy.tensor.array import tensorproduct
@@ -34,6 +35,8 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy import MatrixSymbol
+from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -170,9 +173,44 @@ def test_latex_Float():
     assert latex(-1.0*oo) == r"- \infty"
 
 
+def test_latex_vector_expressions():
+    A = CoordSys3D('A')
+
+    assert latex(Cross(A.i, A.j*A.x*3+A.k)) == r"\mathbf{\hat{i}_{A}} \times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+    assert latex(Cross(A.i, A.j)) == r"\mathbf{\hat{i}_{A}} \times \mathbf{\hat{j}_{A}}"
+    assert latex(x*Cross(A.i, A.j)) == r"x \left(\mathbf{\hat{i}_{A}} \times \mathbf{\hat{j}_{A}}\right)"
+    assert latex(Cross(x*A.i, A.j)) == r'- \mathbf{\hat{j}_{A}} \times \left((x)\mathbf{\hat{i}_{A}}\right)'
+
+    assert latex(Curl(3*A.x*A.j)) == r"\nabla\times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+    assert latex(Curl(3*A.x*A.j+A.i)) == r"\nabla\times \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+    assert latex(Curl(3*x*A.x*A.j)) == r"\nabla\times \left((3 \mathbf{{x}_{A}} x)\mathbf{\hat{j}_{A}}\right)"
+    assert latex(x*Curl(3*A.x*A.j)) == r"x \left(\nabla\times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)\right)"
+
+    assert latex(Divergence(3*A.x*A.j+A.i)) == r"\nabla\cdot \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+    assert latex(Divergence(3*A.x*A.j)) == r"\nabla\cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+    assert latex(x*Divergence(3*A.x*A.j)) == r"x \left(\nabla\cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)\right)"
+
+    assert latex(Dot(A.i, A.j*A.x*3+A.k)) == r"\mathbf{\hat{i}_{A}} \cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+    assert latex(Dot(A.i, A.j)) == r"\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}"
+    assert latex(Dot(x*A.i, A.j)) == r"\mathbf{\hat{j}_{A}} \cdot \left((x)\mathbf{\hat{i}_{A}}\right)"
+    assert latex(x*Dot(A.i, A.j)) == r"x \left(\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}\right)"
+
+    assert latex(Gradient(A.x)) == r"\nabla\cdot \mathbf{{x}_{A}}"
+    assert latex(Gradient(A.x + 3*A.y)) == r"\nabla\cdot \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
+    assert latex(x*Gradient(A.x)) == r"x \left(\nabla\cdot \mathbf{{x}_{A}}\right)"
+    assert latex(Gradient(x*A.x)) == r"\nabla\cdot \left(\mathbf{{x}_{A}} x\right)"
+
+
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
-    mass, volume = symbols('mass, volume')
+    tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
+    assert latex(tau) == r"\tau"
+    assert latex(Tau) == "T"
+    assert latex(TAU) == r"\tau"
+    assert latex(taU) == r"\tau"
+    # Check that all capitalized greek letters are handled explicitly
+    capitalized_letters = set(l.capitalize() for l in greek_letters_set)
+    assert len(capitalized_letters - set(tex_greek_dictionary.keys())) == 0
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
     assert latex(Symbol('q1')) == r"q_{1}"
@@ -271,8 +309,8 @@ def test_latex_functions():
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Max(x, y)**2) == r"\max\left(x, y\right)^{2}"
     assert latex(Abs(x)) == r"\left|{x}\right|"
-    assert latex(re(x)) == r"\Re{x}"
-    assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
+    assert latex(re(x)) == r"\Re{\left(x\right)}"
+    assert latex(re(x + y)) == r"\Re{\left(x\right)} + \Re{\left(y\right)}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma{\left(x \right)}"
@@ -291,7 +329,7 @@ def test_latex_functions():
 
     assert latex(cot(x)) == r'\cot{\left (x \right )}'
     assert latex(coth(x)) == r'\coth{\left (x \right )}'
-    assert latex(re(x)) == r'\Re{x}'
+    assert latex(re(x)) == r'\Re{\left(x\right)}'
     assert latex(im(x)) == r'\Im{x}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left (x \right )}'
@@ -848,9 +886,9 @@ def test_mode():
 
 def test_latex_Piecewise():
     p = Piecewise((x, x < 1), (x**2, True))
-    assert latex(p) == "\\begin{cases} x & \\text{for}\: x < 1 \\\\x^{2} &" \
+    assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 1 \\\\x^{2} &" \
                        " \\text{otherwise} \\end{cases}"
-    assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\: x \\lt 1 \\\\x^{2} &" \
+    assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\\: x \\lt 1 \\\\x^{2} &" \
                                   " \\text{otherwise} \\end{cases}"
     p = Piecewise((x, x < 0), (0, x >= 0))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &" \
@@ -859,7 +897,7 @@ def test_latex_Piecewise():
     p = Piecewise((A**2, Eq(A, B)), (A*B, True))
     s = r"\begin{cases} A^{2} & \text{for}\: A = B \\A B & \text{otherwise} \end{cases}"
     assert latex(p) == s
-    assert latex(A*p) == r"A %s" % s
+    assert latex(A*p) == r"A \left(%s\right)" % s
     assert latex(p*A) == r"\left(%s\right) A" % s
 
 
@@ -937,11 +975,11 @@ def test_latex_NDimArray():
 def test_latex_mul_symbol():
     assert latex(4*4**x, mul_symbol='times') == "4 \\times 4^{x}"
     assert latex(4*4**x, mul_symbol='dot') == "4 \\cdot 4^{x}"
-    assert latex(4*4**x, mul_symbol='ldot') == "4 \,.\, 4^{x}"
+    assert latex(4*4**x, mul_symbol='ldot') == r"4 \,.\, 4^{x}"
 
     assert latex(4*x, mul_symbol='times') == "4 \\times x"
     assert latex(4*x, mul_symbol='dot') == "4 \\cdot x"
-    assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
+    assert latex(4*x, mul_symbol='ldot') == r"4 \,.\, x"
 
 
 def test_latex_issue_4381():
@@ -1076,6 +1114,13 @@ def test_settings():
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
+    assert latex(catalan(n)**2) == r"C_{n}^{2}"
+
+
+def test_latex_euler():
+    assert latex(euler(n)) == r"E_{n}"
+    assert latex(euler(n, x)) == r"E_{n}\left(x\right)"
+    assert latex(euler(n, x)**2) == r"E_{n}^{2}\left(x\right)"
 
 
 def test_lamda():
@@ -1204,10 +1249,10 @@ def test_categories():
     assert latex(id_A1) == "id:A_{1}\\rightarrow A_{1}"
     assert latex(f2*f1) == "f_{2}\\circ f_{1}:A_{1}\\rightarrow A_{3}"
 
-    assert latex(K1) == "\mathbf{K_{1}}"
+    assert latex(K1) == r"\mathbf{K_{1}}"
 
     d = Diagram()
-    assert latex(d) == "\emptyset"
+    assert latex(d) == r"\emptyset"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
     assert latex(d) == r"\left \{ f_{2}\circ f_{1}:A_{1}" \
@@ -1579,6 +1624,11 @@ def test_issue_10489():
     assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'
 
 
+def test_issue_12886():
+    m__1, l__1 = symbols('m__1, l__1')
+    assert latex(m__1**2 + l__1**2) == r'\left(l^{1}\right)^{2} + \left(m^{1}\right)^{2}'
+
+
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
     he = UnevaluatedExpr(1/x)
@@ -1586,3 +1636,25 @@ def test_latex_UnevaluatedExpr():
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
     assert latex(he + 1) == r"1 + \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert latex(A[0, 0]) == r"A_{0, 0}"
+    assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
+
+    F = C[0, 0].subs(C, A - B)
+    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
+
+
+def test_Quaternion_latex_printing():
+    q = Quaternion(x, y, z, t)
+    assert latex(q) == "x + y i + z j + t k"
+    q = Quaternion(x,y,z,x*t)
+    assert latex(q) == "x + y i + z j + t x k"
+    q = Quaternion(x,y,z,x+t)
+    assert latex(q) == r"x + y i + z j + \left(t + x\right) k"

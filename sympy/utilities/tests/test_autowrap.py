@@ -4,14 +4,18 @@
 import os
 import tempfile
 import shutil
+import warnings
+import tempfile
 
-from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
-from sympy.utilities.codegen import (CCodeGen, CodeGenArgumentListError,
-                                     make_routine)
-from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises
+from sympy.utilities.autowrap import (autowrap, binary_function,
+            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
+from sympy.utilities.codegen import (
+    CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
+)
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
@@ -33,8 +37,11 @@ def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     routine = make_routine("test", expr)
-    code_gen = CythonCodeWrapper(CCodeGen())
-    source = get_string(code_gen.dump_pyx, [routine])
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', category=SymPyDeprecationWarning)
+        code_gen = CythonCodeWrapper(CCodeGen())
+        source = get_string(code_gen.dump_pyx, [routine])
+
     expected = (
         "cdef extern from 'file.h':\n"
         "    double test(double x, double y, double z)\n"
@@ -48,7 +55,7 @@ def test_cython_wrapper_scalar_function():
 def test_cython_wrapper_outarg():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
-    code_gen = CythonCodeWrapper(CCodeGen())
+    code_gen = CythonCodeWrapper(C99CodeGen())
 
     routine = make_routine("test", Equality(z, x + y))
     source = get_string(code_gen.dump_pyx, [routine])
@@ -67,7 +74,7 @@ def test_cython_wrapper_outarg():
 def test_cython_wrapper_inoutarg():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
-    code_gen = CythonCodeWrapper(CCodeGen())
+    code_gen = CythonCodeWrapper(C99CodeGen())
     routine = make_routine("test", Equality(z, x + y + z))
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
@@ -80,6 +87,104 @@ def test_cython_wrapper_inoutarg():
         "    return z")
     assert source == expected
 
+
+def test_cython_wrapper_compile_flags():
+    from sympy import Equality
+    x, y, z = symbols('x,y,z')
+    routine = make_routine("test", Equality(z, x + y))
+
+    code_gen = CythonCodeWrapper(CCodeGen())
+
+    expected = """\
+try:
+    from setuptools import setup
+    from setuptools import Extension
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
+from Cython.Build import cythonize
+cy_opts = {}
+
+ext_mods = [Extension(
+    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
+    include_dirs=[],
+    library_dirs=[],
+    libraries=[],
+    extra_compile_args=['-std=c99'],
+    extra_link_args=[]
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
+""" % {'num': CodeWrapper._module_counter}
+
+    temp_dir = tempfile.mkdtemp()
+    setup_file_path = os.path.join(temp_dir, 'setup.py')
+
+    code_gen._prepare_files(routine, build_dir=temp_dir)
+    with open(setup_file_path) as f:
+        setup_text = f.read()
+    assert setup_text == expected
+
+    code_gen = CythonCodeWrapper(CCodeGen(),
+                                 include_dirs=['/usr/local/include', '/opt/booger/include'],
+                                 library_dirs=['/user/local/lib'],
+                                 libraries=['thelib', 'nilib'],
+                                 extra_compile_args=['-slow-math'],
+                                 extra_link_args=['-lswamp', '-ltrident'],
+                                 cythonize_options={'compiler_directives': {'boundscheck': False}}
+                                 )
+    expected = """\
+try:
+    from setuptools import setup
+    from setuptools import Extension
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
+from Cython.Build import cythonize
+cy_opts = {'compiler_directives': {'boundscheck': False}}
+
+ext_mods = [Extension(
+    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
+    include_dirs=['/usr/local/include', '/opt/booger/include'],
+    library_dirs=['/user/local/lib'],
+    libraries=['thelib', 'nilib'],
+    extra_compile_args=['-slow-math', '-std=c99'],
+    extra_link_args=['-lswamp', '-ltrident']
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
+""" % {'num': CodeWrapper._module_counter}
+
+    code_gen._prepare_files(routine, build_dir=temp_dir)
+    with open(setup_file_path) as f:
+        setup_text = f.read()
+    assert setup_text == expected
+
+    expected = """\
+try:
+    from setuptools import setup
+    from setuptools import Extension
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
+from Cython.Build import cythonize
+cy_opts = {'compiler_directives': {'boundscheck': False}}
+import numpy as np
+
+ext_mods = [Extension(
+    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
+    include_dirs=['/usr/local/include', '/opt/booger/include', np.get_include()],
+    library_dirs=['/user/local/lib'],
+    libraries=['thelib', 'nilib'],
+    extra_compile_args=['-slow-math', '-std=c99'],
+    extra_link_args=['-lswamp', '-ltrident']
+)]
+setup(ext_modules=cythonize(ext_mods, **cy_opts))
+""" % {'num': CodeWrapper._module_counter}
+
+    code_gen._need_numpy = True
+    code_gen._prepare_files(routine, build_dir=temp_dir)
+    with open(setup_file_path) as f:
+        setup_text = f.read()
+    assert setup_text == expected
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
@@ -134,6 +239,18 @@ def test_autowrap_store_files():
         shutil.rmtree(tmp)
 
 
+def test_autowrap_store_files_issue_gh12939():
+    x, y = symbols('x y')
+    tmp = './tmp'
+    try:
+        f = autowrap(x + y, backend='dummy', tempdir=tmp)
+        assert f() == str(x + y)
+        assert os.access(tmp, os.F_OK)
+    finally:
+        shutil.rmtree(tmp)
+
+
+
 def test_binary_function():
     x, y = symbols('x y')
     f = binary_function('f', x + y, backend='dummy')
@@ -142,7 +259,7 @@ def test_binary_function():
 
 def test_ufuncify_source():
     x, y, z = symbols('x,y,z')
-    code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"))
+    code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
     CodeWrapper._module_counter = 0
     routine = make_routine("test", x + y + z)
     source = get_string(code_wrapper.dump_c, [routine])
@@ -237,7 +354,7 @@ def test_ufuncify_source_multioutput():
     x, y, z = symbols('x,y,z')
     var_symbols = (x, y, z)
     expr = x + y**3 + 10*z**2
-    code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"))
+    code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
     CodeWrapper._module_counter = 0
     routines = [make_routine("func{}".format(i), expr.diff(var_symbols[i]), var_symbols) for i in range(len(var_symbols))]
     source = get_string(code_wrapper.dump_c, routines, funcname='multitest')

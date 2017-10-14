@@ -21,7 +21,17 @@ from sympy.core.containers import Dict
 import random
 
 class FiniteDensity(dict):
+    """
+    A domain with Finite Density.
+    """
     def __call__(self, item):
+        """
+        Make instance of a class callable.
+
+        If item belongs to current instance of a class, return it.
+
+        Otherwise, return 0.
+        """
         item = sympify(item)
         if item in self:
             return self[item]
@@ -30,6 +40,9 @@ class FiniteDensity(dict):
 
     @property
     def dict(self):
+        """
+        Return item as dictionary.
+        """
         return dict(self)
 
 class FiniteDomain(RandomDomain):
@@ -143,6 +156,11 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
 
     def _test(self, elem):
+        """
+        Test the value. If value is boolean, return it. If value is equality
+        relational (two objects are equal), return it with left-hand side
+        being equal to right-hand side. Otherwise, raise ValueError exception.
+        """
         val = self.condition.xreplace(dict(elem))
         if val in [True, False]:
             return val

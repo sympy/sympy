@@ -1,15 +1,17 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
+from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
-                                        reduce_abs_inequality)
+                                        reduce_abs_inequality,
+                                        _solve_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
 from sympy.utilities.pytest import raises, slow, XFAIL
@@ -273,6 +275,11 @@ def test_solve_univariate_inequality():
     # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
+    #issue 13105
+    assert isolve((x + I)*(x + 2*I) < 0, x) == Eq(x, 0)
+    assert isolve(((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I) < 0, x) == Or(Eq(x, 1), Eq(x, 2))
+    assert isolve((((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I))/(x - 2) > 0, x) == Eq(x, 1)
+    raises (ValueError, lambda: isolve((x**2 - 3*x*I + 2)/x < 0, x))
 
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
@@ -288,24 +295,38 @@ def test_solve_univariate_inequality():
 
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
+    c1 = Dummy("c1", positive=True)
+    raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
+    n = Dummy('n', negative=True)
+    assert isolve(n/c1 > -2, c1) == (-n/2 < c1)
+    assert isolve(n/c1 < 0, c1) == True
+    assert isolve(n/c1 > 0, c1) == False
+
+    zero = cos(1)**2 + sin(1)**2 - 1
+    raises(NotImplementedError, lambda: isolve(x**2 < zero, x))
+    raises(NotImplementedError, lambda: isolve(
+        x**2 < zero*I, x))
+    raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
+    raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
+    raises(TypeError, lambda: isolve(x - I < 0, x))
 
 
 def test_trig_inequalities():
     # all the inequalities are solved in a periodic interval.
     assert isolve(sin(x) < S.Half, x, relational=False) == \
-        Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, True))
+        Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, False))
     assert isolve(sin(x) > S.Half, x, relational=False) == \
         Interval(pi/6, 5*pi/6, True, True)
     assert isolve(cos(x) < S.Zero, x, relational=False) == \
         Interval(pi/2, 3*pi/2, True, True)
     assert isolve(cos(x) >= S.Zero, x, relational=False) == \
-        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
+        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi))
 
     assert isolve(tan(x) < S.One, x, relational=False) == \
-        Union(Interval(0, pi/4, False, True), Interval(pi/2, pi, True, True))
+        Union(Interval.Ropen(0, pi/4), Interval.Lopen(pi/2, pi))
 
     assert isolve(sin(x) <= S.Zero, x, relational=False) == \
-        Union(FiniteSet(S(0)), Interval(pi, 2*pi, False, True))
+        Union(FiniteSet(S(0)), Interval(pi, 2*pi))
 
     assert isolve(sin(x) <= S(1), x, relational=False) == S.Reals
     assert isolve(cos(x) < S(-2), x, relational=False) == S.EmptySet
@@ -365,4 +386,52 @@ def test_issue_10268():
 def test_isolve_Sets():
     n = Dummy('n')
     assert isolve(Abs(x) <= n, x, relational=False) == \
-        Piecewise((S.EmptySet, n<S(0)), (Interval(-n, n), True))
+        Piecewise((S.EmptySet, n < 0), (Interval(-n, n), True))
+
+
+def test_issue_10671_12466():
+    assert solveset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
+    i = Interval(1, 10)
+    assert solveset((1/x).diff(x) < 0, x, i) == i
+    assert solveset((log(x - 6)/x) <= 0, x, S.Reals) == \
+        Interval.Lopen(6, 7)
+
+
+def test__solve_inequality():
+    for op in (Gt, Lt, Le, Ge, Eq, Ne):
+        assert _solve_inequality(op(x, 1), x).lhs == x
+        assert _solve_inequality(op(S.One, x), x).lhs == x
+    # don't get tricked by symbol on right: solve it
+    assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
+    ie = Eq(S.One, y)
+    assert _solve_inequality(ie, x) == ie
+    for fx in (x**2, exp(x), sin(x) + cos(x), x*(1 + x)):
+        for c in (0, 1):
+            e = 2*fx - c > 0
+            assert _solve_inequality(e, x, linear=True) == (
+                fx > c/2)
+    assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x, linear=True) == (
+        x*(x + 1) < S.Half)
+    assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)
+    nz = Symbol('nz', nonzero=True)
+    assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)
+    assert _solve_inequality(x*nz < 1, x) == (x*nz < 1)
+    a = Symbol('a', positive=True)
+    assert _solve_inequality(a/x > 1, x, linear=True) == (1/x > 1/a)
+    # make sure to include conditions under which solution is valid
+    e = Eq(1 - x, x*(1/x - 1))
+    assert _solve_inequality(e, x) == Ne(x, 0)
+    assert _solve_inequality(x < x*(1/x - 1), x) == (x < S.Half) & Ne(x, 0)
+
+
+def test__pt():
+    from sympy.solvers.inequalities import _pt
+    assert _pt(-oo, oo) == 0
+    assert _pt(S(1), S(3)) == 2
+    assert _pt(S(1), oo) == _pt(oo, S(1)) == 2
+    assert _pt(S(1), -oo) == _pt(-oo, S(1)) == S.Half
+    assert _pt(S(-1), oo) == _pt(oo, S(-1)) == -S.Half
+    assert _pt(S(-1), -oo) == _pt(-oo, S(-1)) == -2
+    assert _pt(x, oo) == _pt(oo, x) == x + 1
+    assert _pt(x, -oo) == _pt(-oo, x) == x - 1
+    raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S(1)))

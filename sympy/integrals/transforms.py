@@ -911,27 +911,27 @@ def _simplifyconds(expr, s, a):
             Else return None. """
         if ex1.has(s) and ex2.has(s):
             return None
-        if ex1.func is Abs:
+        if isinstance(ex1, Abs):
             ex1 = ex1.args[0]
-        if ex2.func is Abs:
+        if isinstance(ex2, Abs):
             ex2 = ex2.args[0]
         if ex1.has(s):
-            try:
-                return bigger(1/ex2, 1/ex1)
-            except TypeError:
-                return None
+            return bigger(1/ex2, 1/ex1)
         n = power(ex2)
         if n is None:
             return None
-        if n > 0 and (abs(ex1) <= abs(a)**n) == True:
-            return False
-        if n < 0 and (abs(ex1) >= abs(a)**n) == True:
-            return True
+        try:
+            if n > 0 and (abs(ex1) <= abs(a)**n) == True:
+                return False
+            if n < 0 and (abs(ex1) >= abs(a)**n) == True:
+                return True
+        except TypeError:
+            pass
 
     def replie(x, y):
         """ simplify x < y """
-        if not (x.is_positive or x.func is Abs) \
-                or not (y.is_positive or y.func is Abs):
+        if not (x.is_positive or isinstance(x, Abs)) \
+                or not (y.is_positive or isinstance(y, Abs)):
             return (x < y)
         r = bigger(x, y)
         if r is not None:
@@ -1712,7 +1712,7 @@ def inverse_cosine_transform(F, k, x, **hints):
 
 @_noconds_(True)
 def _hankel_transform(f, r, k, nu, name, simplify=True):
-    """
+    r"""
     Compute a general Hankel transform
 
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.

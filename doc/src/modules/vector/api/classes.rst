@@ -1,14 +1,14 @@
-=============================================
-Essential Classes in sympy.vector (doctrings)
-=============================================
+==============================================
+Essential Classes in sympy.vector (docstrings)
+==============================================
 
-CoordSysCartesian
+CoordSys3D
 =================
 
-.. autoclass:: sympy.vector.coordsysrect.CoordSysCartesian
+.. autoclass:: sympy.vector.coordsysrect.CoordSys3D
    :members:
 
-   .. automethod:: sympy.vector.coordsysrect.CoordSysCartesian.__init__
+   .. automethod:: sympy.vector.coordsysrect.CoordSys3D.__init__
 
 
 Vector
