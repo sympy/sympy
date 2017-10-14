@@ -507,4 +507,6 @@ def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo
 
 def test_issue_13382():
-    assert limit(x*(((x + 1)**2 + 1)/(x**2 + 1) - 1), x, oo) == S(2)
+    assert limit(x*(((x + 1)**2 + 1)/(x**2 + 1) - 1), x, oo) == 2
+    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x ,oo) == 1
+    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x ,oo) == 1
