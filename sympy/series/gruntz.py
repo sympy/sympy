@@ -410,7 +410,7 @@ def sign(e, x):
 @debug
 @timeit
 @cacheit
-def limitinf(e, x,simp=False):
+def limitinf(e, x, simp=False):
     """Limit e(x) for x-> oo"""
     # rewrite e in terms of tractable functions only
     e = e.rewrite('tractable', deep=True)
