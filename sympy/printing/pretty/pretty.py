@@ -1990,7 +1990,7 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.right(self._print(d.symbols)))
             return pform
         else:
-            return None
+            return self._print(None)
 
     def _print_DMP(self, p):
         try:

@@ -123,10 +123,8 @@ class StrPrinter(Printer):
         elif hasattr(d, 'set'):
             return ('Domain: ' + self._print(d.symbols) + ' in ' +
                     self._print(d.set))
-        elif hasattr(d, 'symbols'):
-            return 'Domain on ' + self._print(d.symbols)
         else:
-            return None
+            return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr):
         return '_' + expr.name

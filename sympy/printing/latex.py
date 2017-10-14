@@ -1572,7 +1572,7 @@ class LatexPrinter(Printer):
         elif hasattr(d, 'symbols'):
             return 'Domain on ' + self._print(d.symbols)
         else:
-            return None
+            return self._print(None)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
