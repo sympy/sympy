@@ -119,8 +119,44 @@ class Boolean(Basic):
         return self
 
     def as_set(self):
-        # override where necessary
-        return S.UniversalSet
+        """
+        Rewrites Boolean expression in terms of real sets.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Eq, Or, And
+        >>> x = Symbol('x', real=True)
+        >>> Eq(x, 0).as_set()
+        {0}
+        >>> (x > 0).as_set()
+        Interval.open(0, oo)
+        >>> And(-2 < x, x < 2).as_set()
+        Interval.open(-2, 2)
+        >>> Or(x < -2, 2 < x).as_set()
+        Union(Interval.open(-oo, -2), Interval.open(2, oo))
+        """
+        from sympy.calculus.util import periodicity
+        from sympy.core.relational import Relational
+        free = self.free_symbols
+        if len(free) == 1:
+            x = free.pop()
+            reps = {}
+            for r in self.atoms(Relational):
+                if periodicity(r, x) not in (0, None):
+                    s = r._eval_as_set()
+                    if s in (S.EmptySet, S.UniversalSet, S.Reals):
+                        reps[r] = s.as_relational(x)
+                        continue
+                    raise NotImplementedError(filldedent('''
+                        as_set is not implemented for relationals
+                        with periodic solutions
+                        '''))
+            return self.subs(reps)._eval_as_set()
+        else:
+            raise NotImplementedError("Sorry, as_set has not yet been"
+                                      " implemented for multivariate"
+                                      " expressions")
 
     @property
     def binary_symbols(self):
@@ -356,8 +392,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
         >>> false.as_set()
         EmptySet()
         """
-        from sympy.sets.sets import EmptySet
-        return EmptySet()
+        return S.EmptySet
 
 true = BooleanTrue()
 false = BooleanFalse()
@@ -507,29 +542,9 @@ class And(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
-    def as_set(self):
-        """
-        Rewrite logic operators and relationals in terms of real sets.
-
-        Examples
-        ========
-
-        >>> from sympy import And, Symbol
-        >>> x = Symbol('x', real=True)
-        >>> And(x<2, x>-2).as_set()
-        Interval.open(-2, 2)
-        """
+    def _eval_as_set(self):
         from sympy.sets.sets import Intersection
-        if len(self.free_symbols) == 1:
-            return Intersection(*[arg.as_set() for arg in self.args])
-        else:
-            raise NotImplementedError("Sorry, And.as_set has not yet been"
-                                      " implemented for multivariate"
-                                      " expressions")
-
-    @property
-    def binary_symbols(self):
-        return set().union(*[i.binary_symbols for i in self.args])
+        return Intersection(*[arg.as_set() for arg in self.args])
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -580,25 +595,9 @@ class Or(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 
-    def as_set(self):
-        """
-        Rewrite logic operators and relationals in terms of real sets.
-
-        Examples
-        ========
-
-        >>> from sympy import Or, Symbol
-        >>> x = Symbol('x', real=True)
-        >>> Or(x>2, x<-2).as_set()
-        Union(Interval.open(-oo, -2), Interval.open(2, oo))
-        """
+    def _eval_as_set(self):
         from sympy.sets.sets import Union
-        if len(self.free_symbols) == 1:
-            return Union(*[arg.as_set() for arg in self.args])
-        else:
-            raise NotImplementedError("Sorry, Or.as_set has not yet been"
-                                      " implemented for multivariate"
-                                      " expressions")
+        return Union(*[arg.as_set() for arg in self.args])
 
 
 class Not(BooleanFunction):
@@ -681,7 +680,7 @@ class Not(BooleanFunction):
             pass
         return self.func(x)
 
-    def as_set(self):
+    def _eval_as_set(self):
         """
         Rewrite logic operators and relationals in terms of real sets.
 
@@ -693,12 +692,7 @@ class Not(BooleanFunction):
         >>> Not(x > 0).as_set()
         Interval(-oo, 0)
         """
-        if len(self.free_symbols) == 1:
-            return self.args[0].as_set().complement(S.Reals)
-        else:
-            raise NotImplementedError("Sorry, Not.as_set has not yet been"
-                                      " implemented for mutivariate"
-                                      " expressions")
+        return self.args[0].as_set().complement(S.Reals)
 
     def to_nnf(self, simplify=True):
         if is_literal(self):
@@ -1188,6 +1182,9 @@ class ITE(BooleanFunction):
     def to_nnf(self, simplify=True):
         a, b, c = self.args
         return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
+
+    def _eval_as_set(self):
+        return self.to_nnf().as_set()
 
     def _eval_rewrite_as_Piecewise(self, *args):
         from sympy.functions import Piecewise

@@ -884,6 +884,7 @@ def test_issue_4527():
         (m*sin(k*x)*cos(m*x)/(k**2 - m**2) -
          k*sin(m*x)*cos(k*x)/(k**2 - m**2), True))
 
+
 def test_issue_4199():
     ypos = Symbol('y', positive=True)
     # TODO: Remove conds='none' below, let the assumption take care of it.

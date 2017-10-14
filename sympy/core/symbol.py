@@ -288,6 +288,9 @@ class Symbol(AtomicExpr, Boolean):
 
     binary_symbols = free_symbols  # in this case, not always
 
+    def as_set(self):
+        return S.UniversalSet
+
 
 class Dummy(Symbol):
     """Dummy symbols are each unique, even if they have the same name:

@@ -46,3 +46,6 @@ class Contains(BooleanFunction):
             for i in self.args[1].args
             if i.is_Boolean or i.is_Symbol or
             isinstance(i, (Eq, Ne))])
+
+    def as_set(self):
+        return self

@@ -404,6 +404,7 @@ class LatticeOp(AssocOp):
 
     def __new__(cls, *args, **options):
         args = (_sympify(arg) for arg in args)
+
         try:
             # /!\ args is a generator and _new_args_filter
             # must be careful to handle as such; this

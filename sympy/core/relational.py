@@ -230,32 +230,14 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     __bool__ = __nonzero__
 
-    def as_set(self):
-        """
-        Rewrites univariate inequality in terms of real sets
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol, Eq
-        >>> x = Symbol('x', real=True)
-        >>> (x > 0).as_set()
-        Interval.open(0, oo)
-        >>> Eq(x, 0).as_set()
-        {0}
-
-        """
+    def _eval_as_set(self):
+        # self is univariate and periodicity(self, x) in (0, None)
+        from sympy.solvers.solveset import solveset
         from sympy.solvers.inequalities import solve_univariate_inequality
         syms = self.free_symbols
-
-        if len(syms) == 1:
-            sym = syms.pop()
-        else:
-            raise NotImplementedError("Sorry, Relational.as_set procedure"
-                                      " is not yet implemented for"
-                                      " multivariate expressions")
-
-        return solve_univariate_inequality(self, sym, relational=False)
+        assert len(syms) == 1
+        x = syms.pop()
+        return solve_univariate_inequality(self, x, relational=False)
 
     @property
     def binary_symbols(self):
