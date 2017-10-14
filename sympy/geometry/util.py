@@ -23,61 +23,6 @@ def _ordered_points(p):
     return tuple(sorted(p, key=lambda x: x.args))
 
 
-def _symbol(s, matching_symbol=None):
-    """Return s if s is a Symbol, else return either a new Symbol (real=True)
-    with the same name s or the matching_symbol if s is a string and it matches
-    the name of the matching_symbol.
-
-    >>> from sympy import Symbol
-    >>> from sympy.geometry.util import _symbol
-    >>> x = Symbol('x')
-    >>> _symbol('y')
-    y
-    >>> _.is_real
-    True
-    >>> _symbol(x)
-    x
-    >>> _.is_real is None
-    True
-    >>> arb = Symbol('foo')
-    >>> _symbol('arb', arb) # arb's name is foo so foo will not be returned
-    arb
-    >>> _symbol('foo', arb) # now it will
-    foo
-
-    NB: the symbol here may not be the same as a symbol with the same
-    name defined elsewhere as a result of different assumptions.
-
-    See Also
-    ========
-
-    sympy.core.symbol.Symbol
-
-    """
-    if isinstance(s, string_types):
-        if matching_symbol and matching_symbol.name == s:
-            return matching_symbol
-        return Symbol(s, real=True)
-    elif isinstance(s, Symbol):
-        return s
-    else:
-        raise ValueError('symbol must be string for symbol name or Symbol')
-
-
-def _uniquely_named_symbol(xname, *exprs):
-    """Return a symbol which, when printed, will have a name unique
-    from any other already in the expressions given. The name is made
-    unique by prepending underscores.
-    """
-    prefix = '%s'
-    x = prefix % xname
-    syms = set().union(*[e.free_symbols for e in exprs])
-    while any(x == str(s) for s in syms):
-        prefix = '_' + prefix
-        x = prefix % xname
-    return _symbol(x)
-
-
 def are_coplanar(*e):
     """ Returns True if the given entities are coplanar otherwise False
 

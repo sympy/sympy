@@ -639,7 +639,7 @@ def gruntz(e, z, z0, dir="+"):
     file. It relies heavily on the series expansion. Most frequently, gruntz()
     is only used if the faster limit() function (which uses heuristics) fails.
     """
-    if not z.is_Symbol:
+    if not z.is_symbol:
         raise NotImplementedError("Second argument must be a Symbol")
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf

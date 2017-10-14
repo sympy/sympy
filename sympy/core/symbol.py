@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import string_types, range, is_sequence
 from .basic import Basic
 from .sympify import sympify
 from .singleton import S
@@ -15,6 +15,115 @@ from sympy.utilities.iterables import cartes
 import string
 import re as _re
 import random
+
+
+def _symbol(s, matching_symbol=None, **assumptions):
+    """Return s if s is a Symbol, else if s is a string, return either
+    the matching_symbol if the names are the same or else a new symbol
+    with the same assumptions as the matching symbol (or the
+    assumptions as provided).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Dummy
+    >>> from sympy.core.symbol import _symbol
+    >>> _symbol('y')
+    y
+    >>> _.is_real is None
+    True
+    >>> _symbol('y', real=True).is_real
+    True
+
+    >>> x = Symbol('x')
+    >>> _symbol(x, real=True)
+    x
+    >>> _.is_real is None  # ignore attribute if s is a Symbol
+    True
+
+    Below, the variable sym has the name 'foo':
+
+    >>> sym = Symbol('foo', real=True)
+
+    Since 'x' is not the same as sym's name, a new symbol is created:
+
+    >>> _symbol('x', sym).name
+    'x'
+
+    It will acquire any assumptions give:
+
+    >>> _symbol('x', sym, real=False).is_real
+    False
+
+    Since 'foo' is the same as sym's name, sym is returned
+
+    >>> _symbol('foo', sym)
+    foo
+
+    Any assumptions given are ignored:
+
+    >>> _symbol('foo', sym, real=False).is_real
+    True
+
+    NB: the symbol here may not be the same as a symbol with the same
+    name defined elsewhere as a result of different assumptions.
+
+    See Also
+    ========
+
+    sympy.core.symbol.Symbol
+
+    """
+    if isinstance(s, string_types):
+        if matching_symbol and matching_symbol.name == s:
+            return matching_symbol
+        return Symbol(s, **assumptions)
+    elif isinstance(s, Symbol):
+        return s
+    else:
+        raise ValueError('symbol must be string for symbol name or Symbol')
+
+
+def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
+    """Return a symbol which, when printed, will have a name unique
+    from any other already in the expressions given. The name is made
+    unique by prepending underscores (default) but this can be
+    customized with the keyword 'modify'.
+
+    Parameters
+    ==========
+
+        xname : a string or a Symbol (when symbol xname <- str(xname))
+        compare : a single arg function that takes a symbol and returns
+            a string to be compared with xname (the default is the str
+            function which indicates how the name will look when it
+            is printed, e.g. this includes underscores that appear on
+            Dummy symbols)
+        modify : a single arg function that changes its string argument
+            in some way (the default is to preppend underscores)
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import _uniquely_named_symbol as usym, Dummy
+    >>> from sympy.abc import x
+    >>> usym('x', x)
+    _x
+    """
+    default = None
+    if is_sequence(xname):
+        xname, default = xname
+    x = str(xname)
+    if not exprs:
+        return _symbol(x, default, **assumptions)
+    if not is_sequence(exprs):
+        exprs = [exprs]
+    syms = set().union(*[e.free_symbols for e in exprs])
+    if modify is None:
+        modify = lambda s: '_' + s
+    while any(x == compare(s) for s in syms):
+        x = modify(x)
+    return _symbol(x, default, **assumptions)
 
 
 class Symbol(AtomicExpr, Boolean):

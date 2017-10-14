@@ -1,3 +1,4 @@
+from distutils.version import LooseVersion as V
 from itertools import product
 import math
 
@@ -506,7 +507,10 @@ def test_tensorflow_variables():
     func = lambdify(x, expr, modules="tensorflow")
     a = tensorflow.Variable(0, dtype=tensorflow.float32)
     s = tensorflow.Session()
-    s.run(tensorflow.initialize_all_variables())
+    if V(tensorflow.__version__) < '1.0':
+        s.run(tensorflow.initialize_all_variables())
+    else:
+        s.run(tensorflow.global_variables_initializer())
     assert func(a).eval(session=s) == 0.5
 
 def test_tensorflow_logical_operations():

@@ -20,6 +20,7 @@ from __future__ import division, print_function
 
 from sympy.core import S, sympify
 from sympy.core.relational import Eq
+from sympy.core.symbol import _symbol
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -31,7 +32,6 @@ from sympy.matrices import Matrix
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
-from .util import _symbol
 from sympy.utilities.misc import Undecidable
 
 
@@ -227,7 +227,7 @@ class LinearEntity(GeometrySet):
         Point3D(4*t + 1, 3*t, t)
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError(filldedent('''
                 Symbol %s already appears in object
@@ -1140,7 +1140,7 @@ class Line(LinearEntity):
         [t, -5, 5]
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         return [t, -5, 5]
 
 
@@ -1354,7 +1354,7 @@ class Ray(LinearEntity):
         [t, 0, 10]
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         return [t, 0, 10]
 
     @property
@@ -1660,7 +1660,7 @@ class Segment(LinearEntity):
         [t, 0, 1]
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         return [t, 0, 1]
 
 
@@ -1938,7 +1938,8 @@ class Line2D(LinearEntity2D, Line):
         -3*x + 4*y + 3
 
         """
-        x, y = _symbol(x), _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
         p1, p2 = self.points
         if p1.x == p2.x:
             return x - p1.x
@@ -2380,7 +2381,7 @@ class Line3D(LinearEntity3D, Line):
         (x/4 - 1/4, y/3, zoo*z, k)
 
         """
-        x, y, z, k = _symbol(x), _symbol(y), _symbol(z), _symbol(k)
+        x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, k)]
         p1, p2 = self.points
         a = p1.direction_ratio(p2)
         return (((x - p1.x)/a[0]), ((y - p1.y)/a[1]),

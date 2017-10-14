@@ -1,26 +1,28 @@
 from __future__ import print_function, division
 
 import collections
+from sympy.assumptions.refine import refine
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
-from sympy.core.symbol import Symbol, Dummy, symbols
+from sympy.core.symbol import (Symbol, Dummy, symbols,
+    _uniquely_named_symbol)
 from sympy.core.numbers import Integer, ilcm, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
+from sympy.functions import Abs, exp, factorial
+from sympy.polys import PurePoly, roots, cancel, gcd
+from sympy.printing import sstr
+from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+from sympy.core.compatibility import reduce, as_int, string_types
+
+from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
     NotIterable
 
-from sympy.polys import PurePoly, roots, cancel, gcd
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
-from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import Abs, exp, factorial
-from sympy.printing import sstr
-from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.assumptions.refine import refine
-from sympy.core.decorators import call_highest_priority
 
 from types import FunctionType
 
@@ -284,7 +286,7 @@ class MatrixDeterminant(MatrixCommon):
         """
         return self.cofactor_matrix(method).transpose()
 
-    def charpoly(self, x=Dummy('lambda'), simplify=_simplify):
+    def charpoly(self, x='lambda', simplify=_simplify):
         """Computes characteristic polynomial det(x*I - self) where I is
         the identity matrix.
 
@@ -300,21 +302,27 @@ class MatrixDeterminant(MatrixCommon):
         >>> A.charpoly(x) == A.charpoly(y)
         True
 
-        Specifying ``x`` is optional; a Dummy with name ``lambda`` is used by
+        Specifying ``x`` is optional; a symbol named ``lambda`` is used by
         default (which looks good when pretty-printed in unicode):
 
         >>> A.charpoly().as_expr()
-        _lambda**2 - _lambda - 6
+        lambda**2 - lambda - 6
 
-        No test is done to see that ``x`` doesn't clash with an existing
-        symbol, so using the default (``lambda``) or your own Dummy symbol is
-        the safest option:
+        And if ``x`` clashes with an existing symbol, underscores will
+        be preppended to the name to make it unique:
 
         >>> A = Matrix([[1, 2], [x, 0]])
-        >>> A.charpoly().as_expr()
-        _lambda**2 - _lambda - 2*x
         >>> A.charpoly(x).as_expr()
-        x**2 - 3*x
+        _x**2 - _x - 2*x
+
+        Whether you pass a symbol or not, the generator can be obtained
+        with the gen attribute since it may not be the same as the symbol
+        that was passed:
+
+        >>> A.charpoly(x).gen
+        _x
+        >>> A.charpoly(x).gen == x
+        False
 
         Notes
         =====
@@ -334,6 +342,7 @@ class MatrixDeterminant(MatrixCommon):
             raise NonSquareMatrixError()
 
         berk_vector = self._eval_berkowitz_vector()
+        x = _uniquely_named_symbol(x, berk_vector)
         return PurePoly([simplify(a) for a in berk_vector], x)
 
     def cofactor(self, i, j, method="berkowitz"):
@@ -2501,7 +2510,7 @@ class MatrixBase(MatrixDeprecated,
 
         freevar : List
             If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of an arbitrary
+            rows), infinite solutions are possible, in terms of arbitrary
             values of free variables. Then the index of the free variables
             in the solutions (column Matrix) will be returned by freevar, if
             the flag `freevar` is set to `True`.
@@ -2515,7 +2524,7 @@ class MatrixBase(MatrixDeprecated,
 
         params : Matrix
             If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of an arbitrary
+            rows), infinite solutions are possible, in terms of arbitrary
             parameters. These arbitrary parameters are returned as params
             Matrix.
 
@@ -2528,14 +2537,14 @@ class MatrixBase(MatrixDeprecated,
         >>> sol, params = A.gauss_jordan_solve(b)
         >>> sol
         Matrix([
-        [-2*_tau0 - 3*_tau1 + 2],
-        [                 _tau0],
-        [           2*_tau1 + 5],
-        [                 _tau1]])
+        [-2*tau0 - 3*tau1 + 2],
+        [                 tau0],
+        [           2*tau1 + 5],
+        [                 tau1]])
         >>> params
         Matrix([
-        [_tau0],
-        [_tau1]])
+        [tau0],
+        [tau1]])
 
         >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
         >>> b = Matrix([3, 6, 9])
@@ -2596,9 +2605,11 @@ class MatrixBase(MatrixDeprecated,
                          len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
-        dummygen = numbered_symbols("tau", Dummy)
-        tau = Matrix([next(dummygen) for k in range(col - rank)]).reshape(
-            col - rank, 1)
+        # what are current unnumbered free symbol names?
+        name = _uniquely_named_symbol('tau', aug,
+            compare=lambda i: str(i).rstrip('1234567890')).name
+        gen = numbered_symbols(name)
+        tau = Matrix([next(gen) for k in range(col - rank)]).reshape(col - rank, 1)
 
         # Full parametric solution
         V = A[:rank, rank:]
@@ -2808,8 +2819,9 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
-        x = Dummy('x')
-        if self.charpoly(x).args[0] == x ** self.rows:
+        x = _uniquely_named_symbol('x', self)
+        p = self.charpoly(x)
+        if p.args[0] == x ** self.rows:
             return True
         return False
 
