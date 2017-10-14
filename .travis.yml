@@ -93,7 +93,7 @@ matrix:
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
-    - python: 3.5 # Dummy value
+    - python: 3.6 # Dummy value
       env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
@@ -157,7 +157,7 @@ matrix:
 
   allow_failures:
     # The apt installation of sage fails sometimes
-    - python: 3.5 # Dummy value
+    - python: 3.6 # Dummy value
       env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
