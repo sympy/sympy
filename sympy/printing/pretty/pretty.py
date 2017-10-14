@@ -2052,20 +2052,35 @@ class PrettyPrinter(Printer):
         return prettyForm(binding=prettyForm.POW, *bot.below(top))
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             pform = self._print('Domain: ')
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
+<<<<<<< HEAD
+        elif hasattr(d, 'set'):
+            pform = self._print('Domain: ')
+            pform = prettyForm(*pform.right(self._print(d.symbols)))
+            pform = prettyForm(*pform.right(self._print(' in ')))
+            pform = prettyForm(*pform.right(self._print(d.set)))
+            return pform
+        elif hasattr(d, 'symbols'):
+            pform = self._print('Domain on ')
+            pform = prettyForm(*pform.right(self._print(d.symbols)))
+            return pform
+        else:
+            return self._print(None)
+=======
 
-        except Exception:
+        except AttributeError:
             try:
                 pform = self._print('Domain: ')
                 pform = prettyForm(*pform.right(self._print(d.symbols)))
                 pform = prettyForm(*pform.right(self._print(' in ')))
                 pform = prettyForm(*pform.right(self._print(d.set)))
                 return pform
-            except:
+            except IndexError:
                 return self._print(None)
+>>>>>>> 629fb159d... Replaced bare exceptions in printer module with explicit ones
 
     def _print_DMP(self, p):
         try:
