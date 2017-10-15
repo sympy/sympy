@@ -14,6 +14,8 @@ from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
 
+from sympy.core.compatibility import string_types
+
 from sympy.logic.boolalg import BooleanAtom
 
 from sympy.polys.polyclasses import DMP
@@ -5924,7 +5926,7 @@ def _symbolic_factor(expr, opt, method):
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
-        return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
+        return expr.func(*[_symbolic_factor(arg, opt, method) if not isinstance(arg, string_types) else arg for arg in expr.args])
     elif hasattr(expr, '__iter__'):
         return expr.__class__([_symbolic_factor(arg, opt, method) for arg in expr])
     else:

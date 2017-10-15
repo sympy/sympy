@@ -675,6 +675,11 @@ def test_issue_9324_simplify():
     e = M[0, 0] + M[5, 4] + 1304
     assert simplify(e) == e
 
+def test_MatrixSymbol_factor():
+    n, m = symbols('n m')
+    A = MatrixSymbol('A', n, m)
+    assert factor(A) == A
+
 
 def test_simplify_function_inverse():
     x, y = symbols('x, y')
