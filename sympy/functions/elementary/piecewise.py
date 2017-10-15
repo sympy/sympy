@@ -542,6 +542,24 @@ class Piecewise(Function):
                 pass
 
     def as_expr_set_pairs(self):
+        """Return tuples for each argument of self that give
+        the expression and the interval in which it is valid.
+        If a condition cannot be converted to a set, an error
+        will be raised. The variable of the conditions is
+        assumed to be real; sets of real values are returned.
+
+        Examples
+        ========
+        >>> from sympy import Piecewise
+        >>> from sympy.abc import x
+        >>> Piecewise(
+        ...     (1, x < 2),
+        ...     (2,(x > 0) & (x < 4)),
+        ...     (3, True)).as_expr_set_pairs()
+        [(1, Interval.open(-oo, 2)),
+         (2, Interval.Ropen(2, 4)),
+         (3, Interval(4, oo))]
+        """
         exp_sets = []
         U = S.Reals
         for expr, cond in self.args:
