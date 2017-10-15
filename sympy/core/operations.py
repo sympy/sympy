@@ -79,8 +79,8 @@ class AssocOp(Basic):
 
            Note: use this with caution. There is no checking of arguments at
            all. This is best used when you are rebuilding an Add or Mul after
-           simply removing one or more terms. If modification which result,
-           for example, in extra 1s being inserted (as when collecting an
+           simply removing one or more args. If, for example, modifications,
+           result in extra 1s being inserted (as when collecting an
            expression's numerators and denominators) they will not show up in
            the result but a Mul will be returned nonetheless:
 
@@ -180,29 +180,26 @@ class AssocOp(Basic):
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         from .function import WildFunction
         from .symbol import Wild
-        wild_part = []
-        exact_part = []
-        for p in ordered(self.args):
-            if p.has(Wild, WildFunction) and (not expr.has(p)):
-                # not all Wild should stay Wilds, for example:
-                # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
-                wild_part.append(p)
-            else:
-                exact_part.append(p)
-
-        if exact_part:
-            exact = self.func(*exact_part)
+        from sympy.utilities.iterables import sift
+        sifted = sift(self.args, lambda p:
+            p.has(Wild, WildFunction) and not expr.has(p))
+        wild_part = sifted[True]
+        exact_part = sifted[False]
+        if not exact_part:
+            wild_part = list(ordered(wild_part))
+        else:
+            exact = self._new_rawargs(*exact_part)
             free = expr.free_symbols
             if free and (exact.free_symbols - free):
                 # there are symbols in the exact part that are not
                 # in the expr; but if there are no free symbols, let
                 # the matching continue
                 return None
-            newpattern = self.func(*wild_part)
             newexpr = self._combine_inverse(expr, exact)
             if not old and (expr.is_Add or expr.is_Mul):
                 if newexpr.count_ops() > expr.count_ops():
                     return None
+            newpattern = self._new_rawargs(*wild_part)
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)

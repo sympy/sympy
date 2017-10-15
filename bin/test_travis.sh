@@ -24,7 +24,7 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
-    ./bin/test -k tensorflow
+    sage -t sympy/external/tests/test_sage.py
 fi
 
 # We change directories to make sure that we test the installed version of
@@ -33,16 +33,21 @@ mkdir empty
 cd empty
 
 if [[ "${TEST_ASCII}" == "true" ]]; then
-    export OLD_LANG=$LANG
-    export LANG=c
+    export OLD_LC_ALL=$LC_ALL
+    export LC_ALL=C
     cat <<EOF | python
 print('Testing ASCII')
+try:
+    print(u'\u2713')
+except UnicodeEncodeError:
+    pass
+else:
+    raise Exception('Not an ASCII-only environment')
 import sympy
-sympy.test('print')
+if not (sympy.test('print') and sympy.doctest()):
+    raise Exception('Tests failed')
 EOF
-    cd ..
-    bin/doctest
-    export LANG=$OLD_LANG
+    export LC_ALL=$OLD_LC_ALL
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
@@ -67,6 +72,7 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
+# lambdify with tensorflow is tested here
 if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
     cat << EOF | python
 print('Testing NUMPY')

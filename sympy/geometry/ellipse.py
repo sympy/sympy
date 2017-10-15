@@ -12,7 +12,7 @@ from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range, ordered
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -27,7 +27,7 @@ from sympy.utilities.decorator import doctest_depends_on
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
-from .util import _symbol, idiff
+from .util import idiff
 
 import random
 
@@ -252,7 +252,7 @@ class Ellipse(GeometrySet):
         Point2D(3*cos(t), 2*sin(t))
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError(filldedent('Symbol %s already appears in object '
                 'and cannot be used as a parameter.' % t.name))
@@ -442,8 +442,8 @@ class Ellipse(GeometrySet):
         y**2/4 + (x/3 - 1/3)**2 - 1
 
         """
-        x = _symbol(x)
-        y = _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
         t1 = ((x - self.center.x) / self.hradius)**2
         t2 = ((y - self.center.y) / self.vradius)**2
         return t1 + t2 - 1
@@ -474,8 +474,8 @@ class Ellipse(GeometrySet):
         """
         if len(self.args) != 3:
             raise NotImplementedError('Evolute of arbitrary Ellipse is not supported.')
-        x = _symbol(x)
-        y = _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
         t1 = (self.hradius*(x - self.center.x))**Rational(2, 3)
         t2 = (self.vradius*(y - self.center.y))**Rational(2, 3)
         return t1 + t2 - (self.hradius**2 - self.vradius**2)**Rational(2, 3)
@@ -1002,7 +1002,7 @@ class Ellipse(GeometrySet):
         [t, -pi, pi]
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         return [t, -S.Pi, S.Pi]
 
     def random_point(self, seed=None):
@@ -1067,7 +1067,7 @@ class Ellipse(GeometrySet):
 
         """
         from sympy import sin, cos, Rational
-        t = _symbol('t')
+        t = _symbol('t', real=True)
         x, y = self.arbitrary_point(t).args
         # get a random value in [-1, 1) corresponding to cos(t)
         # and confirm that it will test as being in the ellipse
@@ -1112,14 +1112,14 @@ class Ellipse(GeometrySet):
         zeros define the rotated ellipse is given.
 
         """
-        from .util import _uniquely_named_symbol
 
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            x, y = [_uniquely_named_symbol(name, self, line) for name in 'xy']
+            x, y = [_uniquely_named_symbol(
+                name, (self, line), real=True) for name in 'xy']
             expr = self.equation(x, y)
             p = Point(x, y).reflect(line)
             result = expr.subs(zip((x, y), p.args
@@ -1405,8 +1405,8 @@ class Circle(Ellipse):
         x**2 + y**2 - 25
 
         """
-        x = _symbol(x)
-        y = _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
         t1 = (x - self.center.x)**2
         t2 = (y - self.center.y)**2
         return t1 + t2 - self.major**2

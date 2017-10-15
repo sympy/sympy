@@ -434,6 +434,15 @@ class bell(Function):
 
     @classmethod
     def eval(cls, n, k_sym=None, symbols=None):
+        if n is S.Infinity:
+            if k_sym is None:
+                return S.Infinity
+            else:
+                raise ValueError("Bell polynomial is not defined")
+
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("a non-negative integer expected")
+
         if n.is_Integer and n.is_nonnegative:
             if k_sym is None:
                 return Integer(cls._bell(int(n)))

@@ -14,6 +14,7 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex)
 from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
@@ -26,12 +27,15 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
-from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens
+from sympy.solvers.solvers import (checksol, denoms, unrad,
+    _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.calculus.util import periodicity, continuous_domain
-from sympy.core.compatibility import ordered, default_sort_key
+from sympy.core.compatibility import ordered, default_sort_key, is_sequence
+
+from types import GeneratorType
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -906,9 +910,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
-    elif not getattr(symbol, 'is_Symbol', False):
-        raise ValueError('A Symbol must be given, not type %s: %s' %
-            (type(symbol), symbol))
+    elif not isinstance(symbol, Symbol):
+        s = Dummy()
+        f = f.subs(symbol, s)
+        # the xreplace will be needed if a ConditionSet is returned
+        return solveset(f, s, domain).xreplace({s: symbol})
 
     if isinstance(f, Eq):
         from sympy.core import Add
@@ -1166,31 +1172,25 @@ def linsolve(system, *symbols):
 
     `system = (A, b)`
 
-    Symbols to solve for should be given as input in all the
-    cases either in an iterable or as comma separated arguments.
-    This is done to maintain consistency in returning solutions
-    in the form of variable input by the user.
+    Symbols can always be passed but are actually only needed
+    when 1) a system of equations is being passed and 2) the
+    system is passed as an underdetermined matrix and one wants
+    to control the name of the free variables in the result.
+    An error is raised if no symbols are used for case 1, but if
+    no symbols are provided for case 2, internally generated symbols
+    will be provided. When providing symbols for case 2, there should
+    be at least as many symbols are there are columns in matrix A.
 
     The algorithm used here is Gauss-Jordan elimination, which
-    results, after elimination, in an row echelon form matrix.
+    results, after elimination, in a row echelon form matrix.
 
     Returns
     =======
 
-    A FiniteSet of ordered tuple of values of `symbols` for which
-    the `system` has solution.
-
-    Please note that general FiniteSet is unordered, the solution
-    returned here is not simply a FiniteSet of solutions, rather
-    it is a FiniteSet of ordered tuple, i.e. the first & only
-    argument to FiniteSet is a tuple of solutions, which is ordered,
-    & hence the returned solution is ordered.
-
-    Also note that solution could also have been returned as an
-    ordered tuple, FiniteSet is just a wrapper `{}` around
-    the tuple. It has no other significance except for
-    the fact it is just used to maintain a consistent output
-    format throughout the solveset.
+    A FiniteSet containing an ordered tuple of values for the
+    unknowns for which the `system` has a solution. (Wrapping
+    the tuple in FiniteSet is used to maintain a consistent
+    output format throughout solveset.)
 
     Returns EmptySet(), if the linear system is inconsistent.
 
@@ -1221,20 +1221,27 @@ def linsolve(system, *symbols):
     >>> linsolve((A, b), [x, y, z])
     {(-1, 2, 0)}
 
-    * Parametric Solution: In case the system is under determined, the function
-      will return parametric solution in terms of the given symbols.
-      Free symbols in the system are returned as it is. For e.g. in the system
-      below, `z` is returned as the solution for variable z, which means z is a
-      free symbol, i.e. it can take arbitrary values.
+    * Parametric Solution: In case the system is underdetermined, the
+      function will return a parametric solution in terms of the given
+      symbols. Those that are free will be returned unchanged. e.g. in
+      the system below, `z` is returned as the solution for variable z;
+      it can take on any value.
 
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> b = Matrix([3, 6, 9])
-    >>> linsolve((A, b), [x, y, z])
+    >>> linsolve((A, b), x, y, z)
     {(z - 1, -2*z + 2, z)}
+
+    If no symbols are given, internally generated symbols will be used.
+    The `tau0` in the 3rd position indicates (as before) that the 3rd
+    variable -- whatever it's named -- can take on any value:
+
+    >>> linsolve((A, b))
+    {(tau0 - 1, -2*tau0 + 2, tau0)}
 
     * List of Equations as input
 
-    >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + S(1)/2*y - z]
+    >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + y/2 - z]
     >>> linsolve(Eqns, x, y, z)
     {(1, -2, -2)}
 
@@ -1273,25 +1280,30 @@ def linsolve(system, *symbols):
         return S.EmptySet
 
     # If second argument is an iterable
-    if hasattr(symbols[0], '__iter__'):
+    if symbols and hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
+    sym_gen = isinstance(symbols, GeneratorType)
 
-    if not any([hasattr(symbols[0], attr) for attr in ['is_Symbol', 'is_Function']]):
-        raise ValueError('Symbols or iterable of symbols must be given as '
-                         'second argument, not type %s: %s' % (type(symbols[0]), symbols[0]))
+    swap = {}
+    b = None  # if we don't get b the input was bad
+    syms_needed_msg = None
 
-    # 1). Augmented Matrix input Form
-    if isinstance(system, Matrix):
-        A, b = system[:, :-1], system[:, -1:]
+    # unpack system
 
-    elif hasattr(system, '__iter__'):
+    if hasattr(system, '__iter__'):
 
-        # 2). A & b as input Form
-        if len(system) == 2 and system[0].is_Matrix:
+        # 1). (A, b)
+        if len(system) == 2 and isinstance(system[0], Matrix):
             A, b = system
 
-        # 3). List of equations Form
-        if not system[0].is_Matrix:
+        # 2). (eq1, eq2, ...)
+        if not isinstance(system[0], Matrix):
+            if sym_gen or not symbols:
+                raise ValueError(filldedent('''
+                    When passing a system of equations, the explicit
+                    symbols for which a solution is being sought must
+                    be given as a sequence, too.
+                '''))
             system = list(system)
             for i, eq in enumerate(system):
                 try:
@@ -1301,12 +1313,34 @@ def linsolve(system, *symbols):
                     if any (degree(eq, sym) > 1 for sym in symbols):
                         raise PolynomialError
                 except PolynomialError:
-                        raise ValueError(filldedent(
-'%s contains non-linear terms of variables to be evaluated') %(eq))
+                    raise ValueError(filldedent('''
+                        %s contains non-linear terms in the
+                        variables to be evaluated
+                    ''') % eq)
+            system, symbols, swap = recast_to_symbols(system, symbols)
             A, b = linear_eq_to_matrix(system, symbols)
+            syms_needed_msg = 'free symbols in the equations provided'
 
-    else:
+    elif isinstance(system, Matrix) and not (
+            symbols and not isinstance(symbols, GeneratorType) and
+            isinstance(symbols[0], Matrix)):
+        # 3). A augmented with b
+        A, b = system[:, :-1], system[:, -1:]
+
+    if b is None:
         raise ValueError("Invalid arguments")
+
+    syms_needed_msg  = syms_needed_msg or 'columns of A'
+
+    if sym_gen:
+        symbols = [next(symbols) for i in range(A.cols)]
+        if any(set(symbols) & (A.free_symbols | b.free_symbols)):
+            raise ValueError(filldedent('''
+                At least one of the symbols provided
+                already appears in the system to be solved.
+                One way to avoid this is to use Dummy symbols in
+                the generator, e.g. numbered_symbols('%s', cls=Dummy)
+            ''' % symbols[0].name.rstrip('1234567890')))
 
     try:
         solution, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
@@ -1315,9 +1349,26 @@ def linsolve(system, *symbols):
         return S.EmptySet
 
     # Replace free parameters with free symbols
-    replace_dict = {v: symbols[free_syms[k]] for k, v in enumerate(params)}
-    solution = [simplify(sol.xreplace(replace_dict)) for sol in solution]
+    if params:
+        if not symbols:
+            symbols = [_ for _ in params]
+            # re-use the parameters but put them in order
+            # params       [x, y, z]
+            # free_symbols [2, 0, 4]
+            # idx          [1, 0, 2]
+            idx = list(zip(*sorted(zip(free_syms, range(len(free_syms))))))[1]
+            # simultaneous replacements {y: x, x: y, z: z}
+            replace_dict = dict(zip(symbols, [symbols[i] for i in idx]))
+        elif len(symbols) >= A.cols:
+            replace_dict = {v: symbols[free_syms[k]] for k, v in enumerate(params)}
+        else:
+            raise IndexError(filldedent('''
+                the number of symbols passed should have a length
+                equal to the number of %s.
+                ''' % syms_needed_msg))
+        solution = [sol.xreplace(replace_dict) for sol in solution]
 
+    solution = [simplify(sol).xreplace(swap) for sol in solution]
     return FiniteSet(tuple(solution))
 
 
@@ -2114,19 +2165,15 @@ def nonlinsolve(system, *symbols):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    try:
-        sym = symbols[0].is_Symbol
-    except AttributeError:
-        sym = False
-    except IndexError:
+    if not is_sequence(symbols) or not symbols:
         msg = ('Symbols must be given, for which solution of the '
                'system is to be found.')
         raise IndexError(filldedent(msg))
 
-    if not sym:
-        msg = ('Symbols or iterable of symbols must be given as '
-               'second argument, not type %s: %s')
-        raise ValueError(filldedent(msg % (type(symbols[0]), symbols[0])))
+    system, symbols, swap = recast_to_symbols(system, symbols)
+    if swap:
+        soln = nonlinsolve(system, symbols)
+        return FiniteSet(*[tuple(i.xreplace(swap) for i in s) for s in soln])
 
     if len(system) == 1 and len(symbols) == 1:
         return _solveset_work(system, symbols)
@@ -2136,7 +2183,7 @@ def nonlinsolve(system, *symbols):
         system, symbols)
 
     if len(symbols) == len(polys):
-        # If all the equations in the system is poly
+        # If all the equations in the system are poly
         if is_zero_dimensional(polys, symbols):
             # finite number of soln (Zero dimensional system)
             try:

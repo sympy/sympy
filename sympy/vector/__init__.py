@@ -6,8 +6,9 @@ from sympy.vector.scalar import BaseScalar
 from sympy.vector.deloperator import Del
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.functions import (express, matrix_to_vector,
-                                    is_conservative, is_solenoidal,
-                                    scalar_potential, directional_derivative,
+                                    laplacian, is_conservative,
+                                    is_solenoidal, scalar_potential,
+                                    directional_derivative,
                                     scalar_potential_difference)
 from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
