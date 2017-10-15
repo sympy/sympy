@@ -1773,12 +1773,18 @@ class Subs(Expr):
             return self
 
     def _eval_derivative(self, s):
-        if s not in self.free_symbols:
+        if s not in self.free_symbols and (not s.is_Indexed):
             return S.Zero
-        return Add((Subs(self.expr.diff(s), self.variables, self.point).doit()
-            if s not in self.variables else S.Zero),
-            *[p.diff(s) * Subs(self.expr.diff(v), self.variables,
-            self.point).doit() for v, p in zip(self.variables, self.point)])
+        val = Add.fromiter(p.diff(s) * Subs(self.expr.diff(v), self.variables, self.point).doit() for v, p in zip(self.variables, self.point))
+        if s.is_Indexed:
+            proc_vars = [i.base if i.is_Indexed else i for i in self.variables]
+            proc_s = s.base
+        else:
+            proc_vars = self.variables
+            proc_s = s
+        if proc_s not in proc_vars:
+            val += Subs(self.expr.diff(s), self.variables, self.point).doit()
+        return val
 
     def _eval_nseries(self, x, n, logx):
         if x in self.point:

@@ -506,7 +506,7 @@ class Basic(with_metaclass(ManagedProperties)):
         if not hasattr(self, 'variables'):
             return {}
         u = "_"
-        while any(s.name.endswith(u) for s in self.free_symbols):
+        while any(str(s).endswith(u) for s in self.free_symbols):
             u += "_"
         name = '%%i%s' % u
         V = self.variables
