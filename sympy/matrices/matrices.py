@@ -73,7 +73,7 @@ class MatrixDeterminant(MatrixCommon):
 
     def _eval_berkowitz_toeplitz_matrix(self):
         """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
-        corresponding to `self` and A is the first principal submatrix."""
+        corresponding to ``self`` and A is the first principal submatrix."""
 
         # the 0 x 0 case is trivial
         if self.rows == 0 and self.cols == 0:
@@ -117,7 +117,7 @@ class MatrixDeterminant(MatrixCommon):
 
     def _eval_berkowitz_vector(self):
         """ Run the Berkowitz algorithm and return a vector whose entries
-            are the coefficients of the characteristic polynomial of `self`.
+            are the coefficients of the characteristic polynomial of ``self``.
 
             Given N x N matrix, efficiently compute
             coefficients of characteristic polynomials of 'self'
@@ -373,7 +373,7 @@ class MatrixDeterminant(MatrixCommon):
     def det(self, method="bareiss"):
         """Computes the determinant of a matrix.  If the matrix
         is at most 3x3, a hard-coded formula is used.
-        Otherwise, the determinant using the method `method`.
+        Otherwise, the determinant using the method ``method``.
 
 
         Possible values for "method":
@@ -420,9 +420,9 @@ class MatrixDeterminant(MatrixCommon):
             return self._eval_det_lu()
 
     def minor(self, i, j, method="berkowitz"):
-        """Return the (i,j) minor of `self`.  That is,
+        """Return the (i,j) minor of ``self``.  That is,
         return the determinant of the matrix obtained by deleting
-        the `i`th row and `j`th column from `self`.
+        the `i`th row and `j`th column from ``self``.
 
         See Also
         ========
@@ -439,7 +439,7 @@ class MatrixDeterminant(MatrixCommon):
 
     def minor_submatrix(self, i, j):
         """Return the submatrix obtained by removing the `i`th row
-        and `j`th column from `self`.
+        and `j`th column from ``self``.
 
         See Also
         ========
@@ -513,8 +513,8 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, entry)
 
     def _eval_echelon_form(self, iszerofunc, simpfunc):
-        """Returns (mat, swaps) where `mat` is a row-equivalent matrix
-        in echelon form and `swaps` is a list of row-swaps performed."""
+        """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
+        in echelon form and ``swaps`` is a list of row-swaps performed."""
         reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
                                                       normalize_last=True,
                                                       normalize=False,
@@ -536,7 +536,7 @@ class MatrixReductions(MatrixDeterminant):
         return reduced, pivot_cols
 
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
-        """Validate the arguments for a row/column operation.  `error_str`
+        """Validate the arguments for a row/column operation.  ``error_str``
         can be one of "row" or "col" depending on the arguments being parsed."""
         if op not in ["n->kn", "n<->m", "n->n+km"]:
             raise ValueError("Unknown {} operation '{}'. Valid col operations "
@@ -605,7 +605,7 @@ class MatrixReductions(MatrixDeterminant):
 
     def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
                     normalize=True, zero_above=True):
-        """Row reduce `self` and return a tuple (rref_matrix,
+        """Row reduce ``self`` and return a tuple (rref_matrix,
         pivot_cols, swaps) where pivot_cols are the pivot columns
         and swaps are any row swaps that were used in the process
         of row reduction.
@@ -615,7 +615,7 @@ class MatrixReductions(MatrixDeterminant):
 
         iszerofunc : determines if an entry can be used as a pivot
         simpfunc : used to simplify elements and test if they are
-            zero if `iszerofunc` returns `None`
+            zero if ``iszerofunc`` returns `None`
         normalize_last : indicates where all row reduction should
             happen in a fraction-free manner and then the rows are
             normalized (so that the pivots are 1), or whether
@@ -624,7 +624,7 @@ class MatrixReductions(MatrixDeterminant):
         normalize : whether pivot rows should be normalized so that
             the pivot value is 1
         zero_above : whether entries above the pivot should be zeroed.
-            If `zero_above=False`, an echelon matrix will be returned.
+            If ``zero_above=False``, an echelon matrix will be returned.
         """
         rows, cols = self.rows, self.cols
         mat = list(self)
@@ -702,7 +702,7 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
-        """Returns a matrix row-equivalent to `self` that is
+        """Returns a matrix row-equivalent to ``self`` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
         space and the null space are preserved."""
@@ -715,9 +715,9 @@ class MatrixReductions(MatrixDeterminant):
         return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
-        """Perfoms the elementary column operation `op`.
+        """Perfoms the elementary column operation ``op``.
 
-        `op` may be one of
+        ``op`` may be one of
 
             * "n->kn" (column n goes to k*n)
             * "n<->m" (swap column n and column m)
@@ -745,9 +745,9 @@ class MatrixReductions(MatrixDeterminant):
             return self._eval_col_op_add_multiple_to_other_col(col, k, col2)
 
     def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
-        """Perfoms the elementary row operation `op`.
+        """Perfoms the elementary row operation ``op``.
 
-        `op` may be one of
+        ``op`` may be one of
 
             * "n->kn" (row n goes to k*n)
             * "n<->m" (swap row n and row m)
@@ -776,7 +776,7 @@ class MatrixReductions(MatrixDeterminant):
 
     @property
     def is_echelon(self, iszerofunc=_iszero):
-        """Returns `True` if he matrix is in echelon form.
+        """Returns `True` if the matrix is in echelon form.
         That is, all rows of zeros are at the bottom, and below
         each leading non-zero in a row are exclusively zeros."""
 
@@ -829,10 +829,10 @@ class MatrixReductions(MatrixDeterminant):
 
         iszerofunc : Function
             A function used for detecting whether an element can
-            act as a pivot.  `lambda x: x.is_zero` is used by default.
+            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
         simplify : Function
             A function used to simplify elements when looking for a pivot.
-            By default SymPy's `simplify`is used.
+            By default SymPy's ``simplify``is used.
         pivots : True or False
             If `True`, a tuple containing the row-reduced matrix and a tuple
             of pivot columns is returned.  If `False` just the row-reduced
@@ -848,10 +848,10 @@ class MatrixReductions(MatrixDeterminant):
         Notes
         =====
 
-        The default value of `normalize_last=True` can provide significant
+        The default value of ``normalize_last=True`` can provide significant
         speedup to row reduction, especially on matrices with symbols.  However,
         if you depend on the form row reduction algorithm leaves entries
-        of the matrix, set `noramlize_last=False`
+        of the matrix, set ``noramlize_last=False``
 
 
         Examples
@@ -972,7 +972,7 @@ class MatrixSubspaces(MatrixReductions):
     @classmethod
     def orthogonalize(cls, *vecs, **kwargs):
         """Apply the Gram-Schmidt orthogonalization procedure
-        to vectors supplied in `vecs`.
+        to vectors supplied in ``vecs``.
 
         Arguments
         =========
@@ -989,7 +989,7 @@ class MatrixSubspaces(MatrixReductions):
 
         def perp_to_subspace(vec, basis):
             """projects vec onto the subspace given
-            by the orthogonal basis `basis`"""
+            by the orthogonal basis ``basis``"""
             components = [project(vec, b) for b in basis]
             if len(basis) == 0:
                 return vec
@@ -1282,17 +1282,17 @@ class MatrixEigen(MatrixSubspaces):
         return ret
 
     def jordan_form(self, calc_transform=True, **kwargs):
-        """Return `(P, J)` where `J` is a Jordan block
-        matrix and `P` is a matrix such that
+        """Return ``(P, J)`` where ``J`` is a Jordan block
+        matrix and ``P`` is a matrix such that
 
-            `self == P*J*P**-1`
+            ``self == P*J*P**-1``
 
 
         Parameters
         ==========
 
         calc_transform : bool
-            If ``False``, then only `J` is returned.
+            If `False`, then only `J` is returned.
         chop : bool
             All matrices are convered to exact types when computing
             eigenvalues and eigenvectors.  As a result, there may be
@@ -1325,7 +1325,7 @@ class MatrixEigen(MatrixSubspaces):
         has_floats = any(v.has(Float) for v in self)
 
         def restore_floats(*args):
-            """If `has_floats` is `True`, cast all `args` as
+            """If ``has_floats`` is `True`, cast all ``args`` as
             matrices of floats."""
             if has_floats:
                 args = [m.evalf(chop=chop) for m in args]
@@ -1349,7 +1349,7 @@ class MatrixEigen(MatrixSubspaces):
         # helper functions
         def nullity_chain(val):
             """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
-            until it is constant where `E = self - val*I`"""
+            until it is constant where ``E = self - val*I``"""
             # mat.rank() is faster than computing the null space,
             # so use the rank-nullity theorem
             cols = self.cols
@@ -2246,7 +2246,7 @@ class MatrixBase(MatrixDeprecated,
         of compatible dimensions: if each has 3 elements, a matrix of the
         same type and shape as ``self`` will be returned. If ``b`` has the same
         shape as ``self`` then common identities for the cross product (like
-        `a \times b = - b \times a`) will hold.
+        ``a \times b = - b \times a``) will hold.
 
         Parameters
         ==========
@@ -2408,12 +2408,12 @@ class MatrixBase(MatrixDeprecated,
     def dual(self):
         """Returns the dual of a matrix, which is:
 
-        `(1/2)*levicivita(i, j, k, l)*M(k, l)` summed over indices `k` and `l`
+        ``(1/2)*levicivita(i, j, k, l)*M(k, l)`` summed over indices `k` and `l`
 
         Since the levicivita method is anti_symmetric for any pairwise
         exchange of indices, the dual of a symmetric matrix is the zero
         matrix. Strictly speaking the dual defined here assumes that the
-        'matrix' `M` is a contravariant anti_symmetric second rank tensor,
+        'matrix' ``M`` is a contravariant anti_symmetric second rank tensor,
         so that the dual is a covariant second rank tensor.
 
         """
@@ -2504,7 +2504,7 @@ class MatrixBase(MatrixDeprecated,
             rows), infinite solutions are possible, in terms of an arbitrary
             values of free variables. Then the index of the free variables
             in the solutions (column Matrix) will be returned by freevar, if
-            the flag `freevar` is set to `True`.
+            the flag ``freevar`` is set to `True`.
 
         Returns
         =======
@@ -2617,15 +2617,15 @@ class MatrixBase(MatrixDeprecated,
 
     def inv_mod(self, m):
         r"""
-        Returns the inverse of the matrix `K` (mod `m`), if it exists.
+        Returns the inverse of the matrix ``K`` (mod ``m``), if it exists.
 
-        Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
+        Method to find the matrix inverse of ``K`` (mod ``m``) implemented in this function:
 
-        * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
+        * Compute ``\mathrm{adj}(K) = \mathrm{cof}(K)^t``, the adjoint matrix of ``K``.
 
-        * Compute `r = 1/\mathrm{det}(K) \pmod m`.
+        * Compute ``r = 1/\mathrm{det}(K) \pmod m``.
 
-        * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
+        * ``K^{-1} = r\cdot \mathrm{adj}(K) \pmod m``.
 
         Examples
         ========
@@ -3109,7 +3109,7 @@ class MatrixBase(MatrixDeprecated,
         for which iszerofunc returns None.
         If no such candidate exists, then the search is repeated in the next
         column to the right.
-        The pivot search algorithm differs from the one in `rref()`, which
+        The pivot search algorithm differs from the one in ``rref()``, which
         relies on ``_find_reasonable_pivot()``.
         Future versions of ``LUdecomposition_simple()`` may use
         ``_find_reasonable_pivot()``.
@@ -3306,7 +3306,7 @@ class MatrixBase(MatrixDeprecated,
         """
         if rhs.rows != self.rows:
             raise ShapeError(
-                "`self` and `rhs` must have the same number of rows.")
+                "``self`` and ``rhs`` must have the same number of rows.")
 
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.rows
@@ -4031,11 +4031,11 @@ def a2idx(j, n=None):
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
-    """ Find the lowest index of an item in `col` that is
-    suitable for a pivot.  If `col` consists only of
+    """ Find the lowest index of an item in ``col`` that is
+    suitable for a pivot.  If ``col`` consists only of
     Floats, the pivot with the largest norm is returned.
-    Otherwise, the first element where `iszerofunc` returns
-    False is used.  If `iszerofunc` doesn't return false,
+    Otherwise, the first element where ``iszerofunc`` returns
+    False is used.  If ``iszerofunc`` doesn't return false,
     items are simplified and retested until a suitable
     pivot is found.
 
@@ -4145,26 +4145,26 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
     pivot simplifies to zero. This more naive approach can be much faster,
     with the trade-off that it may erroneously return a pivot that is zero.
 
-    `col` is a sequence of contiguous column entries to be searched for
+    ``col`` is a sequence of contiguous column entries to be searched for
     a suitable pivot.
-    `iszerofunc` is a callable that returns a Boolean that indicates
+    ``iszerofunc`` is a callable that returns a Boolean that indicates
     if its input is zero, or None if no such determination can be made.
-    `simpfunc` is a callable that simplifies its input. It must return
+    ``simpfunc`` is a callable that simplifies its input. It must return
     its input if it does not simplify its input. Passing in
-    `simpfunc=None` indicates that the pivot search should not attempt
+    ``simpfunc=None`` indicates that the pivot search should not attempt
     to simplify any candidate pivots.
 
     Returns a 4-tuple:
     (pivot_offset, pivot_val, assumed_nonzero, newly_determined)
-    `pivot_offset` is the sequence index of the pivot.
-    `pivot_val` is the value of the pivot.
+    ``pivot_offset`` is the sequence index of the pivot.
+    ``pivot_val`` is the value of the pivot.
     pivot_val and col[pivot_index] are equivalent, but will be different
     when col[pivot_index] was simplified during the pivot search.
-    `assumed_nonzero` is a boolean indicating if the pivot cannot be
+    ``assumed_nonzero`` is a boolean indicating if the pivot cannot be
     guaranteed to be zero. If assumed_nonzero is true, then the pivot
     may or may not be non-zero. If assumed_nonzero is false, then
     the pivot is non-zero.
-    `newly_determined` is a list of index-value pairs of pivot candidates
+    ``newly_determined`` is a list of index-value pairs of pivot candidates
     that were simplified during the pivot search.
     """
 
@@ -4216,11 +4216,11 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
 class _MinimalMatrix(object):
     """Class providing the minimum functionality
     for a matrix-like object and implementing every method
-    required for a `MatrixRequired`.  This class does not have everything
+    required for a ``MatrixRequired``.  This class does not have everything
     needed to become a full-fledged sympy object, but it will satisfy the
-    requirements of anything inheriting from `MatrixRequired`.  If you wish
+    requirements of anything inheriting from ``MatrixRequired``.  If you wish
     to make a specialized matrix type, make sure to implement these
-    methods and properties with the exception of `__init__` and `__repr__`
+    methods and properties with the exception of ``__init__`` and ``__repr__``
     which are included for convenience."""
 
     is_MatrixLike = True
@@ -4335,9 +4335,9 @@ class _MatrixWrapper(object):
 
 
 def _matrixify(mat):
-    """If `mat` is a Matrix or is matrix-like,
+    """If ``mat`` is a Matrix or is matrix-like,
     return a Matrix or MatrixWrapper object.  Otherwise
-    `mat` is passed through without modification."""
+    ``mat`` is passed through without modification."""
     if getattr(mat, 'is_Matrix', False):
         return mat
     if hasattr(mat, 'shape'):
