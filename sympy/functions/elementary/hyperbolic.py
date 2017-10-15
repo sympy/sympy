@@ -8,6 +8,10 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 
+from sympy import pi, Eq
+from sympy.logic import Or, And
+
+
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
@@ -211,8 +215,6 @@ class cosh(HyperbolicFunction):
 
     @property
     def is_positive(self):
-        from sympy import pi, Eq
-        from sympy.logic import Or, And
         arg = self.args[0]
 
         if arg.is_real:
@@ -238,8 +240,6 @@ class cosh(HyperbolicFunction):
 
     @property
     def is_nonnegative(self):
-        from sympy import pi, Eq
-        from sympy.logic import Or, And
         arg = self.args[0]
 
         if arg.is_real:

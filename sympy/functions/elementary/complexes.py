@@ -482,9 +482,9 @@ class Abs(Function):
                 return S.Infinity
         if arg.is_zero:
             return S.Zero
-        if arg.is_nonnegative or arg.is_positive:
+        if arg.is_nonnegative:
             return arg
-        if arg.is_nonpositive or arg.is_negative:
+        if arg.is_nonpositive:
             return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
