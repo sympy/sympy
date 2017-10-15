@@ -477,7 +477,7 @@ class Quaternion(Expr):
 
     def to_rotation_matrix(self, v = None):
         """Returns the equivalent rotation transformation matrix of the quaternion
-        which represenets rotation about the origin if v is not passed.
+        which represents rotation about the origin if v is not passed.
 
         Example
         ========

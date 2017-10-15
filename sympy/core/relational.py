@@ -318,9 +318,13 @@ class Equality(Relational):
                     return r
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
-                return S.true
+                return S.true  # e.g. True == True
             elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
-                return S.false
+                return S.false  # True != False
+            elif not (lhs.is_Symbol or rhs.is_Symbol) and (
+                    isinstance(lhs, Boolean) !=
+                    isinstance(rhs, Boolean)):
+                return S.false  # only Booleans can equal Booleans
 
             # check finiteness
             fin = L, R = [i.is_finite for i in (lhs, rhs)]

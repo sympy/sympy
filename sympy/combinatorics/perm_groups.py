@@ -1716,13 +1716,21 @@ class PermutationGroup(Basic):
 
         """
         if _random_prec is None:
+            if self._is_sym or self._is_alt:
+                return True
             n = self.degree
             if n < 8:
                 sym_order = 1
                 for i in range(2, n+1):
                     sym_order *= i
                 order = self.order()
-                return order == sym_order or 2*order == sym_order
+                if order == sym_order:
+                    self._is_sym = True
+                    return True
+                elif 2*order == sym_order:
+                    self._is_alt = True
+                    return True
+                return False
             if not self.is_transitive():
                 return False
             if n < 17:

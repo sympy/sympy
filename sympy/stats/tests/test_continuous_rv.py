@@ -8,7 +8,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
-                         StudentT, Triangular, Uniform, UniformSum,
+                         StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
 
@@ -456,6 +456,22 @@ def test_studentt():
     X = StudentT('x', nu)
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
 
+def test_trapezoidal():
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
+    c = Symbol("c", real=True)
+    d = Symbol("d", real=True)
+
+    X = Trapezoidal('x', a, b, c, d)
+    assert density(X)(x) == Piecewise(((-2*a + 2*x)/((-a + b)*(-a - b + c + d)), (a <= x) & (x < b)),
+                                      (2/(-a - b + c + d), (b <= x) & (x < c)),
+                                      ((2*d - 2*x)/((-c + d)*(-a - b + c + d)), (c <= x) & (x <= d)),
+                                      (0, True))
+
+    X = Trapezoidal('x', 0, 1, 2, 3)
+    assert E(X) == S(3)/2
+    assert variance(X) == S(5)/12
+    assert P(X < 2) == S(3)/4
 
 @XFAIL
 def test_triangular():

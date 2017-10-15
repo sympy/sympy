@@ -155,6 +155,7 @@ from .definitions import (
     avogadro_number,
     avogadro, avogadro_constant,
     boltzmann, boltzmann_constant,
+    stefan, stefan_boltzmann_constant,
     R, molar_gas_constant,
     faraday_constant,
     josephson_constant,

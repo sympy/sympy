@@ -799,6 +799,10 @@ class binomial(CombinatorialFunction):
                 elif k > n // 2:
                     k = n - k
 
+                if HAS_GMPY:
+                    from sympy.core.compatibility import gmpy
+                    return Integer(gmpy.bincoef(n, k))
+
                 M, result = int(_sqrt(n)), 1
 
                 for prime in sieve.primerange(2, n + 1):
