@@ -832,22 +832,22 @@ class Add(Expr, AssocOp):
         if not expr.is_Add:
             return expr.as_leading_term(x)
 
-        infinite = [t for t in expr.args if t.is_infinite]
+        infinite = [e for e in expr.args if e.is_infinite]
 
-        leading_term = [(t, t.as_leading_term(x)) for t in expr.args]
+        leading_term = [(e, e.as_leading_term(x)) for e in expr.args]
 
-        new_expr = expr.func(*[t for _, t in leading_term]).removeO()
+        new_expr = expr.func(*[lead for _, lead in leading_term]).removeO()
 
         if new_expr and (new_expr is not S.NaN):
             #to check if the leading term cancel each other out
             if new_expr.is_Add:
-                final_leading_term = [t for t in new_expr.args]
+                final_leading_term = [e for e in new_expr.args]
             else:
                 final_leading_term = [new_expr]
 
             if len(expr.args) != len(final_leading_term):
-                canceled_term = [(s, t) for s, t in leading_term if t not in final_leading_term]
-                expr_sum = expr.func(*[t for _, t in canceled_term])
+                canceled_term = [(e, lead) for e, lead in leading_term if lead not in final_leading_term]
+                expr_sum = expr.func(*[lead for _, lead in canceled_term])
                 if expr_sum == S(0):
                     for e, lead in canceled_term:
                         lead_term = (simplify(e - lead)).as_leading_term(x)
