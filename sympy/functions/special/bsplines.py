@@ -20,7 +20,37 @@ def _add_splines(c, b1, d, b2):
             p1 = piecewise_fold(c*b1)
             p2 = piecewise_fold(d*b2)
 
-            rv = p1 + p2
+            # Search all Piecewise arguments except (0, True)
+            p2args = list(p2.args[:-1])
+
+            # This merging algorithm assume the conditions in p1 and p2 are sorted
+            for arg in p1.args[:-1]:
+                cond = arg.cond
+                expr = arg.expr
+
+                # Check p2 for matching conditions that can be merged
+                for i, arg2 in enumerate(p2args):
+                    if arg2.cond < cond:
+                        # arg2 condition smaller than arg1, add to new_args by itself (no match expected in p1)
+                        new_args.append(arg2)
+                        del p2args[i]
+                        break
+                    elif arg2.cond == cond:
+                        # Conditions match, join expressions
+                        expr += arg2.expr
+                        # Remove matching element
+                        del p2args[i]
+                        # No need to check the rest
+                        break
+
+                # Checked all, add expr and cond
+                new_args.append((expr, cond))
+
+            # Add remaining items from p2args
+            new_args.extend(p2args)
+
+            # Add final (0, True)
+            new_args.append((0, True))
         else:
             new_args.append((c*b1.args[0].expr, b1.args[0].cond))
             for i in range(1, n_intervals - 1):
@@ -30,7 +60,8 @@ def _add_splines(c, b1, d, b2):
                 ))
             new_args.append((d*b2.args[-2].expr, b2.args[-2].cond))
             new_args.append(b2.args[-1])
-            rv = Piecewise(*new_args)
+
+        rv = Piecewise(*new_args)
 
     return rv.expand()
 
