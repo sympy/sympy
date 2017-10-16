@@ -548,11 +548,10 @@ def test_sympify_set():
     assert sympify(set()) == EmptySet()
 
 
-def test_numpy():
-    from sympy.utilities.pytest import skip
-    np = import_module('numpy')
-    if not np:
+def test_sympify_numpy():
+    if not numpy:
         skip('numpy not installed. Abort numpy tests.')
+    np = numpy
 
     def equal(x, y):
         return x == y and type(x) == type(y)
