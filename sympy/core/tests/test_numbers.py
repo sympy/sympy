@@ -1767,13 +1767,9 @@ def test_numpy_to_float():
     check_prec_and_relerr(np.float16(2)/3, S(2)/3)
     check_prec_and_relerr(np.float32(2)/3, S(2)/3)
     check_prec_and_relerr(np.float64(2)/3, S(2)/3)
-    check_prec_and_relerr(np.float128(2)/3, S(2)/3)
-
-    # float128 more precise than double (how much more is arch dep)
-    x = np.float128(2)/3
-    y = Float(x)
-    assert y._prec > 53
-
+    # extended precision, on some arch/compilers:
+    x = np.longdouble(2)/3
+    check_prec_and_relerr(x, S(2)/3)
     y = Float(x, precision=10)
     assert same_and_same_prec(y, Float(S(2)/3, precision=10))
 
