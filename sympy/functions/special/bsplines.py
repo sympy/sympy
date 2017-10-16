@@ -35,7 +35,7 @@ def _add_splines(c, b1, d, b2):
     return rv.expand()
 
 
-def bspline_basis(d, knots, n, x, close=True):
+def bspline_basis(d, knots, n, x):
     """The `n`-th B-spline at `x` of degree `d` with knots.
 
     B-Splines are piecewise polynomials of degree `d` [1]_.  They are defined on
@@ -56,11 +56,11 @@ def bspline_basis(d, knots, n, x, close=True):
     Here is an example of a cubic B-spline:
 
         >>> bspline_basis(3, range(5), 0, x)
-        Piecewise((x**3/6, (x >= 0) & (x < 1)),
+        Piecewise((x**3/6, (x >= 0) & (x <= 1)),
                   (-x**3/2 + 2*x**2 - 2*x + 2/3,
-                  (x >= 1) & (x < 2)),
+                  (x >= 1) & (x <= 2)),
                   (x**3/2 - 4*x**2 + 10*x - 22/3,
-                  (x >= 2) & (x < 3)),
+                  (x >= 2) & (x <= 3)),
                   (-x**3/6 + 2*x**2 - 8*x + 32/3,
                   (x >= 3) & (x <= 4)),
                   (0, True))
@@ -104,23 +104,21 @@ def bspline_basis(d, knots, n, x, close=True):
         raise ValueError('n + d + 1 must not exceed len(knots) - 1')
     if d == 0:
         result = Piecewise(
-            (S.One, Interval(knots[n], knots[n + 1], False,
-             not close).contains(x)),
+            (S.One, Interval(knots[n], knots[n + 1]).contains(x)),
             (0, True)
         )
     elif d > 0:
         denom = knots[n + d + 1] - knots[n + 1]
         if denom != S.Zero:
             B = (knots[n + d + 1] - x)/denom
-            b2 = bspline_basis(d - 1, knots, n + 1, x, close)
+            b2 = bspline_basis(d - 1, knots, n + 1, x)
         else:
             b2 = B = S.Zero
 
         denom = knots[n + d] - knots[n]
         if denom != S.Zero:
             A = (x - knots[n])/denom
-            b1 = bspline_basis(
-                d - 1, knots, n, x, close and (B == S.Zero or b2 == S.Zero))
+            b1 = bspline_basis(d - 1, knots, n, x)
         else:
             b1 = A = S.Zero
 
