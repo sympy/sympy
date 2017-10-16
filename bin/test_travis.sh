@@ -71,10 +71,12 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
     cat << EOF | python
 print('Testing NUMPY')
 import sympy
-if not (sympy.test('*numpy*', 'sympy/matrices/', 'sympy/physics/quantum/',
-        'sympy/core/tests/test_sympify.py', 'sympy/utilities/tests/test_lambdify.py',
-        blacklist=['sympy/physics/quantum/tests/test_circuitplot.py']) and sympy.
-        doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
+if not (sympy.test('*numpy*', 'sympy/core/tests/test_numbers.py',
+                   'sympy/matrices/', 'sympy/physics/quantum/',
+                   'sympy/core/tests/test_sympify.py',
+                   'sympy/utilities/tests/test_lambdify.py',
+                   blacklist=['sympy/physics/quantum/tests/test_circuitplot.py'])
+        and sympy.doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
     raise Exception('Tests failed')
 EOF
 fi
