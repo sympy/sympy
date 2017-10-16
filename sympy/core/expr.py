@@ -2186,6 +2186,30 @@ class Expr(Basic, EvalfMixin):
         coeffs.append(self)
         return Add(*coeffs)
 
+    @property
+    def expr_free_symbols(self):
+        """
+        Like ``free_symbols``, but returns the free symbols only if they are contained in an expression node.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> (x + y).expr_free_symbols
+        {x, y}
+
+        If the expression is contained in a non-expression object, don't return
+        the free symbols, compare:
+
+        >>> from sympy import Tuple
+        >>> t = Tuple(x + y)
+        >>> t.expr_free_symbols
+        set()
+        >>> t.free_symbols
+        {x, y}
+        """
+        return {j for i in self.args for j in i.expr_free_symbols}
+
     def could_extract_minus_sign(self):
         """Return True if self is not in a canonical form with respect
         to its sign.
@@ -3321,6 +3345,10 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_nseries(self, x, n, logx):
         return self
+
+    @property
+    def expr_free_symbols(self):
+        return {self}
 
 
 def _mag(x):

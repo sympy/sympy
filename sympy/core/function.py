@@ -1746,6 +1746,11 @@ class Subs(Expr):
         return (self.expr.free_symbols - set(self.variables) |
             set(self.point.free_symbols))
 
+    @property
+    def expr_free_symbols(self):
+        return (self.expr.expr_free_symbols - set(self.variables) |
+            set(self.point.expr_free_symbols))
+
     def _has(self, pattern):
         if pattern in self.variables and pattern not in self.point:
             return False
@@ -1773,14 +1778,17 @@ class Subs(Expr):
             return self
 
     def _eval_derivative(self, s):
+        # Apply the chain rule of the derivative on the substitution variables:
         val = Add.fromiter(p.diff(s) * Subs(self.expr.diff(v), self.variables, self.point).doit() for v, p in zip(self.variables, self.point))
-        if s.is_Indexed:
-            proc_vars = [i.base if i.is_Indexed else i for i in self.variables]
-            proc_s = s.base
-        else:
-            proc_vars = self.variables
-            proc_s = s
-        if proc_s not in proc_vars:
+
+        # Check if there are free symbols in `self.expr`:
+        # First get the `expr_free_symbols`, which returns the free symbols
+        # that are directly contained in an expression node (i.e. stop
+        # searching if the node isn't an expression). At this point turn the
+        # expressions into `free_symbols` and check if there are common free
+        # symbols in `self.expr` and the deriving factor.
+        fs1 = {j for i in self.expr_free_symbols for j in i.free_symbols}
+        if len(fs1 & s.free_symbols) > 0:
             val += Subs(self.expr.diff(s), self.variables, self.point).doit()
         return val
 

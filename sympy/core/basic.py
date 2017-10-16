@@ -487,6 +487,10 @@ class Basic(with_metaclass(ManagedProperties)):
         return set().union(*[a.free_symbols for a in self.args])
 
     @property
+    def expr_free_symbols(self):
+        return set([])
+
+    @property
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
         ``self.variables`` as underscore-suffixed numbers
