@@ -235,7 +235,7 @@ def test_commutation():
     c = Commutator(F(m), Fd(m))
     assert c == +1 - 2*NO(Fd(m)*F(m))
     c = Commutator(Fd(m), F(m))
-    assert c == -1 + 2*NO(Fd(m)*F(m))
+    assert c.expand() == -1 + 2*NO(Fd(m)*F(m))
 
     C = Commutator
     X, Y, Z = symbols('X,Y,Z', commutative=False)
@@ -457,6 +457,29 @@ def test_contraction():
     assert restr.is_only_below_fermi
     restr = evaluate_deltas(contraction(F(p), Fd(q)))
     assert restr.is_only_above_fermi
+
+
+def test_evaluate_deltas():
+    i, j, k = symbols('i,j,k')
+
+    r = KroneckerDelta(i, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+
+    r = KroneckerDelta(1, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(1, k)
+
+    r = KroneckerDelta(j, 2) * KroneckerDelta(k, j)
+    assert evaluate_deltas(r) == KroneckerDelta(2, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(i, j) * KroneckerDelta(j, 1)
+    assert evaluate_deltas(r) == 0
+
+    r = (KroneckerDelta(0, i) * KroneckerDelta(0, j)
+         * KroneckerDelta(1, j) * KroneckerDelta(1, j))
+    assert evaluate_deltas(r) == 0
 
 
 def test_Tensors():

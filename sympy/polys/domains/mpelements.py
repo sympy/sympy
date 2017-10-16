@@ -53,13 +53,13 @@ class MPContext(PythonMPContext):
         else:
             ctx._set_dps(dps)
 
-        ctx.mpf = type('RealElement', (RealElement,), {})
-        ctx.mpc = type('ComplexElement', (ComplexElement,), {})
+        ctx.mpf = RealElement
+        ctx.mpc = ComplexElement
         ctx.mpf._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.mpc._ctxdata = [ctx.mpc, new, ctx._prec_rounding]
         ctx.mpf.context = ctx
         ctx.mpc.context = ctx
-        ctx.constant = type('constant', (_constant,), {})
+        ctx.constant = _constant
         ctx.constant._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.constant.context = ctx
 

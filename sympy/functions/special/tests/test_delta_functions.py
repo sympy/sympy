@@ -1,6 +1,7 @@
 from sympy import (
     adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo, SingularityFunction
+    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo,
+    SingularityFunction, signsimp
 )
 
 from sympy.utilities.pytest import raises
@@ -54,6 +55,14 @@ def test_DiracDelta():
     assert DiracDelta(y).expand(diracdelta=True, wrt=x) == DiracDelta(y)
     assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True, wrt=x) == (
         DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
+
+    assert DiracDelta(2*x) != DiracDelta(x)  # scaling property
+    assert DiracDelta(x) == DiracDelta(-x)  # even function
+    assert DiracDelta(-x, 2) == DiracDelta(x, 2)
+    assert DiracDelta(-x, 1) == -DiracDelta(x, 1)  # odd deriv is odd
+    assert DiracDelta(-oo*x) == DiracDelta(oo*x)
+    assert DiracDelta(x - y) != DiracDelta(y - x)
+    assert signsimp(DiracDelta(x - y) - DiracDelta(y - x)) == 0
 
     with raises(SymPyDeprecationWarning):
         assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)

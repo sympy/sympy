@@ -28,6 +28,7 @@ from sympy.polys.domains import QQ, ZZ, RR
 from sympy.polys.domains.pythonrational import PythonRational
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
+from sympy.polys.polytools import Poly
 
 
 def DifferentialOperators(base, generator):
@@ -390,7 +391,7 @@ class HolonomicFunction(object):
     format:
     :math:`{s0: [C_0, C_1, ...], s1: [C^1_0, C^1_1, ...], ...}`
     where s0, s1, ... are the roots of indicial equation and vectors
-    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intiial
+    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding initial
     terms of the associated power series. See Examples below.
 
     Examples
@@ -932,7 +933,7 @@ class HolonomicFunction(object):
         if not isinstance(other, HolonomicFunction):
             other = sympify(other)
 
-            if not other.is_constant():
+            if other.has(self.x):
                 raise NotImplementedError(" Can't multiply a HolonomicFunction and expressions/functions.")
 
             if not self._have_init_cond():
@@ -942,7 +943,7 @@ class HolonomicFunction(object):
                 y1 = []
 
                 for j in y0:
-                    y1.append(j * other)
+                    y1.append((Poly.new(j, self.x) * other).rep)
 
                 return HolonomicFunction(ann_self, self.x, self.x0, y1)
 
@@ -1128,6 +1129,23 @@ class HolonomicFunction(object):
         return self.__div__(other)
 
     def __pow__(self, n):
+        if self.annihilator.order <= 1:
+            ann = self.annihilator
+            parent = ann.parent
+
+            if self.y0 is None:
+                y0 = None
+            else:
+                y0 = [list(self.y0)[0] ** n]
+
+            p0 = ann.listofpoly[0]
+            p1 = ann.listofpoly[1]
+
+            p0 = (Poly.new(p0, self.x) * n).rep
+
+            sol = [parent.base.to_sympy(i) for i in [p0, p1]]
+            dd = DifferentialOperator(sol, parent)
+            return HolonomicFunction(dd, self.x, self.x0, y0)
         if n < 0:
             raise NotHolonomicError("Negative Power on a Holonomic Function")
         if n == 0:
@@ -1204,10 +1222,10 @@ class HolonomicFunction(object):
 
             # check for linear relations
             system.append(coeffs)
-            sol_tuple = (Matrix(system).transpose()).gauss_jordan_solve(homogeneous)
-            sol = sol_tuple[0]
+            sol, taus = (Matrix(system).transpose()
+                ).gauss_jordan_solve(homogeneous)
 
-        tau = sol.atoms(Dummy).pop()
+        tau = list(taus)[0]
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
@@ -1629,7 +1647,7 @@ class HolonomicFunction(object):
         Finds the power series expansion of given holonomic function about :math:`x_0`.
 
         A list of series might be returned if :math:`x_0` is a regular point with
-        multiple roots of the indcial equation.
+        multiple roots of the indicial equation.
 
         Examples
         ========
@@ -1857,7 +1875,7 @@ class HolonomicFunction(object):
         return HolonomicFunction(sol, x, x0, self.y0)
 
     def to_hyper(self, as_list=False, _recur=None):
-        """
+        r"""
         Returns a hypergeometric function (or linear combination of them)
         representing the given holonomic function.
 
@@ -2406,7 +2424,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
             _y0 = _find_conditions(func, x, x0, lenics)
         return sol.composition(func.args[0], x0, _y0)
 
-    # iterate though the expression recursively
+    # iterate through the expression recursively
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow

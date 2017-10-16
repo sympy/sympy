@@ -156,7 +156,7 @@ class Expectation(Expr):
             return Integral(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.domain.set.sup))
         else:
             if rv.pspace.is_Finite:
-                raise NotImplemented
+                raise NotImplementedError
             else:
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 

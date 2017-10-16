@@ -521,6 +521,8 @@ def test_Domain___eq__():
     assert (ZZ.frac_field(x, y) == QQ.frac_field(x, y)) is False
     assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) is False
 
+    assert RealField()[x] == RR[x]
+
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))

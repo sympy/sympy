@@ -73,9 +73,9 @@ def test_m_numbersymbol():
     source = result[1]
     expected = (
         "function out1 = test()\n"
-        "  out1 = pi^0.915965594177219;\n"
+        "  out1 = pi^%s;\n"
         "end\n"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
@@ -347,8 +347,7 @@ def test_m_matrix_output_autoname_2():
         "  out1 = x + y;\n"
         "  out2 = [2*x 2*y 2*z];\n"
         "  out3 = [x; y; z];\n"
-        "  out4 = [x  y;\n"
-        "  z 16];\n"
+        "  out4 = [x y; z 16];\n"
         "end\n"
     )
     assert source == expected

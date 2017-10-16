@@ -340,6 +340,9 @@ def test_as_real_imag():
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
+    assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)
+    assert ((1 + I)**3/(1 - I)).as_real_imag() == (-2, 0)
+
 
 @XFAIL
 def test_sign_issue_3068():
@@ -366,6 +369,7 @@ def test_Abs():
     assert Abs(I) == 1
     assert Abs(-I) == 1
     assert Abs(nan) == nan
+    assert Abs(zoo) == oo
     assert Abs(I * pi) == pi
     assert Abs(-I * pi) == pi
     assert Abs(I * x) == Abs(x)
