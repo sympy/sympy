@@ -509,3 +509,7 @@ def test_issue_12555():
 def test_issue_12564():
     assert limit(x**2 + x*sin(x) + cos(x), x, -oo) == oo
     assert limit(x**2 + x*sin(x) + cos(x), x, oo) == oo
+    assert limit(((x + cos(x))**2).expand(), x, oo) == oo
+    assert limit(((x + sin(x))**2).expand(), x, oo) == oo
+    assert limit(((x + cos(x))**2).expand(), x, -oo) == oo
+    assert limit(((x + sin(x))**2).expand(), x, -oo) == oo
