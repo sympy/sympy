@@ -1,8 +1,5 @@
-"""The Zen of SymPy.
-
-This is still a work in progress. Feel free to add, modify, reorder, or
-delete items from it. Some of these perhaps apply more to developing SymPy
-than using it.
+"""
+The Zen of SymPy.
 """
 
 s = """Gur Mra bs FlzCl
