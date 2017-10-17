@@ -8,7 +8,6 @@ from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
-
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
@@ -49,6 +48,39 @@ class CantSympify(object):
 
     """
     pass
+
+
+def convert_numpy_types(a):
+    """Converts a numpy datatype input to an appropriate sympy type.
+
+    Examples
+    ========
+
+    >>> from sympy.core.sympify import convert_numpy_types
+
+    >>> convert_numpy_types(numpy.int64(5))
+    5.00000000000000
+
+    >>> convert_numpy_types(numpy.float32(5))
+    5.00000
+
+    """
+    import numpy as np
+    if not isinstance(a, np.floating):
+        func = converter[complex] if np.iscomplex(a) else sympify
+        return func(np.asscalar(a))
+    else:
+        try:
+            from sympy.core.numbers import Float
+            prec = np.finfo(a).nmant
+            a = str(list(np.reshape(np.asarray(a),
+                                    (1, np.size(a)))[0]))[1:-1]
+            return Float(a, precision=prec)
+        except NotImplementedError:
+            raise SympifyError('Translation for numpy float : %s '
+                               'is not implemented' % a)
+# doctests must be set manually here to avoid circular imports
+convert_numpy_types._doctest_depends_on = {'modules': ['numpy']}
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
@@ -258,22 +290,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
 
     # Support for basic numpy datatypes
+    # Note that this check exists to avoid importing NumPy when not necessary
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
-            if not isinstance(a, np.floating):
-                func = converter[complex] if np.iscomplex(a) else sympify
-                return func(np.asscalar(a))
-            else:
-                try:
-                    from sympy.core.numbers import Float
-                    prec = np.finfo(a).nmant
-                    a = str(list(np.reshape(np.asarray(a),
-                                            (1, np.size(a)))[0]))[1:-1]
-                    return Float(a, precision=prec)
-                except NotImplementedError:
-                    raise SympifyError('Translation for numpy float : %s '
-                                       'is not implemented' % a)
+            return convert_numpy_types(a)
 
     try:
         return converter[cls](a)
