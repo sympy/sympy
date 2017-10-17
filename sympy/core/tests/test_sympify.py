@@ -2,7 +2,7 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
+from sympy.core.sympify import sympify, _sympify, SympifyError, kernS 
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -552,12 +552,11 @@ def test_numpy():
     from sympy.utilities.pytest import skip
     np = import_module('numpy')
 
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
 
     def equal(x, y):
         return x == y and type(x) == type(y)
-
-    if not np:
-        skip('numpy not installed.Abort numpy tests.')
 
     assert sympify(np.bool_(1)) is S(True)
     try:
