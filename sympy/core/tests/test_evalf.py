@@ -257,6 +257,8 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
+    assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
+    assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
