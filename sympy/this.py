@@ -11,7 +11,7 @@ Harinyhngrq vf orggre guna rinyhngrq.
 Gur hfre vagresnpr znggref.
 Cevagvat znggref.
 Cher Clguba pna or snfg rabhtu.
-Vs vg'f gbb fybj, vgf (cebonoyl) lbhe snhyg.
+Vs vg'f gbb fybj, vg'f (cebonoyl) lbhe snhyg.
 Qbphzragngvba znggref.
 Pbeerpgarff vf zber vzcbegnag guna fcrrq.
 Chfu vg va abj naq vzcebir hcba vg yngre.
