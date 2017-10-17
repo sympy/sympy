@@ -232,7 +232,6 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     def _eval_as_set(self):
         # self is univariate and periodicity(self, x) in (0, None)
-        from sympy.solvers.solveset import solveset
         from sympy.solvers.inequalities import solve_univariate_inequality
         syms = self.free_symbols
         assert len(syms) == 1
