@@ -63,9 +63,7 @@ class AppliedPredicate(Boolean):
     __slots__ = []
 
     def __new__(cls, predicate, arg):
-        if not isinstance(arg, bool):
-            # XXX: There is not yet a Basic type for True and False
-            arg = _sympify(arg)
+        arg = _sympify(arg)
         return Boolean.__new__(cls, predicate, arg)
 
     is_Atom = True  # do not attempt to decompose this
@@ -126,10 +124,15 @@ class Predicate(Boolean):
 
     Predicates merely wrap their argument and remain unevaluated:
 
-        >>> from sympy import Q, ask, Symbol, S
-        >>> x = Symbol('x')
+        >>> from sympy import Q, ask
+        >>> type(Q.prime)
+        <class 'sympy.assumptions.assume.Predicate'>
+        >>> Q.prime.name
+        'prime'
         >>> Q.prime(7)
         Q.prime(7)
+        >>> _.func.name
+        'prime'
 
     To obtain the truth value of an expression containing predicates, use
     the function ``ask``:
@@ -139,10 +142,9 @@ class Predicate(Boolean):
 
     The tautological predicate ``Q.is_true`` can be used to wrap other objects:
 
+        >>> from sympy.abc import x
         >>> Q.is_true(x > 1)
         Q.is_true(x > 1)
-        >>> Q.is_true(S(1) < x)
-        Q.is_true(1 < x)
 
     """
 
