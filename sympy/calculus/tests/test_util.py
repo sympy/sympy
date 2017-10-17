@@ -16,11 +16,16 @@ def test_function_range():
     assert function_range(sin(x), x, Interval(0, pi)) == Interval(0, 1)
     assert function_range(tan(x), x, Interval(0, pi)) == Interval(-oo, oo)
     assert function_range(tan(x), x, Interval(pi/2, pi)) == Interval(-oo, 0)
-    assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)) == Interval(-oo, oo)
+    assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)) == \
+        Union(Interval(-oo, 2/7), Interval(8/3, oo))
     assert function_range(1/(x**2), x, Interval(-1, 1)) == Interval(1, oo)
     assert function_range(exp(x), x, Interval(-1, 1)) == Interval(exp(-1), exp(1))
     assert function_range(log(x) - x, x, S.Reals) == Interval(-oo, -1)
     assert function_range(sqrt(3*x - 1), x, Interval(0, 2)) == Interval(0, sqrt(5))
+    assert function_range(sqrt(x), x, FiniteSet(-1, 4)) == FiniteSet(2)
+    assert function_range(sin(x), x, Union(FiniteSet(pi/2), Interval(pi, 3*pi/2))) == \
+        Union(Interval(-1, 0), FiniteSet(1))
+    assert function_range(1/x, x, FiniteSet(0)) == S.EmptySet
     raises(NotImplementedError, lambda : function_range(exp(x)*(sin(x)-cos(x))/2 - x, x, S.Reals))
 
 
