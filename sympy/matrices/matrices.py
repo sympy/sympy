@@ -431,7 +431,7 @@ class MatrixDeterminant(MatrixCommon):
     def minor(self, i, j, method="berkowitz"):
         """Return the ``(i,j)`` minor of ``self``.  That is,
         return the determinant of the matrix obtained by deleting
-        the ``i``th row and ``j``th column from ``self``.
+        the `i`th row and `j`th column from ``self``.
 
         See Also
         ========
@@ -447,8 +447,8 @@ class MatrixDeterminant(MatrixCommon):
         return self.minor_submatrix(i, j).det(method=method)
 
     def minor_submatrix(self, i, j):
-        """Return the submatrix obtained by removing the ``i``th row
-        and ``j``th column from ``self``.
+        """Return the submatrix obtained by removing the `i`th row
+        and `j`th column from ``self``.
 
         See Also
         ========
@@ -711,7 +711,7 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
-        """Returns a matrix row-equivalent to ```self``` that is
+        """Returns a matrix row-equivalent to ``self`` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
         space and the null space are preserved."""
@@ -841,7 +841,7 @@ class MatrixReductions(MatrixDeterminant):
             act as a pivot.  ``lambda x: x.is_zero`` is used by default.
         simplify : Function
             A function used to simplify elements when looking for a pivot.
-            By default SymPy's ``simplify``is used.
+            By default SymPy's ``simplify`` is used.
         pivots : True or False
             If ``True``, a tuple containing the row-reduced matrix and a tuple
             of pivot columns is returned.  If ``False`` just the row-reduced
@@ -1133,7 +1133,7 @@ class MatrixEigen(MatrixSubspaces):
         return eigs
 
     def eigenvects(self, error_when_incomplete=True, **flags):
-        """Return list of ``triples (eigenval, multiplicity, basis)``.
+        """Return a tuple containing (in order) the eigenvalue, multiplicity and basis.
 
         The flag ``simplify`` has two effects:
             1) if ``bool(simplify)`` is True, ``as_content_primitive()``
@@ -1357,7 +1357,7 @@ class MatrixEigen(MatrixSubspaces):
 
         # helper functions
         def nullity_chain(val):
-            """Calculate the sequence  ``[0, nullity(E), nullity(E**2), ...]``
+            """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
             until it is constant where ``E = self - val*I``"""
             # mat.rank() is faster than computing the null space,
             # so use the rank-nullity theorem
@@ -1474,8 +1474,8 @@ class MatrixEigen(MatrixSubspaces):
     def left_eigenvects(self, **flags):
         """Returns left eigenvectors and eigenvalues.
 
-        This function returns the list of ``triples (eigenval, multiplicity,
-        basis)`` for the left eigenvectors. Options are the same as for
+        This function returns the list of triples (eigenval, multiplicity,
+        basis) for the left eigenvectors. Options are the same as for
         eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
         eigenvects().
 
