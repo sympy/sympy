@@ -1042,6 +1042,10 @@ class Float(Number):
                 # it's a hexadecimal (coming from a pickled object)
                 # assume that it is in standard form
                 num = list(num)
+                # long uses a shim for int on Python 3, so we need to
+                # remove any trailing 'L' on the num[1] string
+                if num[1].endswith('L'):
+                    num[1] = num[1][:-1]
                 num[1] = long(num[1], 16)
                 _mpf_ = tuple(num)
             else:
