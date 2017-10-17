@@ -6,7 +6,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps,
+    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 from sympy.core.expr import UnevaluatedExpr
 
@@ -164,6 +164,9 @@ PIECEWISE:
 
 Piecewise((x,x<1),(x**2,True))
 
+ITE:
+
+ITE(x, y, z)
 
 SEQUENCES (TUPLES, LISTS, DICTIONARIES):
 
@@ -3196,6 +3199,21 @@ u("""\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_pretty_ITE():
+    expr = ITE(x, y, z)
+    assert pretty(expr) == (
+        '/y    for x  \n'
+        '<            \n'
+        '\\z  otherwise'
+        )
+    assert upretty(expr) == u("""\
+⎧y    for x  \n\
+⎨            \n\
+⎩z  otherwise\
+""")
+
 
 def test_pretty_seq():
     expr = ()

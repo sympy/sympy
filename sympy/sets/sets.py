@@ -14,7 +14,7 @@ from sympy.core.compatibility import (iterable, with_metaclass,
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
 from sympy.utilities.misc import func_name, filldedent
@@ -1406,6 +1406,11 @@ class Union(Set, EvalfMixin):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
+        if len(self.args) == 2:
+            a, b = self.args
+            if (a.sup == b.inf and a.inf is S.NegativeInfinity
+                    and b.sup is S.Infinity):
+                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
@@ -2000,12 +2005,12 @@ class FiniteSet(Set, EvalfMixin):
         """
         r = false
         for e in self._elements:
+            # override global evaluation so we can use Eq to do
+            # do the evaluation
             t = Eq(e, other, evaluate=True)
-            if isinstance(t, Eq):
-                t = t.simplify()
-            if t == true:
+            if t is true:
                 return t
-            elif t != false:
+            elif t is not false:
                 r = None
         return r
 

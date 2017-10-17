@@ -4,12 +4,12 @@ of Basic or Atom."""
 import collections
 import sys
 
-from sympy.core.basic import Basic, Atom, preorder_traversal
+from sympy.core.basic import Basic, Atom, preorder_traversal, as_Basic
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
 from sympy.core.compatibility import default_sort_key, with_metaclass
 
-from sympy import sin, Lambda, Q, cos, gamma
+from sympy import sin, Lambda, Q, cos, gamma, Tuple
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
@@ -267,3 +267,9 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     assert n.is_comparable is False
     assert n.n(2).is_comparable is False
     assert n.n(2).n(2).is_comparable
+
+
+def test_as_Basic():
+    assert as_Basic(1) is S.One
+    assert as_Basic(()) == Tuple()
+    raises(TypeError, lambda: as_Basic([]))
