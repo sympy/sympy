@@ -1,4 +1,4 @@
-from sympy.core import symbols, Symbol, Tuple, oo
+from sympy.core import symbols, Symbol, Tuple, oo, Dummy
 from sympy.core.compatibility import iterable, range
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises, XFAIL
@@ -412,10 +412,26 @@ def test_complicated_derivative_with_Indexed():
     f = Function("f")
 
     expr = f((x[i] - y[i])**2/sigma)
-    assert str(expr.diff(x[m0])) == "2*(x[i] - y[i])*KroneckerDelta(i, m0)"\
-            "*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), ((x[i] - y[i])**2/sigma,))/sigma"
-    assert str(expr.diff(x[m0]).diff(x[m1])) == '2*KroneckerDelta(i, m0)*'\
-            'KroneckerDelta(i, m1)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,),'\
-            ' ((x[i] - y[i])**2/sigma,))/sigma + '\
-            '4*(x[i] - y[i])**2*KroneckerDelta(i, m0)*KroneckerDelta(i, m1)*'\
-            'Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), ((x[i] - y[i])**2/sigma,))/sigma**2'
+    _xi_1 = symbols("xi_1", cls=Dummy)
+    assert expr.diff(x[m0]).dummy_eq(
+        (x[i] - y[i])*KroneckerDelta(i, m0)*\
+        2*Subs(
+            Derivative(f(_xi_1), _xi_1),
+            (_xi_1,),
+            ((x[i] - y[i])**2/sigma,)
+        )/sigma
+    )
+    assert expr.diff(x[m0]).diff(x[m1]).dummy_eq(
+        2*KroneckerDelta(i, m0)*\
+        KroneckerDelta(i, m1)*Subs(
+            Derivative(f(_xi_1), _xi_1),
+            (_xi_1,),
+            ((x[i] - y[i])**2/sigma,)
+         )/sigma + \
+        4*(x[i] - y[i])**2*KroneckerDelta(i, m0)*KroneckerDelta(i, m1)*\
+        Subs(
+            Derivative(f(_xi_1), _xi_1, _xi_1),
+            (_xi_1,),
+            ((x[i] - y[i])**2/sigma,)
+        )/sigma**2
+    )

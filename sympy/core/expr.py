@@ -2199,7 +2199,7 @@ class Expr(Basic, EvalfMixin):
         {x, y}
 
         If the expression is contained in a non-expression object, don't return
-        the free symbols, compare:
+        the free symbols. Compare:
 
         >>> from sympy import Tuple
         >>> t = Tuple(x + y)
