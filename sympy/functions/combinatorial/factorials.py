@@ -480,7 +480,7 @@ class RisingFactorial(CombinatorialFunction):
 
     References
     ==========
-    
+
     .. [1] https://en.wikipedia.org/wiki/Pochhammer_symbol
 
     """
@@ -801,10 +801,6 @@ class binomial(CombinatorialFunction):
                     return S.Zero
                 elif k > n // 2:
                     k = n - k
-
-                if HAS_GMPY:
-                    from sympy.core.compatibility import gmpy
-                    return Integer(gmpy.bincoef(n, k))
 
                 prime_count_estimate = N(n / log(n))
 
