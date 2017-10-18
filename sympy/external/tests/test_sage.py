@@ -241,6 +241,7 @@ def test_abstract_function():
 
 TESTS::
 
+    sage: from sympy.external.tests.test_sage import *
     sage: test_basics()
     sage: test_basics()
     sage: test_complex()
@@ -257,13 +258,13 @@ TESTS::
     sage: test_issue_4023()
     sage: test_integral()
     sage: test_undefined_function()
-    sage  test_abstract_function()
+    sage: test_abstract_function()
 
 Sage has no symbolic Lucas function at the moment::
 
     sage: check_expression("lucas(x)", "x")
     Traceback (most recent call last):
     ...
-    AttributeError: 'module' object has no attribute 'lucas'
+    AttributeError...
 
 """

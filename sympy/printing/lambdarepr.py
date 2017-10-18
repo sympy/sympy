@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+from distutils.version import LooseVersion as V
 
 from .str import StrPrinter
 from .pycode import (
@@ -6,8 +7,14 @@ from .pycode import (
     MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
     NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 )
+from sympy.external import import_module
 from sympy.utilities import default_sort_key
 
+tensorflow = import_module('tensorflow')
+if tensorflow and V(tensorflow.__version__) < '1.0':
+    tensorflow_piecewise = "select"
+else:
+    tensorflow_piecewise = "where"
 
 class LambdaPrinter(PythonCodePrinter):
     """
@@ -107,12 +114,14 @@ class TensorflowPrinter(LambdaPrinter):
         from sympy import Piecewise
         e, cond = expr.args[0].args
         if len(expr.args) == 1:
-            return 'select({0}, {1}, {2})'.format(
+            return '{0}({1}, {2}, {3})'.format(
+                tensorflow_piecewise,
                 self._print(cond, **kwargs),
                 self._print(e, **kwargs),
                 0)
 
-        return 'select({0}, {1}, {2})'.format(
+        return '{0}({1}, {2}, {3})'.format(
+            tensorflow_piecewise,
             self._print(cond, **kwargs),
             self._print(e, **kwargs),
             self._print(Piecewise(*expr.args[1:]), **kwargs))

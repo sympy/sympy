@@ -207,6 +207,7 @@ def test_Indexed_constructor():
     assert A == Indexed(IndexedBase('A'), i, j)
     raises(TypeError, lambda: Indexed(A, i, j))
     raises(IndexException, lambda: Indexed("A"))
+    assert A.free_symbols == {A, A.base.label, i, j}
 
 
 def test_Indexed_func_args():

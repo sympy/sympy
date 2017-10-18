@@ -802,13 +802,16 @@ class binomial(CombinatorialFunction):
                 elif k > n // 2:
                     k = n - k
 
+                if HAS_GMPY:
+                    from sympy.core.compatibility import gmpy
+                    return Integer(gmpy.bincoef(n, k))
+
                 prime_count_estimate = N(n / log(n))
 
                 # if the number of primes less than n is less than k, use prime sieve method
                 # otherwise it is more memory efficient to compute factorials explicitly
                 if prime_count_estimate < k:
                     M, result = int(_sqrt(n)), 1
-
                     for prime in sieve.primerange(2, n + 1):
                         if prime > n - k:
                             result *= prime

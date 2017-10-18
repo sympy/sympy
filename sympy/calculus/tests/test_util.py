@@ -12,16 +12,30 @@ a = Symbol('a', real=True)
 
 def test_function_range():
     x, y, a, b = symbols('x y a b')
-    assert function_range(sin(x), x, Interval(-pi/2, pi/2)) == Interval(-1, 1)
-    assert function_range(sin(x), x, Interval(0, pi)) == Interval(0, 1)
-    assert function_range(tan(x), x, Interval(0, pi)) == Interval(-oo, oo)
-    assert function_range(tan(x), x, Interval(pi/2, pi)) == Interval(-oo, 0)
-    assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)) == Interval(-oo, oo)
-    assert function_range(1/(x**2), x, Interval(-1, 1)) == Interval(1, oo)
-    assert function_range(exp(x), x, Interval(-1, 1)) == Interval(exp(-1), exp(1))
-    assert function_range(log(x) - x, x, S.Reals) == Interval(-oo, -1)
-    assert function_range(sqrt(3*x - 1), x, Interval(0, 2)) == Interval(0, sqrt(5))
-    raises(NotImplementedError, lambda : function_range(exp(x)*(sin(x)-cos(x))/2 - x, x, S.Reals))
+    assert function_range(sin(x), x, Interval(-pi/2, pi/2)
+        ) == Interval(-1, 1)
+    assert function_range(sin(x), x, Interval(0, pi)
+        ) == Interval(0, 1)
+    assert function_range(tan(x), x, Interval(0, pi)
+        ) == Interval(-oo, oo)
+    assert function_range(tan(x), x, Interval(pi/2, pi)
+        ) == Interval(-oo, 0)
+    assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)
+        ) == Interval(-oo, oo)
+    assert function_range(1/(x**2), x, Interval(-1, 1)
+        ) == Interval(1, oo)
+    assert function_range(exp(x), x, Interval(-1, 1)
+        ) == Interval(exp(-1), exp(1))
+    assert function_range(log(x) - x, x, S.Reals
+        ) == Interval(-oo, -1)
+    assert function_range(sqrt(3*x - 1), x, Interval(0, 2)
+        ) == Interval(0, sqrt(5))
+    assert function_range(x*(x - 1) - (x**2 - x), x, S.Reals
+        ) == FiniteSet(0)
+    assert function_range(x*(x - 1) - (x**2 - x) + y, x, S.Reals
+        ) == FiniteSet(y)
+    raises(NotImplementedError, lambda : function_range(
+        exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
 
 
 def test_continuous_domain():
@@ -104,8 +118,8 @@ def test_periodicity():
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
 
-    assert periodicity(Abs(sin(Abs(sin(x)))),x) == pi
-    assert all(periodicity(Abs(f(x)),x) == pi for f in (
+    assert periodicity(Abs(sin(Abs(sin(x)))), x) == pi
+    assert all(periodicity(Abs(f(x)), x) == pi for f in (
         cos, sin, sec, csc, tan, cot))
     assert periodicity(Abs(sin(tan(x))), x) == pi
     assert periodicity(Abs(sin(sin(x) + tan(x))), x) == 2*pi
