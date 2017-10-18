@@ -804,6 +804,8 @@ class binomial(CombinatorialFunction):
 
                 prime_count_estimate = N(n / log(n))
 
+                # if the number of primes less than n is less than k, use prime sieve method
+                # otherwise it is more memory efficient to compute factorials explicitly
                 if prime_count_estimate < k:
                     M, result = int(_sqrt(n)), 1
 
@@ -827,12 +829,7 @@ class binomial(CombinatorialFunction):
                             if exp > 0:
                                 result *= prime**exp
                 else:
-                    result = S.One
-                    for i in range(n-k+1, n+1):
-                        result *= i
-
-                    result /= factorial(k)
-
+                    result = ff(n, k) / factorial(k)
                 return Integer(result)
             else:
                 d = result = n - k + 1
