@@ -153,7 +153,7 @@ def _import(module, reload="False"):
         namespace['Abs'] = abs
 
 
-@doctest_depends_on(modules=('numpy'))
+@doctest_depends_on(modules=('numpy', 'tensorflow'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=True):
     """
@@ -300,9 +300,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``lambdify`` always prefers ``_imp_`` implementations to implementations
     in other namespaces, unless the ``use_imps`` input parameter is False.
 
-    Usage with Tensorflow module:
+    Usage with Tensorflow:
 
     >>> import tensorflow as tf
+    >>> from sympy import Max, sin
     >>> f = Max(x, sin(x))
     >>> func = lambdify(x, f, 'tensorflow')
     >>> result = func(tf.constant(1.0))
