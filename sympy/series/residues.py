@@ -57,13 +57,8 @@ def residue(expr, x, x0):
             s = expr.series(x, n=0)
         else:
             s = expr.nseries(x, n=n)
-        if s.has(Order) and s.removeO() == 0:
-            # bug in nseries
-            continue
         if not s.has(Order) or s.getn() >= 0:
             break
-    if s.has(Order) and s.getn() < 0:
-        raise NotImplementedError('Bug in nseries?')
     s = collect(s.removeO(), x)
     if s.is_Add:
         args = s.args

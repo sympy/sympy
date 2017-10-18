@@ -215,6 +215,16 @@ class ReprPrinter(Printer):
             orderstr = ""
         return "%s(%s, %s%s)" % (cls, dom, gens, orderstr)
 
+    def _print_DMP(self, p):
+        cls = p.__class__.__name__
+        rep = self._print(p.rep)
+        dom = self._print(p.dom)
+        if p.ring is not None:
+            ringstr = ", ring=" + self._print(p.ring)
+        else:
+            ringstr = ""
+        return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+
 
 def srepr(expr, **settings):
     """return expr in repr form"""

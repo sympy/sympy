@@ -127,6 +127,8 @@ avogadro_number = Quantity("avogadro_number", 1, 6.022140857e23)
 avogadro = avogadro_constant = Quantity("avogadro_constant", amount_of_substance**-1, avogadro_number / mol)
 # Boltzmann constant
 boltzmann = boltzmann_constant = Quantity("boltzmann_constant", energy/temperature, 1.38064852e-23*joule/kelvin)
+# Stefan-Boltzmann constant
+stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant", energy*time**-1*length**-2*temperature**-4, 5.670367e-8*joule/(s*m**2*kelvin**4))
 # Atomic mass
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant", mass, 1.660539040e-24*gram)
 # Molar gas constant

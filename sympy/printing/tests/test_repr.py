@@ -6,6 +6,7 @@ from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 from sympy.polys import ring, field, ZZ, QQ, lex, grlex
+from sympy.polys.polyclasses import DMP
 
 x, y = symbols('x,y')
 
@@ -227,6 +228,12 @@ def test_PolynomialRingBase():
         "GlobalPolynomialRing(ZZ[x], Symbol('y'))"
     assert srepr(QQ.frac_field(x).old_poly_ring(y)) == \
         "GlobalPolynomialRing(FractionField(FracField((Symbol('x'),), QQ, lex)), Symbol('y'))"
+
+
+def test_DMP():
+    assert srepr(DMP([1, 2], ZZ)) == 'DMP([1, 2], ZZ)'
+    assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
+        "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
 
 
 def test_BooleanAtom():

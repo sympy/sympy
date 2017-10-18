@@ -2,6 +2,7 @@ from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, range, ordered
+from sympy.core.symbol import _symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -16,7 +17,6 @@ from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment
-from .util import _symbol
 
 from sympy import sqrt
 
@@ -622,7 +622,7 @@ class Polygon(GeometrySet):
         Point2D(1, 1/2)
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         sides = []
