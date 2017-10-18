@@ -41,7 +41,7 @@ def limit(e, z, z0, dir="+", exc=True):
     >>> limit(1/x, x, 0, dir='+-')
     Traceback (most recent call last):
         ...
-    ValueError: The limit does not exist since left and right limits do not match.
+    ValueError: The limit does not exist since left and right hand limits don't match.
 
     >>> limit(1/x, x, 0, dir='+-', exc=False)
 
@@ -64,7 +64,7 @@ def limit(e, z, z0, dir="+", exc=True):
         else:
             if exc:
                 raise ValueError("The limit does not exist since "
-                        "left and right limits do not match.")
+                        "left and right hand limits don't match.")
             else:
                 return None
     else:
