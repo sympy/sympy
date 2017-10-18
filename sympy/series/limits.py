@@ -9,17 +9,24 @@ from sympy.series.order import Order
 from .gruntz import gruntz
 
 
-def limit(e, z, z0, dir="+",exc=True):
+def limit(e, z, z0, dir="+", exc=True):
     """
     Compute the limit of e(z) at the point z0.
 
     z0 can be any expression, including oo and -oo.
 
-    For dir="+-" (default) it calculates the bi-directional limit; for dir="+" it calculates the limit from the right (z->z0+) and for dir="-" the limit from the left (z->z0-).
-    For infinite z0 (oo or -oo), the dir argument is determined from
-    the direction of the infinity (i.e., dir="-" for oo).
+    For ``dir="+-"`` it calculates the bi-directional limit; for
+    ``dir="+"`` (default) it calculates the limit from the right
+    (z->z0+) and for dir="-" the limit from the left (z->z0-).
+    For infinite ``z0`` (``oo`` or ``-oo``), the ``dir`` argument is
+    determined from the direction of the infinity (i.e.,
+    ``dir="-"`` for ``oo``).
 
-    exc is only used in the case of a non-existent bi-directional limit--when the left- and right-side limits don't match.  For exc=True (default), it throws a ValueError(), and for exc=False it returns None.
+    ``exc`` is only used in the case of a non-existent bi-directional
+    limit i.e. when the left- and right-side limits don't match.
+    For ``exc=True`` (default), it throws a ``ValueError()``, and
+    for ``exc=False`` it returns ``None``.
+
     Examples
     ========
 
@@ -27,10 +34,17 @@ def limit(e, z, z0, dir="+",exc=True):
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
     1
-    >>> limit(1/x, x, 0, dir="+")
+    >>> limit(1/x, x, 0) # default dir='+'
     oo
     >>> limit(1/x, x, 0, dir="-")
     -oo
+    >>> limit(1/x, x, 0, dir='+-')
+    Traceback (most recent call last):
+        ...
+    ValueError: The limit does not exist since left and right limits do not match.
+
+    >>> limit(1/x, x, 0, dir='+-', exc=False)
+
     >>> limit(1/x, x, oo)
     0
 
@@ -49,7 +63,8 @@ def limit(e, z, z0, dir="+",exc=True):
             return rlim
         else:
             if exc:
-                raise ValueError("The limit does not exist! (left and right limits do not match)")
+                raise ValueError("The limit does not exist since "
+                        "left and right limits do not match.")
             else:
                 return None
     else:
