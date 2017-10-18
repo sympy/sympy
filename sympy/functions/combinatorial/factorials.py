@@ -430,6 +430,7 @@ class factorial2(CombinatorialFunction):
 ######################## RISING and FALLING FACTORIALS ########################
 ###############################################################################
 
+
 class RisingFactorial(CombinatorialFunction):
     """
     Rising factorial (also called Pochhammer symbol) is a double valued
@@ -479,6 +480,7 @@ class RisingFactorial(CombinatorialFunction):
 
     References
     ==========
+    
     .. [1] https://en.wikipedia.org/wiki/Pochhammer_symbol
 
     """
