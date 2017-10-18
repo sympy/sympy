@@ -2319,12 +2319,12 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     This function returns a tuple.  The first item in the tuple is ``True`` if
     the substitution results in ``0``, and ``False`` otherwise. The second
     item in the tuple is what the substitution results in.  It should always
-    be ``0`` if the first item is ``True``. Note that sometimes this function
-    will ``False``, but with an expression that is identically equal to ``0``,
-    instead of returning ``True``.  This is because
-    :py:meth:`~sympy.simplify.simplify.simplify` cannot reduce the expression
-    to ``0``.  If an expression returned by this function vanishes
-    identically, then ``sol`` really is a solution to ``ode``.
+    be ``0`` if the first item is ``True``. Sometimes this function will
+    return ``False`` even when an expression is identically equal to ``0``.
+    This happens when :py:meth:`~sympy.simplify.simplify.simplify` does not
+    reduce the expression to ``0``.  If an expression returned by this
+    function vanishes identically, then ``sol`` really is a solution to
+    the ``ode``.
 
     If this function seems to hang, it is probably because of a hard
     simplification.

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic
+from sympy.core.relational import Eq, Ne
 from sympy.logic.boolalg import BooleanFunction
 
 
@@ -38,3 +39,13 @@ class Contains(BooleanFunction):
         ret = S.contains(x)
         if not isinstance(ret, Contains):
             return ret
+
+    @property
+    def binary_symbols(self):
+        return set().union(*[i.binary_symbols
+            for i in self.args[1].args
+            if i.is_Boolean or i.is_Symbol or
+            isinstance(i, (Eq, Ne))])
+
+    def as_set(self):
+        return self

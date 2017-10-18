@@ -587,11 +587,18 @@ def test_issue_8449():
 
 def test_simplify():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    r = S(1) < -x
-    # until relationals have an _eval_simplify method
-    # if there is no simplification to do on either side
-    # the only the canonical form is returned
+    r = S(1) < x
+    # canonical operations are not the same as simplification,
+    # so if there is no simplification, canonicalization will
+    # be done unless the measure forbids it
     assert simplify(r) == r.canonical
+    assert simplify(r, ratio=0) != r.canonical
+    # this is not a random test; in _eval_simplify
+    # this will simplify to S.false and that is the
+    # reason for the 'if r.is_Relational' in Relational's
+    # _eval_simplify routine
+    assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
+        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
 
 
 def test_equals():
@@ -709,3 +716,24 @@ def test_issue_10927():
     x = symbols('x')
     assert str(Eq(x, oo)) == 'Eq(x, oo)'
     assert str(Eq(x, -oo)) == 'Eq(x, -oo)'
+
+
+def test_binary_symbols():
+    ans = set([x])
+    for f in Eq, Ne:
+        for t in S.true, S.false:
+            eq = f(x, S.true)
+            assert eq.binary_symbols == ans
+            assert eq.reversed.binary_symbols == ans
+        assert f(x, 1).binary_symbols == set()
+
+
+def test_rel_args():
+    # can't have Boolean args; this is automatic with Python 3
+    # so this test and the __lt__, etc..., definitions in
+    # relational.py and boolalg.py which are marked with ///
+    # can be removed.
+    for op in ['<', '<=', '>', '>=']:
+        for b in (S.true, x < 1, And(x, y)):
+            for v in (0.1, 1, 2**32, t, S(1)):
+                raises(TypeError, lambda: Relational(b, v, op))

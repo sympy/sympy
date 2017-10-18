@@ -167,12 +167,29 @@ quart = quarts = Quantity("quart", length**3, Rational(231, 4) * inch**3)
 ly = lightyear = lightyears = Quantity("lightyear", length, speed_of_light*julian_year, abbrev="ly")
 au = astronomical_unit = astronomical_units = Quantity("astronomical_unit", length, 149597870691*meter, abbrev="AU")
 
-# Planck units:
+# Fundamental Planck units:
 planck_mass = Quantity("planck_mass", mass, sqrt(hbar*speed_of_light/G), abbrev="m_P")
 planck_time = Quantity("planck_time", time, sqrt(hbar*G/speed_of_light**5), abbrev="t_P")
 planck_temperature = Quantity("planck_temperature", temperature, sqrt(hbar*speed_of_light**5/G/boltzmann**2), abbrev="T_P")
 planck_length = Quantity("planck_length", length, sqrt(hbar*G/speed_of_light**3), abbrev="l_P")
-# TODO: add more from https://en.wikipedia.org/wiki/Planck_units
+planck_charge = Quantity("planck_charge", charge, sqrt(4*pi*electric_constant*hbar*speed_of_light), abbrev="q_P")
+
+# Derived Planck units:
+planck_area = Quantity("planck_area", length**2, planck_length**2)
+planck_volume = Quantity("planck_volume", length**3, planck_length**3)
+planck_momentum = Quantity("planck_momentum", mass*velocity, planck_mass * speed_of_light)
+planck_energy = Quantity("planck_energy", energy, planck_mass * speed_of_light**2, abbrev="E_P")
+planck_force = Quantity("planck_force", force, planck_energy / planck_length, abbrev="F_P")
+planck_power = Quantity("planck_power", power, planck_energy / planck_time, abbrev="P_P")
+planck_density = Quantity("planck_density", mass/length**3, planck_mass / planck_length**3, abbrev="rho_P")
+planck_energy_density = Quantity("planck_energy_density", energy / length**3, planck_energy / planck_length**3, abbrev="rho^E_P")
+planck_intensity = Quantity("planck_intensity", mass * time**(-3), planck_energy_density * speed_of_light, abbrev="I_P")
+planck_angular_frequency = Quantity("planck_angular_frequency", 1 / time, 1 / planck_time, abbrev="omega_P")
+planck_pressure = Quantity("planck_pressure", pressure, planck_force / planck_length**2, abbrev="p_P")
+planck_current = Quantity("planck_current", current, planck_charge / planck_time, abbrev="I_P")
+planck_voltage = Quantity("planck_voltage", voltage, planck_energy / planck_charge, abbrev="V_P")
+planck_impedance = Quantity("planck_impedance", impedance, planck_voltage / planck_current, abbrev="Z_P")
+planck_acceleration = Quantity("planck_acceleration", acceleration, speed_of_light / planck_time, abbrev="a_P")
 
 # Information theory units:
 bit = bits = Quantity('bit', information, 1)

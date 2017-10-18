@@ -2490,11 +2490,13 @@ def count_ops(expr, visual=False):
 
     """
     from sympy import Integral, Symbol
+    from sympy.core.relational import Relational
     from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction
+    from sympy.utilities.misc import func_name
 
     expr = sympify(expr)
-    if isinstance(expr, Expr):
+    if isinstance(expr, Expr) and not expr.is_Relational:
 
         ops = []
         args = [expr]
@@ -2579,11 +2581,11 @@ def count_ops(expr, visual=False):
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
-    elif isinstance(expr, BooleanFunction):
+    elif isinstance(expr, (Relational, BooleanFunction)):
         ops = []
         for arg in expr.args:
             ops.append(count_ops(arg, visual=True))
-        o = Symbol(expr.func.__name__.upper())
+        o = Symbol(func_name(expr, short=True).upper())
         ops.append(o)
     elif not isinstance(expr, Basic):
         ops = []
