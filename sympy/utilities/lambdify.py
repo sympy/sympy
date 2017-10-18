@@ -181,7 +181,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``lambdify`` bridges the two by converting a SymPy expression to an
     equivalent numeric function.
 
-    The basic workflow with lambdify is to first create a SymPy expression
+    The basic workflow with ``lambdify`` is to first create a SymPy expression
     representing whatever mathematical function you wish to evaluate. This
     should be done using only SymPy functions and expressions. Then, use
     ``lambdify`` to convert this to an equivalent function for numerical
@@ -243,26 +243,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     namespaces work. Say we had two files. One called ``sin_cos_sympy.py``,
     with
 
-    .. code:: python
+        from sympy import sin, cos
 
-       from sympy import sin, cos
-
-       def sin_cos(x):
-           return sin(x) + cos(x)
+        def sin_cos(x):
+            return sin(x) + cos(x)
 
     and one called ``sin_cos_numpy.py`` with
 
-    .. code:: python
+        from numpy import sin, cos
 
-       from numpy import sin, cos
-
-       def sin_cos(x):
-           return sin(x) + cos(x)
-
+        def sin_cos(x):
+            return sin(x) + cos(x)
 
     The two files define an identical function ``sin_cos``. However, in the
-    first file, ``sin`` and ``cos`` are defined as the SymPy ``sin`` and ``cos``. In the second,
-    they are defined as the NumPy versions.
+    first file, ``sin`` and ``cos`` are defined as the SymPy ``sin`` and
+    ``cos``. In the second, they are defined as the NumPy versions.
 
     If we were to import the first file and use the ``sin_cos`` function, we
     would get something like
@@ -429,9 +424,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     The default behavior is to substitute all arguments in the provided
     expression with dummy symbols. This allows for applied functions (e.g.
     f(t)) to be supplied as arguments. Call the function with dummify=False if
-    dummy substitution is unwanted (and `args` is not a string). If you want
+    dummy substitution is unwanted (and ``args`` is not a string). If you want
     to view the lambdified function or provide "sympy" as the module, you
-    should probably set dummify=False.
+    should probably set ``dummify=False``.
 
     For functions involving large array calculations, numexpr can provide a
     significant speedup over numpy.  Please note that the available functions
@@ -537,7 +532,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> f(*flatten(vals))
     10
 
-    Functions present in `expr` can also carry their own numerical
+    Functions present in ``expr`` can also carry their own numerical
     implementations, in a callable attached to the ``_imp_``
     attribute.  Usually you attach this using the
     ``implemented_function`` factory:
@@ -839,7 +834,7 @@ def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations
 
     We need to search for functions in anything that can be thrown at
-    us - that is - anything that could be passed as `expr`.  Examples
+    us - that is - anything that could be passed as ``expr``.  Examples
     include sympy expressions, as well as tuples, lists and dicts that may
     contain sympy expressions.
 
@@ -854,7 +849,7 @@ def _imp_namespace(expr, namespace=None):
     Returns
     -------
     namespace : dict
-       dict with keys of implemented function names within `expr` and
+       dict with keys of implemented function names within ``expr`` and
        corresponding values being the numerical implementation of
        function
 
@@ -919,7 +914,7 @@ def implemented_function(symfunc, implementation):
     ----------
     symfunc : ``str`` or ``UndefinedFunction`` instance
        If ``str``, then create new ``UndefinedFunction`` with this as
-       name.  If `symfunc` is an Undefined function, create a new function
+       name.  If ``symfunc`` is an Undefined function, create a new function
        with the same name and the implemented function attached.
     implementation : callable
        numerical implementation to be called by ``evalf()`` or ``lambdify``
