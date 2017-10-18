@@ -166,11 +166,15 @@ def _import(module, reload=False):
         namespace['Abs'] = abs
 
 
+<<<<<<< HEAD
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
 _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy'))
+=======
+@doctest_depends_on(modules=('numpy', 'tensorflow'))
+>>>>>>> 1f8bd0b65... Fix doctest_depends_on for lambidfy()
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """
@@ -345,9 +349,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``lambdify`` always prefers ``_imp_`` implementations to implementations
     in other namespaces, unless the ``use_imps`` input parameter is False.
 
-    Usage with Tensorflow module:
+    Usage with Tensorflow:
 
     >>> import tensorflow as tf
+    >>> from sympy import Max, sin
     >>> f = Max(x, sin(x))
     >>> func = lambdify(x, f, 'tensorflow')
     >>> result = func(tf.constant(1.0))
