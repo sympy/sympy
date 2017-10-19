@@ -85,8 +85,6 @@ def test_repeated_degree_2():
     knots = [0, 0, 1, 2, 2, 3, 4, 4]
     splines = bspline_basis_set(d, knots, x)
 
-    print(str(splines[2]))
-
     assert splines[0] == Piecewise(((-3*x**2/2 + 2*x), And(x <= 1, x >= 0)),
                                    (x**2/2 - 2*x + 2, And(x <= 2, x >= 1)),
                                    (0, True))

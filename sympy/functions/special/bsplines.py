@@ -25,22 +25,33 @@ def _add_splines(c, b1, d, b2):
 
             # This merging algorithm assume the conditions in p1 and p2 are sorted
             for arg in p1.args[:-1]:
-                cond = arg.cond
+                # Conditional of Piecewise are And objects
+                # the args of the And object is a tuple of two Relational objects
+                # the numerical value is in the .rhs of the Relational object
                 expr = arg.expr
+                cond = arg.cond
+
+                lower = cond.args[0].rhs
 
                 # Check p2 for matching conditions that can be merged
                 for i, arg2 in enumerate(p2args):
-                    if arg2.cond < cond:
-                        # arg2 condition smaller than arg1, add to new_args by itself (no match expected in p1)
-                        new_args.append(arg2)
-                        del p2args[i]
-                        break
-                    elif arg2.cond == cond:
+                    expr2 = arg2.expr
+                    cond2 = arg2.cond
+
+                    lower_2 = cond2.args[0].rhs
+                    upper_2 = cond2.args[1].rhs
+
+                    if cond2 == cond:
                         # Conditions match, join expressions
-                        expr += arg2.expr
+                        expr += expr2
                         # Remove matching element
                         del p2args[i]
                         # No need to check the rest
+                        break
+                    elif lower_2 < lower and upper_2 <= lower:
+                        # Check if arg2 condition smaller than arg1, add to new_args by itself (no match expected in p1)
+                        new_args.append(arg2)
+                        del p2args[i]
                         break
 
                 # Checked all, add expr and cond
