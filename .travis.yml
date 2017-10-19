@@ -289,5 +289,8 @@ script:
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
     fi
+  - if [[ "${TEST_SYMPY}" == "true" ]]; then
+        bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
+    fi
 notifications:
   email: false
