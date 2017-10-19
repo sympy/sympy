@@ -635,6 +635,11 @@ def solve_decomposition(f, symbol, domain):
             elif isinstance(y_s, Union):
                 iter_iset = y_s.args
 
+            elif isinstance(y_s, EmptySet):
+                # y_s is not in the range of g in g_s, so no solution exists
+                #in the given domain
+                return y_s
+
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
                 dummy_var = tuple(iset.lamda.expr.free_symbols)[0]

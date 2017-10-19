@@ -1104,6 +1104,7 @@ def test_solve_decomposition():
     f4 = sin(x + 1)
     f5 = exp(x + 2) - 1
     f6 = 1/log(x)
+    f7 = 1/x
 
     s1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
     s2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
@@ -1116,8 +1117,9 @@ def test_solve_decomposition():
     assert solve_decomposition(f3, x, S.Reals) == Union(s1, s2, s3)
     assert solve_decomposition(f4, x, S.Reals) == Union(s4, s5)
     assert solve_decomposition(f5, x, S.Reals) == FiniteSet(-2)
-    assert solve_decomposition(f6, x, S.Reals) == ConditionSet(x, Eq(f6, 0), S.Reals)
-
+    assert solve_decomposition(f6, x, S.Reals) == S.EmptySet
+    assert solve_decomposition(f7, x, S.Reals) == S.EmptySet
+    assert solve_decomposition(x, x, Interval(1, 2)) == S.EmptySet
 
 # nonlinsolve testcases
 def test_nonlinsolve_basic():

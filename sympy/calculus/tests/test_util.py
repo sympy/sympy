@@ -21,7 +21,7 @@ def test_function_range():
     assert function_range(tan(x), x, Interval(pi/2, pi)
         ) == Interval(-oo, 0)
     assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)
-        ) == Interval(-oo, oo)
+        ) == Union(Interval(-oo, 2/7), Interval(8/3, oo))
     assert function_range(1/(x**2), x, Interval(-1, 1)
         ) == Interval(1, oo)
     assert function_range(exp(x), x, Interval(-1, 1)

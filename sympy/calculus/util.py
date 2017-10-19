@@ -101,7 +101,7 @@ def function_range(f, symbol, domain):
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
     Interval(-oo, oo)
     >>> function_range(1/x, x, S.Reals)
-    Interval(-oo, oo)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> function_range(exp(x), x, S.Reals)
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
@@ -112,7 +112,6 @@ def function_range(f, symbol, domain):
     """
     from sympy.solvers.solveset import solveset
 
-    vals = S.EmptySet
     period = periodicity(f, symbol)
     if period is S.Zero:
         # the expression is constant wrt symbol
@@ -127,46 +126,52 @@ def function_range(f, symbol, domain):
 
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
-    if isinstance(intervals, Interval):
+    if isinstance(intervals,(Interval, FiniteSet)):
         interval_iter = (intervals,)
 
     else:
         interval_iter = intervals.args
 
     for interval in interval_iter:
-        critical_points = S.EmptySet
-        critical_values = S.EmptySet
-        bounds = ((interval.left_open, interval.inf, '+'),
-                  (interval.right_open, interval.sup, '-'))
+        if isinstance(interval, FiniteSet):
+            for singleton in interval:
+                if singleton in domain:
+                    range_int += FiniteSet(f.subs(symbol, singleton))
+        else:
+            vals = S.EmptySet
+            critical_points = S.EmptySet
+            critical_values = S.EmptySet
+            bounds = ((interval.left_open, interval.inf, '+'),
+                   (interval.right_open, interval.sup, '-'))
 
-        for is_open, limit_point, direction in bounds:
-            if is_open:
-                critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
-                vals += critical_values
+            for is_open, limit_point, direction in bounds:
+                if is_open:
+                    critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
+                    vals += critical_values
 
-            else:
-                vals += FiniteSet(f.subs(symbol, limit_point))
+                else:
+                    vals += FiniteSet(f.subs(symbol, limit_point))
 
-        solution = solveset(f.diff(symbol), symbol, domain)
+            solution = solveset(f.diff(symbol), symbol, interval)
 
-        if isinstance(solution, ConditionSet):
-            raise NotImplementedError('Unable to find critical points for %s'.format(f))
+            if isinstance(solution, ConditionSet):
+                raise NotImplementedError('Unable to find critical points for %s'.format(f))
 
-        critical_points += solution
+            critical_points += solution
 
-        for critical_point in critical_points:
-            vals += FiniteSet(f.subs(symbol, critical_point))
+            for critical_point in critical_points:
+                vals += FiniteSet(f.subs(symbol, critical_point))
 
-        left_open, right_open = False, False
+            left_open, right_open = False, False
 
-        if critical_values is not S.EmptySet:
-            if critical_values.inf == vals.inf:
-                left_open = True
+            if critical_values is not S.EmptySet:
+                if critical_values.inf == vals.inf:
+                    left_open = True
 
-            if critical_values.sup == vals.sup:
-                right_open = True
+                if critical_values.sup == vals.sup:
+                    right_open = True
 
-        range_int += Interval(vals.inf, vals.sup, left_open, right_open)
+            range_int += Interval(vals.inf, vals.sup, left_open, right_open)
 
     return range_int
 
