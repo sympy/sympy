@@ -101,7 +101,7 @@ def function_range(f, symbol, domain):
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
     Interval(-oo, oo)
     >>> function_range(1/x, x, S.Reals)
-    Interval(-oo, oo)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> function_range(exp(x), x, S.Reals)
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
