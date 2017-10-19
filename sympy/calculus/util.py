@@ -126,7 +126,7 @@ def function_range(f, symbol, domain):
 
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
-    if isinstance(intervals, Interval) or isinstance(intervals, FiniteSet):
+    if isinstance(intervals,(Interval, FiniteSet)):
         interval_iter = (intervals,)
 
     else:
