@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
+import ast
 
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
@@ -263,6 +264,23 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
         app.display_banner = False
         app.initialize(argv)
 
+        shell = app.shell
+        if hasattr(shell, 'ast_transformers'):
+            del shell.ast_transformers[:]
+        else: # ast_transformers was introduced in IPython 1.0
+            import types
+            shell.ast_transformers = []
+
+            old_run_ast_nodes = shell.run_ast_nodes
+            def my_run_ast_nodes(self, nodelist, *args, **kwargs):
+                node = ast.Module(nodelist)
+                for transformer in self.ast_transformers:
+                    node = transformer.visit(node)
+                node = ast.fix_missing_locations(node)
+                old_run_ast_nodes(node.body, *args, **kwargs)
+
+            shell.run_ast_nodes = types.MethodType(my_run_ast_nodes, shell)
+
         if auto_symbols:
             readline = import_module("readline")
             if readline:
@@ -270,7 +288,7 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
         if auto_int_to_Integer:
             enable_automatic_int_sympification(app)
 
-        return app.shell
+        return shell
     else:
         from IPython.Shell import make_IPython
         return make_IPython(argv)
