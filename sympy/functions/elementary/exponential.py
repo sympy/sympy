@@ -240,7 +240,7 @@ class exp(ExpBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
-        elif arg.func is log:
+        elif isinstance(arg, log):
             return arg.args[0]
         elif isinstance(arg, AccumBounds):
             return AccumBounds(exp(arg.min), exp(arg.max))
@@ -271,7 +271,7 @@ class exp(ExpBase):
 
             coeffs, log_term = [coeff], None
             for term in Mul.make_args(terms):
-                if term.func is log:
+                if isinstance(term, log):
                     if log_term is None:
                         log_term = term.args[0]
                     else:
@@ -291,7 +291,7 @@ class exp(ExpBase):
                     add.append(a)
                     continue
                 newa = cls(a)
-                if newa.func is cls:
+                if isinstance(newa, cls):
                     add.append(a)
                 else:
                     out.append(newa)
@@ -364,9 +364,9 @@ class exp(ExpBase):
             old = exp(old.exp*log(old.base))
         elif old is S.Exp1 and new.is_Function:
             old = exp
-        if old.func is exp or old is S.Exp1:
+        if isinstance(old, exp) or old is S.Exp1:
             f = lambda a: Pow(*a.as_base_exp(), evaluate=False) if (
-                a.is_Pow or a.func is exp) else a
+                a.is_Pow or isinstance(a, exp)) else a
             return Pow._eval_subs(f(self), f(old), new)
 
         if old is exp and not new.is_Function:
@@ -528,9 +528,9 @@ class log(Function):
                 if arg.q != 1:
                     return cls(arg.p) - cls(arg.q)
 
-        if arg.func is exp and arg.args[0].is_real:
+        if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
-        elif arg.func is exp_polar:
+        elif isinstance(arg, exp_polar):
             return unpolarify(arg.exp)
         elif isinstance(arg, AccumBounds):
             if arg.min.is_positive:
@@ -615,8 +615,8 @@ class log(Function):
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow or isinstance(arg, exp):
-            if force or (arg.exp.is_real and arg.base.is_positive) or \
-                    arg.base.is_polar:
+            if force or (arg.exp.is_real and (arg.base.is_positive or ((arg.exp+1)
+                .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
                 a = self.func(b)

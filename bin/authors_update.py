@@ -9,6 +9,7 @@ get the order in AUTHORS.
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import codecs
 import os
 import sys
 
@@ -17,6 +18,7 @@ if sys.version_info < (3, 6):
 
 from subprocess import run, PIPE
 from collections import OrderedDict
+
 
 def yellow(text):
     return "\033[33m%s\033[0m" % text
@@ -31,6 +33,8 @@ sympy_dir = os.path.join(sympy_top, 'sympy')
 
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
+
+from sympy.utilities.misc import filldedent
 
 git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
 
@@ -71,25 +75,27 @@ move(git_people, 93, 92) # James Pearson
 
 git_people.pop(226) # Sergey B Kirpichev
 
-header = """\
-All people who contributed to SymPy by sending at least a patch or more (in the
-order of the date of their first contribution), except those who explicitly
-didn't want to be mentioned. People with a * next to their names are not found
-in the metadata of the git history. This file is generated automatically by
-running `./bin/authors_update.py`.
-"""
-header_extra = """There are a total of {authors_count} authors.\n""".format(authors_count=len(git_people))
+header = filldedent("""
+    All people who contributed to SymPy by sending at least a patch or
+    more (in the order of the date of their first contribution), except
+    those who explicitly didn't want to be mentioned. People with a * next
+    to their names are not found in the metadata of the git history. This
+    file is generated automatically by running `./bin/authors_update.py`.
+    """).lstrip()
+fmt = """\n\nThere are a total of {authors_count} authors.\n"""
+header_extra = fmt.format(authors_count=len(git_people))
 
-with open(os.path.realpath(os.path.join(__file__, os.path.pardir,
-                                        os.path.pardir, "AUTHORS")), "w") as fd:
+with codecs.open(os.path.realpath(os.path.join(
+        __file__, os.path.pardir, os.path.pardir, "AUTHORS")),
+        "w", "utf-8") as fd:
     fd.write(header)
     fd.write(header_extra)
     fd.write("\n")
     fd.write("\n".join(git_people))
     fd.write("\n")
 
-print(blue("""
-Please make sure that there are no duplicates in the new AUTHORS, then commit
-the changes. You may also want to run ./bin/mailmap_update.py to update
-.mailmap as well
-"""))
+print(blue(filldedent("""
+    Please make sure that there are no duplicates in the new AUTHORS, then
+    commit the changes. You may also want to run ./bin/mailmap_update.py
+    to update .mailmap as well.
+""")))

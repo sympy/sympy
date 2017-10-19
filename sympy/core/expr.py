@@ -146,8 +146,25 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
-    def __pow__(self, other):
+    def _pow(self, other):
         return Pow(self, other)
+
+    def __pow__(self, other, mod=None):
+        if mod is None:
+            return self._pow(other)
+        try:
+            _self, other, mod = as_int(self), as_int(other), as_int(mod)
+            if other >= 0:
+                return pow(_self, other, mod)
+            else:
+                from sympy.core.numbers import mod_inverse
+                return mod_inverse(pow(_self, -other, mod), mod)
+        except ValueError:
+            power = self._pow(other)
+            try:
+                return power%mod
+            except TypeError:
+                return NotImplemented
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
@@ -187,7 +204,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__floordiv__')
     def __rfloordiv__(self, other):
         from sympy.functions.elementary.integers import floor
-        return floor(self / other)
+        return floor(other / self)
 
     def __int__(self):
         # Although we only need to round to the units position, we'll
@@ -250,8 +267,7 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
@@ -272,8 +288,7 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
@@ -294,8 +309,7 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
@@ -316,8 +330,7 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
@@ -1640,7 +1653,7 @@ class Expr(Basic, EvalfMixin):
             return S.Zero, S.Zero
 
         func = self.func
-        if hint.get('as_Add', func is Add):
+        if hint.get('as_Add', isinstance(self, Add) ):
             want = Add
         else:
             want = Mul
@@ -1861,7 +1874,7 @@ class Expr(Basic, EvalfMixin):
         """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
         should always be positive and ``Mul(*foo.as_content_primitive()) == foo``.
-        The primitive need no be in canonical form and should try to preserve
+        The primitive need not be in canonical form and should try to preserve
         the underlying structure if possible (i.e. expand_mul should not be
         applied to self).
 
@@ -2174,20 +2187,25 @@ class Expr(Basic, EvalfMixin):
         return Add(*coeffs)
 
     def could_extract_minus_sign(self):
-        """Canonical way to choose an element in the set {e, -e} where
-           e is any expression. If the canonical element is e, we have
-           e.could_extract_minus_sign() == True, else
-           e.could_extract_minus_sign() == False.
+        """Return True if self is not in a canonical form with respect
+        to its sign.
 
-           For any expression, the set ``{e.could_extract_minus_sign(),
-           (-e).could_extract_minus_sign()}`` must be ``{True, False}``.
+        For most expressions, e, there will be a difference in e and -e.
+        When there is, True will be returned for one and False for the
+        other; False will be returned if there is no difference.
 
-           >>> from sympy.abc import x, y
-           >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
-           True
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> e = x - y
+        >>> {i.could_extract_minus_sign() for i in (e, -e)}
+        {False, True}
 
         """
         negative_self = -self
+        if self == negative_self:
+            return False  # e.g. zoo*x == -zoo*x
         self_has_minus = (self.extract_multiplicatively(-1) is not None)
         negative_self_has_minus = (
             (negative_self).extract_multiplicatively(-1) is not None)
@@ -2251,7 +2269,7 @@ class Expr(Basic, EvalfMixin):
         args = Mul.make_args(self)
         exps = []
         for arg in args:
-            if arg.func is exp_polar:
+            if isinstance(arg, exp_polar):
                 exps += [arg.exp]
             else:
                 res *= arg
@@ -2857,7 +2875,7 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        if not x.is_Symbol:
+        if not x.is_symbol:
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
             return self
@@ -3144,6 +3162,11 @@ class Expr(Basic, EvalfMixin):
         """See the combsimp function in sympy.simplify"""
         from sympy.simplify import combsimp
         return combsimp(self)
+
+    def gammasimp(self):
+        """See the gammasimp function in sympy.simplify"""
+        from sympy.simplify import gammasimp
+        return gammasimp(self)
 
     def factor(self, *gens, **args):
         """See the factor() function in sympy.polys.polytools"""

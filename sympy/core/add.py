@@ -45,7 +45,8 @@ def _unevaluated_Add(*args):
     >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
     >>> a = uAdd(x, y)
     >>> assert a in opts and a == uAdd(x, y)
-
+    >>> uAdd(x + 1, x + 2)
+    x + x + 3
     """
     args = list(args)
     newargs = []
@@ -144,7 +145,8 @@ class Add(Expr, AssocOp):
                 continue
 
             elif isinstance(o, MatrixExpr):
-                coeff = o.__add__(coeff)
+                # can't add 0 to Matrix so make sure coeff is not 0
+                coeff = o.__add__(coeff) if coeff else o
                 continue
 
             elif o is S.ComplexInfinity:
@@ -395,13 +397,26 @@ class Add(Expr, AssocOp):
     @staticmethod
     def _combine_inverse(lhs, rhs):
         """
-        Returns lhs - rhs, but treats arguments like symbols, so things like
-        oo - oo return 0, instead of a nan.
+        Returns lhs - rhs, but treats oo like a symbol so oo - oo
+        returns 0, instead of a nan.
         """
-        from sympy import oo, I, expand_mul
-        if lhs == oo and rhs == oo or lhs == oo*I and rhs == oo*I:
-            return S.Zero
-        return expand_mul(lhs - rhs)
+        from sympy.core.function import expand_mul
+        from sympy.core.symbol import Dummy
+        inf = (S.Infinity, S.NegativeInfinity)
+        if lhs.has(*inf) or rhs.has(*inf):
+            oo = Dummy('oo')
+            reps = {
+                S.Infinity: oo,
+                S.NegativeInfinity: -oo}
+            ireps = dict([(v, k) for k, v in reps.items()])
+            eq = expand_mul(lhs.xreplace(reps) - rhs.xreplace(reps))
+            if eq.has(oo):
+                eq = eq.replace(
+                    lambda x: x.is_Pow and x.base == oo,
+                    lambda x: x.base)
+            return eq.xreplace(ireps)
+        else:
+            return expand_mul(lhs - rhs)
 
     @cacheit
     def as_two_terms(self):
@@ -421,8 +436,6 @@ class Add(Expr, AssocOp):
         >>> (3*x*y).as_two_terms()
         (3, x*y)
         """
-        if len(self.args) == 1:
-            return S.Zero, self
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
@@ -436,12 +449,6 @@ class Add(Expr, AssocOp):
         for f in expr.args:
             ni, di = f.as_numer_denom()
             nd[di].append(ni)
-        # put infinity in the numerator
-        if S.Zero in nd:
-            n = nd.pop(S.Zero)
-            assert len(n) == 1
-            n = n[0]
-            nd[S.One].append(n/S.Zero)
 
         # check for quick exit
         if len(nd) == 1:
@@ -509,9 +516,10 @@ class Add(Expr, AssocOp):
                 im_I.append(a*S.ImaginaryUnit)
             else:
                 return
-        if self.func(*nz).is_zero:
+        b = self.func(*nz)
+        if b.is_zero:
             return fuzzy_not(self.func(*im_I).is_zero)
-        elif self.func(*nz).is_zero is False:
+        elif b.is_zero is False:
             return False
 
     def _eval_is_zero(self):
@@ -539,12 +547,15 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if self.func(*nz).is_zero:
+        if len(nz) == len(self.args):
+            return None
+        b = self.func(*nz)
+        if b.is_zero:
             if not im_or_z and not im:
                 return True
             if im and not im_or_z:
                 return False
-        if self.func(*nz).is_zero is False:
+        if b.is_zero is False:
             return False
 
     def _eval_is_odd(self):
@@ -576,11 +587,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_positive and a.is_nonnegative:
+                if s != self and s.is_positive and a.is_nonnegative:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_positive:
+                    if v is not None and v != self and v.is_positive:
                         return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
@@ -629,11 +640,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonnegative:
+                    if s != self and s.is_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonnegative:
+                        if v is not None and v != self and v.is_nonnegative:
                             return True
 
     def _eval_is_nonpositive(self):
@@ -644,11 +655,11 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s.is_nonpositive:
+                    if s != self and s.is_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v.is_nonpositive:
+                        if v is not None and v != self and v.is_nonpositive:
                             return True
 
     def _eval_is_negative(self):
@@ -660,11 +671,11 @@ class Add(Expr, AssocOp):
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s.is_negative and a.is_nonpositive:
+                if s != self and s.is_negative and a.is_nonpositive:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v.is_negative:
+                    if v is not None and v != self and v.is_negative:
                         return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
@@ -854,7 +865,7 @@ class Add(Expr, AssocOp):
         return self.func(*[t.transpose() for t in self.args])
 
     def __neg__(self):
-        return self.func(*[-t for t in self.args])
+        return self*(-1)
 
     def _sage_(self):
         s = 0
@@ -1017,7 +1028,7 @@ class Add(Expr, AssocOp):
     @property
     def _sorted_args(self):
         from sympy.core.compatibility import default_sort_key
-        return tuple(sorted(self.args, key=lambda w: default_sort_key(w)))
+        return tuple(sorted(self.args, key=default_sort_key))
 
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd

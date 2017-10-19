@@ -222,12 +222,26 @@ def test_undefined_function():
     assert bool(sf(sx) == f(x)._sage_())
     #assert bool(f == sympy.sympify(sf))
 
+def test_abstract_function():
+    from sage.symbolic.expression import Expression
+    x,y = sympy.symbols('x y')
+    f = sympy.Function('f')
+    expr =  f(x,y)
+    sexpr = expr._sage_()
+    assert isinstance(sexpr,Expression), "converted expression %r is not sage expression" % sexpr
+    # This test has to be uncommented in the future: it depends on the sage ticket #22802 (https://trac.sagemath.org/ticket/22802)
+    # invexpr = sexpr._sympy_()
+    # assert invexpr == expr, "inverse coversion %r is not correct " % invexpr
+
+
+
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.
 """
 
 TESTS::
 
+    sage: from sympy.external.tests.test_sage import *
     sage: test_basics()
     sage: test_basics()
     sage: test_complex()
@@ -244,12 +258,13 @@ TESTS::
     sage: test_issue_4023()
     sage: test_integral()
     sage: test_undefined_function()
+    sage: test_abstract_function()
 
 Sage has no symbolic Lucas function at the moment::
 
     sage: check_expression("lucas(x)", "x")
     Traceback (most recent call last):
     ...
-    AttributeError: 'module' object has no attribute 'lucas'
+    AttributeError...
 
 """

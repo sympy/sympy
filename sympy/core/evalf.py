@@ -32,7 +32,9 @@ rnd = round_nearest
 
 
 def bitcount(n):
-    return mpmath_bitcount(int(n))
+    """Return smallest integer, b, such that |n|/2**b < 1.
+    """
+    return mpmath_bitcount(abs(int(n)))
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
@@ -369,7 +371,7 @@ def get_integer_part(expr, no, options, return_ints=False):
                 x = fzero
             nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
-        return nint, fastlog(nint) + 10
+        return nint, INF
 
     re_, im_, re_acc, im_acc = None, None, None, None
 
@@ -749,9 +751,9 @@ def evalf_trig(v, prec, options):
     TODO: should also handle tan of complex arguments.
     """
     from sympy import cos, sin
-    if v.func is cos:
+    if isinstance(v, cos):
         func = mpf_cos
-    elif v.func is sin:
+    elif isinstance(v, sin):
         func = mpf_sin
     else:
         raise NotImplementedError
@@ -765,9 +767,9 @@ def evalf_trig(v, prec, options):
             v = v.subs(options['subs'])
         return evalf(v._eval_evalf(prec), prec, options)
     if not re:
-        if v.func is cos:
+        if isinstance(v, cos):
             return fone, None, prec, None
-        elif v.func is sin:
+        elif isinstance(v, sin):
             return None, None, None, None
         else:
             raise NotImplementedError
@@ -1299,12 +1301,16 @@ def evalf(x, prec, options):
             elif re.is_number:
                 re = re._to_mpmath(prec, allow_ints=False)._mpf_
                 reprec = prec
+            else:
+                raise NotImplementedError
             if im == 0:
                 im = None
                 imprec = None
             elif im.is_number:
                 im = im._to_mpmath(prec, allow_ints=False)._mpf_
                 imprec = prec
+            else:
+                raise NotImplementedError
             r = re, im, reprec, imprec
         except AttributeError:
             raise NotImplementedError

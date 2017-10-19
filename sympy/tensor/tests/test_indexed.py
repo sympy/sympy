@@ -14,7 +14,7 @@ def test_Idx_construction():
     assert Idx(i, a) == Idx(i, (0, a - 1))
     assert Idx(i, oo) == Idx(i, (0, oo))
 
-    x = symbols('x')
+    x = symbols('x', integer=False)
     raises(TypeError, lambda: Idx(x))
     raises(TypeError, lambda: Idx(0.5))
     raises(TypeError, lambda: Idx(i, x))
@@ -207,6 +207,7 @@ def test_Indexed_constructor():
     assert A == Indexed(IndexedBase('A'), i, j)
     raises(TypeError, lambda: Indexed(A, i, j))
     raises(IndexException, lambda: Indexed("A"))
+    assert A.free_symbols == {A, A.base.label, i, j}
 
 
 def test_Indexed_func_args():
@@ -362,3 +363,9 @@ def test_issue_12533():
     assert d[0].subs(d, range(5)) == 0
     assert d[1].subs(d, range(5)) == 1
     assert Indexed(Range(5), 2) == 2
+
+
+def test_issue_12780():
+    n = symbols("n")
+    i = Idx("i", (0, n))
+    raises(TypeError, lambda: i.subs(n, 1.5))

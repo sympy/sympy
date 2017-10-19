@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import warnings
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy import Rational
-from sympy.physics.units.definitions import (m, s, c, kg)
-from sympy.physics.units.dimensions import Dimension, DimensionSystem, length, time, mass, velocity, current, \
-    action
-from sympy.physics.units.unitsystem import UnitSystem
+from sympy.physics.units.definitions import c, kg, m, s
+from sympy.physics.units.dimensions import (
+    Dimension, DimensionSystem, action, current, length, mass, time, velocity)
 from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.pytest import raises
 
 
@@ -22,8 +25,8 @@ def test_definition():
     assert ms.name == "MS"
     assert ms.descr == "MS system"
 
-    assert ms._system._base_dims == DimensionSystem.sort_dims(base_dim)
-    assert set(ms._system._dims) == set(base_dim + (velocity,))
+    assert ms._system.base_dims == base_dim
+    assert ms._system.derived_dims == (velocity,)
 
 
 def test_error_definition():
@@ -38,11 +41,13 @@ def test_str_repr():
 
 
 def test_print_unit_base():
-    A = Quantity("A", current, 1)
-    Js = Quantity("Js", action, 1)
-    mksa = UnitSystem((m, kg, s, A), (Js,))
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        A = Quantity("A", current, 1)
+        Js = Quantity("Js", action, 1)
+        mksa = UnitSystem((m, kg, s, A), (Js,))
 
-    assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
+        assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
 
 
 def test_extend():

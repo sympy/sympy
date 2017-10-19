@@ -1,14 +1,34 @@
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
-     sin, cos, Function, Integral, Derivative, diff, integrate
+     sin, cos, Function, Integral, Derivative, diff
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.vector import Cross, Dot, dot, cross
 
 C = CoordSys3D('C')
 
 i, j, k = C.base_vectors()
 a, b, c = symbols('a b c')
+
+
+def test_cross():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert Cross(v1, v2) == Cross(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
+    assert Cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert cross(v1, v2) == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert Cross(v1, v2) == -Cross(v2, v1)
+    assert Cross(v1, v2) + Cross(v2, v1) == Vector.zero
+
+
+def test_dot():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert Dot(v1, v2) == Dot(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
+    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v1, v2) == Dot(v2, v1)
 
 
 def test_vector_sympy():

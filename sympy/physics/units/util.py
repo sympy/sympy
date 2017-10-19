@@ -8,10 +8,12 @@ from __future__ import division
 
 import collections
 
-from sympy.physics.units.quantities import Quantity
-from sympy import Add, Mul, Pow, Function, Rational, Tuple, sympify
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
 from sympy.core.compatibility import reduce
-from sympy.physics.units.dimensions import Dimension
+from sympy.physics.units.dimensions import Dimension, dimsys_default
+from sympy.physics.units.quantities import Quantity
 
 
 def dim_simplify(expr):
@@ -25,33 +27,23 @@ def dim_simplify(expr):
     dimension without being a dimension. This is necessary to avoid strange
     behavior when Add(L, L) be transformed into Mul(2, L).
     """
-
-    if isinstance(expr, Dimension):
-        return expr
-
-    if isinstance(expr, Pow):
-        return dim_simplify(expr.base)**dim_simplify(expr.exp)
-    elif isinstance(expr, Function):
-        return dim_simplify(expr.args[0])
-    elif isinstance(expr, Add):
-        if (all(isinstance(arg, Dimension) for arg in expr.args) or
-            all(arg.is_dimensionless for arg in expr.args if isinstance(arg, Dimension))):
-            return reduce(lambda x, y: x.add(y), expr.args)
-        else:
-            raise ValueError("Dimensions cannot be added: %s" % expr)
-    elif isinstance(expr, Mul):
-        return Dimension(Mul(*[dim_simplify(i).name for i in expr.args if isinstance(i, Dimension)]))
-
-    raise ValueError("Cannot be simplifed: %s", expr)
+    SymPyDeprecationWarning(
+        deprecated_since_version="1.2",
+        feature="dimensional simplification function",
+        issue=13336,
+        useinstead="don't use",
+    ).warn()
+    _, expr = Quantity._collect_factor_and_dimension(expr)
+    return expr
 
 
 def _get_conversion_matrix_for_expr(expr, target_units):
     from sympy import Matrix
 
     expr_dim = Dimension(Quantity.get_dimensional_expr(expr))
-    dim_dependencies = expr_dim.get_dimensional_dependencies(mark_dimensionless=True)
+    dim_dependencies = dimsys_default.get_dimensional_dependencies(expr_dim, mark_dimensionless=True)
     target_dims = [Dimension(Quantity.get_dimensional_expr(x)) for x in target_units]
-    canon_dim_units = {i for x in target_dims for i in x.get_dimensional_dependencies(mark_dimensionless=True)}
+    canon_dim_units = {i for x in target_dims for i in dimsys_default.get_dimensional_dependencies(x, mark_dimensionless=True)}
     canon_expr_units = {i for i in dim_dependencies}
 
     if not canon_expr_units.issubset(canon_dim_units):
@@ -59,7 +51,7 @@ def _get_conversion_matrix_for_expr(expr, target_units):
 
     canon_dim_units = sorted(canon_dim_units)
 
-    camat = Matrix([[i.get_dimensional_dependencies(mark_dimensionless=True).get(j, 0)  for i in target_dims] for j in canon_dim_units])
+    camat = Matrix([[dimsys_default.get_dimensional_dependencies(i, mark_dimensionless=True).get(j, 0)  for i in target_dims] for j in canon_dim_units])
     exprmat = Matrix([dim_dependencies.get(k, 0) for k in canon_dim_units])
 
     res_exponents = camat.solve_least_squares(exprmat, method=None)

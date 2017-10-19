@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+# isort:skip_file
 """
 Dimensional analysis and unit systems.
 
@@ -155,6 +155,7 @@ from .definitions import (
     avogadro_number,
     avogadro, avogadro_constant,
     boltzmann, boltzmann_constant,
+    stefan, stefan_boltzmann_constant,
     R, molar_gas_constant,
     faraday_constant,
     josephson_constant,
@@ -180,6 +181,30 @@ from .definitions import (
     planck_time,
     planck_temperature,
     planck_length,
+    planck_charge,
+    planck_area,
+    planck_volume,
+    planck_momentum,
+    planck_energy,
+    planck_force,
+    planck_power,
+    planck_density,
+    planck_energy_density,
+    planck_intensity,
+    planck_angular_frequency,
+    planck_pressure,
+    planck_current,
+    planck_voltage,
+    planck_impedance,
+    planck_acceleration,
+    bit, bits,
+    byte,
+    kibibyte, kibibytes,
+    mebibyte, mebibytes,
+    gibibyte, gibibytes,
+    tebibyte, tebibytes,
+    pebibyte, pebibytes,
+    exbibyte, exbibytes,
 )
 
 
@@ -197,13 +222,13 @@ def find_unit(quantity):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs']
+    ['C', 'coulomb', 'coulombs', 'planck_charge']
     >>> u.find_unit(u.charge)
-    ['C', 'coulomb', 'coulombs']
+    ['C', 'coulomb', 'coulombs', 'planck_charge']
     >>> u.find_unit("ampere")
     ['ampere', 'amperes']
     >>> u.find_unit('volt')
-    ['volt', 'volts', 'electronvolt', 'electronvolts']
+    ['volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
     """
@@ -227,8 +252,7 @@ def find_unit(quantity):
                     rv.append(str(i))
             elif other.dimension == Dimension(Quantity.get_dimensional_expr(quantity)):
                 rv.append(str(i))
-
-    return sorted(rv, key=len)
+    return sorted(set(rv), key=lambda x: (len(x), x))
 
 # NOTE: the old units module had additional variables:
 # 'density', 'illuminance', 'resistance'.

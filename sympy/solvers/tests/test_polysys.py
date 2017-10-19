@@ -1,9 +1,12 @@
 """Tests for solvers of systems of polynomial equations. """
 
-from sympy import flatten, I, Integer, Poly, QQ, Rational, S, sqrt, symbols
+from sympy import (flatten, I, Integer, Poly, QQ, Rational, S, sqrt,
+    solve, symbols)
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
-from sympy.solvers.polysys import solve_poly_system, solve_triangulated
+from sympy.solvers.polysys import (solve_poly_system,
+    solve_triangulated, solve_biquadratic, SolveFailed)
+from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.utilities.pytest import raises
 
 
@@ -50,10 +53,10 @@ def test_solve_biquadratic():
 
     f_1 = (x - 1)**2 + (y - 1)**2 - r**2
     f_2 = (x - 2)**2 + (y - 2)**2 - r**2
-
-    assert solve_poly_system([f_1, f_2], x, y) == \
-        [(S(3)/2 - sqrt(-1 + 2*r**2)/2, S(3)/2 + sqrt(-1 + 2*r**2)/2),
-         (S(3)/2 + sqrt(-1 + 2*r**2)/2, S(3)/2 - sqrt(-1 + 2*r**2)/2)]
+    s = sqrt(2*r**2 - 1)
+    a = (3 - s)/2
+    b = (3 + s)/2
+    assert solve_poly_system([f_1, f_2], x, y) == [(a, b), (b, a)]
 
     f_1 = (x - 1)**2 + (y - 2)**2 - r**2
     f_2 = (x - 1)**2 + (y - 1)**2 - r**2
@@ -80,8 +83,28 @@ def test_solve_biquadratic():
     assert len(result) == 2 and all(len(r) == 2 for r in result)
     assert all(len(r.find(query)) == 1 for r in flatten(result))
 
+    s1 = (x*y - y, x**2 - x)
+    assert solve(s1) == [{x: 1}, {x: 0, y: 0}]
+    s2 = (x*y - x, y**2 - y)
+    assert solve(s2) == [{y: 1}, {x: 0, y: 0}]
+    gens = (x, y)
+    for seq in (s1, s2):
+        (f, g), opt = parallel_poly_from_expr(seq, *gens)
+        raises(SolveFailed, lambda: solve_biquadratic(f, g, opt))
+    seq = (x**2 + y**2 - 2, y**2 - 1)
+    (f, g), opt = parallel_poly_from_expr(seq, *gens)
+    assert solve_biquadratic(f, g, opt) == [
+        (-1, -1), (-1, 1), (1, -1), (1, 1)]
+    ans = [(0, -1), (0, 1)]
+    seq = (x**2 + y**2 - 1, y**2 - 1)
+    (f, g), opt = parallel_poly_from_expr(seq, *gens)
+    assert solve_biquadratic(f, g, opt) == ans
+    seq = (x**2 + y**2 - 1, x**2 - x + y**2 - 1)
+    (f, g), opt = parallel_poly_from_expr(seq, *gens)
+    assert solve_biquadratic(f, g, opt) == ans
 
-def test_solve_triangualted():
+
+def test_solve_triangulated():
     f_1 = x**2 + y + z - 1
     f_2 = x + y**2 + z - 1
     f_3 = x + y + z**2 - 1

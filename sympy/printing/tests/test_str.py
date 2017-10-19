@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -19,7 +19,7 @@ from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 from sympy import MatrixSymbol
 
-x, y, z, w = symbols('x,y,z,w')
+x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
 
 
@@ -167,8 +167,8 @@ def test_Interval():
 
 def test_AccumBounds():
     a = Symbol('a', real=True)
-    assert str(AccumBounds(0, a)) == "<0, a>"
-    assert str(AccumBounds(0, 1)) == "<0, 1>"
+    assert str(AccumBounds(0, a)) == "AccumBounds(0, a)"
+    assert str(AccumBounds(0, 1)) == "AccumBounds(0, 1)"
 
 
 def test_Lambda():
@@ -489,6 +489,9 @@ def test_Rational():
     assert str(sqrt(-4)) == str(2*I)
     assert str(2**Rational(1, 10**10)) == "2**(1/10000000000)"
 
+    assert sstr(Rational(2, 3), sympy_integers=True) == "S(2)/3"
+    assert sstr(Symbol("x")**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+
 
 def test_Float():
     # NOTE dps is the whole number of decimal digits
@@ -578,6 +581,15 @@ def test_tuple():
     assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
+
+
+def test_Quaternion_str_printer():
+    q = Quaternion(x, y, z, t)
+    assert str(q) == "x + y*i + z*j + t*k"
+    q = Quaternion(x,y,z,x*t)
+    assert str(q) == "x + y*i + z*j + t*x*k"
+    q = Quaternion(x,y,z,x+t)
+    assert str(q) == "x + y*i + z*j + (t + x)*k"
 
 
 def test_Quantity_str():

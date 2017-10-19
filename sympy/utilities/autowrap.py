@@ -134,8 +134,10 @@ class CodeWrapper(object):
             self.include_empty)
 
     def wrap_code(self, routine, helpers=[]):
-
-        workdir = self.filepath or tempfile.mkdtemp("_sympy_compile")
+        if self.filepath:
+            workdir = os.path.abspath(self.filepath)
+        else:
+            workdir = tempfile.mkdtemp("_sympy_compile")
         if not os.access(workdir, os.F_OK):
             os.mkdir(workdir)
         oldwork = os.getcwd()
@@ -167,7 +169,7 @@ class CodeWrapper(object):
         except CalledProcessError as e:
             raise CodeWrapError(
                 "Error while executing command: %s. Command output is:\n%s" % (
-                    " ".join(command), e.output.decode()))
+                    " ".join(command), e.output.decode('utf-8')))
         if not self.quiet:
             print(retoutput)
 
@@ -610,14 +612,14 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
 
     helps = []
     for name_h, expr_h, args_h in helpers:
-        helps.append(make_routine(name_h, expr_h, args_h))
+        helps.append(code_gen.routine(name_h, expr_h, args_h))
 
     for name_h, expr_h, args_h in helpers:
         if expr.has(expr_h):
             name_h = binary_function(name_h, expr_h, backend='dummy')
             expr = expr.subs(expr_h, name_h(*args_h))
     try:
-        routine = make_routine('autofunc', expr, args)
+        routine = code_gen.routine('autofunc', expr, args)
     except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
@@ -627,7 +629,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
             if not isinstance(missing, OutputArgument):
                 raise
             new_args.append(missing.name)
-        routine = make_routine('autofunc', expr, args + new_args)
+        routine = code_gen.routine('autofunc', expr, args + new_args)
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 
@@ -815,7 +817,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
             os.chdir(oldwork)
             if not self.filepath:
                 try:
-                    shutil.rmtree(workdir)
+                    pass # shutil.rmtree(workdir)
                 except OSError:
                     # Could be some issues on Windows
                     pass
@@ -1083,10 +1085,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     else:
         # Dummies are used for all added expressions to prevent name clashes
         # within the original expression.
-        y = IndexedBase(Dummy())
-        m = Dummy(integer=True)
-        i = Idx(Dummy(integer=True), m)
-        f = implemented_function(Dummy().name, Lambda(args, expr))
+        y = IndexedBase(Dummy('y'))
+        m = Dummy('m', integer=True)
+        i = Idx(Dummy('i', integer=True), m)
+        f_dummy = Dummy('f')
+        f = implemented_function('%s_%d' % (f_dummy.name, f_dummy.dummy_index), Lambda(args, expr))
         # For each of the args create an indexed version.
         indexed_args = [IndexedBase(Dummy(str(a))) for a in args]
         # Order the arguments (out, args, dim)

@@ -86,8 +86,9 @@ class RCodePrinter(CodePrinter):
         'reserved_word_suffix': '_',
     }
     _operators = {
-       'and':'&',
+       'and': '&',
         'or': '|',
+       'not': '!',
     }
 
     _relationals = {

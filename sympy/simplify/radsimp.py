@@ -157,6 +157,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ========
     collect_const, collect_sqrt, rcollect
     """
+    expr = sympify(expr)
+    syms = list(syms) if iterable(syms) else [syms]
+
     if evaluate is None:
         evaluate = global_evaluate[0]
 
@@ -237,7 +240,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                     rat_expo, sym_expo = coeff, tail
                 else:
                     sym_expo = expr.exp
-        elif expr.func is exp:
+        elif isinstance(expr, exp):
             arg = expr.args[0]
             if arg.is_Rational:
                 sexpr, rat_expo = S.Exp1, arg
@@ -331,12 +334,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 expr.base, syms, func, True, exact, distribute_order_term)
             return Pow(b, expr.exp)
 
-    if iterable(syms):
-        syms = [expand_power_base(i, deep=False) for i in syms]
-    else:
-        syms = [expand_power_base(syms, deep=False)]
+    syms = [expand_power_base(i, deep=False) for i in syms]
 
-    expr = sympify(expr)
     order_term = None
 
     if distribute_order_term:
@@ -352,7 +351,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collected, disliked = defaultdict(list), S.Zero
     for product in summa:
-        terms = [parse_term(i) for i in Mul.make_args(product)]
+        c, nc = product.args_cnc(split_1=False)
+        args = list(ordered(c)) + nc
+        terms = [parse_term(i) for i in args]
+        small_first = True
 
         for symbol in syms:
             if SYMPY_DEBUG:
@@ -360,6 +362,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                     str(terms), str(symbol))
                 )
 
+            if isinstance(symbol, Derivative) and small_first:
+                terms = list(reversed(terms))
+                small_first = not small_first
             result = parse_expression(terms, symbol)
 
             if SYMPY_DEBUG:
@@ -371,12 +376,14 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 # when there was derivative in current pattern we
                 # will need to rebuild its expression from scratch
                 if not has_deriv:
-                    index = 1
+                    margs = []
                     for elem in elems:
-                        e = elem[1]
-                        if elem[2] is not None:
-                            e *= elem[2]
-                        index *= Pow(elem[0], e)
+                        if elem[2] is None:
+                            e = elem[1]
+                        else:
+                            e = elem[1]*elem[2]
+                        margs.append(Pow(elem[0], e))
+                    index = Mul(*margs)
                 else:
                     index = make_expression(elems)
                 terms = expand_power_base(make_expression(terms), deep=False)
@@ -958,7 +965,7 @@ def fraction(expr, exact=False):
     numer, denom = [], []
 
     for term in Mul.make_args(expr):
-        if term.is_commutative and (term.is_Pow or term.func is exp):
+        if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
             b, ex = term.as_base_exp()
             if ex.is_negative:
                 if ex is S.NegativeOne:

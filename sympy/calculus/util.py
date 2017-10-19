@@ -7,9 +7,11 @@ from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
+from sympy.sets.conditionset import ConditionSet
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
-
+from sympy.simplify.radsimp import denom
+from sympy.polys.rationaltools import together
 
 def continuous_domain(f, symbol, domain):
     """
@@ -41,9 +43,9 @@ def continuous_domain(f, symbol, domain):
     if domain.is_subset(S.Reals):
         constrained_interval = domain
         for atom in f.atoms(Pow):
-            predicate, denom = _has_rational_power(atom, symbol)
+            predicate, denomin = _has_rational_power(atom, symbol)
             constraint = S.EmptySet
-            if predicate and denom == 2:
+            if predicate and denomin == 2:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
                 constrained_interval = Intersection(constraint,
@@ -60,17 +62,20 @@ def continuous_domain(f, symbol, domain):
     try:
         sings = S.EmptySet
         if f.has(Abs):
-            sings = solveset(1/f, symbol, domain)
+            sings = solveset(1/f, symbol, domain) + \
+                solveset(denom(together(f)), symbol, domain)
         else:
             for atom in f.atoms(Pow):
-                predicate, denom = _has_rational_power(atom, symbol)
-                if predicate and denom == 2:
-                    sings = solveset(1/f, symbol, domain)
+                predicate, denomin = _has_rational_power(atom, symbol)
+                if predicate and denomin == 2:
+                    sings = solveset(1/f, symbol, domain) +\
+                        solveset(denom(together(f)), symbol, domain)
                     break
             else:
-                sings = Intersection(solveset(1/f, symbol), domain)
+                sings = Intersection(solveset(1/f, symbol), domain) + \
+                    solveset(denom(together(f)), symbol, domain)
 
-    except BaseException:
+    except NotImplementedError:
         raise NotImplementedError(
             "Methods for determining the continuous domains"
             " of this function have not been developed.")
@@ -96,7 +101,7 @@ def function_range(f, symbol, domain):
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
     Interval(-oo, oo)
     >>> function_range(1/x, x, S.Reals)
-    Interval(-oo, oo)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> function_range(exp(x), x, S.Reals)
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
@@ -107,9 +112,12 @@ def function_range(f, symbol, domain):
     """
     from sympy.solvers.solveset import solveset
 
-    vals = S.EmptySet
     period = periodicity(f, symbol)
-    if not any(period is i for i in (None, S.Zero)):
+    if period is S.Zero:
+        # the expression is constant wrt symbol
+        return FiniteSet(f.expand())
+
+    if period is not None:
         inf = domain.inf
         inf_period = S.Zero if inf.is_infinite else inf
         sup_period = inf_period + period
@@ -118,41 +126,52 @@ def function_range(f, symbol, domain):
 
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
-    if isinstance(intervals, Interval):
+    if isinstance(intervals,(Interval, FiniteSet)):
         interval_iter = (intervals,)
 
     else:
         interval_iter = intervals.args
 
     for interval in interval_iter:
-        critical_points = S.EmptySet
-        critical_values = S.EmptySet
-        bounds = ((interval.left_open, interval.inf, '+'),
-                  (interval.right_open, interval.sup, '-'))
+        if isinstance(interval, FiniteSet):
+            for singleton in interval:
+                if singleton in domain:
+                    range_int += FiniteSet(f.subs(symbol, singleton))
+        else:
+            vals = S.EmptySet
+            critical_points = S.EmptySet
+            critical_values = S.EmptySet
+            bounds = ((interval.left_open, interval.inf, '+'),
+                   (interval.right_open, interval.sup, '-'))
 
-        for is_open, limit_point, direction in bounds:
-            if is_open:
-                critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
-                vals += critical_values
+            for is_open, limit_point, direction in bounds:
+                if is_open:
+                    critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
+                    vals += critical_values
 
-            else:
-                vals += FiniteSet(f.subs(symbol, limit_point))
+                else:
+                    vals += FiniteSet(f.subs(symbol, limit_point))
 
-        critical_points += solveset(f.diff(symbol), symbol, domain)
+            solution = solveset(f.diff(symbol), symbol, interval)
 
-        for critical_point in critical_points:
-            vals += FiniteSet(f.subs(symbol, critical_point))
+            if isinstance(solution, ConditionSet):
+                raise NotImplementedError('Unable to find critical points for %s'.format(f))
 
-        left_open, right_open = False, False
+            critical_points += solution
 
-        if critical_values is not S.EmptySet:
-            if critical_values.inf == vals.inf:
-                left_open = True
+            for critical_point in critical_points:
+                vals += FiniteSet(f.subs(symbol, critical_point))
 
-            if critical_values.sup == vals.sup:
-                right_open = True
+            left_open, right_open = False, False
 
-        range_int += Interval(vals.inf, vals.sup, left_open, right_open)
+            if critical_values is not S.EmptySet:
+                if critical_values.inf == vals.inf:
+                    left_open = True
+
+                if critical_values.sup == vals.sup:
+                    right_open = True
+
+            range_int += Interval(vals.inf, vals.sup, left_open, right_open)
 
     return range_int
 
@@ -327,15 +346,41 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(exp(x), x)
 
     """
-    from sympy import simplify, lcm_list
-    from sympy.functions.elementary.trigonometric import TrigonometricFunction
+    from sympy.core.function import diff
+    from sympy.core.mod import Mod
+    from sympy.core.relational import Relational
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.trigonometric import (
+        TrigonometricFunction, sin, cos, csc, sec)
+    from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
+    from sympy.polys.polytools import degree, lcm_list
+
+    def _check(orig_f, period):
+        '''Return the checked period or raise an error.'''
+        new_f = orig_f.subs(symbol, symbol + period)
+        if new_f.equals(orig_f):
+            return period
+        else:
+            raise NotImplementedError(filldedent('''
+                The period of the given function cannot be verified.
+                When `%s` was replaced with `%s + %s` in `%s`, the result
+                was `%s` which was not recognized as being the same as
+                the original function.
+                So either the period was wrong or the two forms were
+                not recognized as being equal.
+                Set check=False to obtain the value.''' %
+                (symbol, symbol, period, orig_f, new_f)))
 
     orig_f = f
-    f = simplify(orig_f)
     period = None
 
-    if not f.has(symbol):
+    if isinstance(f, Relational):
+        f = f.lhs - f.rhs
+
+    f = simplify(f)
+
+    if symbol not in f.free_symbols:
         return S.Zero
 
     if isinstance(f, TrigonometricFunction):
@@ -343,6 +388,28 @@ def periodicity(f, symbol, check=False):
             period = f.period(symbol)
         except NotImplementedError:
             pass
+
+    if isinstance(f, Abs):
+        arg = f.args[0]
+        if isinstance(arg, (sec, csc, cos)):
+            # all but tan and cot might have a
+            # a period that is half as large
+            # so recast as sin
+            arg = sin(arg.args[0])
+        period = periodicity(arg, symbol)
+        if period is not None and isinstance(arg, sin):
+            # the argument of Abs was a trigonometric other than
+            # cot or tan; test to see if the half-period
+            # is valid. Abs(arg) has behaviour equivalent to
+            # orig_f, so use that for test:
+            orig_f = Abs(arg)
+            try:
+                return _check(orig_f, period/2)
+            except NotImplementedError as err:
+                if check:
+                    raise NotImplementedError(err)
+            # else let new orig_f and period be
+            # checked below
 
     if f.is_Pow:
         base, expo = f.args
@@ -373,6 +440,17 @@ def periodicity(f, symbol, check=False):
 
         period = _periodicity(g.args, symbol)
 
+    elif isinstance(f, Mod):
+        a, n = f.args
+
+        if a == symbol:
+            period = n
+        elif isinstance(a, TrigonometricFunction):
+            period = periodicity(a, symbol)
+        #check if 'f' is linear in 'symbol'
+        elif degree(a, symbol) == 1 and symbol not in n.free_symbols:
+            period = Abs(n / a.diff(symbol))
+
     elif period is None:
         from sympy.solvers.decompogen import compogen
         g_s = decompogen(f, symbol)
@@ -388,14 +466,7 @@ def periodicity(f, symbol, check=False):
 
     if period is not None:
         if check:
-            if orig_f.subs(symbol, symbol + period) == orig_f:
-                return period
-
-            else:
-                raise NotImplementedError(filldedent('''
-                    The period of the given function cannot be verified.
-                    Set check=False to obtain the value.'''))
-
+            return _check(orig_f, period)
         return period
 
     return None
@@ -527,16 +598,16 @@ class AccumulationBounds(AtomicExpr):
     >>> from sympy.abc import x
 
     >>> AccumBounds(0, 1) + AccumBounds(1, 2)
-    <1, 3>
+    AccumBounds(1, 3)
 
     >>> AccumBounds(0, 1) - AccumBounds(0, 2)
-    <-2, 1>
+    AccumBounds(-2, 1)
 
     >>> AccumBounds(-2, 3)*AccumBounds(-1, 1)
-    <-3, 3>
+    AccumBounds(-3, 3)
 
     >>> AccumBounds(1, 2)*AccumBounds(3, 5)
-    <3, 10>
+    AccumBounds(3, 10)
 
     The exponentiation of AccumulationBounds is defined
     as follows:
@@ -553,18 +624,18 @@ class AccumulationBounds(AtomicExpr):
     AccumulationBounds object is neglected.
 
     >>> AccumBounds(-1, 4)**(S(1)/2)
-    <0, 2>
+    AccumBounds(0, 2)
 
     >>> AccumBounds(1, 2)**2
-    <1, 4>
+    AccumBounds(1, 4)
 
     >>> AccumBounds(-1, oo)**(-1)
-    <-oo, oo>
+    AccumBounds(-oo, oo)
 
     Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
 
     >>> AccumBounds(-1, 1)**2
-    <0, 1>
+    AccumBounds(0, 1)
 
     >>> AccumBounds(1, 3) < 4
     True
@@ -577,13 +648,13 @@ class AccumulationBounds(AtomicExpr):
     is defined as `f(\langle a, b\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
-    <1/2, sqrt(3)/2>
+    AccumBounds(1/2, sqrt(3)/2)
 
     >>> exp(AccumBounds(0, 1))
-    <1, E>
+    AccumBounds(1, E)
 
     >>> log(AccumBounds(1, E))
-    <0, 1>
+    AccumBounds(0, 1)
 
     Some symbol in an expression can be substituted for a AccumulationBounds
     object. But it doesn't necessarily evaluate the AccumulationBounds for
@@ -593,10 +664,10 @@ class AccumulationBounds(AtomicExpr):
     the form it is used for substituion. For example:
 
     >>> (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1))
-    <-1, 4>
+    AccumBounds(-1, 4)
 
     >>> ((x + 1)**2).subs(x, AccumBounds(-1, 1))
-    <0, 4>
+    AccumBounds(0, 4)
 
     References
     ==========
@@ -1173,7 +1244,7 @@ class AccumulationBounds(AtomicExpr):
 
         >>> from sympy import AccumBounds, FiniteSet
         >>> AccumBounds(1, 3).intersection(AccumBounds(2, 4))
-        <2, 3>
+        AccumBounds(2, 3)
 
         >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
         EmptySet()

@@ -584,7 +584,7 @@ def test_H32():  # issue 6558
 
 
 def test_H33():
-    A, B, C = symbols('A, B, C', commutatative=False)
+    A, B, C = symbols('A, B, C', commutative=False)
     assert (Commutator(A, Commutator(B, C))
         + Commutator(B, Commutator(C, A))
         + Commutator(C, Commutator(A, B))).doit().expand() == 0
@@ -2027,8 +2027,8 @@ def test_S4():
 
 def test_S5():
     n, k = symbols('n k', integer=True, positive=True)
-    assert (Product((2*k - 1)/(2*k), (k, 1, n)).doit().combsimp() ==
-            factorial(n - Rational(1, 2))/(sqrt(pi)*factorial(n)))
+    assert (Product((2*k - 1)/(2*k), (k, 1, n)).doit().gammasimp() ==
+            gamma(n + Rational(1, 2))/(sqrt(pi)*gamma(n + 1)))
 
 
 @SKIP("https://github.com/sympy/sympy/issues/7133")

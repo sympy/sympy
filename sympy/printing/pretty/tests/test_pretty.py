@@ -6,7 +6,7 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps,
+    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 from sympy.core.expr import UnevaluatedExpr
 
@@ -33,6 +33,8 @@ from sympy.core.trace import Tr
 
 from sympy.core.compatibility import u_decode as u
 from sympy.core.compatibility import range
+
+from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 
 a, b, x, y, z, k, n = symbols('a,b,x,y,z,k,n')
 th = Symbol('theta')
@@ -162,6 +164,9 @@ PIECEWISE:
 
 Piecewise((x,x<1),(x**2,True))
 
+ITE:
+
+ITE(x, y, z)
 
 SEQUENCES (TUPLES, LISTS, DICTIONARIES):
 
@@ -1817,6 +1822,36 @@ E         \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = euler(n, x)
+    ascii_str = \
+"""\
+E (x)\n\
+ n   \
+"""
+    ucode_str = \
+u("""\
+E (x)\n\
+ n   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = euler(n, x/2)
+    ascii_str = \
+"""\
+  /x\\\n\
+E |-|\n\
+ n\\2/\
+"""
+    ucode_str = \
+u("""\
+  ⎛x⎞\n\
+E ⎜─⎟\n\
+ n⎝2⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
 
 def test_pretty_sqrt():
     expr = sqrt(2)
@@ -3165,6 +3200,21 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+
+def test_pretty_ITE():
+    expr = ITE(x, y, z)
+    assert pretty(expr) == (
+        '/y    for x  \n'
+        '<            \n'
+        '\\z  otherwise'
+        )
+    assert upretty(expr) == u("""\
+⎧y    for x  \n\
+⎨            \n\
+⎩z  otherwise\
+""")
+
+
 def test_pretty_seq():
     expr = ()
     ascii_str = \
@@ -3387,8 +3437,8 @@ def test_any_object_in_sequence():
     assert upretty(expr) == u"[Basic(Basic()), Basic()]"
 
     expr = {b2, b1}
-    assert pretty(expr) == "set([Basic(), Basic(Basic())])"
-    assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
+    assert pretty(expr) == "{Basic(), Basic(Basic())}"
+    assert upretty(expr) == u"{Basic(), Basic(Basic())}"
 
     expr = {b2: b1, b1: b2}
     expr2 = Dict({b2: b1, b1: b2})
@@ -3400,6 +3450,41 @@ def test_any_object_in_sequence():
     assert upretty(
         expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
 
+def test_print_builtin_set():
+    assert pretty(set()) == 'set()'
+    assert upretty(set()) == u'set()'
+
+    assert pretty(frozenset()) == 'frozenset()'
+    assert upretty(frozenset()) == u'frozenset()'
+
+    s1 = {1/x, x}
+    s2 = frozenset(s1)
+
+    assert pretty(s1) == \
+"""\
+ 1    \n\
+{-, x}
+ x    \
+"""
+    assert upretty(s1) == \
+u"""\
+⎧1   ⎫
+⎨─, x⎬
+⎩x   ⎭\
+"""
+
+    assert pretty(s2) == \
+"""\
+           1     \n\
+frozenset({-, x})
+           x     \
+"""
+    assert upretty(s2) == \
+u"""\
+         ⎛⎧1   ⎫⎞
+frozenset⎜⎨─, x⎬⎟
+         ⎝⎩x   ⎭⎠\
+"""
 
 def test_pretty_sets():
     s = FiniteSet
@@ -3410,15 +3495,24 @@ def test_pretty_sets():
 """
     assert pretty(s(*range(1, 6))) == "{1, 2, 3, 4, 5}"
     assert pretty(s(*range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
-    for s in (frozenset, set):
-        assert pretty(s([x*y, x**2])) == \
+
+    assert pretty(set([x*y, x**2])) == \
 """\
-%s   2       \n\
-%s([x , x*y])\
-""" % (" " * len(s.__name__), s.__name__)
-        assert pretty(s(range(1, 6))) == "%s([1, 2, 3, 4, 5])" % s.__name__
-        assert pretty(s(range(1, 13))) == \
-            "%s([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])" % s.__name__
+  2      \n\
+{x , x*y}\
+"""
+    assert pretty(set(range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(set(range(1, 13))) == \
+        "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+
+    assert pretty(frozenset([x*y, x**2])) == \
+"""\
+            2       \n\
+frozenset({x , x*y})\
+"""
+    assert pretty(frozenset(range(1, 6))) == "frozenset({1, 2, 3, 4, 5})"
+    assert pretty(frozenset(range(1, 13))) == \
+        "frozenset({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12})"
 
     assert pretty(Range(0, 3, 1)) == '{0, 1, 2}'
 
@@ -5850,3 +5944,19 @@ def test_MatrixElement_printing():
     F = C[0, 0].subs(C, A - B)
     assert pretty(F)  == ascii_str1
     assert upretty(F) == ucode_str1
+
+
+def test_vector_expr_pretty_printing():
+    A = CoordSys3D('A')
+
+    assert upretty(Cross(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)×((A_x) A_i + (3⋅A_y) A_j)")
+    assert upretty(x*Cross(A.i, A.j)) == u('x⋅(A_i)×(A_j)')
+
+    assert upretty(Curl(A.x*A.i + 3*A.y*A.j)) == u("∇×((A_x) A_i + (3⋅A_y) A_j)")
+
+    assert upretty(Divergence(A.x*A.i + 3*A.y*A.j)) == u("∇⋅((A_x) A_i + (3⋅A_y) A_j)")
+
+    assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)⋅((A_x) A_i + (3⋅A_y) A_j)")
+
+    assert upretty(Gradient(A.x+3*A.y)) == u("∇⋅(A_x + 3⋅A_y)")
+    # TODO: add support for ASCII pretty.

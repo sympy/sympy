@@ -17,6 +17,7 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.expr import Expr
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -166,7 +167,7 @@ def trailing(n):
     >>> trailing(63)
     0
     """
-    n = int(n)
+    n = abs(int(n))
     if not n:
         return 0
     low_byte = n & 0xff
@@ -941,6 +942,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     ``factorint`` also periodically checks if the remaining part is
     a prime number or a perfect power, and in those cases stops.
 
+    For unevaluated factorial, it uses Legendre's formula(theorem).
+
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
 
@@ -998,6 +1001,28 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return factordict
 
     assert use_trial or use_rho or use_pm1
+
+    # for unevaluated factorial, if n < 20!, direct computation is faster
+    # since it uses lookup table
+    from sympy.functions.combinatorial.factorials import factorial
+    if isinstance(n, factorial) and n.args[0].is_Integer and n.args[0] >= 20:
+        x = n.args[0]
+        factors = {}
+        for p in sieve.primerange(2, x):
+            m = 0
+            d = p
+            q = x // p
+            while q != 0:
+                m += q
+                d *= p
+                q = x // d
+            factors[p] = m
+        if factors and verbose:
+            for k in sorted(factors):
+                print(factor_msg % (k, factors[k]))
+        if verbose:
+            print(complete_msg)
+        return factors
 
     n = as_int(n)
     if limit:
@@ -1591,6 +1616,8 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
+            raise ValueError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])

@@ -1,6 +1,7 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
     StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
 )
+from sympy.core.symbol import _uniquely_named_symbol, _symbol
 
 from sympy.utilities.pytest import raises
 
@@ -335,9 +336,33 @@ def test_call():
     assert f(2)
     raises(TypeError, lambda: Wild('x')(1))
 
+
 def test_unicode():
     xu = Symbol(u'x')
     x = Symbol('x')
     assert x == xu
 
     raises(TypeError, lambda: Symbol(1))
+
+
+def test__uniquely_named_symbol_and__symbol():
+    F = _uniquely_named_symbol
+    x = Symbol('x')
+    assert F(x) == x
+    assert F('x') == x
+    assert str(F('x', x)) == '_x'
+    assert str(F('x', (x + 1, 1/x))) == '_x'
+    _x = Symbol('x', real=True)
+    assert F(('x', _x)) == _x
+    assert F((x, _x)) == _x
+    assert F('x', real=True).is_real
+    y = Symbol('y')
+    assert F(('x', y), real=True).is_real
+    r = Symbol('x', real=True)
+    assert F(('x', r)).is_real
+    assert F(('x', r), real=False).is_real
+    assert F('x1', Symbol('x1'),
+        compare=lambda i: str(i).rstrip('1')).name == 'x1'
+    assert F('x1', Symbol('x1'),
+        modify=lambda i: i + '_').name == 'x1_'
+    assert _symbol(x, _x) == x

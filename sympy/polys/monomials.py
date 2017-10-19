@@ -2,9 +2,10 @@
 
 from __future__ import print_function, division
 
+from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
-from sympy.core import S, Mul, Tuple, sympify
+from sympy.core import Mul, S, Tuple, sympify
 from sympy.core.compatibility import exec_, iterable, range
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -17,7 +18,8 @@ def itermonomials(variables, degree):
 
     Given a set of variables `V` and a total degree `N` generate
     a set of monomials of degree at most `N`. The total number of
-    monomials is huge and is given by the following formula:
+    monomials in commutative variables is huge and is given by the
+    following formula:
 
     .. math::
 
@@ -32,8 +34,10 @@ def itermonomials(variables, degree):
     Examples
     ========
 
-    Consider monomials in variables `x` and `y`::
+    Consider monomials in commutative variables `x` and `y`
+    and non-commutative variables `a` and `b`::
 
+        >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
         >>> from sympy.polys.orderings import monomial_key
         >>> from sympy.abc import x, y
@@ -44,18 +48,22 @@ def itermonomials(variables, degree):
         >>> sorted(itermonomials([x, y], 3), key=monomial_key('grlex', [y, x]))
         [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
+        >>> a, b = symbols('a, b', commutative=False)
+        >>> itermonomials([a, b, x], 2)
+        {1, a, a**2, b, b**2, x, x**2, a*b, b*a, x*a, x*b}
+
+
     """
-    if not variables:
-        return set([S.One])
+    if degree < 0:
+        return set()
+    if not variables or degree == 0:
+        return {S(1)}
+    # Force to list in case of passed tuple or other incompatible collection
+    variables = list(variables) + [S(1)]
+    if all(variable.is_commutative for variable in variables):
+        return {Mul(*item) for item in combinations_with_replacement(variables, degree)}
     else:
-        x, tail = variables[0], variables[1:]
-
-        monoms = itermonomials(tail, degree)
-
-        for i in range(1, degree + 1):
-            monoms |= set([ x**i * m for m in itermonomials(tail, degree - i) ])
-
-        return monoms
+        return {Mul(*item) for item in product(variables, repeat=degree)}
 
 def monomial_count(V, N):
     r"""
@@ -446,7 +454,7 @@ class Monomial(PicklableWithSlots):
         return self.exponents == exponents
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __mul__(self, other):
         if isinstance(other, Monomial):

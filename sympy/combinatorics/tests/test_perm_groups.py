@@ -1,5 +1,6 @@
 from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import (PermutationGroup,
+    _orbit_transversal)
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation
@@ -240,6 +241,15 @@ def test_orbits():
         [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
 
+    G = DihedralGroup(6)
+    transversal, slps = _orbit_transversal(G.degree, G.generators, 0, True, slp=True)
+    for i, t in transversal:
+        slp = slps[i]
+        w = G.identity
+        for s in slp:
+            w = G.generators[s]*w
+        assert w == t
+
     a = Permutation(list(range(1, 100)) + [0])
     G = PermutationGroup([a])
     assert [min(o) for o in G.orbits()] == [0]
@@ -445,6 +455,20 @@ def test_minimal_block():
 
     assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
 
+    P1 = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    P2 = PermutationGroup(Permutation(0, 1, 2, 3, 4, 5), Permutation(1, 5)(2, 4))
+    assert P1.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
+    assert P2.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
+
+def test_minimal_blocks():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    assert P.minimal_blocks() == [[0, 1, 0, 1, 0, 1], [0, 1, 2, 0, 1, 2]]
+
+    P = SymmetricGroup(5)
+    assert P.minimal_blocks() == [[0]*5]
+
+    P = PermutationGroup(Permutation(0, 3))
+    assert P.minimal_blocks() == False
 
 def test_max_div():
     S = SymmetricGroup(10)
@@ -752,3 +776,78 @@ def test_subgroup():
     G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
     H = G.subgroup([Permutation(0,1,3)])
     assert H.is_subgroup(G)
+
+def test_generator_product():
+    G = SymmetricGroup(5)
+    p = Permutation(0, 2, 3)(1, 4)
+    gens = G.generator_product(p)
+    assert all(g in G.strong_gens for g in gens)
+    w = G.identity
+    for g in gens:
+        w = g*w
+    assert w == p
+
+def test_sylow_subgroup():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    S = P.sylow_subgroup(2)
+    assert S.order() == 4
+
+    P = DihedralGroup(12)
+    S = P.sylow_subgroup(3)
+    assert S.order() == 3
+
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5), Permutation(0, 2))
+    S = P.sylow_subgroup(3)
+    assert S.order() == 9
+    S = P.sylow_subgroup(2)
+    assert S.order() == 8
+
+    P = SymmetricGroup(10)
+    S = P.sylow_subgroup(2)
+    assert S.order() == 256
+    S = P.sylow_subgroup(3)
+    assert S.order() == 81
+    S = P.sylow_subgroup(5)
+    assert S.order() == 25
+
+    # the length of the lower central series
+    # of a p-Sylow subgroup of Sym(n) grows with
+    # the highest exponent exp of p such
+    # that n >= p**exp
+    exp = 1
+    length = 0
+    for i in range(2, 9):
+        P = SymmetricGroup(i)
+        S = P.sylow_subgroup(2)
+        ls = S.lower_central_series()
+        if i // 2**exp > 0:
+            # length increases with exponent
+            assert len(ls) > length
+            length = len(ls)
+            exp += 1
+        else:
+            assert len(ls) == length
+
+    G = SymmetricGroup(100)
+    S = G.sylow_subgroup(3)
+    assert G.order() % S.order() == 0
+    assert G.order()/S.order() % 3 > 0
+
+    G = AlternatingGroup(100)
+    S = G.sylow_subgroup(2)
+    assert G.order() % S.order() == 0
+    assert G.order()/S.order() % 2 > 0
+
+def test_presentation():
+    def _test(P):
+        G = P.presentation()
+        return G.order() == P.order()
+
+    P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6), Permutation(0,3,5,4)(1,6,2,7))
+    assert _test(P)
+
+    P = AlternatingGroup(5)
+    assert _test(P)
+
+    P = SymmetricGroup(5)
+    assert _test(P)

@@ -267,7 +267,7 @@ second is a tuple of indices of the pivot columns.
     ⎝⎣0  0   0    0 ⎦        ⎠
 
 .. Note:: The first element of the tuple returned by ``rref`` is of type
-   ``Matrix``. The second is of type ``list``.
+   ``Matrix``. The second is of type ``tuple``.
 
 Nullspace
 ---------

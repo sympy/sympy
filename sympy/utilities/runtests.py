@@ -39,6 +39,7 @@ from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 IS_WINDOWS = (os.name == 'nt')
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
 # emperically generated list of the proportion of time spent running
 # an even split of tests.  This should periodically be regenerated.
@@ -64,6 +65,8 @@ SPLIT_DENSITY_SLOW = [0.3616, 0.0003, 0.0004, 0.0004, 0.0255, 0.0005, 0.0674, 0.
 class Skipped(Exception):
     pass
 
+class TimeOutError(Exception):
+    pass
 
 # add more flags ??
 future_flags = division.compiler_flag
@@ -510,6 +513,11 @@ def _test(*paths, **kwargs):
     if seed is None:
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
+    fail_on_timeout = kwargs.get("fail_on_timeout", False)
+    if ON_TRAVIS and timeout is False:
+        # Travis times out if no activity is seen for 10 minutes.
+        timeout = 595
+        fail_on_timeout = True
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
@@ -563,8 +571,8 @@ def _test(*paths, **kwargs):
 
     t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout,
-        slow=slow, enhance_asserts=enhance_asserts))
+    return int(not t.test(sort=sort, timeout=timeout, slow=slow,
+        enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
 def doctest(*paths, **kwargs):
@@ -1059,7 +1067,8 @@ class SymPyTests(object):
         else:
             self._slow_threshold = 10
 
-    def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
+    def test(self, sort=False, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -1075,7 +1084,8 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, slow, enhance_asserts)
+                self.test_file(f, sort, timeout, slow,
+                    enhance_asserts, fail_on_timeout)
             except KeyboardInterrupt:
                 print(" interrupted by user")
                 self._reporter.finish()
@@ -1113,7 +1123,8 @@ class SymPyTests(object):
         new_tree = Transform().visit(tree)
         return fix_missing_locations(new_tree)
 
-    def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
+    def test_file(self, filename, sort=True, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         reporter = self._reporter
         funcs = []
         try:
@@ -1207,7 +1218,7 @@ class SymPyTests(object):
                 if getattr(f, '_slow', False) and not slow:
                     raise Skipped("Slow")
                 if timeout:
-                    self._timeout(f, timeout)
+                    self._timeout(f, timeout, fail_on_timeout)
                 else:
                     random.seed(self._seed)
                     f()
@@ -1244,10 +1255,13 @@ class SymPyTests(object):
                     reporter.fast_test_functions.append((f.__name__, taken))
         reporter.leaving_filename()
 
-    def _timeout(self, function, timeout):
+    def _timeout(self, function, timeout, fail_on_timeout):
         def callback(x, y):
             signal.alarm(0)
-            raise Skipped("Timeout")
+            if fail_on_timeout:
+                raise TimeOutError("Timed out after %d seconds" % timeout)
+            else:
+                raise Skipped("Timeout")
         signal.signal(signal.SIGALRM, callback)
         signal.alarm(timeout)  # Set an alarm with a given timeout
         function()
@@ -2112,6 +2126,8 @@ class PyTestReporter(Reporter):
                 import gmpy2 as gmpy
             version = gmpy.version()
         self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
+        numpy = import_module('numpy')
+        self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION
@@ -2280,7 +2296,10 @@ class PyTestReporter(Reporter):
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
-        self.write("E", "Red")
+        if exc_info[0] is TimeOutError:
+            self.write("T", "Red")
+        else:
+            self.write("E", "Red")
         self._active_file_error = True
 
     def import_error(self, filename, exc_info):

@@ -2,6 +2,7 @@ from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, range, ordered
+from sympy.core.symbol import _symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -16,7 +17,8 @@ from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment
-from .util import _symbol
+
+from sympy import sqrt
 
 import warnings
 
@@ -236,6 +238,18 @@ class Polygon(GeometrySet):
 
     @staticmethod
     def _isright(a, b, c):
+        """Return True/False for cw/ccw orientation.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Polygon
+        >>> a, b, c = [Point(i) for i in [(0, 0), (1, 1), (1, 0)]]
+        >>> Polygon._isright(a, b, c)
+        True
+        >>> Polygon._isright(a, c, b)
+        False
+        """
         ba = b - a
         ca = c - a
         t_area = simplify(ba.x*ca.y - ca.x*ba.y)
@@ -608,7 +622,7 @@ class Polygon(GeometrySet):
         Point2D(1, 1/2)
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
         sides = []
@@ -1663,6 +1677,7 @@ class Triangle(Polygon):
     circumcircle
     inradius
     incircle
+    exradii
     medians
     medial
     nine_point_circle
@@ -2203,6 +2218,56 @@ class Triangle(Polygon):
 
         """
         return Circle(self.incenter, self.inradius)
+
+    @property
+    def exradii(self):
+        """The radius of excircles of a triangle.
+
+        An excircle of the triangle is a circle lying outside the triangle,
+        tangent to one of its sides and tangent to the extensions of the
+        other two.
+
+        Returns
+        =======
+
+        exradii : dict
+
+        See Also
+        ========
+
+        sympy.geometry.polygon.Triangle.inradius
+
+        Examples
+        ========
+
+        The exradius touches the side of the triangle to which it is keyed, e.g.
+        the exradius touching side 2 is:
+
+        >>> from sympy.geometry import Point, Triangle, Segment2D, Point2D
+        >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.exradii[t.sides[2]]
+        -2 + sqrt(10)
+
+        References
+        ==========
+
+        [1] http://mathworld.wolfram.com/Exradius.html
+        [2] http://mathworld.wolfram.com/Excircles.html
+
+        """
+
+        side = self.sides
+        a = side[0].length
+        b = side[1].length
+        c = side[2].length
+        s = (a+b+c)/2
+        area = self.area
+        exradii = {self.sides[0]: simplify(area/(s-a)),
+                   self.sides[1]: simplify(area/(s-b)),
+                   self.sides[2]: simplify(area/(s-c))}
+
+        return exradii
 
     @property
     def medians(self):

@@ -27,8 +27,8 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
                    "erfc", "erfi", "erf", "erfinv", "erfcinv",
                    "besseli", "besselj", "besselk", "bessely",
-                   "exp", "factorial", "floor", "fresnelc", "fresnels",
-                   "gamma", "log", "polylog", "sign", "zeta"]
+                   "euler", "exp", "factorial", "floor", "fresnelc",
+                   "fresnels", "gamma", "log", "polylog", "sign", "zeta"]
 
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
@@ -65,7 +65,7 @@ class OctaveCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 16,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -229,14 +229,6 @@ class OctaveCodePrinter(CodePrinter):
         # FIXME: how to do better, e.g., for octave_code(2*GoldenRatio)?
         #return self._print((1+sqrt(S(5)))/2)
         return "(1+sqrt(5))/2"
-
-
-    def _print_NumberSymbol(self, expr):
-        if self._settings["inline"]:
-            return self._print(expr.evalf(self._settings["precision"]))
-        else:
-            # assign to a variable, perhaps more readable for longer program
-            return super(OctaveCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_Assignment(self, expr):

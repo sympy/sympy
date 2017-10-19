@@ -1,17 +1,16 @@
-from sympy import Matrix, eye
+from sympy import Matrix, eye, Integer
 from sympy.combinatorics import Permutation
 from sympy.core import S, Rational, Symbol, Basic
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
-from sympy.external import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.pretty import pretty
 from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
-    TensorManager, TensExpr, TIDS
-from sympy.utilities.pytest import raises, skip
+    TensorManager, TensExpr, TIDS, TensorHead
+from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 
 
@@ -1002,6 +1001,7 @@ def test_metric_contract3():
     t1 = t.contract_metric(C)
     assert _is_equal(t1, B(-a2,a1)*psi(-a1))
 
+
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
@@ -1040,6 +1040,11 @@ def test_epsilon():
     t = epsilon(c,a,d,b)*p(-a)*q(-b) + epsilon(a,b,c,d)*p(-b)*q(-a)
     t1 = t.canon_bp()
     assert t1 == -2*epsilon(c, d, a, b)*p(-a)*q(-b)
+
+    # Test that epsilon can be create with a SymPy integer:
+    Lorentz = TensorIndexType('Lorentz', dim=Integer(4), dummy_fmt='L')
+    epsilon = Lorentz.epsilon
+    assert isinstance(epsilon, TensorHead)
 
 def test_contract_delta1():
     # see Group Theory by Cvitanovic page 9
