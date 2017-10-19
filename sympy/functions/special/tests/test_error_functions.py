@@ -338,6 +338,7 @@ def test_ei():
     assert Ei(x).series(x) == EulerGamma + log(x) + x + x**2/4 + \
         x**3/18 + x**4/96 + x**5/600 + O(x**6)
 
+    assert Ei(cos(2)) == -I*pi + Ei(-exp_polar(I*pi)*cos(2))
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
