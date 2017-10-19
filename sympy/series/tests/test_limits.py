@@ -60,7 +60,6 @@ def test_basic1():
 
     # test failing bi-directional limits
     raises(ValueError, lambda: limit(1/x, x, 0, dir="+-"))
-    assert limit(1/x, x, 0, dir="+-", exc=False) is None
     # approaching 0
     # from dir="+"
     assert limit(1 + 1/x, x, 0) == oo

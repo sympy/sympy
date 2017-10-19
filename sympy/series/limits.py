@@ -9,7 +9,7 @@ from sympy.series.order import Order
 from .gruntz import gruntz
 
 
-def limit(e, z, z0, dir="+", exc=True):
+def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
 
@@ -21,11 +21,6 @@ def limit(e, z, z0, dir="+", exc=True):
     For infinite ``z0`` (``oo`` or ``-oo``), the ``dir`` argument is
     determined from the direction of the infinity (i.e.,
     ``dir="-"`` for ``oo``).
-
-    ``exc`` is only used in the case of a non-existent bi-directional
-    limit i.e. when the left- and right-side limits don't match.
-    For ``exc=True`` (default), it throws a ``ValueError()``, and
-    for ``exc=False`` it returns ``None``.
 
     Examples
     ========
@@ -42,8 +37,6 @@ def limit(e, z, z0, dir="+", exc=True):
     Traceback (most recent call last):
         ...
     ValueError: The limit does not exist since left and right hand limits don't match.
-
-    >>> limit(1/x, x, 0, dir='+-', exc=False)
 
     >>> limit(1/x, x, oo)
     0
@@ -62,11 +55,8 @@ def limit(e, z, z0, dir="+", exc=True):
         if llim == rlim:
             return rlim
         else:
-            if exc:
-                raise ValueError("The limit does not exist since "
-                        "left and right hand limits don't match.")
-            else:
-                return None
+            raise ValueError("The limit does not exist since "
+                    "left and right hand limits don't match.")
     else:
         return Limit(e, z, z0, dir).doit(deep=False)
 
