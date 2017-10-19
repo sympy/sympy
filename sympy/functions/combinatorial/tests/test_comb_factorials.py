@@ -319,6 +319,7 @@ def test_binomial():
     assert binomial(nt, k).is_integer is None
     assert binomial(x, nt).is_integer is False
 
+    assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
 
 def test_binomial_diff():
     n = Symbol('n', integer=True)

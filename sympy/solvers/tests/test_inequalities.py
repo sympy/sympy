@@ -110,10 +110,10 @@ def test_reduce_poly_inequalities_complex_relational():
         [[Ge(x**2, 0)]], x, relational=True) == And(Lt(-oo, x), Lt(x, oo))
     assert reduce_rational_inequalities(
         [[Gt(x**2, 0)]], x, relational=True) == \
-        And(Or(And(Lt(-oo, x), Lt(x, 0)), And(Lt(0, x), Lt(x, oo))))
+        And(Gt(x, -oo), Lt(x, oo), Ne(x, 0))
     assert reduce_rational_inequalities(
         [[Ne(x**2, 0)]], x, relational=True) == \
-        And(Or(And(Lt(-oo, x), Lt(x, 0)), And(Lt(0, x), Lt(x, oo))))
+        And(Gt(x, -oo), Lt(x, oo), Ne(x, 0))
 
     for one in (S(1), S(1.0)):
         inf = one*oo
@@ -309,6 +309,10 @@ def test_solve_univariate_inequality():
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
     raises(TypeError, lambda: isolve(x - I < 0, x))
+
+    # make sure iter_solutions gets a default value
+    raises(NotImplementedError, lambda: isolve(
+        Eq(cos(x)**2 + sin(x)**2, 1), x))
 
 
 def test_trig_inequalities():
