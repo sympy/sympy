@@ -1,0 +1,14 @@
+[run]
+parallel = True
+branch = True
+source = sympy
+omit =
+    */tests/*
+    */benchmarks/*
+data_file = $TRAVIS_BUILD_DIR/.coverage
+
+[report]
+exclude_lines =
+    \#.*pragma:\s*no.?cover
+    ^\s*if SYMPY_DEBUG:
+show_missing = True

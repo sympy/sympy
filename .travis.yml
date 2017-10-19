@@ -227,6 +227,9 @@ before_install:
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
       pip install "sphinx" "docutils" doctr;
     fi
+  - if [[ "${TEST_SYMPY}" == "true" ]]; then
+      pip install coverage;
+    fi
   - |
     if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the

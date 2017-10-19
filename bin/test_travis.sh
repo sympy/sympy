@@ -164,12 +164,30 @@ fi
 if [[ "${TEST_SYMPY}" == "true" ]]; then
     # -We:invalid makes invalid escape sequences error in Python 3.6. See
     # -#12028.
+    rm -f $TRAVIS_BUILD_DIR/.coverage.* $TRAVIS_BUILD_DIR/.coverage
+    cat << EOF | python
+import distutils
+import os
+
+with open(os.path.join(distutils.sysconfig.get_python_lib(), 'coverage.pth'), 'w') as pth:
+    pth.write('import sys; exec(%r)\n' % '''\
+try:
+    import coverage
+except ImportError:
+    pass
+else:
+    coverage.process_startup()
+''')
+EOF
+
+    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/.coveragerc
     cat << EOF | python -We:invalid
 print('Testing SYMPY, split ${SPLIT}')
 import sympy
 if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
 EOF
+    unset COVERAGE_PROCESS_START
 fi
 
 
