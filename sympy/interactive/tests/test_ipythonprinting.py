@@ -122,7 +122,11 @@ def test_matplotlib_bad_latex():
 
     # Make sure no warnings are raised by IPython
     app.run_cell("import warnings")
-    app.run_cell("warnings.simplefilter('error', IPython.core.formatters.FormatterWarning)")
+    # IPython.core.formatters.FormatterWarning was introduced in IPython 2.0
+    if int(ipython.__version__.split(".")[0]) < 2:
+        app.run_cell("warnings.simplefilter('error')")
+    else:
+        app.run_cell("warnings.simplefilter('error', IPython.core.formatters.FormatterWarning)")
 
     # This should not raise an exception
     app.run_cell("a = format(Matrix([1, 2, 3]))")
