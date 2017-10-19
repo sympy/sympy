@@ -1068,7 +1068,7 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def integrate(self, x=None):
+    def integrate(self, x=None, **kwargs):
         """Integrate Formal Power Series.
 
         Examples
