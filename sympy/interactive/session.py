@@ -5,12 +5,16 @@ from __future__ import print_function, division
 from distutils.version import LooseVersion as V
 import ast
 
+from sympy.core.compatibility import builtins
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
-preexec_source = """\
+import_source = """\
 from __future__ import division
 from sympy import *
+"""
+
+preexec_source = """\
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
 f, g, h = symbols('f g h', cls=Function)
@@ -64,7 +68,7 @@ def _make_message(ipython=True, quiet=False, source=None):
     message = "%s console for SymPy %s (Python %s-%s) (%s)\n" % args
 
     if source is None:
-        source = preexec_source
+        source = import_source + preexec_source
 
     _source = ""
 
@@ -84,6 +88,59 @@ def _make_message(ipython=True, quiet=False, source=None):
                                          'version': doc_version}
 
     return message
+
+
+class IntegerWrapper(ast.NodeTransformer):
+    """Wraps all integers in a call to Integer."""
+
+    def visit_Num(self, node):
+        if isinstance(node.n, int):
+            return ast.Call(func=ast.Name(id='Integer', ctx=ast.Load()),
+                            args=[node], keywords=[],
+                            starargs=None, kwargs=None)
+        return node
+
+    def visit_Call(self, node):
+        if isinstance(node.func, ast.Name) and (node.func.id == "Integer"
+                or node.func.id == "int"):
+            return node
+        return self.generic_visit(node)
+
+
+class AutomaticSymbols(ast.NodeTransformer):
+    """Add missing Symbol definitions automatically."""
+
+    def __init__(self, shell):
+        super(AutomaticSymbols, self).__init__()
+        self.shell = shell
+        self.names = []
+
+    def visit_Module(self, node):
+        ignored_names = list(self.shell.user_ns.keys()) + dir(builtins)
+
+        for s in node.body:
+            self.visit(s)
+
+        for v in self.names:
+            if v in ignored_names:
+                continue
+
+            assign = ast.Assign(targets=[ast.Name(id=v, ctx=ast.Store())],
+                                value=ast.Call(func=ast.Name(id='Symbol',
+                                                             ctx=ast.Load()),
+                                               args=[ast.Str(s=v)], keywords=[],
+                                               starargs=None, kwargs=None))
+            node.body.insert(0, assign)
+
+        newnode = ast.Module(body=node.body)
+        ast.copy_location(newnode, node)
+        ast.fix_missing_locations(newnode)
+        return newnode
+
+    def visit_Name(self, node):
+        if isinstance(node.ctx, ast.Load):
+            self.names.append(node.id)
+        return node
 
 
 def int_to_Integer(s):
@@ -138,111 +195,16 @@ def int_to_Integer(s):
     return untokenize(result)
 
 
-def enable_automatic_int_sympification(app):
-    """
-    Allow IPython to automatically convert integer literals to Integer.
-    """
-    hasshell = hasattr(app, 'shell')
-
-    import ast
-    if hasshell:
-        old_run_cell = app.shell.run_cell
-    else:
-        old_run_cell = app.run_cell
-
-    def my_run_cell(cell, *args, **kwargs):
-        try:
-            # Check the cell for syntax errors.  This way, the syntax error
-            # will show the original input, not the transformed input.  The
-            # downside here is that IPython magic like %timeit will not work
-            # with transformed input (but on the other hand, IPython magic
-            # that doesn't expect transformed input will continue to work).
-            ast.parse(cell)
-        except SyntaxError:
-            pass
-        else:
-            cell = int_to_Integer(cell)
-        old_run_cell(cell, *args, **kwargs)
-
-    if hasshell:
-        app.shell.run_cell = my_run_cell
-    else:
-        app.run_cell = my_run_cell
+def enable_automatic_int_sympification(shell):
+    """Allow IPython to automatically convert integer literals to Integer."""
+    shell.ast_transformers.append(IntegerWrapper())
 
 
-def enable_automatic_symbols(app):
-    """Allow IPython to automatially create symbols (``isympy -a``). """
-    # XXX: This should perhaps use tokenize, like int_to_Integer() above.
-    # This would avoid re-executing the code, which can lead to subtle
-    # issues.  For example:
-    #
-    # In [1]: a = 1
-    #
-    # In [2]: for i in range(10):
-    #    ...:     a += 1
-    #    ...:
-    #
-    # In [3]: a
-    # Out[3]: 11
-    #
-    # In [4]: a = 1
-    #
-    # In [5]: for i in range(10):
-    #    ...:     a += 1
-    #    ...:     print b
-    #    ...:
-    # b
-    # b
-    # b
-    # b
-    # b
-    # b
-    # b
-    # b
-    # b
-    # b
-    #
-    # In [6]: a
-    # Out[6]: 12
-    #
-    # Note how the for loop is executed again because `b` was not defined, but `a`
-    # was already incremented once, so the result is that it is incremented
-    # multiple times.
+def enable_automatic_symbols(shell):
+    """Allow IPython to automatially create symbols."""
+    shell.ast_transformers.append(AutomaticSymbols(shell))
 
-    import re
-    re_nameerror = re.compile(
-        "name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
 
-    def _handler(self, etype, value, tb, tb_offset=None):
-        """Handle :exc:`NameError` exception and allow injection of missing symbols. """
-        if etype is NameError and tb.tb_next and not tb.tb_next.tb_next:
-            match = re_nameerror.match(str(value))
-
-            if match is not None:
-                # XXX: Make sure Symbol is in scope. Otherwise you'll get infinite recursion.
-                self.run_cell("%(symbol)s = Symbol('%(symbol)s')" %
-                    {'symbol': match.group("symbol")}, store_history=False)
-
-                try:
-                    code = self.user_ns['In'][-1]
-                except (KeyError, IndexError):
-                    pass
-                else:
-                    self.run_cell(code, store_history=False)
-                    return None
-                finally:
-                    self.run_cell("del %s" % match.group("symbol"),
-                                  store_history=False)
-
-        stb = self.InteractiveTB.structured_traceback(
-            etype, value, tb, tb_offset=tb_offset)
-        self._showtraceback(etype, value, stb)
-
-    if hasattr(app, 'shell'):
-        app.shell.set_custom_exc((NameError,), _handler)
-    else:
-        # This was restructured in IPython 0.13
-        app.set_custom_exc((NameError,), _handler)
 
 
 def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
@@ -282,11 +244,9 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
             shell.run_ast_nodes = types.MethodType(my_run_ast_nodes, shell)
 
         if auto_symbols:
-            readline = import_module("readline")
-            if readline:
-                enable_automatic_symbols(app)
+            enable_automatic_symbols(shell)
         if auto_int_to_Integer:
-            enable_automatic_int_sympification(app)
+            enable_automatic_int_sympification(shell)
 
         return shell
     else:
@@ -468,21 +428,19 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if not in_ipython:
             mainloop = ip.mainloop
 
-    readline = import_module("readline")
-    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11' or not readline):
-        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
+    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11'):
+        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
     if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
-    _preexec_source = preexec_source
-
-    ip.runsource(_preexec_source, symbol='exec')
+    ip.runsource(import_source, symbol='exec')
+    ip.runsource(preexec_source, symbol='exec')
     init_printing(pretty_print=pretty_print, order=order,
                   use_unicode=use_unicode, use_latex=use_latex, ip=ip,
                   str_printer=str_printer, pretty_printer=pretty_printer,
                   latex_printer=latex_printer)
 
-    message = _make_message(ipython, quiet, _preexec_source)
+    message = _make_message(ipython, quiet)
 
     if not in_ipython:
         print(message)
