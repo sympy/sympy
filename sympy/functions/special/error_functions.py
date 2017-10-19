@@ -1058,8 +1058,9 @@ class Ei(Function):
             return S.Zero
 
         if not z.is_polar and z.is_negative:
-            # Note: is this a good idea?
-            return Ei(polar_lift(z)) - pi*I
+            if polar_lift(z) != z:
+                # Note: is this a good idea?
+                return Ei(polar_lift(z)) - pi*I
         nz, n = z.extract_branch_factor()
         if n:
             return Ei(nz) + 2*I*pi*n
