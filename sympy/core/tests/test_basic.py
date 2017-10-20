@@ -106,10 +106,9 @@ def test_subs():
     assert b21.subs([(b2, b1), (b1, b2)]) == Basic(b2, b2)
 
     assert b21.subs({b1: b2, b2: b1}) == Basic(b2, b2)
-    if sys.version_info >= (3, 3):
+    if sys.version_info >= (3, 4):
         assert b21.subs(collections.ChainMap({b1: b2}, {b2: b1})) == Basic(b2, b2)
-    if sys.version_info >= (2, 7):
-        assert b21.subs(collections.OrderedDict([(b2, b1), (b1, b2)])) == Basic(b2, b2)
+    assert b21.subs(collections.OrderedDict([(b2, b1), (b1, b2)])) == Basic(b2, b2)
 
     raises(ValueError, lambda: b21.subs('bad arg'))
     raises(ValueError, lambda: b21.subs(b1, b2, b3))

@@ -37,7 +37,6 @@ $ACTIVITIES = [
     'copy_release_files',
     'compare_tar_against_git',
     'test_tarball27',
-    'test_tarball33',
     'test_tarball34',
     'test_tarball35',
     'test_tarball36',
@@ -114,10 +113,6 @@ def copy_release_files():
 @activity(deps={'source_tarball'})
 def test_tarball27():
     test_tarball('2.7')
-
-@activity(deps={'source_tarball'})
-def test_tarball33():
-    test_tarball('3.3')
 
 @activity(deps={'source_tarball'})
 def test_tarball34():
@@ -218,7 +213,7 @@ def _md5(print_=True, local=False):
         print(out)
     return out
 
-@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball33', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
+@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
 def release():
     pass
 
@@ -252,8 +247,8 @@ def test_tarball(py_version):
     Test that the tarball can be unpacked and installed, and that sympy
     imports in the install.
     """
-    if py_version not in {'2.7', '3.3', '3.4', '3.5', '3.6'}: # TODO: Add win32
-        raise ValueError("release must be one of 2.7, 3.3, 3.4, 3.5, or 3.6 not %s" % py_version)
+    if py_version not in {'2.7', '3.4', '3.5', '3.6'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.4, 3.5, or 3.6 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
