@@ -711,7 +711,7 @@ class Ellipse(GeometrySet):
         elif isinstance(o, Ray2D):
             intersect = self.intersection(o)
             if len(intersect) == 1:
-                return intersect[0] != o.source and not self.encloses_point(o.source)
+                return o in self.tangent_lines(intersect[0])[0]
             else:
                 return False
         elif isinstance(o, (Segment2D, Polygon)):
@@ -719,15 +719,16 @@ class Ellipse(GeometrySet):
             segments = o.sides if isinstance(o, Polygon) else [o]
             for segment in segments:
                 intersect = self.intersection(segment)
-                if len(intersect) == 1:
-                    if not any(intersect[0] in i for i in segment.points)\
-                                   and all(not self.encloses_point(i) for i in segment.points):
-                        all_tangents = True
-                        continue
+                if intersect:
+                    if len(intersect) == 1:
+                        if segment in self.tangent_lines(intersect[0])[0]:
+                            all_tangents = True
+                        else:
+                            return False
                     else:
                         return False
                 else:
-                    return all_tangents
+                    continue
             return all_tangents
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
