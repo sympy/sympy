@@ -805,12 +805,12 @@ class Add(Expr, AssocOp):
         >>> (2*x/3 + 4.2*y).primitive()
         (1/3, 2*x + 12.6*y)
 
-        No sub-processing of term factors is performed:
+        No subprocessing of term factors is performed:
 
         >>> ((2 + 2*x)*x + 2).primitive()
         (1, x*(2*x + 2) + 2)
 
-        Recursive sub-processing can be done with the as_content_primitive()
+        Recursive processing can be done with the ``as_content_primitive()``
         method:
 
         >>> ((2 + 2*x)*x + 2).as_content_primitive()
