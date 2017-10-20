@@ -838,6 +838,13 @@ def _doctest(*paths, **kwargs):
                 [test_file, ' '*(wid - len(test_file) - len(report)), report])
             )
 
+    if blacklist:
+        r.write("\n")
+        r.write_center('blacklisted tests', '_')
+        for blacklisted_file_name in blacklist:
+            print('%s' % blacklisted_file_name)
+        r.write("\n")
+
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
     # testing the *rst as evidenced by first_report no longer being True.
