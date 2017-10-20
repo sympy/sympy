@@ -283,7 +283,7 @@ script:
   - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-        doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
+        doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py; git status; git diff; git diff --cached';
     fi
 notifications:
   email: false
