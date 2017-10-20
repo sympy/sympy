@@ -444,12 +444,13 @@ class Integral(AddWithLimits):
                 continue
 
             if isinstance(function, Piecewise):
+                # TODO pass along eval_kwargs
                 if len(xab) == 1:
-                    antideriv = function._eval_integral(xab[0],
-                        **eval_kwargs)
+                    antideriv = function._eval_integral(xab[0]
+                        )
                 else:
                     antideriv = self._eval_integral(
-                        function, xab[0], **eval_kwargs)
+                        function, xab[0])
             else:
                 # There are a number of tradeoffs in using the
                 # Meijer G method. It can sometimes be a lot faster
@@ -790,7 +791,7 @@ class Integral(AddWithLimits):
 
         # Piecewise antiderivatives need to call special integrate.
         if isinstance(f, Piecewise):
-            return f.piecewise_integrate(x)
+            return f._eval_integral(x)  # TODO change to .piecewise_integrate(x)
 
         # let's cut it short if `f` does not depend on `x`; if
         # x is only a dummy, that will be handled below
