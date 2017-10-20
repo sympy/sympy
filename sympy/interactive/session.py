@@ -227,27 +227,29 @@ def enable_automatic_rationalize(shell):
     shell.ast_transformers.append(FloatRationalizer())
 
 
-def init_ipython_session(argv=[], auto_symbols=False,
+def init_ipython_session(shell=None, argv=[], auto_symbols=False,
         auto_int_to_Integer=False, auto_rationalize=False):
     """Construct new IPython session. """
     import IPython
 
     if V(IPython.__version__) >= '0.11':
-        # use an app to parse the command line, and init config
-        # IPython 1.0 deprecates the frontend module, so we import directly
-        # from the terminal module to prevent a deprecation message from being
-        # shown.
-        if V(IPython.__version__) >= '1.0':
-            from IPython.terminal import ipapp
-        else:
-            from IPython.frontend.terminal import ipapp
-        app = ipapp.TerminalIPythonApp()
+        if not shell:
+            # use an app to parse the command line, and init config
+            # IPython 1.0 deprecates the frontend module, so we import directly
+            # from the terminal module to prevent a deprecation message from being
+            # shown.
+            if V(IPython.__version__) >= '1.0':
+                from IPython.terminal import ipapp
+            else:
+                from IPython.frontend.terminal import ipapp
+            app = ipapp.TerminalIPythonApp()
 
-        # don't draw IPython banner during initialization:
-        app.display_banner = False
-        app.initialize(argv)
+            # don't draw IPython banner during initialization:
+            app.display_banner = False
+            app.initialize(argv)
 
-        shell = app.shell
+            shell = app.shell
+
         if hasattr(shell, 'ast_transformers'):
             del shell.ast_transformers[:]
         else: # ast_transformers was introduced in IPython 1.0
@@ -434,7 +436,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip = init_python_session()
         mainloop = ip.interact
     else:
-        ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
+        ip = init_ipython_session(ip, argv=argv, auto_symbols=auto_symbols,
             auto_int_to_Integer=auto_int_to_Integer,
             auto_rationalize=auto_rationalize)
         if V(IPython.__version__) >= '0.11':
