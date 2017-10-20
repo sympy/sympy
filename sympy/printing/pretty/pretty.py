@@ -1018,6 +1018,10 @@ class PrettyPrinter(Printer):
         D.binding = prettyForm.OPEN
         return D
 
+    def _print_ITE(self, ite):
+        from sympy.functions.elementary.piecewise import Piecewise
+        return self._print(ite.rewrite(Piecewise))
+
     def _hprint_vec(self, v):
         D = None
 

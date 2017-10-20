@@ -235,7 +235,6 @@ class RandomSymbol(Expr):
         return Basic.__new__(cls, symbol, pspace)
 
     is_finite = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
 

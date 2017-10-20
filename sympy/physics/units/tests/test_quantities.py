@@ -219,8 +219,8 @@ def test_issue_5565():
 
 def test_find_unit():
     assert find_unit('coulomb') == ['coulomb', 'coulombs', 'coulomb_constant']
-    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs']
-    assert find_unit(charge) == ['C', 'coulomb', 'coulombs']
+    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge']
+    assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge']
     assert find_unit(inch) == [
         'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um',
         'yd', 'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles',
@@ -235,8 +235,8 @@ def test_find_unit():
     assert find_unit(inch ** 3) == [
         'l', 'cl', 'dl', 'ml', 'liter', 'quart', 'liters', 'quarts',
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
-        'centiliters', 'milliliters']
-    assert find_unit('voltage') == ['V', 'v', 'volt', 'volts']
+        'centiliters', 'milliliters', 'planck_volume']
+    assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
 
 
 def test_Quantity_derivative():

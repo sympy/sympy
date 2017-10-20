@@ -1,5 +1,5 @@
 from sympy.algebras.quaternion import Quaternion
-from sympy import symbols, re, im, Add, Mul, I
+from sympy import symbols, re, im, Add, Mul, I, Abs
 from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E, pi
 from sympy import Matrix
 from sympy import diff, integrate, trigsimp
@@ -18,6 +18,7 @@ def test_quaternion_construction():
     M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
     assert q3 == Quaternion(sqrt(2)*sqrt(cos(x) + 1)/2, 0, 0, sqrt(-2*cos(x) + 2)/2)
+
 
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
@@ -44,6 +45,7 @@ def test_quaternion_complex_real_addition():
     assert q1 * (2 + 3*I) == \
     Quaternion((2 + 3*I)*(3 + 4*I), (2 + 3*I)*(2 + 5*I), 0, (2 + 3*I)*(7 + 8*I))
     assert q2 * (2 + 3*I) == Quaternion(-10, 11, 38, -5)
+
 
 def test_quaternion_functions():
     q = Quaternion(x, y, z, w)
@@ -99,7 +101,17 @@ def test_quaternion_conversions():
 
     theta = symbols("theta", real=True)
     q2 = Quaternion(cos(theta/2), 0, 0, sin(theta/2))
-    assert trigsimp(q2.to_rotation_matrix()) == Matrix(
-            [[cos(theta), -sin(theta), 0], [sin(theta), cos(theta), 0], [0, 0, 1]])
-    # TODO:
-    # assert q2.to_axis_angle() == ((0, 0, 1), theta)
+
+    assert trigsimp(q2.to_rotation_matrix()) == Matrix([
+                                               [cos(theta), -sin(theta), 0],
+                                               [sin(theta),  cos(theta), 0],
+                                               [0,           0,          1]])
+
+    assert q2.to_axis_angle() == ((0, 0, sin(theta/2)/Abs(sin(theta/2))),
+                                   2*acos(cos(theta/2)))
+
+    assert trigsimp(q2.to_rotation_matrix((1, 1, 1))) == Matrix([
+               [cos(theta), -sin(theta), 0, -sqrt(2)*cos(theta + pi/4) + 1],
+               [sin(theta),  cos(theta), 0, -sqrt(2)*sin(theta + pi/4) + 1],
+               [0,           0,          1,  0                            ],
+               [0,           0,          0,  1                            ]])

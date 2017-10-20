@@ -566,7 +566,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='1st_exact')
     [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [Eq(f(x), -acos(C1/sqrt(-cos(x)**2)) + 2*pi), Eq(f(x), acos(C1/sqrt(-cos(x)**2)))]
+    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
@@ -2319,12 +2319,12 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     This function returns a tuple.  The first item in the tuple is ``True`` if
     the substitution results in ``0``, and ``False`` otherwise. The second
     item in the tuple is what the substitution results in.  It should always
-    be ``0`` if the first item is ``True``. Note that sometimes this function
-    will ``False``, but with an expression that is identically equal to ``0``,
-    instead of returning ``True``.  This is because
-    :py:meth:`~sympy.simplify.simplify.simplify` cannot reduce the expression
-    to ``0``.  If an expression returned by this function vanishes
-    identically, then ``sol`` really is a solution to ``ode``.
+    be ``0`` if the first item is ``True``. Sometimes this function will
+    return ``False`` even when an expression is identically equal to ``0``.
+    This happens when :py:meth:`~sympy.simplify.simplify.simplify` does not
+    reduce the expression to ``0``.  If an expression returned by this
+    function vanishes identically, then ``sol`` really is a solution to
+    the ``ode``.
 
     If this function seems to hang, it is probably because of a hard
     simplification.
@@ -8205,7 +8205,8 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z).rhs
     except:
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z, hint='separable_Integral')
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
+
 
 def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     r"""
@@ -8269,7 +8270,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f]).rhs
     except:
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     r"""
@@ -8328,7 +8329,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     sol1 = dsolve(diff(u(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     r"""
@@ -8387,7 +8388,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     sol1 = dsolve(diff(u(t),t) - (c*w*F2 - b*v*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (a*u*F3 - c*w*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (b*v*F1 - a*u*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type5(x, y, t, eq):
     r"""
@@ -8437,4 +8438,4 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol1 = dsolve(diff(u(t),t) - (u*(c*F2-b*F3)).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]

@@ -87,7 +87,9 @@ def _test_args(obj):
 
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
+    from sympy import Q
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
+    assert _test_args(Q.is_true(True))
 
 def test_sympy__assumptions__assume__Predicate():
     from sympy.assumptions.assume import Predicate
@@ -1099,6 +1101,9 @@ def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
     assert _test_args(StudentTDistribution(1))
 
+def test_sympy__stats__crv_types__TrapezoidalDistribution():
+    from sympy.stats.crv_types import TrapezoidalDistribution
+    assert _test_args(TrapezoidalDistribution(1, 2, 3, 4))
 
 def test_sympy__stats__crv_types__TriangularDistribution():
     from sympy.stats.crv_types import TriangularDistribution
@@ -2122,7 +2127,7 @@ def test_sympy__liealgebras__type_g__TypeG():
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
-    assert _test_args(And(x, y, 2))
+    assert _test_args(And(x, y, 1))
 
 
 @SKIP("abstract class")
@@ -2153,7 +2158,7 @@ def test_sympy__logic__boolalg__Equivalent():
 
 def test_sympy__logic__boolalg__ITE():
     from sympy.logic.boolalg import ITE
-    assert _test_args(ITE(x, y, 2))
+    assert _test_args(ITE(x, y, 1))
 
 
 def test_sympy__logic__boolalg__Implies():
@@ -2163,7 +2168,7 @@ def test_sympy__logic__boolalg__Implies():
 
 def test_sympy__logic__boolalg__Nand():
     from sympy.logic.boolalg import Nand
-    assert _test_args(Nand(x, y, 2))
+    assert _test_args(Nand(x, y, 1))
 
 
 def test_sympy__logic__boolalg__Nor():

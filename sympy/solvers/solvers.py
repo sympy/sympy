@@ -17,7 +17,8 @@ from __future__ import print_function, division
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, range)
 from sympy.core.sympify import sympify
-from sympy.core import S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
+from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
+    Pow, Unequality)
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
@@ -55,6 +56,46 @@ from sympy.solvers.inequalities import reduce_inequalities
 from types import GeneratorType
 from collections import defaultdict
 import warnings
+
+
+def recast_to_symbols(eqs, symbols):
+    """Return (e, s, d) where e and s are versions of eqs and
+    symbols in which any non-Symbol objects in symbols have
+    been replaced with generic Dummy symbols and d is a dictionary
+    that can be used to restore the original expressions.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solvers import recast_to_symbols
+    >>> from sympy import symbols, Function
+    >>> x, y = symbols('x y')
+    >>> fx = Function('f')(x)
+    >>> eqs, syms = [fx + 1, x, y], [fx, y]
+    >>> e, s, d = recast_to_symbols(eqs, syms); (e, s, d)
+    ([_X0 + 1, x, y], [_X0, y], {_X0: f(x)})
+
+    The original equations and symbols can be restored using d:
+
+    >>> assert [i.xreplace(d) for i in eqs] == eqs
+    >>> assert [d.get(i, i) for i in s] == syms
+    """
+    if not iterable(eqs) and iterable(symbols):
+        raise ValueError('Both eqs and symbols must be iterable')
+    new_symbols = list(symbols)
+    swap_sym = {}
+    for i, s in enumerate(symbols):
+        if not isinstance(s, Symbol) and s not in swap_sym:
+            swap_sym[s] = Dummy('X%d' % i)
+            new_symbols[i] = swap_sym[s]
+    new_f = []
+    for i in eqs:
+        try:
+            new_f.append(i.subs(swap_sym))
+        except AttributeError:
+            new_f.append(i)
+    swap_sym = {v: k for k, v in swap_sym.items()}
+    return new_f, new_symbols, swap_sym
 
 
 def _ispow(e):
@@ -203,14 +244,23 @@ def checksol(f, symbol, sol=None, **flags):
 
     if isinstance(f, Poly):
         f = f.as_expr()
-    elif isinstance(f, Equality):
-        f = f.lhs - f.rhs
+    elif isinstance(f, (Equality, Unequality)):
+        if f.rhs in (S.true, S.false):
+            f = f.reversed
+        B, E = f.args
+        if B in (S.true, S.false):
+            f = f.subs(sol)
+            if f not in (S.true, S.false):
+                return
+        else:
+            f = Add(f.lhs, -f.rhs, evaluate=False)
 
-
-    if not f:
+    if isinstance(f, BooleanAtom):
+        return bool(f)
+    elif not f.is_Relational and not f:
         return True
 
-    if sol and not f.has(*list(sol.keys())):
+    if sol and not f.free_symbols & set(sol.keys()):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
         return None
 
@@ -300,6 +350,8 @@ def checksol(f, symbol, sol=None, **flags):
         elif val.is_Rational:
             return val == 0
         if numerical and not val.free_symbols:
+            if val in (S.true, S.false):
+                return bool(val)
             return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
         was = val
 
@@ -865,15 +917,37 @@ def solve(f, *symbols, **flags):
     # preprocess equation(s)
     ###########################################################################
     for i, fi in enumerate(f):
-        if isinstance(fi, Equality):
+        if isinstance(fi, (Equality, Unequality)):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
-                f[i] = fi.lhs - fi.rhs
+                fi = fi.lhs - fi.rhs
             else:
-                f[i] = Add(fi.lhs, -fi.rhs, evaluate=False)
-        elif isinstance(fi, Poly):
-            f[i] = fi.as_expr()
-        elif isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
+                args = fi.args
+                if args[1] in (S.true, S.false):
+                    args = args[1], args[0]
+                L, R = args
+                if L in (S.false, S.true):
+                    if isinstance(fi, Unequality):
+                        L = ~L
+                    if R.is_Relational:
+                        fi = ~R if L is S.false else R
+                    elif R.is_Symbol:
+                        return L
+                    elif R.is_Boolean and (~R).is_Symbol:
+                        return ~L
+                    else:
+                        raise NotImplementedError(filldedent('''
+                            Unanticipated argument of Eq when other arg
+                            is True or False.
+                        '''))
+                else:
+                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
+            f[i] = fi
+
+        if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
+
+        if isinstance(fi, Poly):
+            f[i] = fi.as_expr()
 
         # rewrite hyperbolics in terms of exp
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
@@ -948,23 +1022,7 @@ def solve(f, *symbols, **flags):
         symbols = sorted(symbols, key=default_sort_key)
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
-    symbols_new = []
-    symbol_swapped = False
-    for i, s in enumerate(symbols):
-        if s.is_Symbol:
-            s_new = s
-        else:
-            symbol_swapped = True
-            s_new = Dummy('X%d' % i)
-        symbols_new.append(s_new)
-
-    if symbol_swapped:
-        swap_sym = list(zip(symbols, symbols_new))
-        f = [fi.subs(swap_sym) for fi in f]
-        symbols = symbols_new
-        swap_sym = {v: k for k, v in swap_sym}
-    else:
-        swap_sym = {}
+    f, symbols, swap_sym = recast_to_symbols(f, symbols)
 
     # this is needed in the next two events
     symset = set(symbols)
@@ -1106,14 +1164,14 @@ def solve(f, *symbols, **flags):
     #
     # ** unless there were Derivatives with the symbols, but those were handled
     #    above.
-    if symbol_swapped:
-        symbols = [swap_sym[k] for k in symbols]
+    if swap_sym:
+        symbols = [swap_sym.get(k, k) for k in symbols]
         if type(solution) is dict:
-            solution = dict([(swap_sym[k], v.subs(swap_sym))
+            solution = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                              for k, v in solution.items()])
         elif solution and type(solution) is list and type(solution[0]) is dict:
             for i, sol in enumerate(solution):
-                solution[i] = dict([(swap_sym[k], v.subs(swap_sym))
+                solution[i] = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                               for k, v in sol.items()])
 
     # undo the dictionary solutions returned when the system was only partially
@@ -1364,7 +1422,10 @@ def _solve(f, *symbols, **flags):
     elif f.is_Piecewise:
         result = set()
         for i, (expr, cond) in enumerate(f.args):
-            candidates = _solve(expr, symbol, **flags) if expr else [symbol]
+            if expr.is_zero:
+                raise NotImplementedError(
+                    'solve cannot represent interval solutions')
+            candidates = _solve(expr, symbol, **flags)
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
             args = [~c for _, c in f.args[:i]] + [cond]
@@ -1374,7 +1435,13 @@ def _solve(f, *symbols, **flags):
                     # an unconditional value was already there
                     continue
                 try:
-                    v = _canonical(cond.subs(symbol, candidate))
+                    v = cond.subs(symbol, candidate)
+                    try:
+                        # unconditionally take the simplification of v
+                        v = v._eval_simpify(
+                            ratio=2, measure=lambda x: 1)
+                    except AttributeError:
+                        pass
                 except TypeError:
                     # incompatible type with condition(s)
                     continue

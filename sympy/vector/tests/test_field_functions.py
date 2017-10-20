@@ -10,7 +10,7 @@ from sympy.vector.operators import curl, divergence, gradient, Gradient, Diverge
 from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
-                                    scalar_potential_difference)
+                                    laplacian, scalar_potential_difference)
 from sympy.utilities.pytest import raises
 
 C = CoordSys3D('C')
@@ -98,6 +98,18 @@ def test_del_operator():
     assert ((j & delop)(v)).doit() == j
     assert ((k & delop)(v)).doit() == k
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
+
+    # Tests for laplacian on scalar fields
+    assert laplacian(x*y*z) == S.Zero
+    assert laplacian(x**2) == S(2)
+    assert laplacian(x**2*y**2*z**2) == \
+                    2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
+
+    # Tests for laplacian on vector fields
+    assert laplacian(x*y*z*(i + j + k)) == Vector.zero
+    assert laplacian(x*y**2*z*(i + j + k)) == \
+                            2*x*z*i + 2*x*z*j + 2*x*z*k
+
 
 
 def test_product_rules():

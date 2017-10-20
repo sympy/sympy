@@ -2117,6 +2117,9 @@ class acos(InverseTrigonometricFunction):
         x = self.args[0]
         return x.is_real and (1 - abs(x)).is_nonnegative
 
+    def _eval_nseries(self, x, n, logx):
+        return self._eval_rewrite_as_log(self.args[0])._eval_nseries(x, n, logx)
+
     def _eval_rewrite_as_log(self, x):
         return S.Pi/2 + S.ImaginaryUnit * \
             log(S.ImaginaryUnit * x + sqrt(1 - x**2))
