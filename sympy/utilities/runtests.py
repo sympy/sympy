@@ -1200,6 +1200,8 @@ class SymPyTests(object):
                         i += 1
                 # drop functions that are not selected with the keyword expression:
                 funcs = [x for x in funcs if self.matches(x)]
+            else:
+                reporter.disabled_tests.append(filename)
 
             if not funcs:
                 return
@@ -1918,6 +1920,7 @@ class PyTestReporter(Reporter):
         self._split = split
 
         # TODO: Should these be protected?
+        self.disabled_tests = []
         self.slow_test_functions = []
         self.fast_test_functions = []
 
@@ -2191,6 +2194,12 @@ class PyTestReporter(Reporter):
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
                 self.write("%s: %s\n" % (e[0], e[1]))
+            self.write("\n")
+
+        if self.disabled_tests:
+            self.write_center('disabled tests', '_')
+            for disabled_file_name in self.disabled_tests:
+                print('%s' % disabled_file_name)
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
