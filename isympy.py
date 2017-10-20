@@ -137,6 +137,16 @@ COMMAND LINE OPTIONS
     If you want an int, you can wrap the literal in int(), e.g. int(3)/int(2)
     gives 1.5 (with division imported from __future__).
 
+-r, --rationalize-floats (requires at least IPython 0.11)
+
+    Automatically rationalize float literals, by wrapping with Rational.
+    Note that this will not change the behavior of float literals
+    assigned to variables, functions that return float literals, and
+    those wrapped with float or Float.
+
+    If you want a float literal or Float, you can wrap the floats in
+    float() or Float(), respectively.
+
 -I, --interactive (requires at least IPython 0.11)
 
     This is equivalent to --auto-symbols --int-to-Integer.  Future options
@@ -269,6 +279,13 @@ def main():
         help="automatically wrap int literals with Integer")
 
     parser.add_argument(
+        '-r', '--rationalize-floats',
+        dest='auto_rationalize',
+        action='store_true',
+        default=False,
+        help="automatically rationalize floats")
+
+    parser.add_argument(
         '-I', '--interactive',
         dest='interactive',
         action='store_true',
@@ -334,6 +351,7 @@ def main():
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive
     args['auto_int_to_Integer'] = options.auto_int_to_Integer or options.interactive
+    args['auto_rationalize'] = options.auto_rationalize
 
     from sympy.interactive import init_session
     init_session(ipython, **args)

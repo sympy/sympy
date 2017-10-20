@@ -1,7 +1,8 @@
 """Tests of tools for setting up interactive IPython sessions. """
 
 from sympy.interactive.session import (init_ipython_session,
-    enable_automatic_symbols, enable_automatic_int_sympification)
+    enable_automatic_symbols, enable_automatic_int_sympification,
+    enable_automatic_rationalize)
 
 from sympy.core import Symbol, Rational, Integer, Float
 from sympy.external import import_module
@@ -67,3 +68,18 @@ def test_int_to_Integer():
     app.run_cell("a = (1/\n2)")
     assert isinstance(app.user_ns['a'], Rational)
 
+
+def test_rationalize():
+    app = init_ipython_session()
+    app.run_cell("from sympy import Integer")
+    app.run_cell("a = 0.5")
+    assert isinstance(app.user_ns['a'], float)
+
+    enable_automatic_rationalize(app)
+    app.run_cell("a = 0.5")
+    assert isinstance(app.user_ns['a'], Rational)
+    app.run_cell("a = float(0.5)")
+    assert isinstance(app.user_ns['a'], float)
+    app.run_cell("a = Float(1.234567890123456)")
+    assert isinstance(app.user_ns['a'], Float)
+    assert app.user_ns['a'] == Float(1.234567890123456)

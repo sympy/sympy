@@ -143,6 +143,23 @@ class AutomaticSymbols(ast.NodeTransformer):
         return node
 
 
+class FloatRationalizer(ast.NodeTransformer):
+    """Wraps all floats in a call to Rational."""
+
+    def visit_Num(self, node):
+        if isinstance(node.n, float):
+            return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
+                            args=[ast.Str(s=repr(node.n))], keywords=[],
+                            starargs=None, kwargs=None)
+        return node
+
+    def visit_Call(self, node):
+        if isinstance(node.func, ast.Name) and (node.func.id == "Float"
+                or node.func.id == "float"):
+            return node
+        return self.generic_visit(node)
+
+
 def int_to_Integer(s):
     """
     Wrap integer literals with Integer.
@@ -205,9 +222,13 @@ def enable_automatic_symbols(shell):
     shell.ast_transformers.append(AutomaticSymbols(shell))
 
 
+def enable_automatic_rationalize(shell):
+    """Allow IPython to automatially rationalize floats."""
+    shell.ast_transformers.append(FloatRationalizer())
 
 
-def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
+def init_ipython_session(argv=[], auto_symbols=False,
+        auto_int_to_Integer=False, auto_rationalize=False):
     """Construct new IPython session. """
     import IPython
 
@@ -247,6 +268,8 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
             enable_automatic_symbols(shell)
         if auto_int_to_Integer:
             enable_automatic_int_sympification(shell)
+        if auto_rationalize:
+            enable_automatic_rationalize(shell)
 
         return shell
     else:
@@ -289,8 +312,8 @@ def init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
-        latex_printer=None, argv=[]):
+        auto_int_to_Integer=False, auto_rationalize=False, str_printer=None,
+        pretty_printer=None, latex_printer=None, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -325,6 +348,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
     auto_int_to_Integer: boolean
         If True, IPython will automatically wrap int literals with Integer, so
         that things like 1/2 give Rational(1, 2).
+        If False, it will not.
+        The default is False.
+    auto_rationalize: boolean
+        If True, IPython will automatically rationalize floats.
         If False, it will not.
         The default is False.
     ipython: boolean or None
@@ -408,8 +435,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         mainloop = ip.interact
     else:
         ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-            auto_int_to_Integer=auto_int_to_Integer)
-
+            auto_int_to_Integer=auto_int_to_Integer,
+            auto_rationalize=auto_rationalize)
         if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't
             # take a symbol arg.  The second arg is `store_history`,
@@ -432,6 +459,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
     if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
+    if auto_rationalize and (not ipython or V(IPython.__version__) < '0.11'):
+        raise RuntimeError("automatic rationalization is possible only in IPython 0.11 or above")
 
     ip.runsource(import_source, symbol='exec')
     ip.runsource(preexec_source, symbol='exec')
