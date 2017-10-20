@@ -33,7 +33,7 @@ import signal
 import stat
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, range
+from sympy.core.compatibility import exec_, PY3, string_types, range, iterable
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -1454,6 +1454,8 @@ class SymPyDocTests(object):
                 if found is None:
                     return "Could not find %s" % ex
         if moduledeps is not None:
+            if not iterable(moduledeps):
+                moduledeps = [moduledeps]
             for extmod in moduledeps:
                 if extmod == 'matplotlib':
                     matplotlib = import_module(
