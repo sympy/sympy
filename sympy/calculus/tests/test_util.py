@@ -36,6 +36,8 @@ def test_function_range():
         ) == FiniteSet(y)
     assert function_range(sin(x), x, Union(Interval(-5, -3), FiniteSet(4))
         ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
+    assert function_range(cos(x), x, Interval(-oo, -4)
+        ) == Interval(-1, 1)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
 
