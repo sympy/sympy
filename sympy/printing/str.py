@@ -785,9 +785,6 @@ class StrPrinter(Printer):
     def _print_Complexes(self, p):
         return "S.Complexes"
 
-    def _print_EmptySet(self, p):
-        return "S.EmptySet"
-
     def _print_Naturals0(self, p):
         return "S.Naturals0"
 

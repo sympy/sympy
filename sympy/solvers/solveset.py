@@ -1279,7 +1279,7 @@ def linsolve(system, *symbols):
     * For an empty system linsolve returns empty set
 
     >>> linsolve([], x)
-    S.EmptySet
+    EmptySet()
 
     """
     if not system:
@@ -1455,7 +1455,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     * when you want soln should not satisfy eq `x + 1 = 0`
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
-    S.EmptySet
+    EmptySet()
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
     {(1, -1)}
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])

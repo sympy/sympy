@@ -36,7 +36,7 @@ def singularities(expression, symbol):
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
-    S.EmptySet
+    EmptySet()
     >>> singularities(1/(x + 1), x)
     {-1}
     >>> singularities(1/(y**2 + 1), y)

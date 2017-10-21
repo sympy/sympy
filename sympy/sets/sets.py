@@ -102,7 +102,7 @@ class Set(Basic):
         >>> n, m = symbols('n m')
         >>> a = imageset(Lambda(n, 2*n), S.Integers)
         >>> a.intersect(imageset(Lambda(m, 2*m + 1), S.Integers))
-        S.EmptySet
+        EmptySet()
 
         """
         return Intersection(self, other)
@@ -413,7 +413,7 @@ class Set(Basic):
         >>> from sympy import FiniteSet, EmptySet
         >>> A = EmptySet()
         >>> A.powerset()
-        {S.EmptySet}
+        {EmptySet()}
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
         >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
@@ -1738,17 +1738,17 @@ class Complement(Set, EvalfMixin):
 class EmptySet(with_metaclass(Singleton, Set)):
     """
     Represents the empty set. The empty set is available as a singleton
-    as S.EmptySet.
+    as ``S.EmptySet``.
 
     Examples
     ========
 
     >>> from sympy import S, Interval
     >>> S.EmptySet
-    S.EmptySet
+    EmptySet()
 
     >>> Interval(1, 2).intersect(S.EmptySet)
-    S.EmptySet
+    EmptySet()
 
     See Also
     ========
