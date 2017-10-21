@@ -123,6 +123,34 @@ class MatMul(MatrixExpr):
             args = self.args
         return canonicalize(MatMul(*args))
 
+
+    def expand(self, *args, **kwargs):
+        #expand MatMul
+        # e.g.
+        # A *(B + C) = A*B + A*C
+        # (B+C)*A = B*A + B*C
+        # expand((A+D)*(B + C))  = expand((A+D) *B + (A+D)*C) = A*B + D*B + A*C + D*C
+        coeff, matrices = self.as_coeff_matrices()
+
+        mul = matrices[0]
+        if mul.is_MatAdd:
+            new = Add(*tuple(newmul(coeff, arg) for arg in mul.args))
+        else:
+            new = newmul(coeff, mul)
+
+        for mul in  matrices[1:]:
+            if mul.is_MatAdd:
+                new = Add(*tuple(newmul(new, arg) for arg in mul.args))
+            elif new.is_MatAdd:
+                new = Add(*tuple(newmul(arg, mul) for arg in new.args))
+            else:
+                new = newmul(new, mul)
+
+        if new.is_MatAdd:
+            return new.expand(*args, **kwargs)
+
+        return new
+
     # Needed for partial compatibility with Mul
     def args_cnc(self, **kwargs):
         coeff, matrices = self.as_coeff_matrices()

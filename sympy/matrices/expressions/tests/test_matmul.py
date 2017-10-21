@@ -6,7 +6,7 @@ from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
-from sympy import refine, Q, Symbol
+from sympy import refine, Q, Symbol, expand
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -107,6 +107,11 @@ def test_matmul_scalar_Matrix_doit():
 
 def test_matmul_sympify():
     assert isinstance(MatMul(eye(1), eye(1)).args[0], Basic)
+
+
+def test_matmul_expand():
+    assert ((expand(2 * (C + D) - 3 * (D + C) * (C + D))) == \
+           2 * C + 2 * D + (-3) * C * C + (-3) * C * D + (-3) * D * C + (-3) * D * D)
 
 
 def test_collapse_MatrixBase():

@@ -381,6 +381,10 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().equals(other)
 
+    def expand(self, *args, **kwargs):
+        #TODO: use deep for travers self.args with expand
+        return self
+
     def canonicalize(self):
         return self
 

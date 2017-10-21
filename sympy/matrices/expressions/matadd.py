@@ -61,6 +61,11 @@ class MatAdd(MatrixExpr, AssocOp):
             args = self.args
         return canonicalize(MatAdd(*args))
 
+    def expand(self, *args, **kwargs):
+        # expand MatAdd
+        # expand(A*B*(.) + C*D*(.)) = expand(A*B*(.)) + expand(C*D*(.))
+
+        return Add(*tuple(arg.expand(*args, **kwargs) for arg in self.args))
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
