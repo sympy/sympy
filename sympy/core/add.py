@@ -14,6 +14,8 @@ from .expr import Expr
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
+
+
 def _addsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -898,7 +900,7 @@ class Add(Expr, AssocOp):
         >>> ((2 + 2*x)*x + 2).primitive()
         (1, x*(2*x + 2) + 2)
 
-        Recursive subprocessing can be done with the as_content_primitive()
+        Recursive processing can be done with the ``as_content_primitive()``
         method:
 
         >>> ((2 + 2*x)*x + 2).as_content_primitive()
