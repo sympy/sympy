@@ -11,9 +11,9 @@ from .gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
     """
-    Compute the limit of e(z) at the point z0.
+    Compute the limit of ``e(z)`` at the point ``z0``.
 
-    z0 can be any expression, including oo and -oo.
+    ``z0`` can be any expression, including ``oo`` and ``-oo``.
 
     For ``dir="+-"`` it calculates the bi-directional limit; for
     ``dir="+"`` (default) it calculates the limit from the right
@@ -36,7 +36,7 @@ def limit(e, z, z0, dir="+"):
     >>> limit(1/x, x, 0, dir='+-')
     Traceback (most recent call last):
         ...
-    ValueError: The limit does not exist since left and right hand limits don't match.
+    ValueError: The limit does not exist since left hand limit = -oo and right hand limit = oo
 
     >>> limit(1/x, x, oo)
     0
@@ -50,13 +50,14 @@ def limit(e, z, z0, dir="+"):
     """
 
     if dir == "+-":
-        llim = Limit(e, z, z0,dir="-").doit(deep=False)
-        rlim = Limit(e, z, z0,dir="+").doit(deep=False)
+        llim = Limit(e, z, z0, dir="-").doit(deep=False)
+        rlim = Limit(e, z, z0, dir="+").doit(deep=False)
         if llim == rlim:
             return rlim
         else:
             raise ValueError("The limit does not exist since "
-                    "left and right hand limits don't match.")
+                    "left hand limit = %s and right hand limit = %s"
+                    % (llim, rlim))
     else:
         return Limit(e, z, z0, dir).doit(deep=False)
 
