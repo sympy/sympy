@@ -1,5 +1,8 @@
-from sympy.matrices.densetools import eye
-from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from sympy.matrices.densetools import eye
+    from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
 from sympy import ZZ
 
 

@@ -148,6 +148,13 @@ def test_neg_infinity():
     assert mm.is_number is True
 
 
+def test_zoo():
+    zoo = S.ComplexInfinity
+    assert zoo.is_complex
+    assert zoo.is_real is False
+    assert zoo.is_prime is False
+
+
 def test_nan():
     nan = S.NaN
 
@@ -520,6 +527,9 @@ def test_composite():
     x = Dummy(integer=True, positive=True, prime=False)
     assert x.is_composite is None # x could be 1
     assert (x + 1).is_composite is None
+    x = Dummy(positive=True, even=True, prime=False)
+    assert x.is_integer is True
+    assert x.is_composite is True
 
 
 def test_prime_symbol():
@@ -759,33 +769,35 @@ def test_Pow_is_algebraic():
     assert (t**n).is_algebraic is None
     assert (t**n).is_integer is None
 
+    assert (pi**3).is_algebraic is False
+    r = Symbol('r', zero=True)
+    assert (pi**r).is_algebraic is True
 
-def test_Mul_is_prime():
+
+def test_Mul_is_prime_composite():
     from sympy import Mul
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x*y).is_prime is None
     assert ( (x+1)*(y+1) ).is_prime is False
+    assert ( (x+1)*(y+1) ).is_composite is True
 
     x = Symbol('x', positive=True)
-    assert (x*y).is_prime is None
+    assert ( (x+1)*(y+1) ).is_prime is None
+    assert ( (x+1)*(y+1) ).is_composite is None
 
-    assert Mul(6, S.Half, evaluate=False).is_prime is True
-    assert Mul(sqrt(3), sqrt(3), evaluate=False).is_prime is True
-    assert Mul(5, S.Half, evaluate=False).is_prime is False
-
-def test_Pow_is_prime():
+def test_Pow_is_prime_composite():
     from sympy import Pow
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x**y).is_prime is None
+    assert ( x**(y+1) ).is_prime is False
+    assert ( x**(y+1) ).is_composite is None
+    assert ( (x+1)**(y+1) ).is_composite is True
+    assert ( (-x-1)**(2*y) ).is_composite is True
 
     x = Symbol('x', positive=True)
     assert (x**y).is_prime is None
-
-    assert Pow(6, S.One, evaluate=False).is_prime is False
-    assert Pow(9, S.Half, evaluate=False).is_prime is True
-    assert Pow(5, S.One, evaluate=False).is_prime is True
 
 
 def test_Mul_is_infinite():
@@ -975,10 +987,14 @@ def test_issues_8632_8633_8638_8675_8992():
     assert (n - 3).is_nonpositive
 
 
-def test_issue_9115():
+def test_issue_9115_9150():
     n = Dummy('n', integer=True, nonnegative=True)
     assert (factorial(n) >= 1) == True
     assert (factorial(n) < 1) == False
+
+    assert factorial(n + 1).is_even is None
+    assert factorial(n + 2).is_even is True
+    assert factorial(n + 2) >= 2
 
 
 def test_issue_9165():

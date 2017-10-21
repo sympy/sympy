@@ -1,11 +1,12 @@
 from sympy import (
-    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
+    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol, S
+    cos, exp, Abs, Not, Symbol, S, sqrt, Tuple, zoo
 )
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
+
 
 x, y = symbols('x y')
 z = symbols('z', nonzero=True)
@@ -13,7 +14,7 @@ z = symbols('z', nonzero=True)
 
 def test_piecewise():
 
-    # Test canonization
+    # Test canonicalization
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
@@ -27,8 +28,18 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
+    # False condition is never retained
+    assert Piecewise((x, False)) == Piecewise(
+        (x, False), evaluate=False) == Piecewise()
     raises(TypeError, lambda: Piecewise(x))
+    assert Piecewise((x, 1)) == x  # 1 and 0 are accepted as True/False
+    raises(TypeError, lambda: Piecewise((x, 2)))
     raises(TypeError, lambda: Piecewise((x, x**2)))
+    raises(TypeError, lambda: Piecewise(([1], True)))
+    assert Piecewise(((1, 2), True)) == Tuple(1, 2)
+    cond = (Piecewise((1, x < 0), (2, True)) < y)
+    assert Piecewise((1, cond)
+        ) == Piecewise((1, ITE(x < 0, y > 1, y > 2)))
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >= 0))
@@ -60,10 +71,13 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
     assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
         Piecewise((1, Eq(exp(z), cos(z))), (0, True))
-    assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
 
     p5 = Piecewise( (0, Eq(cos(x) + y, 0)), (1, True))
     assert p5.subs(y, 0) == Piecewise( (0, Eq(cos(x), 0)), (1, True))
+
+    assert Piecewise((-1, y < 1), (0, x < 0), (1, Eq(x, 0)), (2, True)
+        ).subs(x, 1) == Piecewise((-1, y < 1), (2, True))
+    assert Piecewise((1, Eq(x**2, -1)), (2, x < 0)).subs(x, I) == 1
 
     # Test evalf
     assert p.evalf() == p
@@ -97,7 +111,7 @@ def test_piecewise():
     # Test _eval_interval
     f1 = x*y + 2
     f2 = x*y**2 + 3
-    peval = Piecewise( (f1, x < 0), (f2, x > 0))
+    peval = Piecewise((f1, x < 0), (f2, x > 0))
     peval_interval = f1.subs(
         x, 0) - f1.subs(x, -1) + f2.subs(x, 1) - f2.subs(x, 0)
     assert peval._eval_interval(x, 0, 0) == 0
@@ -122,7 +136,7 @@ def test_piecewise():
     raises(ValueError, lambda: integrate(p, (x, -2, 2)))
 
     # Test commutativity
-    assert p.is_commutative is True
+    assert isinstance(p, Piecewise) and p.is_commutative is True
 
 
 def test_piecewise_free_symbols():
@@ -304,17 +318,46 @@ def test_piecewise_solve():
                   (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
     assert solve(g, x) == [5]
 
-# See issue 4352 (enhance the solver to handle inequalities).
+    # if no symbol is given the piecewise detection must still work
+    assert solve(Piecewise((x - 2, x > 2), (2 - x, True)) - 3) == [-1, 5]
 
-
-@XFAIL
-def test_piecewise_solve2():
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
-    assert solve(f, x) == [2, Interval(0, oo, True, True)]
+    raises(NotImplementedError, lambda: solve(f, x))
+
+    def nona(ans):
+        return list(filter(lambda x: x is not S.NaN, ans))
+    p = Piecewise((x**2 - 4, x < y), (x - 2, True))
+    ans = solve(p, x)
+    assert nona([i.subs(y, -2) for i in ans]) == [2]
+    assert nona([i.subs(y, 2) for i in ans]) == [-2, 2]
+    assert nona([i.subs(y, 3) for i in ans]) == [-2, 2]
+    assert ans == [
+        Piecewise((-2, y > -2), (S.NaN, True)),
+        Piecewise((2, y <= 2), (S.NaN, True)),
+        Piecewise((2, y > 2), (S.NaN, True))]
+
+    # issue 6060
+    absxm3 = Piecewise(
+        (x - 3, S(0) <= x - 3),
+        (3 - x, S(0) > x - 3)
+    )
+    assert solve(absxm3 - y, x) == [
+        Piecewise((-y + 3, -y < 0), (S.NaN, True)),
+        Piecewise((y + 3, y >= 0), (S.NaN, True))]
+    p = Symbol('p', positive=True)
+    assert solve(absxm3 - p, x) == [-p + 3, p + 3]
+
+    # issue 6989
+    f = Function('f')
+    assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
+        [Piecewise((-1, x > 0), (0, True))]
+
+    # issue 8587
+    f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
+    assert solve(f - 1) == [1/sqrt(2)]
 
 
 def test_piecewise_fold():
-
     p = Piecewise((x, x < 1), (1, 1 <= x))
 
     assert piecewise_fold(x*p) == Piecewise((x**2, x < 1), (x, 1 <= x))
@@ -330,6 +373,13 @@ def test_piecewise_fold():
     assert integrate(
         piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
+    assert piecewise_fold(
+        Piecewise((1, y <= 0), (-Piecewise((2, y >= 0)), True)
+        )) == Piecewise((1, y <= 0), (-2, y >= 0))
+
+    assert piecewise_fold(Piecewise((x, ITE(x > 0, y < 1, y > 1)))
+        ) == Piecewise((x, ((x <= 0) | (y < 1)) & ((x > 0) | (y > 1))))
+
 
 def test_piecewise_fold_piecewise_in_cond():
     p1 = Piecewise((cos(x), x < 0), (0, True))
@@ -339,24 +389,30 @@ def test_piecewise_fold_piecewise_in_cond():
     assert(p2.subs(x, 1) == 0.0)
     assert(p2.subs(x, -pi/4) == 1.0)
     p4 = Piecewise((0, Eq(p1, 0)), (1,True))
-    assert(piecewise_fold(p4) == Piecewise(
-        (0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))), (1, True)))
+    ans = piecewise_fold(p4)
+    for i in range(-1, 1):
+        assert ans.subs(x, i) == p4.subs(x, i)
 
     r1 = 1 < Piecewise((1, x < 1), (3, True))
-    assert(piecewise_fold(r1) == Not(x < 1))
+    ans = piecewise_fold(r1)
+    for i in range(2):
+        assert ans.subs(x, i) == r1.subs(x, i)
 
     p5 = Piecewise((1, x < 0), (3, True))
     p6 = Piecewise((1, x < 1), (3, True))
-    p7 = piecewise_fold(Piecewise((1, p5 < p6), (0, True)))
-    assert(Piecewise((1, And(Not(x < 1), x < 0)), (0, True)))
+    p7 = Piecewise((1, p5 < p6), (0, True))
+    ans = piecewise_fold(p7)
+    for i in range(-1, 2):
+        assert ans.subs(x, i) == p7.subs(x, i)
 
 
-@XFAIL
 def test_piecewise_fold_piecewise_in_cond_2():
     p1 = Piecewise((cos(x), x < 0), (0, True))
     p2 = Piecewise((0, Eq(p1, 0)), (1 / p1, True))
-    p3 = Piecewise((0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))),
-        (1 / cos(x), True))
+    p3 = Piecewise(
+        (0, (x >= 0) | Eq(cos(x), 0)),
+        (1/cos(x), x < 0),
+        (zoo, True))  # redundant b/c all x are already covered
     assert(piecewise_fold(p2) == p3)
 
 
@@ -364,12 +420,8 @@ def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
     p2 = piecewise_fold(expand((1 - x)*p1))
-    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)),
-        (Piecewise((-x, Interval(0, 1, False, True).contains(x)), (0, True)), True))
-
-    p2 = expand(piecewise_fold((1 - x)*p1))
-    assert p2 == Piecewise(
-        (1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
+    assert p2 == Piecewise((1 - x, (x >= 0) & (x < 1)), (0, True))
+    assert p2 == expand(piecewise_fold((1 - x)*p1))
 
 
 def test_piecewise_duplicate():
@@ -496,3 +548,78 @@ def test_S_srepr_is_identity():
     p = Piecewise((10, Eq(x, 0)), (12, True))
     q = S(srepr(p))
     assert p == q
+
+
+def test_issue_10258():
+    assert Piecewise((0, x < 1), (1, True)).is_zero is None
+    assert Piecewise((-1, x < 1), (1, True)).is_zero is False
+    a = Symbol('a', zero=True)
+    assert Piecewise((0, x < 1), (a, True)).is_zero
+    assert Piecewise((1, x < 1), (a, x < 3)).is_zero is None
+    a = Symbol('a')
+    assert Piecewise((0, x < 1), (a, True)).is_zero is None
+    assert Piecewise((0, x < 1), (1, True)).is_nonzero is None
+    assert Piecewise((1, x < 1), (2, True)).is_nonzero
+    assert Piecewise((0, x < 1), (oo, True)).is_finite is None
+    assert Piecewise((0, x < 1), (1, True)).is_finite
+    b = Basic()
+    assert Piecewise((b, x < 1)).is_finite is None
+
+    # 10258
+    c = Piecewise((1, x < 0), (2, True)) < 3
+    assert c != True
+    assert piecewise_fold(c) == True
+
+
+def test_issue_10087():
+    a, b = Piecewise((x, x > 1), (2, True)), Piecewise((x, x > 3), (3, True))
+    m = a*b
+    f = piecewise_fold(m)
+    for i in (0, 2, 4):
+        assert m.subs(x, i) == f.subs(x, i)
+    m = a + b
+    f = piecewise_fold(m)
+    for i in (0, 2, 4):
+        assert m.subs(x, i) == f.subs(x, i)
+
+
+def test_issue_8919():
+    x, c_1, c_2, c_3, c_4 = symbols('x c_1:5')
+    f1 = Piecewise( (c_1, x < 1), (c_2, True))
+    f2 = Piecewise( (c_3, x < S(1)/3), (c_4, True))
+    assert integrate(f1*f2, (x, 0, 2)) == c_1*c_3/3 + 2*c_1*c_4/3 + c_2*c_4
+
+
+def test_conditions_as_alternate_booleans():
+    a, b, c = symbols('a:c')
+    assert Piecewise((x, Piecewise((y < 1, x > 0), (y > 1, True)))
+        ) == Piecewise((x, ITE(x > 0, y < 1, y > 1)))
+
+
+def test_Piecewise_rewrite_as_ITE():
+    a, b, c, d = symbols('a:d')
+
+    def _ITE(*args):
+        return Piecewise(*args).rewrite(ITE)
+
+    assert _ITE((a, x < 1), (b, x >= 1)) == ITE(x < 1, a, b)
+    assert _ITE((a, x < 1), (b, x < oo)) == ITE(x < 1, a, b)
+    assert _ITE((a, x < 1), (b, Or(y < 1, x < oo)), (c, y > 0)
+               ) == ITE(x < 1, a, b)
+    assert _ITE((a, x < 1), (b, True)) == ITE(x < 1, a, b)
+    assert _ITE((a, x < 1), (b, x < 2), (c, True)
+               ) == ITE(x < 1, a, ITE(x < 2, b, c))
+    assert _ITE((a, x < 1), (b, y < 2), (c, True)
+               ) == ITE(x < 1, a, ITE(y < 2, b, c))
+    assert _ITE((a, x < 1), (b, x < oo), (c, y < 1)
+               ) == ITE(x < 1, a, b)
+    assert _ITE((a, x < 1), (c, y < 1), (b, x < oo), (d, True)
+               ) == ITE(x < 1, a, ITE(y < 1, c, b))
+    assert _ITE((a, x < 0), (b, Or(x < oo, y < 1))
+               ) == ITE(x < 0, a, b)
+    raises(TypeError, lambda: _ITE((x + 1, x < 1), (x, True)))
+    # if `a` in the following were replaced with y then the coverage
+    # is complete but something other than as_set would need to be
+    # used to detect this
+    raises(NotImplementedError, lambda: _ITE((x, x < y), (y, x >= a)))
+    raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))

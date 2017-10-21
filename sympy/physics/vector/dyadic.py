@@ -1,4 +1,4 @@
-from sympy import sympify, Add, ImmutableMatrix as Matrix
+from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.compatibility import unicode
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)
@@ -147,7 +147,7 @@ class Dyadic(object):
         return Dyadic(newlist)
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __neg__(self):
         return self * -1

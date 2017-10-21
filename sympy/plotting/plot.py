@@ -922,9 +922,9 @@ class MatplotlibBackend(BaseBackend):
                 self.ax.set_zlim((min(z), max(z)))
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
-                collection = self.ax.plot_surface(x, y, z, cmap=self.cm.jet,
-                                                  rstride=1, cstride=1,
-                                                  linewidth=0.1)
+                collection = self.ax.plot_surface(x, y, z,
+                    cmap=getattr(self.cm, 'viridis', self.cm.jet),
+                    rstride=1, cstride=1, linewidth=0.1)
             elif s.is_implicit:
                 #Smart bounds have to be set to False for implicit plots.
                 self.ax.spines['left'].set_smart_bounds(False)
@@ -942,8 +942,7 @@ class MatplotlibBackend(BaseBackend):
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        self.ax.contour(xarray, yarray, zarray,
-                                contours=(0, 0), fill=False, cmap=colormap)
+                        self.ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
                         self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
@@ -1082,12 +1081,12 @@ plot_backends = {
 
 def centers_of_segments(array):
     np = import_module('numpy')
-    return np.average(np.vstack((array[:-1], array[1:])), 0)
+    return np.mean(np.vstack((array[:-1], array[1:])), 0)
 
 
 def centers_of_faces(array):
     np = import_module('numpy')
-    return np.average(np.dstack((array[:-1, :-1],
+    return np.mean(np.dstack((array[:-1, :-1],
                                  array[1:, :-1],
                                  array[:-1, 1: ],
                                  array[:-1, :-1],

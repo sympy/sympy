@@ -14,7 +14,7 @@ from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
 # List of known functions.  First, those that have the same name in
@@ -59,7 +59,7 @@ class JuliaCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 16,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -246,14 +246,6 @@ class JuliaCodePrinter(CodePrinter):
             return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
 
 
-    def _print_NumberSymbol(self, expr):
-        if self._settings["inline"]:
-            return self._print(expr.evalf(self._settings["precision"]))
-        else:
-            # assign to a variable, perhaps more readable for longer program
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
-
-
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase
@@ -363,7 +355,8 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s,%s]'%(expr.i+1, expr.j+1)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '[%s,%s]' % (expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):

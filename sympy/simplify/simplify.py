@@ -9,11 +9,12 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
     gamma, exp, sqrt, log, exp_polar, piecewise_fold)
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
@@ -375,13 +376,14 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, Expr) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a) for a in e.args])
+        return e.func(*[signsimp(a, evaluate) for a in e.args])
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
+    # type: (object, object, object, object) -> object
     """
     Simplifies the given expression.
 
@@ -503,6 +505,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+
+    If rational=True, Floats will be recast as Rationals before simplification.
+    If rational=None, Floats will be recast as Rationals but the result will
+    be recast as Floats. If rational=False(default) then nothing will be done
+    to the Floats.
     """
     expr = sympify(expr)
 
@@ -525,8 +532,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
                isinstance(expr.args[0], expr.inverse(argindex=1)):
                 return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure, fu=fu)
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                                measure=measure, rational=rational)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
                          for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -539,6 +546,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
+
+    # rationalize Floats
+    floats = False
+    if rational is not False and expr.has(Float):
+        floats = True
+        expr = nsimplify(expr, rational=True)
 
     expr = bottom_up(expr, lambda w: w.normal())
     expr = Mul(*powsimp(expr).as_content_primitive())
@@ -563,14 +576,15 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
-    if expr.has(TrigonometricFunction) and not fu or expr.has(
-            HyperbolicFunction):
+    if expr.has(TrigonometricFunction, HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
     if expr.has(log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
     if expr.has(CombinatorialFunction, gamma):
+        # expression with gamma functions or non-integer arguments is
+        # automatically passed to gammasimp
         expr = combsimp(expr)
 
     if expr.has(Sum):
@@ -580,9 +594,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         expr = product_simplify(expr)
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+    short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
     if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
-        short = exptrigsimp(short, simplify=False)
+        short = exptrigsimp(short)
 
     # get rid of hollow 2-arg Mul factorization
     hollow_mul = Transform(
@@ -609,42 +624,64 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
 
+    # restore floats
+    if floats and rational is None:
+        expr = nfloat(expr, exponent=False)
+
     return expr
 
 
 def sum_simplify(s):
     """Main function for Sum simplification"""
     from sympy.concrete.summations import Sum
+    from sympy.core.function import expand
 
-    terms = Add.make_args(s)
+    terms = Add.make_args(expand(s))
     s_t = [] # Sum Terms
     o_t = [] # Other Terms
 
     for term in terms:
         if isinstance(term, Mul):
-            constant = 1
             other = 1
-            s = 0
-            n_sum_terms = 0
-            for j in range(len(term.args)):
-                if isinstance(term.args[j], Sum):
-                    s = term.args[j]
-                    n_sum_terms = n_sum_terms + 1
-                elif term.args[j].is_number == True:
-                    constant = constant * term.args[j]
-                else:
-                    other = other * term.args[j]
-            if other == 1 and n_sum_terms == 1:
-                # Insert the constant inside the Sum
-                s_t.append(Sum(constant * s.function, *s.limits))
-            elif other != 1 and n_sum_terms == 1:
-                o_t.append(other * Sum(constant * s.function, *s.limits))
-            else:
+            sum_terms = []
+
+            if not term.has(Sum):
                 o_t.append(term)
+                continue
+
+            mul_terms = Mul.make_args(term)
+            for mul_term in mul_terms:
+                if isinstance(mul_term, Sum):
+                    r = mul_term._eval_simplify()
+                    sum_terms.extend(Add.make_args(r))
+                else:
+                    other = other * mul_term
+            if len(sum_terms):
+                #some simplification may have happened
+                #use if so
+                s_t.append(Mul(*sum_terms) * other)
+            else:
+                o_t.append(other)
         elif isinstance(term, Sum):
-            s_t.append(term)
+            #as above, we need to turn this into an add list
+            r = term._eval_simplify()
+            s_t.extend(Add.make_args(r))
         else:
             o_t.append(term)
+
+
+    result = Add(sum_combine(s_t), *o_t)
+
+    return result
+
+def sum_combine(s_t):
+    """Helper function for Sum simplification
+
+       Attempts to simplify a list of sums, by combining limits / sum function's
+       returns the simplified sum
+    """
+    from sympy.concrete.summations import Sum
+
 
     used = [False] * len(s_t)
 
@@ -654,43 +691,93 @@ def sum_simplify(s):
                 for j, s_term2 in enumerate(s_t):
                     if not used[j] and i != j:
                         temp = sum_add(s_term1, s_term2, method)
-                        if isinstance(temp, Sum):
+                        if isinstance(temp, Sum) or isinstance(temp, Mul):
                             s_t[i] = temp
                             s_term1 = s_t[i]
                             used[j] = True
 
-    result = Add(*o_t)
-
+    result = S.Zero
     for i, s_term in enumerate(s_t):
         if not used[i]:
             result = Add(result, s_term)
 
     return result
 
+def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
+    """Helper function for Sum simplification
+
+       if limits is specified, "self" is the inner part of a sum
+
+       Returns the sum with constant factors brought outside
+    """
+    from sympy.core.exprtools import factor_terms
+    from sympy.concrete.summations import Sum
+
+    result = self.function if limits is None else self
+    limits = self.limits if limits is None else limits
+    #avoid any confusion w/ as_independent
+    if result == 0:
+        return S.Zero
+
+    #get the summation variables
+    sum_vars = set([limit.args[0] for limit in limits])
+
+    #finally we try to factor out any common terms
+    #and remove the from the sum if independent
+    retv = factor_terms(result, radical=radical, clear=clear, fraction=fraction, sign=sign)
+    #avoid doing anything bad
+    if not result.is_commutative:
+        return Sum(result, *limits)
+
+    i, d = retv.as_independent(*sum_vars)
+    if isinstance(retv, Add):
+        return i * Sum(1, *limits) + Sum(d, *limits)
+    else:
+        return i * Sum(d, *limits)
 
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
     from sympy.concrete.summations import Sum
+    from sympy import Mul
 
-    if type(self) == type(other):
+    #we know this is something in terms of a constant * a sum
+    #so we temporarily put the constants inside for simplification
+    #then simplify the result
+    def __refactor(val):
+        args = Mul.make_args(val)
+        sumv = next(x for x in args if isinstance(x, Sum))
+        constant = Mul(*[x for x in args if x != sumv])
+        return Sum(constant * sumv.function, *sumv.limits)
+
+    if isinstance(self, Mul):
+        rself = __refactor(self)
+    else:
+        rself = self
+
+    if isinstance(other, Mul):
+        rother = __refactor(other)
+    else:
+        rother = other
+
+    if type(rself) == type(rother):
         if method == 0:
-            if self.limits == other.limits:
-                return Sum(self.function + other.function, *self.limits)
+            if rself.limits == rother.limits:
+                return factor_sum(Sum(rself.function + rother.function, *rself.limits))
         elif method == 1:
-            if simplify(self.function - other.function) == 0:
-                if len(self.limits) == len(other.limits) == 1:
-                    i = self.limits[0][0]
-                    x1 = self.limits[0][1]
-                    y1 = self.limits[0][2]
-                    j = other.limits[0][0]
-                    x2 = other.limits[0][1]
-                    y2 = other.limits[0][2]
+            if simplify(rself.function - rother.function) == 0:
+                if len(rself.limits) == len(rother.limits) == 1:
+                    i = rself.limits[0][0]
+                    x1 = rself.limits[0][1]
+                    y1 = rself.limits[0][2]
+                    j = rother.limits[0][0]
+                    x2 = rother.limits[0][1]
+                    y2 = rother.limits[0][2]
 
                     if i == j:
                         if x2 == y1 + 1:
-                            return Sum(self.function, (i, x1, y2))
+                            return factor_sum(Sum(rself.function, (i, x1, y2)))
                         elif x1 == y2 + 1:
-                            return Sum(self.function, (i, x2, y1))
+                            return factor_sum(Sum(rself.function, (i, x2, y1)))
 
     return Add(self, other)
 
@@ -843,7 +930,7 @@ def logcombine(expr, force=False):
         logs = []
         log1 = defaultdict(list)
         for a in Add.make_args(rv):
-            if a.func is log and goodlog(a):
+            if isinstance(a, log) and goodlog(a):
                 log1[()].append(([], a))
             elif not a.is_Mul:
                 other.append(a)
@@ -855,7 +942,7 @@ def logcombine(expr, force=False):
                     if ai.is_Rational and ai < 0:
                         ot.append(S.NegativeOne)
                         co.append(-ai)
-                    elif ai.func is log and goodlog(ai):
+                    elif isinstance(ai, log) and goodlog(ai):
                         lo.append(ai)
                     elif gooda(ai):
                         co.append(ai)
@@ -886,7 +973,7 @@ def logcombine(expr, force=False):
                 li = l.pop(0)
                 e = log(li.args[0]**e)
             c, l = Mul(*o), e
-            if l.func is log:  # it should be, but check to be sure
+            if isinstance(l, log):  # it should be, but check to be sure
                 log1[(c,)].append(([], l))
             else:
                 other.append(c*l)
@@ -1009,7 +1096,7 @@ def besselsimp(expr):
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) == S(1)/2:
-                return exptrigsimp(trigsimp(unpolarify(
+                return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))
             elif nu.is_Integer and nu > 1:
@@ -1088,7 +1175,8 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
+def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
+    rational_conversion='base10'):
     """
     Find a simple representation for a number or, if there are free symbols or
     if rational=True, then replace Floats with their Rational equivalents. If
@@ -1110,6 +1198,10 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     (this is useful to find simpler numbers when the tolerance
     is set low).
 
+    When converting to rational, if rational_conversion='base10' (the default), then
+    convert floats to rationals using their base-10 (string) representation.
+    When rational_conversion='exact' it uses the exact, base-2 representation.
+
     Examples
     ========
 
@@ -1122,6 +1214,11 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)
     22/7
+
+    >>> nsimplify(0.333333333333333, rational=True, rational_conversion='exact')
+    6004799503160655/18014398509481984
+    >>> nsimplify(0.333333333333333, rational=True)
+    1/3
 
     See Also
     ========
@@ -1139,7 +1236,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
-        return _real_to_rational(expr, tolerance)
+        return _real_to_rational(expr, tolerance, rational_conversion)
 
     # SymPy's default tolerance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if None
@@ -1202,7 +1299,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             im = nsimplify_real(im)
     except ValueError:
         if rational is None:
-            return _real_to_rational(expr)
+            return _real_to_rational(expr, rational_conversion=rational_conversion)
         return expr
 
     rv = re + im*S.ImaginaryUnit
@@ -1210,49 +1307,66 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     # return the value, else return the Rational representation
     if rv != expr or rational is False:
         return rv
-    return _real_to_rational(expr)
+    return _real_to_rational(expr, rational_conversion=rational_conversion)
 
 
-def _real_to_rational(expr, tolerance=None):
+def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     """
     Replace all reals in expr with rationals.
 
-    >>> from sympy import nsimplify
+    >>> from sympy import Rational
+    >>> from sympy.simplify.simplify import _real_to_rational
     >>> from sympy.abc import x
 
-    >>> nsimplify(.76 + .1*x**.5, rational=True)
+    >>> _real_to_rational(.76 + .1*x**.5)
     sqrt(x)/10 + 19/25
 
+    If rational_conversion='base10', this uses the base-10 string. If
+    rational_conversion='exact', the exact, base-2 representation is used.
+
+    >>> _real_to_rational(0.333333333333333, rational_conversion='exact')
+    6004799503160655/18014398509481984
+    >>> _real_to_rational(0.333333333333333)
+    1/3
+
     """
+    expr = _sympify(expr)
     inf = Float('inf')
     p = expr
     reps = {}
     reduce_num = None
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
-    for float in p.atoms(Float):
-        key = float
+    for fl in p.atoms(Float):
+        key = fl
         if reduce_num is not None:
-            r = Rational(float).limit_denominator(reduce_num)
+            r = Rational(fl).limit_denominator(reduce_num)
         elif (tolerance is not None and tolerance >= 1 and
-                float.is_Integer is False):
-            r = Rational(tolerance*round(float/tolerance)
+                fl.is_Integer is False):
+            r = Rational(tolerance*round(fl/tolerance)
                 ).limit_denominator(int(tolerance))
         else:
-            r = nsimplify(float, rational=False)
+            if rational_conversion == 'exact':
+                r = Rational(fl)
+                reps[key] = r
+                continue
+            elif rational_conversion != 'base10':
+                raise ValueError("rational_conversion must be 'base10' or 'exact'")
+
+            r = nsimplify(fl, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
-            if float and not r:
-                r = Rational(float)
+            if fl and not r:
+                r = Rational(fl)
             elif not r.is_Rational:
-                if float == inf or float == -inf:
+                if fl == inf or fl == -inf:
                     r = S.ComplexInfinity
-                elif float < 0:
-                    float = -float
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = -Rational(str(float/d))*d
-                elif float > 0:
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = Rational(str(float/d))*d
+                elif fl < 0:
+                    fl = -fl
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = -Rational(str(fl/d))*d
+                elif fl > 0:
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = Rational(str(fl/d))*d
                 else:
                     r = Integer(0)
         reps[key] = r

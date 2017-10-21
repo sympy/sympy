@@ -435,28 +435,28 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
     >>> from sympy.physics.quantum.gate import X, Y, Z
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> generate_gate_rules((x, x))
-    set([((X(0),), (X(0),)), ((X(0), X(0)), ())])
+    {((X(0),), (X(0),)), ((X(0), X(0)), ())}
 
     >>> generate_gate_rules((x, y, z))
-    set([((), (X(0), Z(0), Y(0))), ((), (Y(0), X(0), Z(0))),
-         ((), (Z(0), Y(0), X(0))), ((X(0),), (Z(0), Y(0))),
-         ((Y(0),), (X(0), Z(0))), ((Z(0),), (Y(0), X(0))),
-         ((X(0), Y(0)), (Z(0),)), ((Y(0), Z(0)), (X(0),)),
-         ((Z(0), X(0)), (Y(0),)), ((X(0), Y(0), Z(0)), ()),
-         ((Y(0), Z(0), X(0)), ()), ((Z(0), X(0), Y(0)), ())])
+    {((), (X(0), Z(0), Y(0))), ((), (Y(0), X(0), Z(0))),
+     ((), (Z(0), Y(0), X(0))), ((X(0),), (Z(0), Y(0))),
+     ((Y(0),), (X(0), Z(0))), ((Z(0),), (Y(0), X(0))),
+     ((X(0), Y(0)), (Z(0),)), ((Y(0), Z(0)), (X(0),)),
+     ((Z(0), X(0)), (Y(0),)), ((X(0), Y(0), Z(0)), ()),
+     ((Y(0), Z(0), X(0)), ()), ((Z(0), X(0), Y(0)), ())}
 
     Find the gate rules of the current circuit using Muls:
 
     >>> generate_gate_rules(x*x, return_as_muls=True)
-    set([(1, 1)])
+    {(1, 1)}
 
     >>> generate_gate_rules(x*y*z, return_as_muls=True)
-    set([(1, X(0)*Z(0)*Y(0)), (1, Y(0)*X(0)*Z(0)),
-         (1, Z(0)*Y(0)*X(0)), (X(0)*Y(0), Z(0)),
-         (Y(0)*Z(0), X(0)), (Z(0)*X(0), Y(0)),
-         (X(0)*Y(0)*Z(0), 1), (Y(0)*Z(0)*X(0), 1),
-         (Z(0)*X(0)*Y(0), 1), (X(0), Z(0)*Y(0)),
-         (Y(0), X(0)*Z(0)), (Z(0), Y(0)*X(0))])
+    {(1, X(0)*Z(0)*Y(0)), (1, Y(0)*X(0)*Z(0)),
+     (1, Z(0)*Y(0)*X(0)), (X(0)*Y(0), Z(0)),
+     (Y(0)*Z(0), X(0)), (Z(0)*X(0), Y(0)),
+     (X(0)*Y(0)*Z(0), 1), (Y(0)*Z(0)*X(0), 1),
+     (Z(0)*X(0)*Y(0), 1), (X(0), Z(0)*Y(0)),
+     (Y(0), X(0)*Z(0)), (Z(0), Y(0)*X(0))}
     """
 
     if isinstance(gate_seq, Number):
@@ -559,20 +559,20 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
     >>> from sympy.physics.quantum.gate import X, Y, Z
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> generate_equivalent_ids((x, x))
-    set([(X(0), X(0))])
+    {(X(0), X(0))}
 
     >>> generate_equivalent_ids((x, y, z))
-    set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
-         (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
+    {(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
+     (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))}
 
     Find equivalent gate identities from the current circuit with Muls:
 
     >>> generate_equivalent_ids(x*x, return_as_muls=True)
-    set([1])
+    {1}
 
     >>> generate_equivalent_ids(x*y*z, return_as_muls=True)
-    set([X(0)*Y(0)*Z(0), X(0)*Z(0)*Y(0), Y(0)*X(0)*Z(0),
-         Y(0)*Z(0)*X(0), Z(0)*X(0)*Y(0), Z(0)*Y(0)*X(0)])
+    {X(0)*Y(0)*Z(0), X(0)*Z(0)*Y(0), Y(0)*X(0)*Z(0),
+     Y(0)*Z(0)*X(0), Z(0)*X(0)*Y(0), Z(0)*Y(0)*X(0)}
     """
 
     if isinstance(gate_seq, Number):
@@ -628,8 +628,8 @@ class GateIdentity(Basic):
     X(0)*Y(0)*Z(0)
 
     >>> an_identity.equivalent_ids
-    set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
-         (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
+    {(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
+     (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))}
     """
 
     def __new__(cls, *args):
@@ -683,7 +683,7 @@ def is_degenerate(identity_set, gate_identity):
     >>> from sympy.physics.quantum.gate import X, Y, Z
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> an_identity = GateIdentity(x, y, z)
-    >>> id_set = set([an_identity])
+    >>> id_set = {an_identity}
     >>> another_id = (y, z, x)
     >>> is_degenerate(id_set, another_id)
     True
@@ -781,17 +781,17 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
     >>> from sympy.physics.quantum.gate import X, Y, Z, H
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> bfs_identity_search([x], 1, max_depth=2)
-    set([GateIdentity(X(0), X(0))])
+    {GateIdentity(X(0), X(0))}
 
     >>> bfs_identity_search([x, y, z], 1)
-    set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
-         GateIdentity(Z(0), Z(0)), GateIdentity(X(0), Y(0), Z(0))])
+    {GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
+     GateIdentity(Z(0), Z(0)), GateIdentity(X(0), Y(0), Z(0))}
 
     Find a list of identities that only equal to 1:
 
     >>> bfs_identity_search([x, y, z], 1, identity_only=True)
-    set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
-         GateIdentity(Z(0), Z(0))])
+    {GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
+     GateIdentity(Z(0), Z(0))}
     """
 
     if max_depth is None or max_depth <= 0:

@@ -9,12 +9,22 @@ get the order in AUTHORS.
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import codecs
 import os
 import sys
 
-from fabric.api import local, env
-from fabric.colors import yellow, blue, green, red
-from fabric.utils import error
+if sys.version_info < (3, 6):
+    sys.exit("This script requires Python 3.6 or newer")
+
+from subprocess import run, PIPE
+from collections import OrderedDict
+
+
+def yellow(text):
+    return "\033[33m%s\033[0m" % text
+
+def blue(text):
+    return "\033[34m%s\033[0m" % text
 
 mailmap_update_path = os.path.abspath(__file__)
 mailmap_update_dir = os.path.dirname(mailmap_update_path)
@@ -26,19 +36,16 @@ if os.path.isdir(sympy_dir):
 
 from sympy.utilities.misc import filldedent
 
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
+git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
 
-git_command = """git log --topo-order --reverse --format="%aN <%aE>" | awk ' !x[$0]++'"""
+git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
 
-git_people = unicode(local(git_command, capture=True), 'utf-8').strip().split("\n")
+# Remove duplicates, keeping the original order
+git_people = list(OrderedDict.fromkeys(git_people))
 
 from distutils.version import LooseVersion
 
-git_ver = local('git --version', capture=True)[12:]
+git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
 if LooseVersion(git_ver) < LooseVersion('1.8.4.2'):
     print(yellow("Please use a newer git version >= 1.8.4.2"))
 
@@ -57,7 +64,7 @@ move(git_people, 10, 5) # Brian Jorgensen
 git_people.insert(11, "*Ulrich Hecht <ulrich.hecht@gmail.com>")
 git_people.pop(12) # Kirill Smelkov
 move(git_people, 12, 32) # Sebastian Krämer
-git_people.insert(35, "*Case Van Horsen <casevh@gmail.com>")
+move(git_people, 227, 35) # Case Van Horsen
 git_people.insert(43, "*Dan <coolg49964@gmail.com>")
 move(git_people, 57, 59) # Aaron Meurer
 move(git_people, 58, 57) # Andrew Docherty
@@ -68,24 +75,27 @@ move(git_people, 93, 92) # James Pearson
 
 git_people.pop(226) # Sergey B Kirpichev
 
+header = filldedent("""
+    All people who contributed to SymPy by sending at least a patch or
+    more (in the order of the date of their first contribution), except
+    those who explicitly didn't want to be mentioned. People with a * next
+    to their names are not found in the metadata of the git history. This
+    file is generated automatically by running `./bin/authors_update.py`.
+    """).lstrip()
+fmt = """\n\nThere are a total of {authors_count} authors.\n"""
+header_extra = fmt.format(authors_count=len(git_people))
 
-header = """\
-All people who contributed to SymPy by sending at least a patch or more (in the
-order of the date of their first contribution), except those who explicitly
-didn't want to be mentioned. People with a * next to their names are not found
-in the metadata of the git history. This file is generated automatically by
-running `./bin/authors_update.py`.
-"""
+with codecs.open(os.path.realpath(os.path.join(
+        __file__, os.path.pardir, os.path.pardir, "AUTHORS")),
+        "w", "utf-8") as fd:
+    fd.write(header)
+    fd.write(header_extra)
+    fd.write("\n")
+    fd.write("\n".join(git_people))
+    fd.write("\n")
 
-fd = open(os.path.realpath(os.path.join(__file__, os.path.pardir,
-    os.path.pardir, "AUTHORS")), "w")
-fd.write(header)
-fd.write("\n")
-fd.write("\n".join(git_people).encode("utf8"))
-fd.write("\n")
-
-print(blue("""
-Please make sure that there are no duplicates in the new AUTHORS, then commit
-the changes. You may also want to run ./bin/mailmap_update.py to update
-.mailmap as well
-"""))
+print(blue(filldedent("""
+    Please make sure that there are no duplicates in the new AUTHORS, then
+    commit the changes. You may also want to run ./bin/mailmap_update.py
+    to update .mailmap as well.
+""")))

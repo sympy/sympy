@@ -16,7 +16,7 @@ Some more information how the single concepts work and who should use which:
     This was the original way of doing printing in sympy. Every class had
     its own latex, mathml, str and repr methods, but it turned out that it
     is hard to produce a high quality printer, if all the methods are spread
-    out that far. Therefor all printing code was combined into the different
+    out that far. Therefore all printing code was combined into the different
     printers, which works great for built-in sympy objects, but not that
     good for user defined classes where it is inconvenient to patch the
     printers.
@@ -255,7 +255,6 @@ class Printer(object):
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
                     return getattr(self, printmethod)(expr, *args, **kwargs)
-
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
         finally:

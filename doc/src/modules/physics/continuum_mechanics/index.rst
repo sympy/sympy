@@ -13,3 +13,4 @@ Beam
     :maxdepth: 3
 
     beam.rst
+    beam_problems.rst
