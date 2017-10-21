@@ -43,19 +43,27 @@ def test_transpose():
 def test_factor_in_front():
     assert factor_in_front(MatMul(A, 2, B, evaluate=False)) ==\
                            MatMul(2, A, B, evaluate=False)
+    assert factor_in_front(MatMul(1/2,A, 2, B, evaluate=False)) == \
+           MatMul(A, B, evaluate=False)
+    assert A == -(-A)
+    assert A == -1*(-1*A)
 
 
 def test_remove_ids():
+    assert remove_ids(MatMul(Identity(m), Identity(m), Identity(m), evaluate=False)) == Identity(m)
+    assert remove_ids(MatMul(Identity(m), A.T, Identity(n), evaluate=False)) == A.T
     assert remove_ids(MatMul(A, Identity(m), B, evaluate=False)) == \
                       MatMul(A, B, evaluate=False)
-    assert null_safe(remove_ids)(MatMul(Identity(n), evaluate=False)) == \
-                                 MatMul(Identity(n), evaluate=False)
+    assert null_safe(remove_ids)(MatMul(Identity(n), evaluate=False)) == Identity(n)
+    assert remove_ids(MatMul(6, Identity(n))) == MatMul(6, Identity(n))
 
 
 def test_xxinv():
-    assert xxinv(MatMul(D, Inverse(D), D, evaluate=False)) == \
-                 MatMul(Identity(n), D, evaluate=False)
-
+    assert xxinv(MatMul(D, Inverse(D), D, Inverse(D), evaluate=False)) == Identity(n)
+    assert xxinv(MatMul(D, Inverse(D), Identity(n), D, Inverse(D), evaluate=False)) == Identity(n)
+    assert xxinv(MatMul(D, Inverse(D), D, D, Inverse(D),Inverse(D), evaluate=False)) == \
+           MatMul(D, Inverse(D), evaluate=False)
+    assert xxinv(MatMul(D, Inverse(D), D, evaluate=False)) == D
 
 def test_any_zeros():
     assert any_zeros(MatMul(A, ZeroMatrix(m, k), evaluate=False)) == \

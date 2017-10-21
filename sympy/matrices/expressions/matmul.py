@@ -72,6 +72,12 @@ class MatMul(MatrixExpr):
             pass
         return result.doit() if expand else result
 
+    def as_scalars_matrices(self):
+        scalars = tuple(x for x in self.args if not x.is_Matrix)
+        matrices = tuple(x for x in self.args if x.is_Matrix)
+
+        return scalars, matrices
+
     def as_coeff_matrices(self):
         scalars = [x for x in self.args if not x.is_Matrix]
         matrices = [x for x in self.args if x.is_Matrix]
@@ -142,7 +148,10 @@ def validate(*matrices):
 def newmul(*args):
     if args[0] == 1:
         args = args[1:]
-    return new(MatMul, *args)
+    if len(args) > 1:
+        return new(MatMul, *args)
+    else:
+        return args[0]
 
 def any_zeros(mul):
     if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
@@ -196,13 +205,27 @@ def merge_explicit(matmul):
 def xxinv(mul):
     """ Y * X * X.I -> Y """
     factor, matrices = mul.as_coeff_matrices()
-    for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
+    len_matrices = len(matrices)
+    i = 0
+    shift = 0
+    while i < len_matrices -1 -shift:
+        X = matrices[i-shift]
+        Y = matrices[i+1-shift]
         try:
             if X.is_square and Y.is_square and X == Y.inverse():
-                I = Identity(X.rows)
-                return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
+                matrices.pop(i+1 -shift)
+                matrices.pop(i - shift)
+                shift += 1
         except ValueError:  # Y might not be invertible
             pass
+
+        i += 1
+
+    if shift > 0:
+        if len(matrices) > 0:
+            return newmul(factor, *matrices)
+        else:
+            return newmul(factor, Identity(mul.shape[0]))
 
     return mul
 
@@ -218,18 +241,28 @@ def remove_ids(mul):
         sympy.strategies.rm_id
     """
     # Separate Exprs from MatrixExprs in args
-    factor, mmul = mul.as_coeff_mmul()
+    scalars, matrices = mul.as_scalars_matrices()
+    len_matrices = len(matrices)
     # Apply standard rm_id for MatMuls
-    result = rm_id(lambda x: x.is_Identity is True)(mmul)
-    if result != mmul:
-        return newmul(factor, *result.args)  # Recombine and return
+    result = tuple(matrice for matrice in matrices if not matrice.is_Identity is True)
+    len_result = len(result)
+    if len_result == 0:
+        factor = Mul(*scalars)
+        return newmul(factor,matrices[0])
+    elif len(result) != len_matrices:
+        factor = Mul(*scalars)
+        return newmul(factor, *result)  # Recombine and return
     else:
         return mul
 
 def factor_in_front(mul):
-    factor, matrices = mul.as_coeff_matrices()
-    if factor != 1:
+    scalars, matrices = mul.as_scalars_matrices()
+    len_scalars = len(scalars)
+
+    if len_scalars > 1 or (len_scalars == 1 and  mul.args[0].is_Matrix):
+        factor = Mul(*scalars)
         return newmul(factor, *matrices)
+
     return mul
 
 rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
