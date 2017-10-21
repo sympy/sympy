@@ -183,8 +183,7 @@ def main():
     if '-h' in sys.argv or '--help' in sys.argv:
         # XXX: We can't use description=__doc__  in the OptionParser call
         # below because optparse line wraps it weird.  The argparse module
-        # allows you to disable this, though, but it's only available in
-        # Python 2.7+.
+        # allows you to disable this, though.
         print(__doc__)  # the docstring of this module above
 
     VERSION = None
