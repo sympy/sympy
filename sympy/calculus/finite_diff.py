@@ -134,7 +134,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     >>> print(x_list)
     [-h + x, -sqrt(2)*h/2 + x, x, sqrt(2)*h/2 + x, h + x]
     >>> mycoeffs = finite_diff_weights(1, x_list, 0)[1][4]
-    >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
+    >>> [simplify(c) for c in  mycoeffs]
     [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,
     (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
     6*x/h**2 - 8*x**3/h**4,
@@ -228,7 +228,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S(0)):
     >>> from sympy.calculus import apply_finite_diff
     >>> cube = lambda arg: (1.0*arg)**3
     >>> xlist = range(-3,3+1)
-    >>> apply_finite_diff(2, xlist, map(cube, xlist), 2) - 12 # doctest: +SKIP
+    >>> apply_finite_diff(2, xlist, list(map(cube, xlist)), 2) - 12
     -3.55271367880050e-15
 
     we see that the example above only contain rounding errors.
