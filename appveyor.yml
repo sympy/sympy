@@ -1,0 +1,54 @@
+environment:
+  matrix:
+    # http://www.appveyor.com/docs/installed-software#python
+    # TEST_OPT_DEPENDENCY: space separated list of optional dependencies(conda packages)
+    # to install and test, theano installs mkl-service libpython m2w64-toolchain theano
+
+    - MINICONDA: "C:\\Miniconda"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "32"
+      TEST_OPT_DEPENDENCY: "numpy scipy gmpy2 matplotlib theano llvmlite numexpr ipython"
+
+    - MINICONDA: "C:\\Miniconda-x64"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "64"
+      TEST_OPT_DEPENDENCY: "numpy scipy gmpy2 matplotlib theano llvmlite numexpr ipython"
+
+    - MINICONDA: "C:\\Miniconda36"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "32"
+      TEST_OPT_DEPENDENCY: "numpy scipy gmpy2 matplotlib theano llvmlite numexpr ipython python-symengine=0.3.*"
+
+    - MINICONDA: "C:\\Miniconda36-x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
+      TEST_OPT_DEPENDENCY: "numpy scipy gmpy2 matplotlib theano llvmlite numexpr ipython python-symengine=0.3.* tensorflow"
+
+install:
+  - SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\bin;%PATH%
+  - SET TEST_OPT_DEPENDENCY=%TEST_OPT_DEPENDENCY:theano=mkl-service libpython m2w64-toolchain theano%
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda config --prepend channels conda-forge --prepend channels symengine/label/dev
+  - conda info -a
+  # gmpy2 for Windows Python 2.7 is not available on Anaconda and the packages on PyPI
+  # needs compilation, so use precompiled binaries.
+  - IF "%PYTHON_VERSION%" == "2.7" (
+      conda create -q -n test-environment python=%PYTHON_VERSION% pip fastcache mpmath %TEST_OPT_DEPENDENCY:gmpy2=%
+    ) ELSE (
+      conda create -q -n test-environment python=%PYTHON_VERSION% pip fastcache mpmath %TEST_OPT_DEPENDENCY%
+    )
+  - activate test-environment
+  - IF "%PYTHON_VERSION%" == "2.7" IF NOT "%TEST_OPT_DEPENDENCY:gmpy2=%" == "%TEST_OPT_DEPENDENCY%" (
+      IF "%PYTHON_ARCH%" == "32" (
+        pip install https://github.com/ylemkimon/gmpy/raw/master/gmpy2-2.0.8-cp27-cp27m-win32.whl
+      ) ELSE (
+        pip install https://github.com/ylemkimon/gmpy/raw/master/gmpy2-2.0.8-cp27-cp27m-win_amd64.whl
+      )
+    )
+
+build_script:
+  - python setup.py install
+
+test_script:
+  - ps: "& bin\\test_appveyor.ps1"
