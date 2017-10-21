@@ -528,7 +528,7 @@ class AssumptionKeys(object):
         False
         >>> ask(~Q.zero(I))
         True
-        >>> ask(Q.nonzero(oo))  #doctest: +SKIP
+        >>> ask(Q.nonzero(oo))  # doctest: +SKIP
         False
 
         """
