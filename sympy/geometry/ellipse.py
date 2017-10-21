@@ -1218,8 +1218,8 @@ class Ellipse(GeometrySet):
         >>> e = Ellipse(Point(0,0), 3, 2)
         >>> t = e.tangent_lines(e.random_point())
         >>> p = Plot()
-        >>> p[0] = e # doctest: +SKIP
-        >>> p[1] = t # doctest: +SKIP
+        >>> p[0] = e
+        >>> p[1] = t
 
         """
         p = Point(p, dim=2)
