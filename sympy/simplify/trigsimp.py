@@ -5,7 +5,7 @@ from collections import defaultdict
 from sympy.core.cache import cacheit
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
-from sympy.core.compatibility import reduce, iterable
+from sympy.core.compatibility import reduce, iterable, SYMPY_INTS
 from sympy.core.numbers import I, Integer
 from sympy.core.function import count_ops, _mexpand
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -206,7 +206,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         n = 1
         funcs, iterables, gens = [], [], []
         for e in hints:
-            if isinstance(e, (int, Integer)):
+            if isinstance(e, (SYMPY_INTS, Integer)):
                 n = e
             elif isinstance(e, FunctionClass):
                 funcs.append(e)

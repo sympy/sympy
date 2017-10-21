@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import collections
 
 from sympy import Basic
+from sympy.core.compatibility import SYMPY_INTS
 
 
 class NDimArray(object):
@@ -62,7 +63,7 @@ class NDimArray(object):
 
     def _parse_index(self, index):
 
-        if isinstance(index, (int, Integer)):
+        if isinstance(index, (SYMPY_INTS, Integer)):
             if index >= self._loop_size:
                 raise ValueError("index out of range")
             return index
@@ -150,10 +151,10 @@ class NDimArray(object):
             shape = ()
             iterable = (iterable,)
 
-        if isinstance(shape, (int, Integer)):
+        if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
-        if any([not isinstance(dim, (int, Integer)) for dim in shape]):
+        if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
             raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable
