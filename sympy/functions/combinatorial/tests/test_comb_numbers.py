@@ -11,6 +11,8 @@ from sympy.functions import (
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
 
+from sympy.core.numbers import GoldenRatio
+
 x = Symbol('x')
 
 
@@ -68,6 +70,8 @@ def test_fibonacci():
     assert fibonacci(n).rewrite(sqrt) == \
         2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
     assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
+    assert fibonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
+        fibonacci(10)
     assert lucas(n).rewrite(sqrt) == \
         (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
@@ -80,6 +84,11 @@ def test_bell():
     assert bell(1, x) == x
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
+    assert bell(oo) == S.Infinity
+    raises(ValueError, lambda: bell(oo, x))
+
+    raises(ValueError, lambda: bell(-1))
+    raises(ValueError, lambda: bell(S(1)/2))
 
     X = symbols('x:6')
     # X = (x0, x1, .. x5)
@@ -106,9 +115,9 @@ def test_bell():
     for i in [0, 2, 3, 7, 13, 42, 55]:
         assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
 
-    # For negative numbers, the formula does not hold
-    m = Symbol('m', integer=True)
-    assert bell(-1).evalf() == bell(m).rewrite(Sum).evalf(subs={m: -1})
+    # issue 9184
+    n = Dummy('n')
+    assert bell(n).limit(n, S.Infinity) == S.Infinity
 
 
 def test_harmonic():
@@ -280,11 +289,16 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
 
+    raises(ValueError, lambda: euler(-2))
+    raises(ValueError, lambda: euler(-3))
+    raises(ValueError, lambda: euler(2.3))
+
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
 
     assert euler(n).rewrite(Sum) == euler(n)
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
+    n = Symbol('n', integer=True, nonnegative=True)
     assert euler(2*n + 1).rewrite(Sum) == 0
 
 
@@ -292,6 +306,34 @@ def test_euler():
 def test_euler_failing():
     # depends on dummy variables being implemented https://github.com/sympy/sympy/issues/5665
     assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+
+
+def test_euler_odd():
+    n = Symbol('n', odd=True, positive=True)
+    assert euler(n) == 0
+    n = Symbol('n', odd=True)
+    assert euler(n) != 0
+
+
+def test_euler_polynomials():
+    assert euler(0, x) == 1
+    assert euler(1, x) == x - Rational(1, 2)
+    assert euler(2, x) == x**2 - x
+    assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
+    m = Symbol('m')
+    assert isinstance(euler(m, x), euler)
+    from sympy import Float
+    A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
+    B = euler(19, S.Pi.evalf(32))
+    assert abs((A - B)/A) < 1e-31  # expect low relative error
+    C = euler(19, S.Pi, evaluate=False).evalf(32)
+    assert abs((A - C)/A) < 1e-31
+
+
+def test_euler_polynomial_rewrite():
+    m = Symbol('m')
+    A = euler(m, x).rewrite('Sum');
+    assert A.subs({m:3, x:5}).doit() == euler(3, 5)
 
 
 def test_catalan():
@@ -508,7 +550,6 @@ def test_issue_8496():
     k = Symbol("k")
 
     raises(TypeError, lambda: catalan(n, k))
-    raises(TypeError, lambda: euler(n, k))
 
 
 def test_issue_8601():

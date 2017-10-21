@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 from __future__ import print_function, division
 
 from .add import Add
-from .assumptions import ManagedProperties
+from .assumptions import ManagedProperties, _assume_defined
 from .basic import Basic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered
@@ -193,7 +193,7 @@ class FunctionClass(ManagedProperties):
         numbers is returned:
 
         >>> Function('f').nargs
-        Naturals0()
+        S.Naturals0
 
         If the function was initialized to accept one or more arguments, a
         corresponding set will be returned:
@@ -209,7 +209,7 @@ class FunctionClass(ManagedProperties):
 
         >>> f = Function('f')
         >>> f(1).nargs
-        Naturals0()
+        S.Naturals0
         >>> len(f(1).args)
         1
         """
@@ -315,7 +315,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
 
 class Function(Application, Expr):
-    """Base class for applied mathematical functions.
+    """
+    Base class for applied mathematical functions.
 
     It also serves as a constructor for undefined function classes.
 
@@ -339,6 +340,16 @@ class Function(Application, Expr):
     Derivative(f(x), x)
     >>> g.diff(x)
     Derivative(g(x), x)
+
+    Assumptions can be passed to Function.
+
+    >>> f_real = Function('f', real=True)
+    >>> f_real(x).is_real
+    True
+
+    Note that assumptions on a function are unrelated to the assumptions on
+    the variable it is called on. If you want to add a relationship, subclass
+    Function and define the appropriate ``_eval_is_assumption`` methods.
 
     In the following example Function is used as a base class for
     ``my_func`` that represents a mathematical function *my_func*. Suppose
@@ -383,6 +394,7 @@ class Function(Application, Expr):
     ...     nargs = (1, 2)
     ...
     >>>
+
     """
 
     @property
@@ -425,13 +437,12 @@ class Function(Application, Expr):
 
         evaluate = options.get('evaluate', global_evaluate[0])
         result = super(Function, cls).__new__(cls, *args, **options)
-        if not evaluate or not isinstance(result, cls):
-            return result
+        if evaluate and isinstance(result, cls) and result.args:
+            pr2 = min(cls._should_evalf(a) for a in result.args)
+            if pr2 > 0:
+                pr = max(cls._should_evalf(a) for a in result.args)
+                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
 
-        pr = max(cls._should_evalf(a) for a in result.args)
-        pr2 = min(cls._should_evalf(a) for a in result.args)
-        if pr2 > 0:
-            return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
     @classmethod
@@ -445,17 +456,15 @@ class Function(Application, Expr):
 
         Returns the precision to evalf to, or -1 if it shouldn't evalf.
         """
-        from sympy.core.symbol import Wild
+        from sympy.core.evalf import pure_complex
         if arg.is_Float:
             return arg._prec
         if not arg.is_Add:
             return -1
-        # Don't use as_real_imag() here, that's too much work
-        a, b = Wild('a'), Wild('b')
-        m = arg.match(a + b*S.ImaginaryUnit)
-        if not m or not (m[a].is_Float or m[b].is_Float):
+        m = pure_complex(arg)
+        if m is None or not (m[0].is_Float or m[1].is_Float):
             return -1
-        l = [m[i]._prec for i in m if m[i].is_Float]
+        l = [i._prec for i in m if i.is_Float]
         l.append(-1)
         return max(l)
 
@@ -507,7 +516,7 @@ class Function(Application, Expr):
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
             try:
-                return Float(self._imp_(*self.args), prec)
+                return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
             except (AttributeError, TypeError, ValueError):
                 return
 
@@ -708,8 +717,7 @@ class Function(Application, Expr):
             else:
                 return Derivative(self, self.args[argindex - 1], evaluate=False)
         # See issue 4624 and issue 4719 and issue 5600
-        arg_dummy = Dummy('xi_%i' % argindex)
-        arg_dummy.dummy_index = hash(self.args[argindex - 1])
+        arg_dummy = Dummy('xi_%i' % argindex, dummy_index=hash(self.args[argindex - 1]))
         new_args = [arg for arg in self.args]
         new_args[argindex-1] = arg_dummy
         return Subs(Derivative(self.func(*new_args), arg_dummy),
@@ -746,8 +754,21 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname)
+        func = getattr(sage, fname,None)
         args = [arg._sage_() for arg in self.args]
+
+        # In the case the function is not known in sage:
+        if func is None:
+            import sympy
+            if getattr(sympy, fname,None) is None:
+                # abstract function
+                return sage.function(fname)(*args)
+
+            else:
+                # the function defined in sympy is not known in sage
+                # this exception is catched in sage
+                raise AttributeError
+
         return func(*args)
 
 
@@ -778,7 +799,14 @@ class UndefinedFunction(FunctionClass):
     """
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
         __dict__ = __dict__ or {}
+        # Allow Function('f', real=True)
+        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        # You can add other attributes, although they do have to be hashable
+        # (but seriously, if you want to add anything other than assumptions,
+        # just subclass Function)
         __dict__.update(kwargs)
+        # Save these for __eq__
+        __dict__.update({'_extra_kwargs': kwargs})
         __dict__['__module__'] = None # For pickling
         ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         return ret
@@ -786,8 +814,18 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
-                                         (s.class_key() == o.class_key()))
+    _extra_kwargs = {}
+
+    def __hash__(self):
+        return hash((self.class_key(), frozenset(self._extra_kwargs.items())))
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and
+            self.class_key() == other.class_key() and
+            self._extra_kwargs == other._extra_kwargs)
+
+    def __ne__(self, other):
+        return not self == other
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -801,7 +839,7 @@ class WildFunction(Function, AtomicExpr):
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> F.nargs
-    Naturals0()
+    S.Naturals0
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}
@@ -926,7 +964,7 @@ class Derivative(Expr):
     identically equal.  However this is the wrong way to think of this.  Think
     of it instead as if we have something like this::
 
-        >>> from sympy.abc import c, s
+        >>> from sympy.abc import c, s, u, x
         >>> def F(u):
         ...     return 2*u
         ...
@@ -939,7 +977,7 @@ class Derivative(Expr):
         2*sqrt(-sin(x)**2 + 1)
         >>> F(c).diff(c)
         2
-        >>> F(c).diff(c)
+        >>> F(cos(x)).diff(cos(x))
         2
         >>> G(s).diff(c)
         0
@@ -1179,8 +1217,7 @@ class Derivative(Expr):
                 obj = None
             else:
                 if not is_symbol:
-                    new_v = Dummy('xi_%i' % i)
-                    new_v.dummy_index = hash(v)
+                    new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
@@ -1841,7 +1878,7 @@ def diff(f, *symbols, **kwargs):
 
 def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         mul=True, log=True, multinomial=True, basic=True, **hints):
-    """
+    r"""
     Expand an expression using methods given as hints.
 
     Hints evaluated unless explicitly set to False are:  ``basic``, ``log``,
@@ -2453,11 +2490,13 @@ def count_ops(expr, visual=False):
 
     """
     from sympy import Integral, Symbol
+    from sympy.core.relational import Relational
     from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction
+    from sympy.utilities.misc import func_name
 
     expr = sympify(expr)
-    if isinstance(expr, Expr):
+    if isinstance(expr, Expr) and not expr.is_Relational:
 
         ops = []
         args = [expr]
@@ -2542,11 +2581,11 @@ def count_ops(expr, visual=False):
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
-    elif isinstance(expr, BooleanFunction):
+    elif isinstance(expr, (Relational, BooleanFunction)):
         ops = []
         for arg in expr.args:
             ops.append(count_ops(arg, visual=True))
-        o = Symbol(expr.func.__name__.upper())
+        o = Symbol(func_name(expr, short=True).upper())
         ops.append(o)
     elif not isinstance(expr, Basic):
         ops = []

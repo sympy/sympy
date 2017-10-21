@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
+    log, cos, sin)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -93,6 +94,8 @@ def test_Eq():
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
+    # issue 13348
+    assert Eq(True, 1) is S.false
 
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
@@ -571,6 +574,8 @@ def test_issue_8245():
     assert (r >= a) == False
     assert (r <= a) == True
 
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+
 
 def test_issue_8449():
     p = Symbol('p', nonnegative=True)
@@ -582,7 +587,18 @@ def test_issue_8449():
 
 def test_simplify():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    assert simplify(S(1) < -x) == (x < -1)
+    r = S(1) < x
+    # canonical operations are not the same as simplification,
+    # so if there is no simplification, canonicalization will
+    # be done unless the measure forbids it
+    assert simplify(r) == r.canonical
+    assert simplify(r, ratio=0) != r.canonical
+    # this is not a random test; in _eval_simplify
+    # this will simplify to S.false and that is the
+    # reason for the 'if r.is_Relational' in Relational's
+    # _eval_simplify routine
+    assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
+        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
 
 
 def test_equals():
@@ -614,34 +630,22 @@ def test_reversed():
 
 
 def test_canonical():
-    one = S(1)
+    c = [i.canonical for i in (
+        x + y < z,
+        x + 2 > 3,
+        x < 2,
+        S(2) > x,
+        x**2 > -x/y,
+        Gt(3, 2, evaluate=False)
+        )]
+    assert [i.canonical for i in c] == c
+    assert [i.reversed.canonical for i in c] == c
+    assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
 
-    def unchanged(v):
-        c = v.canonical
-        return v.is_Relational and c.is_Relational and v == c
-
-    def isreversed(v):
-        return v.canonical == v.reversed
-
-    assert unchanged(x < one)
-    assert unchanged(x <= one)
-    assert isreversed(Eq(one, x, evaluate=False))
-    assert unchanged(Eq(x, one, evaluate=False))
-    assert isreversed(Ne(one, x, evaluate=False))
-    assert unchanged(Ne(x, one, evaluate=False))
-    assert unchanged(x >= one)
-    assert unchanged(x > one)
-
-    assert unchanged(x < y)
-    assert unchanged(x <= y)
-    assert isreversed(Eq(y, x, evaluate=False))
-    assert unchanged(Eq(x, y, evaluate=False))
-    assert isreversed(Ne(y, x, evaluate=False))
-    assert unchanged(Ne(x, y, evaluate=False))
-    assert isreversed(x >= y)
-    assert isreversed(x > y)
-    assert (-x < 1).canonical == (x > -1)
-    assert isreversed(-x > y)
+    c = [i.reversed.func(i.rhs, i.lhs, evaluate=False).canonical for i in c]
+    assert [i.canonical for i in c] == c
+    assert [i.reversed.canonical for i in c] == c
+    assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
 
 
 @XFAIL
@@ -664,7 +668,7 @@ def test_issue_8444():
 
 
 def test_issue_10304():
-    d = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    d = cos(1)**2 + sin(1)**2 - 1
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
@@ -689,6 +693,7 @@ def test_issue_10401():
     assert Eq(inf/fin, 0) is F
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+    assert Eq(inf, -inf) is F
 
 
     assert Eq(fin/(fin + 1), 1) is S.false
@@ -705,3 +710,30 @@ def test_issue_10633():
     assert Eq(False, True) == False
     assert Eq(True, True) == True
     assert Eq(False, False) == True
+
+
+def test_issue_10927():
+    x = symbols('x')
+    assert str(Eq(x, oo)) == 'Eq(x, oo)'
+    assert str(Eq(x, -oo)) == 'Eq(x, -oo)'
+
+
+def test_binary_symbols():
+    ans = set([x])
+    for f in Eq, Ne:
+        for t in S.true, S.false:
+            eq = f(x, S.true)
+            assert eq.binary_symbols == ans
+            assert eq.reversed.binary_symbols == ans
+        assert f(x, 1).binary_symbols == set()
+
+
+def test_rel_args():
+    # can't have Boolean args; this is automatic with Python 3
+    # so this test and the __lt__, etc..., definitions in
+    # relational.py and boolalg.py which are marked with ///
+    # can be removed.
+    for op in ['<', '<=', '>', '>=']:
+        for b in (S.true, x < 1, And(x, y)):
+            for v in (0.1, 1, 2**32, t, S(1)):
+                raises(TypeError, lambda: Relational(b, v, op))

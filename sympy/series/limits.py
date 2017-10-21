@@ -4,10 +4,15 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
-
+from sympy.core.exprtools import factor_terms
+from sympy.simplify.ratsimp import ratsimp
+from sympy.polys import PolynomialError, factor
+from sympy.simplify.simplify import together
 
 def limit(e, z, z0, dir="+"):
     """
@@ -47,7 +52,6 @@ def limit(e, z, z0, dir="+"):
 
 def heuristics(e, z, z0, dir):
     rv = None
-
     if abs(z0) is S.Infinity:
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
         if isinstance(rv, Limit):
@@ -57,6 +61,15 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             l = limit(a, z, z0, dir)
             if l.has(S.Infinity) and l.is_finite is None:
+                if isinstance(e, Add):
+                    m = factor_terms(e)
+                    if not isinstance(m, Mul): # try together
+                        m = together(m)
+                    if not isinstance(m, Mul): # try factor if the previous methods failed
+                        m = factor(e)
+                    if isinstance(m, Mul):
+                        return heuristics(m, z, z0, dir)
+                    return
                 return
             elif isinstance(l, Limit):
                 return
@@ -67,8 +80,13 @@ def heuristics(e, z, z0, dir):
         if r:
             rv = e.func(*r)
             if rv is S.NaN:
-                return
-
+                try:
+                    rat_e = ratsimp(e)
+                except PolynomialError:
+                    return
+                if rat_e is S.NaN or rat_e == e:
+                    return
+                return limit(rat_e, z, z0, dir)
     return rv
 
 
@@ -146,21 +164,20 @@ class Limit(Expr):
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                # XXX todo: this should probably be stated in the
-                # negative -- i.e. to exclude expressions that should
-                # not be handled this way but I'm not sure what that
-                # condition is; when ok is True it means that the leading
-                # term approach is going to succeed (hopefully)
+                e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
                 ok = lambda w: (z in w.free_symbols and
                                 any(a.is_polynomial(z) or
                                     any(z in m.free_symbols and m.is_polynomial(z)
                                         for m in Mul.make_args(a))
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
-                    u = Dummy(positive=(z0 is S.Infinity))
-                    inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u,
-                              S.Zero, "+" if z0 is S.Infinity else "-")
+                    u = Dummy(positive=True)
+                    if z0 is S.NegativeInfinity:
+                        inve = e.subs(z, -1/u)
+                    else:
+                        inve = e.subs(z, 1/u)
+                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
                     if isinstance(r, Limit):
                         return self
                     else:

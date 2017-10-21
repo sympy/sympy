@@ -1,5 +1,8 @@
-from sympy.matrices.densetools import trace, transpose
-from sympy.matrices.densetools import eye
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from sympy.matrices.densetools import trace, transpose
+    from sympy.matrices.densetools import eye
 from sympy import ZZ
 
 def test_trace():

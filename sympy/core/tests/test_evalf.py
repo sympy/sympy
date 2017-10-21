@@ -129,6 +129,7 @@ def test_evalf_logs():
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
     assert NS('log(-1 + 0.00001)', 2) == '-1.0e-5 + 3.1*I'
     assert NS('log(100, 10, evaluate=False)', 15) == '2.00000000000000'
+    assert NS('-2*I*log(-(-1)**(S(1)/9))', 15) == '-5.58505360638185'
 
 
 def test_evalf_trig():
@@ -226,6 +227,11 @@ def test_evalf_bugs():
     assert ((oo*I).n() == S.Infinity*I)
     assert ((oo+oo*I).n() == S.Infinity + S.Infinity*I)
 
+    #issue 11518
+    assert NS(2*x**2.5, 5) == '2.0000*x**2.5000'
+
+    #issue 13076
+    assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
@@ -251,6 +257,8 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
+    assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
+    assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)

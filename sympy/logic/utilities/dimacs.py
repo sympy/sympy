@@ -21,18 +21,18 @@ def load(s):
     >>> load('1')
     cnf_1
     >>> load('1 2')
-    Or(cnf_1, cnf_2)
+    cnf_1 | cnf_2
     >>> load('1 \\n 2')
-    And(cnf_1, cnf_2)
+    cnf_1 & cnf_2
     >>> load('1 2 \\n 3')
-    And(Or(cnf_1, cnf_2), cnf_3)
+    cnf_3 & (cnf_1 | cnf_2)
     """
     clauses = []
 
     lines = s.split('\n')
 
-    pComment = re.compile('c.*')
-    pStats = re.compile('p\s*cnf\s*(\d*)\s*(\d*)')
+    pComment = re.compile(r'c.*')
+    pStats = re.compile(r'p\s*cnf\s*(\d*)\s*(\d*)')
 
     while len(lines) > 0:
         line = lines.pop(0)

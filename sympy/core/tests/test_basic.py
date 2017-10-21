@@ -4,13 +4,15 @@ of Basic or Atom."""
 import collections
 import sys
 
-from sympy.core.basic import Basic, Atom, preorder_traversal
+from sympy.core.basic import Basic, Atom, preorder_traversal, as_Basic
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
 from sympy.core.compatibility import default_sort_key, with_metaclass
 
-from sympy import sin, Lambda, Q, cos, gamma
+from sympy import sin, Lambda, Q, cos, gamma, Tuple
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import raises
 from sympy.core import I, pi
 
@@ -37,6 +39,43 @@ def test_equality():
     assert not(Basic() == [])
     assert Basic() != 0
     assert not(Basic() == 0)
+
+    class Foo(object):
+        """
+        Class that is unaware of Basic, and relies on both classes returning
+        the NotImplemented singleton for equivalence to evaluate to False.
+
+        """
+
+    b = Basic()
+    foo = Foo()
+
+    assert b != foo
+    assert foo != b
+    assert not b == foo
+    assert not foo == b
+
+    class Bar(object):
+        """
+        Class that considers itself equal to any instance of Basic, and relies
+        on Basic returning the NotImplemented singleton in order to achieve
+        a symmetric equivalence relation.
+
+        """
+        def __eq__(self, other):
+            if isinstance(other, Basic):
+                return True
+            return NotImplemented
+
+        def __ne__(self, other):
+            return not self == other
+
+    bar = Bar()
+
+    assert b == bar
+    assert bar == b
+    assert not b != bar
+    assert not bar != b
 
 
 def test_matches_basic():
@@ -183,11 +222,20 @@ def test_call():
 
 def test_rewrite():
     x, y, z = symbols('x y z')
+    a, b = symbols('a b')
     f1 = sin(x) + cos(x)
     assert f1.rewrite(cos,exp) == exp(I*x)/2 + sin(x) + exp(-I*x)/2
     assert f1.rewrite([cos],sin) == sin(x) + sin(x + pi/2, evaluate=False)
     f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
+    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
+    assert Max(x, y, z).rewrite(Piecewise) == Piecewise((x, (x >= y) & (x >= z)), (y, y >= z), (z, True))
+    assert Max(x, y, a, b).rewrite(Piecewise) == Piecewise((a, (a >= b) & (a >= x) & (a >= y)),
+        (b, (b >= x) & (b >= y)), (x, x >= y), (y, True))
+    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a <= b), (b, True))
+    assert Min(x, y, z).rewrite(Piecewise) == Piecewise((x, (x <= y) & (x <= z)), (y, y <= z), (z, True))
+    assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
+        (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
 
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
@@ -219,3 +267,9 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     assert n.is_comparable is False
     assert n.n(2).is_comparable is False
     assert n.n(2).n(2).is_comparable
+
+
+def test_as_Basic():
+    assert as_Basic(1) is S.One
+    assert as_Basic(()) == Tuple()
+    raises(TypeError, lambda: as_Basic([]))

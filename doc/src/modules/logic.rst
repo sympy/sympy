@@ -18,11 +18,11 @@ You can build Boolean expressions with the standard python operators ``&``
     >>> from sympy import *
     >>> x, y = symbols('x,y')
     >>> y | (x & y)
-    Or(And(x, y), y)
+    y | (x & y)
     >>> x | y
-    Or(x, y)
+    x | y
     >>> ~x
-    Not(x)
+    ~x
 
 You can also form implications with ``>>`` and ``<<``::
 

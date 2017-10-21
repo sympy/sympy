@@ -40,10 +40,20 @@ mpmath_version = '0.19'
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
+extra_kwargs = {}
+
 try:
     from setuptools import setup, Command
+    extra_kwargs['zip_safe'] = False
+    extra_kwargs['entry_points'] = {
+        'console_scripts': [
+            'isympy = isympy:main',
+        ]
+    }
 except ImportError:
     from distutils.core import setup, Command
+
+    extra_kwargs['scripts'] = ['bin/isympy']
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
@@ -67,6 +77,7 @@ if sys.version_info[:2] < (2, 7):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_module_list.py
 modules = [
+    'sympy.algebras',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',
@@ -91,6 +102,9 @@ modules = [
     'sympy.holonomic',
     'sympy.integrals',
     'sympy.integrals.benchmarks',
+    'sympy.integrals.rubi',
+    'sympy.integrals.rubi.parsetools',
+    'sympy.integrals.rubi.rules',
     'sympy.interactive',
     'sympy.liealgebras',
     'sympy.logic',
@@ -107,8 +121,8 @@ modules = [
     'sympy.physics.mechanics',
     'sympy.physics.optics',
     'sympy.physics.quantum',
-    'sympy.physics.unitsystems',
-    'sympy.physics.unitsystems.systems',
+    'sympy.physics.units',
+    'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
     'sympy.plotting.intervalmath',
@@ -261,6 +275,7 @@ class run_benchmarks(Command):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
+    'sympy.algebras.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
@@ -277,6 +292,8 @@ tests = [
     'sympy.functions.special.tests',
     'sympy.geometry.tests',
     'sympy.holonomic.tests',
+    'sympy.integrals.rubi.parsetools.tests',
+    'sympy.integrals.rubi.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
     'sympy.liealgebras.tests',
@@ -291,7 +308,7 @@ tests = [
     'sympy.physics.optics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
-    'sympy.physics.unitsystems.tests',
+    'sympy.physics.units.tests',
     'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
@@ -338,8 +355,8 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='http://sympy.org',
+          py_modules = ['isympy'],
           packages=['sympy'] + modules + tests,
-          scripts=['bin/isympy'],
           ext_modules=[],
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
@@ -358,13 +375,14 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.6',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.2',
             'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
             ],
-          install_requires=['mpmath>=%s' % mpmath_version]
+          install_requires=['mpmath>=%s' % mpmath_version],
+          **extra_kwargs
           )
