@@ -1,8 +1,9 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Tuple,
 )
 
 from sympy.utilities.pytest import raises
+from sympy.core.symbol import disambiguate_symbols
 
 
 def test_Symbol():
@@ -341,3 +342,12 @@ def test_unicode():
     assert x == xu
 
     raises(TypeError, lambda: Symbol(1))
+
+def test_disambiguate_symbols():
+    t1 = Tuple(Symbol('_x'), Symbol('_y'), Dummy('y'), Dummy('x'), Dummy('x'))
+    t2 = [Dummy('x'), Dummy('x')]
+    t3 = (Dummy('x'), Dummy('y'))
+
+    assert disambiguate_symbols(t1) == (Symbol('_x'), Symbol('_y'), Dummy('_y_1'), Dummy('_x_2'), Dummy('_x_1'))
+    assert disambiguate_symbols(t2) == (Dummy('_x'), Dummy('_x_1'))
+    assert disambiguate_symbols(t3) == (Dummy('_x'), Dummy('_y'))

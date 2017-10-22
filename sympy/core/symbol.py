@@ -11,6 +11,7 @@ from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
+from sympy.core.containers import Tuple
 
 import string
 import re as _re
@@ -623,3 +624,21 @@ def var(names, **args):
         del frame  # break cyclic dependencies as stated in inspect docs
 
     return syms
+
+def disambiguate_symbols(iter):
+    new_iter = iter
+    if not isinstance(new_iter, Basic):
+        new_iter=Tuple()
+        for i in iter:
+            new_iter += Tuple(i)
+    syms = new_iter.free_symbols
+    mapping = {}
+    for s in syms:
+        mapping.setdefault(str(s), []).append(s)
+    reps = {}
+    for k in mapping:
+        if len(mapping[k]) == 1:
+            continue
+        for i in range(1, len(mapping[k])):
+            reps[mapping[k][i]] = Symbol("%s_%i"%(k, i), **mapping[k][i].assumptions0)
+    return new_iter.xreplace(reps)
