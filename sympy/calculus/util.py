@@ -135,15 +135,20 @@ def function_range(f, symbol, domain):
     if isinstance(intervals,(Interval, FiniteSet)):
         interval_iter = (intervals,)
 
-    else:
+    elif isinstance(intervals, Union):
         interval_iter = intervals.args
+
+    else:
+            raise NotImplementedError(filldedent('''
+                Unable to find range for the given domain.
+                '''))
 
     for interval in interval_iter:
         if isinstance(interval, FiniteSet):
             for singleton in interval:
                 if singleton in domain:
                     range_int += FiniteSet(f.subs(symbol, singleton))
-        else:
+        elif isinstance(interval, Interval):
             vals = S.EmptySet
             critical_points = S.EmptySet
             critical_values = S.EmptySet
@@ -178,6 +183,10 @@ def function_range(f, symbol, domain):
                     right_open = True
 
             range_int += Interval(vals.inf, vals.sup, left_open, right_open)
+        else:
+            raise NotImplementedError(filldedent('''
+                Unable to find range for the given domain.
+                '''))
 
     return range_int
 

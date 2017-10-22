@@ -40,6 +40,10 @@ def test_function_range():
         ) == Interval(-1, 1)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
+    raises(NotImplementedError, lambda : function_range(
+        log(x), x, S.Integers))
+    raises(NotImplementedError, lambda : function_range(
+        sin(x)/2, x, S.Naturals))
 
 
 def test_continuous_domain():
