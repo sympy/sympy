@@ -34,8 +34,16 @@ def test_function_range():
         ) == FiniteSet(0)
     assert function_range(x*(x - 1) - (x**2 - x) + y, x, S.Reals
         ) == FiniteSet(y)
+    assert function_range(sin(x), x, Union(Interval(-5, -3), FiniteSet(4))
+        ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
+    assert function_range(cos(x), x, Interval(-oo, -4)
+        ) == Interval(-1, 1)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
+    raises(NotImplementedError, lambda : function_range(
+        log(x), x, S.Integers))
+    raises(NotImplementedError, lambda : function_range(
+        sin(x)/2, x, S.Naturals))
 
 
 def test_continuous_domain():
