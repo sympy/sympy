@@ -286,6 +286,15 @@ def test_contains():
         assert len(w) == 1
 
 
+def test_parameter_value():
+    p1, p2, p3 = Point(0, 1), Point(2, 3), Point(3, 4)
+    l = Line(p1, p2)
+    # Line parameter
+    assert l.parameter_value(p3) == Rational(3, 2)
+    p4 = Point(1, 1) # not collinear
+    raises(ValueError, lambda: l.parameter_value(p4))
+
+
 def test_contains_nonreal_symbols():
     u, v, w, z = symbols('u, v, w, z')
     l = Segment(Point(u, w), Point(v, z))
