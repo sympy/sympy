@@ -457,12 +457,12 @@ def test_minimal_block():
 
     P1 = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
     P2 = PermutationGroup(Permutation(0, 1, 2, 3, 4, 5), Permutation(1, 5)(2, 4))
-    assert P1.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
-    assert P2.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
+    assert P1.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
+    assert P2.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
 
 def test_minimal_blocks():
     P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
-    assert P.minimal_blocks() == [[0, 3, 0, 3, 0, 3], [0, 4, 5, 0, 4, 5]]
+    assert P.minimal_blocks() == [[0, 1, 0, 1, 0, 1], [0, 1, 2, 0, 1, 2]]
 
     P = SymmetricGroup(5)
     assert P.minimal_blocks() == [[0]*5]

@@ -566,7 +566,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='1st_exact')
     [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [Eq(f(x), -acos(C1/sqrt(-cos(x)**2)) + 2*pi), Eq(f(x), acos(C1/sqrt(-cos(x)**2)))]
+    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
@@ -2270,7 +2270,7 @@ def odesimp(eq, func, order, constants, hint):
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
                 newi = logcombine(eqi, force=True)
-                if newi.lhs.func is log and newi.rhs == 0:
+                if isinstance(newi.lhs, log) and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
@@ -2319,12 +2319,12 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     This function returns a tuple.  The first item in the tuple is ``True`` if
     the substitution results in ``0``, and ``False`` otherwise. The second
     item in the tuple is what the substitution results in.  It should always
-    be ``0`` if the first item is ``True``. Note that sometimes this function
-    will ``False``, but with an expression that is identically equal to ``0``,
-    instead of returning ``True``.  This is because
-    :py:meth:`~sympy.simplify.simplify.simplify` cannot reduce the expression
-    to ``0``.  If an expression returned by this function vanishes
-    identically, then ``sol`` really is a solution to ``ode``.
+    be ``0`` if the first item is ``True``. Sometimes this function will
+    return ``False`` even when an expression is identically equal to ``0``.
+    This happens when :py:meth:`~sympy.simplify.simplify.simplify` does not
+    reduce the expression to ``0``.  If an expression returned by this
+    function vanishes identically, then ``sol`` really is a solution to
+    the ``ode``.
 
     If this function seems to hang, it is probably because of a hard
     simplification.
@@ -2653,7 +2653,7 @@ def __remove_linear_redundancies(expr, Cs):
     Cs = [i for i in Cs if cnts[i] > 0]
 
     def _linear(expr):
-        if expr.func is Add:
+        if isinstance(expr, Add):
             xs = [i for i in Cs if expr.count(i)==cnts[i] \
                 and 0 == expr.diff(i, 2)]
             d = {}
@@ -2675,10 +2675,10 @@ def __remove_linear_redundancies(expr, Cs):
         expr = _linear(expr)
         return expr
 
-    if expr.func is Equality:
+    if isinstance(expr, Equality):
         lhs, rhs = [_recursive_walk(i) for i in expr.args]
         f = lambda i: isinstance(i, Number) or i in Cs
-        if lhs.func is Symbol and lhs in Cs:
+        if isinstance(lhs, Symbol) and lhs in Cs:
             rhs, lhs = lhs, rhs
         if lhs.func in (Add, Symbol) and rhs.func in (Add, Symbol):
             dlhs = sift([lhs] if isinstance(lhs, AtomicExpr) else lhs.args, f)
@@ -2792,7 +2792,9 @@ def constantsimp(expr, constants):
         rexpr = rexpr[0]
         for s in commons:
             cs = list(s[1].atoms(Symbol))
-            if len(cs) == 1 and cs[0] in Cs:
+            if len(cs) == 1 and cs[0] in Cs and \
+                cs[0] not in rexpr.atoms(Symbol) and \
+                not any(cs[0] in ex for ex in commons if ex != s):
                 rexpr = rexpr.subs(s[0], cs[0])
             else:
                 rexpr = rexpr.subs(*s)
@@ -2809,10 +2811,10 @@ def constantsimp(expr, constants):
             infac = False
             asfac = False
             for m in new_expr.args:
-                if m.func is exp:
+                if isinstance(m, exp):
                     asfac = True
                 elif m.is_Add:
-                    infac = any(fi.func is exp for t in m.args
+                    infac = any(isinstance(fi, exp) for t in m.args
                         for fi in Mul.make_args(t))
                 if asfac and infac:
                     new_expr = expr
@@ -3539,12 +3541,12 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
     >>> sol = dsolve(genform, y)
     >>> pprint(sol, wrap_line=False)
-                                             /        __________________       \
-                       __________________    |       /                2        |
-                      /                2     |     \/  4*b*d - (a + c)  *log(x)|
-           -a - c + \/  4*b*d - (a + c)  *tan|C1 + ----------------------------|
-                                             \                 2*a             /
-    f(x) = ---------------------------------------------------------------------
+            /                                 /        __________________       \\
+            |           __________________    |       /                2        ||
+            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
+           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
+            \                                 \                 2*a             //
+    f(x) = ------------------------------------------------------------------------
                                             2*b*x
 
     >>> checkodesol(genform, sol, order=1)[0]
@@ -8203,7 +8205,8 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z).rhs
     except:
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z, hint='separable_Integral')
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
+
 
 def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     r"""
@@ -8267,7 +8270,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f]).rhs
     except:
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     r"""
@@ -8326,7 +8329,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     sol1 = dsolve(diff(u(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     r"""
@@ -8385,7 +8388,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     sol1 = dsolve(diff(u(t),t) - (c*w*F2 - b*v*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (a*u*F3 - c*w*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (b*v*F1 - a*u*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type5(x, y, t, eq):
     r"""
@@ -8435,4 +8438,4 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol1 = dsolve(diff(u(t),t) - (u*(c*F2-b*F3)).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]

@@ -322,10 +322,9 @@ def inverse_trig_rule(integral):
 
 def add_rule(integral):
     integrand, symbol = integral
-    return AddRule(
-        [integral_steps(g, symbol)
-         for g in integrand.as_ordered_terms()],
-        integrand, symbol)
+    results = [integral_steps(g, symbol)
+              for g in integrand.as_ordered_terms()]
+    return None if None in results else AddRule(results, integrand, symbol)
 
 def mul_rule(integral):
     integrand, symbol = integral
@@ -1220,7 +1219,7 @@ def manualintegrate(f, var):
     >>> manualintegrate(tan(x), x)
     -log(cos(x))
     >>> integrate(tan(x), x)
-    -log(sin(x)**2 - 1)/2
+    -log(cos(x))
 
     See Also
     ========

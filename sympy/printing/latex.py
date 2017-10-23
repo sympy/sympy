@@ -1597,14 +1597,15 @@ class LatexPrinter(Printer):
             return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
-        except Exception:
-            try:
-                return ('Domain: ' + self._print(d.symbols) + ' in ' +
-                        self._print(d.set))
-            except:
-                return 'Domain on ' + self._print(d.symbols)
+        elif hasattr(d, 'set'):
+            return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                    self._print(d.set))
+        elif hasattr(d, 'symbols'):
+            return 'Domain on ' + self._print(d.symbols)
+        else:
+            return self._print(None)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
@@ -1949,6 +1950,13 @@ class LatexPrinter(Printer):
     def _print_ModuleImplementedIdeal(self, m):
         return r"\left< %s \right>" % ",".join(
             '{' + self._print(x) + '}' for [x] in m._module.gens)
+
+    def _print_Quaternion(self, expr):
+        # TODO: This expression is potentially confusing,
+        # shall we print it as `Quaternion( ... )`?
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...

@@ -582,6 +582,12 @@ def test_Float_issue_2107():
     assert S.Zero + b + (-b) == 0
 
 
+def test_Float_from_tuple():
+    a = Float((0, '1L', 0, 1))
+    b = Float((0, '1', 0, 1))
+    assert a == b
+
+
 def test_Infinity():
     assert oo != 1
     assert 1*oo == oo
@@ -1749,3 +1755,29 @@ def test_Integer_precision():
     assert Float('1.0', precision=Integer(15))._prec == 15
     assert type(Float('1.0', precision=Integer(15))._prec) == int
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
+
+def test_numpy_to_float():
+    from sympy.utilities.pytest import skip
+    from sympy.external import import_module
+    np = import_module('numpy')
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
+
+    def check_prec_and_relerr(npval, ratval):
+        prec = np.finfo(npval).nmant
+        x = Float(npval)
+        assert x._prec == prec
+        y = Float(ratval, precision=prec)
+        assert abs((x - y)/y) < 2**(-(prec+1))
+
+    check_prec_and_relerr(np.float16(2)/3, S(2)/3)
+    check_prec_and_relerr(np.float32(2)/3, S(2)/3)
+    check_prec_and_relerr(np.float64(2)/3, S(2)/3)
+    # extended precision, on some arch/compilers:
+    x = np.longdouble(2)/3
+    check_prec_and_relerr(x, S(2)/3)
+    y = Float(x, precision=10)
+    assert same_and_same_prec(y, Float(S(2)/3, precision=10))
+
+    raises(TypeError, lambda: Float(np.complex64(1+2j)))
+    raises(TypeError, lambda: Float(np.complex128(1+2j)))

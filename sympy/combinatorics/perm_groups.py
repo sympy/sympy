@@ -1716,13 +1716,21 @@ class PermutationGroup(Basic):
 
         """
         if _random_prec is None:
+            if self._is_sym or self._is_alt:
+                return True
             n = self.degree
             if n < 8:
                 sym_order = 1
                 for i in range(2, n+1):
                     sym_order *= i
                 order = self.order()
-                return order == sym_order or 2*order == sym_order
+                if order == sym_order:
+                    self._is_sym = True
+                    return True
+                elif 2*order == sym_order:
+                    self._is_alt = True
+                    return True
+                return False
             if not self.is_transitive():
                 return False
             if n < 17:
@@ -1894,7 +1902,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> DihedralGroup(6).minimal_blocks()
-        [[0, 3, 0, 3, 0, 3], [0, 4, 2, 0, 4, 2]]
+        [[0, 1, 0, 1, 0, 1], [0, 1, 2, 0, 1, 2]]
         >>> G = PermutationGroup(Permutation(1,2,5))
         >>> G.minimal_blocks()
         False
@@ -2242,7 +2250,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.minimal_block([0, 5])
-        [0, 6, 2, 8, 4, 0, 6, 2, 8, 4]
+        [0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
         >>> D.minimal_block([0, 1])
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -2288,7 +2296,10 @@ class PermutationGroup(Basic):
             # force path compression to get the final state of the equivalence
             # relation
             self._union_find_rep(i, parents)
-        return parents
+
+        # rewrite result so that block representatives are minimal
+        new_reps = {}
+        return [new_reps.setdefault(r, i) for i, r in enumerate(parents)]
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.

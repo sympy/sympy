@@ -1018,6 +1018,10 @@ class PrettyPrinter(Printer):
         D.binding = prettyForm.OPEN
         return D
 
+    def _print_ITE(self, ite):
+        from sympy.functions.elementary.piecewise import Piecewise
+        return self._print(ite.rewrite(Piecewise))
+
     def _hprint_vec(self, v):
         D = None
 
@@ -1652,7 +1656,7 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
-    def _print_AccumuBounds(self, i):
+    def _print_AccumulationBounds(self, i):
         left = '<'
         right = '>'
 
@@ -1846,13 +1850,22 @@ class PrettyPrinter(Printer):
         return self._print_dict(d)
 
     def _print_set(self, s):
+        if not s:
+            return prettyForm('set()')
         items = sorted(s, key=default_sort_key)
-        pretty = self._print_seq(items, '[', ']')
+        pretty = self._print_seq(items)
+        pretty = prettyForm(*pretty.parens('{', '}', ifascii_nougly=True))
+        return pretty
+
+    def _print_frozenset(self, s):
+        if not s:
+            return prettyForm('frozenset()')
+        items = sorted(s, key=default_sort_key)
+        pretty = self._print_seq(items)
+        pretty = prettyForm(*pretty.parens('{', '}', ifascii_nougly=True))
         pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
-
-    _print_frozenset = _print_set
 
     def _print_PolyRing(self, ring):
         return prettyForm(sstr(ring))
@@ -2043,20 +2056,22 @@ class PrettyPrinter(Printer):
         return prettyForm(binding=prettyForm.POW, *bot.below(top))
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             pform = self._print('Domain: ')
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
-
-        except Exception:
-            try:
-                pform = self._print('Domain: ')
-                pform = prettyForm(*pform.right(self._print(d.symbols)))
-                pform = prettyForm(*pform.right(self._print(' in ')))
-                pform = prettyForm(*pform.right(self._print(d.set)))
-                return pform
-            except:
-                return self._print(None)
+        elif hasattr(d, 'set'):
+            pform = self._print('Domain: ')
+            pform = prettyForm(*pform.right(self._print(d.symbols)))
+            pform = prettyForm(*pform.right(self._print(' in ')))
+            pform = prettyForm(*pform.right(self._print(d.set)))
+            return pform
+        elif hasattr(d, 'symbols'):
+            pform = self._print('Domain on ')
+            pform = prettyForm(*pform.right(self._print(d.symbols)))
+            return pform
+        else:
+            return self._print(None)
 
     def _print_DMP(self, p):
         try:

@@ -7,7 +7,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate)
+                   integrate, gammasimp)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1226,6 +1226,7 @@ def test_action_verbs():
         (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)
     assert combsimp(y/(x + 2)/(x + 1)) == (y/(x + 2)/(x + 1)).combsimp()
+    assert gammasimp(gamma(x)/gamma(x-5)) == (gamma(x)/gamma(x-5)).gammasimp()
     assert factor(x**2 + 5*x + 6) == (x**2 + 5*x + 6).factor()
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
     assert cancel((x**2 + 5*x + 6)/(x + 2)) == ((x**2 + 5*x + 6)/(x + 2)).cancel()
@@ -1243,6 +1244,8 @@ def test_as_coefficients_dict():
     check = [S(1), x, y, x*y, 1]
     assert [Add(3*x, 2*x, y, 3).as_coefficients_dict()[i] for i in check] == \
         [3, 5, 1, 0, 3]
+    assert [Add(3*x, 2*x, y, 3, evaluate=False).as_coefficients_dict()[i]
+            for i in check] == [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
     assert [(3.0*x*y).as_coefficients_dict()[i] for i in check] == \

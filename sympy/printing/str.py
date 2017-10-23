@@ -120,14 +120,13 @@ class StrPrinter(Printer):
 
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
-        except Exception:
-            try:
-                return ('Domain: ' + self._print(d.symbols) + ' in ' +
-                        self._print(d.set))
-            except:
-                return 'Domain on ' + self._print(d.symbols)
+        elif hasattr(d, 'set'):
+            return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                    self._print(d.set))
+        else:
+            return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr):
         return '_' + expr.name
@@ -194,11 +193,7 @@ class StrPrinter(Printer):
         return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
-        left = '<'
-        right = '>'
-
-        return "%s%s, %s%s" % \
-                (left, self._print(i.min), self._print(i.max), right)
+        return "AccumBounds(%s, %s)" % (self._print(i.min), self._print(i.max))
 
     def _print_Inverse(self, I):
         return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
@@ -712,6 +707,11 @@ class StrPrinter(Printer):
 
     def _print_Quantity(self, expr):
         return "%s" % expr.name
+
+    def _print_Quaternion(self, expr):
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_Dimension(self, expr):
         return str(expr)

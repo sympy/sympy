@@ -187,6 +187,19 @@ def test_pow3():
     assert sqrt(2)**3 == sqrt(8)
 
 
+def test_mod_pow():
+    for s, t, u, v in [(4, 13, 497, 445), (4, -3, 497, 365),
+            (3.2, 2.1, 1.9, 0.1031015682350942), (S(3)/2, 5, S(5)/6, S(3)/32)]:
+        assert pow(S(s), t, u) == v
+        assert pow(S(s), S(t), u) == v
+        assert pow(S(s), t, S(u)) == v
+        assert pow(S(s), S(t), S(u)) == v
+    assert pow(S(2), S(10000000000), S(3)) == 1
+    assert pow(x, y, z) == x**y%z
+    raises(TypeError, lambda: pow(S(4), "13", 497))
+    raises(TypeError, lambda: pow(S(4), 13, "497"))
+
+
 def test_pow_E():
     assert 2**(y/log(2)) == S.Exp1**y
     assert 2**(y/log(2)/3) == S.Exp1**(y/3)
@@ -1622,6 +1635,7 @@ def test_Mod():
 
     # modular exponentiation
     assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
+    assert Mod(Pow(2, 10000000000, evaluate=False), 3) == 1
 
     # Wilson's theorem
     factorial(18042, evaluate=False) % 18043 == 18042
@@ -1747,6 +1761,9 @@ def test_add_flatten():
     assert a + b == nan
     assert a - b == nan
     assert (1/a).simplify() == (1/b).simplify() == 0
+
+    a = Pow(2, 3, evaluate=False)
+    assert a + a == 16
 
 
 def test_issue_5160_6087_6089_6090():

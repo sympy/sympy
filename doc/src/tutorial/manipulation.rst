@@ -191,7 +191,6 @@ One level up, we see we have ``Mul(-1, Pow(x, 2))``.  There is no subtraction
 class in SymPy.  ``x - y`` is represented as ``x + -y``, or, more completely,
 ``x + -1*y``, i.e., ``Add(x, Mul(-1, y))``.
 
-    >>> expr = x - y
     >>> srepr(x - y)
     "Add(Symbol('x'), Mul(Integer(-1), Symbol('y')))"
 

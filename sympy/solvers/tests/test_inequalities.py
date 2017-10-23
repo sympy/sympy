@@ -110,10 +110,10 @@ def test_reduce_poly_inequalities_complex_relational():
         [[Ge(x**2, 0)]], x, relational=True) == And(Lt(-oo, x), Lt(x, oo))
     assert reduce_rational_inequalities(
         [[Gt(x**2, 0)]], x, relational=True) == \
-        And(Or(And(Lt(-oo, x), Lt(x, 0)), And(Lt(0, x), Lt(x, oo))))
+        And(Gt(x, -oo), Lt(x, oo), Ne(x, 0))
     assert reduce_rational_inequalities(
         [[Ne(x**2, 0)]], x, relational=True) == \
-        And(Or(And(Lt(-oo, x), Lt(x, 0)), And(Lt(0, x), Lt(x, oo))))
+        And(Gt(x, -oo), Lt(x, oo), Ne(x, 0))
 
     for one in (S(1), S(1.0)):
         inf = one*oo
@@ -275,6 +275,11 @@ def test_solve_univariate_inequality():
     # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
+    #issue 13105
+    assert isolve((x + I)*(x + 2*I) < 0, x) == Eq(x, 0)
+    assert isolve(((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I) < 0, x) == Or(Eq(x, 1), Eq(x, 2))
+    assert isolve((((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I))/(x - 2) > 0, x) == Eq(x, 1)
+    raises (ValueError, lambda: isolve((x**2 - 3*x*I + 2)/x < 0, x))
 
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
@@ -304,6 +309,10 @@ def test_solve_univariate_inequality():
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
     raises(TypeError, lambda: isolve(x - I < 0, x))
+
+    # make sure iter_solutions gets a default value
+    raises(NotImplementedError, lambda: isolve(
+        Eq(cos(x)**2 + sin(x)**2, 1), x))
 
 
 def test_trig_inequalities():

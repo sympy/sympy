@@ -369,7 +369,7 @@ class CoordSys3D(Basic):
             if curv_coord_name == 'spherical':
                 return lambda r, theta, phi: (S.One, r, r*sin(theta))
             if curv_coord_name == 'cylindrical':
-                return lambda r, theta, h: (S.One, theta, S.One)
+                return lambda r, theta, h: (S.One, r, S.One)
             raise ValueError('Wrong set of parameters.'
                              ' Type of coordinate system is not defined')
         return CoordSys3D._calculate_lame_coefficients(curv_coord_name)

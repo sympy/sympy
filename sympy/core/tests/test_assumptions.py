@@ -148,6 +148,13 @@ def test_neg_infinity():
     assert mm.is_number is True
 
 
+def test_zoo():
+    zoo = S.ComplexInfinity
+    assert zoo.is_complex
+    assert zoo.is_real is False
+    assert zoo.is_prime is False
+
+
 def test_nan():
     nan = S.NaN
 

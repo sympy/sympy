@@ -206,9 +206,6 @@ class MpmathPrinter(PythonCodePrinter):
         [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
     ))
 
-    def _print_Integer(self, e):
-        return '%s(%d)' % (self._module_format('mpmath.mpf'), e)
-
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
         # the caller of the lambdified function will have set it to sufficient
@@ -324,14 +321,14 @@ class NumPyPrinter(PythonCodePrinter):
         # We have to override LambdaPrinter because it uses Python 'and' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format(self._module_format('numpy.logical_and'), ','.join(self._print(i) for i in expr.args))
+        return '{0}.reduce(({1}))'.format(self._module_format('numpy.logical_and'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Or(self, expr):
         "Logical Or printer"
         # We have to override LambdaPrinter because it uses Python 'or' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format(self._module_format('numpy.logical_or'), ','.join(self._print(i) for i in expr.args))
+        return '{0}.reduce(({1}))'.format(self._module_format('numpy.logical_or'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Not(self, expr):
         "Logical Not printer"

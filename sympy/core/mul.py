@@ -1358,7 +1358,7 @@ class Mul(Expr, AssocOp):
             # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
             from sympy import exp
-            if a.is_Pow or a.func is exp:
+            if a.is_Pow or isinstance(a, exp):
                 return a.as_base_exp()
             return a, S.One
 

@@ -3,6 +3,7 @@ from sympy import (
     cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
     Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise)
 
+from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
@@ -276,6 +277,10 @@ def test_hyperbolic_simp():
     assert trigsimp(y*tanh(x)**2/sinh(x)**2) == y/cosh(x)**2
     assert trigsimp(coth(x)/cosh(x)) == 1/sinh(x)
 
+    for a in (pi/6*I, pi/4*I, pi/3*I):
+        assert trigsimp(sinh(a)*cosh(x) + cosh(a)*sinh(x)) == sinh(x + a)
+        assert trigsimp(-sinh(a)*cosh(x) + cosh(a)*sinh(x)) == sinh(x - a)
+
     e = 2*cosh(x)**2 - 2*sinh(x)**2
     assert trigsimp(log(e)) == log(2)
 
@@ -324,6 +329,7 @@ def test_trigsimp_groebner():
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) in results
+    assert trigsimp_groebner(ex, hints=[long(2)]) in results
 
     # test "I"
     assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)

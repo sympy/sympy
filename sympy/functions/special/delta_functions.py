@@ -363,7 +363,8 @@ class DiracDelta(Function):
             # I dont know how to handle the case for DiracDelta expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
+                rewrite(SingularityFunction) doesn't support
+                arguments with more that 1 variable.'''))
 
 
     @staticmethod
@@ -608,7 +609,8 @@ class Heaviside(Function):
             # I dont know how to handle the case for Heaviside expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
+                rewrite(SingularityFunction) doesn't
+                support arguments with more that 1 variable.'''))
 
     def _sage_(self):
         import sage.all as sage
