@@ -55,6 +55,13 @@ def test_basic1():
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
+    # test bi-directional limits
+    assert limit(sin(x)/x, x, 0, dir="+-") == 1
+    assert limit(x**2, x, 0, dir="+-") == 0
+    assert limit(1/x**2, x, 0, dir="+-") == oo
+
+    # test failing bi-directional limits
+    raises(ValueError, lambda: limit(1/x, x, 0, dir="+-"))
     # approaching 0
     # from dir="+"
     assert limit(1 + 1/x, x, 0) == oo

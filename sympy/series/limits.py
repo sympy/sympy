@@ -16,14 +16,16 @@ from sympy.simplify.simplify import together
 
 def limit(e, z, z0, dir="+"):
     """
-    Compute the limit of e(z) at the point z0.
+    Compute the limit of ``e(z)`` at the point ``z0``.
 
-    z0 can be any expression, including oo and -oo.
+    ``z0`` can be any expression, including ``oo`` and ``-oo``.
 
-    For dir="+" (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-).  For infinite
-    z0 (oo or -oo), the dir argument is determined from the direction
-    of the infinity (i.e., dir="-" for oo).
+    For ``dir="+-"`` it calculates the bi-directional limit; for
+    ``dir="+"`` (default) it calculates the limit from the right
+    (z->z0+) and for dir="-" the limit from the left (z->z0-).
+    For infinite ``z0`` (``oo`` or ``-oo``), the ``dir`` argument is
+    determined from the direction of the infinity (i.e.,
+    ``dir="-"`` for ``oo``).
 
     Examples
     ========
@@ -32,10 +34,15 @@ def limit(e, z, z0, dir="+"):
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
     1
-    >>> limit(1/x, x, 0, dir="+")
+    >>> limit(1/x, x, 0) # default dir='+'
     oo
     >>> limit(1/x, x, 0, dir="-")
     -oo
+    >>> limit(1/x, x, 0, dir='+-')
+    Traceback (most recent call last):
+        ...
+    ValueError: The limit does not exist since left hand limit = -oo and right hand limit = oo
+
     >>> limit(1/x, x, oo)
     0
 
@@ -47,7 +54,17 @@ def limit(e, z, z0, dir="+"):
     Gruntz algorithm (see the gruntz() function).
     """
 
-    return Limit(e, z, z0, dir).doit(deep=False)
+    if dir == "+-":
+        llim = Limit(e, z, z0, dir="-").doit(deep=False)
+        rlim = Limit(e, z, z0, dir="+").doit(deep=False)
+        if llim == rlim:
+            return rlim
+        else:
+            raise ValueError("The limit does not exist since "
+                    "left hand limit = %s and right hand limit = %s"
+                    % (llim, rlim))
+    else:
+        return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):
