@@ -447,7 +447,7 @@ def opt_cse(exprs, order='canonical'):
     # split muls into commutative
     commutative_muls = OrderedSet()
     for m in muls:
-        c, nc = m.args_cnc(cset=True)
+        c, nc = m.args_cnc(cset=True, warn=False)
         if c:
             c_mul = m.func(*c)
             if nc:
