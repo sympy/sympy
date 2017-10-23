@@ -129,6 +129,23 @@ class MatMul(MatrixExpr):
 
         return coeff_c, coeff_nc + matrices
 
+    def to_index_summation(self, first_index, last_index):
+        from sympy import Dummy, Sum, Mul
+        args_mat = [arg for arg in self.args if isinstance(arg, MatrixExpr)]
+        args_nonmat = [arg for arg in self.args if not isinstance(arg, MatrixExpr)]
+        indices = [None]*(len(args_mat) + 1)
+        ind_ranges = [None]*(len(args_mat) - 1)
+        indices[0] = first_index
+        indices[-1] = last_index
+        for i in range(1, len(args_mat)):
+            indices[i] = Dummy("i_%i" % i)
+        for i, arg in enumerate(args_mat[:-1]):
+            ind_ranges[i] = arg.shape[1]
+        args_mat = [arg[indices[i], indices[i+1]] for i, arg in enumerate(args_mat)]
+        return Mul.fromiter(args_nonmat)*\
+            Sum(Mul.fromiter(args_mat), *zip(indices[1:-1], [0]*len(ind_ranges), ind_ranges))
+
+
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):

@@ -1,5 +1,5 @@
-from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix,
-        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
+from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, Symbol,
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy)
 from sympy.utilities.pytest import raises
 
 k, l, m, n = symbols('k l m n', integer=True)
@@ -79,3 +79,24 @@ def test_slicing():
 def test_errors():
     raises(IndexError, lambda: Identity(2)[1, 2, 3, 4, 5])
     raises(IndexError, lambda: Identity(2)[[1, 2, 3, 4, 5]])
+
+
+def test_matrix_expression_to_indices():
+    i, j = symbols("i, j")
+    i1, i2, i3 = symbols("i_1:4")
+
+    def replace_dummies(expr):
+        repl = {i: Symbol(i.name) for i in expr.atoms(Dummy)}
+        return expr.xreplace(repl)
+
+    expr = W*X*Z
+    assert replace_dummies(expr.to_index_summation(i, j)) == \
+        Sum(W[i, i1]*X[i1, i2]*Z[i2, j], (i1, 0, l), (i2, 0, m))
+    expr = Z.T*X.T*W.T
+    assert replace_dummies(expr.to_index_summation(i, j)) == \
+        Sum(W[j, i2]*X[i2, i1]*Z[i1, i], (i1, 0, m), (i2, 0, l))
+
+    expr = W*X*Z + W*Y*Z
+    assert replace_dummies(expr.to_index_summation(i, j)) == \
+        Sum(W[i, i1]*X[i1, i2]*Z[i2, j], (i1, 0, l), (i2, 0, m)) +\
+        Sum(W[i, i1]*Y[i1, i2]*Z[i2, j], (i1, 0, l), (i2, 0, m))

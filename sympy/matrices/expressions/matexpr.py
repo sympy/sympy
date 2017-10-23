@@ -348,6 +348,9 @@ class MatrixExpr(Basic):
     def as_coeff_mmul(self):
         return 1, MatMul(self)
 
+    def to_index_summation(self, first_index, last_index):
+        raise NotImplementedError("abstract method")
+
 
 class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])

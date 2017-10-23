@@ -61,6 +61,10 @@ class MatAdd(MatrixExpr, AssocOp):
             args = self.args
         return canonicalize(MatAdd(*args))
 
+    def to_index_summation(self, first_index, last_index):
+        return Add.fromiter(i.to_index_summation(first_index, last_index) for i in self.args)
+
+
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
