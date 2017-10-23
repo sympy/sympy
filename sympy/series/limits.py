@@ -135,10 +135,11 @@ class Limit(Expr):
         if isinstance(dir, string_types):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
-            raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))
-        if str(dir) not in ('+', '-'):
+            raise TypeError("direction must be of type basestring or "
+                    "Symbol, not %s" % type(dir))
+        if str(dir) not in ('+', '-', '+-'):
             raise ValueError(
-                "direction must be either '+' or '-', not %s" % dir)
+                "direction must be either '+' or '-' or '+-', not %s" % dir)
 
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
