@@ -411,9 +411,9 @@ class Integral(AddWithLimits):
                 raise NotImplementedError
             xab = self.limits[0]
             if len(xab) > 1:
-                return function.integrate(xab)
+                return function.integrate(xab, **eval_kwargs)
             else:
-                return function.integrate(xab[0])
+                return function.integrate(xab[0], **eval_kwargs)
 
         # There is no trivial answer and special handling
         # is done so continue
@@ -446,8 +446,7 @@ class Integral(AddWithLimits):
             if isinstance(function, Piecewise):
                 # TODO pass along eval_kwargs
                 if len(xab) == 1:
-                    antideriv = function._eval_integral(xab[0]
-                        )
+                    antideriv = function._eval_integral(xab[0])
                 else:
                     antideriv = self._eval_integral(
                         function, xab[0])
