@@ -23,9 +23,9 @@ def parse(s):
         lambda m: parse(m.group(1)) + translateFunction(
             m.group(2)) + parse(m.group(3))),
 
-        (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z",  # Function call
-        lambda m: translateFunction(
-            m.group(1)) + "(" + parse(m.group(2)) + ")"),
+        (r"\A([+-]?)(\w+)\[([^\]]+[^\[]*)\]\Z",  # Function call
+        lambda m: m.group(1) + translateFunction(
+            m.group(2)) + "(" + parse(m.group(3)) + ")"),
 
         (r"\((.+)\)\((.+)\)",  # Parenthesized implied multiplication
         lambda m: "(" + parse(m.group(1)) + ")*(" + parse(m.group(2)) + ")"),
