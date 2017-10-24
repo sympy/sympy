@@ -1070,6 +1070,10 @@ class Line(LinearEntity):
             return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
         return False
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> cfe65369ef183d5e7f94b707939011e6659568c0
     def parameter_value(self, other):
         """
         Finds the parameter ``t`` for which
@@ -1086,6 +1090,7 @@ class Line(LinearEntity):
 
         Notes
         =====
+<<<<<<< HEAD
 
         Do not confuse this function with function ``parameter`` 
         in sympy/geometry/curve.py
@@ -1093,6 +1098,13 @@ class Line(LinearEntity):
         Examples
         ========
 
+=======
+            Do not confuse this function with function ``parameter`` 
+            in sympy/geometry/curve.py
+            
+        Examples
+        ========
+>>>>>>> cfe65369ef183d5e7f94b707939011e6659568c0
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 1), Point(2, 3), Point(4, 5)
         >>> l = Line(p1, p2)
