@@ -243,7 +243,8 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                     (numer, denom), gen)
             except PolynomialError:
                 raise PolynomialError(filldedent('''
-only polynomials and rational functions are supported in this context.
+                    only polynomials and rational functions are
+                    supported in this context.
                     '''))
 
             if not opt.domain.is_Exact:
@@ -263,8 +264,11 @@ only polynomials and rational functions are supported in this context.
 
     if eqs:
         solution &= solve_rational_inequalities(eqs)
+        exclude = solve_rational_inequalities([[((d, Poly(S.One, gen)), '==')
+            for i in eqs for ((n, d), _) in i if d.has(gen)]])
+        solution -= exclude
 
-    if not exact:
+    if not exact and solution:
         solution = solution.evalf()
 
     if relational:
@@ -296,8 +300,8 @@ def reduce_abs_inequality(expr, rel, gen):
     """
     if gen.is_real is False:
          raise TypeError(filldedent('''
-can't solve inequalities with absolute values containing non-real
-variables.
+            can't solve inequalities with absolute values containing
+            non-real variables.
             '''))
 
     def _bottom_up_scan(expr):
@@ -460,9 +464,9 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             expr = expr.xreplace({_gen: gen})
         except TypeError:
             raise TypeError(filldedent('''
-When gen is real, the relational has a complex part
-which leads to an invalid comparison like I < 0.
-            '''))
+                When gen is real, the relational has a complex part
+                which leads to an invalid comparison like I < 0.
+                '''))
 
     rv = None
 
@@ -475,7 +479,14 @@ which leads to an invalid comparison like I < 0.
     else:
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
-        if period is not None:
+        if period is S.Zero:
+            e = expand_mul(e)
+            const = expr.func(e, 0)
+            if const is S.true:
+                rv = domain
+            elif const is S.false:
+                rv = S.EmptySet
+        elif period is not None:
             frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
@@ -507,9 +518,12 @@ which leads to an invalid comparison like I < 0.
                     # in which case we raise ValueError
                     raise ValueError
             except (ValueError, NotImplementedError):
+                # replace gen with generic x since it's
+                # univariate anyway
                 raise NotImplementedError(filldedent('''
-The inequality cannot be solved using solve_univariate_inequality.
-                        '''))
+                    The inequality, %s, cannot be solved using
+                    solve_univariate_inequality.
+                    ''' % expr.subs(gen, Symbol('x'))))
 
             expanded_e = expand_mul(e)
             def valid(x):
@@ -543,7 +557,7 @@ The inequality cannot be solved using solve_univariate_inequality.
             for d in denoms(expr, gen):
                 singularities.extend(solvify(d, gen, domain))
             if not continuous:
-                domain = continuous_domain(e, gen, domain)
+                domain = continuous_domain(expanded_e, gen, domain)
 
             include_x = '=' in expr.rel_op and expr.rel_op != '!='
 
@@ -573,8 +587,8 @@ The inequality cannot be solved using solve_univariate_inequality.
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 
-            #If expr contains imaginary coefficients
-            #Only real values of x for which the imaginary part is 0 are taken
+            # If expr contains imaginary coefficients, only take real
+            # values of x for which the imaginary part is 0
             make_real = S.Reals
             if im(expanded_e) != S.Zero:
                 check = True
@@ -610,9 +624,10 @@ The inequality cannot be solved using solve_univariate_inequality.
 
                 if isinstance(im_sol, EmptySet):
                     raise ValueError(filldedent('''
-%s contains imaginary parts which cannot be made 0 for any value of %s
-satisfying the inequality, leading to relations like I < 0.
-                '''  % (expr.subs(gen, _gen), _gen)))
+                        %s contains imaginary parts which cannot be
+                        made 0 for any value of %s satisfying the
+                        inequality, leading to relations like I < 0.
+                        '''  % (expr.subs(gen, _gen), _gen)))
 
                 make_real = make_real.intersect(im_sol)
 
@@ -770,8 +785,24 @@ def _solve_inequality(ie, s, linear=False):
         ie = ie.reversed
     if ie.lhs == s and s not in ie.rhs.free_symbols:
         return ie
-    expr = ie.lhs - ie.rhs
+
+    def classify(ie, s, i):
+        # return True or False if ie evaluates when substituting s with
+        # i else None (if unevaluated) or NaN (when there is an error
+        # in evaluating)
+        try:
+            v = ie.subs(s, i)
+            if v is S.NaN:
+                return v
+            elif v not in (True, False):
+                return
+            return v
+        except TypeError:
+            return S.NaN
+
     rv = None
+    oo = S.Infinity
+    expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)
         if p.degree() == 0:
@@ -782,14 +813,29 @@ def _solve_inequality(ie, s, linear=False):
     except (PolynomialError, NotImplementedError):
         if not linear:
             try:
-                return reduce_rational_inequalities([[ie]], s)
+                rv = reduce_rational_inequalities([[ie]], s)
             except PolynomialError:
-                return solve_univariate_inequality(ie, s)
+                rv = solve_univariate_inequality(ie, s)
+            # remove restrictions wrt +/-oo that may have been
+            # applied when using sets to simplify the relationship
+            okoo = classify(ie, s, oo)
+            if okoo is S.true and classify(rv, s, oo) is S.false:
+                rv = rv.subs(s < oo, True)
+            oknoo = classify(ie, s, -oo)
+            if (oknoo is S.true and
+                    classify(rv, s, -oo) is S.false):
+                rv = rv.subs(-oo < s, True)
+                rv = rv.subs(s > -oo, True)
+            if rv is S.true:
+                rv = (s <= oo) if okoo is S.true else (s < oo)
+                if oknoo is not S.true:
+                    rv = And(-oo < s, rv)
         else:
             p = Poly(expr)
 
-    e = expanded = p.as_expr()  # this is in exanded form
+    conds = []
     if rv is None:
+        e = p.as_expr()  # this is in expanded form
         # Do a safe inversion of e, moving non-s terms
         # to the rhs and dividing by a nonzero factor if
         # the relational is Eq/Ne; for other relationals
@@ -811,15 +857,24 @@ def _solve_inequality(ie, s, linear=False):
             rv = ie.func(e, rhs)
         else:
             rv = ie.reversed.func(e, rhs)
-    # return conditions under which the value is
-    # valid, too.
-    conds = [rv]
-    beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
-    current_denoms = denoms(expanded)
-    for d in beginning_denoms - current_denoms:
-        conds.append(_solve_inequality(Ne(d, 0), s, linear=linear))
-    return And(*conds)
 
+        # return conditions under which the value is
+        # valid, too.
+        beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
+        current_denoms = denoms(rv)
+        for d in beginning_denoms - current_denoms:
+            c = _solve_inequality(Eq(d, 0), s, linear=linear)
+            if isinstance(c, Eq) and c.lhs == s:
+                if classify(rv, s, c.rhs) is S.true:
+                    # rv is permitting this value but it shouldn't
+                    conds.append(~c)
+        for i in (-oo, oo):
+            if (classify(rv, s, i) is S.true and
+                    classify(ie, s, i) is not S.true):
+                conds.append(s < i if i is oo else i < s)
+
+    conds.append(rv)
+    return And(*conds)
 
 def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities
@@ -846,7 +901,7 @@ def _reduce_inequalities(inequalities, symbols):
                 continue
             else:
                 raise NotImplementedError(filldedent('''
-inequality has more than one symbol of interest.
+                    inequality has more than one symbol of interest.
                     '''))
 
         if expr.is_polynomial(gen):
@@ -886,7 +941,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     (-3 <= x) & (x < oo)
 
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
-    x >= -2*y + 1
+    (x < oo) & (x >= -2*y + 1)
     """
     if not iterable(inequalities):
         inequalities = [inequalities]
@@ -899,7 +954,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     symbols = (set(symbols) or gens) & gens
     if any(i.is_real is False for i in symbols):
         raise TypeError(filldedent('''
-inequalities cannot contain symbols that are not real.
+            inequalities cannot contain symbols that are not real.
             '''))
 
     # make vanilla symbol real
