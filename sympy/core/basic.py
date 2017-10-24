@@ -318,11 +318,6 @@ class Basic(with_metaclass(ManagedProperties)):
             return True
 
         if type(self) is not type(other):
-            # issue 6100 a**1.0 == a like a**2.0 == a**2
-            if isinstance(self, Pow) and self.exp == 1:
-                return self.base == other
-            if isinstance(other, Pow) and other.exp == 1:
-                return self == other.base
             try:
                 other = _sympify(other)
             except SympifyError:
