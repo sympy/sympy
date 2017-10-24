@@ -334,7 +334,7 @@ def test_subs_noncommutative():
     assert (x**(3*someint + 3)).subs(x**someint, L) == L**3*x**3
     assert (x**(3*someint)).subs(x**(2*someint), L) == L * x**someint
     assert (x**(4*someint)).subs(x**(2*someint), L) == L**2
-    assert (x**(4*someint + 1)).subs(x**(2*someint), L) == L**2 * x**1.0
+    assert (x**(4*someint + 1)).subs(x**(2*someint), L) == L**2 * x
     assert (x**(4*someint)).subs(x**(3*someint), L) == L * x**someint
     assert (x**(4*someint + 1)).subs(x**(3*someint), L) == L * x**(someint + 1)
 

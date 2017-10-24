@@ -675,7 +675,8 @@ class Pow(Expr):
                         return
                     o_al.append(newa)
                 if new_l:
-                    new_l.append(Pow(self.base, Add(*o_al), evaluate=False))
+                    expo = Add(*o_al)
+                    new_l.append(Pow(self.base, expo, evaluate=False) if expo != 1 else self.base)
                     return Mul(*new_l)
 
         if isinstance(old, exp) and self.exp.is_real and self.base.is_positive:
