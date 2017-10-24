@@ -19,6 +19,7 @@ from sympy.core.compatibility import (
     SYMPY_INTS, int_info)
 import mpmath
 import mpmath.libmp as mlib
+from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
 from mpmath.libmp.libmpf import (
@@ -29,7 +30,6 @@ from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from mpmath.libmp.backend import MPZ
 
 rnd = mlib.round_nearest
 
@@ -1048,7 +1048,7 @@ class Float(Number):
                 # of a shim for int on Python 3, see issue #13470.
                 if num[1].endswith('L'):
                     num[1] = num[1][:-1]
-                num[1] = long(num[1], 16)
+                num[1] = MPZ(num[1], 16)
                 _mpf_ = tuple(num)
             else:
                 if len(num) == 4:

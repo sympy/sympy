@@ -103,6 +103,12 @@ def test_core_numbers():
         check(c)
 
 
+def test_core_float_copy():
+    # See gh-7457
+    y = Symbol("x") + 1.0
+    check(y)  # does not raise TypeError ("argument is not an mpz")
+
+
 def test_core_relational():
     x = Symbol("x")
     y = Symbol("y")
