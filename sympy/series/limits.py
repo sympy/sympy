@@ -60,6 +60,7 @@ def limit(e, z, z0, dir="+"):
         if llim == rlim:
             return rlim
         else:
+            # TODO: choose a better error?
             raise ValueError("The limit does not exist since "
                     "left hand limit = %s and right hand limit = %s"
                     % (llim, rlim))
@@ -138,8 +139,8 @@ class Limit(Expr):
             raise TypeError("direction must be of type basestring or "
                     "Symbol, not %s" % type(dir))
         if str(dir) not in ('+', '-', '+-'):
-            raise ValueError(
-                "direction must be either '+' or '-' or '+-', not %s" % dir)
+            raise ValueError("direction must be one of '+', '-' "
+                    "or '+-', not %s" % dir)
 
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
