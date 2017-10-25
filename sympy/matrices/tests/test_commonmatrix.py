@@ -531,6 +531,8 @@ def test_subs():
            Matrix([[-1, 2], [-3, 4]])
     assert OperationsOnlyMatrix([[x*y]]).subs({x: y - 1, y: x - 1}, simultaneous=True) == \
            Matrix([[(x - 1)*(y - 1)]])
+    assert OperationsOnlyMatrix([[x, y], [y, z]]).subs(zip((x, y), (z, z))) == \
+           Matrix([[z, z], [z, z]])
 
 
 def test_trace():
