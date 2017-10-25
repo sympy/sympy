@@ -1097,7 +1097,7 @@ class Line(LinearEntity):
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 1), Point(2, 3), Point(4, 5)
         >>> l = Line(p1, p2)
-        >>> l.parameter(p3)
+        >>> l.parameter_value(p3)
         2
         """
         if isinstance(other, Point):
