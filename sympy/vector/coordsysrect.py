@@ -1048,9 +1048,6 @@ def _check_strings(arg_name, arg):
     errorstr = arg_name + " must be an iterable of 3 string-types"
     if len(arg) != 3:
         raise ValueError(errorstr)
-    try:
-        for s in arg:
-            if not isinstance(s, string_types):
-                raise TypeError(errorstr)
-    except:
-        raise TypeError(errorstr)
+    for s in arg:
+        if not isinstance(s, string_types):
+            raise TypeError(errorstr)
