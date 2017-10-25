@@ -18,7 +18,8 @@ Segment3D
 """
 from __future__ import division, print_function
 
-from sympy.core import S, sympify
+from sympy.core import S, sympify, Dummy
+from sympy.solvers import solveset
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
@@ -1086,8 +1087,9 @@ class Line(LinearEntity):
 
         Notes
         =====
-        Do not confuse this function with function ``parameter`` 
-        in sympy/geometry/curve.py
+
+        Do not confuse this function with function ``parameter`` in
+        sympy/geometry/curve.py .
 
         Examples
         ========
@@ -1100,7 +1102,7 @@ class Line(LinearEntity):
         """
         if isinstance(other, Point):
             if Point.is_collinear(self.p1, self.p2, other):
-                t = Dummy('t')
+                t = Dummy("t")
                 x, y = self.arbitrary_point(t).args
                 if self.p1.x != self.p2.x:
                     ti = list(solveset(x - other.x, t))[0]

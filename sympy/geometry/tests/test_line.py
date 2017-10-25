@@ -285,7 +285,7 @@ def test_contains():
         assert r3.contains(Point(1.0, 1.0)) is False
         assert len(w) == 1
 
-        
+
 def test_parameter_value():
     p1, p2, p3 = Point(0, 1), Point(2, 3), Point(3, 4)
     l = Line(p1, p2)
