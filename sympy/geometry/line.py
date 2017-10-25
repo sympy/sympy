@@ -1086,8 +1086,8 @@ class Line(LinearEntity):
 
         Notes
         =====
-            Do not confuse this function with function ``parameter`` 
-            in sympy/geometry/curve.py
+        Do not confuse this function with function ``parameter`` 
+        in sympy/geometry/curve.py
 
         Examples
         ========
