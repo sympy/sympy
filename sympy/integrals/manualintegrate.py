@@ -742,12 +742,12 @@ def trig_substitution_rule(integral):
     A = sympy.Wild('a', exclude=[0, symbol])
     B = sympy.Wild('b', exclude=[0, symbol])
     theta = sympy.Dummy("theta")
-
+    a, b = A, B
     matches = integrand.find(A + B*symbol**2)
     if matches:
         for expr in matches:
             match = expr.match(A + B*symbol**2) or {}
-            a, b = [match.get(i, ZERO) for i in (A, B)]
+            a, b = [match.get(i, ZERO) for i in (a, b)]  # XXX should be A, B
             a_positive = a.is_positive
             b_positive = b.is_positive
 
