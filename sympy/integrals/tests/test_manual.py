@@ -235,7 +235,7 @@ def test_manual_true():
         [sin(x) ** 2 / 2, -cos(x)**2 / 2]
 
 
-def test_manualintegrate_powers():
+def test_issue_6746():
     y = Symbol('y')
     n = Symbol('n')
     assert manualintegrate(y**x, x) == \
@@ -261,16 +261,20 @@ def test_manualintegrate_powers():
     assert manualintegrate((y + 1)**(n*x), x) == \
         (y + 1)**(n*x)/(n*log(y + 1))
     a = Symbol('a', negative=True)
-    b = Symbol('b', negative=True)
-    assert manualintegrate(1/((x**a + y**b + 4)*sqrt(a*x**2 + 1)), x) == \
-        Integral(1/(sqrt(a*x**2 + 1)*(x**a + y**b + 4)), x)
-    assert manualintegrate(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x) == \
-        Integral(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x)
-    assert manualintegrate(1 / (a + b*x**2), x) == \
+    b = Symbol('b')
+    assert manualintegrate(1/(a + b*x**2), x) == \
         Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
         (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
         (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
-    assert manualintegrate(1 / (x - a**x + x*b**2), x) == \
+    b = Symbol('b', negative=True)
+    assert manualintegrate(1/(a + b*x**2), x) == \
+        atan(x/(sqrt(-a)*sqrt(-1/b)))/(b*sqrt(-a)*sqrt(-1/b))
+    assert manualintegrate(1/((x**a + y**b + 4)*sqrt(a*x**2 + 1)), x) == \
+        y**(-b)*Integral(x**(-a)/(y**(-b)*sqrt(a*x**2 + 1) +
+        x**(-a)*sqrt(a*x**2 + 1) + 4*x**(-a)*y**(-b)*sqrt(a*x**2 + 1)), x)
+    assert manualintegrate(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x) == \
+        Integral(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x)
+    assert manualintegrate(1/(x - a**x + x*b**2), x) == \
         Integral(1/(-a**x + b**2*x + x), x)
 
 
