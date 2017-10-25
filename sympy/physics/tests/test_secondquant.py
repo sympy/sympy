@@ -14,6 +14,7 @@ from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow
+from sympy.printing.latex import latex
 
 
 def test_PermutationOperator():
@@ -90,6 +91,7 @@ def test_operator():
 def test_create():
     i, j, n, m = symbols('i,j,n,m')
     o = Bd(i)
+    assert latex(Bd(i)) == "b^\\dagger_{i}"
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -102,6 +104,7 @@ def test_create():
 def test_annihilate():
     i, j, n, m = symbols('i,j,n,m')
     o = B(i)
+    assert latex(B(i)) == "b_{i}"
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
