@@ -285,6 +285,15 @@ def test_contains():
         assert r3.contains(Point(1.0, 1.0)) is False
         assert len(w) == 1
 
+        
+def test_parameter_value():
+    p1, p2, p3 = Point(0, 1), Point(2, 3), Point(3, 4)
+    l = Line(p1, p2)
+    # Line parameter
+    assert l.parameter_value(p3) == Rational(3, 2)
+    p4 = Point(1, 1) # not collinear
+    raises(ValueError, lambda: l.parameter_value(p4))
+
 
 def test_contains_nonreal_symbols():
     u, v, w, z = symbols('u, v, w, z')
@@ -322,34 +331,10 @@ def test_distance_2d():
     assert r.distance((1, 1)) == 0
 
 
-<<<<<<< HEAD
 def test_dimension_normalization():
     with warnings.catch_warnings(record=True) as w:
         assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
         assert len(w) == 1
-=======
-    # Line parameter
-    p1, p2, p3 = Point(0, 1), Point(2, 3), Point(3, 4)
-    l = Line(p1, p2)
-    assert l.parameter(p3) == Rational(3, 2)
-    p4 = Point(1, 1) # not collinear
-    raises(ValueError, lambda: l.parameter(p4))
-
-    #Ray contains
-    p1, p2 = Point(0, 0), Point(4, 4)
-    r = Ray(p1, p2)
-    assert r.contains(p1) is True
-    assert r.contains((1, 1)) is True
-    assert r.contains((1, 3)) is False
-    s = Segment((1, 1), (2, 2))
-    assert r.contains(s) is True
-    s = Segment((1, 2), (2, 5))
-    assert r.contains(s) is False
-    r1 = Ray((2, 2), (3, 3))
-    assert r.contains(r1) is True
-    r1 = Ray((2, 2), (3, 5))
-    assert r.contains(r1) is False
->>>>>>> upstreamxx/Line_parameter
 
 
 def test_distance_3d():

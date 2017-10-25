@@ -1070,10 +1070,7 @@ class Line(LinearEntity):
             return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
         return False
 
-<<<<<<< HEAD
-    def distance(self, other):
-=======
-    def parameter(self, other):
+    def parameter_value(self, other):
         """
         Finds the parameter ``t`` for which
         ``other == t * self.p1 + (1 - t) self.p2`` is True.
@@ -1085,7 +1082,12 @@ class Line(LinearEntity):
             When ``other`` is not contained in the line.
 
         NotImplementedError
-            When ``other`` is not a Point.
+            When ``other`` is not a ``Point``.
+
+        Notes
+        =====
+            Do not confuse this function with function ``parameter`` 
+            in sympy/geometry/curve.py
 
         Examples
         ========
@@ -1109,8 +1111,7 @@ class Line(LinearEntity):
             raise ValueError("Point is not collinear.")
         raise NotImplementedError()
 
-    def distance(self, o):
->>>>>>> upstreamxx/Line_parameter
+    def distance(self, other):
         """
         Finds the shortest distance between a line and a point.
 
