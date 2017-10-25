@@ -5,8 +5,9 @@ from sympy import (symbols, Function, Integer, Matrix, Abs,
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
-from sympy.polys import ring, field, ZZ, QQ, lex, grlex
+from sympy.polys import ring, field, ZZ, QQ, lex, grlex, Poly
 from sympy.polys.polyclasses import DMP
+from sympy.polys.agca.extensions import FiniteExtension
 
 x, y = symbols('x,y')
 
@@ -235,6 +236,14 @@ def test_DMP():
     assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
         "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
 
+def test_FiniteExtension():
+    assert srepr(FiniteExtension(Poly(x**2 + 1, x))) == \
+        "FiniteExtension(Poly(x**2 + 1, x, domain='ZZ'))"
+
+def test_ExtensionElement():
+    A = FiniteExtension(Poly(x**2 + 1, x))
+    assert srepr(A.generator) == \
+        "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
 
 def test_BooleanAtom():
     assert srepr(true) == "S.true"
