@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
 from sympy.core.basic import as_Basic
-from sympy.core.sympify import _sympify, SympifyError
+from sympy.core.sympify import SympifyError
 from sympy.core.relational import Equality, Relational, _canonical
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
@@ -50,19 +50,8 @@ class ExprCondPair(Tuple):
         return self.args[1]
 
     @property
-    def free_symbols(self):
-        """
-        Return the free symbols of this pair.
-        """
-        # Overload Basic.free_symbols because self.args[1] may contain non-Basic
-        result = self.expr.free_symbols
-        if hasattr(self.cond, 'free_symbols'):
-            result |= self.cond.free_symbols
-        return result
-
-    @property
     def is_commutative(self):
-        return getattr(self.expr, 'is_commutative', False)
+        return self.expr.is_commutative
 
     def __iter__(self):
         yield self.expr
@@ -560,7 +549,7 @@ class Piecewise(Function):
             # In this case, it is just simple substitution
             return super(Piecewise, self)._eval_interval(sym, a, b)
         else:
-            x, lo, hi = map(_sympify, (sym, a, b))
+            x, lo, hi = map(as_Basic, (sym, a, b))
 
         if _first:  # get only x-dependent relationals
             def handler(ipw):
