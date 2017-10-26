@@ -19,7 +19,6 @@ Segment3D
 from __future__ import division, print_function
 
 from sympy.core import S, sympify, Dummy
-from sympy.solvers import solveset
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
@@ -1071,7 +1070,7 @@ class Line(LinearEntity):
             return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
         return False
 
-    def parameter_value(self, other):
+    def coordinate(self, other):
         """
         Finds the parameter ``t`` for which
         ``other == t * self.p1 + (1 - t) self.p2`` is True.
@@ -1097,7 +1096,7 @@ class Line(LinearEntity):
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 1), Point(2, 3), Point(4, 5)
         >>> l = Line(p1, p2)
-        >>> l.parameter_value(p3)
+        >>> l.coordinate(p3)
         2
         """
         if isinstance(other, Point):
@@ -1105,9 +1104,9 @@ class Line(LinearEntity):
                 t = Dummy("t")
                 x, y = self.arbitrary_point(t).args
                 if self.p1.x != self.p2.x:
-                    ti = list(solveset(x - other.x, t))[0]
+                    ti = (other.x - self.p1.x)/(self.p2.x - self.p1.x)
                 else:
-                    ti = list(solveset(y - other.y, t))[0]
+                    ti = (other.y - self.p1.y)/(self.p2.y - self.p1.y)
                 if ti.is_number:
                     return ti
             raise ValueError("Point is not collinear.")
