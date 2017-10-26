@@ -434,7 +434,7 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
 
     def __repr__(self):
         return "AnnihilateBoson(%s)" % self.state
-        
+
     def _latex(self, printer):
         return "b_{%s}" % self.state.name
 
@@ -473,7 +473,7 @@ class CreateBoson(BosonicOperator, Creator):
 
     def __repr__(self):
         return "CreateBoson(%s)" % self.state
-        
+
     def _latex(self, printer):
         return "b^\\dagger_{%s}" % self.state.name
 
