@@ -542,7 +542,7 @@ def test_checksysodesol():
 
 @slow
 def test_nonlinear_3eq_order1():
-    x, y, z, C3 = symbols('x, y, z, C3', function=True)
+    x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
     eq1 = (4*diff(x(t),t) + 2*y(t)*z(t), 3*diff(y(t),t) - z(t)*x(t), 5*diff(z(t),t) - x(t)*y(t))
     sol1 = "[Eq(4*Integral(1/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))), "\
