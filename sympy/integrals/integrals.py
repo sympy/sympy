@@ -444,12 +444,12 @@ class Integral(AddWithLimits):
                 continue
 
             if isinstance(function, Piecewise):
-                # TODO pass along eval_kwargs
                 if len(xab) == 1:
-                    antideriv = function._eval_integral(xab[0])
+                    antideriv = function._eval_integral(xab[0],
+                        **eval_kwargs)
                 else:
                     antideriv = self._eval_integral(
-                        function, xab[0])
+                        function, xab[0], **eval_kwargs)
             else:
                 # There are a number of tradeoffs in using the
                 # Meijer G method. It can sometimes be a lot faster
@@ -683,7 +683,8 @@ class Integral(AddWithLimits):
 
         1. Simple heuristics (based on pattern matching and integral table):
 
-           - most frequently used functions (e.g. polynomials, products of trig functions)
+           - most frequently used functions (e.g. polynomials, products of
+             trig functions)
 
         2. Integration of rational functions:
 
@@ -778,6 +779,8 @@ class Integral(AddWithLimits):
             except (ValueError, PolynomialError):
                 pass
 
+        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
+            conds=conds)
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -790,7 +793,7 @@ class Integral(AddWithLimits):
 
         # Piecewise antiderivatives need to call special integrate.
         if isinstance(f, Piecewise):
-            return f._eval_integral(x)  # TODO change to .piecewise_integrate(x)
+            return f.piecewise_integrate(x, **eval_kwargs)
 
         # let's cut it short if `f` does not depend on `x`; if
         # x is only a dummy, that will be handled below
@@ -849,10 +852,10 @@ class Integral(AddWithLimits):
             order_term = g.getO()
 
             if order_term is not None:
-                h = self._eval_integral(g.removeO(), x)
+                h = self._eval_integral(g.removeO(), x, **eval_kwargs)
 
                 if h is not None:
-                    h_order_expr = self._eval_integral(order_term.expr, x)
+                    h_order_expr = self._eval_integral(order_term.expr, x, **eval_kwargs)
 
                     if h_order_expr is not None:
                         h_order_term = order_term.func(
@@ -860,8 +863,9 @@ class Integral(AddWithLimits):
                         parts.append(coeff*(h + h_order_term))
                         continue
 
-                # NOTE: if there is O(x**n) and we fail to integrate then there is
-                # no point in trying other methods because they will fail anyway.
+                # NOTE: if there is O(x**n) and we fail to integrate then
+                # there is no point in trying other methods because they
+                # will fail, too.
                 return None
 
             #               c
@@ -914,7 +918,8 @@ class Integral(AddWithLimits):
                 # Try risch again.
                 if risch is not False:
                     try:
-                        h, i = risch_integrate(g, x, separate_integral=True, conds=conds)
+                        h, i = risch_integrate(g, x,
+                            separate_integral=True, conds=conds)
                     except NotImplementedError:
                         h = None
                     else:
@@ -958,7 +963,8 @@ class Integral(AddWithLimits):
                             # try to have other algorithms do the integrals
                             # manualintegrate can't handle
                             result = result.func(*[
-                                arg.doit(manual=False) if arg.has(Integral) else arg
+                                arg.doit(manual=False) if
+                                arg.has(Integral) else arg
                                 for arg in result.args
                             ]).expand(multinomial=False,
                                       log=False,
@@ -988,7 +994,7 @@ class Integral(AddWithLimits):
                     # Note: risch will be identical on the expanded
                     # expression, but maybe it will be able to pick out parts,
                     # like x*(exp(x) + erf(x)).
-                    return self._eval_integral(f, x, meijerg=meijerg, risch=risch, conds=conds)
+                    return self._eval_integral(f, x, **eval_kwargs)
 
             if h is not None:
                 parts.append(coeff * h)

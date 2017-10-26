@@ -872,8 +872,9 @@ def test_issue_4517():
 
 def test_issue_4527():
     k, m = symbols('k m', integer=True)
-    assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)) == Piecewise(
-        (0, And(Eq(k, 0), Eq(m, 0))),
+    ans = integrate(sin(k*x)*sin(m*x), (x, 0, pi)
+            ).simplify() == Piecewise(
+        (0, Eq(k, 0) | Eq(m, 0)),
         (-pi/2, Eq(k, -m)),
         (pi/2, Eq(k, m)),
         (0, True))

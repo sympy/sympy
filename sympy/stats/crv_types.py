@@ -1996,7 +1996,7 @@ def QuadraticU(name, a, b):
     |   /  a   b    \
     |12*|- - - - + z|
     |   \  2   2    /
-    <-----------------  for And(a <= z, z <= b)
+    <-----------------  for And(b >= z, a <= z)
     |            3
     |    (-a + b)
     |
@@ -2070,7 +2070,7 @@ def RaisedCosine(name, mu, s):
     /   /pi*(-mu + z)\
     |cos|------------| + 1
     |   \     s      /
-    <---------------------  for And(z <= mu + s, mu - s <= z)
+    <---------------------  for And(z >= mu - s, z <= mu + s)
     |         2*s
     |
     \          0                        otherwise
@@ -2335,15 +2335,15 @@ def Trapezoidal(name, a, b, c, d):
 
     >>> pprint(density(X)(z), use_unicode=False)
     /        -2*a + 2*z
-    |-------------------------  for And(a <= z, z < b)
+    |-------------------------  for And(a <= z, b > z)
     |(-a + b)*(-a - b + c + d)
     |
     |           2
-    |     --------------        for And(b <= z, z < c)
+    |     --------------        for And(b <= z, c > z)
     <     -a - b + c + d
     |
     |        2*d - 2*z
-    |-------------------------  for And(c <= z, z <= d)
+    |-------------------------  for And(d >= z, c <= z)
     |(-c + d)*(-a - b + c + d)
     |
     \            0                     otherwise
@@ -2413,15 +2413,15 @@ def Triangular(name, a, b, c):
 
     >>> pprint(density(X)(z), use_unicode=False)
     /    -2*a + 2*z
-    |-----------------  for And(a <= z, z < c)
+    |-----------------  for And(a <= z, c > z)
     |(-a + b)*(-a + c)
     |
     |       2
-    |     ------              for z = c
+    |     ------              for c = z
     <     -a + b
     |
     |   2*b - 2*z
-    |----------------   for And(z <= b, c < z)
+    |----------------   for And(b >= z, c < z)
     |(-a + b)*(b - c)
     |
     \        0                otherwise
@@ -2509,7 +2509,7 @@ def Uniform(name, left, right):
     >>> X = Uniform("x", a, b)
 
     >>> density(X)(z)
-    Piecewise((1/(-a + b), (a <= z) & (z <= b)), (0, True))
+    Piecewise((1/(-a + b), (b >= z) & (a <= z)), (0, True))
 
     >>> cdf(X)(z)  # doctest: +SKIP
     -a/(-a + b) + z/(-a + b)
