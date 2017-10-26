@@ -7,7 +7,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt, Ne
 from sympy.sets import Interval
-from sympy.sets.sets import FiniteSet, Union, EmptySet
+from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
 from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
@@ -455,6 +455,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     # `solveset` makes sure this function is called only when the domain is
     # real.
     _gen = gen
+    _domain = domain
     if gen.is_real is False:
         rv = S.EmptySet
         return rv if not relational else rv.as_relational(_gen)
@@ -664,9 +665,10 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 sol_sets.append(Interval.open(start, end))
 
             if im(expanded_e) != S.Zero and check:
-                rv = (make_real)
+                rv = (make_real).intersect(_domain)
             else:
-                rv = (Union(*sol_sets)).intersect(make_real).subs(gen, _gen)
+                rv = Intersection(
+                    (Union(*sol_sets)), make_real, _domain).subs(gen, _gen)
 
     return rv if not relational else rv.as_relational(_gen)
 

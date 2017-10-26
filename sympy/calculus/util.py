@@ -76,9 +76,11 @@ def continuous_domain(f, symbol, domain):
                     solveset(denom(together(f)), symbol, domain)
 
     except NotImplementedError:
-        raise NotImplementedError(
-            "Methods for determining the continuous domains"
-            " of this function have not been developed.")
+        import sys
+        raise (NotImplementedError("Methods for determining the continuous domains"
+                                   " of this function have not been developed."),
+               None,
+               sys.exc_info()[2])
 
     return domain - sings
 

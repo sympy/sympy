@@ -270,6 +270,8 @@ def test_solve_univariate_inequality():
         Union(Interval(1, 2), Interval(3, oo))
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
         Or(And(Le(1, x), Le(x, 2)), And(Le(3, x), Lt(x, oo)))
+    assert isolve((x - 1)*(x - 2)*(x - 4) < 0, x, domain = FiniteSet(0, 3)) == \
+        Or(Eq(x, 0), Eq(x, 3))
     # issue 2785:
     assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
         Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),

@@ -1181,5 +1181,14 @@ def test_singularities():
     assert integrate(1/x**2, (x, 1, -1)) == -oo
     assert integrate(1/(x - 1)**2, (x, 2, -2)) == -oo
 
+def test_issue_12645():
+    x, y = symbols('x y', real=True)
+    assert (integrate(sin(x*x + y*y),
+                      (x, -sqrt(pi - y*y), sqrt(pi - y*y)),
+                      (y, -sqrt(pi), sqrt(pi)))
+                == Integral(sin(x**2 + y**2),
+                            (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
+                            (y, -sqrt(pi), sqrt(pi))))
+
 def test_issue_12677():
     assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
