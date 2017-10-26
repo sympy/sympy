@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from itertools import product
 import re
 from sympy import sympify
 
@@ -8,126 +9,220 @@ def mathematica(s):
     return sympify(parse(s))
 
 
-class _Parse(object):
-    '''An instance of this class converts basic Mathematica expression to
-    Python.'''
+class parse(object):
+    '''parse class converts basic Mathematica expression to Python.'''
 
-    replaces1 = (
-        (' ', ''),
-        ('^', '**'),
-    )
+    # translate
+    F = {
+        # (func in Mathematica, number of arguments): func in sympy
+        ('Mod', 2): 'Mod',
+        ('Sqrt', 1): 'sqrt',
+        ('Exp', 1): 'exp',
+        ('Log', 1): 'log',
+    }
 
-    replaces2 = (
-        ('[', '('),
-        (']', ')'),
-    )
+    # trigonometric, e.t.c.
+    for arc, tri, h in product(('', 'Arc'), (
+            'Sin', 'Cos', 'Tan', 'Cot', 'Sec', 'Csc'), ('', 'h')):
 
-    rules1 = (
-        # 'Arc' to 'a'
-        (r'''
-                (               # group1
-                .*              # any characters
-                [^a-zA-Z]       # a single character except alphabet
-                )
-                Arc             # detect 'Arc'
-                (               # group2
-                [a-zA-Z]        # a single alphabet
-                .*              # any characters
-                )
-                ''',
-         lambda m: m.group(1) + 'a' + m.group(2)),
+        fm = arc + tri + h
 
-        # 'Arc' (at the top) to 'a'
-        (r'''
-                \AArc           # detect 'Arc' at the top of the string
-                (               # group1
-                [a-zA-Z]        # a single alphabet
-                .*              # any characters
-                )
-                ''',
-         lambda m: 'a' + m.group(1)),
+        if arc:  # arc func
+            fs = 'a' + tri.lower() + h
+
+        else:    # non-arc func
+            fs = tri.lower() + h
+
+        F.update({(fm, 1): fs})
+
+    F_swap = {
+        # when you say log(2,4) in Mathematica, base is 2.
+        ('Log', 2): 'log',
+    }
+
+    replaces = {
+        ' ': '',
+        '^': '**',
+        '[': '(',
+        ']': ')',
+    }
+
+    rules = {
+        # a single whitespace to '*'
+        'whitespace': (
+            re.compile(r'''
+                (?<=[a-zA-Z\d])     # a letter or a number
+                \                   # a whitespace
+                (?=[a-zA-Z\d])      # a letter or a number
+                ''', re.VERBOSE),
+            '*'),
 
         # Add omitted '*' character
-        (r'''
-                (               # group1
-                .*              # any characters
-                [])\d]          # ], ) or a single number
-                )
-                (               # group2
-                [(a-zA-Z]       # ( or a single alphabet
-                .*              # any characters
-                )
-                ''',
-         lambda m: m.group(1) + '*' + m.group(2)),
+        'add*_1': (
+            re.compile(r'''
+                (?<=[])\d])         # ], ) or a number
+                                    # ''
+                (?=[(a-zA-Z])       # ( or a single letter
+                ''', re.VERBOSE),
+            '*'),
 
         # Add omitted '*' character (variable letter preceding)
-        (r'''
-                (               # group1
-                .*              # any characters
-                [a-zA-Z]        # a single alphabet
-                )
-                \(              # ( as a character
-                (.*)            # group2, any characters
-                ''',
-         lambda m: m.group(1) + '*(' + m.group(2)),
-    )
+        'add*_2': (
+            re.compile(r'''
+                (?<=[a-zA-Z])       # a letter
+                \(                  # ( as a character
+                (?=.)               # any characters
+                ''', re.VERBOSE),
+            '*('),
+    }
 
-    rules2 = (
-        # 'mod' to 'Mod'
-        (r'''
-                (               # group1
-                .*              # any characters
-                [^a-zA-Z]       # a single character except alphabet
+    func_anchor = re.compile(r'''
+                (?:
+                \A|(?<=[^a-zA-Z])   # at the top or a non-letter
                 )
-                mod             # detect 'mod'
-                (.*)            # group2, any characters
-                ''',
-         lambda m: m.group(1) + 'Mod' + m.group(2)),
+                [A-Z][a-zA-Z]*      # Function
+                (?=\[)              # [ as a character
+                ''', re.VERBOSE)
 
-        # 'mod' (at the top) to 'Mod'
-        (r'''
-                \Amod           # detect 'mod' at the top of the string
-                (.*)            # group1, any characters
-                ''',
-         lambda m: 'Mod' + m.group(1)),
-    )
+    def __new__(cls, s):
+        return cls.eval(s)
+
+    @classmethod
+    def _convert_function(cls, s):
+        pat = cls.func_anchor       # compiled regex object
+        scaned = ''                 # converted string
+        cur = 0                     # position cursor
+
+        while True:
+            m = pat.search(s)
+
+            if m is None:
+                # append the rest of string
+                scaned += s
+                break
+
+            # get function name
+            func = m.group()
+
+            # get arguments of function
+            args, ancs = cls._get_args(m)
+
+            # convert to sympy function
+            s, symFunc = cls._convert(s, func, args, ancs)
+
+            # replace func with symFunc just once
+            s = pat.sub(symFunc, s, count=1)
+
+            # update cursor
+            cur = m.end()
+
+            # append converted part
+            scaned += s[:cur]
+
+            # shrink s
+            s = s[cur:]
+
+        return scaned
 
     @staticmethod
-    def _replace(s, replaces):
-        for bef, aft in replaces:
-            s = s.replace(bef, aft)
-        return s
+    def _get_args(m):
+        s = m.string                # whole string
+        anc = m.end() + 1           # pointing the first letter of arguments
+        square, curly = [], []      # stack for brakets
+        args, arg_ancs = [], []
 
-    @staticmethod
-    def _apply_rules(s, rules):
-        for rule, action in rules:
-            pat = re.compile(rule, re.VERBOSE)  # VERBOSE: for readable code
-            while True:
-                m = re.search(pat, s)
-                if m:
-                    s = action(m)
-                else:
+        for i, c in enumerate(s[anc:], anc):
+            # extract one argument
+            if c == ',' and (not square) and (not curly):
+                args.append(s[anc:i])       # add an argument
+                arg_ancs.append((anc, i))   # add anchor position
+                anc = i + 1                 # move anchor
+
+            # handle list or matrix (for future usage)
+            if c == '{':
+                curly.append(c)
+            elif c == '}':
+                curly.pop()
+
+            # seek corresponding ']' with skipping irrevant ones
+            if c == '[':
+                square.append(c)
+            elif c == ']':
+                if square:
+                    square.pop()
+                else:   # empty stack
+                    args.append(s[anc:i])
+                    arg_ancs.append((anc, i))
                     break
+
+        return args, arg_ancs
+
+    @classmethod
+    def _convert(cls, s, fm, args, ancs):
+        # make key
+        key = (fm, len(args))
+
+        # convert function in F dictionary
+        if key in cls.F:
+            fs = cls.F[key]
+
+        # convert function in F_swap dictionary
+        elif key in cls.F_swap:
+            fs = cls.F_swap[key]
+            s = cls._swap_args(s, args, ancs)
+
+        else:
+            # if function name is not found, throw error message
+            raise ValueError("Pursing '{}' is unsupported.".format(fm))
+
+        return s, fs
+
+    @staticmethod
+    def _swap_args(s, args, ancs):
+        arg1, arg2 = args
+        (bgn1, _), (_, end2) = ancs
+        s = s[:bgn1] + arg2 + ',' + arg1 + s[end2:]
         return s
 
-    def __call__(self, s):
-        # '^' to '**' and remove Whitespace(s)
-        s = self._replace(s, self.replaces1)
+    @classmethod
+    def _replace(cls, s, bef):
+        aft = cls.replaces[bef]
+        s = s.replace(bef, aft)
+        return s
 
-        # 'Arc' to 'a' and add omitted '*' character
-        s = self._apply_rules(s, self.rules1)
+    @classmethod
+    def _apply_rules(cls, s, bef):
+        pat, aft = cls.rules[bef]
+        return pat.sub(aft, s)
 
-        # convert to lower letters
-        s = s.lower()
+    @staticmethod
+    def _check_supported(s):
+        if ('{' or '}') in s:
+            raise ValueError("Pursing '{' or '}' is unsupported.")
 
-        # 'mod' to 'Mod'
-        s = self._apply_rules(s, self.rules2)
+    @classmethod
+    def eval(cls, s):
+        # check input
+        cls._check_supported(s)
+
+        # uncover '*' hiding behind a whitespace
+        s = cls._apply_rules(s, 'whitespace')
+
+        # remove whitespace(s)
+        s = cls._replace(s, ' ')
+
+        # add omitted '*' character
+        s = cls._apply_rules(s, 'add*_1')
+        s = cls._apply_rules(s, 'add*_2')
+
+        # translate function
+        s = cls._convert_function(s)
+
+        # '^' to '**'
+        s = cls._replace(s, '^')
 
         # '[', ']' to '(', ')', respectively
-        s = self._replace(s, self.replaces2)
+        s = cls._replace(s, '[')
+        s = cls._replace(s, ']')
 
         return s
-
-
-# instantiate _Parse
-parse = _Parse()
