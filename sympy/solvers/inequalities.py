@@ -264,7 +264,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
 
     if eqs:
         solution &= solve_rational_inequalities(eqs)
-        exclude = solve_rational_inequalities([[((d, Poly(S.One, gen)), '==')
+        exclude = solve_rational_inequalities([[((d, d.one), '==')
             for i in eqs for ((n, d), _) in i if d.has(gen)]])
         solution -= exclude
 
