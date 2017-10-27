@@ -1084,12 +1084,6 @@ class Line(LinearEntity):
         NotImplementedError
             When ``other`` is not a ``Point``.
 
-        Notes
-        =====
-
-        Do not confuse this function with function ``parameter`` in
-        sympy/geometry/curve.py .
-
         Examples
         ========
 
@@ -1101,8 +1095,6 @@ class Line(LinearEntity):
         """
         if isinstance(other, Point):
             if Point.is_collinear(self.p1, self.p2, other):
-                t = Dummy("t")
-                x, y = self.arbitrary_point(t).args
                 if self.p1.x != self.p2.x:
                     ti = (other.x - self.p1.x)/(self.p2.x - self.p1.x)
                 else:
