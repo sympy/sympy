@@ -1,6 +1,7 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix,
         Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
 from sympy.utilities.pytest import raises
+from sympy.matrices.expressions.matexpr import MatrixExpr
 
 k, l, m, n = symbols('k l m n', integer=True)
 i, j = symbols('i j', integer=True)
@@ -79,3 +80,21 @@ def test_slicing():
 def test_errors():
     raises(IndexError, lambda: Identity(2)[1, 2, 3, 4, 5])
     raises(IndexError, lambda: Identity(2)[[1, 2, 3, 4, 5]])
+
+
+def test_matrix_expression_from_index_summation():
+    from sympy.abc import a,b,c,d
+    A = MatrixSymbol("A", k, k)
+    B = MatrixSymbol("B", k, k)
+    C = MatrixSymbol("C", k, k)
+
+    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l), (c, 0, m))
+    assert MatrixExpr.from_index_summation(expr, a) == W*X*Z
+    expr = Sum(W.T[b,a]*X[b,c]*Z[c,d], (b, 0, l), (c, 0, m))
+    assert MatrixExpr.from_index_summation(expr, a) == W*X*Z
+    expr = Sum(A[b, a]*B[b, c]*C[c, d], (b, 0, k), (c, 0, k))
+    assert MatrixSymbol.from_index_summation(expr, a) == A.T*B*C
+    expr = Sum(A[b, a]*B[c, b]*C[c, d], (b, 0, k), (c, 0, k))
+    assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C
+    expr = Sum(C[c, d]*A[b, a]*B[c, b], (b, 0, k), (c, 0, k))
+    assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C

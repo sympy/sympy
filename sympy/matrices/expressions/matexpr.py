@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from functools import wraps
+import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
@@ -347,6 +348,59 @@ class MatrixExpr(Basic):
 
     def as_coeff_mmul(self):
         return 1, MatMul(self)
+
+    @staticmethod
+    def from_index_summation(expr, first_index):
+        from sympy import Sum, Mul, MatMul
+
+        def transform_sum(s, first_index):
+            indices = s.args[1:]
+            indices = [i[0] if isinstance(i, (tuple, Tuple)) else i for i in indices]
+            expr = s.args[0]
+            if expr.is_Mul:
+                nonmatargs = []
+                dmap = {i: [None, None] for i in indices}
+                matargs = []
+                for arg in expr.args:
+                    if not isinstance(arg, MatrixElement):
+                        nonmatargs.append(arg)
+                        continue
+                    arg_symbol = arg.args[0]
+                    for i in indices:
+                        arg_indices = arg.args[1:]
+                        if i not in arg_indices:
+                            continue
+                        pos = 0 if dmap[i][0] is None else 1
+                        assert dmap[i][pos] is None
+                        if pos == arg_indices.index(i):
+                            arg_symbol = arg.args[0].T
+                        dmap[i][pos] = arg_symbol
+                    if arg.has(first_index):
+                        assert len(matargs) == 0
+                        matargs.append(arg_symbol)
+                dlinks = collections.defaultdict(list)
+                for v1, v2 in dmap.values():
+                    if v2 is None:
+                        continue
+                    dlinks[v1].append(v2)
+                    dlinks[v2].append(v1)
+                flag = True
+                while flag:
+                    for nextarg in dlinks[matargs[-1]]:
+                        flag = False
+                        if (nextarg in matargs):
+                            continue
+                        del dlinks[matargs[-1]]
+                        matargs.append(nextarg)
+                        flag = True
+                        break
+                return Mul.fromiter(nonmatargs)*MatMul.fromiter(matargs)
+            elif expr.is_Add:
+                raise NotImplementedError
+            else:
+                raise NotImplementedError
+
+        return expr.replace(lambda x: isinstance(x, Sum), lambda x: transform_sum(x, first_index))
 
 
 class MatrixElement(Expr):
