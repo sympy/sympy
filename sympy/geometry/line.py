@@ -18,7 +18,7 @@ Segment3D
 """
 from __future__ import division, print_function
 
-from sympy.core import S, sympify, Dummy
+from sympy.core import S, sympify
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
