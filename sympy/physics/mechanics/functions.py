@@ -399,7 +399,7 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def find_dynamicsymbols(expression, exclude=None):
+def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
 
     >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
@@ -422,8 +422,13 @@ def find_dynamicsymbols(expression, exclude=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
-    return set([i for i in expression.atoms(AppliedUndef, Derivative) if
-            i.free_symbols == t_set]) - exclude_set
+    if reference_frame==None:
+        return set([i for i in expression.atoms(AppliedUndef, Derivative) if
+        	i.free_symbols == t_set]) - exclude_set
+    else:
+        expr=expression.to_matrix(reference_frame)
+        return set([i for i in expr.atoms(AppliedUndef, Derivative) if
+        	i.free_symbols == t_set]) - exclude_set
 
 
 def msubs(expr, *sub_dicts, **kwargs):
