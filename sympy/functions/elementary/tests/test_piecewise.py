@@ -200,7 +200,7 @@ def test_piecewise_integrate1():
         (0, True))
     assert integrate(g, (x, y, 1)) == Piecewise(
         (-Min(1, Max(0, y))**2/2 + 1/2, y < 1),
-        (-y + Min(1, y), True))
+        (-y + 1, True))
 
     g = Piecewise((1 - x, Interval(0, 1).contains(x)),
         (1 + x, Interval(-1, 0).contains(x)), (0, True))
@@ -219,8 +219,7 @@ def test_piecewise_integrate1():
     assert i == Piecewise(
         (-Min(-1, y)**2/2 - Min(-1, y) +
             Min(0, y)**2 - Min(1, y)**2/2 + Min(1, y), y > -5),
-        (Max(-5, Min(-1, y))**2/2 + Max(-5, Min(-1, y)) -
-            Min(0, Max(-5, y))**2/2 - Min(0, Max(-5, y)), True))
+        (0, True))
     i = integrate(g, (x, y, 1))
     assert i.subs(y, -5) == 1
     assert piecewise_fold(i.rewrite(Piecewise)
@@ -231,7 +230,7 @@ def test_piecewise_integrate1():
         (0, True))
     assert i == Piecewise(
         (Min(1, Max(0, y))**2 - Min(1, Max(-1, y), Max(0, y))**2/2 -
-            Min(1, Max(-1, y), Max(0, y)) + S.Half, y < 1),
+            Min(1, Max(-1, y), Max(0, y)) + 1/2, y < 1),
         (0, True))
 
     g = Piecewise((0, Or(x <= -1, x >= 1)), (1 - x, x > 0),
@@ -251,8 +250,7 @@ def test_piecewise_integrate1():
     assert i == Piecewise(
         (-Min(-1, y)**2/2 - Min(-1, y) + Min(0, y)**2 -
             Min(1, y)**2/2 + Min(1, y), y > -5),
-        (Max(-5, y)**2/2 - Max(-5, y) + Max(-5, Min(-1, y))**2/2 +
-            Max(-5, Min(-1, y)) - Min(0, Max(-5, y))**2, True))
+        (0, True))
     i = integrate(g, (x, y, 1))
     assert i.subs(y, -5) == 1
     assert piecewise_fold(i.rewrite(Piecewise)
@@ -263,7 +261,7 @@ def test_piecewise_integrate1():
         (0, True))
     assert i == Piecewise(
         (-Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
-            Min(1, Max(0, y))**2 + S.Half, y < 1),
+            Min(1, Max(0, y))**2 + 1/2, y < 1),
         (0, True))
 
 
@@ -273,8 +271,8 @@ def test_3_piecewise_integrate():
     p = Piecewise((1, x < a), (2, x > b), (3, True))
     q = p.integrate(lim)
     assert q == Piecewise(
-        (2*d - Min(c, d) - 2*Min(d, Max(a, c)) + Min(d, Max(a, b, c)), c < d),
-        (-2*c + Min(c, d) + 2*Min(c, Max(a, d)) - Min(c, Max(a, b, d)), True))
+        (-c + 2*d - 2*Min(d, Max(a, c)) + Min(d, Max(a, b, c)), c < d),
+        (-2*c + d + 2*Min(c, Max(a, d)) - Min(c, Max(a, b, d)), True))
     for v in permutations((1, 2, 3, 4)):
         r = dict(zip((a, b, c, d), v))
         assert p.subs(r).integrate(lim.subs(r)) == q.subs(r)
@@ -905,9 +903,8 @@ def test_issue_6900():
         (t*x - t0*x, t <= Max(t0, t1)),
         (-t0*x + x*Max(t0, t1), True))
     assert f.integrate((t, t0, T)) == Piecewise(
-        (-x*Min(T, t0) + x*Min(T, Max(t0, t1)), t0 < T),
+        (-t0*x + x*Min(T, Max(t0, t1)), T > t0),
         (0, True))
-
 
 def test_issue_10122():
     assert solve(abs(x) + abs(x - 1) - 1 > 0, x

@@ -561,18 +561,44 @@ class Piecewise(Function):
             if irv is not None:
                 return irv
 
-            if (lo < hi) is S.true or hi is S.Infinity or lo is S.NegativeInfinity:
+            if (lo < hi) is S.false or (
+                    lo is S.Infinity or hi is S.NegativeInfinity):
+                rv = self._eval_interval(x, hi, lo, _first=False)
+                if isinstance(rv, Piecewise):
+                    rv = Piecewise(*[(-e, c) for e, c in rv.args])
+                else:
+                    rv = -rv
+                return rv
+
+            if (lo < hi) is S.true or (
+                    hi is S.Infinity or lo is S.NegativeInfinity):
                 pass
             else:
-                neg = -self._eval_interval(x, hi, lo, _first=False)
-                if (lo < hi) is S.false or lo is S.Infinity or hi is S.NegativeInfinity:
-                    rv = neg
+                a = Dummy('lo')
+                b = Dummy('hi')
+                pos = self._eval_interval(x, a, b, _first=False)
+                if not (lo.is_number or hi.is_number):
+                    neg, pos = -pos.xreplace({a: hi, b: lo}), pos.xreplace({a: lo, b: hi})
                 else:
-                    rv = Piecewise(
-                        (self._eval_interval(x, lo, hi, _first=False),
-                            lo < hi),
-                        (neg,
-                            True))
+                    neg, pos = -self._eval_interval(x, hi, lo, _first=False), pos.xreplace({a: lo, b: hi})
+                # allow simplification based on ordering of lo and hi
+                p = Dummy('', positive=True)
+                if lo.is_Symbol:
+                    pos = pos.xreplace({lo: hi - p}).xreplace({p: hi - lo})
+                    neg = neg.xreplace({lo: hi + p}).xreplace({p: lo - hi})
+                elif hi.is_Symbol:
+                    pos = pos.xreplace({hi: lo + p}).xreplace({p: hi - lo})
+                    neg = neg.xreplace({hi: lo - p}).xreplace({p: lo - hi})
+                # assumble return expression
+                rv = Piecewise(
+                    (pos,
+                        lo < hi),
+                    (neg,
+                        True))
+                # apply simplification of Min/Max expressions which may
+                # respond differently now that some simplification may
+                # have occured given the ordering of lo and hi
+                rv = _mmsimp(rv)
                 if rv == Undefined:
                     raise ValueError("Can't integrate across undefined region.")
                 return rv
