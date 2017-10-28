@@ -89,43 +89,44 @@ class parse(object):
 
     @classmethod
     def _convert_function(cls, s):
-        pat = cls.func_anchor       # compiled regex object
-        scaned = ''                 # converted string
-        cur = 0                     # position cursor
+        '''Parse Mathematica function to sympy one'''
 
+        pat = cls.func_anchor       # compiled regex object
+
+        scanned = ''                 # converted string
+        cur = 0                     # position cursor
         while True:
             m = pat.search(s)
 
             if m is None:
                 # append the rest of string
-                scaned += s
+                scanned += s
                 break
 
             # get function name
-            func = m.group()
+            fm = m.group()
 
             # get arguments of function
             args, ancs = cls._get_args(m)
 
-            # convert to sympy function
-            s, symFunc = cls._convert(s, func, args, ancs)
-
-            # replace func with symFunc just once
-            s = pat.sub(symFunc, s, count=1)
+            # convert Mathematica function to sympy one
+            s = cls._convert(pat, s, fm, args, ancs)
 
             # update cursor
             cur = m.end()
 
             # append converted part
-            scaned += s[:cur]
+            scanned += s[:cur]
 
             # shrink s
             s = s[cur:]
 
-        return scaned
+        return scanned
 
     @staticmethod
     def _get_args(m):
+        '''Get arguments of Mathematica function'''
+
         s = m.string                # whole string
         anc = m.end() + 1           # pointing the first letter of arguments
         square, curly = [], []      # stack for brakets
@@ -158,7 +159,7 @@ class parse(object):
         return args, arg_ancs
 
     @classmethod
-    def _convert(cls, s, fm, args, ancs):
+    def _convert(cls, pat, s, fm, args, ancs):
         # make key
         key = (fm, len(args))
 
@@ -169,13 +170,18 @@ class parse(object):
         # convert function in F_swap dictionary
         elif key in cls.F_swap:
             fs = cls.F_swap[key]
+
+            # swap argument.
             s = cls._swap_args(s, args, ancs)
 
         # just downcase function name
         else:
             fs = fm.lower()
 
-        return s, fs
+        # replace Mathematica function with sympy function just once
+        s = pat.sub(fs, s, count=1)
+
+        return s
 
     @staticmethod
     def _swap_args(s, args, ancs):
