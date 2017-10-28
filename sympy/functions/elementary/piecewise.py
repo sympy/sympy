@@ -1073,9 +1073,11 @@ def _pair(A, B, union=False, dict=None, abi=False):
     c, d = B
     oo = S.Infinity
     # the real line is broken into pieces which are compactly
-    # represented as -oo, i1, hi1_lo2, i2, hi2_lo3, i3, ..., oo
-    # where i1, i2, ...., refer to the interval A (0), B(1) or
-    # neither (-1) as covering that intrval
+    # represented as -oo, i1, H1|L2, i2, H2|L3, i3, ..., oo
+    # where i1, i2, ...., refer to the interval A (0), B (1) or
+    # neither (-1) as covering that interval and Hi|Lj means
+    # either the hi boundary of the ith interval or the lo
+    # boundary of the jth interval
     if a is -oo and b is oo:
         br = a, 0, b
     elif c is -oo and d is oo:
@@ -1090,7 +1092,7 @@ def _pair(A, B, union=False, dict=None, abi=False):
     elif a is -oo and c is -oo:  # (-oo, b) (-oo, d)
         br = -oo, 0, b, 1, Max(b, d), -1, oo
     elif a is -oo and d is oo:  # (-oo, b) (c, oo)
-        br = -oo, 0, b, -1, Max(b,c), 1, oo
+        br = -oo, 0, b, -1, Max(b, c), 1, oo
     elif b is oo and c is -oo:  # (a, oo) (-oo, d)
         br = -oo, 1, Min(a, d), -1, a, 0, oo
     elif d is oo:  # (a, b) (c, oo)
