@@ -1064,7 +1064,6 @@ def _pair(A, B, union=False, dict=None, abi=False):
     (0, [(6, 2)])
     (1, [(4, 5), (4, 5)])
     """
-    from sympy.logic.boolalg import Xor
     if not any(i for i in (abi, dict, union)):
         dict = True
     if [bool(i) for i in (abi, dict, union)].count(True) != 1:
