@@ -42,6 +42,8 @@ def test_mathematica():
         'Log[2,4]': 'log(4,2)',
         'Log[Log[2,4],4]': 'log(4,log(4,2))',
         'Exp[Sqrt[2]^2Log[2, 8]]': 'exp(sqrt(2)**2*log(8,2))',
+        'Arcsin[1/2]': 'arcsin(1/2)',   # discussion in the issue #13544
+        'Func[1/2]': 'func(1/2)',       # discussion in the issue #13544
         }
 
     for e in d:

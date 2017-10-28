@@ -171,9 +171,9 @@ class parse(object):
             fs = cls.F_swap[key]
             s = cls._swap_args(s, args, ancs)
 
+        # just downcase function name
         else:
-            # if function name is not found, throw error message
-            raise ValueError("Pursing '{}' is unsupported.".format(fm))
+            fs = fm.lower()
 
         return s, fs
 
@@ -195,16 +195,8 @@ class parse(object):
         pat, aft = cls.rules[bef]
         return pat.sub(aft, s)
 
-    @staticmethod
-    def _check_supported(s):
-        if ('{' or '}') in s:
-            raise ValueError("Pursing '{' or '}' is unsupported.")
-
     @classmethod
     def eval(cls, s):
-        # check input
-        cls._check_supported(s)
-
         # uncover '*' hiding behind a whitespace
         s = cls._apply_rules(s, 'whitespace')
 
