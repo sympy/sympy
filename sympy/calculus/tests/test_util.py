@@ -1,7 +1,7 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds)
+                                 periodicity, lcim, AccumBounds, argmax)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -352,3 +352,29 @@ def test_contains_AccumBounds():
     raises(TypeError, lambda: a in AccumBounds(1, 2))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true
+
+def test_argmax():
+    from sympy.sets.fancysets import ImageSet
+    from sympy.core.function import Lambda
+
+    x = Symbol('x')
+    y = Symbol('y', real = True)
+
+    raises (ValueError, lambda : argmax(y, x, S.Reals))
+    assert argmax(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == S.EmptySet
+    assert argmax(-(log(x)), x, Interval(0.02, 10)) == 0.02
+    assert argmax(sin(x), x, S.Reals) == \
+        ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)
+    assert argmax(exp(y), y, Interval(-oo, 10)) == 10
+
+def test_argmin():
+    from sympy.sets.fancysets import ImageSet
+    from sympy.core.function import Lambda
+
+    x = Symbol('x')
+    y = Symbol('y', real = True)
+
+    assert argmax(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == -3
+    assert argmax(x**2 - 2*x + 1, domain = S.Reals) == 1
+    #assert argmax(sin(x), x, S.Reals) == \
+     #   ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)

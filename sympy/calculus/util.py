@@ -1311,5 +1311,142 @@ class AccumulationBounds(AtomicExpr):
             return AccumBounds(other.min, Max(self.max, other.max))
 
 
+
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds
+
+def argmax(f, symbol = None, domain = S.Reals):
+    """
+    Returns the set of arguments of maxima, i.e., values of `symbol`
+    for which the `f` attains the maximum value in the given domain.
+
+    Parameters
+    ==========
+
+    f: expr
+        The concerned expression
+    symbol: Symbol
+        Variable for which the arguments to be determined.
+    domain: Set
+        The domain over which the arguments are to be determined
+
+    Examples
+    ========
+
+    >>> from sympy.calculus.util import argmax
+    >>> x = Symbol('x')
+    >>> argmax(sin(x), x, Interval(-2*pi, pi))
+    {-3*pi/2, pi/2}
+    >>> argmax(-x**2 + 5*x - 6)
+    5/2
+    >>> argmax(exp(x), x, S.Reals)
+    EmptySet()
+
+    """
+    f = _sympify(f)
+    if symbol is None:
+        if len(f.free_symbols) > 1:
+            raise ValueError(filldedent('''
+                Variable for which argmax is to be determined needs to be
+                specified.'''))
+        else:
+            symbol = list(f.free_symbols)[0]
+
+    if symbol not in f.free_symbols:
+        raise ValueError(filldedent('''
+            argmax of %s cannot be calculated with respect to %s'''%
+            (f, symbol)))
+
+    return _argMaxMin(f, symbol , domain, max = True)
+
+def argmin(f, symbol = None, domain = S.Reals):
+    """
+    Returns the set of arguments of minima, i.e., values of `symbol`
+    for which the `f` attains the minimum value in the given domain.
+
+    Parameters
+    ==========
+
+    f: expr
+        The concerned expression
+    symbol: Symbol
+        Variable for which the arguments to be determined.
+    domain: Set
+        The domain over which the arguments are to be determined
+
+    Examples
+    ========
+
+    >>> from sympy.calculus.util import argmin
+    >>> x = Symbol('x')
+    >>> argmin(sin(x), x, Interval(-2*pi, pi))
+    {-*pi/2, 3*pi/2}
+    >>> argmin((x - 1)**2, x, S.Reals)
+    1
+    >>> argmin(exp(x), x, S.Reals)
+    EmptySet()
+
+    """
+    f = _sympify(f)
+    if symbol is None:
+        if len(f.free_symbols) > 1:
+            raise ValueError(filldedent('''
+                Variable for which argmin is to be determined needs to be
+                specified.'''))
+        else:
+            symbol = f.free_symbols[0]
+    if symbol not in f.free_symbols:
+        raise ValueError(filldedent('''
+            argmax of %s cannot be calculated with respect to %s'''%
+            (f, symbol)))
+
+    return _argMaxMin(f, symbol , domain, max = False)
+
+def _argMaxMin(f, symbol, domain, max):
+    """
+    Helper function for calculuating argmin/argmax
+
+    """
+    from sympy.core.function import diff
+    from sympy.solvers.solveset import solveset
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    solns = S.EmptySet
+    try:
+        frange = function_range(f, symbol, domain)
+        if max:
+            extremum = frange.sup
+        else:
+            extremum = frange.inf
+    except:
+        raise NotImplementedError(filldedent('''
+            Methods for finding the argument of maxima of %s have not been
+            implemented yet.'''%(f)))
+    # If the supremum or the infimum of the function is not in its range,
+    # then an empty set is returned.
+    if not FiniteSet(extremum).is_subset(frange):
+        return EmptySet()
+
+    first_deriv = f.diff(symbol)
+    if first_deriv.is_positive:
+        return domain.sup if max else domain.inf
+    elif first_deriv.is_negative:
+        return domain.inf if max else domain.sup
+    critical_points = Union(
+        solveset(first_deriv, symbol = symbol,domain = domain), domain.boundary)
+
+    try:
+        solns = solveset(f - extremum, symbol, domain = critical_points)
+    except:
+        for pt in critical_points:
+            if f.subs(symbol, pt) == extremum and not pt.is_infinite:
+                solns += FiniteSet(pt)
+
+    if isinstance(solns, FiniteSet) and len(solns) == 1:
+        for i in solns:
+            return i
+    return solns
+
+
+
+
