@@ -278,7 +278,7 @@ def test_3_piecewise_integrate():
         assert p.subs(r).integrate(lim.subs(r)) == q.subs(r)
 
 
-def test_miejer_bypass():
+def test_meijer_bypass():
     # totally bypass meijerg machinery when dealing
     # with Piecewise in integrate
     assert Piecewise((1, x < 4), (0, True)).integrate((x, oo, 1)) == -3
@@ -969,16 +969,15 @@ def test_containment():
 
 
 def test_piecewise_with_DiracDelta():
-    # XXX not sure what these should be
     d1 = DiracDelta(x - 1)
     assert integrate(d1, (x, -oo, oo)) == 1
     assert integrate(d1, (x, 0, 2)) == 1
-    assert Piecewise((d1, Eq(x, 2)), (0, True)).integrate(x) == 0  # right
-    # XXX should the following be
-    # Piecewise((Heaviside(0), Eq(x, 1)), (1, x > 1), (0, True))?
-    assert Piecewise((d1, Eq(x, 1)), (0, True)).integrate(x) == 0
+    assert Piecewise((d1, Eq(x, 2)), (0, True)).integrate(x) == 0
     assert Piecewise((d1, x < 2), (0, True)).integrate(x) == Piecewise(
         (Heaviside(x - 1), x < 2), (1, True))
+    # TODO raise error if function is discontinuous at limit of
+    # integration, e.g. integrate(d1, (x, -2, 1)) or Piecewise(
+    # (d1, Eq(x ,1)
 
 
 def test_issue_10258():

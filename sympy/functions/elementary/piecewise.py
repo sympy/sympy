@@ -1078,34 +1078,38 @@ def _pair(A, B, union=False, dict=None, abi=False):
     # neither (-1) as covering that interval and Hi|Lj means
     # either the hi boundary of the ith interval or the lo
     # boundary of the jth interval
-    if a is -oo and b is oo:
+    if a is -oo and b is oo:                       # (-oo, oo), (c, d)
         br = a, 0, b
     elif c is -oo and d is oo:
-        if a is -oo:
+        if a is -oo:                               # (-oo, b) (-oo, oo)
             br = a, 0, b, 1, oo
-        elif b is oo:
+        elif b is oo:                              # (a, oo) (-oo, oo)
             br = -oo, 1, a, 0, b
-        else:
+        else:                                      # (a, b) (-oo, oo)
             br = -oo, 1, a, 0, b, 1, oo
-    elif b is oo and d is oo:  # (a, oo) (c, oo)
+    elif b is oo and d is oo:                      # (a, oo) (c, oo)
         br = -oo, -1, Min(a, c), 1, a, 0, oo
-    elif a is -oo and c is -oo:  # (-oo, b) (-oo, d)
+    elif a is -oo and c is -oo:                    # (-oo, b) (-oo, d)
         br = -oo, 0, b, 1, Max(b, d), -1, oo
-    elif a is -oo and d is oo:  # (-oo, b) (c, oo)
+    elif a is -oo and d is oo:                     # (-oo, b) (c, oo)
         br = -oo, 0, b, -1, Max(b, c), 1, oo
-    elif b is oo and c is -oo:  # (a, oo) (-oo, d)
+    elif b is oo and c is -oo:                     # (a, oo) (-oo, d)
         br = -oo, 1, Min(a, d), -1, a, 0, oo
-    elif d is oo:  # (a, b) (c, oo)
-        br = -oo, -1, Min(a, c), 1, a, 0, b, -1, Max(b, c), 1, oo
-    elif c is -oo:  # (a, b) (-oo, d)
-        br = -oo, 1, Min(a, d), -1, a, 0, b, 1, Max(b, d), -1, oo
-    elif b is oo:  # (a, oo) (c, d)
-        br = -oo, -1, Min(a, c), 1, Min(a, d), -1, a, 0, oo
-    elif a is -oo:  # (-oo, b) (c, d)
-        br = -oo, 0, b, -1, Max(b, c), 1, Max(b, d), -1, oo
-    else:  # (a, b) (c, d)
-        br = (-oo, -1, Min(a, c), 1, Min(a, d), -1, a, 0, b,
-            -1, Max(b, c), 1, Max(b, d), -1, oo)
+    elif d is oo:                                  # (a, b) (c, oo)
+        br = (-oo, -1, Min(a, c), 1, a, 0,
+            b, -1, Max(b, c), 1, oo)
+    elif c is -oo:                                 # (a, b) (-oo, d)
+        br = (-oo, 1, Min(a, d), -1, a, 0,
+            b, 1, Max(b, d), -1, oo)
+    elif b is oo:                                  # (a, oo) (c, d)
+        br = (-oo, -1, Min(a, c), 1,
+            Min(a, d), -1, a, 0, oo)
+    elif a is -oo:                                 # (-oo, b) (c, d)
+        br = (-oo, 0, b, -1, Max(b, c), 1,
+            Max(b, d), -1, oo)
+    else:                                          # (a, b) (c, d)
+        br = (-oo, -1, Min(a, c), 1, Min(a, d), -1,
+            a, 0, b, -1, Max(b, c), 1, Max(b, d), -1, oo)
     abi = []
     for _ in range(1, len(br) - 1, 2):
         a, b, i = br[_ - 1], br[_ + 1], br[_]
