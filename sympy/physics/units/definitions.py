@@ -149,7 +149,7 @@ e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity", c
 # vacuum impedance:
 Z0 = vacuum_impedance = Quantity("vacuum_impedance", impedance, u0 * c)
 # Coulomb's constant:
-coulomb_constant = electric_force_constant = Quantity("coulomb_constant", force*length**2/charge**2, 1/(4*pi*vacuum_permittivity), abbrev="k_e")
+coulomb_constant = coulombs_constant = electric_force_constant = Quantity("coulomb_constant", force*length**2/charge**2, 1/(4*pi*vacuum_permittivity), abbrev="k_e")
 
 atmosphere = atmospheres = atm = Quantity("atmosphere", pressure, 101325 * pascal, abbrev="atm")
 
