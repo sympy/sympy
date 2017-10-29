@@ -239,7 +239,7 @@ class Product(ExprWithIntLimits):
         from sympy.functions import KroneckerDelta, RisingFactorial
 
         (k, a, n) = limits
-        #print(term, limits)
+
         if k not in term.free_symbols:
             if (term - 1).is_zero:
                 return S.One
@@ -252,7 +252,6 @@ class Product(ExprWithIntLimits):
             return deltaproduct(term, limits)
 
         dif = n - a
-
         if dif.is_Integer:
             return Mul(*[term.subs(k, a + i) for i in range(dif + 1)])
 
@@ -276,7 +275,6 @@ class Product(ExprWithIntLimits):
             return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
-
             p, q = term.as_numer_denom()
             q = self._eval_product(q, (k, a, n))
             if q.is_Number:
