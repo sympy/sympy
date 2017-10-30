@@ -165,6 +165,12 @@ def test_find_dynamicsymbols():
     sol = {x, y.diff(), y, x.diff().diff(), z, z.diff()}
     assert find_dynamicsymbols(expr) == sol
     # Test finding all but those in sym_list
-    exclude = [x, y, z]
+    exclude_list = [x, y, z]
     sol = {y.diff(), x.diff().diff(), z.diff()}
-    assert find_dynamicsymbols(expr, exclude) == sol
+    assert find_dynamicsymbols(expr, exclude=exclude_list) == sol
+    # Test finding all dynamicsymbols in a vector with a given reference frame
+    a, b, c = dynamicsymbols('a, b, c')
+    A = ReferenceFrame('A')
+    v = a * A.x + b * A.y + c * A.z
+    sol = {c, a, b}
+    assert find_dynamicsymbols(expr, reference_frame=A) == sol
