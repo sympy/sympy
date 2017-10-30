@@ -42,8 +42,11 @@ def test_mathematica():
         'Log[2,4]': 'log(4,2)',
         'Log[Log[2,4],4]': 'log(4,log(4,2))',
         'Exp[Sqrt[2]^2Log[2, 8]]': 'exp(sqrt(2)**2*log(8,2))',
-        'Arcsin[1/2]': 'arcsin(1/2)',   # discussion in the issue #13544
-        'Func[1/2]': 'func(1/2)',       # discussion in the issue #13544
+        'ArcSin[Cos[0]]': 'asin(cos(0))',
+        'Log2[16]': 'log(16,2)',
+        'Max[1,-2,3,-4]': 'Max(1,-2,3,-4)',
+        'Min[1,-2,3]': 'Min(1,-2,3)',
+        'Exp[I Pi/2]': 'exp(I*pi/2)',
         }
 
     for e in d:
