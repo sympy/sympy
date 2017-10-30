@@ -413,6 +413,26 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
 
     >>> find_dynamicsymbols(expr, [x, y])
     {Derivative(x(t), t)}
+
+    Optional Parameter
+    ------------------
+    reference_frame : ReferenceFrame
+        The frame with respect to which the dynamic symbols of the
+        given vector is to be determined.
+
+    If we intend to apply this function on a vector, the optional
+    ''reference_frame'' is also used to inform about the corresponding frame
+    with respect to which the dynamic symbols of the given vector is to be
+    determined.
+
+    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols, Ref
+    erenceFrame
+    >>> a, b, c = dynamicsymbols('a, b, c')
+    >>> A = ReferenceFrame('A')
+    >>> v = a * A.x + b * A.y + c * A.z
+    >>> find_dynamicsymbols(v,reference_frame=A)
+    {a(t), b(t), c(t)}
+
     """
     t_set = {dynamicsymbols._t}
     if exclude:
@@ -424,11 +444,11 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
         exclude_set = set()
     if reference_frame==None:
         return set([i for i in expression.atoms(AppliedUndef, Derivative) if
-        	i.free_symbols == t_set]) - exclude_set
+                i.free_symbols == t_set]) - exclude_set
     else:
         expr=expression.to_matrix(reference_frame)
         return set([i for i in expr.atoms(AppliedUndef, Derivative) if
-        	i.free_symbols == t_set]) - exclude_set
+                i.free_symbols == t_set]) - exclude_set
 
 
 def msubs(expr, *sub_dicts, **kwargs):
