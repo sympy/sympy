@@ -13,11 +13,6 @@ def density(mass, volume):
     Output Parameter :
      d - Density of the Fluid
     ================================================================================================================
-    Example :
-    >>> from sympy.core import S, Symbol, symbols
-    >>> from sympy.physics.fluid import *
-    >>> m, v = symbols('m, v')
-    >>> d = density(m, v)
     """
     return mass/volume
 
@@ -33,10 +28,5 @@ def specific_weight(mass, volume , gravity):
     Output Parameter :
      w - Specific Weight
     ================================================================================================================
-    Example :
-    >>> from sympy.core import S, Symbol, symbols
-    >>> from sympy.physics.fluid import *
-    >>> m, v, g = symbols('m, v, g')
-    >>> w = specific_weight(m, v, g)
     """
     return (mass*gravity)/volume
