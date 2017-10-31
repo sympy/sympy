@@ -105,10 +105,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     else:
         x1, s = _invert_complex(f_x, FiniteSet(y), x)
 
-    if not isinstance(s, FiniteSet) or x1 == f_x:
-        return x1, s
-
-    if not x1 == x:
+    if not isinstance(s, FiniteSet) or x1 == f_x or x1 != x:
         return x1, s
 
     return x1, s.intersection(domain)
