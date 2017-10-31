@@ -1633,3 +1633,6 @@ def test__is_finite_with_finite_vars():
     assert all(f(1/x) is None for x in (
         Dummy(), Dummy(real=True), Dummy(complex=True)))
     assert f(1/Dummy(real=False)) is True  # b/c it's finite but not 0
+
+def test_issue_13550():
+    assert solveset(x**2 - 2*x - 15, symbol = x, domain = Interval(-oo, 0)) == FiniteSet(-3)
