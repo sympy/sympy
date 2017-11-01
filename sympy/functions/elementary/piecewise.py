@@ -1011,7 +1011,7 @@ def _pair(A, B, union=False, dict=None, abi=False):
 
     >>> from sympy import Tuple
     >>> from sympy.functions.elementary.piecewise import _pair
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y
 
     For the following segments,
 
@@ -1034,10 +1034,15 @@ def _pair(A, B, union=False, dict=None, abi=False):
     become more complex and the boundaries are given in terms of
     Min and Max functions:
 
-    >>> _pair((x, 2), (4, 5))
-    {-1: [(-oo, Min(4, x)), (Min(5, x), x), (2, 4), (5, oo)],
+    >>> _pair((x, 2), (y, 5))
+    {-1: [(-oo, Min(x, y)), (Min(5, x), x), (2, Max(2, y)), (5, oo)],
     0: [(x, 2)],
-    1: [(Min(4, x), Min(5, x)), (4, 5)]}
+    1: [(Min(x, y), Min(5, x)), (Max(2, y), 5)]}
+
+    >>> _pair((x, 2), (4, 5))
+    {-1: [(-oo, Min(2, x)), (2, 4), (5, oo)],
+    0: [(Min(2, x), 2)],
+    1: [(4, 5)]}
 
     When an actual value is given for x, there may be redundant
     intervals and intervals with no width:
@@ -1051,18 +1056,26 @@ def _pair(A, B, union=False, dict=None, abi=False):
     ...
     >>> for k, v in sorted(replace(x, 1).items()):
     ...     k, v
-    (-1, [(-oo, 1), (1, 1), (2, 4), (5, oo)])
+    (-1, [(-oo, 1), (2, 4), (5, oo)])
     (0, [(1, 2)])
-    (1, [(1, 1), (4, 5)])
+    (1, [(4, 5)])
 
     There may also be intervals wherein the right boundary is greater
-    than the left and redundant intervals:
+    than the left:
 
     >>> for k, v in sorted(replace(x, 6).items()):
     ...     (k, v)
-    (-1, [(-oo, 4), (5, 6), (2, 4), (5, oo)])
-    (0, [(6, 2)])
-    (1, [(4, 5), (4, 5)])
+    (-1, [(-oo, 2), (2, 4), (5, oo)])
+    (0, [(2, 2)])
+    (1, [(4, 5)])
+
+    NB: the examples above are simply a description of how this routine
+    works and are not intended to indicate deficiencies that should be
+    resolved in themselves. This routine is a helper for '_clip' which
+    itself is a helper for Piecewise integration. The contraction done
+    in '_clip' of the interval boundaries could perhaps be moved here
+    and then this routine might be a way to represent interactions
+    between symbolic intervals.
     """
     if not any(i for i in (abi, dict, union)):
         dict = True
@@ -1073,43 +1086,40 @@ def _pair(A, B, union=False, dict=None, abi=False):
     c, d = B
     oo = S.Infinity
     # the real line is broken into pieces which are compactly
-    # represented as -oo, i1, H1|L2, i2, H2|L3, i3, ..., oo
+    # represented as -oo, i1, H|L, i2, H|L, i3, ..., oo
     # where i1, i2, ...., refer to the interval A (0), B (1) or
-    # neither (-1) as covering that interval and Hi|Lj means
+    # neither (-1) as covering that interval and H|L means
     # either the hi boundary of the ith interval or the lo
-    # boundary of the jth interval
-    if a is -oo and b is oo:                       # (-oo, oo), (c, d)
-        br = a, 0, b
-    elif c is -oo and d is oo:
-        if a is -oo:                               # (-oo, b) (-oo, oo)
-            br = a, 0, b, 1, oo
-        elif b is oo:                              # (a, oo) (-oo, oo)
-            br = -oo, 1, a, 0, b
-        else:                                      # (a, b) (-oo, oo)
-            br = -oo, 1, a, 0, b, 1, oo
-    elif b is oo and d is oo:                      # (a, oo) (c, oo)
-        br = -oo, -1, Min(a, c), 1, a, 0, oo
-    elif a is -oo and c is -oo:                    # (-oo, b) (-oo, d)
-        br = -oo, 0, b, 1, Max(b, d), -1, oo
-    elif a is -oo and d is oo:                     # (-oo, b) (c, oo)
-        br = -oo, 0, b, -1, Max(b, c), 1, oo
-    elif b is oo and c is -oo:                     # (a, oo) (-oo, d)
-        br = -oo, 1, Min(a, d), -1, a, 0, oo
-    elif d is oo:                                  # (a, b) (c, oo)
-        br = (-oo, -1, Min(a, c), 1, a, 0,
-            b, -1, Max(b, c), 1, oo)
-    elif c is -oo:                                 # (a, b) (-oo, d)
-        br = (-oo, 1, Min(a, d), -1, a, 0,
-            b, 1, Max(b, d), -1, oo)
-    elif b is oo:                                  # (a, oo) (c, d)
-        br = (-oo, -1, Min(a, c), 1,
-            Min(a, d), -1, a, 0, oo)
-    elif a is -oo:                                 # (-oo, b) (c, d)
-        br = (-oo, 0, b, -1, Max(b, c), 1,
-            Max(b, d), -1, oo)
-    else:                                          # (a, b) (c, d)
-        br = (-oo, -1, Min(a, c), 1, Min(a, d), -1,
-            a, 0, b, -1, Max(b, c), 1, Max(b, d), -1, oo)
+    # boundary of the (i+1)th interval
+    if (d <= a) == True:
+        c = Min(c, d)
+        br = (
+        -oo, -1,
+        c, 1,
+        d, -1,
+        a, 0,
+        b, -1,
+        oo)
+    elif (b <= c) == True:
+        a = Min(a, b)
+        br = (
+        -oo, -1,
+        a, 0,
+        b, -1,
+        c, 1,
+        d, -1,
+        oo)
+    else:
+        br = (
+        -oo, -1,
+        Min(a, c), 1,
+        Min(a, d), -1,
+        a, 0,
+        b, -1,
+        Max(b, c), 1,
+        Max(b, d), -1,
+        oo)
+
     abi = []
     for _ in range(1, len(br) - 1, 2):
         a, b, i = br[_ - 1], br[_ + 1], br[_]
@@ -1140,7 +1150,11 @@ def _pair(A, B, union=False, dict=None, abi=False):
 
 def _clip(A, B, k):
     """Return interval B as intervals that are covered by A (keyed
-    to k) and all others keyed to -1.
+    to k) and all other intervals of B not covered by A keyed to -1.
+
+    The reference point of each interval is the rhs; if the lhs is
+    greater than the rhs then an interval of zero width interval will
+    result, e.g. (4, 1) is treated like (1, 1).
 
     Examples
     ========
@@ -1148,10 +1162,11 @@ def _clip(A, B, k):
     >>> from sympy.functions.elementary.piecewise import _clip
     >>> _clip((1, 3), (2, 4), 0)
     [(2, 3, 0), (3, 4, -1)]
+
+    Interpretation: interval portion (2, 3) of interval (2, 4) is
+    covered by interval (1, 3) and is keyed to 0 as requested;
+    interval (3, 4) was not covered by (1, 3) and is keyed to -1.
     """
-    # pair(A, B) will give keys of -1, 0 and 1
-    # we rekey A intervals to k and change all others
-    # to -1
     a, b = B
     c, d = A
     A = c, d = Min(Max(c, a), b), Min(Max(d, a), b)
@@ -1206,8 +1221,8 @@ def _mmsimp(e):
         else:
             return m
 
-    # And and Or are going to be used to identify arg that
-    # warrant simplification but we can't allow any non-Booleans
+    # And and Or are going to be used to identify args that
+    # warrant simplification. We can't allow any non-Booleans
     # into BooleanFunctions, so replace any non-Booleans with
     # Dummy symbols
     reps = []
