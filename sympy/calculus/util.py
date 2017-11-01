@@ -1317,6 +1317,7 @@ def argmax(f, symbol = None, domain = S.Reals):
     Examples
     ========
 
+    >>> from sympy import Symbol, sin, Interval, S, exp, pi
     >>> from sympy.calculus.util import argmax
     >>> x = Symbol('x')
     >>> argmax(sin(x), x, Interval(-2*pi, pi))
@@ -1361,6 +1362,7 @@ def argmin(f, symbol = None, domain = S.Reals):
     Examples
     ========
 
+    >>> from sympy import Symbol, sin, Interval, S, exp, pi
     >>> from sympy.calculus.util import argmin
     >>> x = Symbol('x')
     >>> argmin(sin(x), x, Interval(-2*pi, pi))
@@ -1441,7 +1443,3 @@ def _argMaxMin(f, symbol, domain, max):
     if isinstance(solns, FiniteSet) and len(solns) == 1:
         return list(solns)[0]
     return solns
-
-
-
-
