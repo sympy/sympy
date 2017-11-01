@@ -1081,7 +1081,6 @@ class Line(LinearEntity):
         ValueError
             When ``other`` is not contained in the line.
 
-        NotImplementedError
             When ``other`` is not a ``Point``.
 
         Examples
@@ -1094,6 +1093,7 @@ class Line(LinearEntity):
         2
         """
         if isinstance(other, Point):
+            other=Point(other)
             if Point.is_collinear(self.p1, self.p2, other):
                 if self.p1.x != self.p2.x:
                     ti = (other.x - self.p1.x)/(self.p2.x - self.p1.x)
@@ -1102,7 +1102,7 @@ class Line(LinearEntity):
                 if ti.is_number:
                     return ti
             raise ValueError("Point is not collinear.")
-        raise NotImplementedError()
+        raise ValueError('Other should be a Point')
 
     def distance(self, other):
         """
