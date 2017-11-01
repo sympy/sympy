@@ -995,159 +995,6 @@ def piecewise_fold(expr):
     return Piecewise(*new_args)
 
 
-def _pair(A, B, union=False, dict=None, abi=False):
-    """Return the intervals on the real number line that are covered
-    by the two intervals, A = [a, b] and B = [c, d]. If union is
-    true then a simple list of intervals is returned; if dict is
-    true (default) then the intervals are keyed to 0 if they are
-    covered by A, 1 if they are covered by B and -1 if they are covered
-    by neither, with higher precedence given to A. If abi is true,
-    return an ordered set of tuples (a, b, i) where
-    a is the lower bound, b is the upper bound and i indicates which
-    interval covers that range: 0 for A, 1 for B and -1 for neither.
-
-    Examples
-    ========
-
-    >>> from sympy import Tuple
-    >>> from sympy.functions.elementary.piecewise import _pair
-    >>> from sympy.abc import x, y
-
-    For the following segments,
-
-           1---2
-                      4---5
-
-    5 regions are identified:
-
-        -oo -> 1 -> 2 -> 4 -> 5 -> oo
-
-    >>> A = (1, 2); B = (4, 5)
-    >>> _pair(A, B, abi=True)
-    [(-oo, 1, -1), (1, 2, 0), (2, 4, -1), (4, 5, 1), (5, oo, -1)]
-    >>> _pair(A, B, union=True)
-    [(1, 2), (4, 5)]
-    >>> _pair(A, B, dict=True)  # default
-    {-1: [(-oo, 1), (2, 4), (5, oo)], 0: [(1, 2)], 1: [(4, 5)]}
-
-    When one or more of the boundaries are symbolic, the results
-    become more complex and the boundaries are given in terms of
-    Min and Max functions:
-
-    >>> _pair((x, 2), (y, 5))
-    {-1: [(-oo, Min(x, y)), (Min(5, x), x), (2, Max(2, y)), (5, oo)],
-    0: [(x, 2)],
-    1: [(Min(x, y), Min(5, x)), (Max(2, y), 5)]}
-
-    >>> _pair((x, 2), (4, 5))
-    {-1: [(-oo, Min(2, x)), (2, 4), (5, oo)],
-    0: [(Min(2, x), 2)],
-    1: [(4, 5)]}
-
-    When an actual value is given for x, there may be redundant
-    intervals and intervals with no width:
-
-    >>> last = _
-    >>> def replace(x, y):
-    ...     rv = {}
-    ...     for k, v in last.items():
-    ...         rv[k] = [Tuple(*i).subs(x, y) for i in v]
-    ...     return rv
-    ...
-    >>> for k, v in sorted(replace(x, 1).items()):
-    ...     k, v
-    (-1, [(-oo, 1), (2, 4), (5, oo)])
-    (0, [(1, 2)])
-    (1, [(4, 5)])
-
-    There may also be intervals wherein the right boundary is greater
-    than the left:
-
-    >>> for k, v in sorted(replace(x, 6).items()):
-    ...     (k, v)
-    (-1, [(-oo, 2), (2, 4), (5, oo)])
-    (0, [(2, 2)])
-    (1, [(4, 5)])
-
-    NB: the examples above are simply a description of how this routine
-    works and are not intended to indicate deficiencies that should be
-    resolved in themselves. This routine is a helper for '_clip' which
-    itself is a helper for Piecewise integration. The contraction done
-    in '_clip' of the interval boundaries could perhaps be moved here
-    and then this routine might be a way to represent interactions
-    between symbolic intervals.
-    """
-    if not any(i for i in (abi, dict, union)):
-        dict = True
-    if [bool(i) for i in (abi, dict, union)].count(True) != 1:
-        raise ValueError('only 1 of abi, dict and union may be True')
-
-    a, b = A
-    c, d = B
-    oo = S.Infinity
-    # the real line is broken into pieces which are compactly
-    # represented as -oo, i1, H|L, i2, H|L, i3, ..., oo
-    # where i1, i2, ...., refer to the interval A (0), B (1) or
-    # neither (-1) as covering that interval and H|L means
-    # either the hi boundary of the ith interval or the lo
-    # boundary of the (i+1)th interval
-    if (d <= a) == True:
-        c = Min(c, d)
-        br = (
-        -oo, -1,
-        c, 1,
-        d, -1,
-        a, 0,
-        b, -1,
-        oo)
-    elif (b <= c) == True:
-        a = Min(a, b)
-        br = (
-        -oo, -1,
-        a, 0,
-        b, -1,
-        c, 1,
-        d, -1,
-        oo)
-    else:
-        br = (
-        -oo, -1,
-        Min(a, c), 1,
-        Min(a, d), -1,
-        a, 0,
-        b, -1,
-        Max(b, c), 1,
-        Max(b, d), -1,
-        oo)
-
-    abi = []
-    for _ in range(1, len(br) - 1, 2):
-        a, b, i = br[_ - 1], br[_ + 1], br[_]
-        if a == b:
-            continue
-        abi.append((a, b, i))
-    if not union and not dict:
-        return abi
-    if union:
-        rv = []
-        for a, b, i in abi:
-            if i == -1:
-                continue
-            K = (a, b)
-            if not rv or a != rv[-1][1]:
-                # it's a new interval
-                rv.append(K)
-            else:
-                # it joins with the last one
-                rv[-1] = rv[-1][0], K[1]
-        return rv
-    # dict
-    rv = {}
-    for a, b, i in abi:
-        rv.setdefault(i, []).append((a, b))
-    return rv
-
-
 def _clip(A, B, k):
     """Return interval B as intervals that are covered by A (keyed
     to k) and all other intervals of B not covered by A keyed to -1.
@@ -1167,24 +1014,60 @@ def _clip(A, B, k):
     covered by interval (1, 3) and is keyed to 0 as requested;
     interval (3, 4) was not covered by (1, 3) and is keyed to -1.
     """
+    oo = S.Infinity
     a, b = B
     c, d = A
-    A = c, d = Min(Max(c, a), b), Min(Max(d, a), b)
-    p = _pair(A, B, abi=True)
+    a = Min(a, b)
+    c, d = Min(Max(c, a), b), Min(Max(d, a), b)
+    A = c, d = Min(c, d), d
+    # the real line is broken into pieces which are compactly
+    # represented as -oo, i1, H|L, i2, H|L, i3, ..., oo
+    # where i1, i2, ...., refer to the interval A (k), or
+    # B (-1) or neither (-1) as covering that interval and H|L means
+    # either the hi boundary of the ith interval or the lo
+    # boundary of the (i+1)th interval
+    a, b, c, d = c, d, a, b  # code below assumes opposite ordering
+    if (d <= a) == True:
+        br = (
+        -oo, -1,
+        c, -1,
+        d, -1,
+        a, k,
+        b, -1,
+        oo)
+    elif (b <= c) == True:
+        br = (
+        -oo, -1,
+        a, k,
+        b, -1,
+        c, -1,
+        d, -1,
+        oo)
+    else:
+        br = (
+        -oo, -1,
+        Min(a, c), -1,
+        Min(a, d), -1,
+        a, k,
+        b, -1,
+        Max(b, c), -1,
+        Max(b, d), -1,
+        oo)
+    a, b, c, d = c, d, a, b  # restore ordering
     # remove infinities that weren't there at the start
     oo = S.Infinity
-    if -oo not in (a, c) and p[0][0] == -oo:
-        p.pop(0)
-    if oo not in (b, d) and p[-1][1] == oo:
-        p.pop()
-    # rekey key 0 to k
-    assert k != -1
-    for i in range(len(p)):
-        if p[i][-1] == 0:
-            p[i] = p[i][:2] + (k,)
-        else:
-            # rekey all other keys to -1
-            p[i] = p[i][:2] + (-1,)
+    if -oo not in (a, c) and br[0] == -oo:
+        br = br[2:]
+    if oo not in (b, d) and br[-1] == oo:
+        br = br[:-2]
+    # reform into tuples
+    p = []
+    for _ in range(1, len(br) - 1, 2):
+        _a, _b, i = br[_ - 1], br[_ + 1], br[_]
+        # ignore zero-width intervals
+        if _a == _b:
+            continue
+        p.append((_a, _b, i))
     # combine intervals that are now at the same level
     remove = []
     for i in range(1,len(p)):
