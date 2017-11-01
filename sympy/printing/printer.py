@@ -130,14 +130,22 @@ This is done by overriding the method ``_latex`` of ``Mod``.
 
 .. code-block:: python
 
-    from sympy import Symbol, Mod
+    from sympy import Symbol, Mod, Integer
     from sympy.printing.latex import print_latex
 
 
     class ModOp(Mod):
-        def _latex(self, printer=None):
-            a, b = [printer.doprint(i) for i in self.args]
-            return r"\\operatorname{Mod}{\left( %s,%s \\\\right)}" % (a,b)
+	def _latex(self, printer=None):
+	    # Always use printer.doprint() otherwise nested expressions won't
+	    # work. See the example of ModOpWrong.
+	    a, b = [printer.doprint(i) for i in self.args]
+	    return r"\operatorname{Mod}{\left( %s,%s \\right)}" % (a,b)
+
+
+    class ModOpWrong(Mod):
+	def _latex(self, printer=None):
+	    a, b = [str(i) for i in self.args]
+	    return r"\operatorname{Mod}{\left( %s,%s \\right)}" % (a,b)
 
 
     x = Symbol('x')
@@ -146,10 +154,16 @@ This is done by overriding the method ``_latex`` of ``Mod``.
     print_latex(ModOp(x, m))
     print_latex(Mod(x, m))
 
+    # Nested modulo.
+    print_latex(ModOp(ModOp(x, m), Integer(7)))
+    print_latex(ModOpWrong(ModOpWrong(x, m), Integer(7)))
+
 The output of the code above is::
 
-    \\operatorname{Mod}{\\left( x,m \\right)}
+    \operatorname{Mod}{\left( x,m \\right)}
     x\\bmod{m}
+    \operatorname{Mod}{\left( \operatorname{Mod}{\left( x,m \\right)},7 \\right)}
+    \operatorname{Mod}{\left( ModOpWrong(x, m),7 \\right)}
 
 """
 
