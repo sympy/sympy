@@ -1,34 +1,35 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
 from itertools import product
 import re
 from sympy import sympify
 
 
-class mathematica(object):
-    '''This class converts a string of a basic Mathematica expretion to
-    SymPy style. Output is a SymPy object.'''
+def mathematica(s, additional_translations=None):
+    '''Users can add their own translation dictionary
+    # Example
+    In [1]: mathematica('Log3[9]', {'Log3[x]':'log(x,3)'})
+    Out[1]: 2
+    In [2]: mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
+    Out[2]: 21
+    variable-length argument needs '*' character '''
 
-    # use this class like a function
-    def __new__(cls, s, additional_translations={}):
-        try:
-            # get parsed string
-            s = cls.parse(s, additional_translations)
+    parser = MathematicaParser(additional_translations)
+    return sympify(parser.parse(s))
 
-        # execute only for the first time
-        except AttributeError:
-            cls.parse = MathematicaParser()
-            s = cls.parse(s, additional_translations)
 
-        return sympify(s)
+def _deco(cls):
+    cls._initialize_class()
+    return cls
 
+
+@_deco
 class MathematicaParser(object):
     '''An instance of this class converts a string of a basic Mathematica
     expression to SymPy style. Output is string type.'''
 
     # left: Mathematica, right: SymPy
-    correspondence = {
+    CORRESPONDENCES = {
         'Sqrt[x]': 'sqrt(x)',
         'Exp[x]': 'exp(x)',
         'Log[x]': 'log(x)',
@@ -48,16 +49,16 @@ class MathematicaParser(object):
             fs = 'a' + tri.lower() + h + '(x)'
         else:    # non-arc func
             fs = tri.lower() + h + '(x)'
-        correspondence.update({fm: fs})
+        CORRESPONDENCES.update({fm: fs})
 
-    replaces = {
+    REPLACEMENTS = {
         ' ': '',
         '^': '**',
         '{': '[',
         '}': ']',
     }
 
-    rules = {
+    RULES = {
         # a single whitespace to '*'
         'whitespace': (
             re.compile(r'''
@@ -98,7 +99,7 @@ class MathematicaParser(object):
     }
 
     # Mathematica function name pattern
-    fm_pattern = re.compile(r'''
+    FM_PATTERN = re.compile(r'''
                 (?:
                 \A|(?<=[^a-zA-Z])   # at the top or a non-letter
                 )
@@ -107,12 +108,12 @@ class MathematicaParser(object):
                 ''', re.VERBOSE)
 
     # list or matrix pattern (for future usage)
-    arg_mtrx_pattern = re.compile(r'''
+    ARG_MTRX_PATTERN = re.compile(r'''
                 \{.*\}
                 ''', re.VERBOSE)
 
     # regex string for function argument pattern
-    arg_pattern_template = r'''
+    ARGS_PATTERN_TEMPLATE = r'''
                 (?:
                 \A|(?<=[^a-zA-Z])
                 )
@@ -120,32 +121,65 @@ class MathematicaParser(object):
                 (?=[^a-zA-Z])
                 '''
 
-    def __init__(self):
-        # T will contain a function name, the number of arguments, e.t.c.
-        self.T = defaultdict(dict)
+    # will contain transformed CORRESPONDENCES dictionary
+    TRANSLATIONS = {}
 
-        # for the latest added translation dictionary by users
-        self.cache = {}
+    # cache for a raw users' translation dictionary
+    cache_original = {}
 
-        # transform the correspondence dictionary and add to T.
-        self._update_translation_dictionary(self.correspondence)
+    # cache for a compiled users' translation dictionary
+    cache_compiled = {}
 
-    def _update_translation_dictionary(self, dic):
+    @classmethod
+    def _initialize_class(cls):
+        # get a transformed CORRESPONDENCES dictionary
+        d = cls._compile_dictionary(cls.CORRESPONDENCES)
+        cls.TRANSLATIONS.update(d)
+
+    def __init__(self, additional_translations=None):
+        self.translations = {}
+
+        # update with TRANSLATIONS (class constant)
+        self.translations.update(self.TRANSLATIONS)
+
+        if additional_translations is None:
+            additional_translations = {}
+
+        # check the latest added translations
+        if self.__class__.cache_original != additional_translations:
+            if not isinstance(additional_translations, dict):
+                raise ValueError('The argument must be dict type')
+
+            # get a transformed additional_translations dictionary
+            d = self._compile_dictionary(additional_translations)
+
+            # update cache
+            self.__class__.cache_original = additional_translations
+            self.__class__.cache_compiled = d
+
+        # merge user's own translations
+        self.translations.update(self.__class__.cache_compiled)
+
+    @classmethod
+    def _compile_dictionary(cls, dic):
+        # for return
+        d = {}
+
         for fm, fs in dic.items():
             # check function form
-            self._check_input(fm)
-            self._check_input(fs)
+            cls._check_input(fm)
+            cls._check_input(fs)
 
             # uncover '*' hiding behind a whitespace
-            fm = self._apply_rules(fm, 'whitespace')
-            fs = self._apply_rules(fs, 'whitespace')
+            fm = cls._apply_rules(fm, 'whitespace')
+            fs = cls._apply_rules(fs, 'whitespace')
 
             # remove whitespace(s)
-            fm = self._replace(fm, ' ')
-            fs = self._replace(fs, ' ')
+            fm = cls._replace(fm, ' ')
+            fs = cls._replace(fs, ' ')
 
             # search Mathematica function name
-            m = self.fm_pattern.search(fm)
+            m = cls.FM_PATTERN.search(fm)
 
             # if no-hit
             if m is None:
@@ -156,9 +190,9 @@ class MathematicaParser(object):
             fm_name = m.group()
 
             # get arguments of Mathematica function
-            args, end = self._get_args(m)
+            args, end = cls._get_args(m)
 
-            # funciton side check. (ex) '2*Func[x]' is invalid.
+            # funciton side check. (e.g.) '2*Func[x]' is invalid.
             if m.start() != 0 or end != len(fm):
                 err = "'{f}' function form is invalid.".format(f=fm)
                 raise ValueError(err)
@@ -171,12 +205,6 @@ class MathematicaParser(object):
 
             key = (fm_name, key_arg)
 
-            # SymPy function template
-            self.T[key]['fs'] = fs
-
-            # args are ['x', 'y'] for example
-            self.T[key]['args'] = args
-
             # convert '*x' to '\\*x' for regex
             re_args = [x if x[0] != '*' else '\\' + x for x in args]
 
@@ -184,52 +212,23 @@ class MathematicaParser(object):
             xyz = '(?:(' + '|'.join(re_args) + '))'
 
             # string for regex compile
-            patStr = self.arg_pattern_template.format(arguments=xyz)
+            patStr = cls.ARGS_PATTERN_TEMPLATE.format(arguments=xyz)
 
             pat = re.compile(patStr, re.VERBOSE)
 
-            self.T[key]['pat'] = pat
+            # update dictionary
+            d[key] = {}
+            d[key]['fs'] = fs  # SymPy function template
+            d[key]['args'] = args  # args are ['x', 'y'] for example
+            d[key]['pat'] = pat
 
-    def add_translation(self, user_dic):
-        '''Users can add their own translation dictionary
-        # Example 1
-        In [1]: user_dic
-        Out[1]: {'Log3[x]': 'log(x, 3)'}
-
-        In [2]: parse.add_translation(user_dic)
-
-        In [3]: Mathematica('Log3[81]')
-        Out[3]: 4
-
-        # Example 2
-        In [1]: user_dic
-        Out[1]: {'Func[a]': 'sqrt(a)*exp(1/a)**2'}
-
-        In [2]: parse.add_translation(user_dic)
-
-        In [3]: Mathematica('Func[3]')
-        Out[3]: sqrt(3)*exp(2/3)
-
-        # Example 3
-        In [1]: user_dic
-        Out[1]: {'Func[x, y, *z]': 'Max(*z)*(x**2 + y**2)'}
-
-        In [2]: parse.add_translation(user_dic)
-
-        In [3]: Mathematica('Func[2,3,1,2,3,4,5,6,7,8,9,10]')
-        Out[3]: 130
-
-        variable-length argument needs '*' character '''
-
-        if not isinstance(user_dic, dict):
-            raise ValueError('argument must be dict type')
-        self._update_translation_dictionary(user_dic)
+        return d
 
     def _convert_function(self, s):
         '''Parse Mathematica function to SymPy one'''
 
         # compiled regex object
-        pat = self.fm_pattern
+        pat = self.FM_PATTERN
 
         scanned = ''                # converted string
         cur = 0                     # position cursor
@@ -266,23 +265,23 @@ class MathematicaParser(object):
 
     def _convert_one_function(self, s, fm, args, bgn, end):
         # no variable-length argument
-        if (fm, len(args)) in self.T:
+        if (fm, len(args)) in self.translations:
             key = (fm, len(args))
 
             # x, y,... model arguments
-            x_args = self.T[key]['args']
+            x_args = self.translations[key]['args']
 
-            # make correspondence between model arguments and actual ones
+            # make CORRESPONDENCES between model arguments and actual ones
             d = {k: v for k, v in zip(x_args, args)}
 
         # with variable-length argument
-        elif (fm, '*') in self.T:
+        elif (fm, '*') in self.translations:
             key = (fm, '*')
 
             # x, y,..*args (model arguments)
-            x_args = self.T[key]['args']
+            x_args = self.translations[key]['args']
 
-            # make correspondence between model arguments and actual ones
+            # make CORRESPONDENCES between model arguments and actual ones
             d = {}
             for i, x in enumerate(x_args):
                 if x[0] == '*':
@@ -290,16 +289,16 @@ class MathematicaParser(object):
                     break
                 d[x] = args[i]
 
-        # out of self.T
+        # out of self.translations
         else:
             err = "'{f}' is out of the whitelist.".format(f=fm)
             raise ValueError(err)
 
         # template string of converted function
-        template = self.T[key]['fs']
+        template = self.translations[key]['fs']
 
         # regex pattern for x_args
-        pat = self.T[key]['pat']
+        pat = self.translations[key]['pat']
 
         scanned = ''
         cur = 0
@@ -363,20 +362,20 @@ class MathematicaParser(object):
                     args.append(s[cur:i])
                     break
 
-        # the end postion of function + 1 (the next position to ']' bracket)
+        # the next position to ']' bracket (the function end)
         func_end = i + 1
 
         return args, func_end
 
     @classmethod
     def _replace(cls, s, bef):
-        aft = cls.replaces[bef]
+        aft = cls.REPLACEMENTS[bef]
         s = s.replace(bef, aft)
         return s
 
     @classmethod
     def _apply_rules(cls, s, bef):
-        pat, aft = cls.rules[bef]
+        pat, aft = cls.RULES[bef]
         return pat.sub(aft, s)
 
     @classmethod
@@ -390,16 +389,7 @@ class MathematicaParser(object):
             err = "Currently list is not suported.".format(f=s)
             raise ValueError(err)
 
-    def __call__(self, s, additional_translations={}):
-
-        # check change of user_dic
-        if additional_translations != self.cache:
-            # update T dictionary with user_dic
-            self.add_translation(additional_translations)
-
-            # the cache contains the latest additional_translations
-            self.cache = additional_translations
-
+    def parse(self, s):
         # input check
         self._check_input(s)
 
@@ -427,6 +417,3 @@ class MathematicaParser(object):
 #        s = cls._replace(s, '}')
 
         return s
-
-# instantiate
-parse = MathematicaParser()
