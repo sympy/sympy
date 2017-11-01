@@ -425,8 +425,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     with respect to which the dynamic symbols of the given vector is to be
     determined.
 
-    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols, Ref
-    erenceFrame
+    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols, ReferenceFrame
     >>> a, b, c = dynamicsymbols('a, b, c')
     >>> A = ReferenceFrame('A')
     >>> v = a * A.x + b * A.y + c * A.z

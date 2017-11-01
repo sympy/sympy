@@ -695,7 +695,6 @@ class Vector(object):
             d[v[1]] = v[0].applyfunc(f)
         return Vector(d)
 
-    @property
     def free_symbols(self, reference_frame):
         """
         Returns from the vector those which are free symbols.
