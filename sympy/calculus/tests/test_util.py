@@ -1,7 +1,7 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds, argmax)
+                                 periodicity, lcim, AccumBounds, argmax, argmin)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -365,11 +365,15 @@ def test_argmax():
     y = Symbol('y', real = True)
 
     raises (ValueError, lambda : argmax(y, x, S.Reals))
+    raises (ValueError, lambda: argmax(x*y, domain = S.Reals))
     assert argmax(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == S.EmptySet
+    assert argmax(x**2, domain = Interval(-oo, 4)) == S.EmptySet
     assert argmax(-(log(x)), x, Interval(0.02, 10)) == 0.02
     assert argmax(sin(x), x, S.Reals) == \
         ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)
+    assert argmax(x**2, x, Interval(-3, 3)) == FiniteSet(-3, 3)
     assert argmax(exp(y), y, Interval(-oo, 10)) == 10
+    assert argmax(exp(y), y, S.Reals) == S.EmptySet
 
 def test_argmin():
     from sympy.sets.fancysets import ImageSet
@@ -378,7 +382,12 @@ def test_argmin():
     x = Symbol('x')
     y = Symbol('y', real = True)
 
-    assert argmax(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == -3
-    assert argmax(x**2 - 2*x + 1, domain = S.Reals) == 1
-    #assert argmax(sin(x), x, S.Reals) == \
-     #   ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)
+    raises (ValueError, lambda: argmin(y, x, S.Reals))
+    assert argmin(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == -3
+    assert argmin(x**2 - 2*x + 1, domain = S.Reals) == 1
+    assert argmax(sin(x), x, S.Reals) == \
+        ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)
+    assert argmin(log(x), x, Interval(1, 10)) == 1
+    assert argmin(exp(y), y, Interval(-10, 10)) == -10
+    assert argmin(-x**2 + 4, x, Interval(-2, 2)) == FiniteSet(-2, 2)
+    assert argmin(exp(y)) == S.EmptySet

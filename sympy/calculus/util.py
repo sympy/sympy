@@ -1378,7 +1378,7 @@ def argmin(f, symbol = None, domain = S.Reals):
                 Variable for which argmin is to be determined needs to be
                 specified.'''))
         else:
-            symbol = f.free_symbols[0]
+            symbol = list(f.free_symbols)[0]
     if symbol not in f.free_symbols:
         raise ValueError(filldedent('''
             argmax of %s cannot be calculated with respect to %s'''%
@@ -1396,6 +1396,23 @@ def _argMaxMin(f, symbol, domain, max):
     from sympy.functions.elementary.piecewise import Piecewise
 
     solns = S.EmptySet
+
+    first_deriv = f.diff(symbol)
+    if first_deriv.is_positive:
+        soln1 = FiniteSet(domain.sup)
+        soln2 = FiniteSet(domain.inf)
+        if max:
+            return list(soln1)[0] if soln1.is_subset(domain) else S.EmptySet
+        else:
+            return list(soln2)[0] if soln2.is_subset(domain) else S.EmptySet
+    elif first_deriv.is_negative:
+        soln1 = FiniteSet(domain.sup)
+        soln2 = FiniteSet(domain.inf)
+        if max:
+            return list(soln2)[0] if soln2.is_subset(domain) else S.EmptySet
+        else:
+            return list(soln1)[0] if soln1.is_subset(domain) else S.EmptySet
+
     try:
         frange = function_range(f, symbol, domain)
         if max:
@@ -1411,11 +1428,6 @@ def _argMaxMin(f, symbol, domain, max):
     if not FiniteSet(extremum).is_subset(frange):
         return EmptySet()
 
-    first_deriv = f.diff(symbol)
-    if first_deriv.is_positive:
-        return domain.sup if max else domain.inf
-    elif first_deriv.is_negative:
-        return domain.inf if max else domain.sup
     critical_points = Union(
         solveset(first_deriv, symbol = symbol,domain = domain), domain.boundary)
 
@@ -1427,8 +1439,7 @@ def _argMaxMin(f, symbol, domain, max):
                 solns += FiniteSet(pt)
 
     if isinstance(solns, FiniteSet) and len(solns) == 1:
-        for i in solns:
-            return i
+        return list(solns)[0]
     return solns
 
 
