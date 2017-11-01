@@ -289,7 +289,7 @@ def test_matrixelement_diff():
 
     assert w[k, p].diff(w[k, p]) == 1
     assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k)*KroneckerDelta(0, p)
-    assert str(dexpr) == "Sum(KroneckerDelta(_k, p)*D[k, _k], (_k, 0, n - 1))"
+    assert str(dexpr) == "Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1))"
     assert str(dexpr.doit()) == 'Piecewise((D[k, p], (0 <= p) & (p <= n - 1)), (0, True))'
 
 

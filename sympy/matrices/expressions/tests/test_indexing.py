@@ -1,6 +1,7 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, Symbol,
         Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy)
 from sympy.utilities.pytest import raises
+from sympy.matrices.expressions.matexpr import MatrixElement
 
 k, l, m, n = symbols('k l m n', integer=True)
 i, j = symbols('i j', integer=True)
@@ -42,6 +43,9 @@ def test_mul_index():
 def test_pow_index():
     Q = MatPow(A, 2)
     assert Q[0, 0] == A[0, 0]**2 + A[0, 1]*A[1, 0]
+    n = symbols("n")
+    Q2 = A**n
+    assert Q2[0, 0] == MatrixElement(Q2, 0, 0)
 
 
 def test_transpose_index():
@@ -90,13 +94,21 @@ def test_matrix_expression_to_indices():
         return expr.xreplace(repl)
 
     expr = W*X*Z
-    assert replace_dummies(expr.to_index_summation(i, j)) == \
-        Sum(W[i, i1]*X[i1, i2]*Z[i2, j], (i1, 0, l), (i2, 0, m))
+    assert replace_dummies(expr._entry(i, j)) == \
+        Sum(W[i, i1]*X[i1, i2]*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1))
     expr = Z.T*X.T*W.T
-    assert replace_dummies(expr.to_index_summation(i, j)) == \
-        Sum(W[j, i2]*X[i2, i1]*Z[i1, i], (i1, 0, m), (i2, 0, l))
+    assert replace_dummies(expr._entry(i, j)) == \
+        Sum(W[j, i2]*X[i2, i1]*Z[i1, i], (i1, 0, m-1), (i2, 0, l-1))
 
     expr = W*X*Z + W*Y*Z
-    assert replace_dummies(expr.to_index_summation(i, j)) == \
-        Sum(W[i, i1]*X[i1, i2]*Z[i2, j], (i1, 0, l), (i2, 0, m)) +\
-        Sum(W[i, i1]*Y[i1, i2]*Z[i2, j], (i1, 0, l), (i2, 0, m))
+    assert replace_dummies(expr._entry(i, j)) == \
+        Sum(W[i, i1]*X[i1, i2]*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1)) +\
+        Sum(W[i, i1]*Y[i1, i2]*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1))
+
+    expr = W*(X + Y)*Z
+    assert replace_dummies(expr._entry(i, j)) == \
+            Sum(W[i, i1]*(X[i1, i2] + Y[i1, i2])*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1))
+
+    expr = A*B**2*A
+    #assert replace_dummies(expr._entry(i, j)) == \
+    #        Sum(A[i, i1]*B[i1, i2]*B[i2, i3]*A[i3, j], (i1, 0, 1), (i2, 0, 1), (i3, 0, 1))
