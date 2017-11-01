@@ -1,5 +1,5 @@
-from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix,
-        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
+from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, MatMul)
 from sympy.utilities.pytest import raises
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
@@ -98,3 +98,21 @@ def test_matrix_expression_from_index_summation():
     assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C
     expr = Sum(C[c, d]*A[b, a]*B[c, b], (b, 0, k), (c, 0, k))
     assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C
+    expr = Sum(A[a, b] + B[a, b], (a, 0, k-1), (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == A + B
+    expr = Sum((A[a, b] + B[a, b])*C[b, c], (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == (A+B)*C
+    expr = Sum((A[a, b] + B[b, a])*C[b, c], (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == (A+B.T)*C
+    expr = Sum(A[a, b]*A[b, c]*A[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, A)
+    expr = Sum(A[a, b]*A[b, c]*B[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, B)
+
+    # Parse nested sums:
+    expr = Sum(A[a, b]*Sum(B[b, c]*C[c, d], (c, 0, k-1)), (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == A*B*C
+
+    # Test Kronecker delta:
+    expr = Sum(A[a, b]*KroneckerDelta(b, c)*B[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == A*B

@@ -5,7 +5,7 @@ import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range, SYMPY_INTS
+from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -351,56 +351,84 @@ class MatrixExpr(Basic):
 
     @staticmethod
     def from_index_summation(expr, first_index):
-        from sympy import Sum, Mul, MatMul
+        from sympy import Sum, Mul, MatMul, transpose
 
-        def transform_sum(s, first_index):
-            indices = s.args[1:]
-            indices = [i[0] if isinstance(i, (tuple, Tuple)) else i for i in indices]
-            expr = s.args[0]
+        def recurse_expr(expr):
             if expr.is_Mul:
                 nonmatargs = []
-                dmap = {i: [None, None] for i in indices}
                 matargs = []
+                pos_arg = []
+                pos_ind = []
+                dlinks = {}
+                link_ind = []
+                counter = 0
                 for arg in expr.args:
-                    if not isinstance(arg, MatrixElement):
-                        nonmatargs.append(arg)
+                    arg_symbol, arg_indices = recurse_expr(arg)
+                    if arg_indices is None:
+                        nonmatargs.append(arg_symbol)
                         continue
-                    arg_symbol = arg.args[0]
-                    for i in indices:
-                        arg_indices = arg.args[1:]
-                        if i not in arg_indices:
-                            continue
-                        pos = 0 if dmap[i][0] is None else 1
-                        assert dmap[i][pos] is None
-                        if pos == arg_indices.index(i):
-                            arg_symbol = arg.args[0].T
-                        dmap[i][pos] = arg_symbol
-                    if arg.has(first_index):
-                        assert len(matargs) == 0
-                        matargs.append(arg_symbol)
-                dlinks = collections.defaultdict(list)
-                for v1, v2 in dmap.values():
-                    if v2 is None:
-                        continue
-                    dlinks[v1].append(v2)
-                    dlinks[v2].append(v1)
-                flag = True
-                while flag:
-                    for nextarg in dlinks[matargs[-1]]:
-                        flag = False
-                        if (nextarg in matargs):
-                            continue
-                        del dlinks[matargs[-1]]
-                        matargs.append(nextarg)
-                        flag = True
+                    pos_arg.append(arg_symbol)
+                    i1, i2 = arg_indices
+                    pos_ind.append(i1)
+                    pos_ind.append(i2)
+                    link_ind.extend([None, None])
+                    if i1 in dlinks:
+                        other_i1 = dlinks[i1]
+                        link_ind[2*counter] = other_i1
+                        link_ind[other_i1] = 2*counter
+                    if i2 in dlinks:
+                        other_i2 = dlinks[i2]
+                        link_ind[2*counter + 1] = other_i2
+                        link_ind[other_i2] = 2*counter + 1
+                    dlinks[i1] = 2*counter
+                    dlinks[i2] = 2*counter + 1
+                    counter += 1
+                cur_ind_pos = link_ind.index(None)
+                first_index = pos_ind[cur_ind_pos]
+                while True:
+                    d = cur_ind_pos // 2
+                    r = cur_ind_pos % 2
+                    if r == 1:
+                        matargs.append(transpose(pos_arg[d]))
+                    else:
+                        matargs.append(pos_arg[d])
+                    next_ind_pos = link_ind[2*d + 1 - r]
+                    if next_ind_pos is None:
+                        last_index = pos_ind[2*d + 1 - r]
                         break
-                return Mul.fromiter(nonmatargs)*MatMul.fromiter(matargs)
+                    cur_ind_pos = next_ind_pos
+                return Mul.fromiter(nonmatargs)*MatMul.fromiter(matargs), (first_index, last_index)
             elif expr.is_Add:
-                raise NotImplementedError
+                res = [recurse_expr(i) for i in expr.args]
+                res = [
+                    ((transpose(i), (j[1], j[0]))
+                        if default_sort_key(j[0]) > default_sort_key(j[1])
+                    else (i, j))
+                    for (i, j) in res
+                ]
+                addends, last_indices = zip(*res)
+                last_indices = list(set(last_indices))
+                if len(last_indices) > 1:
+                    print(last_indices)
+                    raise ValueError("incompatible summation")
+                return MatAdd.fromiter(addends), last_indices[0]
+            elif isinstance(expr, KroneckerDelta):
+                i1, i2 = expr.args
+                return S.One, (i1, i2)
+            elif isinstance(expr, MatrixElement):
+                matrix_symbol, i1, i2 = expr.args
+                return matrix_symbol, (i1, i2)
+            elif isinstance(expr, Sum):
+                return recurse_expr(expr.args[0])
             else:
-                raise NotImplementedError
+                return expr, None
 
-        return expr.replace(lambda x: isinstance(x, Sum), lambda x: transform_sum(x, first_index))
+        parsed, (i1, i2) = recurse_expr(expr)
+        if i1 == first_index:
+            return parsed
+        if i2 == first_index:
+            return transpose(parsed)
+        raise ValueError("no such index")
 
 
 class MatrixElement(Expr):
