@@ -1366,7 +1366,7 @@ def argmin(f, symbol = None, domain = S.Reals):
     >>> from sympy.calculus.util import argmin
     >>> x = Symbol('x')
     >>> argmin(sin(x), x, Interval(-2*pi, pi))
-    {-*pi/2, 3*pi/2}
+    -pi/2
     >>> argmin((x - 1)**2, x, S.Reals)
     1
     >>> argmin(exp(x), x, S.Reals)
