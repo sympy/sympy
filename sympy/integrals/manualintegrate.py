@@ -28,6 +28,8 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.strategies.core import switch, do_one, null_safe, condition
 
 
+ZERO = sympy.S.Zero
+
 def Rule(name, props=""):
     # GOTCHA: namedtuple class name not considered!
     def __eq__(self, other):
@@ -300,8 +302,7 @@ def inverse_trig_rule(integral):
             substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
         return substep
 
-    a, b = match[a], match[b]
-
+    a, b = [match.get(i, ZERO) for i in (a, b)]
     # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
     possibilities = []
 
@@ -678,14 +679,16 @@ def trig_sincos_rule(integral):
     if any(integrand.has(f) for f in (sympy.sin, sympy.cos)):
         pattern, a, b, m, n = sincos_pattern(symbol)
         match = integrand.match(pattern)
+        if not match:
+            return
 
-        if match:
-            a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                sincos_botheven_condition: sincos_botheven,
-                sincos_sinodd_condition: sincos_sinodd,
-                sincos_cosodd_condition: sincos_cosodd
-            })((a, b, m, n, integrand, symbol))
+        return multiplexer({
+            sincos_botheven_condition: sincos_botheven,
+            sincos_sinodd_condition: sincos_sinodd,
+            sincos_cosodd_condition: sincos_cosodd
+        })(tuple(
+            [match.get(i, ZERO) for i in (a, b, m, n)] +
+            [integrand, symbol]))
 
 def trig_tansec_rule(integral):
     integrand, symbol = integral
@@ -697,14 +700,16 @@ def trig_tansec_rule(integral):
     if any(integrand.has(f) for f in (sympy.tan, sympy.sec)):
         pattern, a, b, m, n = tansec_pattern(symbol)
         match = integrand.match(pattern)
+        if not match:
+            return
 
-        if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                tansec_tanodd_condition: tansec_tanodd,
-                tansec_seceven_condition: tansec_seceven,
-                tan_tansquared_condition: tan_tansquared
-            })((a, b, m, n, integrand, symbol))
+        return multiplexer({
+            tansec_tanodd_condition: tansec_tanodd,
+            tansec_seceven_condition: tansec_seceven,
+            tan_tansquared_condition: tan_tansquared
+        })(tuple(
+            [match.get(i, ZERO) for i in (a, b, m, n)] +
+            [integrand, symbol]))
 
 def trig_cotcsc_rule(integral):
     integrand, symbol = integral
@@ -717,13 +722,15 @@ def trig_cotcsc_rule(integral):
     if any(integrand.has(f) for f in (sympy.cot, sympy.csc)):
         pattern, a, b, m, n = cotcsc_pattern(symbol)
         match = integrand.match(pattern)
+        if not match:
+            return
 
-        if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                cotcsc_cotodd_condition: cotcsc_cotodd,
-                cotcsc_csceven_condition: cotcsc_csceven
-            })((a, b, m, n, integrand, symbol))
+        return multiplexer({
+            cotcsc_cotodd_condition: cotcsc_cotodd,
+            cotcsc_csceven_condition: cotcsc_csceven
+        })(tuple(
+            [match.get(i, ZERO) for i in (a, b, m, n)] +
+            [integrand, symbol]))
 
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
@@ -732,16 +739,16 @@ def trig_powers_products_rule(integral):
 
 def trig_substitution_rule(integral):
     integrand, symbol = integral
-    a_wild = sympy.Wild('a', exclude=[0, symbol])
-    b_wild = sympy.Wild('b', exclude=[0, symbol])
+    A = sympy.Wild('a', exclude=[0, symbol])
+    B = sympy.Wild('b', exclude=[0, symbol])
     theta = sympy.Dummy("theta")
-    target_pattern = a_wild + b_wild*symbol**2
+    target_pattern = A + B*symbol**2
 
     matches = integrand.find(target_pattern)
     for expr in matches:
         match = expr.match(target_pattern)
-        a = match[a_wild]
-        b = match[b_wild]
+        a = match.get(A, ZERO)
+        b = match.get(B, ZERO)
 
         a_positive = ((a.is_number and a > 0) or a.is_positive)
         b_positive = ((b.is_number and b > 0) or b.is_positive)
