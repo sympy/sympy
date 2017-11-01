@@ -94,6 +94,10 @@ in a shorter form.
                not all(isinstance(i, Symbol) for i in vars):
                 return super()._print_Derivative(expr)
 
+	    # If you want the printer to work correctly for nested
+	    # expressions then use self._print() instead of str() or latex().
+	    # See the example of nested modulo below in the custom printing
+	    # method section.
             return "{}_{{{}}}".format(
                 self._print(Symbol(function.func.__name__)),
                             ''.join(self._print(i) for i in vars))
