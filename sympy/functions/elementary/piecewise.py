@@ -1017,43 +1017,41 @@ def _clip(A, B, k):
     oo = S.Infinity
     a, b = B
     c, d = A
-    a = Min(a, b)
     c, d = Min(Max(c, a), b), Min(Max(d, a), b)
-    A = c, d = Min(c, d), d
     # the real line is broken into pieces which are compactly
     # represented as -oo, i1, H|L, i2, H|L, i3, ..., oo
     # where i1, i2, ...., refer to the interval A (k), or
     # B (-1) or neither (-1) as covering that interval and H|L means
     # either the hi boundary of the ith interval or the lo
     # boundary of the (i+1)th interval
-    a, b, c, d = c, d, a, b  # code below assumes opposite ordering
-    if (d <= a) == True:
+    # /!\ If some integration of Piecewise is giving a wrong answer
+    # try uncommenting the commented out intervals.
+    if (b <= c) == True:
         br = (
         -oo, -1,
-        c, -1,
+        a, -1,
+        #b, -1,
+        c, k,
         d, -1,
-        a, k,
-        b, -1,
         oo)
-    elif (b <= c) == True:
+    elif (d <= a) == True:
         br = (
         -oo, -1,
-        a, k,
-        b, -1,
-        c, -1,
+        c, k,
         d, -1,
+        #a, -1,
+        b, -1,
         oo)
     else:
         br = (
         -oo, -1,
-        Min(a, c), -1,
-        Min(a, d), -1,
-        a, k,
-        b, -1,
-        Max(b, c), -1,
-        Max(b, d), -1,
+        Min(c, a), -1,
+        #Min(c, b), -1,
+        c, k,
+        d, -1,
+        #Max(d, a), -1,
+        Max(d, b), -1,
         oo)
-    a, b, c, d = c, d, a, b  # restore ordering
     # remove infinities that weren't there at the start
     oo = S.Infinity
     if -oo not in (a, c) and br[0] == -oo:
