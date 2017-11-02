@@ -1304,6 +1304,10 @@ def argmax(f, symbol = None, domain = S.Reals):
     Returns the set of arguments of maxima, i.e., values of `symbol`
     for which the `f` attains the maximum value in the given domain.
 
+    Note: This function uses derivatives to calculate the points where the
+    maximum value is achieved, and thus, would not include points where the
+    function is not differentiable.
+
     Parameters
     ==========
 
@@ -1348,6 +1352,10 @@ def argmin(f, symbol = None, domain = S.Reals):
     """
     Returns the set of arguments of minima, i.e., values of `symbol`
     for which the `f` attains the minimum value in the given domain.
+
+    Note: This function uses derivatives to calculate the points where the
+    minimum value is achieved, and thus, would not include points where the
+    function is not differentiable.
 
     Parameters
     ==========
