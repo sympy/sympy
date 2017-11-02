@@ -143,13 +143,13 @@ This is done by overriding the method ``_latex`` of ``Mod``.
 	    # Always use printer.doprint() otherwise nested expressions won't
 	    # work. See the example of ModOpWrong.
 	    a, b = [printer.doprint(i) for i in self.args]
-	    return r"\operatorname{Mod}{\left( %s,%s \\right)}" % (a,b)
+	    return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
 
     class ModOpWrong(Mod):
 	def _latex(self, printer=None):
 	    a, b = [str(i) for i in self.args]
-	    return r"\operatorname{Mod}{\left( %s,%s \\right)}" % (a,b)
+	    return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
 
     x = Symbol('x')
@@ -164,10 +164,10 @@ This is done by overriding the method ``_latex`` of ``Mod``.
 
 The output of the code above is::
 
-    \operatorname{Mod}{\left( x,m \\right)}
+    \\operatorname{Mod}{\\left( x,m \\right)}
     x\\bmod{m}
-    \operatorname{Mod}{\left( \operatorname{Mod}{\left( x,m \\right)},7 \\right)}
-    \operatorname{Mod}{\left( ModOpWrong(x, m),7 \\right)}
+    \\operatorname{Mod}{\\left( \\operatorname{Mod}{\\left( x,m \\right)},7 \\right)}
+    \\operatorname{Mod}{\\left( ModOpWrong(x, m),7 \\right)}
 """
 
 from __future__ import print_function, division
