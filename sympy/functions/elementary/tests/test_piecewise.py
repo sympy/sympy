@@ -161,19 +161,15 @@ def test_piecewise_integrate1():
     assert integrate(g, (x, -2, 2)) == Rational(14, 3)
     assert integrate(g, (x, -2, 5)) == Rational(43, 6)
 
-    g = Piecewise(((x - 5)**5, 4 <= x), (f, x < 4))
-    assert integrate(g, (x, -2, 2)) == Rational(14, 3)
-    assert integrate(g, (x, -2, 5)) == Rational(43, 6)
+    assert g == Piecewise(((x - 5)**5, x >= 4), (f, x < 4))
 
     g = Piecewise(((x - 5)**5, 2 <= x), (f, x < 2))
     assert integrate(g, (x, -2, 2)) == Rational(14, 3)
     assert integrate(g, (x, -2, 5)) == -Rational(701, 6)
 
-    g = Piecewise(((x - 5)**5, 2 <= x), (f, True))
-    assert integrate(g, (x, -2, 2)) == Rational(14, 3)
-    assert integrate(g, (x, -2, 5)) == -Rational(701, 6)
+    assert g == Piecewise(((x - 5)**5, 2 <= x), (f, True))
 
-    g = Piecewise(((x - 5)**5, 2 <= x), (2 * f, True))
+    g = Piecewise(((x - 5)**5, 2 <= x), (2*f, True))
     assert integrate(g, (x, -2, 2)) == 2 * Rational(14, 3)
     assert integrate(g, (x, -2, 5)) == -Rational(673, 6)
 
@@ -202,70 +198,58 @@ def test_piecewise_integrate1():
         (-Min(1, Max(0, y))**2/2 + 1/2, y < 1),
         (-y + 1, True))
 
-    g = Piecewise((1 - x, Interval(0, 1).contains(x)),
-        (1 + x, Interval(-1, 0).contains(x)), (0, True))
-    assert integrate(g, (x, -5, 1)) == 1
-    assert integrate(g, (x, 1, -5)) == -1
-    assert integrate(g, (x, 1, y)).subs(y, -5) == -1
-    assert integrate(g, (x, y, -5)).subs(y, 1) == -1
-    i = integrate(g, (x, -5, y))
-    assert i.subs(y, 1) == 1
-    assert piecewise_fold(i.rewrite(Piecewise)
-        ) == Piecewise(
-        (1, y >= 1),
-        (-y**2/2 + y + 1/2, y >= 0),
-        (y**2/2 + y + 1/2, y >= -1),
-        (0, True))
-    assert i == Piecewise(
-        (-Min(-1, y)**2/2 - Min(-1, y) +
-            Min(0, y)**2 - Min(1, y)**2/2 + Min(1, y), y > -5),
-        (0, True))
-    i = integrate(g, (x, y, 1))
-    assert i.subs(y, -5) == 1
-    assert piecewise_fold(i.rewrite(Piecewise)
-        )== Piecewise(
-        (1, y <= -1),
-        (-y**2/2 - y + 1/2, y <= 0),
-        (y**2/2 - y + 1/2, y < 1),
-        (0, True))
-    assert i == Piecewise(
-        (Min(1, Max(0, y))**2 - Min(1, Max(-1, y), Max(0, y))**2/2 -
-            Min(1, Max(-1, y), Max(0, y)) + 1/2, y < 1),
-        (0, True))
-
-    g = Piecewise((0, Or(x <= -1, x >= 1)), (1 - x, x > 0),
-        (1 + x, True))
-    assert integrate(g, (x, -5, 1)) == 1
-    assert integrate(g, (x, 1, -5)) == -1
-    assert integrate(g, (x, 1, y)).subs(y, -5) == -1
-    assert integrate(g, (x, y, -5)).subs(y, 1) == -1
-    i = integrate(g, (x, -5, y))
-    assert i.subs(y, 1) == 1
-    assert piecewise_fold(i.rewrite(Piecewise)
-        ) == Piecewise(
-        (1, y >= 1),
-        (-y**2/2 + y + 1/2, y >= 0),
-        (y**2/2 + y + 1/2, y >= -1),
-        (0, True))
-    assert i == Piecewise(
-        (-Min(-1, y)**2/2 - Min(-1, y) + Min(0, y)**2 -
-            Min(1, y)**2/2 + Min(1, y), y > -5),
-        (0, True))
-    i = integrate(g, (x, y, 1))
-    assert i.subs(y, -5) == 1
-    assert piecewise_fold(i.rewrite(Piecewise)
-        ) == Piecewise(
-        (1, y <= -1),
-        (-y**2/2 - y + 1/2, y <= 0),
-        (y**2/2 - y + 1/2, y < 1),
-        (0, True))
-    assert i == Piecewise(
-        (-Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
-            Min(1, Max(0, y))**2 + 1/2, y < 1),
-        (0, True))
+    for j, g in enumerate([
+        Piecewise((1 - x, Interval(0, 1).contains(x)),
+            (1 + x, Interval(-1, 0).contains(x)), (0, True)),
+        Piecewise((0, Or(x <= -1, x >= 1)), (1 - x, x > 0),
+            (1 + x, True))]):
+        assert integrate(g, (x, -5, 1)) == 1
+        assert integrate(g, (x, 1, -5)) == -1
+        assert integrate(g, (x, 1, y)).subs(y, -5) == -1
+        assert integrate(g, (x, y, -5)).subs(y, 1) == -1
+        i = integrate(g, (x, -5, y))
+        assert i.subs(y, 1) == 1
+        assert piecewise_fold(i.rewrite(Piecewise)
+            ) == Piecewise(
+            (1, y >= 1),
+            (-y**2/2 + y + 1/2, y >= 0),
+            (y**2/2 + y + 1/2, y >= -1),
+            (0, True))
+        assert i == Piecewise(
+            (-Min(-1, y)**2/2 - Min(-1, y) +
+                Min(0, y)**2 - Min(1, y)**2/2 + Min(1, y), y > -5),
+            (0, True))
+        i = integrate(g, (x, y, 1))
+        assert i.subs(y, -5) == 1
+        assert piecewise_fold(i.rewrite(Piecewise)
+            )== Piecewise(
+            (1, y <= -1),
+            (-y**2/2 - y + 1/2, y <= 0),
+            (y**2/2 - y + 1/2, y < 1),
+            (0, True))
+        # the solutions are different because
+        # Min(1, Max(-1, y), Max(0, y)) is not
+        # simplifying to Min(1, Max(-1, y))
+        assert i == [
+            Piecewise(
+                (
+                -Min(1, Max(-1, y), Max(0, y))**2/2
+                -Min(1, Max(-1, y), Max(0, y))
+                +Min(1, Max(0, y))**2
+                +1/2,
+                    y < 1),
+                (0, True)),
+            Piecewise(
+                (
+                -Min(1, Max(-1, y))**2/2
+                -Min(1, Max(-1, y))
+                +Min(1, Max(0, y))**2
+                +1/2,
+                    y < 1),
+                (0, True))][j]
 
 
-def test_3_piecewise_integrate():
+def test_piecewise_integrate2():
     from itertools import permutations
     lim = Tuple(x, c, d)
     p = Piecewise((1, x < a), (2, x > b), (3, True))
@@ -284,7 +268,7 @@ def test_meijer_bypass():
     assert Piecewise((1, x < 4), (0, True)).integrate((x, oo, 1)) == -3
 
 
-def test_piecewise_integrate2_inequality_conditions():
+def test_piecewise_integrate3_inequality_conditions():
     from sympy.utilities.iterables import cartes
     lim = (x, 0, 5)
     # set below includes two pts below range, 2 pts in range,
@@ -310,7 +294,7 @@ def test_piecewise_integrate2_inequality_conditions():
     # values
 
 
-def test_piecewise_integrate3_symbolic_conditions():
+def test_piecewise_integrate4_symbolic_conditions():
     a = Symbol('a', real=True, finite=True)
     b = Symbol('b', real=True, finite=True)
     x = Symbol('x', real=True, finite=True)
@@ -374,7 +358,7 @@ def test_piecewise_integrate3_symbolic_conditions():
             assert ans.subs(reps) == p.subs(reps).integrate(lim.subs(reps))
 
 
-def test_piecewise_integrate4_independent_conditions():
+def test_piecewise_integrate5_independent_conditions():
     p = Piecewise((0, Eq(y, 0)), (x*y, True))
     assert integrate(p, (x, 1, 3)) == Piecewise((0, Eq(y, 0)), (4*y, True))
 
