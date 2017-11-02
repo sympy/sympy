@@ -168,7 +168,6 @@ The output of the code above is::
     x\\bmod{m}
     \operatorname{Mod}{\left( \operatorname{Mod}{\left( x,m \\right)},7 \\right)}
     \operatorname{Mod}{\left( ModOpWrong(x, m),7 \\right)}
-
 """
 
 from __future__ import print_function, division
