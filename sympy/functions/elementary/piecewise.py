@@ -1007,74 +1007,37 @@ def _clip(A, B, k):
     ========
 
     >>> from sympy.functions.elementary.piecewise import _clip
-    >>> _clip((1, 3), (2, 4), 0)
+    >>> from sympy import Tuple
+    >>> A = Tuple(1, 3)
+    >>> B = Tuple(2, 4)
+    >>> _clip(A, B, 0)
     [(2, 3, 0), (3, 4, -1)]
 
     Interpretation: interval portion (2, 3) of interval (2, 4) is
     covered by interval (1, 3) and is keyed to 0 as requested;
     interval (3, 4) was not covered by (1, 3) and is keyed to -1.
     """
-    oo = S.Infinity
     a, b = B
     c, d = A
     c, d = Min(Max(c, a), b), Min(Max(d, a), b)
-    # the real line is broken into pieces which are compactly
-    # represented as -oo, i1, H|L, i2, H|L, i3, ..., oo
-    # where i1, i2, ...., refer to the interval A (k), or
-    # B (-1) or neither (-1) as covering that interval and H|L means
-    # either the hi boundary of the ith interval or the lo
-    # boundary of the (i+1)th interval
-    # /!\ If some integration of Piecewise is giving a wrong answer
-    # try uncommenting the commented out intervals.
-    if (b <= c) == True:
-        br = (
-        -oo, -1,
-        a, -1,
-        #b, -1,
-        c, k,
-        d, -1,
-        oo)
-    elif (d <= a) == True:
-        br = (
-        -oo, -1,
-        c, k,
-        d, -1,
-        #a, -1,
-        b, -1,
-        oo)
-    else:
-        br = (
-        -oo, -1,
-        Min(c, a), -1,
-        #Min(c, b), -1,
-        c, k,
-        d, -1,
-        #Max(d, a), -1,
-        Max(d, b), -1,
-        oo)
-    # remove infinities that weren't there at the start
-    oo = S.Infinity
-    if -oo not in (a, c) and br[0] == -oo:
-        br = br[2:]
-    if oo not in (b, d) and br[-1] == oo:
-        br = br[:-2]
-    # reform into tuples
     p = []
-    for _ in range(1, len(br) - 1, 2):
-        _a, _b, i = br[_ - 1], br[_ + 1], br[_]
-        # ignore zero-width intervals
-        if _a == _b:
-            continue
-        p.append((_a, _b, i))
-    # combine intervals that are now at the same level
-    remove = []
-    for i in range(1,len(p)):
-        if p[i][-1] == p[i - 1][-1]:
-            remove.append(i)
-            p[i - 1]=(p[i - 1][0],) + p[i][1:]
-    for i in reversed(remove):
-        p.pop(i)
-    return [tuple(map(_mmsimp, (a, b))) + (i,) for a, b, i in p]
+    if a != c:
+        p.append((Min(a, b), c, -1))
+    else:
+        pass
+    if c != d:
+        p.append((c, d, k))
+    else:
+        pass
+    if d != b:
+        if d == c and p and p[-1][-1] == -1:
+            p[-1] = p[-1][0], b, -1
+        else:
+            p.append((d, b, -1))
+    else:
+        pass
+    rv = [tuple(map(_mmsimp, (a, b))) + (i,) for a, b, i in p]
+    return [(a, b, i) for a, b, i in rv if a != b]
 
 
 def _mmsimp(e):
