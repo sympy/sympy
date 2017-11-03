@@ -1,4 +1,4 @@
-from sympy import I, symbols, Matrix
+from sympy import I, symbols, Matrix, MatrixSymbol, Identity, ZeroMatrix, Mul, MatMul
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -9,6 +9,7 @@ from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.density import Density
 from sympy.core.trace import Tr
+from sympy.matrices.expressions.trace import Trace
 
 A, B, C = symbols('A,B,C', commutative=False)
 x = symbols('x')
@@ -105,3 +106,20 @@ def test_eval_trace():
                         1.0*A*Dagger(C)*Tr(B*Dagger(D)) +
                         1.0*C*Dagger(A)*Tr(D*Dagger(B)) +
                         1.0*C*Dagger(C)*Tr(D*Dagger(D)))
+
+def test_TP_of_MatrixSymbol():
+    M = MatrixSymbol('M', x, x)
+    N = MatrixSymbol('N', x, x)
+    y, z, w = symbols('y, z, w')
+    C = MatrixSymbol('C', y,w)
+    D = MatrixSymbol('D', w,y)
+    E = MatrixSymbol('E', z,z)
+    Id = Identity(x)
+    Zero = ZeroMatrix(x,x)
+    assert TP(M,N).is_Matrix == True
+    assert TP(M,N).is_square == True
+    assert TP(C,D,E).is_square == True
+    assert Tr(TP(M,N)).doit() == Tr(M)*Tr(N)
+    assert Trace(TP(M,N)).doit() == Tr(M)*Tr(N)
+    assert TP(Id, MatMul((Id+M),N)) == TP(Id,Mul((Id+M),N))
+    assert TP(M-M,Id) == TP(Zero, Id)

@@ -2,10 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify
+from sympy import Expr, Add, Mul, Matrix, Pow, sympify, MatrixSymbol, MatAdd, MatMul
 from sympy.core.compatibility import range
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.core.mul import prod
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
@@ -116,6 +117,17 @@ class TensorProduct(Expr):
     """
     is_commutative = False
 
+    @property
+    def is_Matrix(self):
+        return all(arg.is_Matrix for arg in self.args)
+
+    @property
+    def is_square(self):
+        if self.is_Matrix:
+            return prod([arg.rows for arg in self.args]) == prod([arg.cols for arg in self.args])
+        else:
+            return False
+
     def __new__(cls, *args):
         if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
@@ -137,7 +149,10 @@ class TensorProduct(Expr):
         for arg in args:
             cp, ncp = arg.args_cnc()
             c_part.extend(list(cp))
-            nc_parts.append(Mul._from_args(ncp))
+            if all(isinstance(i, (MatrixSymbol, MatAdd, MatMul)) for i in ncp) and len(ncp) > 0:
+                nc_parts.append(MatMul._from_args(ncp))
+            else:
+                nc_parts.append(Mul._from_args(ncp))
         return c_part, nc_parts
 
     def _eval_adjoint(self):
