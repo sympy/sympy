@@ -707,8 +707,7 @@ class meijerg(TupleParametersBase):
     @property
     def is_number(self):
         """ Returns true if expression has numeric data only. """
-        from sympy import Symbol
-        return not self.atoms(Symbol)
+        return not self.free_symbols
 
 
 class HyperRep(Function):
