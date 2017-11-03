@@ -94,10 +94,10 @@ in a shorter form.
                not all(isinstance(i, Symbol) for i in vars):
                 return super()._print_Derivative(expr)
 
-	    # If you want the printer to work correctly for nested
-	    # expressions then use self._print() instead of str() or latex().
-	    # See the example of nested modulo below in the custom printing
-	    # method section.
+            # If you want the printer to work correctly for nested
+            # expressions then use self._print() instead of str() or latex().
+            # See the example of nested modulo below in the custom printing
+            # method section.
             return "{}_{{{}}}".format(
                 self._print(Symbol(function.func.__name__)),
                             ''.join(self._print(i) for i in vars))
@@ -139,17 +139,17 @@ This is done by overriding the method ``_latex`` of ``Mod``.
 
 
     class ModOp(Mod):
-	def _latex(self, printer=None):
-	    # Always use printer.doprint() otherwise nested expressions won't
-	    # work. See the example of ModOpWrong.
-	    a, b = [printer.doprint(i) for i in self.args]
-	    return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+        def _latex(self, printer=None):
+            # Always use printer.doprint() otherwise nested expressions won't
+            # work. See the example of ModOpWrong.
+            a, b = [printer.doprint(i) for i in self.args]
+            return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
 
     class ModOpWrong(Mod):
-	def _latex(self, printer=None):
-	    a, b = [str(i) for i in self.args]
-	    return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+        def _latex(self, printer=None):
+            a, b = [str(i) for i in self.args]
+            return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
 
     x = Symbol('x')
