@@ -537,7 +537,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 # x**2 + x - 2 < 0
                 #
                 # expanded_e, expr and gen used from enclosing scope
-                v = expanded_e.subs(gen, x)
+                v = expanded_e.subs(gen, expand_mul(x))
                 try:
                     r = expr.func(v, 0)
                 except TypeError:
