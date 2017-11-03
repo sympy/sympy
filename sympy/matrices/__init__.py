@@ -20,8 +20,6 @@ SparseMatrix = MutableSparseMatrix
 
 from .immutable import ImmutableMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
 
-MutableSparseMatrix = SparseMatrix
-
 from .expressions import (MatrixSlice, BlockDiagMatrix, BlockMatrix,
         FunctionMatrix, Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr,
         MatrixSymbol, Trace, Transpose, ZeroMatrix, blockcut, block_collapse,
