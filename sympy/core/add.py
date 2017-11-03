@@ -827,8 +827,8 @@ class Add(Expr, AssocOp):
         from sympy import expand_mul, factor_terms, Order, simplify
 
         old = self
+        expr = self
 
-        expr = expand_mul(self)
         if not expr.is_Add:
             return expr.as_leading_term(x)
 
@@ -850,7 +850,9 @@ class Add(Expr, AssocOp):
                 expr_sum = expr.func(*[lead for _, lead in canceled_term])
                 if expr_sum == S(0):
                     for e, lead in canceled_term:
-                        lead_term = (simplify(e - lead)).as_leading_term(x)
+                        numer, denom = e.as_numer_denom()
+                        e = (numer - lead*denom)/denom
+                        lead_term = e.as_leading_term(x)
                         final_leading_term.append(lead_term)
                     new_expr = expr.func(*final_leading_term).removeO()
 
