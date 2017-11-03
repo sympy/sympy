@@ -353,7 +353,7 @@ class MatrixExpr(Basic):
     def from_index_summation(expr, first_index):
         from sympy import Sum, Mul, MatMul, transpose
 
-        def recurse_expr(expr):
+        def recurse_expr(expr, index_ranges={}):
             if expr.is_Mul:
                 nonmatargs = []
                 matargs = []
@@ -363,12 +363,12 @@ class MatrixExpr(Basic):
                 link_ind = []
                 counter = 0
                 for arg in expr.args:
-                    arg_symbol, arg_indices = recurse_expr(arg)
+                    arg_symbol, arg_indices = recurse_expr(arg, index_ranges)
                     if arg_indices is None:
                         nonmatargs.append(arg_symbol)
                         continue
-                    pos_arg.append(arg_symbol)
                     i1, i2 = arg_indices
+                    pos_arg.append(arg_symbol)
                     pos_ind.append(i1)
                     pos_ind.append(i2)
                     link_ind.extend([None, None])
@@ -417,9 +417,22 @@ class MatrixExpr(Basic):
                 return S.One, (i1, i2)
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
+                if i1 in index_ranges:
+                    r1, r2 = index_ranges[i1]
+                    if r1 != 0 or matrix_symbol.shape[0] != r2+1:
+                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                            (r1, r2), matrix_symbol.shape[0]))
+                if i2 in index_ranges:
+                    r1, r2 = index_ranges[i2]
+                    if r1 != 0 or matrix_symbol.shape[1] != r2+1:
+                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                            (r1, r2), matrix_symbol.shape[1]))
                 return matrix_symbol, (i1, i2)
             elif isinstance(expr, Sum):
-                return recurse_expr(expr.args[0])
+                return recurse_expr(
+                    expr.args[0],
+                    index_ranges={i[0]: i[1:] for i in expr.args[1:]}
+                )
             else:
                 return expr, None
 

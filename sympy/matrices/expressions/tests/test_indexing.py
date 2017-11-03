@@ -88,15 +88,15 @@ def test_matrix_expression_from_index_summation():
     B = MatrixSymbol("B", k, k)
     C = MatrixSymbol("C", k, k)
 
-    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l), (c, 0, m))
+    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 0, m-1))
     assert MatrixExpr.from_index_summation(expr, a) == W*X*Z
-    expr = Sum(W.T[b,a]*X[b,c]*Z[c,d], (b, 0, l), (c, 0, m))
+    expr = Sum(W.T[b,a]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 0, m-1))
     assert MatrixExpr.from_index_summation(expr, a) == W*X*Z
-    expr = Sum(A[b, a]*B[b, c]*C[c, d], (b, 0, k), (c, 0, k))
+    expr = Sum(A[b, a]*B[b, c]*C[c, d], (b, 0, k-1), (c, 0, k-1))
     assert MatrixSymbol.from_index_summation(expr, a) == A.T*B*C
-    expr = Sum(A[b, a]*B[c, b]*C[c, d], (b, 0, k), (c, 0, k))
+    expr = Sum(A[b, a]*B[c, b]*C[c, d], (b, 0, k-1), (c, 0, k-1))
     assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C
-    expr = Sum(C[c, d]*A[b, a]*B[c, b], (b, 0, k), (c, 0, k))
+    expr = Sum(C[c, d]*A[b, a]*B[c, b], (b, 0, k-1), (c, 0, k-1))
     assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C
     expr = Sum(A[a, b] + B[a, b], (a, 0, k-1), (b, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, a) == A + B
@@ -108,6 +108,15 @@ def test_matrix_expression_from_index_summation():
     assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, A)
     expr = Sum(A[a, b]*A[b, c]*B[c, d], (b, 0, k-1), (c, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, B)
+
+    # Check wrong sum ranges (should raise an exception):
+
+    ## Case 1: 0 to m instead of 0 to m-1
+    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 0, m))
+    raises(ValueError, lambda: MatrixExpr.from_index_summation(expr, a))
+    ## Case 2: 1 to m-1 instead of 0 to m-1
+    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 1, m-1))
+    raises(ValueError, lambda: MatrixExpr.from_index_summation(expr, a))
 
     # Parse nested sums:
     expr = Sum(A[a, b]*Sum(B[b, c]*C[c, d], (c, 0, k-1)), (b, 0, k-1))
