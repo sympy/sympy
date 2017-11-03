@@ -1,5 +1,5 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
-        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, MatMul)
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, MatMul, trace)
 from sympy.utilities.pytest import raises
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
@@ -108,6 +108,13 @@ def test_matrix_expression_from_index_summation():
     assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, A)
     expr = Sum(A[a, b]*A[b, c]*B[c, d], (b, 0, k-1), (c, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, B)
+
+    # Parse the trace of a matrix:
+
+    expr = Sum(A[a, a], (a, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, None) == trace(A)
+    expr = Sum(A[a, a]*B[b, c]*C[c, d], (a, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, b) == trace(A)*B*C
 
     # Check wrong sum ranges (should raise an exception):
 

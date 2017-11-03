@@ -351,7 +351,7 @@ class MatrixExpr(Basic):
 
     @staticmethod
     def from_index_summation(expr, first_index):
-        from sympy import Sum, Mul, MatMul, transpose
+        from sympy import Sum, Mul, MatMul, transpose, trace
 
         def recurse_expr(expr, index_ranges={}):
             if expr.is_Mul:
@@ -427,6 +427,8 @@ class MatrixExpr(Basic):
                     if r1 != 0 or matrix_symbol.shape[1] != r2+1:
                         raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
                             (r1, r2), matrix_symbol.shape[1]))
+                if (i1 == i2) and (i1 in index_ranges):
+                    return trace(matrix_symbol), None
                 return matrix_symbol, (i1, i2)
             elif isinstance(expr, Sum):
                 return recurse_expr(
@@ -436,7 +438,10 @@ class MatrixExpr(Basic):
             else:
                 return expr, None
 
-        parsed, (i1, i2) = recurse_expr(expr)
+        parsed, irange = recurse_expr(expr)
+        if irange is None:
+            return parsed
+        i1, i2 = irange
         if i1 == first_index:
             return parsed
         if i2 == first_index:
