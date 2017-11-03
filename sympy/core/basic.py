@@ -13,6 +13,19 @@ from .singleton import S
 from inspect import getmro
 
 
+def as_Basic(expr):
+    """Return expr as a Basic instance using strict sympify
+    or raise a TypeError; this is just a wrapper to _sympify,
+    raising a TypeError instead of a SympifyError."""
+    from sympy.utilities.misc import func_name
+    try:
+        return _sympify(expr)
+    except SympifyError:
+        raise TypeError(
+            'Argument must be a Basic object, not `%s`' % func_name(
+            expr))
+
+
 class Basic(with_metaclass(ManagedProperties)):
     """
     Base class for all objects in SymPy.
@@ -305,11 +318,6 @@ class Basic(with_metaclass(ManagedProperties)):
             return True
 
         if type(self) is not type(other):
-            # issue 6100 a**1.0 == a like a**2.0 == a**2
-            if isinstance(self, Pow) and self.exp == 1:
-                return self.base == other
-            if isinstance(other, Pow) and other.exp == 1:
-                return self == other.base
             try:
                 other = _sympify(other)
             except SympifyError:

@@ -76,9 +76,11 @@ def continuous_domain(f, symbol, domain):
                     solveset(denom(together(f)), symbol, domain)
 
     except NotImplementedError:
-        raise NotImplementedError(
-            "Methods for determining the continuous domains"
-            " of this function have not been developed.")
+        import sys
+        raise (NotImplementedError("Methods for determining the continuous domains"
+                                   " of this function have not been developed."),
+               None,
+               sys.exc_info()[2])
 
     return domain - sings
 
@@ -101,7 +103,7 @@ def function_range(f, symbol, domain):
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
     Interval(-oo, oo)
     >>> function_range(1/x, x, S.Reals)
-    Interval(-oo, oo)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> function_range(exp(x), x, S.Reals)
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
@@ -112,57 +114,81 @@ def function_range(f, symbol, domain):
     """
     from sympy.solvers.solveset import solveset
 
-    vals = S.EmptySet
+    if isinstance(domain, EmptySet):
+        return S.EmptySet
+
     period = periodicity(f, symbol)
-    if not any(period is i for i in (None, S.Zero)):
-        inf = domain.inf
-        inf_period = S.Zero if inf.is_infinite else inf
-        sup_period = inf_period + period
-        periodic_interval = Interval(inf_period, sup_period)
-        domain = domain.intersect(periodic_interval)
+    if period is S.Zero:
+        # the expression is constant wrt symbol
+        return FiniteSet(f.expand())
+
+    if period is not None:
+        if isinstance(domain, Interval):
+            if (domain.inf - domain.sup).is_infinite:
+                domain = Interval(0, period)
+        elif isinstance(domain, Union):
+            for sub_dom in domain.args:
+                if isinstance(sub_dom, Interval) and \
+                ((sub_dom.inf - sub_dom.sup).is_infinite):
+                    domain = Interval(0, period)
 
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
-    if isinstance(intervals, Interval):
+    if isinstance(intervals,(Interval, FiniteSet)):
         interval_iter = (intervals,)
 
-    else:
+    elif isinstance(intervals, Union):
         interval_iter = intervals.args
 
+    else:
+            raise NotImplementedError(filldedent('''
+                Unable to find range for the given domain.
+                '''))
+
     for interval in interval_iter:
-        critical_points = S.EmptySet
-        critical_values = S.EmptySet
-        bounds = ((interval.left_open, interval.inf, '+'),
-                  (interval.right_open, interval.sup, '-'))
+        if isinstance(interval, FiniteSet):
+            for singleton in interval:
+                if singleton in domain:
+                    range_int += FiniteSet(f.subs(symbol, singleton))
+        elif isinstance(interval, Interval):
+            vals = S.EmptySet
+            critical_points = S.EmptySet
+            critical_values = S.EmptySet
+            bounds = ((interval.left_open, interval.inf, '+'),
+                   (interval.right_open, interval.sup, '-'))
 
-        for is_open, limit_point, direction in bounds:
-            if is_open:
-                critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
-                vals += critical_values
+            for is_open, limit_point, direction in bounds:
+                if is_open:
+                    critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
+                    vals += critical_values
 
-            else:
-                vals += FiniteSet(f.subs(symbol, limit_point))
+                else:
+                    vals += FiniteSet(f.subs(symbol, limit_point))
 
-        solution = solveset(f.diff(symbol), symbol, domain)
+            solution = solveset(f.diff(symbol), symbol, interval)
 
-        if isinstance(solution, ConditionSet):
-            raise NotImplementedError('Unable to find critical points for %s'.format(f))
+            if isinstance(solution, ConditionSet):
+                raise NotImplementedError('Unable to find critical points for %s'.format(f))
 
-        critical_points += solution
+            critical_points += solution
 
-        for critical_point in critical_points:
-            vals += FiniteSet(f.subs(symbol, critical_point))
+            for critical_point in critical_points:
+                vals += FiniteSet(f.subs(symbol, critical_point))
 
-        left_open, right_open = False, False
+            left_open, right_open = False, False
 
-        if critical_values is not S.EmptySet:
-            if critical_values.inf == vals.inf:
-                left_open = True
+            if critical_values is not S.EmptySet:
+                if critical_values.inf == vals.inf:
+                    left_open = True
 
-            if critical_values.sup == vals.sup:
-                right_open = True
+                if critical_values.sup == vals.sup:
+                    right_open = True
 
-        range_int += Interval(vals.inf, vals.sup, left_open, right_open)
+            range_int += Interval(vals.inf, vals.sup, left_open, right_open)
+        else:
+            raise NotImplementedError(filldedent('''
+                Unable to find range for the given domain.
+                '''))
 
     return range_int
 
@@ -337,15 +363,15 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(exp(x), x)
 
     """
-    from sympy import simplify, lcm_list
+    from sympy.core.function import diff
+    from sympy.core.mod import Mod
+    from sympy.core.relational import Relational
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions.elementary.trigonometric import (
         TrigonometricFunction, sin, cos, csc, sec)
+    from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
-    from sympy.core import Mod
-    from sympy.polys.polytools import degree
-    from sympy.core.function import diff
-    from sympy.core.relational import Relational
+    from sympy.polys.polytools import degree, lcm_list
 
     def _check(orig_f, period):
         '''Return the checked period or raise an error.'''
@@ -364,14 +390,15 @@ def periodicity(f, symbol, check=False):
                 (symbol, symbol, period, orig_f, new_f)))
 
     orig_f = f
-    f = simplify(orig_f)
     period = None
-
-    if symbol not in f.free_symbols:
-        return S.Zero
 
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
+
+    f = simplify(f)
+
+    if symbol not in f.free_symbols:
+        return S.Zero
 
     if isinstance(f, TrigonometricFunction):
         try:
@@ -1028,9 +1055,8 @@ class AccumulationBounds(AtomicExpr):
         Returns True if range of values attained by `self` AccumulationBounds
         object is less than the range of values attained by `other`, where
         other may be any value of type AccumulationBounds object or extended
-        real number value, False is returned if `other` satisfies the same
-        property,None if the values attained by AccumulationBounds object
-        intersect.
+        real number value, False if `other` satisfies the same property, else
+        an unevaluated Relational
 
         Examples
         ========
@@ -1039,7 +1065,7 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) < AccumBounds(4, oo)
         True
         >>> AccumBounds(1, 4) < AccumBounds(3, 4)
-
+        AccumBounds(1, 4) < AccumBounds(3, 4)
         >>> AccumBounds(1, oo) < -1
         False
 
@@ -1050,29 +1076,25 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min >= other.max:
                 return False
-            return None
-
-        if not(other.is_real or other is S.Infinity or
+        elif not(other.is_real or other is S.Infinity or
                other is S.NegativeInfinity):
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
-
-        if other.is_comparable:
+        elif other.is_comparable:
             if self.max < other:
                 return True
             if self.min >= other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__lt__(other)
 
     def __le__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
         object is less than or equal to the range of values attained by
         `other`, where other may be any value of type AccumulationBounds
-        object or extended real number value, AccumulationBounds object,
-        False is returned if `other` satisfies the same property, None if
-        the values attained by AccumulationBounds object intersect.
+        object or extended real number value, False if `other`
+        satisfies the same property, else an unevaluated Relational.
 
         Examples
         ========
@@ -1081,9 +1103,9 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) <= AccumBounds(4, oo)
         True
         >>> AccumBounds(1, 4) <= AccumBounds(3, 4)
-
-        >>> AccumBounds(1, 3) <= 3
-        True
+        AccumBounds(1, 4) <= AccumBounds(3, 4)
+        >>> AccumBounds(1, 3) <= 0
+        False
 
         """
         other = _sympify(other)
@@ -1092,29 +1114,25 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min > other.max:
                 return False
-            return None
-
-        if not(other.is_real or other is S.Infinity or
+        elif not(other.is_real or other is S.Infinity or
                other is S.NegativeInfinity):
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
-
-        if other.is_comparable:
+        elif other.is_comparable:
             if self.max <= other:
                 return True
             if self.min > other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__le__(other)
 
     def __gt__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
         object is greater than the range of values attained by `other`,
         where other may be any value of type AccumulationBounds object or
-        extended real number value, False is returned if `other` satisfies
-        the same property, None if the values attained by AccumulationBounds
-        object intersect.
+        extended real number value, False if `other` satisfies
+        the same property, else an unevaluated Relational.
 
         Examples
         ========
@@ -1123,7 +1141,7 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) > AccumBounds(4, oo)
         False
         >>> AccumBounds(1, 4) > AccumBounds(3, 4)
-
+        AccumBounds(1, 4) > AccumBounds(3, 4)
         >>> AccumBounds(1, oo) > -1
         True
 
@@ -1134,29 +1152,25 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max <= other.min:
                 return False
-            return
-
-        if not(other.is_real or other is S.Infinity or
+        elif not(other.is_real or other is S.Infinity or
                other is S.NegativeInfinity):
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
-
-        if other.is_comparable:
+        elif other.is_comparable:
             if self.min > other:
                 return True
             if self.max <= other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__gt__(other)
 
     def __ge__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
         object is less that the range of values attained by `other`, where
         other may be any value of type AccumulationBounds object or extended
-        real number value, False is returned if `other` satisfies the same
-        property, None if the values attained by AccumulationBounds object
-        intersect.
+        real number value, False if `other` satisfies the same
+        property, else an unevaluated Relational.
 
         Examples
         ========
@@ -1165,7 +1179,7 @@ class AccumulationBounds(AtomicExpr):
         >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
         False
         >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
-
+        AccumBounds(1, 4) >= AccumBounds(3, 4)
         >>> AccumBounds(1, oo) >= 1
         True
 
@@ -1176,20 +1190,17 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other.min:
                 return False
-            return None
-
-        if not(other.is_real or other is S.Infinity or
+        elif not(other.is_real or other is S.Infinity or
                other is S.NegativeInfinity):
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
-
-        if other.is_comparable:
+        elif other.is_comparable:
             if self.min >= other:
                 return True
             if self.max < other:
                 return False
-        return None
+        return super(AccumulationBounds, self).__ge__(other)
 
     def __contains__(self, other):
         """

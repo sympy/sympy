@@ -4,7 +4,7 @@ from functools import wraps
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, SYMPY_INTS
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -248,7 +248,7 @@ class MatrixExpr(Basic):
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
-        elif isinstance(key, (int, Integer)):
+        elif isinstance(key, (SYMPY_INTS, Integer)):
             # row-wise decomposition of matrix
             rows, cols = self.shape
             # allow single indexing if number of columns is known

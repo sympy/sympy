@@ -72,15 +72,17 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-# lambdify with tensorflow is tested here
+# lambdify with tensorflow and numexpr is tested here
 if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
     cat << EOF | python
 print('Testing NUMPY')
 import sympy
-if not (sympy.test('*numpy*', 'sympy/matrices/', 'sympy/physics/quantum/',
-        'sympy/core/tests/test_sympify.py', 'sympy/utilities/tests/test_lambdify.py',
-        blacklist=['sympy/physics/quantum/tests/test_circuitplot.py']) and sympy.
-        doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
+if not (sympy.test('*numpy*', 'sympy/core/tests/test_numbers.py',
+                   'sympy/matrices/', 'sympy/physics/quantum/',
+                   'sympy/core/tests/test_sympify.py',
+                   'sympy/utilities/tests/test_lambdify.py',
+                   blacklist=['sympy/physics/quantum/tests/test_circuitplot.py'])
+        and sympy.doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
     raise Exception('Tests failed')
 EOF
 fi
@@ -146,6 +148,15 @@ print('Testing AUTOWRAP')
 import sympy
 if not (sympy.test('sympy/external/tests/test_autowrap.py')
         and sympy.doctest('sympy/utilities/autowrap.py')):
+    raise Exception('Tests failed')
+EOF
+fi
+
+if [[ "${TEST_OPT_DEPENDENCY}" == *"ipython"* ]]; then
+    cat << EOF | python
+print('Testing IPYTHON')
+import sympy
+if not sympy.test('*ipython*'):
     raise Exception('Tests failed')
 EOF
 fi

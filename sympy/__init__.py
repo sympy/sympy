@@ -35,11 +35,10 @@ if 'dev' in __version__:
 
 
 import sys
-if sys.version_info[0] == 2 and sys.version_info[1] < 6:
-    raise ImportError("Python Version 2.6 or above is required for SymPy.")
-else:  # Python 3
-    pass
-    # Here we can also check for specific Python 3 versions, if needed
+if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
+    (sys.version_info[0] == 3 and sys.version_info[1] < 4)):
+    raise ImportError("Python version 2.7 or 3.4 or above "
+                      "is required for SymPy.")
 
 del sys
 

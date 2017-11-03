@@ -1,6 +1,6 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol,
+    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
@@ -541,23 +541,38 @@ def test_solve_undetermined_coeffs():
 
 def test_solve_inequalities():
     x = Symbol('x')
-    system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
+    sol = And(S(0) < x, x < oo)
+    assert solve(x + 1 > 1) == sol
+    assert solve([x + 1 > 1]) == sol
+    assert solve([x + 1 > 1], x) == sol
+    assert solve([x + 1 > 1], [x]) == sol
 
+    system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
     assert solve(system) == \
         And(Or(And(Lt(-sqrt(2), x), Lt(x, -1)),
                And(Lt(1, x), Lt(x, sqrt(2)))), Eq(0, 0))
 
     x = Symbol('x', real=True)
     system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]
-
     assert solve(system) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
-    # issue 6627, 3448
+    # issues 6627, 3448
     assert solve((x - 3)/(x - 2) < 0, x) == And(Lt(2, x), Lt(x, 3))
     assert solve(x/(x + 1) > 1, x) == And(Lt(-oo, x), Lt(x, -1))
 
     assert solve(sin(x) > S.Half) == And(pi/6 < x, x < 5*pi/6)
+
+    assert solve(Eq(False, x < 1)) == (S(1) <= x) & (x < oo)
+    assert solve(Eq(True, x < 1)) == (-oo < x) & (x < 1)
+    assert solve(Eq(x < 1, False)) == (S(1) <= x) & (x < oo)
+    assert solve(Eq(x < 1, True)) == (-oo < x) & (x < 1)
+
+    assert solve(Eq(False, x)) == False
+    assert solve(Eq(True, x)) == True
+    assert solve(Eq(False, ~x)) == True
+    assert solve(Eq(True, ~x)) == False
+    assert solve(Ne(True, x)) == False
 
 
 def test_issue_4793():
@@ -1076,8 +1091,15 @@ def test_checksol():
     x, y, r, t = symbols('x, y, r, t')
     eq = r - x**2 - y**2
     dict_var_soln = {y: - sqrt(r) / sqrt(tan(t)**2 + 1),
-                            x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
+        x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
     assert checksol(eq, dict_var_soln) == True
+    assert checksol(Eq(x, False), {x: False}) is True
+    assert checksol(Ne(x, False), {x: False}) is False
+    assert checksol(Eq(x < 1, True), {x: 0}) is True
+    assert checksol(Eq(x < 1, True), {x: 1}) is False
+    assert checksol(Eq(x < 1, False), {x: 1}) is True
+    assert checksol(Eq(x < 1, False), {x: 0}) is False
+    assert checksol(Eq(x + 1, x**2 + 1), {x: 1}) is True
 
 
 def test__invert():
@@ -1764,14 +1786,6 @@ def test_issue_2840_8155():
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
-
-
-def test_solve_inequality_list():
-    sol = And(S(0) < x, x < oo)
-    assert solve(x + 1 > 1) == sol
-    assert solve([x + 1 > 1]) == sol
-    assert solve([x + 1 > 1], x) == sol
-    assert solve([x + 1 > 1], [x]) == sol
 
 
 def test_issue_11538():

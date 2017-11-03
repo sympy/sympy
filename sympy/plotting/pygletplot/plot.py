@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Integer
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, SYMPY_INTS
 
 from threading import RLock
 
@@ -304,7 +304,7 @@ class PygletPlot(object):
         Parses and adds a PlotMode to the function
         list.
         """
-        if not (isinstance(i, (int, Integer)) and i >= 0):
+        if not (isinstance(i, (SYMPY_INTS, Integer)) and i >= 0):
             raise ValueError("Function index must "
                              "be an integer >= 0.")
 

@@ -611,7 +611,7 @@ def test_messy():
         log(S(1)/2 + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
+        Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
 
 
 def test_issue_6122():
