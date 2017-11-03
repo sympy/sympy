@@ -14,8 +14,6 @@ from .expr import Expr
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
-
-
 def _addsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -826,7 +824,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        from sympy import expand_mul, factor_terms
+        from sympy import expand_mul, factor_terms, Order
 
         old = self
 
@@ -834,10 +832,23 @@ class Add(Expr, AssocOp):
         if not expr.is_Add:
             return expr.as_leading_term(x)
 
-        infinite = [t for t in expr.args if t.is_infinite]
+        infinite = [e for e in expr.args if e.is_infinite]
+        compute = False
 
-        expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
-        if not expr:
+        leading_term = [e.as_leading_term(x) for e in expr.args]
+
+        new_expr = expr.func(*[t for t in leading_term]).removeO()
+
+        if new_expr.is_Add:
+            #check if leading_terms cancel each other
+            if len(expr.args) != len(new_expr.args):
+                compute = True
+        else:
+            compute = True
+
+        expr = new_expr
+
+        if compute:
             # simple leading term analysis gave us 0 but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
@@ -900,7 +911,7 @@ class Add(Expr, AssocOp):
         >>> ((2 + 2*x)*x + 2).primitive()
         (1, x*(2*x + 2) + 2)
 
-        Recursive processing can be done with the ``as_content_primitive()``
+        Recursive subprocessing can be done with the as_content_primitive()
         method:
 
         >>> ((2 + 2*x)*x + 2).as_content_primitive()

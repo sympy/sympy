@@ -520,3 +520,16 @@ def test_issue_12564():
     assert limit(((x + sin(x))**2).expand(), x, oo) == oo
     assert limit(((x + cos(x))**2).expand(), x, -oo) == oo
     assert limit(((x + sin(x))**2).expand(), x, -oo) == oo
+
+def test_issue_13382():
+    assert limit(x*(((x + 1)**2 + 1)/(x**2 + 1) - 1), x, oo) == 2
+
+def test_issue_13403():
+    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x ,oo) == 1
+
+def test_issue_13462():
+    n = Symbol('n')
+    limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
+
+def test_issue_13416():
+    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x ,oo) == 1
