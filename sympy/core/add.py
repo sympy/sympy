@@ -824,7 +824,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        from sympy import expand_mul, factor_terms, Order
+        from sympy import expand_mul, factor_terms
 
         old = self
 
@@ -835,9 +835,7 @@ class Add(Expr, AssocOp):
         infinite = [e for e in expr.args if e.is_infinite]
         compute = False
 
-        leading_term = [e.as_leading_term(x) for e in expr.args]
-
-        new_expr = expr.func(*[t for t in leading_term]).removeO()
+        new_expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
 
         if new_expr.is_Add:
             #check if leading_terms cancel each other
