@@ -1800,7 +1800,8 @@ def meijerint_definite(f, x, a, b):
             return res, cond
 
     elif a == oo:
-        return -meijerint_definite(f, x, b, oo)
+        res = meijerint_definite(f, x, b, oo)
+        return -res[0], res[1]
 
     elif (a, b) == (0, oo):
         # This is a common case - try it directly first.

@@ -1,6 +1,7 @@
-from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix,
-        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
+from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, MatMul, trace)
 from sympy.utilities.pytest import raises
+from sympy.matrices.expressions.matexpr import MatrixExpr
 
 k, l, m, n = symbols('k l m n', integer=True)
 i, j = symbols('i j', integer=True)
@@ -79,3 +80,55 @@ def test_slicing():
 def test_errors():
     raises(IndexError, lambda: Identity(2)[1, 2, 3, 4, 5])
     raises(IndexError, lambda: Identity(2)[[1, 2, 3, 4, 5]])
+
+
+def test_matrix_expression_from_index_summation():
+    from sympy.abc import a,b,c,d
+    A = MatrixSymbol("A", k, k)
+    B = MatrixSymbol("B", k, k)
+    C = MatrixSymbol("C", k, k)
+
+    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 0, m-1))
+    assert MatrixExpr.from_index_summation(expr, a) == W*X*Z
+    expr = Sum(W.T[b,a]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 0, m-1))
+    assert MatrixExpr.from_index_summation(expr, a) == W*X*Z
+    expr = Sum(A[b, a]*B[b, c]*C[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixSymbol.from_index_summation(expr, a) == A.T*B*C
+    expr = Sum(A[b, a]*B[c, b]*C[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C
+    expr = Sum(C[c, d]*A[b, a]*B[c, b], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixSymbol.from_index_summation(expr, a) == A.T*B.T*C
+    expr = Sum(A[a, b] + B[a, b], (a, 0, k-1), (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == A + B
+    expr = Sum((A[a, b] + B[a, b])*C[b, c], (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == (A+B)*C
+    expr = Sum((A[a, b] + B[b, a])*C[b, c], (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == (A+B.T)*C
+    expr = Sum(A[a, b]*A[b, c]*A[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, A)
+    expr = Sum(A[a, b]*A[b, c]*B[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, B)
+
+    # Parse the trace of a matrix:
+
+    expr = Sum(A[a, a], (a, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, None) == trace(A)
+    expr = Sum(A[a, a]*B[b, c]*C[c, d], (a, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, b) == trace(A)*B*C
+
+    # Check wrong sum ranges (should raise an exception):
+
+    ## Case 1: 0 to m instead of 0 to m-1
+    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 0, m))
+    raises(ValueError, lambda: MatrixExpr.from_index_summation(expr, a))
+    ## Case 2: 1 to m-1 instead of 0 to m-1
+    expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 1, m-1))
+    raises(ValueError, lambda: MatrixExpr.from_index_summation(expr, a))
+
+    # Parse nested sums:
+    expr = Sum(A[a, b]*Sum(B[b, c]*C[c, d], (c, 0, k-1)), (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == A*B*C
+
+    # Test Kronecker delta:
+    expr = Sum(A[a, b]*KroneckerDelta(b, c)*B[c, d], (b, 0, k-1), (c, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, a) == A*B
