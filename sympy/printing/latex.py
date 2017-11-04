@@ -372,6 +372,7 @@ class LatexPrinter(Printer):
         return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
+        from sympy.parsing.sympy_parser import parse_expr
         include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
@@ -415,12 +416,9 @@ class LatexPrinter(Printer):
                     _tex += term_tex
                     last_term_tex = term_tex
                 return _tex
+        one_by_one =  parse_expr('1/1', evaluate=False)
 
-        if denom is S.One:
-            # use the original expression here, since fraction() may have
-            # altered it when producing numer and denom
-            tex += convert(expr)
-        else:
+        if not denom is S.One or one_by_one in expr.args:
             snumer = convert(numer)
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
@@ -458,6 +456,11 @@ class LatexPrinter(Printer):
                     tex += r"\frac{1}{%s}%s%s" % (sdenom, separator, snumer)
             else:
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
+
+        elif denom is S.One:
+            # use the original expression here, since fraction() may have
+            # altered it when producing numer and denom
+            tex += convert(expr)
 
         if include_parens:
             tex += ")"
