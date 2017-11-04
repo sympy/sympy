@@ -125,18 +125,18 @@ between coordinates and speeds. ::
 Now the equations of motion instances can be created using the above mentioned
 equations of motion formats. ::
 
-    >>> symsystem1 = system.SymbolicSystem(states, comb_explicit_rhs, 
-    ...                                    alg_con=alg_con_full, bodies=bodies, 
+    >>> symsystem1 = system.SymbolicSystem(states, comb_explicit_rhs,
+    ...                                    alg_con=alg_con_full, bodies=bodies,
     ...                                    loads=loads)
-    >>> symsystem2 = system.SymbolicSystem(states, comb_implicit_rhs, 
+    >>> symsystem2 = system.SymbolicSystem(states, comb_implicit_rhs,
     ...                                    mass_matrix=comb_implicit_mat,
     ...                                    alg_con=alg_con_full,
     ...                                    coord_idxs=coord_idxs)
-    >>> symsystem3 = system.SymbolicSystem(states, dyn_implicit_rhs, 
+    >>> symsystem3 = system.SymbolicSystem(states, dyn_implicit_rhs,
     ...                                    mass_matrix=dyn_implicit_mat,
     ...                                    coordinate_derivatives=kin_explicit_rhs,
-    ...                                    alg_con=alg_con, 
-    ...                                    coord_idxs=coord_idxs, 
+    ...                                    alg_con=alg_con,
+    ...                                    coord_idxs=coord_idxs,
     ...                                    speed_idxs=speed_idxs)
 
  Like coordinates and speeds, the bodies and loads attributes can only be

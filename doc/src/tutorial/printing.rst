@@ -231,7 +231,7 @@ printer.
 
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
-    >>> print(dotprint(x+2)) 
+    >>> print(dotprint(x+2))
     digraph{
     # Graph style
     "ordering"="out"
