@@ -827,6 +827,7 @@ class Add(Expr, AssocOp):
 
     def _eval_as_leading_term(self, x):
         from sympy import expand_mul, factor_terms
+        from collections import Counter
 
         old = self
 
@@ -849,9 +850,11 @@ class Add(Expr, AssocOp):
                 final_leading_term = [new_expr]
 
             if len(expr.args) != len(final_leading_term):
-                canceled_term = [t for t in leading_term if t not in final_leading_term]
+                coeff_added_term = [t for t in leading_term if t not in final_leading_term]
+                leading_coeff = [t.as_coeff_Mul()[1] for t in final_leading_term]
+                canceled_term = [t for t in leading_term if t not in final_leading_term and t.as_coeff_Mul()[1] not in leading_coeff]
                 expr_sum = expr.func(*canceled_term)
-                if expr_sum == S(0):
+                if expr_sum == S(0) and len(canceled_term) != 0:
                     compute = True
 
         expr = new_expr
