@@ -34,8 +34,16 @@ def test_function_range():
         ) == FiniteSet(0)
     assert function_range(x*(x - 1) - (x**2 - x) + y, x, S.Reals
         ) == FiniteSet(y)
+    assert function_range(sin(x), x, Union(Interval(-5, -3), FiniteSet(4))
+        ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
+    assert function_range(cos(x), x, Interval(-oo, -4)
+        ) == Interval(-1, 1)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
+    raises(NotImplementedError, lambda : function_range(
+        log(x), x, S.Integers))
+    raises(NotImplementedError, lambda : function_range(
+        sin(x)/2, x, S.Naturals))
 
 
 def test_continuous_domain():
@@ -328,16 +336,20 @@ def test_AccumBounds_pow():
 def test_comparison_AccumBounds():
     assert (AccumBounds(1, 3) < 4) == S.true
     assert (AccumBounds(1, 3) < -1) == S.false
-    assert (AccumBounds(1, 3) < 2) is None
+    assert (AccumBounds(1, 3) < 2).rel_op == '<'
+    assert (AccumBounds(1, 3) <= 2).rel_op == '<='
 
     assert (AccumBounds(1, 3) > 4) == S.false
     assert (AccumBounds(1, 3) > -1) == S.true
-    assert (AccumBounds(1, 3) > 2) is None
+    assert (AccumBounds(1, 3) > 2).rel_op == '>'
+    assert (AccumBounds(1, 3) >= 2).rel_op == '>='
 
     assert (AccumBounds(1, 3) < AccumBounds(4, 6)) == S.true
-    assert (AccumBounds(1, 3) < AccumBounds(2, 4)) is None
+    assert (AccumBounds(1, 3) < AccumBounds(2, 4)).rel_op == '<'
     assert (AccumBounds(1, 3) < AccumBounds(-2, 0)) == S.false
 
+    # issue 13499
+    assert (cos(x) > 0).subs(x, oo) == (AccumBounds(-1, 1) > 0)
 
 def test_contains_AccumBounds():
     assert (1 in AccumBounds(1, 2)) == S.true
