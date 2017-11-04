@@ -857,7 +857,7 @@ class Add(Expr, AssocOp):
         expr = new_expr
 
         if compute:
-            # simple leading term analysis gave us canceled terms which's sum is 0  
+            # simple leading term analysis gave us canceled terms which's sum is 0
             # so compute the leading term (via series)
             return old.compute_leading_term(x)
         elif expr is S.NaN:
