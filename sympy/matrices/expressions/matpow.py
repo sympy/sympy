@@ -43,10 +43,10 @@ class MatPow(MatrixExpr):
             # T = A.base.as_explicit().inverse()
             # A = MatMul(*[T for k in range(-A.exp)])
             else:
-                raise NotImplementedError(("(%d, %d) entry" % (int(i), int(j)))
-                    + " of matrix power either not defined or not implemented")
+                # Leave the expression unevaluated:
+                from sympy.matrices.expressions.matexpr import MatrixElement
+                return MatrixElement(self, i, j)
         return A._entry(i, j)
-
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
