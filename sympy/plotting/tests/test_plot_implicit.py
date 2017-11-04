@@ -54,12 +54,14 @@ def plot_implicit_tests(name):
 
     #Test plots which cannot be rendered using the adaptive algorithm
     with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter(action='ignore', category=FutureWarning)
         plot_and_save(Eq(y, re(cos(x) + I*sin(x))), name=name)
         for i in w: # Same warning may be issued multiple times
             assert issubclass(i.category, UserWarning)
             assert "Adaptive meshing could not be applied" in str(i.message)
 
     with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter(action='ignore', category=FutureWarning)
         plot_and_save(x**2 - 1, legend='An implicit plot')
         for i in w:
             assert issubclass(i.category, UserWarning)

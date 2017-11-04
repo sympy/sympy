@@ -220,6 +220,7 @@ def plot_and_save(name):
     # that warning.
 
     with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter(action='ignore', category=FutureWarning)
         i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
         p = plot(i, (y, 1, 5))
         p.save(tmp_file('%s_advanced_integral' % name))
