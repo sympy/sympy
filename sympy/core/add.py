@@ -25,8 +25,10 @@ def _unevaluated_Add(*args):
     """Return a well-formed unevaluated Add: Numbers are collected and
     put in slot 0 and args are sorted. Use this when args have changed
     but you still want to return an unevaluated Add.
+
     Examples
     ========
+
     >>> from sympy.core.add import _unevaluated_Add as uAdd
     >>> from sympy import S, Add
     >>> from sympy.abc import x, y
@@ -35,11 +37,13 @@ def _unevaluated_Add(*args):
     3.00000000000000
     >>> a.args[1]
     x
+
     Beyond the Number being in slot 0, there is no other assurance of
     order for the arguments since they are hash sorted. So, for testing
     purposes, output produced by this in some other function can only
     be tested against the output of this function or as one of several
     options:
+
     >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
     >>> a = uAdd(x, y)
     >>> assert a in opts and a == uAdd(x, y)
@@ -75,13 +79,19 @@ class Add(Expr, AssocOp):
     def flatten(cls, seq):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
+
         Returns: (commutative_part, noncommutative_part, order_symbols)
+
         Applies associativity, all terms are commutable with respect to
         addition.
+
         NB: the removal of 0 is already handled by AssocOp.__new__
+
         See also
         ========
+
         sympy.core.mul.Mul.flatten
+
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
@@ -277,8 +287,10 @@ class Add(Expr, AssocOp):
         Since the dictionary is a defaultdict, inquiries about terms which
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
+
         Examples
         ========
+
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -306,8 +318,10 @@ class Add(Expr, AssocOp):
         """
         Returns a tuple (coeff, args) where self is treated as an Add and coeff
         is the Number term and args is a tuple of all other terms.
+
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> (7 + 3*x).as_coeff_add()
         (7, (3*x,))
@@ -409,14 +423,17 @@ class Add(Expr, AssocOp):
     @cacheit
     def as_two_terms(self):
         """Return head and tail of self.
+
         This is the most efficient way to get the head and tail of an
         expression.
+
         - if you want only the head, use self.args[0];
         - if you want to process the arguments of the tail then use
           self.as_coef_add() which gives the head and a tuple containing
           the arguments of the tail when treated as an Add.
         - if you want the coefficient when self is treated as a Mul
           then use self.as_coeff_mul()[0]
+
         >>> from sympy.abc import x, y
         >>> (3*x*y).as_two_terms()
         (3, x*y)
@@ -751,8 +768,10 @@ class Add(Expr, AssocOp):
     def extract_leading_order(self, symbols, point=None):
         """
         Returns the leading term and its order.
+
         Examples
         ========
+
         >>> from sympy.abc import x
         >>> (x + 1 + 1/x**5).extract_leading_order(x)
         ((x**(-5), O(x**(-5))),)
@@ -760,6 +779,7 @@ class Add(Expr, AssocOp):
         ((1, O(1)),)
         >>> (x + x**2).extract_leading_order(x)
         ((x, O(x)),)
+
         """
         from sympy import Order
         lst = []
@@ -785,8 +805,10 @@ class Add(Expr, AssocOp):
     def as_real_imag(self, deep=True, **hints):
         """
         returns a tuple representing a complex number
+
         Examples
         ========
+
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
         (7, 9)
@@ -835,8 +857,8 @@ class Add(Expr, AssocOp):
         expr = new_expr
 
         if compute:
-            # simple leading term analysis gave us 0 but we have to send
-            # back a term, so compute the leading term (via series)
+            # simple leading term analysis gave us canceled terms which's sum is 0  
+            # so compute the leading term (via series)
             return old.compute_leading_term(x)
         elif expr is S.NaN:
             return old.func._from_args(infinite)
@@ -875,24 +897,36 @@ class Add(Expr, AssocOp):
     def primitive(self):
         """
         Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
+
         ``R`` is collected only from the leading coefficient of each term.
+
         Examples
         ========
+
         >>> from sympy.abc import x, y
+
         >>> (2*x + 4*y).primitive()
         (2, x + 2*y)
+
         >>> (2*x/3 + 4*y/9).primitive()
         (2/9, 3*x + 2*y)
+
         >>> (2*x/3 + 4.2*y).primitive()
         (1/3, 2*x + 12.6*y)
+
         No subprocessing of term factors is performed:
+
         >>> ((2 + 2*x)*x + 2).primitive()
         (1, x*(2*x + 2) + 2)
+
         Recursive processing can be done with the ``as_content_primitive()``
         method:
+
         >>> ((2 + 2*x)*x + 2).as_content_primitive()
         (2, x*(x + 1) + 1)
+
         See also: primitive() function in polytools.py
+
         """
 
         terms = []
@@ -945,14 +979,19 @@ class Add(Expr, AssocOp):
         extracted from self. If radical is True (default is False) then
         common radicals will be removed and included as a factor of the
         primitive expression.
+
         Examples
         ========
+
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
         (3, 1 + sqrt(2))
+
         Radical content can also be factored out of the primitive:
+
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
         (2, sqrt(2)*(1 + 2*sqrt(5)))
+
         See docstring of Expr.as_content_primitive for more examples.
         """
         con, prim = self.func(*[_keep_coeff(*a.as_content_primitive(
