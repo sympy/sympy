@@ -350,7 +350,47 @@ class MatrixExpr(Basic):
         return 1, MatMul(self)
 
     @staticmethod
-    def from_index_summation(expr, first_index):
+    def from_index_summation(expr, first_index=None):
+        r"""
+        Parse expression of matrices with explicitly summed indices into a
+        matrix expression without indices, if possible.
+
+        This transformation expressed in mathematical notation:
+
+        `\sum_{j=0}^{N-1} A_{i,j} B_{j,k} \Longrightarrow \mathbf{A}\cdot \mathbf{B}`
+
+        Optional parameter ``first_index``: specify which free index to use as
+        the index starting the expression.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+        >>> from sympy.abc import i, j, k, l, N
+        >>> A = MatrixSymbol("A", N, N)
+        >>> B = MatrixSymbol("B", N, N)
+        >>> expr = Sum(A[i, j]*B[j, k], (j, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A*B
+
+        Transposition is detected:
+
+        >>> expr = Sum(A[j, i]*B[j, k], (j, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A.T*B
+
+        Detect the trace:
+
+        >>> expr = Sum(A[i, i], (i, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        Trace(A)
+
+        More complicated expressions:
+
+        >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A*B.T*A.T
+        """
         from sympy import Sum, Mul, MatMul, transpose, trace
 
         def recurse_expr(expr, index_ranges={}):
@@ -439,7 +479,7 @@ class MatrixExpr(Basic):
                 return expr, None
 
         parsed, irange = recurse_expr(expr)
-        if irange is None:
+        if irange is None or first_index is None:
             return parsed
         i1, i2 = irange
         if i1 == first_index:
