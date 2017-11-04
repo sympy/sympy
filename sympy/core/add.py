@@ -852,7 +852,7 @@ class Add(Expr, AssocOp):
             if len(expr.args) != len(final_leading_term):
                 coeff_added_term = [t for t in leading_term if t not in final_leading_term]
                 leading_coeff = [t.as_coeff_Mul()[1] for t in final_leading_term]
-                canceled_term = [t for t in leading_term if t not in final_leading_term and t.as_coeff_Mul()[1] not in leading_coeff]
+                canceled_term = [t for t in coeff_added_term if t.as_coeff_Mul()[1] not in leading_coeff]
                 expr_sum = expr.func(*canceled_term)
                 if expr_sum == S(0) and len(canceled_term) != 0:
                     compute = True
