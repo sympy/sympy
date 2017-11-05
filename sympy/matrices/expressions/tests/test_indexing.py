@@ -1,6 +1,6 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
         Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, MatMul, trace,
-        Symbol)
+        Symbol, Mul)
 from sympy.utilities.pytest import raises
 from sympy.matrices.expressions.matexpr import MatrixElement, MatrixExpr
 
@@ -110,6 +110,12 @@ def test_matrix_expression_to_indices():
         Sum(W[i, i1]*Y[i1, i2]*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1))
     assert MatrixExpr.from_index_summation(expr._entry(i, j)) == expr
 
+    expr = 2*W*X*Z + 3*W*Y*Z
+    assert replace_dummies(expr._entry(i, j)) == \
+        2*Sum(W[i, i1]*X[i1, i2]*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1)) +\
+        3*Sum(W[i, i1]*Y[i1, i2]*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1))
+    assert MatrixExpr.from_index_summation(expr._entry(i, j)) == expr
+
     expr = W*(X + Y)*Z
     assert replace_dummies(expr._entry(i, j)) == \
             Sum(W[i, i1]*(X[i1, i2] + Y[i1, i2])*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1))
@@ -125,6 +131,8 @@ def test_matrix_expression_from_index_summation():
     A = MatrixSymbol("A", k, k)
     B = MatrixSymbol("B", k, k)
     C = MatrixSymbol("C", k, k)
+
+    i0, i1, i2, i3, i4 = symbols("i0:5", cls=Dummy)
 
     expr = Sum(W[a,b]*X[b,c]*Z[c,d], (b, 0, l-1), (c, 0, m-1))
     assert MatrixExpr.from_index_summation(expr, a) == W*X*Z
@@ -170,3 +178,6 @@ def test_matrix_expression_from_index_summation():
     # Test Kronecker delta:
     expr = Sum(A[a, b]*KroneckerDelta(b, c)*B[c, d], (b, 0, k-1), (c, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, a) == A*B
+
+    expr = Sum(KroneckerDelta(i1, m)*KroneckerDelta(i2, n)*A[i, i1]*A[j, i2], (i1, 0, k-1), (i2, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, m) == A.T*A[j, n]
