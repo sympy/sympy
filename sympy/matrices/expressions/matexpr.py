@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
 from functools import wraps
+import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range, SYMPY_INTS
+from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -347,6 +348,145 @@ class MatrixExpr(Basic):
 
     def as_coeff_mmul(self):
         return 1, MatMul(self)
+
+    @staticmethod
+    def from_index_summation(expr, first_index=None):
+        r"""
+        Parse expression of matrices with explicitly summed indices into a
+        matrix expression without indices, if possible.
+
+        This transformation expressed in mathematical notation:
+
+        `\sum_{j=0}^{N-1} A_{i,j} B_{j,k} \Longrightarrow \mathbf{A}\cdot \mathbf{B}`
+
+        Optional parameter ``first_index``: specify which free index to use as
+        the index starting the expression.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+        >>> from sympy.abc import i, j, k, l, N
+        >>> A = MatrixSymbol("A", N, N)
+        >>> B = MatrixSymbol("B", N, N)
+        >>> expr = Sum(A[i, j]*B[j, k], (j, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A*B
+
+        Transposition is detected:
+
+        >>> expr = Sum(A[j, i]*B[j, k], (j, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A.T*B
+
+        Detect the trace:
+
+        >>> expr = Sum(A[i, i], (i, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        Trace(A)
+
+        More complicated expressions:
+
+        >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A*B.T*A.T
+        """
+        from sympy import Sum, Mul, MatMul, transpose, trace
+
+        def recurse_expr(expr, index_ranges={}):
+            if expr.is_Mul:
+                nonmatargs = []
+                matargs = []
+                pos_arg = []
+                pos_ind = []
+                dlinks = {}
+                link_ind = []
+                counter = 0
+                for arg in expr.args:
+                    arg_symbol, arg_indices = recurse_expr(arg, index_ranges)
+                    if arg_indices is None:
+                        nonmatargs.append(arg_symbol)
+                        continue
+                    i1, i2 = arg_indices
+                    pos_arg.append(arg_symbol)
+                    pos_ind.append(i1)
+                    pos_ind.append(i2)
+                    link_ind.extend([None, None])
+                    if i1 in dlinks:
+                        other_i1 = dlinks[i1]
+                        link_ind[2*counter] = other_i1
+                        link_ind[other_i1] = 2*counter
+                    if i2 in dlinks:
+                        other_i2 = dlinks[i2]
+                        link_ind[2*counter + 1] = other_i2
+                        link_ind[other_i2] = 2*counter + 1
+                    dlinks[i1] = 2*counter
+                    dlinks[i2] = 2*counter + 1
+                    counter += 1
+                cur_ind_pos = link_ind.index(None)
+                first_index = pos_ind[cur_ind_pos]
+                while True:
+                    d = cur_ind_pos // 2
+                    r = cur_ind_pos % 2
+                    if r == 1:
+                        matargs.append(transpose(pos_arg[d]))
+                    else:
+                        matargs.append(pos_arg[d])
+                    next_ind_pos = link_ind[2*d + 1 - r]
+                    if next_ind_pos is None:
+                        last_index = pos_ind[2*d + 1 - r]
+                        break
+                    cur_ind_pos = next_ind_pos
+                return Mul.fromiter(nonmatargs)*MatMul.fromiter(matargs), (first_index, last_index)
+            elif expr.is_Add:
+                res = [recurse_expr(i) for i in expr.args]
+                res = [
+                    ((transpose(i), (j[1], j[0]))
+                        if default_sort_key(j[0]) > default_sort_key(j[1])
+                    else (i, j))
+                    for (i, j) in res
+                ]
+                addends, last_indices = zip(*res)
+                last_indices = list(set(last_indices))
+                if len(last_indices) > 1:
+                    print(last_indices)
+                    raise ValueError("incompatible summation")
+                return MatAdd.fromiter(addends), last_indices[0]
+            elif isinstance(expr, KroneckerDelta):
+                i1, i2 = expr.args
+                return S.One, (i1, i2)
+            elif isinstance(expr, MatrixElement):
+                matrix_symbol, i1, i2 = expr.args
+                if i1 in index_ranges:
+                    r1, r2 = index_ranges[i1]
+                    if r1 != 0 or matrix_symbol.shape[0] != r2+1:
+                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                            (r1, r2), matrix_symbol.shape[0]))
+                if i2 in index_ranges:
+                    r1, r2 = index_ranges[i2]
+                    if r1 != 0 or matrix_symbol.shape[1] != r2+1:
+                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                            (r1, r2), matrix_symbol.shape[1]))
+                if (i1 == i2) and (i1 in index_ranges):
+                    return trace(matrix_symbol), None
+                return matrix_symbol, (i1, i2)
+            elif isinstance(expr, Sum):
+                return recurse_expr(
+                    expr.args[0],
+                    index_ranges={i[0]: i[1:] for i in expr.args[1:]}
+                )
+            else:
+                return expr, None
+
+        parsed, irange = recurse_expr(expr)
+        if irange is None or first_index is None:
+            return parsed
+        i1, i2 = irange
+        if i1 == first_index:
+            return parsed
+        if i2 == first_index:
+            return transpose(parsed)
+        raise ValueError("no such index")
 
 
 class MatrixElement(Expr):

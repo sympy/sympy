@@ -72,24 +72,24 @@ def test_piecewise():
 
     p = Piecewise(
         (x**2, x < 0),
-        (x, Interval(0, 1, False, True).contains(x)),
+        (x, x < 1),
         (2 - x, x >= 1),
-        (0, True)
+        (0, True), evaluate=False
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x**2) if (x < 0) else (((x) if (((x >= 0) and (x < 1))) " \
+    assert l == "((x**2) if (x < 0) else (((x) if (x < 1) " \
         "else (((-x + 2) if (x >= 1) else (((0) if (True) else None)))))))"
 
     p = Piecewise(
         (x**2, x < 0),
-        (x, Interval(0, 1, False, True).contains(x)),
-        (2 - x, x >= 1),
+        (x, x < 1),
+        (2 - x, x >= 1), evaluate=False
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x**2) if (x < 0) else (((x) if (((x >= 0) and " \
-        "(x < 1))) else (((-x + 2) if (x >= 1) else None)))))"
+    assert l == ("((x**2) if (x < 0) else (((x) if (x < 1) else "
+        "(((-x + 2) if (x >= 1) else None)))))")
 
     p = Piecewise(
         (1, x >= 1),

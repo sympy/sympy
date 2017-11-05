@@ -3874,6 +3874,21 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Limit(sin(x), x, 0, dir='+-')
+    ascii_str = \
+"""\
+lim sin(x)\n\
+x->0      \
+"""
+    ucode_str = \
+u("""\
+lim sin(x)\n\
+x─→0      \
+""")
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
 
 def test_pretty_ComplexRootOf():
     expr = rootof(x**5 + 11*x - 2, 0)

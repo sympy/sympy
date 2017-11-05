@@ -221,7 +221,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), (-oo, oo), True
 
-    if not F.is_Piecewise:
+    if not F.is_Piecewise:  # XXX can this work if integration gives continuous result now?
         raise IntegralTransformError('Mellin', f, 'could not compute integral')
 
     F, cond = F.args[0]
@@ -986,6 +986,8 @@ def _laplace_transform(f, t, s_, simplify=True):
             a_ = oo
             aux_ = []
             for d in disjuncts(c):
+                if d.is_Relational and s in d.rhs.free_symbols:
+                    d = d.reversed
                 m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
                 if not m:
                     m = d.match(abs(arg((s + w3)**p*q, w1)) <= w2)
@@ -997,10 +999,11 @@ def _laplace_transform(f, t, s_, simplify=True):
                     if m[q].is_positive and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0
                 m = d.match(
-                    0 < cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                    cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p > 0)
                 if not m:
-                    m = d.match(0 < cos(abs(
-                        arg(polar_lift(s)**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                    m = d.match(
+                        cos(abs(arg(polar_lift(s)**w1*w5, q))*w2
+                            )*abs(s**w3)**w4 - p > 0)
                 if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(
