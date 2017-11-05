@@ -793,6 +793,8 @@ def test_latex_limits():
 
     # issue #10806
     assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
+    # bi-directional limit
+    assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
 
 
 def test_issue_3568():
