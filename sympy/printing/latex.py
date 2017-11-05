@@ -372,7 +372,7 @@ class LatexPrinter(Printer):
         return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
-        from sympy.parsing.sympy_parser import parse_expr
+        from sympy.core.power import Pow
         include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
@@ -416,7 +416,7 @@ class LatexPrinter(Printer):
                     _tex += term_tex
                     last_term_tex = term_tex
                 return _tex
-        one_by_one =  parse_expr('1/1', evaluate=False)
+        one_by_one =  Pow(1, -1, evaluate=False)
 
         if not denom is S.One or one_by_one in expr.args:
             snumer = convert(numer)
