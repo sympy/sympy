@@ -14,7 +14,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
-    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
+    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Min,
     ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
@@ -2307,8 +2307,8 @@ def test_V1():
 
 
 def test_V2():
-    assert (integrate(Piecewise((-x, x < 0), (x, x >= 0)), x) ==
-            Piecewise((-x**2/2, x < 0), (x**2/2, x >= 0)))
+    assert integrate(Piecewise((-x, x < 0), (x, x >= 0)), x
+        ) == Piecewise((-x**2/2, x < 0), (x**2/2, True))
 
 
 def test_V3():
@@ -2570,10 +2570,9 @@ def test_W21():
 def test_W22():
     t, u = symbols('t u', real=True)
     s = Lambda(x, Piecewise((1, And(x >= 1, x <= 2)), (0, True)))
-    assert (integrate(s(t)*cos(t), (t, 0, u)) ==
-            Piecewise((sin(u) - sin(1), And(u <= 2, u >= 1)),
-                      (0, And(u <= 1, u >= -oo)),
-                      (-sin(1) + sin(2), True)))
+    assert integrate(s(t)*cos(t), (t, 0, u)) == Piecewise(
+        (-sin(Min(1, u)) + sin(Min(2, u)), u > 0),
+        (0, True))
 
 
 @XFAIL

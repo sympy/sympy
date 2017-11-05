@@ -611,7 +611,7 @@ def test_messy():
         log(S(1)/2 + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
+        Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
 
 
 def test_issue_6122():
@@ -673,3 +673,8 @@ def test_issue_10681():
     g = (1.0/3)*R**1.0*r**3*hyper((-0.5, S(3)/2), (S(5)/2,),
                                   r**2*exp_polar(2*I*pi)/R**2)
     assert RR.almosteq((f/g).n(), 1.0, 1e-12)
+
+def test_issue_13536():
+    from sympy import Symbol
+    a = Symbol('a', real=True, positive=True)
+    assert integrate(1/x**2, (x, oo, a)) == -1/a
