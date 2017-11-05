@@ -827,7 +827,6 @@ class Add(Expr, AssocOp):
 
     def _eval_as_leading_term(self, x):
         from sympy import expand_mul, factor_terms
-        from collections import Counter
 
         old = self
 
