@@ -1097,10 +1097,9 @@ class Line(LinearEntity):
             if Point.is_collinear(self.p1, self.p2, other):
                 if self.p1.x != self.p2.x:
                     ti = (other.x - self.p1.x)/(self.p2.x - self.p1.x)
-                else:
+                elif self.p1.y != self.p2.y:
                     ti = (other.y - self.p1.y)/(self.p2.y - self.p1.y)
-                if ti.is_number:
-                    return ti
+                return ti
             raise ValueError("Point is not collinear.")
         raise ValueError('Other should be a Point')
 
