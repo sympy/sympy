@@ -33,7 +33,7 @@ import signal
 import stat
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, range
+from sympy.core.compatibility import exec_, PY3, string_types, range, iterable
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -838,6 +838,13 @@ def _doctest(*paths, **kwargs):
                 [test_file, ' '*(wid - len(test_file) - len(report)), report])
             )
 
+    if blacklist:
+        r.write("\n")
+        r.write_center('blacklisted tests', '_')
+        for blacklisted_file_name in blacklist:
+            print('%s' % blacklisted_file_name)
+        r.write("\n")
+
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
     # testing the *rst as evidenced by first_report no longer being True.
@@ -1200,6 +1207,8 @@ class SymPyTests(object):
                         i += 1
                 # drop functions that are not selected with the keyword expression:
                 funcs = [x for x in funcs if self.matches(x)]
+            else:
+                reporter.disabled_tests.append(filename)
 
             if not funcs:
                 return
@@ -1454,6 +1463,8 @@ class SymPyDocTests(object):
                 if found is None:
                     return "Could not find %s" % ex
         if moduledeps is not None:
+            if not iterable(moduledeps):
+                moduledeps = [moduledeps]
             for extmod in moduledeps:
                 if extmod == 'matplotlib':
                     matplotlib = import_module(
@@ -1916,6 +1927,7 @@ class PyTestReporter(Reporter):
         self._split = split
 
         # TODO: Should these be protected?
+        self.disabled_tests = []
         self.slow_test_functions = []
         self.fast_test_functions = []
 
@@ -2189,6 +2201,12 @@ class PyTestReporter(Reporter):
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
                 self.write("%s: %s\n" % (e[0], e[1]))
+            self.write("\n")
+
+        if self.disabled_tests:
+            self.write_center('disabled tests', '_')
+            for disabled_file_name in self.disabled_tests:
+                print('%s' % disabled_file_name)
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:

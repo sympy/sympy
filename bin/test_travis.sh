@@ -56,7 +56,7 @@ if [[ "${TEST_DOCTESTS}" == "true" ]]; then
     cat << EOF | python -We:invalid
 print('Testing DOCTESTS')
 import sympy
-if not sympy.doctest():
+if not sympy.doctest(verbose=True):
     raise Exception('Tests failed')
 EOF
     cd ..
@@ -81,8 +81,9 @@ if not (sympy.test('*numpy*', 'sympy/core/tests/test_numbers.py',
                    'sympy/matrices/', 'sympy/physics/quantum/',
                    'sympy/core/tests/test_sympify.py',
                    'sympy/utilities/tests/test_lambdify.py',
-                   blacklist=['sympy/physics/quantum/tests/test_circuitplot.py'])
-        and sympy.doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
+                   blacklist=['sympy/physics/quantum/tests/test_circuitplot.py'],
+                   verbose=True)
+        and sympy.doctest('sympy/matrices/', 'sympy/utilities/lambdify.py', verbose=True)):
     raise Exception('Tests failed')
 EOF
 fi
@@ -92,7 +93,7 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"scipy"* ]]; then
 print('Testing SCIPY')
 import sympy
 # scipy matrices are tested in numpy testing
-if not sympy.test('sympy/external/tests/test_scipy.py'):
+if not sympy.test('sympy/external/tests/test_scipy.py', verbose=True):
     raise Exception('Tests failed')
 EOF
 fi
@@ -101,8 +102,8 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"llvmlite"* ]]; then
     cat << EOF | python
 print('Testing LLVMJIT')
 import sympy
-if not (sympy.test('sympy/printing/tests/test_llvmjit.py')
-        and sympy.doctest('sympy/printing/llvmjitcode.py')):
+if not (sympy.test('sympy/printing/tests/test_llvmjit.py', verbose=True)
+        and sympy.doctest('sympy/printing/llvmjitcode.py', verbose=True)):
     raise Exception('Tests failed')
 EOF
 fi
@@ -111,7 +112,7 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"theano"* ]]; then
     cat << EOF | python
 print('Testing THEANO')
 import sympy
-if not sympy.test('*theano*'):
+if not sympy.test('*theano*', verbose=True):
     raise Exception('Tests failed')
 EOF
 fi
@@ -120,7 +121,7 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"gmpy"* ]]; then
     cat << EOF | python
 print('Testing GMPY')
 import sympy
-if not (sympy.test('sympy/polys/') and sympy.doctest('sympy/polys/')):
+if not (sympy.test('sympy/polys/', verbose=True) and sympy.doctest('sympy/polys/', verbose=True)):
     raise Exception('Tests failed')
 EOF
 fi
@@ -137,7 +138,7 @@ import sympy
 # Unfortunately, we have to use subprocess=False so that the above will be
 # applied, so no hash randomization here.
 if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitplot.py',
-    subprocess=False) and sympy.doctest('sympy/plotting', subprocess=False)):
+    subprocess=False, verbose=True) and sympy.doctest('sympy/plotting', subprocess=False, verbose=True)):
     raise Exception('Tests failed')
 EOF
 fi
@@ -146,8 +147,8 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"autowrap"* ]]; then
     cat << EOF | python
 print('Testing AUTOWRAP')
 import sympy
-if not (sympy.test('sympy/external/tests/test_autowrap.py')
-        and sympy.doctest('sympy/utilities/autowrap.py')):
+if not (sympy.test('sympy/external/tests/test_autowrap.py', verbose=True)
+        and sympy.doctest('sympy/utilities/autowrap.py', verbose=True)):
     raise Exception('Tests failed')
 EOF
 fi
@@ -167,7 +168,7 @@ if [[ "${TEST_SYMPY}" == "true" ]]; then
     cat << EOF | python -We:invalid
 print('Testing SYMPY, split ${SPLIT}')
 import sympy
-if not sympy.test(split='${SPLIT}'):
+if not sympy.test(split='${SPLIT}', verbose=True):
    raise Exception('Tests failed')
 EOF
 fi
@@ -178,9 +179,9 @@ if [[ "${TEST_OPT_DEPENDENCY}" == *"symengine"* ]]; then
     cat << EOF | python
 print('Testing SYMENGINE')
 import sympy
-if not sympy.test('sympy/physics/mechanics'):
+if not sympy.test('sympy/physics/mechanics', verbose=True):
     raise Exception('Tests failed')
-if not sympy.test('sympy/liealgebras'):
+if not sympy.test('sympy/liealgebras', verbose=True):
     raise Exception('Tests failed')
 EOF
     unset USE_SYMENGINE
