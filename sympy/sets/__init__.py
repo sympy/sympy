@@ -4,5 +4,6 @@ from .fancysets import ImageSet, Range, ComplexRegion
 from .contains import Contains
 from .conditionset import ConditionSet
 
-from .fancysets import Reals, Complexes
-Reals = Reals()
+from ..core.singleton import S
+Reals = S.Reals
+del S
