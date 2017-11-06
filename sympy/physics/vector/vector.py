@@ -696,9 +696,12 @@ class Vector(object):
         return Vector(d)
 
     def tilde(self):
-        vx = self.args[0][0][0]
-        vy = self.args[0][0][1]
-        vz = self.args[0][0][2]
+        if self.args == []:
+            vx, vy, vz = 0, 0, 0
+        else:
+            vx = self.args[0][0][0]
+            vy = self.args[0][0][1]
+            vz = self.args[0][0][2]
         return Matrix( [
             [0, -vz, vy],
             [vz, 0, -vx],
