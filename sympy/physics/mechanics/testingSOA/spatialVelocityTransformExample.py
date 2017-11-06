@@ -201,7 +201,8 @@ class SpatialInertia(object):
         
     def __call__(self, pointName):
         """ Equation 2.12, page 20- Jain textbook
-        This is the parallel axis theorem to compute spatial inertia.
+        This is the parallel axis theorem to compute spatial inertia about a
+        supplied point.
         Returns a Matrix object."""
         posVec = pointName.pos_from(self._point)
         bodyFrame = self._body.frame
@@ -210,7 +211,7 @@ class SpatialInertia(object):
 
     def _compute(self):
         """Equation 2.13, page 20- Jain textbook
-        This is the parallel axis theorem to compute the moment of inertia.
+        The spatial inertia of a body is computed here upon class instantiaion.
         Returns a Matrix object."""
         offDiagonalMatrix = self._mass * self._posvec.tilde()
         massMatrixify = self._mass * eye( 3 )
@@ -221,6 +222,11 @@ class SpatialInertia(object):
 M = SpatialInertia(body, mass_center)
 pretty_print( M(mass_center) )
 pretty_print( M(x))
+
+# Serial Chain Kinematics
+
+
+
 #
 
 # IRRELEVANT TO THE PULL REQUEST
