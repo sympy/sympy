@@ -31,7 +31,6 @@ import random
 import subprocess
 import signal
 import stat
-from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range
@@ -40,14 +39,38 @@ from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 IS_WINDOWS = (os.name == 'nt')
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
+# emperically generated list of the proportion of time spent running
+# an even split of tests.  This should periodically be regenerated.
+# A list of [.6, .1, .3] would mean that if the tests are evenly split
+# into '1/3', '2/3', '3/3', the first split would take 60% of the time,
+# the second 10% and the third 30%.  These lists are normalized to sum
+# to 1, so [60, 10, 30] has the same behavoir as [6, 1, 3] or [.6, .1, .3].
+#
+# This list can be generated with the code:
+#     from time import time
+#     import sympy
+#
+#     delays, num_splits = [], 30
+#     for i in range(1, num_splits + 1):
+#         tic = time()
+#         sympy.test(split='{}/{}'.format(i, num_splits), time_balance=False)
+#         delays.append(time() - tic)
+#     tot = sum(delays)
+#     print([round(x / tot, 4) for x in delays]))
+SPLIT_DENSITY = [0.2464, 0.0507, 0.0328, 0.0113, 0.0418, 0.012, 0.0269, 0.0095, 0.091, 0.0215, 0.001, 0.0023, 0.0116, 0.0137, 0.0041, 0.0039, 0.0145, 0.0172, 0.059, 0.0017, 0.0112, 0.0128, 0.0012, 0.0293, 0.0705, 0.0284, 0.1495, 0.0073, 0.0052, 0.0115]
+SPLIT_DENSITY_SLOW = [0.3616, 0.0003, 0.0004, 0.0004, 0.0255, 0.0005, 0.0674, 0.0337, 0.1057, 0.0329, 0.0002, 0.0002, 0.0184, 0.0028, 0.0046, 0.0148, 0.0046, 0.0083, 0.0004, 0.0002, 0.0069, 0.0004, 0.0004, 0.0046, 0.0205, 0.1378, 0.1451, 0.0003, 0.0006, 0.0006]
 
 class Skipped(Exception):
     pass
 
-import __future__
+class TimeOutError(Exception):
+    pass
+
 # add more flags ??
-future_flags = __future__.division.compiler_flag
+future_flags = division.compiler_flag
+
 
 def _indent(s, indent=4):
     """
@@ -63,6 +86,7 @@ def _indent(s, indent=4):
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
+
 pdoctest._indent = _indent
 
 # ovverride reporter to maintain windows and python3
@@ -75,6 +99,7 @@ def _report_failure(self, out, test, example, got):
     s = self._checker.output_difference(example, got, self.optionflags)
     s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
     out(self._failure_header(test, example) + s)
+
 
 if PY3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
@@ -110,8 +135,8 @@ def get_sympy_dir():
     sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
     sympy_dir = os.path.normpath(sympy_dir)
     sys_case_insensitive = (os.path.isdir(sympy_dir) and
-                        os.path.isdir(sympy_dir.lower()) and
-                        os.path.isdir(sympy_dir.upper()))
+                            os.path.isdir(sympy_dir.lower()) and
+                            os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
 
@@ -131,8 +156,9 @@ def setup_pprint():
     init_printing(pretty_print=False)
 
 
-def run_in_subprocess_with_hash_randomization(function, function_args=(),
-    function_kwargs={}, command=sys.executable,
+def run_in_subprocess_with_hash_randomization(
+        function, function_args=(),
+        function_kwargs=None, command=sys.executable,
         module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
@@ -198,10 +224,13 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     else:
         if not force:
             return False
+
+    function_kwargs = function_kwargs or {}
+
     # Now run the command
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
                      (module, function, function, repr(function_args),
-                     repr(function_kwargs)))
+                      repr(function_kwargs)))
 
     try:
         p = subprocess.Popen([command, "-R", "-c", commandstring])
@@ -218,8 +247,9 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
         return p.returncode
 
 
-def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
-                  doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet': True}):
+def run_all_tests(test_args=(), test_kwargs=None,
+                  doctest_args=(), doctest_kwargs=None,
+                  examples_args=(), examples_kwargs=None):
     """
     Run all tests.
 
@@ -241,6 +271,10 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
 
     """
     tests_successful = True
+
+    test_kwargs = test_kwargs or {}
+    doctest_kwargs = doctest_kwargs or {}
+    examples_kwargs = examples_kwargs or {'quiet': True}
 
     try:
         # Regular tests
@@ -387,6 +421,13 @@ def test(*paths, **kwargs):
 
     >>> sympy.test(split='1/2')  # doctest: +SKIP
 
+    The ``time_balance`` option can be passed in conjunction with ``split``.
+    If ``time_balance=True`` (the default for ``sympy.test``), sympy will attempt
+    to split the tests such that each split takes equal time.  This heuristic
+    for balancing is based on pre-recorded test data.
+
+    >>> sympy.test(split='1/2', time_balance=True)  # doctest: +SKIP
+
     You can disable running the tests in a separate subprocess using
     ``subprocess=False``.  This is done to support seeding hash randomization,
     which is enabled by default in the Python versions where it is supported.
@@ -472,9 +513,15 @@ def _test(*paths, **kwargs):
     if seed is None:
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
+    fail_on_timeout = kwargs.get("fail_on_timeout", False)
+    if ON_TRAVIS and timeout is False:
+        # Travis times out if no activity is seen for 10 minutes.
+        timeout = 595
+        fail_on_timeout = True
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
+    time_balance = kwargs.get('time_balance', True)
     blacklist = kwargs.get('blacklist', [])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
@@ -493,6 +540,7 @@ def _test(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     test_files = t.get_test_files('sympy')
 
@@ -511,22 +559,24 @@ def _test(*paths, **kwargs):
                     matched.append(f)
                     break
 
-    if slow:
-        # Seed to evenly shuffle slow tests among splits
-        random.seed(41992450)
-        random.shuffle(matched)
+    density = None
+    if time_balance:
+        if slow:
+            density = SPLIT_DENSITY_SLOW
+        else:
+            density = SPLIT_DENSITY
 
     if split:
-        matched = split_list(matched, split)
+        matched = split_list(matched, split, density=density)
 
     t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout,
-        slow=slow, enhance_asserts=enhance_asserts))
+    return int(not t.test(sort=sort, timeout=timeout, slow=slow,
+        enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
 def doctest(*paths, **kwargs):
-    """
+    r"""
     Runs doctests in all \*.py files in the sympy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
 
@@ -620,6 +670,10 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/galgebra.py", # raises ImportError
+        "sympy/matrices/densearith.py", # raises deprecation warning
+        "sympy/matrices/densesolve.py", # raises deprecation warning
+        "sympy/matrices/densetools.py", # raises deprecation warning
+        "sympy/physics/unitsystems.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:
@@ -678,6 +732,7 @@ def _doctest(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     r = PyTestReporter(verbose, split=split, colors=colors,\
                        force_colors=force_colors)
@@ -794,7 +849,7 @@ def _doctest(*paths, **kwargs):
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 
-def split_list(l, split):
+def split_list(l, split, density=None):
     """
     Splits a list into part a of b
 
@@ -803,6 +858,10 @@ def split_list(l, split):
 
     If the length of the list is not divisible by the number of splits, the
     last split will have more items.
+
+    `density` may be specified as a list.  If specified,
+    tests will be balanced so that each split has as equal-as-possible
+    amount of mass according to `density`.
 
     >>> from sympy.utilities.runtests import split_list
     >>> a = list(range(10))
@@ -817,8 +876,35 @@ def split_list(l, split):
     if not m:
         raise ValueError("split must be a string of the form a/b where a and b are ints")
     i, t = map(int, m.groups())
-    return l[(i - 1)*len(l)//t:i*len(l)//t]
 
+    if not density:
+        return l[(i - 1)*len(l)//t : i*len(l)//t]
+
+    # normalize density
+    tot = sum(density)
+    density = [x / tot for x in density]
+
+    def density_inv(x):
+        """Interpolate the inverse to the cumulative
+        distribution function given by density"""
+        if x <= 0:
+            return 0
+        if x >= sum(density):
+            return 1
+
+        # find the first time the cumulative sum surpasses x
+        # and linearly interpolate
+        cumm = 0
+        for i, d in enumerate(density):
+            cumm += d
+            if cumm >= x:
+                break
+        frac = (d - (cumm - x)) / d
+        return (i + frac) / len(density)
+
+    lower_frac = density_inv((i - 1) / t)
+    higher_frac = density_inv(i / t)
+    return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
 SymPyTestResults = namedtuple('TestResults', 'failed attempted')
@@ -981,7 +1067,8 @@ class SymPyTests(object):
         else:
             self._slow_threshold = 10
 
-    def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
+    def test(self, sort=False, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -997,7 +1084,8 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, slow, enhance_asserts)
+                self.test_file(f, sort, timeout, slow,
+                    enhance_asserts, fail_on_timeout)
             except KeyboardInterrupt:
                 print(" interrupted by user")
                 self._reporter.finish()
@@ -1035,7 +1123,8 @@ class SymPyTests(object):
         new_tree = Transform().visit(tree)
         return fix_missing_locations(new_tree)
 
-    def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
+    def test_file(self, filename, sort=True, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         reporter = self._reporter
         funcs = []
         try:
@@ -1075,29 +1164,29 @@ class SymPyTests(object):
             clear_cache()
             self._count += 1
             random.seed(self._seed)
-            pytestfile = ""
-            if "XFAIL" in gl:
-                pytestfile = inspect.getsourcefile(gl["XFAIL"])
-            pytestfile2 = ""
-            if "slow" in gl:
-                pytestfile2 = inspect.getsourcefile(gl["slow"])
             disabled = gl.get("disabled", False)
             if not disabled:
                 # we need to filter only those functions that begin with 'test_'
-                # that are defined in the testing file or in the file where
-                # is defined the XFAIL decorator
-                funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                    (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
-                    (inspect.getsourcefile(gl[f]) == filename or
-                     inspect.getsourcefile(gl[f]) == pytestfile or
-                     inspect.getsourcefile(gl[f]) == pytestfile2)]
+                # We have to be careful about decorated functions. As long as
+                # the decorator uses functools.wraps, we can detect it.
+                funcs = []
+                for f in gl:
+                    if (f.startswith("test_") and (inspect.isfunction(gl[f])
+                        or inspect.ismethod(gl[f]))):
+                        func = gl[f]
+                        # Handle multiple decorators
+                        while hasattr(func, '__wrapped__'):
+                            func = func.__wrapped__
+
+                        if inspect.getsourcefile(func) == filename:
+                            funcs.append(gl[f])
                 if slow:
                     funcs = [f for f in funcs if getattr(f, '_slow', False)]
                 # Sorting of XFAILed functions isn't fixed yet :-(
                 funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
                 i = 0
                 while i < len(funcs):
-                    if isgeneratorfunction(funcs[i]):
+                    if inspect.isgeneratorfunction(funcs[i]):
                     # some tests can be generators, that return the actual
                     # test functions. We unpack it below:
                         f = funcs.pop(i)
@@ -1129,7 +1218,7 @@ class SymPyTests(object):
                 if getattr(f, '_slow', False) and not slow:
                     raise Skipped("Slow")
                 if timeout:
-                    self._timeout(f, timeout)
+                    self._timeout(f, timeout, fail_on_timeout)
                 else:
                     random.seed(self._seed)
                     f()
@@ -1166,10 +1255,13 @@ class SymPyTests(object):
                     reporter.fast_test_functions.append((f.__name__, taken))
         reporter.leaving_filename()
 
-    def _timeout(self, function, timeout):
+    def _timeout(self, function, timeout, fail_on_timeout):
         def callback(x, y):
             signal.alarm(0)
-            raise Skipped("Timeout")
+            if fail_on_timeout:
+                raise TimeOutError("Timed out after %d seconds" % timeout)
+            else:
+                raise Skipped("Timeout")
         signal.signal(signal.SIGALRM, callback)
         signal.alarm(timeout)  # Set an alarm with a given timeout
         function()
@@ -1312,7 +1404,7 @@ class SymPyDocTests(object):
         self._reporter.leaving_filename()
 
     def get_test_files(self, dir, pat='*.py', init_only=True):
-        """
+        r"""
         Returns the list of \*.py files (default) from which docstrings
         will be tested which are at or below directory ``dir``. By default,
         only those that have an __init__.py in their parent directory
@@ -1559,7 +1651,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
             docstring = obj
 
-            matches = re.findall("line \d+", name)
+            matches = re.findall(r"line \d+", name)
             assert len(matches) == 1, \
                 "string '%s' does not contain lineno " % name
 
@@ -1767,11 +1859,11 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
         if not (optionflags & pdoctest.DONT_ACCEPT_BLANKLINE):
             # Replace <BLANKLINE> in want with a blank line.
-            want = re.sub('(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
+            want = re.sub(r'(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
                           '', want)
             # If a line in got contains only spaces, then remove the
             # spaces.
-            got = re.sub('(?m)^\s*?$', '', got)
+            got = re.sub(r'(?m)^\s*?$', '', got)
             if got == want:
                 return True
 
@@ -2034,6 +2126,8 @@ class PyTestReporter(Reporter):
                 import gmpy2 as gmpy
             version = gmpy.version()
         self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
+        numpy = import_module('numpy')
+        self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION
@@ -2202,7 +2296,10 @@ class PyTestReporter(Reporter):
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
-        self.write("E", "Red")
+        if exc_info[0] is TimeOutError:
+            self.write("T", "Red")
+        else:
+            self.write("E", "Red")
         self._active_file_error = True
 
     def import_error(self, filename, exc_info):

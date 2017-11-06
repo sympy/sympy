@@ -79,9 +79,17 @@ def _monotonic_sign(self):
                 return S(3)
             else:
                 return S(2)
+        elif s.is_composite:
+            if s.is_odd:
+                return S(9)
+            else:
+                return S(4)
         elif s.is_positive:
             if s.is_even:
-                return S(2)
+                if s.is_prime is False:
+                    return S(4)
+                else:
+                    return S(2)
             elif s.is_integer:
                 return S.One
             else:
@@ -299,7 +307,7 @@ class Factors(object):
         >>> f.factors  # underlying dictionary
         {2: 1, x: 3}
         >>> f.gens  # base of each factor
-        frozenset([2, x])
+        frozenset({2, x})
         >>> Factors(0)
         Factors({0: 1})
         >>> Factors(I)
@@ -797,7 +805,7 @@ class Factors(object):
         return self.factors == other.factors
 
     def __ne__(self, other):  # Factors
-        return not self.__eq__(other)
+        return not self == other
 
 
 class Term(object):
@@ -909,7 +917,7 @@ class Term(object):
                 self.denom == other.denom)
 
     def __ne__(self, other):  # Term
-        return not self.__eq__(other)
+        return not self == other
 
 
 def _gcd_terms(terms, isprimitive=False, fraction=True):
@@ -1144,6 +1152,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
 
     """
     def do(expr):
+        from sympy.concrete.summations import Sum
+        from sympy.simplify.simplify import factor_sum
         is_iterable = iterable(expr)
 
         if not isinstance(expr, Basic) or expr.is_Atom:
@@ -1158,6 +1168,9 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
             if newargs == args:
                 return expr
             return expr.func(*newargs)
+
+        if isinstance(expr, Sum):
+            return factor_sum(expr, radical=radical, clear=clear, fraction=fraction, sign=sign)
 
         cont, p = expr.as_content_primitive(radical=radical, clear=clear)
         if p.is_Add:

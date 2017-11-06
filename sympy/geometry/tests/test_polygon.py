@@ -5,7 +5,7 @@ from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
                             convex_hull, intersection, Line)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
 
@@ -15,7 +15,7 @@ def feq(a, b):
     t_float = Float("1.0E-10")
     return -t_float < a - b < t_float
 
-
+@slow
 def test_polygon():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
@@ -102,7 +102,7 @@ def test_polygon():
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
-    assert p6.intersection(r) == [Point(-9, 33/5), Point(-9, -84/13)]
+    assert p6.intersection(r) == [Point(-9, -84/13), Point(-9, 33/5)]
     #
     # Regular polygon
     #
@@ -216,6 +216,9 @@ def test_polygon():
     assert t1.inradius == t1.incircle.radius == 5 - 5*sqrt(2)/2
     assert t2.inradius == t2.incircle.radius == 5*sqrt(3)/6
     assert t3.inradius == t3.incircle.radius == x1**2/((2 + sqrt(2))*Abs(x1))
+
+    # Exradius
+    assert t1.exradii[t1.sides[2]] == 5*sqrt(2)/2
 
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
@@ -376,3 +379,29 @@ def test_eulerline():
         == Point2D(5, 5*sqrt(3)/3)
     assert Triangle(Point(4, -6), Point(4, -1), Point(-3, 3)).eulerline \
         == Line(Point2D(64/7, 3), Point2D(-29/14, -7/2))
+
+
+def test_intersection():
+    poly1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
+    poly2 = Polygon(Point(0, 1), Point(-5, 0),
+                    Point(0, -4), Point(0, 1/5), Point(1/2, -0.1), Point(1,0), Point(0, 1))
+
+    assert poly1.intersection(poly2) == [Point(1/3, 0), Segment(Point(0, 0), Point(0, 1/5)),
+                                         Segment(Point(0, 1), Point(1, 0))]
+    assert poly2.intersection(poly1) == [Point2D(1/3, 0), Segment(Point2D(0, 0), Point(0, 1/5)),
+                                         Segment(Point(0, 1), Point(1, 0))]
+    assert poly1.intersection(Point(0, 0)) == [Point(0, 0)]
+    assert poly1.intersection(Point(-12,  -43)) == []
+    assert poly2.intersection(Line((-12, 0), (12, 0))) == [Point(-5, 0), Point(0, 0),
+                                                           Point(1/3, 0), Point(1, 0)]
+    assert poly2.intersection(Line((-12, 12), (12, 12))) == []
+    assert poly2.intersection(Ray((-3,4), (1,0))) == [Segment(Point(0, 1), Point(1, 0))]
+    assert poly2.intersection(Circle((0, -1), 1)) == [Point(0, -2), Point(0, 0)]
+    assert poly1.intersection(poly1) == [Segment(Point(0, 0), Point(0, 1)), Segment(Point(0, 0), Point(1, 0)),
+                                         Segment(Point(0, 1), Point(1, 0))]
+    assert poly2.intersection(poly2) == [Segment(Point(-5, 0), Point(0, -4)), Segment(Point(-5, 0), Point(0, 1)),
+                                         Segment(Point(0, -4), Point(0, 1/5)), Segment(Point(0, 1/5), Point(1/2, -1/10)),
+                                         Segment(Point(0, 1), Point(1, 0)), Segment(Point(1/2, -1/10), Point(1, 0))]
+    assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) == [Point(-5/7, 6/7),
+                                                                                    Segment(Point2D(0, 1), Point(1, 0))]
+    assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Derivative
-from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
@@ -121,10 +120,10 @@ class VectorLatexPrinter(LatexPrinter):
 
     def _print_Derivative(self, der_expr):
         from sympy.physics.vector.functions import dynamicsymbols
-        # make sure it is an the right form
+        # make sure it is in the right form
         der_expr = der_expr.doit()
         if not isinstance(der_expr, Derivative):
-            return self.doprint(der_expr)
+            return r"\left(%s\right)" % self.doprint(der_expr)
 
         # check if expr is a dynamicsymbol
         from sympy.core.function import AppliedUndef

@@ -1,20 +1,24 @@
 import collections
 import random
+import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, sstr, diff)
+    sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector)
+    NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
+    _simplify)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, u, range
+from sympy.core.compatibility import long, iterable, range
+from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.solvers import solve
 from sympy.assumptions import Q
 
@@ -32,7 +36,7 @@ def test_args():
         assert m.rows == 3 and type(m.rows) is int
         assert m.cols == 2 and type(m.cols) is int
         if not c % 2:
-            assert type(m._mat) is list
+            assert type(m._mat) in (list, tuple, Tuple)
         else:
             assert type(m._smat) is dict
 
@@ -50,6 +54,10 @@ def test_sum():
     n = Matrix(1, 2, [1, 2])
     raises(ShapeError, lambda: m + n)
 
+def test_abs():
+    m = Matrix(1, 2, [-3, x])
+    n = Matrix(1, 2, [3, Abs(x)])
+    assert abs(m) == n
 
 def test_addition():
     a = Matrix((
@@ -214,9 +222,42 @@ def test_power():
         [0, a**n, 0],
         [0, 0, b**n]])
 
+    A = Matrix([[1, 0], [1, 7]])
+    assert A._matrix_pow_by_jordan_blocks(3) == A._eval_pow_by_recursion(3)
+    A = Matrix([[2]])
+    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(10) == \
+        A._eval_pow_by_recursion(10)
+
+    # testing a matrix that cannot be jordan blocked issue 11766
+    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
+    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(10))
+
+    # test issue 11964
+    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
+    assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    raises(ValueError, lambda: A**2.1)
+    raises(ValueError, lambda: A**(S(3)/2))
+    A = Matrix([[8, 1], [3, 2]])
+    assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
+    A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
+    assert A**10.2 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
+    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    n = Symbol('n', integer=True)
+    raises(ValueError, lambda: A**n)
+    n = Symbol('n', integer=True, nonnegative=True)
+    raises(ValueError, lambda: A**n)
+    assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    raises(ValueError, lambda: A**(S(3)/2))
+    A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
+    assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
+    assert A**5.0 == A**5
+
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
+    raises(ValueError, lambda: Matrix(5, -1, []))
     raises(IndexError, lambda: Matrix((1, 2))[2])
     with raises(IndexError):
         Matrix((1, 2))[1:2] = 5
@@ -277,28 +318,28 @@ def test_determinant():
     for M in [Matrix(), Matrix([[1]])]:
         assert (
             M.det() ==
-            M.det_bareis() ==
-            M.berkowitz_det() ==
-            M.det_LU_decomposition() ==
+            M._eval_det_bareiss() ==
+            M._eval_det_berkowitz() ==
+            M._eval_det_lu() ==
             1)
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
 
-    assert M.det(method="bareis") == -1
+    assert M.det(method="bareiss") == -1
     assert M.det(method="berkowitz") == -1
 
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det(method="bareis") == 2*x*y - y
+    assert M.det(method="bareiss") == 2*x*y - y
     assert M.det(method="berkowitz") == 2*x*y - y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
                  (1, 3, 6) ))
 
-    assert M.det(method="bareis") == 1
+    assert M.det(method="bareiss") == 1
     assert M.det(method="berkowitz") == 1
 
     M = Matrix(( ( 3, -2,  0, 5),
@@ -306,7 +347,7 @@ def test_determinant():
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
-    assert M.det(method="bareis") == -289
+    assert M.det(method="bareiss") == -289
     assert M.det(method="berkowitz") == -289
 
     M = Matrix(( ( 1,  2,  3,  4),
@@ -314,7 +355,7 @@ def test_determinant():
                  ( 9, 10, 11, 12),
                  (13, 14, 15, 16) ))
 
-    assert M.det(method="bareis") == 0
+    assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
 
     M = Matrix(( (3, 2, 0, 0, 0),
@@ -323,7 +364,7 @@ def test_determinant():
                  (0, 0, 0, 3, 2),
                  (2, 0, 0, 0, 3) ))
 
-    assert M.det(method="bareis") == 275
+    assert M.det(method="bareiss") == 275
     assert M.det(method="berkowitz") == 275
 
     M = Matrix(( (1, 0,  1,  2, 12),
@@ -332,7 +373,7 @@ def test_determinant():
                  (3, 2, -1,  1,  8),
                  (1, 1,  1,  0,  6) ))
 
-    assert M.det(method="bareis") == -55
+    assert M.det(method="bareiss") == -55
     assert M.det(method="berkowitz") == -55
 
     M = Matrix(( (-5,  2,  3,  4,  5),
@@ -341,7 +382,7 @@ def test_determinant():
                  ( 1,  2,  3, -2,  5),
                  ( 1,  2,  3,  4, -1) ))
 
-    assert M.det(method="bareis") == 11664
+    assert M.det(method="bareiss") == 11664
     assert M.det(method="berkowitz") == 11664
 
     M = Matrix(( ( 2,  7, -1, 3, 2),
@@ -350,44 +391,44 @@ def test_determinant():
                  (-3, -2,  4, 5, 3),
                  ( 1,  0,  0, 0, 1) ))
 
-    assert M.det(method="bareis") == 123
+    assert M.det(method="bareiss") == 123
     assert M.det(method="berkowitz") == 123
 
     M = Matrix(( (x, y, z),
                  (1, 0, 0),
                  (y, z, x) ))
 
-    assert M.det(method="bareis") == z**2 - x*y
+    assert M.det(method="bareiss") == z**2 - x*y
     assert M.det(method="berkowitz") == z**2 - x*y
 
 
 def test_det_LU_decomposition():
 
     for M in [Matrix(), Matrix([[1]])]:
-        assert M.det(method="det_LU") == 1
+        assert M.det(method="lu") == 1
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
 
-    assert M.det(method="det_LU") == -1
+    assert M.det(method="lu") == -1
 
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det(method="det_LU") == 2*x*y - y
+    assert M.det(method="lu") == 2*x*y - y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
                  (1, 3, 6) ))
 
-    assert M.det(method="det_LU") == 1
+    assert M.det(method="lu") == 1
 
     M = Matrix(( ( 3, -2,  0, 5),
                  (-2,  1, -2, 2),
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
-    assert M.det(method="det_LU") == -289
+    assert M.det(method="lu") == -289
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
@@ -395,7 +436,7 @@ def test_det_LU_decomposition():
                  (0, 0, 0, 3, 2),
                  (2, 0, 0, 0, 3) ))
 
-    assert M.det(method="det_LU") == 275
+    assert M.det(method="lu") == 275
 
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
@@ -403,7 +444,7 @@ def test_det_LU_decomposition():
                  (3, 2, -1,  1,  8),
                  (1, 1,  1,  0,  6) ))
 
-    assert M.det(method="det_LU") == -55
+    assert M.det(method="lu") == -55
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),
@@ -411,7 +452,7 @@ def test_det_LU_decomposition():
                  ( 1,  2,  3, -2,  5),
                  ( 1,  2,  3,  4, -1) ))
 
-    assert M.det(method="det_LU") == 11664
+    assert M.det(method="lu") == 11664
 
     M = Matrix(( ( 2,  7, -1, 3, 2),
                  ( 0,  0,  1, 0, 1),
@@ -419,25 +460,14 @@ def test_det_LU_decomposition():
                  (-3, -2,  4, 5, 3),
                  ( 1,  0,  0, 0, 1) ))
 
-    assert M.det(method="det_LU") == 123
+    assert M.det(method="lu") == 123
 
     M = Matrix(( (x, y, z),
                  (1, 0, 0),
                  (y, z, x) ))
 
-    assert M.det(method="det_LU") == z**2 - x*y
+    assert M.det(method="lu") == z**2 - x*y
 
-
-def test_berkowitz_minors():
-    B = Matrix(2, 2, [1, 2, 2, 1])
-
-    assert B.berkowitz_minors() == (1, 1, -3)
-    E = Matrix([])
-    assert E.berkowitz() == ((1,),)
-    assert E.berkowitz_minors() == (1,)
-    assert E.berkowitz_eigenvals() == {}
-    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert A.berkowitz() == ((1,), (1, -1), (1, -6, -3), (1, -15, -18, 0))
 
 def test_slicing():
     m0 = eye(4)
@@ -560,7 +590,7 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(4)
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4)
 
     testmat = Matrix([[6, -2, 7, 4],
                       [0, 3, 6, 7],
@@ -569,13 +599,32 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(4)
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4)
+
+    # non-square
+    testmat = Matrix([[1, 2, 3],
+                      [4, 5, 6],
+                      [7, 8, 9],
+                      [10, 11, 12]])
+    L, U, p = testmat.LUdecomposition(rankcheck=False)
+    assert L.is_lower
+    assert U.is_upper
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4, 3)
+
+    # square and singular
+    testmat = Matrix([[1, 2, 3],
+                      [2, 4, 6],
+                      [4, 5, 6]])
+    L, U, p = testmat.LUdecomposition(rankcheck=False)
+    assert L.is_lower
+    assert U.is_upper
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(3)
 
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - M == zeros(3)
+    assert (L*U).permute_rows(p, 'backward') - M == zeros(3)
 
     mL = Matrix((
         (1, 0, 0),
@@ -703,12 +752,12 @@ def test_util():
     assert ones(1, 2) == Matrix(1, 2, [1, 1])
     assert v1.copy() == v1
     # cofactor
-    assert eye(3) == eye(3).cofactorMatrix()
+    assert eye(3) == eye(3).cofactor_matrix()
     test = Matrix([[1, 3, 2], [2, 6, 3], [2, 3, 6]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         Matrix([[27, -6, -6], [-12, 2, 3], [-3, 1, 0]])
     test = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
 
 
@@ -952,14 +1001,13 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])]),
-        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])])]
-    assert M.eigenvects(simplify=False) == [
-        (Rational(5, 8) + sqrt(73)/8, 1,
-        [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])]),
-        (-sqrt(73)/8 + Rational(5, 8), 1,
-        [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
-    ]
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])]),
+        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])])]
+    assert M.eigenvects(simplify=False) ==[(S(5)/8 + sqrt(73)/8, 1, [Matrix([
+       [-1/(-sqrt(73)/8 - S(3)/8)],
+       [                     1]])]), (-sqrt(73)/8 + S(5)/8, 1, [Matrix([
+       [-1/(-S(3)/8 + sqrt(73)/8)],
+       [                     1]])])]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
     evals = {-sqrt(385)/20 + S(5)/4: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
@@ -997,11 +1045,6 @@ def test_xreplace():
 
 def test_simplify():
     f, n = symbols('f, n')
-
-    m = Matrix([[1, x], [x + 1/x, x - 1]])
-    m = m.row_join(eye(m.cols))
-    raw = m.rref(simplify=lambda x: x)[0]
-    assert raw != m.rref(simplify=True)[0]
 
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
@@ -1193,6 +1236,8 @@ def test_is_upper():
     assert a.is_upper is True
     a = Matrix([[1], [2], [3]])
     assert a.is_upper is False
+    a = zeros(4, 2)
+    assert a.is_upper is True
 
 
 def test_is_lower():
@@ -1590,10 +1635,6 @@ def test_jordan_form():
     Jmust = Matrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
     P, J = m.jordan_form()
     assert Jmust == J
-    P, Jcells = m.jordan_cells()
-    # same here see 1456ff
-    assert Jcells[1] == Matrix(1, 1, [2])
-    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
 
     # complexity: all of eigenvalues are equal
     m = Matrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
@@ -1634,27 +1675,6 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert Jmust == J
 
-    # the following tests are new and include (some) test the cases where the old
-    # algorithm failed due to the fact that the block structure can
-    # *NOT* be determined  from algebraic and geometric multiplicity alone
-    # This can be seen most easily when one lets compute the J.c.f. of a matrix that
-    # is in J.c.f already.
-    m = Matrix(4, 4, [2, 1, 0, 0,
-                    0, 2, 1, 0,
-                    0, 0, 2, 0,
-                    0, 0, 0, 2
-    ])
-    P, J = m.jordan_form()
-    assert m == J
-
-    m = Matrix(4, 4, [2, 1, 0, 0,
-                    0, 2, 0, 0,
-                    0, 0, 2, 1,
-                    0, 0, 0, 2
-    ])
-    P, J = m.jordan_form()
-    assert m == J
-
 
 def test_jordan_form_complex_issue_9274():
     A = Matrix([[ 2,  4,  1,  0],
@@ -1681,12 +1701,16 @@ def test_issue_10220():
                 [0, 1, 1, 0],
                 [0, 0, 1, 1],
                 [0, 0, 0, 1]])
-    P, C = M.jordan_cells()
+    P, J = M.jordan_form()
     assert P == Matrix([[0, 1, 0, 1],
                         [1, 0, 0, 0],
                         [0, 1, 0, 0],
                         [0, 0, 1, 0]])
-    assert len(C) == 2
+    assert J == Matrix([
+                        [1, 1, 0, 0],
+                        [0, 1, 1, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
 
 
 def test_Matrix_berkowitz_charpoly():
@@ -1695,7 +1719,7 @@ def test_Matrix_berkowitz_charpoly():
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
-    charpoly = A.berkowitz_charpoly(x)
+    charpoly = A.charpoly(x)
 
     assert charpoly == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
@@ -1704,8 +1728,12 @@ def test_Matrix_berkowitz_charpoly():
     assert type(charpoly) is PurePoly
 
     A = Matrix([[1, 3], [2, 0]])
-
     assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)
+
+    A = Matrix([[1, 2], [x, 0]])
+    p = A.charpoly(x)
+    assert p.gen != x
+    assert p.as_expr().subs(p.gen, x) == x**2 - 3*x
 
 
 def test_exp():
@@ -1728,6 +1756,80 @@ def test_has():
     A = A.subs(x, 2)
     assert not A.has(x)
 
+def test_LUdecomposition_Simple_iszerofunc():
+    # Test if callable passed to matrices.LUdecomposition_Simple() as iszerofunc keyword argument is used inside
+    # matrices.LUdecomposition_Simple()
+    magic_string = "I got passed in!"
+    def goofyiszero(value):
+        raise ValueError(magic_string)
+
+    try:
+        lu, p = Matrix([[1, 0], [0, 1]]).LUdecomposition_Simple(iszerofunc=goofyiszero)
+    except ValueError as err:
+        assert magic_string == err.args[0]
+        return
+
+    assert False
+
+def test_LUdecomposition_iszerofunc():
+    # Test if callable passed to matrices.LUdecomposition() as iszerofunc keyword argument is used inside
+    # matrices.LUdecomposition_Simple()
+    magic_string = "I got passed in!"
+    def goofyiszero(value):
+        raise ValueError(magic_string)
+
+    try:
+        l, u, p = Matrix([[1, 0], [0, 1]]).LUdecomposition(iszerofunc=goofyiszero)
+    except ValueError as err:
+        assert magic_string == err.args[0]
+        return
+
+    assert False
+
+def test_find_reasonable_pivot_naive_finds_guaranteed_nonzero1():
+    # Test if matrices._find_reasonable_pivot_naive()
+    # finds a guaranteed non-zero pivot when the
+    # some of the candidate pivots are symbolic expressions.
+    # Keyword argument: simpfunc=None indicates that no simplifications
+    # should be performed during the search.
+    x = Symbol('x')
+    column = Matrix(3, 1, [x, cos(x)**2 + sin(x)**2, Rational(1, 2)])
+    pivot_offset, pivot_val, pivot_assumed_nonzero, simplified =\
+        _find_reasonable_pivot_naive(column)
+    assert pivot_val == Rational(1, 2)
+
+def test_find_reasonable_pivot_naive_finds_guaranteed_nonzero2():
+    # Test if matrices._find_reasonable_pivot_naive()
+    # finds a guaranteed non-zero pivot when the
+    # some of the candidate pivots are symbolic expressions.
+    # Keyword argument: simpfunc=_simplify indicates that the search
+    # should attempt to simplify candidate pivots.
+    x = Symbol('x')
+    column = Matrix(3, 1,
+                    [x,
+                     cos(x)**2+sin(x)**2+x**2,
+                     cos(x)**2+sin(x)**2])
+    pivot_offset, pivot_val, pivot_assumed_nonzero, simplified =\
+        _find_reasonable_pivot_naive(column, simpfunc=_simplify)
+    assert pivot_val == 1
+
+def test_find_reasonable_pivot_naive_simplifies():
+    # Test if matrices._find_reasonable_pivot_naive()
+    # simplifies candidate pivots, and reports
+    # their offsets correctly.
+    x = Symbol('x')
+    column = Matrix(3, 1,
+                    [x,
+                     cos(x)**2+sin(x)**2+x,
+                     cos(x)**2+sin(x)**2])
+    pivot_offset, pivot_val, pivot_assumed_nonzero, simplified =\
+        _find_reasonable_pivot_naive(column, simpfunc=_simplify)
+
+    assert len(simplified) == 2
+    assert simplified[0][0] == 1
+    assert simplified[0][1] == 1+x
+    assert simplified[1][0] == 2
+    assert simplified[1][1] == 1
 
 def test_errors():
     raises(ValueError, lambda: Matrix([[1, 2], [1]]))
@@ -1754,10 +1856,8 @@ def test_errors():
     raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
            ]).QRdecomposition())
     raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
-    raises(
-        NonSquareMatrixError, lambda: Matrix([1, 2]).LUdecomposition_Simple())
-    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorEntry(4, 5))
-    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5))
+    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
+    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
     raises(TypeError, lambda: Matrix([1, 2, 3]).dot(1))
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
@@ -1775,16 +1875,10 @@ def test_errors():
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det())
     raises(ValueError,
         lambda: Matrix([[1, 2], [3, 4]]).det(method='Not a real method'))
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det_bareis())
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).berkowitz())
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).berkowitz_det())
     raises(ValueError,
         lambda: hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]])))
     raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
     raises(ValueError, lambda: hessian(Symbol('x')**2, 'a'))
-    raises(ValueError,
-        lambda: Matrix([[5, 10, 7], [0, -1, 2], [8, 3, 4]]
-        ).LUdecomposition_Simple(iszerofunc=lambda x: abs(x) <= 4))
     raises(IndexError, lambda: eye(3)[5, 2])
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
@@ -1847,6 +1941,9 @@ def test_hessenberg():
 
     A = Matrix([[3, 4, 1], [2, 4, 5], [3, 1, 2]])
     assert not A.is_upper_hessenberg
+
+    A = zeros(5, 2)
+    assert A.is_upper_hessenberg
 
 
 def test_cholesky():
@@ -2034,22 +2131,9 @@ def test_matrix_norm():
                     (abs(alpha) * X.norm(order)))
                 assert dif == 0
 
-
-def test_singular_values():
-    x = Symbol('x', real=True)
-
-    A = Matrix([[0, 1*I], [2, 0]])
-    assert A.singular_values() == [2, 1]
-
-    A = eye(3)
-    A[1, 1] = x
-    A[2, 2] = 5
-    vals = A.singular_values()
-    assert 1 in vals and 5 in vals and abs(x) in vals
-
-    A = Matrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
-    vals = [sv.trigsimp() for sv in A.singular_values()]
-    assert vals == [S(1), S(1)]
+    # ord=1
+    M = Matrix(3, 3, [1, 3, 0, -2, -1, 0, 3, 9, 6])
+    assert M.norm(1) == 13
 
 
 def test_condition_number():
@@ -2256,19 +2340,17 @@ def test_copyin():
 def test_invertible_check():
     # sometimes a singular matrix will have a pivot vector shorter than
     # the number of rows in a matrix...
-    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
+    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), (0,))
     raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
-    # ... but sometimes it won't, so that is an insufficient test of
-    # whether something is invertible.
     m = Matrix([
         [-1, -1,  0],
         [ x,  1,  1],
         [ 1,  x, -1],
     ])
-    assert len(m.rref()[1]) == m.rows
+    assert len(m.rref()[1]) != m.rows
     # in addition, unless simplify=True in the call to rref, the identity
     # matrix will be returned even though m is not invertible
-    assert m.rref()[0] == eye(3)
+    assert m.rref()[0] != eye(3)
     assert m.rref(simplify=signsimp)[0] != eye(3)
     raises(ValueError, lambda: m.inv(method="ADJ"))
     raises(ValueError, lambda: m.inv(method="GE"))
@@ -2380,6 +2462,11 @@ def test_issue_5320():
         [0, 1, 0, 2]
     ])
 
+def test_issue_11944():
+    A = Matrix([[1]])
+    AIm = sympify(A)
+    assert Matrix.hstack(AIm, A) == Matrix([[1, 1]])
+    assert Matrix.vstack(AIm, A) == Matrix([[1], [1]])
 
 def test_cross():
     a = [1, 2, 3]
@@ -2437,6 +2524,36 @@ def test_rank():
     assert n.rank() == 2
     p = zeros(3)
     assert p.rank() == 0
+
+def test_issue_11434():
+    ax, ay, bx, by, cx, cy, dx, dy, ex, ey, t0, t1 = \
+        symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    M = Matrix([[ax, ay, ax*t0, ay*t0, 0],
+                [bx, by, bx*t0, by*t0, 0],
+                [cx, cy, cx*t0, cy*t0, 1],
+                [dx, dy, dx*t0, dy*t0, 1],
+                [ex, ey, 2*ex*t1 - ex*t0, 2*ey*t1 - ey*t0, 0]])
+    assert M.rank() == 4
+
+def test_rank_regression_from_so():
+    # see:
+    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+
+    nu, lamb = symbols('nu, lambda')
+    A = Matrix([[-3*nu,         1,                  0,  0],
+                [ 3*nu, -2*nu - 1,                  2,  0],
+                [    0,      2*nu, (-1*nu) - lamb - 2,  3],
+                [    0,         0,          nu + lamb, -3]])
+    expected_reduced = Matrix([[1, 0, 0, 1/(nu**2*(-lamb - nu))],
+                               [0, 1, 0,    3/(nu*(-lamb - nu))],
+                               [0, 0, 1,         3/(-lamb - nu)],
+                               [0, 0, 0,                      0]])
+    expected_pivots = (0, 1, 2)
+
+    reduced, pivots = A.rref()
+
+    assert simplify(expected_reduced - reduced) == zeros(*A.shape)
+    assert pivots == expected_pivots
 
 def test_replace():
     from sympy import symbols, Function, Matrix
@@ -2638,6 +2755,14 @@ def test_gauss_jordan_solve():
                          [-2*w['tau0'] - 3*w['tau1'] - 1/S(4)],
                          [w['tau0']], [w['tau1']]])
     assert params == Matrix([[w['tau0']], [w['tau1']]])
+    # watch out for clashing symbols
+    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau1')
+    M = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
+    A = M[:, :-1]
+    b = M[:, -1:]
+    sol, params = A.gauss_jordan_solve(b)
+    assert params == Matrix(3, 1, [x0, x1, x2])
+    assert sol == Matrix(5, 1, [x1, 0, x0, _x0, x2])
 
     # Rectangular, wide, reduced rank, no solution
     A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
@@ -2747,3 +2872,88 @@ def test_issue_10658():
     assert A.extract([False, False, False], [0, 1, 2]) == Matrix(0, 3, [])
     assert A.extract([True, False, True], [False, True, False]) == \
         Matrix([[2], [8]])
+
+def test_opportunistic_simplification():
+    # this test relates to issue #10718, #9480, #11434
+
+    # issue #9480
+    m = Matrix([[-5 + 5*sqrt(2), -5], [-5*sqrt(2)/2 + 5, -5*sqrt(2)/2]])
+    assert m.rank() == 1
+
+    # issue #10781
+    m = Matrix([[3+3*sqrt(3)*I, -9],[4,-3+3*sqrt(3)*I]])
+    assert simplify(m.rref()[0] - Matrix([[1, -9/(3 + 3*sqrt(3)*I)], [0, 0]])) == zeros(2, 2)
+
+    # issue #11434
+    ax,ay,bx,by,cx,cy,dx,dy,ex,ey,t0,t1 = symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    m = Matrix([[ax,ay,ax*t0,ay*t0,0],[bx,by,bx*t0,by*t0,0],[cx,cy,cx*t0,cy*t0,1],[dx,dy,dx*t0,dy*t0,1],[ex,ey,2*ex*t1-ex*t0,2*ey*t1-ey*t0,0]])
+    assert m.rank() == 4
+
+def test_partial_pivoting():
+    # example from https://en.wikipedia.org/wiki/Pivot_element
+    # partial pivoting with back subsitution gives a perfect result
+    # naive pivoting give an error ~1e-13, so anything better than
+    # 1e-15 is good
+    mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
+    assert (mm.rref()[0] - Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])).norm() < 1e-15
+
+    # issue #11549
+    m_mixed = Matrix([[6e-17, 1.0, 4],[ -1.0,   0, 8],[    0,   0, 1]])
+    m_float = Matrix([[6e-17, 1.0, 4.],[ -1.0,   0., 8.],[    0.,   0., 1.]])
+    m_inv = Matrix([[  0,    -1.0,  8.0],[1.0, 6.0e-17, -4.0],[  0,       0,    1]])
+    # this example is numerically unstable and involves a matrix with a norm >= 8,
+    # this comparing the difference of the results with 1e-15 is numerically sound.
+    assert (m_mixed.inv() - m_inv).norm() < 1e-15
+    assert (m_float.inv() - m_inv).norm() < 1e-15
+
+def test_iszero_substitution():
+    """ When doing numerical computations, all elements that pass
+    the iszerofunc test should be set to numerically zero if they
+    aren't already. """
+
+    # Matrix from issue #9060
+    m = Matrix([[0.9, -0.1, -0.2, 0],[-0.8, 0.9, -0.4, 0],[-0.1, -0.8, 0.6, 0]])
+    m_rref = m.rref(iszerofunc=lambda x: abs(x)<6e-15)[0]
+    m_correct = Matrix([[1.0,   0, -0.301369863013699, 0],[  0, 1.0, -0.712328767123288, 0],[  0,   0,                  0, 0]])
+    m_diff = m_rref - m_correct
+    assert m_diff.norm() < 1e-15
+    # if a zero-substitution wasn't made, this entry will be -1.11022302462516e-16
+    assert m_rref[2,2] == 0
+
+
+@slow
+def test_issue_11238():
+    from sympy import Point
+    xx = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
+    yy = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/(-3 + tan(13*pi/45)**2)
+    p1 = Point(0, 0)
+    p2 = Point(1, -sqrt(3))
+    p0 = Point(xx,yy)
+    m1 = Matrix([p1 - simplify(p0), p2 - simplify(p0)])
+    m2 = Matrix([p1 - p0, p2 - p0])
+    m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
+
+    assert m1.rank(simplify=True) == 1
+    assert m2.rank(simplify=True) == 1
+    assert m3.rank(simplify=True) == 1
+
+def test_as_real_imag():
+    m1 = Matrix(2,2,[1,2,3,4])
+    m2 = m1*S.ImaginaryUnit
+    m3 = m1 + m2
+
+    for kls in classes:
+        a,b = kls(m3).as_real_imag()
+        assert list(a) == list(m1)
+        assert list(b) == list(m1)
+
+def test_deprecated():
+    # Maintain tests for deprecated functions.  We must capture
+    # the deprecation warnings.  When the deprecated functionality is
+    # removed, the corresponding tests should be removed.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+        P, Jcells = m.jordan_cells()
+        assert Jcells[1] == Matrix(1, 1, [2])
+        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])

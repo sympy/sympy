@@ -35,6 +35,8 @@ def test_interval_arguments():
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
     assert Interval(-oo, 0).left_open is true
     assert Interval(oo, -oo) == S.EmptySet
+    assert Interval(oo, oo) == S.EmptySet
+    assert Interval(-oo, -oo) == S.EmptySet
 
     assert isinstance(Interval(1, 1), FiniteSet)
     e = Sum(x, (x, 1, 3))
@@ -132,6 +134,8 @@ def test_union():
     # issue 7843
     assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == \
         FiniteSet(-sqrt(-I), sqrt(-I))
+
+    assert Union(S.Reals, S.Integers) == S.Reals
 
 
 def test_union_iter():
@@ -305,6 +309,10 @@ def test_intersection():
                         S.Reals, evaluate=False) == \
             Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
 
+    assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
+
+    # issue 12178
+    assert Intersection() == S.UniversalSet
 
 def test_issue_9623():
     n = Symbol('n')
@@ -485,6 +493,8 @@ def test_contains():
         Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
         And(y <= 3, y <= x, y >= 1, y >= 2)
+
+    assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 
 
 def test_interval_symbolic():
@@ -955,6 +965,8 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
 
+def test_issue_11827():
+    assert S.Naturals0**4
 
 def test_issue_10113():
     f = x**2/(x**2 - 4)
@@ -1035,21 +1047,14 @@ def test_issue_8257():
     assert FiniteSet(-oo) + Interval(-oo, oo) == reals_plus_negativeinfinity
 
 
-def test_issue_10285():
-    assert FiniteSet(-x - 1).intersect(Interval.Ropen(1, 2)) == \
-        FiniteSet(x).intersect(Interval.Lopen(-3, -2))
-    eq = -x - 2*(-x - y)
-    s = signsimp(eq)
-    ivl = Interval.open(0, 1)
-    assert FiniteSet(eq).intersect(ivl) == FiniteSet(s).intersect(ivl)
-    assert FiniteSet(-eq).intersect(ivl) == \
-        FiniteSet(s).intersect(Interval.open(-1, 0))
-    eq -= 1
-    ivl = Interval.Lopen(1, oo)
-    assert FiniteSet(eq).intersect(ivl) == \
-        FiniteSet(s).intersect(Interval.Lopen(2, oo))
-
-
 def test_issue_10931():
     assert S.Integers - S.Integers == EmptySet()
     assert S.Integers - S.Reals == EmptySet()
+
+
+def test_issue_11174():
+    soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)
+    assert Intersection(FiniteSet(-x), S.Reals) == soln
+
+    soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
+    assert Intersection(FiniteSet(x), S.Reals) == soln

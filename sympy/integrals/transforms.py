@@ -221,7 +221,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), (-oo, oo), True
 
-    if not F.is_Piecewise:
+    if not F.is_Piecewise:  # XXX can this work if integration gives continuous result now?
         raise IntegralTransformError('Mellin', f, 'could not compute integral')
 
     F, cond = F.args[0]
@@ -911,27 +911,27 @@ def _simplifyconds(expr, s, a):
             Else return None. """
         if ex1.has(s) and ex2.has(s):
             return None
-        if ex1.func is Abs:
+        if isinstance(ex1, Abs):
             ex1 = ex1.args[0]
-        if ex2.func is Abs:
+        if isinstance(ex2, Abs):
             ex2 = ex2.args[0]
         if ex1.has(s):
-            try:
-                return bigger(1/ex2, 1/ex1)
-            except TypeError:
-                return None
+            return bigger(1/ex2, 1/ex1)
         n = power(ex2)
         if n is None:
             return None
-        if n > 0 and (abs(ex1) <= abs(a)**n) == True:
-            return False
-        if n < 0 and (abs(ex1) >= abs(a)**n) == True:
-            return True
+        try:
+            if n > 0 and (abs(ex1) <= abs(a)**n) == True:
+                return False
+            if n < 0 and (abs(ex1) >= abs(a)**n) == True:
+                return True
+        except TypeError:
+            pass
 
     def replie(x, y):
         """ simplify x < y """
-        if not (x.is_positive or x.func is Abs) \
-                or not (y.is_positive or y.func is Abs):
+        if not (x.is_positive or isinstance(x, Abs)) \
+                or not (y.is_positive or isinstance(y, Abs)):
             return (x < y)
         r = bigger(x, y)
         if r is not None:
@@ -986,6 +986,8 @@ def _laplace_transform(f, t, s_, simplify=True):
             a_ = oo
             aux_ = []
             for d in disjuncts(c):
+                if d.is_Relational and s in d.rhs.free_symbols:
+                    d = d.reversed
                 m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
                 if not m:
                     m = d.match(abs(arg((s + w3)**p*q, w1)) <= w2)
@@ -997,10 +999,11 @@ def _laplace_transform(f, t, s_, simplify=True):
                     if m[q].is_positive and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0
                 m = d.match(
-                    0 < cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                    cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p > 0)
                 if not m:
-                    m = d.match(0 < cos(abs(
-                        arg(polar_lift(s)**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                    m = d.match(
+                        cos(abs(arg(polar_lift(s)**w1*w5, q))*w2
+                            )*abs(s**w3)**w4 - p > 0)
                 if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(
@@ -1712,7 +1715,7 @@ def inverse_cosine_transform(F, k, x, **hints):
 
 @_noconds_(True)
 def _hankel_transform(f, r, k, nu, name, simplify=True):
-    """
+    r"""
     Compute a general Hankel transform
 
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.

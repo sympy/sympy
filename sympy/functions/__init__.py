@@ -31,6 +31,7 @@ from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
         lerchphi, polylog, stieltjes)
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
         KroneckerDelta)
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,

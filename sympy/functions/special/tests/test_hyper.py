@@ -123,6 +123,9 @@ def test_meijer():
     assert g.nu == 75
     assert g.delta == -1
     assert g.is_commutative is True
+    assert g.is_number is False
+    #issue 13071
+    assert meijerg([[],[]], [[S(1)/2],[0]], 1).is_number is True
 
     assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
 
@@ -132,6 +135,10 @@ def test_meijer():
                                Tuple(0), Tuple(S(1)/2), z**2/4), cos(z), z)
     assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
+
+    # test exceptions
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((oo,), (2, 0)), x))
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((1,), (2, 0)), x))
 
     # differentiation
     g = meijerg((randcplx(),), (randcplx() + 2*I,), Tuple(),

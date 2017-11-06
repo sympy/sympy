@@ -1,6 +1,5 @@
 """Bosonic quantum operators."""
 
-from sympy.core.compatibility import u
 from sympy import Mul, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator

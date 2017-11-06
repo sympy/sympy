@@ -272,6 +272,8 @@ def test_coth():
 
     assert coth(k*pi*I) == -cot(k*pi)*I
 
+    assert coth(log(tan(2))) == coth(log(-tan(2)))
+    assert coth(1 + I*pi/2) == tanh(1)
 
 def test_coth_series():
     x = Symbol('x')
@@ -499,6 +501,11 @@ def test_acosh():
     assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
 
 
+def test_acosh_rewrite():
+    x = Symbol('x')
+    assert acosh(x).rewrite(log) == log(x + sqrt(x - 1)*sqrt(x + 1))
+
+
 def test_acosh_series():
     x = Symbol('x')
     assert acosh(x).series(x, 0, 8) == \
@@ -574,7 +581,7 @@ def test_asech_series():
 
 def test_asech_rewrite():
     x = Symbol('x')
-    assert asech(x).rewrite(log) == log(1/x + sqrt(1/x**2 - 1))
+    assert asech(x).rewrite(log) == log(1/x + sqrt(1/x - 1) * sqrt(1/x + 1))
 
 
 def test_acsch():
@@ -683,6 +690,11 @@ def test_atanh():
     assert atanh(oo) == -I*pi/2
 
 
+def test_atanh_rewrite():
+    x = Symbol('x')
+    assert atanh(x).rewrite(log) == (log(1 + x) - log(1 - x)) / 2
+
+
 def test_atanh_series():
     x = Symbol('x')
     assert atanh(x).series(x, 0, 10) == \
@@ -723,6 +735,11 @@ def test_acoth():
     assert acoth(-I*(2 + sqrt(3))) == pi*I/12
     assert acoth(I*(2 - sqrt(3))) == -5*pi*I/12
     assert acoth(I*(sqrt(3) - 2)) == 5*pi*I/12
+
+
+def test_acoth_rewrite():
+    x = Symbol('x')
+    assert acoth(x).rewrite(log) == (log(1 + 1/x) - log(1 - 1/x)) / 2
 
 
 def test_acoth_series():

@@ -14,16 +14,16 @@ def test_plane():
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
-    p4 = Point3D(x, x, x)
-    p5 = Point3D(y, y, y)
-
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
     pl4b = Plane(p1, p2)
     pl5 = Plane(p3, normal_vector=(1, 2, 3))
     pl6 = Plane(Point3D(2, 3, 7), normal_vector=(2, 2, 2))
     pl7 = Plane(Point3D(1, -5, -6), normal_vector=(1, -2, 1))
-
+    pl8 = Plane(p1, normal_vector=(0, 0, 1))
+    pl9 = Plane(p1, normal_vector=(0, 12, 0))
+    pl10 = Plane(p1, normal_vector=(-2, 0, 0))
+    pl11 = Plane(p2, normal_vector=(0, 0, 1))
     l1 = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
     l2 = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
@@ -70,7 +70,6 @@ def test_plane():
     assert pl6.projection_line(Ray(Point(1, 0), Point(1, 1))) == \
                Ray3D(Point3D(14/3, 11/3, 11/3), Point3D(13/3, 13/3, 10/3))
     assert pl3.perpendicular_line(r.args) == pl3.perpendicular_line(r)
-
 
     assert pl3.is_parallel(pl6) is False
     assert pl4.is_parallel(pl6)
@@ -157,8 +156,38 @@ def test_plane():
     r = Ray(Point(2, 3), Point(4, 2))
     assert Plane((1,2,0), normal_vector=(0,0,1)).intersection(r) == [
         Ray3D(Point(2, 3), Point(4, 2))]
-
+    assert pl9.intersection(pl8) == [Line3D(Point3D(0, 0, 0), Point3D(12, 0, 0))]
+    assert pl10.intersection(pl11) == [Line3D(Point3D(0, 0, 1), Point3D(0, 2, 1))]
+    assert pl4.intersection(pl8) == [Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
+    assert pl11.intersection(pl8) == []
+    assert pl9.intersection(pl11) == [Line3D(Point3D(0, 0, 1), Point3D(12, 0, 1))]
+    assert pl9.intersection(pl4) == [Line3D(Point3D(0, 0, 0), Point3D(12, 0, -12))]
     assert pl3.random_point() in pl3
+
+    # test geometrical entity using equals
+    assert pl4.intersection(pl4.p1)[0].equals(pl4.p1)
+    assert pl3.intersection(pl6)[0].equals(Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6)))
+    pl8 = Plane((1, 2, 0), normal_vector=(0, 0, 1))
+    assert pl8.intersection(Line3D(p1, (1, 12, 0)))[0].equals(Line((0, 0, 0), (0.1, 1.2, 0)))
+    assert pl8.intersection(Ray3D(p1, (1, 12, 0)))[0].equals(Ray((0, 0, 0), (1, 12, 0)))
+    assert pl8.intersection(Segment3D(p1, (21, 1, 0)))[0].equals(Segment3D(p1, (21, 1, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(0, 0, 112)))[0].equals(pl8)
+    assert pl8.intersection(Plane(p1, normal_vector=(0, 12, 0)))[0].equals(
+        Line3D(p1, direction_ratio=(112 * pi, 0, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(11, 0, 1)))[0].equals(
+        Line3D(p1, direction_ratio=(0, -11, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(1, 0, 11)))[0].equals(
+        Line3D(p1, direction_ratio=(0, 11, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(-1, -1, -11)))[0].equals(
+        Line3D(p1, direction_ratio=(1, -1, 0)))
+    assert pl3.random_point() in pl3
+    assert len(pl8.intersection(Ray3D(Point3D(0, 2, 3), Point3D(1, 0, 3)))) is 0
+    # check if two plane are equals
+    assert pl6.intersection(pl6)[0].equals(pl6)
+    assert pl8.equals(Plane(p1, normal_vector=(0, 12, 0))) is False
+    assert pl8.equals(pl8)
+    assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12)))
+    assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12*sqrt(3))))
 
     # issue 8570
     l2 = Line3D(Point3D(S(50000004459633)/5000000000000,
@@ -176,3 +205,16 @@ def test_plane():
 
     assert str([i.n(2) for i in p2.intersection(l2)]) == \
            '[Point3D(4.0, -0.89, 2.3)]'
+
+
+def test_dimension_normalization():
+    A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
+    b = Point(1, 1)
+    assert A.projection(b) == Point(5/3, 5/3, 2/3)
+
+    a, b = Point(0, 0), Point3D(0, 1)
+    Z = (0, 0, 1)
+    p = Plane(a, normal_vector=Z)
+    assert p.perpendicular_plane(a, b) == Plane(Point3D(0, 0, 0), (1, 0, 0))
+    assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
+        ).intersection((2, 1)) == [Point(2, 1, 0)]

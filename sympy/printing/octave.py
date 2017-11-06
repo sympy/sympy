@@ -16,7 +16,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
 # List of known functions.  First, those that have the same name in
@@ -27,8 +27,8 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
                    "erfc", "erfi", "erf", "erfinv", "erfcinv",
                    "besseli", "besselj", "besselk", "bessely",
-                   "exp", "factorial", "floor", "fresnelc", "fresnels",
-                   "gamma", "log", "polylog", "sign", "zeta"]
+                   "euler", "exp", "factorial", "floor", "fresnelc",
+                   "fresnels", "gamma", "log", "polylog", "sign", "zeta"]
 
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
@@ -65,7 +65,7 @@ class OctaveCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 16,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -231,14 +231,6 @@ class OctaveCodePrinter(CodePrinter):
         return "(1+sqrt(5))/2"
 
 
-    def _print_NumberSymbol(self, expr):
-        if self._settings["inline"]:
-            return self._print(expr.evalf(self._settings["precision"]))
-        else:
-            # assign to a variable, perhaps more readable for longer program
-            return super(OctaveCodePrinter, self)._print_NumberSymbol(expr)
-
-
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase
@@ -310,13 +302,8 @@ class OctaveCodePrinter(CodePrinter):
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
             return self._print(A[0, 0])
-        elif A.rows == 1:
-            return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
-        elif A.cols == 1:
-            # note .table would unnecessarily equispace the rows
-            return "[%s]" % "; ".join([self._print(a) for a in A])
-        return "[%s]" % A.table(self, rowstart='', rowend='',
-                                rowsep=';\n', colsep=' ')
+        return "[%s]" % "; ".join(" ".join([self._print(a) for a in A[r, :]])
+                                  for r in range(A.rows))
 
 
     def _print_SparseMatrix(self, A):
@@ -345,7 +332,8 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '(%s, %s)' % (expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):
@@ -392,6 +380,11 @@ class OctaveCodePrinter(CodePrinter):
                                               self._print(expr.args[0]))
 
 
+    def _print_sinc(self, expr):
+        #Note: Divide by pi because Octave implements normalized sinc function.
+        return "sinc(%s)" % self._print(expr.args[0]/S.Pi)
+
+
     def _print_hankel1(self, expr):
         return "besselh(%s, 1, %s)" % (self._print(expr.order),
                                        self._print(expr.argument))
@@ -431,6 +424,12 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_airybiprime(self, expr):
         return "airy(3, %s)" % self._print(expr.args[0])
+
+
+    def _print_LambertW(self, expr):
+        # argument order is reversed
+        args = ", ".join([self._print(x) for x in reversed(expr.args)])
+        return "lambertw(" + args + ")"
 
 
     def _print_Piecewise(self, expr):

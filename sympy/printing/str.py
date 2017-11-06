@@ -20,6 +20,7 @@ class StrPrinter(Printer):
     _default_settings = {
         "order": None,
         "full_prec": "auto",
+        "sympy_integers": False,
     }
 
     _relationals = dict()
@@ -74,13 +75,14 @@ class StrPrinter(Printer):
     def _print_BooleanFalse(self, expr):
         return "False"
 
+    def _print_Not(self, expr):
+        return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
+
     def _print_And(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
 
     def _print_Or(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
@@ -118,14 +120,13 @@ class StrPrinter(Printer):
 
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
-        except Exception:
-            try:
-                return ('Domain: ' + self._print(d.symbols) + ' in ' +
-                        self._print(d.set))
-            except:
-                return 'Domain on ' + self._print(d.symbols)
+        elif hasattr(d, 'set'):
+            return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                    self._print(d.set))
+        else:
+            return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr):
         return '_' + expr.name
@@ -173,25 +174,26 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        if i.left_open:
-            left = '('
+        fin =  'Interval{m}({a}, {b})'
+        a, b, l, r = i.args
+        if a.is_infinite and b.is_infinite:
+            m = ''
+        elif a.is_infinite and not r:
+            m = ''
+        elif b.is_infinite and not l:
+            m = ''
+        elif not l and not r:
+            m = ''
+        elif l and r:
+            m = '.open'
+        elif l:
+            m = '.Lopen'
         else:
-            left = '['
-
-        if i.right_open:
-            right = ')'
-        else:
-            right = ']'
-
-        return "%s%s, %s%s" % \
-               (left, self._print(i.start), self._print(i.end), right)
+            m = '.Ropen'
+        return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
-        left = '<'
-        right = '>'
-
-        return "%s%s, %s%s" % \
-                (left, self._print(i.min), self._print(i.max), right)
+        return "AccumBounds(%s, %s)" % (self._print(i.min), self._print(i.max))
 
     def _print_Inverse(self, I):
         return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
@@ -231,7 +233,8 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '[%s, %s]' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
@@ -489,10 +492,11 @@ class StrPrinter(Printer):
             if -expr.exp is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
-                return "1/sqrt(%s)" % self._print(expr.base)
+                return "%s/sqrt(%s)" % tuple(map(self._print, (S.One, expr.base)))
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
-                return '1/%s' % self.parenthesize(expr.base, PREC, strict=False)
+                return '%s/%s' % (self._print(S.One),
+                                  self.parenthesize(expr.base, PREC, strict=False))
 
         e = self.parenthesize(expr.exp, PREC, strict=False)
         if self.printmethod == '_sympyrepr' and expr.exp.is_Rational and expr.exp.q != 1:
@@ -501,6 +505,9 @@ class StrPrinter(Printer):
             if e.startswith('(Rational'):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
+
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
 
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
@@ -514,7 +521,21 @@ class StrPrinter(Printer):
         return str(expr)
 
     def _print_Integer(self, expr):
+        if self._settings.get("sympy_integers", False):
+            return "S(%s)" % (expr)
         return str(expr.p)
+
+    def _print_Integers(self, expr):
+        return 'S.Integers'
+
+    def _print_Naturals(self, expr):
+        return 'S.Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'S.Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'S.Reals'
 
     def _print_int(self, expr):
         return str(expr)
@@ -526,6 +547,8 @@ class StrPrinter(Printer):
         if expr.q == 1:
             return str(expr.p)
         else:
+            if self._settings.get("sympy_integers", False):
+                return "S(%s)/%s" % (expr.p, expr.q)
             return "%s/%s" % (expr.p, expr.q)
 
     def _print_PythonRational(self, expr):
@@ -563,6 +586,9 @@ class StrPrinter(Printer):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
             rv = '0.' + rv[2:]
+        if rv.startswith('+'):
+            # e.g., +inf -> inf
+            rv = rv[1:]
         return rv
 
     def _print_Relational(self, expr):
@@ -619,11 +645,14 @@ class StrPrinter(Printer):
         items = sorted(s, key=default_sort_key)
 
         args = ', '.join(self._print(item) for item in items)
-        if args:
-            args = '[%s]' % args
-        return '%s(%s)' % (type(s).__name__, args)
+        if not args:
+            return "set()"
+        return '{%s}' % args
 
-    _print_frozenset = _print_set
+    def _print_frozenset(self, s):
+        if not s:
+            return "frozenset()"
+        return "frozenset(%s)" % self._print_set(s)
 
     def _print_SparseMatrix(self, expr):
         from sympy.matrices import Matrix
@@ -665,20 +694,24 @@ class StrPrinter(Printer):
         return self._print_tuple(expr)
 
     def _print_Transpose(self, T):
-        return "%s'" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
+        return "%s.T" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return ' U '.join(self._print(set) for set in expr.args)
+        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
-        return ' \ '.join(self._print(set) for set in expr.args)
+        return r' \ '.join(self._print(set) for set in expr.args)
 
+    def _print_Quantity(self, expr):
+        return "%s" % expr.name
 
-    def _print_Unit(self, expr):
-        return expr.abbrev
+    def _print_Quaternion(self, expr):
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_Dimension(self, expr):
         return str(expr)
@@ -690,6 +723,8 @@ class StrPrinter(Printer):
         return expr.name + '_'
 
     def _print_Zero(self, expr):
+        if self._settings.get("sympy_integers", False):
+            return "S(0)"
         return "0"
 
     def _print_DMP(self, p):

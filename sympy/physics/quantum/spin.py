@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
                    pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
                    Tuple, Dummy)
-from sympy.core.compatibility import u, unicode, range
+from sympy.core.compatibility import unicode, range
 from sympy.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import pretty_symbol
@@ -404,7 +404,7 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     def _print_contents_pretty(self, printer, *args):
         a = prettyForm(unicode(self.name))
-        b = prettyForm(u('2'))
+        b = prettyForm(u'2')
         return a**b
 
     def _print_contents_latex(self, printer, *args):
@@ -500,7 +500,7 @@ class Rotation(UnitaryOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u('\N{SCRIPT CAPITAL R}') + u(' '))
+            return prettyForm(u'\N{SCRIPT CAPITAL R}' + u' ')
         else:
             return prettyForm("R ")
 
@@ -687,21 +687,21 @@ class Rotation(UnitaryOperator):
         return self._apply_operator_coupled(JzKetCoupled, ket, **options)
 
 class WignerD(Expr):
-    """Wigner-D function
+    r"""Wigner-D function
 
     The Wigner D-function gives the matrix elements of the rotation
-    operator in the jm-representation. For the Euler angles `\\alpha`,
-    `\\beta`, `\gamma`, the D-function is defined such that:
+    operator in the jm-representation. For the Euler angles `\alpha`,
+    `\beta`, `\gamma`, the D-function is defined such that:
 
     .. math ::
-        <j,m| \mathcal{R}(\\alpha, \\beta, \gamma ) |j',m'> = \delta_{jj'} D(j, m, m', \\alpha, \\beta, \gamma)
+        <j,m| \mathcal{R}(\alpha, \beta, \gamma ) |j',m'> = \delta_{jj'} D(j, m, m', \alpha, \beta, \gamma)
 
     Where the rotation operator is as defined by the Rotation class [1]_.
 
     The Wigner D-function defined in this way gives:
 
     .. math ::
-        D(j, m, m', \\alpha, \\beta, \gamma) = e^{-i m \\alpha} d(j, m, m', \\beta) e^{-i m' \gamma}
+        D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}
 
     Where d is the Wigner small-d function, which is given by Rotation.d.
 
@@ -710,7 +710,7 @@ class WignerD(Expr):
     Wigner D-function is:
 
     .. math ::
-        D(j, m, m', \\alpha, \\beta, \gamma) = e^{-i m \\alpha} d(j, m, m', \\beta) e^{-i m' \gamma}
+        D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}
 
     Where d is the small-d function. The Wigner D-function is given by
     Rotation.D.
@@ -1620,7 +1620,7 @@ class JyBraCoupled(CoupledSpinState, Bra):
 
 
 class JzKetCoupled(CoupledSpinState, Ket):
-    """Coupled eigenket of Jz
+    r"""Coupled eigenket of Jz
 
     Spin state that is an eigenket of Jz which represents the coupling of
     separate spin spaces.
@@ -1633,7 +1633,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
     The other required parameter in ``jn``, which is a tuple defining the `j_n`
     angular momentum quantum numbers of the product spaces. So for example, if
     a state represented the coupling of the product basis state
-    `|j_1,m_1\\rangle\\times|j_2,m_2\\rangle`, the ``jn`` for this state would be
+    `|j_1,m_1\rangle\times|j_2,m_2\rangle`, the ``jn`` for this state would be
     ``(j1,j2)``.
 
     The final option is ``jcoupling``, which is used to define how the spaces

@@ -10,7 +10,7 @@
 """
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
-    det_quick, inv_quick
+    det_quick, inv_quick, check_assumptions
 
 from .diophantine import diophantine
 
@@ -30,6 +30,7 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
     reduce_abs_inequalities, solve_poly_inequality, solve_rational_inequalities, solve_univariate_inequality
 
 from .decompogen import decompogen
+
 
 from .solveset import solveset, linsolve, linear_eq_to_matrix
 

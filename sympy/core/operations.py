@@ -41,6 +41,7 @@ class AssocOp(Basic):
         c_part, nc_part, order_symbols = cls.flatten(args)
         is_commutative = not nc_part
         obj = cls._from_args(c_part + nc_part, is_commutative)
+        obj = cls._exec_constructor_postprocessors(obj)
 
         if order_symbols is not None:
             return Order(obj, *order_symbols)
@@ -78,8 +79,8 @@ class AssocOp(Basic):
 
            Note: use this with caution. There is no checking of arguments at
            all. This is best used when you are rebuilding an Add or Mul after
-           simply removing one or more terms. If modification which result,
-           for example, in extra 1s being inserted (as when collecting an
+           simply removing one or more args. If, for example, modifications,
+           result in extra 1s being inserted (as when collecting an
            expression's numerators and denominators) they will not show up in
            the result but a Mul will be returned nonetheless:
 
@@ -179,29 +180,26 @@ class AssocOp(Basic):
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         from .function import WildFunction
         from .symbol import Wild
-        wild_part = []
-        exact_part = []
-        for p in ordered(self.args):
-            if p.has(Wild, WildFunction) and (not expr.has(p)):
-                # not all Wild should stay Wilds, for example:
-                # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
-                wild_part.append(p)
-            else:
-                exact_part.append(p)
-
-        if exact_part:
-            exact = self.func(*exact_part)
+        from sympy.utilities.iterables import sift
+        sifted = sift(self.args, lambda p:
+            p.has(Wild, WildFunction) and not expr.has(p))
+        wild_part = sifted[True]
+        exact_part = sifted[False]
+        if not exact_part:
+            wild_part = list(ordered(wild_part))
+        else:
+            exact = self._new_rawargs(*exact_part)
             free = expr.free_symbols
             if free and (exact.free_symbols - free):
                 # there are symbols in the exact part that are not
                 # in the expr; but if there are no free symbols, let
                 # the matching continue
                 return None
-            newpattern = self.func(*wild_part)
             newexpr = self._combine_inverse(expr, exact)
             if not old and (expr.is_Add or expr.is_Mul):
                 if newexpr.count_ops() > expr.count_ops():
                     return None
+            newpattern = self._new_rawargs(*wild_part)
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
@@ -331,9 +329,7 @@ class AssocOp(Basic):
                         args.append(a)
                     else:
                         args.append(newa)
-                if not _aresame(tuple(args), tail_args):
-                    tail = self.func(*args)
-                return self.func(x, tail)
+                return self.func(x, *args)
 
         # this is the same as above, but there were no pure-number args to
         # deal with
@@ -344,9 +340,7 @@ class AssocOp(Basic):
                 args.append(a)
             else:
                 args.append(newa)
-        if not _aresame(tuple(args), self.args):
-            return self.func(*args)
-        return self
+        return self.func(*args)
 
     @classmethod
     def make_args(cls, expr):
@@ -410,7 +404,12 @@ class LatticeOp(AssocOp):
 
     def __new__(cls, *args, **options):
         args = (_sympify(arg) for arg in args)
+
         try:
+            # /!\ args is a generator and _new_args_filter
+            # must be careful to handle as such; this
+            # is done so short-circuiting can be done
+            # without having to sympify all values
             _args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
             return sympify(cls.zero)

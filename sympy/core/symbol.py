@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import string_types, range, is_sequence
 from .basic import Basic
 from .sympify import sympify
 from .singleton import S
@@ -14,6 +14,116 @@ from sympy.utilities.iterables import cartes
 
 import string
 import re as _re
+import random
+
+
+def _symbol(s, matching_symbol=None, **assumptions):
+    """Return s if s is a Symbol, else if s is a string, return either
+    the matching_symbol if the names are the same or else a new symbol
+    with the same assumptions as the matching symbol (or the
+    assumptions as provided).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Dummy
+    >>> from sympy.core.symbol import _symbol
+    >>> _symbol('y')
+    y
+    >>> _.is_real is None
+    True
+    >>> _symbol('y', real=True).is_real
+    True
+
+    >>> x = Symbol('x')
+    >>> _symbol(x, real=True)
+    x
+    >>> _.is_real is None  # ignore attribute if s is a Symbol
+    True
+
+    Below, the variable sym has the name 'foo':
+
+    >>> sym = Symbol('foo', real=True)
+
+    Since 'x' is not the same as sym's name, a new symbol is created:
+
+    >>> _symbol('x', sym).name
+    'x'
+
+    It will acquire any assumptions give:
+
+    >>> _symbol('x', sym, real=False).is_real
+    False
+
+    Since 'foo' is the same as sym's name, sym is returned
+
+    >>> _symbol('foo', sym)
+    foo
+
+    Any assumptions given are ignored:
+
+    >>> _symbol('foo', sym, real=False).is_real
+    True
+
+    NB: the symbol here may not be the same as a symbol with the same
+    name defined elsewhere as a result of different assumptions.
+
+    See Also
+    ========
+
+    sympy.core.symbol.Symbol
+
+    """
+    if isinstance(s, string_types):
+        if matching_symbol and matching_symbol.name == s:
+            return matching_symbol
+        return Symbol(s, **assumptions)
+    elif isinstance(s, Symbol):
+        return s
+    else:
+        raise ValueError('symbol must be string for symbol name or Symbol')
+
+
+def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
+    """Return a symbol which, when printed, will have a name unique
+    from any other already in the expressions given. The name is made
+    unique by prepending underscores (default) but this can be
+    customized with the keyword 'modify'.
+
+    Parameters
+    ==========
+
+        xname : a string or a Symbol (when symbol xname <- str(xname))
+        compare : a single arg function that takes a symbol and returns
+            a string to be compared with xname (the default is the str
+            function which indicates how the name will look when it
+            is printed, e.g. this includes underscores that appear on
+            Dummy symbols)
+        modify : a single arg function that changes its string argument
+            in some way (the default is to preppend underscores)
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import _uniquely_named_symbol as usym, Dummy
+    >>> from sympy.abc import x
+    >>> usym('x', x)
+    _x
+    """
+    default = None
+    if is_sequence(xname):
+        xname, default = xname
+    x = str(xname)
+    if not exprs:
+        return _symbol(x, default, **assumptions)
+    if not is_sequence(exprs):
+        exprs = [exprs]
+    syms = set().union(*[e.free_symbols for e in exprs])
+    if modify is None:
+        modify = lambda s: '_' + s
+    while any(x == compare(s) for s in syms):
+        x = modify(x)
+    return _symbol(x, default, **assumptions)
 
 
 class Symbol(AtomicExpr, Boolean):
@@ -37,6 +147,7 @@ class Symbol(AtomicExpr, Boolean):
     __slots__ = ['name']
 
     is_Symbol = True
+    is_symbol = True
 
     @property
     def _diff_wrt(self):
@@ -175,15 +286,20 @@ class Symbol(AtomicExpr, Boolean):
     def free_symbols(self):
         return {self}
 
+    binary_symbols = free_symbols  # in this case, not always
+
+    def as_set(self):
+        return S.UniversalSet
+
 
 class Dummy(Symbol):
-    """Dummy symbols are each unique, identified by an internal count index:
+    """Dummy symbols are each unique, even if they have the same name:
 
     >>> from sympy import Dummy
-    >>> bool(Dummy("x") == Dummy("x")) == True
+    >>> Dummy("x") == Dummy("x")
     False
 
-    If a name is not supplied then a string value of the count index will be
+    If a name is not supplied then a string value of an internal count will be
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
@@ -192,21 +308,41 @@ class Dummy(Symbol):
 
     """
 
+    # In the rare event that a Dummy object needs to be recreated, both the
+    # `name` and `dummy_index` should be passed.  This is used by `srepr` for
+    # example:
+    # >>> d1 = Dummy()
+    # >>> d2 = eval(srepr(d1))
+    # >>> d2 == d1
+    # True
+    #
+    # If a new session is started between `srepr` and `eval`, there is a very
+    # small chance that `d2` will be equal to a previously-created Dummy.
+
     _count = 0
+    _prng = random.Random()
+    _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
     __slots__ = ['dummy_index']
 
     is_Dummy = True
 
-    def __new__(cls, name=None, **assumptions):
+    def __new__(cls, name=None, dummy_index=None, **assumptions):
+        if dummy_index is not None:
+            assert name is not None, "If you specify a dummy_index, you must also provide a name"
+
         if name is None:
             name = "Dummy_" + str(Dummy._count)
+
+        if dummy_index is None:
+            dummy_index = Dummy._base_dummy_index + Dummy._count
+            Dummy._count += 1
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        Dummy._count += 1
-        obj.dummy_index = Dummy._count
+        obj.dummy_index = dummy_index
+
         return obj
 
     def __getstate__(self):
@@ -330,7 +466,7 @@ class Wild(Symbol):
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 def symbols(names, **args):
-    """
+    r"""
     Transform strings into instances of :class:`Symbol` class.
 
     :func:`symbols` function returns a sequence of symbols with names taken
@@ -354,8 +490,8 @@ def symbols(names, **args):
         (a, b, c)
         >>> symbols(['a', 'b', 'c'])
         [a, b, c]
-        >>> symbols(set(['a', 'b', 'c']))
-        set([a, b, c])
+        >>> symbols({'a', 'b', 'c'})
+        {a, b, c}
 
     If an iterable container is needed for a single symbol, set the ``seq``
     argument to ``True`` or terminate the symbol name with a comma::
@@ -421,7 +557,7 @@ def symbols(names, **args):
 
         >>> symbols('x((a:b))')
         (x(a), x(b))
-        >>> symbols('x(:1\,:2)')  # or 'x((:1)\,(:2))'
+        >>> symbols(r'x(:1\,:2)')  # or r'x((:1)\,(:2))'
         (x(0,0), x(0,1))
 
     All newly created symbols have assumptions set according to ``args``::
@@ -449,7 +585,7 @@ def symbols(names, **args):
 
     if isinstance(names, string_types):
         marker = 0
-        literals = ['\,', '\:', '\ ']
+        literals = [r'\,', r'\:', r'\ ']
         for i in range(len(literals)):
             lit = literals.pop(0)
             if lit in names:

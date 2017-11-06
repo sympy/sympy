@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 import collections
-from sympy import Matrix, Integer, sympify, Basic, Derivative, conjugate
+
+from sympy import Basic
+from sympy.core.compatibility import SYMPY_INTS
 
 
 class NDimArray(object):
@@ -11,7 +13,7 @@ class NDimArray(object):
 
     Create an N-dim array of zeros:
 
-    >>> from sympy.tensor.array import MutableDenseNDimArray
+    >>> from sympy import MutableDenseNDimArray
     >>> a = MutableDenseNDimArray.zeros(2, 3, 4)
     >>> a
     [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
@@ -61,7 +63,7 @@ class NDimArray(object):
 
     def _parse_index(self, index):
 
-        if isinstance(index, (int, Integer)):
+        if isinstance(index, (SYMPY_INTS, Integer)):
             if index >= self._loop_size:
                 raise ValueError("index out of range")
             return index
@@ -86,8 +88,20 @@ class NDimArray(object):
         index.reverse()
         return tuple(index)
 
+    def _check_symbolic_index(self, index):
+        # Check if any index is symbolic:
+        tuple_index = (index if isinstance(index, tuple) else (index,))
+        if any([(isinstance(i, Expr) and (not i.is_number)) for i in tuple_index]):
+            for i, nth_dim in zip(tuple_index, self.shape):
+                if ((i < 0) == True) or ((i >= nth_dim) == True):
+                    raise ValueError("index out of range")
+            from sympy.tensor import Indexed
+            return Indexed(self, *tuple_index)
+        return None
+
     def _setter_iterable_check(self, value):
-        if isinstance(value, (collections.Iterable, Matrix, NDimArray)):
+        from sympy.matrices.matrices import MatrixBase
+        if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
     @classmethod
@@ -108,6 +122,7 @@ class NDimArray(object):
 
     @classmethod
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
+        from sympy.matrices.matrices import MatrixBase
 
         if shape is None and iterable is None:
             shape = ()
@@ -121,7 +136,7 @@ class NDimArray(object):
             iterable, shape = cls._scan_iterable_shape(iterable)
 
         # Construct N-dim array from a Matrix:
-        elif shape is None and isinstance(iterable, Matrix):
+        elif shape is None and isinstance(iterable, MatrixBase):
             shape = iterable.shape
 
         # Construct N-dim array from another N-dim array:
@@ -133,12 +148,13 @@ class NDimArray(object):
             pass
 
         else:
-            raise TypeError("Data type not understood")
+            shape = ()
+            iterable = (iterable,)
 
-        if isinstance(shape, (int, Integer)):
+        if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
-        if any([not isinstance(dim, (int, Integer)) for dim in shape]):
+        if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
             raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable
@@ -149,7 +165,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(3, 3)
         >>> a
         [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
@@ -167,7 +183,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(3, 3)
         >>> a.shape
         (3, 3)
@@ -182,7 +198,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(3,4,5,6,3)
         >>> a.rank()
         5
@@ -197,7 +213,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> from sympy import ImmutableDenseNDimArray
         >>> from sympy.abc import x, y
         >>> M = ImmutableDenseNDimArray([[x, y], [1, x*y]])
         >>> M.diff(x)
@@ -212,7 +228,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> from sympy import ImmutableDenseNDimArray
         >>> m = ImmutableDenseNDimArray([i*2+j for i in range(2) for j in range(2)], (2, 2))
         >>> m
         [[0, 1], [2, 3]]
@@ -227,7 +243,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(2, 2)
         >>> a
         [[0, 0], [0, 0]]
@@ -242,20 +258,6 @@ class NDimArray(object):
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
-        out_str = ''
-
-        # forming output string
-        for i, el in enumerate(self):
-
-            out_str += str(el) + '  '
-            chidx = i+1
-            for sh in reversed(self.shape):
-                if chidx % sh == 0:
-                    out_str += '\n'
-                    chidx //= sh
-
-        return out_str
-
     def __repr__(self):
         return self.__str__()
 
@@ -266,7 +268,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([1, 2, 3, 4], (2, 2))
         >>> a
         [[1, 2], [3, 4]]
@@ -307,21 +309,27 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
-        if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
+        from sympy.matrices.matrices import MatrixBase
+
+        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [i*other for i in self]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
-        if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
+        from sympy.matrices.matrices import MatrixBase
+
+        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [other*i for i in self]
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
-        if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
+        from sympy.matrices.matrices import MatrixBase
+
+        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
         other = sympify(other)
         result_list = [i/other for i in self]
@@ -329,6 +337,10 @@ class NDimArray(object):
 
     def __rdiv__(self, other):
         raise NotImplementedError('unsupported operation on NDimArray')
+
+    def __neg__(self):
+        result_list = [-i for i in self]
+        return type(self)(result_list, self.shape)
 
     def __eq__(self, other):
         """
@@ -338,7 +350,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(2, 3)
         >>> b = MutableDenseNDimArray.zeros(2, 3)
         >>> a == b
@@ -356,7 +368,7 @@ class NDimArray(object):
         return (self.shape == other.shape) and (list(self) == list(other))
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -391,3 +403,12 @@ class NDimArray(object):
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
+
+    def __hash__(self):
+        return Basic.__hash__(self)
+
+
+from sympy.core.numbers import Integer
+from sympy.core.sympify import sympify
+from sympy.core.function import Derivative
+from sympy.core.expr import Expr

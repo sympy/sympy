@@ -1,14 +1,17 @@
 from __future__ import print_function, division
 
 from functools import wraps
+import collections
 
-from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr
+from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy.utilities.misc import filldedent
 
 
 def _sympifyit(arg, retval=None):
@@ -171,6 +174,12 @@ class MatrixExpr(Basic):
         from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
+    def as_real_imag(self):
+        from sympy import I
+        real = (S(1)/2) * (self + self._eval_conjugate())
+        im = (self - self._eval_conjugate())/(2*I)
+        return (real, im)
+
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)
@@ -198,6 +207,10 @@ class MatrixExpr(Basic):
     def adjoint(self):
         return adjoint(self)
 
+    def as_coeff_Mul(self, rational=False):
+        """Efficiently extract the coefficient of a product. """
+        return S.One, self
+
     def conjugate(self):
         return conjugate(self)
 
@@ -218,7 +231,8 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                (0 <= i) != False and (i < self.rows) != False and
+                (self.rows is None or
+                (0 <= i) != False and (i < self.rows) != False) and
                 (0 <= j) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
@@ -235,12 +249,14 @@ class MatrixExpr(Basic):
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
-        elif isinstance(key, (int, Integer)):
+        elif isinstance(key, (SYMPY_INTS, Integer)):
             # row-wise decomposition of matrix
             rows, cols = self.shape
-            if not (isinstance(rows, Integer) and isinstance(cols, Integer)):
-                raise IndexError("Single index only supported for "
-                                 "non-symbolic matrix shapes.")
+            # allow single indexing if number of columns is known
+            if not isinstance(cols, Integer):
+                raise IndexError(filldedent('''
+                    Single indexing is only supported when the number
+                    of columns is known.'''))
             key = sympify(key)
             i = key // cols
             j = key % cols
@@ -249,15 +265,16 @@ class MatrixExpr(Basic):
             else:
                 raise IndexError("Invalid index %s" % key)
         elif isinstance(key, (Symbol, Expr)):
-                raise IndexError("Single index only supported for "
-                                 "non-symbolic indices.")
+                raise IndexError(filldedent('''
+                    Only integers may be used when addressing the matrix
+                    with a single index.'''))
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):
         """
         Returns a dense Matrix with elements represented explicitly
 
-        Returns an object of type ImmutableMatrix.
+        Returns an object of type ImmutableDenseMatrix.
 
         Examples
         ========
@@ -277,8 +294,8 @@ class MatrixExpr(Basic):
         as_mutable: returns mutable Matrix type
 
         """
-        from sympy.matrices.immutable import ImmutableMatrix
-        return ImmutableMatrix([[    self[i, j]
+        from sympy.matrices.immutable import ImmutableDenseMatrix
+        return ImmutableDenseMatrix([[    self[i, j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
@@ -303,7 +320,7 @@ class MatrixExpr(Basic):
 
         See Also
         ========
-        as_explicit: returns ImmutableMatrix
+        as_explicit: returns ImmutableDenseMatrix
         """
         return self.as_explicit().as_mutable()
 
@@ -332,13 +349,163 @@ class MatrixExpr(Basic):
     def as_coeff_mmul(self):
         return 1, MatMul(self)
 
+    @staticmethod
+    def from_index_summation(expr, first_index=None):
+        r"""
+        Parse expression of matrices with explicitly summed indices into a
+        matrix expression without indices, if possible.
+
+        This transformation expressed in mathematical notation:
+
+        `\sum_{j=0}^{N-1} A_{i,j} B_{j,k} \Longrightarrow \mathbf{A}\cdot \mathbf{B}`
+
+        Optional parameter ``first_index``: specify which free index to use as
+        the index starting the expression.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+        >>> from sympy.abc import i, j, k, l, N
+        >>> A = MatrixSymbol("A", N, N)
+        >>> B = MatrixSymbol("B", N, N)
+        >>> expr = Sum(A[i, j]*B[j, k], (j, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A*B
+
+        Transposition is detected:
+
+        >>> expr = Sum(A[j, i]*B[j, k], (j, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A.T*B
+
+        Detect the trace:
+
+        >>> expr = Sum(A[i, i], (i, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        Trace(A)
+
+        More complicated expressions:
+
+        >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A*B.T*A.T
+        """
+        from sympy import Sum, Mul, MatMul, transpose, trace
+
+        def recurse_expr(expr, index_ranges={}):
+            if expr.is_Mul:
+                nonmatargs = []
+                matargs = []
+                pos_arg = []
+                pos_ind = []
+                dlinks = {}
+                link_ind = []
+                counter = 0
+                for arg in expr.args:
+                    arg_symbol, arg_indices = recurse_expr(arg, index_ranges)
+                    if arg_indices is None:
+                        nonmatargs.append(arg_symbol)
+                        continue
+                    i1, i2 = arg_indices
+                    pos_arg.append(arg_symbol)
+                    pos_ind.append(i1)
+                    pos_ind.append(i2)
+                    link_ind.extend([None, None])
+                    if i1 in dlinks:
+                        other_i1 = dlinks[i1]
+                        link_ind[2*counter] = other_i1
+                        link_ind[other_i1] = 2*counter
+                    if i2 in dlinks:
+                        other_i2 = dlinks[i2]
+                        link_ind[2*counter + 1] = other_i2
+                        link_ind[other_i2] = 2*counter + 1
+                    dlinks[i1] = 2*counter
+                    dlinks[i2] = 2*counter + 1
+                    counter += 1
+                cur_ind_pos = link_ind.index(None)
+                first_index = pos_ind[cur_ind_pos]
+                while True:
+                    d = cur_ind_pos // 2
+                    r = cur_ind_pos % 2
+                    if r == 1:
+                        matargs.append(transpose(pos_arg[d]))
+                    else:
+                        matargs.append(pos_arg[d])
+                    next_ind_pos = link_ind[2*d + 1 - r]
+                    if next_ind_pos is None:
+                        last_index = pos_ind[2*d + 1 - r]
+                        break
+                    cur_ind_pos = next_ind_pos
+                return Mul.fromiter(nonmatargs)*MatMul.fromiter(matargs), (first_index, last_index)
+            elif expr.is_Add:
+                res = [recurse_expr(i) for i in expr.args]
+                res = [
+                    ((transpose(i), (j[1], j[0]))
+                        if default_sort_key(j[0]) > default_sort_key(j[1])
+                    else (i, j))
+                    for (i, j) in res
+                ]
+                addends, last_indices = zip(*res)
+                last_indices = list(set(last_indices))
+                if len(last_indices) > 1:
+                    print(last_indices)
+                    raise ValueError("incompatible summation")
+                return MatAdd.fromiter(addends), last_indices[0]
+            elif isinstance(expr, KroneckerDelta):
+                i1, i2 = expr.args
+                return S.One, (i1, i2)
+            elif isinstance(expr, MatrixElement):
+                matrix_symbol, i1, i2 = expr.args
+                if i1 in index_ranges:
+                    r1, r2 = index_ranges[i1]
+                    if r1 != 0 or matrix_symbol.shape[0] != r2+1:
+                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                            (r1, r2), matrix_symbol.shape[0]))
+                if i2 in index_ranges:
+                    r1, r2 = index_ranges[i2]
+                    if r1 != 0 or matrix_symbol.shape[1] != r2+1:
+                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                            (r1, r2), matrix_symbol.shape[1]))
+                if (i1 == i2) and (i1 in index_ranges):
+                    return trace(matrix_symbol), None
+                return matrix_symbol, (i1, i2)
+            elif isinstance(expr, Sum):
+                return recurse_expr(
+                    expr.args[0],
+                    index_ranges={i[0]: i[1:] for i in expr.args[1:]}
+                )
+            else:
+                return expr, None
+
+        parsed, irange = recurse_expr(expr)
+        if irange is None or first_index is None:
+            return parsed
+        i1, i2 = irange
+        if i1 == first_index:
+            return parsed
+        if i2 == first_index:
+            return transpose(parsed)
+        raise ValueError("no such index")
+
 
 class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
     _diff_wrt = True
+    is_symbol = True
     is_commutative = True
+
+    def __new__(cls, name, n, m):
+        n, m = map(sympify, (n, m))
+        from sympy import MatrixBase
+        if isinstance(name, (MatrixBase,)):
+            if n.is_Integer and m.is_Integer:
+                return name[n, m]
+        name = sympify(name)
+        obj = Expr.__new__(cls, name, n, m)
+        return obj
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
@@ -347,6 +514,18 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
+
+    def _eval_derivative(self, v):
+        if not isinstance(v, MatrixElement):
+            from sympy import MatrixBase
+            if isinstance(self.parent, MatrixBase):
+                return self.parent.diff(v)[self.i, self.j]
+            return S.Zero
+
+        if self.args[0] != v.args[0]:
+            return S.Zero
+
+        return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
 
 
 class MatrixSymbol(MatrixExpr):
@@ -446,10 +625,12 @@ class Identity(MatrixExpr):
         return self
 
     def _entry(self, i, j):
-        if i == j:
+        eq = Eq(i, j)
+        if eq is S.true:
             return S.One
-        else:
+        elif eq is S.false:
             return S.Zero
+        return KroneckerDelta(i, j)
 
     def _eval_determinant(self):
         return S.One

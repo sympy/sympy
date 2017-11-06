@@ -184,7 +184,7 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    """Generates simple DE.
+    r"""Generates simple DE.
 
     DE is of the form
 
@@ -1068,18 +1068,18 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def integrate(self, x=None):
+    def integrate(self, x=None, **kwargs):
         """Integrate Formal Power Series.
 
         Examples
         ========
 
-        >>> from sympy import fps, sin
+        >>> from sympy import fps, sin, integrate
         >>> from sympy.abc import x
         >>> f = fps(sin(x))
         >>> f.integrate(x).truncate()
         -1 + x**2/2 - x**4/24 + O(x**6)
-        >>> f.integrate((x, 0, 1))
+        >>> integrate(f, (x, 0, 1))
         -cos(1) + 1
         """
         from sympy.integrals import integrate

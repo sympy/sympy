@@ -4,13 +4,13 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg,
+    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 
 
@@ -447,6 +447,34 @@ def test_failing_integrals():
     assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
 
 
+def test_integrate_SingularityFunction():
+    in_1 = SingularityFunction(x, a, 3) + SingularityFunction(x, 5, -1)
+    out_1 = SingularityFunction(x, a, 4)/4 + SingularityFunction(x, 5, 0)
+    assert integrate(in_1, x) == out_1
+
+    in_2 = 10*SingularityFunction(x, 4, 0) - 5*SingularityFunction(x, -6, -2)
+    out_2 = 10*SingularityFunction(x, 4, 1) - 5*SingularityFunction(x, -6, -1)
+    assert integrate(in_2, x) == out_2
+
+    in_3 = 2*x**2*y -10*SingularityFunction(x, -4, 7) - 2*SingularityFunction(y, 10, -2)
+    out_3_1 = 2*x**3*y/3 - 2*x*SingularityFunction(y, 10, -2) - 5*SingularityFunction(x, -4, 8)/4
+    out_3_2 = x**2*y**2 - 10*y*SingularityFunction(x, -4, 7) - 2*SingularityFunction(y, 10, -1)
+    assert integrate(in_3, x) == out_3_1
+    assert integrate(in_3, y) == out_3_2
+
+    assert Integral(in_3, x) == Integral(in_3, x)
+    assert Integral(in_3, x).doit() == out_3_1
+
+    in_4 = 10*SingularityFunction(x, -4, 7) - 2*SingularityFunction(x, 10, -2)
+    out_4 = 5*SingularityFunction(x, -4, 8)/4 - 2*SingularityFunction(x, 10, -1)
+    assert integrate(in_4, (x, -oo, x)) == out_4
+
+    assert integrate(SingularityFunction(x, 5, -1), x) == SingularityFunction(x, 5, 0)
+    assert integrate(SingularityFunction(x, 0, -1), (x, -oo, oo)) == 1
+    assert integrate(5*SingularityFunction(x, 5, -1), (x, -oo, oo)) == 5
+    assert integrate(SingularityFunction(x, 5, -1) * f(x), (x, -oo, oo)) == f(5)
+
+
 def test_integrate_DiracDelta():
     # This is here to check that deltaintegrate is being called, but also
     # to test definite integrals. More tests are in test_deltafunctions.py
@@ -781,9 +809,11 @@ def test_issue_4403():
         -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
     x = Symbol('x', real=True)
-    y = Symbol('y', nonzero=True, real=True)
+    y = Symbol('y', positive=True)
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
-        1/(y**2*sqrt(1 + y**2/x**2))
+        x/(y**2*sqrt(x**2 + y**2))
+    # If y is real and nonzero, we get x*Abs(y)/(y**3*sqrt(x**2 + y**2)),
+    # which results from sqrt(1 + x**2/y**2) = sqrt(x**2 + y**2)/|y|.
 
 
 def test_issue_4403_2():
@@ -842,8 +872,9 @@ def test_issue_4517():
 
 def test_issue_4527():
     k, m = symbols('k m', integer=True)
-    assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)) == Piecewise(
-        (0, And(Eq(k, 0), Eq(m, 0))),
+    ans = integrate(sin(k*x)*sin(m*x), (x, 0, pi)
+            ).simplify() == Piecewise(
+        (0, Eq(k, 0) | Eq(m, 0)),
         (-pi/2, Eq(k, -m)),
         (pi/2, Eq(k, m)),
         (0, True))
@@ -853,6 +884,7 @@ def test_issue_4527():
         (x*sin(m*x)**2/2 + x*cos(m*x)**2/2 - sin(m*x)*cos(m*x)/(2*m), Eq(k, m)),
         (m*sin(k*x)*cos(m*x)/(k**2 - m**2) -
          k*sin(m*x)*cos(k*x)/(k**2 - m**2), True))
+
 
 def test_issue_4199():
     ypos = Symbol('y', positive=True)
@@ -991,7 +1023,6 @@ def test_issue_4487():
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 
-@XFAIL
 def test_issue_4215():
     x = Symbol("x")
     assert integrate(1/(x**2), (x, -1, 1)) == oo
@@ -1078,7 +1109,7 @@ def test_issue_2708():
     assert integrate(2*f + exp(z), (z, 2, 3)) == \
         2*integral_f - exp(2) + exp(3)
     assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
-        1.0*NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
+        NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
                                   (z, 0, x))
 
 def test_issue_8368():
@@ -1123,6 +1154,8 @@ def test_issue_8901():
 
 @slow
 def test_issue_7130():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
@@ -1140,3 +1173,23 @@ def test_issue_4950():
 
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+
+def test_singularities():
+    assert integrate(1/x**2, (x, -oo, oo)) == oo
+    assert integrate(1/x**2, (x, -1, 1)) == oo
+    assert integrate(1/(x - 1)**2, (x, -2, 2)) == oo
+
+    assert integrate(1/x**2, (x, 1, -1)) == -oo
+    assert integrate(1/(x - 1)**2, (x, 2, -2)) == -oo
+
+def test_issue_12645():
+    x, y = symbols('x y', real=True)
+    assert (integrate(sin(x*x + y*y),
+                      (x, -sqrt(pi - y*y), sqrt(pi - y*y)),
+                      (y, -sqrt(pi), sqrt(pi)))
+                == Integral(sin(x**2 + y**2),
+                            (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
+                            (y, -sqrt(pi), sqrt(pi))))
+
+def test_issue_12677():
+    assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)

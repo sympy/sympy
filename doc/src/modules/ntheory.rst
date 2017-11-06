@@ -75,6 +75,10 @@ Ntheory Functions Reference
 
 .. autofunction:: digits
 
+.. autofunction:: primenu
+
+.. autofunction:: primeomega
+
 .. module:: sympy.ntheory.modular
 
 .. autofunction:: symmetric_residue
@@ -128,6 +132,8 @@ Ntheory Functions Reference
 .. autofunction:: legendre_symbol
 
 .. autofunction:: jacobi_symbol
+
+.. autofunction:: discrete_log
 
 .. automodule:: sympy.ntheory.continued_fraction
     :members:

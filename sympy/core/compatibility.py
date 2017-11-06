@@ -69,12 +69,12 @@ if PY3:
     integer_types = (int,)
     string_types = (str,)
     long = int
+    int_info = sys.int_info
 
     # String / unicode compatibility
     unicode = str
     unichr = chr
-    def u(x):
-        return x
+
     def u_decode(x):
         return x
 
@@ -101,12 +101,12 @@ else:
     integer_types = (int, long)
     string_types = (str, unicode)
     long = long
+    int_info = sys.long_info
 
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
+
     def u_decode(x):
         return x.decode('utf-8')
 
@@ -294,11 +294,12 @@ def is_sequence(i, include=None):
 
 try:
     from itertools import zip_longest
-except ImportError: # <= Python 2.7
+except ImportError:  # Python 2.7
     from itertools import izip_longest as zip_longest
 
 
 try:
+    # Python 2.7
     from string import maketrans
 except ImportError:
     maketrans = str.maketrans
@@ -333,7 +334,7 @@ def as_int(n):
         if result != n:
             raise TypeError
     except TypeError:
-        raise ValueError('%s is not an integer' % n)
+        raise ValueError('%s is not an integer' % (n,))
     return result
 
 
@@ -684,7 +685,7 @@ if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
 
 
-# lru_cache compatible with py2.6->py3.2 copied directly from
+# lru_cache compatible with py2.7 copied directly from
 #   http://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
@@ -860,3 +861,9 @@ def lru_cache(maxsize=100, typed=False):
 if sys.version_info[:2] >= (3, 3):
     # 3.2 has an lru_cache with an incompatible API
     from functools import lru_cache
+
+try:
+    from itertools import filterfalse
+except ImportError:  # Python 2.7
+    def filterfalse(pred, itr):
+        return filter(lambda x: not pred(x), itr)

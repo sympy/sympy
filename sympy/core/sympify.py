@@ -50,6 +50,27 @@ class CantSympify(object):
     """
     pass
 
+
+def _convert_numpy_types(a):
+    """
+    Converts a numpy datatype input to an appropriate sympy type.
+    """
+    import numpy as np
+    if not isinstance(a, np.floating):
+        func = converter[complex] if np.iscomplex(a) else sympify
+        return func(np.asscalar(a))
+    else:
+        try:
+            from sympy.core.numbers import Float
+            prec = np.finfo(a).nmant
+            a = str(list(np.reshape(np.asarray(a),
+                                    (1, np.size(a)))[0]))[1:-1]
+            return Float(a, precision=prec)
+        except NotImplementedError:
+            raise SympifyError('Translation for numpy float : %s '
+                               'is not implemented' % a)
+
+
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
@@ -65,6 +86,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave ``None`` unchanged)
        - lists, sets or tuples containing any of the above
+
+    .. warning::
+        Note that this function uses ``eval``, and thus shouldn't be used on
+        unsanitized input.
 
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -141,7 +166,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> _clash1
     {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
     >>> sympify('I & Q', _clash1)
-    And(I, Q)
+    I & Q
 
     Strict
     ------
@@ -184,7 +209,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...     def __iter__(self):
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     ...     def _sympy_(self): return Matrix(self)
     >>> sympify(MyList1())
@@ -201,7 +226,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...     def __iter__(self):  #     Use _sympy_!
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     >>> from sympy.core.sympify import converter
     >>> converter[MyList2] = lambda x: Matrix(x)
@@ -231,7 +256,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
     try:
         if a in sympy_classes:
             return a
@@ -248,6 +276,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             raise SympifyError(a)
         else:
             return a
+
+    # Support for basic numpy datatypes
+    # Note that this check exists to avoid importing NumPy when not necessary
+    if type(a).__module__ == 'numpy':
+        import numpy as np
+        if np.isscalar(a):
+            return _convert_numpy_types(a)
 
     try:
         return converter[cls](a)
@@ -275,6 +310,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if strict:
         raise SympifyError(a)
+
+    try:
+        from ..tensor.array import Array
+        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+    except AttributeError:
+        pass
 
     if iterable(a):
         try:

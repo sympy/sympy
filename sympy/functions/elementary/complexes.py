@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
-from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
@@ -53,11 +52,15 @@ class re(Function):
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif arg.is_real:
             return arg
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return S.Zero
-        elif arg.is_Function and arg.func is conjugate:
+        elif arg.is_Matrix:
+            return arg.as_real_imag()[0]
+        elif arg.is_Function and isinstance(arg, conjugate):
             return re(arg.args[0])
         else:
 
@@ -145,11 +148,15 @@ class im(Function):
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif arg.is_real:
             return S.Zero
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return -S.ImaginaryUnit * arg
-        elif arg.is_Function and arg.func is conjugate:
+        elif arg.is_Matrix:
+            return arg.as_real_imag()[1]
+        elif arg.is_Function and isinstance(arg, conjugate):
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
@@ -296,7 +303,7 @@ class sign(Function):
         if arg.is_negative:
             return S.NegativeOne
         if arg.is_Function:
-            if arg.func is sign:
+            if isinstance(arg, sign):
                 return arg
         if arg.is_imaginary:
             if arg.is_Pow and arg.exp is S.Half:
@@ -445,7 +452,7 @@ class Abs(Function):
             unk = []
             for t in arg.args:
                 tnew = cls(t)
-                if tnew.func is cls:
+                if isinstance(tnew, cls):
                     unk.append(tnew.args[0])
                 else:
                     known.append(tnew)
@@ -454,6 +461,8 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
+        if arg is S.ComplexInfinity:
+            return S.Infinity
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
             if base.is_real:
@@ -462,12 +471,14 @@ class Abs(Function):
                         return arg
                     if base is S.NegativeOne:
                         return S.One
-                    if base.func is cls and exponent is S.NegativeOne:
+                    if isinstance(base, cls) and exponent is S.NegativeOne:
                         return arg
                     return Abs(base)**exponent
-                if base.is_positive == True:
+                if base.is_nonnegative:
                     return base**re(exponent)
-                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                if base.is_negative:
+                    return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                return
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
@@ -858,13 +869,13 @@ class periodic_argument(Function):
         for a in args:
             if not a.is_polar:
                 unbranched += arg(a)
-            elif a.func is exp_polar:
+            elif isinstance(a, exp_polar):
                 unbranched += a.exp.as_real_imag()[1]
             elif a.is_Pow:
                 re, im = a.exp.as_real_imag()
                 unbranched += re*unbranched_argument(
                     a.base) + im*log(abs(a.base))
-            elif a.func is polar_lift:
+            elif isinstance(a, polar_lift):
                 unbranched += arg(a.args[0])
             else:
                 return None
@@ -881,7 +892,7 @@ class periodic_argument(Function):
             return None
         if period == oo and isinstance(ar, principal_branch):
             return periodic_argument(*ar.args)
-        if ar.func is polar_lift and period >= 2*pi:
+        if isinstance(ar, polar_lift) and period >= 2*pi:
             return periodic_argument(ar.args[0], period)
         if ar.is_Mul:
             newargs = [x for x in ar.args if not x.is_positive]
@@ -1084,9 +1095,9 @@ def _unpolarify(eq, exponents_only, pause=False):
         return eq
 
     if not pause:
-        if eq.func is exp_polar:
+        if isinstance(eq, exp_polar):
             return exp(_unpolarify(eq.exp, exponents_only))
-        if eq.func is principal_branch and eq.args[1] == 2*pi:
+        if isinstance(eq, principal_branch) and eq.args[1] == 2*pi:
             return _unpolarify(eq.args[0], exponents_only)
         if (
             eq.is_Add or eq.is_Mul or eq.is_Boolean or
@@ -1095,7 +1106,7 @@ def _unpolarify(eq, exponents_only, pause=False):
                 eq.rel_op not in ('==', '!='))
         ):
             return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
-        if eq.func is polar_lift:
+        if isinstance(eq, polar_lift):
             return _unpolarify(eq.args[0], exponents_only)
 
     if eq.is_Pow:

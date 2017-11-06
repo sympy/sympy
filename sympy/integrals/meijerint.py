@@ -108,7 +108,7 @@ def _create_lookup_table(table):
     add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a),
         hint=Not(IsNonPositiveInteger(a)))
     add(abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
-        pi/(gamma(a)*cos(pi*a/2))*abs(b)**(-a), re(a) < 1)
+        2*sin(pi*a/2)*gamma(1 - a)*abs(b)**(-a), re(a) < 1)
     add((t**a - b**a)/(t - b), [0, a], [], [0, a], [], t/b,
         b**(a - 1)*sin(a*pi)/pi)
 
@@ -343,13 +343,13 @@ def _exponents(expr, x):
     >>> from sympy.abc import x, y
     >>> from sympy import sin
     >>> _exponents(x, x)
-    set([1])
+    {1}
     >>> _exponents(x**2, x)
-    set([2])
+    {2}
     >>> _exponents(x**2 + x, x)
-    set([1, 2])
+    {1, 2}
     >>> _exponents(x**3*sin(x + x**y) + 1/x, x)
-    set([-1, 1, 3, y])
+    {-1, 1, 3, y}
     """
     def _exponents_(expr, x, res):
         if expr == x:
@@ -380,11 +380,11 @@ def _find_splitting_points(expr, x):
     >>> from sympy import sin
     >>> from sympy.abc import a, x
     >>> fsp(x, x)
-    set([0])
+    {0}
     >>> fsp((x-1)**3, x)
-    set([1])
+    {1}
     >>> fsp(sin(x+3)*x, x)
-    set([-3, 0])
+    {-3, 0}
     """
     p, q = [Wild(n, exclude=[x]) for n in 'pq']
 
@@ -587,7 +587,7 @@ def _condsimp(cond):
     >>> from sympy import Or, Eq, unbranched_argument as arg, And
     >>> from sympy.abc import x, y, z
     >>> simp(Or(x < y, z, Eq(x, y)))
-    Or(x <= y, z)
+    z | (x <= y)
     >>> simp(Or(x <= y, And(x < y, z)))
     x <= y
     """
@@ -635,12 +635,12 @@ def _condsimp(cond):
                         if arg2 == arg3:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[1] == r and \
-                                arg2.func is And and arg2.args[0] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[1] == r and \
+                                isinstance(arg2, And) and arg2.args[0] in arg3.args:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[0] == r and \
-                                arg2.func is And and arg2.args[1] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[0] == r and \
+                                isinstance(arg2, And) and arg2.args[1] in arg3.args:
                             otherlist += [k]
                             break
                 if len(otherlist) != len(otherargs) + 1:
@@ -661,7 +661,7 @@ def _condsimp(cond):
             return orig
         m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
-            if expr.func is periodic_argument and not expr.args[0].is_polar \
+            if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
                     and expr.args[1] == oo:
                 return (expr.args[0] > 0)
             return orig
@@ -717,7 +717,7 @@ def _rewrite_saxena_1(fac, po, g, x):
 
 
 def _check_antecedents_1(g, x, helper=False):
-    """
+    r"""
     Return a condition under which the mellin transform of g exists.
     Any power of x has already been absorbed into the G function,
     so this is just int_0^\infty g dx.
@@ -834,7 +834,7 @@ def _check_antecedents_1(g, x, helper=False):
 
 
 def _int0oo_1(g, x):
-    """
+    r"""
     Evaluate int_0^\infty g dx using G functions,
     assuming the necessary conditions are fulfilled.
 
@@ -845,7 +845,7 @@ def _int0oo_1(g, x):
     gamma(-a)*gamma(c + 1)/(y*gamma(-d)*gamma(b + 1))
     """
     # See [L, section 5.6.1]. Note that s=1.
-    from sympy import gamma, combsimp, unpolarify
+    from sympy import gamma, gammasimp, unpolarify
     eta, _ = _get_coeff_exp(g.argument, x)
     res = 1/eta
     # XXX TODO we should reduce order first
@@ -857,7 +857,7 @@ def _int0oo_1(g, x):
         res /= gamma(1 - b - 1)
     for a in g.aother:
         res /= gamma(a + 1)
-    return combsimp(unpolarify(res))
+    return gammasimp(unpolarify(res))
 
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
@@ -1346,7 +1346,7 @@ def _check_antecedents_inversion(g, x):
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z):
-        return And(*[statement(a - 1, 0, z) for a in g.an])
+        return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def H(z):
         return statement(theta, -sigma, 1/sigma, z)
@@ -1461,7 +1461,10 @@ def _rewrite_single(f, x, recursive=True):
                 for fac, g in terms:
                     r1 = _get_coeff_exp(unpolarify(fac.subs(subs).subs(z, x),
                                                    exponents_only=True), x)
-                    g = g.subs(subs).subs(z, x)
+                    try:
+                        g = g.subs(subs).subs(z, x)
+                    except ValueError:
+                        continue
                     # NOTE these substitutions can in principle introduce oo,
                     #      zoo and other absurdities. It shouldn't matter,
                     #      but better be safe.
@@ -1628,7 +1631,7 @@ def meijerint_indefinite(f, x):
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
-    from sympy import Integral, piecewise_fold
+    from sympy import Integral, piecewise_fold, nan, zoo
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
@@ -1666,7 +1669,12 @@ def _meijerint_indefinite_1(f, x):
         else:
             r = meijerg(
                 tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
-        r = hyperexpand(r.subs(t, a*x**b))
+        # The antiderivative is most often expected to be defined
+        # in the neighborhood of  x = 0.
+        place = 0
+        if b < 0 or f.subs(x, 0).has(nan, zoo):
+            place = None
+        r = hyperexpand(r.subs(t, a*x**b), place=place)
 
         # now substitute back
         # Note: we really do want the powers of x to combine.
@@ -1739,11 +1747,15 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    from sympy import arg, exp, I, And, DiracDelta
+    from sympy import arg, exp, I, And, DiracDelta, SingularityFunction
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
 
     if f.has(DiracDelta):
         _debug('Integrand has DiracDelta terms - giving up.')
+        return None
+
+    if f.has(SingularityFunction):
+        _debug('Integrand has Singularity Function terms - giving up.')
         return None
 
     f_, x_, a_, b_ = f, x, a, b
@@ -1788,7 +1800,8 @@ def meijerint_definite(f, x, a, b):
             return res, cond
 
     elif a == oo:
-        return -meijerint_definite(f, x, b, oo)
+        res = meijerint_definite(f, x, b, oo)
+        return -res[0], res[1]
 
     elif (a, b) == (0, oo):
         # This is a common case - try it directly first.
@@ -1998,7 +2011,7 @@ def _meijerint_definite_4(f, x, only_double=False):
 
 
 def meijerint_inversion(f, x, t):
-    """
+    r"""
     Compute the inverse laplace transform
     :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
     for real c larger than the real part of all singularities of f.

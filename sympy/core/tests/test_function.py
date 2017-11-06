@@ -47,6 +47,17 @@ def test_general_function():
     assert edxdx == diff(diff(nu(x), x), x)
     assert edxdy == 0
 
+def test_general_function_nullary():
+    nu = Function('nu')
+
+    e = nu()
+    edx = e.diff(x)
+    edxdx = e.diff(x).diff(x)
+    assert e == nu()
+    assert edx != nu()
+    assert edx == 0
+    assert edxdx == 0
+
 
 def test_derivative_subs_bug():
     e = diff(g(x), x)
@@ -98,6 +109,15 @@ def test_diff_symbols():
 def test_Function():
     class myfunc(Function):
         @classmethod
+        def eval(cls):  # zero args
+            return
+
+    assert myfunc.nargs == FiniteSet(0)
+    assert myfunc().nargs == FiniteSet(0)
+    raises(TypeError, lambda: myfunc(x).nargs)
+
+    class myfunc(Function):
+        @classmethod
         def eval(cls, x):  # one arg
             return
 
@@ -136,6 +156,12 @@ def test_Lambda():
     assert e(x) == x**2
     assert e(y) == y**2
 
+    assert Lambda((), 42)() == 42
+    assert Lambda((), 42) == Lambda((), 42)
+    assert Lambda((), 42) != Lambda((), 43)
+    assert Lambda((), f(x))() == f(x)
+    assert Lambda((), 42).nargs == FiniteSet(0)
+
     assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
@@ -161,6 +187,7 @@ def test_Lambda():
     assert Lambda(x, 1)(1) is S.One
 
 
+
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
     assert Lambda(x, 2*x) is not S.IdentityFunction
@@ -170,11 +197,14 @@ def test_IdentityFunction():
 def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
     assert Lambda(x, x*y).free_symbols == {y}
+    assert Lambda((), 42).free_symbols == set()
+    assert Lambda((), x*y).free_symbols == {x,y}
 
 
 def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
     raises(TypeError, lambda: Lambda((x, y), x + y)(x))
+    raises(TypeError, lambda: Lambda((), 42)(x))
 
 
 def test_Lambda_equality():
@@ -382,12 +412,12 @@ def test_function__eval_nseries():
     assert sin(x)._eval_nseries(x, 2, None) == x + O(x**2)
     assert sin(x + 1)._eval_nseries(x, 2, None) == x*cos(1) + sin(1) + O(x**2)
     assert sin(pi*(1 - x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
-    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
+    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x**2) + O(x**2)
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
         polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1 - x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1 + x)._eval_nseries(x, 2, None))
+    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + O(x)
+    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + O(x)  # XXX: wrong, branch cuts
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
@@ -698,6 +728,7 @@ def test_mexpand():
     assert _mexpand(1) is S.One
     assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
 
+
 def test_issue_8469():
     # This should not take forever to run
     N = 40
@@ -708,6 +739,153 @@ def test_issue_8469():
     import functools
     expr = functools.reduce(g,ws)
 
+
 def test_should_evalf():
     # This should not take forever to run (see #8506)
     assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
+
+
+def test_Derivative_as_finite_difference():
+    # Central 1st derivative at gridpoint
+    x, h = symbols('x h', real=True)
+    dfdx = f(x).diff(x)
+    assert (dfdx.as_finite_difference([x-2, x-1, x, x+1, x+2]) -
+            (S(1)/12*(f(x-2)-f(x+2)) + S(2)/3*(f(x+1)-f(x-1)))).simplify() == 0
+
+    # Central 1st derivative "half-way"
+    assert (dfdx.as_finite_difference() -
+            (f(x + S(1)/2)-f(x - S(1)/2))).simplify() == 0
+    assert (dfdx.as_finite_difference(h) -
+            (f(x + h/S(2))-f(x - h/S(2)))/h).simplify() == 0
+    assert (dfdx.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
+            (S(9)/(8*2*h)*(f(x+h) - f(x-h)) +
+             S(1)/(24*2*h)*(f(x - 3*h) - f(x + 3*h)))).simplify() == 0
+
+    # One sided 1st derivative at gridpoint
+    assert (dfdx.as_finite_difference([0, 1, 2], 0) -
+            (-S(3)/2*f(0) + 2*f(1) - f(2)/2)).simplify() == 0
+    assert (dfdx.as_finite_difference([x, x+h], x) -
+            (f(x+h) - f(x))/h).simplify() == 0
+    assert (dfdx.as_finite_difference([x-h, x, x+h], x-h) -
+            (-S(3)/(2*h)*f(x-h) + 2/h*f(x) -
+             S(1)/(2*h)*f(x+h))).simplify() == 0
+
+    # One sided 1st derivative "half-way"
+    assert (dfdx.as_finite_difference([x-h, x+h, x + 3*h, x + 5*h, x + 7*h])
+            - 1/(2*h)*(-S(11)/(12)*f(x-h) + S(17)/(24)*f(x+h)
+                       + S(3)/8*f(x + 3*h) - S(5)/24*f(x + 5*h)
+                       + S(1)/24*f(x + 7*h))).simplify() == 0
+
+    d2fdx2 = f(x).diff(x, 2)
+    # Central 2nd derivative at gridpoint
+    assert (d2fdx2.as_finite_difference([x-h, x, x+h]) -
+            h**-2 * (f(x-h) + f(x+h) - 2*f(x))).simplify() == 0
+
+    assert (d2fdx2.as_finite_difference([x - 2*h, x-h, x, x+h, x + 2*h]) -
+            h**-2 * (-S(1)/12*(f(x - 2*h) + f(x + 2*h)) +
+                     S(4)/3*(f(x+h) + f(x-h)) - S(5)/2*f(x))).simplify() == 0
+
+    # Central 2nd derivative "half-way"
+    assert (d2fdx2.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
+            (2*h)**-2 * (S(1)/2*(f(x - 3*h) + f(x + 3*h)) -
+                         S(1)/2*(f(x+h) + f(x-h)))).simplify() == 0
+
+    # One sided 2nd derivative at gridpoint
+    assert (d2fdx2.as_finite_difference([x, x+h, x + 2*h, x + 3*h]) -
+            h**-2 * (2*f(x) - 5*f(x+h) +
+                     4*f(x+2*h) - f(x+3*h))).simplify() == 0
+
+    # One sided 2nd derivative at "half-way"
+    assert (d2fdx2.as_finite_difference([x-h, x+h, x + 3*h, x + 5*h]) -
+            (2*h)**-2 * (S(3)/2*f(x-h) - S(7)/2*f(x+h) + S(5)/2*f(x + 3*h) -
+                         S(1)/2*f(x + 5*h))).simplify() == 0
+
+    d3fdx3 = f(x).diff(x, 3)
+    # Central 3rd derivative at gridpoint
+    assert (d3fdx3.as_finite_difference() -
+            (-f(x - 3/S(2)) + 3*f(x - 1/S(2)) -
+             3*f(x + 1/S(2)) + f(x + 3/S(2)))).simplify() == 0
+
+    assert (d3fdx3.as_finite_difference(
+        [x - 3*h, x - 2*h, x-h, x, x+h, x + 2*h, x + 3*h]) -
+        h**-3 * (S(1)/8*(f(x - 3*h) - f(x + 3*h)) - f(x - 2*h) +
+                 f(x + 2*h) + S(13)/8*(f(x-h) - f(x+h)))).simplify() == 0
+
+    # Central 3rd derivative at "half-way"
+    assert (d3fdx3.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
+            (2*h)**-3 * (f(x + 3*h)-f(x - 3*h) +
+                         3*(f(x-h)-f(x+h)))).simplify() == 0
+
+    # One sided 3rd derivative at gridpoint
+    assert (d3fdx3.as_finite_difference([x, x+h, x + 2*h, x + 3*h]) -
+            h**-3 * (f(x + 3*h)-f(x) + 3*(f(x+h)-f(x + 2*h)))).simplify() == 0
+
+    # One sided 3rd derivative at "half-way"
+    assert (d3fdx3.as_finite_difference([x-h, x+h, x + 3*h, x + 5*h]) -
+            (2*h)**-3 * (f(x + 5*h)-f(x-h) +
+                         3*(f(x+h)-f(x + 3*h)))).simplify() == 0
+
+    # issue 11007
+    y = Symbol('y', real=True)
+    d2fdxdy = f(x, y).diff(x, y)
+
+    ref0 = Derivative(f(x + S(1)/2, y), y) - Derivative(f(x - S(1)/2, y), y)
+    assert (d2fdxdy.as_finite_difference(wrt=x) - ref0).simplify() == 0
+
+    half = S(1)/2
+    xm, xp, ym, yp = x-half, x+half, y-half, y+half
+    ref2 = f(xm, ym) + f(xp, yp) - f(xp, ym) - f(xm, yp)
+    assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
+
+
+def test_issue_11159():
+    # Tests Application._eval_subs
+    expr1 = E
+    expr0 = expr1 * expr1
+    expr1 = expr0.subs(expr1,expr0)
+    assert expr0 == expr1
+
+
+def test_issue_12005():
+    e1 = Subs(Derivative(f(x), x), (x,), (x,))
+    assert e1.diff(x) == Derivative(f(x), x, x)
+    e2 = Subs(Derivative(f(x), x), (x,), (x**2 + 1,))
+    assert e2.diff(x) == 2*x*Subs(Derivative(f(x), x, x), (x,), (x**2 + 1,))
+    e3 = Subs(Derivative(f(x) + y**2 - y, y), (y,), (y**2,))
+    assert e3.diff(y) == 4*y
+    e4 = Subs(Derivative(f(x + y), y), (y,), (x**2))
+    assert e4.diff(y) == S.Zero
+    e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
+    assert e5.diff(x) == Derivative(f(x), x, x)
+    assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+
+def test_undefined_function_eq():
+    f = Function('f')
+    f2 = Function('f')
+    g = Function('g')
+    f_real = Function('f', is_real=True)
+
+    # This test may only be meaningful if the cache is turned off
+    assert f == f2
+    assert hash(f) == hash(f2)
+    assert f == f
+
+    assert f != g
+
+    assert f != f_real
+
+def test_function_assumptions():
+    x = Symbol('x')
+    f = Function('f')
+    f_real = Function('f', real=True)
+
+    assert f != f_real
+    assert f(x) != f_real(x)
+
+    assert f(x).is_real is None
+    assert f_real(x).is_real is True
+
+    # Can also do it this way, but it won't be equal to f_real because of the
+    # way UndefinedFunction.__new__ works.
+    f_real2 = Function('f', is_real=True)
+    assert f_real2(x).is_real is True
