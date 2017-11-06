@@ -837,23 +837,23 @@ class Add(Expr, AssocOp):
         infinite = [t for t in expr.args if t.is_infinite]
 
         compute = False
-        leading_term = [t.as_leading_term(x) for t in expr.args]
-        new_expr = expr.func(*leading_term).removeO()
+        leading_terms = [t.as_leading_term(x) for t in expr.args]
+        new_expr = expr.func(*leading_terms).removeO()
 
         if not new_expr:
             compute = True
         elif new_expr is not S.NaN:
             if new_expr.is_Add:
-                final_leading_term = [t for t in new_expr.args]
+                final_leading_terms = [t for t in new_expr.args]
             else:
-                final_leading_term = [new_expr]
+                final_leading_terms = [new_expr]
 
-            if len(expr.args) != len(final_leading_term):
-                coeff_added_term = [t for t in leading_term if t not in final_leading_term]
-                leading_coeff = [t.as_coeff_Mul()[1] for t in final_leading_term]
-                canceled_term = [t for t in coeff_added_term if t.as_coeff_Mul()[1] not in leading_coeff]
-                expr_sum = expr.func(*canceled_term)
-                if expr_sum == S(0) and len(canceled_term) != 0:
+            if len(expr.args) != len(final_leading_terms):
+                coeff_added_terms = [t for t in leading_terms if t not in final_leading_terms]
+                leading_exprs = [t.as_coeff_Mul()[1] for t in final_leading_terms]
+                canceled_terms = [t for t in coeff_added_terms if t.as_coeff_Mul()[1] not in leading_exprs]
+                expr_sum = expr.func(*canceled_terms)
+                if expr_sum == S(0) and len(canceled_terms) != 0:
                     compute = True
 
         expr = new_expr
