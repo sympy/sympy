@@ -695,6 +695,15 @@ class Vector(object):
             d[v[1]] = v[0].applyfunc(f)
         return Vector(d)
 
+    def tilde(self):
+        vx = self.args[0][0][0]
+        vy = self.args[0][0][1]
+        vz = self.args[0][0][2]
+        return Matrix( [
+            [0, -vz, vy],
+            [vz, 0, -vx],
+            [-vy, vx, 0]
+        ])
 
 class VectorTypeError(TypeError):
 
