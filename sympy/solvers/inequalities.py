@@ -444,7 +444,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
-    from sympy import im
+    from sympy import im, Lambda
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
@@ -667,6 +667,20 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             if im(expanded_e) != S.Zero and check:
                 rv = (make_real).intersect(_domain)
             else:
+                if period is not None and sup - inf is S.Infinity:
+                    n =  Symbol('n')
+                    sol_sets_dummy  = sol_sets
+                    for i in sol_sets_dummy:
+                        if isinstance(i, FiniteSet):
+                            for j in i:
+                                sol_sets.append(ImageSet(
+                                    Lambda(n,j + n*period), S.Integers))
+                        elif isinstance(i, Interval):
+                            inf, sup = i.inf, i.sup
+                            left, right = i.left_open, i.right_open
+                            sol_sets.append(ImageSet(
+                                Lambda(n, Interval(inf + n*period,
+                                 sup + n*period, left, right)), S.Integers))
                 rv = Intersection(
                     (Union(*sol_sets)), make_real, _domain).subs(gen, _gen)
 
