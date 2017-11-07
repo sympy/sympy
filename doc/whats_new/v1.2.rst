@@ -1,0 +1,20 @@
+Version 1.1.2 (under development)
+=================================
+
+Changelog
+---------
+
+New features
+------------
+
+
+Enhancements
+------------
+
+
+Bug fixes
+---------
+
+
+API changes
+-----------
