@@ -31,7 +31,6 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
 
 from .decompogen import decompogen
 
-
 from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
 
 from ..core.singleton import S
