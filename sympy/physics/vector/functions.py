@@ -1,3 +1,4 @@
+
 from __future__ import print_function, division
 
 from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
@@ -267,6 +268,8 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         raise TypeError('Need to supply speeds in a list')
     if len(speeds) != 3:
         raise TypeError('Need to supply 3 body-fixed speeds')
+    if set(speeds) == set([0, 0, 0]): # All speeds equal to 0 should result in [0, 0, 0]
+        return [0, 0, 0]
     if not isinstance(coords, (list, tuple)):
         raise TypeError('Need to supply coordinates in a list')
     if rot_type.lower() in ['body', 'space']:
