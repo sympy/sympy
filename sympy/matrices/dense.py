@@ -1394,25 +1394,29 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
         c = r
     # Note that ``Random()`` is equivalent to ``Random(None)``
     prng = prng or random.Random(seed)
-    if symmetric and r != c:
-        raise ValueError(
-            'For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+    
     if not symmetric:
         m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
-    else:
-        m = zeros(r)
-        for i in range(r):
-            for j in range(i, r):
-                m[i, j] = prng.randint(min, max)
-        for i in range(r):
-            for j in range(i):
-                m[i, j] = m[j, i]
-    if percent == 100:
-        return m
-    else:
-        z = int(r*c*percent // 100)
+        if percent == 100:
+            return m
+        z = int(r * c * (100 - percent) // 100)
         m._mat[:z] = [S.Zero]*z
         prng.shuffle(m._mat)
+
+        return m
+
+    # Symmetric case
+    if r != c:
+        raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+    m = zeros(r)
+    ij = [(i, j) for i in range(r) for j in range(i, r)]
+    if percent != 100:
+        ij = prng.sample(ij, int(len(ij) *  percent // 100))
+
+    for i, j in ij:
+        value = prng.randint(min, max)
+        m[i, j] = m[j, i] = value
+
     return m
 
 
