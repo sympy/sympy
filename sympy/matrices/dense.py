@@ -1386,9 +1386,9 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     >>> A == randMatrix(3, seed=1)
     True
     >>> randMatrix(3, symmetric=True, percent=50) # doctest:+SKIP
-    [0, 68, 43]
-    [0, 68,  0]
-    [0, 91, 34]
+    [77, 70,  0],
+    [70,  0,  0],
+    [ 0,  0, 88]
     """
     if c is None:
         c = r
