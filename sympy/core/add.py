@@ -849,12 +849,12 @@ class Add(Expr, AssocOp):
                 final_leading_terms = [new_expr]
 
             if len(expr.args) != len(final_leading_terms):
-                coeff_added_terms = [t for t in leading_terms \
+                coeff_added_terms = [t for t in leading_terms
                                     if t not in final_leading_terms]
                 leading_exprs = [t.as_coeff_Mul()[1] for t in final_leading_terms]
-                canceled_terms = [t for t in coeff_added_terms \
+                canceled_terms = [t for t in coeff_added_terms
                                  if t.as_coeff_Mul()[1] not in leading_exprs]
-                if len(canceled_terms) != 0:
+                if canceled_terms:
                     compute = True
 
         expr = new_expr
