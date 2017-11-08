@@ -854,7 +854,8 @@ class Add(Expr, AssocOp):
                 leading_exprs = [t.as_coeff_Mul()[1] for t in final_leading_terms]
                 canceled_terms = [t for t in coeff_added_terms
                                  if t.as_coeff_Mul()[1] not in leading_exprs]
-                if canceled_terms:
+                expr_sum = expr.func(*canceled_terms)
+                if expr_sum == S(0) and canceled_terms:
                     compute = True
 
         expr = new_expr
