@@ -224,7 +224,7 @@ before_install:
       pip install fastcache;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr;
+      pip install "sphinx" "docutils" doctr requests gitpython;
     fi
   - |
     if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
@@ -281,6 +281,9 @@ install:
 script:
   # Don't run doctr if the build fails
   - set -e
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+        python bin/changelog.py;
+    fi
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
