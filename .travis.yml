@@ -9,6 +9,7 @@ env:
   - SPLIT="4/4" TEST_SYMPY="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
+    - secure: "KY4F2kL2YLZGAZr/MKOaW2JSDJKliHgR6lD6eRHOJ4WKCjr9l2MW6WwsCFKmtLLy76eJYZumUkTMSNf/eKT8tgnrIxB7vJr1FIECSHB97LXonhxqd3nCvfxIByz0fmLuJPfNIySvcoW0MExbAXK7fn3+Q0KWxU8gGcA6QaPzoZAr/SkL7hY1VGSKZmQWY3zbdtxh1nO/alIZsDPyhrgTHGnb1y0lVettw2eqH2lCUgN87R4w72ZPrfLSgDiCXbzmmMNRdaHbA0KUcaLNCD+/tMvXDYuPGl3Ohw42Zj5II5kTk3yTSgaR6lJGW0Q39m7MzRJnUaPNyAy/MYQ6e6v65LXOWT31L0/eU1jIc4psLbySIllOx8JtcSijn7kx+xOWcBZYBGJVzd+RRc0lUMdNVO49MzmH+ojwYWZTV4/qvIKE8a9DT8/IX6dpxmGx3XA+DiJB17kfBWM5yF9kBD6PhC4q6h4hboMjLovCW1/UNvFOER0N0pfOVUVkkSCwjORs+GPF55nvXTpomJ03k+bcWEn1fbQp+0H66ladcIvn9AwfNtRFKCVK4d86EU4UdE7a8yTihpTu/napu4FyGqbLx4BPkgwDj2SU1YfkHETgMwZb2YMX9LiRsB9VoOTdj2Mt9oXVy9/83cMfUXjN+SRlmR08ZrwBeDoo1WlwRkhvzDg="
 dist: trusty
 
 python:
@@ -224,7 +225,7 @@ before_install:
       pip install fastcache;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr;
+      pip install "sphinx" "docutils" doctr requests gitpython;
     fi
   - |
     if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
@@ -281,6 +282,9 @@ install:
 script:
   # Don't run doctr if the build fails
   - set -e
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+        python bin/changelog.py;
+    fi
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
