@@ -124,20 +124,17 @@ if __name__ == '__main__':
     pr_desc = get_pr_desc(pr_number)
     changelogs = get_changelog(pr_desc)
 
-    if True:
-        # release-notes-bot:' + os.environ['BOT_TOKEN'] + '@
-        # TODO : encrypt token
-        repo = Repo.clone_from('https://github.com/' + os.environ['TRAVIS_REPO_SLUG'] +
-            '.wiki.git', os.path.abspath('wiki'))
+    if update:
+        repo = Repo.clone_from('https://release-notes-bot:' + os.environ['RNBOT_TOKEN'] +
+            '@github.com/' + os.environ['TRAVIS_REPO_SLUG'] + '.wiki.git',
+            os.path.abspath('wiki'))
 
         rel_notes_path = os.path.join(repo.working_tree_dir,
             get_release_notes_filename())
         update_release_notes(rel_notes_path, changelogs, pr_number)
 
-        with open(rel_notes_path, 'r') as f:
-            print(f.read(), end="")
-        #repo.index.add([rel_notes_path])
-        #bot = Actor('Release Notes Bot', '33476835+release-notes-bot@users.noreply.github.com')
-        #repo.index.commit('Update release notes after pull request #%s' %
-        #    pr_number, author=bot, committer=bot)
-        #repo.remotes.origin.push()
+        repo.index.add([rel_notes_path])
+        bot = Actor('Release Notes Bot', '33476835+release-notes-bot@users.noreply.github.com')
+        repo.index.commit('Update release notes after pull request #%s' %
+            pr_number, author=bot, committer=bot)
+        repo.remotes.origin.push()
