@@ -416,9 +416,13 @@ class LatexPrinter(Printer):
                     _tex += term_tex
                     last_term_tex = term_tex
                 return _tex
-        one_by_one =  Pow(1, -1, evaluate=False)
 
-        if not denom is S.One or one_by_one in expr.args:
+        if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
+            # use the original expression here, since fraction() may have
+            # altered it when producing numer and denom
+            tex += convert(expr)
+
+        else:
             snumer = convert(numer)
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
@@ -456,11 +460,6 @@ class LatexPrinter(Printer):
                     tex += r"\frac{1}{%s}%s%s" % (sdenom, separator, snumer)
             else:
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
-
-        elif denom is S.One:
-            # use the original expression here, since fraction() may have
-            # altered it when producing numer and denom
-            tex += convert(expr)
 
         if include_parens:
             tex += ")"
