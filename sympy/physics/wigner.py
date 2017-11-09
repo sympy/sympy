@@ -538,54 +538,18 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     """
 
     imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
+    j_sum = j_1 + j_2 + j_9 + j_6 + j_4 + j_8
     sumres = 0
     for kk in range(0, 2*(int(imax) + 1)):
         k = S.Half*kk
         try:
-            j_sum = j_1+j_2+j_9+j_6+j_4+j_8
             sumres +=(-1)**(kk+2*j_sum)*(kk + 1) * \
             racah(j_1, j_2, j_9, j_6, j_3, k, prec) * \
             racah(j_4, j_6, j_8, j_2, j_5, k, prec) * \
             racah(j_1, j_4, j_9, j_8, j_7, k, prec)
-        except:
+        except ValueError:
             pass
     return sumres
-
-    '''
-    #imin = 0
-    print(j_1, " ", j_2, " ", j_3, " ", j_4, " ", j_5, " ", j_6, " ", j_7, " ", j_8, " ", j_9)
-    x=1
-    for i in (j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9):
-        if (not isinstance(i, int)):
-            x=2;
-    print("x: ", x)
-    #if (j_1%2==0 && j_2%2==0 & j_3%2==0)
-    imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
-    imin = max(abs(j_1-j_9),abs(j_2-j_6),abs(j_4-j_8))
-    #print(imax, " ", imin)
-    assert(imax>=imin)
-
-    z=imin*2/x+1
-    sumres=0
-    print("z: ", z, "i: ", imin, " ", imax)
-    #for kk in range(int(imin), int(imax), x):
-    kk=imin
-    #print(kk)
-    #print(j_1, " ", j_9, " ", kk, " ", j_6, " ", j_2, " ", j_3)
-    term = racah(j_1, j_9, kk, j_8, j_4, j_7, prec) * \
-    racah(j_1, j_9, kk, j_6, j_2, j_3, prec)*z
-    # racah(j_2, j_6, kk, j_4, j_8, j_5, prec) * \
-    print("2nd: ", j_2, j_6, kk, j_4, j_8, j_5)
-    
-    #print(kk, " ", racah(j_1, j_9, kk, j_8, j_4, j_7, prec), " ", racah(j_2, j_6, kk, j_4, j_8, j_5, prec), " ", racah(j_1, j_9, kk, j_6, j_2, j_3, prec) )
-    sumres = sumres + term
-    z=z+2
-
-# factor = j_1+j_9+j_8+j_4 + j_2+j_6+j_4+j_8 + j_1+j_9+j_6+j_9
-# term = term*(-1)**factor
-    #print(tot)
-    return sumres
-    '''
 
 
 def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
