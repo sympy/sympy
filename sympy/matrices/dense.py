@@ -1394,7 +1394,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
         c = r
     # Note that ``Random()`` is equivalent to ``Random(None)``
     prng = prng or random.Random(seed)
-    
+ 
     if not symmetric:
         m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
         if percent == 100:
@@ -1416,7 +1416,6 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     for i, j in ij:
         value = prng.randint(min, max)
         m[i, j] = m[j, i] = value
-
     return m
 
 
