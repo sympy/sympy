@@ -1655,6 +1655,9 @@ def test_Mod():
     # issue 10963
     assert (x**6000%400).args[1] == 400
 
+    #issue 13543
+    assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
+
 
 def test_Mod_is_integer():
     p = Symbol('p', integer=True)
