@@ -1278,6 +1278,7 @@ def hessian(f, varlist, constraints=[]):
             out[j, i] = out[i, j]
     return out
 
+
 def jordan_cell(eigenval, n):
     """
     Create a Jordan block:
@@ -1394,7 +1395,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
         c = r
     # Note that ``Random()`` is equivalent to ``Random(None)``
     prng = prng or random.Random(seed)
- 
+
     if not symmetric:
         m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
         if percent == 100:
