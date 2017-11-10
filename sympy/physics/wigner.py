@@ -513,6 +513,9 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     >>> wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18
     0.05555555...
 
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1 ,prec=64) # ==1/6
+    0.1666666...
+
     It is an error to have arguments that are not integer or half
     integer values or do not fulfill the triangle relation::
 
@@ -533,15 +536,19 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
     """
-    imin = 0
-    imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
 
+    imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
+    j_sum = j_1 + j_2 + j_9 + j_6 + j_4 + j_8
     sumres = 0
-    for kk in range(imin, int(imax) + 1):
-        sumres = sumres + (2 * kk + 1) * \
-            racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
-            racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
-            racah(j_1, j_4, j_9, j_8, j_7, kk, prec)
+    for kk in range(0, 2*(int(imax) + 1)):
+        k = S.Half*kk
+        try:
+            sumres +=(-1)**(kk+2*j_sum)*(kk + 1) * \
+            racah(j_1, j_2, j_9, j_6, j_3, k, prec) * \
+            racah(j_4, j_6, j_8, j_2, j_5, k, prec) * \
+            racah(j_1, j_4, j_9, j_8, j_7, k, prec)
+        except ValueError:
+            pass
     return sumres
 
 
