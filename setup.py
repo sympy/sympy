@@ -28,7 +28,7 @@ To get a full list of avaiable commands, read the output of:
 Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
-
+#Imports
 import sys
 import subprocess
 import os
@@ -345,7 +345,7 @@ with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
 
 with open(os.path.join(dir_setup, 'sympy', '__init__.py')) as f:
     long_description = f.read().split('"""')[1]
-
+#Defines class
 if __name__ == '__main__':
     setup(name='sympy',
           version=__version__,
