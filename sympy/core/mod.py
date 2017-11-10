@@ -111,12 +111,12 @@ class Mod(Function):
             #separating into modulus and non modulus
             both_l = non_mod_l, mod_l = [], []
             for arg in p.args:
-                both_l[isinstance(arg,cls)].append(arg)
+                both_l[isinstance(arg, cls)].append(arg)
             #if q same for all
             if mod_l:
                 if all(inner.args[1] == q for inner in mod_l):
                     net = sum(non_mod_l) + sum(i.args[0] for i in mod_l)
-                    return cls(net,q)
+                    return cls(net, q)
 
         # XXX other possibilities?
 
