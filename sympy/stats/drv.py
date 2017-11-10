@@ -5,6 +5,7 @@ from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
 from sympy.solvers.solveset import solveset
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
+from math import floor
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     """ Discrete distribution of a single variable
