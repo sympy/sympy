@@ -4,7 +4,8 @@ from sympy.core import S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
-from sympy.core.function import Application, Lambda, ArgumentIndexError
+from sympy.core.function import (Application, Lambda,
+    ArgumentIndexError, AppliedUndef)
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
@@ -554,7 +555,9 @@ class MinMaxBase(Expr, LatticeOp):
 
             # pre-filter, checking comparability of arguments
             if not isinstance(arg, Expr) or arg.is_real is False or (
-                    arg.is_number and not arg.is_comparable):
+                    arg.is_number and
+                    not arg.has(AppliedUndef) and
+                    not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:

@@ -505,13 +505,12 @@ class Piecewise(Function):
                 if i == -1:
                     j = N - j
                     done[j: j + 1] = _clip(p, (a, b), k)
+        done = [(a, b, i) for a, b, i in done if a != b]
 
-        # check for holes
-        for a, b, i in done:
-            if i == -1 and a != b:
-                # when we reference arg -1 we will get Undefined
-                abei.append((-oo, oo, Undefined, -1))
-                break
+        # append an arg if there is a hole so a reference to
+        # argument -1 will give Undefined
+        if any(i == -1 for (a, b, i) in done):
+            abei.append((-oo, oo, Undefined, -1))
 
         # return the sum of the intervals
         args = []
@@ -574,13 +573,22 @@ class Piecewise(Function):
                     hi is S.Infinity or lo is S.NegativeInfinity):
                 pass
             else:
-                a = Dummy('lo')
-                b = Dummy('hi')
+                _a = Dummy('lo')
+                _b = Dummy('hi')
+                a = a if a.is_comparable else _a
+                b = b if b.is_comparable else _b
                 pos = self._eval_interval(x, a, b, _first=False)
-                if not (lo.is_number or hi.is_number):
-                    neg, pos = -pos.xreplace({a: hi, b: lo}), pos.xreplace({a: lo, b: hi})
+                if a == _a and b == _b:
+                    # it's purely symbolic so just swap lo and hi and
+                    # change the sign to get the value for when lo > hi
+                    neg, pos = (-pos.xreplace({_a: hi, _b: lo}),
+                        pos.xreplace({_a: lo, _b: hi}))
                 else:
-                    neg, pos = -self._eval_interval(x, hi, lo, _first=False), pos.xreplace({a: lo, b: hi})
+                    # at least one of the bounds was comparable, so allow
+                    # _eval_interval to use that information when computing
+                    # the interval with lo and hi reversed
+                    neg, pos = (-self._eval_interval(x, hi, lo, _first=False),
+                        pos.xreplace({_a: lo, _b: hi}))
                 # allow simplification based on ordering of lo and hi
                 p = Dummy('', positive=True)
                 if lo.is_Symbol:
@@ -589,12 +597,20 @@ class Piecewise(Function):
                 elif hi.is_Symbol:
                     pos = pos.xreplace({hi: lo + p}).xreplace({p: hi - lo})
                     neg = neg.xreplace({hi: lo - p}).xreplace({p: lo - hi})
-                # assumble return expression
-                rv = Piecewise(
-                    (pos,
-                        lo < hi),
-                    (neg,
-                        True))
+                # assemble return expression
+                if a == _a:
+                    rv = Piecewise(
+                        (pos,
+                            lo < hi),
+                        (neg,
+                            True))
+                else:
+                    rv = Piecewise(
+                        (neg,
+                            hi < lo),
+                        (pos,
+                            True))
+
                 # apply simplification of Min/Max expressions which may
                 # respond differently now that some simplification may
                 # have occured given the ordering of lo and hi
@@ -628,22 +644,12 @@ class Piecewise(Function):
                 if i == -1:
                     j = N - j
                     done[j: j + 1] = _clip(p, (a, b), k)
+        done = [(a, b, i) for a, b, i in done if a != b]
+
         # check for holes
-        for a, b, i in done:
-            if i == -1:
-                if a != b:
-                    # this requires a default (i == -1)
-                    # over a potentially non-zero interval
-                    # since a != b so we can't do this
-                    return S.NaN
-                else:
-                    # XXX are there expressions that would give
-                    # a value over a zero-width interval?
-                    # Integrating DiracDelta or Heaviside
-                    # does but we are not integrating right
-                    # now. If there are things to check for
-                    # check expression given by abei[i][-2]
-                    pass
+        if any(i == -1 for (a, b, i) in done):
+            return S.NaN
+
         # return the sum of the intervals
         sum = S.Zero
         for a, b, i in done:
