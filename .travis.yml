@@ -224,7 +224,7 @@ before_install:
       pip install fastcache;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr;
+      pip install "sphinx" "docutils" requests doctr;
     fi
   - |
     if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
