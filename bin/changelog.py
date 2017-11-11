@@ -40,18 +40,25 @@ def get_build_information():
     else:
         sys.exit('Unknown event type!')
 
-def get_pr_desc(pr_number):
+def request_https_get(url):
     """
-    Retrieve pull request description using GitHub API
+    Make HTTPS GET request and return response
     """
     s = requests.Session()
     retry = Retry(total=5, read=5, connect=5, backoff_factor=0.1,
         status_forcelist=(500, 502, 503, 504))
     adapter = HTTPAdapter(max_retries=retry)
     s.mount('https://', adapter)
-    r = s.get('https://api.github.com/repos/' +
-        os.environ['TRAVIS_REPO_SLUG'] + '/pulls/' + pr_number)
+    r = s.get(url)
     r.raise_for_status()
+    return r
+
+def get_pr_desc(pr_number):
+    """
+    Retrieve pull request description using GitHub API
+    """
+    r = request_https_get('https://api.github.com/repos/' +
+        os.environ['TRAVIS_REPO_SLUG'] + '/pulls/' + pr_number)
     return r.json()['body']
 
 def get_changelog(data):
@@ -121,12 +128,38 @@ def update_release_notes(rel_notes_path, changelogs, pr_number):
     rel_notes.close()
 
 if __name__ == '__main__':
-    pr_number = get_build_information()
+    ON_TRAVIS = os.environ.get('TRAVIS', 'false') == 'true'
+
+    if ON_TRAVIS:
+        pr_number = get_build_information()
+    else:
+        while True:
+            test_repo = input("Enter GitHub repository name: ")
+            if test_repo.count("/") == 1:
+                os.environ['TRAVIS_REPO_SLUG'] = test_repo
+                break
+        while True:
+            pr_number = input("Enter PR number: ")
+            if pr_number.isdigit():
+                break
+
     pr_desc = get_pr_desc(pr_number)
     changelogs = get_changelog(pr_desc)
 
-    rel_notes_path = os.path.abspath(get_release_notes_filename())
+    rel_notes_name = get_release_notes_filename()
+    rel_notes_path = os.path.abspath(rel_notes_name)
+
+    if not ON_TRAVIS:
+        print('Parsed changelogs:\n%s' % changelogs)
+        print('Downloading %s' % rel_notes_name)
+        r = request_https_get('https://raw.githubusercontent.com/wiki/' +
+            os.environ['TRAVIS_REPO_SLUG'] + '/' + rel_notes_name)
+        with open(rel_notes_path, 'w') as f:
+            f.write(r.text)
+
     print('Updating %s' % rel_notes_path)
     update_release_notes(rel_notes_path, changelogs, pr_number)
-    print('Staging updated release notes')
-    subprocess.run(['git', 'add', rel_notes_path], check=True)
+
+    if ON_TRAVIS:
+        print('Staging updated release notes')
+        subprocess.run(['git', 'add', rel_notes_path], check=True)
