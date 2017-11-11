@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB
-from sympy.core.compatibility import string_types, range, is_sequence
+from sympy.core.compatibility import (string_types, range, is_sequence,
+    ordered)
 from .basic import Basic
 from .sympify import sympify
 from .singleton import S
@@ -745,12 +746,13 @@ def disambiguate_symbols(iter):
         new_iter=Tuple()
         for i in iter:
             new_iter += Tuple(i)
-    syms = new_iter.free_symbols
+    syms = ordered(new_iter.free_symbols, keys=new_iter.index)
     mapping = {}
     for s in syms:
         mapping.setdefault(str(s), []).append(s)
     reps = {}
     for k in mapping:
+        reps[mapping[k][0]] = Symbol("%s"%(k), **mapping[k][0].assumptions0)
         if len(mapping[k]) == 1:
             continue
         for i in range(1, len(mapping[k])):

@@ -373,7 +373,11 @@ def test_disambiguate_symbols():
     t1 = Tuple(Symbol('_x'), Symbol('_y'), Dummy('y'), Dummy('x'), Dummy('x'))
     t2 = [Dummy('x'), Dummy('x')]
     t3 = (Dummy('x'), Dummy('y'))
+    t4 = Tuple(Symbol('x', prime=True), Symbol('x', composite=True))
+    t5 = Tuple(Symbol('x'), Dummy('x'))
 
-    assert disambiguate_symbols(t1) == (Symbol('_x'), Symbol('_y'), Dummy('_y_1'), Dummy('_x_2'), Dummy('_x_1'))
-    assert disambiguate_symbols(t2) == (Dummy('_x'), Dummy('_x_1'))
-    assert disambiguate_symbols(t3) == (Dummy('_x'), Dummy('_y'))
+    assert disambiguate_symbols(t1) == Tuple(Symbol('_x'), Symbol('_y'), Symbol('_y_1'), Symbol('_x_1'), Symbol('_x_2'))
+    assert disambiguate_symbols(t2) == Tuple(Symbol('_x'), Symbol('_x_1'))
+    assert disambiguate_symbols(t3) == Tuple(Symbol('_x'), Symbol('_y'))
+    assert disambiguate_symbols(t4) == Tuple(Symbol('x', prime=True), Symbol('x_1', composite=True))
+    assert disambiguate_symbols(t5) == Tuple(Symbol('x'), Symbol('_x'))
