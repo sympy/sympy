@@ -343,54 +343,203 @@ class MinMaxBase(Expr, LatticeOp):
         # first standard filter, for cls.zero and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
         try:
-            _args = frozenset(cls._new_args_filter(args))
+            args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
             return cls.zero
 
-        # second filter
-        # variant I: remove ones which can be removed
-        # args = cls._collapse_arguments(set(_args), **assumptions)
+        evaluate = assumptions.pop('evaluate', True)
+        check = assumptions.pop('check', True)
+        if evaluate:
+            uargs = set(args)
+            # second filter
+            # variant II: remove redundant args that are easily identified
+            args = cls._collapse_arguments(args, **assumptions)
 
-        # variant II: find local zeros
-        args = cls._find_localzeros(set(_args), **assumptions)
+        # variant I: find local zeros
+        args = cls._find_localzeros(args, **assumptions)
 
         if not args:
-            return cls.identity
+            rv = cls.identity
         elif len(args) == 1:
-            return args.pop()
+            rv = list(args).pop()
         else:
             # base creation
             # XXX should _args be made canonical with sorting?
             _args = frozenset(args)
             obj = Expr.__new__(cls, _args, **assumptions)
             obj._argset = _args
-            return obj
+            rv = obj
 
-    def _eval_simplify(self, ratio, measure):
-        # simplify Min(foo, y, Max(foo, x)) to Min(foo, y)
-        # Like And/Or, anything in common between the two
-        # is cause to eliminate the opposite arg.
-        cls = self.func
+        if evaluate and check and uargs:
+            # check the result against the unevaluate result
+            u = cls(*uargs, evaluate=False)
+            free = u.free_symbols
+            from sympy.core.relational import Eq
+            from sympy.core.numbers import Number
+            from itertools import permutations
+            eq = Eq(u, rv)
+            n = u.atoms(Number)
+            if 1 or not n:
+                for i in permutations(range(len(free))):
+                    reps = dict(zip(free, i))
+                    if eq.xreplace(reps) != True:
+                        print('logic error')
+                        print('unevaluated',u, u.xreplace(reps))
+                        print('evaluated', rv, rv.xreplace(reps))
+                        print(reps)
+                        print('-'*22)
+                        break
+            else:
+                from random import randint
+                for i in range(100):
+                    reps = dict(zip(free, [
+                        randint(min(n) -1, max(n)+2)
+                        for i in range(len(free))]))
+                    if eq.xreplace(reps) != True:
+                        print('logic error')
+                        print('unevaluated',u,u.xreplace(reps))
+                        print('evaluated', rv,rv.xreplace(reps))
+                        print('-'*22)
+                        break
+        return rv
+
+    @classmethod
+    def _collapse_arguments(cls, args, **assumptions):
+        """Remove redundant args.
+
+        Examples
+        ========
+
+        >>> from sympy import Min, Max
+        >>> from sympy.abc import a, b, c, d, e
+
+        Any arg in parent that appears in any
+        parent-like function in any of the flat args
+        of parent can be removed from that sub-arg:
+
+        >>> Min(a, Max(b, Min(a, c, d)))
+        Min(a, Max(b, Min(c, d)))
+
+        If the arg of parent appears in an opposite-than parent
+        function in any of the flat args of parent that function
+        can be replaced with the arg:
+
+        >>> Min(a, Max(b, Min(c, d, Max(a, e))))
+        Min(a, Max(b, Min(a, c, d)))
+
+        """
+        from sympy.utilities.iterables import ordered
+        from sympy.utilities.iterables import sift
+        from sympy.simplify.simplify import walk
+
+        if not args:
+            return args
+        args = list(ordered(args))
         if cls == Min:
-            op = Max
-        elif cls == Max:
-            op = Min
+            other = Max
         else:
-            op = None
-        if op:
-            unnested = set()
-            nested = []
+            other = Min
+
+        # find global comparable max of Max and min of Min if a new
+        # value is being introduced in these args at position 0 of
+        # the ordered args
+        if args[0].is_number:
+            minmax = []
+            for i in args:
+                minmax.extend([v for v in walk(i, (Min, Max))
+                    if v.args[0].is_comparable])
+            ismin = sift(minmax, lambda x: isinstance(x, Min))
+            mins = ismin[True]
+            small = Min.identity
+            for i in mins:
+                v = i.args[0]
+                if v.is_number and (v < small) == True:
+                    small = v
+            maxs = ismin[False]
+            big = Max.identity
+            if maxs:
+                for i in maxs:
+                    v = i.args[0]
+                    if v.is_number and (v > big) == True:
+                        big = v
+            # at the point when this function is called from __new__,
+            # there may be more than one numeric arg present since
+            # local zeros have not been handled yet, so look through
+            # more than the first arg
+            if cls == Min:
+                for i in range(len(args)):
+                    if not args[i].is_number:
+                        break
+                    if (args[i] < small) == True:
+                        small = args[i]
+            elif cls == Max:
+                for i in range(len(args)):
+                    if not args[i].is_comparable:
+                        break
+                    if (args[i] > big) == True:
+                        big = args[i]
+            small = small if small != Min.identity else None
+            big = big if big != Max.identity else None
+            T = None
+            if cls == Min:
+                other = Max
+                T = small
+            else:
+                other = Min
+                T = big
+            if T is not None:
+                # remove numerical redundancy
+                for i in range(len(args)):
+                    a = args[i]
+                    if isinstance(a, other):
+                        a0 = a.args[0]
+                        if ((a0 > T) if other == Max else (a0 < T)) == True:
+                            args[i] = cls.identity
+
+        # remove redundant symbolic args
+        def do(ai, a):
+            if not isinstance(ai, (Min, Max)):
+                return ai
+            cond = a in ai.args
+            if not cond:
+                return ai.func(*[do(i, a) for i in ai.args],
+                    evaluate=False)
+            if isinstance(ai, cls):
+                return ai.func(*[do(i, a) for i in ai.args if i != a],
+                    evaluate=False)
+            return a
+        for i, a in enumerate(args):
+            args[i + 1:] = [do(ai, a) for ai in args[i + 1:]]
+
+        # rewrite Min(Max(x, y), Max(x, z)) as Max(x, Min(y, z))
+        # and vice versa when swapping Min/Max -- do this only for the
+        # easy case where all functions contain something in common;
+        # trying to find some optimal subset of args to modify takes
+        # too long
+        if len(args) > 1:
+            common = None
             remove = []
-            for a in self.args:
-                if isinstance(a, op):
-                    nested.append(a)
-                else:
-                    unnested.add(a)
-            N = len(nested) - 1
-            for i, n in enumerate(reversed(nested)):
-                if set(n.args) & unnested:
-                    nested.pop(N - i)
-            return cls(*(list(unnested) + nested))
+            sets = []
+            for i in range(len(args)):
+                a = args[i]
+                if not isinstance(a, other):
+                    continue
+                s = set(a.args)
+                common = s if common is None else (common & s)
+                if not common:
+                    break
+                sets.append(s)
+                remove.append(i)
+            else:
+                sets = [s - common for s in sets]
+                if sets and all(len(i) == 1 for i in sets):
+                    for i in reversed(remove):
+                        args.pop(i)
+                    oargs = [cls(*set.union(*sets))]
+                    oargs.extend(common)
+                    args.append(other(*oargs))
+
+        return args
 
     @classmethod
     def _new_args_filter(cls, arg_sequence):
@@ -404,7 +553,8 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if (not isinstance(arg, Expr)) or (arg.is_real is False) or (arg is S.ComplexInfinity):
+            if not isinstance(arg, Expr) or arg.is_real is False or (
+                    arg.is_number and not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:

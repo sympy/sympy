@@ -533,7 +533,7 @@ class Piecewise(Function):
                 cond = (x < b)
             else:
                 cond = (x <= b)
-            args.append((_mmsimp(sum), cond))
+            args.append((sum, cond))
         return Piecewise(*args)
 
     def _eval_interval(self, sym, a, b, _first=True):
@@ -598,7 +598,6 @@ class Piecewise(Function):
                 # apply simplification of Min/Max expressions which may
                 # respond differently now that some simplification may
                 # have occured given the ordering of lo and hi
-                rv = _mmsimp(rv)
                 if rv == Undefined:
                     raise ValueError("Can't integrate across undefined region.")
                 return rv
@@ -649,7 +648,7 @@ class Piecewise(Function):
         sum = S.Zero
         for a, b, i in done:
             sum += abei[i][-2]._eval_interval(x, a, b)
-        return _mmsimp(sum)
+        return sum
 
     def _intervals(self, sym):
         """Return a list of tuples, (a, b, e, i), where a and b
@@ -1018,61 +1017,24 @@ def _clip(A, B, k):
     interval (3, 4) was not covered by (1, 3) and is keyed to -1.
     """
     a, b = B
+    a, b = Min(a, b), b
     c, d = A
     c, d = Min(Max(c, a), b), Min(Max(d, a), b)
     p = []
     if a != c:
-        p.append((Min(a, b), c, -1))
+        p.append((a, c, -1))
     else:
         pass
     if c != d:
         p.append((c, d, k))
     else:
         pass
-    if d != b:
+    if b != d:
         if d == c and p and p[-1][-1] == -1:
             p[-1] = p[-1][0], b, -1
         else:
             p.append((d, b, -1))
     else:
         pass
-    rv = [tuple(map(_mmsimp, (a, b))) + (i,) for a, b, i in p]
-    return [(a, b, i) for a, b, i in rv if a != b]
 
-
-def _mmsimp(e):
-    # simplify min/max relationships
-    from sympy import simplify, Expr
-    from sympy.logic.boolalg import Boolean
-
-    def rw(m):
-        if isinstance(m, Min):
-            return simplify(And(*[rw(i) for i in m.args]))
-        elif isinstance(m, Max):
-            return simplify(Or(*[rw(i) for i in m.args]))
-        elif not m.is_Atom:
-            return m.func(*[rw(a) for a in m.args])
-        else:
-            return m
-
-    def wr(m):
-        if isinstance(m, And):
-            return Min(*[wr(i) for i in m.args])
-        elif isinstance(m, Or):
-            return Max(*[wr(i) for i in m.args])
-        elif not m.is_Atom:
-            return m.func(*[wr(a) for a in m.args])
-        else:
-            return m
-
-    # And and Or are going to be used to identify args that
-    # warrant simplification. We can't allow any non-Booleans
-    # into BooleanFunctions, so replace any non-Booleans with
-    # Dummy symbols
-    reps = []
-    for m in e.atoms(Min, Max):
-        nonBool = dict([(n, Dummy()) for n in m.atoms(Expr)
-            if not isinstance(n, (Boolean, Min, Max))])
-        reps.append((m, wr(rw(m.xreplace(nonBool))).xreplace(
-            dict([(v, k) for k, v in nonBool.items()]))))
-    return e.xreplace(dict(reps))
+    return p
