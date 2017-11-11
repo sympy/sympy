@@ -1506,3 +1506,28 @@ def test_custom_codegen():
     result = codegen(('expr', expr), header=False, empty=False, code_gen=gen)
     source = result[0][1]
     assert source == expected
+
+def test_c_with_printer():
+    #issue 13586
+    from sympy.printing.ccode import CCodePrinter
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
+    expected = [
+        ("file.c",
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test(double x, double y, double z) {\n"
+        "   double test_result;\n"
+        "   test_result = z*(x + y);\n"
+        "   return test_result;\n"
+        "}\n"),
+        ("file.h",
+        "#ifndef PROJECT__FILE__H\n"
+        "#define PROJECT__FILE__H\n"
+        "double test(double x, double y, double z);\n"
+        "#endif\n")
+    ]
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        result = codegen(("test", expr), "C","file", header=False, empty=False, printer = CCodePrinter())
+        assert result == expected
