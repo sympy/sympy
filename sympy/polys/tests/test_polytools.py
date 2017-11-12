@@ -3238,3 +3238,8 @@ def test_Poly_precision():
     # Make sure Poly doesn't lose precision
     p = Poly(pi.evalf(100)*x)
     assert p.as_expr() == pi.evalf(100)*x
+
+def test_issue_12400():
+    # Correction of check for negative exponents
+    assert poly(1/(1+sqrt(2)), x) == \
+            Poly(1/(1+sqrt(2)), x , domain='EX')
