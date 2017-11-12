@@ -694,6 +694,11 @@ class Ellipse(GeometrySet):
         >>> l1 = Line(p1, p2)
         >>> e1.is_tangent(l1)
         True
+        
+        References
+        ==========
+
+        [1] http://jwilson.coe.uga.edu/emt669/student.folders/banker.teresa/unitstdy/unitstdy.html
 
         """
         if isinstance(o, Point2D):
