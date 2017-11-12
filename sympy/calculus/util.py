@@ -166,7 +166,7 @@ def function_range(f, symbol, domain):
             solution = solveset(f.diff(symbol), symbol, interval)
 
             if isinstance(solution, ConditionSet):
-                raise NotImplementedError('Unable to find critical points for %s'.format(f))
+                raise NotImplementedError('Unable to find critical points for {}'.format(f))
 
             critical_points += solution
 
