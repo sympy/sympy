@@ -20,6 +20,7 @@ from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
 from sympy.solvers.solveset import solveset
+from sympy.utilities.misc import filldedent
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.abc import x
 
@@ -621,19 +622,32 @@ def probability(condition, given_condition=None, numsamples=None,
     given_condition = sympify(given_condition)
 
     if given_condition is not None and \
-            not isinstance(given_condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (given_condition))
+            not isinstance(given_condition, (Relational, Boolean, Expr)):
+        raise ValueError(filldedent('''
+            %s is not a relational, combination of
+            relationals, or an expression that can be equated to zero.
+            ''') % (given_condition))
+    if isinstance(given_condition, Expr) and not \
+            random_symbols(given_condition):
+        raise ValueError(filldedent('''
+            Expression containing Random Variable expected, not %s
+            ''') % (given_condition))
     if given_condition == False:
         return S.Zero
-    if not isinstance(condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (condition))
+    if not isinstance(condition, (Relational, Boolean, Expr)):
+        raise ValueError(filldedent('''
+            %s is not a relational, combination of relationals, or an
+            expression that can be equated to zero.
+            ''') % (condition))
     if condition is S.true:
         return S.One
     if condition is S.false:
         return S.Zero
-
+    if not isinstance(condition, Relational) and isinstance(condition, Expr):
+        condition = Eq(condition, S(0))
+    if not given_condition is None and isinstance(given_condition, Expr) \
+        and not isinstance(given_condition, Relational):
+        given_condition = Eq(given_condition, S(0))
     if numsamples:
         return sampling_P(condition, given_condition, numsamples=numsamples,
                 **kwargs)
