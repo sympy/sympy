@@ -227,3 +227,9 @@ def test_issue_8129():
     assert P(X >= X) == 1
     assert P(X > X) == 0
     assert P(X > X+1) == 0
+
+def test_issue_6700():
+    X = Die('X', 6)
+    assert P(X - 3) == S(1)/6
+    assert P(X - 4, X > 3) == S(1)/3
+    assert P(X**2 - 4) == S(1)/6
