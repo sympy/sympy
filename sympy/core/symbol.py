@@ -741,6 +741,34 @@ def var(names, **args):
     return syms
 
 def disambiguate_symbols(iter):
+    """
+    This provides a method to disambiguate symbols that print the same.
+
+    Parameters
+    ==========
+
+    iter: Iterables.
+        List, Tuple or Set
+
+    Returns
+    =======
+
+    A sympy Tuple object containing disambiguate symbols.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import disambiguate_symbols
+    >>> from sympy import Tuple, Dummy, Symbol
+
+    >>> tup = Tuple(Symbol('_x'), Dummy('x'), Dummy('x'))
+    >>> disambiguate_symbols(tup)
+    (_x, _x_1, _x_2)
+
+    >>> disambiguate_symbols([Dummy('x'), Dummy('x')])
+    (_x, _x_1)
+
+    """
     new_iter = iter
     if not isinstance(new_iter, Basic):
         new_iter=Tuple()
