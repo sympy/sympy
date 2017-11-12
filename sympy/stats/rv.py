@@ -643,10 +643,10 @@ def probability(condition, given_condition=None, numsamples=None,
         return S.One
     if condition is S.false:
         return S.Zero
-    if not isinstance(condition, Relational):
+    if not isinstance(condition, Relational) and isinstance(condition, Expr):
         condition = Eq(condition, S(0))
-    if not given_condition is None and \
-        not isinstance(given_condition, Relational):
+    if not given_condition is None and isinstance(given_condition, Expr) \
+        and not isinstance(given_condition, Relational):
         given_condition = Eq(given_condition, S(0))
     if numsamples:
         return sampling_P(condition, given_condition, numsamples=numsamples,
