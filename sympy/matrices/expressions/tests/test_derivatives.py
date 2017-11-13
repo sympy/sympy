@@ -60,9 +60,7 @@ def test_matrix_derivative_vectors_and_scalars():
 
     # Cookbook example 83:
     expr = (X*b + c).T*D*(X*b + c)
-    # TODO: parsing error
-    # assert expr._eval_derivative(X) == D*X*b*b.T + D*c*b.T + D.T*X*b*b.T + D.T*c*b.T
-    # otherwise: (D + D.T)*(X*b + c)*b.T
+    assert expr._eval_derivative(X) == D*(X*b + c)*b.T + D.T*(X*b + c)*b.T
 
 
 def test_matrix_derivative_with_inverse():

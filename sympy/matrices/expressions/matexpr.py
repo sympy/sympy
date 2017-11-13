@@ -218,13 +218,13 @@ class MatrixExpr(Basic):
 
         repl = {}
         if self.shape[0] == 1:
-            repl[i] = 1
+            repl[i] = 0
         if self.shape[1] == 1:
-            repl[j] = 1
+            repl[j] = 0
         if v.shape[0] == 1:
-            repl[m] = 1
+            repl[m] = 0
         if v.shape[1] == 1:
-            repl[n] = 1
+            repl[n] = 0
         res = M.diff(v[m, n])
         res = res.xreplace(repl)
         if res == 0:
@@ -432,12 +432,26 @@ class MatrixExpr(Basic):
         from sympy.strategies.traverse import bottom_up
 
         def remove_matelement(expr, i1, i2):
-            expr = expr.replace(lambda x: isinstance(x, MatrixElement) and
-                (x.args[1] == i1), # and x.args[2] == i2),
+
+            def repl_match(pos):
+                def func(x):
+                    if not isinstance(x, MatrixElement):
+                        return False
+                    if x.args[pos] != i1:
+                        return False
+                    if x.args[3-pos] == 0:
+                        if x.args[0].shape[2-pos] == 1:
+                            return True
+                        else:
+                            return False
+                    return True
+                return func
+
+            expr = expr.replace(repl_match(1),
                 lambda x: x.args[0])
-            expr = expr.replace(lambda x: isinstance(x, MatrixElement) and
-                (x.args[2] == i1),
+            expr = expr.replace(repl_match(2),
                 lambda x: transpose(x.args[0]))
+
             # Make sure that all Mul are transformed to MatMul and that they
             # are flattened:
             rule = bottom_up(lambda x: reduce(lambda a, b: a*b, x.args) if isinstance(x, (Mul, MatMul)) else x)
@@ -503,7 +517,7 @@ class MatrixExpr(Basic):
                             break
                         cur_ind_pos = next_ind_pos
                 ret_indices = list(j for i in lines for j in i)
-                lines = {k: MatMul.fromiter(v) if len(v) > 1 else v[0] for k, v in lines.items()}
+                lines = {k: MatMul.fromiter(v) if len(v) != 1 else v[0] for k, v in lines.items()}
                 return [(Mul.fromiter(nonmatargs), None)] + [
                     (MatrixElement(a, i, j), (i, j)) for (i, j), a in lines.items()
                 ]
