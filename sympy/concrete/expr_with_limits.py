@@ -312,7 +312,7 @@ class ExprWithLimits(Expr):
         ========
 
         variables : Lists the integration variables
-        transform : Perform mapping on the dummy variable for intgrals
+        transform : Perform mapping on the dummy variable for integrals
         change_index : Perform mapping on the sum and product dummy variables
 
         """
