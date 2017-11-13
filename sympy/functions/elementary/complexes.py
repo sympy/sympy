@@ -586,7 +586,7 @@ class Abs(Function):
 
 class arg(Function):
     """
-    Returns the argument (in radians) of a complex number. For a real
+    Returns the argument (in radians) of a complex number. For a positive
     number, the argument is always 0.
 
     Examples
