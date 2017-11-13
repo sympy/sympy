@@ -221,43 +221,16 @@ def test_piecewise_integrate1c():
             (y**2/2 + y - 1/2, y <= 0),
             (-y**2/2 + y - 1/2, y < 1),
             (0, True))
-        if i == 0:
-            assert gy1 == Piecewise(
-                (-Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
-                    Min(1, Max(0, y))**2 + 1/2, y < 1),
-                (0, True))
-            assert g1y == Piecewise(
-                (Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
-                    Min(1, Max(0, y))**2 - 1/2, y < 1),
-                (0, True))
-        else:
-            assert gy1 == Piecewise(
-                (-Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
-                    Min(1, Max(0, y))**2 + 1/2, y < 1),
-                (0, True))
-            assert g1y == Piecewise(
-                (Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
-                    Min(1, Max(0, y))**2 - 1/2, y < 1),
-                (0, True))
-        # the following are also possible:
-        #if i == 0:
-        #    assert gy1 == Piecewise(
-        #        (-Max(-1, y)**2/2 - Max(-1, y) +
-        #             Max(0, y)**2 + 1/2, y < 1),
-        #         (0, True))
-        #    assert g1y == Piecewise(
-        #        (Max(-1, y)**2/2 + Max(-1, y) -
-        #            Max(0, y)**2 - 1/2, y < 1),
-        #        (0, True))
-        #else:
-        #    assert gy1 == Piecewise(
-        #        (Max(0, y)**2 - Min(1, Max(-1, y))**2/2 -
-        #            Min(1, Max(-1, y)) + 1/2, y < 1),
-        #        (0, True))
-        #    assert g1y == Piecewise(
-        #        (-Max(0, y)**2 + Min(1, Max(-1, y))**2/2 +
-        #            Min(1, Max(-1, y)) - 1/2, y < 1),
-        #        (0, True))
+        # g1y and gy1 should simplify if the condition that y < 1
+        # is applied, e.g. Min(1, Max(-1, y)) --> Max(-1, y)
+        assert gy1 == Piecewise(
+            (-Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
+                Min(1, Max(0, y))**2 + 1/2, y < 1),
+            (0, True))
+        assert g1y == Piecewise(
+            (Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
+                Min(1, Max(0, y))**2 - 1/2, y < 1),
+            (0, True))
 
 
 def test_piecewise_integrate2():
