@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from functools import wraps
+from functools import wraps, reduce
 import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
@@ -200,7 +200,44 @@ class MatrixExpr(Basic):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
 
-    def _entry(self, i, j):
+    def _eval_derivative(self, v):
+        if not isinstance(v, MatrixExpr):
+            return None
+
+        # Convert to the index-summation notation, perform the derivative, then
+        # reconvert it back to matrix expression.
+        from sympy import symbols, Dummy, Lambda, Trace
+        i, j, m, n = symbols("i j m n", cls=Dummy)
+        M = self._entry(i, j, expand=False)
+
+        # Replace traces with summations:
+        def getsum(x):
+            di = Dummy("d_i")
+            return Sum(x.args[0], (di, 0, x.args[0].shape[0]-1))
+        M = M.replace(lambda x: isinstance(x, Trace), getsum)
+
+        repl = {}
+        if self.shape[0] == 1:
+            repl[i] = 0
+        if self.shape[1] == 1:
+            repl[j] = 0
+        if v.shape[0] == 1:
+            repl[m] = 0
+        if v.shape[1] == 1:
+            repl[n] = 0
+        res = M.diff(v[m, n])
+        res = res.xreplace(repl)
+        if res == 0:
+            return res
+        if len(repl) < 2:
+            return res
+        if m not in repl:
+            return MatrixExpr.from_index_summation(res, m)
+        if i not in repl:
+            return MatrixExpr.from_index_summation(res, i)
+        return MatrixExpr.from_index_summation(res)
+
+    def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
             "Indexing not implemented for %s" % self.__class__.__name__)
 
@@ -350,7 +387,7 @@ class MatrixExpr(Basic):
         return 1, MatMul(self)
 
     @staticmethod
-    def from_index_summation(expr, first_index=None):
+    def from_index_summation(expr, first_index=None, last_index=None):
         r"""
         Parse expression of matrices with explicitly summed indices into a
         matrix expression without indices, if possible.
@@ -391,70 +428,115 @@ class MatrixExpr(Basic):
         >>> MatrixExpr.from_index_summation(expr)
         A*B.T*A.T
         """
-        from sympy import Sum, Mul, MatMul, transpose, trace
+        from sympy import Sum, Mul, Add, MatMul, transpose, trace
+        from sympy.strategies.traverse import bottom_up
+
+        def remove_matelement(expr, i1, i2):
+
+            def repl_match(pos):
+                def func(x):
+                    if not isinstance(x, MatrixElement):
+                        return False
+                    if x.args[pos] != i1:
+                        return False
+                    if x.args[3-pos] == 0:
+                        if x.args[0].shape[2-pos] == 1:
+                            return True
+                        else:
+                            return False
+                    return True
+                return func
+
+            expr = expr.replace(repl_match(1),
+                lambda x: x.args[0])
+            expr = expr.replace(repl_match(2),
+                lambda x: transpose(x.args[0]))
+
+            # Make sure that all Mul are transformed to MatMul and that they
+            # are flattened:
+            rule = bottom_up(lambda x: reduce(lambda a, b: a*b, x.args) if isinstance(x, (Mul, MatMul)) else x)
+            return rule(expr)
 
         def recurse_expr(expr, index_ranges={}):
             if expr.is_Mul:
                 nonmatargs = []
-                matargs = []
                 pos_arg = []
                 pos_ind = []
                 dlinks = {}
                 link_ind = []
                 counter = 0
+                args_ind = []
                 for arg in expr.args:
-                    arg_symbol, arg_indices = recurse_expr(arg, index_ranges)
+                    retvals = recurse_expr(arg, index_ranges)
+                    assert isinstance(retvals, list)
+                    if isinstance(retvals, list):
+                        for i in retvals:
+                            args_ind.append(i)
+                    else:
+                        args_ind.append(retvals)
+                for arg_symbol, arg_indices in args_ind:
                     if arg_indices is None:
                         nonmatargs.append(arg_symbol)
                         continue
-                    i1, i2 = arg_indices
+                    if isinstance(arg_symbol, MatrixElement):
+                        arg_symbol = arg_symbol.args[0]
                     pos_arg.append(arg_symbol)
-                    pos_ind.append(i1)
-                    pos_ind.append(i2)
-                    link_ind.extend([None, None])
-                    if i1 in dlinks:
-                        other_i1 = dlinks[i1]
-                        link_ind[2*counter] = other_i1
-                        link_ind[other_i1] = 2*counter
-                    if i2 in dlinks:
-                        other_i2 = dlinks[i2]
-                        link_ind[2*counter + 1] = other_i2
-                        link_ind[other_i2] = 2*counter + 1
-                    dlinks[i1] = 2*counter
-                    dlinks[i2] = 2*counter + 1
+                    pos_ind.append(arg_indices)
+                    link_ind.append([None]*len(arg_indices))
+                    for i, ind in enumerate(arg_indices):
+                        if ind in dlinks:
+                            other_i = dlinks[ind]
+                            link_ind[counter][i] = other_i
+                            link_ind[other_i[0]][other_i[1]] = (counter, i)
+                        dlinks[ind] = (counter, i)
                     counter += 1
-                cur_ind_pos = link_ind.index(None)
-                first_index = pos_ind[cur_ind_pos]
-                while True:
-                    d = cur_ind_pos // 2
-                    r = cur_ind_pos % 2
-                    if r == 1:
-                        matargs.append(transpose(pos_arg[d]))
-                    else:
-                        matargs.append(pos_arg[d])
-                    next_ind_pos = link_ind[2*d + 1 - r]
-                    if next_ind_pos is None:
-                        last_index = pos_ind[2*d + 1 - r]
-                        break
-                    cur_ind_pos = next_ind_pos
-                return Mul.fromiter(nonmatargs)*MatMul.fromiter(matargs), (first_index, last_index)
+                counter2 = 0
+                lines = {}
+                while counter2 < len(link_ind):
+                    for i, e in enumerate(link_ind):
+                        if None in e:
+                            line_start_index = (i, e.index(None))
+                            break
+                    cur_ind_pos = line_start_index
+                    cur_line = []
+                    index1 = pos_ind[cur_ind_pos[0]][cur_ind_pos[1]]
+                    while True:
+                        d, r = cur_ind_pos
+                        if pos_arg[d] != 1:
+                            if r % 2 == 1:
+                                cur_line.append(transpose(pos_arg[d]))
+                            else:
+                                cur_line.append(pos_arg[d])
+                        next_ind_pos = link_ind[d][1-r]
+                        counter2 += 1
+                        # Mark as visited, there will be no `None` anymore:
+                        link_ind[d] = (-1, -1)
+                        if next_ind_pos is None:
+                            index2 = pos_ind[d][1-r]
+                            lines[(index1, index2)] = cur_line
+                            break
+                        cur_ind_pos = next_ind_pos
+                ret_indices = list(j for i in lines for j in i)
+                lines = {k: MatMul.fromiter(v) if len(v) != 1 else v[0] for k, v in lines.items()}
+                return [(Mul.fromiter(nonmatargs), None)] + [
+                    (MatrixElement(a, i, j), (i, j)) for (i, j), a in lines.items()
+                ]
             elif expr.is_Add:
                 res = [recurse_expr(i) for i in expr.args]
-                res = [
-                    ((transpose(i), (j[1], j[0]))
-                        if default_sort_key(j[0]) > default_sort_key(j[1])
-                    else (i, j))
-                    for (i, j) in res
-                ]
-                addends, last_indices = zip(*res)
-                last_indices = list(set(last_indices))
-                if len(last_indices) > 1:
-                    print(last_indices)
-                    raise ValueError("incompatible summation")
-                return MatAdd.fromiter(addends), last_indices[0]
+                d = collections.defaultdict(list)
+                for res_addend in res:
+                    scalar = 1
+                    for elem, indices in res_addend:
+                        if indices is None:
+                            scalar = elem
+                            continue
+                        indices = tuple(sorted(indices, key=default_sort_key))
+                        d[indices].append(scalar*remove_matelement(elem, *indices))
+                        scalar = 1
+                return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
             elif isinstance(expr, KroneckerDelta):
                 i1, i2 = expr.args
-                return S.One, (i1, i2)
+                return [(MatrixElement(S.One, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
                 if i1 in index_ranges:
@@ -468,25 +550,29 @@ class MatrixExpr(Basic):
                         raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
                             (r1, r2), matrix_symbol.shape[1]))
                 if (i1 == i2) and (i1 in index_ranges):
-                    return trace(matrix_symbol), None
-                return matrix_symbol, (i1, i2)
+                    return [(trace(matrix_symbol), None)]
+                return [(MatrixElement(matrix_symbol, i1, i2), (i1, i2))]
             elif isinstance(expr, Sum):
                 return recurse_expr(
                     expr.args[0],
                     index_ranges={i[0]: i[1:] for i in expr.args[1:]}
                 )
             else:
-                return expr, None
+                return [(expr, None)]
 
-        parsed, irange = recurse_expr(expr)
-        if irange is None or first_index is None:
-            return parsed
-        i1, i2 = irange
-        if i1 == first_index:
-            return parsed
-        if i2 == first_index:
-            return transpose(parsed)
-        raise ValueError("no such index")
+        retvals = recurse_expr(expr)
+        factors, indices = zip(*retvals)
+        retexpr = Mul.fromiter(factors)
+        if len(indices) == 0 or list(set(indices)) == [None]:
+            return retexpr
+        if first_index is None:
+            for i in indices:
+                if i is not None:
+                    ind0 = i
+                    break
+            return remove_matelement(retexpr, *ind0)
+        else:
+            return remove_matelement(retexpr, first_index, last_index)
 
 
 class MatrixElement(Expr):
@@ -516,16 +602,30 @@ class MatrixElement(Expr):
         return args[0][args[1], args[2]]
 
     def _eval_derivative(self, v):
+        from sympy import Sum, symbols, Dummy
+
         if not isinstance(v, MatrixElement):
             from sympy import MatrixBase
             if isinstance(self.parent, MatrixBase):
                 return self.parent.diff(v)[self.i, self.j]
             return S.Zero
 
-        if self.args[0] != v.args[0]:
-            return S.Zero
+        M = self.args[0]
 
-        return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
+        if M == v.args[0]:
+            return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
+
+        if isinstance(M, Inverse):
+            i, j = self.args[1:]
+            i1, i2 = symbols("z1, z2", cls=Dummy)
+            Y = M.args[0]
+            r1, r2 = Y.shape
+            return -Sum(M[i, i1]*Y[i1, i2].diff(v)*M[i2, j], (i1, 0, r1-1), (i2, 0, r2-1))
+
+        if self.has(v.args[0]):
+            return None
+
+        return S.Zero
 
 
 class MatrixSymbol(MatrixExpr):
@@ -543,6 +643,7 @@ class MatrixSymbol(MatrixExpr):
     I + 2*A*B
     """
     is_commutative = False
+    _diff_wrt = True
 
     def __new__(cls, name, n, m):
         n, m = sympify(n), sympify(m)
@@ -568,7 +669,7 @@ class MatrixSymbol(MatrixExpr):
     def __call__(self, *args):
         raise TypeError( "%s object is not callable" % self.__class__ )
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return MatrixElement(self, i, j)
 
     @property
@@ -624,7 +725,7 @@ class Identity(MatrixExpr):
     def conjugate(self):
         return self
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         eq = Eq(i, j)
         if eq is S.true:
             return S.One
@@ -680,7 +781,7 @@ class ZeroMatrix(MatrixExpr):
     def conjugate(self):
         return self
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return S.Zero
 
     def __nonzero__(self):
