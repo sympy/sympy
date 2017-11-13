@@ -379,7 +379,7 @@ def test_issue_12638():
 
 
 def test_instantiation_evaluation():
-    from sympy.abc import w, x, y, z
+    from sympy.abc import v, w, x, y, z
     assert Min(1, Max(2, x)) == 1
     assert Max(3, Min(2, x)) == 3
     assert Min(Max(x, y), Max(x, z)) == Max(x, Min(y, z))
@@ -392,3 +392,5 @@ def test_instantiation_evaluation():
         assert A(x, B(x, y)) == x
         assert A(x, B(y, A(x, w, z))) == A(x, B(y, A(w, z)))
         A, B = B, A
+    assert Min(w, Max(x, y), Max(v, x, z)) == Min(
+        w, Max(x, Min(y, Max(v, z))))

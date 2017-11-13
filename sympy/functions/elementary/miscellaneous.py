@@ -475,7 +475,8 @@ class MinMaxBase(Expr, LatticeOp):
         for i, a in enumerate(args):
             args[i + 1:] = [do(ai, a) for ai in args[i + 1:]]
 
-        # rewrite Min(Max(x, y), Max(x, z)) as Max(x, Min(y, z))
+        # factor out common elements as for
+        # Min(Max(x, y), Max(x, z)) -> Max(x, Min(y, z))
         # and vice versa when swapping Min/Max -- do this only for the
         # easy case where all functions contain something in common;
         # trying to find some optimal subset of args to modify takes
@@ -494,14 +495,14 @@ class MinMaxBase(Expr, LatticeOp):
                     break
                 sets.append(s)
                 remove.append(i)
-            else:
-                sets = [s - common for s in sets]
-                if sets and all(len(i) == 1 for i in sets):
-                    for i in reversed(remove):
-                        args.pop(i)
-                    oargs = [cls(*set.union(*sets))]
-                    oargs.extend(common)
-                    args.append(other(*oargs))
+            if common:
+                sets = filter(None, [s - common for s in sets])
+                sets = [other(*s, evaluate=False) for s in sets]
+                for i in reversed(remove):
+                    args.pop(i)
+                oargs = [cls(*sets)] if sets else []
+                oargs.extend(common)
+                args.append(other(*oargs, evaluate=False))
 
         return args
 
