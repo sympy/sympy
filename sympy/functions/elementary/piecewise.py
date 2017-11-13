@@ -1023,9 +1023,9 @@ def _clip(A, B, k):
     interval (3, 4) was not covered by (1, 3) and is keyed to -1.
     """
     a, b = B
-    a, b = Min(a, b), b
     c, d = A
     c, d = Min(Max(c, a), b), Min(Max(d, a), b)
+    a, b = Min(a, b), b
     p = []
     if a != c:
         p.append((a, c, -1))
