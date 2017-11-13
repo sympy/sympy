@@ -376,3 +376,19 @@ def test_issue_12638():
     assert Min(a, b, c, Max(a, b)) == Min(a, b, c)
     assert Min(a, b, Max(a, b, c)) == Min(a, b)
     assert Min(a, b, Max(a, c)) == Min(a, b)
+
+
+def test_instantiation_evaluation():
+    from sympy.abc import w, x, y, z
+    assert Min(1, Max(2, x)) == 1
+    assert Max(3, Min(2, x)) == 3
+    assert Min(Max(x, y), Max(x, z)) == Max(x, Min(y, z))
+    assert set(Min(Max(w, x), Max(y, z)).args) == set(
+        [Max(w, x), Max(y, z)])
+    assert Min(Max(x, y), Max(x, z), w) == Min(
+        w, Max(x, Min(y, z)))
+    A, B = Min, Max
+    for i in range(2):
+        assert A(x, B(x, y)) == x
+        assert A(x, B(y, A(x, w, z))) == A(x, B(y, A(w, z)))
+        A, B = B, A

@@ -348,61 +348,24 @@ class MinMaxBase(Expr, LatticeOp):
         except ShortCircuit:
             return cls.zero
 
-        evaluate = assumptions.pop('evaluate', True)
-        check = assumptions.pop('check', True)
-        if evaluate:
-            uargs = set(args)
-            # second filter
-            # variant II: remove redundant args that are easily identified
+        if assumptions.pop('evaluate', True):
+            # remove redundant args that are easily identified
             args = cls._collapse_arguments(args, **assumptions)
 
-        # variant I: find local zeros
+        # find local zeros
         args = cls._find_localzeros(args, **assumptions)
 
         if not args:
-            rv = cls.identity
-        elif len(args) == 1:
-            rv = list(args).pop()
-        else:
-            # base creation
-            # XXX should _args be made canonical with sorting?
-            _args = frozenset(args)
-            obj = Expr.__new__(cls, _args, **assumptions)
-            obj._argset = _args
-            rv = obj
+            return cls.identity
 
-        if evaluate and check and uargs:
-            # check the result against the unevaluate result
-            u = cls(*uargs, evaluate=False)
-            free = u.free_symbols
-            from sympy.core.relational import Eq
-            from sympy.core.numbers import Number
-            from itertools import permutations
-            eq = Eq(u, rv)
-            n = u.atoms(Number)
-            if 1 or not n:
-                for i in permutations(range(len(free))):
-                    reps = dict(zip(free, i))
-                    if eq.xreplace(reps) != True:
-                        print('logic error')
-                        print('unevaluated',u, u.xreplace(reps))
-                        print('evaluated', rv, rv.xreplace(reps))
-                        print(reps)
-                        print('-'*22)
-                        break
-            else:
-                from random import randint
-                for i in range(100):
-                    reps = dict(zip(free, [
-                        randint(min(n) -1, max(n)+2)
-                        for i in range(len(free))]))
-                    if eq.xreplace(reps) != True:
-                        print('logic error')
-                        print('unevaluated',u,u.xreplace(reps))
-                        print('evaluated', rv,rv.xreplace(reps))
-                        print('-'*22)
-                        break
-        return rv
+        if len(args) == 1:
+            return list(args).pop()
+
+        # base creation
+        _args = frozenset(args)
+        obj = Expr.__new__(cls, _args, **assumptions)
+        obj._argset = _args
+        return obj
 
     @classmethod
     def _collapse_arguments(cls, args, **assumptions):
