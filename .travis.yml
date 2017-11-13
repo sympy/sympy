@@ -284,7 +284,7 @@ script:
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         cp bin/changelog.py ~/changelog.py;
         chmod +x ~/changelog.py;
-        doctr deploy . --built-docs . --key-env CHANGELOG_DEPLOY_KEY --key-path changelog_deploy_key.enc --deploy-repo sympy/sympy.wiki --no-sync --command '~/changelog.py';
+        doctr deploy . --built-docs . --deploy-repo sympy/sympy.wiki --no-sync --command '~/changelog.py';
     fi
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
