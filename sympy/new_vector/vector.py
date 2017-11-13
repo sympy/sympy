@@ -2,16 +2,9 @@
 import sympy
 
 """
-
 This module assumes you know your way around linear algebra and python.
 It will _not: warn you that something you're doing might not be what
-you want to do. It'll rather do it and fail.
-
-
-Also, since sympy already has a linear algebra module, this 
-shouldn't really be here. It would be preferable if the lin alg module
-could do what this module does.
-
+you want to do. It'll rather do it and fail gracefull.
 
 """
 
@@ -23,7 +16,7 @@ def curl(vectorfield,base_symbols=basic_xyz()):
     Takes a vectorfield and the base symbols to be differentiated with.
     If no base is provided, sympy symbols x,y,z are assumed.
     """
-    #if base_symbols==None:
+    
     x,y,z=base_symbols
     
     val1=sympy.diff(vectorfield[2],y)-sympy.diff(vectorfield[1],z)
@@ -35,10 +28,12 @@ def curl(vectorfield,base_symbols=basic_xyz()):
 
 def divergence(vec,base_symbols=basic_xyz()):
     """returns the sum of the components of the gradient vector"""
+    
     gradv=gradient(vec,base_symbols)
     s=0
     for val in gradv:
         s+=val
+        
     return s        
 
 def gradient(expr,base_symbols=basic_xyz()):
@@ -86,8 +81,6 @@ class Matrix:
             j=0
             new_values=[]
             while i < 3:
-                #extract scalars, since it's changing
-                #dimensions
                 s=0
                 while j < 3:
                     
@@ -109,21 +102,13 @@ class Vector:
     
     def __init__(self,x,y,z):
         """
-        assumes you are providing symbols,
-        if no symbols are defined, it will default to 
-        x,y,z=sympy.symbols("x y z")
+        Works basically like a list or a tuple, except it supports
+        common vector funtions.
         """
         
-        #x_sym,y_sym,z_sym=1,1,1
-        #x,y,z=[sympy.sympify(val) for val in [x,y,z]]
-        #if (x.free_symbols == set() or 
-            #y.free_symbols == set() or
-            #z.free_symbols == set()   ):
-            #x_sym,y_sym,z_sym=sympy.symbols("x y z")
-        
-        self.x = x #* x_sym
-        self.y = y #* y_sym
-        self.z = z #* z_sym
+        self.x = x 
+        self.y = y 
+        self.z = z 
 
     def subs(self,d=None):
         n_exprs=[]
@@ -144,14 +129,6 @@ class Vector:
         s=str(s)
         return s
         
-    def __truediv__(self,quotient):
-        
-        l=[i/quotient for i in self]
-        
-        #print(l)
-        
-        return vector3d(*l)
-        
     def __getitem__(self,ind):
         if ind==0:
             return self.x
@@ -170,16 +147,20 @@ class Vector:
             yield self[c]
             c+=1
     
+    def __rtruediv__(self,quotient):
+        raise TypeError("You can't devide through a vector") 
+    
+    def __truediv__(self,quotient):
+        l=[i/quotient for i in self]        
+        return Vector(*l)
+    
     def __rmul__(self,other):
-        #print(self,other)
         return self*other
     
     def __mul__(self,other):
         """intended for multiplication of the vector with a scalar"""
         if isinstance(other,Vector):
             raise TypeError("use dot product instead")
-        
-        #differentiate between a regular number and a vector
         
         new_vals=[]
         for val in self:
@@ -218,7 +199,7 @@ class Vector:
         https://en.wikipedia.org/wiki/Dyadic_tensor
         the function assumes the vectors are already in the appropriate base.
         
-        Returns a matrix
+        returns a matrix
         """
         
         vectors=[]
@@ -238,12 +219,11 @@ class Vector:
         v=self
         l=(v[0]**2+v[1]**2+v[2]**2)**0.5
         return l
-        
+
     def normalize(self):
         v=self
         l=self.length()
         return Vector(v[0]/l,v[1]/l,v[2]/l)
-    
 
 def tests():
     v1=Vector(1,0,0)
@@ -262,6 +242,11 @@ def tests():
     
     neg_test(v1)
     mul_test(v1)
+    
+    
+    
+    quo_test(v1)
+    
     #sym_test(v1)
     
     newbasis=Matrix(v1,v3,v2)
@@ -309,6 +294,19 @@ def sym_test(v1):
 def neg_test(v1):
     v=-v1
     print("neg",v)
+    
+def quo_test(v1):
+    
+    r=v1/2
+    print("div2",r)
+    try:
+        r=1/v1
+        print("div",r)
+    except TypeError:
+        pass
+    
+    
+
 def mul_test(v1):
     v1=5*v1
     print("mul",v1)
