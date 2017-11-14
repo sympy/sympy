@@ -1,6 +1,6 @@
 import collections
 from sympy.core.evaluate import global_evaluate
-from sympy import Expr, S, Mul
+from sympy import Expr, S, Mul, sympify
 
 
 class TensorProduct(Expr):
@@ -14,6 +14,7 @@ class TensorProduct(Expr):
         from sympy import MatrixBase, MatrixExpr
         from sympy.strategies import flatten
 
+        args = [sympify(arg) for arg in args]
         evaluate = kwargs.get("evaluate", global_evaluate[0])
 
         if not evaluate:
