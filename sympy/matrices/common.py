@@ -1881,6 +1881,10 @@ class MatrixOperations(MatrixRequired):
 
     _eval_simplify = simplify
 
+    def _eval_trigsimp(self, **opts):
+        from sympy.simplify import trigsimp
+        return self.applyfunc(lambda x: trigsimp(x, **opts))
+
 
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.

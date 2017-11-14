@@ -30,7 +30,7 @@ def _sympifyit(arg, retval=None):
     return deco
 
 
-class MatrixExpr(Basic):
+class MatrixExpr(Expr):
     """ Superclass for Matrix Expressions
 
     MatrixExprs represent abstract matrices, linear transformations represented
@@ -70,7 +70,8 @@ class MatrixExpr(Basic):
     is_MatMul = False
 
     is_commutative = False
-
+    is_number = False
+    is_symbol = True
 
     def __new__(cls, *args, **kwargs):
         args = map(sympify, args)
