@@ -11,7 +11,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
-from sympy.matrices.immutable.ImmutableDenseMatrix
+from sympy.matrices.immutable import ImmutableDenseMatrix
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
