@@ -778,6 +778,8 @@ class AppliedUndef(Function):
     function.
     """
 
+    is_number = False
+
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
         obj = super(AppliedUndef, cls).__new__(cls, *args, **options)

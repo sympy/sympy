@@ -600,12 +600,13 @@ class Basic(with_metaclass(ManagedProperties)):
         is_real = self.is_real
         if is_real is False:
             return False
-        is_number = self.is_number
-        if is_number is False:
+        if not self.is_number:
             return False
+        # don't re-eval numbers that are already evaluated since
+        # this will create spurious precision
         n, i = [p.evalf(2) if not p.is_Number else p
             for p in self.as_real_imag()]
-        if not i.is_Number or not n.is_Number:
+        if not (i.is_Number and n.is_Number):
             return False
         if i:
             # if _prec = 1 we can't decide and if not,
