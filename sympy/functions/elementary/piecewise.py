@@ -575,8 +575,8 @@ class Piecewise(Function):
             else:
                 _a = Dummy('lo')
                 _b = Dummy('hi')
-                a = a if a.is_comparable else _a
-                b = b if b.is_comparable else _b
+                a = lo if lo.is_comparable else _a
+                b = hi if hi.is_comparable else _b
                 pos = self._eval_interval(x, a, b, _first=False)
                 if a == _a and b == _b:
                     # it's purely symbolic so just swap lo and hi and
@@ -589,6 +589,7 @@ class Piecewise(Function):
                     # the interval with lo and hi reversed
                     neg, pos = (-self._eval_interval(x, hi, lo, _first=False),
                         pos.xreplace({_a: lo, _b: hi}))
+
                 # allow simplification based on ordering of lo and hi
                 p = Dummy('', positive=True)
                 if lo.is_Symbol:
@@ -597,8 +598,11 @@ class Piecewise(Function):
                 elif hi.is_Symbol:
                     pos = pos.xreplace({hi: lo + p}).xreplace({p: hi - lo})
                     neg = neg.xreplace({hi: lo - p}).xreplace({p: lo - hi})
-                # assemble return expression
-                if a == _a:
+
+                # assemble return expression; make the first condition be Lt
+                # b/c then the first expression will look the same whether
+                # the lo or hi limit is symbolic
+                if a == _a:  # the lower limit was symbolic
                     rv = Piecewise(
                         (pos,
                             lo < hi),
@@ -611,9 +615,6 @@ class Piecewise(Function):
                         (pos,
                             True))
 
-                # apply simplification of Min/Max expressions which may
-                # respond differently now that some simplification may
-                # have occured given the ordering of lo and hi
                 if rv == Undefined:
                     raise ValueError("Can't integrate across undefined region.")
                 return rv
