@@ -11,6 +11,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
+from sympy.matrices.immutable.ImmutableDenseMatrix
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -414,8 +415,9 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     >>> find_dynamicsymbols(expr, [x, y])
     {Derivative(x(t), t)}
 
-    Optional Parameter
-    ------------------
+    Parameters
+    ==========
+
     reference_frame : ReferenceFrame
         The frame with respect to which the dynamic symbols of the
         given vector is to be determined.
@@ -425,7 +427,8 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     with respect to which the dynamic symbols of the given vector is to be
     determined.
 
-    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols, ReferenceFrame
+    >>> from sympy.physics.mechanics import (dynamicsymbols, find_dynamicsymbols,
+                                             ReferenceFrame)
     >>> a, b, c = dynamicsymbols('a, b, c')
     >>> A = ReferenceFrame('A')
     >>> v = a * A.x + b * A.y + c * A.z
@@ -441,13 +444,16 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
-    if reference_frame==None:
+    if reference_frame is None and isinstance(expression, ImmutableDenseMatrix):
         return set([i for i in expression.atoms(AppliedUndef, Derivative) if
                 i.free_symbols == t_set]) - exclude_set
-    else:
-        expr=expression.to_matrix(reference_frame)
-        return set([i for i in expr.atoms(AppliedUndef, Derivative) if
-                i.free_symbols == t_set]) - exclude_set
+    try:
+        if isinstance(expression, Vector):
+            expr=expression.to_matrix(reference_frame)
+            return set([i for i in expr.atoms(AppliedUndef, Derivative) if
+                    i.free_symbols == t_set]) - exclude_set
+    except TypeError:
+        print(" function missing one required argument of type ReferenceFrame ")
 
 
 def msubs(expr, *sub_dicts, **kwargs):
