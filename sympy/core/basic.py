@@ -119,8 +119,9 @@ class Basic(with_metaclass(ManagedProperties)):
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
-        h = self._mhash
-        if h is None:
+        try:
+            h = self._mhash
+        except AttributeError:
             h = hash((type(self).__name__,) + self._hashable_content())
             self._mhash = h
         return h
