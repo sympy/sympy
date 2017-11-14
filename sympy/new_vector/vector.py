@@ -42,10 +42,9 @@ def gradient(expr,base_symbols=basic_xyz()):
     (1,1,1) for f(x,y,z)=x+y+z
     (yz,xz,xy) for f(x,y,z)=x*y*z
     """
-    x,y,z=base_symbols
     
     n_exprs=[]
-    for s in [x,y,z]:
+    for s in base_symbols:
         n_expr=sympy.diff(expr,s)
         n_exprs.append(n_expr)
     return Vector(*n_exprs)
