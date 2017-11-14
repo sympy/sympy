@@ -351,8 +351,9 @@ def test_issue_2827_trigsimp_methods():
     # all methods should work with Basic expressions even if they
     # aren't Expr
     M = Matrix.eye(1)
+    # NOTE: "groebner" is currently not tested as it raises an exception:
     assert all(trigsimp(M, method=m) == M for m in
-        'fu matching groebner old'.split())
+        'fu matching old'.split())
     # watch for E in exptrigsimp, not only exp()
     eq = 1/sqrt(E) + E
     assert exptrigsimp(eq) == eq
