@@ -12,6 +12,7 @@ import functools
 from sympy import Tuple, S #, diff
 from sympy.core.containers import Basic
 
+from sympy import symbols
 
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import SYMPY_INTS
@@ -32,13 +33,21 @@ from sympy.matrices import Matrix
 
 #OLD N DIM ARRAY
 
+
+def deprecation_warning(ob):
+    print(str(ob)+" is a deprecated class, please check the documentation and update your code")
+
+
 class NDimArray:
     """
     An n-dimensional Array.
     """
     
     default_assumptions="Jack"
-    
+    _mhash=None
+    def _hashable_content(self):
+        return ("A",)
+        
     def __setitem__(self, index, value):
         if self.immutable:
             raise TypeError('immutable N-dim array')
@@ -77,13 +86,13 @@ class NDimArray:
         start, stop, step = s.indices(dim)
         return [start + i*step for i in range((stop-start)//step)]
     
+    
     def __getitem__(self, index):
         """
         Allows to get items from N-dim array.
         """
         
         if self.sparse:
-            
             syindex = self._check_symbolic_index(index)
             if syindex is not None:
                 return syindex
@@ -91,13 +100,7 @@ class NDimArray:
             # `index` is a tuple with one or more slices:
             if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
 
-                def slice_expand(s, dim):
-                    if not isinstance(s, slice):
-                            return (s,)
-                    start, stop, step = s.indices(dim)
-                    return [start + i*step for i in range((stop-start)//step)]
-
-                sl_factors = [slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
+                sl_factors = [self.slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
                 eindices = itertools.product(*sl_factors)
                 array = [self._sparse_array.get(self._parse_index(i), S.Zero) for i in eindices]
                 nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
@@ -125,18 +128,55 @@ class NDimArray:
                 nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
                 return type(self)(array, nshape)
             else:
+                
                 if isinstance(index, slice):
                     return self._array[index]
+                    
                 else:
                     index = self._parse_index(index)
                     return self._array[index]
 
     
-    def __init__(self, iterable,*args,sparse=False,immutable=False, **kwargs):
-        
+    def __init__(self,iterable,shape=(),sparse=False,immutable=False, **kwargs):
+        #assume dense and mutable
         self.sparse=sparse
         self.immutable=immutable
-        self.common_new(iterable,*args,**kwargs)
+        print(sparse,immutable)
+        #ImmutableDenseNDimArray
+        shape, flat_list = self.handle_ndarray_creation_inputs(iterable, shape, **kwargs)
+        
+        
+        shape = Tuple(*map(_sympify, shape))
+        flat_list = flatten(flat_list)
+        flat_list = Tuple(*flat_list)
+        
+        
+        #this is for dense
+        if not self.sparse==True:
+            #wtf???
+            #self = Basic.__new__(type(self), flat_list, shape, **kwargs)
+            self._array = list(flat_list)
+            #this can't be appropriate?, surely?
+        
+        
+        if self.sparse:
+            if isinstance(flat_list, dict):
+                sparse_array = dict(flat_list)
+                #hmmmm
+            else:
+                sparse_array = {}
+                for i, el in enumerate(flatten(flat_list)):
+                    if el != 0:
+                        sparse_array[i] = _sympify(el)
+
+            sparse_array = dict(sparse_array)
+
+            self._sparse_array = sparse_array
+            
+        self._shape = shape
+        self._rank = len(shape)
+        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
+
         
 
     def _parse_index(self, index):
@@ -182,14 +222,15 @@ class NDimArray:
         if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
-    @classmethod
-    def _scan_iterable_shape(cls, iterable):
+
+    def scan_iterable_shape(self,iterable):
         #replace pointer with iterable
         if not isinstance(iterable, collections.Iterable):
             return [iterable], ()
 
         result = []
-        elems, shapes = zip(*[f(i) for i in iterable])
+        
+        elems, shapes = zip(*[self.scan_iterable_shape(i) for i in iterable])
         if len(set(shapes)) != 1:
             raise ValueError("could not determine shape unambiguously")
         for i in elems:
@@ -197,10 +238,8 @@ class NDimArray:
         return result, (len(shapes),)+shapes[0]
 
 
-    @classmethod
-    def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
+    def handle_ndarray_creation_inputs(self,iterable=None, shape=None, **kwargs):
         
-
         if shape is None and iterable is None:
             shape = ()
             iterable = ()
@@ -210,7 +249,9 @@ class NDimArray:
             iterable = list(iterable)
         # Construct N-dim array from an iterable (numpy arrays included):
         elif shape is None and isinstance(iterable, collections.Iterable):
-            iterable, shape = cls._scan_iterable_shape(iterable)
+            print(iterable)
+            print(type(iterable))
+            iterable, shape = self.scan_iterable_shape(iterable)
 
         # Construct N-dim array from a Matrix:
         elif shape is None and isinstance(iterable, MatrixBase):
@@ -224,13 +265,12 @@ class NDimArray:
         elif shape is not None:
             pass
 
-        else:
-            shape = ()
-            iterable = (iterable,)
-
+        #else:
+        #    shape = ()
+        #    iterable = (iterable,)
+        
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
-
         if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
             raise TypeError("Shape should contain integers only.")
 
@@ -241,7 +281,13 @@ class NDimArray:
         return Basic.__hash__(self)
     
     def __iter__(self):
-        return self._array.__iter__()
+        #if self.sparse:
+        #    return self._array.__iter__()
+        #else:
+        #    return self._array.__iter__()
+            
+        for i in range(self._loop_size):
+            yield self[i]
 
     def __len__(self):
         """
@@ -275,7 +321,8 @@ class NDimArray:
         Returns rank of array.
         """
         return self._rank
-
+        
+    
     def diff(self, *args):
         """
         Calculate the derivative of each element in the array.
@@ -287,19 +334,20 @@ class NDimArray:
         Apply a function to each element of the N-dim array.
         """
         return type(self)(map(f, self), self.shape)
+    def recursive_string(self,sh,shape_left,i,j):
+        if len(shape_left) == 1:
+            return "["+", ".join([str(self[e]) for e in range(i, j)])+"]"
+
+        sh //= shape_left[0]
+        return "[" + ", ".join([self.recursive_string(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
 
     def __str__(self):
         """
         Returns string, allows to use standard functions print() and str().
         """
-        def f(sh, shape_left, i, j):
-            if len(shape_left) == 1:
-                return "["+", ".join([str(self[e]) for e in range(i, j)])+"]"
-
-            sh //= shape_left[0]
-            return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
-
-        return f(self._loop_size, self.shape, 0, self._loop_size)
+        
+        r=self.recursive_string(self._loop_size, self.shape, 0, self._loop_size)
+        return r
 
     def __repr__(self):
         return self.__str__()
@@ -318,10 +366,16 @@ class NDimArray:
         """
         Conveting MutableDenseNDimArray to one-dim list
         """
-        if len(self.shape) == 1:
-            return [self[e] for e in range(i, j)]
-        else:
-            return self.recursive_list_conversion(self._loop_size, self.shape, 0, self._loop_size)
+        l=[]
+        for i in self:
+            l.append(i)
+        return l
+        
+        
+        #if len(self.shape) == 1:
+            #return [self[e] for e in range(i, j)]
+        #else:
+            #return self.recursive_list_conversion(self._loop_size, self.shape, 0, self._loop_size)
 
     def recursive_list_conversion(self,sh,shape_left,i,j):
         result = []
@@ -412,40 +466,11 @@ class NDimArray:
         return self._eval_transpose()
 
     def _eval_conjugate(self):
-        return self.func([i.conjugate() for i in self], self.shape)
+        return type(self)([i.conjugate() for i in self], self.shape)
 
 
     def common_new(self,iterable,shape,*args,**kwargs):
-        #ImmutableDenseNDimArray
-        shape, flat_list = self._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
-        shape = Tuple(*map(_sympify, shape))
-        flat_list = flatten(flat_list)
-        flat_list = Tuple(*flat_list)
-        
-        #this is for dense
-        if not self.sparse==True:
-            #wtf???
-            #self = Basic.__new__(type(self), flat_list, shape, **kwargs)
-            self._array = list(flat_list)
-        
-        if self.sparse:
-            if isinstance(flat_list, dict):
-                sparse_array = dict(flat_list)
-                #hmmmm
-            else:
-                sparse_array = {}
-                for i, el in enumerate(flatten(flat_list)):
-                    if el != 0:
-                        sparse_array[i] = _sympify(el)
-
-            sparse_array = dict(sparse_array)
-
-            self._sparse_array = sparse_array
-            
-        self._shape = shape
-        self._rank = len(shape)
-        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
-
+        a=1
         
         
     def conjugate(self):
@@ -457,10 +482,12 @@ class NDimArray:
     def adjoint(self):
         return self._eval_adjoint()
         
-    @classmethod
-    def zeros(cls, *shape):
+    #@classmethod
+    def zeros(self, *shape):
         list_length = functools.reduce(lambda x, y: x*y, shape)
-        return cls._new(([0]*list_length,), shape)
+        the_zeros=[0]*list_length
+        r=NDimArray(the_zeros, shape)
+        return r
 
 class ImmutableNDimArray(NDimArray):
     _op_priority = 11.0
@@ -475,28 +502,33 @@ def _arrayfy(a):
         return ImmutableDenseNDimArray(a)
     return a
 
-
-def tensorproduct(*args):
+def tensorproduct(a,b):
     """
     Tensor product among scalars or array-like objects.
     """
-    if len(args) == 0:
-        return S.One
-    if len(args) == 1:
-        return _arrayfy(args[0])
-    if len(args) > 2:
-        return tensorproduct(tensorproduct(args[0], args[1]), *args[2:])
+    
+    
+    #what the fuck...
+    
+    #if len(args) == 0:
+        #return S.One
+    #if len(args) == 1:
+        #return NDimArray(args[0])
+    #if len(args) == 2:
+        #print(args)
+        #NDimArray(*args)
+    #if len(args) > 2:
+        #return tensorproduct(tensorproduct(args[0], args[1]), *args[2:])
+    #if not isinstance(a, NDimArray) or not isinstance(b, NDimArray):
+        #return a*b
 
-    # length of args is 2:
-    a, b = map(_arrayfy, args)
-
-    if not isinstance(a, NDimArray) or not isinstance(b, NDimArray):
-        return a*b
-
-    al = list(a)
-    bl = list(b)
-
+    #al = list(a)
+    #bl = list(b)
+    
     product_list = [i*j for i in al for j in bl]
+    
+    #erm. no. what.
+    
     return ImmutableDenseNDimArray(product_list, a.shape + b.shape)
 
 
@@ -505,7 +537,7 @@ def tensorcontraction(array, *contraction_axes):
     Contraction of an array-like object on the specified axes.
     """
     array = _arrayfy(array)
-
+    #print(array)
     # Verify contraction_axes:
     taken_dims = set([])
     for axes_group in contraction_axes:
@@ -601,7 +633,7 @@ def derive_by_array(expr, dx):
         if isinstance(dx, array_types):
             return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
         else:
-            return diff(expr, dx)
+            return expr.diff(dx)
 
 
 def permutedims(expr, perm):
@@ -611,12 +643,14 @@ def permutedims(expr, perm):
     Parameter specifies the permutation of the indices.
 
     """
+    #print("expr",expr)
+    #print("perm",perm)
     if not isinstance(expr, NDimArray):
         raise TypeError("expression has to be an N-dim array")
-
+        
     if not isinstance(perm, Permutation):
         perm = Permutation(list(perm))
-
+    #print(perm.size,expr.rank())
     if perm.size != expr.rank():
         raise ValueError("wrong permutation size")
 
@@ -624,185 +658,92 @@ def permutedims(expr, perm):
     iperm = ~perm
 
     indices_span = perm([range(i) for i in expr.shape])
-
+    
     new_array = [None]*len(expr)
     for i, idx in enumerate(itertools.product(*indices_span)):
         t = iperm(idx)
         new_array[i] = expr[t]
-
+        
     new_shape = perm(expr.shape)
-
-    return type(expr)(new_array, new_shape)
-
-
-#OLD N DIM MUTABLE ARRAY
+    
+    
+    rt=type(expr)(new_array, new_shape)
+    
+    return rt
 
 class MutableNDimArray(NDimArray):
-    print("this is just NDimArray, read the docs and replace this with it.")
-    pass
-
-#OLD N DIM SPARSE ARRAY
-
+    def __new__(self, *args, **kwargs):
+        deprecation_warning(MutableNDimArray)
+        return NDimArray(*args, **kwargs)
+    
+    
 class SparseNDimArray(NDimArray):
-
     def __new__(self, *args, **kwargs):
-        return ImmutableSparseNDimArray(*args, **kwargs)
-
-    def __getitem__(self, index):
-        """
-        Get an element from a sparse N-dim array.
-        """
-        syindex = self._check_symbolic_index(index)
-        if syindex is not None:
-            return syindex
-
-        # `index` is a tuple with one or more slices:
-        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
-
-            def slice_expand(s, dim):
-                if not isinstance(s, slice):
-                        return (s,)
-                start, stop, step = s.indices(dim)
-                return [start + i*step for i in range((stop-start)//step)]
-
-            sl_factors = [slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
-            eindices = itertools.product(*sl_factors)
-            array = [self._sparse_array.get(self._parse_index(i), S.Zero) for i in eindices]
-            nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
-            return type(self)(array, nshape)
-        else:
-            # `index` is a single slice:
-            if isinstance(index, slice):
-                start, stop, step = index.indices(self._loop_size)
-                retvec = [self._sparse_array.get(ind, S.Zero) for ind in range(start, stop, step)]
-                return retvec
-            # `index` is a number or a tuple without any slice:
-            else:
-                index = self._parse_index(index)
-                return self._sparse_array.get(index, S.Zero)
-
-    @classmethod
-    def zeros(cls, *shape):
-        """
-        Return a sparse N-dim array of zeros.
-        """
-        return cls({}, shape)
-
-    def tomatrix(self):
-        """
-        Converts MutableDenseNDimArray to Matrix. Can convert only 2-dim array, else will raise error.
-        """
-        if self.rank() != 2:
-            raise ValueError('Dimensions must be of size of 2')
-
-        mat_sparse = {}
-        for key, value in self._sparse_array.items():
-            mat_sparse[self._get_tuple_index(key)] = value
-
-        return SparseMatrix(self.shape[0], self.shape[1], mat_sparse)
-
-    def __iter__(self):
-        def iterator():
-            for i in range(self._loop_size):
-                yield self[i]
-        return iterator()
-
-    def reshape(self, *newshape):
-        new_total_size = functools.reduce(lambda x,y: x*y, newshape)
-        if new_total_size != self._loop_size:
-            raise ValueError("Invalid reshape parameters " + newshape)
-
-        return type(self)(*(newshape + (self._array,)))
-
-class ImmutableSparseNDimArray(NDimArray):#SparseNDimArray, ImmutableNDimArray):
-
-    def __init__(self, iterable=None, shape=None, **kwargs):
-        self.sparse=True
-        self.immutable=True
-        self.common_new(iterable,shape,**kwargs)
-
-class MutableSparseNDimArray(NDimArray):#MutableNDimArray, SparseNDimArray):
-
-    def __init__(self, iterable=None, shape=None, **kwargs):
-        self.sparse=True
-        self.immutable=False
-        self.common_new(iterable,shape,**kwargs)
+        deprecation_warning(SparseNDimArray)
+        sparse=True
+        return ImmutableSparseNDimArray(*args,sparse, **kwargs)
         
+class ImmutableSparseNDimArray(NDimArray):
 
-#OLD N DIM DENSE ARRAY
+    def __new__(self, iterable=None, shape=None, **kwargs):
+        
+        deprecation_warning(ImmutableSparseNDimArray)
+        sparse=True
+        immutable=True        
+        A=NDimArray(iterable,shape,sparse,immutable,**kwargs)
+        return A
 
-class DenseNDimArray:
+class MutableSparseNDimArray(NDimArray):
+
+    def __new__(self, iterable=None, shape=None, **kwargs):
+        
+        deprecation_warning(MutableSparseNDimArray)
+        
+        sparse=True
+        immutable=False
+        
+        A=NDimArray(iterable,shape,sparse,immutable,**kwargs)
+        return A
+        
+class DenseNDimArray(NDimArray):
     def __new__(self, *args, **kwargs):
-        print("warning, this is just ImmutableDenseNDimArray, please replace")
-        return ImmutableDenseNDimArray(*args, **kwargs)
-
-class ImmutableDenseNDimArray(NDimArray):#DenseNDimArray, ImmutableNDimArray):
-    """
-    
-    """
-
-    def __init__(self, iterable=None, shape=None, **kwargs):
-        #retob=cls._new(iterable, shape, **kwargs)
-        #this returned self.
         
-        self.sparse=False
-        self.immutable=True
-        self.common_new(iterable, shape, **kwargs)
+        deprecation_warning(DenseNDimArray)
         
-        return retob
-        
-    ##this is no longer used.
-    #@classmethod
-    #def _new(cls, iterable, shape, **kwargs):
+        return NDimArray(*args, **kwargs)
 
-        #shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
-        #shape = Tuple(*map(_sympify, shape))
-        #flat_list = flatten(flat_list)
-        #flat_list = Tuple(*flat_list)
-        #self = Basic.__new__(cls, flat_list, shape, **kwargs)
-        #self._shape = shape
-        #self._array = list(flat_list)
-        #self._rank = len(shape)
-        #self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
-        #return self
-    
+class ImmutableDenseNDimArray(NDimArray):
+
+    def __new__(self, iterable=None, shape=None, **kwargs):
+        
+        deprecation_warning(ImmutableDenseNDimArray)
+        
+        sparse=False
+        immutable=True
+        A=NDimArray(iterable,shape,sparse,immutable,**kwargs)
+        return A
 
 class MutableDenseNDimArray(NDimArray):#DenseNDimArray, MutableNDimArray):
 
-    def __init__(self, iterable=None, shape=None, **kwargs):
-        self.immutable=False
-        self.sparse=False
-        self.common_new(iterable, shape, **kwargs)
+    def __new__(self, iterable=None, shape=None, **kwargs):
         
-    #@classmethod
-    #def _new(cls, iterable, shape, **kwargs):
-
-        #shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
-        #flat_list = flatten(flat_list)
-        #self = object.__new__(cls)
-        #self._shape = shape
-        #self._array = list(flat_list)
-        #self._rank = len(shape)
-        #self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
-        #return self
-
-
+        deprecation_warning(MutableDenseNDimArray)
+        
+        immutable=False
+        sparse=False
+        A=NDimArray(iterable,shape,sparse,immutable,**kwargs)
+        return A
+        
 def testing():
-    n=NDimArray([1,2,3,4],[2,2])
-    print(n)
-    #n[0,0]=5
-    #print(n)
+    x,y,z,t=sympy.symbols("x y z t")
     
-    n=MutableNDimArray([1,2,3,4],[2,2])
-    print(n)
-    #n[0,0]=5 not mutable.
-    #print(n)
-    a=1
+    NDimArray([x,y,z,t],[2,2])
     
-    n=MutableSparseNDimArray([1,2,3,4],[2,2])
-    print(n)
-    n[0,0]=5
-    print(n)
+    a=NDimArray([1,2,3,4],[2,2])
+    b=NDimArray([1,2,3,4],[2,2])
+    
+    
+    
 
 if __name__=="__main__":
     testing()
