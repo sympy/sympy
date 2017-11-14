@@ -23,56 +23,56 @@ d = MatrixSymbol("d", k, 1)
 
 def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
-    assert X._eval_derivative(A) == 0
+    assert X.diff(A) == 0
 
 
 def test_matrix_derivative_vectors_and_scalars():
 
     # Cookbook example 69:
     expr = x.T*a
-    assert expr._eval_derivative(x) == a
+    assert expr.diff(x) == a
     expr = a.T*x
-    assert expr._eval_derivative(x) == a
+    assert expr.diff(x) == a
 
     # Cookbook example 70:
     expr = a.T*X*b
-    assert expr._eval_derivative(X) == a*b.T
+    assert expr.diff(X) == a*b.T
 
     # Cookbook example 71:
     expr = a.T*X.T*b
-    assert expr._eval_derivative(X) == b*a.T
+    assert expr.diff(X) == b*a.T
 
     # Cookbook example 77:
     expr = b.T*X.T*X*c
-    assert expr._eval_derivative(X) == X*b*c.T + X*c*b.T
+    assert expr.diff(X) == X*b*c.T + X*c*b.T
 
     # Cookbook example 78:
     expr = (B*x + b).T*C*(D*x + d)
-    assert expr._eval_derivative(x) == B.T*C*(D*x + d) + D.T*C.T*(B*x + b)
+    assert expr.diff(x) == B.T*C*(D*x + d) + D.T*C.T*(B*x + b)
 
     # Cookbook example 81:
     expr = x.T*B*x
-    assert expr._eval_derivative(x) == B*x + B.T*x
+    assert expr.diff(x) == B*x + B.T*x
 
     # Cookbook example 82:
     expr = b.T*X.T*D*X*c
-    assert expr._eval_derivative(X) == D.T*X*b*c.T + D*X*c*b.T
+    assert expr.diff(X) == D.T*X*b*c.T + D*X*c*b.T
 
     # Cookbook example 83:
     expr = (X*b + c).T*D*(X*b + c)
-    assert expr._eval_derivative(X) == D*(X*b + c)*b.T + D.T*(X*b + c)*b.T
+    assert expr.diff(X) == D*(X*b + c)*b.T + D.T*(X*b + c)*b.T
 
 
 def test_matrix_derivative_with_inverse():
 
     # Cookbook example 61:
     expr = a.T*Inverse(X)*b
-    assert expr._eval_derivative(X) == -Inverse(X).T*a*b.T*Inverse(X).T
+    assert expr.diff(X) == -Inverse(X).T*a*b.T*Inverse(X).T
 
     # Cookbook example 63:
     expr = Trace(A*Inverse(X)*B)
-    assert expr._eval_derivative(X) == -(X**(-1)*B*A*X**(-1)).T
+    assert expr.diff(X) == -(X**(-1)*B*A*X**(-1)).T
 
     # Cookbook example 64:
     expr = Trace(Inverse(X + A))
-    assert expr._eval_derivative(X) == -(Inverse(X + A)*Inverse(X + A)).T
+    assert expr.diff(X) == -(Inverse(X + A)*Inverse(X + A)).T
