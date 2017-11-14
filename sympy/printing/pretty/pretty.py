@@ -11,7 +11,7 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
-from sympy.printing.precedence import PRECEDENCE, precedence
+from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
@@ -726,6 +726,11 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+    def _print_TensorProduct(self, expr):
+        circled_times = "\u2297"
+        return self._print_seq(expr.args, None, None, circled_times,
+            parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
+
     def _print_Trace(self, e):
         D = self._print(e.arg)
         D = prettyForm(*D.parens('(',')'))
@@ -932,7 +937,7 @@ class PrettyPrinter(Printer):
         from sympy import ImmutableMatrix
 
         if expr.rank() == 0:
-            return self._print_matrix_contents(expr.tomatrix())
+            return self._print(expr[()])
 
         level_str = [[]] + [[] for i in range(expr.rank())]
         shape_ranges = [list(range(i)) for i in expr.shape]

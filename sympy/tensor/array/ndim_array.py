@@ -256,6 +256,9 @@ class NDimArray(object):
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
 
+        if self.rank() == 0:
+            return self[()].__str__()
+
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
     def __repr__(self):
