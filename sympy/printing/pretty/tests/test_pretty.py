@@ -2892,6 +2892,13 @@ def test_tensor_TensorProduct():
     assert upretty(TensorProduct(A, B, A)) == "A\u2297B\u2297A"
 
 
+def test_diffgeom_print_WedgeProduct():
+    from sympy.diffgeom.rn import R2
+    from sympy.diffgeom import WedgeProduct
+    wp = WedgeProduct(R2.dx, R2.dy)
+    assert upretty(wp) == u("ⅆ x∧ⅆ y")
+
+
 def test_Adjoint():
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)

@@ -727,7 +727,14 @@ class PrettyPrinter(Printer):
     _print_Matrix = _print_MatrixBase
 
     def _print_TensorProduct(self, expr):
+        # This should somehow share the code with _print_WedgeProduct:
         circled_times = "\u2297"
+        return self._print_seq(expr.args, None, None, circled_times,
+            parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
+
+    def _print_WedgeProduct(self, expr):
+        # This should somehow share the code with _print_TensorProduct:
+        circled_times = "\u2227"
         return self._print_seq(expr.args, None, None, circled_times,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 

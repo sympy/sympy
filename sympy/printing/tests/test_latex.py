@@ -1670,3 +1670,17 @@ def test_Quaternion_latex_printing():
     assert latex(q) == "x + y i + z j + t x k"
     q = Quaternion(x,y,z,x+t)
     assert latex(q) == r"x + y i + z j + \left(t + x\right) k"
+
+
+def test_TensorProduct_printing():
+    from sympy.tensor.functions import TensorProduct
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    assert latex(TensorProduct(A, B)) == r"A \otimes B"
+
+
+def test_WedgeProduct_printing():
+    from sympy.diffgeom.rn import R2
+    from sympy.diffgeom import WedgeProduct
+    wp = WedgeProduct(R2.dx, R2.dy)
+    assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"

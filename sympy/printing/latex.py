@@ -1532,6 +1532,14 @@ class LatexPrinter(Printer):
         return r"\left ( %s\right )" % \
             r", \quad ".join([ self._print(i) for i in expr ])
 
+    def _print_TensorProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \otimes '.join(elements)
+
+    def _print_WedgeProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \wedge '.join(elements)
+
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
 
