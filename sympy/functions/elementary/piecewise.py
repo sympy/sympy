@@ -647,14 +647,16 @@ class Piecewise(Function):
                     done[j: j + 1] = _clip(p, (a, b), k)
         done = [(a, b, i) for a, b, i in done if a != b]
 
-        # check for holes
-        if any(i == -1 for (a, b, i) in done):
-            return S.NaN
-
         # return the sum of the intervals
         sum = S.Zero
+        upto = None
         for a, b, i in done:
+            if i == -1:
+                if upto is None:
+                    return S.NaN
+                return Piecewise((sum, hi <= upto), (Undefined, True))
             sum += abei[i][-2]._eval_interval(x, a, b)
+            upto = b
         return sum
 
     def _intervals(self, sym):
