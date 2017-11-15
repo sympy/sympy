@@ -412,7 +412,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     If the optional ``exclude`` kwarg is used, only dynamicsymbols
     not in the iterable ``exclude`` are returned.
 
-    >>> find_dynamicsymbols(expr, [x, y])
+    >>> find_dynamicsymbols(expr, exclude=[x, y])
     {Derivative(x(t), t)}
 
     Parameters
@@ -444,9 +444,6 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
-    if reference_frame is None and isinstance(expression, ImmutableDenseMatrix):
-        return set([i for i in expression.atoms(AppliedUndef, Derivative) if
-                i.free_symbols == t_set]) - exclude_set
     try:
         if isinstance(expression, Vector):
             expr=expression.to_matrix(reference_frame)
@@ -454,6 +451,10 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
                     i.free_symbols == t_set]) - exclude_set
     except TypeError:
         print(" function missing one required argument of type ReferenceFrame ")
+        return 
+    if reference_frame is None :
+        return set([i for i in expression.atoms(AppliedUndef, Derivative) if
+                i.free_symbols == t_set]) - exclude_set
 
 
 def msubs(expr, *sub_dicts, **kwargs):
