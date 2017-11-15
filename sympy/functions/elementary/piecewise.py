@@ -653,7 +653,8 @@ class Piecewise(Function):
         for a, b, i in done:
             if i == -1:
                 if upto is None:
-                    return S.NaN
+                    return Undefined
+                # TODO simplify hi <= upto
                 return Piecewise((sum, hi <= upto), (Undefined, True))
             sum += abei[i][-2]._eval_interval(x, a, b)
             upto = b
