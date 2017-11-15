@@ -710,12 +710,12 @@ def test_issue_11045():
     i = p.integrate((x, 1, y))
     assert i == Piecewise(
         (y - 1, y < 1),
-        (Piecewise(
-            (Min(3, y)**2/2 - Min(3, y) + Min(4, y) - 1/2,
-                y <= Min(4, y)),
-            (nan, True)), True))
+        (Min(3, y)**2/2 - Min(3, y) + Min(4, y) - 1/2,
+            y <= Min(4, y)),
+        (nan, True))
     assert p.integrate((x, 1, -1)) == i.subs(y, -1)
     assert p.integrate((x, 1, 4)) == 5
+    assert p.integrate((x, 1, 5)) == nan
 
     # handle Not
     p = Piecewise((1, x > 1), (2, Not(And(x > 1, x< 3))), (3, True))
