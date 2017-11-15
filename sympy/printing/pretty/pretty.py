@@ -734,8 +734,8 @@ class PrettyPrinter(Printer):
 
     def _print_WedgeProduct(self, expr):
         # This should somehow share the code with _print_TensorProduct:
-        circled_times = "\u2227"
-        return self._print_seq(expr.args, None, None, circled_times,
+        wedge_symbol = u"\u2227"
+        return self._print_seq(expr.args, None, None, wedge_symbol,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
     def _print_Trace(self, e):
