@@ -134,7 +134,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
     """
 
-    def __new__(cls, iterable=None, shape=None, **kwargs):
+    def __new__(cls, iterable, shape=None, **kwargs):
         return cls._new(iterable, shape, **kwargs)
 
     @classmethod

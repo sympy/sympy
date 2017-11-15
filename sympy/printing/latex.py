@@ -1476,6 +1476,9 @@ class LatexPrinter(Printer):
 
     def _print_NDimArray(self, expr):
 
+        if expr.rank() == 0:
+            return self._print(expr[()])
+
         mat_str = self._settings['mat_str']
         if mat_str is None:
             if self._settings['mode'] == 'inline':

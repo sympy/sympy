@@ -944,6 +944,11 @@ def test_latex_NDimArray():
     x, y, z, w = symbols("x y z w")
 
     for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray):
+        # Basic: scalar array
+        M = ArrayType(x)
+
+        assert latex(M) == "x"
+
         M = ArrayType([[1 / x, y], [z, w]])
         M1 = ArrayType([1 / x, y, z])
 
@@ -963,7 +968,6 @@ def test_latex_NDimArray():
                 r"""\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right] & """\
                 r"""\left[\begin{matrix}\frac{w}{x} & w y\\w z & w^{2}\end{matrix}\right]"""\
                 r"""\end{matrix}\right]"""
-        assert latex(ArrayType()) == r"\left[\begin{matrix}\end{matrix}\right]"
 
         Mrow = ArrayType([[x, y, 1/z]])
         Mcolumn = ArrayType([[x], [y], [1/z]])
