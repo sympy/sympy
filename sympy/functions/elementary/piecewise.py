@@ -617,6 +617,8 @@ class Piecewise(Function):
 
                 if rv == Undefined:
                     raise ValueError("Can't integrate across undefined region.")
+                if any(isinstance(i, Piecewise) for i in (pos, neg)):
+                    rv = piecewise_fold(rv)
                 return rv
 
         # handle a Piecewise with lo <= hi and no x-independent relationals
