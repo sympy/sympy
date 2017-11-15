@@ -262,12 +262,9 @@ class AssocOp(Basic):
             # this is not the same as args_cnc because here
             # we don't assume expr is a Mul -- hence deal with args --
             # and always return a set.
-            cpart, ncpart = [], []
+            sifted = ncpart, cpart = [], []
             for arg in expr.args:
-                if arg.is_commutative:
-                    cpart.append(arg)
-                else:
-                    ncpart.append(arg)
+                sifted[arg.is_commutative is True].append(arg)
             return set(cpart), ncpart
 
         c, nc = _ncsplit(self)

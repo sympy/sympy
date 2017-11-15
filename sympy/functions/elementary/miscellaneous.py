@@ -408,24 +408,21 @@ class MinMaxBase(Expr, LatticeOp):
         # value is being introduced in these args at position 0 of
         # the ordered args
         if args[0].is_number:
-            minmax = []
+            sifted = mins, maxs = [], []
             for i in args:
-                minmax.extend([v for v in walk(i, (Min, Max))
-                    if v.args[0].is_comparable])
-            ismin = sift(minmax, lambda x: isinstance(x, Min))
-            mins = ismin[True]
+                for v in walk(i, Min, Max):
+                    if v.args[0].is_comparable:
+                        sifted[isinstance(v, Max)].append(v)
             small = Min.identity
             for i in mins:
                 v = i.args[0]
                 if v.is_number and (v < small) == True:
                     small = v
-            maxs = ismin[False]
             big = Max.identity
-            if maxs:
-                for i in maxs:
-                    v = i.args[0]
-                    if v.is_number and (v > big) == True:
-                        big = v
+            for i in maxs:
+                v = i.args[0]
+                if v.is_number and (v > big) == True:
+                    big = v
             # at the point when this function is called from __new__,
             # there may be more than one numeric arg present since
             # local zeros have not been handled yet, so look through
@@ -438,17 +435,16 @@ class MinMaxBase(Expr, LatticeOp):
                         small = args[i]
             elif cls == Max:
                 for i in range(len(args)):
-                    if not args[i].is_comparable:
+                    if not args[i].is_number:
                         break
                     if (args[i] > big) == True:
                         big = args[i]
-            small = small if small != Min.identity else None
-            big = big if big != Max.identity else None
             T = None
             if cls == Min:
-                other = Max
-                T = small
-            else:
+                if small != Min.identity:
+                    other = Max
+                    T = small
+            elif big != Max.identity:
                 other = Min
                 T = big
             if T is not None:

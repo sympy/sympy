@@ -202,12 +202,9 @@ class ColorScheme(object):
         return vars
 
     def _sort_args(self, args):
-        atoms, lists = [], []
+        sifted = atoms, lists = [], []
         for a in args:
-            if isinstance(a, (tuple, list)):
-                lists.append(a)
-            else:
-                atoms.append(a)
+            sifted[isinstance(a, (tuple, list))].append(a)
         return atoms, lists
 
     def _test_color_function(self):

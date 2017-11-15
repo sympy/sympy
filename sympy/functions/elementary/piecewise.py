@@ -494,7 +494,7 @@ class Piecewise(Function):
         oo = S.Infinity
         done = [(-oo, oo, -1)]
         for k, p in enumerate(pieces):
-            if p[:2] == (-oo, oo):
+            if p == (-oo, oo):
                 # all undone intervals will get this key
                 for j, (a, b, i) in enumerate(done):
                     if i == -1:
