@@ -215,7 +215,7 @@ class Set(Basic):
         elif isinstance(other, EmptySet):
             return S.EmptySet
 
-        elif isinstance(other, FiniteSet): 
+        elif isinstance(other, FiniteSet):
             both_l = non_num, num = [], []
             for el in other:
                 both_l[el.is_number].append(el)
