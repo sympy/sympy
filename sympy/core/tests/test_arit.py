@@ -1658,6 +1658,9 @@ def test_Mod():
     #issue 13543
     assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
 
+    assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
+    assert Mod(Mod(x + 2, 4)*4, 4) == 0
+
 
 def test_Mod_is_integer():
     p = Symbol('p', integer=True)
