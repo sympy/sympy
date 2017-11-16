@@ -427,8 +427,8 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     with respect to which the dynamic symbols of the given vector is to be
     determined.
 
-    >>> from sympy.physics.mechanics import (dynamicsymbols, find_dynamicsymbols,
-                                             ReferenceFrame)
+    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
+    >>> from sympy.physics.mechanics import ReferenceFrame
     >>> a, b, c = dynamicsymbols('a, b, c')
     >>> A = ReferenceFrame('A')
     >>> v = a * A.x + b * A.y + c * A.z
@@ -451,7 +451,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
                     i.free_symbols == t_set]) - exclude_set
     except TypeError:
         print(" function missing one required argument of type ReferenceFrame ")
-        return 
+        return
     if reference_frame is None :
         return set([i for i in expression.atoms(AppliedUndef, Derivative) if
                 i.free_symbols == t_set]) - exclude_set
