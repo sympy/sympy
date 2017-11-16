@@ -108,33 +108,34 @@ class Mod(Function):
                 # |qinner| < |q| and have different sign
                 return p
         elif isinstance(p, Add):
-            #separating into modulus and non modulus
+            # separating into modulus and non modulus
             both_l = non_mod_l, mod_l = [], []
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
-            #if q same for all
+            # if q same for all
             if mod_l and all(inner.args[1] == q for inner in mod_l):
-                net = sum(non_mod_l) + sum(i.args[0] for i in mod_l)
+                net = Add(*non_mod_l) + Add(*[i.args[0] for i in mod_l])
                 return cls(net, q)
 
         elif isinstance(p, Mul):
-            #separating into modulus and non modulus
+            # separating into modulus and non modulus
             both_l = non_mod_l, mod_l = [], []
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            prod_mod = prod_mod1 = prod_non_mod = 1
-
             if mod_l and all(inner.args[1] == q for inner in mod_l):
-                #finding distributive term
+                # finding distributive term
                 non_mod_l = [cls(x, q) for x in non_mod_l]
+                mod = []
+                non_mod = []
                 for j in non_mod_l:
                     if isinstance(j, cls):
-                        prod_mod *= j.args[0]
+                        mod.append(j.args[0])
                     else:
-                        prod_non_mod *= j
-
-                for i in mod_l: prod_mod1 *= i.args[0]
+                        non_mod.append(j)
+                prod_mod = Mul(*mod)
+                prod_non_mod = Mul(*non_mod)
+                prod_mod1 = Mul(*[i.args[0] for i in mod_l])
                 net = prod_mod1*prod_mod
                 return prod_non_mod*cls(net, q)
 
