@@ -117,6 +117,27 @@ class Mod(Function):
                 net = sum(non_mod_l) + sum(i.args[0] for i in mod_l)
                 return cls(net, q)
 
+        elif isinstance(p, Mul):
+            #separating into modulus and non modulus
+            both_l = non_mod_l, mod_l = [], []
+            for arg in p.args:
+                both_l[isinstance(arg, cls)].append(arg)
+
+            prod_mod = prod_mod1 = prod_non_mod = 1
+
+            if mod_l and all(inner.args[1] == q for inner in mod_l):
+                #finding distributive term
+                non_mod_l = [cls(x, q) for x in non_mod_l]
+                for j in non_mod_l:
+                    if isinstance(j, cls):
+                        prod_mod *= j.args[0]
+                    else:
+                        prod_non_mod *= j
+
+                for i in mod_l: prod_mod1 *= i.args[0]
+                net = prod_mod1*prod_mod
+                return prod_non_mod*cls(net, q)
+
         # XXX other possibilities?
 
         # extract gcd; any further simplification should be done by the user
