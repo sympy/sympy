@@ -604,6 +604,12 @@ class MinMaxBase(Expr, LatticeOp):
             l.append(df * da)
         return Add(*l)
 
+    def _eval_rewrite_as_Abs(self, *args):
+        from sympy.functions.elementary.complexes import Abs
+        s = (args[0] + self.func(*args[1:]))/2
+        d = abs(args[0] - self.func(*args[1:]))/2
+        return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
+
     def evalf(self, prec=None, **options):
         return self.func(*[a.evalf(prec, **options) for a in self.args])
     n = evalf
