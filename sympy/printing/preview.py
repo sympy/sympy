@@ -98,6 +98,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     'dvi'+output conversion tool. These options have to be in the form of a
     list of strings (see subprocess.Popen).
 
+    For example, to output a png with white text on a black background:
+
+    >>> dvioptions = ["-T", "tight", "--truecolor", "-fg", "White", "-bg", "Black"]
+    >>> preview(x + y, output='png', dvioptions=dvioptions)
+
     Additional keyword args will be passed to the latex call, e.g., the
     symbol_names flag.
 
