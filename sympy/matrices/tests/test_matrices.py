@@ -585,7 +585,7 @@ def test_random():
     for size in (10, 11): # Test odd and even
         for percent in (100, 70, 30):
             M = randMatrix(size, symmetric=True, percent=percent, prng=rng)
-            assert M = M.T
+            assert M == M.T
 
     M = randMatrix(10, min=1, percent=70)
     zero_count = 0
