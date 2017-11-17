@@ -402,6 +402,7 @@ def test_rewrite_as_Abs():
     def test(e):
         free = e.free_symbols
         a = e.rewrite(Abs)
+        assert not a.has(Min, Max)
         for i in permutations(range(len(free))):
             reps = dict(zip(free, i))
             assert a.xreplace(reps) == e.xreplace(reps)
