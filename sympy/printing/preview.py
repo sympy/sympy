@@ -109,6 +109,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> phidd = Symbol('phidd')
     >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
 
+    Or the mode flag (the default mode is set to 'inline')
+
+    >>> from sympy import Integral
+    >>> preview(Integral(x**2, x), mode='equation*')
+
     For post-processing the generated TeX File can be written to a file by
     passing the desired filename to the 'outputTexFile' keyword
     argument. To write the TeX code to a file named
@@ -187,10 +192,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                              "custom LaTeX preamble was specified")
     latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
+    latex_settings.setdefault('mode', 'inline')
     if isinstance(expr, str):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline', **latex_settings)
+        latex_string = latex(expr, **latex_settings)
 
     try:
         workdir = tempfile.mkdtemp()
