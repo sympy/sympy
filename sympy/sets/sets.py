@@ -216,13 +216,11 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            both_l = non_num, num = [], []
-            for el in other:
-                both_l[el.is_number].append(el)
-            non_num = FiniteSet(*non_num)
-            out_range = FiniteSet(*[el for el in num if self.contains(el) == False])
-            if non_num:
-                return Union(out_range, Complement(non_num, self, evaluate = False))
+
+            none_range = FiniteSet(*[el for el in other if self.contains(el) not in [True, False]])
+            out_range = FiniteSet(*[el for el in other if self.contains(el) == False])
+            if none_range:
+                return Union(out_range, Complement(none_range, self, evaluate = False))
             else:
                 return out_range
 
