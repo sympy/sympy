@@ -216,7 +216,15 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if self.contains(el) != True])
+            both_l = non_num, num = [], []
+            for el in other:
+                both_l[el.is_number].append(el)
+            non_num = FiniteSet(*non_num)
+            out_range = FiniteSet(*[el for el in num if self.contains(el) != True])
+            if non_num:
+                return Union(out_range, Complement(non_num, self, evaluate = False))
+            else:
+                return out_range
 
     def symmetric_difference(self, other):
         """
