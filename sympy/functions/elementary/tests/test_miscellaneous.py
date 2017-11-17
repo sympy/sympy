@@ -398,7 +398,7 @@ def test_instantiation_evaluation():
 def test_rewrite_as_Abs():
     from itertools import permutations
     from sympy.functions.elementary.complexes import Abs
-    from sympy.abc import x, y, z
+    from sympy.abc import x, y, z, w
     def test(e):
         free = e.free_symbols
         a = e.rewrite(Abs)
@@ -408,3 +408,4 @@ def test_rewrite_as_Abs():
     test(Min(x, y))
     test(Max(x, y))
     test(Min(x, y, z))
+    test(Min(Max(w, x), Max(y, z)))
