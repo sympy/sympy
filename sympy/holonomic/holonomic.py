@@ -5,8 +5,9 @@ various operations on them.
 
 from __future__ import print_function, division
 
-from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
+from sympy import (Symbol, diff, S, Dummy, Order, rf, I,
     solve, limit, Float, nsimplify, gamma)
+from sympy.integrals import meijerint
 from sympy.printing import sstr
 from sympy.core.compatibility import range, ordered
 from sympy.functions.combinatorial.factorials import binomial, factorial
