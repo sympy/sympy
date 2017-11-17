@@ -200,9 +200,19 @@ z*cos(y*z) + exp(x)
 
 """
 
+__all__ = []
+
 from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, DenseNDimArray
+__all__ += ["MutableDenseNDimArray", "ImmutableDenseNDimArray", "DenseNDimArray"]
+
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray
+__all__ += ["MutableSparseNDimArray", "ImmutableSparseNDimArray", "SparseNDimArray"]
+
 from .ndim_array import NDimArray
+__all__ += ["NDimArray"]
+
 from .arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
+__all__ += ["tensorproduct", "tensorcontraction", "derive_by_array", "permutedims"]
 
 Array = ImmutableDenseNDimArray
+__all__ += ["Array"]
