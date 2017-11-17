@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
+from sympy.utilities.iterables import sift
 from util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.core.compatibility import range
 
@@ -202,10 +203,8 @@ class ColorScheme(object):
         return vars
 
     def _sort_args(self, args):
-        sifted = atoms, lists = [], []
-        for a in args:
-            sifted[isinstance(a, (tuple, list))].append(a)
-        return atoms, lists
+        lists, atoms = sift(args,
+            lambda a: isinstance(a, (tuple, list)), binary=True)
 
     def _test_color_function(self):
         if not callable(self.f):
