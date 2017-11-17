@@ -581,6 +581,27 @@ def test_random():
     rng = random.Random(4)
     assert M == randMatrix(3, symmetric=True, prng=rng)
 
+    # Ensure symmetry
+    for size in (10, 11): # Test odd and even
+        for percent in (100, 70, 30):
+            M = randMatrix(size, symmetric=True, percent=percent, prng=rng)
+            assert M = M.T
+
+    M = randMatrix(10, min=1, percent=70)
+    zero_count = 0
+    for i in range(M.shape[0]):
+        for j in range(M.shape[1]):
+            if M[i, j] == 0:
+                zero_count += 1
+    assert zero_count == 30
+
+    M = randMatrix(10, min=1, percent=99.5)
+    zero_count = 0
+    for i in range(M.shape[0]):
+        for j in range(M.shape[1]):
+            if M[i, j] == 0:
+                zero_count += 1
+    assert zero_count == 0
 
 def test_LUdecomp():
     testmat = Matrix([[0, 2, 5, 3],
