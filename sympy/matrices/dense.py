@@ -1400,7 +1400,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
         m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
         if percent == 100:
             return m
-        z = int(r * c * (100 - percent) // 100)
+        z = int(r*c*(100 - percent) // 100)
         m._mat[:z] = [S.Zero]*z
         prng.shuffle(m._mat)
 
@@ -1412,7 +1412,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     m = zeros(r)
     ij = [(i, j) for i in range(r) for j in range(i, r)]
     if percent != 100:
-        ij = prng.sample(ij, int(len(ij) *  percent // 100))
+        ij = prng.sample(ij, int(len(ij)*percent // 100))
 
     for i, j in ij:
         value = prng.randint(min, max)
