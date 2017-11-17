@@ -354,5 +354,8 @@ def test_comparison_AccumBounds():
 def test_contains_AccumBounds():
     assert (1 in AccumBounds(1, 2)) == S.true
     raises(TypeError, lambda: a in AccumBounds(1, 2))
+    assert 0 in AccumBounds(-1, 0)
+    raises(TypeError, lambda:
+        (cos(1)**2 + sin(1)**2 - 1) in AccumBounds(-1, 0))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true
