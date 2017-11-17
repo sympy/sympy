@@ -595,13 +595,6 @@ def test_random():
                 zero_count += 1
     assert zero_count == 30
 
-    M = randMatrix(10, min=1, percent=99.5)
-    zero_count = 0
-    for i in range(M.shape[0]):
-        for j in range(M.shape[1]):
-            if M[i, j] == 0:
-                zero_count += 1
-    assert zero_count == 0
 
 def test_LUdecomp():
     testmat = Matrix([[0, 2, 5, 3],
