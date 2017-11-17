@@ -85,8 +85,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     argument. This can be used, e.g., to set a different font size, use a
     custom documentclass or import certain set of LaTeX packages.
 
-    >>> preamble = "\\documentclass[10pt]{article}\n" \
-    ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
+    >>> preamble = r'''
+    ... \documentclass[10pt]{article}
+    ... \pagestyle{empty}
+    ... \usepackage{amsmath,amsfonts}
+    ... \begin{document}
+    ... '''
     >>> preview(x + y, output='png', preamble=preamble)
 
     If the value of 'output' is different from 'dvi' then command line
