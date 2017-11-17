@@ -697,15 +697,18 @@ class Vector(object):
 
     def free_symbols(self, reference_frame):
         """
-        Returns from the vector those which are free symbols.
+        Returns the free symbols in the measure numbers of the vector
+        expressed in the given reference frame.
 
         Parameter
-        ---------
+        =========
+
         reference_frame : ReferenceFrame
-            The frame with respect to which the dynamic symbols of the
+            The frame with respect to which the free symbols of the
             given vector is to be determined.
 
         """
+
         return self.to_matrix(reference_frame).free_symbols
 
 

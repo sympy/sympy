@@ -403,36 +403,39 @@ def Lagrangian(frame, *body):
 def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
 
-    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
-    >>> x, y = dynamicsymbols('x, y')
-    >>> expr = x + x.diff()*y
-    >>> find_dynamicsymbols(expr)
-    {x(t), y(t), Derivative(x(t), t)}
-
     If the optional ``exclude`` kwarg is used, only dynamicsymbols
     not in the iterable ``exclude`` are returned.
-
-    >>> find_dynamicsymbols(expr, exclude=[x, y])
-    {Derivative(x(t), t)}
-
-    Parameters
-    ==========
-
-    reference_frame : ReferenceFrame
-        The frame with respect to which the dynamic symbols of the
-        given vector is to be determined.
-
     If we intend to apply this function on a vector, the optional
     ''reference_frame'' is also used to inform about the corresponding frame
     with respect to which the dynamic symbols of the given vector is to be
     determined.
 
+    Parameters
+    ==========
+
+    expression : sympy expression
+
+    reference_frame : ReferenceFrame
+        The frame with respect to which the dynamic symbols of the
+        given vector is to be determined.
+
+    exclude : iterable of dynamicsymbols
+
+    Examples
+    ========
+
     >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
     >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> x, y = dynamicsymbols('x, y')
+    >>> expr = x + x.diff()*y
+    >>> find_dynamicsymbols(expr)
+    {x(t), y(t), Derivative(x(t), t)}
+    >>> find_dynamicsymbols(expr, exclude=[x, y])
+    {Derivative(x(t), t)}
     >>> a, b, c = dynamicsymbols('a, b, c')
     >>> A = ReferenceFrame('A')
     >>> v = a * A.x + b * A.y + c * A.z
-    >>> find_dynamicsymbols(v,reference_frame=A)
+    >>> find_dynamicsymbols(v, reference_frame=A)
     {a(t), b(t), c(t)}
 
     """
@@ -444,17 +447,12 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
-    try:
-        if isinstance(expression, Vector):
-            expr=expression.to_matrix(reference_frame)
-            return set([i for i in expr.atoms(AppliedUndef, Derivative) if
-                    i.free_symbols == t_set]) - exclude_set
-    except TypeError:
-        print(" function missing one required argument of type ReferenceFrame ")
-        return
-    if reference_frame is None :
-        return set([i for i in expression.atoms(AppliedUndef, Derivative) if
-                i.free_symbols == t_set]) - exclude_set
+    if isinstance(expression, Vector) and reference_frame is None :
+            raise TypeError("You must provide a reference frame when passing in a vector expression.")
+    if isinstance(expression, Vector) :
+        expression=expression.to_matrix(reference_frame)
+    return set([i for i in expression.atoms(AppliedUndef, Derivative) if
+            i.free_symbols == t_set]) - exclude_set
 
 
 def msubs(expr, *sub_dicts, **kwargs):
