@@ -220,7 +220,7 @@ class Set(Basic):
             for el in other:
                 both_l[el.is_number].append(el)
             non_num = FiniteSet(*non_num)
-            out_range = FiniteSet(*[el for el in num if self.contains(el) != True])
+            out_range = FiniteSet(*[el for el in num if self.contains(el) == False])
             if non_num:
                 return Union(out_range, Complement(non_num, self, evaluate = False))
             else:
