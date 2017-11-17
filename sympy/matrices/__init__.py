@@ -42,7 +42,7 @@ from .expressions import (
     MatMul, MatPow, MatrixExpr, MatrixSymbol,
     Trace, Transpose, ZeroMatrix, blockcut,
     block_collapse, matrix_symbols, Adjoint,
-    hadamard_product, HadamardProduct, Determinant, 
+    hadamard_product, HadamardProduct, Determinant,
     det, DiagonalMatrix, DiagonalOf, trace, DotProduct
 )
 __all__ += [
@@ -51,7 +51,7 @@ __all__ += [
     "MatMul", "MatPow", "MatrixExpr", "MatrixSymbol",
     "Trace", "Transpose", "ZeroMatrix", "blockcut",
     "block_collapse", "matrix_symbols", "Adjoint",
-    "hadamard_product", "HadamardProduct", "Determinant", 
+    "hadamard_product", "HadamardProduct", "Determinant",
     "det", "DiagonalMatrix", "DiagonalOf", "trace", "DotProduct"
 ]
 
