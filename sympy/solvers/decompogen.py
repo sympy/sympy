@@ -49,6 +49,7 @@ def decompogen(f, symbol):
             return [f]
         result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
         return result
+ 
     # ===== Max/Min Functions ===== #
     if isinstance(f, (Max, Min)):
         result += [type(f)]
