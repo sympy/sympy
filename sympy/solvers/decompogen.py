@@ -57,7 +57,7 @@ def decompogen(f, symbol):
             if isinstance(i,(Pow,Function,Min,Max)):
                 result += decompogen(i,symbol)
         return result
-        
+
     # ===== Convert to Polynomial ===== #
     fp = Poly(f)
     gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
