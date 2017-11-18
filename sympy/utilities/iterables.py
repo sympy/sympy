@@ -669,7 +669,7 @@ def sift(seq, keyfunc, binary=False):
     (which is a good test for the logic where sifting is used and
     binary results were expected):
 
-    >>> unknown = exp(1) - pi  # this rationality of this is unknown
+    >>> unknown = exp(1) - pi  # the rationality of this is unknown
     >>> args = Tuple(1, pi, unknown)
     >>> sift(args, lambda x: x.is_rational, binary=True)
     Traceback (most recent call last):
