@@ -232,11 +232,9 @@ class MatrixExpr(Expr):
             return res
         if len(repl) < 2:
             return res
-        if m not in repl:
-            return MatrixExpr.from_index_summation(res, m)
-        if i not in repl:
-            return MatrixExpr.from_index_summation(res, i)
-        return MatrixExpr.from_index_summation(res)
+        # Parse the resulting expression, indices of the deriving variable first:
+        read_indices = tuple(x for x in [m, n, i, j] if x not in repl)
+        return MatrixExpr.from_index_summation(res, read_indices)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -388,7 +386,7 @@ class MatrixExpr(Expr):
         return 1, MatMul(self)
 
     @staticmethod
-    def from_index_summation(expr, first_index=None, last_index=None):
+    def from_index_summation(expr, indices=(), dimension_hint={}):
         r"""
         Parse expression of matrices with explicitly summed indices into a
         matrix expression without indices, if possible.
@@ -411,6 +409,13 @@ class MatrixExpr(Expr):
         >>> MatrixExpr.from_index_summation(expr)
         A*B
 
+        or specify the indices you want to read:
+
+        >>> MatrixExpr.from_index_summation(expr, (i, k))
+        A*B
+        >>> MatrixExpr.from_index_summation(expr, (k, i))
+        B.T*A.T
+
         Transposition is detected:
 
         >>> expr = Sum(A[j, i]*B[j, k], (j, 0, N-1))
@@ -428,15 +433,60 @@ class MatrixExpr(Expr):
         >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
         >>> MatrixExpr.from_index_summation(expr)
         A*B.T*A.T
+
+        If there are two separate matrix multiplication lines, return the
+        tensor product of the matrices:
+
+        >>> expr = A[i, j]*B[k, l]
+        >>> MatrixExpr.from_index_summation(expr)
+        TensorProduct(A, B)
+
+        Kronecker delta needs indication of dimension to return an identity
+        matrix, otherwise it will just return the number one:
+
+        >>> from sympy import KroneckerDelta
+        >>> expr = KroneckerDelta(i, j)
+        >>> MatrixExpr.from_index_summation(expr)
+        1
+        >>> MatrixExpr.from_index_summation(expr, dimension_hint={i: 4})
+        I
+
+        Contracted Kronecker deltas don't need indication of dimension:
+
+        >>> expr = Sum(A[i, j]*KroneckerDelta(j, k)*B[k, l], (j, 0, N-1), (k, 0, N-1))
+        >>> MatrixExpr.from_index_summation(expr)
+        A*B
         """
         from sympy import Sum, Mul, Add, MatMul, transpose, trace
         from sympy.strategies.traverse import bottom_up
+        from sympy.tensor.functions import TensorProduct
+        from sympy.tensor import Indexed
 
-        def remove_matelement(expr, i1, i2):
+        def remove_matelement(expr, indices=()):
+            i1 = indices[0]
+
+            expr = expr.replace(
+                lambda x: isinstance(x, KroneckerDelta),
+                lambda x: MatrixElement(Identity(dimension_hint[x.args[1]]), x.args[1:])
+            )
+
+            def repl_mul(x):
+                if not isinstance(x, (Mul, MatMul)):
+                    return x
+                args_me = [arg for arg in x.args if isinstance(arg, (KroneckerDelta, MatrixElement))]
+                if len(args_me) <= 1:
+                    return x
+                args_other = [arg for arg in x.args if arg not in args_me]
+                args_me.sort(key=lambda v: (indices.index(v.args[1]), 0) if v.args[1] in indices else (len(indices), 0))
+                return MatMul.fromiter(args_other)*Indexed(TensorProduct(*[i.args[0] for i in args_me]),
+                        *sum([i.args[1:] for i in args_me], ())
+                    )
+            rule_tensorproduct = bottom_up(repl_mul)
+            expr = rule_tensorproduct(expr)
 
             def repl_match(pos):
                 def func(x):
-                    if not isinstance(x, MatrixElement):
+                    if not isinstance(x, (Indexed, MatrixElement)):
                         return False
                     if x.args[pos] != i1:
                         return False
@@ -532,12 +582,14 @@ class MatrixExpr(Expr):
                             scalar = elem
                             continue
                         indices = tuple(sorted(indices, key=default_sort_key))
-                        d[indices].append(scalar*remove_matelement(elem, *indices))
+                        d[indices].append(scalar*remove_matelement(elem, indices))
                         scalar = 1
                 return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
             elif isinstance(expr, KroneckerDelta):
                 i1, i2 = expr.args
-                return [(MatrixElement(S.One, i1, i2), (i1, i2))]
+                return [(MatrixElement(
+                    Identity(dimension_hint[i1]) if i1 in dimension_hint else S.One, i1, i2),
+                    (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
                 if i1 in index_ranges:
@@ -562,18 +614,20 @@ class MatrixExpr(Expr):
                 return [(expr, None)]
 
         retvals = recurse_expr(expr)
-        factors, indices = zip(*retvals)
+        factors, retindices = zip(*retvals)
         retexpr = Mul.fromiter(factors)
-        if len(indices) == 0 or list(set(indices)) == [None]:
+        if len(retindices) == 0 or list(set(retindices)) == [None]:
             return retexpr
-        if first_index is None:
-            for i in indices:
+        if not isinstance(indices, collections.Iterable):
+            indices = (indices,)
+        if len(indices) == 0:
+            for i in retindices:
                 if i is not None:
                     ind0 = i
                     break
-            return remove_matelement(retexpr, *ind0)
+            return remove_matelement(retexpr, ind0)
         else:
-            return remove_matelement(retexpr, first_index, last_index)
+            return remove_matelement(retexpr, indices)
 
 
 class MatrixElement(Expr):
