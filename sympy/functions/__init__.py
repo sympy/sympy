@@ -113,7 +113,7 @@ __all__ += ["DiracDelta", "Heaviside"]
 from .special.bsplines import bspline_basis, bspline_basis_set
 __all__ += ["bspline_basis", "bspline_basis_set"]
 
-from sympy.functions.special.bessel import (
+from .special.bessel import (
     besselj, bessely, besseli, besselk, hankel1, hankel2,
     jn, yn, jn_zeros, hn1, hn2,
     airyai, airybi, airyaiprime, airybiprime

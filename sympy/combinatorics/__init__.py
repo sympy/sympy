@@ -39,7 +39,7 @@ __all__ += ["DirectProduct"]
 from .graycode import GrayCode
 __all__ += ["GrayCode"]
 
-from sympy.combinatorics.named_groups import (
+from .named_groups import (
     SymmetricGroup, DihedralGroup, CyclicGroup,
     AlternatingGroup, AbelianGroup, RubikGroup
 )
