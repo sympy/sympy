@@ -2,6 +2,7 @@ from sympy.core import (Function, Pow, sympify, Expr)
 from sympy.core.relational import Relational
 from sympy.polys import Poly, decompose
 from sympy.utilities.misc import func_name
+from sympy import Min, Max
 
 
 def decompogen(f, symbol):
@@ -28,6 +29,8 @@ def decompogen(f, symbol):
     [sqrt(x), 6*x**2 - 5]
     >>> decompogen(sin(sqrt(cos(x**2 + 1))), x)
     [sin(x), sqrt(x), cos(x), x**2 + 1]
+    >>> decompogen(Max(sin(x), x**2), x)
+    [Max, sin(x), x**2]
     >>> decompogen(x**4 + 2*x**3 - x - 1, x)
     [x**2 - x - 1, x**2 + x]
 
@@ -46,7 +49,14 @@ def decompogen(f, symbol):
             return [f]
         result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
         return result
-
+    # ===== Max/Min Functions ===== #
+    if isinstance(f, (Max, Min)):
+        result += [type(f)]
+        for i in f.args:
+            if isinstance(i,(Pow,Function,Min,Max)):
+                result += decompogen(i,symbol)
+        return result
+        
     # ===== Convert to Polynomial ===== #
     fp = Poly(f)
     gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
