@@ -20,7 +20,7 @@ def decompogen(f, symbol):
 
     >>> from sympy.solvers.decompogen import decompogen
     >>> from sympy.abc import x
-    >>> from sympy import sqrt, sin, cos
+    >>> from sympy import sqrt, sin, cos, Max, Min
     >>> decompogen(sin(cos(x)), x)
     [sin(x), cos(x)]
     >>> decompogen(sin(x)**2 + sin(x) + 1, x)
@@ -49,7 +49,7 @@ def decompogen(f, symbol):
             return [f]
         result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
         return result
- 
+
     # ===== Max/Min Functions ===== #
     if isinstance(f, (Max, Min)):
         result += [type(f)]
