@@ -246,9 +246,7 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
 
     def _get_statement(self, codestring):
-        """Formats a codestring with the proper line ending."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
+        return codestring
 
     def _get_comment(self, text):
         """Formats a text string as a comment."""
@@ -308,7 +306,7 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
-        elif self._settings["contract"] and (lhs.has(IndexedBase) or
+        elif self._settings.get("contract", False) and (lhs.has(IndexedBase) or
                 rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
