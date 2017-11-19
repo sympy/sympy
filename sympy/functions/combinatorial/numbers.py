@@ -977,6 +977,20 @@ class catalan(Function):
         k = Dummy('k', integer=True, positive=True)
         return Product((n + k) / k, (k, 2, n))
 
+    def _eval_is_integer(self):
+        if self.args[0].is_integer:
+            if self.args[0].is_nonnegative:
+                return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_composite(self):
+        if self.args[0].is_integer:
+            if (self.args[0] - 3).is_positive:
+                return True
+
     def _eval_evalf(self, prec):
         from sympy import gamma
         if self.args[0].is_number:
