@@ -230,11 +230,10 @@ class MatrixExpr(Expr):
         res = res.xreplace(repl)
         if res == 0:
             return res
-        if len(repl) < 2:
-            return res
         # Parse the resulting expression, indices of the deriving variable first:
-        read_indices = tuple(x for x in [m, n, i, j] if x not in repl)
-        return MatrixExpr.from_index_summation(res, read_indices)
+        read_indices = tuple(x for x in [m, i, n, j] if x not in repl)
+        dim_hint = {m: v.shape[0], n: v.shape[1], i: self.shape[0], j: self.shape[1]}
+        return MatrixExpr.from_index_summation(res, read_indices, dim_hint)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -477,8 +476,11 @@ class MatrixExpr(Expr):
                 if len(args_me) <= 1:
                     return x
                 args_other = [arg for arg in x.args if arg not in args_me]
-                args_me.sort(key=lambda v: (indices.index(v.args[1]), 0) if v.args[1] in indices else (len(indices), 0))
-                return MatMul.fromiter(args_other)*Indexed(TensorProduct(*[i.args[0] for i in args_me]),
+                args_me.sort(key=lambda v: (indices.index(v.args[1]), 0)
+                        if v.args[1] in indices else (len(indices),
+                            default_sort_key(v.args[1])))
+                return MatMul.fromiter(args_other)*Indexed(
+                        TensorProduct(*[i.args[0] for i in args_me]),
                         *sum([i.args[1:] for i in args_me], ())
                     )
             rule_tensorproduct = bottom_up(repl_mul)
