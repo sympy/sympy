@@ -1959,3 +1959,11 @@ def test_issue_8247_8354():
 def test_Add_is_zero():
     x, y = symbols('x y', zero=True)
     assert (x + y).is_zero
+
+
+def test_Mod_is_even_odd():
+    odd = Symbol('odd', odd=True)
+    even = Symbol('even', even=True)
+
+    assert odd % 2 == 1
+    assert even % 2 == 0
