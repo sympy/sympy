@@ -220,7 +220,7 @@ class Set(Basic):
             none_range = FiniteSet(*[el for el in other if self.contains(el) not in [True, False]])
             out_range = FiniteSet(*[el for el in other if self.contains(el) == False])
             if none_range:
-                return Union(out_range, Complement(none_range, self, evaluate = False))
+                return Union(out_range, Complement(none_range, self, evaluate=False))
             else:
                 return out_range
 
