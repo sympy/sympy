@@ -202,6 +202,7 @@ reference eigenvalues. Look at the aforementioned paper for more information.
 Some of these are intermediate values, used to transform values from the paper
 into the coordinate systems used in this model. ::
 
+  >>> from sympy.core import evalf
   >>> PaperRadRear  =  0.3
   >>> PaperRadFront =  0.35
   >>> HTA           =  evalf.N(pi/2-pi/10)
