@@ -74,7 +74,7 @@ __all__ += [
 ]
 
 from .evalf import PrecisionExhausted, N
-__all__ += ["PrecisionExhausted", "N", "evalf"]
+__all__ += ["PrecisionExhausted", "N"]
 
 from .containers import Tuple, Dict
 __all__ += ["Tuple", "Dict"]

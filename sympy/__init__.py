@@ -85,7 +85,8 @@ from .printing import rcode, ccode, fcode, jscode, julia_code, mathematica_code,
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
 
-evalf._create_evalf_table()
+from .core.evalf import _create_evalf_table
+_create_evalf_table()
 
 # This is slow to import:
 #import abc
