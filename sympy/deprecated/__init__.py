@@ -9,4 +9,7 @@ Since no modules in SymPy ever depend on deprecated code, SymPy always imports
 this last, after all other modules have been imported.
 """
 
-from sympy.deprecated.class_registry import C, ClassRegistry
+__all__ = []
+
+from .class_registry import C, ClassRegistry
+__all__ += ["C", "ClassRegistry"]
