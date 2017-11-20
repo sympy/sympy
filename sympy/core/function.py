@@ -778,6 +778,8 @@ class AppliedUndef(Function):
     function.
     """
 
+    is_number = False
+
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
         obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
@@ -2531,7 +2533,7 @@ def count_ops(expr, visual=False):
                     if a.q != 1:
                         ops.append(DIV)
                     continue
-            elif a.is_Mul:
+            elif a.is_Mul or a.is_MatMul:
                 if _coeff_isneg(a):
                     ops.append(NEG)
                     if a.args[0] is S.NegativeOne:
@@ -2551,7 +2553,7 @@ def count_ops(expr, visual=False):
                     ops.append(DIV)
                     args.append(n)
                     continue  # could be -Mul
-            elif a.is_Add:
+            elif a.is_Add or a.is_MatAdd:
                 aargs = list(a.args)
                 negs = 0
                 for i, ai in enumerate(aargs):

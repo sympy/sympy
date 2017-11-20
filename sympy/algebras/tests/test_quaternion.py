@@ -111,7 +111,7 @@ def test_quaternion_conversions():
                                    2*acos(cos(theta/2)))
 
     assert trigsimp(q2.to_rotation_matrix((1, 1, 1))) == Matrix([
-               [cos(theta), -sin(theta), 0, -sqrt(2)*cos(theta + pi/4) + 1],
-               [sin(theta),  cos(theta), 0, -sqrt(2)*sin(theta + pi/4) + 1],
-               [0,           0,          1,  0                            ],
-               [0,           0,          0,  1                            ]])
+               [cos(theta), -sin(theta), 0, sin(theta) - cos(theta) + 1],
+               [sin(theta),  cos(theta), 0, -sin(theta) - cos(theta) + 1],
+               [0,           0,          1,  0],
+               [0,           0,          0,  1]])

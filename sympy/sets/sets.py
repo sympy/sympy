@@ -17,6 +17,7 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
+from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -1557,15 +1558,13 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
-        from sympy.utilities.iterables import sift
 
-        sifted = sift(args, lambda x: x.is_FiniteSet)
-        fs_args = sifted.pop(True, [])
+        fs_args, other = sift(args, lambda x: x.is_FiniteSet,
+            binary=True)
         if not fs_args:
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
-        other = sifted.pop(False, [])
 
         res = []
         unk = []

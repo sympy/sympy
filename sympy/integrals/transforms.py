@@ -1293,6 +1293,10 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     if not F.has(Integral):
         return _simplify(F, simplify), True
 
+    integral_f = integrate(f, (x, -oo, oo))
+    if integral_f in (-oo, oo, S.NaN) or integral_f.has(Integral):
+        raise IntegralTransformError(name, f, 'function not integrable on real axis')
+
     if not F.is_Piecewise:
         raise IntegralTransformError(name, f, 'could not compute integral')
 

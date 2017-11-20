@@ -1476,6 +1476,9 @@ class LatexPrinter(Printer):
 
     def _print_NDimArray(self, expr):
 
+        if expr.rank() == 0:
+            return self._print(expr[()])
+
         mat_str = self._settings['mat_str']
         if mat_str is None:
             if self._settings['mode'] == 'inline':
@@ -1528,6 +1531,14 @@ class LatexPrinter(Printer):
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
             r", \quad ".join([ self._print(i) for i in expr ])
+
+    def _print_TensorProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \otimes '.join(elements)
+
+    def _print_WedgeProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \wedge '.join(elements)
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
