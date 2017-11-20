@@ -223,7 +223,7 @@ class Set(Basic):
                 contains = self.contains(el)
                 return contains if contains in [True, False] else None
 
-            sifted = sift(other, lambda i: ternary_sift(i))
+            sifted = sift(other, ternary_sift)
             # ignore those that are contained in self
             return Union(FiniteSet(*(sifted[False])),
                 Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
