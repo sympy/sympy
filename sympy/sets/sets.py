@@ -217,13 +217,17 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
+            from sympy.utilities.iterables import sift
 
-            none_range = FiniteSet(*[el for el in other if self.contains(el) not in [True, False]])
-            out_range = FiniteSet(*[el for el in other if self.contains(el) == False])
-            if none_range:
-                return Union(out_range, Complement(none_range, self, evaluate=False))
-            else:
-                return out_range
+            def ternary_sift(el):
+                contains = self.contains(el)
+                return contains if contains in [True, False] else None
+
+            sifted = sift(other, lambda i: ternary_sift(i))
+            # ignore those that are contained in self
+            return Union(FiniteSet(*(sifted[False])),
+                Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
+                if sifted[None] else S.EmptySet)
 
     def symmetric_difference(self, other):
         """
