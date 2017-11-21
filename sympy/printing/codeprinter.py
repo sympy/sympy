@@ -246,7 +246,7 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
 
     def _get_statement(self, codestring):
-        return codestring
+        return "%s" % codestring
 
     def _get_comment(self, text):
         """Formats a text string as a comment."""
