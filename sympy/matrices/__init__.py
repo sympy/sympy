@@ -57,4 +57,4 @@ __all__ += [
 
 MutableDenseMatrix = MutableMatrix = Matrix
 SparseMatrix = MutableSparseMatrix
-__all__ += ["MutableDenseMatrix", "SparseMatrix"]
+__all__ += ["MutableDenseMatrix", "MutableMatrix", "SparseMatrix"]
