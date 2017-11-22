@@ -294,8 +294,9 @@ class ImageSet(Set):
 
     def _contains(self, other):
         from sympy.matrices import Matrix
-        from sympy.solvers.solveset import solveset, linsolve
+        from sympy.solvers.solveset import solveset, linsolve, solvify
         from sympy.utilities.iterables import is_sequence, iterable, cartes
+        from sympy.functions.elementary.integers import floor
         L = self.lamda
         if is_sequence(other):
             if not is_sequence(L.expr):
@@ -351,6 +352,26 @@ class ImageSet(Set):
                     solns = list(solnsSet)
                 else:
                     msgset = solnsSet
+            elif isinstance(L.expr, Interval):
+                var = L.variables[0]
+                if isinstance(other, Expr) and \
+                (self.base_set).is_subset(S.Integers):
+                    if not iterable(other):
+                        other = (other,)
+                    for i in (other):
+                        interval_sol = solveset(
+                            L.expr.inf - i, var)
+                        if interval_sol is S.EmptySet:
+                            return False
+                        for j in interval_sol:
+                            j_floor = floor(j)
+                            j_ceiling = floor(j) + 1
+                            if L.expr.subs(var, j_floor).contains(i) or \
+                                L.expr.subs(var, j_ceiling).contains(i):
+                                return True
+                            else:
+                             continue
+                    return S.false
             else:
                 # scalar -> vector
                 for e, o in zip(L.expr, other):
