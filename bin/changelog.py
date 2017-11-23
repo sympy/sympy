@@ -19,13 +19,9 @@ SUFFIX = ' ([#{pr_number}](../pull/{pr_number}))\n'
 
 def get_build_information():
     """
-    Check event type and target branch and return PR number
+    Check event type and return PR number
     """
     event_type = os.environ['TRAVIS_EVENT_TYPE']
-    branch = os.environ['TRAVIS_BRANCH']
-    if branch != 'master':
-        print('Target branch is not master, skipping changelog')
-        sys.exit()
     elif event_type == 'push':
         match = re.match(r'Merge pull request #(\d+)',
             os.environ['TRAVIS_COMMIT_MESSAGE']);
