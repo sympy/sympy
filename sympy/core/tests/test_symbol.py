@@ -4,7 +4,7 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
 from sympy.core.symbol import _uniquely_named_symbol, _symbol
 
 from sympy.utilities.pytest import raises
-from sympy.core.symbol import disambiguate_symbols
+from sympy.core.symbol import disambiguate
 
 
 def test_Symbol():
@@ -369,15 +369,24 @@ def test__uniquely_named_symbol_and__symbol():
     assert _symbol(x, _x) == x
 
 
-def test_disambiguate_symbols():
-    t1 = Tuple(Symbol('_x'), Symbol('_y'), Dummy('y'), Dummy('x'), Dummy('x'))
-    t2 = [Dummy('x'), Dummy('x')]
-    t3 = (Dummy('x'), Dummy('y'))
-    t4 = Tuple(Symbol('x', prime=True), Symbol('x', composite=True))
-    t5 = Tuple(Symbol('x'), Dummy('x'))
+def test_disambiguate():
+    y = Symbol('y')
 
-    assert disambiguate_symbols(t1) == Tuple(Symbol('_x'), Symbol('_y'), Symbol('_y_1'), Symbol('_x_1'), Symbol('_x_2'))
-    assert disambiguate_symbols(t2) == Tuple(Symbol('_x'), Symbol('_x_1'))
-    assert disambiguate_symbols(t3) == Tuple(Symbol('_x'), Symbol('_y'))
-    assert disambiguate_symbols(t4) == Tuple(Symbol('x', prime=True), Symbol('x_1', composite=True))
-    assert disambiguate_symbols(t5) == Tuple(Symbol('x'), Symbol('_x'))
+    t1 = Symbol('_y'), Dummy('y'),Symbol('_x'), Dummy('x'), Dummy('x')
+    t2 = Dummy('x'), Dummy('x')
+    t3 = Dummy('x'), Dummy('y')
+    t4 = Symbol('x', prime=True), Symbol('x', composite=True)
+    t5 = Symbol('x'), Dummy('x')
+
+    assert disambiguate(*t1) == (Symbol('_x'), Symbol('_x_1'), Symbol('_x_2'),\
+        Symbol('_y'), Symbol('_y_1'))
+    assert disambiguate(*t2) == (Symbol('_x'), Symbol('_x_1'))
+    assert disambiguate(*t3) == (Symbol('_x'), Symbol('_y'))
+    assert disambiguate(*t4) == (Symbol('x', composite=True), Symbol('x_1', prime=True))
+    assert disambiguate(*t5) == (Symbol('_x'), Symbol('x'))
+
+    t6 = Symbol('_x'), Dummy('x')/y
+    t7 = Symbol('_y')*Dummy('y'), Symbol('_y')
+
+    assert disambiguate(*t6) == (Symbol('_x_1'), Symbol('_x')/y)
+    assert disambiguate(*t7) == (Symbol('_y_1'), Symbol('_y')*Symbol('_y_1'))

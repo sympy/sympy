@@ -740,41 +740,38 @@ def var(names, **args):
 
     return syms
 
-def disambiguate_symbols(iter):
+def disambiguate(*iter):
     """
-    This provides a method to disambiguate symbols that print the same.
+    This provides a method to disambiguate symbols or expressions having
+    ambiguate symbols
 
     Parameters
     ==========
 
-    iter: Iterables.
-        List, Tuple or Set
+    iter: list of symbols or expressions.
 
     Returns
     =======
 
-    A sympy Tuple object containing disambiguate symbols.
+    An ordered tuple containing disambiguate symbols or expressions 
+    with disambiguate symbols.
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import disambiguate_symbols
-    >>> from sympy import Tuple, Dummy, Symbol
+    >>> from sympy.core.symbol import disambiguate
+    >>> from sympy import Dummy, Symbol
 
-    >>> tup = Tuple(Symbol('_x'), Dummy('x'), Dummy('x'))
-    >>> disambiguate_symbols(tup)
+    >>> tup = Symbol('_x'), Dummy('x'), Dummy('x')
+    >>> disambiguate(*tup)
     (_x, _x_1, _x_2)
 
-    >>> disambiguate_symbols([Dummy('x'), Dummy('x')])
+    >>> disambiguate(Dummy('x'), Dummy('x'))
     (_x, _x_1)
 
     """
-    new_iter = iter
-    if not isinstance(new_iter, Basic):
-        new_iter=Tuple()
-        for i in iter:
-            new_iter += Tuple(i)
-    syms = ordered(new_iter.free_symbols, keys=new_iter.index)
+    new_iter = Tuple(*iter)
+    syms = ordered(new_iter.free_symbols)
     mapping = {}
     for s in syms:
         mapping.setdefault(str(s), []).append(s)
@@ -785,4 +782,4 @@ def disambiguate_symbols(iter):
             continue
         for i in range(1, len(mapping[k])):
             reps[mapping[k][i]] = Symbol("%s_%i"%(k, i), **mapping[k][i].assumptions0)
-    return new_iter.xreplace(reps)
+    return tuple(ordered(new_iter.xreplace(reps)))
