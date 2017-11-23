@@ -375,18 +375,16 @@ def test_disambiguate():
     t1 = Symbol('_y'), Dummy('y'),Symbol('_x'), Dummy('x'), Dummy('x')
     t2 = Dummy('x'), Dummy('x')
     t3 = Dummy('x'), Dummy('y')
-    t4 = Symbol('x', prime=True), Symbol('x', composite=True)
-    t5 = Symbol('x'), Dummy('x')
+    t4 = Symbol('x'), Dummy('x')
 
     assert disambiguate(*t1) == (Symbol('_x'), Symbol('_x_1'), Symbol('_x_2'),\
         Symbol('_y'), Symbol('_y_1'))
     assert disambiguate(*t2) == (Symbol('_x'), Symbol('_x_1'))
     assert disambiguate(*t3) == (Symbol('_x'), Symbol('_y'))
-    assert disambiguate(*t4) == (Symbol('x', composite=True), Symbol('x_1', prime=True))
-    assert disambiguate(*t5) == (Symbol('_x'), Symbol('x'))
+    assert disambiguate(*t4) == (Symbol('_x'), Symbol('x'))
 
-    t6 = Symbol('_x'), Dummy('x')/y
-    t7 = Symbol('_y')*Dummy('y'), Symbol('_y')
+    t5 = Symbol('_x'), Dummy('x')/y
+    t6 = Symbol('_y')*Dummy('y'), Symbol('_y')
 
-    assert disambiguate(*t6) == (Symbol('_x_1'), Symbol('_x')/y)
-    assert disambiguate(*t7) == (Symbol('_y_1'), Symbol('_y')*Symbol('_y_1'))
+    assert disambiguate(*t5) == (Symbol('_x_1'), Symbol('_x')/y)
+    assert disambiguate(*t6) == (Symbol('_y_1'), Symbol('_y')*Symbol('_y_1'))

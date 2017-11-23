@@ -753,7 +753,7 @@ def disambiguate(*iter):
     Returns
     =======
 
-    An ordered tuple containing disambiguate symbols or expressions 
+    An ordered tuple containing disambiguate symbols or expressions
     with disambiguate symbols.
 
     Examples
