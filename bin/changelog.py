@@ -22,7 +22,7 @@ def get_build_information():
     Check event type and return PR number
     """
     event_type = os.environ['TRAVIS_EVENT_TYPE']
-    elif event_type == 'push':
+    if event_type == 'push':
         match = re.match(r'Merge pull request #(\d+)',
             os.environ['TRAVIS_COMMIT_MESSAGE']);
         if not match:
