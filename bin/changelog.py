@@ -17,6 +17,15 @@ HEADERS = {
 PREFIX = '* '
 SUFFIX = ' ([#{pr_number}](../pull/{pr_number}))\n'
 
+def red(text):
+    return "\033[31m%s\033[0m" % text
+
+def green(text):
+    return "\033[32m%s\033[0m" % text
+
+def blue(text):
+    return "\033[34m%s\033[0m" % text
+
 def get_build_information():
     """
     Check event type and return PR number
@@ -26,15 +35,15 @@ def get_build_information():
         match = re.match(r'Merge pull request #(\d+)',
             os.environ['TRAVIS_COMMIT_MESSAGE']);
         if not match:
-            sys.exit('Cannot find pull request number!')
+            sys.exit(red('Cannot find pull request number!'))
         return match.group(1)
     elif event_type == 'pull_request':
         return os.environ['TRAVIS_PULL_REQUEST']
     elif event_type == 'cron' or event_type == 'api':
-        print('Not a push or PR build, skipping changelog')
+        print(green('Not a push or PR build, skipping changelog'))
         sys.exit()
     else:
-        sys.exit('Unknown event type!')
+        sys.exit(red('Unknown event type!'))
 
 def request_https_get(url):
     """
@@ -73,12 +82,14 @@ def get_changelog(data):
             elif '[CHANGELOG END]' in line:
                 break
             elif '[skip changelog]' in line:
-                print('[skip changelog] found, skipping changelog')
+                print(green('[skip changelog] found, skipping changelog'))
                 sys.exit()
     else:
-        sys.exit('Changelog not detected! Please use pull request template.')
-    if all(len(changelogs[t]) == 0 for t in HEADERS):
-        sys.exit('Changelog not found! Please add a changelog.')
+        sys.exit(red('Changelog not detected! Please use pull request template.'))
+    count = sum(len(changelogs[t]) for t in HEADERS)
+    if count == 0:
+        sys.exit(red('Changelog not found! Please add a changelog.'))
+    print(green('%s changelog entr%s found!' % (count, 'y' if count == 1 else 'ies')))
     return changelogs
 
 def get_release_notes_filename():
@@ -146,16 +157,19 @@ if __name__ == '__main__':
     rel_notes_path = os.path.abspath(rel_notes_name)
 
     if not ON_TRAVIS:
-        print('Parsed changelogs:\n%s' % changelogs)
-        print('Downloading %s' % rel_notes_name)
+        print(green('Parsed changelogs:'))
+        print(str(changelogs))
+        print(green('Downloading %s' % rel_notes_name))
         r = request_https_get('https://raw.githubusercontent.com/wiki/' +
             os.environ['TRAVIS_REPO_SLUG'] + '/' + rel_notes_name)
         with open(rel_notes_path, 'w') as f:
             f.write(r.text)
 
-    print('Updating %s' % rel_notes_path)
+    print(green('Updating %s' % rel_notes_path))
     update_release_notes(rel_notes_path, changelogs, pr_number)
 
     if ON_TRAVIS:
-        print('Staging updated release notes')
-        subprocess.run(['git', 'add', rel_notes_path], check=True)
+        print(green('Staging updated release notes'))
+        command = ['git', 'add', rel_notes_path]
+        print(blue(' '.join(command)))
+        subprocess.run(command, check=True)
