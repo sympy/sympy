@@ -8,6 +8,7 @@ env:
   - SPLIT="3/4" TEST_SYMPY="true"
   - SPLIT="4/4" TEST_SYMPY="true"
   global:
+    # Doctr deploy key for sympy/sympy_doc
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
     # Doctr deploy key for sympy/sympy.wiki
     - secure: "c6eRGaJxmgH13eUd0yyJPkEse6+BzYtFfWfXfKt6h74ObmCJYuM3tuWQf/QBgAgkDbk7YHUbyBBmN1Z+OWQ7uPhFOKuah1mYxnoXNeQPqhDuyOcBJyBSO0/RF5QJDFNNoX6J2e+9K/64qiuzyVKdOc1VXNcOlC0wDYMGioHOw9U="
