@@ -370,21 +370,24 @@ def test__uniquely_named_symbol_and__symbol():
 
 
 def test_disambiguate():
+    from sympy import var
     y = Symbol('y')
 
     t1 = Symbol('_y'), Dummy('y'),Symbol('_x'), Dummy('x'), Dummy('x')
     t2 = Dummy('x'), Dummy('x')
     t3 = Dummy('x'), Dummy('y')
     t4 = Symbol('x'), Dummy('x')
+    t5 = var('x', integer=True), var('x')
 
-    assert disambiguate(*t1) == (Symbol('_x'), Symbol('_x_1'), Symbol('_x_2'),\
-        Symbol('_y'), Symbol('_y_1'))
-    assert disambiguate(*t2) == (Symbol('_x'), Symbol('_x_1'))
-    assert disambiguate(*t3) == (Symbol('_x'), Symbol('_y'))
-    assert disambiguate(*t4) == (Symbol('_x'), Symbol('x'))
+    assert disambiguate(*t1) == Tuple(Symbol('_y_1'), Symbol('_y'), Symbol('_x_2'),\
+        Symbol('_x'), Symbol('_x_1'))
+    assert disambiguate(*t2) == Tuple(Symbol('_x'), Symbol('_x_1'))
+    assert disambiguate(*t3) == Tuple(Symbol('_x'), Symbol('_y'))
+    assert disambiguate(*t4) == Tuple(Symbol('x'), Symbol('_x'))
+    assert disambiguate(*t5) == Tuple(Symbol('x', integer=True), Symbol('x_1'))
 
-    t5 = Symbol('_x'), Dummy('x')/y
-    t6 = Symbol('_y')*Dummy('y'), Symbol('_y')
+    t6 = Symbol('_x'), Dummy('x')/y
+    t7 = Symbol('_y')*Dummy('y'), Symbol('_y')
 
-    assert disambiguate(*t5) == (Symbol('_x_1'), Symbol('_x')/y)
-    assert disambiguate(*t6) == (Symbol('_y_1'), Symbol('_y')*Symbol('_y_1'))
+    assert disambiguate(*t6) == Tuple(Symbol('_x_1'), Symbol('_x')/y)
+    assert disambiguate(*t7) == Tuple(Symbol('_y')*Symbol('_y_1'), Symbol('_y_1'))

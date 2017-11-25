@@ -771,7 +771,8 @@ def disambiguate(*iter):
 
     """
     new_iter = Tuple(*iter)
-    syms = ordered(new_iter.free_symbols)
+    key = lambda x:tuple(sorted(x.assumptions0.items()))
+    syms = ordered(new_iter.free_symbols, keys=key)
     mapping = {}
     for s in syms:
         mapping.setdefault(str(s), []).append(s)
@@ -782,4 +783,4 @@ def disambiguate(*iter):
             continue
         for i in range(1, len(mapping[k])):
             reps[mapping[k][i]] = Symbol("%s_%i"%(k, i), **mapping[k][i].assumptions0)
-    return tuple(ordered(new_iter.xreplace(reps)))
+    return new_iter.xreplace(reps)
