@@ -742,32 +742,37 @@ def var(names, **args):
 
 def disambiguate(*iter):
     """
-    This provides a method to disambiguate symbols or expressions having
-    ambiguate symbols
+    Return a Tuple containing the passed expressions with distinct
+    symbols(that appear the same when printed) replaced with numerically
+    subscripted symbols.
 
     Parameters
     ==========
 
     iter: list of symbols or expressions.
 
-    Returns
-    =======
-
-    An ordered tuple containing disambiguate symbols or expressions
-    with disambiguate symbols.
-
     Examples
     ========
 
     >>> from sympy.core.symbol import disambiguate
     >>> from sympy import Dummy, Symbol
+    >>> from sympy.abc import y
 
     >>> tup = Symbol('_x'), Dummy('x'), Dummy('x')
     >>> disambiguate(*tup)
-    (_x, _x_1, _x_2)
+    (_x_2, _x, _x_1)
 
     >>> disambiguate(Dummy('x'), Dummy('x'))
     (_x, _x_1)
+
+    >>> t = Symbol('_x'), Dummy('x')/y
+    >>> disambiguate(*t)
+    (_x_1, _x/y)
+
+    >>> x = Symbol('x', integer=True)
+    >>> y = Symbol('x')
+    >>> disambiguate(x + y)
+    (x + x_1,)
 
     """
     new_iter = Tuple(*iter)
