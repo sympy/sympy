@@ -362,7 +362,7 @@ class ImageSet(Set):
                     raise NotImplementedError(filldedent('''
                         Determining whether %s is contained in imagesets
                         with base sets %s has not been implemented.''')
-                        %(self, other, self.base_set))
+                        %(other, self.base_set))
                 if isinstance(other, Expr) and \
                 (self.base_set).is_subset(S.Integers):
                     if not iterable(other):
