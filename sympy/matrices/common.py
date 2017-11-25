@@ -2134,7 +2134,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    pass
+    _diff_wrt = True
 
 
 class _MinimalMatrix(object):
@@ -2157,6 +2157,9 @@ class _MinimalMatrix(object):
     @classmethod
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
+
+    def diff(self, *args):
+        return self.applyfunc(lambda x: x.diff(*args))
 
     def __init__(self, rows, cols=None, mat=None):
         if isinstance(mat, FunctionType):
