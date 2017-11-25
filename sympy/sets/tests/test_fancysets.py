@@ -490,8 +490,17 @@ def test_ImageSet_simplification():
 
 def test_ImageSet_contains():
     from sympy.abc import x
+    a = ImageSet(Lambda(x, Interval(x, x + S(1)/2)), S.Naturals0)
+    b = ImageSet(Lambda(x, Interval(1/x, 1/x + S.One)), S.Naturals)
+    c = ImageSet(Lambda(x, Interval(2*x*pi, (2*x + 1)*pi)), S.Integers)
     assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
-
+    assert a.contains(S(3)/2)
+    assert not a.contains(S(5)/3)
+    assert b.contains(S.One)
+    assert not b.contains(5/2)
+    assert c.contains(3*pi/4)
+    assert c.contains(pi)
+    assert not c.contains(3*pi/2)
 
 def test_ComplexRegion_contains():
 

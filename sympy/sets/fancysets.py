@@ -128,6 +128,10 @@ class Integers(with_metaclass(Singleton, Set)):
         from sympy.functions.elementary.integers import floor, ceiling
         if other is Interval(S.NegativeInfinity, S.Infinity) or other is S.Reals:
             return self
+        elif other == Interval(S.Zero, S.Infinity) or other is S.Naturals0:
+            return S.Naturals0
+        elif other == Interval(S.One, S.Infinity) or other is S.Naturals:
+            return S.Naturals
         elif other.is_Interval:
             s = Range(ceiling(other.left), floor(other.right) + 1)
             return s.intersect(other)  # take out endpoints if open interval
@@ -354,6 +358,11 @@ class ImageSet(Set):
                     msgset = solnsSet
             elif isinstance(L.expr, Interval):
                 var = L.variables[0]
+                if not (self.base_set).is_subset(S.Integers):
+                    raise NotImplementedError(filldedent('''
+                        Determining whether %s is contained in imagesets
+                        with base sets %s has not been implemented.''')
+                        %(self, other, self.base_set))
                 if isinstance(other, Expr) and \
                 (self.base_set).is_subset(S.Integers):
                     if not iterable(other):
@@ -366,11 +375,18 @@ class ImageSet(Set):
                         for j in interval_sol:
                             j_floor = floor(j)
                             j_ceiling = floor(j) + 1
-                            if L.expr.subs(var, j_floor).contains(i) or \
-                                L.expr.subs(var, j_ceiling).contains(i):
-                                return True
-                            else:
-                             continue
+                            try:
+                                if L.expr.subs(var, j_floor).contains(i) and \
+                                    self.base_set.contains(j_floor):
+                                    return True
+                            except:
+                                pass
+                            try:
+                                if L.expr.subs(var, j_ceiling).contains(i) and \
+                                    self.base_set.contains(j_ceiling):
+                                    return True
+                            except:
+                                pass
                     return S.false
             else:
                 # scalar -> vector
