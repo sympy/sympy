@@ -2158,9 +2158,6 @@ class _MinimalMatrix(object):
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
-    def diff(self, *args):
-        return self.applyfunc(lambda x: x.diff(*args))
-
     def __init__(self, rows, cols=None, mat=None):
         if isinstance(mat, FunctionType):
             # if we passed in a function, use that to populate the indices

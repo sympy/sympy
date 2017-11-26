@@ -1952,6 +1952,17 @@ def test_diff():
     # Derive a constant matrix:
     assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
 
+    B = ImmutableDenseMatrix([a, b])
+    assert A.diff(B) == Array(
+        [[[
+            [0,0],
+            [0,0]
+        ]],
+        [[
+            [0,0],
+            [0,0]
+        ]]])
+
 
 def test_getattr():
     A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
