@@ -1178,7 +1178,10 @@ class Derivative(Expr):
         if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
             symbol_set = set(sc[0] for sc in variable_count)
             if symbol_set.difference(expr.free_symbols):
-                return S.Zero
+                if isinstance(expr, (MatrixCommon, NDimArray)):
+                    return expr.zeros(*expr.shape)
+                else:
+                    return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.
         # If a high order of derivative is requested and the expr becomes 0
