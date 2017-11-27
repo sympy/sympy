@@ -379,7 +379,7 @@ def test_disambiguate():
 
     assert disambiguate(*t1) == (_y_1, _y, Symbol('_x_2'), _x, _x_1)
     assert disambiguate(*t2) == (_x, _x_1)
-    assert disambiguate(*t3) == (_x, _y))
+    assert disambiguate(*t3) == (_x, _y)
     assert disambiguate(*t4) == (x, _x)
     assert disambiguate(*t5) == (t5[0], Symbol('x_1'))
 
