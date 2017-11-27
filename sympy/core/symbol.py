@@ -793,7 +793,9 @@ def disambiguate(*iter):
     for k in mapping:
         # the first or only symbol doesn't get subscripted but make
         # sure that it's a Symbol, not a Dummy
-        reps[mapping[k][0]] = Symbol("%s"%(k), **mapping[k][0].assumptions0)
+        k0 = Symbol("%s"%(k), **mapping[k][0].assumptions0)
+        if k != k0:
+            reps[mapping[k][0]] = k0
         # the others get subscripts (and are made into Symbols)
         for i in range(1, len(mapping[k])):
             reps[mapping[k][i]] = Symbol("%s_%i"%(k, i), **mapping[k][i].assumptions0)
