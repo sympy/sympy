@@ -2134,7 +2134,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    pass
+    _diff_wrt = True
 
 
 class _MinimalMatrix(object):
