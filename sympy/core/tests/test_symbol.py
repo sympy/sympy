@@ -370,24 +370,21 @@ def test__uniquely_named_symbol_and__symbol():
 
 
 def test_disambiguate():
-    from sympy import var
-    y = Symbol('y')
-
-    t1 = Symbol('_y'), Dummy('y'),Symbol('_x'), Dummy('x'), Dummy('x')
+    x, y, _x, _x_1, _y, _y_1 = symbols('x y _x _x_1 _y _y_1')
+    t1 = _y, Dummy('y'), _x, Dummy('x'), Dummy('x')
     t2 = Dummy('x'), Dummy('x')
     t3 = Dummy('x'), Dummy('y')
-    t4 = Symbol('x'), Dummy('x')
-    t5 = var('x', integer=True), var('x')
+    t4 = x, Dummy('x')
+    t5 = Symbol('x', integer=True), x
 
-    assert disambiguate(*t1) == Tuple(Symbol('_y_1'), Symbol('_y'), Symbol('_x_2'),\
-        Symbol('_x'), Symbol('_x_1'))
-    assert disambiguate(*t2) == Tuple(Symbol('_x'), Symbol('_x_1'))
-    assert disambiguate(*t3) == Tuple(Symbol('_x'), Symbol('_y'))
-    assert disambiguate(*t4) == Tuple(Symbol('x'), Symbol('_x'))
-    assert disambiguate(*t5) == Tuple(Symbol('x', integer=True), Symbol('x_1'))
+    assert disambiguate(*t1) == (_y_1, _y, Symbol('_x_2'), _x, _x_1)
+    assert disambiguate(*t2) == (_x, _x_1)
+    assert disambiguate(*t3) == (_x, _y))
+    assert disambiguate(*t4) == (x, _x)
+    assert disambiguate(*t5) == (t5[0], Symbol('x_1'))
 
-    t6 = Symbol('_x'), Dummy('x')/y
-    t7 = Symbol('_y')*Dummy('y'), Symbol('_y')
+    t6 = _x, Dummy('x')/y
+    t7 = _y*y, _y
 
-    assert disambiguate(*t6) == Tuple(Symbol('_x_1'), Symbol('_x')/y)
-    assert disambiguate(*t7) == Tuple(Symbol('_y')*Symbol('_y_1'), Symbol('_y_1'))
+    assert disambiguate(*t6) == (_x_1, _x/y)
+    assert disambiguate(*t7) == (_y*_y_1, _y_1)
