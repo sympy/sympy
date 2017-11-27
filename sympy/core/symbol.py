@@ -742,9 +742,9 @@ def var(names, **args):
 
 def disambiguate(*iter):
     """
-    Return a Tuple containing the passed expressions with distinct
-    symbols(that appear the same when printed) replaced with numerically
-    subscripted symbols.
+    Return a Tuple containing the passed expressions with symbols
+    that appear the same when printed replaced with numerically
+    subscripted symbols, and all Dummy symbols replaced with Symbols.
 
     Parameters
     ==========
@@ -755,7 +755,7 @@ def disambiguate(*iter):
     ========
 
     >>> from sympy.core.symbol import disambiguate
-    >>> from sympy import Dummy, Symbol
+    >>> from sympy import Dummy, Symbol, Tuple
     >>> from sympy.abc import y
 
     >>> tup = Symbol('_x'), Dummy('x'), Dummy('x')
@@ -765,14 +765,22 @@ def disambiguate(*iter):
     >>> disambiguate(Dummy('x'), Dummy('x'))
     (_x, _x_1)
 
-    >>> t = Symbol('_x'), Dummy('x')/y
-    >>> disambiguate(*t)
-    (_x_1, _x/y)
+    >>> eqs = Tuple(Symbol('_x')/y, Dummy('x')/y)
+    >>> disambiguate(*eqs)
+    (_x_1/y, _x/y)
 
-    >>> x = Symbol('x', integer=True)
-    >>> y = Symbol('x')
-    >>> disambiguate(x + y)
+    >>> ix = Symbol('x', integer=True)
+    >>> vx = Symbol('x')
+    >>> disambiguate(vx + ix)
     (x + x_1,)
+
+    To make your own mapping of symbols to use, pass only the free symbols
+    of the expressions and create a dictionary:
+
+    >>> free = eqs.free_symbols
+    >>> mapping = dict(zip(free, disambiguate(*free)))
+    >>> eqs.xreplace(mapping)
+    (_x_1/y, _x/y)
 
     """
     new_iter = Tuple(*iter)
@@ -783,9 +791,10 @@ def disambiguate(*iter):
         mapping.setdefault(str(s), []).append(s)
     reps = {}
     for k in mapping:
+        # the first or only symbol doesn't get subscripted but make
+        # sure that it's a Symbol, not a Dummy
         reps[mapping[k][0]] = Symbol("%s"%(k), **mapping[k][0].assumptions0)
-        if len(mapping[k]) == 1:
-            continue
+        # the others get subscripts (and are made into Symbols)
         for i in range(1, len(mapping[k])):
             reps[mapping[k][i]] = Symbol("%s_%i"%(k, i), **mapping[k][i].assumptions0)
     return new_iter.xreplace(reps)
