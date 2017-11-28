@@ -246,7 +246,9 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
 
     def _get_statement(self, codestring):
-        return "%s" % codestring
+        """Formats a codestring with the proper line ending."""
+        raise NotImplementedError("This function must be implemented by "
+                                  "subclass of CodePrinter.")
 
     def _get_comment(self, text):
         """Formats a text string as a comment."""

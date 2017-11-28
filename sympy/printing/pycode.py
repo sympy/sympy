@@ -112,6 +112,9 @@ class PythonCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return lines
 
+    def _get_statement(self, codestring):
+        return "%s" % codestring
+
     def _get_comment(self, text):
         return "  # {0}".format(text)
 
