@@ -384,7 +384,7 @@ def test_disambiguate():
     assert disambiguate(*t5) == (t5[0], Symbol('x_1'))
 
     t6 = _x, Dummy('x')/y
-    t7 = _y*y, _y
+    t7 = _y*Dummy('y'), _y
 
     assert disambiguate(*t6) == (_x_1, _x/y)
     assert disambiguate(*t7) == (_y*_y_1, _y_1)
