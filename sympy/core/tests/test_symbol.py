@@ -370,21 +370,24 @@ def test__uniquely_named_symbol_and__symbol():
 
 
 def test_disambiguate():
-    x, y, _x, _x_1, _y, _y_1 = symbols('x y _x _x_1 _y _y_1')
-    t1 = _y, Dummy('y'), _x, Dummy('x'), Dummy('x')
+    x, y, _x, _x_1, x_1, x_2 = symbols('x y _x _x_1 x_1 x_2')
+    t1 = Dummy('y'), _x, Dummy('x'), Dummy('x')
     t2 = Dummy('x'), Dummy('x')
     t3 = Dummy('x'), Dummy('y')
     t4 = x, Dummy('x')
-    t5 = Symbol('x', integer=True), x
+    t5 = Symbol('x', integer=True), x, Symbol('x_1')
 
-    assert disambiguate(*t1) == (_y_1, _y, Symbol('_x_2'), _x, _x_1)
-    assert disambiguate(*t2) == (_x, _x_1)
-    assert disambiguate(*t3) == (_x, _y)
-    assert disambiguate(*t4) == (x, _x)
-    assert disambiguate(*t5) == (t5[0], Symbol('x_1'))
+    assert disambiguate(*t1) == (y, x_2, x, x_1)
+    assert disambiguate(*t2) == (x, x_1)
+    assert disambiguate(*t3) == (x, y)
+    assert disambiguate(*t4) == (x_1, x)
+    assert disambiguate(*t5) == (t5[0], x_2, x_1)
+    assert disambiguate(*t5)[0] != x  # assumptions are retained
 
     t6 = _x, Dummy('x')/y
-    t7 = _y*Dummy('y'), _y
+    t7 = y*Dummy('y'), y
 
-    assert disambiguate(*t6) == (_x_1, _x/y)
-    assert disambiguate(*t7) == (_y*_y_1, _y_1)
+    assert disambiguate(*t6) == (x_1, x/y)
+    assert disambiguate(*t7) == (y*y_1, y_1)
+    assert disambiguate(Dummy('x_1'), Dummy('x_1')
+        ) == (x_1, Symbol('x_1_1'))
