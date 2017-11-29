@@ -764,12 +764,12 @@ def disambiguate(*iter):
 
     >>> eqs = Tuple(Symbol('x')/y, Dummy('x')/y)
     >>> disambiguate(*eqs)
-    (x/y, x_1/y)
+    (x_1/y, x/y)
 
     >>> ix = Symbol('x', integer=True)
     >>> vx = Symbol('x')
     >>> disambiguate(vx + ix)
-    (x + x_1)
+    (x + x_1,)
 
     To make your own mapping of symbols to use, pass only the free symbols
     of the expressions and create a dictionary:
@@ -777,7 +777,7 @@ def disambiguate(*iter):
     >>> free = eqs.free_symbols
     >>> mapping = dict(zip(free, disambiguate(*free)))
     >>> eqs.xreplace(mapping)
-    (x/y, x_1/y)
+    (x_1/y, x/y)
 
     """
     new_iter = Tuple(*iter)
