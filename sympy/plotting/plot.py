@@ -67,6 +67,9 @@ def _arity(f):
        return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
 
 
+plot_backends = {}
+
+
 class Plot(object):
     """The central class of the plotting module.
 
@@ -74,7 +77,11 @@ class Plot(object):
 
     This class permits the plotting of sympy expressions using numerous
     backends (matplotlib, textplot, the old pyglet module for sympy, Google
-    charts api, etc).
+    charts api, etc).To choose a backend use ``backend`` option while
+    initilizing the plot class. Example: ``p1 = plot(x*x,backend='text')``,
+    options given are:
+    - 'text'
+    - 'matplotlib'
 
     The figure can contain an arbitrary number of plots of sympy expressions,
     lists of coordinates of points, etc. Plot has a private attribute _series that
@@ -181,7 +188,10 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        self.backend = DefaultBackend
+        if 'backend' in kwargs:
+            self.backend = plot_backends[kwargs.pop('backend')]
+        else:
+            self.backend = DefaultBackend
 
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
@@ -1068,11 +1078,9 @@ class DefaultBackend(BaseBackend):
             return TextBackend(parent)
 
 
-plot_backends = {
-    'matplotlib': MatplotlibBackend,
-    'text': TextBackend,
-    'default': DefaultBackend
-}
+plot_backends['matplotlib'] = MatplotlibBackend
+plot_backends['text'] = TextBackend
+plot_backends['default'] = DefaultBackend
 
 
 ##############################################################################
