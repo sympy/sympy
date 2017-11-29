@@ -760,19 +760,16 @@ def disambiguate(*iter):
 
     >>> tup = Symbol('_x'), Dummy('x'), Dummy('x')
     >>> disambiguate(*tup)
-    (_x_2, _x, _x_1)
+    (x_2, x, x_1)
 
-    >>> disambiguate(Dummy('x'), Dummy('x'))
-    (_x, _x_1)
-
-    >>> eqs = Tuple(Symbol('_x')/y, Dummy('x')/y)
+    >>> eqs = Tuple(Symbol('x')/y, Dummy('x')/y)
     >>> disambiguate(*eqs)
-    (_x_1/y, _x/y)
+    (x/y, x_1/y)
 
     >>> ix = Symbol('x', integer=True)
     >>> vx = Symbol('x')
     >>> disambiguate(vx + ix)
-    (x + x_1,)
+    (x + x_1)
 
     To make your own mapping of symbols to use, pass only the free symbols
     of the expressions and create a dictionary:
@@ -780,7 +777,7 @@ def disambiguate(*iter):
     >>> free = eqs.free_symbols
     >>> mapping = dict(zip(free, disambiguate(*free)))
     >>> eqs.xreplace(mapping)
-    (_x_1/y, _x/y)
+    (x/y, x_1/y)
 
     """
     new_iter = Tuple(*iter)
@@ -788,15 +785,22 @@ def disambiguate(*iter):
     syms = ordered(new_iter.free_symbols, keys=key)
     mapping = {}
     for s in syms:
-        mapping.setdefault(str(s), []).append(s)
+        mapping.setdefault(str(s).lstrip('_'), []).append(s)
     reps = {}
     for k in mapping:
         # the first or only symbol doesn't get subscripted but make
         # sure that it's a Symbol, not a Dummy
-        k0 = Symbol("%s"%(k), **mapping[k][0].assumptions0)
+        k0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
         if k != k0:
             reps[mapping[k][0]] = k0
         # the others get subscripts (and are made into Symbols)
+        skip = 0
         for i in range(1, len(mapping[k])):
-            reps[mapping[k][i]] = Symbol("%s_%i"%(k, i), **mapping[k][i].assumptions0)
+            while True:
+                name = "%s_%i" % (k, i + skip)
+                if name not in mapping:
+                    break
+                skip += 1
+            ki = mapping[k][i]
+            reps[ki] = Symbol(name, **ki.assumptions0)
     return new_iter.xreplace(reps)
