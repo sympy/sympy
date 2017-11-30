@@ -21,7 +21,6 @@ unset_show()
 # That would need rewriting the plot_and_save() function
 # entirely
 class TmpFileManager:
-
     tmp_files = []
 
     @classmethod
@@ -32,6 +31,7 @@ class TmpFileManager:
     @classmethod
     def cleanup(cls):
         map(os.remove, cls.tmp_files)
+
 
 def plot_and_save(name):
     tmp_file = TmpFileManager.tmp_file
@@ -45,7 +45,7 @@ def plot_and_save(name):
     ###
 
     p = plot(x)
-    p = plot(x*sin(x), x*cos(x))
+    p = plot(x * sin(x), x * cos(x))
     p.extend(p)
     p[0].line_color = lambda a: a
     p[1].line_color = 'b'
@@ -59,14 +59,14 @@ def plot_and_save(name):
     p._backend.close()
 
     p.extend(plot(x + 1))
-    p.append(plot(x + 3, x**2)[1])
+    p.append(plot(x + 3, x ** 2)[1])
     p.save(tmp_file('%s_plot_extend_append' % name))
 
-    p[2] = plot(x**2, (x, -2, 3))
+    p[2] = plot(x ** 2, (x, -2, 3))
     p.save(tmp_file('%s_plot_setitem' % name))
     p._backend.close()
 
-    p = plot(sin(x), (x, -2*pi, 4*pi))
+    p = plot(sin(x), (x, -2 * pi, 4 * pi))
     p.save(tmp_file('%s_line_explicit' % name))
     p._backend.close()
 
@@ -74,46 +74,46 @@ def plot_and_save(name):
     p.save(tmp_file('%s_line_default_range' % name))
     p._backend.close()
 
-    p = plot((x**2, (x, -5, 5)), (x**3, (x, -3, 3)))
+    p = plot((x ** 2, (x, -5, 5)), (x ** 3, (x, -3, 3)))
     p.save(tmp_file('%s_line_multiple_range' % name))
     p._backend.close()
 
     raises(ValueError, lambda: plot(x, y))
 
-    p = plot(Piecewise((1, x > 0), (0, True)),(x,-1,1))
+    p = plot(Piecewise((1, x > 0), (0, True)), (x, -1, 1))
     p.save(tmp_file('%s_plot_piecewise' % name))
     p._backend.close()
 
-    #parametric 2d plots.
-    #Single plot with default range.
+    # parametric 2d plots.
+    # Single plot with default range.
     plot_parametric(sin(x), cos(x)).save(tmp_file())
 
-    #Single plot with range.
+    # Single plot with range.
     p = plot_parametric(sin(x), cos(x), (x, -5, 5))
     p.save(tmp_file('%s_parametric_range' % name))
     p._backend.close()
 
-    #Multiple plots with same range.
+    # Multiple plots with same range.
     p = plot_parametric((sin(x), cos(x)), (x, sin(x)))
     p.save(tmp_file('%s_parametric_multiple' % name))
     p._backend.close()
 
-    #Multiple plots with different ranges.
+    # Multiple plots with different ranges.
     p = plot_parametric((sin(x), cos(x), (x, -3, 3)), (x, sin(x), (x, -5, 5)))
     p.save(tmp_file('%s_parametric_multiple_ranges' % name))
     p._backend.close()
 
-    #depth of recursion specified.
+    # depth of recursion specified.
     p = plot_parametric(x, sin(x), depth=13)
     p.save(tmp_file('%s_recursion_depth' % name))
     p._backend.close()
 
-    #No adaptive sampling.
+    # No adaptive sampling.
     p = plot_parametric(cos(x), sin(x), adaptive=False, nb_of_points=500)
     p.save(tmp_file('%s_adaptive' % name))
     p._backend.close()
 
-    #3d parametric plots
+    # 3d parametric plots
     p = plot3d_parametric_line(sin(x), cos(x), x)
     p.save(tmp_file('%s_3d_line' % name))
     p._backend.close()
@@ -150,7 +150,7 @@ def plot_and_save(name):
 
     # Multiple Parametric 3D plots.
     p = plot3d_parametric_surface(
-        (x*sin(z), x*cos(z), z, (x, -5, 5), (z, -5, 5)),
+        (x * sin(z), x * cos(z), z, (x, -5, 5), (z, -5, 5)),
         (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
     p.save(tmp_file('%s_parametric_surface' % name))
     p._backend.close()
@@ -167,7 +167,7 @@ def plot_and_save(name):
     p.save(tmp_file('%s_colors_line_arity2' % name))
     p._backend.close()
 
-    p = plot(x*sin(x), x*cos(x), (x, 0, 10))
+    p = plot(x * sin(x), x * cos(x), (x, 0, 10))
     p[0].line_color = lambda a: a
     p.save(tmp_file('%s_colors_param_line_arity1' % name))
 
@@ -178,11 +178,11 @@ def plot_and_save(name):
     p.save(tmp_file('%s_colors_param_line_arity2b' % name))
     p._backend.close()
 
-    p = plot3d_parametric_line(sin(x) + 0.1*sin(x)*cos(7*x),
-             cos(x) + 0.1*cos(x)*cos(7*x),
-        0.1*sin(7*x),
-        (x, 0, 2*pi))
-    p[0].line_color = lambdify_(x, sin(4*x))
+    p = plot3d_parametric_line(sin(x) + 0.1 * sin(x) * cos(7 * x),
+                               cos(x) + 0.1 * cos(x) * cos(7 * x),
+                               0.1 * sin(7 * x),
+                               (x, 0, 2 * pi))
+    p[0].line_color = lambdify_(x, sin(4 * x))
     p.save(tmp_file('%s_colors_3d_line_arity1' % name))
     p[0].line_color = lambda a, b: b
     p.save(tmp_file('%s_colors_3d_line_arity2' % name))
@@ -190,24 +190,24 @@ def plot_and_save(name):
     p.save(tmp_file('%s_colors_3d_line_arity3' % name))
     p._backend.close()
 
-    p = plot3d(sin(x)*y, (x, 0, 6*pi), (y, -5, 5))
+    p = plot3d(sin(x) * y, (x, 0, 6 * pi), (y, -5, 5))
     p[0].surface_color = lambda a: a
     p.save(tmp_file('%s_colors_surface_arity1' % name))
     p[0].surface_color = lambda a, b: b
     p.save(tmp_file('%s_colors_surface_arity2' % name))
     p[0].surface_color = lambda a, b, c: c
     p.save(tmp_file('%s_colors_surface_arity3a' % name))
-    p[0].surface_color = lambdify_((x, y, z), sqrt((x - 3*pi)**2 + y**2))
+    p[0].surface_color = lambdify_((x, y, z), sqrt((x - 3 * pi) ** 2 + y ** 2))
     p.save(tmp_file('%s_colors_surface_arity3b' % name))
     p._backend.close()
 
     p = plot3d_parametric_surface(x * cos(4 * y), x * sin(4 * y), y,
-             (x, -1, 1), (y, -1, 1))
+                                  (x, -1, 1), (y, -1, 1))
     p[0].surface_color = lambda a: a
     p.save(tmp_file('%s_colors_param_surf_arity1' % name))
-    p[0].surface_color = lambda a, b: a*b
+    p[0].surface_color = lambda a, b: a * b
     p.save(tmp_file('%s_colors_param_surf_arity2' % name))
-    p[0].surface_color = lambdify_((x, y, z), sqrt(x**2 + y**2 + z**2))
+    p[0].surface_color = lambdify_((x, y, z), sqrt(x ** 2 + y ** 2 + z ** 2))
     p.save(tmp_file('%s_colors_param_surf_arity3' % name))
     p._backend.close()
 
@@ -222,7 +222,7 @@ def plot_and_save(name):
     # that warning.
 
     with warnings.catch_warnings(record=True) as w:
-        i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
+        i = Integral(log((sin(x) ** 2 + 1) * sqrt(x ** 2 + 1)), (x, 0, y))
         p = plot(i, (y, 1, 5))
         p.save(tmp_file('%s_advanced_integral' % name))
         p._backend.close()
@@ -231,12 +231,12 @@ def plot_and_save(name):
             assert issubclass(i.category, UserWarning)
             assert "The evaluation of the expression is problematic" in str(i.message)
 
-    s = Sum(1/x**y, (x, 1, oo))
+    s = Sum(1 / x ** y, (x, 1, oo))
     p = plot(s, (y, 2, 10))
     p.save(tmp_file('%s_advanced_inf_sum' % name))
     p._backend.close()
 
-    p = plot(Sum(1/x, (x, 1, y)), (y, 2, 10), show=False)
+    p = plot(Sum(1 / x, (x, 1, y)), (y, 2, 10), show=False)
     p[0].only_integers = True
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum' % name))
@@ -246,18 +246,18 @@ def plot_and_save(name):
     # Test expressions that can not be translated to np and generate complex
     # results.
     ###
-    plot(sin(x) + I*cos(x)).save(tmp_file())
+    plot(sin(x) + I * cos(x)).save(tmp_file())
     plot(sqrt(sqrt(-x))).save(tmp_file())
     plot(LambertW(x)).save(tmp_file())
     plot(sqrt(LambertW(x))).save(tmp_file())
 
-    #Characteristic function of a StudentT distribution with nu=10
-    plot((meijerg(((1 / 2,), ()), ((5, 0, 1 / 2), ()), 5 * x**2 * exp_polar(-I*pi)/2)
-            + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
-                5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
+    # Characteristic function of a StudentT distribution with nu=10
+    plot((meijerg(((1 / 2,), ()), ((5, 0, 1 / 2), ()), 5 * x ** 2 * exp_polar(-I * pi) / 2)
+          + meijerg(((1 / 2,), ()), ((5, 0, 1 / 2), ()),
+                    5 * x ** 2 * exp_polar(I * pi) / 2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
+
 
 def test_matplotlib():
-
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         try:
@@ -267,6 +267,7 @@ def test_matplotlib():
             TmpFileManager.cleanup()
     else:
         skip("Matplotlib not the default backend")
+
 
 # Tests for exception handling in experimental_lambdify
 def test_experimental_lambify():
@@ -290,7 +291,7 @@ def test_append_issue_7140():
 
     x = Symbol('x')
     p1 = plot(x)
-    p2 = plot(x**2)
+    p2 = plot(x ** 2)
     p3 = plot(x + 2)
 
     # append a series
@@ -302,6 +303,7 @@ def test_append_issue_7140():
 
     with raises(TypeError):
         p1.append(p2._series)
+
 
 class Capturing(list):
     def __enter__(self):
@@ -320,18 +322,5 @@ def test_text_backend():
     with Capturing() as output:
         plot(x ** 2, backend="text")
 
-    pattern = '100 |                                                        \n        |  .                            ' \
-              '                        /\n        |   \\                                                  / \n        ' \
-              '|    \\                                                /  \n        |     \\                           ' \
-              '                   /   \n        |      \\                                            /    \n        | ' \
-              '      \\                                          .     \n        |        \\                          ' \
-              '                     \n50.0165 | --------\\--------------------------------------..------\n        |   ' \
-              '       \\                                    /        \n        |           \\                         ' \
-              '         /         \n        |            \\                                /          \n        |     ' \
-              '        ..                            ..           \n        |               \\                        ' \
-              '  /             \n        |                ..                      ..              \n        |         ' \
-              '         ..                  ..                \n        |                    ..              ..       ' \
-              '           \n0.03305 |                      ..............                    \n          -10          ' \
-              '          0                          10 '
-
+        pattern = '    100 |                                                        \n        |  .                                                    /\n        |   \\                                                  / \n        |    \\                                                /  \n        |     \\                                              /   \n        |      \\                                            /    \n        |       \\                                          .     \n        |        \\                                               \n50.0165 | --------\\--------------------------------------..------\n        |          \\                                    /        \n        |           \\                                  /         \n        |            \\                                /          \n        |             ..                            ..           \n        |               \\                          /             \n        |                ..                      ..              \n        |                  ..                  ..                \n        |                    ..              ..                  \n0.03305 |                      ..............                    \n          -10                    0                          10'
     assert "\n".join(output) == pattern
