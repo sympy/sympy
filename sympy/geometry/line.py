@@ -1101,7 +1101,6 @@ class Line(LinearEntity):
                 elif self.p1.y != self.p2.y:
                     return (other.y - self.p1.y)/(self.p2.y - self.p1.y)
             raise ValueError("Point is not collinear.")
-
         raise ValueError('Other should be a Point')
 
     def distance(self, other):
