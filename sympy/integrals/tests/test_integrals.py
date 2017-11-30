@@ -843,7 +843,7 @@ def test_issue_5167():
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
     assert Integral(1, x, y).args != Integral(1, y, x).args
-    # do as many as possibble
+    # do as many as possible
     assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
     assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
         y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))

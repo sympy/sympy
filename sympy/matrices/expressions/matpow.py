@@ -28,7 +28,7 @@ class MatPow(MatrixExpr):
     def shape(self):
         return self.base.shape
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         A = self.doit()
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.

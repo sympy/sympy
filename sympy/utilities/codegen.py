@@ -1945,7 +1945,7 @@ class RustCodeGen(CodeGen):
 
 
 
-def get_code_generator(language, project=None, standard=None):
+def get_code_generator(language, project=None, standard=None, printer = None):
     if language == 'C':
         if standard is None:
             pass
@@ -1959,7 +1959,7 @@ def get_code_generator(language, project=None, standard=None):
                     "RUST": RustCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
-    return CodeGenClass(project)
+    return CodeGenClass(project, printer)
 
 
 #
@@ -1969,7 +1969,7 @@ def get_code_generator(language, project=None, standard=None):
 
 def codegen(name_expr, language=None, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None, standard=None, code_gen=None):
+            global_vars=None, standard=None, code_gen=None, printer = None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -2103,7 +2103,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     else:
         if code_gen is not None:
             raise ValueError("You cannot specify both language and code_gen.")
-        code_gen = get_code_generator(language, project, standard)
+        code_gen = get_code_generator(language, project, standard, printer)
 
     if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.

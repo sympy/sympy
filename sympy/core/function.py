@@ -778,6 +778,8 @@ class AppliedUndef(Function):
     function.
     """
 
+    is_number = False
+
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
         obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
@@ -1097,6 +1099,9 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *variables, **assumptions):
 
+        from sympy.matrices.common import MatrixCommon
+        from sympy.tensor.array import NDimArray, derive_by_array
+
         expr = sympify(expr)
 
         # There are no variables, we differentiate wrt all of the free symbols
@@ -1173,7 +1178,10 @@ class Derivative(Expr):
         if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
             symbol_set = set(sc[0] for sc in variable_count)
             if symbol_set.difference(expr.free_symbols):
-                return S.Zero
+                if isinstance(expr, (MatrixCommon, NDimArray)):
+                    return expr.zeros(*expr.shape)
+                else:
+                    return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.
         # If a high order of derivative is requested and the expr becomes 0
@@ -1216,6 +1224,10 @@ class Derivative(Expr):
             if unhandled_non_symbol:
                 obj = None
             else:
+                if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+                    expr = derive_by_array(expr, v)
+                    nderivs += 1
+                    continue
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
@@ -2531,7 +2543,7 @@ def count_ops(expr, visual=False):
                     if a.q != 1:
                         ops.append(DIV)
                     continue
-            elif a.is_Mul:
+            elif a.is_Mul or a.is_MatMul:
                 if _coeff_isneg(a):
                     ops.append(NEG)
                     if a.args[0] is S.NegativeOne:
@@ -2551,7 +2563,7 @@ def count_ops(expr, visual=False):
                     ops.append(DIV)
                     args.append(n)
                     continue  # could be -Mul
-            elif a.is_Add:
+            elif a.is_Add or a.is_MatAdd:
                 aargs = list(a.args)
                 negs = 0
                 for i, ai in enumerate(aargs):
