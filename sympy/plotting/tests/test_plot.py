@@ -7,10 +7,12 @@ from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
+from cStringIO import StringIO
 
 from tempfile import NamedTemporaryFile
 import os
 import warnings
+import sys
 
 unset_show()
 
@@ -266,30 +268,6 @@ def test_matplotlib():
     else:
         skip("Matplotlib not the default backend")
 
-from cStringIO import StringIO
-import sys
-
-
-class Capturing(list):
-    def __enter__(self):
-        self._stdout = sys.stdout
-        sys.stdout = self._stringio = StringIO()
-        return self
-
-    def __exit__(self, *args):
-        self.extend(self._stringio.getvalue().splitlines())
-        del self._stringio  # free up some memory
-        sys.stdout = self._stdout
-
-
-def test_text_backend():
-    x = Symbol('x')
-    with Capturing() as output:
-        plot(x ** 2, backend="text")
-
-    pattern = '    100 |                                                        \n        |  .                                                    /\n        |   \\                                                  / \n        |    \\                                                /  \n        |     \\                                              /   \n        |      \\                                            /    \n        |       \\                                          .     \n        |        \\                                               \n50.0165 | --------\\--------------------------------------..------\n        |          \\                                    /        \n        |           \\                                  /         \n        |            \\                                /          \n        |             ..                            ..           \n        |               \\                          /             \n        |                ..                      ..              \n        |                  ..                  ..                \n        |                    ..              ..                  \n0.03305 |                      ..............                    \n          -10                    0                          10'
-
-    assert "\n".join(output) == pattern
 # Tests for exception handling in experimental_lambdify
 def test_experimental_lambify():
     x = Symbol('x')
@@ -325,10 +303,6 @@ def test_append_issue_7140():
     with raises(TypeError):
         p1.append(p2._series)
 
-from cStringIO import StringIO
-import sys
-
-
 class Capturing(list):
     def __enter__(self):
         self._stdout = sys.stdout
@@ -346,7 +320,18 @@ def test_text_backend():
     with Capturing() as output:
         plot(x ** 2, backend="text")
 
-    pattern = '    100 |                                                        \n        |  .                                                    /\n        |   \\                                                  / \n        |    \\                                                /  \n        |     \\                                              /   \n        |      \\                                            /    \n        |       \\                                          .     \n        |        \\                                               \n50.0165 | --------\\--------------------------------------..------\n        |          \\                                    /        \n        |           \\                                  /         \n        |            \\                                /          \n        |             ..                            ..           \n        |               \\                          /             \n        |                ..                      ..              \n        |                  ..                  ..                \n        |                    ..              ..                  \n0.03305 |                      ..............                    \n          -10                    0                          10'
+    pattern = '100 |                                                        \n        |  .                            ' \
+              '                        /\n        |   \\                                                  / \n        ' \
+              '|    \\                                                /  \n        |     \\                           ' \
+              '                   /   \n        |      \\                                            /    \n        | ' \
+              '      \\                                          .     \n        |        \\                          ' \
+              '                     \n50.0165 | --------\\--------------------------------------..------\n        |   ' \
+              '       \\                                    /        \n        |           \\                         ' \
+              '         /         \n        |            \\                                /          \n        |     ' \
+              '        ..                            ..           \n        |               \\                        ' \
+              '  /             \n        |                ..                      ..              \n        |         ' \
+              '         ..                  ..                \n        |                    ..              ..       ' \
+              '           \n0.03305 |                      ..............                    \n          -10          ' \
+              '          0                          10 '
 
     assert "\n".join(output) == pattern
-
