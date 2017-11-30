@@ -1100,7 +1100,7 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **assumptions):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy.tensor.array import NDimArray, derive_by_array
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
 
         expr = sympify(expr)
 
@@ -1139,13 +1139,16 @@ class Derivative(Expr):
         while i < len(variables) - 1:  # process up to final Integer
             v, count = variables[i: i + 2]
             iwas = i
+            if isinstance(v, (collections.Iterable, Tuple)):
+                v = Array(v)
+                variables[i] = v
             if v._diff_wrt:
                 # We need to test the more specific case of count being an
                 # Integer first.
                 if count.is_Integer:
                     count = int(count)
                     i += 2
-                elif count._diff_wrt:
+                else:
                     count = 1
                     i += 1
 
