@@ -1092,14 +1092,16 @@ class Line(LinearEntity):
         >>> l.coordinate(p3)
         2
         """
+        if not isinstance(other, GeometryEntity):
+            other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
-            other=Point(other)
             if Point.is_collinear(self.p1, self.p2, other):
                 if self.p1.x != self.p2.x:
                     return (other.x - self.p1.x)/(self.p2.x - self.p1.x)
                 elif self.p1.y != self.p2.y:
                     return (other.y - self.p1.y)/(self.p2.y - self.p1.y)
             raise ValueError("Point is not collinear.")
+
         raise ValueError('Other should be a Point')
 
     def distance(self, other):
