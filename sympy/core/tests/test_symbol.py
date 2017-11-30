@@ -370,7 +370,7 @@ def test__uniquely_named_symbol_and__symbol():
 
 
 def test_disambiguate():
-    x, y, y_1, _x, _x_1, x_1, x_2 = symbols('x y y_1 _x _x_1 x_1 x_2')
+    x, y, y_1, _x, x_1, x_2 = symbols('x y y_1 _x x_1 x_2')
     t1 = Dummy('y'), _x, Dummy('x'), Dummy('x')
     t2 = Dummy('x'), Dummy('x')
     t3 = Dummy('x'), Dummy('y')
