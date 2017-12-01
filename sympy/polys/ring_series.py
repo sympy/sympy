@@ -30,7 +30,7 @@ Extending rs_series
 
 To make a function work with rs_series you need to do two things::
 
-    - Many sure it works with a constant term (as explained above).
+    - Make sure it works with a constant term (as explained above).
     - If the series contains constant terms, you might need to extend its ring.
       You do so by adding the new terms to the rings as generators.
       ``PolyRing.compose`` and ``PolyRing.add_gens`` are two functions that do
@@ -1843,7 +1843,8 @@ _convert_func = {
         'cos': 'rs_cos',
         'exp': 'rs_exp',
         'tan': 'rs_tan',
-        'log': 'rs_log'
+        'log': 'rs_log',
+	'atan': 'rs_atan'
         }
 
 def rs_min_pow(expr, series_rs, a):
@@ -1964,7 +1965,7 @@ def rs_series(expr, a, prec):
 
     >>> from sympy.polys.ring_series import rs_series
     >>> from sympy.functions import sin, cos, exp, tan
-    >>> from sympy.core import symbols
+    >>> from sympy import symbols
     >>> from sympy.polys.domains import QQ
     >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
