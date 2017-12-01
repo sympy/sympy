@@ -629,3 +629,8 @@ def test_rs_series():
     assert rs_series(log(1 + x*a**2), x, 7).as_expr() == -x**6*a**12/6 + \
                     x**5*a**10/5 - x**4*a**8/4 + x**3*a**6/3 - \
                     x**2*a**4/2 + x*a**2
+
+    assert rs_series(atan(a), a, 5).as_expr() == (atan(a).series(a, 0,
+        5).removeO())
+    assert rs_series(atan(a)/7, a, 5).as_expr() == (atan(a)/7).series(a, 0,
+        5).removeO()
