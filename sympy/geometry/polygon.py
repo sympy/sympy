@@ -403,6 +403,22 @@ class Polygon(GeometrySet):
         return Point(simplify(A*cx), simplify(A*cy))
 
     @property
+    def second_moment_of_area(self):
+
+        I_xx,I_yy=0,0
+        args= self.args
+        for i in range(len(args)):
+            x1,y1 = args[i-1].args
+            x2,y2 = args[i].args
+            v = x1*y2 - x2*y1
+            I_xx += (y1**2+y1*y2+y2**2)*v
+            I_yy += (x1**2+x1*x2+x2**2)*v
+        
+        return simplify(I_xx/12),simplify(I_yy/12)   
+
+
+
+    @property
     def sides(self):
         """The line segments that form the sides of the polygon.
 
