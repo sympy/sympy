@@ -7,12 +7,17 @@ from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
-from cStringIO import StringIO
 
 from tempfile import NamedTemporaryFile
 import os
 import warnings
 import sys
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 
 unset_show()
 
