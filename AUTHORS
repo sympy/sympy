@@ -1,10 +1,9 @@
-All people who contributed to SymPy by sending at least a patch or
-more (in the order of the date of their first contribution), except
-those who explicitly didn't want to be mentioned. People with a * next
-to their names are not found in the metadata of the git history. This
-file is generated automatically by running `./bin/authors_update.py`.
-
-There are a total of 701 authors.
+All people who contributed to SymPy by sending at least a patch or more (in the
+order of the date of their first contribution), except those who explicitly
+didn't want to be mentioned. People with a * next to their names are not found
+in the metadata of the git history. This file is generated automatically by
+running `./bin/authors_update.py`.
+There are a total of 619 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -624,86 +623,6 @@ harsh_jain <harshjniitr@gmail.com>
 Nathan Goldbaum <ngoldbau@illinois.edu>
 latot <felipematas@yahoo.com>
 Kenneth Lyons <ixjlyons@gmail.com>
-Stan Schymanski <stan.schymanski@env.ethz.ch>
-David Daly <david.daly12@kzoo.edu>
-Ayush Shridhar <ayush.shridhar1999@gmail.com>
-Javed Nissar <javednissar@gmail.com>
 Jiri Kuncar <jiri.kuncar@gmail.com>
-vedantc98 <vedantc98@gmail.com>
-Rupesh Harode <rupeshharode@gmail.com>
-Rob Zinkov <rob@zinkov.com>
-szymon <szymon.mieszczak@gmail.com>
-James Harrop <ebc121@gmail.com>
-James Taylor <user234683@tutanota.com>
-Ishan Joshi <ishanaj98@gmail.com>
-Marco Mancini <marco.mancini@obspm.fr>
-Boris Ettinger <ettinger.boris@gmail.com>
-micahscopes <fitchmicah@gmail.com>
-Micah <fitchmicah@gmail.com>
-Daniel Wennberg <daniel.wennberg@gmail.com>
-ylemkimon <ylemkimon@naver.com>
-Akash Vaish <akash.9712@gmail.com>
-Peter Enenkel <peter.enenkel+git@gmail.com>
-Peter Enenkel <peter.enenkel+github@gmail.com>
-Waldir Pimenta <waldyrious@gmail.com>
-Yathartha22 <yathartha32@gmail.com>
-Yathartha Joshi <yathartha32@gmail.com>
-Dirivian <jithindgeorge93@gmail.com>
-Leva7 <leva181777@gmail.com>
-user234683 <user234683@tutanota.com>
-Lucas Wiman <lucas.wiman@gmail.com>
-Rhea Parekh <rheaparekh12@gmail.com>
-James Cotton <peabody124@gmail.com>
-Robert Pollak <robert.pollak@posteo.net>
-anca-mc <anca-mc@users.noreply.github.com>
-souravghosh97 <souravghosh2197@gmail.com>
-Jonathan Allan <jjallan@users.noreply.github.com>
-Amit Kumar <dtu.amit+gh@gmail.com>
-Nikhil Pappu <nkhlpappu@gmail.com>
-ethankward <ethanward@email.arizona.edu>
-Cezary Marczak <zeddq1@gmail.com>
-dps7ud <dps7ud@virginia.edu>
-neil <nilabja10201992@gmail.com>
-Itay4 <31018228+Itay4@users.noreply.github.com>
-Poom Chiarawongse <Eight1911@users.noreply.github.com>
-Nilabja Bhattacharya <nilabja10201992@gmail.com>
-Yang Yang <wdscxsj@gmail.com>
-Cavendish McKay <cmckay@tachycline.com>
-shekharrajak <shekharstudy@ymail.com>
 Bradley Gannon <bradley.m.gannon@gmail.com>
-gxyd <gauravdhingra.gxyd@gmail.com>
-B McG <bmcg0890@gmail.com>
-robdrynkin <rob.drynkin@gmail.com>
-Seth Ebner <murgrehk@gmail.com>
-sayak119 <sk.sayakkundu1997@gmail.com>
-Shikhar1998 <shikharmakhija2@gmail.com>
-Mark Jeromin <mark.jeromin@sysfrog.net>
-Roberto Díaz Pérez <r.r.1994a@gmail.com>
 Gleb Siroki <g.shiroki@gmail.com>
-ylemkimon <mail@ylem.kim>
-Segev Finer <segev208@gmail.com>
-Ethan Ward <etkewa@gmail.com>
-Alex Lubbock <code@alexlubbock.com>
-Ayodeji Ige <ayodeji18@outlook.com>
-Matthew Wardrop <matthew.wardrop@airbnb.com>
-Hugo <hugovk@users.noreply.github.com>
-Austin Palmer <ap4000@nyu.edu>
-der-blaue-elefant <github@kklein.de>
-Filip Gokstorp <filip@gokstorp.se>
-Yuki Matsuda <yuki.matsuda.w@gmail.com>
-Aaron Miller <acmiller273@gmail.com>
-Salil Vishnu Kapur <salilvishnukapur@gmail.com>
-Atharva Khare <khareatharva@gmail.com>
-shu121197 <rmaheshwari05@gmail.com>
-pavel-tkachenko <paveltkachenko@email.com>
-ashishkg0022 <ashishkg0022@gmail.com>
-Rajeev Singh <rajs2010@gmail.com>
-Keno Goertz <keno@goertz-berlin.com>
-Lucas Gallindo <lgallindo@gmail.com>
-ovolve <ovolve@users.noreply.github.com>
-Richard Otis <richard.otis@jpl.nasa.gov>
-himanshukgp <hs80941@gmail.com>
-Ondřej Čertík <ondrej@certik.us>
-David Menéndez Hurtado <david.menendez.hurtado@scilifelab.se>
-Amit Manchanda <amitdelhi1995@gmail.com>
-eight1911 <15707729+Eight1911@users.noreply.github.com>
