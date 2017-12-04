@@ -1140,6 +1140,8 @@ def rs_exp(p, x, prec):
     n = 1
     k = 1
     c = []
+    if not(type(prec) is int):
+        prec = int(prec.p/prec.q) + 1
     for k in range(prec):
         c.append(one/n)
         k += 1
