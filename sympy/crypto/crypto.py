@@ -2044,9 +2044,10 @@ def dh_shared_key(key, b):
 ################ Goldwasser-Micali Encryption  #########################
 
 
-def legendre(a, p):
+def _legendre(a, p):
     """
     Returns the legendre symbol of a and p
+    assuming that p is a prime
 
     i.e. 1 if a is a quadratic residue mod p
         -1 if a is not a quadratic residue mod p
@@ -2064,7 +2065,7 @@ def legendre(a, p):
     legendre symbol (a / p) (int)
 
     """
-    sig = pow(a, (p - 1)//2) % p
+    sig = pow(a%p, (p - 1)//2) % p
     if sig == 1:
         return 1
     elif sig == 0:
@@ -2073,7 +2074,7 @@ def legendre(a, p):
         return -1
 
 
-def random_coprime_stream(n):
+def _random_coprime_stream(n):
     while True:
         y = random.randrange(n)
         if gcd(y, n) == 1:
@@ -2132,7 +2133,7 @@ def gm_public_key(p, q):
 
     while True:
         a = random.randrange(N)
-        if legendre(a, p) == legendre(a, q) == -1:
+        if _legendre(a, p) == _legendre(a, q) == -1:
             break
 
     return (a, N)
@@ -2161,7 +2162,7 @@ def encipher_gm(i, key):
         bits.append(i % 2)
         i //= 2
 
-    gen = random_coprime_stream(N)
+    gen = _random_coprime_stream(N)
     rev = reversed(bits)
     encode = lambda b: next(gen)**2*pow(a, b) % N
     return [ encode(b) for b in rev]
@@ -2184,7 +2185,7 @@ def decipher_gm(message, key):
     i: (int) the encrpyted message
     """
     p, q = key
-    nonres = lambda m, p: legendre(m, p) < 0
+    nonres = lambda m, p: _legendre(m, p) < 0
     bits = [nonres(m, p) * nonres(m, q) for m in message]
     m = 0
     for b in bits:
