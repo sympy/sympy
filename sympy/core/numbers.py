@@ -17,6 +17,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+import numpy as np
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp.backend import MPZ
@@ -1470,6 +1471,10 @@ class Rational(Number):
     @cacheit
     def __new__(cls, p, q=None, gcd=None):
         if q is None:
+
+            if isinstance(p, np.generic):
+                p = np.asscalar(p)
+
             if isinstance(p, Rational):
                 return p
 
@@ -1504,6 +1509,12 @@ class Rational(Number):
             q = q or S.One
             gcd = 1
         else:
+
+            if isinstance(p, np.generic):
+                p = np.asscalar(p)
+            if isinstance(q, np.generic):
+                q = np.asscalar(q)
+
             p = Rational(p)
             q = Rational(q)
 
