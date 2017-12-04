@@ -16,7 +16,7 @@ from sympy.utilities.pytest import XFAIL, raises
 
 from mpmath import mpf
 import mpmath
-
+import numpy as np
 
 
 t = Symbol('t', real=False)
@@ -1781,3 +1781,6 @@ def test_numpy_to_float():
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
+
+def test_numpy_dtypes_rational():
+    assert Rational(np.int64(1),2) == 1/2
