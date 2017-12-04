@@ -9,7 +9,6 @@ and the Diffie-Hellman key exchange.
 from __future__ import print_function
 
 import random
-
 from string import whitespace, ascii_uppercase as uppercase, printable
 
 from sympy import nextprime
@@ -23,7 +22,6 @@ from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
 from sympy.utilities.randtest import _randrange
-
 
 
 def AZ(s=None):
