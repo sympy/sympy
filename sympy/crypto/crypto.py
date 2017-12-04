@@ -8,8 +8,6 @@ and the Diffie-Hellman key exchange.
 
 from __future__ import print_function
 
-import random
-
 from string import whitespace, ascii_uppercase as uppercase, printable
 
 from sympy import nextprime
@@ -23,8 +21,6 @@ from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
 from sympy.utilities.randtest import _randrange
-
-
 
 def AZ(s=None):
     """Return the letters of ``s`` in uppercase. In case more than
@@ -2041,155 +2037,3 @@ def dh_shared_key(key, b):
             than prime %s.''' % p))
 
     return pow(x, b, p)
-
-
-################ Goldwasser-Micali Encryption  #########################
-
-
-def legendre(a, p):
-    """
-    Returns the legendre symbol of a and p
-
-    i.e. 1 if a is a quadratic residue mod p
-        -1 if a is not a quadratic residue mod p
-         0 if a is divisible by p
-
-    Parameters
-    ==========
-
-    a : int the number to test
-    p : the prime to test a against
-
-    Returns
-    =======
-
-    legendre symbol (a / p) (int)
-
-    """
-    sig = pow(a, (p - 1)//2) % p
-    if sig == 1:
-        return 1
-    elif sig == 0:
-        return 0
-    else:
-        return -1
-
-
-def random_coprime_stream(n):
-    while True:
-        y = random.randrange(n)
-        if gcd(y, n) == 1:
-            yield y
-
-
-def gm_private_key(p, q):
-    """
-    Check if p and q can be used as private keys
-    for Goldwasser-Micali encryption
-
-    p and q must be odd primes
-
-    Parameters
-    ==========
-
-    p, q : int to test primality
-
-    Returns
-    =======
-
-    p, q (int) the same as input
-
-    """
-    if p == q:
-        return False
-    elif not isprime(p) or not isprime(q):
-        return False
-    elif p == 2 or q == 2:
-        return False
-    return p, q
-
-
-def gm_public_key(p, q):
-    """
-    Compute public keys for p and q.
-    Note that in GM Encrpytin, public keys are
-    randomly selected.
-
-
-    Parameters
-    ==========
-
-    p, q : (int) private keys
-
-    Returns
-    =======
-
-    a (int) some random integer coprime to p and q
-    N (int) the product of p and q
-
-    """
-    if not gm_private_key(p, q):
-        return False
-    N = p * q
-
-    while True:
-        a = random.randrange(N)
-        if legendre(a, p) == legendre(a, q) == -1:
-            break
-
-    return (a, N)
-
-
-def encipher_gm(i, key):
-    """
-    Encrypt integer 'i' using public_key 'key'
-    Note that gm uses random encrpytion.
-
-    Parameters
-    ==========
-
-    i: (int) the message to encrypt
-    key: Tuple (a, N) the public key
-
-    Returns
-    =======
-
-    List[int] the randomized encrpyted message.
-
-    """
-    a, N = key
-    bits = []
-    while i > 0:
-        bits.append(i % 2)
-        i //= 2
-
-    gen = random_coprime_stream(N)
-    rev = reversed(bits)
-    encode = lambda b: next(gen)**2*pow(a, b) % N
-    return [ encode(b) for b in rev]
-
-
-
-def decipher_gm(message, key):
-    """
-    Decrypt message 'message' using public_key 'key'.
-
-    Parameters
-    ==========
-
-    List[int]: the randomized encrpyted message.
-    key: Tuple (p, q) the private key
-
-    Returns
-    =======
-
-    i: (int) the encrpyted message
-    """
-    p, q = key
-    nonres = lambda m, p: legendre(m, p) < 0
-    bits = [nonres(m, p) * nonres(m, q) for m in message]
-    m = 0
-    for b in bits:
-        m <<= 1
-        m += b
-    return m
