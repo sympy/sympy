@@ -6,7 +6,7 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import igcdex, Rational, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Wild
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.exponential import log, exp
@@ -460,7 +460,8 @@ class sin(TrigonometricFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -879,7 +880,8 @@ class cos(TrigonometricFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -1887,10 +1889,10 @@ class asin(InverseTrigonometricFunction):
             return s.is_rational
 
     def _eval_is_positive(self):
-        if self.args[0].is_positive:
-            return (self.args[0] - 1).is_negative
-        if self.args[0].is_negative:
-            return not (self.args[0] + 1).is_positive
+        return self._eval_is_real() and self.args[0].is_positive
+
+    def _eval_is_negative(self):
+        return self._eval_is_real() and self.args[0].is_negative
 
     @classmethod
     def eval(cls, arg):
@@ -2048,10 +2050,6 @@ class acos(InverseTrigonometricFunction):
         else:
             return s.is_rational
 
-    def _eval_is_positive(self):
-        x = self.args[0]
-        return (1 - abs(x)).is_nonnegative
-
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -2116,6 +2114,9 @@ class acos(InverseTrigonometricFunction):
     def _eval_is_real(self):
         x = self.args[0]
         return x.is_real and (1 - abs(x)).is_nonnegative
+
+    def _eval_is_nonnegative(self):
+        return self._eval_is_real()
 
     def _eval_nseries(self, x, n, logx):
         return self._eval_rewrite_as_log(self.args[0])._eval_nseries(x, n, logx)
@@ -2344,6 +2345,12 @@ class acot(InverseTrigonometricFunction):
             return s.is_rational
 
     def _eval_is_positive(self):
+        return self.args[0].is_nonnegative
+
+    def _eval_is_negative(self):
+        return self.args[0].is_negative
+
+    def _eval_is_real(self):
         return self.args[0].is_real
 
     @classmethod
@@ -2542,7 +2549,7 @@ class asec(InverseTrigonometricFunction):
         x = self.args[0]
         if x.is_real is False:
             return False
-        return (x - 1).is_nonnegative or (-x - 1).is_nonnegative
+        return fuzzy_or(((x - 1).is_nonnegative, (-x - 1).is_nonnegative))
 
     def _eval_rewrite_as_log(self, arg):
         return S.Pi/2 + S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
