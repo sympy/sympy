@@ -306,8 +306,6 @@ def test_bifid():
         bifid6_square('B0ACDEFGHIJKLMNOPQRSTUVWXYZ123456789')
 
 
-
-
 def test_encipher_decipher_gm():
     ps = [131, 137, 139, 149, 151, 157, 163, 167,
           173, 179, 181, 191, 193, 197, 199]
