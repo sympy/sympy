@@ -2156,6 +2156,8 @@ def encipher_gm(i, key):
     List[int] the randomized encrpyted message.
 
     """
+    if i < 0:
+        raise ValueError("message must be a non-negative integer")
     a, N = key
     bits = []
     while i > 0:
@@ -2182,13 +2184,13 @@ def decipher_gm(message, key):
     Returns
     =======
 
-    i: (int) the encrpyted message
+    i (int) the encrpyted message
     """
     p, q = key
-    nonres = lambda m, p: _legendre(m, p) < 0
-    bits = [nonres(m, p) * nonres(m, q) for m in message]
+    res = lambda m, p: _legendre(m, p) > 0
+    bits = [res(m, p) * res(m, q) for m in message]
     m = 0
     for b in bits:
         m <<= 1
-        m += b
+        m += not b
     return m
