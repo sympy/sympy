@@ -300,7 +300,7 @@ class LatexPrinter(Printer):
             else:
                 tex += " + "
             term_tex = self._print(term)
-            if self._needs_add_brackets(term):
+            if self._needs_add_brackets(term) or term.is_Add:
                 term_tex = r"\left(%s\right)" % term_tex
             tex += term_tex
 
