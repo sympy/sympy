@@ -295,8 +295,12 @@ class LatexPrinter(Printer):
             if i == 0:
                 pass
             elif _coeff_isneg(term):
-                tex += " - "
-                term = -term
+                if term.is_Add :
+                    tex += " - "
+                    term = -term
+                else:
+                    if self._print(-term)[0]=='-':
+                        tex+= " + "
             else:
                 tex += " + "
             term_tex = self._print(term)
