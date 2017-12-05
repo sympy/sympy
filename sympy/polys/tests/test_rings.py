@@ -272,7 +272,6 @@ def test_PolyElement_from_expr():
     f = R.from_expr(x**3*y*z + x**2*y**7 + 1)
     assert f == X**3*Y*Z + X**2*Y**7 + 1 and isinstance(f, R.dtype)
 
-    raises(ValueError, lambda: R.from_expr(1/x))
     raises(ValueError, lambda: R.from_expr(2**x))
     raises(ValueError, lambda: R.from_expr(7*x + sqrt(2)))
 
