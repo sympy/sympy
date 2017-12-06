@@ -401,10 +401,26 @@ class Polygon(GeometrySet):
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
         return Point(simplify(A*cx), simplify(A*cy))
-
+ 
     @property
     def second_moment_of_area(self):
+        """Second moment of area of polygon
+	   
+	   RETURNS
+	   =======
+	   I_xx,I_yy (about x and y axis)
 
+	   Example
+           =======
+
+           >>> from sympy import Point,Polygon,pi
+           >>> from sympy import symbols
+           >>> L,B=symbols('L,B')
+           >>> p1,p2,p3,p4=[(0,0),(L,0),(L,B),(0,B)]
+           >>> rectangle=Polygon(p1,p2,p3,p4)
+           >>> rectangle.second_moment_of_area
+           (B**3*L/3, B*L**3/3)
+        """
         I_xx,I_yy=0,0
         args= self.args
         for i in range(len(args)):
@@ -413,10 +429,7 @@ class Polygon(GeometrySet):
             v = x1*y2 - x2*y1
             I_xx += (y1**2+y1*y2+y2**2)*v
             I_yy += (x1**2+x1*x2+x2**2)*v
-        
-        return simplify(I_xx/12),simplify(I_yy/12)   
-
-
+        return (I_xx/12),(I_yy/12)   
 
     @property
     def sides(self):
