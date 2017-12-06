@@ -114,29 +114,21 @@ class Ordinal(Basic):
         else:
             a_terms = list(self.args)
             b_terms = list(other.args)
-            print(a_terms)
-            print(b_terms)
             power_self = [i[1] for i in a_terms]
             power_other = [i[1] for i in b_terms]
             b1 = power_other[0]
             r = reverse_bisect_right(power_self, power_other[0])
-            print(r)
             if not b1 in power_self:
                 a_terms.insert(r,[self.index, b1, 0])
             else:
                 r-=1
-            print(a_terms)
             net = a_terms[:r]
-            print(net)
             term2 = [b_terms[0][0],b_terms[0][1], b_terms[0][2]+a_terms[r][2]]
-            print(term2)
             if term2:
                 net.append(term2)
             term3 = (b_terms[1:])
-            print(term3)
             if term3:
                 net.append(*term3)
-            print(net)
             return(Ordinal(net))
 
     def __radd__(self, other):
