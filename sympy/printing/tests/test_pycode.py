@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
+
+from sympy.codegen import Assignment
 from sympy.core import Expr, Mod, symbols
 from sympy.core.numbers import pi
 from sympy.logic import And, Or
@@ -24,6 +26,7 @@ def test_PythonCodePrinter():
     assert prntr.doprint(pi) == 'math.pi'
     assert prntr.module_imports == {'math': {'pi'}}
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
+    assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
 
 
 def test_SciPyPrinter():

@@ -86,7 +86,7 @@ class MatrixShaping(MatrixRequired):
                 return self[i, j]
             elif pos <= j < pos + other.cols:
                 return other[i, j - pos]
-            return self[i, j - pos - other.cols]
+            return self[i, j - other.cols]
 
         return self._new(self.rows, self.cols + other.cols,
                          lambda i, j: entry(i, j))
@@ -2134,7 +2134,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    pass
+    _diff_wrt = True
 
 
 class _MinimalMatrix(object):

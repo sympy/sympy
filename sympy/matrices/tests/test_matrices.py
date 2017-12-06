@@ -21,8 +21,9 @@ from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.solvers import solve
 from sympy.assumptions import Q
+from sympy.tensor.array import Array
 
-from sympy.abc import a, b, c, d, x, y, z
+from sympy.abc import a, b, c, d, x, y, z, t
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -1937,6 +1938,30 @@ def test_diff():
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    # Derive matrix by matrix:
+
+    A = MutableDenseMatrix([[x, y], [z, t]])
+    assert A.diff(A) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+    assert diff(A, A) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    A_imm = A.as_immutable()
+    assert A_imm.diff(A_imm) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+    assert diff(A_imm, A_imm) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    # Derive a constant matrix:
+    assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
+
+    B = ImmutableDenseMatrix([a, b])
+    assert A.diff(B) == Array(
+        [[[
+            [0,0],
+            [0,0]
+        ]],
+        [[
+            [0,0],
+            [0,0]
+        ]]])
 
 
 def test_getattr():
