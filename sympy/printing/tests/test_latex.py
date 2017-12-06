@@ -16,7 +16,8 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, Quaternion)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
+     UnevaluatedExpr, Quaternion, collect_const)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -1630,6 +1631,10 @@ def test_issue_12886():
     m__1, l__1 = symbols('m__1, l__1')
     assert latex(m__1**2 + l__1**2) == r'\left(l^{1}\right)^{2} + \left(m^{1}\right)^{2}'
 
+def test_issue_13651():
+    from sympy.abc import a,b,c
+    bug = c+collect_const(-a-b)
+    assert latex(bug) == r"c - \left(a + b\right)"
 
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
