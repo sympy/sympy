@@ -153,7 +153,7 @@ def _import(module, reload="False"):
         namespace['Abs'] = abs
 
 
-@doctest_depends_on(modules=('numpy'))
+@doctest_depends_on(modules=('numpy',))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=True):
     """
