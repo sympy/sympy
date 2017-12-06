@@ -61,7 +61,9 @@ weber = webers = Wb = wb = Quantity("weber", magnetic_flux, joule/ampere, abbrev
 
 optical_power = dioptre = D = Quantity("dioptre", 1/length, 1/meter)
 lux = lx = Quantity("lux", luminous_intensity/length**2, steradian*candela/meter**2)
+# katal is the SI unit of catalytic activity
 katal = kat = Quantity("katal", amount_of_substance/time, mol/second)
+# gray is the SI unit of absorbed dose
 gray = Gy = Quantity("gray", energy/mass, meter**2/second**2)
 
 # Common length units
