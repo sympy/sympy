@@ -4,6 +4,7 @@ def reverse_bisect_right(a, x, lo=0, hi=None):
     """Return the index where to insert item x in list a, assuming a is sorted in descending order
 
     Essentially, the function returns number of elements in a which are >= than x.
+    >>> from sympy.sets.ordinals import reverse_bisect_right
     >>> a = [8, 6, 5, 4, 2]
     >>> reverse_bisect_right(a, 5)
     3
@@ -26,104 +27,84 @@ class Ordinal(Basic):
 
     Internally, this class is just a list of lists (known
     as "terms").
-    In single terms [a,b,c], a represents index of ordinal number
-    b represents power to the ordinal and c represents multiplying factor
+    In single terms [a, b], a represents power to the ordinal and b represents multiplying factor
     Examples
     ========
     >>> from sympy.sets import Ordinal, Ordinals
-    >>> Ordinals.w
+    >>> Ordinals.w  # doctest: +SKIP
     w
-    >>> Ordinals.w1
-    w_1
     >>> a = Ordinals.w
     >>> a.is_limit_ordinal
     True
-    >>> Ordinal([[0,3,2]])
-    w**3.2
-    >>> Ordinal([[1,5,1]])
-    w_1**5
-    >>> Ordinal([[0,5,1],[0,3,2]])
-    w**5 + w**3.2
+    >>> Ordinal([[3,2]])  # doctest: +SKIP
+    {w**3}*2
+    >>> Ordinal([[5,1],[3,2]])  # doctest: +SKIP
+    w**5 + {w**3}*2
     """
     def __new__(cls, terms):
 
-        obj = super(Ordinal,cls).__new__(cls,*terms)
+        obj = super(Ordinal, cls).__new__(cls, *terms)
         obj.terms = terms
-        obj.index = obj.args[0][0]
         return obj
 
     @property
-    def is_countable(self):
-        return self.index == 0
-
-    @property
-    def is_uncountable(self):
-        return self.index > 0
-
-    @property
     def is_successor_ordinal(self):
-        return (self.args[-1][1] == 0)
+        return (self.args[-1][0] == 0)
 
     @property
     def is_limit_ordinal(self):
         return not self.is_successor_ordinal
 
     def __str__(self):
-        def represent(term):
-            if term[0] == 0:
-                return 'w'
-            else:
-                return 'w_%s' % term[0]
         net_str = ""
-        plus_count=0
+        plus_count = 0
         for i in self.args:
             if plus_count:
-                net_str+=" + "
-            if i[2] == 0:
+                net_str += " + "
+            if i[1] == 0:
                 continue
-            elif i[1] == 0:
-                net_str+=str(i[2])
-            elif i[1] == 1:
-                if i[2] == 1:
-                    net_str+=represent(i)
+            elif i[0] == 0:
+                net_str += str(i[1])
+            elif i[0] == 1:
+                if i[1] == 1:
+                    net_str += 'w'
                 else:
-                    net_str+=represent(i)+'.%s'%i[2]
+                    net_str += 'w*%s'%i[1]
             else :
-                if i[2]==1:
-                    net_str+=represent(i)+'**%s'%i[1]
+                if i[1]==1:
+                    net_str += 'w**%s'%i[0]
                 else:
-                    net_str+=represent(i)+'**%s'%i[1]+'.%s'%i[2]
+                    net_str += '{w**%s'%i[0]+'}*%s'%i[1]
             plus_count += 1
         return(net_str)
-    def __repr__(self):
-        return str(self)
+    __repr__ = __str__
 
-    def __add__(self,other):
+    def __add__(self, other):
 
         if isinstance(other, int):
             new_terms = list(self.args)
             if other < 0:
                 raise ValueError("can only add ordinals and positive integers")
 
-            elif new_terms[0][1] == 0:
-                new_terms[0][2]+=other
+            elif new_terms[-1][0] == 0:
+                new_terms[-1][1] += other
                 return Ordinal(new_terms)
             else:
-                new_terms.append([(self.index), 0, other])
+                new_terms.append([0, other])
                 return Ordinal(new_terms)
         else:
             a_terms = list(self.args)
             b_terms = list(other.args)
-            power_self = [i[1] for i in a_terms]
-            power_other = [i[1] for i in b_terms]
+            power_self = [i[0] for i in a_terms]
+            power_other = [i[0] for i in b_terms]
             b1 = power_other[0]
             r = reverse_bisect_right(power_self, power_other[0])
             if not b1 in power_self:
-                a_terms.insert(r,[self.index, b1, 0])
+                a_terms.insert(r,[b1, 0])
             else:
                 r-=1
             net = a_terms[:r]
-            term2 = [b_terms[0][0],b_terms[0][1], b_terms[0][2]+a_terms[r][2]]
+            term2 = [b_terms[0][0], b_terms[0][1]+a_terms[r][1]]
             if term2:
                 net.append(term2)
             term3 = (b_terms[1:])
@@ -144,9 +125,7 @@ class SingletonOrdinal(object):
         if SingletonOrdinal.__instance is None:
             SingletonOrdinal.__instance = object.__new__(cls)
         # first countably infinite ordinal
-        SingletonOrdinal.__instance.w = Ordinal([[0, 1, 1]])
-        # first uncountable ordinal
-        SingletonOrdinal.__instance.w1 = Ordinal([[1, 1, 1]])
+        SingletonOrdinal.__instance.w = Ordinal([[1, 1]])
         return SingletonOrdinal.__instance
 
 Ordinals = SingletonOrdinal()
