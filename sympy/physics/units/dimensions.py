@@ -143,7 +143,7 @@ class Dimension(Expr):
 
         name = self.name
         if name in dimsys_default.dimensional_dependencies:
-            raise IndexError("already in dependecies dict")
+            raise IndexError("already in dependencies dict")
         # Horrible code:
         d = dict(dimsys_default.dimensional_dependencies)
         d[name] = Dict({name: 1})

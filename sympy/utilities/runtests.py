@@ -1791,7 +1791,7 @@ SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
 class SymPyOutputChecker(pdoctest.OutputChecker):
     """
     Compared to the OutputChecker from the stdlib our OutputChecker class
-    supports numerical comparison of floats occuring in the output of the
+    supports numerical comparison of floats occurring in the output of the
     doctest examples
     """
 

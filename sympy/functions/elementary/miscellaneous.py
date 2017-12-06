@@ -129,7 +129,7 @@ def sqrt(arg):
 
 
 def cbrt(arg):
-    """This function computes the principial cube root of `arg`, so
+    """This function computes the principal cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
 
     Examples
