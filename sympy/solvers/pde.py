@@ -814,9 +814,9 @@ def pde_separate(eq, fun, sep, strategy='mul'):
 
     :param eq: Partial differential equation
 
-    :param fun: Original function F(x, y, z)
+    :param fun: Original function u(x, t)
 
-    :param sep: List of separated functions [X(x), u(y, z)]
+    :param sep: List of separated functions [X(x), T(t)]
 
     :param strategy: Separation strategy. You can choose between additive
         separation ('add') and multiplicative separation ('mul') which is
@@ -900,11 +900,11 @@ def pde_separate_add(eq, fun, sep):
     """
     Helper function for searching additive separable solutions.
 
-    Consider an equation of two independent variables x, y and a dependent
-    variable w, we look for the product of two functions depending on different
-    arguments:
+    Consider a function, u, of two independent variables x and t. We
+    seek a sum of functions, each being dependent on one of the
+    variables:
 
-    `w(x, y, z) = X(x) + y(y, z)`
+    `u(x, t) = X(x) + T(t)`
 
     Examples
     ========
@@ -925,11 +925,11 @@ def pde_separate_mul(eq, fun, sep):
     """
     Helper function for searching multiplicative separable solutions.
 
-    Consider an equation of two independent variables x, y and a dependent
-    variable w, we look for the product of two functions depending on different
-    arguments:
+    Consider a function, u, of two independent variables x and t.  We
+    seek a product of functions, each being dependent on one of the
+    variables:
 
-    `w(x, y, z) = X(x)*u(y, z)`
+    `u(x, t) = X(x)*T(t)`
 
     Examples
     ========
@@ -938,9 +938,16 @@ def pde_separate_mul(eq, fun, sep):
     >>> from sympy.abc import x, y
     >>> u, X, Y = map(Function, 'uXY')
 
-    >>> eq = Eq(D(u(x, y), x, 2), D(u(x, y), y, 2))
-    >>> pde_separate_mul(eq, u(x, y), [X(x), Y(y)])
-    [Derivative(X(x), x, x)/X(x), Derivative(Y(y), y, y)/Y(y)]
+    >>> eq = Eq(D(u(x, y), x, 2), D(u(x, t), t, 2))
+    >>> pde_separate_mul(eq, u(x, t), [X(x), T(t)])
+    [Derivative(X(x), x, x)/X(x), Derivative(T(t), t, t)/T(t)]
+
+    References
+    ==========
+
+    - Viktor Grigoryan, "Partial Differential Equations"
+      Math 124A - Fall 2010, p. 84
+
 
     """
     return pde_separate(eq, fun, sep, strategy='mul')
