@@ -256,6 +256,8 @@ class LatexPrinter(Printer):
             return True
         if any([expr.has(x) for x in (Mod,)]):
             return True
+        if expr.is_Add:
+            return True
         return False
 
 
@@ -300,7 +302,7 @@ class LatexPrinter(Printer):
             else:
                 tex += " + "
             term_tex = self._print(term)
-            if self._needs_add_brackets(term) or term.is_Add:
+            if self._needs_add_brackets(term):
                 term_tex = r"\left(%s\right)" % term_tex
             tex += term_tex
 
