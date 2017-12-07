@@ -8,7 +8,6 @@ and the Diffie-Hellman key exchange.
 
 from __future__ import print_function
 
-import random
 from string import whitespace, ascii_uppercase as uppercase, printable
 
 from sympy import nextprime
@@ -2074,9 +2073,10 @@ def _legendre(a, p):
         return -1
 
 
-def _random_coprime_stream(n):
+def _random_coprime_stream(n, seed=None):
+    randrange = _randrange(seed)
     while True:
-        y = random.randrange(n)
+        y = randrange(n)
         if gcd(y, n) == 1:
             yield y
 
@@ -2139,7 +2139,7 @@ def gm_private_key(p, q, a=None):
     return p, q
 
 
-def gm_public_key(p, q, a=None):
+def gm_public_key(p, q, a=None, seed=None):
     """
     Compute public keys for p and q.
     Note that in Goldwasser-Micali Encrpytion,
@@ -2167,8 +2167,9 @@ def gm_public_key(p, q, a=None):
     N = p * q
 
     if a is None:
+        randrange = _randrange(seed)
         while True:
-            a = random.randrange(N)
+            a = randrange(N)
             if _legendre(a, p) == _legendre(a, q) == -1:
                 break
     else:
@@ -2177,7 +2178,7 @@ def gm_public_key(p, q, a=None):
     return (a, N)
 
 
-def encipher_gm(i, key):
+def encipher_gm(i, key, seed=None):
     """
     Encrypt integer 'i' using public_key 'key'
     Note that gm uses random encrpytion.
@@ -2204,7 +2205,7 @@ def encipher_gm(i, key):
         bits.append(i % 2)
         i //= 2
 
-    gen = _random_coprime_stream(N)
+    gen = _random_coprime_stream(N, seed)
     rev = reversed(bits)
     encode = lambda b: next(gen)**2*pow(a, b) % N
     return [ encode(b) for b in rev ]
