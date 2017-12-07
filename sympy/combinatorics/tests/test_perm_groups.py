@@ -851,3 +851,13 @@ def test_presentation():
 
     P = SymmetricGroup(5)
     assert _test(P)
+
+    P = PermutationGroup([Permutation(0,3,1,2), Permutation(3)(0,1), Permutation(0,1)(2,3)])
+    G = P.strong_presentation()
+    assert G.order() == P.order()
+    assert len(G.generators) == len(P.strong_gens)
+
+    P = DihedralGroup(6)
+    G = P.strong_presentation()
+    assert G.order() == P.order()
+    assert len(G.generators) == len(P.strong_gens)

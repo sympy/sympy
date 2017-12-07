@@ -218,7 +218,7 @@ class FpGroup(DefaultPrinting):
         elif len(self.relators) == 0:
             self._order = self.free_group.order()
         elif len(self.generators) == 1:
-            self._order = gcd([r.array_form[0][1] for r in self.relators])
+            self._order = abs(gcd([r.array_form[0][1] for r in self.relators]))
         elif self._is_infinite():
             self._order = S.Infinity
         else:
