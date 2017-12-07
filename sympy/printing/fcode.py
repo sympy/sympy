@@ -409,7 +409,7 @@ class FCodePrinter(CodePrinter):
                 if pos == 0:
                     return endpos
             return pos
-        # split line by line and add the splitted lines to result
+        # split line by line and add the split lines to result
         result = []
         if self._settings['source_format'] == 'free':
             trailing = ' &'

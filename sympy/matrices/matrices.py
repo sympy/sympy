@@ -181,7 +181,7 @@ class MatrixDeterminant(MatrixCommon):
             return (None, None, None, None)
 
 
-        # Recursively implimented Bareiss' algorithm as per Deanna Richelle Leggett's
+        # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
         # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         def bareiss(mat, cumm=1):
             if mat.rows == 0:

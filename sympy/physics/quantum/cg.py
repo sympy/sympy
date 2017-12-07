@@ -45,7 +45,7 @@ class Wigner3j(Expr):
     Examples
     ========
 
-    Declare a Wigner-3j coefficient and calcualte its value
+    Declare a Wigner-3j coefficient and calculate its value
 
         >>> from sympy.physics.quantum.cg import Wigner3j
         >>> w3j = Wigner3j(6,0,4,0,2,0)
@@ -594,7 +594,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
 
     dep_variables: list
         A list of the variables that must match for all the terms in the sum,
-        i.e. the dependant variables
+        i.e. the dependent variables
 
     build_index_expr: expression
         Expression with Wild terms giving the number of elements in cg_index

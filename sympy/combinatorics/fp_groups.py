@@ -968,7 +968,7 @@ def elimination_technique_1(gens, rels, identity):
     redundant_gens = {}
     redundant_rels = []
     used_gens = set()
-    # examine each relator in relator list for any generator occuring exactly
+    # examine each relator in relator list for any generator occurring exactly
     # once
     for rel in rels:
         # don't look for a redundant generator in a relator which

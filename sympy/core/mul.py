@@ -1499,7 +1499,7 @@ class Mul(Expr, AssocOp):
 
                 # the bases must be equivalent in succession, and
                 # the powers must be extractively compatible on the
-                # first and last factor but equal inbetween.
+                # first and last factor but equal in between.
 
                 rat = []
                 for j in range(take):

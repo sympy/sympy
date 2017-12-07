@@ -193,6 +193,6 @@ def deltaintegrate(f, x):
                         else:
                             return r*DiracDelta(x,m-1)
                 # In some very weak sense, x=0 is still a singularity,
-                # but we hope will not be of any practial consequence.
+                # but we hope will not be of any practical consequence.
                 return S.Zero
     return None

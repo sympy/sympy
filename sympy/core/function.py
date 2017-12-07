@@ -766,7 +766,7 @@ class Function(Application, Expr):
 
             else:
                 # the function defined in sympy is not known in sage
-                # this exception is catched in sage
+                # this exception is caught in sage
                 raise AttributeError
 
         return func(*args)
@@ -1172,7 +1172,7 @@ class Derivative(Expr):
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
-        # expression at all. Note, this cannnot check non-symbols like
+        # expression at all. Note, this cannot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):

@@ -1343,7 +1343,7 @@ def test_exclude():
             Vout: 0},
     ]
 
-    # TODO: Investingate why currently solution [0] is preferred over [1].
+    # TODO: Investigate why currently solution [0] is preferred over [1].
     assert solve(eqs, exclude=[Vplus, s, C]) in [[{
         Vminus: Vplus,
         V1: Vout/2 + Vplus/2 + sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,

@@ -1068,7 +1068,7 @@ def multiset_permutations(m, size=None, g=None):
 
 def _partition(seq, vector, m=None):
     """
-    Return the partion of seq as specified by the partition vector.
+    Return the partition of seq as specified by the partition vector.
 
     Examples
     ========

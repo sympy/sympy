@@ -220,7 +220,7 @@ class Plane(GeometryEntity):
             return True
 
     def distance(self, o):
-        """Distance beteen the plane and another geometric entity.
+        """Distance between the plane and another geometric entity.
 
         Parameters
         ==========
