@@ -2131,11 +2131,14 @@ def gm_private_key(p, q, a=None):
 
     """
     if p == q:
-        return False
+        raise ValueError("expected distinct primes, "
+                         "got two copies of %i" % p)
     elif not isprime(p) or not isprime(q):
-        return False
+        raise ValueError("first two arguments must be prime, "
+                         "got %i of %i" % (p, q))
     elif p == 2 or q == 2:
-        return False
+        raise ValueError("first two arguments must not be even, "
+                         "got %i of %i" % (p, q))
     return p, q
 
 
@@ -2153,17 +2156,14 @@ def gm_public_key(p, q, a=None, seed=None):
     Returns
     =======
 
-    a | false (int)
-        if a is not None otherwise some random integer
-        coprime to p and q. returns false
-        if inputs cannot be used to initalize public key
+    (a, N) : tuple[int]
+        a is the input a if it is not None otherwise
+        some random integer coprime to p and q.
 
-    N (int) the product of p and q
-
+        N is the product of p and q
     """
 
-    if not gm_private_key(p, q):
-        return False
+    p, q = gm_private_key(p, q)
     N = p * q
 
     if a is None:

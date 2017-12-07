@@ -325,13 +325,13 @@ def test_encipher_decipher_gm():
 
 
 def test_gm_private_key():
-    assert False == gm_public_key(13, 15)
-    assert False == gm_public_key(0, 0)
-    assert False == gm_public_key(0, 5)
+    raises(ValueError, lambda: gm_public_key(13, 15))
+    raises(ValueError, lambda: gm_public_key(0, 0))
+    raises(ValueError, lambda: gm_public_key(0, 5))
     assert 17, 19 == gm_public_key(17, 19)
 
 
 def test_gm_public_key():
     assert 323 == gm_public_key(17, 19)[1]
     assert 15  == gm_public_key(3, 5)[1]
-    assert False == gm_public_key(15, 19)
+    raises(ValueError, lambda: gm_public_key(15, 19))
