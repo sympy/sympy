@@ -39,7 +39,7 @@ from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 
-x, y, z, t, a, b = symbols('x y z t a b')
+x, y, z, t, a, b, c = symbols('x y z t a b c')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -1631,10 +1631,11 @@ def test_issue_12886():
     m__1, l__1 = symbols('m__1, l__1')
     assert latex(m__1**2 + l__1**2) == r'\left(l^{1}\right)^{2} + \left(m^{1}\right)^{2}'
 
+
 def test_issue_13651():
-    from sympy.abc import a,b,c
-    bug = c+collect_const(-a-b)
-    assert latex(bug) == r"c - \left(a + b\right)"
+    expr = c + collect_const(-a - b)
+    assert latex(expr) == r"c - \left(a + b\right)"
+
 
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
