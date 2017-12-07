@@ -42,6 +42,7 @@ class Polygon(GeometrySet):
     perimeter
     vertices
     centroid
+    second_moment_of_area
     sides
 
     Raises
@@ -392,7 +393,7 @@ class Polygon(GeometrySet):
 
         """
         A = 1/(6*self.area)
-        cx, cy = 0, 0
+        cx, cy = 0, 0,
         args = self.args
         for i in range(len(args)):
             x1, y1 = args[i - 1].args
@@ -401,25 +402,24 @@ class Polygon(GeometrySet):
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
         return Point(simplify(A*cx), simplify(A*cy))
- 
-    @property
-    def second_moment_of_area(self):
+    
+    def second_moment_of_area(self,p=None):
         """Second moment of area of polygon
-	   
 	   RETURNS
 	   =======
-	   I_xx,I_yy (about x and y axis)
-
+	   I_xx,I_yy (about the centroid if point is not given othervise about the given point)
 	   Example
            =======
-
-           >>> from sympy import Point,Polygon,pi
-           >>> from sympy import symbols
-           >>> L,B=symbols('L,B')
-           >>> p1,p2,p3,p4=[(0,0),(L,0),(L,B),(0,B)]
+           >>> from sympy import *
+           >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
+           >>> from sympy import *
+           >>> a,b=symbols('a,b')
+           >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
            >>> rectangle=Polygon(p1,p2,p3,p4)
-           >>> rectangle.second_moment_of_area
-           (B**3*L/3, B*L**3/3)
+           >>> rectangle.second_moment_of_area()
+           (a*b**3/12, a**3*b/12)
+           >>> rectangle.second_moment_of_area(p5)
+           (a*b**3/9, a**3*b/9)
         """
         I_xx,I_yy=0,0
         args= self.args
@@ -429,8 +429,19 @@ class Polygon(GeometrySet):
             v = x1*y2 - x2*y1
             I_xx += (y1**2+y1*y2+y2**2)*v
             I_yy += (x1**2+x1*x2+x2**2)*v
-        return (I_xx/12),(I_yy/12)   
-
+        A=self.area
+        c_x=self.centroid[0]
+        c_y=self.centroid[1]
+        #parallel axis theorem    
+        I_xx_c = (I_xx/12) - A*(c_y**2) 
+        I_yy_c = (I_yy/12) - A*(c_x**2)
+        if(p == None):
+        	return I_xx_c,I_yy_c
+        I_xx = (I_xx_c + A*((p[1]-c_y)**2))
+        I_yy = (I_yy_c + A*((p[0]-c_x)**2))    
+		
+        return I_xx,I_yy
+    
     @property
     def sides(self):
         """The line segments that form the sides of the polygon.
