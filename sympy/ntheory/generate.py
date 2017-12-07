@@ -500,7 +500,7 @@ def primerange(a, b):
         Notes
         =====
 
-        Some famous conjectures about the occurence of primes in a given
+        Some famous conjectures about the occurrence of primes in a given
         range are [1]:
 
         - Twin primes: though often not, the following will give 2 primes

@@ -555,7 +555,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
     helpers : iterable, optional
-        Used to define auxillary expressions needed for the main expr. If the
+        Used to define auxiliary expressions needed for the main expr. If the
         main expression needs to call a specialized function it should be put
         in the ``helpers`` iterable. Autowrap will then make sure that the
         compiled main expression can link to the helper routine. Items should
@@ -993,7 +993,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         If True, autowrap will not mute the command line backends. This can
         be helpful for debugging.
     helpers : iterable, optional
-        Used to define auxillary expressions needed for the main expr. If
+        Used to define auxiliary expressions needed for the main expr. If
         the main expression needs to call a specialized function it should
         be put in the ``helpers`` iterable. Autowrap will then make sure
         that the compiled main expression can link to the helper routine.

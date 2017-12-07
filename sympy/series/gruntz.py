@@ -189,7 +189,7 @@ class SubsSet(dict):
         {d3: exp(x-d2)}.
 
     The function rewrite uses all this information to correctly rewrite our
-    expression in terms of w. In this case w can be choosen to be exp(-x),
+    expression in terms of w. In this case w can be chosen to be exp(-x),
     i.e. d2. The correct rewriting then is::
 
         exp(-w)/w + 1/w + x.
@@ -363,7 +363,7 @@ def sign(e, x):
         e <  0 for x sufficiently large ... -1
 
     The result of this function is currently undefined if e changes sign
-    arbitarily often for arbitrarily large x (e.g. sin(x)).
+    arbitrarily often for arbitrarily large x (e.g. sin(x)).
 
     Note that this returns zero only if e is *constantly* zero
     for x sufficiently large. [If e is constant, of course, this is just

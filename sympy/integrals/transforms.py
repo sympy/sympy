@@ -745,7 +745,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         # See [L], 5.2
         cond = [abs(arg(G.argument)) < G.delta*pi]
         # Note: we allow ">=" here, this corresponds to convergence if we let
-        # limits go to oo symetrically. ">" corresponds to absolute convergence.
+        # limits go to oo symmetrically. ">" corresponds to absolute convergence.
         cond += [And(Or(len(G.ap) != len(G.bq), 0 >= re(G.nu) + 1),
                      abs(arg(G.argument)) == G.delta*pi)]
         cond = Or(*cond)
@@ -869,7 +869,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
 def _simplifyconds(expr, s, a):
     r"""
-    Naively simplify some conditions occuring in ``expr``, given that `\operatorname{Re}(s) > a`.
+    Naively simplify some conditions occurring in ``expr``, given that `\operatorname{Re}(s) > a`.
 
     >>> from sympy.integrals.transforms import _simplifyconds as simp
     >>> from sympy.abc import x
