@@ -338,7 +338,9 @@ def test_euler_polynomial_rewrite():
 
 def test_catalan():
     n = Symbol('n', integer=True)
-    m = Symbol('n', integer=True, positive=True)
+    m = Symbol('m', integer=True, positive=True)
+    k = Symbol('k', integer=True, nonnegative=True)
+    p = Symbol('p', nonnegative=True)
 
     catalans = [1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862, 16796, 58786]
     for i, c in enumerate(catalans):
@@ -368,6 +370,11 @@ def test_catalan():
     assert str(c) == '0.848826363156775'
     c = catalan(I).evalf(3)
     assert str((re(c), im(c))) == '(0.398, -0.0209)'
+
+    # Assumptions
+    assert catalan(p).is_positive is True
+    assert catalan(k).is_integer is True
+    assert catalan(m+3).is_composite is True
 
 
 def test_genocchi():

@@ -494,7 +494,7 @@ class Piecewise(Function):
         oo = S.Infinity
         done = [(-oo, oo, -1)]
         for k, p in enumerate(pieces):
-            if p[:2] == (-oo, oo):
+            if p == (-oo, oo):
                 # all undone intervals will get this key
                 for j, (a, b, i) in enumerate(done):
                     if i == -1:
@@ -505,13 +505,12 @@ class Piecewise(Function):
                 if i == -1:
                     j = N - j
                     done[j: j + 1] = _clip(p, (a, b), k)
+        done = [(a, b, i) for a, b, i in done if a != b]
 
-        # check for holes
-        for a, b, i in done:
-            if i == -1 and a != b:
-                # when we reference arg -1 we will get Undefined
-                abei.append((-oo, oo, Undefined, -1))
-                break
+        # append an arg if there is a hole so a reference to
+        # argument -1 will give Undefined
+        if any(i == -1 for (a, b, i) in done):
+            abei.append((-oo, oo, Undefined, -1))
 
         # return the sum of the intervals
         args = []
@@ -533,7 +532,7 @@ class Piecewise(Function):
                 cond = (x < b)
             else:
                 cond = (x <= b)
-            args.append((_mmsimp(sum), cond))
+            args.append((sum, cond))
         return Piecewise(*args)
 
     def _eval_interval(self, sym, a, b, _first=True):
@@ -574,13 +573,23 @@ class Piecewise(Function):
                     hi is S.Infinity or lo is S.NegativeInfinity):
                 pass
             else:
-                a = Dummy('lo')
-                b = Dummy('hi')
+                _a = Dummy('lo')
+                _b = Dummy('hi')
+                a = lo if lo.is_comparable else _a
+                b = hi if hi.is_comparable else _b
                 pos = self._eval_interval(x, a, b, _first=False)
-                if not (lo.is_number or hi.is_number):
-                    neg, pos = -pos.xreplace({a: hi, b: lo}), pos.xreplace({a: lo, b: hi})
+                if a == _a and b == _b:
+                    # it's purely symbolic so just swap lo and hi and
+                    # change the sign to get the value for when lo > hi
+                    neg, pos = (-pos.xreplace({_a: hi, _b: lo}),
+                        pos.xreplace({_a: lo, _b: hi}))
                 else:
-                    neg, pos = -self._eval_interval(x, hi, lo, _first=False), pos.xreplace({a: lo, b: hi})
+                    # at least one of the bounds was comparable, so allow
+                    # _eval_interval to use that information when computing
+                    # the interval with lo and hi reversed
+                    neg, pos = (-self._eval_interval(x, hi, lo, _first=False),
+                        pos.xreplace({_a: lo, _b: hi}))
+
                 # allow simplification based on ordering of lo and hi
                 p = Dummy('', positive=True)
                 if lo.is_Symbol:
@@ -589,18 +598,27 @@ class Piecewise(Function):
                 elif hi.is_Symbol:
                     pos = pos.xreplace({hi: lo + p}).xreplace({p: hi - lo})
                     neg = neg.xreplace({hi: lo - p}).xreplace({p: lo - hi})
-                # assumble return expression
-                rv = Piecewise(
-                    (pos,
-                        lo < hi),
-                    (neg,
-                        True))
-                # apply simplification of Min/Max expressions which may
-                # respond differently now that some simplification may
-                # have occured given the ordering of lo and hi
-                rv = _mmsimp(rv)
+
+                # assemble return expression; make the first condition be Lt
+                # b/c then the first expression will look the same whether
+                # the lo or hi limit is symbolic
+                if a == _a:  # the lower limit was symbolic
+                    rv = Piecewise(
+                        (pos,
+                            lo < hi),
+                        (neg,
+                            True))
+                else:
+                    rv = Piecewise(
+                        (neg,
+                            hi < lo),
+                        (pos,
+                            True))
+
                 if rv == Undefined:
                     raise ValueError("Can't integrate across undefined region.")
+                if any(isinstance(i, Piecewise) for i in (pos, neg)):
+                    rv = piecewise_fold(rv)
                 return rv
 
         # handle a Piecewise with lo <= hi and no x-independent relationals
@@ -629,27 +647,20 @@ class Piecewise(Function):
                 if i == -1:
                     j = N - j
                     done[j: j + 1] = _clip(p, (a, b), k)
-        # check for holes
-        for a, b, i in done:
-            if i == -1:
-                if a != b:
-                    # this requires a default (i == -1)
-                    # over a potentially non-zero interval
-                    # since a != b so we can't do this
-                    return S.NaN
-                else:
-                    # XXX are there expressions that would give
-                    # a value over a zero-width interval?
-                    # Integrating DiracDelta or Heaviside
-                    # does but we are not integrating right
-                    # now. If there are things to check for
-                    # check expression given by abei[i][-2]
-                    pass
+        done = [(a, b, i) for a, b, i in done if a != b]
+
         # return the sum of the intervals
         sum = S.Zero
+        upto = None
         for a, b, i in done:
+            if i == -1:
+                if upto is None:
+                    return Undefined
+                # TODO simplify hi <= upto
+                return Piecewise((sum, hi <= upto), (Undefined, True))
             sum += abei[i][-2]._eval_interval(x, a, b)
-        return _mmsimp(sum)
+            upto = b
+        return sum
 
     def _intervals(self, sym):
         """Return a list of tuples, (a, b, e, i), where a and b
@@ -1020,59 +1031,22 @@ def _clip(A, B, k):
     a, b = B
     c, d = A
     c, d = Min(Max(c, a), b), Min(Max(d, a), b)
+    a, b = Min(a, b), b
     p = []
     if a != c:
-        p.append((Min(a, b), c, -1))
+        p.append((a, c, -1))
     else:
         pass
     if c != d:
         p.append((c, d, k))
     else:
         pass
-    if d != b:
+    if b != d:
         if d == c and p and p[-1][-1] == -1:
             p[-1] = p[-1][0], b, -1
         else:
             p.append((d, b, -1))
     else:
         pass
-    rv = [tuple(map(_mmsimp, (a, b))) + (i,) for a, b, i in p]
-    return [(a, b, i) for a, b, i in rv if a != b]
 
-
-def _mmsimp(e):
-    # simplify min/max relationships
-    from sympy import simplify, Expr
-    from sympy.logic.boolalg import Boolean
-
-    def rw(m):
-        if isinstance(m, Min):
-            return simplify(And(*[rw(i) for i in m.args]))
-        elif isinstance(m, Max):
-            return simplify(Or(*[rw(i) for i in m.args]))
-        elif not m.is_Atom:
-            return m.func(*[rw(a) for a in m.args])
-        else:
-            return m
-
-    def wr(m):
-        if isinstance(m, And):
-            return Min(*[wr(i) for i in m.args])
-        elif isinstance(m, Or):
-            return Max(*[wr(i) for i in m.args])
-        elif not m.is_Atom:
-            return m.func(*[wr(a) for a in m.args])
-        else:
-            return m
-
-    # And and Or are going to be used to identify args that
-    # warrant simplification. We can't allow any non-Booleans
-    # into BooleanFunctions, so replace any non-Booleans with
-    # Dummy symbols
-    reps = []
-    for m in e.atoms(Min, Max):
-        nonBool = dict([(n, Dummy()) for n in m.atoms(Expr)
-            if not isinstance(n, (Boolean, Min, Max))])
-        reps.append((m, wr(rw(m.xreplace(nonBool))).xreplace(
-            dict([(v, k) for k, v in nonBool.items()]))))
-    return e.xreplace(dict(reps))
+    return p

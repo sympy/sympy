@@ -57,6 +57,9 @@ class NDimArray(object):
     [[-3, -3], [-3, -3]]
 
     """
+
+    _diff_wrt = True
+
     def __new__(cls, *args, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(*args, **kwargs)
@@ -220,7 +223,11 @@ class NDimArray(object):
         [[1, 0], [0, y]]
 
         """
-        return type(self)(map(lambda x: x.diff(*args), self), self.shape)
+        from sympy import Derivative
+        return Derivative(self.as_immutable(), *args, evaluate=True)
+
+    def _eval_derivative(self, arg):
+        return self.applyfunc(lambda x: x.diff(arg))
 
     def applyfunc(self, f):
         """Apply a function to each element of the N-dim array.
@@ -255,6 +262,9 @@ class NDimArray(object):
 
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
+
+        if self.rank() == 0:
+            return self[()].__str__()
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
@@ -406,6 +416,12 @@ class ImmutableNDimArray(NDimArray, Basic):
 
     def __hash__(self):
         return Basic.__hash__(self)
+
+    def as_immutable(self):
+        return self
+
+    def as_mutable(self):
+        raise NotImplementedError("abstract method")
 
 
 from sympy.core.numbers import Integer

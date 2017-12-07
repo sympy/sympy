@@ -6,7 +6,7 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.utilities.pytest import raises
 
-from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate
+from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
 from sympy.tensor.array import Array, NDimArray
 
 from sympy.tensor.array import tensorproduct, tensorcontraction, derive_by_array, permutedims
@@ -72,6 +72,16 @@ def test_derivative_by_array():
     assert derive_by_array(a, [[x, y], [z, t]]) == Array([[[bexpr/x*cexpr], [2*y*bexpr/y**2*cexpr]], [[bexpr*cexpr], [bexpr/log(t)/t*cexpr]]])
     assert derive_by_array([[x, y], [z, t]], [x, y]) == Array([[[1, 0], [0, 0]], [[0, 1], [0, 0]]])
     assert derive_by_array([[x, y], [z, t]], [[x, y], [z, t]]) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]],
+                                                                         [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    assert diff(sexpr, t) == x*y**2*exp(z)*cos(x*y**2*exp(z)*log(t))/t
+    assert diff(sexpr, Array([x, y, z])) == Array([bexpr/x*cexpr, 2*y*bexpr/y**2*cexpr, bexpr*cexpr])
+    assert diff(a, Array([x, y, z])) == Array([[bexpr/x*cexpr], [2*y*bexpr/y**2*cexpr], [bexpr*cexpr]])
+
+    assert diff(sexpr, Array([[x, y], [z, t]])) == Array([[bexpr/x*cexpr, 2*y*bexpr/y**2*cexpr], [bexpr*cexpr, bexpr/log(t)/t*cexpr]])
+    assert diff(a, Array([[x, y], [z, t]])) == Array([[[bexpr/x*cexpr], [2*y*bexpr/y**2*cexpr]], [[bexpr*cexpr], [bexpr/log(t)/t*cexpr]]])
+    assert diff(Array([[x, y], [z, t]]), Array([x, y])) == Array([[[1, 0], [0, 0]], [[0, 1], [0, 0]]])
+    assert diff(Array([[x, y], [z, t]]), Array([[x, y], [z, t]])) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]],
                                                                          [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
 
 

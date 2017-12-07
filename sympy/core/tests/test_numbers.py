@@ -1464,7 +1464,7 @@ def test_issue_4122():
     x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
 
-    # similarily for negative infinity
+    # similarly for negative infinity
     x = Symbol('x', nonnegative=True)
     assert (-oo + x).is_Add
     x = Symbol('x', finite=True)
