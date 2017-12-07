@@ -7,7 +7,7 @@ from sympy import (
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
-    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
+    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio, collect_const)
 from sympy.core.expr import UnevaluatedExpr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
@@ -36,7 +36,7 @@ from sympy.core.compatibility import range
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 
-a, b, x, y, z, k, n = symbols('a,b,x,y,z,k,n')
+a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
 th = Symbol('theta')
 ph = Symbol('phi')
 
@@ -5825,6 +5825,13 @@ def test_issue_9877():
     ucode_str2 = u'{x} ∩ {y} ∩ ({z} \\ [1, 2])'
     d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
     assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2
+
+
+def test_issue_13651():
+    expr = c + collect_const(-a - b)
+    assert pretty(expr) == 'c - (a + b)'
+    expr = c + collect_const(-a + b - d)
+    assert pretty(expr) == 'b + c - (a + d)'
 
 
 def test_pretty_primenu():

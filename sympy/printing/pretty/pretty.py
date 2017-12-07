@@ -1404,7 +1404,7 @@ class PrettyPrinter(Printer):
             else:
                 pform_neg = ' - '
 
-            if pform.binding > prettyForm.NEG:
+            if pform.binding > prettyForm.NEG or pform.binding == prettyForm.ADD:
                 p = stringPict(*pform.parens())
             else:
                 p = pform
