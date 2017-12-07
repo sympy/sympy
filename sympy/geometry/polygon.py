@@ -393,7 +393,7 @@ class Polygon(GeometrySet):
 
         """
         A = 1/(6*self.area)
-        cx, cy = 0, 0,
+        cx, cy = 0, 0
         args = self.args
         for i in range(len(args)):
             x1, y1 = args[i - 1].args
