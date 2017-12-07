@@ -3,6 +3,9 @@ Utility functions for Rubi integration.
 
 See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Integration%20utility%20functions.pdf
 '''
+
+from __future__ import print_function, division
+
 from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
@@ -253,7 +256,7 @@ def IntegerQ(var):
 def IntegersQ(*var):
     return all(IntegerQ(i) for i in var)
 
-def ComplexNumberQ(*var):
+def ComplexNumberQ(*vars):
     """
     ComplexNumberQ(m, n,...) returns True if m, n, ... are all explicit complex numbers, else it returns False.
 
