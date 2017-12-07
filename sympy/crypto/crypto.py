@@ -2081,22 +2081,53 @@ def _random_coprime_stream(n):
             yield y
 
 
-def gm_private_key(p, q):
+def gm_private_key(p, q, a=None):
     """
-    Check if p and q can be used as private keys
-    for Goldwasser-Micali encryption
+    Check if p and q can be used as private keys for
+    the Goldwasser-Micali encryption. The method works
+    roughly as follows.
 
-    p and q must be odd primes
+    Pick two large primes p ands q. Call their product N.
+    Given a message as an integer i, write i in its
+    bit representation b_0,...,b_n. For each k,
+
+     if b_k = 0:
+        let a_k be a random square
+        (quadratic residue) modulo p * q
+        such that jacobi_symbol(a, p * q) = 1
+     if b_k = 1:
+        let a_k be a random non-square
+        (non-quadratic residue) modulo p * q
+        such that jacobi_symbol(a, p * q) = 1
+
+    return [a_1, a_2,...]
+
+    b_k can be recovered by checking whether or not
+    a_k is a residue. And from the b_k's, the message
+    can be reconstructed.
+
+    The idea is that, while jacobi_symbol(a, p * q)
+    can be easily computed (and when it is equal to -1 will
+    tell you that a is not a square mod p * q), quadratic
+    residuosity modulo a composite number is hard to compute
+    without knowing its factorization.
+
+    Moreover, approximately half the numbers coprime to p * q have
+    jacobi_symbol equal to 1. And among those, approximately half
+    are residues and approximately half are not. This maximizes the
+    entropy of the code.
 
     Parameters
     ==========
 
-    p, q : int to test primality
+    p, q, a : initialization variables
 
     Returns
     =======
 
-    p, q (int) the same as input
+    p, q | false (int)
+        if inputs cannot be used to initalize public key
+        then refurn false. Otherwise, return p and q
 
     """
     if p == q:
@@ -2108,34 +2139,41 @@ def gm_private_key(p, q):
     return p, q
 
 
-def gm_public_key(p, q):
+def gm_public_key(p, q, a=None):
     """
     Compute public keys for p and q.
-    Note that in GM Encrpytin, public keys are
-    randomly selected.
-
+    Note that in Goldwasser-Micali Encrpytion,
+    public keys are randomly selected.
 
     Parameters
     ==========
 
-    p, q : (int) private keys
+    p, q, a : (int) initialization variables
 
     Returns
     =======
 
-    a (int) some random integer coprime to p and q
+    a | false (int)
+        if a is not None otherwise some random integer
+        coprime to p and q. returns false
+        if inputs cannot be used to initalize public key
+
     N (int) the product of p and q
 
     """
+
     if not gm_private_key(p, q):
         return False
     N = p * q
 
-    while True:
-        a = random.randrange(N)
-        if _legendre(a, p) == _legendre(a, q) == -1:
-            break
-
+    if a is None:
+        while True:
+            a = random.randrange(N)
+            if _legendre(a, p) == _legendre(a, q) == -1:
+                break
+    else:
+        if _legendre(a, p) != -1 or _legendre(a, q) != -1:
+            return False
     return (a, N)
 
 
@@ -2157,7 +2195,9 @@ def encipher_gm(i, key):
 
     """
     if i < 0:
-        raise ValueError("message must be a non-negative integer")
+        raise ValueError(
+            "message must be a non-negative "
+            "integer: got %d instead" % i)
     a, N = key
     bits = []
     while i > 0:
@@ -2167,7 +2207,7 @@ def encipher_gm(i, key):
     gen = _random_coprime_stream(N)
     rev = reversed(bits)
     encode = lambda b: next(gen)**2*pow(a, b) % N
-    return [ encode(b) for b in rev]
+    return [ encode(b) for b in rev ]
 
 
 
