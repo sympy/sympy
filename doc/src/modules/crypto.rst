@@ -1,6 +1,13 @@
 Basic Cryptography Module
 =========================
 
+.. warning::
+
+   This module is intended for educational purposes only. Do not use the
+   functions in this module for real cryptographic applications. If you wish
+   to encrypt real data, we recommend using something like the `cryptography
+   <https://cryptography.io/en/latest/>`_ module.
+
 Encryption is the process of hiding a message and a cipher is a
 means of doing so. Included in this module are both block and stream
 ciphers:
