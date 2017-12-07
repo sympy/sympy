@@ -303,6 +303,8 @@ class Quaternion(Expr):
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
+        if not q.norm():
+            raise ValueError("Cannot compute inverse for Quaternion(0,0,0,0)")
         return conjugate(q) * (1/q.norm()**2)
 
     def pow(self, p):
