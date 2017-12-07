@@ -35,6 +35,8 @@ from sympy.core.compatibility import u_decode as u
 from sympy.core.compatibility import range
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
+from sympy.tensor.functions import TensorProduct
+
 
 a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
 th = Symbol('theta')
@@ -2707,6 +2709,12 @@ def test_pretty_ndim_arrays():
     x, y, z, w = symbols("x y z w")
 
     for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray):
+        # Basic: scalar array
+        M = ArrayType(x)
+
+        assert pretty(M) == "x"
+        assert upretty(M) == "x"
+
         M = ArrayType([[1/x, y], [z, w]])
         M1 = ArrayType([1/x, y, z])
 
@@ -2875,6 +2883,20 @@ u("""\
 """)
         assert pretty(Mcol2) == ascii_str
         assert upretty(Mcol2) == ucode_str
+
+
+def test_tensor_TensorProduct():
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    assert upretty(TensorProduct(A, B)) == "A\u2297B"
+    assert upretty(TensorProduct(A, B, A)) == "A\u2297B\u2297A"
+
+
+def test_diffgeom_print_WedgeProduct():
+    from sympy.diffgeom.rn import R2
+    from sympy.diffgeom import WedgeProduct
+    wp = WedgeProduct(R2.dx, R2.dy)
+    assert upretty(wp) == u("ⅆ x∧ⅆ y")
 
 
 def test_Adjoint():

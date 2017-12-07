@@ -451,7 +451,7 @@ def test_add():
     assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)
     assert ((-x + 1)*y).subs(x + 1, t) == y*(-t + 2)
 
-    # this should work everytime:
+    # this should work every time:
     e = a**2 - b - c
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
     assert e.subs(a**2 - c, d) == d - b

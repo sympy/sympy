@@ -1935,7 +1935,7 @@ def dh_private_key(digit=10, seed=None):
     =======
 
     (p, g, a) : p = prime number, g = primitive root of p,
-                a = random number from 2 thru p - 1
+                a = random number from 2 through p - 1
 
     Notes
     =====

@@ -740,12 +740,12 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
                 # XXX we break modularity here!
                 h = Heaviside(x - abs(C))*h.args[0].args[0] \
                     + Heaviside(abs(C) - x)*h.args[1].args[0]
-        # We must ensure that the intgral along the line we want converges,
+        # We must ensure that the integral along the line we want converges,
         # and return that value.
         # See [L], 5.2
         cond = [abs(arg(G.argument)) < G.delta*pi]
         # Note: we allow ">=" here, this corresponds to convergence if we let
-        # limits go to oo symetrically. ">" corresponds to absolute convergence.
+        # limits go to oo symmetrically. ">" corresponds to absolute convergence.
         cond += [And(Or(len(G.ap) != len(G.bq), 0 >= re(G.nu) + 1),
                      abs(arg(G.argument)) == G.delta*pi)]
         cond = Or(*cond)
@@ -869,7 +869,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
 def _simplifyconds(expr, s, a):
     r"""
-    Naively simplify some conditions occuring in ``expr``, given that `\operatorname{Re}(s) > a`.
+    Naively simplify some conditions occurring in ``expr``, given that `\operatorname{Re}(s) > a`.
 
     >>> from sympy.integrals.transforms import _simplifyconds as simp
     >>> from sympy.abc import x
@@ -1292,6 +1292,10 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
 
     if not F.has(Integral):
         return _simplify(F, simplify), True
+
+    integral_f = integrate(f, (x, -oo, oo))
+    if integral_f in (-oo, oo, S.NaN) or integral_f.has(Integral):
+        raise IntegralTransformError(name, f, 'function not integrable on real axis')
 
     if not F.is_Piecewise:
         raise IntegralTransformError(name, f, 'could not compute integral')

@@ -6,6 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.evaluate import global_evaluate
+from sympy.utilities.iterables import sift
 
 
 class AssocOp(Basic):
@@ -180,11 +181,9 @@ class AssocOp(Basic):
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         from .function import WildFunction
         from .symbol import Wild
-        from sympy.utilities.iterables import sift
-        sifted = sift(self.args, lambda p:
-            p.has(Wild, WildFunction) and not expr.has(p))
-        wild_part = sifted[True]
-        exact_part = sifted[False]
+        wild_part, exact_part = sift(self.args, lambda p:
+            p.has(Wild, WildFunction) and not expr.has(p),
+            binary=True)
         if not exact_part:
             wild_part = list(ordered(wild_part))
         else:
@@ -262,12 +261,8 @@ class AssocOp(Basic):
             # this is not the same as args_cnc because here
             # we don't assume expr is a Mul -- hence deal with args --
             # and always return a set.
-            cpart, ncpart = [], []
-            for arg in expr.args:
-                if arg.is_commutative:
-                    cpart.append(arg)
-                else:
-                    ncpart.append(arg)
+            cpart, ncpart = sift(expr.args,
+                lambda arg: arg.is_commutative is True, binary=True)
             return set(cpart), ncpart
 
         c, nc = _ncsplit(self)

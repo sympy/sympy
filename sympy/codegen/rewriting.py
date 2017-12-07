@@ -34,6 +34,7 @@ The ``optims_c99`` imported above is tuple containing the following instances
 from __future__ import (absolute_import, division, print_function)
 from itertools import tee, chain
 from sympy import log, Add, exp, Max, Min, Wild, Pow, expand_log, Dummy
+from sympy.utilities.iterables import sift
 from sympy.core.compatibility import filterfalse
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 
@@ -154,11 +155,6 @@ logsumexp_2terms_opt = ReplaceOptim(
 )
 
 
-def _partition(predicate, iterable):
-    iter_a, iter_b = tee(iterable)
-    return tuple(filter(predicate, iter_a)), tuple(filterfalse(predicate, iter_b))
-
-
 def _try_expm1(expr):
     protected, old_new =  expr.replace(exp, lambda arg: Dummy(), map=True)
     factored = protected.factor()
@@ -167,8 +163,9 @@ def _try_expm1(expr):
 
 
 def _expm1_value(e):
-    numbers, non_num = _partition(lambda arg: arg.is_number, e.args)
-    non_num_exp, non_num_other = _partition(lambda arg: arg.has(exp), non_num)
+    numbers, non_num = sift(e.args, lambda arg: arg.is_number, binary=True)
+    non_num_exp, non_num_other = sift(non_num, lambda arg: arg.has(exp),
+        binary=True)
     numsum = sum(numbers)
     new_exp_terms, done = [], False
     for exp_term in non_num_exp:

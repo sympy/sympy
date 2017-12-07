@@ -2501,7 +2501,7 @@ class asec(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
-    .. [4] http://refrence.wolfram.com/language/ref/ArcSec.html
+    .. [4] http://reference.wolfram.com/language/ref/ArcSec.html
     """
 
     @classmethod

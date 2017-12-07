@@ -181,7 +181,7 @@ class MatrixDeterminant(MatrixCommon):
             return (None, None, None, None)
 
 
-        # Recursively implimented Bareiss' algorithm as per Deanna Richelle Leggett's
+        # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
         # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         def bareiss(mat, cumm=1):
             if mat.rows == 0:
@@ -1560,7 +1560,11 @@ class MatrixCalculus(MatrixCommon):
         integrate
         limit
         """
-        return self.applyfunc(lambda x: x.diff(*args))
+        from sympy import Derivative
+        return Derivative(self, *args, evaluate=True)
+
+    def _eval_derivative(self, arg):
+        return self.applyfunc(lambda x: x.diff(arg))
 
     def integrate(self, *args):
         """Integrate each element of the matrix.  ``args`` will
@@ -4224,135 +4228,3 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
                 return i, tmp_col_val, False, newly_determined
 
     return indeterminates[0][0], indeterminates[0][1], True, newly_determined
-
-class _MinimalMatrix(object):
-    """Class providing the minimum functionality
-    for a matrix-like object and implementing every method
-    required for a `MatrixRequired`.  This class does not have everything
-    needed to become a full-fledged sympy object, but it will satisfy the
-    requirements of anything inheriting from `MatrixRequired`.  If you wish
-    to make a specialized matrix type, make sure to implement these
-    methods and properties with the exception of `__init__` and `__repr__`
-    which are included for convenience."""
-
-    is_MatrixLike = True
-    _sympify = staticmethod(sympify)
-    _class_priority = 3
-
-    is_Matrix = True
-    is_MatrixExpr = False
-
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        return cls(*args, **kwargs)
-
-    def __init__(self, rows, cols=None, mat=None):
-        if isinstance(mat, FunctionType):
-            # if we passed in a function, use that to populate the indices
-            mat = list(mat(i, j) for i in range(rows) for j in range(cols))
-        try:
-            if cols is None and mat is None:
-                mat = rows
-            rows, cols = mat.shape
-        except AttributeError:
-            pass
-        try:
-            # if we passed in a list of lists, flatten it and set the size
-            if cols is None and mat is None:
-                mat = rows
-            cols = len(mat[0])
-            rows = len(mat)
-            mat = [x for l in mat for x in l]
-        except (IndexError, TypeError):
-            pass
-        self.mat = tuple(self._sympify(x) for x in mat)
-        self.rows, self.cols = rows, cols
-        if self.rows is None or self.cols is None:
-            raise NotImplementedError("Cannot initialize matrix with given parameters")
-
-    def __getitem__(self, key):
-        def _normalize_slices(row_slice, col_slice):
-            """Ensure that row_slice and col_slice don't have
-            `None` in their arguments.  Any integers are converted
-            to slices of length 1"""
-            if not isinstance(row_slice, slice):
-                row_slice = slice(row_slice, row_slice + 1, None)
-            row_slice = slice(*row_slice.indices(self.rows))
-
-            if not isinstance(col_slice, slice):
-                col_slice = slice(col_slice, col_slice + 1, None)
-            col_slice = slice(*col_slice.indices(self.cols))
-
-            return (row_slice, col_slice)
-
-        def _coord_to_index(i, j):
-            """Return the index in _mat corresponding
-            to the (i,j) position in the matrix. """
-            return i * self.cols + j
-
-        if isinstance(key, tuple):
-            i, j = key
-            if isinstance(i, slice) or isinstance(j, slice):
-                # if the coordinates are not slices, make them so
-                # and expand the slices so they don't contain `None`
-                i, j = _normalize_slices(i, j)
-
-                rowsList, colsList = list(range(self.rows))[i], \
-                                     list(range(self.cols))[j]
-                indices = (i * self.cols + j for i in rowsList for j in
-                           colsList)
-                return self._new(len(rowsList), len(colsList),
-                                 list(self.mat[i] for i in indices))
-
-            # if the key is a tuple of ints, change
-            # it to an array index
-            key = _coord_to_index(i, j)
-        return self.mat[key]
-
-    def __eq__(self, other):
-        return self.shape == other.shape and list(self) == list(other)
-
-    def __len__(self):
-        return self.rows*self.cols
-
-    def __repr__(self):
-        return "_MinimalMatrix({}, {}, {})".format(self.rows, self.cols,
-                                                   self.mat)
-
-    @property
-    def shape(self):
-        return (self.rows, self.cols)
-
-
-class _MatrixWrapper(object):
-    """Wrapper class providing the minimum functionality
-    for a matrix-like object: .rows, .cols, .shape, indexability,
-    and iterability.  CommonMatrix math operations should work
-    on matrix-like objects.  For example, wrapping a numpy
-    matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
-    """
-    is_MatrixLike = True
-
-    def __init__(self, mat, shape=None):
-        self.mat = mat
-        self.rows, self.cols = mat.shape if shape is None else shape
-
-    def __getattr__(self, attr):
-        """Most attribute access is passed straight through
-        to the stored matrix"""
-        return getattr(self.mat, attr)
-
-    def __getitem__(self, key):
-        return self.mat.__getitem__(key)
-
-
-def _matrixify(mat):
-    """If `mat` is a Matrix or is matrix-like,
-    return a Matrix or MatrixWrapper object.  Otherwise
-    `mat` is passed through without modification."""
-    if getattr(mat, 'is_Matrix', False):
-        return mat
-    if hasattr(mat, 'shape'):
-        if len(mat.shape) == 2:
-            return _MatrixWrapper(mat)
-    return mat

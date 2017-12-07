@@ -2571,8 +2571,8 @@ def test_W22():
     t, u = symbols('t u', real=True)
     s = Lambda(x, Piecewise((1, And(x >= 1, x <= 2)), (0, True)))
     assert integrate(s(t)*cos(t), (t, 0, u)) == Piecewise(
-        (-sin(Min(1, u)) + sin(Min(2, u)), u > 0),
-        (0, True))
+        (0, u < 0),
+        (-sin(Min(1, u)) + sin(Min(2, u)), True))
 
 
 @XFAIL
@@ -2582,17 +2582,14 @@ def test_W23():
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
     assert r1.simplify() == pi*(-a + b)
 
+
 @SKIP("integrate raises RuntimeError: maximum recursion depth exceeded")
 @slow
 def test_W23b():
-    # this used to be test_W23.  Can't really split since r1 is needed
-    # in the second assert
+    # like W23 but limits are reversed
     a, b = symbols('a b', real=True, positive=True)
-    r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
-    assert r1.simplify() == pi*(-a + b)
-    # integrate raises RuntimeError: maximum recursion depth exceeded
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
-    assert r1 == r2
+    assert r2 == pi*(-a + b)
 
 
 @XFAIL
@@ -2611,8 +2608,9 @@ def test_W25():
     if ON_TRAVIS:
         skip("Too slow for travis.")
     a, x, y = symbols('a x y', real=True)
-    i1 = integrate(sin(a)*sin(y)/sqrt(1- sin(a)**2*sin(x)**2*sin(y)**2),
-                   (x, 0, pi/2))
+    i1 = integrate(
+        sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
+        (x, 0, pi/2))
     i2 = integrate(i1, (y, 0, pi/2))
     assert (i2 - pi*a/2).simplify() == 0
 
