@@ -28,6 +28,8 @@ Parsing Functions Reference
 
 .. autofunction:: sympy.parsing.mathematica.mathematica
 
+.. autofunction:: sympy.parsing.latex.parse_latex
+
 Parsing Exceptions Reference
 ----------------------------
 
