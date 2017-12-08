@@ -1,4 +1,5 @@
 from sympy.algebras.quaternion import Quaternion
+from sympy.utilities.pytest import raises
 from sympy import symbols, re, im, Add, Mul, I, Abs
 from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E, pi
 from sympy import Matrix
@@ -13,7 +14,7 @@ def test_quaternion_construction():
 
     q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
     assert q2 == Quaternion(Rational(1/2), Rational(1/2),
-                            Rational(1/2), Rational(1,2))
+                            Rational(1/2), Rational(1/2))
 
     M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
@@ -50,12 +51,17 @@ def test_quaternion_complex_real_addition():
 def test_quaternion_functions():
     q = Quaternion(x, y, z, w)
     q1 = Quaternion(1, 2, 3, 4)
+    q2 = Quaternion(0,0,0,0)
 
     assert conjugate(q) == Quaternion(x, -y, -z, -w)
     assert q.norm() == sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.normalize() == Quaternion(x, y, z, w) / sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
     assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
+
+    def test1(p):
++        p1 = p.inverse()
++   raises(ValueError, lambda: test1(q0))
 
     assert q1.exp() == \
     Quaternion(E * cos(sqrt(29)),
