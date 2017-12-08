@@ -256,6 +256,10 @@ class sin(TrigonometricFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
+
+        if hasattr(arg, '_eval_sin'):
+            return arg._eval_sin(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -524,6 +528,10 @@ class cos(TrigonometricFunction):
     def eval(cls, arg):
         from sympy.functions.special.polynomials import chebyshevt
         from sympy.calculus.util import AccumBounds
+
+        if hasattr(arg, '_eval_cos'):
+            return arg._eval_cos(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -943,6 +951,10 @@ class tan(TrigonometricFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus.util import AccumBounds
+
+        if hasattr(arg, '_eval_tan'):
+            return arg._eval_tan(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1238,6 +1250,10 @@ class cot(TrigonometricFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus.util import AccumBounds
+
+        if hasattr(arg, '_eval_cot'):
+            return arg._eval_cot(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1894,6 +1910,9 @@ class asin(InverseTrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
+        if hasattr(arg, '_eval_asin'):
+            return arg._eval_asin(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2054,6 +2073,9 @@ class acos(InverseTrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
+        if hasattr(arg, '_eval_acos'):
+            return arg._eval_acos(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2213,6 +2235,9 @@ class atan(InverseTrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
+        if hasattr(arg, '_eval_atan'):
+            return arg._eval_atan(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2348,6 +2373,9 @@ class acot(InverseTrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
+        if hasattr(arg, '_eval_acot'):
+            return arg._eval_acot(cls)
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2747,6 +2775,10 @@ class atan2(InverseTrigonometricFunction):
     @classmethod
     def eval(cls, y, x):
         from sympy import Heaviside, im, re
+
+        if hasattr(arg, '_eval_atan2'):
+            return arg._eval_atan2(cls)
+
         if x is S.NegativeInfinity:
             if y.is_zero:
                 # Special case y = 0 because we define Heaviside(0) = 1/2

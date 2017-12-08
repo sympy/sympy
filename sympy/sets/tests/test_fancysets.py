@@ -91,6 +91,10 @@ def test_ImageSet():
     assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
 
+    assert imageset(x, -x, Interval(0, 1)) == Interval(-1, 0)
+
+    assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
+
 
 def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
