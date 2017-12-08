@@ -195,6 +195,7 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
     ...     My sine. Note that this is only accurate for small x.
     ...     """
     ...     return x
+    >>> expr=sin(x)
     >>> f = lambdify(x, expr, {"sin":mysin})
     >>> f(0.1)
     0.1
