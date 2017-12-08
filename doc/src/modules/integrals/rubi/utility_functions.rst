@@ -1,8 +1,9 @@
 Utility Functions
 =================
 
-Utility functions or helper functions plays an essential role in Rubi apart from pattern matching. It is required to facilitate integration 
-methods to check conditions or use other integration technique.
+Utility functions or helper functions plays an essential role in Rubi apart 
+from pattern matching. It is required to facilitate integration methods to 
+check conditions or use other integration technique.
 
 
 .. module:: sympy.integrals.rubi.utility_function
