@@ -401,8 +401,7 @@ class Polygon(GeometrySet):
             v = x1*y2 - x2*y1
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
-        return Point(simplify(A*cx), simplify(A*cy)) 
-        
+        return Point(simplify(A*cx), simplify(A*cy))   
     def second_moment_of_area(self,p=None):
         """Second moment of area of polygon
 	   RETURNS
@@ -439,7 +438,6 @@ class Polygon(GeometrySet):
         I_yy = (I_yy_c + A*((p[0]-c_x)**2))    
 		
         return I_xx,I_yy
-    
     @property
     def sides(self):
         """The line segments that form the sides of the polygon.
