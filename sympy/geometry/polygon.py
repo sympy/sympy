@@ -401,14 +401,25 @@ class Polygon(GeometrySet):
             v = x1*y2 - x2*y1
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
-        return Point(simplify(A*cx), simplify(A*cy))   
+        return Point(simplify(A*cx), simplify(A*cy))
+
     def second_moment_of_area(self,p=None):
         """Second moment of area of polygon
-	    RETURNS
-	    =======
-	    I_xx,I_yy (about the centroid if point is not given othervise about the given point)
-	    Example
+
+		Notes
+		=====
+
+        about the centroid if point is not given othervise about the given point
+
+        Parameters
+        ==========
+
+        p : Point, None
+            Default value is None.
+
+	   	Example
         =======
+
         >>> from sympy import *
         >>> a,b=symbols('a,b')
         >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
@@ -417,6 +428,7 @@ class Polygon(GeometrySet):
         (a*b**3/12, a**3*b/12)
         >>> rectangle.second_moment_of_area(p5)
         (a*b**3/9, a**3*b/9)
+
         """
         I_xx,I_yy=0,0
         args= self.args
@@ -436,8 +448,9 @@ class Polygon(GeometrySet):
         	return I_xx_c,I_yy_c
         I_xx = (I_xx_c + A*((p[1]-c_y)**2))
         I_yy = (I_yy_c + A*((p[0]-c_x)**2))    
-		
+
         return I_xx,I_yy
+
     @property
     def sides(self):
         """The line segments that form the sides of the polygon.
