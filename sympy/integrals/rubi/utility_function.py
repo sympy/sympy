@@ -261,7 +261,7 @@ def IntegersQ(*var):
     return all(IntegerQ(i) for i in var)
 
 def ComplexNumberQ(*var):
-    r"""
+    """
     ComplexNumberQ(m, n,...) returns True if m, n, ... are all explicit complex numbers, else it returns False.
 
     Examples
@@ -354,7 +354,7 @@ def Subst(a, x, y):
     return a.xreplace({x: y})
 
 def First(expr, d=None):
-    r"""
+    """
     Gives the first element if it exists, or d otherwise.
 
     Examples
@@ -378,7 +378,7 @@ def First(expr, d=None):
             return expr.args[0]
 
 def Rest(expr):
-    r"""
+    """
     Gives rest of the elements if it exists
 
     Examples
@@ -416,7 +416,7 @@ def SqrtNumberSumQ(u):
     return SumQ(u) and SqrtNumberQ(First(u)) and SqrtNumberQ(Rest(u)) or ProductQ(u) and SqrtNumberQ(First(u)) and SqrtNumberSumQ(Rest(u))
 
 def LinearQ(expr, x):
-    r"""
+    """
     LinearQ(expr, x) returns True iff u is a polynomial of degree 1.
 
     Examples
@@ -446,7 +446,7 @@ def ArcCosh(a):
     return acosh(a)
 
 def Coefficient(expr, var, n=1):
-    r"""
+    """
     Coefficient(expr, var) gives the coefficient of form in the polynomial expr.
     Coefficient(expr, var, n) gives the coefficient of var**n in expr.
 
@@ -593,7 +593,7 @@ def GreaterEqual(*args):
     return True
 
 def FractionQ(*args):
-    r"""
+    """
     FractionQ(m, n,...) returns True if m, n, ... are all explicit fractions, else it returns False.
 
     Examples
@@ -619,7 +619,7 @@ def Expand(expr):
     return expr.expand()
 
 def IndependentQ(u, x):
-    r"""
+    """
     If u is free from x IndependentQ(u, x) returns True else False.
 
     Examples
@@ -767,7 +767,7 @@ def NumericQ(u):
     return N(u).is_number
 
 def Length(expr):
-    r"""
+    """
     Returns number of elements in the experssion just as sympy's len.
 
     Examples
@@ -1420,7 +1420,7 @@ def FreeFactors(u, x):
         return S(1)
 
 def NonfreeFactors(u, x):
-    r"""
+    """
     Returns the product of the factors of u not free of x.
 
     Examples
@@ -1506,7 +1506,7 @@ def RemoveContent(u, x):
 
 
 def FreeTerms(u, x):
-    r"""
+    """
     Returns the sum of the terms of u free of x.
 
     Examples
@@ -1682,7 +1682,7 @@ def RemainingFactors(u):
     return S(1)
 
 def LeadBase(u):
-    r"""
+    """
     returns the base of the leading factor of u.
 
     Examples
@@ -1786,7 +1786,7 @@ def PolynomialDivide(p_, q_, x):
     return result
 
 def BinomialQ(u, x, n=None):
-    r"""
+    """
     If u is equivalent to an expression of the form a + b*x**n, BinomialQ(u, x, n) returns True, else it returns False.
 
     Examples
@@ -1810,7 +1810,7 @@ def BinomialQ(u, x, n=None):
     return ListQ(BinomialParts(u, x))
 
 def TrinomialQ(u, x):
-    r"""
+    """
     If u is equivalent to an expression of the form a + b*x**n + c*x**(2*n) where n, b and c are not 0,
     TrinomialQ(u, x) returns True, else it returns False.
 
@@ -1839,7 +1839,7 @@ def TrinomialQ(u, x):
     return ListQ(TrinomialParts(u,x)) and Not(QuadraticQ(u, x)) and Not(check)
 
 def GeneralizedBinomialQ(u, x):
-    r"""
+    """
     If u is equivalent to an expression of the form a*x**q+b*x**n where n, q and b are not 0,
     GeneralizedBinomialQ(u, x) returns True, else it returns False.
 
@@ -1857,7 +1857,7 @@ def GeneralizedBinomialQ(u, x):
     return ListQ(GeneralizedBinomialParts(u, x))
 
 def GeneralizedTrinomialQ(u, x):
-    r"""
+    """
     If u is equivalent to an expression of the form a*x**q+b*x**n+c*x**(2*n-q) where n, q, b and c are not 0,
     GeneralizedTrinomialQ(u, x) returns True, else it returns False.
 
@@ -1955,7 +1955,7 @@ def Reverse(u):
         return u.func(*list(reversed(l)))
 
 def RationalFunctionExponents(u, x):
-    r"""
+    """
     u is a polynomial or rational function of x.
     RationalFunctionExponents(u, x) returns a list of the exponent of the
     numerator of u and the exponent of the denominator of u.
@@ -2727,7 +2727,7 @@ def SimplerSqrtQ(u, v):
         return Not(OrderedQ([v, u]))
 
 def SumSimplerQ(u, v):
-    r"""
+    """
     If u + v is simpler than u, SumSimplerQ(u, v) returns True, else it returns False.
     If for every term w of v there is a term of u equal to n*w where n<-1/2, u + v will be simpler than u.
 
@@ -2848,7 +2848,7 @@ def MonomialSumQ(u, x):
         return True
 
 def MinimumMonomialExponent(u, x):
-    r"""
+    """
     u is sum whose terms are monomials.  MinimumMonomialExponent(u, x) returns the exponent of the term having the smallest exponent
 
     Examples
@@ -3072,7 +3072,7 @@ def AlgebraicFunctionFactors(u, x, flag=False):
     return 1
 
 def NonalgebraicFunctionFactors(u, x):
-    r"""
+    """
     NonalgebraicFunctionFactors[u,x] returns the product of the factors of u that are not algebraic functions of x.
 
     Examples
@@ -3241,7 +3241,7 @@ def FactorAbsurdNumber(m):
     return CombineExponents
 
 def SubstForInverseFunction(*args):
-    r"""
+    """
     SubstForInverseFunction(u, v, w, x) returns u with subexpressions equal to v replaced by x and x replaced by w.
 
     Examples
@@ -3533,7 +3533,7 @@ def PolynomialInAuxQ(u, v, x):
     return False
 
 def PolynomialInQ(u, v, x):
-    r"""
+    """
     If u is a polynomial in v(x), PolynomialInQ(u, v, x) returns True, else it returns False.
 
     Examples
@@ -3603,7 +3603,7 @@ def DistributeDegree(u, m):
     return u**m
 
 def FunctionOfPower(*args):
-    r"""
+    """
     FunctionOfPower[u,x] returns the gcd of the integer degrees of x in u.
 
     Examples
@@ -3637,7 +3637,7 @@ def FunctionOfPower(*args):
     return tmp
 
 def DivideDegreesOfFactors(u, n):
-    r"""
+    """
     DivideDegreesOfFactors[u,n] returns the product of the base of the factors of u raised to the degree of the factors divided by n.
 
     Examples
@@ -4215,7 +4215,7 @@ def FunctionOfTanhQ(u, v, x):
     return all(FunctionOfTanhQ(i, v, x) for i in u.args)
 
 def FunctionOfTanhWeight(u, v, x):
-    r"""
+    """
     u is a function of the form f(tanh(v), coth(v)) where f is independent of x.
     FunctionOfTanhWeight(u, v, x) returns a nonnegative number if u is best considered a function of tanh(v), else it returns a negative number.
 
@@ -4776,7 +4776,7 @@ def ExpandTrigToExp(u, *args):
         return ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x),x)
 
 def TrigReduce(i):
-    r"""
+    """
     TrigReduce(expr) rewrites products and powers of trigonometric functions in expr in terms of trigonometric functions with combined arguments.
 
     Examples
@@ -5822,7 +5822,7 @@ def FunctionOfExponentialTestAux(base, expon, x):
     return True
 
 def stdev(lst):
-    r"""Calculates the standard deviation for a list of numbers."""
+    """Calculates the standard deviation for a list of numbers."""
     num_items = len(lst)
     mean = sum(lst) / num_items
     differences = [x - mean for x in lst]
