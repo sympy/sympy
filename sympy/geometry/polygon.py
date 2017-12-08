@@ -404,19 +404,19 @@ class Polygon(GeometrySet):
         return Point(simplify(A*cx), simplify(A*cy))   
     def second_moment_of_area(self,p=None):
         """Second moment of area of polygon
-	   RETURNS
-	   =======
-	   I_xx,I_yy (about the centroid if point is not given othervise about the given point)
-	   Example
-           =======
-           >>> from sympy import *
-           >>> a,b=symbols('a,b')
-           >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
-           >>> rectangle=Polygon(p1,p2,p3,p4)
-           >>> rectangle.second_moment_of_area()
-           (a*b**3/12, a**3*b/12)
-           >>> rectangle.second_moment_of_area(p5)
-           (a*b**3/9, a**3*b/9)
+	    RETURNS
+	    =======
+	    I_xx,I_yy (about the centroid if point is not given othervise about the given point)
+	    Example
+        =======
+        >>> from sympy import *
+        >>> a,b=symbols('a,b')
+        >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
+        >>> rectangle=Polygon(p1,p2,p3,p4)
+        >>> rectangle.second_moment_of_area()
+        (a*b**3/12, a**3*b/12)
+        >>> rectangle.second_moment_of_area(p5)
+        (a*b**3/9, a**3*b/9)
         """
         I_xx,I_yy=0,0
         args= self.args
