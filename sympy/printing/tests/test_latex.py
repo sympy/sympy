@@ -1641,7 +1641,7 @@ def test_issue_13559():
     expr = parse_expr('5/1', evaluate=False)
     assert latex(expr) == r"\frac{5}{1}"
 
-    
+
 def test_issue_13651():
     expr = c + collect_const(-a - b)
     assert latex(expr) == r"c - \left(a + b\right)"
