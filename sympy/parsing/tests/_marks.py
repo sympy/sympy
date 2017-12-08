@@ -1,15 +1,13 @@
 import subprocess
 import pytest
-import platform
-
-WIN = platform.system() == "Windows"
 
 
 def _skip_if_callable(args):
     """ A mark to use to skip a test if a command is callable
     """
     try:
-        subprocess.check_call(args)
+        subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE).communicate()
         has_cmd = True
     except FileNotFoundError:
         has_cmd = False
@@ -36,10 +34,6 @@ def _skip_if_importable(module_name):
                            reason="COULDN'T import '%s'".format(module_name))
     ]
 
-
-ANTLR = "antlr4.cmd" if WIN else "antlr4"
-
-skip_if_has_antlr4, skip_if_missing_antlr4 = _skip_if_callable(
-    ["antlr4.cmd" if WIN else "antlr4"])
+skip_if_has_antlr4, skip_if_missing_antlr4 = _skip_if_callable(["antlr4"])
 
 skip_if_has_antlr4runtime, skip_if_missing_antlr4runtime = _skip_if_importable("antlr4")
