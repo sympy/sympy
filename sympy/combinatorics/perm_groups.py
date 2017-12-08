@@ -4095,7 +4095,7 @@ class PermutationGroup(Basic):
                         # combine generators of K_s with their
                         # action on the block system
                         images = {g: g*p*t_img[g]*p for g in t_img}
-                        K_s_act = PermutationGroup(images.values())
+                        K_s_act = PermutationGroup(list(images.values()))
 
                         f = GroupHomomorphism(K_s, K_s_act, images)
                         K_act = PermutationGroup([f(g) for g in K.generators])
