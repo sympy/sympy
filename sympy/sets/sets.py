@@ -717,6 +717,19 @@ class ProductSet(Set):
 
     @property
     def sets(self):
+        """
+        Returns the arguments of 'self', or in the other words, the factors
+        of Cartesian Product.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval
+        >>> I = Interval(0, 1) * Interval(0, 2)
+        >>> I.sets
+        ([0, 1], [0, 2])
+
+        """
         return self.args
 
     @property
