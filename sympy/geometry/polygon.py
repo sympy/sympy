@@ -401,8 +401,8 @@ class Polygon(GeometrySet):
             v = x1*y2 - x2*y1
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
-        return Point(simplify(A*cx), simplify(A*cy))
-    
+        return Point(simplify(A*cx), simplify(A*cy)) 
+        
     def second_moment_of_area(self,p=None):
         """Second moment of area of polygon
 	   RETURNS
@@ -410,8 +410,6 @@ class Polygon(GeometrySet):
 	   I_xx,I_yy (about the centroid if point is not given othervise about the given point)
 	   Example
            =======
-           >>> from sympy import *
-           >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
            >>> from sympy import *
            >>> a,b=symbols('a,b')
            >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
