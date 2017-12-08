@@ -293,7 +293,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             # If hint tan is provided, also work with tan(x). Moreover, if
             # n > 1, also work with sin(k*x) for k <= n, and similarly for cos
             # (and tan if the hint is provided). Finally, any generators which
-            # the ideal does not work with but we need to accomodate (either
+            # the ideal does not work with but we need to accommodate (either
             # because it was in expr or because it was provided as a hint)
             # we also build into the ideal.
             # This selection process is expressed in the list ``terms``.
