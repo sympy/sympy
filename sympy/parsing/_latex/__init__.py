@@ -21,6 +21,8 @@ class Antlr4Missing(Exception):
 
 
 def build_with_antlr():
+    """ Attempt to call antlr4 to generate python classes from PS.g4
+    """
     try:
         subprocess.check_output(["antlr4", os.path.join(here, "PS.g4")])
     except subprocess.CalledProcessError as err:
@@ -33,6 +35,8 @@ def build_with_antlr():
 
 
 def get_parser(retry=True):
+    """ Return the LaTeX parser and lexer classes
+    """
     try:
         from sympy.parsing._latex.PSParser import PSParser
         from sympy.parsing._latex.PSLexer import PSLexer

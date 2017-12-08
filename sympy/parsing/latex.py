@@ -3,21 +3,29 @@
 
 import sympy
 
-from antlr4.error.ErrorListener import ErrorListener
-
 from sympy.printing.str import StrPrinter
 
-from sympy.parsing._latex import (get_parser, LaTeXParserNotAvailable, Antlr4RuntimeMissing)
+from sympy.parsing._latex import (
+    get_parser,
+    LaTeXParserNotAvailable,
+    Antlr4RuntimeMissing,
+)
 
 try:
     import antlr4
 except ImportError:
     raise Antlr4RuntimeMissing("Please install antlr-python*-runtime")
 
+from antlr4.error.ErrorListener import ErrorListener
+
 PSParser, PSLexer = get_parser()
 
 if None in [PSParser, PSLexer]:
     raise LaTeXParserNotAvailable("Couldn't import generated LaTeX parser")
+
+
+class LaTeXSyntaxError(Exception):
+    pass
 
 
 def parse_latex(sympy):
@@ -59,7 +67,7 @@ class MathErrorListener(ErrorListener):
             expected = [
                 names[i] for i in e.getExpectedTokens() if i < len(names)
             ]
-            if expected < 10:
+            if len(expected) < 10:
                 expected = " ".join(expected)
                 err = (fmt % ("I expected one of these: " + expected, self.src,
                               marker))
@@ -68,7 +76,7 @@ class MathErrorListener(ErrorListener):
                               marker))
         else:
             err = fmt % ("I don't understand this", self.src, marker)
-        raise ValueError(err)
+        raise LaTeXSyntaxError(err)
 
 
 def convert_relation(rel):
@@ -151,7 +159,7 @@ def convert_unary(unary):
 
 def convert_postfix_list(arr, i=0):
     if i >= len(arr):
-        raise ValueError("Index out of bounds")
+        raise LaTeXSyntaxError("Index out of bounds")
 
     res = convert_postfix(arr[i])
     if isinstance(res, sympy.Expr):
@@ -177,7 +185,7 @@ def convert_postfix_list(arr, i=0):
     else:  # must be derivative
         wrt = res[0]
         if i == len(arr) - 1:
-            raise ValueError("Expected expression for derivative")
+            raise LaTeXSyntaxError("Expected expression for derivative")
         else:
             expr = convert_postfix_list(arr, i + 1)
             return sympy.Derivative(expr, wrt)
@@ -208,7 +216,7 @@ def convert_postfix(postfix):
     for op in postfix.postfix_op():
         if op.BANG():
             if isinstance(exp, list):
-                raise ValueError("Cannot apply postfix to derivative")
+                raise LaTeXSyntaxError("Cannot apply postfix to derivative")
             exp = sympy.factorial(exp, evaluate=False)
         elif op.eval_at():
             ev = op.eval_at()
@@ -237,7 +245,7 @@ def convert_exp(exp):
     if exp_nested:
         base = convert_exp(exp_nested)
         if isinstance(base, list):
-            raise ValueError("Cannot raise derivative to power")
+            raise LaTeXSyntaxError("Cannot raise derivative to power")
         if exp.atom():
             exponent = convert_atom(exp.atom())
         elif exp.expr():
