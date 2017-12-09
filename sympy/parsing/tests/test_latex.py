@@ -42,7 +42,7 @@ def _log(a, b):
     return log(a, b, evaluate=False)
 
 
-# These latex strings should parse to the corresponding SymPy expression
+# These LaTeX strings should parse to the corresponding SymPy expression
 GOOD_PAIRS = [
     ("0", 0),
     ("1", 1),
@@ -161,7 +161,7 @@ GOOD_PAIRS = [
     ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x))
 ]
 
-# These bad latex strings should raise an exception when parsed
+# These bad LaTeX strings should raise a LaTeXSyntaxError when parsed
 BAD_STRINGS = [
     "(",
     ")",
