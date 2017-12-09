@@ -13,8 +13,8 @@ def test_quaternion_construction():
     assert q + q == Quaternion(2*x, 2*y, 2*z, 2*w)
 
     q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
-    assert q2 == Quaternion(Rational(1,2), Rational(1,2),
-                            Rational(1,2), Rational(1,2))
+    assert q2 == Quaternion(Rational(1/2), Rational(1/2),
+                            Rational(1/2), Rational(1,2))
 
     M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
@@ -57,9 +57,7 @@ def test_quaternion_functions():
     assert q.norm() == sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.normalize() == Quaternion(x, y, z, w) / sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
-    def test1(p):
-        p1 = p.inverse()
-    raises(ValueError, lambda: test1(q0))
+    raises(ValueError, lambda: q0.inverse())
     assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
 
     assert q1.exp() == \
@@ -84,7 +82,7 @@ def test_quaternion_functions():
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
-    assert Quaternion.rotate_point((1, 1, 1), q1) == (Rational(1,5) , 1 , Rational(7,5))
+    assert Quaternion.rotate_point((1, 1, 1), q1) == (1 / 5, 1, 7 / 5)
 
 
 def test_quaternion_conversions():
