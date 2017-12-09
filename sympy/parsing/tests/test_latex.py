@@ -1,4 +1,5 @@
 from sympy.utilities import pytest
+from sympy.external import import_module
 
 from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
@@ -7,6 +8,11 @@ from sympy import (
     GreaterThan, Sum, Product, E, log, tan
 )
 from sympy.abc import x, y, z, a, b, c, f, t, k, n
+antlr4 = import_module("antlr4")
+
+# disable tests if antlr4-python*-runtime is not present
+if not antlr4:
+    disabled = True
 
 theta = Symbol('theta')
 

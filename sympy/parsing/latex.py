@@ -6,8 +6,8 @@ from sympy.printing.str import StrPrinter
 
 from sympy.parsing._latex import (PSParser, PSLexer)
 
-antlr4 = import_module('antlr4', warn_not_installed=True)
 ErrorListener = import_module('antlr4.error.ErrorListener',
+                              warn_not_installed=True,
                               __import__kwargs={'fromlist': ['ErrorListener']}
                               ).ErrorListener
 
@@ -17,6 +17,7 @@ class LaTeXSyntaxError(Exception):
 
 
 def parse_latex(sympy):
+    antlr4 = import_module('antlr4', warn_not_installed=True)
     matherror = MathErrorListener(sympy)
 
     stream = antlr4.InputStream(sympy)

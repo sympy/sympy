@@ -414,7 +414,6 @@ if __name__ == '__main__':
             ],
           install_requires=[
             'mpmath>=%s' % mpmath_version,
-            'antlr4-python%s-runtime' % '3' if PY3 else '2',
             ],
           **extra_kwargs
           )
