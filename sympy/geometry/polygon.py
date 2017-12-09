@@ -406,6 +406,11 @@ class Polygon(GeometrySet):
     def second_moment_of_area(self,p=None):
         """Second moment of area of polygon.
 
+        Notes
+        =====
+
+        about the centroid if point is not given othervise about the given point.
+
         Parameters
         ==========
 
