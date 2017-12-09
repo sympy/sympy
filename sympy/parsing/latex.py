@@ -1,5 +1,6 @@
 # Ported from latex2sympy by @augustt198
 # https://github.com/augustt198/latex2sympy
+# See license in _latex/LICENSE.txt
 import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
