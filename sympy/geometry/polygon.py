@@ -404,12 +404,7 @@ class Polygon(GeometrySet):
         return Point(simplify(A*cx), simplify(A*cy))
 
     def second_moment_of_area(self,p=None):
-        """Second moment of area of polygon
-
-		Notes
-		=====
-
-        about the centroid if point is not given othervise about the given point
+        """Second moment of area of polygon.
 
         Parameters
         ==========
