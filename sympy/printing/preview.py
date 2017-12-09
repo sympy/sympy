@@ -85,8 +85,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     argument. This can be used, e.g., to set a different font size, use a
     custom documentclass or import certain set of LaTeX packages.
 
-    >>> preamble = "\\documentclass[10pt]{article}\n" \
-    ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
+    >>> preamble = r'''
+    ... \documentclass[10pt]{article}
+    ... \pagestyle{empty}
+    ... \usepackage{amsmath,amsfonts}
+    ... \begin{document}
+    ... '''
     >>> preview(x + y, output='png', preamble=preamble)
 
     If the value of 'output' is different from 'dvi' then command line
@@ -94,11 +98,21 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     'dvi'+output conversion tool. These options have to be in the form of a
     list of strings (see subprocess.Popen).
 
+    For example, to output a png with white text on a black background:
+
+    >>> dvioptions = ["-T", "tight", "--truecolor", "-fg", "White", "-bg", "Black"]
+    >>> preview(x + y, output='png', dvioptions=dvioptions)
+
     Additional keyword args will be passed to the latex call, e.g., the
     symbol_names flag.
 
     >>> phidd = Symbol('phidd')
     >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
+
+    Or the mode flag (the default mode is set to 'inline')
+
+    >>> from sympy import Integral
+    >>> preview(Integral(x**2, x), mode='equation*')
 
     For post-processing the generated TeX File can be written to a file by
     passing the desired filename to the 'outputTexFile' keyword
@@ -178,10 +192,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                              "custom LaTeX preamble was specified")
     latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
+    latex_settings.setdefault('mode', 'inline')
     if isinstance(expr, str):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline', **latex_settings)
+        latex_string = latex(expr, **latex_settings)
 
     try:
         workdir = tempfile.mkdtemp()
