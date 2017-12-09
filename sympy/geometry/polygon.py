@@ -417,10 +417,10 @@ class Polygon(GeometrySet):
         p : Point, None
             Default value is None.
 
-	   	Example
-        =======
+        Examples
+        ========
 
-        >>> from sympy import *
+        >>> from sympy import Point,Polygon
         >>> a,b=symbols('a,b')
         >>> p1,p2,p3,p4,p5=[(0,0),(a,0),(a,b),(0,b),(a/3,b/3)]
         >>> rectangle=Polygon(p1,p2,p3,p4)
@@ -441,13 +441,13 @@ class Polygon(GeometrySet):
         A=self.area
         c_x=self.centroid[0]
         c_y=self.centroid[1]
-        #parallel axis theorem    
-        I_xx_c = (I_xx/12) - A*(c_y**2) 
+        #parallel axis theorem
+        I_xx_c = (I_xx/12) - A*(c_y**2)
         I_yy_c = (I_yy/12) - A*(c_x**2)
         if(p == None):
-        	return I_xx_c,I_yy_c
+            return I_xx_c,I_yy_c
         I_xx = (I_xx_c + A*((p[1]-c_y)**2))
-        I_yy = (I_yy_c + A*((p[0]-c_x)**2))    
+        I_yy = (I_yy_c + A*((p[0]-c_x)**2))
 
         return I_xx,I_yy
 
