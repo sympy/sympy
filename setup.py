@@ -39,6 +39,8 @@ mpmath_version = '0.19'
 
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
+# Location for generated latex assets
+dir_latex = os.path.join(dir_setup, "sympy", "parsing", "_latex")
 
 extra_kwargs = {}
 
@@ -221,6 +223,11 @@ class clean(Command):
             if os.path.isfile(name):
                 os.remove(name)
 
+        for ext in ["tokens", "py"]:
+            for name in glob.glob(os.path.join(dir_latex, "PS*.%s" % ext)):
+                if os.path.isfile(name):
+                    os.remove(name)
+
         os.chdir(curr_dir)
 
 
@@ -272,6 +279,25 @@ class run_benchmarks(Command):
     def run(self):
         from sympy.utilities import benchmarking
         benchmarking.main(['sympy'])
+
+
+class antlr(Command):
+    """Generate code requiring antlr4-python*-runtime"""
+    description = "generate parser code from antlr grammars"
+    user_options = []  # distutils complains if this is not here.
+
+    def __init__(self, *args):
+        self.args = args[0]  # so we can pass it to other classes
+        Command.__init__(self, *args)
+
+    def initialize_options(self):  # distutils wants this
+        pass
+
+    def finalize_options(self):    # this too
+        pass
+
+    def run(self):
+        subprocess.check_output(["antlr4", "PS.g4"], cwd=dir_latex)
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
@@ -356,7 +382,7 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='http://sympy.org',
-          py_modules = ['isympy'],
+          py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
@@ -367,7 +393,9 @@ if __name__ == '__main__':
           cmdclass={'test': test_sympy,
                     'bench': run_benchmarks,
                     'clean': clean,
-                    'audit': audit},
+                    'audit': audit,
+                    'antlr': antlr,
+                    },
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
@@ -384,6 +412,9 @@ if __name__ == '__main__':
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             ],
-          install_requires=['mpmath>=%s' % mpmath_version],
+          install_requires=[
+            'mpmath>=%s' % mpmath_version,
+            'antlr4-python%s-runtime' % '3' if PY3 else '2',
+            ],
           **extra_kwargs
           )

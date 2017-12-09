@@ -4,6 +4,8 @@ prune doc/_build
 recursive-include examples *.py README
 
 include sympy/utilities/mathml/data/*.xsl
+include sympy/parsing/_latex/*.g4
+include sympy/parsing/_latex/*.tokens
 
 include LICENSE
 include TODO

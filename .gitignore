@@ -74,3 +74,7 @@ sample.tex
 
 # pytest related data file for slow tests
 .ci/durations.log
+
+# generated as part of `setup.py antlr`
+sympy/parsing/_latex/PS*.py
+sympy/parsing/_latex/PS*.tokens

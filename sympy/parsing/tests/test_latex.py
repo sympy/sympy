@@ -1,10 +1,4 @@
-import pytest
-from ._marks import (
-    skip_if_has_antlr4,
-    skip_if_has_antlr4runtime,
-    skip_if_missing_antlr4,
-    skip_if_missing_antlr4runtime,
-)
+from sympy.utilities import pytest
 
 from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
@@ -13,9 +7,6 @@ from sympy import (
     GreaterThan, Sum, Product, E, log, tan
 )
 from sympy.abc import x, y, z, a, b, c, f, t, k, n
-
-from sympy.parsing import _latex
-
 
 theta = Symbol('theta')
 
@@ -225,51 +216,27 @@ FAILING_BAD_STRINGS = [
 ]
 
 
-@skip_if_missing_antlr4
-@skip_if_missing_antlr4runtime
-@pytest.mark.parametrize("latex_str,sympy_expr", GOOD_PAIRS)
-def test_parseable(latex_str, sympy_expr):
+def test_parseable():
     from sympy.parsing.latex import parse_latex
-    assert parse_latex(latex_str) == sympy_expr
-
-
-@skip_if_missing_antlr4
-@skip_if_missing_antlr4runtime
-@pytest.mark.parametrize("latex_str,sympy_expr", FAILING_PAIRS)
-def test_failing_parseable(latex_str, sympy_expr):
-    from sympy.parsing.latex import parse_latex
-    with pytest.raises(Exception):
+    for latex_str, sympy_expr in GOOD_PAIRS:
         assert parse_latex(latex_str) == sympy_expr
 
 
-@skip_if_missing_antlr4
-@skip_if_missing_antlr4runtime
-@pytest.mark.parametrize("latex_str", BAD_STRINGS)
-def test_not_parseable(latex_str):
-    from sympy.parsing.latex import parse_latex, LaTeXSyntaxError
-    with pytest.raises(LaTeXSyntaxError):
-        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))
-
-
-@skip_if_missing_antlr4
-@skip_if_missing_antlr4runtime
-@pytest.mark.parametrize("latex_str", FAILING_BAD_STRINGS)
-def test_failing_not_parseable(latex_str):
+def test_failing_parseable():
     from sympy.parsing.latex import parse_latex
-    print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))
+    for latex_str, sympy_expr in FAILING_PAIRS:
+        with pytest.raises(Exception):
+            assert parse_latex(latex_str) == sympy_expr
 
 
-@skip_if_has_antlr4
-@skip_if_has_antlr4runtime
-def test_get_import_fail():
-    with pytest.raises(_latex.Antlr4RuntimeMissing):
-        from sympy.parsing.latex import parse_latex
-        print(parse_latex)
+def test_not_parseable():
+    from sympy.parsing.latex import parse_latex, LaTeXSyntaxError
+    for latex_str in BAD_STRINGS:
+        with pytest.raises(LaTeXSyntaxError):
+            print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))
 
 
-@skip_if_has_antlr4
-@skip_if_missing_antlr4runtime
-def test_get_parser_fail():
-    with pytest.raises(_latex.Antlr4RuntimeMissing):
-        from sympy.parsing.latex import parse_latex
-        print(parse_latex)
+def test_failing_not_parseable():
+    from sympy.parsing.latex import parse_latex
+    for latex_str in FAILING_BAD_STRINGS:
+        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))

@@ -1,27 +1,15 @@
 # Ported from latex2sympy by @augustt198
 # https://github.com/augustt198/latex2sympy
-
 import sympy
-
+from sympy.external import import_module
 from sympy.printing.str import StrPrinter
 
-from sympy.parsing._latex import (
-    get_parser,
-    LaTeXParserNotAvailable,
-    Antlr4RuntimeMissing,
-)
+from sympy.parsing._latex import (PSParser, PSLexer)
 
-try:
-    import antlr4
-except ImportError:
-    raise Antlr4RuntimeMissing("Please install antlr-python*-runtime")
-
-from antlr4.error.ErrorListener import ErrorListener
-
-PSParser, PSLexer = get_parser()
-
-if None in [PSParser, PSLexer]:
-    raise LaTeXParserNotAvailable("Couldn't import generated LaTeX parser")
+antlr4 = import_module('antlr4', warn_not_installed=True)
+ErrorListener = import_module('antlr4.error.ErrorListener',
+                              __import__kwargs={'fromlist': ['ErrorListener']}
+                              ).ErrorListener
 
 
 class LaTeXSyntaxError(Exception):
