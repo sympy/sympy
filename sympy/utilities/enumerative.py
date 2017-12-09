@@ -36,7 +36,7 @@ partition A is greater than partition B if A's leftmost/greatest
 part is greater than B's leftmost part.  If the leftmost parts are
 equal, compare the second parts, and so on.
 
-In this ordering, the greatest partion of a given multiset has only
+In this ordering, the greatest partition of a given multiset has only
 one part.  The least partition is the one in which the components
 are spread out, one per part.
 

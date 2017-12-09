@@ -40,7 +40,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     instead.
 
     Looks for derivative of a function up to 4'th order (by default).
-    This can be overriden using order option.
+    This can be overridden using order option.
 
     Returns
     =======

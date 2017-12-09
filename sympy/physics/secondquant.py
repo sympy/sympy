@@ -2264,7 +2264,7 @@ def evaluate_deltas(e):
         return e.func(*[evaluate_deltas(arg) for arg in e.args])
 
     elif isinstance(e, Mul):
-        # find all occurences of delta function and count each index present in
+        # find all occurrences of delta function and count each index present in
         # expression.
         deltas = []
         indices = {}
@@ -2835,7 +2835,7 @@ def wicks(e, **kw_args):
     # For Mul-objects we can actually do something
     if isinstance(e, Mul):
 
-        # we dont want to mess around with commuting part of Mul
+        # we don't want to mess around with commuting part of Mul
         # so we factorize it out before starting recursion
         c_part = []
         string1 = []

@@ -187,7 +187,7 @@ def test_Complement():
 
     assert S.Reals - Union(S.Naturals, FiniteSet(pi)) == \
             Intersection(S.Reals - S.Naturals, S.Reals - FiniteSet(pi))
-    # isssue 12712
+    # issue 12712
     assert Complement(FiniteSet(x, y, 2), Interval(-10, 10)) == \
             Complement(FiniteSet(x, y), Interval(-10, 10))
 

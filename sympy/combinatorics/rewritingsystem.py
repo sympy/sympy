@@ -65,7 +65,7 @@ class RewritingSystem(object):
 
     def _add_rule(self, r1, r2):
         '''
-        Add the rule r1 -> r2 with no checking or futher
+        Add the rule r1 -> r2 with no checking or further
         deductions
 
         '''
