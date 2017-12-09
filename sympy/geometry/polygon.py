@@ -409,7 +409,7 @@ class Polygon(GeometrySet):
         Notes
         =====
 
-        about the centroid if point is not given othervise about the given point.
+        about the axis passing through centroid if point is not given othervise about the axis passing through given point.
 
         Parameters
         ==========
