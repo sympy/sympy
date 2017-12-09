@@ -187,7 +187,7 @@ EOF
 fi
 
 if [[ "${TEST_OPT_DEPENDENCY}" == *"antlr4"* ]]; then
-    python setup.py antlr
+    python -We:invalid setup.py antlr
     cat << EOF | python
 print('Testing antlr4-based latex parsing')
 import sympy
