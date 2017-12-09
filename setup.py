@@ -118,6 +118,7 @@ modules = [
     'sympy.matrices.expressions',
     'sympy.ntheory',
     'sympy.parsing',
+    'sympy.parsing._latex',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.hep',
