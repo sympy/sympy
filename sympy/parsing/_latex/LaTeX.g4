@@ -1,4 +1,4 @@
-grammar PS;
+grammar LaTeX;
 
 options {
     language=Python2;

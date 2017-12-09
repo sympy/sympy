@@ -76,5 +76,5 @@ sample.tex
 .ci/durations.log
 
 # generated as part of `setup.py antlr`
-sympy/parsing/_latex/PS*.py
-sympy/parsing/_latex/PS*.tokens
+sympy/parsing/_latex/latex*.py
+sympy/parsing/_latex/latex*.tokens

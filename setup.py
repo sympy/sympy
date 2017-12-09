@@ -225,9 +225,10 @@ class clean(Command):
                 os.remove(name)
 
         for ext in ["tokens", "py"]:
-            for name in glob.glob(os.path.join(dir_latex, "PS*.%s" % ext)):
-                if os.path.isfile(name):
-                    os.remove(name)
+            for name_pattern in ["LaTeX*.%s" % ext, "latex*.%s" % ext]:
+                for path in glob.glob(os.path.join(dir_latex, name_pattern)):
+                    if os.path.isfile(path):
+                        os.remove(path)
 
         os.chdir(curr_dir)
 
@@ -298,7 +299,11 @@ class antlr(Command):
         pass
 
     def run(self):
-        subprocess.check_output(["antlr4", "PS.g4"], cwd=dir_latex)
+        subprocess.check_output(["antlr4", "LaTeX.g4"], cwd=dir_latex)
+        for path in glob.glob(os.path.join(dir_latex, "LaTeX*.py")):
+            os.rename(
+                path,
+                os.path.join(dir_latex, os.path.basename(path).lower()))
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
