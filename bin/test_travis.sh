@@ -185,3 +185,13 @@ if not sympy.test('sympy/liealgebras'):
 EOF
     unset USE_SYMENGINE
 fi
+
+if [[ "${TEST_OPT_DEPENDENCY}" == *"antlr4"* ]]; then
+    python setup.py antlr
+    cat << EOF | python
+print('Testing antlr4-based latex parsing')
+import sympy
+if not (sympy.test('sympy/parsing/test_latex.py')):
+    raise Exception('Tests failed')
+EOF
+fi

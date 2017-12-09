@@ -241,6 +241,10 @@ before_install:
         conda config --set always_yes yes --set changeps1 no;
         conda update -q conda;
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
+
+        # TODO: remove
+        conda config --prepend channels https://raw.githubusercontent.com/bollwyvl/latex2sympy-demo/8f3b2ab2965c15f15ea39af5ed237a84b2200073/conda.channel;
+
         conda info -a;
         conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython};
         source activate test-environment;
