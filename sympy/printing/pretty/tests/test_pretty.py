@@ -7,7 +7,7 @@ from sympy import (
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
-    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio, collect_const)
+    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 from sympy.core.expr import UnevaluatedExpr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
@@ -5850,10 +5850,10 @@ def test_issue_9877():
 
 
 def test_issue_13651():
-    expr = c + collect_const(-a - b)
-    assert pretty(expr) == 'c - (a + b)'
-    expr = c + collect_const(-a + b - d)
-    assert pretty(expr) == 'b + c - (a + d)'
+    expr1 = c + Mul(-1, a + b, evaluate=False)
+    assert pretty(expr1) == 'c - (a + b)'
+    expr2 = c + Mul(-1, a - b + d, evaluate=False)
+    assert pretty(expr2) == 'c - (a - b + d)'
 
 
 def test_pretty_primenu():

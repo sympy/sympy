@@ -17,7 +17,7 @@ from sympy import (
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-     UnevaluatedExpr, Quaternion, collect_const)
+     UnevaluatedExpr, Quaternion)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -1643,7 +1643,7 @@ def test_issue_13559():
 
 
 def test_issue_13651():
-    expr = c + collect_const(-a - b)
+    expr = c + Mul(-1, a + b, evaluate=False)
     assert latex(expr) == r"c - \left(a + b\right)"
 
 
