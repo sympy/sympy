@@ -19,7 +19,7 @@ While looking for the method, it follows these steps:
 
 1. **Let the object print itself if it knows how.**
 
-    The printers look for a specific method in every object. The name of that method
+    The printer looks for a specific method in every object. The name of that method
     depends on the specific printer and is defined under ``Printer.printmethod``.
     For example, StrPrinter calls ``_sympystr`` and LatexPrinter calls ``_latex``.
     Look at the documentation of the printer that you want to use.
