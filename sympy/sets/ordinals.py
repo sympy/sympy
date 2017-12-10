@@ -1,25 +1,5 @@
 from sympy.core import Basic
-
-def reverse_bisect_right(a, x, lo=0, hi=None):
-    """Return the index where to insert item x in list a, assuming a is sorted in descending order
-
-    Essentially, the function returns number of elements in a which are >= than x.
-    >>> from sympy.sets.ordinals import reverse_bisect_right
-    >>> a = [8, 6, 5, 4, 2]
-    >>> reverse_bisect_right(a, 5)
-    3
-    >>> a[:reverse_bisect_right(a, 5)]
-    [8, 6, 5]
-    """
-    if lo < 0:
-        raise ValueError('lo must be non-negative')
-    if hi is None:
-        hi = len(a)
-    while lo < hi:
-        mid = (lo+hi)//2
-        if x > a[mid]: hi = mid
-        else: lo = mid+1
-    return lo
+import operator
 
 class Ordinal(Basic):
     """
@@ -42,9 +22,10 @@ class Ordinal(Basic):
     w**5 + {w**3}*2
     """
     def __new__(cls, terms):
-
         obj = super(Ordinal, cls).__new__(cls, *terms)
-        obj.terms = terms
+        powers = [i[0] for i in obj.args]
+        if not all(earlier >= later for earlier, later in zip(powers, powers[1:])):
+            raise ValueError("powers must be in decreasing order")
         return obj
 
     @property
@@ -54,6 +35,69 @@ class Ordinal(Basic):
     @property
     def is_limit_ordinal(self):
         return not self.is_successor_ordinal
+
+    def _insert_index(self, a, x, lo=0, hi=None):
+        """Return the index where to insert item x in list a,
+        assuming a is sorted in descending order
+
+        Essentially, the function returns number of elements in a which are >= than x.
+        """
+        if lo < 0:
+            raise ValueError('lo must be non-negative')
+        if hi is None:
+            hi = len(a)
+        while lo < hi:
+            mid = (lo+hi)//2
+            if x > a[mid]: hi = mid
+            else: lo = mid+1
+        return lo
+
+    def _compare(self, other, index):
+        value_self = [i[index] for i in self.args]
+        value_other = [i[index] for i in other.args]
+        if value_other == value_self:
+            return -1
+        else:
+            return map(operator.eq, value_self, value_other).index(False)
+
+    def __eq__(self, other):
+        if isinstance(other, Ordinal):
+            return self.args == other.args
+        else:
+            return False
+
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return False
+        elif isinstance(other, Ordinal):
+            index = self._compare(other, 0)
+            if index == -1:
+                index_factor = self._compare(other, 1)
+                if index_factor == -1:
+                    return false
+                else:
+                    return operator.lt(self.args[index_factor][1], other.args[index_factor][1])
+            else:
+                if index in (len(self.args), len(other.args)):
+                    if self.args[index-1][1] == other.args[index-1][1]:
+                        return len(self.args) < len(other.args)
+                    else:
+                        return operator.lt(self.args[index-1][1], other.args[index-1][1])
+                else:
+                    return operator.lt(self.args[index][0], other.args[index][0])
+        else:
+            raise TypeError("cannot compare types: %s and %s" % (type(self), type(other)))
+
+    def __le__(self, other):
+        return (self == other or self < other)
+
+    def __gt__(self, other):
+        if type(other) not in (int , Ordinal):
+            raise TypeError("cannot compare types: %s and %s" % (type(self), type(other)))
+        return not self <= other
+
+    def __ge__(self, other):
+        return not self < other
 
     def __str__(self):
         net_str = ""
@@ -77,6 +121,7 @@ class Ordinal(Basic):
                     net_str += '{w**%s'%i[0]+'}*%s'%i[1]
             plus_count += 1
         return(net_str)
+
     __repr__ = __str__
 
     def __add__(self, other):
@@ -98,7 +143,7 @@ class Ordinal(Basic):
             power_self = [i[0] for i in a_terms]
             power_other = [i[0] for i in b_terms]
             b1 = power_other[0]
-            r = reverse_bisect_right(power_self, power_other[0])
+            r = self._insert_index(power_self, power_other[0])
             if not b1 in power_self:
                 a_terms.insert(r,[b1, 0])
             else:
