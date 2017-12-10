@@ -32,7 +32,7 @@ from sympy.matrices import Matrix
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
-from sympy.utilities.misc import Undecidable
+from sympy.utilities.misc import Undecidable, filldedent
 
 
 class LinearEntity(GeometrySet):

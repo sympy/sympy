@@ -699,3 +699,14 @@ def test_issue_2941():
     # midline intersection
     c, d = (-2, -3), (-2, 0)
     _check()
+
+
+def tes_issue_13705
+x = Symbol('x')
+try:
+    Line((x,1),(2,3)).arbitrary_point(x)
+    #this should return a value error
+except ValueError:
+    assert True
+except NameError:
+    assert False
