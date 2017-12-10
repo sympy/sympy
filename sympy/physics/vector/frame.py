@@ -619,15 +619,26 @@ class ReferenceFrame(object):
             try:
                 from sympy.polys.polyerrors import CoercionFailed
                 from sympy.physics.vector.functions import kinematic_equations
-                q1, q2, q3 = amounts
-                u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-                templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                               rot_type, rot_order)
-                templist = [expand(i) for i in templist]
-                td = solve(templist, [u1, u2, u3])
-                u1 = expand(td[u1])
-                u2 = expand(td[u2])
-                u3 = expand(td[u3])
+                U = u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
+                Q = symbols('q1, q2, q3', cls=Dummy)
+                reps = dict(zip(Q, amounts))
+                templist = kinematic_equations(
+                    U, Q, rot_type, rot_order)
+                # the form of the equations may cause unneccessary
+                # divisions by zero so those situations are avoided
+                # by working only with the numerator of the expressions
+                eqs = []
+                for i in templist:
+                    n, d = i.as_numer_denom()
+                    # now safely put in the actual `amounts`
+                    n = n.xreplace(reps)  # put in the actual `amounts`
+                    eqs.append(n)
+                td = solve(eqs, [u1, u2, u3])
+                # if the solution is not there, the speed is
+                # arbitrarily set to the Dummy symbol
+                u1 = expand(td.get(u1, u1))
+                u2 = expand(td.get(u2, u2))
+                u3 = expand(td.get(u3, u3))
                 wvec = u1 * self.x + u2 * self.y + u3 * self.z
             except (CoercionFailed, AssertionError):
                 wvec = self._w_diff_dcm(parent)
