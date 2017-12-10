@@ -16,7 +16,8 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, Quaternion)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
+     UnevaluatedExpr, Quaternion)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -38,7 +39,7 @@ from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 
-x, y, z, t, a, b = symbols('x y z t a b')
+x, y, z, t, a, b, c = symbols('x y z t a b c')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -1639,6 +1640,11 @@ def test_issue_13559():
     from sympy.parsing.sympy_parser import parse_expr
     expr = parse_expr('5/1', evaluate=False)
     assert latex(expr) == r"\frac{5}{1}"
+
+
+def test_issue_13651():
+    expr = c + Mul(-1, a + b, evaluate=False)
+    assert latex(expr) == r"c - \left(a + b\right)"
 
 
 def test_latex_UnevaluatedExpr():
