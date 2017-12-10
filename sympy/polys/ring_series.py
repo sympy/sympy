@@ -1141,7 +1141,7 @@ def rs_exp(p, x, prec):
     k = 1
     c = []
     if not isinstance(prec, int):
-        prec = int(prec.p/prec.q) + 1
+        prec = ceiling(prec)
     for k in range(prec):
         c.append(one/n)
         k += 1
