@@ -1309,7 +1309,6 @@ class Permutation(Basic):
         since coercion can only handle one argument to the left. To handle
         multiple cycles it is convenient to use Cycle instead of Permutation:
 
-        >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2)(2, 3)
         (1 3 2)
