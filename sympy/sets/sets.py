@@ -218,12 +218,8 @@ class Set(Basic):
 
         elif isinstance(other, FiniteSet):
             from sympy.utilities.iterables import sift
-
-            def ternary_sift(el):
-                contains = self.contains(el)
-                return contains if contains in [True, False] else None
-
-            sifted = sift(other, ternary_sift)
+            from sympy.core.logic import fuzzy_bool
+            sifted = sift(other, lambda x: fuzzy_bool(x))
             # ignore those that are contained in self
             return Union(FiniteSet(*(sifted[False])),
                 Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
