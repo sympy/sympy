@@ -17,7 +17,7 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
     log = file if hasattr(file,'write') else sys.stderr
     log.write(warnings.formatwarning(message, category, filename, lineno, line))
 warnings.showwarning = warn_with_traceback
-warnings.simplefilter('always', UserWarning)     # make sure to show warnings every time they occurr
+warnings.simplefilter('always', UserWarning)     # make sure to show warnings every time they occur
 
 
 def test_point():

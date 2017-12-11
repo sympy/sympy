@@ -348,9 +348,9 @@ def downvalues_rules(r, parsed):
         free_symbols = list(set(free_symbols)) #remove common symbols
 
         # Parse Transformed Expression and Constraints
-        if i[2][0] == 'Condition': # parse rules without constraints seperately
-            constriant = divide_constraint(i[2][2], free_symbols) # seperate And constraints into indivdual constraints
-            FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # seperate FreeQ into indivdual constraints
+        if i[2][0] == 'Condition': # parse rules without constraints separately
+            constriant = divide_constraint(i[2][2], free_symbols) # separate And constraints into individual constraints
+            FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # separate FreeQ into individual constraints
             transformed = generate_sympy_from_parsed(i[2][1].copy(), symbols=free_symbols)
         else:
             constriant = ''
@@ -364,7 +364,7 @@ def downvalues_rules(r, parsed):
         transformed = sympify(transformed)
 
         index += 1
-        if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define seperate function when With appears
+        if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define separate function when With appears
             transformed, With_constraints = replaceWith(transformed, free_symbols, index)
             parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
             parsed += '\n{}'.format(transformed)

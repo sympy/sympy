@@ -521,7 +521,7 @@ def f5_reduce(f, B):
     """
     F5-reduce a labeled polynomial f by B.
 
-    Continously searches for non-zero labeled polynomial h in B, such
+    Continuously searches for non-zero labeled polynomial h in B, such
     that the leading term lt_h of h divides the leading term lt_f of
     f and Sign(lt_h * h) < Sign(f). If such a labeled polynomial h is
     found, f gets replaced by f - lt_f / lt_h * h. If no such h can be

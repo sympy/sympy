@@ -495,18 +495,21 @@ def test_issue_10323():
 
 
 def test_AssocOp_Function():
-    e = S('''
+    # the first arg of Min is not comparable in the imaginary part
+    raises(ValueError, lambda: S('''
     Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
     sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
     I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
-    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''')
-    # the following should not raise a recursion error; it
-    # should raise a value error because the first arg computes
-    # a non-comparable (prec=1) imaginary part
-    raises(ValueError, lambda: e._eval_evalf(2))
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
+    # if that is changed so a non-comparable number remains as
+    # an arg, then the Min/Max instantiation needs to be changed
+    # to watch out for non-comparable args when making simplifications
+    # and the following test should be added instead (with e being
+    # the sympified expression above):
+    # raises(ValueError, lambda: e._eval_evalf(2))
 
 
 def test_issue_10395():

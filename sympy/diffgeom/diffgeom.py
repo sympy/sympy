@@ -874,10 +874,6 @@ class TensorProduct(Expr):
         multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, fields)]
         return TensorProduct(*multipliers)
 
-    def _latex(self, printer, *args):
-        elements = [printer._print(a) for a in self.args]
-        return r'\otimes'.join(elements)
-
 
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.

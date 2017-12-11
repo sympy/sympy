@@ -245,11 +245,10 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     x = symbols('x')
     f = Function('f')
 
-    # the following should not be changed without a lot of dicussion
-    # `foo.is_number` should be equivalent to `not foo.free_symbols`
-    # it should not attempt anything fancy; see is_zero, is_constant
-    # and equals for more rigorous tests.
-    assert f(1).is_number is True
+    # issue 5033
+    assert f.is_number is False
+    # issue 6646
+    assert f(1).is_number is False
     i = Integral(0, (x, x, x))
     # expressions that are symbolically 0 can be difficult to prove
     # so in case there is some easy way to know if something is 0

@@ -944,6 +944,11 @@ def test_latex_NDimArray():
     x, y, z, w = symbols("x y z w")
 
     for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray):
+        # Basic: scalar array
+        M = ArrayType(x)
+
+        assert latex(M) == "x"
+
         M = ArrayType([[1 / x, y], [z, w]])
         M1 = ArrayType([1 / x, y, z])
 
@@ -963,7 +968,6 @@ def test_latex_NDimArray():
                 r"""\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right] & """\
                 r"""\left[\begin{matrix}\frac{w}{x} & w y\\w z & w^{2}\end{matrix}\right]"""\
                 r"""\end{matrix}\right]"""
-        assert latex(ArrayType()) == r"\left[\begin{matrix}\end{matrix}\right]"
 
         Mrow = ArrayType([[x, y, 1/z]])
         Mcolumn = ArrayType([[x], [y], [1/z]])
@@ -1334,17 +1338,17 @@ def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(Adjoint(X)) == r'X^\dag'
-    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dag'
-    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dag + Y^\dag'
-    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dag'
-    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dag X^\dag'
-    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dag'
-    assert latex(Adjoint(X)**2) == r'\left(X^\dag\right)^{2}'
-    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dag'
-    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dag\right)^{-1}'
-    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dag'
-    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dag\right)^T'
+    assert latex(Adjoint(X)) == r'X^\dagger'
+    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dagger'
+    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dagger + Y^\dagger'
+    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dagger'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dagger X^\dagger'
+    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dagger'
+    assert latex(Adjoint(X)**2) == r'\left(X^\dagger\right)^{2}'
+    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dagger'
+    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dagger\right)^{-1}'
+    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dagger'
+    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dagger\right)^T'
 
 
 def test_Hadamard():
@@ -1666,3 +1670,17 @@ def test_Quaternion_latex_printing():
     assert latex(q) == "x + y i + z j + t x k"
     q = Quaternion(x,y,z,x+t)
     assert latex(q) == r"x + y i + z j + \left(t + x\right) k"
+
+
+def test_TensorProduct_printing():
+    from sympy.tensor.functions import TensorProduct
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    assert latex(TensorProduct(A, B)) == r"A \otimes B"
+
+
+def test_WedgeProduct_printing():
+    from sympy.diffgeom.rn import R2
+    from sympy.diffgeom import WedgeProduct
+    wp = WedgeProduct(R2.dx, R2.dy)
+    assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
