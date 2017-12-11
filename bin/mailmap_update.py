@@ -58,12 +58,13 @@ git_command = ['git', 'log', '--format=%aN <%aE>']
 git_people = sorted(set(run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")))
 
 # check for ambiguous emails
+
 dups = defaultdict(list)
 near_dups = defaultdict(list)
 for i in git_people:
     k = i.split('<')[1]
     dups[k].append(i)
-    near_dups[k.lower()].append(i)
+    near_dups[k.lower()].append((k, i))
 multi = [k for k in dups if len(dups[k]) > 1]
 if multi:
     print()
@@ -79,7 +80,10 @@ if multi:
 
 # warn for nearly ambiguous email addresses
 dups = near_dups
-multi = [k for k in dups if len(dups[k]) > 1]
+# some may have been real dups, so disregard those
+# for which all email addresses were the same
+multi = [k for k in dups if len(dups[k]) > 1 and
+    len(set([i for i, _ in dups[k]])) > 1]
 if multi:
     # not fatal but make it red
     print()
@@ -91,7 +95,7 @@ if multi:
         both commit name and address (not just the address).""")))
     for k in multi:
         print()
-        for e in sorted(dups[k]):
+        for _, e in sorted(dups[k]):
             print('\t%s' % e)
 
 # warn for ambiguous names
