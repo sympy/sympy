@@ -521,11 +521,33 @@ def collect_sqrt(expr, evaluate=None):
     return coeff*d
 
 
-def collect_const(expr, *vars, **kwargs):
+def collect_const(expr, *vars, Numbers=True):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
     desired set ``Numbers=False`` and no Float or Rational will be collected.
+
+    Parameters
+    ==========
+
+    expr : Numbers,Symbols
+           This parameter defines the expression to be worked upon by the function.
+
+    *vars : Numbers,Symbols
+            Used to specify the different number coefficients explicitly, for grouping of terms.
+            Can be multiple in number.
+
+    **kwargs : Optional(Numbers=True)
+               Default is targeting the Numbers set. If this is not the desrired set, 
+               ''Numbers=False'' can be the arg value.
+
+
+    Returns
+    =======
+
+    expr : Numbers,Symbols
+           Returns a collection of terms with similar number coefficients,
+           which may be Numbers or Symbols.
 
     Examples
     ========
@@ -555,26 +577,7 @@ def collect_const(expr, *vars, **kwargs):
     >>> collect_const(2*x - 2*y - 2*z, -2)
     2*x - 2*(y + z)
 
-    ---->> According to documentation, we have the second argument as *vars.
-          *vars - implies that you can pass on as many arguments as possible.
-
-    Examples -- 
-
-    >>> collect_const(3*x-3*y+2*z+2*s,3, 2)
-    2*(s + z) + 3*(x - y)
-    >>> collect_const(x-y+2*z+2*s, 1, 2)
-    x - y + 2*(s + z)
-
-    ---->> According to documentation, we have the third argument as **kwargs.
-           **kwargs - implies that you can pass keyworded variable length of arguments to a function.
-
-    Examples --
-
-    >>> kwargs = {"arg1":3, "arg2":2}
-    >>> collect_const(3*x-3*y+2*z+2*s ,**kwargs)
-    2*(s + z) + 3*(x - y)
-
-    Both can be used together also as specified in the function definition.
+    
 
     See Also
     ========
@@ -584,7 +587,6 @@ def collect_const(expr, *vars, **kwargs):
         return expr
 
     recurse = False
-    Numbers = kwargs.get('Numbers', True)
 
     if not vars:
         recurse = True

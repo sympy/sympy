@@ -13,7 +13,6 @@ from sympy import Matrix, Add, Mul
 from sympy import symbols, sympify
 from sympy.printing.latex import latex
 from sympy.printing import StrPrinter
-from sympy import oo
 
 
 class Quaternion(Expr):
@@ -305,10 +304,6 @@ class Quaternion(Expr):
         """Returns the inverse of the quaternion."""
         q = self
         return conjugate(q) * (1/q.norm()**2)
-        if not q.norm() :
-            raise ValueError("Cannot compute inverse of a quaternion with zero norm")
-        if q.norm() == oo :
-            raise ValueError("Cannot compute inverse of a quaternion with infinite norm")
 
     def pow(self, p):
         """Finds the pth power of the quaternion.
