@@ -117,10 +117,23 @@ class Commutator(Expr):
         if a.compare(b) == 1:
             return S.NegativeOne*cls(b, a)
 
+    def deNest(self, **hints):
+        #Takes a nested commutator and recursively evaluates it to a single commutator
+        A = self.args[0]
+        B = self.args[1]
+	    if isinstance(A, Commutator):
+	        A = A.deNest()
+	    if isinstance(B, Commutator):
+	        B = B.deNest()
+        return (A*B - B*A)
+    
     def _eval_expand_commutator(self, **hints):
         A = self.args[0]
         B = self.args[1]
-
+        if isinstance(A, Commutator) or isinstance(B, Commutator):
+		    #Returns a non-nested computator
+		    #[[[A,B],A],B] -> -[B*A,B]*A - [-A*B*A + A**2*B,B] + [A,B]*B*A + A*B*[A,B] - B*A*[A,B]
+		    return self.deNest(**hints)
         if isinstance(A, Add):
             # [A + B, C]  ->  [A, C] + [B, C]
             sargs = []
