@@ -30,6 +30,7 @@ def test_commutator_identities():
     assert Comm(A, B + C).expand(commutator=True) == Comm(A, B) + Comm(A, C)
     e = Comm(A, Comm(B, C)) + Comm(B, Comm(C, A)) + Comm(C, Comm(A, B))
     assert e.doit().expand() == 0
+    assert Comm(Comm(Comm(A,B),A),B) == -[B*A,B]*A - [-A*B*A + A**2*B,B] + [A,B]*B*A + A*B*[A,B] - B*A*[A,B]
 
 
 def test_commutator_dagger():
