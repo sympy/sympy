@@ -256,6 +256,8 @@ class LatexPrinter(Printer):
             return True
         if any([expr.has(x) for x in (Mod,)]):
             return True
+        if expr.is_Add:
+            return True
         return False
 
 
