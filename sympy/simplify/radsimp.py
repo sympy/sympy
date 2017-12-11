@@ -521,7 +521,7 @@ def collect_sqrt(expr, evaluate=None):
     return coeff*d
 
 
-def collect_const(expr, *vars, Numbers=True):
+def collect_const(expr, Numbers=True,*vars):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
