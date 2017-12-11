@@ -12,7 +12,11 @@ from sympy.crypto.crypto import (cycle_list,
       encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
-      decipher_bifid, bifid_square, padded_key, uniq)
+      decipher_bifid, bifid_square, padded_key, uniq, playfair_matrix,
+      encipher_playfair, decipher_playfair, mix_columns, expand_key,
+      asciify, hexify, binify, encipher_rijndael,decipher_rijndael,
+      encipher_adfgvx,decipher_adfgvx,encipher_vic,decipher_vic,
+      encipher_transposition, decipher_transposition)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -303,3 +307,139 @@ def test_bifid():
         bifid5_square('BACDEFGHIKLMNOPQRSTUVWXYZ')
     assert bifid6_square('B0') == \
         bifid6_square('B0ACDEFGHIJKLMNOPQRSTUVWXYZ123456789')
+
+
+def test_playfair_matrix():
+    assert playfair_matrix("PLAYFAIR") == "PLAYFIRBCDEGHKMNOQSTUVWXZ"
+    assert playfair_matrix("ENCRYPT") == "ENCRYPTABDFGHIKLMOQSUVWXZ"
+    assert playfair_matrix("JANGLE") == "IANGLEBCDFHKMOPQRSTUVWXYZ"
+
+
+def test_encipher_playfair():
+    assert encipher_playfair("ABC","ABC") == "BCHC"
+    assert encipher_playfair("THEQUICKBROWNFOXJUMPEDOVERTHELAZYDOG","PLAYFAIR") == "QMHNPEKSCBQVTPSVEPEFMIVLGIQMGPFWFCVO"
+
+
+def test_decipher_playfair():
+    assert decipher_playfair("BCHC","ABC") == "ABCX"
+    assert decipher_playfair("QMHNPEKSCBQVTPSVEPEFMIVLGIQMGPFWFCVO","PLAYFAIR") == "THEQUICKBROWNFOXIUMPEDOVERTHELAZYDOG"
+
+
+def test_encipher_transposition():
+    assert encipher_transposition("MEETMEUNDERTHEWILLOWTREE","SECRET") == "EDWTENEWMRLETEIRMUHOETLE"
+    assert encipher_transposition("Attack at dawn.","MILITARY") == "KTAANTWADACT"
+
+def test_decipher_transposition():
+    assert decipher_transposition("EDWTENEWMRLETEIRMUHOETLE","SECRET") == "MEETMEUNDERTHEWILLOWTREE"
+    assert decipher_transposition("KTAANTWADACT","MILITARY") == "ATTACKATDAWN"
+
+def test_encipher_adfgvx():
+    assert encipher_adfgvx("ATTACKAT1200AM","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY") == "DGDDDAGDDGAFADDFDADVDVFAADVX"
+    assert encipher_adfgvx("attack at 100 pm","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","CODE") == "ADAAAVDDAVDVFDDGDFVDDGDFFX"
+    assert encipher_adfgvx("do not attack","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","REPEAT") == "AAAXVDGVDDGDDDVFDDAADD"
+
+
+def test_decipher_adfgvx():
+    assert decipher_adfgvx("DGDDDAGDDGAFADDFDADVDVFAADVX","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY") == "ATTACKAT1200AM"
+    assert decipher_adfgvx("ADAAAVDDAVDVFDDGDFVDDGDFFX","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","CODE") == "ATTACKAT100PM"
+    assert decipher_adfgvx("AAAXVDGVDDGDDDVFDDAADD","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","REPEAT") == "DONOTATTACK"
+
+
+def test_encipher_vic():
+    msg = "We are pleased to hear of your success in establishing your false identity. You will be sent some money to cover expenses within a month."
+    ct = "36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860"
+    assert encipher_vic(msg,'741776','77651','IDREAMOFJEANNIEWITHT',8) == ct
+
+
+def test_decipher_vic():
+    ct = "36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860"
+    msg = "WEAREPLEASEDTOHEAROFYOURSUCCESSINESTABLISHINGYOURFALSEIDENTITYYOUWILLBESENTSOMEMONEYTOCOVEREXPENSESWITHINAMONTHR"
+    assert decipher_vic(ct,'741776','77651','IDREAMOFJEANNIEWITHT',8) == msg
+
+
+def test_encipher_rijndael():
+    hmsg = "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710"
+    key128 = "2b7e151628aed2a6abf7158809cf4f3c"
+    key192 = "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b"
+    key256 = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"
+    iv = "000102030405060708090a0b0c0d0e0f"
+    ctr = "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+
+    #ECB
+    assert encipher_rijndael(hmsg,key128) == "3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4"
+    assert encipher_rijndael(hmsg,key192) == "bd334f1d6e45f25ff712a214571fa5cc974104846d0ad3ad7734ecb3ecee4eefef7afd2270e2e60adce0ba2face6444e9a4b41ba738d6c72fb16691603c18e0e"
+    assert encipher_rijndael(hmsg,key256) == "f3eed1bdb5d2a03c064b5a7e3db181f8591ccb10d410ed26dc5ba74a31362870b6ed21b99ca6f4f9f153e7b1beafed1d23304b7a39f9f3ff067d8d8f9e24ecc7"
+
+    #CBC
+    assert encipher_rijndael(hmsg,key128,mode='CBC',iv=iv) == "7649abac8119b246cee98e9b12e9197d5086cb9b507219ee95db113a917678b273bed6b8e3c1743b7116e69e222295163ff1caa1681fac09120eca307586e1a7"
+    assert encipher_rijndael(hmsg,key192,mode='CBC',iv=iv) == "4f021db243bc633d7178183a9fa071e8b4d9ada9ad7dedf4e5e738763f69145a571b242012fb7ae07fa9baac3df102e008b0e27988598881d920a9e64f5615cd"
+    assert encipher_rijndael(hmsg,key256,mode='CBC',iv=iv) == "f58c4c04d6e5f1ba779eabfb5f7bfbd69cfc4e967edb808d679f777bc6702c7d39f23369a9d9bacfa530e26304231461b2eb05e2c39be9fcda6c19078c6a9d1b"
+
+    #CFB1
+    assert encipher_rijndael(hmsg[0:4],key128,mode='CFB',iv=iv,s=1) == hexify("0110100010110011","binary")
+    assert encipher_rijndael(hmsg[0:4],key192,mode='CFB',iv=iv,s=1) == hexify("1001001101011001","binary")
+    assert encipher_rijndael(hmsg[0:4],key256,mode='CFB',iv=iv,s=1) == hexify("1001000000101001","binary")
+
+    #CFB8
+    assert encipher_rijndael(hmsg[0:36],key128,mode='CFB',iv=iv,s=8) == "3b79424c9c0dd436bace9e0ed4586a4f32b9"
+    assert encipher_rijndael(hmsg[0:36],key192,mode='CFB',iv=iv,s=8) == "cda2521ef0a905ca44cd057cbf0d47a0678a"
+    assert encipher_rijndael(hmsg[0:36],key256,mode='CFB',iv=iv,s=8) == "dc1f1a8520a64db55fcc8ac554844e889700"
+
+    #CFB128
+    assert encipher_rijndael(hmsg,key128,mode='CFB',iv=iv,s=128) == "3b3fd92eb72dad20333449f8e83cfb4ac8a64537a0b3a93fcde3cdad9f1ce58b26751f67a3cbb140b1808cf187a4f4dfc04b05357c5d1c0eeac4c66f9ff7f2e6"
+    assert encipher_rijndael(hmsg,key192,mode='CFB',iv=iv,s=128) == "cdc80d6fddf18cab34c25909c99a417467ce7f7f81173621961a2b70171d3d7a2e1e8a1dd59b88b1c8e60fed1efac4c9c05f9f9ca9834fa042ae8fba584b09ff"
+    assert encipher_rijndael(hmsg,key256,mode='CFB',iv=iv,s=128) == "dc7e84bfda79164b7ecd8486985d386039ffed143b28b1c832113c6331e5407bdf10132415e54b92a13ed0a8267ae2f975a385741ab9cef82031623d55b1e471"
+
+    #OFB
+    assert encipher_rijndael(hmsg,key128,mode='OFB',iv=iv) == "3b3fd92eb72dad20333449f8e83cfb4a7789508d16918f03f53c52dac54ed8259740051e9c5fecf64344f7a82260edcc304c6528f659c77866a510d9c1d6ae5e"
+    assert encipher_rijndael(hmsg,key192,mode='OFB',iv=iv) == "cdc80d6fddf18cab34c25909c99a4174fcc28b8d4c63837c09e81700c11004018d9a9aeac0f6596f559c6d4daf59a5f26d9f200857ca6c3e9cac524bd9acc92a"
+    assert encipher_rijndael(hmsg,key256,mode='OFB',iv=iv) == "dc7e84bfda79164b7ecd8486985d38604febdc6740d20b3ac88f6ad82a4fb08d71ab47a086e86eedf39d1c5bba97c4080126141d67f37be8538f5a8be740e484"
+
+    #CTR
+    assert encipher_rijndael(hmsg,key128,mode='CTR',ctr=ctr) == "874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee"
+    assert encipher_rijndael(hmsg,key192,mode='CTR',ctr=ctr) == "1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050"
+    assert encipher_rijndael(hmsg,key256,mode='CTR',ctr=ctr) == "601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6"
+
+
+def test_decipher_rijndael():
+    hmsg = "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710"
+    key128 = "2b7e151628aed2a6abf7158809cf4f3c"
+    key192 = "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b"
+    key256 = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"
+    iv = "000102030405060708090a0b0c0d0e0f"
+    ctr = "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+
+    #ECB
+    assert decipher_rijndael("3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4",key128) == hmsg
+    assert decipher_rijndael("bd334f1d6e45f25ff712a214571fa5cc974104846d0ad3ad7734ecb3ecee4eefef7afd2270e2e60adce0ba2face6444e9a4b41ba738d6c72fb16691603c18e0e",key192) == hmsg
+    assert decipher_rijndael("f3eed1bdb5d2a03c064b5a7e3db181f8591ccb10d410ed26dc5ba74a31362870b6ed21b99ca6f4f9f153e7b1beafed1d23304b7a39f9f3ff067d8d8f9e24ecc7",key256) == hmsg
+
+    #CBC
+    assert decipher_rijndael("7649abac8119b246cee98e9b12e9197d5086cb9b507219ee95db113a917678b273bed6b8e3c1743b7116e69e222295163ff1caa1681fac09120eca307586e1a7",key128,mode='CBC',iv=iv) == hmsg
+    assert decipher_rijndael("4f021db243bc633d7178183a9fa071e8b4d9ada9ad7dedf4e5e738763f69145a571b242012fb7ae07fa9baac3df102e008b0e27988598881d920a9e64f5615cd",key192,mode='CBC',iv=iv) == hmsg
+    assert decipher_rijndael("f58c4c04d6e5f1ba779eabfb5f7bfbd69cfc4e967edb808d679f777bc6702c7d39f23369a9d9bacfa530e26304231461b2eb05e2c39be9fcda6c19078c6a9d1b",key256,mode='CBC',iv=iv) == hmsg
+
+    #CFB1
+    assert decipher_rijndael(hexify("0110100010110011",'binary'),key128,mode='CFB',iv=iv,s=1) == hmsg[0:4]
+    assert decipher_rijndael(hexify("1001001101011001","binary"),key192,mode='CFB',iv=iv,s=1) == hmsg[0:4]
+    assert decipher_rijndael(hexify("1001000000101001","binary"),key256,mode='CFB',iv=iv,s=1) == hmsg[0:4]
+
+    #CFB8
+    assert decipher_rijndael("3b79424c9c0dd436bace9e0ed4586a4f32b9",key128,mode='CFB',iv=iv,s=8) == hmsg[0:36]
+    assert decipher_rijndael("cda2521ef0a905ca44cd057cbf0d47a0678a",key192,mode='CFB',iv=iv,s=8) == hmsg[0:36]
+    assert decipher_rijndael("dc1f1a8520a64db55fcc8ac554844e889700",key256,mode='CFB',iv=iv,s=8) == hmsg[0:36]
+
+    #CFB128
+    assert decipher_rijndael("3b3fd92eb72dad20333449f8e83cfb4ac8a64537a0b3a93fcde3cdad9f1ce58b26751f67a3cbb140b1808cf187a4f4dfc04b05357c5d1c0eeac4c66f9ff7f2e6",key128,mode='CFB',iv=iv,s=128) == hmsg
+    assert decipher_rijndael("cdc80d6fddf18cab34c25909c99a417467ce7f7f81173621961a2b70171d3d7a2e1e8a1dd59b88b1c8e60fed1efac4c9c05f9f9ca9834fa042ae8fba584b09ff",key192,mode='CFB',iv=iv,s=128) == hmsg
+    assert decipher_rijndael("dc7e84bfda79164b7ecd8486985d386039ffed143b28b1c832113c6331e5407bdf10132415e54b92a13ed0a8267ae2f975a385741ab9cef82031623d55b1e471",key256,mode='CFB',iv=iv,s=128) == hmsg
+
+    #OFB
+    assert decipher_rijndael("3b3fd92eb72dad20333449f8e83cfb4a7789508d16918f03f53c52dac54ed8259740051e9c5fecf64344f7a82260edcc304c6528f659c77866a510d9c1d6ae5e",key128,mode='OFB',iv=iv) == hmsg
+    assert decipher_rijndael("cdc80d6fddf18cab34c25909c99a4174fcc28b8d4c63837c09e81700c11004018d9a9aeac0f6596f559c6d4daf59a5f26d9f200857ca6c3e9cac524bd9acc92a",key192,mode='OFB',iv=iv) == hmsg
+    assert decipher_rijndael("dc7e84bfda79164b7ecd8486985d38604febdc6740d20b3ac88f6ad82a4fb08d71ab47a086e86eedf39d1c5bba97c4080126141d67f37be8538f5a8be740e484",key256,mode='OFB',iv=iv) == hmsg
+
+    #CTR
+    assert decipher_rijndael("874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee",key128,mode='CTR',ctr=ctr) == hmsg
+    assert decipher_rijndael("1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050",key192,mode='CTR',ctr=ctr) == hmsg
+    assert decipher_rijndael("601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6",key256,mode='CTR',ctr=ctr) == hmsg

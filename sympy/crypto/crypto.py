@@ -403,6 +403,619 @@ def encipher_substitution(msg, old, new=None):
     """
     return translate(msg, old, new)
 
+def encipher_transposition(msg,key):
+    """
+    Enciphers a message using a columnar transposition.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be transposed.
+    ``key`` : The key used for the transposition.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_transposition
+    >>> encipher_transposition("Meet me under the willow tree","SECRET")
+    'EDWTENEWMRLETEIRMUHOETLE'
+
+    """
+
+    msg,key,_ = _prep(msg,key,AZ() + AZ().lower() + '0123456789')
+    msg = msg.upper()
+    key = key.upper()
+    lkey = [key[i] + chr(i) for i in range(len(key))]
+    slkey = sorted(lkey)
+    while len(msg) % len(key) != 0:
+        msg += ' '
+
+    out = ''
+
+    l = int(len(msg) / len(key))
+    for i in range(len(key)):
+        for j in range(l):
+            out += msg[lkey.index(slkey[i]) + j*len(key)]
+
+    out = out.replace(" ","")
+    return out
+
+def decipher_transposition(msg,key):
+    """
+    Deciphers a message using a columnar transposition.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be deciphered.
+    ``key`` : The key used for the transposition.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_transposition
+    >>> decipher_transposition("EDWTENEWMRLETEIRMUHOETLE","SECRET")
+    'MEETMEUNDERTHEWILLOWTREE'
+
+    """
+    msg,key,_ = _prep(msg,key,AZ() + AZ().lower() + '0123456789')
+
+    lkey = [key[i] + chr(i) for i in range(len(key))]
+    slkey = sorted(lkey)
+
+    dmsg = msg
+    l = int(len(msg) / len(key))
+    ex = len(msg) % len(key)
+
+    chunks = ['' for i in range(len(key))]
+    for i in range(len(chunks)):
+        o = lkey.index(slkey[i])
+        chunks[o] += dmsg[0:l]
+        dmsg = dmsg[l:]
+        if o < ex:
+            chunks[o] += dmsg[0]
+            dmsg = dmsg[1:]
+        else:
+            chunks[o] += ' '
+
+    out = ''
+    l += 1
+    chunks = ''.join(chunks)
+    for i in range(l):
+        for j in range(len(key)):
+            out += chunks[l*j + i]
+
+    out = out.replace(" ","")
+
+    return out
+
+
+def playfair_matrix(key):
+    """
+    Generates the Playfair matrix used in enciphering/deciphering
+    for the Playfair cipher.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import playfair_matrix
+    >>> key = "ENCRYPT"
+    >>> playfair_matrix(key)
+    'ENCRYPTABDFGHIKLMOQSUVWXZ'
+
+    Notes
+    ====
+
+    Some implementations of the Playfair cipher simply remove
+    the "J" when it shows up in the keyword; however, in this
+    case, the "J" simply gets turned into an "I", similar to
+    what happens during the enciphering/deciphering process.
+
+    """
+
+    map = ''
+    key += AZ()
+    for i in range(25):
+        for c in key:
+            if c not in map and (c != 'J' or 'I' not in map):
+                map += c if c != 'J' else 'I'
+                break
+    return map
+
+
+def encipher_playfair(msg,key):
+    """
+    Performs the Playfair cipher encryption on plaintext ``msg``, and
+    returns the ciphertext.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_playfair
+    >>> key = "encrypt"
+    >>> msg = "meet me on monday"
+    >>> encipher_playfair(msg,key)
+    'LNNPLNMCOQYTDC'
+
+    """
+
+    msg,key,alp = _prep(msg,key,None)
+    key += alp
+    map = playfair_matrix(key)
+
+    parse = True
+    rv = ''
+
+    for c in range(len(msg)):
+        if parse:
+            if c == len(msg) - 1 or msg[c+1] == msg[c]:
+                b = map.index('X')
+            else:
+                b = map.index(msg[c+1]) if msg[c+1] in map else map.index('I')
+                parse = False
+
+            a = map.index(msg[c]) if msg[c] in map else map.index('I')
+
+            ja,jb = a % 5, b % 5
+            ia,ib = a - ja, b - jb
+
+            if ja == jb:
+                rv += map[ja + ((int(ia/5) + 1) % 5)*5] + map[jb + ((int(ib/5) + 1) % 5)*5]
+            elif ia == ib:
+                rv += map[((ja+1)%5) + ia] + map[((jb+1)%5) + ib]
+            else:
+                rv += map[ia + jb] + map[ib + ja]
+        else:
+            parse = True
+
+    return rv
+
+def decipher_playfair(msg,key):
+    """
+    Performs the Playfair cipher decryption on ciphertext ``msg``, and
+    returns the plaintext.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_playfair, AZ
+    >>> key = "encrypt"
+    >>> msg = "LNNPLNMCOQYTDC"
+    >>> decipher_playfair(msg,key)
+    'MEETMEONMONDAY'
+
+    Notes
+    ====
+
+    Since I and J share the same space in the Playfair matrix,
+    it's impossible to unambigously decode a ciphertext. This,
+    plus the fact that Xs need to be inserted into the plaintext
+    in order to encipher it, means that decipher_playfair()
+    isn't guaranteed to return the same plaintext as was
+    enciphered.  The message will still be readable in most
+    cases, though.  For instance:
+
+    >>> from sympy.crypto.crypto import encipher_playfair,decipher_playfair
+    >>> key = "encrypt"
+    >>> msg = "jays, exes and dubbles make things look strange"
+    >>> encipher_playfair(msg,key)
+    'HBDZRUYLTCBZPZIRPQYLOTFYAGGRKMMQSHMDCBTMRU'
+    >>> ct = 'HBDZRUYLTCBZPZIRPQYLOTFYAGGRKMMQSHMDCBTMRU'
+    >>> decipher_playfair(ct,key)
+    'IAYSEXESANDXDUBXBLESMAKETHINGSLOOKSTRANGEX'
+
+    """
+
+    msg,key,_ = _prep(msg,key,None)
+    map = playfair_matrix(key)
+    parse = True
+    rv = ''
+
+    for c in range(len(msg)):
+        if parse:
+
+            if c == len(msg) - 1 or msg[c+1]==msg[c]:
+                b = map.index('X')
+            else:
+                b = map.index(msg[c+1]) if msg[c+1] in map else map.index('I')
+                parse = False
+
+            a = map.index(msg[c]) if msg[c] in map else map.index('I')
+
+            ja,jb = a % 5, b % 5
+            ia,ib = a - ja, b - jb
+
+            if ja == jb:
+                rv += map[ja + ((int(ia/5) - 1) % 5)*5] + map[jb + ((int(ib/5) - 1) % 5)*5]
+            elif ia == ib:
+                rv += map[((ja-1)%5) + ia] + map[((jb-1)%5) + ib]
+            else:
+                rv += map[ia + jb] + map[ib + ja]
+        else:
+            parse = True
+
+    return rv
+
+def encipher_adfgvx(msg,alph,key):
+    """
+    Enciphers a message using the ADFGVX cipher.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be encoded..
+    ``alph`` : The alphabet used for the substitution
+    phase.  The alphabet must contain all letters A-Z,
+    and the digits 0-9.
+    ``key`` : The key used for transposition.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_adfgvx
+    >>> encipher_adfgvx("ATTACKAT1200AM","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY")
+    'DGDDDAGDDGAFADDFDADVDVFAADVX'
+
+    """
+
+    t = 'ADFGVX'
+    if len(alph) != 36:
+        raise ValueError('Alphabet must be 36 characters.')
+    for char in uppercase:
+        if char not in alph and char.lower() not in alph:
+            raise ValueError('Alphabet requires all letters A-Z and digits 0-9.')
+
+    msg,key,alp = _prep(msg,key,bifid6 + uppercase.lower())
+    msg = msg.upper()
+    key = key.upper()
+    alp = alph.upper()
+
+    ct = ''
+    for char in msg:
+        i = alp.index(char) % 6
+        j = int(alp.index(char) / 6)
+        ct += t[j] + t[i]
+
+    out = encipher_transposition(ct,key)
+    return out
+
+def decipher_adfgvx(msg,alph,key):
+    """
+    Deciphers a message using the ADFGVX cipher.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be deciphered.
+    ``alph`` : The alphabet used for the substitution
+    phase.  The alphabet must contain all letters A-Z,
+    and the digits 0-9.
+    ``key`` : The key used for the transposition phase.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_adfgvx
+    >>> decipher_adfgvx("DGDDDAGDDGAFADDFDADVDVFAADVX","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY")
+    'ATTACKAT1200AM'
+
+    """
+
+    t = 'ADFGVX'
+    if len(alph) != 36:
+        raise ValueError('Alphabet must be 36 characters.')
+    for char in uppercase:
+        if char not in alph and char.lower() not in alph:
+            raise ValueError('Alphabet requires all letters A-Z and digits 0-9.')
+
+    msg,key,alp = _prep(msg,key,bifid6 + uppercase.lower())
+    msg = msg.upper()
+    key = key.upper()
+    alp = alph.upper()
+
+    pt = decipher_transposition(msg,key)
+    out = ''
+
+    for i in range(int(len(pt)/2)):
+        out += alp[6*t.index(pt[2*i]) + t.index(pt[2*i+1])]
+
+    return out
+
+def chain_add(string,n):
+    for i in range(n):
+        string += str( (int(string[i]) + int(string[i+1])) % 10 )
+    return string
+
+def create_keys(date,ind,key,num):
+    num = int(num)
+    key = key[0:20]
+
+    first = ''
+    for i in range(5):
+        first += str( (int(ind[i]) - int(date[i])) % 10 )
+
+    lsplit,rsplit = [key[x] + str(x) for x in range(10)],[key[10+y] + str(y) for y in range(10)]
+    slsplit,srsplit = sorted(lsplit),sorted(rsplit)
+
+    second = list('0'*20)
+    for i in range(10):
+        second[i] = str( (slsplit.index(lsplit[i]) + 1) % 10 )
+        second[10+i] = str( (srsplit.index(rsplit[i]) + 1) % 10)
+
+    second = ''.join(second)
+
+    first = chain_add(first,5)
+
+    third = ''
+    for i in range(10):
+        third += str( (int(first[i]) + int(second[i])) % 10 )
+
+    third = list(third)
+    for i in range(10):
+        third[i] = second[10 + ((int(third[i]) - 1) % 10)]
+
+    third = ''.join(third)
+    third = chain_add(third,50)
+    third_old = third[0:10]
+    third = third[10:]
+
+    temp = sorted([ str( (int( third[40+x] ) - 1) % 10) + str(x) for x in range(10)])
+    toprow = ''
+    for i in range(10):
+        toprow += str( (temp.index( str((int(third[40+i]) -1) % 10) + str(i)) + 1) % 10)
+
+
+    digits = third[-1]
+    t = -2
+
+    while third[t] == digits:
+        t -= 1
+    digits = third[t] + digits
+
+    trans = [int(digits[0]) + num, int(digits[1]) + num]
+
+    third_old = ''.join([str((int(third_old[x]) - 1) % 10) for x in range(len(third_old))])
+
+    tchars = encipher_transposition(third,third_old)
+    tchars = tchars[0:sum(trans)]
+
+    t1 = [ str( (int(tchars[x]) - 1) % 10) + chr(x) for x in range(trans[0]) ]
+    t2 = [ str( (int(tchars[x + trans[0]]) - 1) % 10) + chr(x) for x in range(trans[1]) ]
+
+    return toprow,trans,tchars,t1,t2
+
+def vic_triangles(t,l,trans):
+    st = sorted(t)
+    tri = [0 for i in range(l)]
+
+    n = t.index(st[0])
+    m = 0
+    for i in range(len(tri)):
+        tri[i] = n
+        n += 1
+        if n > trans[1]:
+            m += 1
+            n = t.index(st[m])
+
+    return tri
+
+def encipher_vic(msg,date,ind,key,num):
+    """
+    Enciphers a message using the VIC cipher.
+
+    Notes
+    =====
+
+    The VIC cipher is a pen-and-paper cipher, used by the
+    Russian spy Reino Hayhanen during the Cold War. [1] It's
+    considered the most complex cipher that can still
+    reasonably be used with just pen and paper, and in fact
+    was never broken during the Cold War.
+    A more detailed description of the cipher can be found here:
+
+    http://www.quadibloc.com/crypto/pp1324.htm
+
+    The cipher makes use of a straddling checkerboard in one
+    step of the encryption process; though there are numerous
+    valid configurations, this implementiation uses the one found
+    at the above link, in particular:
+
+
+      |X X X X X X X X X X
+      |___________________
+      |A T   O N E   S I R
+    0 |B C D F G H J K L M
+    8 |P Q U V W X Y Z . /
+
+    ,where XXXXXXXXXX is an intermediate key used during the
+    encryption process.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be encrypted.
+    ``date`` : A six-digit number or string, typically encoded
+    as the date.
+    ``ind`` : A random 5-digit indicator group.
+    ``key`` : A twenty-character string used as the key during
+    encryption.
+    ``num`` : A "personal number", must be no greater than 15.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_vic
+    >>> msg = "We are pleased to hear of your success in establishing your false identity. You will be sent some money to cover expenses within a month."
+    >>> encipher_vic(msg,'741776','77651','IDREAMOFJEANNIEWITHT',8)
+    '36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860'
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/VIC_cipher
+
+    """
+    try:
+        x,y,z = int(date),int(ind),int(num)
+    except:
+        raise ValueError("Date, indicator, and personal number must be numbers.")
+
+    if len(date) != 6:
+        raise ValueError("Date must be 6 digits long.")
+
+    if len(ind) != 5:
+        raise ValueError("Indicator must be 5 digits long.")
+
+    if int(num) > 15:
+        raise ValueError("Personal number must be no greater than 15.")
+
+    msg,key,_ = _prep(msg,key,None)
+    num = int(num)
+    if len(key) < 20:
+        raise ValueError("Key phrase must be at least 20 letters long.")
+
+    toprow,trans,tchars,t1,t2 = create_keys(date,ind,key,num)
+
+    secondrow = 'AT ONE SIR'
+    thirdrow  = 'BCDFGHJKLM'
+    fourthrow = 'PQUVWXYZ./'
+    rows = secondrow + thirdrow + fourthrow
+    column = ' 08'
+
+    tout = ''
+    for char in msg:
+        i = int(rows.index(char) / 10)
+        j = rows.index(char) % 10
+        tout += column[i] + toprow[j]
+
+    tout = tout.replace(" ","")
+
+    while len(tout) % 5 != 0:
+        tout += '9'
+
+    while len(tout) % trans[0] != 0:
+        tout += ' '
+
+    tout2 = encipher_transposition(tout,t1)
+
+    l = int( len(tout2) / trans[1])
+    ex = len(tout2) % trans[1]
+    if ex != 0:
+        l += 1
+
+    tri = vic_triangles(t2,l,trans)
+
+    last = list(' ' * trans[1] * l)
+    for i in range(l):
+        ext = min(ex,tri[i]) if  i == l-1 else tri[i]
+        last[ i*trans[1] : i*trans[1] + ext ] = tout2[0:ext]
+        tout2 = tout2[ext:]
+
+    while tout2 != '':
+        last[last.index(' ')] = tout2[0]
+        tout2 = tout2[1:]
+
+    out = encipher_transposition(last,t2)
+
+    aout = ''
+    for i in range(int(len(out) / 5)):
+        aout += out[5*i:5*(i+1)] + ' '
+
+    aout = aout[0:-1]
+    return aout
+
+def decipher_vic(msg,date,ind,key,num):
+    """
+    Deciphers a message using the VIC cipher.
+
+    Notes
+    =====
+
+    See the documentation for ``encipher_vic`` for more details
+    regarding the VIC cipher implementation.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be decrypted.
+    ``date`` : A six-digit number or string, typically encoded
+    as the date.
+    ``ind`` : A random 5-digit indicator group.
+    ``key`` : A twenty-character string used as the key during
+    decryption.
+    ``num`` : A "personal number", must be no greater than 15.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_vic
+    >>> ct = "36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860"
+    >>> decipher_vic(ct,'741776','77651','IDREAMOFJEANNIEWITHT',8)
+    'WEAREPLEASEDTOHEAROFYOURSUCCESSINESTABLISHINGYOURFALSEIDENTITYYOUWILLBESENTSOMEMONEYTOCOVEREXPENSESWITHINAMONTHR'
+
+
+    """
+    try:
+        x,y,z = int(date),int(ind),int(num)
+    except:
+        raise ValueError("Date, indicator, and personal number must be numbers.")
+
+    if len(date) != 6:
+        raise ValueError("Date must be 6 digits long.")
+
+    if len(ind) != 5:
+        raise ValueError("Indicator must be 5 digits long.")
+
+    if int(num) > 15:
+        raise ValueError("Personal number must be no greater than 15.")
+
+    msg,key,_ = _prep(msg,key,AZ() + AZ().lower() + '0123456789')
+    msg = msg.replace(" ","")
+    num = int(num)
+    if len(key) < 20:
+        raise ValueError("Key phrase must be at least 20 letters long.")
+
+    toprow,trans,tchars,t1,t2 = create_keys(date,ind,key,num)
+    secondrow = 'AT ONE SIR'
+    thirdrow  = 'BCDFGHJKLM'
+    fourthrow = 'PQUVWXYZ./'
+
+    tout = decipher_transposition(msg,t2)
+    l = int(len(tout) / trans[1])
+    ex = len(tout) % trans[1]
+    if ex != 0:
+        l += 1
+
+    tri = vic_triangles(t2,l,trans)
+
+    tout = list(tout)
+    tout2 = ''
+    for i in range(l):
+        ext = min(ex,tri[i]) if i == l-1 else tri[i]
+        tout2 += ''.join(tout[i*trans[1] : i*trans[1] + ext])
+        tout[i*trans[1] : i*trans[1] + ext] = ' '*ext
+
+    tout = ''.join(tout).replace(" ","")
+    tout2 += tout
+
+    tout3 = decipher_transposition(tout2,t1)
+
+    out = ''
+    while tout3 != '':
+        char = tout3[0]
+        if char == '0':
+            out += thirdrow[toprow.index(tout3[1])]
+            tout3 = tout3[2:]
+        elif char == '8':
+            out += fourthrow[toprow.index(tout3[1])]
+            tout3 = tout3[2:]
+        else:
+            out += secondrow[toprow.index(char)]
+            tout3 = tout3[1:]
+
+    return out
+
+
 
 ######################################################################
 #################### Vigenère cipher examples ########################
@@ -2045,3 +2658,621 @@ def dh_shared_key(key, b):
             than prime %s.''' % p))
 
     return pow(x, b, p)
+
+encrypt_box = [
+    '0x63','0x7c','0x77','0x7b','0xf2','0x6b','0x6f','0xc5','0x30','0x01','0x67','0x2b','0xfe','0xd7','0xab','0x76',
+    '0xca','0x82','0xc9','0x7d','0xfa','0x59','0x47','0xf0','0xad','0xd4','0xa2','0xaf','0x9c','0xa4','0x72','0xc0',
+    '0xb7','0xfd','0x93','0x26','0x36','0x3f','0xf7','0xcc','0x34','0xa5','0xe5','0xf1','0x71','0xd8','0x31','0x15',
+    '0x04','0xc7','0x23','0xc3','0x18','0x96','0x05','0x9a','0x07','0x12','0x80','0xe2','0xeb','0x27','0xb2','0x75',
+    '0x09','0x83','0x2c','0x1a','0x1b','0x6e','0x5a','0xa0','0x52','0x3b','0xd6','0xb3','0x29','0xe3','0x2f','0x84',
+    '0x53','0xd1','0x00','0xed','0x20','0xfc','0xb1','0x5b','0x6a','0xcb','0xbe','0x39','0x4a','0x4c','0x58','0xcf',
+    '0xd0','0xef','0xaa','0xfb','0x43','0x4d','0x33','0x85','0x45','0xf9','0x02','0x7f','0x50','0x3c','0x9f','0xa8',
+    '0x51','0xa3','0x40','0x8f','0x92','0x9d','0x38','0xf5','0xbc','0xb6','0xda','0x21','0x10','0xff','0xf3','0xd2',
+    '0xcd','0x0c','0x13','0xec','0x5f','0x97','0x44','0x17','0xc4','0xa7','0x7e','0x3d','0x64','0x5d','0x19','0x73',
+    '0x60','0x81','0x4f','0xdc','0x22','0x2a','0x90','0x88','0x46','0xee','0xb8','0x14','0xde','0x5e','0x0b','0xdb',
+    '0xe0','0x32','0x3a','0x0a','0x49','0x06','0x24','0x5c','0xc2','0xd3','0xac','0x62','0x91','0x95','0xe4','0x79',
+    '0xe7','0xc8','0x37','0x6d','0x8d','0xd5','0x4e','0xa9','0x6c','0x56','0xf4','0xea','0x65','0x7a','0xae','0x08',
+    '0xba','0x78','0x25','0x2e','0x1c','0xa6','0xb4','0xc6','0xe8','0xdd','0x74','0x1f','0x4b','0xbd','0x8b','0x8a',
+    '0x70','0x3e','0xb5','0x66','0x48','0x03','0xf6','0x0e','0x61','0x35','0x57','0xb9','0x86','0xc1','0x1d','0x9e',
+    '0xe1','0xf8','0x98','0x11','0x69','0xd9','0x8e','0x94','0x9b','0x1e','0x87','0xe9','0xce','0x55','0x28','0xdf',
+    '0x8c','0xa1','0x89','0x0d','0xbf','0xe6','0x42','0x68','0x41','0x99','0x2d','0x0f','0xb0','0x54','0xbb','0x16'
+]
+
+decrypt_box = [
+   '0x52','0x09','0x6a','0xd5','0x30','0x36','0xa5','0x38','0xbf','0x40','0xa3','0x9e','0x81','0xf3','0xd7','0xfb',
+   '0x7c','0xe3','0x39','0x82','0x9b','0x2f','0xff','0x87','0x34','0x8e','0x43','0x44','0xc4','0xde','0xe9','0xcb',
+   '0x54','0x7b','0x94','0x32','0xa6','0xc2','0x23','0x3d','0xee','0x4c','0x95','0x0b','0x42','0xfa','0xc3','0x4e',
+   '0x08','0x2e','0xa1','0x66','0x28','0xd9','0x24','0xb2','0x76','0x5b','0xa2','0x49','0x6d','0x8b','0xd1','0x25',
+   '0x72','0xf8','0xf6','0x64','0x86','0x68','0x98','0x16','0xd4','0xa4','0x5c','0xcc','0x5d','0x65','0xb6','0x92',
+   '0x6c','0x70','0x48','0x50','0xfd','0xed','0xb9','0xda','0x5e','0x15','0x46','0x57','0xa7','0x8d','0x9d','0x84',
+   '0x90','0xd8','0xab','0x00','0x8c','0xbc','0xd3','0x0a','0xf7','0xe4','0x58','0x05','0xb8','0xb3','0x45','0x06',
+   '0xd0','0x2c','0x1e','0x8f','0xca','0x3f','0x0f','0x02','0xc1','0xaf','0xbd','0x03','0x01','0x13','0x8a','0x6b',
+   '0x3a','0x91','0x11','0x41','0x4f','0x67','0xdc','0xea','0x97','0xf2','0xcf','0xce','0xf0','0xb4','0xe6','0x73',
+   '0x96','0xac','0x74','0x22','0xe7','0xad','0x35','0x85','0xe2','0xf9','0x37','0xe8','0x1c','0x75','0xdf','0x6e',
+   '0x47','0xf1','0x1a','0x71','0x1d','0x29','0xc5','0x89','0x6f','0xb7','0x62','0x0e','0xaa','0x18','0xbe','0x1b',
+   '0xfc','0x56','0x3e','0x4b','0xc6','0xd2','0x79','0x20','0x9a','0xdb','0xc0','0xfe','0x78','0xcd','0x5a','0xf4',
+   '0x1f','0xdd','0xa8','0x33','0x88','0x07','0xc7','0x31','0xb1','0x12','0x10','0x59','0x27','0x80','0xec','0x5f',
+   '0x60','0x51','0x7f','0xa9','0x19','0xb5','0x4a','0x0d','0x2d','0xe5','0x7a','0x9f','0x93','0xc9','0x9c','0xef',
+   '0xa0','0xe0','0x3b','0x4d','0xae','0x2a','0xf5','0xb0','0xc8','0xeb','0xbb','0x3c','0x83','0x53','0x99','0x61',
+   '0x17','0x2b','0x04','0x7e','0xba','0x77','0xd6','0x26','0xe1','0x69','0x14','0x63','0x55','0x21','0x0c','0x7d'
+]
+
+rcon = [
+    '0x8d','0x01','0x02','0x04','0x08','0x10','0x20','0x40','0x80','0x1b','0x36','0x6c','0xd8','0xab','0x4d','0x9a',
+    '0x2f','0x5e','0xbc','0x63','0xc6','0x97','0x35','0x6a','0xd4','0xb3','0x7d','0xfa','0xef','0xc5','0x91','0x39',
+    '0x72','0xe4','0xd3','0xbd','0x61','0xc2','0x9f','0x25','0x4a','0x94','0x33','0x66','0xcc','0x83','0x1d','0x3a',
+    '0x74','0xe8','0xcb','0x8d','0x01','0x02','0x04','0x08','0x10','0x20','0x40','0x80','0x1b','0x36','0x6c','0xd8',
+    '0xab','0x4d','0x9a','0x2f','0x5e','0xbc','0x63','0xc6','0x97','0x35','0x6a','0xd4','0xb3','0x7d','0xfa','0xef',
+    '0xc5','0x91','0x39','0x72','0xe4','0xd3','0xbd','0x61','0xc2','0x9f','0x25','0x4a','0x94','0x33','0x66','0xcc',
+    '0x83','0x1d','0x3a','0x74','0xe8','0xcb','0x8d','0x01','0x02','0x04','0x08','0x10','0x20','0x40','0x80','0x1b',
+    '0x36','0x6c','0xd8','0xab','0x4d','0x9a','0x2f','0x5e','0xbc','0x63','0xc6','0x97','0x35','0x6a','0xd4','0xb3',
+    '0x7d','0xfa','0xef','0xc5','0x91','0x39','0x72','0xe4','0xd3','0xbd','0x61','0xc2','0x9f','0x25','0x4a','0x94',
+    '0x33','0x66','0xcc','0x83','0x1d','0x3a','0x74','0xe8','0xcb','0x8d','0x01','0x02','0x04','0x08','0x10','0x20',
+    '0x40','0x80','0x1b','0x36','0x6c','0xd8','0xab','0x4d','0x9a','0x2f','0x5e','0xbc','0x63','0xc6','0x97','0x35',
+    '0x6a','0xd4','0xb3','0x7d','0xfa','0xef','0xc5','0x91','0x39','0x72','0xe4','0xd3','0xbd','0x61','0xc2','0x9f',
+    '0x25','0x4a','0x94','0x33','0x66','0xcc','0x83','0x1d','0x3a','0x74','0xe8','0xcb','0x8d','0x01','0x02','0x04',
+    '0x08','0x10','0x20','0x40','0x80','0x1b','0x36','0x6c','0xd8','0xab','0x4d','0x9a','0x2f','0x5e','0xbc','0x63',
+    '0xc6','0x97','0x35','0x6a','0xd4','0xb3','0x7d','0xfa','0xef','0xc5','0x91','0x39','0x72','0xe4','0xd3','0xbd',
+    '0x61','0xc2','0x9f','0x25','0x4a','0x94','0x33','0x66','0xcc','0x83','0x1d','0x3a','0x74','0xe8','0xcb','0x8d'
+]
+
+mult_9 = [
+    0x00,0x09,0x12,0x1b,0x24,0x2d,0x36,0x3f,0x48,0x41,0x5a,0x53,0x6c,0x65,0x7e,0x77,
+    0x90,0x99,0x82,0x8b,0xb4,0xbd,0xa6,0xaf,0xd8,0xd1,0xca,0xc3,0xfc,0xf5,0xee,0xe7,
+    0x3b,0x32,0x29,0x20,0x1f,0x16,0x0d,0x04,0x73,0x7a,0x61,0x68,0x57,0x5e,0x45,0x4c,
+    0xab,0xa2,0xb9,0xb0,0x8f,0x86,0x9d,0x94,0xe3,0xea,0xf1,0xf8,0xc7,0xce,0xd5,0xdc,
+    0x76,0x7f,0x64,0x6d,0x52,0x5b,0x40,0x49,0x3e,0x37,0x2c,0x25,0x1a,0x13,0x08,0x01,
+    0xe6,0xef,0xf4,0xfd,0xc2,0xcb,0xd0,0xd9,0xae,0xa7,0xbc,0xb5,0x8a,0x83,0x98,0x91,
+    0x4d,0x44,0x5f,0x56,0x69,0x60,0x7b,0x72,0x05,0x0c,0x17,0x1e,0x21,0x28,0x33,0x3a,
+    0xdd,0xd4,0xcf,0xc6,0xf9,0xf0,0xeb,0xe2,0x95,0x9c,0x87,0x8e,0xb1,0xb8,0xa3,0xaa,
+    0xec,0xe5,0xfe,0xf7,0xc8,0xc1,0xda,0xd3,0xa4,0xad,0xb6,0xbf,0x80,0x89,0x92,0x9b,
+    0x7c,0x75,0x6e,0x67,0x58,0x51,0x4a,0x43,0x34,0x3d,0x26,0x2f,0x10,0x19,0x02,0x0b,
+    0xd7,0xde,0xc5,0xcc,0xf3,0xfa,0xe1,0xe8,0x9f,0x96,0x8d,0x84,0xbb,0xb2,0xa9,0xa0,
+    0x47,0x4e,0x55,0x5c,0x63,0x6a,0x71,0x78,0x0f,0x06,0x1d,0x14,0x2b,0x22,0x39,0x30,
+    0x9a,0x93,0x88,0x81,0xbe,0xb7,0xac,0xa5,0xd2,0xdb,0xc0,0xc9,0xf6,0xff,0xe4,0xed,
+    0x0a,0x03,0x18,0x11,0x2e,0x27,0x3c,0x35,0x42,0x4b,0x50,0x59,0x66,0x6f,0x74,0x7d,
+    0xa1,0xa8,0xb3,0xba,0x85,0x8c,0x97,0x9e,0xe9,0xe0,0xfb,0xf2,0xcd,0xc4,0xdf,0xd6,
+    0x31,0x38,0x23,0x2a,0x15,0x1c,0x07,0x0e,0x79,0x70,0x6b,0x62,0x5d,0x54,0x4f,0x46
+]
+
+mult_11 = [
+    0x00,0x0b,0x16,0x1d,0x2c,0x27,0x3a,0x31,0x58,0x53,0x4e,0x45,0x74,0x7f,0x62,0x69,
+    0xb0,0xbb,0xa6,0xad,0x9c,0x97,0x8a,0x81,0xe8,0xe3,0xfe,0xf5,0xc4,0xcf,0xd2,0xd9,
+    0x7b,0x70,0x6d,0x66,0x57,0x5c,0x41,0x4a,0x23,0x28,0x35,0x3e,0x0f,0x04,0x19,0x12,
+    0xcb,0xc0,0xdd,0xd6,0xe7,0xec,0xf1,0xfa,0x93,0x98,0x85,0x8e,0xbf,0xb4,0xa9,0xa2,
+    0xf6,0xfd,0xe0,0xeb,0xda,0xd1,0xcc,0xc7,0xae,0xa5,0xb8,0xb3,0x82,0x89,0x94,0x9f,
+    0x46,0x4d,0x50,0x5b,0x6a,0x61,0x7c,0x77,0x1e,0x15,0x08,0x03,0x32,0x39,0x24,0x2f,
+    0x8d,0x86,0x9b,0x90,0xa1,0xaa,0xb7,0xbc,0xd5,0xde,0xc3,0xc8,0xf9,0xf2,0xef,0xe4,
+    0x3d,0x36,0x2b,0x20,0x11,0x1a,0x07,0x0c,0x65,0x6e,0x73,0x78,0x49,0x42,0x5f,0x54,
+    0xf7,0xfc,0xe1,0xea,0xdb,0xd0,0xcd,0xc6,0xaf,0xa4,0xb9,0xb2,0x83,0x88,0x95,0x9e,
+    0x47,0x4c,0x51,0x5a,0x6b,0x60,0x7d,0x76,0x1f,0x14,0x09,0x02,0x33,0x38,0x25,0x2e,
+    0x8c,0x87,0x9a,0x91,0xa0,0xab,0xb6,0xbd,0xd4,0xdf,0xc2,0xc9,0xf8,0xf3,0xee,0xe5,
+    0x3c,0x37,0x2a,0x21,0x10,0x1b,0x06,0x0d,0x64,0x6f,0x72,0x79,0x48,0x43,0x5e,0x55,
+    0x01,0x0a,0x17,0x1c,0x2d,0x26,0x3b,0x30,0x59,0x52,0x4f,0x44,0x75,0x7e,0x63,0x68,
+    0xb1,0xba,0xa7,0xac,0x9d,0x96,0x8b,0x80,0xe9,0xe2,0xff,0xf4,0xc5,0xce,0xd3,0xd8,
+    0x7a,0x71,0x6c,0x67,0x56,0x5d,0x40,0x4b,0x22,0x29,0x34,0x3f,0x0e,0x05,0x18,0x13,
+    0xca,0xc1,0xdc,0xd7,0xe6,0xed,0xf0,0xfb,0x92,0x99,0x84,0x8f,0xbe,0xb5,0xa8,0xa3
+]
+
+mult_13 = [
+    0x00,0x0d,0x1a,0x17,0x34,0x39,0x2e,0x23,0x68,0x65,0x72,0x7f,0x5c,0x51,0x46,0x4b,
+    0xd0,0xdd,0xca,0xc7,0xe4,0xe9,0xfe,0xf3,0xb8,0xb5,0xa2,0xaf,0x8c,0x81,0x96,0x9b,
+    0xbb,0xb6,0xa1,0xac,0x8f,0x82,0x95,0x98,0xd3,0xde,0xc9,0xc4,0xe7,0xea,0xfd,0xf0,
+    0x6b,0x66,0x71,0x7c,0x5f,0x52,0x45,0x48,0x03,0x0e,0x19,0x14,0x37,0x3a,0x2d,0x20,
+    0x6d,0x60,0x77,0x7a,0x59,0x54,0x43,0x4e,0x05,0x08,0x1f,0x12,0x31,0x3c,0x2b,0x26,
+    0xbd,0xb0,0xa7,0xaa,0x89,0x84,0x93,0x9e,0xd5,0xd8,0xcf,0xc2,0xe1,0xec,0xfb,0xf6,
+    0xd6,0xdb,0xcc,0xc1,0xe2,0xef,0xf8,0xf5,0xbe,0xb3,0xa4,0xa9,0x8a,0x87,0x90,0x9d,
+    0x06,0x0b,0x1c,0x11,0x32,0x3f,0x28,0x25,0x6e,0x63,0x74,0x79,0x5a,0x57,0x40,0x4d,
+    0xda,0xd7,0xc0,0xcd,0xee,0xe3,0xf4,0xf9,0xb2,0xbf,0xa8,0xa5,0x86,0x8b,0x9c,0x91,
+    0x0a,0x07,0x10,0x1d,0x3e,0x33,0x24,0x29,0x62,0x6f,0x78,0x75,0x56,0x5b,0x4c,0x41,
+    0x61,0x6c,0x7b,0x76,0x55,0x58,0x4f,0x42,0x09,0x04,0x13,0x1e,0x3d,0x30,0x27,0x2a,
+    0xb1,0xbc,0xab,0xa6,0x85,0x88,0x9f,0x92,0xd9,0xd4,0xc3,0xce,0xed,0xe0,0xf7,0xfa,
+    0xb7,0xba,0xad,0xa0,0x83,0x8e,0x99,0x94,0xdf,0xd2,0xc5,0xc8,0xeb,0xe6,0xf1,0xfc,
+    0x67,0x6a,0x7d,0x70,0x53,0x5e,0x49,0x44,0x0f,0x02,0x15,0x18,0x3b,0x36,0x21,0x2c,
+    0x0c,0x01,0x16,0x1b,0x38,0x35,0x22,0x2f,0x64,0x69,0x7e,0x73,0x50,0x5d,0x4a,0x47,
+    0xdc,0xd1,0xc6,0xcb,0xe8,0xe5,0xf2,0xff,0xb4,0xb9,0xae,0xa3,0x80,0x8d,0x9a,0x97
+]
+
+mult_14 = [
+    0x00,0x0e,0x1c,0x12,0x38,0x36,0x24,0x2a,0x70,0x7e,0x6c,0x62,0x48,0x46,0x54,0x5a,
+    0xe0,0xee,0xfc,0xf2,0xd8,0xd6,0xc4,0xca,0x90,0x9e,0x8c,0x82,0xa8,0xa6,0xb4,0xba,
+    0xdb,0xd5,0xc7,0xc9,0xe3,0xed,0xff,0xf1,0xab,0xa5,0xb7,0xb9,0x93,0x9d,0x8f,0x81,
+    0x3b,0x35,0x27,0x29,0x03,0x0d,0x1f,0x11,0x4b,0x45,0x57,0x59,0x73,0x7d,0x6f,0x61,
+    0xad,0xa3,0xb1,0xbf,0x95,0x9b,0x89,0x87,0xdd,0xd3,0xc1,0xcf,0xe5,0xeb,0xf9,0xf7,
+    0x4d,0x43,0x51,0x5f,0x75,0x7b,0x69,0x67,0x3d,0x33,0x21,0x2f,0x05,0x0b,0x19,0x17,
+    0x76,0x78,0x6a,0x64,0x4e,0x40,0x52,0x5c,0x06,0x08,0x1a,0x14,0x3e,0x30,0x22,0x2c,
+    0x96,0x98,0x8a,0x84,0xae,0xa0,0xb2,0xbc,0xe6,0xe8,0xfa,0xf4,0xde,0xd0,0xc2,0xcc,
+    0x41,0x4f,0x5d,0x53,0x79,0x77,0x65,0x6b,0x31,0x3f,0x2d,0x23,0x09,0x07,0x15,0x1b,
+    0xa1,0xaf,0xbd,0xb3,0x99,0x97,0x85,0x8b,0xd1,0xdf,0xcd,0xc3,0xe9,0xe7,0xf5,0xfb,
+    0x9a,0x94,0x86,0x88,0xa2,0xac,0xbe,0xb0,0xea,0xe4,0xf6,0xf8,0xd2,0xdc,0xce,0xc0,
+    0x7a,0x74,0x66,0x68,0x42,0x4c,0x5e,0x50,0x0a,0x04,0x16,0x18,0x32,0x3c,0x2e,0x20,
+    0xec,0xe2,0xf0,0xfe,0xd4,0xda,0xc8,0xc6,0x9c,0x92,0x80,0x8e,0xa4,0xaa,0xb8,0xb6,
+    0x0c,0x02,0x10,0x1e,0x34,0x3a,0x28,0x26,0x7c,0x72,0x60,0x6e,0x44,0x4a,0x58,0x56,
+    0x37,0x39,0x2b,0x25,0x0f,0x01,0x13,0x1d,0x47,0x49,0x5b,0x55,0x7f,0x71,0x63,0x6d,
+    0xd7,0xd9,0xcb,0xc5,0xef,0xe1,0xf3,0xfd,0xa7,0xa9,0xbb,0xb5,0x9f,0x91,0x83,0x8d
+]
+
+def xor_ascii(a,b):
+    return asciify( hex(int(hexify(a),16) ^ int(hexify(b),16)))
+
+def asciify(hstream,mode="hex"):
+    stream = hstream[0:-1] if hstream[-1] == 'L' else hstream
+    out = ''
+
+    start = 0
+    if stream[0:2] == '0x' or stream[0:2] == '0b' :
+        start = 2
+
+    if mode == "hex":
+        step = 2
+        base = 16
+        if stream[0:2] == '0x':
+            start = 2
+    elif mode == "binary":
+        step = 8
+        base = 2
+    elif mode == "octal":
+        step = 4
+        base = 8
+        if stream[0] == '0':
+            start = 1
+    else:
+        raise ValueError("Invalid conversion type.")
+
+    offset = len(stream) % step
+    if offset != 0:
+        out = chr(int(stream[start:start+offset],base))
+        start += offset
+
+    for i in range(start,len(stream),step):
+        out += chr(int(stream[i:i+step],base))
+
+    return out
+
+def hexify(word,mode="ascii"):
+    if mode == 'binary':
+        h = hex(int(word,2))
+        h = h[2:]
+        return h[0:-1] if h[-1] == 'L' else h
+    out = ''
+    for c in word:
+        h = hex(ord(c))
+        if len(h) == 3:
+            out += '0' + h[-1]
+        else:
+            out += h[2:]
+
+    return out
+
+def binify(word,mode='ascii'):
+    if mode == 'hex':
+        out = bin(int(word,16))
+        out = out[2:]
+        while len(out) % 8 != 0:
+            out = '0' + out
+        return out
+
+    out = ''
+    for c in word:
+        b = bin(ord(c))
+        b = b[2:]
+        pad = ''
+        while len(pad) + len(b) < 8:
+            pad += '0'
+        out += pad + b
+    return out
+
+def rotate(word):
+    return word[1:] + word[0]
+
+def key_schedule_core(word,i):
+    out = ''
+    rot = rotate(word)
+    for n in range(4):
+        byte = ord(rot[n])
+        eb = encrypt_box[byte]
+        out += asciify(eb)
+    l = ord(out[0])
+    l = chr(l ^ int(rcon[i],16))
+    out = l + out[1:]
+    return out
+
+def expand_key(key):
+    n = len(key)
+    if n == 16: #16
+        b = 176
+        end_rep = 0
+    elif n == 24: #24
+        b = 208
+        end_rep = 2
+    elif n == 32: #32
+        b = 240
+        end_rep = 3
+    else:
+        raise ValueError("Invalid key length.")
+
+    rcon_i = 1
+    expanded_key = key
+    while len(expanded_key) < b:
+        t = expanded_key[-4:]
+        t = key_schedule_core(t,rcon_i)
+        rcon_i += 1
+        for j in range(4):
+            t = xor_ascii(t,expanded_key[-1*n:-1*n+4])
+            expanded_key += t
+        if n == 32:
+            tt = ''
+            for k in range(4):
+                byte = ord(t[k])
+                eb = encrypt_box[byte]
+                tt += asciify(eb)
+            t = xor_ascii(tt,expanded_key[-1*n:-1*n+4])
+            expanded_key += t
+        for l in range(end_rep):
+            t = xor_ascii(t,expanded_key[-1*n:-1*n+4])
+            expanded_key += t
+    return expanded_key
+
+def add_round_key(state,expanded_key,n):
+    out = ''
+    round_key = expanded_key[len(state)*n:len(state)*(n+1)]
+    for i in range(len(state)):
+        out += xor_ascii(state[i],round_key[i])
+    return out
+
+def sub_bytes(state,encrypt=True):
+    out = ''
+    for i in range(len(state)):
+        h = ord(state[i])
+        eb = encrypt_box[h] if encrypt else decrypt_box[h]
+        out += asciify(eb)
+    return out
+
+def shift_rows(state,encrypt=True):
+    out = state
+    block = int(len(state) / 16)
+    for i in range(4):
+        t = [0 for x in range(4)]
+        for x in range(4):
+            t[x] = out[4*block*x + i : 4*block*x + i + block]
+        for j in range(4):
+            p = block*4*j+i
+            if encrypt:
+                out = out[0:p] + t[(j + i) % 4] + out[p+block:]
+            else:
+                out = out[0:p] + t[(j - i) % 4] + out[p+block:]
+    return out
+
+def mix_column(column,encrypt=True):
+    ints = [0 for x in range(4)]
+    t = [0 for x in range(4)]
+    for i in range(4):
+        ints[i] = ord(column[i])
+        c = 0xFF * (ints[i] >> 7)
+        t[i] = (ints[i] << 1) & 0xFF
+        t[i] ^= 0x1B & c;
+    if encrypt:
+        res = [
+                t[0] ^ t[1] ^ ints[1] ^ ints[2] ^ ints[3],
+                ints[0] ^ t[1] ^ t[2] ^ ints[2] ^ ints[3],
+                ints[0] ^ ints[1] ^ t[2] ^ t[3] ^ ints[3],
+                t[0] ^ ints[0] ^ ints[1] ^ ints[2] ^ t[3]
+              ]
+    else:
+        res = [
+                mult_14[ints[0]] ^ mult_11[ints[1]] ^ mult_13[ints[2]] ^ mult_9[ints[3]],
+                mult_9[ints[0]] ^ mult_14[ints[1]] ^ mult_11[ints[2]] ^ mult_13[ints[3]],
+                mult_13[ints[0]] ^ mult_9[ints[1]] ^ mult_14[ints[2]] ^ mult_11[ints[3]],
+                mult_11[ints[0]] ^ mult_13[ints[1]] ^ mult_9[ints[2]] ^ mult_14[ints[3]]
+              ]
+    out = chr(res[0]) + chr(res[1]) + chr(res[2]) + chr(res[3])
+    return out
+
+def mix_columns(state,encrypt=True):
+    block = int(len(state) / 4)
+    out = ''
+    for i in range(4):
+        out += mix_column(state[block*i:block*(i+1)],encrypt)
+    return out
+
+def encipher_rijndael_block(sblock,expanded_key,rounds):
+    block = sblock if len(sblock) == 16 else pad_length(sblock,16)
+
+    out = add_round_key(block,expanded_key,0)
+    for n in range(1,rounds):
+
+        out = sub_bytes(out,True)
+        out = shift_rows(out)
+        out = mix_columns(out)
+        out = add_round_key(out,expanded_key,n)
+
+    out = sub_bytes(out,True)
+    out = shift_rows(out)
+    out = add_round_key(out,expanded_key,rounds)
+
+    return out
+
+def decipher_rijndael_block(sblock,expanded_key,rounds):
+    block = sblock if len(sblock) == 16 else pad_length(sblock,16)
+
+    out = add_round_key(block,expanded_key,rounds)
+
+    for n in range(rounds-1,0,-1):
+
+        out = shift_rows(out,False)
+        out = sub_bytes(out,False)
+        out = add_round_key(out,expanded_key,n)
+        out = mix_columns(out,False)
+
+    out = shift_rows(out,False)
+    out = sub_bytes(out,False)
+    out = add_round_key(out,expanded_key,0)
+
+    return out
+
+def pad_length(msg,size,mode="ascii"):
+    out = msg
+    leftover = (size - (len(msg) % size)) % size
+    pad = ''
+    for i in range(leftover):
+        pad += '0' if mode == 'binary' else chr(0)
+
+    return pad + msg
+
+def rijndael_rounds(key):
+    k = len(key)
+
+    if k == 16:
+        return 10
+    if k == 24:
+        return 12
+    if k == 32:
+        return 14
+
+    raise ValueError("Invalid key size.")
+
+def increment_counter(counter):
+    base = len(counter) * 8
+    i = int(hexify(counter),16)
+    i += 1
+    return asciify(hex(i % (2**base)))
+
+def encipher_rijndael(msg,key,**kwargs):
+    """
+    Encrypts a message using AES (Rjindael) block encryption.
+
+    Parameters
+    =========
+
+    ``msg``: the message to be encrypted.
+    ``key``: the key used to encrypt the message.
+
+    Optional Arguments
+    ==================
+
+    ``mode``: the block cipher mode used for encryption. Currently,
+    the algorithm implements the following modes:
+
+        'ECB': Electronic Code Book
+        'CBC': Cipher Block Chaining
+        'CFB': Cipher Feed Back,
+        'OFB': Ouput Feed Back,
+        'CTR': Counter Mode
+
+    If ``mode`` is something other than 'EBC' and 'CTR', the ``iv``
+    parameter must also be set.  If ``mode`` is 'CTR', the ``ctr``
+    parameter must also be set. If ``mode`` is 'CFB', the ``s``
+    parameter msut also be set (see below).
+
+    ``msg_type``: The format that the message is sent in, either
+    'ascii','binary',or 'hex'.  The ``msg``,``key``, and ``iv`` and ``ctr``
+    (see above) must all be in the same format.
+
+    ``iv``: the initialization vector.  Must be set if ``mode``
+    is something other than 'ECB' or 'CTR'.
+
+    ``s``: the size of each data segment.  Must be set if ``mode``
+    is 'CFB'.
+
+    ``ctr``: the intialized counter.  Must be set if ``mode``
+    is 'CTR'.
+
+    Examples
+    =======
+
+    >>> from sympy.crypto.crypto import encipher_rijndael
+    >>> hmsg,hkey = "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710","2b7e151628aed2a6abf7158809cf4f3c"
+    >>> encipher_rijndael(hmsg,hkey)
+    '3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4'
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+    .. [2] http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
+
+    """
+    mode = kwargs['mode'] if 'mode' in kwargs.keys() else 'ECB'
+    msg_type = kwargs['msg_type'] if 'msg_type' in kwargs.keys() else 'hex'
+
+    hmsg, hkey = msg, key
+    if msg_type != 'ascii':
+        hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
+
+    s = 16
+    if mode == 'CFB':
+        if 's' in kwargs.keys():
+            s = kwargs['s']
+        hmsg = pad_length(binify(hmsg),s,"binary")
+    elif mode != 'OFB' and mode != 'CTR':
+        hmsg = pad_length(hmsg,s)
+    rounds = rijndael_rounds(hkey)
+    expanded_key = expand_key(hkey)
+    ct = ''
+
+    if mode != "ECB":
+        if 'iv' not in kwargs.keys() and 'ctr' not in kwargs.keys():
+            raise ValueError('Chaining requires initialization vector.')
+        if mode == 'CTR':
+            chain = asciify(kwargs['ctr'],msg_type) if msg_type != "ascii" else kwargs['ctr']
+        else:
+            chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
+        chain = pad_length(chain,16)
+
+    for b in range(int(len(hmsg) / s)):
+
+        block = hmsg[s*b:s*(b+1)]
+
+        if mode == 'CFB':
+            temp = asciify(block,"binary")
+            enc = binify(encipher_rijndael_block(chain,expanded_key,rounds))
+            high = asciify(enc[0:s],'binary')
+
+            out = binify(xor_ascii(temp,high))
+            out = out[-s:]
+
+            chain = binify(chain)
+            chain = asciify(chain[s:] + out,"binary")
+        elif mode == 'OFB':
+            chain = encipher_rijndael_block(chain,expanded_key,rounds)
+            chain = chain[0:len(block)]
+            out = xor_ascii(block,chain)
+        elif mode == 'CTR':
+            out = encipher_rijndael_block(chain,expanded_key,rounds)
+            out = out[0:len(block)]
+            out = xor_ascii(block,out)
+            chain = increment_counter(chain)
+        else:
+            if mode == 'CBC':
+                block = xor_ascii(block,chain)
+
+            out = encipher_rijndael_block(block,expanded_key,rounds)
+            chain = out
+
+        ct += out
+
+    if msg_type == 'hex':
+        if mode == 'CFB':
+            ct = hexify(ct,"binary")
+        else:
+            ct = hexify(ct)
+
+    return ct
+
+def decipher_rijndael(ct,key,**kwargs):
+    """
+    Decrypts a message using AES (Rjindael) block encryption.
+
+    Parameters
+    =========
+
+    ``msg``: the message to be decrypted.
+    ``key``: the key used to decrypt the message.
+
+    Optional Arguments
+    ==================
+
+    ``mode``: the block cipher mode used for decryption. Currently,
+    the algorithm implements the following modes:
+
+        'ECB': Electronic Code Book
+        'CBC': Cipher Block Chaining
+        'CFB': Cipher Feed Back,
+        'OFB': Ouput Feed Back,
+        'CTR': Counter Mode
+
+    If ``mode`` is something other than 'EBC' and 'CTR', the ``iv``
+    parameter must also be set.  If ``mode`` is 'CTR', the ``ctr``
+    parameter must also be set. If ``mode`` is 'CFB', the ``s``
+    parameter msut also be set (see below).
+
+    ``msg_type``: The format that the message is sent in, either
+    'ascii','binary',or 'hex'.  The ``msg``,``key``,``iv``, and ``ctr``
+    (see above) must all be in the same format.
+
+    ``iv``: the initialization vector.  Must be set if ``mode``
+    is something other than 'ECB' or 'CTR'.
+
+    ``s``: the size of each data segment.  Must be set if ``mode``
+    is 'CFB'.
+
+    ``ctr``: the intialized counter.  Must be set if ``mode``
+    is 'CTR'.
+
+    Examples
+    =======
+
+    >>> from sympy.crypto.crypto import decipher_rijndael
+    >>> hmsg,hkey = "3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4","2b7e151628aed2a6abf7158809cf4f3c"
+    >>> decipher_rijndael(hmsg,hkey)
+    '6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710'
+    """
+
+    mode = kwargs['mode'] if 'mode' in kwargs.keys() else 'ECB'
+    msg_type = kwargs['msg_type'] if 'msg_type' in kwargs.keys() else 'hex'
+    hct, hkey = ct,key
+    if msg_type != 'ascii':
+        hct, hkey = asciify(hct,msg_type),asciify(hkey,msg_type)
+
+    s = 16
+    if mode == 'CFB' and 's' in kwargs.keys():
+        hct = binify(hct)
+        s = kwargs['s']
+
+    if mode != 'OFB' and mode != 'CTR':
+        hct = pad_length(hct,s)
+    rounds = rijndael_rounds(hkey)
+    expanded_key = expand_key(hkey)
+    pt = ''
+
+    if mode != "ECB":
+        if 'iv' not in kwargs.keys() and 'ctr' not in kwargs.keys():
+            raise ValueError('Chaining requires initialization vector.')
+
+        if mode == 'CTR':
+            chain = asciify(kwargs['ctr'],msg_type) if msg_type != "ascii" else kwargs['ctr']
+        else:
+            chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
+        chain = pad_length(chain,16)
+
+    for b in range(int(len(hct) / s)):
+
+        block = hct[s*b:s*(b+1)]
+
+        if mode == 'CFB':
+            temp = asciify(block,"binary")
+            enc = binify(encipher_rijndael_block(chain,expanded_key,rounds))
+            high = asciify(enc[0:s],'binary')
+
+            out = binify(xor_ascii(temp,high))
+            out = out[-s:]
+
+            chain = binify(chain)
+            chain = asciify(chain[s:] + block,"binary")
+
+        elif mode == 'OFB':
+            chain = encipher_rijndael_block(chain,expanded_key,rounds)
+            chain = chain[0:len(block)]
+            out = xor_ascii(block,chain)
+        elif mode == 'CTR':
+            out = encipher_rijndael_block(chain,expanded_key,rounds)
+            out = out[0:len(block)]
+            out = xor_ascii(block,out)
+            chain = increment_counter(chain)
+        else:
+            out = decipher_rijndael_block(block,expanded_key,rounds)
+
+            if mode == "CBC":
+                out = xor_ascii(out,chain)
+                chain = block
+
+        pt += out
+
+    if msg_type == 'hex':
+        if mode == 'CFB':
+            pt = hexify(pt,"binary")
+        else:
+            pt = hexify(pt)
+
+    return pt
