@@ -1108,8 +1108,11 @@ def hypsum(expr, n, start, prec):
         s = term
         k = 1
         while abs(term) > 5:
-            term *= MPZ(func1(k - 1))
-            term //= MPZ(func2(k - 1))
+            #term *= MPZ(func1(k - 1))
+            #term //= MPZ(func2(k - 1))
+            term = MPZ(term*func1(k - 1))
+            term = MPZ(term/func2(k - 1))
+
             s += term
             k += 1
         return from_man_exp(s, -prec)
