@@ -121,10 +121,10 @@ class Commutator(Expr):
         #Takes a nested commutator and recursively evaluates it to a single commutator
         A = self.args[0]
         B = self.args[1]
-	if isinstance(A, Commutator):
-	    A = A.deNest()
-	if isinstance(B, Commutator):
-	    B = B.deNest()
+	    if isinstance(A, Commutator):
+	        A = A.deNest()
+	    if isinstance(B, Commutator):
+	        B = B.deNest()
         return (A*B - B*A)
     
     def _eval_expand_commutator(self, **hints):
