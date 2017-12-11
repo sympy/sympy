@@ -403,20 +403,20 @@ class Polygon(GeometrySet):
             cy += v*(y1 + y2)
         return Point(simplify(A*cx), simplify(A*cy))
 
-    def second_moment_of_area(self, p = None):
+    def second_moment_of_area(self, p=None):
         """Second and product moment of area of polygon.
 
         Parameters
         ==========
 
         p : Point, None
-            Default value is None.
+            p is the point about which second moment of area is to be find. Default value is None
 
         Notes
         =====
 
-        p is the point about which second moment of area is to be find.function will return second moment of area about
-        the axis passing through centroid if point is not given othervise about the axis passing through the p point.
+        function will return second moment of area about the axis passing through centroid
+        if point is not given othervise about the axis passing through the p point.
 
         Examples
         ========
