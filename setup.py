@@ -39,10 +39,12 @@ mpmath_version = '0.19'
 
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
-# Location for generated latex assets
-dir_latex = os.path.join(dir_setup, "sympy", "parsing", "_latex")
 
 extra_kwargs = {}
+
+antlr_grammars = {
+    "LaTeX": os.path.join(dir_setup, "sympy", "parsing", "_latex"),
+}
 
 try:
     from setuptools import setup, Command
@@ -224,11 +226,18 @@ class clean(Command):
             if os.path.isfile(name):
                 os.remove(name)
 
-        for ext in ["tokens", "py"]:
-            for name_pattern in ["LaTeX*.%s" % ext, "latex*.%s" % ext]:
-                for path in glob.glob(os.path.join(dir_latex, name_pattern)):
-                    if os.path.isfile(path):
-                        os.remove(path)
+        for grammar_name, grammar_root in antlr_grammars.items():
+            for ext in ["tokens", "py", "interp"]:
+                patterns = [
+                    "{}*.{}".format(grammar_name, ext),
+                    "{}*.{}".format(grammar_name.lower(), ext),
+                ]
+                for name_frag in patterns:
+                    pattern = glob.glob(os.path.join(grammar_root, name_frag))
+                    for path in sorted(pattern):
+                        print("Cleaning {}...".format(os.path.basename(path)))
+                        if os.path.isfile(path):
+                            os.remove(path)
 
         os.chdir(curr_dir)
 
@@ -299,12 +308,74 @@ class antlr(Command):
         pass
 
     def run(self):
-        subprocess.check_output(["antlr4", "LaTeX.g4"], cwd=dir_latex)
-        for ext in ["tokens", "py"]:
-            for path in glob.glob(os.path.join(dir_latex, "LaTeX*.{}".format(ext))):
-                os.rename(
-                    path,
-                    os.path.join(dir_latex, os.path.basename(path).lower()))
+        import antlr4
+        ANTLR4_API = [k for k in antlr4.__dict__.keys() if k[0] != "_"]
+
+        for grammar_name, grammar_root in antlr_grammars.items():
+            print("Processing {}...".format(grammar_name))
+
+            generated_root = os.path.join(grammar_root, "_antlr_raw")
+            lib_root = os.path.join(grammar_root, "_antlr")
+
+            shutil.rmtree(generated_root, ignore_errors=True)
+            shutil.rmtree(lib_root, ignore_errors=True)
+
+            os.makedirs(lib_root)
+
+            subprocess.check_output(["antlr4",
+                                     "{}.g4".format(grammar_name),
+                                     "-no-listener",
+                                     "-no-visitor",
+                                     "-o", generated_root,
+                                     # "-Xlog",
+                                     ],
+                                    cwd=grammar_root)
+            print("... OK")
+
+            pattern = os.path.join(generated_root, "{}*.py".format(grammar_name))
+            paths = sorted(glob.glob(pattern))
+
+            for path in paths:
+                print("Postprocessing {}...".format(os.path.basename(path)))
+                with open(path) as fp:
+                    lines = fp.readlines()
+
+                new_path = os.path.join(lib_root,
+                                        os.path.basename(path)
+                                        .lower())
+                print("... copying to".format(new_path))
+                shutil.copy2(path, new_path)
+
+                bad_star = "from antlr4 import *"
+
+                future_line = "from __future__ import print_function"
+
+                drop_lines = [
+                    future_line
+                ]
+
+                with open(new_path, "w+") as fp:
+                    fp.write(
+                        """def _importer():\n"""
+                        """    try:\n"""
+                        )
+                    [fp.write(
+                        """        {}""".format(line) if
+                        bad_star not in line else
+                        """        from antlr4 import (\n"""
+                        """            {}\n"""
+                        """        )\n""".format(
+                            ",\n            ".join(ANTLR4_API)
+                        )
+                    ) for line in lines if line.strip() not in drop_lines]
+                    fp.write(
+                        """    except Exception as err:\n"""
+                        """        print(err)\n"""
+                        """    return locals()\n"""
+                    )
+
+            with open(os.path.join(lib_root, "__init__.py"), "w+") as fp:
+                fp.write("\n")
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py

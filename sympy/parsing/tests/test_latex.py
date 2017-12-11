@@ -239,10 +239,10 @@ def test_not_parseable():
     from sympy.parsing.latex import parse_latex, LaTeXSyntaxError
     for latex_str in BAD_STRINGS:
         with pytest.raises(LaTeXSyntaxError):
-            print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))
+            parse_latex(latex_str)
 
 
 def test_failing_not_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str in FAILING_BAD_STRINGS:
-        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))
+        parse_latex(latex_str)

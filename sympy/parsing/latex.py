@@ -1,12 +1,22 @@
-from sympy.external import import_module
+__all__ = ['parse_latex', 'LaTeXSyntaxError']
 
-LaTeXSyntaxError = import_module('sympy.parsing._latex',
-                                 __import__kwargs={'fromlist': ['_latex']}).LaTeXSyntaxError
+
+class LaTeXSyntaxError(Exception):
+    pass
 
 
 def parse_latex(latex_str):
-    _latex = import_module('sympy.parsing._latex',
-                           __import__kwargs={'fromlist': ['_latex']})
+    """ Generate a SymPy Expression from a LaTeX math string.
 
-    if _latex is not None:
-        return _latex.parse_latex(latex_str)
+    Examples
+    ========
+
+    >>> from sympy.abc import a, b
+    >>> from sympy.parsing.latex import parse_latex
+    >>> parse_latex("a + 1")
+    a + 1
+    >>> parse_latex("a + \\sin b")
+    a + sin(b)
+    """
+    from ._latex import (parse_latex as _parse_latex)
+    return _parse_latex(latex_str)
