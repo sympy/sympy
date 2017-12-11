@@ -56,7 +56,7 @@ class MatrixRequired(object):
         raise NotImplementedError("Subclasses must implement this.")
 
     def __eq__(self, other):
-        raise NotImplementedError("Subclasses must impliment this.")
+        raise NotImplementedError("Subclasses must implement this.")
 
     def __getitem__(self, key):
         """Implementations of __getitem__ should accept ints, in which
@@ -736,7 +736,7 @@ class MatrixSpecial(MatrixRequired):
         rows = kwargs.get('rows', diag_rows)
         cols = kwargs.get('cols', diag_cols)
         if rows < diag_rows or cols < diag_cols:
-            raise ValueError("A {} x {} diagnal matrix cannot accomodate a"
+            raise ValueError("A {} x {} diagnal matrix cannot accommodate a"
                              "diagonal of size at least {} x {}.".format(rows, cols,
                                                                          diag_rows, diag_cols))
 

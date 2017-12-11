@@ -1,3 +1,4 @@
+from __future__ import division
 from sympy.polys.domains import QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
@@ -13,7 +14,6 @@ from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
     tanh, log, sqrt)
 from sympy.core.numbers import Rational
 from sympy.core import expand
-
 
 def is_close(a, b):
     tol = 10**(-10)

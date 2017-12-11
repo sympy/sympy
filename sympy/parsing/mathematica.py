@@ -192,7 +192,7 @@ class MathematicaParser(object):
             # get arguments of Mathematica function
             args, end = cls._get_args(m)
 
-            # funciton side check. (e.g.) '2*Func[x]' is invalid.
+            # function side check. (e.g.) '2*Func[x]' is invalid.
             if m.start() != 0 or end != len(fm):
                 err = "'{f}' function form is invalid.".format(f=fm)
                 raise ValueError(err)
@@ -315,7 +315,7 @@ class MathematicaParser(object):
             # get a start position of the model argument
             xbgn = m.start()
 
-            # add the correspoinding actual argument
+            # add the corresponding actual argument
             scanned += template[:xbgn] + d[x]
 
             # update cursor to the end of the model arugment
