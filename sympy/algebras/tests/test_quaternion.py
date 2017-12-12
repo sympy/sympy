@@ -1,4 +1,5 @@
 from sympy.algebras.quaternion import Quaternion
+from sympy.utilities.pytest import raises
 from sympy import symbols, re, im, Add, Mul, I, Abs
 from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E, pi
 from sympy.utilities.pytest import raises
@@ -14,7 +15,7 @@ def test_quaternion_construction():
 
     q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
     assert q2 == Quaternion(Rational(1/2), Rational(1/2),
-                            Rational(1/2), Rational(1,2))
+                            Rational(1/2), Rational(1/2))
 
     M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))

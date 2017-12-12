@@ -527,6 +527,28 @@ def collect_const(expr, *vars, **kwargs):
     targeted. Although any Number can also be targeted, if this is not
     desired set ``Numbers=False`` and no Float or Rational will be collected.
 
+    Parameters
+    ==========
+
+    expr : Numbers,Symbols
+           This parameter defines the expression to be worked upon by the function.
+
+    *vars : Numbers,Symbols
+            Used to specify the different number coefficients explicitly, for grouping of terms.
+            Can be multiple in number.
+
+    **kwargs : Optional(Numbers=True)
+               Default is targeting the Numbers set. If this is not the desired set,
+               ''Numbers=False'' can be the arg value.
+
+
+    Returns
+    =======
+
+    expr : Numbers,Symbols
+           Returns a collection of terms with similar number coefficients,
+           which may be Numbers or Symbols.
+
     Examples
     ========
 
@@ -554,6 +576,8 @@ def collect_const(expr, *vars, **kwargs):
     2*(x - y - z)
     >>> collect_const(2*x - 2*y - 2*z, -2)
     2*x - 2*(y + z)
+
+    
 
     See Also
     ========
