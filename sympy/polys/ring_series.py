@@ -1140,7 +1140,7 @@ def rs_exp(p, x, prec):
     n = 1
     k = 1
     c = []
-    for k in range(ceiling(prec)):
+    for k in range(prec):
         c.append(one/n)
         k += 1
         n *= k
@@ -1910,8 +1910,7 @@ def _rs_series(expr, series_rs, a, prec):
         series = R(1)
 
         for i in range(n):
-            _series = _rs_series(args[i], R(args[i]), a, prec - sum_pows +
-                min_pows[i])
+            _series = _rs_series(args[i], R(args[i]), a, prec)
             R = R.compose(_series.ring)
             _series = _series.set_ring(R)
             series = series.set_ring(R)
