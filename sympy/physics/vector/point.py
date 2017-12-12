@@ -32,8 +32,8 @@ class Point(object):
         if not isinstance(other, Point):
             raise TypeError('A Point must be supplied')
 
-    def _pdict_list(self, other, num):
-        """Creates a list from self to other using _dcm_dict. """
+    def _pdict_lists(self, other, num):
+        """Creates a list of lists from self to other using _pos_dict. """
         outlist = [[self]]
         oldlist = [[]]
         while outlist != oldlist:
@@ -50,9 +50,13 @@ class Point(object):
                 outlist.remove(v)
         outlist.sort(key=len)
         if len(outlist) != 0:
-            return outlist[0]
+            return outlist
         raise ValueError('No Connecting Path found between ' + other.name +
                          ' and ' + self.name)
+
+    def _pdict_list(self, other, num):
+        """Creates a list from self to other using _pos_dict. """
+        return self._pdict_lists(other, num)[0]
 
     def a1pt_theory(self, otherpoint, outframe, interframe):
         """Sets the acceleration of this point with the 1-point theory.
@@ -215,7 +219,7 @@ class Point(object):
         self.set_pos(p, -value)
         return p
 
-    def pos_from(self, otherpoint):
+    def pos_from(self, otherpoint, frame=None, variables=False, dcm_connected=False):
         """Returns a Vector distance between this Point and the other Point.
 
         Parameters
@@ -223,6 +227,16 @@ class Point(object):
 
         otherpoint : Point
             The otherpoint we are locating this one relative to
+        frame : ReferenceFrame
+            Expresses the resulting vector in this frame
+        variables : boolean
+            If True, the coordinate symbols(if present) in the resulting Vector
+            are re-expressed in terms the resulting frame if frame is given
+        dcm_connected : boolean
+            If True, ensures that the resulting vector is expressable in a
+            single frame.  Does not necessarily return the vector expressed
+            in that single frame, it just makes sure that it could be.  This
+            allows the resulting vector to be separated into its contituents.
 
         Examples
         ========
@@ -236,12 +250,40 @@ class Point(object):
         10*N.x
 
         """
+        last_error = None
 
-        outvec = Vector(0)
-        plist = self._pdict_list(otherpoint, 0)
-        for i in range(len(plist) - 1):
-            outvec += plist[i]._pos_dict[plist[i + 1]]
-        return outvec
+        plists = self._pdict_lists(otherpoint, 0)
+
+        # Try each point path (sorted from smallest number of points to largest number of points)
+        # The first point path that meets the conditions will be returned
+        for plist in plists:
+            outvec = Vector(0)
+            for i in range(len(plist) - 1):
+                outvec += plist[i]._pos_dict[plist[i + 1]]
+
+            # 0 Vector
+            if len(outvec.args) == 0:
+                return outvec
+
+            try:
+                if frame is not None:
+                    # Express in the given frame
+                    outvec = outvec.express(frame, variables=variables)
+                elif dcm_connected:
+                    # Check to make sure the resulting vector can be expressed
+                    # in any single frame to make sure the involved frames are
+                    # dcm-connected (Direction Cosine Matrix).
+                    # This means that rotation matrices are defined that allow
+                    # all contituent vectors to be expressed in a single frame.
+                    outvec.check_expressable()
+            except ValueError as e:
+                last_error = e
+                continue
+            else:
+                # Made it here without a value error, must have worked!
+                return outvec
+
+        raise last_error
 
     def set_acc(self, frame, value):
         """Used to set the acceleration of this Point in a ReferenceFrame.

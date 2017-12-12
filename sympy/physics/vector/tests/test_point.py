@@ -112,6 +112,19 @@ def test_point_pos():
     assert Q.pos_from(O) == 10 * N.x + 10 * N.y + 5 * B.x + 5 * B.y
     assert O.pos_from(Q) == -10 * N.x - 10 * N.y - 5 * B.x - 5 * B.y
 
+    q = dynamicsymbols('q')
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+    O = Point('O')
+    P = O.locatenew('P', 10 * N.x + 5 * B.x)
+    raises(ValueError, lambda: P.pos_from(O, dcm_connected=True))
+    B.orient(N, 'Axis', [q, N.z])
+    assert P.pos_from(O, dcm_connected=True) == 10 * N.x + 5 * B.x
+    assert P.pos_from(O, frame=N) == 10 * N.x + 5 * B.x
+    assert P.pos_from(O, frame=B) == 10 * N.x + 5 * B.x
+    raises(ValueError, lambda: P.pos_from(O, frame=C))
+
 def test_point_partial_velocity():
 
     N = ReferenceFrame('N')

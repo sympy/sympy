@@ -555,6 +555,31 @@ class Vector(object):
 
         return Vector(inlist)
 
+    def check_expressable(self, otherframe=None):
+        """
+        Returns if this vector is expressable in the given frame, otherwise, raises an exception. 
+
+        Parameters
+        ==========
+
+        otherframe : ReferenceFrame
+            The frame for this Vector to be described in.
+            If None, checks if this vector can be expressed in *any* single frame.
+        """
+        if len(self.args) == 0:
+            return
+
+        if otherframe is None:
+            otherframe = self.args[0][1]  # The frame of the first constituent part
+
+        # If we can get a dcm for each contituent of this vector
+        # then it is expressable in otherframe
+        for v in self.args:
+            if v[1] != otherframe:
+                v[1].dcm(otherframe)  # raises ValueError
+
+        return
+
     def express(self, otherframe, variables=False):
         """
         Returns a Vector equivalent to this one, expressed in otherframe.
