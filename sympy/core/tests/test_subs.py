@@ -779,3 +779,11 @@ def test_issue_12657():
     reps = [(-oo, 2), (oo, 1)]
     assert (x < oo).subs(reps) == (x < 1)
     assert (x < oo).subs(list(reversed(reps))) == (x < 1)
+
+
+def test_issue_13654():
+    fct = S("1/f")
+    A = {"f": "(1 / 2)"}
+    B = {"f": "1 / 2"}
+    assert fct.subs(A) == 2
+    assert fct.subs(B) == 2
