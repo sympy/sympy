@@ -498,7 +498,7 @@ def collect_sqrt(expr, evaluate=None):
 
     # we only want radicals, so exclude Number handling; in this case
     # d will be evaluated
-    d = collect_const(expr, Numbers=False, *vars)
+    d = collect_const(expr, *vars, Numbers=False)
     hit = expr != d
 
     if not evaluate:
@@ -521,7 +521,7 @@ def collect_sqrt(expr, evaluate=None):
     return coeff*d
 
 
-def collect_const(expr, Numbers=True,*vars):
+def collect_const(expr, *vars, **kwargs):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
@@ -587,6 +587,7 @@ def collect_const(expr, Numbers=True,*vars):
         return expr
 
     recurse = False
+    Numbers = kwargs.get('Numbers', True)
 
     if not vars:
         recurse = True
