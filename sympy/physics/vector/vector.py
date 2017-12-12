@@ -555,7 +555,7 @@ class Vector(object):
 
         return Vector(inlist)
 
-    def check_expressable(self, otherframe=None):
+    def check_expressible(self, otherframe=None):
         """
         Returns if this vector is expressable in the given frame, otherwise, raises an exception. 
 

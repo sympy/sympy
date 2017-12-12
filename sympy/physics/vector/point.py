@@ -275,7 +275,7 @@ class Point(object):
                     # dcm-connected (Direction Cosine Matrix).
                     # This means that rotation matrices are defined that allow
                     # all contituent vectors to be expressed in a single frame.
-                    outvec.check_expressable()
+                    outvec.check_expressible()
             except ValueError as e:
                 last_error = e
                 continue
