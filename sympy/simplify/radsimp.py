@@ -577,8 +577,6 @@ def collect_const(expr, *vars, **kwargs):
     >>> collect_const(2*x - 2*y - 2*z, -2)
     2*x - 2*(y + z)
 
-    
-
     See Also
     ========
     collect, collect_sqrt, rcollect
