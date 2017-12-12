@@ -498,7 +498,7 @@ def collect_sqrt(expr, evaluate=None):
 
     # we only want radicals, so exclude Number handling; in this case
     # d will be evaluated
-    d = collect_const(expr, *vars, Numbers=False)
+    d = collect_const(expr, Numbers=False, *vars)
     hit = expr != d
 
     if not evaluate:
