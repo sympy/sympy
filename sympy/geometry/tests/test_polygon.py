@@ -406,6 +406,7 @@ def test_intersection():
                                                                                     Segment(Point2D(0, 1), Point(1, 0))]
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
 
+
 def test_second_moment_of_area():
     x, y = symbols('x, y')
     #triangle

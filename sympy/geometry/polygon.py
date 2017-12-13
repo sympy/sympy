@@ -421,7 +421,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point,Polygon,symbols
+        >>> from sympy import Point, Polygon, symbols
         >>> a, b = symbols('a, b')
         >>> p1, p2, p3, p4, p5 = [(0, 0), (a, 0), (a, b), (0, b), (a/3, b/3)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
