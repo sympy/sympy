@@ -538,7 +538,7 @@ def collect_const(expr, *vars, **kwargs):
             Can be multiple in number.
 
     **kwargs : Optional(Numbers=True)
-               Default is targeting the Numbers set. If this is not the desired set,
+               Default is targeting the Numbers set. If Numbers is not the desired set,
                ''Numbers=False'' can be the arg value.
 
 
