@@ -776,7 +776,6 @@ class Add(Expr, AssocOp):
         from sympy import Order
         lst = []
         symbols = list(symbols if is_sequence(symbols) else [symbols])
-
         if not point:
             point = [0]*len(symbols)
         seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
