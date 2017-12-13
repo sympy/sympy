@@ -137,7 +137,7 @@ stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant", energ
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant", mass, 1.660539040e-24*gram)
 # Molar gas constant
 R = molar_gas_constant = Quantity("molar_gas_constant", energy/(temperature * amount_of_substance),
-                                  avogadro_number*boltzmann, abbrev="R")
+                                  8.3144598*joule/kelvin/mol, abbrev="R")
 # Faraday constant
 faraday_constant = Quantity("faraday_constant", charge/amount_of_substance, 96485.33289*C/mol)
 # Josephson constant
@@ -153,7 +153,7 @@ e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity", c
 # vacuum impedance:
 Z0 = vacuum_impedance = Quantity("vacuum_impedance", impedance, u0 * c)
 # Coulomb's constant:
-Ke=coulomb_constant = coulombs_constant = electric_force_constant = Quantity("coulomb_constant", force*length**2/charge**2, 1/(4*pi*vacuum_permittivity), abbrev="k_e")
+coulomb_constant = coulombs_constant = electric_force_constant = Quantity("coulomb_constant", force*length**2/charge**2, 1/(4*pi*vacuum_permittivity), abbrev="k_e")
 
 atmosphere = atmospheres = atm = Quantity("atmosphere", pressure, 101325 * pascal, abbrev="atm")
 
