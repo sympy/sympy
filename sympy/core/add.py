@@ -776,14 +776,16 @@ class Add(Expr, AssocOp):
         from sympy import Order
         lst = []
         symbols = list(symbols if is_sequence(symbols) else [symbols])
+
         if not point:
             point = [0]*len(symbols)
         seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
-                if o.contains(of) and o != of:
-                    of = None
-                    break
+                if(isinstance(o, Order)):
+                    if o.contains(of) and o != of:
+                        of = None
+                        break
             if of is None:
                 continue
             new_lst = [(ef, of)]
