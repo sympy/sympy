@@ -415,11 +415,11 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
 
     expression : sympy expression
 
-    reference_frame : ReferenceFrame
+    exclude : iterable of dynamicsymbols, optional
+
+    reference_frame : ReferenceFrame, optional
         The frame with respect to which the dynamic symbols of the
         given vector is to be determined.
-
-    exclude : iterable of dynamicsymbols
 
     Examples
     ========
@@ -448,9 +448,10 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     else:
         exclude_set = set()
     if isinstance(expression, Vector) and reference_frame is None :
-            raise TypeError("You must provide a reference frame when passing in a vector expression.")
+            raise ValueError("You must provide reference_frame when passing a "
+                             "vector expression, got %s." % reference_frame)
     if isinstance(expression, Vector) :
-        expression=expression.to_matrix(reference_frame)
+        expression = expression.to_matrix(reference_frame)
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
             i.free_symbols == t_set]) - exclude_set
 
