@@ -11,6 +11,7 @@ from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
+from .numbers import Zero
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -781,7 +782,7 @@ class Add(Expr, AssocOp):
         seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
-                if(isinstance(o, Order)):
+                if not isinstance(o, Zero):
                     if o.contains(of) and o != of:
                         of = None
                         break
