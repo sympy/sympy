@@ -781,6 +781,12 @@ def test_issue_12657():
     assert (x < oo).subs(list(reversed(reps))) == (x < 1)
 
 
+def test_issue_13333():
+    expr = S('R*F')
+    val = {'R':'8314.4*mjoule/(mole*kelvin)', 'F':'96484.6*(coulomb/mole)'}
+    assert str(expr.subs(val)) == '802211558.24*coulomb*mjoule/(kelvin*mole**2)'
+
+
 def test_issue_13654():
     fct = S("1/f")
     A = {"f": "(1 / 2)"}
