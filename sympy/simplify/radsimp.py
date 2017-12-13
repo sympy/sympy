@@ -530,10 +530,11 @@ def collect_const(expr, *vars, **kwargs):
     Parameters
     ==========
 
-    expr : Numbers,Symbols
-           This parameter defines the expression to be worked upon by the function.
+    expr : Sympy Expression
+           This parameter defines the expression the expression from which terms with similar
+           coefficient are to be collected. A non-Add expression is returned as it is.
 
-    *vars : Numbers,Symbols
+    *vars : Numbers,optional
             Used to specify the different number coefficients explicitly, for grouping of terms.
             Can be multiple in number.
 
@@ -545,9 +546,8 @@ def collect_const(expr, *vars, **kwargs):
     Returns
     =======
 
-    expr : Numbers,Symbols
-           Returns a collection of terms with similar number coefficients,
-           which may be Numbers or Symbols.
+    expr :  Sympy expression
+            Returns an expression with similar coefficient terms collected.
 
     Examples
     ========
