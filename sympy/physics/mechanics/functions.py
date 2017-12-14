@@ -447,11 +447,12 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
-    if isinstance(expression, Vector) and reference_frame is None :
+    if isinstance(expression, Vector):
+        if reference_frame is None:
             raise ValueError("You must provide reference_frame when passing a "
                              "vector expression, got %s." % reference_frame)
-    if isinstance(expression, Vector) :
-        expression = expression.to_matrix(reference_frame)
+        else:
+            expression = expression.to_matrix(reference_frame)
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
             i.free_symbols == t_set]) - exclude_set
 
