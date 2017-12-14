@@ -766,7 +766,7 @@ class Function(Application, Expr):
 
             else:
                 # the function defined in sympy is not known in sage
-                # this exception is catched in sage
+                # this exception is caught in sage
                 raise AttributeError
 
         return func(*args)
@@ -777,6 +777,8 @@ class AppliedUndef(Function):
     Base class for expressions resulting from the application of an undefined
     function.
     """
+
+    is_number = False
 
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
@@ -1097,6 +1099,9 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *variables, **assumptions):
 
+        from sympy.matrices.common import MatrixCommon
+        from sympy.tensor.array import NDimArray, derive_by_array
+
         expr = sympify(expr)
 
         # There are no variables, we differentiate wrt all of the free symbols
@@ -1167,13 +1172,16 @@ class Derivative(Expr):
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
-        # expression at all. Note, this cannnot check non-symbols like
+        # expression at all. Note, this cannot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
             symbol_set = set(sc[0] for sc in variable_count)
             if symbol_set.difference(expr.free_symbols):
-                return S.Zero
+                if isinstance(expr, (MatrixCommon, NDimArray)):
+                    return expr.zeros(*expr.shape)
+                else:
+                    return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.
         # If a high order of derivative is requested and the expr becomes 0
@@ -1216,6 +1224,10 @@ class Derivative(Expr):
             if unhandled_non_symbol:
                 obj = None
             else:
+                if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+                    expr = derive_by_array(expr, v)
+                    nderivs += 1
+                    continue
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
@@ -1746,6 +1758,11 @@ class Subs(Expr):
         return (self.expr.free_symbols - set(self.variables) |
             set(self.point.free_symbols))
 
+    @property
+    def expr_free_symbols(self):
+        return (self.expr.expr_free_symbols - set(self.variables) |
+            set(self.point.expr_free_symbols))
+
     def _has(self, pattern):
         if pattern in self.variables and pattern not in self.point:
             return False
@@ -1773,12 +1790,19 @@ class Subs(Expr):
             return self
 
     def _eval_derivative(self, s):
-        if s not in self.free_symbols:
-            return S.Zero
-        return Add((Subs(self.expr.diff(s), self.variables, self.point).doit()
-            if s not in self.variables else S.Zero),
-            *[p.diff(s) * Subs(self.expr.diff(v), self.variables,
-            self.point).doit() for v, p in zip(self.variables, self.point)])
+        # Apply the chain rule of the derivative on the substitution variables:
+        val = Add.fromiter(p.diff(s) * Subs(self.expr.diff(v), self.variables, self.point).doit() for v, p in zip(self.variables, self.point))
+
+        # Check if there are free symbols in `self.expr`:
+        # First get the `expr_free_symbols`, which returns the free symbols
+        # that are directly contained in an expression node (i.e. stop
+        # searching if the node isn't an expression). At this point turn the
+        # expressions into `free_symbols` and check if there are common free
+        # symbols in `self.expr` and the deriving factor.
+        fs1 = {j for i in self.expr_free_symbols for j in i.free_symbols}
+        if len(fs1 & s.free_symbols) > 0:
+            val += Subs(self.expr.diff(s), self.variables, self.point).doit()
+        return val
 
     def _eval_nseries(self, x, n, logx):
         if x in self.point:
@@ -2519,7 +2543,7 @@ def count_ops(expr, visual=False):
                     if a.q != 1:
                         ops.append(DIV)
                     continue
-            elif a.is_Mul:
+            elif a.is_Mul or a.is_MatMul:
                 if _coeff_isneg(a):
                     ops.append(NEG)
                     if a.args[0] is S.NegativeOne:
@@ -2539,7 +2563,7 @@ def count_ops(expr, visual=False):
                     ops.append(DIV)
                     args.append(n)
                     continue  # could be -Mul
-            elif a.is_Add:
+            elif a.is_Add or a.is_MatAdd:
                 aargs = list(a.args)
                 negs = 0
                 for i, ai in enumerate(aargs):

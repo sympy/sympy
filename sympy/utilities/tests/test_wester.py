@@ -14,7 +14,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
-    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
+    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Min,
     ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
@@ -2307,8 +2307,8 @@ def test_V1():
 
 
 def test_V2():
-    assert (integrate(Piecewise((-x, x < 0), (x, x >= 0)), x) ==
-            Piecewise((-x**2/2, x < 0), (x**2/2, x >= 0)))
+    assert integrate(Piecewise((-x, x < 0), (x, x >= 0)), x
+        ) == Piecewise((-x**2/2, x < 0), (x**2/2, True))
 
 
 def test_V3():
@@ -2570,10 +2570,9 @@ def test_W21():
 def test_W22():
     t, u = symbols('t u', real=True)
     s = Lambda(x, Piecewise((1, And(x >= 1, x <= 2)), (0, True)))
-    assert (integrate(s(t)*cos(t), (t, 0, u)) ==
-            Piecewise((sin(u) - sin(1), And(u <= 2, u >= 1)),
-                      (0, And(u <= 1, u >= -oo)),
-                      (-sin(1) + sin(2), True)))
+    assert integrate(s(t)*cos(t), (t, 0, u)) == Piecewise(
+        (0, u < 0),
+        (-sin(Min(1, u)) + sin(Min(2, u)), True))
 
 
 @XFAIL
@@ -2583,17 +2582,14 @@ def test_W23():
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
     assert r1.simplify() == pi*(-a + b)
 
+
 @SKIP("integrate raises RuntimeError: maximum recursion depth exceeded")
 @slow
 def test_W23b():
-    # this used to be test_W23.  Can't really split since r1 is needed
-    # in the second assert
+    # like W23 but limits are reversed
     a, b = symbols('a b', real=True, positive=True)
-    r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
-    assert r1.simplify() == pi*(-a + b)
-    # integrate raises RuntimeError: maximum recursion depth exceeded
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
-    assert r1 == r2
+    assert r2 == pi*(-a + b)
 
 
 @XFAIL
@@ -2612,8 +2608,9 @@ def test_W25():
     if ON_TRAVIS:
         skip("Too slow for travis.")
     a, x, y = symbols('a x y', real=True)
-    i1 = integrate(sin(a)*sin(y)/sqrt(1- sin(a)**2*sin(x)**2*sin(y)**2),
-                   (x, 0, pi/2))
+    i1 = integrate(
+        sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
+        (x, 0, pi/2))
     i2 = integrate(i1, (y, 0, pi/2))
     assert (i2 - pi*a/2).simplify() == 0
 

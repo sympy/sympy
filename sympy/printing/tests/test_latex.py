@@ -16,7 +16,8 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, Quaternion)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
+     UnevaluatedExpr, Quaternion)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -38,7 +39,7 @@ from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 
-x, y, z, t, a, b = symbols('x y z t a b')
+x, y, z, t, a, b, c = symbols('x y z t a b c')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -793,6 +794,8 @@ def test_latex_limits():
 
     # issue #10806
     assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
+    # bi-directional limit
+    assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
 
 
 def test_issue_3568():
@@ -891,8 +894,8 @@ def test_latex_Piecewise():
     assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\\: x \\lt 1 \\\\x^{2} &" \
                                   " \\text{otherwise} \\end{cases}"
     p = Piecewise((x, x < 0), (0, x >= 0))
-    assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &" \
-                       " \\text{for}\\: x \\geq 0 \\end{cases}"
+    assert latex(p) == '\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &' \
+                       ' \\text{otherwise} \\end{cases}'
     A, B = symbols("A B", commutative=False)
     p = Piecewise((A**2, Eq(A, B)), (A*B, True))
     s = r"\begin{cases} A^{2} & \text{for}\: A = B \\A B & \text{otherwise} \end{cases}"
@@ -942,6 +945,11 @@ def test_latex_NDimArray():
     x, y, z, w = symbols("x y z w")
 
     for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray):
+        # Basic: scalar array
+        M = ArrayType(x)
+
+        assert latex(M) == "x"
+
         M = ArrayType([[1 / x, y], [z, w]])
         M1 = ArrayType([1 / x, y, z])
 
@@ -961,7 +969,6 @@ def test_latex_NDimArray():
                 r"""\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right] & """\
                 r"""\left[\begin{matrix}\frac{w}{x} & w y\\w z & w^{2}\end{matrix}\right]"""\
                 r"""\end{matrix}\right]"""
-        assert latex(ArrayType()) == r"\left[\begin{matrix}\end{matrix}\right]"
 
         Mrow = ArrayType([[x, y, 1/z]])
         Mcolumn = ArrayType([[x], [y], [1/z]])
@@ -1332,17 +1339,17 @@ def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(Adjoint(X)) == r'X^\dag'
-    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dag'
-    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dag + Y^\dag'
-    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dag'
-    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dag X^\dag'
-    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dag'
-    assert latex(Adjoint(X)**2) == r'\left(X^\dag\right)^{2}'
-    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dag'
-    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dag\right)^{-1}'
-    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dag'
-    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dag\right)^T'
+    assert latex(Adjoint(X)) == r'X^\dagger'
+    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dagger'
+    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dagger + Y^\dagger'
+    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dagger'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dagger X^\dagger'
+    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dagger'
+    assert latex(Adjoint(X)**2) == r'\left(X^\dagger\right)^{2}'
+    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dagger'
+    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dagger\right)^{-1}'
+    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dagger'
+    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dagger\right)^T'
 
 
 def test_Hadamard():
@@ -1629,6 +1636,17 @@ def test_issue_12886():
     assert latex(m__1**2 + l__1**2) == r'\left(l^{1}\right)^{2} + \left(m^{1}\right)^{2}'
 
 
+def test_issue_13559():
+    from sympy.parsing.sympy_parser import parse_expr
+    expr = parse_expr('5/1', evaluate=False)
+    assert latex(expr) == r"\frac{5}{1}"
+
+
+def test_issue_13651():
+    expr = c + Mul(-1, a + b, evaluate=False)
+    assert latex(expr) == r"c - \left(a + b\right)"
+
+
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
     he = UnevaluatedExpr(1/x)
@@ -1658,3 +1676,17 @@ def test_Quaternion_latex_printing():
     assert latex(q) == "x + y i + z j + t x k"
     q = Quaternion(x,y,z,x+t)
     assert latex(q) == r"x + y i + z j + \left(t + x\right) k"
+
+
+def test_TensorProduct_printing():
+    from sympy.tensor.functions import TensorProduct
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    assert latex(TensorProduct(A, B)) == r"A \otimes B"
+
+
+def test_WedgeProduct_printing():
+    from sympy.diffgeom.rn import R2
+    from sympy.diffgeom import WedgeProduct
+    wp = WedgeProduct(R2.dx, R2.dy)
+    assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"

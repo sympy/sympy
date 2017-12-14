@@ -1,6 +1,7 @@
 from sympy.algebras.quaternion import Quaternion
 from sympy import symbols, re, im, Add, Mul, I, Abs
 from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E, pi
+from sympy.utilities.pytest import raises
 from sympy import Matrix
 from sympy import diff, integrate, trigsimp
 from sympy import S, Rational
@@ -50,11 +51,13 @@ def test_quaternion_complex_real_addition():
 def test_quaternion_functions():
     q = Quaternion(x, y, z, w)
     q1 = Quaternion(1, 2, 3, 4)
+    q0 = Quaternion(0, 0, 0, 0)
 
     assert conjugate(q) == Quaternion(x, -y, -z, -w)
     assert q.norm() == sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.normalize() == Quaternion(x, y, z, w) / sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
+    raises(ValueError, lambda: q0.inverse())
     assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
 
     assert q1.exp() == \
@@ -111,7 +114,7 @@ def test_quaternion_conversions():
                                    2*acos(cos(theta/2)))
 
     assert trigsimp(q2.to_rotation_matrix((1, 1, 1))) == Matrix([
-               [cos(theta), -sin(theta), 0, -sqrt(2)*cos(theta + pi/4) + 1],
-               [sin(theta),  cos(theta), 0, -sqrt(2)*sin(theta + pi/4) + 1],
-               [0,           0,          1,  0                            ],
-               [0,           0,          0,  1                            ]])
+               [cos(theta), -sin(theta), 0, sin(theta) - cos(theta) + 1],
+               [sin(theta),  cos(theta), 0, -sin(theta) - cos(theta) + 1],
+               [0,           0,          1,  0],
+               [0,           0,          0,  1]])

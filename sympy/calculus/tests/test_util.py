@@ -336,19 +336,26 @@ def test_AccumBounds_pow():
 def test_comparison_AccumBounds():
     assert (AccumBounds(1, 3) < 4) == S.true
     assert (AccumBounds(1, 3) < -1) == S.false
-    assert (AccumBounds(1, 3) < 2) is None
+    assert (AccumBounds(1, 3) < 2).rel_op == '<'
+    assert (AccumBounds(1, 3) <= 2).rel_op == '<='
 
     assert (AccumBounds(1, 3) > 4) == S.false
     assert (AccumBounds(1, 3) > -1) == S.true
-    assert (AccumBounds(1, 3) > 2) is None
+    assert (AccumBounds(1, 3) > 2).rel_op == '>'
+    assert (AccumBounds(1, 3) >= 2).rel_op == '>='
 
     assert (AccumBounds(1, 3) < AccumBounds(4, 6)) == S.true
-    assert (AccumBounds(1, 3) < AccumBounds(2, 4)) is None
+    assert (AccumBounds(1, 3) < AccumBounds(2, 4)).rel_op == '<'
     assert (AccumBounds(1, 3) < AccumBounds(-2, 0)) == S.false
 
+    # issue 13499
+    assert (cos(x) > 0).subs(x, oo) == (AccumBounds(-1, 1) > 0)
 
 def test_contains_AccumBounds():
     assert (1 in AccumBounds(1, 2)) == S.true
     raises(TypeError, lambda: a in AccumBounds(1, 2))
+    assert 0 in AccumBounds(-1, 0)
+    raises(TypeError, lambda:
+        (cos(1)**2 + sin(1)**2 - 1) in AccumBounds(-1, 0))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true

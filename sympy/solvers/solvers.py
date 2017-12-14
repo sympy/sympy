@@ -2301,7 +2301,7 @@ def solve_linear_system(system, *symbols, **flags):
                     return dict()
                 continue
 
-            # we want to change the order of colums so
+            # we want to change the order of columns so
             # the order of variables must also change
             syms[i], syms[k] = syms[k], syms[i]
             matrix.col_swap(i, k)

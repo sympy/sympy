@@ -303,6 +303,8 @@ class Quaternion(Expr):
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
+        if not q.norm():
+            raise ValueError("Cannot compute inverse for a quaternion with zero norm")
         return conjugate(q) * (1/q.norm()**2)
 
     def pow(self, p):
@@ -504,10 +506,10 @@ class Quaternion(Expr):
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
         >>> trigsimp(q.to_rotation_matrix((1, 1, 1)))
          Matrix([
-        [cos(x), -sin(x), 0, -sqrt(2)*cos(x + pi/4) + 1],
-        [sin(x),  cos(x), 0, -sqrt(2)*sin(x + pi/4) + 1],
-        [     0,       0, 1,                          0],
-        [     0,       0, 0,                          1]])
+        [cos(x), -sin(x), 0,  sin(x) - cos(x) + 1],
+        [sin(x),  cos(x), 0, -sin(x) - cos(x) + 1],
+        [     0,       0, 1,                    0],
+        [     0,       0, 0,                    1]])
         """
 
         q = self

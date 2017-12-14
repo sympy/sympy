@@ -90,6 +90,8 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Matrix = False
     is_Vector = False
     is_Point = False
+    is_MatAdd = False
+    is_MatMul = False
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -495,6 +497,10 @@ class Basic(with_metaclass(ManagedProperties)):
         return set().union(*[a.free_symbols for a in self.args])
 
     @property
+    def expr_free_symbols(self):
+        return set([])
+
+    @property
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
         ``self.variables`` as underscore-suffixed numbers
@@ -514,7 +520,7 @@ class Basic(with_metaclass(ManagedProperties)):
         if not hasattr(self, 'variables'):
             return {}
         u = "_"
-        while any(s.name.endswith(u) for s in self.free_symbols):
+        while any(str(s).endswith(u) for s in self.free_symbols):
             u += "_"
         name = '%%i%s' % u
         V = self.variables
@@ -594,12 +600,13 @@ class Basic(with_metaclass(ManagedProperties)):
         is_real = self.is_real
         if is_real is False:
             return False
-        is_number = self.is_number
-        if is_number is False:
+        if not self.is_number:
             return False
+        # don't re-eval numbers that are already evaluated since
+        # this will create spurious precision
         n, i = [p.evalf(2) if not p.is_Number else p
             for p in self.as_real_imag()]
-        if not i.is_Number or not n.is_Number:
+        if not (i.is_Number and n.is_Number):
             return False
         if i:
             # if _prec = 1 we can't decide and if not,

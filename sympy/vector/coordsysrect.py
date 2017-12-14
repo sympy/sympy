@@ -42,7 +42,7 @@ class CoordSys3D(Basic):
             The name of the new CoordSys3D instance.
 
         transformation : Lambda, Tuple, str
-            Transformation defined by transformation equations or choosen
+            Transformation defined by transformation equations or chosen
             from predefined ones.
 
         location : Vector
@@ -997,7 +997,7 @@ class CoordSys3D(Basic):
             The name of the new CoordSys3D instance.
 
         transformation : Lambda, Tuple, str
-            Transformation defined by transformation equations or choosen
+            Transformation defined by transformation equations or chosen
             from predefined ones.
 
         vector_names, variable_names : iterable(optional)
@@ -1048,9 +1048,6 @@ def _check_strings(arg_name, arg):
     errorstr = arg_name + " must be an iterable of 3 string-types"
     if len(arg) != 3:
         raise ValueError(errorstr)
-    try:
-        for s in arg:
-            if not isinstance(s, string_types):
-                raise TypeError(errorstr)
-    except:
-        raise TypeError(errorstr)
+    for s in arg:
+        if not isinstance(s, string_types):
+            raise TypeError(errorstr)

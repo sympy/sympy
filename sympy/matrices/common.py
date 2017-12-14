@@ -56,7 +56,7 @@ class MatrixRequired(object):
         raise NotImplementedError("Subclasses must implement this.")
 
     def __eq__(self, other):
-        raise NotImplementedError("Subclasses must impliment this.")
+        raise NotImplementedError("Subclasses must implement this.")
 
     def __getitem__(self, key):
         """Implementations of __getitem__ should accept ints, in which
@@ -86,7 +86,7 @@ class MatrixShaping(MatrixRequired):
                 return self[i, j]
             elif pos <= j < pos + other.cols:
                 return other[i, j - pos]
-            return self[i, j - pos - other.cols]
+            return self[i, j - other.cols]
 
         return self._new(self.rows, self.cols + other.cols,
                          lambda i, j: entry(i, j))
@@ -736,7 +736,7 @@ class MatrixSpecial(MatrixRequired):
         rows = kwargs.get('rows', diag_rows)
         cols = kwargs.get('cols', diag_cols)
         if rows < diag_rows or cols < diag_cols:
-            raise ValueError("A {} x {} diagnal matrix cannot accomodate a"
+            raise ValueError("A {} x {} diagnal matrix cannot accommodate a"
                              "diagonal of size at least {} x {}.".format(rows, cols,
                                                                          diag_rows, diag_cols))
 
@@ -1881,6 +1881,10 @@ class MatrixOperations(MatrixRequired):
 
     _eval_simplify = simplify
 
+    def _eval_trigsimp(self, **opts):
+        from sympy.simplify import trigsimp
+        return self.applyfunc(lambda x: trigsimp(x, **opts))
+
 
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.
@@ -2130,7 +2134,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    pass
+    _diff_wrt = True
 
 
 class _MinimalMatrix(object):

@@ -605,7 +605,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         # TODO: Currently it's better to use symbolic expressions here instead
         # of rational functions, because it's simpler and FracElement doesn't
-        # give big speed improvement yet. This is because cancelation is slow
+        # give big speed improvement yet. This is because cancellation is slow
         # due to slow polynomial GCD algorithms. If this gets improved then
         # revise this code.
         candidate = poly_part/poly_denom + Add(*log_part)

@@ -967,34 +967,14 @@ class Ei(Function):
     If the integral is interpreted as a Cauchy principal value, this statement
     holds for `x > 0` and `\operatorname{Ei}(x)` as defined above.
 
-    Note that we carefully avoided defining `\operatorname{Ei}(x)` for
-    negative real `x`. This is because above integral formula does not hold for
-    any polar lift of such `x`, indeed all branches of
-    `\operatorname{Ei}(x)` above the negative reals are imaginary.
-
-    However, the following statement holds for all `x \in \mathbb{R}^*`:
-
-    .. math:: \int_{-\infty}^x \frac{e^t}{t} \mathrm{d}t =
-              \frac{\operatorname{Ei}\left(|x|e^{i \arg(x)}\right) +
-                    \operatorname{Ei}\left(|x|e^{- i \arg(x)}\right)}{2},
-
-    where the integral is again understood to be a principal value if
-    `x > 0`, and `|x|e^{i \arg(x)}`,
-    `|x|e^{- i \arg(x)}` denote two conjugate polar lifts of `x`.
-
     Examples
     ========
 
     >>> from sympy import Ei, polar_lift, exp_polar, I, pi
     >>> from sympy.abc import x
 
-    The exponential integral in SymPy is strictly undefined for negative values
-    of the argument. For convenience, exponential integrals with negative
-    arguments are immediately converted into an expression that agrees with
-    the classical integral definition:
-
     >>> Ei(-1)
-    -I*pi + Ei(exp_polar(I*pi))
+    Ei(-1)
 
     This yields a real value:
 
@@ -1057,9 +1037,6 @@ class Ei(Function):
         elif z is S.NegativeInfinity:
             return S.Zero
 
-        if not z.is_polar and z.is_negative:
-            # Note: is this a good idea?
-            return Ei(polar_lift(z)) - pi*I
         nz, n = z.extract_branch_factor()
         if n:
             return Ei(nz) + 2*I*pi*n

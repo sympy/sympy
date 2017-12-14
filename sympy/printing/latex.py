@@ -256,6 +256,8 @@ class LatexPrinter(Printer):
             return True
         if any([expr.has(x) for x in (Mod,)]):
             return True
+        if expr.is_Add:
+            return True
         return False
 
 
@@ -372,6 +374,7 @@ class LatexPrinter(Printer):
         return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
+        from sympy.core.power import Pow
         include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
@@ -416,10 +419,11 @@ class LatexPrinter(Printer):
                     last_term_tex = term_tex
                 return _tex
 
-        if denom is S.One:
+        if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
             # use the original expression here, since fraction() may have
             # altered it when producing numer and denom
             tex += convert(expr)
+
         else:
             snumer = convert(numer)
             sdenom = convert(denom)
@@ -677,7 +681,7 @@ class LatexPrinter(Printer):
         e, z, z0, dir = expr.args
 
         tex = r"\lim_{%s \to " % self._print(z)
-        if z0 in (S.Infinity, S.NegativeInfinity):
+        if str(dir) == '+-' or z0 in (S.Infinity, S.NegativeInfinity):
             tex += r"%s}" % self._print(z0)
         else:
             tex += r"%s^%s}" % (self._print(z0), self._print(dir))
@@ -1424,9 +1428,9 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^\dag" % self._print(mat)
+            return r"\left(%s\right)^\dagger" % self._print(mat)
         else:
-            return r"%s^\dag" % self._print(mat)
+            return r"%s^\dagger" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         terms = list(expr.args)
@@ -1473,6 +1477,9 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}"
 
     def _print_NDimArray(self, expr):
+
+        if expr.rank() == 0:
+            return self._print(expr[()])
 
         mat_str = self._settings['mat_str']
         if mat_str is None:
@@ -1526,6 +1533,14 @@ class LatexPrinter(Printer):
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
             r", \quad ".join([ self._print(i) for i in expr ])
+
+    def _print_TensorProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \otimes '.join(elements)
+
+    def _print_WedgeProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \wedge '.join(elements)
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)

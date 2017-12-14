@@ -2194,7 +2194,7 @@ def odesimp(eq, func, order, constants, hint):
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When CRootOf is implemented in solve(), we will want to return a CRootOf
-    # everytime instead of an Equality.
+    # every time instead of an Equality.
 
     # Get the f(x) on the left if possible.
     if eq.rhs == func and not eq.lhs.has(func):
@@ -5217,7 +5217,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
         wr = simplify(wr)  # We need much better simplification for
                            # some ODEs. See issue 4662, for example.
 
-        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
+        # To reduce commonly occurring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly
@@ -5408,7 +5408,7 @@ def ode_lie_group(eq, func, order, match):
                  \frac{\partial r}{\partial x} + h(x, y)\frac{\partial r}{\partial y}}
 
     After finding the solution by integration, it is then converted back to the original
-    coordinate system by subsituting `r` and `s` in terms of `x` and `y` again.
+    coordinate system by substituting `r` and `s` in terms of `x` and `y` again.
 
     Examples
     ========
@@ -6581,7 +6581,7 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
 
     .. math:: y = C_1 (\lambda_1 - a) e^{\lambda_1 t} + C_2 (\lambda_2 - a) e^{\lambda_2 t}
 
-    where `C_1` and `C_2` being arbitary constants
+    where `C_1` and `C_2` being arbitrary constants
 
     1.2. If `D < 0`. The characteristics equation has two conjugate
     roots, `\lambda_1 = \sigma + i \beta` and `\lambda_2 = \sigma - i \beta`.
@@ -6607,7 +6607,7 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
     .. math:: x = (b C_1 t + C_2) e^{a t} , y = C_1 e^{a t}
 
     2. Case when `ad - bc = 0` and `a^{2} + b^{2} > 0`. The whole straight
-    line `ax + by = 0` consists of singular points. The orginal system of differential
+    line `ax + by = 0` consists of singular points. The original system of differential
     equaitons can be rewritten as
 
     .. math:: x' = ax + by , y' = k (ax + by)
@@ -6732,7 +6732,7 @@ def _linear_2eq_order1_type3(x, y, t, r, eq):
 
     .. math:: x = e^{F} (C_1 e^{G} + C_2 e^{-G}) , y = e^{F} (C_1 e^{G} - C_2 e^{-G})
 
-    where `C_1` and `C_2` are arbitary constants, and
+    where `C_1` and `C_2` are arbitrary constants, and
 
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
@@ -6756,7 +6756,7 @@ def _linear_2eq_order1_type4(x, y, t, r, eq):
 
     .. math:: x = F (C_1 \cos(G) + C_2 \sin(G)), y = F (-C_1 \sin(G) + C_2 \cos(G))
 
-    where `C_1` and `C_2` are arbitary constants, and
+    where `C_1` and `C_2` are arbitrary constants, and
 
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
@@ -6891,7 +6891,7 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
 
     .. math:: y = C_1 y_0(t) + C_2 [\frac{F(t) P(t)}{x_0(t)} + y_0(t) \int \frac{g(t) F(t) P(t)}{x_0^{2}(t)} \,dt]
 
-    where C1 and C2 are arbitary constants and
+    where C1 and C2 are arbitrary constants and
 
     .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
 
@@ -6998,7 +6998,7 @@ def _linear_2eq_order2_type1(x, y, t, r, eq):
 
     .. math:: y = C_1 (\lambda_1^{2} - a) e^{\lambda_1 t} + C_2 (\lambda_2^{2} - a) e^{\lambda_2 t} + C_3 (\lambda_3^{2} - a) e^{\lambda_3 t} + C_4 (\lambda_4^{2} - a) e^{\lambda_4 t}
 
-    where `C_1,..., C_4` are arbitary constants.
+    where `C_1,..., C_4` are arbitrary constants.
 
     1.2. If `D = 0` and `a \neq d`:
 
@@ -7006,7 +7006,7 @@ def _linear_2eq_order2_type1(x, y, t, r, eq):
 
     .. math:: y = C_1 (d - a) t e^{\frac{kt}{2}} + C_2 (d - a) t e^{\frac{-kt}{2}} + C_3 [(d - a) t + 2k] e^{\frac{kt}{2}} + C_4 [(d - a) t - 2k] e^{\frac{-kt}{2}}
 
-    where `C_1,..., C_4` are arbitary constants and `k = \sqrt{2 (a + d)}`
+    where `C_1,..., C_4` are arbitrary constants and `k = \sqrt{2 (a + d)}`
 
     1.3. If `D = 0` and `a = d \neq 0` and `b = 0`:
 
@@ -7241,7 +7241,7 @@ def _linear_2eq_order2_type4(x, y, t, r, eq):
 
 def _linear_2eq_order2_type5(x, y, t, r, eq):
     r"""
-    The equation which come under this catagory are
+    The equation which come under this category are
 
     .. math:: x'' = a (t y' - y)
 
@@ -7269,7 +7269,7 @@ def _linear_2eq_order2_type5(x, y, t, r, eq):
 
     .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\frac{1}{2} \sqrt{\left|ab\right|} t^2) + C_2 \sqrt{\left|ab\right|} \cos(-\frac{1}{2} \sqrt{\left|ab\right|} t^2)
 
-    where `C_1` and `C_2` are arbitary constants. On substituting the value of `u` and `v`
+    where `C_1` and `C_2` are arbitrary constants. On substituting the value of `u` and `v`
     in above equations and integrating the resulting expressions, the general solution will become
 
     .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
@@ -7382,7 +7382,7 @@ def _linear_2eq_order2_type7(x, y, t, r, eq):
 
 def _linear_2eq_order2_type8(x, y, t, r, eq):
     r"""
-    The equation of this catagory are
+    The equation of this category are
 
     .. math:: x'' = a f(t) (t y' - y)
 
@@ -7410,7 +7410,7 @@ def _linear_2eq_order2_type8(x, y, t, r, eq):
 
     .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\sqrt{\left|ab\right|} \int t f(t) \,dt) + C_2 \sqrt{\left|ab\right|} \cos(-\sqrt{\left|ab\right|} \int t f(t) \,dt)
 
-    where `C_1` and `C_2` are arbitary constants. On substituting the value of `u` and `v`
+    where `C_1` and `C_2` are arbitrary constants. On substituting the value of `u` and `v`
     in above equations and integrating the resulting expressions, the general solution will become
 
     .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
@@ -7495,7 +7495,7 @@ def _linear_2eq_order2_type9(x, y, t, r, eq):
 
 def _linear_2eq_order2_type10(x, y, t, r, eq):
     r"""
-    The equation of this catagory are
+    The equation of this category are
 
     .. math:: (\alpha t^2 + \beta t + \gamma)^{2} x'' = ax + by
 
@@ -7695,7 +7695,7 @@ def _linear_3eq_order1_type3(x, y, z, t, r, eq):
 
     .. math:: a^2 x + b^2 y + c^2 z = A
 
-    where A is an arbitary constant. It follows that the integral lines are plane curves.
+    where A is an arbitrary constant. It follows that the integral lines are plane curves.
 
     2. Solution:
 
@@ -7789,7 +7789,7 @@ def _linear_neq_order1_type1(match_):
     .. math:: r \vec{v} = A \vec{v}
 
     where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
-    of `A` corresponding to `r`. There are three possiblities of eigenvalues of `A`
+    of `A` corresponding to `r`. There are three possibilities of eigenvalues of `A`
 
     - `n` distinct real eigenvalues
     - complex conjugate eigenvalues
@@ -8193,18 +8193,9 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
     x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
     y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
-    try:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x).rhs
-    except:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x, hint='separable_Integral')
-    try:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y).rhs
-    except:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y, hint='separable_Integral')
-    try:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z).rhs
-    except:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z, hint='separable_Integral')
+    sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x)
+    sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y)
+    sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z)
     return [sol1, sol2, sol3]
 
 
@@ -8258,18 +8249,9 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
     x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
     y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
-    try:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f]).rhs
-    except:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f], hint='separable_Integral')
-    try:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f]).rhs
-    except:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f], hint='separable_Integral')
-    try:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f]).rhs
-    except:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
+    sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f])
+    sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f])
+    sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f])
     return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type3(x, y, z, t, eq):

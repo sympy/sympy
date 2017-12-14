@@ -501,7 +501,7 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calulate exact roots of a solvable quintic
+    Calculate exact roots of a solvable quintic
     """
     result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()

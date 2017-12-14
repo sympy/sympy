@@ -17,6 +17,7 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
+from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -169,7 +170,7 @@ class Set(Basic):
 
     def complement(self, universe):
         r"""
-        The complement of 'self' w.r.t the given the universe.
+        The complement of 'self' w.r.t the given universe.
 
         Examples
         ========
@@ -193,9 +194,9 @@ class Set(Basic):
             # We can conveniently represent these options easily using a
             # ProductSet
 
-            # XXX: this doesn't work if the dimentions of the sets isn't same.
+            # XXX: this doesn't work if the dimensions of the sets isn't same.
             # A - B is essentially same as A if B has a different
-            # dimentionality than A
+            # dimensionality than A
             switch_sets = ProductSet(FiniteSet(o, o - s) for s, o in
                                      zip(self.sets, other.sets))
             product_sets = (ProductSet(*set) for set in switch_sets)
@@ -216,7 +217,17 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if self.contains(el) != True])
+            from sympy.utilities.iterables import sift
+
+            def ternary_sift(el):
+                contains = self.contains(el)
+                return contains if contains in [True, False] else None
+
+            sifted = sift(other, ternary_sift)
+            # ignore those that are contained in self
+            return Union(FiniteSet(*(sifted[False])),
+                Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
+                if sifted[None] else S.EmptySet)
 
     def symmetric_difference(self, other):
         """
@@ -1420,8 +1431,11 @@ class Union(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         try:
             return Union(set._eval_evalf(prec) for set in self.args)
-        except Exception:
-            raise TypeError("Not all sets are evalf-able")
+        except (TypeError, ValueError, NotImplementedError):
+            import sys
+            raise (TypeError("Not all sets are evalf-able"),
+                   None,
+                   sys.exc_info()[2])
 
     def __iter__(self):
         import itertools
@@ -1548,15 +1562,13 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
-        from sympy.utilities.iterables import sift
 
-        sifted = sift(args, lambda x: x.is_FiniteSet)
-        fs_args = sifted.pop(True, [])
+        fs_args, other = sift(args, lambda x: x.is_FiniteSet,
+            binary=True)
         if not fs_args:
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
-        other = sifted.pop(False, [])
 
         res = []
         unk = []

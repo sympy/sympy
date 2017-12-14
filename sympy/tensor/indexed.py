@@ -315,6 +315,10 @@ class Indexed(Expr):
         else:
             return indices_free_symbols
 
+    @property
+    def expr_free_symbols(self):
+        return {self}
+
 
 class IndexedBase(Expr, NotIterable):
     """Represent the base or stem of an indexed object

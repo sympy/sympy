@@ -359,27 +359,53 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if ``self`` has no free symbols.
-        It will be faster than ``if not self.free_symbols``, however, since
-        ``is_number`` will fail as soon as it hits a free symbol.
+        """Returns True if ``self`` has no free symbols and no
+        undefined functions (AppliedUndef, to be precise). It will be
+        faster than ``if not self.free_symbols``, however, since
+        ``is_number`` will fail as soon as it hits a free symbol
+        or undefined function.
 
         Examples
         ========
 
-        >>> from sympy import log, Integral
+        >>> from sympy import log, Integral, cos, sin, pi
+        >>> from sympy.core.function import Function
         >>> from sympy.abc import x
+        >>> f = Function('f')
 
         >>> x.is_number
         False
+        >>> f(1).is_number
+        False
         >>> (2*x).is_number
         False
-        >>> (2 + log(2)).is_number
-        True
         >>> (2 + Integral(2, x)).is_number
         False
         >>> (2 + Integral(2, (x, 1, 2))).is_number
         True
 
+        Not all numbers are Numbers in the SymPy sense:
+
+        >>> pi.is_number, pi.is_Number
+        (True, False)
+
+        If something is a number it should evaluate to a number with
+        real and imaginary parts that are Numbers; the result may not
+        be comparable, however, since the real and/or imaginary part
+        of the result may not have precision.
+
+        >>> cos(1).is_number and cos(1).is_comparable
+        True
+
+        >>> z = cos(1)**2 + sin(1)**2 - 1
+        >>> z.is_number
+        True
+        >>> z.is_comparable
+        False
+
+        See Also
+        ========
+        sympy.core.basic.is_comparable
         """
         return all(obj.is_number for obj in self.args)
 
@@ -531,20 +557,11 @@ class Expr(Basic, EvalfMixin):
 
         simplify = flags.get('simplify', True)
 
-        # Except for expressions that contain units, only one of these should
-        # be necessary since if something is
-        # known to be a number it should also know that there are no
-        # free symbols. But is_number quits as soon as it hits a non-number
-        # whereas free_symbols goes until all free symbols have been collected,
-        # thus is_number should be faster. But a double check on free symbols
-        # is made just in case there is a discrepancy between the two.
-        free = self.free_symbols
-        if self.is_number or not free:
-            # if the following assertion fails then that object's free_symbols
-            # method needs attention: if an expression is a number it cannot
-            # have free symbols
-            assert not free
+        if self.is_number:
             return True
+        free = self.free_symbols
+        if not free:
+            return True  # assume f(1) is some constant
 
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
@@ -1093,7 +1110,7 @@ class Expr(Basic, EvalfMixin):
         self is treated as a Mul and the ordering of the factors is maintained.
         If ``cset`` is True the commutative factors will be returned in a set.
         If there were repeated factors (as may happen with an unevaluated Mul)
-        then an error will be raised unless it is explicitly supressed by
+        then an error will be raised unless it is explicitly suppressed by
         setting ``warn`` to False.
 
         Note: -1 is always separated from a Number unless split_1 is False.
@@ -1302,8 +1319,8 @@ class Expr(Basic, EvalfMixin):
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
-            the first occurance from the left is returned, else the last
-            occurance is returned. Return None if sub is not in l.
+            the first occurrence from the left is returned, else the last
+            occurrence is returned. Return None if sub is not in l.
 
             >> l = range(5)*2
             >> find(l, [2, 3])
@@ -2185,6 +2202,30 @@ class Expr(Basic, EvalfMixin):
             coeffs.append((cot + xa)*at)
         coeffs.append(self)
         return Add(*coeffs)
+
+    @property
+    def expr_free_symbols(self):
+        """
+        Like ``free_symbols``, but returns the free symbols only if they are contained in an expression node.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> (x + y).expr_free_symbols
+        {x, y}
+
+        If the expression is contained in a non-expression object, don't return
+        the free symbols. Compare:
+
+        >>> from sympy import Tuple
+        >>> t = Tuple(x + y)
+        >>> t.expr_free_symbols
+        set()
+        >>> t.free_symbols
+        {x, y}
+        """
+        return {j for i in self.args for j in i.expr_free_symbols}
 
     def could_extract_minus_sign(self):
         """Return True if self is not in a canonical form with respect
@@ -3322,6 +3363,10 @@ class AtomicExpr(Atom, Expr):
     def _eval_nseries(self, x, n, logx):
         return self
 
+    @property
+    def expr_free_symbols(self):
+        return {self}
+
 
 def _mag(x):
     """Return integer ``i`` such that .1 <= x/10**i < 1
@@ -3383,12 +3428,10 @@ class UnevaluatedExpr(Expr):
 
 
 def _n2(a, b):
-    """Return (a - b).evalf(2) if it, a and b are comparable, else None.
+    """Return (a - b).evalf(2) if a and b are comparable, else None.
     This should only be used when a and b are already sympified.
     """
-    if not all(i.is_number for i in (a, b)):
-        return
-    # /!\ if is very important (see issue 8245) not to
+    # /!\ it is very important (see issue 8245) not to
     # use a re-evaluated number in the calculation of dif
     if a.is_comparable and b.is_comparable:
         dif = (a - b).evalf(2)
