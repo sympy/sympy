@@ -4,6 +4,14 @@
 This file contains some classical ciphers and routines
 implementing a linear-feedback shift register (LFSR)
 and the Diffie-Hellman key exchange.
+
+.. warning::
+
+   This module is intended for educational purposes only. Do not use the
+   functions in this module for real cryptographic applications. If you wish
+   to encrypt real data, we recommend using something like the `cryptography
+   <https://cryptography.io/en/latest/>`_ module.
+
 """
 
 from __future__ import print_function
@@ -1935,7 +1943,7 @@ def dh_private_key(digit=10, seed=None):
     =======
 
     (p, g, a) : p = prime number, g = primitive root of p,
-                a = random number from 2 thru p - 1
+                a = random number from 2 through p - 1
 
     Notes
     =====

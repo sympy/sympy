@@ -314,7 +314,7 @@ class FinitePSpace(PSpace):
         cdf = self.sorted_cdf(expr, python_float=True)
 
         x = random.uniform(0, 1)
-        # Find first occurence with cumulative probability less than x
+        # Find first occurrence with cumulative probability less than x
         # This should be replaced with binary search
         for value, cum_prob in cdf:
             if x < cum_prob:

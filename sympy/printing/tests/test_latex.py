@@ -16,7 +16,8 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, Quaternion)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
+     UnevaluatedExpr, Quaternion)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -38,7 +39,7 @@ from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 
-x, y, z, t, a, b = symbols('x y z t a b')
+x, y, z, t, a, b, c = symbols('x y z t a b c')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -1338,17 +1339,17 @@ def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(Adjoint(X)) == r'X^\dag'
-    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dag'
-    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dag + Y^\dag'
-    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dag'
-    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dag X^\dag'
-    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dag'
-    assert latex(Adjoint(X)**2) == r'\left(X^\dag\right)^{2}'
-    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dag'
-    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dag\right)^{-1}'
-    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dag'
-    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dag\right)^T'
+    assert latex(Adjoint(X)) == r'X^\dagger'
+    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dagger'
+    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dagger + Y^\dagger'
+    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dagger'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dagger X^\dagger'
+    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dagger'
+    assert latex(Adjoint(X)**2) == r'\left(X^\dagger\right)^{2}'
+    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dagger'
+    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dagger\right)^{-1}'
+    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dagger'
+    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dagger\right)^T'
 
 
 def test_Hadamard():
@@ -1639,6 +1640,11 @@ def test_issue_13559():
     from sympy.parsing.sympy_parser import parse_expr
     expr = parse_expr('5/1', evaluate=False)
     assert latex(expr) == r"\frac{5}{1}"
+
+
+def test_issue_13651():
+    expr = c + Mul(-1, a + b, evaluate=False)
+    assert latex(expr) == r"c - \left(a + b\right)"
 
 
 def test_latex_UnevaluatedExpr():
