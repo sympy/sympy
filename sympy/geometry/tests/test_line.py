@@ -76,13 +76,7 @@ def test_arbitrary_point():
     assert Segment3D(Point3D(x1, x1, x1), Point3D(y1, y1, y1)).length == sqrt(3) * sqrt((x1 - y1) ** 2)
     assert Segment3D((1, 1, 1), (2, 3, 4)).arbitrary_point() == \
            Point3D(t + 1, 2 * t + 1, 3 * t + 1)
-    try:
-        Line((x,1),(2,3)).arbitrary_point(x)
-    except ValueError:
-        assert True
-    except BaseException:
-        assert False
-
+    raises(ValueError, (lambda: Line((x,1),(2,3)).arbitrary_point(x)))
 
 def test_are_concurrent_2d():
     l1 = Line(Point(0, 0), Point(1, 1))
