@@ -11,7 +11,6 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
-from sympy.matrices.immutable import ImmutableDenseMatrix
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -450,7 +449,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     if isinstance(expression, Vector):
         if reference_frame is None:
             raise ValueError("You must provide reference_frame when passing a "
-                             "vector expression, got %s." % reference_frame)
+                             "vector expression, got %s." % reference_frame")
         else:
             expression = expression.to_matrix(reference_frame)
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
