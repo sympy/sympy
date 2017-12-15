@@ -5,7 +5,7 @@ class LaTeXSyntaxError(Exception):
     pass
 
 
-def parse_latex(latex_str):
+def parse_latex(latex_str, parser="antlr", debug=False):
     """ Generate a SymPy Expression from a LaTeX math string.
 
     Examples
@@ -18,5 +18,9 @@ def parse_latex(latex_str):
     >>> parse_latex("a + \\sin b")
     a + sin(b)
     """
-    from ._latex import (parse_latex as _parse_latex)
+    if parser == "ply":
+        from ._latex._ply.parser import parse_latex as _parse_latex
+    elif parser == "antlr":
+        from ._latex._parse_latex_antlr import parse_latex as _parse_latex
+
     return _parse_latex(latex_str)

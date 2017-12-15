@@ -6,12 +6,12 @@ from sympy.external import import_module
 from sympy.printing.str import StrPrinter
 from sympy.parsing.latex import LaTeXSyntaxError
 
-__all__ = ['parse_latex_antlr']
+__all__ = ['parse_latex']
 
 _parse_implementation = None
 
 
-def parse_latex_antlr(latex_str):
+def parse_latex(latex_str, debug=False):
     global _parse_implementation
     if _parse_implementation is None:
         _parse_implementation = _parse_func()

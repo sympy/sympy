@@ -34,6 +34,7 @@ import subprocess
 import os
 import shutil
 import glob
+import re
 
 mpmath_version = '0.19'
 
@@ -360,7 +361,10 @@ class antlr(Command):
                         """    try:\n"""
                         )
                     [fp.write(
-                        """        {}""".format(line) if
+                        re.sub(
+                            r'[ ]*$', '',
+                            """        {}""".format(line)
+                        ) if
                         bad_star not in line else
                         """        from antlr4 import (\n"""
                         """            {}\n"""
@@ -369,8 +373,8 @@ class antlr(Command):
                         )
                     ) for line in lines if line.strip() not in drop_lines]
                     fp.write(
-                        """    except Exception as err:\n"""
-                        """        print(err)\n"""
+                        """    except:\n"""
+                        """        print("Some error occured")\n"""
                         """    return locals()\n"""
                     )
 

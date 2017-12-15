@@ -45,8 +45,8 @@ def _importer():
         )
         from io import StringIO
         import sys
-        
-        
+
+
         def serializedATN():
             with StringIO() as buf:
                 buf.write(u"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\2")
@@ -259,14 +259,14 @@ def _importer():
                 buf.write(u"\2\u01e7x\3\2\2\2\17\2~\u00d4\u0199\u01a1\u01a3\u01ac")
                 buf.write(u"\u01b5\u01bb\u01c5\u01cc\u01ce\u01e6\3\b\2\2")
                 return buf.getvalue()
-        
-        
+
+
         class LaTeXLexer(Lexer):
-        
+
             atn = ATNDeserializer().deserialize(serializedATN())
-        
+
             decisionsToDFA = [ DFA(ds, i) for i, ds in enumerate(atn.decisionToState) ]
-        
+
             T__0 = 1
             WS = 2
             ADD = 3
@@ -324,58 +324,58 @@ def _importer():
             GTE = 55
             BANG = 56
             SYMBOL = 57
-        
+
             channelNames = [ u"DEFAULT_TOKEN_CHANNEL", u"HIDDEN" ]
-        
+
             modeNames = [ u"DEFAULT_MODE" ]
-        
+
             literalNames = [ u"<INVALID>",
-                    u"','", u"'+'", u"'-'", u"'*'", u"'/'", u"'('", u"')'", u"'{'", 
-                    u"'}'", u"'['", u"']'", u"'|'", u"'\\lim'", u"'\\int'", u"'\\sum'", 
-                    u"'\\prod'", u"'\\log'", u"'\\ln'", u"'\\sin'", u"'\\cos'", 
-                    u"'\\tan'", u"'\\csc'", u"'\\sec'", u"'\\cot'", u"'\\arcsin'", 
-                    u"'\\arccos'", u"'\\arctan'", u"'\\arccsc'", u"'\\arcsec'", 
-                    u"'\\arccot'", u"'\\sinh'", u"'\\cosh'", u"'\\tanh'", u"'\\arsinh'", 
-                    u"'\\arcosh'", u"'\\artanh'", u"'\\sqrt'", u"'\\times'", u"'\\cdot'", 
-                    u"'\\div'", u"'\\frac'", u"'\\mathit'", u"'_'", u"'^'", u"':'", 
+                    u"','", u"'+'", u"'-'", u"'*'", u"'/'", u"'('", u"')'", u"'{'",
+                    u"'}'", u"'['", u"']'", u"'|'", u"'\\lim'", u"'\\int'", u"'\\sum'",
+                    u"'\\prod'", u"'\\log'", u"'\\ln'", u"'\\sin'", u"'\\cos'",
+                    u"'\\tan'", u"'\\csc'", u"'\\sec'", u"'\\cot'", u"'\\arcsin'",
+                    u"'\\arccos'", u"'\\arctan'", u"'\\arccsc'", u"'\\arcsec'",
+                    u"'\\arccot'", u"'\\sinh'", u"'\\cosh'", u"'\\tanh'", u"'\\arsinh'",
+                    u"'\\arcosh'", u"'\\artanh'", u"'\\sqrt'", u"'\\times'", u"'\\cdot'",
+                    u"'\\div'", u"'\\frac'", u"'\\mathit'", u"'_'", u"'^'", u"':'",
                     u"'='", u"'<'", u"'\\leq'", u"'>'", u"'\\geq'", u"'!'" ]
-        
+
             symbolicNames = [ u"<INVALID>",
-                    u"WS", u"ADD", u"SUB", u"MUL", u"DIV", u"L_PAREN", u"R_PAREN", 
-                    u"L_BRACE", u"R_BRACE", u"L_BRACKET", u"R_BRACKET", u"BAR", 
-                    u"FUNC_LIM", u"LIM_APPROACH_SYM", u"FUNC_INT", u"FUNC_SUM", 
-                    u"FUNC_PROD", u"FUNC_LOG", u"FUNC_LN", u"FUNC_SIN", u"FUNC_COS", 
-                    u"FUNC_TAN", u"FUNC_CSC", u"FUNC_SEC", u"FUNC_COT", u"FUNC_ARCSIN", 
-                    u"FUNC_ARCCOS", u"FUNC_ARCTAN", u"FUNC_ARCCSC", u"FUNC_ARCSEC", 
-                    u"FUNC_ARCCOT", u"FUNC_SINH", u"FUNC_COSH", u"FUNC_TANH", u"FUNC_ARSINH", 
-                    u"FUNC_ARCOSH", u"FUNC_ARTANH", u"FUNC_SQRT", u"CMD_TIMES", 
-                    u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC", u"CMD_MATHIT", u"UNDERSCORE", 
-                    u"CARET", u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER", u"EQUAL", 
+                    u"WS", u"ADD", u"SUB", u"MUL", u"DIV", u"L_PAREN", u"R_PAREN",
+                    u"L_BRACE", u"R_BRACE", u"L_BRACKET", u"R_BRACKET", u"BAR",
+                    u"FUNC_LIM", u"LIM_APPROACH_SYM", u"FUNC_INT", u"FUNC_SUM",
+                    u"FUNC_PROD", u"FUNC_LOG", u"FUNC_LN", u"FUNC_SIN", u"FUNC_COS",
+                    u"FUNC_TAN", u"FUNC_CSC", u"FUNC_SEC", u"FUNC_COT", u"FUNC_ARCSIN",
+                    u"FUNC_ARCCOS", u"FUNC_ARCTAN", u"FUNC_ARCCSC", u"FUNC_ARCSEC",
+                    u"FUNC_ARCCOT", u"FUNC_SINH", u"FUNC_COSH", u"FUNC_TANH", u"FUNC_ARSINH",
+                    u"FUNC_ARCOSH", u"FUNC_ARTANH", u"FUNC_SQRT", u"CMD_TIMES",
+                    u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC", u"CMD_MATHIT", u"UNDERSCORE",
+                    u"CARET", u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER", u"EQUAL",
                     u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
-        
-            ruleNames = [ u"T__0", u"WS", u"ADD", u"SUB", u"MUL", u"DIV", u"L_PAREN", 
-                          u"R_PAREN", u"L_BRACE", u"R_BRACE", u"L_BRACKET", u"R_BRACKET", 
-                          u"BAR", u"FUNC_LIM", u"LIM_APPROACH_SYM", u"FUNC_INT", 
-                          u"FUNC_SUM", u"FUNC_PROD", u"FUNC_LOG", u"FUNC_LN", u"FUNC_SIN", 
-                          u"FUNC_COS", u"FUNC_TAN", u"FUNC_CSC", u"FUNC_SEC", u"FUNC_COT", 
-                          u"FUNC_ARCSIN", u"FUNC_ARCCOS", u"FUNC_ARCTAN", u"FUNC_ARCCSC", 
-                          u"FUNC_ARCSEC", u"FUNC_ARCCOT", u"FUNC_SINH", u"FUNC_COSH", 
-                          u"FUNC_TANH", u"FUNC_ARSINH", u"FUNC_ARCOSH", u"FUNC_ARTANH", 
-                          u"FUNC_SQRT", u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC", 
-                          u"CMD_MATHIT", u"UNDERSCORE", u"CARET", u"COLON", u"WS_CHAR", 
-                          u"DIFFERENTIAL", u"LETTER", u"DIGIT", u"NUMBER", u"EQUAL", 
+
+            ruleNames = [ u"T__0", u"WS", u"ADD", u"SUB", u"MUL", u"DIV", u"L_PAREN",
+                          u"R_PAREN", u"L_BRACE", u"R_BRACE", u"L_BRACKET", u"R_BRACKET",
+                          u"BAR", u"FUNC_LIM", u"LIM_APPROACH_SYM", u"FUNC_INT",
+                          u"FUNC_SUM", u"FUNC_PROD", u"FUNC_LOG", u"FUNC_LN", u"FUNC_SIN",
+                          u"FUNC_COS", u"FUNC_TAN", u"FUNC_CSC", u"FUNC_SEC", u"FUNC_COT",
+                          u"FUNC_ARCSIN", u"FUNC_ARCCOS", u"FUNC_ARCTAN", u"FUNC_ARCCSC",
+                          u"FUNC_ARCSEC", u"FUNC_ARCCOT", u"FUNC_SINH", u"FUNC_COSH",
+                          u"FUNC_TANH", u"FUNC_ARSINH", u"FUNC_ARCOSH", u"FUNC_ARTANH",
+                          u"FUNC_SQRT", u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC",
+                          u"CMD_MATHIT", u"UNDERSCORE", u"CARET", u"COLON", u"WS_CHAR",
+                          u"DIFFERENTIAL", u"LETTER", u"DIGIT", u"NUMBER", u"EQUAL",
                           u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
-        
+
             grammarFileName = u"LaTeX.g4"
-        
+
             def __init__(self, input=None, output=sys.stdout):
                 super(LaTeXLexer, self).__init__(input, output=output)
                 self.checkVersion("4.7.1")
                 self._interp = LexerATNSimulator(self, self.atn, self.decisionsToDFA, PredictionContextCache())
                 self._actions = None
                 self._predicates = None
-        
-        
+
+
     except Exception as err:
         print(err)
     return locals()
