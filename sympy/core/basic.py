@@ -9,6 +9,7 @@ from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest, range)
 from .singleton import S
+from .core import all_classes as sympy_classes
 
 from inspect import getmro
 
@@ -868,7 +869,10 @@ class Basic(with_metaclass(ManagedProperties)):
                     si = sympify(si, strict=True)
                 except SympifyError:
                     if type(si) is str:
-                        si = Symbol(si)
+                        si_prev = si
+                        si = sympify(si)
+                        if type(si) not in sympy_classes:
+                            si = Symbol(si_prev)
                     else:
                         # if it can't be sympified, skip it
                         sequence[i] = None
