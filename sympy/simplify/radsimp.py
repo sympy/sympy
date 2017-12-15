@@ -527,6 +527,28 @@ def collect_const(expr, *vars, **kwargs):
     targeted. Although any Number can also be targeted, if this is not
     desired set ``Numbers=False`` and no Float or Rational will be collected.
 
+    Parameters
+    ==========
+
+    expr : Sympy Expression
+           This parameter defines the expression the expression from which terms with similar
+           coefficient are to be collected. A non-Add expression is returned as it is.
+
+    *vars : Numbers,optional
+            Used to specify the different number coefficients explicitly, for grouping of terms.
+            Can be multiple in number.
+
+    **kwargs : Optional(Numbers=True)
+               Default is targeting the Numbers set. If Numbers is not the desired set,
+               ''Numbers=False'' can be the arg value.
+
+
+    Returns
+    =======
+
+    expr :  Sympy expression
+            Returns an expression with similar coefficient terms collected.
+
     Examples
     ========
 
