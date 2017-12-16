@@ -449,7 +449,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     if isinstance(expression, Vector):
         if reference_frame is None:
             raise ValueError("You must provide reference_frame when passing a "
-                             "vector expression, got %s." % reference_frame")
+                             "vector expression, got %s." % reference_frame)
         else:
             expression = expression.to_matrix(reference_frame)
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
