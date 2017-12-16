@@ -363,28 +363,40 @@ class ImageSet(Set):
                         Determining whether %s is contained in imagesets
                         with base sets %s has not been implemented.''')
                         %(other, self.base_set))
-                if isinstance(other, Expr) and \
-                (self.base_set).is_subset(S.Integers):
+                if isinstance(other, (Expr, Interval)):
+                    interval = isinstance(other, Interval)
                     if not iterable(other):
                         other = (other,)
                     for i in (other):
-                        interval_sol = solveset(
-                            L.expr.inf - i, var)
+                        if interval:
+                            interval_sol = solveset(
+                                L.expr.inf - i.inf, var)
+                        else:
+                            interval_sol = solveset(L.expr.inf - i, var)
                         if interval_sol is S.EmptySet:
                             return False
                         for j in interval_sol:
                             j_floor = floor(j)
-                            j_ceiling = floor(j) + 1
+                            j_ceiling = j_floor + 1
                             try:
-                                if L.expr.subs(var, j_floor).contains(i) and \
-                                    self.base_set.contains(j_floor):
-                                    return True
-                            except:
-                                pass
-                            try:
-                                if L.expr.subs(var, j_ceiling).contains(i) and \
-                                    self.base_set.contains(j_ceiling):
-                                    return True
+                                if interval:
+                                    if i.is_subset(
+                                        L.expr.subs(var, j_floor)) and \
+                                        self.base_set.contains(j_floor):
+                                        return True
+                                    if i.is_subset(
+                                        L.expr.subs(var, j_ceiling)) and \
+                                        self.base_set.contains(j_ceiling):
+                                        return True
+                                else:
+                                    if L.expr.subs(
+                                        var, j_floor).contains(i) and \
+                                        self.base_set.contains(j_floor):
+                                        return True
+                                    if L.expr.subs(
+                                        var, j_ceiling).contains(i) and \
+                                        self.base_set.contains(j_floor):
+                                        return True
                             except:
                                 pass
                     return S.false

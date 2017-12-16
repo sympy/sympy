@@ -501,6 +501,9 @@ def test_ImageSet_contains():
     assert c.contains(3*pi/4)
     assert c.contains(pi)
     assert not c.contains(3*pi/2)
+    assert a.contains(Interval(10, 10 + S(1/3)))
+    assert not b.contains(Interval(2, 3))
+    assert c.contains(Interval(0, 3))
 
 def test_ComplexRegion_contains():
 
