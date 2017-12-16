@@ -511,7 +511,7 @@ def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
         r"\frac{d}{d x} x^{3}"
     assert latex(diff(sin(x) + x**2, x, evaluate=False)) == \
-        r"\frac{d}{d x}\left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{d}{d x} \left(x^{2} + \sin{\left (x \right )}\right)"
     assert latex(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False)) == \
         r"\frac{d^{2}}{d x^{2}} \left(x^{2} + \sin{\left (x \right )}\right)"
     assert latex(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
@@ -521,7 +521,7 @@ def test_latex_derivatives():
     assert latex(diff(sin(x * y), x, evaluate=False)) == \
         r"\frac{\partial}{\partial x} \sin{\left (x y \right )}"
     assert latex(diff(sin(x * y) + x**2, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x y \right )}\right)"
+        r"\frac{\partial}{\partial x} \left(x^{2} + \sin{\left (x y \right )}\right)"
     assert latex(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
         r"\frac{\partial^{2}}{\partial x^{2}} \left(x^{2} + \sin{\left (x y \right )}\right)"
     assert latex(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
@@ -530,10 +530,10 @@ def test_latex_derivatives():
     # mixed partial derivatives
     f = Function("f")
     assert latex(diff(diff(f(x,y), x, evaluate=False), y, evaluate=False)) == \
-        r"\frac{\partial^{2}}{\partial x\partial y}  " + latex(f(x,y))
+        r"\frac{\partial^{2}}{\partial y\partial x} " + latex(f(x,y))
 
     assert latex(diff(diff(diff(f(x,y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
-        r"\frac{\partial^{3}}{\partial x^{2}\partial y}  " + latex(f(x,y))
+        r"\frac{\partial^{3}}{\partial y\partial x^{2}} " + latex(f(x,y))
 
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
@@ -545,6 +545,9 @@ def test_latex_derivatives():
 
     assert latex(diff(f(x), x)**2) == \
         r"\left(\frac{d}{d x} f{\left (x \right )}\right)^{2}"
+
+    assert latex(diff(f(x), (x, n))) == \
+        r"\frac{d^{n}}{d x^{n}} f{\left (x \right )}"
 
 
 def test_latex_subs():
