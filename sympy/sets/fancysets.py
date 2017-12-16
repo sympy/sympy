@@ -128,9 +128,9 @@ class Integers(with_metaclass(Singleton, Set)):
         from sympy.functions.elementary.integers import floor, ceiling
         if other is Interval(S.NegativeInfinity, S.Infinity) or other is S.Reals:
             return self
-        elif other == Interval(S.Zero, S.Infinity) or other is S.Naturals0:
+        elif other is Interval(S.Zero, S.Infinity) or other is S.Naturals0:
             return S.Naturals0
-        elif other == Interval(S.One, S.Infinity) or other is S.Naturals:
+        elif other is Interval(S.One, S.Infinity) or other is S.Naturals:
             return S.Naturals
         elif other.is_Interval:
             s = Range(ceiling(other.left), floor(other.right) + 1)
