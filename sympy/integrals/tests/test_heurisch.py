@@ -1,5 +1,5 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
+    I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
     LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
     besselj, besselk, bessely, jn
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
@@ -98,6 +98,7 @@ def test_heurisch_trigonometric():
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16 - x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
+    assert heurisch(sin(x)/(cos(x)**2+1),x) == -atan(cos(x)) #fixes issue 13723
 
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)

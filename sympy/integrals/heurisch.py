@@ -5,9 +5,9 @@ from itertools import permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, symbols
 from sympy.core.basic import sympify
-from sympy.core.numbers import Rational, pi
+from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 
@@ -583,6 +583,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     def _integrate(field=None):
         irreducibles = set()
+        atans = set()
 
         for poly in reducibles:
             for z in poly.free_symbols:
@@ -594,8 +595,28 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                            #               V
             irreducibles |= set(root_factors(poly, z, filter=field))
 
-        log_coeffs, log_part = [], []
+        log_coeffs, log_part, atan_part, complx_coeff = [], [], [], []
+
+        x, y = symbols('x y', cls=Wild, exclude=[I])
+        for poly in list(irreducibles):
+            m = poly.match(x + I*y)
+            if m[y] == 0:  # Only coefficient of I
+                continue 
+            complx_coeff.append((m[x], m[y]))  # It is enough to save the coefficients
+            irreducibles.remove(poly)
+
+        for pair in complx_coeff:
+            complx_coeff.remove(pair)
+            if (pair[0],-pair[1]) in complx_coeff:
+                complx_coeff.remove((pair[0],-pair[1]))
+                irreducibles.add(pair[0]*pair[0]+pair[1]*pair[1])
+                atans.add(atan(pair[0]/pair[1]))
+            else:
+                irreducibles.add(pair)
+
+
         B = _symbols('B', len(irreducibles))
+        C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
         for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
@@ -603,12 +624,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
+        for poly, c in reversed(list(ordered(zip(atans, C)))):
+            if poly.has(*V):
+                poly_coeffs.append(c)
+                atan_part.append(c * poly)
+
         # TODO: Currently it's better to use symbolic expressions here instead
         # of rational functions, because it's simpler and FracElement doesn't
         # give big speed improvement yet. This is because cancellation is slow
         # due to slow polynomial GCD algorithms. If this gets improved then
         # revise this code.
-        candidate = poly_part/poly_denom + Add(*log_part)
+        candidate = poly_part/poly_denom + Add(*log_part) + Add(*atan_part)
         h = F - _derivation(candidate) / denom
         raw_numer = h.as_numer_denom()[0]
 
