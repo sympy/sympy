@@ -782,7 +782,7 @@ class Add(Expr, AssocOp):
         seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
-                if not isinstance(o, Zero):
+                if not o.is_zero:
                     if o.contains(of) and o != of:
                         of = None
                         break
