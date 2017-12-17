@@ -106,7 +106,7 @@ class Poly(Expr):
 
     is_commutative = True
     is_Poly = True
-    _op_priority = 11.0
+    _op_priority = 10.0
 
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
