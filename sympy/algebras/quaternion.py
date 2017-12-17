@@ -320,6 +320,7 @@ class Quaternion(Expr):
         q = self
         if p == -1:
             return q.inverse()
+        res = 1
 
         while p > 0:
             if p & 1:
@@ -334,7 +335,7 @@ class Quaternion(Expr):
 
             while r > 0:
                 if r & 1:
-                    res = q_inv() * res
+                    res = q_inv * res
 
                 r = r >> 1
                 q_inv = q_inv * q_inv
