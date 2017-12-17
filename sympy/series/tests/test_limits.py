@@ -112,7 +112,7 @@ def test_issue_10382():
 
 def test_issue_13715():
     p = symbols('p', zero=True)
-    assert limit(x + p, x, 2) == p + 2
+    assert limit(x + p, x, 2) == 2
 
 
 def test_Limit():
