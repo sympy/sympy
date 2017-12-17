@@ -4,14 +4,6 @@
 This file contains some classical ciphers and routines
 implementing a linear-feedback shift register (LFSR)
 and the Diffie-Hellman key exchange.
-
-.. warning::
-
-   This module is intended for educational purposes only. Do not use the
-   functions in this module for real cryptographic applications. If you wish
-   to encrypt real data, we recommend using something like the `cryptography
-   <https://cryptography.io/en/latest/>`_ module.
-
 """
 
 from __future__ import print_function

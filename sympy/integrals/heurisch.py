@@ -584,7 +584,6 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     def _integrate(field=None):
         irreducibles = set()
         atans = set()
-        pairs = set()
 
         for poly in reducibles:
             for z in poly.free_symbols:
@@ -596,27 +595,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                            #               V
             irreducibles |= set(root_factors(poly, z, filter=field))
 
-        log_coeffs, log_part, atan_part = [], [], []
+        log_coeffs, log_part, atan_part, complx_coeff = [], [], [], []
 
         x, y = symbols('x y', cls=Wild, exclude=[I])
         for poly in list(irreducibles):
             m = poly.match(x + I*y)
-            if m[y] == 0:  # No I part
+            if m[y] == 0:  # Only coefficient of I
                 continue 
-            pairs.add((m[x], m[y]))  # It is enough to save the coefficients
+            complx_coeff.append((m[x], m[y]))  # It is enough to save the coefficients
             irreducibles.remove(poly)
 
-        while pairs:
-            x, y = pairs.pop()
-            if (x,-y) in pairs:
-                pairs.remove((x,-y))
-                # Choosing b with no minus sign
-                if y.could_extract_minus_sign():
-                    y = -y
-                irreducibles.add(x*x + y*y)
-                atans.add(atan(x/y))
+        for pair in complx_coeff:
+            complx_coeff.remove(pair)
+            if (pair[0],-pair[1]) in complx_coeff:
+                complx_coeff.remove((pair[0],-pair[1]))
+                irreducibles.add(pair[0]*pair[0]+pair[1]*pair[1])
+                atans.add(atan(pair[0]/pair[1]))
             else:
-                irreducibles.add(x+I*y)
+                irreducibles.add(pair)
 
 
         B = _symbols('B', len(irreducibles))

@@ -32,17 +32,6 @@ from sympy.sets.fancysets import Range
 # Used in C89CodePrinter._print_Function(self)
 known_functions_C89 = {
     "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
-    "Mod": [
-        (
-            lambda numer, denom: numer.is_integer and denom.is_integer,
-            lambda printer, numer, denom, *args, **kwargs: "((%s) %% (%s))" % (
-                printer._print(numer, *args, **kwargs), printer._print(denom, *args, **kwargs))
-        ),
-        (
-            lambda numer, denom: not numer.is_integer or not denom.is_integer,
-            "fmod"
-        )
-    ],
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",
@@ -588,11 +577,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
                     break
             else:
                 raise ValueError("No matching printer")
-        try:
-            return known(self, *expr.args)
-        except TypeError:
-            suffix = self._get_func_suffix(real) if self._ns + known in self._prec_funcs else ''
-
+        suffix = self._get_func_suffix(real) if self._ns + known in self._prec_funcs else ''
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
@@ -613,7 +598,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         return self._print_math_func(expr, nest=True)
 
 
-for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma Mod'
+for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma '
           ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
           'atanh erf erfc loggamma gamma ceiling floor').split():
     setattr(C99CodePrinter, '_print_%s' % k, C99CodePrinter._print_math_func)

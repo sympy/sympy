@@ -331,7 +331,7 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
-    def _print_Function(self, expr, **kwargs):
+    def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
@@ -343,12 +343,9 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(self, *[self.parenthesize(item, 0) for item in expr.args], **kwargs)
+                    return func(*[self.parenthesize(item, 0) for item in expr.args])
                 except TypeError:
-                    try:
-                        return func(*[self.parenthesize(item, 0) for item in expr.args])
-                    except TypeError:
-                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
