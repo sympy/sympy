@@ -510,7 +510,7 @@ def trigsimp(expr, **opts):
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
-    return trigsimpfunc(expr)
+    return exptrigsimp(trigsimpfunc(expr), simplify=False)
 
 
 def exptrigsimp(expr, simplify=True):
