@@ -134,7 +134,7 @@ def test_mul():
     assert e.match(x**p*exp(x*q)) == {p: 0, q: 1}
 
     e = I*Poly(x, x)
-    assert e.match(I*p) == {p: Poly(x, x)}
+    assert e.match(I*p) == {p: x}
 
 
 def test_mul_noncommutative():
