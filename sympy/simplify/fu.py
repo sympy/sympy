@@ -430,6 +430,8 @@ def TR3(rv):
         rv = rv.func(signsimp(rv.args[0]))
         if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
+            if not rv.func in fmap:
+                return rv
             rv = fmap[rv.func](S.Pi/2 - rv.args[0])
         return rv
 
