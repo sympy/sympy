@@ -6,6 +6,8 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      kinetic_energy, linear_momentum,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols)
+from sympy.physics.vector.vector import Vector
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -165,6 +167,14 @@ def test_find_dynamicsymbols():
     sol = {x, y.diff(), y, x.diff().diff(), z, z.diff()}
     assert find_dynamicsymbols(expr) == sol
     # Test finding all but those in sym_list
-    exclude = [x, y, z]
+    exclude_list = [x, y, z]
     sol = {y.diff(), x.diff().diff(), z.diff()}
-    assert find_dynamicsymbols(expr, exclude) == sol
+    assert find_dynamicsymbols(expr, exclude=exclude_list) == sol
+    # Test finding all dynamicsymbols in a vector with a given reference frame
+    d, e, f = dynamicsymbols('d, e, f')
+    A = ReferenceFrame('A')
+    v = d * A.x + e * A.y + f * A.z
+    sol = {d, e, f}
+    assert find_dynamicsymbols(v, reference_frame=A) == sol
+    # Test if a ValueError is raised on supplying only a vector as input
+    raises(ValueError, lambda: find_dynamicsymbols(v))

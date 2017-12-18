@@ -695,6 +695,22 @@ class Vector(object):
             d[v[1]] = v[0].applyfunc(f)
         return Vector(d)
 
+    def free_symbols(self, reference_frame):
+        """
+        Returns the free symbols in the measure numbers of the vector
+        expressed in the given reference frame.
+
+        Parameter
+        =========
+
+        reference_frame : ReferenceFrame
+            The frame with respect to which the free symbols of the
+            given vector is to be determined.
+
+        """
+
+        return self.to_matrix(reference_frame).free_symbols
+
 
 class VectorTypeError(TypeError):
 
