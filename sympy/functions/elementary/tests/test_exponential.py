@@ -125,6 +125,7 @@ def test_exp_rewrite():
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
 
+
 def test_exp_leading_term():
     x = symbols('x')
     assert exp(x).as_leading_term(x) == 1
