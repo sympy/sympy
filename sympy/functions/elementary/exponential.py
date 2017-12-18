@@ -452,11 +452,6 @@ class exp(ExpBase):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
-    def _eval_rewrite_as_sincos(self, arg):
-        from sympy import sin, cos
-        I = S.ImaginaryUnit
-        return cos(I*arg) - I*sin(I*arg)
-
 
 class log(Function):
     """
