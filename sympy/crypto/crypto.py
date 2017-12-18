@@ -2125,9 +2125,12 @@ def gm_private_key(p, q, a=None):
     Returns
     =======
 
-    p, q | false (int)
-        if inputs cannot be used to initalize public key
-        then refurn false. Otherwise, return p and q
+    p, q : the input value p and q
+
+    Raises
+    ======
+
+    ValueError : if p and q are not distinct odd primes
 
     """
     if p == q:
