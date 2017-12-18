@@ -3739,7 +3739,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     is_number = True
     is_algebraic = True
     is_transcendental = False
-
+    _op_priority = 10.001
     __slots__ = []
 
     def _latex(self, printer):
