@@ -364,6 +364,9 @@ def sub_func_doit(eq, func, new):
         repu[u] = d.subs(func, new).doit()
         reps[d] = u
 
+    # Make sure that expressions such as ``Derivative(f(x), (x, 2))`` get
+    # replaced before ``Derivative(f(x), x)``:
+    reps = sorted(reps.items(), key=lambda x: -x[0].derivative_count)
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
@@ -4002,11 +4005,12 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) \
-                    or f == func):
-                return None
-            else:
+            if isinstance(f, Derivative) and set(f.variables) == one_x:
+                terms[f.derivative_count] += c
+            elif f == func:
                 terms[len(f.args[1:])] += c
+            else:
+                return None
     return terms
 
 

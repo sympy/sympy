@@ -246,7 +246,7 @@ def exp_re(DE, r, k):
 
     >>> exp_re(-f(x) + Derivative(f(x)), r, k)
     -r(k) + r(k + 1)
-    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), x, x), r, k)
+    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), (x, 2)), r, k)
     r(k) + r(k + 1)
 
     See Also
@@ -262,7 +262,7 @@ def exp_re(DE, r, k):
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
         if isinstance(d, Derivative):
-            j = len(d.args) - 1
+            j = d.derivative_count
         else:
             j = 0
         if mini is None or j < mini:
@@ -293,7 +293,7 @@ def hyper_re(DE, r, k):
 
     >>> hyper_re(-f(x) + Derivative(f(x)), r, k)
     (k + 1)*r(k + 1) - r(k)
-    >>> hyper_re(-x*f(x) + Derivative(f(x), x, x), r, k)
+    >>> hyper_re(-x*f(x) + Derivative(f(x), (x, 2)), r, k)
     (k + 2)*(k + 3)*r(k + 3) - r(k)
 
     See Also
@@ -312,7 +312,7 @@ def hyper_re(DE, r, k):
         c, v = coeff.as_independent(x)
         l = v.as_coeff_exponent(x)[1]
         if isinstance(d, Derivative):
-            j = len(d.args[1:])
+            j = d.derivative_count
         else:
             j = 0
         RE += c * rf(k + 1 - l, j) * r(k + j - l)
