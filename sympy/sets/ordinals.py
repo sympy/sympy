@@ -1,18 +1,16 @@
-from sympy.core import Basic
+from sympy.core import Basic, Integer
 import operator
 
-class OrdinalPow(Basic):
+class OmegaPower(Basic):
     """
     Represents ordinal exponential and multiplication terms one of the
     building blocks of the Ordinal class.
-    In OrdinalPow(a, b) a represents exponent and b represents multiplicity.
+    In OmegaPower(a, b) a represents exponent and b represents multiplicity.
     """
-    def __new__(cls, *terms):
-        if not all (isinstance(i, (int, Ordinal)) for i in terms):
+    def __new__(cls, a, b):
+        if not all (isinstance(i, (int, Ordinal, Integer)) for i in (a, b)):
             raise TypeError("arguments must be an integer or an Ordinal instance")
-        if not len(terms) == 2:
-            raise TypeError("number of arguments is invalid")
-        return Basic.__new__(cls, *terms)
+        return Basic.__new__(cls, a, b)
 
     @property
     def exp(self):
@@ -32,24 +30,41 @@ class OrdinalPow(Basic):
         else:
             return op(self.exp, other.exp)
 
+    def __eq__(self, other):
+        if not isinstance(other, OmegaPower):
+            try:
+                other = Ordinal.convert(other).args[0]
+            except TypeError:
+                return NotImplemented
+        return hash(self) == hash(other)
 
+    def __lt__(self, other):
+        if not isinstance(other, OmegaPower):
+            try:
+                other = Ordinal.convert(other).args[0]
+            except TypeError:
+                return NotImplemented
+        return self._compare_term(other, operator.lt)
+
+    def __hash__(self):
+        return hash((self.exp, self.mult))
 
 class Ordinal(Basic):
     """
     Represents ordinals in Cantor normal form.
 
-    Internally, this class is just a list of instances of OrdinalPow
+    Internally, this class is just a list of instances of OmegaPower
     Examples
     ========
-    >>> from sympy.sets import Ordinal, Ordinals, OrdinalPow
+    >>> from sympy.sets import Ordinal, Ordinals, OmegaPower
     >>> Ordinals.w  # doctest: +SKIP
     w
     >>> a = Ordinals.w
     >>> a.is_limit_ordinal
     True
-    >>> Ordinal([OrdinalPow(3,2)])  # doctest: +SKIP
+    >>> Ordinal([OmegaPower(3,2)])  # doctest: +SKIP
     {w**3}*2
-    >>> Ordinal([OrdinalPow(5,1),OrdinalPow(3,2)])  # doctest: +SKIP
+    >>> Ordinal([OmegaPower(5,1),OmegaPower(3,2)])  # doctest: +SKIP
     w**5 + {w**3}*2
     """
     def __new__(cls, terms):
@@ -83,31 +98,34 @@ class Ordinal(Basic):
             else: lo = mid+1
         return lo
 
-    def _convert_integer(self, integer_value):
-        return Ordinal([OrdinalPow(0, integer_value)])
+    @classmethod
+    def convert(cls, integer_value):
+        return Ordinal([OmegaPower(0, integer_value)])
+
+    def __eq__(self, other):
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return self.args == other.args
 
     def __lt__(self, other):
-        if self == other:
-            return False
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
 
-        elif isinstance(other, int):
-            return operator.lt(self, self._convert_integer(other))
-
-        elif isinstance(other, Ordinal):
-            index =  map(operator.eq, self.args, other.args).index(False)
-            if index not in (len(self.args), len(other.args)):
-                return self.args[index]._compare_term(other.args[index], operator.lt)
-            else:
-                return len(self.args) < len(other.args)
-        else:
-            raise TypeError("cannot compare types: %s and %s" % (type(self), type(other)))
+        for term_self, term_other in zip(self.args, other.args):
+            if term_self != term_other:
+                return term_self < term_other
+        return len(self.args) < len(other.args)
 
     def __le__(self, other):
         return (self == other or self < other)
 
     def __gt__(self, other):
-        if type(other) not in (int , Ordinal):
-            raise TypeError("cannot compare types: %s and %s" % (type(self), type(other)))
         return not self <= other
 
     def __ge__(self, other):
@@ -146,10 +164,10 @@ class Ordinal(Basic):
                 raise ValueError("can only add ordinals and positive integers")
 
             elif new_terms[-1].exp == 0:
-                new_terms[-1] = OrdinalPow(0, other+new_terms[-1].mult)
+                new_terms[-1] = OmegaPower(0, other+new_terms[-1].mult)
                 return Ordinal(new_terms)
             else:
-                new_terms.append(OrdinalPow(0, other))
+                new_terms.append(OmegaPower(0, other))
                 return Ordinal(new_terms)
         else:
             a_terms = list(self.args)
@@ -159,13 +177,13 @@ class Ordinal(Basic):
             b1 = power_other[0]
             r = self._insert_index(power_self, power_other[0])
             if not b1 in power_self:
-                a_terms.insert(r,OrdinalPow(b1, 0))
+                a_terms.insert(r,OmegaPower(b1, 0))
             else:
                 r-=1
             net = a_terms[:r]
             term2 = [b_terms[0].exp, b_terms[0].mult+a_terms[r].mult]
             if term2:
-                net.append(OrdinalPow(*term2))
+                net.append(OmegaPower(*term2))
             term3 = (b_terms[1:])
             if term3:
                 net.append(*term3)
@@ -184,7 +202,7 @@ class SingletonOrdinal(object):
         if SingletonOrdinal.__instance is None:
             SingletonOrdinal.__instance = object.__new__(cls)
         # first countably infinite ordinal
-        SingletonOrdinal.__instance.w = Ordinal([OrdinalPow(1, 1)])
+        SingletonOrdinal.__instance.w = Ordinal([OmegaPower(1, 1)])
         return SingletonOrdinal.__instance
 
 Ordinals = SingletonOrdinal()
