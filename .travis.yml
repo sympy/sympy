@@ -24,7 +24,7 @@ matrix:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
         # autowrap installs libgfortran libgcc gcc cython
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr4 antlr4-python2-runtime"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr>=4.7 antlr-python-runtime>=4.7"
       addons:
         apt:
           packages:
@@ -36,7 +36,7 @@ matrix:
     - python: 3.6
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr4 antlr4-python3-runtime"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr>=4.7 antlr-python-runtime>=4.7"
       addons:
         apt:
           packages:
@@ -241,9 +241,6 @@ before_install:
         conda config --set always_yes yes --set changeps1 no;
         conda update -q conda;
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
-
-        # TODO: remove
-        conda config --prepend channels https://raw.githubusercontent.com/bollwyvl/latex2sympy-demo/8f3b2ab2965c15f15ea39af5ed237a84b2200073/conda.channel;
 
         conda info -a;
         conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython};

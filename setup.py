@@ -40,7 +40,7 @@ mpmath_version = '0.19'
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 # Location for generated latex assets
-dir_latex = os.path.join(dir_setup, "sympy", "parsing", "_latex")
+dir_latex = os.path.join(dir_setup, "sympy", "parsing", "_latex", "_antlr")
 
 extra_kwargs = {}
 
@@ -224,11 +224,7 @@ class clean(Command):
             if os.path.isfile(name):
                 os.remove(name)
 
-        for ext in ["tokens", "py"]:
-            for name_pattern in ["LaTeX*.%s" % ext, "latex*.%s" % ext]:
-                for path in glob.glob(os.path.join(dir_latex, name_pattern)):
-                    if os.path.isfile(path):
-                        os.remove(path)
+        shutil.rmtree(dir_latex, ignore_errors=True)
 
         os.chdir(curr_dir)
 
@@ -299,12 +295,21 @@ class antlr(Command):
         pass
 
     def run(self):
-        subprocess.check_output(["antlr4", "LaTeX.g4"], cwd=dir_latex)
-        for ext in ["tokens", "py"]:
-            for path in glob.glob(os.path.join(dir_latex, "LaTeX*.{}".format(ext))):
-                os.rename(
-                    path,
-                    os.path.join(dir_latex, os.path.basename(path).lower()))
+        shutil.rmtree(dir_latex, ignore_errors=True)
+        os.makedirs(dir_latex)
+
+        with open(os.path.join(dir_latex, "__init__.py"), "w+") as fp:
+            fp.write("")
+
+        subprocess.check_output([
+            "antlr4", os.path.join(dir_latex, "..", "LaTeX.g4"),
+            "-no-visitor", "-no-listener", "-o", dir_latex,
+        ], cwd=dir_latex)
+
+        for path in glob.glob(os.path.join(dir_latex, "LaTeX*.*")):
+            os.rename(
+                path,
+                os.path.join(dir_latex, os.path.basename(path).lower()))
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
