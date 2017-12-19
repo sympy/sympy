@@ -2388,7 +2388,10 @@ class MatrixBase(MatrixDeprecated,
         multiply_elementwise
         """
         from .dense import Matrix
-
+        
+        if (b.cols !=1 and b.rows != 1):
+            raise ShapeError("Matrices size mismatch")
+        
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
