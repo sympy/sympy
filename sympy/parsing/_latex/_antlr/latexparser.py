@@ -1,4 +1,4 @@
-# Generated from LaTeX.g4 by ANTLR 4.7
+# Generated from /home/weg/Documents/projects/sympy/sympy/parsing/_latex/_antlr/../LaTeX.g4 by ANTLR 4.7.1
 # encoding: utf-8
 from __future__ import print_function
 from antlr4 import *
@@ -352,7 +352,7 @@ class LaTeXParser ( Parser ):
 
     def __init__(self, input, output=sys.stdout):
         super(LaTeXParser, self).__init__(input, output=output)
-        self.checkVersion("4.7")
+        self.checkVersion("4.7.1")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -370,14 +370,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_math
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterMath"):
-                listener.enterMath(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitMath"):
-                listener.exitMath(self)
 
 
 
@@ -432,14 +424,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_relation
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterRelation"):
-                listener.enterRelation(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitRelation"):
-                listener.exitRelation(self)
 
 
 
@@ -510,14 +494,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_equality
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterEquality"):
-                listener.enterEquality(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitEquality"):
-                listener.exitEquality(self)
-
 
 
 
@@ -553,14 +529,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_expr
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterExpr"):
-                listener.enterExpr(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitExpr"):
-                listener.exitExpr(self)
 
 
 
@@ -606,14 +574,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_additive
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterAdditive"):
-                listener.enterAdditive(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitAdditive"):
-                listener.exitAdditive(self)
 
 
 
@@ -703,14 +663,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_mp
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterMp"):
-                listener.enterMp(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitMp"):
-                listener.exitMp(self)
-
 
 
     def mp(self, _p=0):
@@ -799,14 +751,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_mp_nofunc
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterMp_nofunc"):
-                listener.enterMp_nofunc(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitMp_nofunc"):
-                listener.exitMp_nofunc(self)
-
 
 
     def mp_nofunc(self, _p=0):
@@ -882,14 +826,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_unary
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterUnary"):
-                listener.enterUnary(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitUnary"):
-                listener.exitUnary(self)
 
 
 
@@ -973,14 +909,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_unary_nofunc
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterUnary_nofunc"):
-                listener.enterUnary_nofunc(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitUnary_nofunc"):
-                listener.exitUnary_nofunc(self)
-
 
 
 
@@ -1052,14 +980,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_postfix
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterPostfix"):
-                listener.enterPostfix(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitPostfix"):
-                listener.exitPostfix(self)
-
 
 
 
@@ -1110,14 +1030,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_postfix_nofunc
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterPostfix_nofunc"):
-                listener.enterPostfix_nofunc(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitPostfix_nofunc"):
-                listener.exitPostfix_nofunc(self)
-
 
 
 
@@ -1163,14 +1075,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_postfix_op
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterPostfix_op"):
-                listener.enterPostfix_op(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitPostfix_op"):
-                listener.exitPostfix_op(self)
 
 
 
@@ -1223,14 +1127,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_eval_at
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterEval_at"):
-                listener.enterEval_at(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitEval_at"):
-                listener.exitEval_at(self)
 
 
 
@@ -1298,14 +1194,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_eval_at_sub
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterEval_at_sub"):
-                listener.enterEval_at_sub(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitEval_at_sub"):
-                listener.exitEval_at_sub(self)
-
 
 
 
@@ -1368,14 +1256,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_eval_at_sup
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterEval_at_sup"):
-                listener.enterEval_at_sup(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitEval_at_sup"):
-                listener.exitEval_at_sup(self)
 
 
 
@@ -1451,14 +1331,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_exp
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterExp"):
-                listener.enterExp(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitExp"):
-                listener.exitExp(self)
 
 
 
@@ -1566,14 +1438,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_exp_nofunc
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterExp_nofunc"):
-                listener.enterExp_nofunc(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitExp_nofunc"):
-                listener.exitExp_nofunc(self)
-
 
 
     def exp_nofunc(self, _p=0):
@@ -1671,14 +1535,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_comp
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterComp"):
-                listener.enterComp(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitComp"):
-                listener.exitComp(self)
-
 
 
 
@@ -1754,14 +1610,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_comp_nofunc
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterComp_nofunc"):
-                listener.enterComp_nofunc(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitComp_nofunc"):
-                listener.exitComp_nofunc(self)
-
 
 
 
@@ -1835,14 +1683,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_group
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterGroup"):
-                listener.enterGroup(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitGroup"):
-                listener.exitGroup(self)
-
 
 
 
@@ -1911,14 +1751,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_abs_group
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterAbs_group"):
-                listener.enterAbs_group(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitAbs_group"):
-                listener.exitAbs_group(self)
-
 
 
 
@@ -1970,14 +1802,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_atom
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterAtom"):
-                listener.enterAtom(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitAtom"):
-                listener.exitAtom(self)
 
 
 
@@ -2057,14 +1881,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_mathit
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterMathit"):
-                listener.enterMathit(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitMathit"):
-                listener.exitMathit(self)
-
 
 
 
@@ -2104,14 +1920,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_mathit_text
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterMathit_text"):
-                listener.enterMathit_text(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitMathit_text"):
-                listener.exitMathit_text(self)
 
 
 
@@ -2173,14 +1981,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_frac
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterFrac"):
-                listener.enterFrac(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitFrac"):
-                listener.exitFrac(self)
 
 
 
@@ -2281,14 +2081,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_func_normal
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterFunc_normal"):
-                listener.enterFunc_normal(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitFunc_normal"):
-                listener.exitFunc_normal(self)
 
 
 
@@ -2418,14 +2210,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_func
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterFunc"):
-                listener.enterFunc(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitFunc"):
-                listener.exitFunc(self)
 
 
 
@@ -2669,14 +2453,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_args
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterArgs"):
-                listener.enterArgs(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitArgs"):
-                listener.exitArgs(self)
-
 
 
 
@@ -2759,14 +2535,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_limit_sub
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterLimit_sub"):
-                listener.enterLimit_sub(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitLimit_sub"):
-                listener.exitLimit_sub(self)
-
 
 
 
@@ -2838,14 +2606,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_func_arg
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterFunc_arg"):
-                listener.enterFunc_arg(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitFunc_arg"):
-                listener.exitFunc_arg(self)
-
 
 
 
@@ -2895,14 +2655,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_func_arg_noparens
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterFunc_arg_noparens"):
-                listener.enterFunc_arg_noparens(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitFunc_arg_noparens"):
-                listener.exitFunc_arg_noparens(self)
-
 
 
 
@@ -2947,14 +2699,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_subexpr
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterSubexpr"):
-                listener.enterSubexpr(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitSubexpr"):
-                listener.exitSubexpr(self)
 
 
 
@@ -3019,14 +2763,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_supexpr
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterSupexpr"):
-                listener.enterSupexpr(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitSupexpr"):
-                listener.exitSupexpr(self)
-
 
 
 
@@ -3086,14 +2822,6 @@ class LaTeXParser ( Parser ):
         def getRuleIndex(self):
             return LaTeXParser.RULE_subeq
 
-        def enterRule(self, listener):
-            if hasattr(listener, "enterSubeq"):
-                listener.enterSubeq(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitSubeq"):
-                listener.exitSubeq(self)
-
 
 
 
@@ -3140,14 +2868,6 @@ class LaTeXParser ( Parser ):
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_supeq
-
-        def enterRule(self, listener):
-            if hasattr(listener, "enterSupeq"):
-                listener.enterSupeq(self)
-
-        def exitRule(self, listener):
-            if hasattr(listener, "exitSupeq"):
-                listener.exitSupeq(self)
 
 
 
