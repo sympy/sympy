@@ -2,9 +2,9 @@
 was changed. Do not include the issue number in the title. -->
 
 #### References to other Issues or PRs
-<!-- Refer to related issues by number putting '#' before the number;
-write "fix" before each issue that is closed by this PR.
-Example: This PR will fix #3 and fix #42. Issue #99 is not fixed." -->
+<!-- If this pull request fixes an issue, write "Fixes #NNNN" in that exact
+format, e.g. "Fixes #1234". See
+https://github.com/blog/1506-closing-issues-via-pull-requests .-->
 
 
 #### Brief description of what is fixed or changed
