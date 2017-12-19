@@ -56,6 +56,7 @@ def test_quaternion_functions():
     assert q.normalize() == Quaternion(x, y, z, w) / sqrt(w**2 + x**2 + y**2 + z**2)
     assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
     assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
+    assert q1.pow(2) == Quaternion(-(7/225), -(1/225), -(1/150), -(2/225))
 
     assert q1.exp() == \
     Quaternion(E * cos(sqrt(29)),

@@ -322,23 +322,15 @@ class Quaternion(Expr):
             return q.inverse()
         res = 1
 
+        if p < 0:
+            q, p = q.inverse(), -p
+
         while p > 0:
             if p & 1:
                 res = q * res
 
             p = p >> 1
             q = q * q
-
-        if p < -1:
-            r = abs(p)
-            q_inv = q.inverse()
-
-            while r > 0:
-                if r & 1:
-                    res = q_inv * res
-
-                r = r >> 1
-                q_inv = q_inv * q_inv
 
         return res
 
