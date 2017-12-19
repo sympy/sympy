@@ -1973,7 +1973,11 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
-        return self.__mul__(other)
+        if hasattr(self, 'shape') and hasattr(other, 'shape'):
+            return self.__mul__(other)
+        else:
+            raise ValueError(
+                "Scalar operands are not allowed, use '*' instead")
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):

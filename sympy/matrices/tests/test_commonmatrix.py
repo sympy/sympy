@@ -1340,3 +1340,9 @@ def test_limit():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [1/x, y])
     assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])
+
+
+def test_issue_13766():
+    A = Matrix([[1, 2], [3, 4]])
+    B = Matrix([[2, 3], [1, 2]])
+    raises(ValueError, lambda: MatrixArithmetic.__matmul__(B,2))
