@@ -886,8 +886,8 @@ distribute_expand_rule = rewriter(
 
 def derivative_rule(integral):
     integrand = integral[0]
-    diff_variables = integrand.args[1:]
-    undifferentiated_function = integrand.args[0]
+    diff_variables = integrand.variables
+    undifferentiated_function = integrand.expr
     integrand_variables = undifferentiated_function.free_symbols
 
     if integral.symbol in integrand_variables:
@@ -1165,12 +1165,12 @@ def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integran
 @evaluates(DerivativeRule)
 def eval_derivativerule(integrand, symbol):
     # isinstance(integrand, Derivative) should be True
-    if len(integrand.args) == 2:
-        return integrand.args[0]
-    else:
-        new_diff_vars = list(integrand.args[1:])
-        new_diff_vars.remove(symbol)
-        return sympy.Derivative(integrand.args[0], *(new_diff_vars))
+    variable_count = list(integrand.variable_count)
+    for i, (var, count) in enumerate(variable_count):
+        if var == symbol:
+            variable_count[i] = (var, count-1)
+            break
+    return sympy.Derivative(integrand.expr, *variable_count)
 
 @evaluates(HeavisideRule)
 def eval_heaviside(harg, ibnd, substep, integrand, symbol):

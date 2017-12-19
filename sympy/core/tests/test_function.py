@@ -92,7 +92,7 @@ def test_derivative_evaluate():
 
 def test_diff_symbols():
     assert diff(f(x, y, z), x, y, z) == Derivative(f(x, y, z), x, y, z)
-    assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
+    assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x) == Derivative(f(x, y, z), (x, 3))
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
 
     # issue 5028
@@ -345,8 +345,8 @@ def test_func_deriv():
     assert f(x).diff(x) == Derivative(f(x), x)
     # issue 4534
     assert f(x, y).diff(x, y) - f(x, y).diff(y, x) == 0
-    assert Derivative(f(x, y), x, y).args[1:] == (x, y)
-    assert Derivative(f(x, y), y, x).args[1:] == (y, x)
+    assert Derivative(f(x, y), x, y).args[1:] == ((x, 1), (y, 1))
+    assert Derivative(f(x, y), y, x).args[1:] == ((y, 1), (x, 1))
     assert (Derivative(f(x, y), x, y) - Derivative(f(x, y), y, x)).doit() == 0
 
 

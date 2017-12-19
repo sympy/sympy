@@ -322,14 +322,15 @@ class PrettyPrinter(Printer):
             deriv_symbol = U('PARTIAL DIFFERENTIAL')
         else:
             deriv_symbol = r'd'
-        syms = list(reversed(deriv.variables))
         x = None
+        count_total_deriv = 0
 
-        for sym, num in group(syms, multiple=False):
+        for sym, num in reversed(deriv.variable_count):
             s = self._print(sym)
             ds = prettyForm(*s.left(deriv_symbol))
+            count_total_deriv += num
 
-            if num > 1:
+            if (not num.is_Integer) or (num > 1):
                 ds = ds**prettyForm(str(num))
 
             if x is None:
@@ -343,8 +344,8 @@ class PrettyPrinter(Printer):
 
         pform = prettyForm(deriv_symbol)
 
-        if len(syms) > 1:
-            pform = pform**prettyForm(str(len(syms)))
+        if (count_total_deriv > 1) != False:
+            pform = pform**prettyForm(str(count_total_deriv))
 
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
@@ -1416,7 +1417,8 @@ class PrettyPrinter(Printer):
             else:
                 pform_neg = ' - '
 
-            if pform.binding > prettyForm.NEG:
+            if (pform.binding > prettyForm.NEG
+                or pform.binding == prettyForm.ADD):
                 p = stringPict(*pform.parens())
             else:
                 p = pform
