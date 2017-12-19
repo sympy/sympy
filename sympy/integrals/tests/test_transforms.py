@@ -779,10 +779,12 @@ def test_issue_8514():
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t', positive=True)
     ft = simplify(inverse_laplace_transform(1/(a*s**2+b*s+c),s, t))
-    assert ft == ((exp(t*(exp(I*atan2(0, -4*a*c + b**2)/2) -
-                  exp(-I*atan2(0, -4*a*c + b**2)/2))*
-                  sqrt(Abs(4*a*c - b**2))/(4*a))*exp(t*cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2))/a) + I*sin(t*sin(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2))/(2*a)) - cos(t*sin(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2))
+    assert ft == (I*exp(t*cos(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
+                  b**2))/a)*sin(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(
+                  4*a*c - b**2))/(2*a)) + exp(t*cos(atan2(0, -4*a*c + b**2)
+                  /2)*sqrt(Abs(4*a*c - b**2))/a)*cos(t*sin(atan2(0, -4*a*c
+                  + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a)) + I*sin(t*sin(
+                  atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a))
+                  - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
+                  b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
+                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)

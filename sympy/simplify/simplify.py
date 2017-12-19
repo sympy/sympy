@@ -581,8 +581,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
-    if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
-        short = exptrigsimp(short, simplify=False)
 
     # get rid of hollow 2-arg Mul factorization
     hollow_mul = Transform(
