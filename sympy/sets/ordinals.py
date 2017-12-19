@@ -8,8 +8,16 @@ class OmegaPower(Basic):
     In OmegaPower(a, b) a represents exponent and b represents multiplicity.
     """
     def __new__(cls, a, b):
-        if not all (isinstance(i, (int, Ordinal, Integer)) for i in (a, b)):
-            raise TypeError("arguments must be an integer or an Ordinal instance")
+        if b < 0 or not isinstance(b, (int, Integer)):
+            raise TypeError("multiplicity must be a positive integer")
+        if a == 0:
+            a = Ordinal()
+        elif not isinstance(a, Ordinal):
+            try:
+                a = Ordinal.convert(a)
+            except TypeError:
+                return NotImplemented
+
         return Basic.__new__(cls, a, b)
 
     @property
@@ -20,10 +28,6 @@ class OmegaPower(Basic):
     def mult(self):
         return self.args[1]
 
-    @property
-    def contains_ordinal(self):
-        return any(isinstance(x, Ordinal) for x in self.args)
-
     def _compare_term(self, other, op):
         if self.exp == other.exp:
             return op(self.mult, other.mult)
@@ -33,7 +37,7 @@ class OmegaPower(Basic):
     def __eq__(self, other):
         if not isinstance(other, OmegaPower):
             try:
-                other = Ordinal.convert(other).args[0]
+                other = OmegaPower(0, other)
             except TypeError:
                 return NotImplemented
         return hash(self) == hash(other)
@@ -41,7 +45,7 @@ class OmegaPower(Basic):
     def __lt__(self, other):
         if not isinstance(other, OmegaPower):
             try:
-                other = Ordinal.convert(other).args[0]
+                other = OmegaPower(0, other)
             except TypeError:
                 return NotImplemented
         return self._compare_term(other, operator.lt)
@@ -62,21 +66,24 @@ class Ordinal(Basic):
     >>> a = Ordinals.w
     >>> a.is_limit_ordinal
     True
-    >>> Ordinal([OmegaPower(3,2)])  # doctest: +SKIP
+    >>> Ordinal(OmegaPower(3,2))  # doctest: +SKIP
     {w**3}*2
-    >>> Ordinal([OmegaPower(5,1),OmegaPower(3,2)])  # doctest: +SKIP
+    >>> Ordinal(OmegaPower(5,1),OmegaPower(3,2))  # doctest: +SKIP
     w**5 + {w**3}*2
     """
-    def __new__(cls, terms):
-        obj = super(Ordinal, cls).__new__(cls, *terms)
-        powers = [i.exp for i in obj.args]
-        if not all(earlier >= later for earlier, later in zip(powers, powers[1:])):
-            raise ValueError("powers must be in decreasing order")
+    def __new__(cls, *terms ):
+        if not terms == None:
+            obj = super(Ordinal, cls).__new__(cls, *terms)
+            powers = [i.exp for i in obj.args]
+            if not all(earlier >= later for earlier, later in zip(powers, powers[1:])):
+                raise ValueError("powers must be in decreasing order")
+        else:
+            obj = super(Ordinal, cls).__new__(cls, ())
         return obj
 
     @property
     def is_successor_ordinal(self):
-        return (self.args[-1].exp == 0)
+        return self.args[-1].exp == 0
 
     @property
     def is_limit_ordinal(self):
@@ -100,7 +107,7 @@ class Ordinal(Basic):
 
     @classmethod
     def convert(cls, integer_value):
-        return Ordinal([OmegaPower(0, integer_value)])
+        return Ordinal(OmegaPower(0, integer_value))
 
     def __eq__(self, other):
         if not isinstance(other, Ordinal):
@@ -116,7 +123,6 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-
         for term_self, term_other in zip(self.args, other.args):
             if term_self != term_other:
                 return term_self < term_other
@@ -131,6 +137,7 @@ class Ordinal(Basic):
     def __ge__(self, other):
         return not self < other
 
+
     def __str__(self):
         net_str = ""
         plus_count = 0
@@ -139,7 +146,7 @@ class Ordinal(Basic):
                 net_str += " + "
             if i.mult == 0:
                 continue
-            elif i.exp == 0:
+            elif i.exp == Ordinal():
                 net_str += str(i.mult)
             elif i.exp == 1:
                 if i.mult == 1:
@@ -154,46 +161,43 @@ class Ordinal(Basic):
             plus_count += 1
         return(net_str)
 
+
+
     __repr__ = __str__
 
     def __add__(self, other):
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
 
-        if isinstance(other, int):
-            new_terms = list(self.args)
-            if other < 0:
-                raise ValueError("can only add ordinals and positive integers")
-
-            elif new_terms[-1].exp == 0:
-                new_terms[-1] = OmegaPower(0, other+new_terms[-1].mult)
-                return Ordinal(new_terms)
-            else:
-                new_terms.append(OmegaPower(0, other))
-                return Ordinal(new_terms)
+        a_terms = list(self.args)
+        b_terms = list(other.args)
+        power_self = [i.exp for i in a_terms]
+        power_other = [i.exp for i in b_terms]
+        b1 = power_other[0]
+        r = self._insert_index(power_self, power_other[0])
+        if not b1 in power_self:
+            a_terms.insert(r,OmegaPower(b1, 0))
         else:
-            a_terms = list(self.args)
-            b_terms = list(other.args)
-            power_self = [i.exp for i in a_terms]
-            power_other = [i.exp for i in b_terms]
-            b1 = power_other[0]
-            r = self._insert_index(power_self, power_other[0])
-            if not b1 in power_self:
-                a_terms.insert(r,OmegaPower(b1, 0))
-            else:
-                r-=1
-            net = a_terms[:r]
-            term2 = [b_terms[0].exp, b_terms[0].mult+a_terms[r].mult]
-            if term2:
-                net.append(OmegaPower(*term2))
-            term3 = (b_terms[1:])
-            if term3:
-                net.append(*term3)
-            return(Ordinal(net))
+            r-=1
+        net = a_terms[:r]
+        term2 = [b_terms[0].exp, b_terms[0].mult+a_terms[r].mult]
+        if term2:
+            net.append(OmegaPower(*term2))
+        term3 = (b_terms[1:])
+        if term3:
+            net.append(*term3)
+        return(Ordinal(*net))
 
     def __radd__(self, other):
-        if type(other) is int and other > 0:
-            return self
-        else:
-            raise ValueError("can only add ordinals and positive integers")
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return other + self
 
 class SingletonOrdinal(object):
     __instance = None
@@ -202,7 +206,7 @@ class SingletonOrdinal(object):
         if SingletonOrdinal.__instance is None:
             SingletonOrdinal.__instance = object.__new__(cls)
         # first countably infinite ordinal
-        SingletonOrdinal.__instance.w = Ordinal([OmegaPower(1, 1)])
+        SingletonOrdinal.__instance.w = Ordinal(OmegaPower(1, 1))
         return SingletonOrdinal.__instance
 
 Ordinals = SingletonOrdinal()
