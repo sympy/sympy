@@ -1,0 +1,2 @@
+class LaTeXSyntaxError(Exception):
+    pass

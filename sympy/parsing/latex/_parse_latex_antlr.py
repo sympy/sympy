@@ -6,12 +6,15 @@ import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
 
+from .errors import LaTeXSyntaxError
+
+
 LaTeXParser = LaTeXLexer = MathErrorListener = None
 
 try:
-    LaTeXParser = import_module('sympy.parsing._latex._antlr.latexparser',
+    LaTeXParser = import_module('sympy.parsing.latex._antlr.latexparser',
                                 __import__kwargs={'fromlist': ['LaTeXParser']}).LaTeXParser
-    LaTeXLexer = import_module('sympy.parsing._latex._antlr.latexlexer',
+    LaTeXLexer = import_module('sympy.parsing.latex._antlr.latexlexer',
                                __import__kwargs={'fromlist': ['LaTeXLexer']}).LaTeXLexer
 except Exception:
     pass
@@ -21,9 +24,6 @@ ErrorListener = import_module('antlr4.error.ErrorListener',
                               __import__kwargs={'fromlist': ['ErrorListener']}
                               )
 
-
-class LaTeXSyntaxError(Exception):
-    pass
 
 
 if ErrorListener is None:
