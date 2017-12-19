@@ -71,14 +71,11 @@ class Ordinal(Basic):
     >>> Ordinal(OmegaPower(5,1),OmegaPower(3,2))  # doctest: +SKIP
     w**5 + {w**3}*2
     """
-    def __new__(cls, *terms ):
-        if not terms == None:
-            obj = super(Ordinal, cls).__new__(cls, *terms)
-            powers = [i.exp for i in obj.args]
-            if not all(earlier >= later for earlier, later in zip(powers, powers[1:])):
-                raise ValueError("powers must be in decreasing order")
-        else:
-            obj = super(Ordinal, cls).__new__(cls, ())
+    def __new__(cls, *terms):
+        obj = super(Ordinal, cls).__new__(cls, *terms)
+        powers = [i.exp for i in obj.args]
+        if not all(earlier >= later for earlier, later in zip(powers, powers[1:])):
+            raise ValueError("powers must be in decreasing order")
         return obj
 
     @property
