@@ -6,15 +6,64 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Equality
 from sympy.sets.sets import Interval
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.functions.elementary.piecewise import (piecewise_fold,
+    Piecewise)
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
+
+
+def _common_new(cls, function, *symbols, **assumptions):
+    """Return either a special return value or the tuple,
+    (function, limits, orientation). This code is common to
+    both ExprWithLimits and AddWithLimits."""
+    function = sympify(function)
+
+    if hasattr(function, 'func') and isinstance(function, Equality):
+        lhs = function.lhs
+        rhs = function.rhs
+        return Equality(cls(lhs, *symbols, **assumptions), \
+                        cls(rhs, *symbols, **assumptions))
+
+    if function is S.NaN:
+        return S.NaN
+
+    if symbols:
+        limits, orientation = _process_limits(*symbols)
+    else:
+        # symbol not provided -- we can still try to compute a general form
+        free = function.free_symbols
+        if len(free) != 1:
+            raise ValueError(
+                "specify dummy variables for %s" % function)
+        limits, orientation = [Tuple(s) for s in free], 1
+
+    # denest any nested calls
+    while cls == type(function):
+        limits = list(function.limits) + limits
+        function = function.function
+
+    # Any embedded piecewise functions need to be brought out to the
+    # top level. We only fold Piecewise that contain the integration
+    # variable.
+    reps = {}
+    symbols_of_integration = set([i[0] for i in limits])
+    for p in function.atoms(Piecewise):
+        if not p.has(*symbols_of_integration):
+            reps[p] = Dummy()
+    # mask off those that don't
+    function = function.xreplace(reps)
+    # do the fold
+    function = piecewise_fold(function)
+    # remove the masking
+    function = function.xreplace({v: k for k, v in reps.items()})
+
+    return function, limits, orientation
 
 
 def _process_limits(*symbols):
@@ -75,37 +124,14 @@ class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        function = sympify(function)
-        if hasattr(function, 'func') and function.func is Equality:
-            lhs = function.lhs
-            rhs = function.rhs
-            return Equality(cls(lhs, *symbols, **assumptions), \
-                cls(rhs, *symbols, **assumptions))
-        function = piecewise_fold(function)
-
-        if function is S.NaN:
-            return S.NaN
-
-        if symbols:
-            limits, orientation = _process_limits(*symbols)
+        pre = _common_new(cls, function, *symbols, **assumptions)
+        if type(pre) is tuple:
+            function, limits, _ = pre
         else:
-            # symbol not provided -- we can still try to compute a general form
-            free = function.free_symbols
-            if len(free) != 1:
-                raise ValueError(
-                    "specify dummy variables for %s" % function)
-            limits, orientation = [Tuple(s) for s in free], 1
+            return pre
 
-        # denest any nested calls
-        while cls == type(function):
-            limits = list(function.limits) + limits
-            function = function.function
-
-        # Only limits with lower and upper bounds are supported; the indefinite form
-        # is not supported
+        # limits must have upper and lower bounds; the indefinite form
+        # is not supported. This restriction does not apply to AddWithLimits
         if any(len(l) != 3 or None in l for l in limits):
             raise ValueError('ExprWithLimits requires values for lower and upper bounds.')
 
@@ -286,7 +312,7 @@ class ExprWithLimits(Expr):
         ========
 
         variables : Lists the integration variables
-        transform : Perform mapping on the dummy variable for intgrals
+        transform : Perform mapping on the dummy variable for integrals
         change_index : Perform mapping on the sum and product dummy variables
 
         """
@@ -347,43 +373,14 @@ class AddWithLimits(ExprWithLimits):
     """
 
     def __new__(cls, function, *symbols, **assumptions):
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        #
-        # This constructor only differs from ExprWithLimits
-        # in the application of the orientation variable.  Perhaps merge?
-        function = sympify(function)
-        if hasattr(function, 'func') and function.func is Equality:
-            lhs = function.lhs
-            rhs = function.rhs
-            return Equality(cls(lhs, *symbols, **assumptions), \
-                cls(rhs, *symbols, **assumptions))
-        function = piecewise_fold(function)
-
-        if function is S.NaN:
-            return S.NaN
-
-        if symbols:
-            limits, orientation = _process_limits(*symbols)
+        pre = _common_new(cls, function, *symbols, **assumptions)
+        if type(pre) is tuple:
+            function, limits, orientation = pre
         else:
-            # symbol not provided -- we can still try to compute a general form
-            free = function.free_symbols
-            if len(free) != 1:
-                raise ValueError(
-                    " specify dummy variables for %s. If the integrand contains"
-                    " more than one free symbol, an integration variable should"
-                    " be supplied explicitly e.g., integrate(f(x, y), x)"
-                    % function)
-            limits, orientation = [Tuple(s) for s in free], 1
-
-        # denest any nested calls
-        while cls == type(function):
-            limits = list(function.limits) + limits
-            function = function.function
+            return pre
 
         obj = Expr.__new__(cls, **assumptions)
-        arglist = [orientation*function]
+        arglist = [orientation*function]  # orientation not used in ExprWithLimits
         arglist.extend(limits)
         obj._args = tuple(arglist)
         obj.is_commutative = function.is_commutative  # limits already checked

@@ -365,7 +365,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
             for g in set(terms):  # using copy of terms
                 if g.is_Function:
-                    if g.func is li:
+                    if isinstance(g, li):
                         M = g.args[0].match(a*x**b)
 
                         if M is not None:
@@ -374,7 +374,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             #terms.add( x*(li(M[a]*x**M[b]) - x*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
                             #terms.add( li(M[a]*x**M[b]) - Ei((M[b]+1)*log(M[a]*x**M[b])/M[b]) )
 
-                    elif g.func is exp:
+                    elif isinstance(g, exp):
                         M = g.args[0].match(a*x**2)
 
                         if M is not None:
@@ -507,12 +507,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     for term in terms:
         if term.is_Function:
-            if term.func is tan:
+            if isinstance(term, tan):
                 special[1 + _substitute(term)**2] = False
-            elif term.func is tanh:
+            elif isinstance(term, tanh):
                 special[1 + _substitute(term)] = False
                 special[1 - _substitute(term)] = False
-            elif term.func is LambertW:
+            elif isinstance(term, LambertW):
                 special[_substitute(term)] = True
 
     F = _substitute(f)
@@ -605,7 +605,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         # TODO: Currently it's better to use symbolic expressions here instead
         # of rational functions, because it's simpler and FracElement doesn't
-        # give big speed improvement yet. This is because cancelation is slow
+        # give big speed improvement yet. This is because cancellation is slow
         # due to slow polynomial GCD algorithms. If this gets improved then
         # revise this code.
         candidate = poly_part/poly_denom + Add(*log_part)

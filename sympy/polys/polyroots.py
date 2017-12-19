@@ -501,7 +501,7 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calulate exact roots of a solvable quintic
+    Calculate exact roots of a solvable quintic
     """
     result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
@@ -976,7 +976,7 @@ def roots(f, *gens, **flags):
 
     coeff, f = preprocess_roots(f)
 
-    if auto and f.get_domain().has_Ring:
+    if auto and f.get_domain().is_Ring:
         f = f.to_field()
 
     rescale_x = None
@@ -1012,6 +1012,9 @@ def roots(f, *gens, **flags):
                             if not result:
                                 for root in _try_decompose(f):
                                     _update_dict(result, root, 1)
+                        else:
+                            for r in _try_heuristics(f):
+                                _update_dict(result, r, 1)
                     else:
                         for root in _try_decompose(f):
                             _update_dict(result, root, 1)

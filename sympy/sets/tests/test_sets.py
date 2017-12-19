@@ -187,6 +187,10 @@ def test_Complement():
 
     assert S.Reals - Union(S.Naturals, FiniteSet(pi)) == \
             Intersection(S.Reals - S.Naturals, S.Reals - FiniteSet(pi))
+    # issue 12712
+    assert Complement(FiniteSet(x, y, 2), Interval(-10, 10)) == \
+            Complement(FiniteSet(x, y), Interval(-10, 10))
+
 
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
@@ -311,6 +315,8 @@ def test_intersection():
 
     assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
+    # issue 12178
+    assert Intersection() == S.UniversalSet
 
 def test_issue_9623():
     n = Symbol('n')

@@ -32,9 +32,17 @@ class ClassRegistry(Registry):
         useinstead='direct imports from the defining module',
         issue=9371,
         deprecated_since_version='1.0')
+
     def __getattr__(self, name):
         return any(cls.__name__ == name for cls in all_classes)
 
+    @property
+    def _sympy_(self):
+        # until C is deprecated, any sympification of an expression
+        # with C when C has not been defined can raise this error
+        # since the user is trying to use C like a symbol -- and if
+        # we get here, it hasn't been defined as a symbol
+        raise NameError("name 'C' is not defined as a Symbol")
 
 C = ClassRegistry()
 C.BasicMeta = BasicMeta
