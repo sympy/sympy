@@ -1973,6 +1973,13 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is our check.
+        # Non matrice operands will throw error
+        if not(hasattr(other, 'shape')):
+            raise ValueError("Scalar operands are not allowed, use '*' instead");
+            return
+
         return self.__mul__(other)
 
     @call_highest_priority('__rmul__')
@@ -2066,6 +2073,12 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is our check.
+        # Non matrice operands will throw error
+        if not(hasattr(other, 'shape')):
+            raise ValueError("Scalar operands are not allowed, use '*' instead");
+            return
         return self.__rmul__(other)
 
     @call_highest_priority('__mul__')

@@ -674,6 +674,13 @@ def test_multiplication():
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
 
+def test_matmul():
+    a = Matrix([[1, 2], [3, 4]])
+    b = Matrix([[2, 3], [1, 2]])
+    raises(ValueError, lambda: a@2)
+    raises(ValueError, lambda: 2@a)
+        
+
 def test_power():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
 
