@@ -117,9 +117,9 @@ class Quantity(AtomicExpr):
         elif isinstance(expr, Add):
             return Quantity.get_dimensional_expr(expr.args[0])
         elif isinstance(expr, Derivative):
-            dim = Quantity.get_dimensional_expr(expr.args[0])
-            for independent in expr.args[1:]:
-                dim /= Quantity.get_dimensional_expr(independent)
+            dim = Quantity.get_dimensional_expr(expr.expr)
+            for independent, count in expr.variable_count:
+                dim /= Quantity.get_dimensional_expr(independent)**count
             return dim
         elif isinstance(expr, Function):
             args = [Quantity.get_dimensional_expr(arg) for arg in expr.args]
@@ -163,10 +163,10 @@ class Quantity(AtomicExpr):
             return factor, dim
         elif isinstance(expr, Derivative):
             factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
-            for independent in expr.args[1:]:
+            for independent, count in expr.variable_count:
                 ifactor, idim = Quantity._collect_factor_and_dimension(independent)
-                factor /= ifactor
-                dim /= idim
+                factor /= ifactor**count
+                dim /= idim**count
             return factor, dim
         elif isinstance(expr, Function):
             fds = [Quantity._collect_factor_and_dimension(

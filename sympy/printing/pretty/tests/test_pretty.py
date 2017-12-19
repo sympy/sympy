@@ -39,6 +39,7 @@ from sympy.tensor.functions import TensorProduct
 
 
 a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
+f = Function("f")
 th = Symbol('theta')
 ph = Symbol('phi')
 
@@ -2446,6 +2447,27 @@ u("""\
 d       \n\
 ──(β(α))\n\
 dα      \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Derivative(f(x), (x, n))
+
+    ascii_str = \
+"""\
+  n      \n\
+ d       \n\
+---(f(x))\n\
+  n      \n\
+dx       \
+"""
+    ucode_str = \
+u("""\
+  n      \n\
+ d       \n\
+───(f(x))\n\
+  n      \n\
+dx       \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

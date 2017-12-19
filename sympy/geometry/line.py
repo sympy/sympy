@@ -18,6 +18,8 @@ Segment3D
 """
 from __future__ import division, print_function
 
+import warnings
+
 from sympy.core import S, sympify
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol
@@ -26,13 +28,16 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
-from sympy.utilities.misc import Undecidable
+from sympy.utilities.misc import Undecidable, filldedent
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class LinearEntity(GeometrySet):
@@ -2353,8 +2358,8 @@ class Line3D(LinearEntity3D, Line):
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
-    def equation(self, x='x', y='y', z='z', k='k'):
-        """The equation of the line in 3D
+    def equation(self, x='x', y='y', z='z', k=None):
+        """Return the equations that define the line in 3D.
 
         Parameters
         ==========
@@ -2364,28 +2369,45 @@ class Line3D(LinearEntity3D, Line):
         y : str, optional
             The name to use for the y-axis, default value is 'y'.
         z : str, optional
-            The name to use for the x-axis, default value is 'z'.
+            The name to use for the z-axis, default value is 'z'.
 
         Returns
         =======
 
-        equation : tuple
+        equation : Tuple of simultaneous equations
 
         Examples
         ========
 
-        >>> from sympy import Point3D, Line3D
+        >>> from sympy import Point3D, Line3D, solve
+        >>> from sympy.abc import x, y, z
         >>> p1, p2 = Point3D(1, 0, 0), Point3D(5, 3, 0)
         >>> l1 = Line3D(p1, p2)
-        >>> l1.equation()
-        (x/4 - 1/4, y/3, zoo*z, k)
+        >>> eq = l1.equation(x, y, z); eq
+        (-3*x + 4*y + 3, z)
+        >>> solve(eq.subs(z, 0), (x, y, z))
+        {x: 4*y/3 + 1}
 
         """
-        x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, k)]
+        if k is not None:
+            SymPyDeprecationWarning(
+                            feature="equation() no longer needs 'k'",
+                            issue=13742,
+                            deprecated_since_version="1.2").warn()
+        from sympy import solve
+        x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
-        a = p1.direction_ratio(p2)
-        return (((x - p1.x)/a[0]), ((y - p1.y)/a[1]),
-                ((z - p1.z)/a[2]), k)
+        d1, d2, d3 = p1.direction_ratio(p2)
+        x1, y1, z1 = p1
+        v = (x, y, z)
+        eqs = [-d1*k + x - x1, -d2*k + y - y1, -d3*k + z - z1]
+        # eliminate k from equations by solving first eq with k for k
+        for i, e in enumerate(eqs):
+            if e.has(k):
+                kk = solve(eqs[i], k)[0]
+                eqs.pop(i)
+                break
+        return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
 
 
 class Ray3D(LinearEntity3D, Ray):
