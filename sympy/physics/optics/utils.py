@@ -267,7 +267,7 @@ def brewster_angle(medium1, medium2):
     ========
 
     >>> from sympy.physics.optics import brewster
-    >>> brewster_angle(1.33, 1)
+    >>> brewster_angle(1, 1.33)
     0.926093295503462
 
     """
