@@ -276,7 +276,7 @@ install:
         pip uninstall -y sympy;
         pip install --upgrade setuptools;
       fi
-      python -We:invalid -m compileall -f sympy/;
+      python -We:invalid -m compileall -f sympy/ -x _antlr;
       python -We:invalid setup.py install;
       pip list --format=columns;
     fi
