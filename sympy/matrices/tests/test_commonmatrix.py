@@ -676,9 +676,16 @@ def test_multiplication():
 
 def test_matmul():
     a = Matrix([[1, 2], [3, 4]])
-    b = Matrix([[2, 3], [1, 2]])
-    raises(ValueError, lambda: a@2)
-    raises(ValueError, lambda: 2@a)
+
+    raises(ValueError, lambda: a.__matmul__(2))
+
+    #To check 2@a case
+    try:
+        eval('2 @ a')
+    except SyntaxError:
+        pass
+    except ValueError:
+        pass
         
 
 def test_power():
