@@ -111,7 +111,7 @@ GOOD_PAIRS = [
     ("\\int \\frac{1}{x} dx", Integral(Pow(x, -1), x)),
     ("\\int \\frac{1}{a} + \\frac{1}{b} dx",
      Integral(_Add(_Pow(a, -1), Pow(b, -1)), x)),
-    ("\\int \\frac{3 \cdot d\\theta}{\\theta}",
+    ("\\int \\frac{3 \\cdot d\\theta}{\\theta}",
      Integral(3*_Pow(theta, -1), theta)),
     ("\\int \\frac{1}{x} + 1 dx", Integral(_Add(_Pow(x, -1), 1), x)),
     ("x_0", Symbol('x_{0}')),
