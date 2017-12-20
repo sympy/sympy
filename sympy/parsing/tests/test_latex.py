@@ -77,7 +77,8 @@ GOOD_PAIRS = [
     ("\\lim_{x \\to 3^{+}} a", Limit(a, x, 3, dir='+')),
     ("\\lim_{x \\to 3^{-}} a", Limit(a, x, 3, dir='-')),
     ("\\infty", oo),
-    ("\\lim_{x \\to \\infty} \\frac{1}{x}", Limit(_Mul(1, _Pow(x, -1)), x, oo)),
+    ("\\lim_{x \\to \\infty} \\frac{1}{x}",
+     Limit(_Mul(1, _Pow(x, -1)), x, oo)),
     ("\\frac{d}{dx} x", Derivative(x, x)),
     ("\\frac{d}{dt} x", Derivative(x, t)),
     ("f(x)", f(x)),
@@ -89,7 +90,7 @@ GOOD_PAIRS = [
     ("||x||", _Abs(Abs(x))),
     ("|x||y|", _Abs(x)*_Abs(y)),
     ("||x||y||", _Abs(_Abs(x)*_Abs(y))),
-    ("\pi^{|xy|}", Symbol('pi')**_Abs(x*y)),
+    ("\\pi^{|xy|}", Symbol('pi')**_Abs(x*y)),
     ("\\int x dx", Integral(x, x)),
     ("\\int x d\\theta", Integral(x, theta)),
     ("\\int (x^2 - y)dx", Integral(x**2 - y, x)),
@@ -108,8 +109,10 @@ GOOD_PAIRS = [
     ("\\int \\frac{dz}{z}", Integral(Pow(z, -1), z)),
     ("\\int \\frac{3 dz}{z}", Integral(3*Pow(z, -1), z)),
     ("\\int \\frac{1}{x} dx", Integral(Pow(x, -1), x)),
-    ("\\int \\frac{1}{a} + \\frac{1}{b} dx", Integral(_Add(_Pow(a, -1), Pow(b, -1)), x)),
-    ("\\int \\frac{3 \cdot d\\theta}{\\theta}", Integral(3*_Pow(theta, -1), theta)),
+    ("\\int \\frac{1}{a} + \\frac{1}{b} dx",
+     Integral(_Add(_Pow(a, -1), Pow(b, -1)), x)),
+    ("\\int \\frac{3 \cdot d\\theta}{\\theta}",
+     Integral(3*_Pow(theta, -1), theta)),
     ("\\int \\frac{1}{x} + 1 dx", Integral(_Add(_Pow(x, -1), 1), x)),
     ("x_0", Symbol('x_{0}')),
     ("x_{1}", Symbol('x_{1}')),
@@ -117,7 +120,8 @@ GOOD_PAIRS = [
     ("x_{b}", Symbol('x_{b}')),
     ("h_\\theta", Symbol('h_{theta}')),
     ("h_{\\theta}", Symbol('h_{theta}')),
-    ("h_{\\theta}(x_0, x_1)", Symbol('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
+    ("h_{\\theta}(x_0, x_1)",
+     Symbol('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
     ("x!", _factorial(x)),
     ("100!", _factorial(100)),
     ("\\theta!", _factorial(theta)),
@@ -143,7 +147,8 @@ GOOD_PAIRS = [
     ("\\sum^{3}_{k = 1} c", Sum(c, (k, 1, 3))),
     ("\\sum^3_{k = 1} c", Sum(c, (k, 1, 3))),
     ("\\sum_{k = 1}^{10} k^2", Sum(k**2, (k, 1, 10))),
-    ("\\sum_{n = 0}^{\\infty} \\frac{1}{n!}", Sum(_Pow(_factorial(n), -1), (n, 0, oo))),
+    ("\\sum_{n = 0}^{\\infty} \\frac{1}{n!}",
+     Sum(_Pow(_factorial(n), -1), (n, 0, oo))),
     ("\\prod_{a = b}^{c} x", Product(x, (a, b, c))),
     ("\\prod_{a = b}^c x", Product(x, (a, b, c))),
     ("\\prod^{c}_{a = b} x", Product(x, (a, b, c))),
@@ -239,10 +244,12 @@ def test_not_parseable():
     from sympy.parsing.latex import parse_latex, LaTeXSyntaxError
     for latex_str in BAD_STRINGS:
         with pytest.raises(LaTeXSyntaxError):
-            print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))
+            print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
+                latex_str, parse_latex(latex_str)))
 
 
 def test_failing_not_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str in FAILING_BAD_STRINGS:
-        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(latex_str, parse_latex(latex_str)))
+        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
+            latex_str, parse_latex(latex_str)))
