@@ -3,6 +3,7 @@
 
 * refraction_angle
 * deviation
+* brewster_angle
 * lens_makers_formula
 * mirror_formula
 * lens_formula
@@ -14,6 +15,7 @@ from __future__ import division
 
 __all__ = ['refraction_angle',
            'deviation',
+           'brewster_angle',
            'lens_makers_formula',
            'mirror_formula',
            'lens_formula',
@@ -21,7 +23,7 @@ __all__ = ['refraction_angle',
            'transverse_magnification'
            ]
 
-from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit
+from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
@@ -248,6 +250,42 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
         i = acos(_incident.dot(_normal))
         r = acos(refracted.dot(_normal))
         return i - r
+
+
+def brewster_angle(medium1, medium2):
+    """
+    This function calculates the Brewster's angle of incidence to Medium 2 from
+    Medium 1 in radians.
+
+    Parameters
+    ==========
+
+    medium 1 : Medium or sympifiable
+        Refractive index of Medium 1
+    medium 2 : Medium or sympifiable
+        Refractive index of Medium 1
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics import brewster_angle
+    >>> brewster_angle(1, 1.33)
+    0.926093295503462
+
+    """
+    n1, n2 = None, None
+
+    if isinstance(medium1, Medium):
+        n1 = medium1.refractive_index
+    else:
+        n1 = sympify(medium1)
+
+    if isinstance(medium2, Medium):
+        n2 = medium2.refractive_index
+    else:
+        n2 = sympify(medium2)
+
+    return atan2(n2, n1)
 
 
 def lens_makers_formula(n_lens, n_surr, r1, r2):
