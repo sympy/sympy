@@ -1,12 +1,13 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, symbols, Rational,
-                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand)
+                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
+                   Function)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     _parts_rule
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
-
+f = Function('f')
 
 def test_find_substitutions():
     assert find_substitutions((cot(x)**2 + 1)**2*csc(x)**2*cot(x)**2, x, u) == \
@@ -182,8 +183,8 @@ def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
         pi * ((x**2 + 2*x + 3))
     assert manualintegrate(Derivative(x**2 + 2*x + 3, y), x) == \
-        x * Derivative(x**2 + 2*x + 3, y)
-    assert manualintegrate(Derivative(sin(x), x, x, y, x), x) == \
+        Integral(Derivative(x**2 + 2*x + 3, y))
+    assert manualintegrate(Derivative(sin(x), x, x, x, y), x) == \
         Derivative(sin(x), x, x, y)
 
 
@@ -260,11 +261,21 @@ def test_issue_6746():
     assert manualintegrate((y + 1)**(n*x), x) == \
         (y + 1)**(n*x)/(n*log(y + 1))
     a = Symbol('a', negative=True)
-    assert manualintegrate(1 / (a + b*x**2), x) == \
+    b = Symbol('b')
+    assert manualintegrate(1/(a + b*x**2), x) == \
         Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
         (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
         (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
-
+    b = Symbol('b', negative=True)
+    assert manualintegrate(1/(a + b*x**2), x) == \
+        atan(x/(sqrt(-a)*sqrt(-1/b)))/(b*sqrt(-a)*sqrt(-1/b))
+    assert manualintegrate(1/((x**a + y**b + 4)*sqrt(a*x**2 + 1)), x) == \
+        y**(-b)*Integral(x**(-a)/(y**(-b)*sqrt(a*x**2 + 1) +
+        x**(-a)*sqrt(a*x**2 + 1) + 4*x**(-a)*y**(-b)*sqrt(a*x**2 + 1)), x)
+    assert manualintegrate(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x) == \
+        Integral(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x)
+    assert manualintegrate(1/(x - a**x + x*b**2), x) == \
+        Integral(1/(-a**x + b**2*x + x), x)
 
 
 def test_issue_2850():
@@ -316,5 +327,14 @@ def test_issue_10847():
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
 
+def test_issue_12899():
+    assert manualintegrate(f(x,y).diff(x),y) == Integral(Derivative(f(x,y),x),y)
+    assert manualintegrate(f(x,y).diff(y).diff(x),y) == Derivative(f(x,y),x)
+
+
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
+
+
+def test_issue_13297():
+    assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6

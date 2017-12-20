@@ -49,6 +49,10 @@ def test_trigintegrate_odd():
     assert trigintegrate(sin(x)**3 * cos(x)**7, x) == \
         cos(x)**10/10 - cos(x)**8/8
 
+    # both n, m are odd and -ve, and not necessarily equal
+    assert trigintegrate(sin(x)**-1*cos(x)**-1, x) == \
+        -log(sin(x)**2 - 1)/2 + log(sin(x))
+
 
 def test_trigintegrate_even():
     assert trigintegrate(sin(x)**2, x) == x/2 - cos(x)*sin(x)/2
@@ -75,15 +79,16 @@ def test_trigintegrate_even():
 
 
 def test_trigintegrate_mixed():
-    assert trigintegrate(sin(x)*sec(x), x) == -log(sin(x)**2 - 1)/2
+    assert trigintegrate(sin(x)*sec(x), x) == -log(cos(x))
     assert trigintegrate(sin(x)*csc(x), x) == x
     assert trigintegrate(sin(x)*cot(x), x) == sin(x)
 
     assert trigintegrate(cos(x)*sec(x), x) == x
-    assert trigintegrate(cos(x)*csc(x), x) == log(cos(x)**2 - 1)/2
+    assert trigintegrate(cos(x)*csc(x), x) == log(sin(x))
     assert trigintegrate(cos(x)*tan(x), x) == -cos(x)
     assert trigintegrate(cos(x)*cot(x), x) == log(cos(x) - 1)/2 \
         - log(cos(x) + 1)/2 + cos(x)
+    assert trigintegrate(cot(x)*cos(x)**2, x) == log(sin(x)) - sin(x)**2/2
 
 
 def test_trigintegrate_symbolic():

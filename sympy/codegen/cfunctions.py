@@ -13,7 +13,11 @@ from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp, log
+from .ast import Attribute
 
+restrict = Attribute('restrict')  # guarantees no pointer aliasing
+volatile = Attribute('volatile')
+static = Attribute('static')
 
 def _expm1(x):
     return exp(x) - S.One

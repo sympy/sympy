@@ -227,6 +227,11 @@ def test_evalf_bugs():
     assert ((oo*I).n() == S.Infinity*I)
     assert ((oo+oo*I).n() == S.Infinity + S.Infinity*I)
 
+    #issue 11518
+    assert NS(2*x**2.5, 5) == '2.0000*x**2.5000'
+
+    #issue 13076
+    assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
@@ -252,6 +257,8 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
+    assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
+    assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -488,18 +495,21 @@ def test_issue_10323():
 
 
 def test_AssocOp_Function():
-    e = S('''
+    # the first arg of Min is not comparable in the imaginary part
+    raises(ValueError, lambda: S('''
     Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
     sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
     I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
-    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''')
-    # the following should not raise a recursion error; it
-    # should raise a value error because the first arg computes
-    # a non-comparable (prec=1) imaginary part
-    raises(ValueError, lambda: e._eval_evalf(2))
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
+    # if that is changed so a non-comparable number remains as
+    # an arg, then the Min/Max instantiation needs to be changed
+    # to watch out for non-comparable args when making simplifications
+    # and the following test should be added instead (with e being
+    # the sympified expression above):
+    # raises(ValueError, lambda: e._eval_evalf(2))
 
 
 def test_issue_10395():

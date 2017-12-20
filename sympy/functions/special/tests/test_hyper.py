@@ -123,6 +123,9 @@ def test_meijer():
     assert g.nu == 75
     assert g.delta == -1
     assert g.is_commutative is True
+    assert g.is_number is False
+    #issue 13071
+    assert meijerg([[],[]], [[S(1)/2],[0]], 1).is_number is True
 
     assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
 

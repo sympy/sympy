@@ -35,6 +35,7 @@ message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
+message_func_is = "File contains '.func is': %s, line %s."
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -45,6 +46,7 @@ old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 test_ok_def_re = re.compile(r'^def\s+test_.*:$')
 test_file_re = re.compile(r'.*[/\\]test_.*\.py$')
+func_is_re = re.compile(r'\.\s*func\s+is')
 
 
 def tab_in_leading(s):
@@ -135,6 +137,7 @@ def test_files():
       o name of arg-less test suite functions start with _ or test_
       o no duplicate function names that start with test_
       o no assignments to self variable in class methods
+      o no lines contain ".func is" except in the test suite
     """
 
     def test(fname):
@@ -178,6 +181,8 @@ def test_files():
             if (implicit_test_re.search(line) and
                     not filter(lambda ex: ex in fname, import_exclude)):
                 assert False, message_implicit % (fname, idx + 1)
+            if func_is_re.search(line) and not test_file_re.search(fname):
+                assert False, message_func_is % (fname, idx + 1)
 
             result = old_raise_re.search(line)
 
@@ -194,6 +199,7 @@ def test_files():
 
     # Files to test at top level
     top_level_files = [join(TOP_PATH, file) for file in [
+        "isympy.py",
         "build.py",
         "setup.py",
         "setupegg.py",
@@ -213,8 +219,8 @@ def test_files():
         "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
-        # isympy executes ``from sympy import *``:
-        "%(sep)sbin%(sep)sisympy" % sepd,
+        # isympy.py executes ``from sympy import *``:
+        "%(sep)sisympy.py" % sepd,
         # these two are import timing tests:
         "%(sep)sbin%(sep)ssympy_time.py" % sepd,
         "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,

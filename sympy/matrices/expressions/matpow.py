@@ -28,7 +28,7 @@ class MatPow(MatrixExpr):
     def shape(self):
         return self.base.shape
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         A = self.doit()
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.
@@ -43,10 +43,10 @@ class MatPow(MatrixExpr):
             # T = A.base.as_explicit().inverse()
             # A = MatMul(*[T for k in range(-A.exp)])
             else:
-                raise NotImplementedError(("(%d, %d) entry" % (int(i), int(j)))
-                    + " of matrix power either not defined or not implemented")
+                # Leave the expression unevaluated:
+                from sympy.matrices.expressions.matexpr import MatrixElement
+                return MatrixElement(self, i, j)
         return A._entry(i, j)
-
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)

@@ -97,6 +97,12 @@ def test_issue_8289():
     assert roots == _nsort(roots)
 
 
+def test_issue_13340():
+    eq = Poly(y**3 + exp(x)*y + x, y, domain='EX')
+    roots_d = roots(eq)
+    assert len(roots_d) == 3
+
+
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
     assert roots_cubic(Poly(x**3 - 3*x**2 + 3*x - 1, x)) == [1, 1, 1]
