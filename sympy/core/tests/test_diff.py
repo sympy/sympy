@@ -104,6 +104,7 @@ def test_deriv_noncommutative():
     assert A*f(x)*A == f(x)*A**2
     assert A*f(x).diff(x)*A == f(x).diff(x) * A**2
 
+
 def test_diff_nth_derivative():
     f =  Function("f")
     x = Symbol("x")
