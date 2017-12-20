@@ -52,64 +52,84 @@ __all__ += ["SYMPY_DEBUG"]
 
 from . import core
 __all__ += core.__all__
+from .core import *
 
 from . import logic
 __all__ += logic.__all__
+from .logic import *
 
 from . import assumptions
 __all__ += assumptions.__all__
+from .assumptions import *
 
 from . import polys
 __all__ += polys.__all__
+from .polys import *
 
 from . import series
 __all__ += series.__all__
+from .series import *
 
 from . import functions
 __all__ += functions.__all__
+from .functions import *
 
 from . import ntheory
 __all__ += ntheory.__all__
+from .ntheory import *
 
 from . import concrete
 __all__ += concrete.__all__
+from .concrete import *
 
 from . import simplify
 __all__ += simplify.__all__
+from .simplify import *
 
 from . import sets
 __all__ += sets.__all__
+from .sets import *
 
 from . import solvers
 __all__ += solvers.__all__
+from .solvers import *
 
 from . import matrices
 __all__ += matrices.__all__
+from .matrices import *
 
 from . import geometry
 __all__ += geometry.__all__
+from .geometry import *
 
 from . import utilities
 __all__ += utilities.__all__
+from .utilities import *
 
 from . import integrals
 __all__ += integrals.__all__
+from .integrals import *
 
 from . import tensor
 __all__ += tensor.__all__
+from .tensor import *
 
 from . import parsing
 __all__ += parsing.__all__
+from .parsing import *
 
 from . import calculus
 __all__ += calculus.__all__
+from .calculus import *
 
 from . import algebras
 __all__ += algebras.__all__
+from .algebras import *
 
 # Adds about .04-.05 seconds of import time
 # from . import combinatorics
 # __all__ += combinatorics.__all__
+# from .combinatorics import *
 
 # This module is slow to import:
 # from .physics import units
@@ -150,3 +170,4 @@ _create_evalf_table()
 
 from . import deprecated
 __all__ += deprecated.__all__
+from .deprecated import *
