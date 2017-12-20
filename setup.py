@@ -319,11 +319,7 @@ class antlr(Command):
                     out_file.write(message)
                     header = 2
                 with open(path) as in_file:
-                    out_file.writelines([
-                        line.rstrip()
-                        for line in in_file.readlines()[header:]
-                    ])
-                    out_file.write("\n")
+                    out_file.writelines(in_file.readlines()[header:])
             os.unlink(path)
 
 # Check that this list is uptodate against the result of the command:
