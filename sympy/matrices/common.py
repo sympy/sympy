@@ -1978,7 +1978,7 @@ class MatrixArithmetic(MatrixRequired):
         # Non matrice operands will throw error
         if not(hasattr(other, 'shape')):
             raise ValueError("Scalar operands are not allowed, use '*' instead")
-            
+
         return self.__mul__(other)
 
     @call_highest_priority('__rmul__')

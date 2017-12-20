@@ -686,7 +686,6 @@ def test_matmul():
         pass
     except ValueError:
         pass
-        
 
 def test_power():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
