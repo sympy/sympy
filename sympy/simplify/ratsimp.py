@@ -165,7 +165,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
                 c = c_hat.subs(sol)
                 d = d_hat.subs(sol)
 
-                # The "free" variables occuring before as parameters
+                # The "free" variables occurring before as parameters
                 # might still be in the substituted c, d, so set them
                 # to the value chosen before:
                 c = c.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))

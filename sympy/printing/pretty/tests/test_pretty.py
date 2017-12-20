@@ -38,7 +38,8 @@ from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 from sympy.tensor.functions import TensorProduct
 
 
-a, b, x, y, z, k, n = symbols('a,b,x,y,z,k,n')
+a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
+f = Function("f")
 th = Symbol('theta')
 ph = Symbol('phi')
 
@@ -2446,6 +2447,27 @@ u("""\
 d       \n\
 ──(β(α))\n\
 dα      \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Derivative(f(x), (x, n))
+
+    ascii_str = \
+"""\
+  n      \n\
+ d       \n\
+---(f(x))\n\
+  n      \n\
+dx       \
+"""
+    ucode_str = \
+u("""\
+  n      \n\
+ d       \n\
+───(f(x))\n\
+  n      \n\
+dx       \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -5847,6 +5869,13 @@ def test_issue_9877():
     ucode_str2 = u'{x} ∩ {y} ∩ ({z} \\ [1, 2])'
     d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
     assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2
+
+
+def test_issue_13651():
+    expr1 = c + Mul(-1, a + b, evaluate=False)
+    assert pretty(expr1) == 'c - (a + b)'
+    expr2 = c + Mul(-1, a - b + d, evaluate=False)
+    assert pretty(expr2) == 'c - (a - b + d)'
 
 
 def test_pretty_primenu():

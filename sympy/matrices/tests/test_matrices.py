@@ -1965,30 +1965,30 @@ def test_diff():
 
     # Test diff with tuples:
 
-    dB = B.diff((a, b))
+    dB = B.diff([[a, b]])
     assert dB.shape == (2, 2, 1)
     assert dB == Array([[[1], [0]], [[0], [1]]])
 
     f = Function("f")
     fxyz = f(x, y, z)
-    assert fxyz.diff((x, y, z)) == Array([fxyz.diff(x), fxyz.diff(y), fxyz.diff(z)])
-    assert fxyz.diff((x, y, z), 2) == Array([
+    assert fxyz.diff([[x, y, z]]) == Array([fxyz.diff(x), fxyz.diff(y), fxyz.diff(z)])
+    assert fxyz.diff(([x, y, z], 2)) == Array([
         [fxyz.diff(x, 2), fxyz.diff(x, y), fxyz.diff(x, z)],
         [fxyz.diff(x, y), fxyz.diff(y, 2), fxyz.diff(y, z)],
         [fxyz.diff(x, z), fxyz.diff(z, y), fxyz.diff(z, 2)],
     ])
 
     expr = sin(x)*exp(y)
-    assert expr.diff((x, y)) == Array([cos(x)*exp(y), sin(x)*exp(y)])
-    assert expr.diff(y, (x, y)) == Array([cos(x)*exp(y), sin(x)*exp(y)])
-    assert expr.diff(x, (x, y)) == Array([-sin(x)*exp(y), cos(x)*exp(y)])
-    assert expr.diff((y, x), (x, y)) == Array([[cos(x)*exp(y), -sin(x)*exp(y)], [sin(x)*exp(y), cos(x)*exp(y)]])
+    assert expr.diff([[x, y]]) == Array([cos(x)*exp(y), sin(x)*exp(y)])
+    assert expr.diff(y, ((x, y),)) == Array([cos(x)*exp(y), sin(x)*exp(y)])
+    assert expr.diff(x, ((x, y),)) == Array([-sin(x)*exp(y), cos(x)*exp(y)])
+    assert expr.diff(((y, x),), [[x, y]]) == Array([[cos(x)*exp(y), -sin(x)*exp(y)], [sin(x)*exp(y), cos(x)*exp(y)]])
 
     # Test different notations:
 
-    fxyz.diff(x).diff(y).diff(x) == fxyz.diff((x, y, z), 3)[0, 1, 0]
-    fxyz.diff(z).diff(y).diff(x) == fxyz.diff((x, y, z), 3)[2, 1, 0]
-    fxyz.diff((x, y, z), (z, y, x)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
+    fxyz.diff(x).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[0, 1, 0]
+    fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
+    fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
 
 
 def test_getattr():

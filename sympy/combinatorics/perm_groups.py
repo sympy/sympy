@@ -1958,7 +1958,7 @@ class PermutationGroup(Basic):
                 to_remove = []
                 for i, r in enumerate(rep_blocks):
                     if len(r) > len(rep) and rep.issubset(r):
-                        # i-th block sytem is not minimal
+                        # i-th block system is not minimal
                         del num_blocks[i], blocks[i]
                         to_remove.append(rep_blocks[i])
                     elif len(r) < len(rep) and r.issubset(rep):

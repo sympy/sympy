@@ -275,7 +275,7 @@ def get_contraction_structure(expr):
 
     By *dummy* we mean indices that are summation indices.
 
-    The stucture of the expression is determined and described as follows:
+    The structure of the expression is determined and described as follows:
 
     1) A conforming summation of Indexed objects is described with a dict where
        the keys are summation indices and the corresponding values are sets
@@ -289,7 +289,7 @@ def get_contraction_structure(expr):
        itself will be stored as a key in the dict.  For that key, the
        corresponding value is a list of dicts, each of which is the result of a
        recursive call to get_contraction_structure().  The list contains only
-       dicts for the non-trivial deeper contractions, ommitting dicts with None
+       dicts for the non-trivial deeper contractions, omitting dicts with None
        as the one and only key.
 
     .. Note:: The presence of expressions among the dictinary keys indicates

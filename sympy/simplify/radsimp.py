@@ -129,10 +129,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         (a + b)*Derivative(f(x), x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), f)
-        (a + b)*Derivative(f(x), x, x)
+        (a + b)*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-        a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
+        a*Derivative(f(x), (x, 2)) + b*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
@@ -140,7 +140,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     Or you can even match both derivative order and exponent at the same time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-        (a + b)*Derivative(f(x), x, x)**2
+        (a + b)*Derivative(f(x), (x, 2))**2
 
     Finally, you can apply a function to each of the collected coefficients.
     For example you can factorize symbolic coefficients of polynomial::
