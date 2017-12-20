@@ -1,5 +1,5 @@
-from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
-from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
+from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix, symbols
+from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym, Point,
                                   dynamicsymbols, time_derivative, express)
 
 Vector.simp = True
@@ -214,3 +214,53 @@ def test_issue_11498():
     assert B.dcm(A) == Matrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]])
     assert A.dcm(B) == Matrix([[0, 0, -1], [1, 0, 0], [0, -1, 0]])
     assert B.dcm(A).T == A.dcm(B)
+
+
+def test_orient_loop():
+    # Make a triangle where each side has a reference frame
+    a_frame = ReferenceFrame('a_frame')
+    b_frame = ReferenceFrame('b_frame')
+    c_frame = ReferenceFrame('c_frame')
+
+    abc_angle = symbols('abc_angle', positive=True)
+    bca_angle = symbols('bca_angle', positive=True)
+
+    b_frame.orient(a_frame, 'Axis', (pi - abc_angle, a_frame.z))
+    a_frame.dcm(b_frame)
+    b_frame.dcm(a_frame)
+
+    # c_frame.orient(b_frame, 'Axis', (pi - bca_angle, b_frame.z))
+    b_frame.orient(c_frame, 'Axis', (bca_angle - pi, c_frame.z))
+    a_frame.dcm(b_frame)
+    b_frame.dcm(a_frame)
+    c_frame.dcm(b_frame)
+    b_frame.dcm(c_frame)
+
+    a_frame.orient(c_frame, 'Axis', (abc_angle + bca_angle, c_frame.z))
+    a_frame.dcm(b_frame)
+    b_frame.dcm(a_frame)
+    c_frame.dcm(b_frame)
+    b_frame.dcm(c_frame)
+    a_frame.dcm(c_frame)
+    c_frame.dcm(a_frame)
+
+    a_pt = Point('a_pt')
+    b_pt = Point('b_pt')
+    c_pt = Point('c_pt')
+
+    b_pt.set_pos(a_pt, a_frame.x)
+    c_pt.set_pos(b_pt, b_frame.x)
+    a_pt.set_pos(c_pt, c_frame.x)
+
+    # Check angles between each side of the triangle
+    bc_vec = c_pt.pos_from(b_pt)
+    ba_vec = a_pt.pos_from(b_pt)
+    assert cos(abc_angle) == bc_vec.dot(ba_vec) / (bc_vec.magnitude() * ba_vec.magnitude())
+
+    ca_vec = a_pt.pos_from(c_pt)
+    cb_vec = b_pt.pos_from(c_pt)
+    assert cos(bca_angle) == cb_vec.dot(ca_vec) / (cb_vec.magnitude() * ca_vec.magnitude())
+
+    ab_vec = b_pt.pos_from(a_pt)
+    ac_vec = c_pt.pos_from(a_pt)
+    assert cos(pi - (abc_angle + bca_angle)) == ac_vec.dot(ab_vec) / (ac_vec.magnitude() * ab_vec.magnitude())

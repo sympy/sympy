@@ -581,32 +581,16 @@ class ReferenceFrame(object):
         #of the frames it is linked to. Also remove it from the _dcm_dict of
         #its parent
         frames = self._dcm_cache.keys()
-#        dcm_dict_del = []
         dcm_cache_del = []
 
         # For every frame that I have a cached dcm to
         for frame in frames:
             dcm_cache_del += [frame]  # Add it to cache delete list
 
-            # If it is also in my dictionary of directly oriented frames, add it to the dict delete list
-#            if frame in self._dcm_dict:
-#                dcm_dict_del += [frame]
-
-        # For every frame that was in my cache AND directly oriented, delete their orientation to me?
-        # Why are we doing this?
-#        for frame in dcm_dict_del:
-#            del frame._dcm_dict[self]
-
         # For every frame that was in my cache, delete their cache to me.
         # This is because the most direct dcm path could have changed due to the new relationship.
         for frame in dcm_cache_del:
             del frame._dcm_cache[self]
-
-        #Add the dcm relationship to _dcm_dict
-
-        # I guess we are saying that any other orientations that were set are not invalid?
-        # This seems wrong, the previously set orientations should still be valid.
-#        self._dcm_dict = self._dlist[0] = {}
 
         # Add the orientations to the dicts of both self and parent
         self._dcm_dict.update({parent: parent_orient.T})
