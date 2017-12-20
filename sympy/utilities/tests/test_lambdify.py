@@ -5,10 +5,10 @@ import math
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
-    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
+    symbols, Function, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy)
+    DotProduct, Eq, Dummy, diff)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -26,6 +26,7 @@ numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
 w, x, y, z = symbols('w,x,y,z')
+func = Function('func')(x)
 
 #================== Test different arguments =======================
 
@@ -218,6 +219,15 @@ def test_issue_9334():
     func_numexpr = lambdify((a,b), expr, modules=[numexpr], dummify=False)
     foo, bar = numpy.random.random((2, 4))
     func_numexpr(foo, bar)
+
+#================== Test derivatives ===============================
+
+
+def test_derivative():
+    expr = func + func.diff()
+    f = lambdify((func, func.diff()), expr)
+    assert f(sin(x)) == sin(x) + cos(x)
+    assert f(cos(x)) == cos(x) - sin(x)
 
 #================== Test some functions ============================
 
