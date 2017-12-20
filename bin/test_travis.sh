@@ -56,7 +56,11 @@ if [[ "${TEST_DOCTESTS}" == "true" ]]; then
     cat << EOF | python -We:invalid
 print('Testing DOCTESTS')
 import sympy
-if not sympy.doctest():
+blacklist = [
+    'sympy/parsing/latex/_antlr/latexparser.py',
+    'sympy/parsing/latex/_antlr/latexlexer.py',
+]
+if not sympy.doctest(blacklist=blacklist):
     raise Exception('Tests failed')
 EOF
     cd ..

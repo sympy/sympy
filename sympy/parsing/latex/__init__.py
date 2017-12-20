@@ -11,6 +11,10 @@ def parse_latex(s):
 
     s : str
     The LaTeX string to parse.
+
+    >>> from sympy.parsing.latex import parse_latex
+    >>> parse_latex("1 + 1")  # doctest: +SKIP
+    2
     """
 
     _latex = import_module(
