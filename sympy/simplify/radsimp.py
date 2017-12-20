@@ -530,23 +530,23 @@ def collect_const(expr, *vars, **kwargs):
     Parameters
     ==========
 
-    expr : Sympy Expression
-           This parameter defines the expression the expression from which terms with similar
-           coefficient are to be collected. A non-Add expression is returned as it is.
+    expr : sympy expression
+           This parameter defines the expression the expression from which terms
+           with similar coefficients are to be collected. A non-Add expression
+           is returned as it is.
 
-    *vars : Numbers,optional
-            Used to specify the different number coefficients explicitly, for grouping of terms.
+    *vars : variable length collection of Numbers,optional
+            Specifies the constants to target for collection.
             Can be multiple in number.
 
-    **kwargs : Optional(Numbers=True)
-               Default is targeting the Numbers set. If Numbers is not the desired set,
-               ''Numbers=False'' can be the arg value.
-
+    **kwargs : 'Numbers' is the only possible argument to pass.
+               Numbers(default=True) specifies to target all instance of :class: 'Number'
+               class. If 'Numbers=False', then no Float or Rational will be collected.
 
     Returns
     =======
 
-    expr :  Sympy expression
+    expr :  Expr
             Returns an expression with similar coefficient terms collected.
 
     Examples
