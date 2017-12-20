@@ -2389,9 +2389,6 @@ class MatrixBase(MatrixDeprecated,
         """
         from .dense import Matrix
         
-        if (b.cols !=1 and b.rows != 1):
-            raise ShapeError("Matrices size mismatch")
-        
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
@@ -2403,7 +2400,11 @@ class MatrixBase(MatrixDeprecated,
                 raise TypeError(
                     "`b` must be an ordered iterable or Matrix, not %s." %
                     type(b))
-
+        if (type(b) == list or type(b) == tuple):
+            b = Matrix(b)
+        if (b.cols !=1 and b.rows != 1):
+            raise ShapeError("`b` must has only one row or one column")
+        
         mat = self
         if mat.cols == b.rows:
             if b.cols != 1:
