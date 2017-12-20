@@ -133,6 +133,21 @@ Travis CI.
 
 To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 
+Regenerate Experimental `\LaTeX` Parser/Lexer
+---------------------------------------------
+For convenience, the parser and lexer generated with the
+`ANTLR4 <http://antlr4.org`_ toolchain, but checked into the repo in
+`sympy/parsing/latex/_antlr`. Presently, most users should not need to
+regenerate these files, but if you plan to work on this feature, you will need
+the `antlr4` command line tool available. One way to get it is::
+
+    $ conda install -c conda-forge antlr=4.7
+
+After making changes to `sympy/parsing/latex/LaTeX.g4`, run::
+
+
+    $ ./setup.py antlr
+
 Usage in Python 3
 -----------------
 
@@ -166,6 +181,7 @@ with::
 WARNING: The above commands will all clear changes you may have made, and you
 will lose them forever. Be sure to check things with ``git status``, ``git
 diff``, ``git clean -Xn`` and ``git clean -n`` before doing any of those.
+
 
 Bugs
 ----

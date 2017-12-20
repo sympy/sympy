@@ -28,8 +28,6 @@ Parsing Functions Reference
 
 .. autofunction:: sympy.parsing.mathematica.mathematica
 
-.. autofunction:: sympy.parsing.latex.parse_latex
-
 Parsing Exceptions Reference
 ----------------------------
 
@@ -72,3 +70,34 @@ don't need to be manually added by the user.
 .. autofunction:: sympy.parsing.sympy_parser.auto_symbol
 
 .. autofunction:: sympy.parsing.sympy_parser.auto_number
+
+
+Experimental `\LaTeX` Parsing
+-----------------------------
+
+`\LaTeX` parsing was ported from
+`latex2sympy <https://github.com/augustt198/latex2sympy>`_. While functional
+and its API should remain stable, the parsing behavior or backend may change in
+future releases.
+
+`\LaTeX` Parsing Functions Reference
+------------------------------------
+
+.. autofunction:: sympy.parsing.latex.parse_latex
+
+`\LaTeX` Parsing Exceptions Reference
+-------------------------------------
+
+.. autoclass:: sympy.parsing.latex.LaTeXSyntaxError
+
+Runtime Installation
+--------------------
+
+The currently-packaged backend is partially generated with
+`ANTLR4 <http://antlr4.org>`_,
+but to use the parser, you only need the ``antlr4`` python package, provided by
+one of::
+
+    $ conda install -c conda-forge antlr-python-runtime
+    $ pip install antlr4-python3-runtime
+    $ pip install antlr4-python2-runtime
