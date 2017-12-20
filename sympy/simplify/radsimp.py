@@ -527,6 +527,29 @@ def collect_const(expr, *vars, **kwargs):
     targeted. Although any Number can also be targeted, if this is not
     desired set ``Numbers=False`` and no Float or Rational will be collected.
 
+    Parameters
+    ==========
+
+    expr : sympy expression
+        This parameter defines the expression the expression from which
+        terms with similar coefficients are to be collected. A non-Add
+        expression is returned as it is.
+
+    vars : variable length collection of Numbers, optional
+        Specifies the constants to target for collection. Can be multiple in
+        number.
+
+    kwargs : ``Numbers`` is the only possible argument to pass.
+        Numbers (default=True) specifies to target all instance of
+        :class:`sympy.core.numbers.Number` class. If ``Numbers=False``, then
+        no Float or Rational will be collected.
+
+    Returns
+    =======
+
+    expr : Expr
+        Returns an expression with similar coefficient terms collected.
+
     Examples
     ========
 
