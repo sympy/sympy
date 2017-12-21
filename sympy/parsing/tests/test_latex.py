@@ -1,3 +1,5 @@
+import hashlib
+
 from sympy.utilities import pytest
 from sympy.external import import_module
 
@@ -253,3 +255,26 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
             latex_str, parse_latex(latex_str)))
+
+
+def test_antlr_generation():
+    from sympy.parsing.latex._build_latex_antlr import (
+        build_parser,
+        check_antlr_version,
+        generated_files,
+    )
+
+    if not check_antlr_version():
+        pytest.skip('antlr4 not available')
+
+    def generated_sha():
+        sha = hashlib.sha256()
+        for gen in generated_files:
+            with open(gen, 'rb') as fp:
+                sha.update(fp.read())
+        return sha.hexdigest()
+
+    old_sha = generated_sha()
+    build_parser()
+    new_sha = generated_sha()
+    assert old_sha == new_sha

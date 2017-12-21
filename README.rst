@@ -145,7 +145,6 @@ the `antlr4` command line tool available. One way to get it is::
 
 After making changes to `sympy/parsing/latex/LaTeX.g4`, run::
 
-
     $ ./setup.py antlr
 
 Usage in Python 3
