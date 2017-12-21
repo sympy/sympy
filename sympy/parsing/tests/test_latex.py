@@ -1,4 +1,13 @@
 import hashlib
+import os
+import glob
+import tempfile
+
+from sympy.parsing.latex._build_latex_antlr import (
+    build_parser,
+    check_antlr_version,
+    dir_latex_antlr
+)
 
 from sympy.utilities import pytest
 from sympy.external import import_module
@@ -258,23 +267,19 @@ def test_failing_not_parseable():
 
 
 def test_antlr_generation():
-    from sympy.parsing.latex._build_latex_antlr import (
-        build_parser,
-        check_antlr_version,
-        generated_files,
-    )
-
     if not check_antlr_version():
         pytest.skip('antlr4 not available')
 
-    def generated_sha():
+    def generated_sha(path):
         sha = hashlib.sha256()
-        for gen in generated_files:
+        for gen in sorted(glob.glob(os.path.join(path, "*.*"))):
             with open(gen, 'rb') as fp:
                 sha.update(fp.read())
         return sha.hexdigest()
 
-    old_sha = generated_sha()
-    build_parser()
-    new_sha = generated_sha()
-    assert old_sha == new_sha
+    old_sha = generated_sha(dir_latex_antlr)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        build_parser(tmpdir)
+        new_sha = generated_sha(tmpdir)
+        assert old_sha == new_sha
