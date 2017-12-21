@@ -1977,7 +1977,7 @@ class MatrixArithmetic(MatrixRequired):
         # matrix-like objects can have shapes.  This is our check.
         # Non matrice operands will throw error
         if not(hasattr(other, 'shape')):
-            raise ValueError("Scalar operands are not allowed, use '*' instead")
+            return NotImplemented
 
         return self.__mul__(other)
 
@@ -2076,7 +2076,7 @@ class MatrixArithmetic(MatrixRequired):
         # matrix-like objects can have shapes.  This is our check.
         # Non matrice operands will throw error
         if not(hasattr(other, 'shape')):
-            raise ValueError("Scalar operands are not allowed, use '*' instead")
+            return NotImplemented
 
         return self.__rmul__(other)
 

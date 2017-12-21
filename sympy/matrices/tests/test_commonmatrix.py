@@ -677,14 +677,15 @@ def test_multiplication():
 def test_matmul():
     a = Matrix([[1, 2], [3, 4]])
 
-    raises(ValueError, lambda: a.__matmul__(2))
+    #Check a@2 case
+    assert a.__matmul__(2) == NotImplemented
 
     #To check 2@a case
     try:
         eval('2 @ a')
     except SyntaxError:
         pass
-    except ValueError:
+    except TypeError:  #TypeError is raised in case of NotImplemented is returned
         pass
 
 def test_power():
