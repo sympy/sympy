@@ -218,31 +218,31 @@ class LaTeXParser ( Parser ):
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ u"<INVALID>", u"','", u"<INVALID>", u"'+'", u"'-'", 
-                     u"'*'", u"'/'", u"'('", u"')'", u"'{'", u"'}'", u"'['", 
-                     u"']'", u"'|'", u"'\\lim'", u"<INVALID>", u"'\\int'", 
-                     u"'\\sum'", u"'\\prod'", u"'\\log'", u"'\\ln'", u"'\\sin'", 
-                     u"'\\cos'", u"'\\tan'", u"'\\csc'", u"'\\sec'", u"'\\cot'", 
-                     u"'\\arcsin'", u"'\\arccos'", u"'\\arctan'", u"'\\arccsc'", 
-                     u"'\\arcsec'", u"'\\arccot'", u"'\\sinh'", u"'\\cosh'", 
-                     u"'\\tanh'", u"'\\arsinh'", u"'\\arcosh'", u"'\\artanh'", 
-                     u"'\\sqrt'", u"'\\times'", u"'\\cdot'", u"'\\div'", 
-                     u"'\\frac'", u"'\\mathit'", u"'_'", u"'^'", u"':'", 
-                     u"<INVALID>", u"<INVALID>", u"<INVALID>", u"'='", u"'<'", 
+    literalNames = [ u"<INVALID>", u"','", u"<INVALID>", u"'+'", u"'-'",
+                     u"'*'", u"'/'", u"'('", u"')'", u"'{'", u"'}'", u"'['",
+                     u"']'", u"'|'", u"'\\lim'", u"<INVALID>", u"'\\int'",
+                     u"'\\sum'", u"'\\prod'", u"'\\log'", u"'\\ln'", u"'\\sin'",
+                     u"'\\cos'", u"'\\tan'", u"'\\csc'", u"'\\sec'", u"'\\cot'",
+                     u"'\\arcsin'", u"'\\arccos'", u"'\\arctan'", u"'\\arccsc'",
+                     u"'\\arcsec'", u"'\\arccot'", u"'\\sinh'", u"'\\cosh'",
+                     u"'\\tanh'", u"'\\arsinh'", u"'\\arcosh'", u"'\\artanh'",
+                     u"'\\sqrt'", u"'\\times'", u"'\\cdot'", u"'\\div'",
+                     u"'\\frac'", u"'\\mathit'", u"'_'", u"'^'", u"':'",
+                     u"<INVALID>", u"<INVALID>", u"<INVALID>", u"'='", u"'<'",
                      u"'\\leq'", u"'>'", u"'\\geq'", u"'!'" ]
 
-    symbolicNames = [ u"<INVALID>", u"<INVALID>", u"WS", u"ADD", u"SUB", 
-                      u"MUL", u"DIV", u"L_PAREN", u"R_PAREN", u"L_BRACE", 
-                      u"R_BRACE", u"L_BRACKET", u"R_BRACKET", u"BAR", u"FUNC_LIM", 
-                      u"LIM_APPROACH_SYM", u"FUNC_INT", u"FUNC_SUM", u"FUNC_PROD", 
-                      u"FUNC_LOG", u"FUNC_LN", u"FUNC_SIN", u"FUNC_COS", 
-                      u"FUNC_TAN", u"FUNC_CSC", u"FUNC_SEC", u"FUNC_COT", 
-                      u"FUNC_ARCSIN", u"FUNC_ARCCOS", u"FUNC_ARCTAN", u"FUNC_ARCCSC", 
-                      u"FUNC_ARCSEC", u"FUNC_ARCCOT", u"FUNC_SINH", u"FUNC_COSH", 
-                      u"FUNC_TANH", u"FUNC_ARSINH", u"FUNC_ARCOSH", u"FUNC_ARTANH", 
-                      u"FUNC_SQRT", u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV", 
-                      u"CMD_FRAC", u"CMD_MATHIT", u"UNDERSCORE", u"CARET", 
-                      u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER", u"EQUAL", 
+    symbolicNames = [ u"<INVALID>", u"<INVALID>", u"WS", u"ADD", u"SUB",
+                      u"MUL", u"DIV", u"L_PAREN", u"R_PAREN", u"L_BRACE",
+                      u"R_BRACE", u"L_BRACKET", u"R_BRACKET", u"BAR", u"FUNC_LIM",
+                      u"LIM_APPROACH_SYM", u"FUNC_INT", u"FUNC_SUM", u"FUNC_PROD",
+                      u"FUNC_LOG", u"FUNC_LN", u"FUNC_SIN", u"FUNC_COS",
+                      u"FUNC_TAN", u"FUNC_CSC", u"FUNC_SEC", u"FUNC_COT",
+                      u"FUNC_ARCSIN", u"FUNC_ARCCOS", u"FUNC_ARCTAN", u"FUNC_ARCCSC",
+                      u"FUNC_ARCSEC", u"FUNC_ARCCOT", u"FUNC_SINH", u"FUNC_COSH",
+                      u"FUNC_TANH", u"FUNC_ARSINH", u"FUNC_ARCOSH", u"FUNC_ARTANH",
+                      u"FUNC_SQRT", u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV",
+                      u"CMD_FRAC", u"CMD_MATHIT", u"UNDERSCORE", u"CARET",
+                      u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER", u"EQUAL",
                       u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
 
     RULE_math = 0
@@ -281,13 +281,13 @@ class LaTeXParser ( Parser ):
     RULE_subeq = 33
     RULE_supeq = 34
 
-    ruleNames =  [ u"math", u"relation", u"equality", u"expr", u"additive", 
-                   u"mp", u"mp_nofunc", u"unary", u"unary_nofunc", u"postfix", 
-                   u"postfix_nofunc", u"postfix_op", u"eval_at", u"eval_at_sub", 
-                   u"eval_at_sup", u"exp", u"exp_nofunc", u"comp", u"comp_nofunc", 
-                   u"group", u"abs_group", u"atom", u"mathit", u"mathit_text", 
-                   u"frac", u"func_normal", u"func", u"args", u"limit_sub", 
-                   u"func_arg", u"func_arg_noparens", u"subexpr", u"supexpr", 
+    ruleNames =  [ u"math", u"relation", u"equality", u"expr", u"additive",
+                   u"mp", u"mp_nofunc", u"unary", u"unary_nofunc", u"postfix",
+                   u"postfix_nofunc", u"postfix_op", u"eval_at", u"eval_at_sub",
+                   u"eval_at_sup", u"exp", u"exp_nofunc", u"comp", u"comp_nofunc",
+                   u"group", u"abs_group", u"atom", u"mathit", u"mathit_text",
+                   u"frac", u"func_normal", u"func", u"args", u"limit_sub",
+                   u"func_arg", u"func_arg_noparens", u"subexpr", u"supexpr",
                    u"subeq", u"supeq" ]
 
     EOF = Token.EOF
@@ -461,7 +461,7 @@ class LaTeXParser ( Parser ):
                         self._errHandler.reportMatch(self)
                         self.consume()
                     self.state = 77
-                    self.relation(3) 
+                    self.relation(3)
                 self.state = 82
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,0,self._ctx)
@@ -611,7 +611,7 @@ class LaTeXParser ( Parser ):
                         self._errHandler.reportMatch(self)
                         self.consume()
                     self.state = 94
-                    self.additive(3) 
+                    self.additive(3)
                 self.state = 99
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,1,self._ctx)
@@ -699,7 +699,7 @@ class LaTeXParser ( Parser ):
                         self._errHandler.reportMatch(self)
                         self.consume()
                     self.state = 105
-                    self.mp(3) 
+                    self.mp(3)
                 self.state = 110
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,2,self._ctx)
@@ -787,7 +787,7 @@ class LaTeXParser ( Parser ):
                         self._errHandler.reportMatch(self)
                         self.consume()
                     self.state = 116
-                    self.mp_nofunc(3) 
+                    self.mp_nofunc(3)
                 self.state = 121
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,3,self._ctx)
@@ -852,7 +852,7 @@ class LaTeXParser ( Parser ):
                 pass
             elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_SQRT, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.NUMBER, LaTeXParser.SYMBOL]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 125 
+                self.state = 125
                 self._errHandler.sync(self)
                 _alt = 1
                 while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
@@ -862,7 +862,7 @@ class LaTeXParser ( Parser ):
 
                     else:
                         raise NoViableAltException(self)
-                    self.state = 127 
+                    self.state = 127
                     self._errHandler.sync(self)
                     _alt = self._interp.adaptivePredict(self._input,4,self._ctx)
 
@@ -942,7 +942,7 @@ class LaTeXParser ( Parser ):
                 while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                     if _alt==1:
                         self.state = 134
-                        self.postfix_nofunc() 
+                        self.postfix_nofunc()
                     self.state = 139
                     self._errHandler.sync(self)
                     _alt = self._interp.adaptivePredict(self._input,6,self._ctx)
@@ -996,7 +996,7 @@ class LaTeXParser ( Parser ):
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
                     self.state = 143
-                    self.postfix_op() 
+                    self.postfix_op()
                 self.state = 148
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,8,self._ctx)
@@ -1046,7 +1046,7 @@ class LaTeXParser ( Parser ):
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
                     self.state = 150
-                    self.postfix_op() 
+                    self.postfix_op()
                 self.state = 155
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,9,self._ctx)
@@ -1386,7 +1386,7 @@ class LaTeXParser ( Parser ):
                         self.state = 196
                         self.subexpr()
 
-             
+
                 self.state = 203
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,16,self._ctx)
@@ -1492,7 +1492,7 @@ class LaTeXParser ( Parser ):
                         self.state = 216
                         self.subexpr()
 
-             
+
                 self.state = 223
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,19,self._ctx)
@@ -2913,32 +2913,32 @@ class LaTeXParser ( Parser ):
     def relation_sempred(self, localctx, predIndex):
             if predIndex == 0:
                 return self.precpred(self._ctx, 2)
-         
+
 
     def additive_sempred(self, localctx, predIndex):
             if predIndex == 1:
                 return self.precpred(self._ctx, 2)
-         
+
 
     def mp_sempred(self, localctx, predIndex):
             if predIndex == 2:
                 return self.precpred(self._ctx, 2)
-         
+
 
     def mp_nofunc_sempred(self, localctx, predIndex):
             if predIndex == 3:
                 return self.precpred(self._ctx, 2)
-         
+
 
     def exp_sempred(self, localctx, predIndex):
             if predIndex == 4:
                 return self.precpred(self._ctx, 2)
-         
+
 
     def exp_nofunc_sempred(self, localctx, predIndex):
             if predIndex == 5:
                 return self.precpred(self._ctx, 2)
-         
+
 
 
 

@@ -58,7 +58,10 @@ def build_parser(output_dir=dir_latex_antlr):
                 out_file.write(header)
                 offset = 2
             with open(path) as in_file:
-                out_file.writelines(in_file.readlines()[offset:])
+                out_file.writelines([
+                    line.rstrip() + "\n"
+                    for line in in_file.readlines()[offset:]
+                ])
         os.unlink(path)
         print("...", new_path)
 

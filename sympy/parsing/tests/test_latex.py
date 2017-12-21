@@ -3,6 +3,7 @@ import os
 import glob
 import tempfile
 import shutil
+import difflib
 
 from sympy.parsing.latex._build_latex_antlr import (
     build_parser,
@@ -268,23 +269,26 @@ def test_failing_not_parseable():
 
 
 def test_antlr_generation():
+    """ Does rebuilding the parser create the same content as
+        what is checked in?
+    """
     if not check_antlr_version():
-        pytest.skip('antlr4 not available')
-
-    def generated_sha(path):
-        sha = hashlib.sha256()
-        for gen in sorted(glob.glob(os.path.join(path, "*.*"))):
-            with open(gen, 'rb') as fp:
-                sha.update(fp.read())
-        return sha.hexdigest()
-
-    old_sha = generated_sha(dir_latex_antlr)
+        return pytest.skip('antlr4 not available, skipping')
 
     tmpdir = tempfile.mkdtemp()
 
     try:
         build_parser(tmpdir)
-        new_sha = generated_sha(tmpdir)
+
+        for filename in sorted(glob.glob(os.path.join(tmpdir, "*.*"))):
+            base = os.path.basename(filename)
+            print("Comparing {}...".format(base))
+            with open(filename) as generated:
+                with open(os.path.join(dir_latex_antlr, base)) as checked_in:
+                    diff = difflib.context_diff(
+                        checked_in.readlines(),
+                        generated.readlines()
+                    )
+                    assert list(diff) == [], "{} not the same".format(base)
     finally:
         shutil.rmtree(tmpdir)
-    assert old_sha == new_sha
