@@ -349,9 +349,9 @@ def tensor_product_simp_Pow(e):
     if not isinstance(e, Pow):
         return e
 
-    new_args = []
-    new_args = tuple([arg**e.exp for arg in e.args])
-    return TensorProduct(new_args)
+    new_arg = []
+    new_arg = tuple([arg**e.exp for arg in e.args])
+    return TensorProduct(new_arg)
 
 
 def tensor_product_simp(e, **hints):
