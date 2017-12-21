@@ -351,7 +351,7 @@ def tensor_product_simp_Pow(e):
 
     new_arg = []
     new_arg = tuple([arg**e.exp for arg in e.args])
-    return TensorProduct(new_arg)
+    return TensorProduct(*new_arg)
 
 
 def tensor_product_simp(e, **hints):
