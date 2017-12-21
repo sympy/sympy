@@ -2,6 +2,7 @@ import hashlib
 import os
 import glob
 import tempfile
+import shutil
 
 from sympy.parsing.latex._build_latex_antlr import (
     build_parser,
@@ -279,7 +280,11 @@ def test_antlr_generation():
 
     old_sha = generated_sha(dir_latex_antlr)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    tmpdir = tempfile.mkdtemp
+
+    try:
         build_parser(tmpdir)
         new_sha = generated_sha(tmpdir)
-        assert old_sha == new_sha
+    finally:
+        shutil.rmtree(tmpdir)
+    assert old_sha == new_sha
