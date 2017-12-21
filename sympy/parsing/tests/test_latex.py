@@ -280,7 +280,7 @@ def test_antlr_generation():
 
     old_sha = generated_sha(dir_latex_antlr)
 
-    tmpdir = tempfile.mkdtemp
+    tmpdir = tempfile.mkdtemp()
 
     try:
         build_parser(tmpdir)
