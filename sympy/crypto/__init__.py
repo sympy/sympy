@@ -10,4 +10,5 @@ from sympy.crypto.crypto import (cycle_list,
         elgamal_private_key, elgamal_public_key, decipher_elgamal,
         encipher_elgamal, dh_private_key, dh_public_key, dh_shared_key,
         padded_key, encipher_bifid, decipher_bifid, bifid_square, bifid5,
-        bifid6, bifid10)
+        bifid6, bifid10, decipher_gm, encipher_gm, gm_public_key,
+        gm_private_key)

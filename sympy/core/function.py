@@ -1100,7 +1100,8 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **assumptions):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy.tensor.array import NDimArray, derive_by_array
+        from sympy import Integer
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
 
         expr = sympify(expr)
 
@@ -1132,8 +1133,10 @@ class Derivative(Expr):
         # derivative.
         variable_count = []
         j = 0
+        array_likes = (tuple, list, Tuple)
+
         for i, v in enumerate(variables):
-            if v.is_Integer:
+            if isinstance(v, Integer):
                 count = v
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
@@ -1146,8 +1149,20 @@ class Derivative(Expr):
                 else:
                     variable_count[j-1] = Tuple(prev, count)
             else:
-                if isinstance(v, (Tuple, tuple)):
-                    v, count = v
+                if isinstance(v, array_likes):
+                    if len(v) == 0:
+                        # Ignore empty tuples: Derivative(expr, ... , (), ... )
+                        continue
+                    if isinstance(v[0], array_likes):
+                        # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
+                        if len(v) == 1:
+                            v = Array(v[0])
+                            count = 1
+                        else:
+                            v, count = v
+                            v = Array(v)
+                    else:
+                        v, count = v
                 else:
                     count = S(1)
                 if count == 0:
@@ -1224,9 +1239,10 @@ class Derivative(Expr):
                 obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-                    expr = derive_by_array(expr, v)
-                    nderivs += 1
-                    continue
+                    deriv_fun = derive_by_array
+                    is_symbol = True
+                else:
+                    deriv_fun = lambda x, y: x._eval_derivative(y)
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
@@ -1234,7 +1250,7 @@ class Derivative(Expr):
                     v = new_v
                 obj = expr
                 for i in range(count):
-                    obj2 = obj._eval_derivative(v)
+                    obj2 = deriv_fun(obj, v)
                     if obj == obj2:
                         break
                     obj = obj2

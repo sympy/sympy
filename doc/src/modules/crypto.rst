@@ -125,3 +125,11 @@ substitutions at different times in the message.
 .. autofunction:: encipher_elgamal
 
 .. autofunction:: decipher_elgamal
+
+.. autofunction:: gm_public_key
+
+.. autofunction:: gm_private_key
+
+.. autofunction:: encipher_gm
+
+.. autofunction:: decipher_gm
