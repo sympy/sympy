@@ -275,6 +275,16 @@ class C89CodePrinter(CodePrinter):
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
             return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
+        elif expr.exp == 2:
+            b=self._print(expr.base)
+            return '(%s*%s)' % (b, b)
+        elif expr.exp == 3:
+            b=self._print(expr.base)
+            return '(%s*%s*%s)' % (b, b, b)
+        elif expr.exp == 4:
+            b=self._print(expr.base)
+            b2='(%s*%s)' % (b, b)
+            return '(%s*%s)' % (b2, b2)
         else:
             return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
                                    self._print(expr.exp))
