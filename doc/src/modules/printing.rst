@@ -69,7 +69,7 @@ Usage::
     >>> print_ccode(Abs(x**5), standard='C89')
     fabs(pow(x, 5))
     >>> print_ccode(gamma(x**2), standard='C99')
-    tgamma(x*x))
+    tgamma((x*x))
 
 .. autodata:: sympy.printing.ccode.known_functions_C89
 .. autodata:: sympy.printing.ccode.known_functions_C99
