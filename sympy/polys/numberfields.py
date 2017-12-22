@@ -134,8 +134,8 @@ def _separate_sq(p):
             else:
                 raise NotImplementedError
             continue
-        sifted = sift(y.args, is_sqrt)
-        a.append((Mul(*sifted[False]), Mul(*sifted[True])**2))
+        T, F = sift(y.args, is_sqrt, binary=True)
+        a.append((Mul(*F), Mul(*T)**2))
     a.sort(key=lambda z: z[1])
     if a[-1][1] is S.One:
         # there are no surds

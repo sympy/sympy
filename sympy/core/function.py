@@ -766,7 +766,7 @@ class Function(Application, Expr):
 
             else:
                 # the function defined in sympy is not known in sage
-                # this exception is catched in sage
+                # this exception is caught in sage
                 raise AttributeError
 
         return func(*args)
@@ -777,6 +777,8 @@ class AppliedUndef(Function):
     Base class for expressions resulting from the application of an undefined
     function.
     """
+
+    is_number = False
 
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
@@ -921,9 +923,9 @@ class Derivative(Expr):
         >>> from sympy import sqrt, diff
         >>> from sympy.abc import x
         >>> e = sqrt((x + 1)**2 + x)
-        >>> diff(e, x, 5, simplify=False).count_ops()
+        >>> diff(e, (x, 5), simplify=False).count_ops()
         136
-        >>> diff(e, x, 5).count_ops()
+        >>> diff(e, (x, 5)).count_ops()
         30
 
     Ordering of variables:
@@ -1059,7 +1061,7 @@ class Derivative(Expr):
         >>> Derivative(Derivative(f(x,y), x), y)
         Derivative(f(x, y), x, y)
         >>> Derivative(f(x), x, 3)
-        Derivative(f(x), x, x, x)
+        Derivative(f(x), (x, 3))
         >>> Derivative(f(x, y), y, x, evaluate=True)
         Derivative(f(x, y), x, y)
 
@@ -1097,6 +1099,10 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *variables, **assumptions):
 
+        from sympy.matrices.common import MatrixCommon
+        from sympy import Integer
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
+
         expr = sympify(expr)
 
         # There are no variables, we differentiate wrt all of the free symbols
@@ -1118,48 +1124,65 @@ class Derivative(Expr):
                         expression, the variable(s) of differentiation
                         must be supplied to differentiate %s''' % expr))
 
-        # Standardize the variables by sympifying them and making appending a
-        # count of 1 if there is only one variable: diff(e,x)->diff(e,x,1).
+        # Standardize the variables by sympifying them:
         variables = list(sympify(variables))
-        if not variables[-1].is_Integer or len(variables) == 1:
-            variables.append(S.One)
 
         # Split the list of variables into a list of the variables we are diff
         # wrt, where each element of the list has the form (s, count) where
         # s is the entity to diff wrt and count is the order of the
         # derivative.
         variable_count = []
-        all_zero = True
-        i = 0
-        while i < len(variables) - 1:  # process up to final Integer
-            v, count = variables[i: i + 2]
-            iwas = i
-            if v._diff_wrt:
-                # We need to test the more specific case of count being an
-                # Integer first.
-                if count.is_Integer:
-                    count = int(count)
-                    i += 2
-                elif count._diff_wrt:
-                    count = 1
-                    i += 1
+        j = 0
+        array_likes = (tuple, list, Tuple)
 
-            if i == iwas:  # didn't get an update because of bad input
-                from sympy.utilities.misc import filldedent
-                last_digit = int(str(count)[-1])
-                ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
-                raise ValueError(filldedent('''
-                Can\'t calculate %s%s derivative wrt %s.''' % (count, ordinal, v)))
-
-            if all_zero and not count == 0:
-                all_zero = False
-
-            if count:
-                variable_count.append((v, count))
+        for i, v in enumerate(variables):
+            if isinstance(v, Integer):
+                count = v
+                if i == 0:
+                    raise ValueError("First variable cannot be a number: %i" % v)
+                prev, prevcount = variable_count[j-1]
+                if prevcount != 1:
+                    raise TypeError("tuple {0} followed by number {1}".format((prev, prevcount), v))
+                if count == 0:
+                    j -= 1
+                    variable_count.pop()
+                else:
+                    variable_count[j-1] = Tuple(prev, count)
+            else:
+                if isinstance(v, array_likes):
+                    if len(v) == 0:
+                        # Ignore empty tuples: Derivative(expr, ... , (), ... )
+                        continue
+                    if isinstance(v[0], array_likes):
+                        # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
+                        if len(v) == 1:
+                            v = Array(v[0])
+                            count = 1
+                        else:
+                            v, count = v
+                            v = Array(v)
+                    else:
+                        v, count = v
+                else:
+                    count = S(1)
+                if count == 0:
+                    continue
+                if not v._diff_wrt:
+                    from sympy.utilities.misc import filldedent
+                    last_digit = int(str(count)[-1])
+                    ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
+                    raise ValueError(filldedent('''
+                    Can\'t calculate %s%s derivative wrt %s.''' % (count, ordinal, v)))
+                if j != 0 and v == variable_count[-1][0]:
+                    prev, prevcount = variable_count[j-1]
+                    variable_count[-1] = Tuple(prev, prevcount + count)
+                else:
+                    variable_count.append(Tuple(v, count))
+                    j += 1
 
         # We make a special case for 0th derivative, because there is no
         # good way to unambiguously print this.
-        if all_zero:
+        if len(variable_count) == 0:
             return expr
 
         # Pop evaluate because it is not really an assumption and we will need
@@ -1167,42 +1190,39 @@ class Derivative(Expr):
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
-        # expression at all. Note, this cannnot check non-symbols like
+        # expression at all. Note, this cannot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
             symbol_set = set(sc[0] for sc in variable_count)
             if symbol_set.difference(expr.free_symbols):
-                return S.Zero
-
-        # We make a generator so as to only generate a variable when necessary.
-        # If a high order of derivative is requested and the expr becomes 0
-        # after a few differentiations, then we won't need the other variables.
-        variablegen = (v for v, count in variable_count for i in range(count))
+                if isinstance(expr, (MatrixCommon, NDimArray)):
+                    return expr.zeros(*expr.shape)
+                else:
+                    return S.Zero
 
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
         # derivative class by calling Expr.__new__.
         if (not (hasattr(expr, '_eval_derivative') and evaluate) and
            (not isinstance(expr, Derivative))):
-            variables = list(variablegen)
             # If we wanted to evaluate, we sort the variables into standard
             # order for later comparisons. This is too aggressive if evaluate
             # is False, so we don't do it in that case.
             if evaluate:
                 #TODO: check if assumption of discontinuous derivatives exist
-                variables = cls._sort_variables(variables)
+                variable_count = cls._sort_variable_count(variable_count)
             # Here we *don't* need to reinject evaluate into assumptions
             # because we are done with it and it is not an assumption that
             # Expr knows about.
-            obj = Expr.__new__(cls, expr, *variables, **assumptions)
+            obj = Expr.__new__(cls, expr, *variable_count, **assumptions)
             return obj
 
         # Compute the derivative now by repeatedly calling the
         # _eval_derivative method of expr for each variable. When this method
         # returns None, the derivative couldn't be computed wrt that variable
         # and we save the variable for later.
-        unhandled_variables = []
+        unhandled_variable_count = []
 
         # Once we encouter a non_symbol that is unhandled, we stop taking
         # derivatives entirely. This is because derivatives wrt functions
@@ -1210,19 +1230,31 @@ class Derivative(Expr):
         # continue.
         unhandled_non_symbol = False
         nderivs = 0  # how many derivatives were performed
-        for v in variablegen:
+        for v, count in variable_count:
             is_symbol = v.is_symbol
 
             if unhandled_non_symbol:
                 obj = None
+            elif not count.is_Integer:
+                obj = None
             else:
+                if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+                    deriv_fun = derive_by_array
+                    is_symbol = True
+                else:
+                    deriv_fun = lambda x, y: x._eval_derivative(y)
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                obj = expr._eval_derivative(v)
-                nderivs += 1
+                obj = expr
+                for i in range(count):
+                    obj2 = deriv_fun(obj, v)
+                    if obj == obj2:
+                        break
+                    obj = obj2
+                    nderivs += 1
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1234,7 +1266,7 @@ class Derivative(Expr):
                     v = old_v
 
             if obj is None:
-                unhandled_variables.append(v)
+                unhandled_variable_count.append(Tuple(v, count))
                 if not is_symbol:
                     unhandled_non_symbol = True
             elif obj is S.Zero:
@@ -1242,15 +1274,15 @@ class Derivative(Expr):
             else:
                 expr = obj
 
-        if unhandled_variables:
-            unhandled_variables = cls._sort_variables(unhandled_variables)
-            expr = Expr.__new__(cls, expr, *unhandled_variables, **assumptions)
+        if unhandled_variable_count:
+            unhandled_variable_count = cls._sort_variable_count(unhandled_variable_count)
+            expr = Expr.__new__(cls, expr, *unhandled_variable_count, **assumptions)
         else:
             # We got a Derivative at the end of it all, and we rebuild it by
             # sorting its variables.
             if isinstance(expr, Derivative):
                 expr = cls(
-                    expr.args[0], *cls._sort_variables(expr.args[1:])
+                    expr.args[0], *cls._sort_variable_count(expr.args[1:])
                 )
 
         if nderivs > 1 and assumptions.get('simplify', True):
@@ -1258,6 +1290,32 @@ class Derivative(Expr):
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
         return expr
+
+    @classmethod
+    def _remove_derived_once(cls, v):
+        return [i[0] if i[1] == 1 else i for i in v]
+
+    @classmethod
+    def _sort_variable_count(cls, varcounts):
+        """Like ``_sort_variables``, but acting on variable-count pairs.
+
+        Examples
+        ========
+
+        >>> from sympy import Derivative, Function, symbols
+        >>> vsort = Derivative._sort_variable_count
+        >>> x, y, z = symbols('x y z')
+        >>> f, g, h = symbols('f g h', cls=Function)
+
+        >>> vsort([(x, 1), (y, 2), (z, 1)])
+        [(x, 1), (y, 2), (z, 1)]
+
+        >>> vsort([(z, 1), (y, 1), (x, 1), (h(x), 1), (g(x), 1), (f(x), 1)])
+        [(x, 1), (y, 1), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
+        """
+        d = dict(varcounts)
+        varsorted = cls._sort_variables([i for i, j in varcounts])
+        return [Tuple(var, d[var]) for var in varsorted]
 
     @classmethod
     def _sort_variables(cls, vars):
@@ -1334,7 +1392,7 @@ class Derivative(Expr):
             if obj is S.Zero:
                 return S.Zero
             if isinstance(obj, Derivative):
-                return obj.func(obj.expr, *(self.variables + obj.variables))
+                return obj.func(obj.expr, *(self.variable_count + obj.variable_count))
             # The derivative wrt s could have simplified things such that the
             # derivative wrt things in self.variables can now be done. Thus,
             # we set evaluate=True to see if there are any other derivatives
@@ -1344,7 +1402,12 @@ class Derivative(Expr):
         # In this case s was in self.variables so the derivatve wrt s has
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
-        return self.func(self.expr, *(self.variables + (v, )), evaluate=False)
+        variable_count = list(self.variable_count)
+        if variable_count[-1][0] == v:
+            variable_count[-1] = Tuple(v, variable_count[-1][1] + 1)
+        else:
+            variable_count.append(Tuple(v, S(1)))
+        return self.func(self.expr, *variable_count, evaluate=False)
 
     def doit(self, **hints):
         expr = self.expr
@@ -1381,7 +1444,17 @@ class Derivative(Expr):
 
     @property
     def variables(self):
+        # TODO: deprecate?
+        # TODO: support for `d^n`?
+        return tuple(v for v, count in self.variable_count if count.is_Integer for i in (range(count) if count.is_Integer else [1]))
+
+    @property
+    def variable_count(self):
         return self._args[1:]
+
+    @property
+    def derivative_count(self):
+        return sum([count for var, count in self.variable_count], 0)
 
     @property
     def free_symbols(self):
@@ -1395,17 +1468,17 @@ class Derivative(Expr):
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.expr:
             # Check if canonnical order of variables is equal.
-            old_vars = collections.Counter(old.variables)
-            self_vars = collections.Counter(self.variables)
+            old_vars = collections.Counter(dict(reversed(old.variable_count)))
+            self_vars = collections.Counter(dict(reversed(self.variable_count)))
             if old_vars == self_vars:
                 return new
 
             # collections.Counter doesn't have __le__
             def _subset(a, b):
-                return all(a[i] <= b[i] for i in a)
+                return all((a[i] <= b[i]) == True for i in a)
 
             if _subset(old_vars, self_vars):
-                return Derivative(new, *(self_vars - old_vars).elements())
+                return Derivative(new, *(self_vars - old_vars).items())
 
         return Derivative(*(x._subs(old, new) for x in self.args))
 
@@ -1843,9 +1916,9 @@ def diff(f, *symbols, **kwargs):
     >>> diff(sin(x), x)
     cos(x)
     >>> diff(f(x), x, x, x)
-    Derivative(f(x), x, x, x)
+    Derivative(f(x), (x, 3))
     >>> diff(f(x), x, 3)
-    Derivative(f(x), x, x, x)
+    Derivative(f(x), (x, 3))
     >>> diff(sin(x)*cos(y), x, 2, y, 2)
     sin(x)*cos(y)
 
@@ -2531,7 +2604,7 @@ def count_ops(expr, visual=False):
                     if a.q != 1:
                         ops.append(DIV)
                     continue
-            elif a.is_Mul:
+            elif a.is_Mul or a.is_MatMul:
                 if _coeff_isneg(a):
                     ops.append(NEG)
                     if a.args[0] is S.NegativeOne:
@@ -2551,7 +2624,7 @@ def count_ops(expr, visual=False):
                     ops.append(DIV)
                     args.append(n)
                     continue  # could be -Mul
-            elif a.is_Add:
+            elif a.is_Add or a.is_MatAdd:
                 aargs = list(a.args)
                 negs = 0
                 for i, ai in enumerate(aargs):

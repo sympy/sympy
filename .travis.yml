@@ -27,7 +27,7 @@ matrix:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
         # autowrap installs libgfortran libgcc gcc cython
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib=2.1.0 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
       addons:
         apt:
           packages:
@@ -39,7 +39,7 @@ matrix:
     - python: 3.6
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib=2.1.0 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
       addons:
         apt:
           packages:
@@ -223,6 +223,7 @@ matrix:
             - pypy
 
 before_install:
+  - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi

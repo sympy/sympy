@@ -5,7 +5,7 @@ import warnings
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, tan, sstr, diff)
+    sympify, trigsimp, tan, sstr, diff, Function)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
@@ -21,8 +21,9 @@ from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.solvers import solve
 from sympy.assumptions import Q
+from sympy.tensor.array import Array
 
-from sympy.abc import a, b, c, d, x, y, z
+from sympy.abc import a, b, c, d, x, y, z, t
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -580,6 +581,20 @@ def test_random():
 
     rng = random.Random(4)
     assert M == randMatrix(3, symmetric=True, prng=rng)
+
+    # Ensure symmetry
+    for size in (10, 11): # Test odd and even
+        for percent in (100, 70, 30):
+            M = randMatrix(size, symmetric=True, percent=percent, prng=rng)
+            assert M == M.T
+
+    M = randMatrix(10, min=1, percent=70)
+    zero_count = 0
+    for i in range(M.shape[0]):
+        for j in range(M.shape[1]):
+            if M[i, j] == 0:
+                zero_count += 1
+    assert zero_count == 30
 
 
 def test_LUdecomp():
@@ -1923,6 +1938,57 @@ def test_diff():
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    # Derive matrix by matrix:
+
+    A = MutableDenseMatrix([[x, y], [z, t]])
+    assert A.diff(A) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+    assert diff(A, A) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    A_imm = A.as_immutable()
+    assert A_imm.diff(A_imm) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+    assert diff(A_imm, A_imm) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    # Derive a constant matrix:
+    assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
+
+    B = ImmutableDenseMatrix([a, b])
+    assert A.diff(B) == Array(
+        [[[
+            [0,0],
+            [0,0]
+        ]],
+        [[
+            [0,0],
+            [0,0]
+        ]]])
+
+    # Test diff with tuples:
+
+    dB = B.diff([[a, b]])
+    assert dB.shape == (2, 2, 1)
+    assert dB == Array([[[1], [0]], [[0], [1]]])
+
+    f = Function("f")
+    fxyz = f(x, y, z)
+    assert fxyz.diff([[x, y, z]]) == Array([fxyz.diff(x), fxyz.diff(y), fxyz.diff(z)])
+    assert fxyz.diff(([x, y, z], 2)) == Array([
+        [fxyz.diff(x, 2), fxyz.diff(x, y), fxyz.diff(x, z)],
+        [fxyz.diff(x, y), fxyz.diff(y, 2), fxyz.diff(y, z)],
+        [fxyz.diff(x, z), fxyz.diff(z, y), fxyz.diff(z, 2)],
+    ])
+
+    expr = sin(x)*exp(y)
+    assert expr.diff([[x, y]]) == Array([cos(x)*exp(y), sin(x)*exp(y)])
+    assert expr.diff(y, ((x, y),)) == Array([cos(x)*exp(y), sin(x)*exp(y)])
+    assert expr.diff(x, ((x, y),)) == Array([-sin(x)*exp(y), cos(x)*exp(y)])
+    assert expr.diff(((y, x),), [[x, y]]) == Array([[cos(x)*exp(y), -sin(x)*exp(y)], [sin(x)*exp(y), cos(x)*exp(y)]])
+
+    # Test different notations:
+
+    fxyz.diff(x).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[0, 1, 0]
+    fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
+    fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
 
 
 def test_getattr():

@@ -71,6 +71,14 @@ def test_ndim_array_initiation():
     assert vector_with_long_shape.rank() == 1
     raises(ValueError, lambda: vector_with_long_shape[long(5)])
 
+    from sympy.abc import x
+    rank_zero_array = ImmutableDenseNDimArray(x)
+    assert len(rank_zero_array) == 0
+    assert rank_zero_array.shape == ()
+    assert rank_zero_array.rank() == 0
+    assert rank_zero_array[()] == x
+    raises(ValueError, lambda: rank_zero_array[0])
+
 
 def test_reshape():
     array = ImmutableDenseNDimArray(range(50), 50)

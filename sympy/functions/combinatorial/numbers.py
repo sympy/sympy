@@ -901,7 +901,7 @@ class catalan(Function):
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
-    continuous real funtion in n:
+    continuous real function in n:
 
     >>> diff(catalan(n), n)
     (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
@@ -976,6 +976,18 @@ class catalan(Function):
             return self
         k = Dummy('k', integer=True, positive=True)
         return Product((n + k) / k, (k, 2, n))
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_composite(self):
+        if self.args[0].is_integer and (self.args[0] - 3).is_positive:
+            return True
 
     def _eval_evalf(self, prec):
         from sympy import gamma
@@ -1344,7 +1356,7 @@ def nC(n, k=None, replacement=False):
     35
 
     If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``
-    then the total of all combinations of length 0 hrough ``k`` is the
+    then the total of all combinations of length 0 through ``k`` is the
     product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity
     of each item is 1 (i.e., k unique items) then there are 2**k
     combinations. For example, if there are 4 unique items, the total number

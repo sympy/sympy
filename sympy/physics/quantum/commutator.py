@@ -25,7 +25,7 @@ class Commutator(Expr):
     class returns the commutator in an unevaluated form. To evaluate the
     commutator, use the ``.doit()`` method.
 
-    Cannonical ordering of a commutator is ``[A, B]`` for ``A < B``. The
+    Canonical ordering of a commutator is ``[A, B]`` for ``A < B``. The
     arguments of the commutator are put into canonical order using ``__cmp__``.
     If ``B < A``, then ``[B, A]`` is returned as ``-[A, B]``.
 

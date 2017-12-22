@@ -256,6 +256,8 @@ class LatexPrinter(Printer):
             return True
         if any([expr.has(x) for x in (Mod,)]):
             return True
+        if expr.is_Add:
+            return True
         return False
 
 
@@ -598,41 +600,26 @@ class LatexPrinter(Printer):
         return self._print(expr.label)
 
     def _print_Derivative(self, expr):
-        dim = len(expr.variables)
         if requires_partial(expr):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
 
+        tex = ""
+        dim = 0
+        for x, num in reversed(expr.variable_count):
+            dim += num
+            if num == 1:
+                tex += r"%s %s" % (diff_symbol, self._print(x))
+            else:
+                tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), num)
 
         if dim == 1:
-            tex = r"\frac{%s}{%s %s}" % (diff_symbol, diff_symbol,
-                self._print(expr.variables[0]))
+            tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
-            multiplicity, i, tex = [], 1, ""
-            current = expr.variables[0]
+            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, dim, tex)
 
-            for symbol in expr.variables[1:]:
-                if symbol == current:
-                    i = i + 1
-                else:
-                    multiplicity.append((current, i))
-                    current, i = symbol, 1
-            else:
-                multiplicity.append((current, i))
-
-            for x, i in multiplicity:
-                if i == 1:
-                    tex += r"%s %s" % (diff_symbol, self._print(x))
-                else:
-                    tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), i)
-
-            tex = r"\frac{%s^{%s}}{%s} " % (diff_symbol, dim, tex)
-
-        if isinstance(expr.expr, AssocOp):
-            return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
-        else:
-            return r"%s %s" % (tex, self._print(expr.expr))
+        return r"%s %s" % (tex, self.parenthesize(expr.expr, PRECEDENCE["Mul"], strict=True))
 
     def _print_Subs(self, subs):
         expr, old, new = subs.args
@@ -1426,9 +1413,9 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^\dag" % self._print(mat)
+            return r"\left(%s\right)^\dagger" % self._print(mat)
         else:
-            return r"%s^\dag" % self._print(mat)
+            return r"%s^\dagger" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         terms = list(expr.args)
@@ -1475,6 +1462,9 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}"
 
     def _print_NDimArray(self, expr):
+
+        if expr.rank() == 0:
+            return self._print(expr[()])
 
         mat_str = self._settings['mat_str']
         if mat_str is None:
@@ -1528,6 +1518,14 @@ class LatexPrinter(Printer):
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
             r", \quad ".join([ self._print(i) for i in expr ])
+
+    def _print_TensorProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \otimes '.join(elements)
+
+    def _print_WedgeProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \wedge '.join(elements)
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
