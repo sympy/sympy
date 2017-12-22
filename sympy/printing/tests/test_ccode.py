@@ -301,7 +301,6 @@ def test_ccode_Piecewise_deep():
             ": (\n"
             "   1\n"
             ")) + cos(z) - 1;")
-            
     p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
     assert p == (
             "2*((x < 1) ? (\n"

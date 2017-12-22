@@ -752,10 +752,10 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
     generated normally can also exist inside a Matrix:
 
     >>> from sympy import Matrix, MatrixSymbol
-    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
+    >>> mat = Matrix([x**5, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
     >>> A = MatrixSymbol('A', 3, 1)
     >>> print(ccode(mat, A, standard='C89'))
-    A[0] = pow(x, 2);
+    A[0] = pow(x, 5);
     if (x > 0) {
        A[1] = x + 1;
     }
