@@ -496,6 +496,35 @@ class GeometryEntity(Basic):
                 newargs.append(a)
         return self.func(*newargs)
 
+    def parameter_value(self,other):
+        """Return the parameter corresponding to the given point. Evaluating
+        the entity at this parameter value will return the given point.
+
+        Examples
+        ========
+
+        >>> from sympy import Line, Point
+        >>> from sympy.abc import t
+        >>> a = Point(0,0)
+        >>> b = Point(2, 2)
+        >>> Line(a, b).parameter_value((1, 1))
+        1/2
+        >>> Line(a, b).arbitrary_point(t).subs(t, 0.5)
+        Point2D(1, 1)
+        """
+        from sympy.geometry.point import Point
+        from sympy.core.symbol import Dummy
+        from sympy.solvers.solvers import solve
+        if not isinstance(other,GeometryEntity):
+            other = Point(other,dim = self.ambient_dimension)
+        if not isinstance(other,Point):
+            raise ValueError("other must be a point")
+        t = Dummy()
+        sol = solve(self.arbitrary_point(t) - other,t,dict = True)
+        if len(sol) == 0:
+            raise ValueError("Given point is not on %s" %type(self))
+        return sol[0].values()[0]
+
 class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
     (compatible with sympy.sets)
