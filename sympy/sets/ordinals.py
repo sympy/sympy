@@ -1,4 +1,6 @@
 from sympy.core import Basic, Integer
+from sympy.core.compatibility import with_metaclass
+from sympy.core.singleton import Singleton, S
 import operator
 
 class OmegaPower(Basic):
@@ -8,7 +10,7 @@ class OmegaPower(Basic):
     In OmegaPower(a, b) a represents exponent and b represents multiplicity.
     """
     def __new__(cls, a, b):
-        if b < 0 or not isinstance(b, (int, Integer)):
+        if not isinstance(b, (int, Integer)) or b <= 0:
             raise TypeError("multiplicity must be a positive integer")
         if a == 0:
             a = Ordinal()
@@ -86,22 +88,6 @@ class Ordinal(Basic):
     def is_limit_ordinal(self):
         return not self.is_successor_ordinal
 
-    def _insert_index(self, a, x, lo=0, hi=None):
-        """Return the index where to insert item x in list a,
-        assuming a is sorted in descending order
-
-        Essentially, the function returns number of elements in a which are >= than x.
-        """
-        if lo < 0:
-            raise ValueError('lo must be non-negative')
-        if hi is None:
-            hi = len(a)
-        while lo < hi:
-            mid = (lo+hi)//2
-            if x > a[mid]: hi = mid
-            else: lo = mid+1
-        return lo
-
     @classmethod
     def convert(cls, integer_value):
         return Ordinal(OmegaPower(0, integer_value))
@@ -168,25 +154,22 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-
+        if other == Ordinal():
+            return self
         a_terms = list(self.args)
         b_terms = list(other.args)
-        power_self = [i.exp for i in a_terms]
-        power_other = [i.exp for i in b_terms]
-        b1 = power_other[0]
-        r = self._insert_index(power_self, power_other[0])
-        if not b1 in power_self:
-            a_terms.insert(r,OmegaPower(b1, 0))
+        r = len(a_terms) - 1
+        b_exp = b_terms[0].exp
+        while r >= 0 and a_terms[r].exp < b_exp:
+            r -= 1
+        if r < 0:
+            terms = b_terms
+        elif a_terms[r].exp == b_exp:
+            sum_term = OmegaPower(b_exp, a_terms[r].mult + b_terms[0].mult)
+            terms = a_terms[:r] + [sum_term] + b_terms[1:]
         else:
-            r-=1
-        net = a_terms[:r]
-        term2 = [b_terms[0].exp, b_terms[0].mult+a_terms[r].mult]
-        if term2:
-            net.append(OmegaPower(*term2))
-        term3 = (b_terms[1:])
-        if term3:
-            net.append(*term3)
-        return(Ordinal(*net))
+            terms = a_terms[:r+1] + b_terms
+        return Ordinal(*terms)
 
     def __radd__(self, other):
         if not isinstance(other, Ordinal):
@@ -196,14 +179,39 @@ class Ordinal(Basic):
                 return NotImplemented
         return other + self
 
-class SingletonOrdinal(object):
-    __instance = None
+    def __mul__(self, other):
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        if Ordinal() in (self, other):
+            return Ordinal()
+
+        a1 = self.args[0].exp
+        prod = []
+        for arg in other.args:
+            prod.append(OmegaPower(a1 + arg.exp, arg.mult))
+        return Ordinal(*prod)
+
+    def __rmul__(self, other):
+        if not isinstance(other, Ordinal):
+            try:
+                other = Ordinal.convert(other)
+            except TypeError:
+                return NotImplemented
+        return other * self
+
+
+class Ord0(with_metaclass(Singleton, Ordinal)):
 
     def __new__(cls):
-        if SingletonOrdinal.__instance is None:
-            SingletonOrdinal.__instance = object.__new__(cls)
-        # first countably infinite ordinal
-        SingletonOrdinal.__instance.w = Ordinal(OmegaPower(1, 1))
-        return SingletonOrdinal.__instance
+        return Ordinal.__new__(cls)
 
-Ordinals = SingletonOrdinal()
+class OrdOmega(with_metaclass(Singleton, Ordinal)):
+
+    def __new__(cls):
+        return Ordinal.__new__(cls, OmegaPower(1,1))
+
+Ord0 = S.Ord0
+OrdOmega = S.OrdOmega
