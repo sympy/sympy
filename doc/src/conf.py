@@ -15,7 +15,7 @@ import sys
 import sympy
 
 # If your extensions are in another directory, add it here.
-sys.path = ['../sympy', 'ext'] + sys.path
+sys.path = ['ext'] + sys.path
 
 # General configuration
 # ---------------------

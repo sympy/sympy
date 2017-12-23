@@ -129,10 +129,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         (a + b)*Derivative(f(x), x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), f)
-        (a + b)*Derivative(f(x), x, x)
+        (a + b)*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-        a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
+        a*Derivative(f(x), (x, 2)) + b*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
@@ -140,7 +140,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     Or you can even match both derivative order and exponent at the same time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-        (a + b)*Derivative(f(x), x, x)**2
+        (a + b)*Derivative(f(x), (x, 2))**2
 
     Finally, you can apply a function to each of the collected coefficients.
     For example you can factorize symbolic coefficients of polynomial::
@@ -527,6 +527,29 @@ def collect_const(expr, *vars, **kwargs):
     targeted. Although any Number can also be targeted, if this is not
     desired set ``Numbers=False`` and no Float or Rational will be collected.
 
+    Parameters
+    ==========
+
+    expr : sympy expression
+        This parameter defines the expression the expression from which
+        terms with similar coefficients are to be collected. A non-Add
+        expression is returned as it is.
+
+    vars : variable length collection of Numbers, optional
+        Specifies the constants to target for collection. Can be multiple in
+        number.
+
+    kwargs : ``Numbers`` is the only possible argument to pass.
+        Numbers (default=True) specifies to target all instance of
+        :class:`sympy.core.numbers.Number` class. If ``Numbers=False``, then
+        no Float or Rational will be collected.
+
+    Returns
+    =======
+
+    expr : Expr
+        Returns an expression with similar coefficient terms collected.
+
     Examples
     ========
 
@@ -554,27 +577,6 @@ def collect_const(expr, *vars, **kwargs):
     2*(x - y - z)
     >>> collect_const(2*x - 2*y - 2*z, -2)
     2*x - 2*(y + z)
-
-    ---->> According to documentation, we have the second argument as *vars.
-          *vars - implies that you can pass on as many arguments as possible.
-
-    Examples -- 
-
-    >>> collect_const(3*x-3*y+2*z+2*s,3, 2)
-    2*(s + z) + 3*(x - y)
-    >>> collect_const(x-y+2*z+2*s, 1, 2)
-    x - y + 2*(s + z)
-
-    ---->> According to documentation, we have the third argument as **kwargs.
-           **kwargs - implies that you can pass keyworded variable length of arguments to a function.
-
-    Examples --
-
-    >>> kwargs = {"arg1":3, "arg2":2}
-    >>> collect_const(3*x-3*y+2*z+2*s ,**kwargs)
-    2*(s + z) + 3*(x - y)
-
-    Both can be used together also as specified in the function definition.
 
     See Also
     ========

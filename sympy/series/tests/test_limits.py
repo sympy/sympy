@@ -122,6 +122,7 @@ def test_issue_10382():
 def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
     assert Limit(sin(x)/x, x, 0).doit() == 1
+    assert Limit(x, x, 0, dir='+-').args == (x, x, 0, Symbol('+-'))
 
 
 def test_floor():

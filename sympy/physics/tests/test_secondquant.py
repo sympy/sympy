@@ -14,6 +14,7 @@ from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow
+from sympy.printing.latex import latex
 
 
 def test_PermutationOperator():
@@ -90,6 +91,7 @@ def test_operator():
 def test_create():
     i, j, n, m = symbols('i,j,n,m')
     o = Bd(i)
+    assert latex(o) == "b^\\dagger_{i}"
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -102,6 +104,7 @@ def test_create():
 def test_annihilate():
     i, j, n, m = symbols('i,j,n,m')
     o = B(i)
+    assert latex(o) == "b_{i}"
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -1216,3 +1219,18 @@ def test_internal_external_pqrs_AT():
     ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+
+def test_canonical_ordering_AntiSymmetricTensor():
+    v = symbols("v")
+    virtual_indices = ('c', 'd')
+    occupied_indices = ('k', 'l')
+
+    c, d = symbols(('c','d'), above_fermi=True,
+                                   cls=Dummy)
+    k, l = symbols(('k','l'), below_fermi=True,
+                                   cls=Dummy)
+
+    # formerly, the left gave either the left or the right
+    assert AntiSymmetricTensor(v, (k, l), (d, c)
+        ) == -AntiSymmetricTensor(v, (l, k), (d, c))

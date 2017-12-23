@@ -23,7 +23,7 @@ class gamma(Function):
     The gamma function
 
     .. math::
-        \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t.
+        \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{-t} \mathrm{d}t.
 
     The ``gamma`` function implements the function which passes through the
     values of the factorial function, i.e. `\Gamma(n) = (n - 1)!` when n is

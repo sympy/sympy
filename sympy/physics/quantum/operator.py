@@ -579,7 +579,7 @@ class DifferentialOperator(Operator):
     @property
     def expr(self):
         """
-        Returns the arbitary expression which is to have the Wavefunction
+        Returns the arbitrary expression which is to have the Wavefunction
         substituted into it
 
         Examples

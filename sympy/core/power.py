@@ -797,9 +797,8 @@ class Pow(Expr):
             nc = [Mul(*nc)]
 
         # sift the commutative bases
-        sifted = sift(cargs, lambda x: x.is_real)
-        maybe_real = sifted[True] + sifted[None]
-        other = sifted[False]
+        other, maybe_real = sift(cargs, lambda x: x.is_real is False,
+            binary=True)
         def pred(x):
             if x is S.ImaginaryUnit:
                 return S.ImaginaryUnit

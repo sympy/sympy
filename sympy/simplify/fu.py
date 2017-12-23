@@ -1621,7 +1621,7 @@ RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 
 
 # XXX it's a little unclear how this one is to be implemented
-# see Fu paper of reference, page 7. What is the Union symbol refering to?
+# see Fu paper of reference, page 7. What is the Union symbol referring to?
 # The diagram shows all these as one chain of transformations, but the
 # text refers to them being applied independently. Also, a break
 # if L starts to increase has not been implemented.

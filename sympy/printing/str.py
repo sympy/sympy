@@ -103,7 +103,9 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_Derivative(self, expr):
-        return 'Derivative(%s)' % ", ".join(map(self._print, expr.args))
+        dexpr = expr.expr
+        dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
+        return 'Derivative(%s)' % ", ".join(map(self._print, [dexpr] + dvars))
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)

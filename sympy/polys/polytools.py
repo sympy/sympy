@@ -6076,8 +6076,7 @@ def to_rational_coeffs(f):
                 func = c.func
             else:
                 args = [c]
-            sifted = sift(args, lambda z: z.is_rational)
-            c1, c2 = sifted[True], sifted[False]
+            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
             alpha = -func(*c2)/n
             f2 = f1.shift(alpha)
             return alpha, f2
@@ -6563,8 +6562,9 @@ def cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
-            c, nc = sifted[True], sifted[False]
+            c, nc = sift(f.args, lambda x:
+                x.is_commutative is True and not x.has(Piecewise),
+                binary=True)
             nc = [cancel(i) for i in nc]
             return f.func(cancel(f.func._from_args(c)), *nc)
         else:
@@ -7023,7 +7023,8 @@ def poly(expr, *gens, **args):
             for factor in Mul.make_args(term):
                 if factor.is_Add:
                     poly_factors.append(_poly(factor, opt))
-                elif factor.is_Pow and factor.base.is_Add and factor.exp.is_Integer:
+                elif factor.is_Pow and factor.base.is_Add and \
+                        factor.exp.is_Integer and factor.exp >= 0:
                     poly_factors.append(
                         _poly(factor.base, opt).pow(factor.exp))
                 else:

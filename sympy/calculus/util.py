@@ -168,7 +168,7 @@ def function_range(f, symbol, domain):
             solution = solveset(f.diff(symbol), symbol, interval)
 
             if isinstance(solution, ConditionSet):
-                raise NotImplementedError('Unable to find critical points for %s'.format(f))
+                raise NotImplementedError('Unable to find critical points for {}'.format(f))
 
             critical_points += solution
 
@@ -1225,15 +1225,16 @@ class AccumulationBounds(AtomicExpr):
 
         """
         other = _sympify(other)
-        if not (other.is_Symbol or other.is_number):
-            raise TypeError("Input of type real symbol or Number expected")
 
         if other is S.Infinity or other is S.NegativeInfinity:
             if self.min is S.NegativeInfinity or self.max is S.Infinity:
                 return True
             return False
 
-        return And(self.min <= other and self.max >= other)
+        rv = And(self.min <= other, self.max >= other)
+        if rv not in (True, False):
+            raise TypeError("input failed to evaluate")
+        return rv
 
     def intersection(self, other):
         """

@@ -3396,6 +3396,12 @@ def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
     assert _test_args(sparr)
 
 
+def test_sympy__tensor__functions__TensorProduct():
+    from sympy.tensor.functions import TensorProduct
+    tp = TensorProduct(3, 4, evaluate=False)
+    assert _test_args(tp)
+
+
 def test_sympy__tensor__indexed__Idx():
     from sympy.tensor.indexed import Idx
     assert _test_args(Idx('test'))

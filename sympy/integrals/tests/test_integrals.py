@@ -843,7 +843,7 @@ def test_issue_5167():
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
     assert Integral(1, x, y).args != Integral(1, y, x).args
-    # do as many as possibble
+    # do as many as possible
     assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
     assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
         y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))
@@ -872,8 +872,9 @@ def test_issue_4517():
 
 def test_issue_4527():
     k, m = symbols('k m', integer=True)
-    assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)) == Piecewise(
-        (0, And(Eq(k, 0), Eq(m, 0))),
+    ans = integrate(sin(k*x)*sin(m*x), (x, 0, pi)
+            ).simplify() == Piecewise(
+        (0, Eq(k, 0) | Eq(m, 0)),
         (-pi/2, Eq(k, -m)),
         (pi/2, Eq(k, m)),
         (0, True))
@@ -910,7 +911,7 @@ def test_issue_3940():
 
 
 def test_issue_5413():
-    # Note that this is not the same as testing ratint() becuase integrate()
+    # Note that this is not the same as testing ratint() because integrate()
     # pulls out the coefficient.
     assert integrate(-a/(a**2 + x**2), x) == I*log(-I*a + x)/2 - I*log(I*a + x)/2
 

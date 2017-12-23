@@ -16,6 +16,7 @@ from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
+from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
 def solve_poly_inequality(poly, rel):
@@ -537,7 +538,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 # x**2 + x - 2 < 0
                 #
                 # expanded_e, expr and gen used from enclosing scope
-                v = expanded_e.subs(gen, x)
+                v = expanded_e.subs(gen, expand_mul(x))
                 try:
                     r = expr.func(v, 0)
                 except TypeError:
@@ -573,7 +574,6 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 if all(r.is_number for r in critical_points):
                     reals = _nsort(critical_points, separated=True)[0]
                 else:
-                    from sympy.utilities.iterables import sift
                     sifted = sift(critical_points, lambda x: x.is_real)
                     if sifted[None]:
                         # there were some roots that weren't known
