@@ -218,3 +218,13 @@ def test_dimension_normalization():
     assert p.perpendicular_plane(a, b) == Plane(Point3D(0, 0, 0), (1, 0, 0))
     assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
         ).intersection((2, 1)) == [Point(2, 1, 0)]
+
+def test_paramater_value():
+    p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
+
+    param = p.parameter_value((0,1,0))
+    # (0,cos(t),sin(t))
+    assert param == 0
+
+    with raises(ValueError):
+        p.parameter_value((1,0,0))
