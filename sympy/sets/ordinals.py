@@ -13,7 +13,7 @@ class OmegaPower(Basic):
         if not isinstance(b, (int, Integer)) or b <= 0:
             raise TypeError("multiplicity must be a positive integer")
         if a == 0:
-            a = Ordinal()
+            a = Ord0
         elif not isinstance(a, Ordinal):
             try:
                 a = Ordinal.convert(a)
@@ -129,7 +129,7 @@ class Ordinal(Basic):
                 net_str += " + "
             if i.mult == 0:
                 continue
-            elif i.exp == Ordinal():
+            elif i.exp == Ord0:
                 net_str += str(i.mult)
             elif i.exp == 1:
                 if i.mult == 1:
@@ -154,7 +154,7 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-        if other == Ordinal():
+        if other == Ord0:
             return self
         a_terms = list(self.args)
         b_terms = list(other.args)
@@ -185,8 +185,8 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-        if Ordinal() in (self, other):
-            return Ordinal()
+        if Ord0 in (self, other):
+            return Ord0
 
         a1 = self.args[0].exp
         prod = []
