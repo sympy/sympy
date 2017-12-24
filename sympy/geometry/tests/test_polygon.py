@@ -406,7 +406,7 @@ def test_intersection():
                                                                                     Segment(Point2D(0, 1), Point(1, 0))]
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
 
-def test_paramater_value():
+def test_parameter_value():
     sq = Polygon((0,0),(0,1),(1,1),(1,0))
 
     param = sq.parameter_value((0.5,1))

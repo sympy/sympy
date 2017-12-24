@@ -647,7 +647,7 @@ class Polygon(GeometrySet):
         from sympy.core.symbol import Dummy
         from sympy.solvers.solvers import solve
         if not isinstance(other,GeometryEntity):
-            other = Point(other,dim = self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):
             raise ValueError("other must be a point")
         t = Dummy()
@@ -655,12 +655,12 @@ class Polygon(GeometrySet):
         num_conditions = len(p.args)
         for c in p.args:
             arb_point = c.args[0]
-            sol = solve(arb_point - other,t,dict = True)
+            sol = solve(arb_point - other, t, dict=True)
             if len(sol) != 0:
-                value = sol[0].values()[0]
+                value = sol[0].get(t)
                 if c.args[1].subs(t,value):
                         return value
-        raise ValueError("Given point is not on %s" %type(self))
+        raise ValueError("Given point is not on %s" %type(self).__name__)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the polygon.

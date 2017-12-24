@@ -219,7 +219,7 @@ def test_dimension_normalization():
     assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
         ).intersection((2, 1)) == [Point(2, 1, 0)]
 
-def test_paramater_value():
+def test_parameter_value():
     p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
 
     param = p.parameter_value((0,1,0))
