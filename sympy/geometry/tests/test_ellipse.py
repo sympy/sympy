@@ -386,7 +386,7 @@ def test_is_tangent():
     raises(TypeError, lambda: e1.is_tangent(Point(0, 0, 0)))
     raises(TypeError, lambda: e1.is_tangent(Rational(5)))
 
-def test_paramater_value():
+def test_parameter_value():
     e = Ellipse(Point(0,0), 3, 5)
 
     param = e.parameter_value((3,0))

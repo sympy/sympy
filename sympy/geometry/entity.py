@@ -516,14 +516,15 @@ class GeometryEntity(Basic):
         from sympy.core.symbol import Dummy
         from sympy.solvers.solvers import solve
         if not isinstance(other,GeometryEntity):
-            other = Point(other,dim = self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):
             raise ValueError("other must be a point")
         t = Dummy()
-        sol = solve(self.arbitrary_point(t) - other,t,dict = True)
+        sol = solve(self.arbitrary_point(t) - other, t, dict=True)
         if len(sol) == 0:
-            raise ValueError("Given point is not on %s" %type(self))
-        return sol[0].values()[0]
+            raise ValueError("Given point is not on %s" %type(self).__name__)
+        v = sol[0].get(t)
+        return v
 
 class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
