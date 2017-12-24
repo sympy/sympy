@@ -878,15 +878,10 @@ class Or(LatticeOp, BooleanFunction):
         n_args = len(self.args)
         a = self.args[:int(n_args/2)]
         b = self.args[int(n_args/2):]
-        if len(a) == 1:
-            a = a[0]
-        else:
-            a = to_anf(Or(*a), deep=deep)
-        if len(b) == 1:
-            b = b[0]
-        else:
-            b = to_anf(Or(*b), deep=deep)
-        return Xor._to_anf(a, b, distribute_xor_over_and(And(a, b)), deep=deep)
+        a = to_anf(Or(*a)) if len(a) > 1 else to_anf(a[0])
+        b = to_anf(Or(*b)) if len(b) > 1 else to_anf(b[0])
+        x = Xor(a, b, distribute_xor_over_and(And(a, b)))
+        return to_anf(x, deep=deep) if deep else x
 
 
 class Not(BooleanFunction):
@@ -1638,13 +1633,16 @@ def to_anf(expr, deep=True):
 
     A logical expression is in ANF if it has the form
     ((A & B & ...) ^ (B & C ...) ^ B ^ True ^ ...),
-    i.e. it is purely true, purely false, conjunction of
-    variables or exclusive disjunction. The exclusive
-    disjunction can only contain true, variables or
-    conjunction of variables. No negations are permitted.
+    i.e. it can be:
+        - purely true,
+        - purely false,
+        - conjunction of variables,
+        - exclusive disjunction.
+    The exclusive disjunction can only contain true, variables
+    or conjunction of variables. No negations are permitted.
 
-    If ``deep`` if false, arguments of the boolean
-    expression considered variables, i.e. only the
+    If ``deep`` is false, arguments of the boolean
+    expression are considered variables, i.e. only the
     top-level expression is converted to ANF.
 
     Examples
@@ -1660,6 +1658,8 @@ def to_anf(expr, deep=True):
     Xor(True, ~A, ~A & (Equivalent(B, C)))
 
     """
+    expr = sympify(expr)
+
     if is_anf(expr):
         return expr
     return expr.to_anf(deep=deep)
@@ -2172,6 +2172,13 @@ def _convert_to_varsANF(term, variables):
     """
     Converts a term in the expansion of a function from binary to it's
     variable form (for ANF).
+
+    Parameters
+    ==========
+
+    term : list of 1's and 0's (complementation patter)
+    variables : list of variables
+
     """
     temp = []
     for i, m in enumerate(term):
@@ -2503,6 +2510,12 @@ def ANFform(variables, truthvalues):
     set of Zhegalkin monomials, with the empty set denoted
     by 0 (False).
 
+    Parameters
+    ==========
+
+    variables : list of variables
+    truthvalues : list of 1's and 0's (result column of truth table)
+
     Examples
     ========
     >>> from sympy.logic.boolalg import ANFform
@@ -2515,7 +2528,7 @@ def ANFform(variables, truthvalues):
     References
     ==========
 
-    .. [2] en.wikipedia.org/wiki/Zhegalkin_polynomial
+    .. [2] https://en.wikipedia.org/wiki/Zhegalkin_polynomial
 
     """
     variables = [sympify(v) for v in variables]
@@ -2542,6 +2555,11 @@ def anf_coeffs(truthvalues):
     each monomial is fully specified by the presence or absence of
     each variable.
 
+    We can enumarate all the monomials. For example, boolean
+    function with four variables (a, b, c, d) can contain
+    up to 2^4 = 16 monomials. The 13-th monomial is the
+    product a & b & d, because 13 in binary is 1, 1, 0, 1.
+
     A given monomial's presence or absence in a polynomial corresponds
     to that monomial's coefficient being 1 or 0 respectively.
 
@@ -2564,7 +2582,8 @@ def anf_coeffs(truthvalues):
     n = len(s) - 1
 
     if len(truthvalues) != 2**n:
-        raise ValueError('The number of truth values must be a power of two.')
+        raise ValueError("The number of truth values must be a power of two, "
+                         "got %d" % len(truthvalues))
 
     coeffs = [[v] for v in truthvalues]
 
@@ -2589,7 +2608,7 @@ def minterm(k, variables):
     Parameters
     ==========
 
-    k : int or list of 1s and 0s (complementation patter)
+    k : int or list of 1's and 0's (complementation patter)
     variables : list of variables
 
     Examples
@@ -2604,12 +2623,12 @@ def minterm(k, variables):
     References
     ==========
 
-    .. [3] en.wikipedia.org/wiki/Canonical_normal_form#Indexing_minterms
+    .. [3] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_minterms
 
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = [sympify(v) for v in variables]
+    variables = list(map(sympify, variables))
     return _convert_to_varsSOP(k, variables)
 
 
@@ -2625,7 +2644,7 @@ def maxterm(k, variables):
     Parameters
     ==========
 
-    k : int or list of 1s and 0s (complementation pattern)
+    k : int or list of 1's and 0's (complementation pattern)
     variables : list of variables
 
     Examples
@@ -2640,12 +2659,12 @@ def maxterm(k, variables):
     References
     ==========
 
-    .. [4] en.wikipedia.org/wiki/Canonical_normal_form#Indexing_maxterms
+    .. [4] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_maxterms
 
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = [sympify(v) for v in variables]
+    variables = list(map(sympify, variables))
     return _convert_to_varsPOS(k, variables)
 
 
@@ -2665,13 +2684,13 @@ def monomial(k, variables):
     of each variable.
 
     For example, boolean function with four variables (a, b, c, d)
-    can contain up to 2^4=16 monomials. The 13-th monomial is the
-    product abd, because 13 in binary is 1, 1, 0, 1.
+    can contain up to 2^4 = 16 monomials. The 13-th monomial is the
+    product a & b & d, because 13 in binary is 1, 1, 0, 1.
 
     Parameters
     ==========
 
-    k : int or list of 1s and 0s
+    k : int or list of 1's and 0's
     variables : list of variables
 
     Examples
@@ -2686,7 +2705,7 @@ def monomial(k, variables):
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = [sympify(v) for v in variables]
+    variables = list(map(sympify, variables))
     return _convert_to_varsANF(k, variables)
 
 
