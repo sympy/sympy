@@ -11,10 +11,7 @@ from __future__ import print_function
 
 # files listed here can be in unix forward slash format with paths
 # listed relative to sympy (which contains bin, etc...)
-blacklist = [
-    "parsing/latex/_antlr/latexparser.py",
-    "parsing/latex/_antlr/latexlexer.py",
-]
+blacklist = []
 
 import sys
 import os
