@@ -419,13 +419,9 @@ def test_second_moment_of_area():
 
     triangle = Polygon(p1, p2, p3)
 
-    i_xx = int(I_xx - triangle.second_moment_of_area(p)[0])
-    i_yy = int(I_yy - triangle.second_moment_of_area(p)[1])
-    i_xy = int(I_xy - triangle.second_moment_of_area(p)[2])
-
-    assert i_xx is 0
-    assert i_yy is 0
-    assert i_xy is 0
+    assert (I_xx - triangle.second_moment_of_area(p)[0]) == 0
+    assert (I_yy - triangle.second_moment_of_area(p)[1]) == 0
+    assert (I_xy - triangle.second_moment_of_area(p)[2]) == 0
 
     #rectangle
     p1, p2, p3, p4=[(0, 0), (4, 0), (4, 2), (0, 2)]
@@ -435,10 +431,6 @@ def test_second_moment_of_area():
 
     rectangle = Polygon(p1, p2, p3, p4)
 
-    i_xx = int(I_xx - rectangle.second_moment_of_area(p)[0])
-    i_yy = int(I_yy - rectangle.second_moment_of_area(p)[1])
-    i_xy = int(I_xy - rectangle.second_moment_of_area(p)[2])
-
-    assert i_xx is 0
-    assert i_yy is 0
-    assert i_xy is 0
+    assert (I_xx - rectangle.second_moment_of_area(p)[0]) == 0
+    assert (I_yy - rectangle.second_moment_of_area(p)[1]) == 0
+    assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0
