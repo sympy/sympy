@@ -2025,7 +2025,7 @@ class MatrixArithmetic(MatrixRequired):
             except TypeError:
                 pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        raise NotImplementedError('Cannot multiply %s and %s' % (type(self), type(other)))
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
@@ -2093,7 +2093,7 @@ class MatrixArithmetic(MatrixRequired):
             except TypeError:
                 pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        raise NotImplementedError('Cannot multiply %s and %s' % (type(self), type(other)))
 
     @call_highest_priority('__sub__')
     def __rsub__(self, a):

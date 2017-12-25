@@ -614,7 +614,7 @@ def test_multiplication():
     ))
 
     raises(ShapeError, lambda: b*a)
-    raises(TypeError, lambda: a*{})
+    raises(NotImplementedError, lambda: a*{})
 
     c = a*b
     assert c[0, 0] == 7
@@ -1344,5 +1344,5 @@ def test_limit():
 def test_issue_13774():
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     v = [1,1,1]
-    raises(TypeError, lambda: M*v)
-    raises(TypeError, lambda: v*M)
+    raises(NotImplementedError, lambda: M*v)
+    raises(NotImplementedError, lambda: v*M)
