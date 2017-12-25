@@ -10,7 +10,7 @@ from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.density import Density
 from sympy.core.trace import Tr
 
-A, B, C = symbols('A,B,C', commutative=False)
+A, B, C, D = symbols('A,B,C,D', commutative=False)
 x = symbols('x')
 
 mat1 = Matrix([[1, 2*I], [1 + I, 3]])
@@ -47,6 +47,10 @@ def test_tensor_product_commutator():
 
 def test_tensor_product_simp():
     assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
+
+
+def test_tensor_product_simp_Pow():
+    assert tensor_product_simp((TP(A, B)*TP(C, D)) ** 2) == (TP(A*C, B*D)) ** 2
 
 
 def test_issue_5923():
