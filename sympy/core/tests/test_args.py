@@ -593,11 +593,11 @@ def test_sympy__calculus__util__AccumulationBounds():
 @XFAIL
 def test_sympy__sets__ordinals__OmegaPower():
     from sympy.sets.ordinals import OmegaPower
-    assert _test_args(OmegaPower(2,))
+    assert _test_args(OmegaPower(1, 1))
 
 def test_sympy__sets__ordinals__Ordinal():
-    from sympy.sets.ordinals import Ordinal
-    assert _test_args(Ordinal())
+    from sympy.sets.ordinals import Ordinal, OmegaPower
+    assert _test_args(Ordinal(OmegaPower(2, 1)))
 
 def test_sympy__sets__ordinals__OrdinalOmega():
     from sympy.sets.ordinals import OrdinalOmega
