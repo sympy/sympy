@@ -13,7 +13,7 @@ class OmegaPower(Basic):
         if not isinstance(b, (int, Integer)) or b <= 0:
             raise TypeError("multiplicity must be a positive integer")
         if a == 0:
-            a = Ord0
+            a = ord0
         elif not isinstance(a, Ordinal):
             try:
                 a = Ordinal.convert(a)
@@ -62,10 +62,11 @@ class Ordinal(Basic):
     Internally, this class is just a list of instances of OmegaPower
     Examples
     ========
-    >>> from sympy.sets import Ordinal, Ordinals, OmegaPower
-    >>> Ordinals.w  # doctest: +SKIP
+    >>> from sympy.sets import Ordinal, ord0, OmegaPower
+    >>> from sympy.sets.ordinals import omega
+    >>> omega  # doctest: +SKIP
     w
-    >>> a = Ordinals.w
+    >>> a = omega
     >>> a.is_limit_ordinal
     True
     >>> Ordinal(OmegaPower(3,2))  # doctest: +SKIP
@@ -100,6 +101,9 @@ class Ordinal(Basic):
                 return NotImplemented
         return self.args == other.args
 
+    def __hash__(self):
+        return hash(self.args)
+
     def __lt__(self, other):
         if not isinstance(other, Ordinal):
             try:
@@ -129,7 +133,7 @@ class Ordinal(Basic):
                 net_str += " + "
             if i.mult == 0:
                 continue
-            elif i.exp == Ord0:
+            elif i.exp == ord0:
                 net_str += str(i.mult)
             elif i.exp == 1:
                 if i.mult == 1:
@@ -154,7 +158,7 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-        if other == Ord0:
+        if other == ord0:
             return self
         a_terms = list(self.args)
         b_terms = list(other.args)
@@ -185,8 +189,8 @@ class Ordinal(Basic):
                 other = Ordinal.convert(other)
             except TypeError:
                 return NotImplemented
-        if Ord0 in (self, other):
-            return Ord0
+        if ord0 in (self, other):
+            return ord0
 
         a1 = self.args[0].exp
         prod = []
@@ -203,15 +207,37 @@ class Ordinal(Basic):
         return other * self
 
 
-class Ord0(with_metaclass(Singleton, Ordinal)):
+class OrdinalZero(with_metaclass(Singleton, Ordinal)):
+    """The ordinal zero.
 
-    def __new__(cls):
-        return Ordinal.__new__(cls)
+    OrdinalZero is a singleton, and can be accessed by ``S.OrdinalZero``
+    or can be imported as ``ord0``.
 
-class OrdOmega(with_metaclass(Singleton, Ordinal)):
+    Examples
+    ========
 
+    >>> from sympy import ord0, S
+    >>> ord0 is S.OrdinalZero
+    True
+    """
+    pass
+
+class OrdinalOmega(with_metaclass(Singleton, Ordinal)):
+    """The ordinal omega which forms the base of all ordinals in cantor normal form.
+
+    OrdinalOmega is a singleton, and can be accessed by ``S.OrdinalOmega``
+    or can be imported as ``omega``.
+
+    Examples
+    ========
+
+    >>> from sympy.sets.ordinals import omega
+    >>> from sympy import S
+    >>> omega is S.OrdinalOmega
+    True
+    """
     def __new__(cls):
         return Ordinal.__new__(cls, OmegaPower(1,1))
 
-Ord0 = S.Ord0
-OrdOmega = S.OrdOmega
+ord0 = S.OrdinalZero
+omega = S.OrdinalOmega
