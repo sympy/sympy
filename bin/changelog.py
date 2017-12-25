@@ -8,12 +8,11 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from collections import defaultdict
 
-HEADERS = {
-    'M': 'Major changes',
-    'b': 'Backwards compatibility breaks and deprecations',
-    'n': 'New features',
-    'm': 'Minor changes'
-}
+HEADERS = [
+    'Major changes',
+    'Backwards compatibility breaks',
+    'Minor changes'
+]
 PREFIX = '* '
 SUFFIX = ' ([#{pr_number}](../pull/{pr_number}))\n'
 
@@ -71,19 +70,28 @@ def get_changelog(data):
     Parse changelogs from a string
     """
     changelogs = defaultdict(list)
-    start = False
+    current = None
     for line in data.splitlines():
-        if 'This PR changes' in line:
-            start = True
-        if start:
-            if ':' in line:
-                type, message = line.split(':', 1)
-                changelogs[type.strip()].append(message.strip())
-            elif '[CHANGELOG END]' in line:
+        if current:
+            if 'Add entry(ies)' in line:
+                _, answer = line.split('?', 1)
+                answer = re.sub('[^a-zA-Z]+', '', answer).lower()
+                if answer in ['no', 'n', 'false', 'f']:
+                    print(green('Skipping changelog'))
+                    sys.exit()
                 break
-            elif '[skip changelog]' in line:
-                print(green('[skip changelog] found, skipping changelog'))
-                sys.exit()
+            elif line.startswith('*'):
+                _, message = line.split('*', 1)
+                message = message.strip()
+                if message:
+                    changelogs[header].append(message)
+            elif line.startswith('#### '):
+                for header in HEADERS:
+                    if header in line:
+                        current = header
+                        break
+        elif 'Brief description' in line:
+            current = '_'
     else:
         sys.exit(red('Changelog not detected! Please use pull request template.'))
     count = sum(len(changelogs[t]) for t in HEADERS)
@@ -111,18 +119,18 @@ def update_release_notes(rel_notes_path, changelogs, pr_number):
     for i in range(len(contents)):
         line = contents[i].strip()
         is_empty = (not line or line == '*')
-        if line.startswith('##'):
+        if line.startswith('## '):
             # last heading is assumed to be not a changelog header
-            if current:
+            if changelogs[current]:
                 suffix = SUFFIX.format(pr_number=pr_number)
-                entry = (PREFIX + (suffix + PREFIX).join(changelogs[header]) +
+                entry = (PREFIX + (suffix + PREFIX).join(changelogs[current]) +
                     suffix + '\n')
                 if not is_prev_empty:
                     contents[i] = contents[i] + entry
                 else:
                     contents[n] = entry
             for header in HEADERS:
-                if HEADERS[header] in line:
+                if header in line:
                     current = header
                     break
         elif current and not is_prev_empty and is_empty:

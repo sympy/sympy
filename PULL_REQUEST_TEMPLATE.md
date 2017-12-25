@@ -8,15 +8,16 @@ https://github.com/blog/1506-closing-issues-via-pull-requests .-->
 
 
 ### Brief description of what is fixed or changed
-<!-- This will be added to release notes automatically. If changes are trivial
-or not related to SymPy itself, please uncomment following line.-->
-<!-- [skip release notes] -->
+<!-- This will be added to release notes automatically. -->
 #### Major changes
-* 
-#### Minor changes
 *
 #### Backwards compatibility breaks
 *
-<!-- [end release notes] -->
+#### Minor changes
+*
+
+<!-- If changes are trivial or not related to SymPy itself,
+leave this section empty and answer 'No' to following question. -->
+**Add entry(ies) to the release notes?** Yes
 
 ### Other comments
