@@ -310,8 +310,13 @@ def main_integrate3d(expr, facets, vertices, hp_params, **kwargs):
                                                       dps=dps, tis=tis,
                                                       weights=weights)
                 monom[7] = value_over_face
-                result[expr] += value_over_face * \
-                    (b / norm(a)) / (dim_length + x_d + y_d + z_d)
+                monom_result = value_over_face * \
+                    (b / norm(a)) / (dim_length + degree)
+                if dps is not None:
+                    result[expr] += N(monom_result, dps)
+                else:
+                    result[expr] += monom_result
+
         return result
     else:
         integral_value = S.Zero
