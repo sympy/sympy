@@ -325,6 +325,9 @@ class Quaternion(Expr):
         if p < 0:
             q, p = q.inverse(), -p
 
+        if (type(p) != int):
+            return NotImplemented
+
         while p > 0:
             if p & 1:
                 res = q * res
