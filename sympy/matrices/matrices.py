@@ -2399,8 +2399,6 @@ class MatrixBase(MatrixDeprecated,
                 raise TypeError(
                     "`b` must be an ordered iterable or Matrix, not %s." %
                     type(b))
-        if (type(b) == list or type(b) == tuple):
-            b = Matrix(b)
         if (b.cols !=1 and b.rows != 1):
             raise ShapeError("`b` must has only one row or one column")
         mat = self
