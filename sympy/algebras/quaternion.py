@@ -327,7 +327,7 @@ class Quaternion(Expr):
         if p < 0:
             q, p = q.inverse(), -p
 
-        if not (isinstance(p, (int, Integer, SYMPY_INTS))):
+        if not (isinstance(p, (Integer, SYMPY_INTS))):
             return NotImplemented
 
         while p > 0:
