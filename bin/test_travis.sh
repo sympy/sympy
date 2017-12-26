@@ -35,7 +35,7 @@ cd empty
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     rm -f $TRAVIS_BUILD_DIR/.coverage.* $TRAVIS_BUILD_DIR/.coverage
     cat << EOF | python
-import distutils
+import distutils.sysconfig
 import os
 
 with open(os.path.join(distutils.sysconfig.get_python_lib(), 'coverage.pth'), 'w') as pth:
