@@ -2,11 +2,11 @@ language: python
 sudo: false
 env:
   matrix:
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
-  - SPLIT="1/4" TEST_SYMPY="true"
-  - SPLIT="2/4" TEST_SYMPY="true"
-  - SPLIT="3/4" TEST_SYMPY="true"
-  - SPLIT="4/4" TEST_SYMPY="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_COVERAGE="true"
+  - SPLIT="1/4" TEST_SYMPY="true" TEST_COVERAGE="true"
+  - SPLIT="2/4" TEST_SYMPY="true" TEST_COVERAGE="true"
+  - SPLIT="3/4" TEST_SYMPY="true" TEST_COVERAGE="true"
+  - SPLIT="4/4" TEST_SYMPY="true" TEST_COVERAGE="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
@@ -25,6 +25,7 @@ matrix:
         # space separated list of optional dependencies(conda packages) to install and test
         # autowrap installs libgfortran libgcc gcc cython
         - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib=2.1.0 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
+        - TEST_COVERAGE="true"
       addons:
         apt:
           packages:
@@ -37,6 +38,7 @@ matrix:
       env:
         - TEST_ASCII="true"
         - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib=2.1.0 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
+        - TEST_COVERAGE="true"
       addons:
         apt:
           packages:
@@ -70,26 +72,32 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="1/3"
+        - TEST_COVERAGE="true"
     - python: 2.7
       env:
         - TEST_SLOW="true"
         - SPLIT="2/3"
+        - TEST_COVERAGE="true"
     - python: 2.7
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
+        - TEST_COVERAGE="true"
     - python: 3.6
       env:
         - TEST_SLOW="true"
         - SPLIT="1/3"
+        - TEST_COVERAGE="true"
     - python: 3.6
       env:
         - TEST_SLOW="true"
         - SPLIT="2/3"
+        - TEST_COVERAGE="true"
     - python: 3.6
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
+        - TEST_COVERAGE="true"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
@@ -227,7 +235,7 @@ before_install:
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
       pip install "sphinx" "docutils" doctr;
     fi
-  - if [[ "${TEST_SYMPY}" == "true" ]]; then
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
       pip install coverage;
     fi
   - |
@@ -289,7 +297,7 @@ script:
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
     fi
-  - if [[ "${TEST_SYMPY}" == "true" ]]; then
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
         bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
     fi
 notifications:
