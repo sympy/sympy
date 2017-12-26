@@ -16,7 +16,7 @@ from .conventions import split_super_sub, requires_partial
 class MathMLContentPrinter(Printer):
     """Prints an expression to the Content MathML markup language.
 
-    References: https://www.w3.org/TR/MathML3/
+    References: https://www.w3.org/TR/MathML2/chapter4.html
     """
     printmethod = "_mathml"
     _default_settings = {
@@ -438,7 +438,9 @@ class MathMLContentPrinter(Printer):
 
 
 class MathMLPresentationPrinter(Printer):
-    """Prints an expression to the Presentation MathML markup language
+    """Prints an expression to the Presentation MathML markup language.
+
+    References: https://www.w3.org/TR/MathML2/chapter3.html
 
     """
     printmethod = "_mathml"
@@ -959,7 +961,13 @@ class MathMLPresentationPrinter(Printer):
 
 
 def mathml(expr, printer='content', **settings):
-    """Returns the MathML representation of expr"""
+    """Returns the MathML representation of expr
+
+    If printer is presentation then prints Presentation MathML
+
+    else prints content MathML.
+    
+    """
     if printer == 'presentation':
         return MathMLPresentationPrinter(settings).doprint(expr)
     else:
