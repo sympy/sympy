@@ -8,6 +8,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
+from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3)
@@ -219,11 +220,7 @@ class Set(Basic):
         elif isinstance(other, FiniteSet):
             from sympy.utilities.iterables import sift
 
-            def ternary_sift(el):
-                contains = self.contains(el)
-                return contains if contains in [True, False] else None
-
-            sifted = sift(other, ternary_sift)
+            sifted = sift(other, lambda x: fuzzy_bool(self.contains(x)))
             # ignore those that are contained in self
             return Union(FiniteSet(*(sifted[False])),
                 Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
