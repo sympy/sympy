@@ -155,12 +155,18 @@ class LatexPrinter(Printer):
             "dot": r" \cdot ",
             "times": r" \times "
         }
-
-        self._settings['mul_symbol_latex'] = \
-            mul_symbol_table[self._settings['mul_symbol']]
-
-        self._settings['mul_symbol_latex_numbers'] = \
-            mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+        try:
+            self._settings['mul_symbol_latex'] = \
+                mul_symbol_table[self._settings['mul_symbol']]
+        except KeyError:
+            self._settings['mul_symbol_latex'] = \
+                self._settings['mul_symbol']
+        try:
+            self._settings['mul_symbol_latex_numbers'] = \
+                mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+        except KeyError:
+            self._settings['mul_symbol_latex_numbers'] = \
+                self._settings['mul_symbol'] or mul_symbol_table['dot']
 
         self._delim_dict = {'(': ')', '[': ']'}
 
