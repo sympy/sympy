@@ -40,6 +40,11 @@ def test_slicing():
     assert X[2, :] == MatrixSlice(X, 2, (0, m))
     assert X[k, :] == MatrixSlice(X, k, (0, m))
 
+def test_ellipsis():
+    assert X[...] == MatrixSlice(X, (0, n), (0, m))
+    assert X[2, ...] == MatrixSlice(X, 2, (0, m))
+    assert X[k, ...] == MatrixSlice(X, k, (0, m))
+
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)
     raises(IndexError, lambda: X[0:12, 2])
