@@ -5,6 +5,7 @@ source = sympy
 omit =
     */tests/*
     */benchmarks/*
+    */sympy/integrals/rubi/rules/*
 data_file = $TRAVIS_BUILD_DIR/.coverage
 
 [report]
