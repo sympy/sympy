@@ -217,17 +217,18 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            from sympy.utilities.iterables import sift
+            from sympy.core.logic import fuzzy_bool
 
             def ternary_sift(el):
                 contains = self.contains(el)
-                return contains if contains in [True, False] else None
+                return fuzzy_bool(contains)
 
-            sifted = sift(other, ternary_sift)
+            sifted = sift(other, fuzzy_bool)
             # ignore those that are contained in self
             return Union(FiniteSet(*(sifted[False])),
-                Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
-                if sifted[None] else S.EmptySet)
+                         Complement(
+                             FiniteSet(*(sifted[None])), self, evaluate=False)
+                         if sifted[None] else S.EmptySet)
 
     def symmetric_difference(self, other):
         """
