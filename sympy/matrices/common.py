@@ -1974,9 +1974,7 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
         other = _matrixify(other)
-        # matrix-like objects can have shapes.  This is our check.
-        # Non matrice operands will throw error
-        if not(hasattr(other, 'shape')):
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
             return NotImplemented
 
         return self.__mul__(other)
@@ -2073,9 +2071,7 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
         other = _matrixify(other)
-        # matrix-like objects can have shapes.  This is our check.
-        # Non matrice operands will throw error
-        if not(hasattr(other, 'shape')):
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
             return NotImplemented
 
         return self.__rmul__(other)
