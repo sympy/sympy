@@ -139,6 +139,8 @@ class Ordinal(Basic):
     def __str__(self):
         net_str = ""
         plus_count = 0
+        if self == ord0:
+            return 'ord0'
         for i in self.args:
             if plus_count:
                 net_str += " + "
