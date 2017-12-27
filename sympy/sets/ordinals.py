@@ -12,9 +12,8 @@ class OmegaPower(Basic):
     def __new__(cls, a, b):
         if not isinstance(b, (int, Integer)) or b <= 0:
             raise TypeError("multiplicity must be a positive integer")
-        if a == 0:
-            a = ord0
-        elif not isinstance(a, Ordinal):
+
+        if not isinstance(a, Ordinal):
             try:
                 a = Ordinal.convert(a)
             except TypeError:
@@ -64,15 +63,19 @@ class Ordinal(Basic):
     ========
     >>> from sympy.sets import Ordinal, ord0, OmegaPower
     >>> from sympy.sets.ordinals import omega
-    >>> omega  # doctest: +SKIP
-    w
-    >>> a = omega
-    >>> a.is_limit_ordinal
+    >>> w = omega
+    >>> w.is_limit_ordinal
     True
-    >>> Ordinal(OmegaPower(3,2))  # doctest: +SKIP
-    {w**3}*2
-    >>> Ordinal(OmegaPower(5,1),OmegaPower(3,2))  # doctest: +SKIP
-    w**5 + {w**3}*2
+    >>> Ordinal(OmegaPower(w + 1 ,1), OmegaPower(3, 2)) #doctest: +SKIP
+    w**(w + 1) + w**3*2
+    >>> 3 + w  #doctest: +SKIP
+    w
+    >>> (w + 1) * w #doctest: +SKIP
+    w**2
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Beta_function
     """
     def __new__(cls, *terms):
         obj = super(Ordinal, cls).__new__(cls, *terms)
@@ -83,7 +86,7 @@ class Ordinal(Basic):
 
     @property
     def is_successor_ordinal(self):
-        return self.args[-1].exp == 0
+        return self.args[-1].exp == ord0
 
     @property
     def is_limit_ordinal(self):
@@ -91,7 +94,16 @@ class Ordinal(Basic):
 
     @classmethod
     def convert(cls, integer_value):
+        if integer_value == 0:
+            return ord0
         return Ordinal(OmegaPower(0, integer_value))
+
+    def _mult_single_term(self, other):
+        a_exp = self.args[0].exp
+        prod = []
+        for arg in other.args:
+            prod.append(OmegaPower(a_exp + arg.exp, arg.mult))
+        return Ordinal(*prod)
 
     def __eq__(self, other):
         if not isinstance(other, Ordinal):
@@ -124,31 +136,27 @@ class Ordinal(Basic):
     def __ge__(self, other):
         return not self < other
 
-
     def __str__(self):
         net_str = ""
         plus_count = 0
         for i in self.args:
             if plus_count:
                 net_str += " + "
-            if i.mult == 0:
-                continue
-            elif i.exp == ord0:
+
+            if i.exp == ord0:
                 net_str += str(i.mult)
             elif i.exp == 1:
-                if i.mult == 1:
-                    net_str += 'w'
-                else:
-                    net_str += 'w*%s'%i.mult
-            else :
-                if i.mult==1:
-                    net_str += 'w**%s'%i.exp
-                else:
-                    net_str += '{w**%s'%i.exp+'}*%s'%i.mult
+                net_str += 'w'
+            elif len(i.exp.args) > 1 or i.exp.is_limit_ordinal:
+                net_str += 'w**(%s)'%i.exp
+            else:
+                net_str += 'w**%s'%i.exp
+
+            if not i.mult == 1 and not i.exp == ord0:
+                net_str += '*%s'%i.mult
+
             plus_count += 1
         return(net_str)
-
-
 
     __repr__ = __str__
 
@@ -191,12 +199,20 @@ class Ordinal(Basic):
                 return NotImplemented
         if ord0 in (self, other):
             return ord0
+        a_exp = self.args[0].exp
+        a_mult = self.args[0].mult
+        sum = []
+        if other.is_limit_ordinal:
+            for arg in other.args:
+                sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
 
-        a1 = self.args[0].exp
-        prod = []
-        for arg in other.args:
-            prod.append(OmegaPower(a1 + arg.exp, arg.mult))
-        return Ordinal(*prod)
+        else:
+            for arg in other.args[:-1:]:
+                sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
+            b_mult = other.args[-1].mult
+            sum.append(OmegaPower(a_exp, a_mult*b_mult))
+            sum += list(self.args[1:])
+        return Ordinal(*sum)
 
     def __rmul__(self, other):
         if not isinstance(other, Ordinal):
@@ -206,6 +222,10 @@ class Ordinal(Basic):
                 return NotImplemented
         return other * self
 
+    def __pow__(self, other):
+        if not self == omega:
+            return NotImplemented
+        return Ordinal(OmegaPower(other, 1))
 
 class OrdinalZero(with_metaclass(Singleton, Ordinal)):
     """The ordinal zero.
@@ -237,7 +257,7 @@ class OrdinalOmega(with_metaclass(Singleton, Ordinal)):
     True
     """
     def __new__(cls):
-        return Ordinal.__new__(cls, OmegaPower(1,1))
+        return Ordinal.__new__(cls, OmegaPower(1, 1))
 
 ord0 = S.OrdinalZero
 omega = S.OrdinalOmega
