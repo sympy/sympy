@@ -1012,3 +1012,6 @@ def print_mathml(expr, printer='content', **settings):
     s.restore_patch()
 
     print(pretty_xml)
+
+#For backward compatibility
+MathMLPrinter = MathMLContentPrinter

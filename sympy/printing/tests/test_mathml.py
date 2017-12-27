@@ -1,7 +1,8 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix
-from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter
+from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
+    MathMLPrinter
 
 from sympy.utilities.pytest import raises
 
@@ -9,6 +10,11 @@ x = Symbol('x')
 y = Symbol('y')
 mp = MathMLContentPrinter()
 mpp = MathMLPresentationPrinter()
+
+def test_mathml_printer():
+    m = MathMLPrinter()
+    assert m.doprint(1+x) == mp.doprint(1+x)
+
 
 def test_content_printmethod():
     assert mp.doprint(1 + x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
