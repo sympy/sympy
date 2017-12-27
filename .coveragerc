@@ -6,6 +6,8 @@ omit =
     */tests/*
     */benchmarks/*
     */sympy/integrals/rubi/rules/*
+    */sympy/plotting/pygletplot/*
+    */conftest.py
 data_file = $TRAVIS_BUILD_DIR/.coverage
 
 [report]
