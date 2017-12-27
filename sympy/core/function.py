@@ -1467,7 +1467,7 @@ class Derivative(Expr):
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.expr:
-            # Check if canonnical order of variables is equal.
+            # Check if canonical order of variables is equal.
             old_vars = collections.Counter(dict(reversed(old.variable_count)))
             self_vars = collections.Counter(dict(reversed(self.variable_count)))
             if old_vars == self_vars:
@@ -1479,8 +1479,33 @@ class Derivative(Expr):
 
             if _subset(old_vars, self_vars):
                 return Derivative(new, *(self_vars - old_vars).items())
+        # Substitution remains unevaluate unless one of the following applies:
+        # 1) old is an instance of UndefinedFunction, rather than an expression
+        # 2) Neither old nor new term contains any self.variables
+        # 3) Substitution replaces one of self.variables by an expression whose
+        #    variable(s) are not present in self.args[0]
+        # 4) Substitution replaces one of self.variables by an expression that
+        #    does not depend on other variables
+        # 5) expr == old, complete replacement of differentiated expression
+        # 6) Substitution does not change either expr or variables
+        # See issue 13795
 
-        return Derivative(*(x._subs(old, new) for x in self.args))
+        expr = self.args[0]
+        if isinstance(old, UndefinedFunction) or \
+           len(set(self.variables) & (old.free_symbols | new.free_symbols)) == 0 or \
+           (old in self.variables and new._diff_wrt and \
+                len(expr.free_symbols & new.free_symbols) == 0
+           ) or \
+           (old in self.variables and new._diff_wrt and \
+                len(new.free_symbols - old.free_symbols) == 0
+           ) or \
+           expr == old or \
+           (expr.subs(old, new) == expr and \
+                all(v.subs(old, new) == v for v in self.variables)
+           ):
+            return Derivative(*(x._subs(old, new) for x in self.args))
+        else:
+            return Subs(self, old, new)
 
     def _eval_lseries(self, x, logx):
         dx = self.variables
