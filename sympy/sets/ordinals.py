@@ -207,7 +207,7 @@ class Ordinal(Basic):
                 sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
 
         else:
-            for arg in other.args[:-1:]:
+            for arg in other.args[:-1]:
                 sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
             b_mult = other.args[-1].mult
             sum.append(OmegaPower(a_exp, a_mult*b_mult))
