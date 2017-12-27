@@ -562,6 +562,26 @@ def test_diff_wrt_func_subs():
     assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)
 
 
+def test_subs_in_derivative():
+    expr = sin(x*exp(y))
+    u = Function('u')
+    v = Function('v')
+    assert Derivative(expr, y).subs(y, x).doit() == \
+        Derivative(expr, y).doit().subs(y, x)
+    assert Derivative(f(x, y), y).subs(y, x) == Subs(Derivative(f(x, y), y), y, x)
+    assert Derivative(f(x, y), y).subs(x, y) == Subs(Derivative(f(x, y), y), x, y)
+    assert Derivative(f(x, y), y).subs(y, g(x, y)) == Subs(Derivative(f(x, y), y), y, g(x, y))
+    assert Derivative(f(x, y), y).subs(x, g(x, y)) == Subs(Derivative(f(x, y), y), x, g(x, y))
+    assert Derivative(f(u(x), h(y)), h(y)).subs(h(y), g(x, y)) == \
+        Subs(Derivative(f(u(x), h(y)), h(y)), h(y), g(x, y))
+    assert Derivative(f(x, y), y).subs(y, z) == Derivative(f(x, z), z)
+    assert Derivative(f(x, y), y).subs(y, g(y)) == Derivative(f(x, g(y)), g(y))
+    assert Derivative(f(g(x), h(y)), h(y)).subs(h(y), u(y)) == \
+        Derivative(f(g(x), u(y)), u(y))
+    issue_13791 = v(x, y, u(x, y)).diff(y).diff(x).diff(y)
+    # no assertion (it's a complicated formula) but in 13791 this threw an exception
+
+
 def test_diff_wrt_not_allowed():
     raises(ValueError, lambda: diff(sin(x**2), x**2))
     raises(ValueError, lambda: diff(exp(x*y), x*y))

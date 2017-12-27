@@ -1480,7 +1480,28 @@ class Derivative(Expr):
             if _subset(old_vars, self_vars):
                 return Derivative(new, *(self_vars - old_vars).items())
 
-        return Derivative(*(x._subs(old, new) for x in self.args))
+        # Check whether the substitution (old, new) cannot be done inside
+        # Derivative(expr, vars). Disallowed:
+        # (1) changing expr by introducing a variable among vars
+        # (2) changing vars by introducing a variable contained in expr
+        # However, it is always allowed to replace the entire expr by new.
+        old_symbols = old.free_symbols if isinstance(old.free_symbols, set) \
+            else set()
+        new_symbols = new.free_symbols if isinstance(new.free_symbols, set) \
+            else set()
+        introduced_symbols = new_symbols - old_symbols
+        args_subbed = tuple(x._subs(old, new) for x in self.args)
+        if self.args[0] == old:   # complete replacement
+            return Derivative(*args_subbed)
+        if (self.args[0] != args_subbed[0] and \
+            len(set(self.variables) & introduced_symbols) > 0
+            ) or \
+            (self.args[1:] != args_subbed[1:] and \
+            len(self.args[0].free_symbols & introduced_symbols) > 0
+            ):
+            return Subs(self, old, new)
+        else:
+            return Derivative(*args_subbed)
 
     def _eval_lseries(self, x, logx):
         dx = self.variables
