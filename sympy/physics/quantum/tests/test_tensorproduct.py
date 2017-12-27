@@ -1,6 +1,7 @@
 from sympy import I, symbols, Matrix
 
 from sympy.physics.quantum.commutator import Commutator as Comm
+from sympy.physics.quantum.anticommutator import AntiCommutator as AntiComm
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct as TP
 from sympy.physics.quantum.tensorproduct import tensor_product_simp
@@ -52,6 +53,12 @@ def test_tensor_product_simp():
 def test_tensor_product_simp_Pow():
     assert tensor_product_simp((TP(A, B)*TP(C, D)) ** 2) == (TP(A*C, B*D)) ** 2
     assert tensor_product_simp(TP(A, B) ** 2) == TP(A**2, B**2)
+    assert tensor_product_simp((TP(A, B) + TP(C, D)) ** 2) == \
+        (TP(A**2, B**2) + TP(C**2, D**2))
+    assert tensor_product_simp(Comm(TP(A, B), TP(C, D)) ** 2) == \
+        Comm(TP(A**2, B**2), TP(C**2, D**2))
+    assert tensor_product_simp(AntiComm(TP(A, B), TP(C, D)) ** 2) == \
+        AntiComm(TP(A**2, B**2), TP(C**2, D**2))
 
 
 def test_issue_5923():
