@@ -2,7 +2,6 @@ from sympy import S, sqrt, pi, Dummy, Sum, Ynm, symbols
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         racah, dot_rot_grad_Ynm, Wigner3j, wigner_3j)
 from sympy.core.numbers import Rational
-from sympy import srepr
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
@@ -259,9 +258,10 @@ def test_wigner():
 def test_gaunt():
     def tn(a, b):
         return (a - b).n(64) < S('1e-64')
-    assert srepr(gaunt(1, 0, 1, 1, 0, -1)) == srepr(S(-1)/(2*sqrt(pi)))
-    assert srepr(gaunt(1, 1, 0, -1, 1, 0)) == srepr(S(-1)/(2*sqrt(pi)))
-    assert srepr(gaunt(0, 1, 1, 0, -1, 1)) == srepr(S(-1)/(2*sqrt(pi)))
+    assert gaunt(1, 0, 1, 1, 0, -1) == -1/(2*sqrt(pi))
+    assert isinstance(gaunt(1, 1, 0, -1, 1, 0).args[0], Rational)
+    assert isinstance(gaunt(0, 1, 1, 0, -1, 1).args[0], Rational)
+
     assert tn(gaunt(
         10, 10, 12, 9, 3, -12, prec=64), (-S(98)/62031) * sqrt(6279)/sqrt(pi))
     def gaunt_ref(l1, l2, l3, m1, m2, m3):
