@@ -75,7 +75,7 @@ class Ordinal(Basic):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_function
+    .. [1] https://en.wikipedia.org/wiki/Ordinal_arithmetic
     """
     def __new__(cls, *terms):
         obj = super(Ordinal, cls).__new__(cls, *terms)
