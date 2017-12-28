@@ -361,7 +361,7 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def check_assumptions(expr, against=None, get=False, **assumptions):
+def check_assumptions(expr, against=None, failing_assumption=False, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
@@ -386,12 +386,12 @@ def check_assumptions(expr, against=None, get=False, **assumptions):
        >>> check_assumptions(-2*x - 5, real=True, positive=True)
        False
 
-       To get the assumptions that are wrong, set the ``get`` parameter
+       To get the assumptions that are wrong, set the ` failing_assumption`` parameter
        to `True`
 
-       >>> check_assumptions(-5, get=True, integer=False, positive=True)
+       >>> check_assumptions(-5, failing_assumption=True, integer=False, positive=True)
        (False, ('integer', 'positive'))
-       >>> check_assumptions(pi, get=True, real=True, negative=True)
+       >>> check_assumptions(pi, failing_assumption=True, real=True, negative=True)
        (False, ('negative',))
 
        To check assumptions of ``expr`` against another variable or expression,
@@ -419,7 +419,7 @@ def check_assumptions(expr, against=None, get=False, **assumptions):
         if test is expected:
             continue
         elif test is not None:
-            if get is True:
+            if failing_assumption is True:
                 wrong_list.append(key)
             else:
                 return False

@@ -1302,11 +1302,11 @@ def test_check_assumptions():
     x = symbols('x', positive=False)
     y = Symbol('y', real=True, positive=True)
     assert check_assumptions(1, x, True) == (False, ('positive',))
-    assert check_assumptions(-5, get=True, integer=True, positive=True) == \
+    assert check_assumptions(-5, failing_assumption=True, integer=True, positive=True) == \
         (False, ('positive',))
-    assert check_assumptions(-5, get=True, integer=False, positive=True) == \
+    assert check_assumptions(-5, failing_assumption=True, integer=False, positive=True) == \
         (False, ('integer', 'positive'))
-    assert check_assumptions(-2*y - 5, get=True, real=False, positive=True) == \
+    assert check_assumptions(-2*y - 5, failing_assumption=True, real=False, positive=True) == \
         (False, ('positive', 'real'))
 
 
