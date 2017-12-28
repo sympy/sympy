@@ -1,7 +1,7 @@
 import random
 
 from sympy import Integer, Matrix, Rational, sqrt, symbols
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, long
 from sympy.physics.quantum.qubit import (measure_all, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,
@@ -133,6 +133,8 @@ def test_measure_partial():
     #Basic test of collapse of entangled two qubits (Bell States)
     state = Qubit('01') + Qubit('10')
     assert measure_partial(state, (0,)) == \
+        [(Qubit('10'), Rational(1, 2)), (Qubit('01'), Rational(1, 2))]
+    assert measure_partial(state, long(0)) == \
         [(Qubit('10'), Rational(1, 2)), (Qubit('01'), Rational(1, 2))]
     assert measure_partial(state, (0,)) == \
         measure_partial(state, (1,))[::-1]

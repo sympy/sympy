@@ -122,13 +122,13 @@ class erf(Function):
             elif arg is S.Zero:
                 return S.Zero
 
-        if arg.func is erfinv:
+        if isinstance(arg, erfinv):
              return arg.args[0]
 
-        if arg.func is erfcinv:
+        if isinstance(arg, erfcinv):
             return S.One - arg.args[0]
 
-        if arg.func is erf2inv and arg.args[0] is S.Zero:
+        if isinstance(arg, erf2inv) and arg.args[0] is S.Zero:
             return arg.args[1]
 
         # Try to pull out factors of I
@@ -312,10 +312,10 @@ class erfc(Function):
             elif arg is S.Zero:
                 return S.One
 
-        if arg.func is erfinv:
+        if isinstance(arg, erfinv):
             return S.One - arg.args[0]
 
-        if arg.func is erfcinv:
+        if isinstance(arg, erfcinv):
             return arg.args[0]
 
         # Try to pull out factors of I
@@ -500,11 +500,11 @@ class erfi(Function):
         if nz is not None:
             if nz is S.Infinity:
                 return I
-            if nz.func is erfinv:
+            if isinstance(nz, erfinv):
                 return I*nz.args[0]
-            if nz.func is erfcinv:
+            if isinstance(nz, erfcinv):
                 return I*(S.One - nz.args[0])
-            if nz.func is erf2inv and nz.args[0] is S.Zero:
+            if isinstance(nz, erf2inv) and nz.args[0] is S.Zero:
                 return I*nz.args[1]
 
     @staticmethod
@@ -659,7 +659,7 @@ class erf2(Function):
         elif (x is I or x is N or x is O) or (y is I or y is N or y is O):
             return erf(y) - erf(x)
 
-        if y.func is erf2inv and y.args[0] == x:
+        if isinstance(y, erf2inv) and y.args[0] == x:
             return y.args[1]
 
         #Try to pull out -1 factor
@@ -778,12 +778,12 @@ class erfinv(Function):
         elif z is S.One:
             return S.Infinity
 
-        if (z.func is erf) and z.args[0].is_real:
+        if isinstance(z, erf) and z.args[0].is_real:
             return z.args[0]
 
         # Try to pull out factors of -1
         nz = z.extract_multiplicatively(-1)
-        if nz is not None and ((nz.func is erf) and (nz.args[0]).is_real):
+        if nz is not None and (isinstance(nz, erf) and (nz.args[0]).is_real):
             return -nz.args[0]
 
     def _eval_rewrite_as_erfcinv(self, z):
@@ -967,34 +967,14 @@ class Ei(Function):
     If the integral is interpreted as a Cauchy principal value, this statement
     holds for `x > 0` and `\operatorname{Ei}(x)` as defined above.
 
-    Note that we carefully avoided defining `\operatorname{Ei}(x)` for
-    negative real `x`. This is because above integral formula does not hold for
-    any polar lift of such `x`, indeed all branches of
-    `\operatorname{Ei}(x)` above the negative reals are imaginary.
-
-    However, the following statement holds for all `x \in \mathbb{R}^*`:
-
-    .. math:: \int_{-\infty}^x \frac{e^t}{t} \mathrm{d}t =
-              \frac{\operatorname{Ei}\left(|x|e^{i \arg(x)}\right) +
-                    \operatorname{Ei}\left(|x|e^{- i \arg(x)}\right)}{2},
-
-    where the integral is again understood to be a principal value if
-    `x > 0`, and `|x|e^{i \arg(x)}`,
-    `|x|e^{- i \arg(x)}` denote two conjugate polar lifts of `x`.
-
     Examples
     ========
 
     >>> from sympy import Ei, polar_lift, exp_polar, I, pi
     >>> from sympy.abc import x
 
-    The exponential integral in SymPy is strictly undefined for negative values
-    of the argument. For convenience, exponential integrals with negative
-    arguments are immediately converted into an expression that agrees with
-    the classical integral definition:
-
     >>> Ei(-1)
-    -I*pi + Ei(exp_polar(I*pi))
+    Ei(-1)
 
     This yields a real value:
 
@@ -1057,9 +1037,6 @@ class Ei(Function):
         elif z is S.NegativeInfinity:
             return S.Zero
 
-        if not z.is_polar and z.is_negative:
-            # Note: is this a good idea?
-            return Ei(polar_lift(z)) - pi*I
         nz, n = z.extract_branch_factor()
         if n:
             return Ei(nz) + 2*I*pi*n

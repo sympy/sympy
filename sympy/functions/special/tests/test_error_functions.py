@@ -312,10 +312,6 @@ def tn_branch(func, s=None):
 
 
 def test_ei():
-    pos = Symbol('p', positive=True)
-    neg = Symbol('n', negative=True)
-    assert Ei(-pos) == Ei(polar_lift(-1)*pos) - I*pi
-    assert Ei(neg) == Ei(polar_lift(neg)) - I*pi
     assert tn_branch(Ei)
     assert mytd(Ei(x), exp(x)/x, x)
     assert mytn(Ei(x), Ei(x).rewrite(uppergamma),
@@ -338,6 +334,7 @@ def test_ei():
     assert Ei(x).series(x) == EulerGamma + log(x) + x + x**2/4 + \
         x**3/18 + x**4/96 + x**5/600 + O(x**6)
 
+    assert str(Ei(cos(2)).evalf(n=10)) == '-0.6760647401'
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),

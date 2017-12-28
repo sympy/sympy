@@ -8,15 +8,17 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
+from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3)
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
-from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.relational import Eq, Ne
+from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
+from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -73,18 +75,18 @@ class Set(Basic):
 
         >>> from sympy import Interval, FiniteSet
         >>> Interval(0, 1).union(Interval(2, 3))
-        [0, 1] U [2, 3]
+        Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(0, 1) + Interval(2, 3)
-        [0, 1] U [2, 3]
+        Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        (1, 2] U {3}
+        Union(Interval.Lopen(1, 2), {3})
 
         Similarly it is possible to use the '-' operator for set differences:
 
         >>> Interval(0, 2) - Interval(0, 1)
-        (1, 2]
+        Interval.Lopen(1, 2)
         >>> Interval(1, 3) - FiniteSet(2)
-        [1, 2) U (2, 3]
+        Union(Interval.Ropen(1, 2), Interval.Lopen(2, 3))
 
         """
         return Union(self, other)
@@ -96,7 +98,7 @@ class Set(Basic):
         >>> from sympy import Interval
 
         >>> Interval(1, 3).intersect(Interval(1, 2))
-        [1, 2]
+        Interval(1, 2)
 
         >>> from sympy import imageset, Lambda, symbols, S
         >>> n, m = symbols('n m')
@@ -168,18 +170,18 @@ class Set(Basic):
         return None
 
     def complement(self, universe):
-        """
-        The complement of 'self' w.r.t the given the universe.
+        r"""
+        The complement of 'self' w.r.t the given universe.
 
         Examples
         ========
 
         >>> from sympy import Interval, S
         >>> Interval(0, 1).complement(S.Reals)
-        (-oo, 0) U (1, oo)
+        Union(Interval.open(-oo, 0), Interval.open(1, oo))
 
         >>> Interval(0, 1).complement(S.UniversalSet)
-        UniversalSet() \ [0, 1]
+        UniversalSet() \ Interval(0, 1)
 
         """
         return Complement(universe, self)
@@ -193,9 +195,9 @@ class Set(Basic):
             # We can conveniently represent these options easily using a
             # ProductSet
 
-            # XXX: this doesn't work if the dimentions of the sets isn't same.
+            # XXX: this doesn't work if the dimensions of the sets isn't same.
             # A - B is essentially same as A if B has a different
-            # dimentionality than A
+            # dimensionality than A
             switch_sets = ProductSet(FiniteSet(o, o - s) for s, o in
                                      zip(self.sets, other.sets))
             product_sets = (ProductSet(*set) for set in switch_sets)
@@ -216,7 +218,13 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if self.contains(el) != True])
+            from sympy.utilities.iterables import sift
+
+            sifted = sift(other, lambda x: fuzzy_bool(self.contains(x)))
+            # ignore those that are contained in self
+            return Union(FiniteSet(*(sifted[False])),
+                Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
+                if sifted[None] else S.EmptySet)
 
     def symmetric_difference(self, other):
         """
@@ -227,13 +235,13 @@ class Set(Basic):
 
         >>> from sympy import Interval, S
         >>> Interval(1, 3).symmetric_difference(S.Reals)
-        (-oo, 1) U (3, oo)
+        Union(Interval.open(-oo, 1), Interval.open(3, oo))
         >>> Interval(1, 10).symmetric_difference(S.Reals)
-        (-oo, 1) U (10, oo)
+        Union(Interval.open(-oo, 1), Interval.open(10, oo))
 
         >>> from sympy import S, EmptySet
         >>> S.Reals.symmetric_difference(EmptySet())
-        (-oo, oo)
+        S.Reals
 
         References
         ==========
@@ -517,9 +525,9 @@ class Set(Basic):
         ========
         >>> from sympy import S, Interval
         >>> S.Reals.closure
-        (-oo, oo)
+        S.Reals
         >>> Interval(0, 1).closure
-        [0, 1]
+        Interval(0, 1)
         """
         return self + self.boundary
 
@@ -534,7 +542,7 @@ class Set(Basic):
         ========
         >>> from sympy import Interval
         >>> Interval(0, 1).interior
-        (0, 1)
+        Interval.open(0, 1)
         >>> Interval(0, 1).boundary.interior
         EmptySet()
         """
@@ -597,13 +605,13 @@ class ProductSet(Set):
     >>> from sympy import Interval, FiniteSet, ProductSet
     >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
     >>> ProductSet(I, S)
-    [0, 5] x {1, 2, 3}
+    Interval(0, 5) x {1, 2, 3}
 
     >>> (2, 2) in ProductSet(I, S)
     True
 
     >>> Interval(0, 1) * Interval(0, 1) # The unit square
-    [0, 1] x [0, 1]
+    Interval(0, 1) x Interval(0, 1)
 
     >>> coin = FiniteSet('H', 'T')
     >>> set(coin**2)
@@ -717,9 +725,30 @@ class ProductSet(Set):
 
     @property
     def is_iterable(self):
+        """
+        A property method which tests whether a set is iterable or not.
+        Returns True if set is iterable, otherwise returns False.
+
+        Examples
+        ========
+
+        >>> from sympy import FiniteSet, Interval, ProductSet
+        >>> I = Interval(0, 1)
+        >>> A = FiniteSet(1, 2, 3, 4, 5)
+        >>> I.is_iterable
+        False
+        >>> A.is_iterable
+        True
+
+        """
         return all(set.is_iterable for set in self.sets)
 
     def __iter__(self):
+        """
+        A method which implements is_iterable property method.
+        If self.is_iterable returns True (both constituent sets are iterable),
+        then return the Cartesian Product. Otherwise, raise TypeError.
+        """
         if self.is_iterable:
             return product(*self.sets)
         else:
@@ -757,19 +786,19 @@ class Interval(Set, EvalfMixin):
 
     >>> from sympy import Symbol, Interval
     >>> Interval(0, 1)
-    [0, 1]
-    >>> Interval(0, 1, False, True)
-    [0, 1)
+    Interval(0, 1)
     >>> Interval.Ropen(0, 1)
-    [0, 1)
+    Interval.Ropen(0, 1)
+    >>> Interval.Ropen(0, 1)
+    Interval.Ropen(0, 1)
     >>> Interval.Lopen(0, 1)
-    (0, 1]
+    Interval.Lopen(0, 1)
     >>> Interval.open(0, 1)
-    (0, 1)
+    Interval.open(0, 1)
 
     >>> a = Symbol('a', real=True)
     >>> Interval(0, a)
-    [0, a]
+    Interval(0, a)
 
     Notes
     =====
@@ -1210,13 +1239,13 @@ class Union(Set, EvalfMixin):
 
     >>> from sympy import Union, Interval
     >>> Union(Interval(1, 2), Interval(3, 4))
-    [1, 2] U [3, 4]
+    Union(Interval(1, 2), Interval(3, 4))
 
     The Union constructor will always try to merge overlapping intervals,
     if possible. For example:
 
     >>> Union(Interval(1, 2), Interval(2, 3))
-    [1, 3]
+    Interval(1, 3)
 
     See Also
     ========
@@ -1385,6 +1414,11 @@ class Union(Set, EvalfMixin):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
+        if len(self.args) == 2:
+            a, b = self.args
+            if (a.sup == b.inf and a.inf is S.NegativeInfinity
+                    and b.sup is S.Infinity):
+                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
@@ -1394,8 +1428,11 @@ class Union(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         try:
             return Union(set._eval_evalf(prec) for set in self.args)
-        except Exception:
-            raise TypeError("Not all sets are evalf-able")
+        except (TypeError, ValueError, NotImplementedError):
+            import sys
+            raise (TypeError("Not all sets are evalf-able"),
+                   None,
+                   sys.exc_info()[2])
 
     def __iter__(self):
         import itertools
@@ -1432,12 +1469,12 @@ class Intersection(Set):
 
     >>> from sympy import Intersection, Interval
     >>> Intersection(Interval(1, 3), Interval(2, 4))
-    [2, 3]
+    Interval(2, 3)
 
     We often use the .intersect method
 
     >>> Interval(1,3).intersect(Interval(2,4))
-    [2, 3]
+    Interval(2, 3)
 
     See Also
     ========
@@ -1469,7 +1506,7 @@ class Intersection(Set):
         args = flatten(args)
 
         if len(args) == 0:
-            return S.EmptySet
+            return S.UniversalSet
 
         # args can't be ordered for Partition see issue #9608
         if 'Partition' not in [type(a).__name__ for a in args]:
@@ -1522,15 +1559,13 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
-        from sympy.utilities.iterables import sift
 
-        sifted = sift(args, lambda x: x.is_FiniteSet)
-        fs_args = sifted.pop(True, [])
+        fs_args, other = sift(args, lambda x: x.is_FiniteSet,
+            binary=True)
         if not fs_args:
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
-        other = sifted.pop(False, [])
 
         res = []
         unk = []
@@ -1653,7 +1688,7 @@ class Intersection(Set):
 
 
 class Complement(Set, EvalfMixin):
-    """Represents the set difference or relative complement of a set with
+    r"""Represents the set difference or relative complement of a set with
     another set.
 
     `A - B = \{x \in A| x \\notin B\}`
@@ -1789,7 +1824,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     UniversalSet()
 
     >>> Interval(1, 2).intersect(S.UniversalSet)
-    [1, 2]
+    Interval(1, 2)
 
     See Also
     ========
@@ -1845,8 +1880,13 @@ class FiniteSet(Set, EvalfMixin):
     True
 
     >>> members = [1, 2, 3, 4]
-    >>> FiniteSet(*members)
+    >>> f = FiniteSet(*members)
+    >>> f
     {1, 2, 3, 4}
+    >>> f - FiniteSet(2)
+    {1, 3, 4}
+    >>> f + FiniteSet(2, 5)
+    {1, 2, 3, 4, 5}
 
     References
     ==========
@@ -1974,12 +2014,12 @@ class FiniteSet(Set, EvalfMixin):
         """
         r = false
         for e in self._elements:
+            # override global evaluation so we can use Eq to do
+            # do the evaluation
             t = Eq(e, other, evaluate=True)
-            if isinstance(t, Eq):
-                t = t.simplify()
-            if t == true:
+            if t is true:
                 return t
-            elif t != false:
+            elif t is not false:
                 r = None
         return r
 
@@ -2109,18 +2149,18 @@ def imageset(*args):
     >>> from sympy.abc import x, y
 
     >>> imageset(x, 2*x, Interval(0, 2))
-    [0, 4]
+    Interval(0, 4)
 
     >>> imageset(lambda x: 2*x, Interval(0, 2))
-    [0, 4]
+    Interval(0, 4)
 
     >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), [-2, 1])
+    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
 
     >>> imageset(sin, Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), [-2, 1])
+    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
     >>> imageset(lambda y: x + y, Interval(-2, 1))
-    ImageSet(Lambda(_x, _x + x), [-2, 1])
+    ImageSet(Lambda(_x, _x + x), Interval(-2, 1))
 
     Expressions applied to the set of Integers are simplified
     to show as few negatives as possible and linear expressions
@@ -2128,7 +2168,7 @@ def imageset(*args):
     then the unevaluated ImageSet should be used.
 
     >>> imageset(x, -2*x + 5, S.Integers)
-    ImageSet(Lambda(x, 2*x + 1), Integers())
+    ImageSet(Lambda(x, 2*x + 1), S.Integers)
 
     See Also
     ========
@@ -2138,7 +2178,6 @@ def imageset(*args):
     """
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
-    from sympy.geometry.util import _uniquely_named_symbol
 
     if len(args) not in (2, 3):
         raise ValueError('imageset expects 2 or 3 args, got: %s' % len(args))

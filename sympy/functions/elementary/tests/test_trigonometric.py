@@ -6,6 +6,8 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         AccumBounds)
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.core.relational import Ne, Eq
+from sympy.functions.elementary.piecewise import Piecewise
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -37,6 +39,8 @@ def test_sin():
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)
     assert sin(acot(x)) == 1 / (sqrt(1 + 1 / x**2) * x)
+    assert sin(acsc(x)) == 1 / x
+    assert sin(asec(x)) == sqrt(1 - 1 / x**2)
     assert sin(atan2(y, x)) == y / sqrt(x**2 + y**2)
 
     assert sin(pi*I) == sinh(pi)*I
@@ -87,7 +91,7 @@ def test_sin():
 
     assert sin(pi/8) == sqrt((2 - sqrt(2))/4)
 
-    assert sin(pi/10) == -1/4 + sqrt(5)/4
+    assert sin(pi/10) == -S(1)/4 + sqrt(5)/4
 
     assert sin(pi/12) == -sqrt(2)/4 + sqrt(6)/4
     assert sin(5*pi/12) == sqrt(2)/4 + sqrt(6)/4
@@ -247,6 +251,8 @@ def test_cos():
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
     assert cos(asin(x)) == sqrt(1 - x**2)
     assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
+    assert cos(acsc(x)) == sqrt(1 - 1 / x**2)
+    assert cos(asec(x)) == 1 / x
     assert cos(atan2(y, x)) == x / sqrt(x**2 + y**2)
 
     assert cos(pi*I) == cosh(pi)
@@ -404,6 +410,8 @@ def test_tan():
     assert tan(asin(x)) == x / sqrt(1 - x**2)
     assert tan(acos(x)) == sqrt(1 - x**2) / x
     assert tan(acot(x)) == 1 / x
+    assert tan(acsc(x)) == 1 / (sqrt(1 - 1 / x**2) * x)
+    assert tan(asec(x)) == sqrt(1 - 1 / x**2) * x
     assert tan(atan2(y, x)) == y/x
 
     assert tan(pi*I) == tanh(pi)*I
@@ -548,6 +556,8 @@ def test_cot():
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x
     assert cot(acos(x)) == x / sqrt(1 - x**2)
+    assert cot(acsc(x)) == sqrt(1 - 1 / x**2) * x
+    assert cot(asec(x)) == 1 / (sqrt(1 - 1 / x**2) * x)
     assert cot(atan2(y, x)) == x/y
 
     assert cot(pi*I) == -coth(pi)*I
@@ -704,7 +714,7 @@ def test_sinc():
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 
     assert sinc(x).rewrite(jn) == jn(0, x)
-    assert sinc(x).rewrite(sin) == sin(x) / x
+    assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))
 
 
 def test_asin():
@@ -842,12 +852,15 @@ def test_atan():
 
 
 def test_atan_rewrite():
-    assert atan(x).rewrite(log) == I*log((1 - I*x)/(1 + I*x))/2
+    assert atan(x).rewrite(log) == I*(log(1 - I*x)-log(1 + I*x))/2
     assert atan(x).rewrite(asin) == (-asin(1/sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
     assert atan(x).rewrite(acos) == sqrt(x**2)*acos(1/sqrt(x**2 + 1))/x
     assert atan(x).rewrite(acot) == acot(1/x)
     assert atan(x).rewrite(asec) == sqrt(x**2)*asec(sqrt(x**2 + 1))/x
     assert atan(x).rewrite(acsc) == (-acsc(sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
+
+    assert atan(-5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:-5*I})
+    assert atan(5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:5*I})
 
 
 def test_atan2():
@@ -927,18 +940,21 @@ def test_acot():
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
     assert acot(x).is_positive is None
-    assert acot(r).is_positive is True
+    assert acot(n).is_positive is False
     assert acot(p).is_positive is True
     assert acot(I).is_positive is False
 
 
 def test_acot_rewrite():
-    assert acot(x).rewrite(log) == I*log((x - I)/(x + I))/2
+    assert acot(x).rewrite(log) == I*(log(1 - I/x)-log(1 + I/x))/2
     assert acot(x).rewrite(asin) == x*(-asin(sqrt(-x**2)/sqrt(-x**2 - 1)) + pi/2)*sqrt(x**(-2))
     assert acot(x).rewrite(acos) == x*sqrt(x**(-2))*acos(sqrt(-x**2)/sqrt(-x**2 - 1))
     assert acot(x).rewrite(atan) == atan(1/x)
     assert acot(x).rewrite(asec) == x*sqrt(x**(-2))*asec(sqrt((x**2 + 1)/x**2))
     assert acot(x).rewrite(acsc) == x*(-acsc(sqrt((x**2 + 1)/x**2)) + pi/2)*sqrt(x**(-2))
+
+    assert acot(-I/5).evalf() == acot(x).rewrite(log).evalf(subs={x:-I/5})
+    assert acot(I/5).evalf() == acot(x).rewrite(log).evalf(subs={x:I/5})
 
 
 def test_attributes():
@@ -1193,7 +1209,14 @@ def test_sincos_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in range(1, (n + 1)//2 + 1):
+            # The vertices `exp(i*pi/n)` of a regular `n`-gon can
+            # be expressed by means of nested square roots if and
+            # only if `n` is a product of Fermat primes, `p`, and
+            # powers of 2, `t'. The code aims to check all vertices
+            # not belonging to an `m`-gon for `m < n`(`gcd(i, n) == 1`).
+            # For large `n` this makes the test too slow, therefore
+            # the vertices are limited to those of index `i < 10`.
+            for i in range(1, min((n + 1)//2 + 1, 10)):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     s1 = sin(x).rewrite(sqrt)
@@ -1267,7 +1290,7 @@ def test_tancot_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in range(1, (n + 1)//2 + 1):
+            for i in range(1, min((n + 1)//2 + 1, 10)):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     if  2*i != n and 3*i != 2*n:
@@ -1507,6 +1530,35 @@ def test_trig_period():
     assert tan(3*x).period(y) == S.Zero
     raises(NotImplementedError, lambda: sin(x**2).period(x))
 
+
 def test_issue_7171():
     assert sin(x).rewrite(sqrt) == sin(x)
     assert sin(x).rewrite(pow) == sin(x)
+
+
+def test_issue_11864():
+    w, k = symbols('w, k', real=True)
+    F = Piecewise((1, Eq(2*pi*k, 0)), (sin(pi*k)/(pi*k), True))
+    soln = Piecewise((1, Eq(2*pi*k, 0)), (sinc(pi*k), True))
+    assert F.rewrite(sinc) == soln
+
+def test_real_assumptions():
+    z = Symbol('z', real=False)
+    assert sin(z).is_real is None
+    assert cos(z).is_real is None
+    assert tan(z).is_real is False
+    assert sec(z).is_real is None
+    assert csc(z).is_real is None
+    assert cot(z).is_real is False
+    assert asin(p).is_real is None
+    assert asin(n).is_real is None
+    assert asec(p).is_real is None
+    assert asec(n).is_real is None
+    assert acos(p).is_real is None
+    assert acos(n).is_real is None
+    assert acsc(p).is_real is None
+    assert acsc(n).is_real is None
+    assert atan(p).is_positive is True
+    assert atan(n).is_negative is True
+    assert acot(p).is_positive is True
+    assert acot(n).is_negative is True

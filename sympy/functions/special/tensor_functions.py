@@ -5,7 +5,7 @@ from sympy.core import S, Integer
 from sympy.core.mul import prod
 from sympy.core.logic import fuzzy_not
 from sympy.utilities.iterables import (has_dups, default_sort_key)
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, SYMPY_INTS
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -72,7 +72,7 @@ class LeviCivita(Function):
 
     @classmethod
     def eval(cls, *args):
-        if all(isinstance(a, (int, Integer)) for a in args):
+        if all(isinstance(a, (SYMPY_INTS, Integer)) for a in args):
             return eval_levicivita(*args)
         if has_dups(args):
             return S.Zero

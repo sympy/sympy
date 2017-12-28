@@ -1,4 +1,4 @@
-"""Tools for arithmetic error propogation."""
+"""Tools for arithmetic error propagation."""
 from __future__ import print_function, division
 from itertools import repeat, combinations
 
@@ -9,7 +9,7 @@ _arg0_or_var = lambda var: var.args[0] if len(var.args) > 0 else var
 
 
 def variance_prop(expr, consts=(), include_covar=False):
-    """Symbolically propagates variance (`\sigma^2`) for expressions.
+    r"""Symbolically propagates variance (`\sigma^2`) for expressions.
     This is computed as as seen in [1]_.
 
     Parameters

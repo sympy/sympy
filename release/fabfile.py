@@ -17,7 +17,7 @@ fab vagrant func
 Even those functions that do not use vagrant must be run this way, because of
 the vagrant configuration at the bottom of this file.
 
-Any function that should be made avaiable from the command line needs to have
+Any function that should be made available from the command line needs to have
 the @task decorator.
 
 Save any files that should be reset between runs somewhere in the repos
@@ -308,7 +308,7 @@ def build_docs():
         with virtualenv(venv):
             with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
-                run("make html-errors")
+                run("make html")
                 run("make man")
                 with cd("/home/vagrant/repos/sympy/doc/_build"):
                     run("mv html {html-nozip}".format(**tarball_formatter()))
@@ -402,7 +402,7 @@ git_whitelist = {
     'bin/test_isolated',
     'bin/test_travis.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
-    # up, and preferrably doctested.  See also
+    # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
     'examples/advanced/identitysearch_example.ipynb',
     'examples/beginner/plot_advanced.ipynb',
@@ -544,6 +544,8 @@ def table():
 
     table = []
 
+    version = get_sympy_version()
+
     # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
     # anything else I've tried.
@@ -552,6 +554,11 @@ def table():
         table.append("<%s>" % name)
         yield
         table.append("</%s>" % name)
+    @contextmanager
+    def a_href(link):
+        table.append("<a href=\"%s\">" % link)
+        yield
+        table.append("</a>")
 
     with tag('table'):
         with tag('tr'):
@@ -563,8 +570,9 @@ def table():
             name = get_tarball_name(key)
             with tag('tr'):
                 with tag('td'):
-                    with tag('b'):
-                        table.append(name)
+                    with a_href('https://github.com/sympy/sympy/releases/download/sympy-%s/%s' %(version,name)):
+                        with tag('b'):
+                            table.append(name)
                 with tag('td'):
                     table.append(descriptions[key].format(**tarball_formatter_dict))
                 with tag('td'):

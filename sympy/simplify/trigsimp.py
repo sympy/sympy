@@ -5,7 +5,7 @@ from collections import defaultdict
 from sympy.core.cache import cacheit
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
-from sympy.core.compatibility import reduce, iterable
+from sympy.core.compatibility import reduce, iterable, SYMPY_INTS
 from sympy.core.numbers import I, Integer
 from sympy.core.function import count_ops, _mexpand
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -206,7 +206,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         n = 1
         funcs, iterables, gens = [], [], []
         for e in hints:
-            if isinstance(e, (int, Integer)):
+            if isinstance(e, (SYMPY_INTS, Integer)):
                 n = e
             elif isinstance(e, FunctionClass):
                 funcs.append(e)
@@ -293,7 +293,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             # If hint tan is provided, also work with tan(x). Moreover, if
             # n > 1, also work with sin(k*x) for k <= n, and similarly for cos
             # (and tan if the hint is provided). Finally, any generators which
-            # the ideal does not work with but we need to accomodate (either
+            # the ideal does not work with but we need to accommodate (either
             # because it was in expr or because it was provided as a hint)
             # we also build into the ideal.
             # This selection process is expressed in the list ``terms``.
@@ -513,12 +513,9 @@ def trigsimp(expr, **opts):
     return trigsimpfunc(expr)
 
 
-def exptrigsimp(expr, simplify=True):
+def exptrigsimp(expr):
     """
     Simplifies exponential / trigonometric / hyperbolic functions.
-    When ``simplify`` is True (default) the expression obtained after the
-    simplification step will be then be passed through simplify to
-    precondition it so the final transformations will be applied.
 
     Examples
     ========
@@ -544,35 +541,53 @@ def exptrigsimp(expr, simplify=True):
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
 
-    if simplify:
-        newexpr = newexpr.simplify()
+    def f(rv):
+        if not rv.is_Mul:
+            return rv
+        rvd = rv.as_powers_dict()
+        newd = rvd.copy()
 
-    # conversion from exp to hyperbolic
-    ex = newexpr.atoms(exp, S.Exp1)
-    ex = [ei for ei in ex if 1/ei not in ex]
-    ## sinh and cosh
-    for ei in ex:
-        e2 = ei**-2
-        if e2 in ex:
-            a = e2.args[0]/2 if not e2 is S.Exp1 else S.Half
-            newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
-            newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
-    ## exp ratios to tan and tanh
-    for ei in ex:
-        n, d = ei - 1, ei + 1
-        et = n/d
-        etinv = d/n  # not 1/et or else recursion errors arise
-        a = ei.args[0] if ei.func is exp else S.One
-        if a.is_Mul or a is S.ImaginaryUnit:
-            c = a.as_coefficient(I)
-            if c:
-                t = S.ImaginaryUnit*tan(c/2)
-                newexpr = newexpr.subs(etinv, 1/t)
-                newexpr = newexpr.subs(et, t)
-                continue
-        t = tanh(a/2)
-        newexpr = newexpr.subs(etinv, 1/t)
-        newexpr = newexpr.subs(et, t)
+        def signlog(expr, sign=1):
+            if expr is S.Exp1:
+                return sign, 1
+            elif isinstance(expr, exp):
+                return sign, expr.args[0]
+            elif sign == 1:
+                return signlog(-expr, sign=-1)
+            else:
+                return None, None
+
+        ee = rvd[S.Exp1]
+        for k in rvd:
+            if k.is_Add and len(k.args) == 2:
+                # k == c*(1 + sign*E**x)
+                c = k.args[0]
+                sign, x = signlog(k.args[1]/c)
+                if not x:
+                    continue
+                m = rvd[k]
+                newd[k] -= m
+                if ee == -x*m/2:
+                    # sinh and cosh
+                    newd[S.Exp1] -= ee
+                    ee = 0
+                    if sign == 1:
+                        newd[2*c*cosh(x/2)] += m
+                    else:
+                        newd[-2*c*sinh(x/2)] += m
+                elif newd[1 - sign*S.Exp1**x] == -m:
+                    # tanh
+                    del newd[1 - sign*S.Exp1**x]
+                    if sign == 1:
+                        newd[-c/tanh(x/2)] += m
+                    else:
+                        newd[-c*tanh(x/2)] += m
+                else:
+                    newd[1 + sign*S.Exp1**x] += m
+                    newd[c] += m
+
+        return Mul(*[k**newd[k] for k in newd])
+    newexpr = bottom_up(newexpr, f)
 
     # sin/cos and sinh/cosh ratios to tan and tanh, respectively
     if newexpr.has(HyperbolicFunction):
@@ -1149,13 +1164,15 @@ def _futrig(e, **kwargs):
             factor_terms, TR12(x), trigs)],  # expand tan of sum
         )]
     e = greedy(tree, objective=Lops)(e)
-
     return coeff*e
 
 
 def _is_Expr(e):
     """_eapply helper to tell whether ``e`` and all its args
     are Exprs."""
+    from sympy import Derivative
+    if isinstance(e, Derivative):
+        return _is_Expr(e.expr)
     if not isinstance(e, Expr):
         return False
     return all(_is_Expr(i) for i in e.args)
