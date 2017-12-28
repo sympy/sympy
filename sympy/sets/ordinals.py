@@ -98,13 +98,6 @@ class Ordinal(Basic):
             return ord0
         return Ordinal(OmegaPower(0, integer_value))
 
-    def _mult_single_term(self, other):
-        a_exp = self.args[0].exp
-        prod = []
-        for arg in other.args:
-            prod.append(OmegaPower(a_exp + arg.exp, arg.mult))
-        return Ordinal(*prod)
-
     def __eq__(self, other):
         if not isinstance(other, Ordinal):
             try:
