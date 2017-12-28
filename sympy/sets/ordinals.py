@@ -10,7 +10,9 @@ class OmegaPower(Basic):
     In OmegaPower(a, b) a represents exponent and b represents multiplicity.
     """
     def __new__(cls, a, b):
-        if not isinstance(b, (int, Integer)) or b <= 0:
+        if isinstance(b, int):
+            b = Integer(b)
+        if not isinstance(b, Integer) or b <= 0:
             raise TypeError("multiplicity must be a positive integer")
 
         if not isinstance(a, Ordinal):
