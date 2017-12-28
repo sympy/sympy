@@ -16,10 +16,7 @@ class OmegaPower(Basic):
             raise TypeError("multiplicity must be a positive integer")
 
         if not isinstance(a, Ordinal):
-            try:
-                a = Ordinal.convert(a)
-            except TypeError:
-                return NotImplemented
+            a = Ordinal.convert(a)
 
         return Basic.__new__(cls, a, b)
 
