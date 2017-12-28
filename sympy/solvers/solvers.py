@@ -386,7 +386,7 @@ def check_assumptions(expr, against=None, failing_assumption=False, **assumption
        >>> check_assumptions(-2*x - 5, real=True, positive=True)
        False
 
-       To get the assumptions that are wrong, set the ` failing_assumption`` parameter
+       To get the assumptions that are wrong, set the ``failing_assumption`` parameter
        to `True`
 
        >>> check_assumptions(-5, failing_assumption=True, integer=False, positive=True)

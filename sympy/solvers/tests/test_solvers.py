@@ -1298,6 +1298,7 @@ def test_float_handling():
 
 def test_check_assumptions():
     x = symbols('x', positive=True)
+    assert solve(x**2 - 1) == [1]
     assert check_assumptions(1, x) == True
     x = symbols('x', positive=False)
     y = Symbol('y', real=True, positive=True)
