@@ -13,19 +13,40 @@ from .pretty.pretty_symbology import greek_unicode
 from .conventions import split_super_sub, requires_partial
 
 
-class MathPrinter(Printer):
-    # Contains common code required for MathMLContentPrinter and
-    # MathMLPresentationPrinter
+class MathMLPrinterBase(Printer):
+    """Contains common code required for MathMLContentPrinter and
 
-    printmethod = "_mathml"
+    MathMLPresentationPrinter.
+    """
+
     _default_settings = {
         "order": None,
         "encoding": "utf-8"
     }
+    def __init__(self, settings=None):
+        Printer.__init__(self, settings)
+        from xml.dom.minidom import Document,Text
+
+        self.dom = Document()
+
+        # Workaround to allow strings to remain unescaped
+        # Based on https://stackoverflow.com/questions/38015864/python-xml-dom-minidom-please-dont-escape-my-strings/38041194
+        class RawText(Text):
+            def writexml(self, writer, indent='', addindent='', newl=''):
+                if self.data:
+                    writer.write(u'{}{}{}'.format(indent, self.data, newl))
+
+        def createRawTextNode(data):
+            r = RawText()
+            r.data = data
+            r.ownerDocument = self.dom
+            return r
+
+        self.dom.createTextNode = createRawTextNode
 
     def doprint(self, expr):
         """
-        Prints the expression as Content MathML.
+        Prints the expression as MathML.
         """
         mathML = Printer._print(self, expr)
         unistr = mathML.toxml()
@@ -85,16 +106,12 @@ class MathPrinter(Printer):
         Text.writexml = self._Text_writexml_old
 
 
-class MathMLContentPrinter(MathPrinter):
+class MathMLContentPrinter(MathMLPrinterBase):
     """Prints an expression to the Content MathML markup language.
 
     References: https://www.w3.org/TR/MathML2/chapter4.html
     """
-
-    def __init__(self, settings=None):
-        Printer.__init__(self, settings)
-        from xml.dom.minidom import Document
-        self.dom = Document()
+    printmethod = "_mathml_content"
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -443,32 +460,12 @@ class MathMLContentPrinter(MathPrinter):
         return dom_element
 
 
-class MathMLPresentationPrinter(MathPrinter):
+class MathMLPresentationPrinter(MathMLPrinterBase):
     """Prints an expression to the Presentation MathML markup language.
 
     References: https://www.w3.org/TR/MathML2/chapter3.html
     """
-
-    def __init__(self, settings=None):
-        Printer.__init__(self, settings)
-        from xml.dom.minidom import Document,Text
-
-        self.dom = Document()
-
-        # Workaround to allow strings to remain unescaped
-        # Based on https://stackoverflow.com/questions/38015864/python-xml-dom-minidom-please-dont-escape-my-strings/38041194
-        class RawText(Text):
-            def writexml(self, writer, indent='', addindent='', newl=''):
-                if self.data:
-                    writer.write(u'{}{}{}'.format(indent, self.data, newl))
-
-        def createRawTextNode(data):
-            r = RawText()
-            r.data = data
-            r.ownerDocument = self.dom
-            return r
-
-        self.dom.createTextNode = createRawTextNode
+    printmethod = "_mathml_presentation"
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
