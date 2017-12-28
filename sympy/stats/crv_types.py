@@ -2446,18 +2446,16 @@ class UniformDistribution(SingleContinuousDistribution):
         left, right = self.left, self.right
         return Piecewise(
             (S.One/(right - left), And(left <= x, x <= right)),
-            (S.Zero, True))
+            (S.Zero, True)
+        )
 
-    def compute_cdf(self, **kwargs):
-        from sympy import Lambda, Min
-        z = Dummy('z', real=True, finite=True)
-        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)(z)
-        reps = {
-            Min(z, self.right): z,
-            Min(z, self.left, self.right): self.left,
-            Min(z, self.left): self.left}
-        result = result.subs(reps)
-        return Lambda(z, result)
+    def _cdf(self, x):
+        left, right = self.left, self.right
+        return Piecewise(
+            (S.Zero, x < left),
+            ((x - left)/(right - left), x <= right),
+            (S.One, True)
+        )
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
