@@ -8,7 +8,6 @@
 # Generated with antlr4
 #    antlr4 is licensed under the BSD-3-Clause License
 #    https://github.com/antlr/antlr4/blob/master/LICENSE.txt
-
 from __future__ import print_function
 from antlr4 import *
 from io import StringIO
