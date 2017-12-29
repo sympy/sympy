@@ -32,6 +32,7 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
+from sympy.physics.units import degree
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -1684,3 +1685,8 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
+
+
+def test_latex_degree():
+    deg = 90*degree
+    assert latex(deg) == r"90 ^\circ"
