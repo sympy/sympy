@@ -67,6 +67,8 @@ class Plane(GeometryEntity):
                 raise ValueError(filldedent('''
                     Either provide 3 3D points or a point with a
                     normal vector expressed as a sequence of length 3'''))
+            if all(coord.is_zero for coord in normal_vector):
+                raise ValueError('Normal vector cannot be zero vector')
         return GeometryEntity.__new__(cls, p1, normal_vector, **kwargs)
 
     def __contains__(self, o):
@@ -133,20 +135,18 @@ class Plane(GeometryEntity):
             return acos(c/(d*e))
 
 
-    def arbitrary_point(self, t=None):
-        """ Returns an arbitrary point on the Plane; varying `t` from 0 to 2*pi
-        will move the point in a circle of radius 1 about p1 of the Plane.
+    def arbitrary_point(self, u=None, v=None):
+        """ Returns an arbitrary point on the Plane, parameterized by `u` and `v`,
+        with all coordinates of the point being linear functions of parameters.
 
         Examples
         ========
 
         >>> from sympy.geometry.plane import Plane
-        >>> from sympy.abc import t
-        >>> p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
-        >>> p.arbitrary_point(t)
-        Point3D(0, cos(t), sin(t))
-        >>> _.distance(p.p1).simplify()
-        1
+        >>> from sympy.abc import u, v
+        >>> p = Plane((3, 1, 4), (2, 0, 1), (-1, -2, -2))
+        >>> p.arbitrary_point(u, v)
+        Point3D(-6*u - 3*v + 3, -3*u + 6*v + 1, 45*v + 4)
 
         Returns
         =======
@@ -155,20 +155,19 @@ class Plane(GeometryEntity):
 
         """
         from sympy import cos, sin
-        t = t or Dummy('t')
+        u = u or Dummy('u')
+        v = v or Dummy('v')
         x, y, z = self.normal_vector
         a, b, c = self.p1.args
-        if x == y == 0:
-            return Point3D(a + cos(t), b + sin(t), c)
-        elif x == z == 0:
-            return Point3D(a + cos(t), b, c + sin(t))
-        elif y == z == 0:
-            return Point3D(a, b + cos(t), c + sin(t))
-        m = Dummy()
-        p = self.projection(Point3D(self.p1.x + cos(t), self.p1.y + sin(t), 0)*m)
+        # x1, y1, z1 is a nonzero vector parallel to the plane
+        if x.is_zero and y.is_zero:
+            x1, y1, z1 = S.One, S.Zero, S.Zero
+        else:
+            x1, y1, z1 = -y, x, S.Zero
+        # x2, y2, z2 is also parallel to the plane, and orthogonal to x1, y1, z1
+        x2, y2, z2 = tuple(Matrix((x, y, z)).cross(Matrix((x1, y1, z1))))
+        return Point3D(a + x1*u + x2*v, b + y1*u + y2*v, c + z1*u + z2*v)
 
-        # TODO: Replace solve with solveset, when this line is tested
-        return p.xreplace({m: solve(p.distance(self.p1) - 1, m)[0]})
 
     @staticmethod
     def are_concurrent(*planes):
@@ -218,6 +217,7 @@ class Plane(GeometryEntity):
                 if not l or not l[0] in line:
                     return False
             return True
+
 
     def distance(self, o):
         """Distance between the plane and another geometric entity.
@@ -280,6 +280,7 @@ class Plane(GeometryEntity):
             f = sqrt(sum([i**2 for i in self.normal_vector]))
             return abs(e / f)
 
+
     def equals(self, o):
         """
         Returns True if self and o are the same mathematical entities.
@@ -305,6 +306,7 @@ class Plane(GeometryEntity):
         else:
             return False
 
+
     def equation(self, x=None, y=None, z=None):
         """The equation of the Plane.
 
@@ -325,6 +327,7 @@ class Plane(GeometryEntity):
         b = self.p1.direction_ratio(a)
         c = self.normal_vector
         return (sum(i*j for i, j in zip(b, c)))
+
 
     def intersection(self, o):
         """ The intersection with other geometrical entity.
@@ -406,6 +409,7 @@ class Plane(GeometryEntity):
                 for i in (x, y, z): result = result.subs(i, 0)
                 return [Line3D(Point3D(result), direction_ratio=c)]
 
+
     def is_coplanar(self, o):
         """ Returns True if `o` is coplanar with self, else False.
 
@@ -430,6 +434,7 @@ class Plane(GeometryEntity):
             return all(i in self for i in self)
         elif isinstance(o, GeometryEntity):  # XXX should only be handling 2D objects now
             return all(i == 0 for i in self.normal_vector[:2])
+
 
     def is_parallel(self, l):
         """Is the given geometric entity parallel to the plane?
@@ -470,6 +475,7 @@ class Plane(GeometryEntity):
                 return True
             else:
                 return False
+
 
     def is_perpendicular(self, l):
         """is the given geometric entity perpendicualar to the given plane?
@@ -774,5 +780,6 @@ class Plane(GeometryEntity):
             rng = random.Random(seed)
         else:
             rng = random
-        t = Dummy('t')
-        return self.arbitrary_point(t).subs(t, Rational(rng.random()))
+        u, v = Dummy('u'), Dummy('v')
+        params = {u: Rational(rng.random()), v: Rational(rng.random())}
+        return self.arbitrary_point(u, v).subs(params)
