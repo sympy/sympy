@@ -1,10 +1,12 @@
 from __future__ import division
 
-from sympy import Rational, Float, S, Symbol, cos, oo, pi, simplify, sin, sqrt, symbols, acos
+from sympy import (Rational, Float, S, Symbol, cos, oo, pi, simplify,
+    sin, sqrt, symbols, acos)
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, GeometryError, Line, Point, Ray, Segment, Triangle, intersection, Point3D, Line3D,
-                            Ray3D, Segment3D, Point2D, Line2D)
+from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
+    Segment, Triangle, intersection, Point3D, Line3D, Ray3D, Segment3D,
+    Point2D, Line2D)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
@@ -201,7 +203,7 @@ def test_basic_properties_2d():
     assert p_r3.x >= p1.x and p_r3.y >= p1.y
     assert p_r4.x <= p2.x and p_r4.y <= p2.y
     assert p1.x <= p_s1.x <= p10.x and p1.y <= p_s1.y <= p10.y
-    assert hash(s1) == hash(Segment(p10, p1))
+    assert hash(s1) != hash(Segment(p10, p1))
 
     assert s1.plot_interval() == [t, 0, 1]
     assert Line(p1, p10).plot_interval() == [t, -5, 5]
@@ -479,7 +481,7 @@ def test_intersection_2d():
     assert Segment3D((0, 0), (3, 0)).intersection(
         Segment3D((3, 0), (4, 0))) == [Point3D((3, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((2, 0), (5, 0))) == [Segment3D((3, 0), (2, 0))]
+        Segment3D((2, 0), (5, 0))) == [Segment3D((2, 0), (3, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
         Segment3D((-2, 0), (1, 0))) == [Segment3D((0, 0), (1, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
@@ -626,7 +628,7 @@ def test_projection():
 
     assert Line(Point(x1, x1), Point(y1, y1)).projection(Point(y1, y1)) == Point(y1, y1)
     assert Line(Point(x1, x1), Point(x1, 1 + x1)).projection(Point(1, 1)) == Point(x1, 1)
-    assert Segment(Point(0, 4), Point(-2, 2)).projection(r1) == Segment(Point(0, 4), Point(-1, 3))
+    assert Segment(Point(-2, 2), Point(0, 4)).projection(r1) == Segment(Point(-1, 3), Point(0, 4))
     assert Segment(Point(0, 4), Point(-2, 2)).projection(r1) == Segment(Point(0, 4), Point(-1, 3))
     assert l1.projection(p3) == p1
     assert l1.projection(Ray(p1, Point(-1, 5))) == Ray(Point(0, 0), Point(2, 2))
@@ -650,7 +652,7 @@ def test_perpendicular_bisector():
     on_line = Segment(Point(1 / 2, 1 / 2), Point(3 / 2, -1 / 2)).midpoint
 
     assert s1.perpendicular_bisector().equals(aline)
-    assert s1.perpendicular_bisector(on_line) == Segment(s1.midpoint, on_line)
+    assert s1.perpendicular_bisector(on_line).equals(Segment(s1.midpoint, on_line))
     assert s1.perpendicular_bisector(on_line + (1, 0)).equals(aline)
 
 

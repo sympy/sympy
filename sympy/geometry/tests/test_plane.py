@@ -96,7 +96,7 @@ def test_plane():
     assert pl6.angle_between(Ray3D(Point3D(2, 4, 1), Point3D(6, 5, 3))) == \
         asin(sqrt(7)/3)
     assert pl7.angle_between(Segment3D(Point3D(5, 6, 1), Point3D(1, 2, 4))) == \
-        -asin(7*sqrt(246)/246)
+        asin(7*sqrt(246)/246)
 
     assert are_coplanar(l1, l2, l3) is False
     assert are_coplanar(l1) is False

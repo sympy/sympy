@@ -21,6 +21,7 @@ from __future__ import division, print_function
 import warnings
 
 from sympy.core import S, sympify
+from sympy.core.compatibility import ordered
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
@@ -138,8 +139,9 @@ class LinearEntity(GeometrySet):
         return len(self.p1)
 
     def angle_between(l1, l2):
-        """The smallest of the two angles formed at the
-        intersection of two linear entities.
+        """Return the non-reflex angle formed by rays emanating from
+        the origin with directions the same as the direction vectors
+        of the linear entities.
 
         Parameters
         ==========
@@ -171,23 +173,73 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line
-        >>> p1, p2, p3 = Point(0, 0), Point(0, 4), Point(2, 0)
-        >>> l1, l2 = Line(p1, p2), Line(p1, p3)
-        >>> l1.angle_between(l2)
-        pi/2
+        >>> from sympy import Point, Line, pi
+        >>> e = Line((0, 0), (1, 0))
+        >>> ne = Line((0, 0), (1, 1))
+        >>> sw = Line((1, 1), (0, 0))
+        >>> ne.angle_between(e)
+        pi/4
+        >>> sw.angle_between(e)
+        3*pi/4
+
+        To obtain the non-obtuse angle at the intersection of lines, use
+        the ``smallest_angle_between`` method:
+
+        >>> sw.smallest_angle_between(e)
+        pi/4
+
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(-1, 2, 0)
         >>> l1, l2 = Line3D(p1, p2), Line3D(p2, p3)
         >>> l1.angle_between(l2)
         acos(-sqrt(2)/3)
-
+        >>> l1.smallest_angle_between(l2)
+        acos(sqrt(2)/3)
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+
+    def smallest_angle_between(l1, l2):
+        """Return the smallest angle formed at the intersection of the
+        lines containing the linear entities.
+
+        Parameters
+        ==========
+
+        l1 : LinearEntity
+        l2 : LinearEntity
+
+        Returns
+        =======
+
+        angle : angle in radians
+
+        See Also
+        ========
+
+        angle_between, is_perpendicular, Ray2D.closing_angle
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line, pi
+        >>> p1, p2, p3 = Point(0, 0), Point(0, 4), Point(2, -2)
+        >>> l1, l2 = Line(p1, p2), Line(p1, p3)
+        >>> l1.smallest_angle_between(l2)
+        pi/4
+
+        See Also
+        ========
+        angle_bewteen, Ray2D.closing_angle
+        """
+        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+            raise TypeError('Must pass only LinearEntity objects')
+
+        v1, v2 = l1.direction, l2.direction
+        return acos(abs(v1.dot(v2))/(abs(v1)*abs(v2)))
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
@@ -416,7 +468,7 @@ class LinearEntity(GeometrySet):
 
             # direct the segments so they're oriented the same way
             if seg1.direction.dot(seg2.direction) < 0:
-                seg2 = Segment(seg2.p1, seg2.p2)
+                seg2 = Segment(seg2.p2, seg2.p1)
             # order the segments so seg1 is "behind" seg2
             if seg1._span_test(seg2.p1) < 0:
                 seg1, seg2 = seg2, seg1
@@ -790,7 +842,7 @@ class LinearEntity(GeometrySet):
         >>> p3 in s1
         True
         >>> l1.perpendicular_segment(Point(4, 0))
-        Segment2D(Point2D(2, 2), Point2D(4, 0))
+        Segment2D(Point2D(4, 0), Point2D(2, 2))
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(0, 2, 0)
         >>> l1 = Line3D(p1, p2)
@@ -800,7 +852,7 @@ class LinearEntity(GeometrySet):
         >>> p3 in s1
         True
         >>> l1.perpendicular_segment(Point3D(4, 0, 0))
-        Segment3D(Point3D(4/3, 4/3, 4/3), Point3D(4, 0, 0))
+        Segment3D(Point3D(4, 0, 0), Point3D(4/3, 4/3, 4/3))
 
         """
         p = Point(p, dim=self.ambient_dimension)
@@ -917,6 +969,10 @@ class LinearEntity(GeometrySet):
                 # projected is a set of size 1, so unpack it in `a`
                 a, = projected
                 return a
+            # order args so projection is in the same direction as self
+            if self.direction.dot(projected.direction) < 0:
+                p1, p2 = projected.args
+                projected = projected.func(p2, p1)
             return projected
 
         raise GeometryError(
@@ -1389,7 +1445,7 @@ class Ray(LinearEntity):
 
 
 class Segment(LinearEntity):
-    """An undirected line segment in space.
+    """A line segment in space.
 
     Parameters
     ==========
@@ -1425,10 +1481,8 @@ class Segment(LinearEntity):
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1))
-    >>> s
-    Segment2D(Point2D(1, 1), Point2D(4, 3))
     >>> s.points
-    (Point2D(1, 1), Point2D(4, 3))
+    (Point2D(4, 3), Point2D(1, 1))
     >>> s.slope
     2/3
     >>> s.length
@@ -1437,11 +1491,10 @@ class Segment(LinearEntity):
     Point2D(5/2, 2)
     >>> Segment((1, 0, 0), (1, 1, 1)) # tuples are interpreted as pts
     Segment3D(Point3D(1, 0, 0), Point3D(1, 1, 1))
-    >>> s = Segment(Point(4, 3, 9), Point(1, 1, 7))
-    >>> s
-    Segment3D(Point3D(1, 1, 7), Point3D(4, 3, 9))
+    >>> s = Segment(Point(4, 3, 9), Point(1, 1, 7)); s
+    Segment3D(Point3D(4, 3, 9), Point3D(1, 1, 7))
     >>> s.points
-    (Point3D(1, 1, 7), Point3D(4, 3, 9))
+    (Point3D(4, 3, 9), Point3D(1, 1, 7))
     >>> s.length
     sqrt(17)
     >>> s.midpoint
@@ -1500,6 +1553,11 @@ class Segment(LinearEntity):
             return other.p1 in self and other.p2 in self
 
         return False
+
+    def equals(self, other):
+        """Returns True if self and other are the same mathematical entities"""
+        return isinstance(other, self.func) and list(
+            ordered(self.args)) == list(ordered(other.args))
 
     def distance(self, other):
         """
@@ -1629,14 +1687,14 @@ class Segment(LinearEntity):
         Line2D(Point2D(3, 3), Point2D(-3, 9))
 
         >>> s1.perpendicular_bisector(p3)
-        Segment2D(Point2D(3, 3), Point2D(5, 1))
+        Segment2D(Point2D(5, 1), Point2D(3, 3))
 
         """
         l = self.perpendicular_line(self.midpoint)
         if p is not None:
             p2 = Point(p, dim=self.ambient_dimension)
             if p2 in l:
-                return Segment(self.midpoint, p2)
+                return Segment(p2, self.midpoint)
         return l
 
     def plot_interval(self, parameter='t'):
@@ -2152,11 +2210,14 @@ class Ray2D(LinearEntity2D, Ray):
 
         a1 = atan2(*list(reversed(r1.direction.args)))
         a2 = atan2(*list(reversed(r2.direction.args)))
+        if a1*a2 < 0:
+            a1 = 2*S.Pi + a1 if a1 < 0 else a1
+            a2 = 2*S.Pi + a2 if a2 < 0 else a2
         return a1 - a2
 
 
 class Segment2D(LinearEntity2D, Segment):
-    """An undirected line segment in 2D space.
+    """A line segment in 2D space.
 
     Parameters
     ==========
@@ -2182,11 +2243,10 @@ class Segment2D(LinearEntity2D, Segment):
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
-    >>> s = Segment(Point(4, 3), Point(1, 1))
-    >>> s
-    Segment2D(Point2D(1, 1), Point2D(4, 3))
+    >>> s = Segment(Point(4, 3), Point(1, 1)); s
+    Segment2D(Point2D(4, 3), Point2D(1, 1))
     >>> s.points
-    (Point2D(1, 1), Point2D(4, 3))
+    (Point2D(4, 3), Point2D(1, 1))
     >>> s.slope
     2/3
     >>> s.length
@@ -2196,17 +2256,12 @@ class Segment2D(LinearEntity2D, Segment):
 
     """
     def __new__(cls, p1, p2, **kwargs):
-        # Reorder the two points under the following ordering:
-        #   if p1.x != p2.x then p1.x < p2.x
-        #   if p1.x == p2.x then p1.y < p2.y
         p1 = Point(p1, dim=2)
         p2 = Point(p2, dim=2)
+
         if p1 == p2:
             return p1
-        if (p1.x > p2.x) == True:
-            p1, p2 = p2, p1
-        elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
-            p1, p2 = p2, p1
+
         return LinearEntity2D.__new__(cls, p1, p2, **kwargs)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
@@ -2578,7 +2633,7 @@ class Ray3D(LinearEntity3D, Ray):
 
 
 class Segment3D(LinearEntity3D, Segment):
-    """A undirected line segment in a 3D space.
+    """A line segment in a 3D space.
 
     Parameters
     ==========
@@ -2604,11 +2659,10 @@ class Segment3D(LinearEntity3D, Segment):
     >>> from sympy.geometry import Segment3D
     >>> Segment3D((1, 0, 0), (1, 1, 1)) # tuples are interpreted as pts
     Segment3D(Point3D(1, 0, 0), Point3D(1, 1, 1))
-    >>> s = Segment3D(Point3D(4, 3, 9), Point3D(1, 1, 7))
-    >>> s
-    Segment3D(Point3D(1, 1, 7), Point3D(4, 3, 9))
+    >>> s = Segment3D(Point3D(4, 3, 9), Point3D(1, 1, 7)); s
+    Segment3D(Point3D(4, 3, 9), Point3D(1, 1, 7))
     >>> s.points
-    (Point3D(1, 1, 7), Point3D(4, 3, 9))
+    (Point3D(4, 3, 9), Point3D(1, 1, 7))
     >>> s.length
     sqrt(17)
     >>> s.midpoint
@@ -2617,17 +2671,10 @@ class Segment3D(LinearEntity3D, Segment):
     """
 
     def __new__(cls, p1, p2, **kwargs):
-        # Reorder the two points under the following ordering:
-        #   if p1.x != p2.x then p1.x < p2.x
-        #   if p1.x == p2.x then p1.y < p2.y
-        #   The z-coordinate will not come into picture while ordering
         p1 = Point(p1, dim=3)
         p2 = Point(p2, dim=3)
 
         if p1 == p2:
             return p1
-        if (p1.x > p2.x) == True:
-            p1, p2 = p2, p1
-        elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
-            p1, p2 = p2, p1
+
         return LinearEntity3D.__new__(cls, p1, p2, **kwargs)
