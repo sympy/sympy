@@ -12,7 +12,8 @@ from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms, \
+    failing_assumptions
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -1300,15 +1301,14 @@ def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
     assert check_assumptions(1, x) == True
-    x = symbols('x', positive=False)
-    y = Symbol('y', real=True, positive=True)
-    assert check_assumptions(1, x, True) == (False, ('positive',))
-    assert check_assumptions(-5, failing_assumption=True, integer=True, positive=True) == \
-        (False, ('positive',))
-    assert check_assumptions(-5, failing_assumption=True, integer=False, positive=True) == \
-        (False, ('integer', 'positive'))
-    assert check_assumptions(-2*y - 5, failing_assumption=True, real=False, positive=True) == \
-        (False, ('positive', 'real'))
+
+def test_failing_assumptions():
+    x = Symbol('x', real=True, positive=True)
+    y = Symbol('y')
+    assert failing_assumptions(6*x + y, x) == None
+    assert failing_assumptions(x**2 - 1, positive=True) == None
+    assert failing_assumptions(-2*x - 6, real=True, positive=True) == ['positive']
+    assert failing_assumptions(x**2, positive=True) == []
 
 
 def test_issue_6056():

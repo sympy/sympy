@@ -361,7 +361,51 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def check_assumptions(expr, against=None, failing_assumption=False, **assumptions):
+def failing_assumptions(expr, against=None, **assumptions):
+    """
+    Helper for ``check_assumptions``.
+
+    Returns empty list `[]` if all assumptions are True, or a list
+    of  assumption(s) that the expression does not satisfy or
+    `None` if it can't conclude.
+
+    Examples
+    ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.solvers.solvers import failing_assumptions
+        >>> failing_assumptions(-5, integer=False, positive=True)
+        ['integer', 'positive']
+
+        >>> x = Symbol('x', positive=True)
+        >>> y = Symbol('y')
+        >>> failing_assumptions(6*x, positive=True)
+        []
+
+        >>> failing_assumptions(y, real=True)
+    """
+    if against is not None:
+        assumptions = against.assumptions0
+
+    expr = sympify(expr)
+
+    flag = True
+    fail_list = []
+    for key, expected in ordered(assumptions.items()):
+        if expected is None:
+            continue
+        test = getattr(expr, 'is_' + key, None)
+        if test is expected:
+            continue
+        elif test is not None:
+            fail_list.append(key)
+            flag = True
+            continue
+        flag = False
+    return fail_list if flag else None
+
+
+def check_assumptions(expr, against=None, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
@@ -386,14 +430,6 @@ def check_assumptions(expr, against=None, failing_assumption=False, **assumption
        >>> check_assumptions(-2*x - 5, real=True, positive=True)
        False
 
-       To get the assumptions that are wrong, set the ``failing_assumption`` parameter
-       to `True`
-
-       >>> check_assumptions(-5, failing_assumption=True, integer=False, positive=True)
-       (False, ('integer', 'positive'))
-       >>> check_assumptions(pi, failing_assumption=True, real=True, negative=True)
-       (False, ('negative',))
-
        To check assumptions of ``expr`` against another variable or expression,
        pass the expression or variable as ``against``.
 
@@ -406,29 +442,8 @@ def check_assumptions(expr, against=None, failing_assumption=False, **assumption
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
     """
-    if against is not None:
-        assumptions = against.assumptions0
-
-    expr = sympify(expr)
-    wrong_list = []
-    result = True
-    for key, expected in ordered(assumptions.items()):
-        if expected is None:
-            continue
-        test = getattr(expr, 'is_' + key, None)
-        if test is expected:
-            continue
-        elif test is not None:
-            if failing_assumption is True:
-                wrong_list.append(key)
-            else:
-                return False
-
-        result = None  # Can't conclude, unless an other test fails.
-    if not wrong_list:
-        return result
-    else:
-        return False, tuple(wrong_list)
+    ans = failing_assumptions(expr, against, **assumptions)
+    return None if ans is None else not ans
 
 
 def solve(f, *symbols, **flags):
