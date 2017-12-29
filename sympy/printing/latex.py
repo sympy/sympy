@@ -2061,7 +2061,7 @@ class LatexPrinter(Printer):
     def _print_Quantity(self, expr):
         if str(expr) == 'degree':
             return r"^\circ"
-        return r"%s" %expr
+        return r"%s" % expr
 
 def translate(s):
     r'''
