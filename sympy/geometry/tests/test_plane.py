@@ -80,8 +80,8 @@ def test_plane():
     assert pl6.is_perpendicular(pl7)
     assert pl6.is_perpendicular(l1) is False
 
-    assert p16.distance(p16.arbitrary_point()) == 0
-    assert p17.distance(p17.arbitrary_point()) == 0
+    assert pl6.distance(pl6.arbitrary_point()) == 0
+    assert pl7.distance(pl7.arbitrary_point()) == 0
     assert pl7.distance(Point3D(1, 3, 5)) == 5*sqrt(6)/6
     assert pl6.distance(Point3D(0, 0, 0)) == 4*sqrt(3)
     assert pl6.distance(pl6.p1) == 0
@@ -108,7 +108,7 @@ def test_plane():
     assert Plane.are_concurrent(pl3, pl4, pl5) is False
     assert Plane.are_concurrent(pl6) is False
     raises(ValueError, lambda: Plane.are_concurrent(Point3D(0, 0, 0)))
-    raises(ValueError, Plane((1, 2, 3), normal_vector=(0, 0, 0)))
+    raises(ValueError, lambda: Plane((1, 2, 3), normal_vector=(0, 0, 0)))
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))
