@@ -730,7 +730,8 @@ def trig_sindouble_rule(integral):
     a = sympy.Wild('a', exclude=[sympy.sin(2*symbol)])
     match = integrand.match(sympy.sin(2*symbol)*a)
     if match:
-        return integral_steps(integrand*2*sympy.sin(symbol)*sympy.cos(symbol)/sympy.sin(2*symbol), symbol)
+        sin_double = 2*sympy.sin(symbol)*sympy.cos(symbol)/sympy.sin(2*symbol)
+        return integral_steps(integrand * sin_double, symbol)
 
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
