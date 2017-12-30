@@ -5984,8 +5984,12 @@ def test_MatrixElement_printing():
 
 
 def test_degree_printing():
-    deg = 90*degree
-    assert pretty(deg) == u'90°'
+    expr1 = 90*degree
+    assert pretty(expr1) == u'90°'
+    expr2 = x*degree
+    assert pretty(expr2) == u'x°'
+    expr3 = cos(x*degree + 90*degree)
+    assert pretty(expr3) == u'cos(x° + 90°)'
 
 
 def test_vector_expr_pretty_printing():

@@ -116,6 +116,9 @@ _between_two_numbers_p = (
     re.compile(r'[{ ]*[-+0-9]'),  # match
 )
 
+quantity = [
+    'degree'
+]
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
@@ -398,6 +401,12 @@ class LatexPrinter(Printer):
                     args = expr.as_ordered_factors()
                 else:
                     args = expr.args
+
+                # If quantity is present append them at the back
+                for i in range(len(args)):
+                    if str(args[i]) in quantity:
+                        args.append(args[i])
+                        del args[i]
 
                 for i, term in enumerate(args):
                     term_tex = self._print(term)

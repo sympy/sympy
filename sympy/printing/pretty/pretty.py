@@ -33,6 +33,10 @@ from sympy.utilities import default_sort_key
 pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
 
+quantity = [
+    'degree'
+]
+
 
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ASCII-art figure."""
@@ -1476,6 +1480,12 @@ class PrettyPrinter(Printer):
             args = product.as_ordered_factors()
         else:
             args = product.args
+
+        # If quantity is present append them at the back
+        for i in range(len(args)):
+            if str(args[i]) in quantity:
+                args.append(args[i])
+                del args[i]
 
         # Gather terms for numerator/denominator
         for item in args:

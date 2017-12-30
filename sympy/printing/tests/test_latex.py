@@ -1688,5 +1688,9 @@ def test_WedgeProduct_printing():
 
 
 def test_latex_degree():
-    deg = 90*degree
-    assert latex(deg) == r"90 ^\circ"
+    expr1 = 90*degree
+    assert latex(expr1) == r"90 ^\circ"
+    expr2 = x*degree
+    assert latex(expr2) == r"x ^\circ"
+    expr3 = cos(x*degree + 90*degree)
+    assert latex(expr3) == r'\cos{\left (x ^\circ + 90 ^\circ \right )}'
