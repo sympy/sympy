@@ -19,7 +19,7 @@ from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign, tan, cot
+from sympy.functions import Piecewise, sqrt, sign, tan, cot, atan
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.series import limit
@@ -524,15 +524,16 @@ class Integral(AddWithLimits):
                 else:
                     terms = tuple((antideriv,))
                 for term in terms:
-                    argtan = []
-                    for part in term.atoms(tan) | term.atoms(cot):
-                        argtan.append(part.args)
-                    for arg in argtan:
-                        from sympy import solve
-                        a = arg[0]
-                        K = solve(a-pi/2,sym)[0]
-                        P = limit(term, sym, K, dir="-") - limit(term, sym, K, dir="+")
-                        antideriv += P*floor((a-pi/2)/pi)
+                    if term.has(atan):
+                        argtan = []
+                        for part in term.atoms(tan) | term.atoms(cot):
+                            argtan.append(part.args)
+                        for arg in argtan:
+                            from sympy import solve
+                            a = arg[0]
+                            K = solve(a-pi/2,sym)[0]
+                            P = limit(term, sym, K, dir="-") - limit(term, sym, K, dir="+")
+                            antideriv += P*floor((a-pi/2)/pi)
 
             if antideriv is None:
                 undone_limits.append(xab)
