@@ -2440,6 +2440,7 @@ class MatrixBase(MatrixDeprecated,
                 feature="dot() no longer support dot of (m,n) and (1,n) matrices.",
                 issue=13808,
                 deprecated_since_version="1.2").warn()
+            return super(MatrixBase,self)._array_dot(b)
         if len(mat) != len(b):
             raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
         n = len(mat)
