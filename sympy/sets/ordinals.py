@@ -40,7 +40,7 @@ class OmegaPower(Basic):
                 other = OmegaPower(0, other)
             except TypeError:
                 return NotImplemented
-        return hash(self) == hash(other)
+        return self.args == other.args
 
     def __lt__(self, other):
         if not isinstance(other, OmegaPower):
@@ -49,9 +49,6 @@ class OmegaPower(Basic):
             except TypeError:
                 return NotImplemented
         return self._compare_term(other, operator.lt)
-
-    def __hash__(self):
-        return hash((self.exp, self.mult))
 
 class Ordinal(Basic):
     """
@@ -79,17 +76,39 @@ class Ordinal(Basic):
     def __new__(cls, *terms):
         obj = super(Ordinal, cls).__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
-        if not all(earlier >= later for earlier, later in zip(powers, powers[1:])):
+        if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
             raise ValueError("powers must be in decreasing order")
         return obj
 
     @property
+    def leading_term(self):
+        if self == ord0:
+            raise ValueError("ordinal zero has no leading term")
+        return self.args[0]
+
+    @property
+    def trailing_term(self):
+        if self == ord0:
+            raise ValueError("ordinal zero has no trailing term")
+        return self.args[-1]
+
+    @property
     def is_successor_ordinal(self):
-        return self.args[-1].exp == ord0
+        try:
+            return self.trailing_term.exp == ord0
+        except ValueError:
+            return False
 
     @property
     def is_limit_ordinal(self):
-        return not self.is_successor_ordinal
+        try:
+            return not self.trailing_term.exp == ord0
+        except ValueError:
+            return False
+
+    @property
+    def degree(self):
+        return self.leading_term.exp
 
     @classmethod
     def convert(cls, integer_value):
@@ -165,13 +184,13 @@ class Ordinal(Basic):
         a_terms = list(self.args)
         b_terms = list(other.args)
         r = len(a_terms) - 1
-        b_exp = b_terms[0].exp
+        b_exp = other.degree
         while r >= 0 and a_terms[r].exp < b_exp:
             r -= 1
         if r < 0:
             terms = b_terms
         elif a_terms[r].exp == b_exp:
-            sum_term = OmegaPower(b_exp, a_terms[r].mult + b_terms[0].mult)
+            sum_term = OmegaPower(b_exp, a_terms[r].mult + other.leading_term.mult)
             terms = a_terms[:r] + [sum_term] + b_terms[1:]
         else:
             terms = a_terms[:r+1] + b_terms
@@ -193,8 +212,8 @@ class Ordinal(Basic):
                 return NotImplemented
         if ord0 in (self, other):
             return ord0
-        a_exp = self.args[0].exp
-        a_mult = self.args[0].mult
+        a_exp = self.degree
+        a_mult = self.leading_term.mult
         sum = []
         if other.is_limit_ordinal:
             for arg in other.args:
@@ -203,7 +222,7 @@ class Ordinal(Basic):
         else:
             for arg in other.args[:-1]:
                 sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
-            b_mult = other.args[-1].mult
+            b_mult = other.trailing_term.mult
             sum.append(OmegaPower(a_exp, a_mult*b_mult))
             sum += list(self.args[1:])
         return Ordinal(*sum)
