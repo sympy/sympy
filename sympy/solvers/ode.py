@@ -246,9 +246,9 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.logic.boolalg import BooleanAtom
+from sympy.logic.boolalg import BooleanAtom, And, Or, Not
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    atan2, conjugate
+    atan2, conjugate, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
@@ -1544,29 +1544,29 @@ def classify_sysode(eq, funcs=None, **kwargs):
     # which we are talking about and k denotes the order of function funcs[l]
     # whose coefficient we are calculating.
     def linearity_check(eqs, j, func, is_linear_):
-        for k in range(order[func]+1):
-            func_coef[j,func,k] = collect(eqs.expand(),[diff(func,t,k)]).coeff(diff(func,t,k))
+        for k in range(order[func] + 1):
+            func_coef[j, func, k] = collect(eqs.expand(), [diff(func, t, k)]).coeff(diff(func, t, k))
             if is_linear_ == True:
-                if func_coef[j,func,k]==0:
-                    if k==0:
-                        coef = eqs.as_independent(func)[1]
-                        for xr in range(1, ode_order(eqs,func)+1):
-                            coef -= eqs.as_independent(diff(func,t,xr))[1]
+                if func_coef[j, func, k] == 0:
+                    if k == 0:
+                        coef = eqs.as_independent(func, as_Add=True)[1]
+                        for xr in range(1, ode_order(eqs,func) + 1):
+                            coef -= eqs.as_independent(diff(func, t, xr), as_Add=True)[1]
                         if coef != 0:
                             is_linear_ = False
                     else:
-                        if eqs.as_independent(diff(func,t,k))[1]:
+                        if eqs.as_independent(diff(func, t, k), as_Add=True)[1]:
                             is_linear_ = False
                 else:
                     for func_ in funcs:
                         if isinstance(func_, list):
                             for elem_func_ in func_:
-                                dep = func_coef[j,func,k].as_independent(elem_func_)[1]
-                                if dep!=1 and dep!=0:
+                                dep = func_coef[j, func, k].as_independent(elem_func_, as_Add=True)[1]
+                                if dep != 0:
                                     is_linear_ = False
                         else:
-                            dep = func_coef[j,func,k].as_independent(func_)[1]
-                            if dep!=1 and dep!=0:
+                            dep = func_coef[j, func, k].as_independent(func_, as_Add=True)[1]
+                            if dep != 0:
                                 is_linear_ = False
         return is_linear_
 
@@ -6625,55 +6625,64 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
     .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
 
     """
-    # FIXME: at least some of these can fail to give two linearly
-    # independent solutions e.g., because they make assumptions about
-    # zero/nonzero of certain coefficients.  I've "fixed" one and
-    # raised NotImplementedError in another.  I think this should probably
-    # just be re-written in terms of eigenvectors...
 
     l = Dummy('l')
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    l1 = rootof(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
-    l2 = rootof(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 1)
-    D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
-    if (r['a']*r['d'] - r['b']*r['c']) != 0:
-        if D > 0:
-            if r['b'].is_zero:
-                # tempting to use this in all cases, but does not guarantee linearly independent eigenvectors
-                gsol1 = C1*(l1 - r['d'] + r['b'])*exp(l1*t) + C2*(l2 - r['d'] + r['b'])*exp(l2*t)
-                gsol2 = C1*(l1 - r['a'] + r['c'])*exp(l1*t) + C2*(l2 - r['a'] + r['c'])*exp(l2*t)
-            else:
-                gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t)
-                gsol2 = C1*(l1 - r['a'])*exp(l1*t) + C2*(l2 - r['a'])*exp(l2*t)
-        if D < 0:
-            sigma = re(l1)
-            if im(l1).is_positive:
-                beta = im(l1)
-            else:
-                beta = im(l2)
-            if r['b'].is_zero:
-                raise NotImplementedError('b == 0 case not implemented')
-            gsol1 = r['b']*exp(sigma*t)*(C1*sin(beta*t)+C2*cos(beta*t))
-            gsol2 = exp(sigma*t)*(((C1*(sigma-r['a'])-C2*beta)*sin(beta*t)+(C1*beta+(sigma-r['a'])*C2)*cos(beta*t)))
-        if D == 0:
-            if r['a']!=r['d']:
-                gsol1 = 2*r['b']*(C1 + C2/(r['a']-r['d'])+C2*t)*exp((r['a']+r['d'])*t/2)
-                gsol2 = ((r['d']-r['a'])*C1+C2+(r['d']-r['a'])*C2*t)*exp((r['a']+r['d'])*t/2)
-            if r['a']==r['d'] and r['a']!=0 and r['b']==0:
-                gsol1 = C1*exp(r['a']*t)
-                gsol2 = (r['c']*C1*t+C2)*exp(r['a']*t)
-            if r['a']==r['d'] and r['a']!=0 and r['c']==0:
-                gsol1 = (r['b']*C1*t+C2)*exp(r['a']*t)
-                gsol2 = C1*exp(r['a']*t)
-    elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
-        k = r['c']/r['a']
-        if r['a']+r['b']*k != 0:
-            gsol1 = r['b']*C1 + C2*exp((r['a']+r['b']*k)*t)
-            gsol2 = -r['a']*C1 + k*C2*exp((r['a']+r['b']*k)*t)
+    C1, C2 = get_numbered_constants(eq, num=2)
+    a, b, c, d = r['a'], r['b'], r['c'], r['d']
+    real_coeff = all(v.is_real for v in (a, b, c, d))
+    D = (a - d)**2 + 4*b*c
+    l1 = (a + d + sqrt(D))/2
+    l2 = (a + d - sqrt(D))/2
+    equal_roots = Eq(D, 0).simplify()
+    gsol1, gsol2 = [], []
+
+    # Solutions have exponential form if either D > 0 with real coefficients
+    # or D != 0 with complex coefficients. Eigenvalues are distinct.
+    # For each eigenvalue, pick an eigenvector, making sure we don't get (0, 0)
+    assumption = D > 0 if real_coeff else Not(equal_roots)
+    vector1 = Matrix((l1 - d, c)) if b == l1 - a == 0 else Matrix((b, l1 - a))
+    vector2 = Matrix((l2 - d, c)) if b == l2 - a == 0 else Matrix((b, l2 - a))
+    sol_vector = C1*exp(l1*t)*vector1 + C2*exp(l2*t)*vector2
+    gsol1.append((sol_vector[0], assumption))
+    gsol2.append((sol_vector[1], assumption))
+
+    # Solutions have trigonometric form for real coefficients with D < 0
+    # Both b and c are nonzero in this case, so (b, lam-a) is an eigenvector
+    # It splits into real/imag parts as (b, sigma-a) and (0, beta). Then
+    # multiply it by C1(cos(beta*t) + I*C2*sin(beta*t)) and separate real/imag
+    assumption = D < 0 if real_coeff else False
+    sigma = re(l1)
+    if im(l1).is_positive:
+        beta = im(l1)
+    else:
+        beta = im(l2)
+    vector1 = Matrix((b, sigma - a))
+    vector2 = Matrix((0, beta))
+    sol_vector = exp(sigma*t) * (C1*(cos(beta*t)*vector1 - sin(beta*t)*vector2) + \
+        C2*(sin(beta*t)*vector1 + cos(beta*t)*vector2))
+    gsol1.append((sol_vector[0], assumption))
+    gsol2.append((sol_vector[1], assumption))
+
+    # Final case is D == 0, a single eigenvalue. If the eigenspace is 2-dimensional
+    # then we have a scalar matrix, deal with this case first.
+    assumption = equal_roots
+    if a == d and b == c == 0:
+        vector1 = Matrix((S.One, S.Zero))
+        vector2 = Matrix((S.Zero, S.One))
+        sol_vector = exp(l1*t) * (C1*vector1 + C2*vector2)
+    else:
+    # Have one eigenvector. Get a generalized eigenvector from (A-lam)*vector2 = vector1
+        if b == l1 - a == 0:
+            vector1 = Matrix((l1 - d, c))
+            vector2 = Matrix((S.One, S.Zero))
         else:
-            gsol1 = C1*(r['b']*k*t-1)+r['b']*C2*t
-            gsol2 = k**2*r['b']*C1*t+(r['b']*k**2*t+1)*C2
-    return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
+            vector1 = Matrix((b, l1 - a))
+            vector2 = Matrix((S.Zero, S.One)) if a == l1 else Matrix((b/(a-l1), S.Zero))
+        sol_vector = exp(l1*t) * (C1*vector1  + C2*(vector2 + t*vector1))
+    gsol1.append((sol_vector[0], assumption))
+    gsol2.append((sol_vector[1], assumption))
+    return [Eq(x(t), Piecewise(*gsol1)), Eq(y(t), Piecewise(*gsol2))]
+
 
 def _linear_2eq_order1_type2(x, y, t, r, eq):
     r"""
