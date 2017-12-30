@@ -2396,7 +2396,7 @@ class MatrixBase(MatrixDeprecated,
 
     def dot(self, b):
         """Return the dot product of Matrix self and b only if they are either
-        row or column matrix of same length and a scalar is returned. dot 
+        row or column matrix of same length and a scalar is returned. dot
         product will also performed if b is an iterable of same length.
 
         Examples
