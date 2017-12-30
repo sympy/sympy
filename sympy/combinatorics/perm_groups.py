@@ -3928,8 +3928,8 @@ class PermutationGroup(Basic):
 
         # orbit representatives of K_beta
         gammas = [alpha, beta]
-        orbits = list(uniq(K_beta.orbit(o) for o in orbit))
-        orbit_reps = [list(orb)[0] for orb in orbits]
+        orbits = list(set(tuple(K_beta.orbit(o)) for o in orbit))
+        orbit_reps = [orb[0] for orb in orbits]
         for rep in orbit_reps:
             if rep not in gammas:
                 gammas.append(rep)
@@ -3941,6 +3941,7 @@ class PermutationGroup(Basic):
         for s, g in K.orbit_transversal(beta, pairs=True):
             if not s in transversal:
                 transversal[s] = transversal[beta]*phi.invert(g)
+
 
         union = K.orbit(alpha).union(K.orbit(beta))
         while (len(union) < len(orbit)):
@@ -4024,7 +4025,7 @@ class PermutationGroup(Basic):
 
         strong_gens = G.strong_gens[:]
         stabs = G.basic_stabilizers[:]
-        base = G.base[:-1]
+        base = G.base[:]
 
         # injection from a free group on len(strong_gens)
         # generators into G
@@ -4032,24 +4033,21 @@ class PermutationGroup(Basic):
         F = free_group(', '.join(gen_syms))[0]
         phi = homomorphism(F, G, F.generators, strong_gens)
 
-        H = stabs.pop()
-        if not stabs:
-            # there is only one stabilizer so a strong presentation
-            # is the same as
-            return H.presentation(eliminate_gens=False)
-        # H is a group on one generator and this is the relator for it
-        rels = [F.generators[-1]**H.generators[0].order()]
-
-        intermediate_gens = H.generators
+        H = PermutationGroup(G.identity)
         while stabs:
             alpha = base.pop()
             K = H
             H = stabs.pop()
             new_gens = [g for g in H.generators if g not in K]
-            l = len(new_gens)
+
+            if K.order() == 1:
+                z = new_gens.pop()
+                rels = [F.generators[-1]**z.order()]
+                intermediate_gens = [z]
+                K = PermutationGroup(intermediate_gens)
 
             # add generators one at a time building up from K to H
-            for s in range(l):
+            while new_gens:
                 z = new_gens.pop()
                 intermediate_gens = [z] + intermediate_gens
                 K_s = PermutationGroup(intermediate_gens)
@@ -4095,11 +4093,13 @@ class PermutationGroup(Basic):
                         # combine generators of K_s with their
                         # action on the block system
                         images = {g: g*p*t_img[g]*p for g in t_img}
+                        for g in G.strong_gens[:-len(K_s.generators)]:
+                            images[g] = g
                         K_s_act = PermutationGroup(list(images.values()))
+                        f = GroupHomomorphism(G, K_s_act, images)
 
-                        f = GroupHomomorphism(K_s, K_s_act, images)
                         K_act = PermutationGroup([f(g) for g in K.generators])
-                        success, new_rels = K_s_act._verify(K_act, f.compose(phi), f(z), d)
+                        success, new_rels = K_s_act._verify(K_act, f.compose(phi, check=False), f(z), d)
 
                 for n in new_rels:
                     if not n in rels:
@@ -4132,7 +4132,7 @@ class PermutationGroup(Basic):
         def _factor_group_by_rels(G, rels):
             if isinstance(G, FpGroup):
                 rels.extend(G.relators)
-                return FpGroup(G.free_group, list(uniq(rels)))
+                return FpGroup(G.free_group, list(set(rels)))
             return FpGroup(G, rels)
 
         gens = G.generators
