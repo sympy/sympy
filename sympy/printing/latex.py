@@ -165,8 +165,8 @@ class LatexPrinter(Printer):
             self._settings['mul_symbol_latex_numbers'] = \
                 mul_symbol_table[self._settings['mul_symbol'] or 'dot']
         except KeyError:
-            if (self._settings['mul_symbol'] == ' ' or
-                    self._settings['mul_symbol'] == '\\,'):
+            if (self._settings['mul_symbol'].strip() in
+                    ['', ' ', '\\', '\\,', '\\:', '\\;', '\\quad']):
                 self._settings['mul_symbol_latex_numbers'] = \
                     mul_symbol_table['dot']
             else:
