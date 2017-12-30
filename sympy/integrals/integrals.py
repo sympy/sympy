@@ -517,9 +517,8 @@ class Integral(AddWithLimits):
                             function = ret
                             continue
 
-            if not isinstance(antideriv,Integral):
+            if not isinstance(antideriv,Integral) and antideriv is not None::
                 sym = xab[0]
-                terms = tuple()
                 if antideriv.is_Add:
                     terms = antideriv.args
                 else:
