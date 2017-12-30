@@ -23,6 +23,7 @@ from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
     NotIterable
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -1677,6 +1678,40 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
+    def _array_dot(self, b):
+        """Compatibility function for deprecated behavior of ``matrix.dot(vector)``
+        """
+        from .dense import Matrix
+
+        if not isinstance(b, MatrixBase):
+            if is_sequence(b):
+                if len(b) != self.cols and len(b) != self.rows:
+                    raise ShapeError(
+                        "Dimensions incorrect for dot product: %s, %s" % (
+                            self.shape, len(b)))
+                return self.dot(Matrix(b))
+            else:
+                raise TypeError(
+                    "`b` must be an ordered iterable or Matrix, not %s." %
+                    type(b))
+
+        mat = self
+        if mat.cols == b.rows:
+            if b.cols != 1:
+                mat = mat.T
+                b = b.T
+            prod = flatten((mat * b).tolist())
+            if len(prod) == 1:
+                return prod[0]
+            return prod
+        if mat.cols == b.cols:
+            return mat.dot(b.T)
+        elif mat.rows == b.rows:
+            return mat.T.dot(b)
+        else:
+            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
+                self.shape, b.shape))
+
 
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         return self.charpoly(x=x)
@@ -2360,25 +2395,23 @@ class MatrixBase(MatrixDeprecated,
         return self._diagonal_solve(rhs)
 
     def dot(self, b):
-        """Return the dot product of Matrix self and b relaxing the condition
-        of compatible dimensions: if either the number of rows or columns are
-        the same as the length of b then the dot product is returned. If self
-        is a row or column vector, a scalar is returned. Otherwise, a list
-        of results is returned (and in that case the number of columns in self
-        must match the length of b).
+        """Return the dot product of Matrix self and b only if they are either
+        row or column matrix of same length and a scalar is returned. dot 
+        product will also performed if b is an iterable of same length.
 
         Examples
         ========
 
         >>> from sympy import Matrix
         >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        >>> v = [1, 1, 1]
+        >>> v = Matrix([1, 1, 1])
         >>> M.row(0).dot(v)
         6
         >>> M.col(0).dot(v)
         12
-        >>> M.dot(v)
-        [6, 15, 24]
+        >>> v = [3, 2, 1]
+        >>> M.row(0).dot(v)
+        10
 
         See Also
         ========
@@ -2402,21 +2435,20 @@ class MatrixBase(MatrixDeprecated,
                     type(b))
 
         mat = self
-        if mat.cols == b.rows:
-            if b.cols != 1:
-                mat = mat.T
-                b = b.T
-            prod = flatten((mat * b).tolist())
-            if len(prod) == 1:
-                return prod[0]
-            return prod
-        if mat.cols == b.cols:
-            return mat.dot(b.T)
-        elif mat.rows == b.rows:
-            return mat.T.dot(b)
-        else:
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
-                self.shape, b.shape))
+        if (1 not in mat.shape) or (1 not in b.shape) :
+            SymPyDeprecationWarning(
+                feature="dot() no longer support dot of (m,n) and (1,n) matrices.",
+                issue=13808,
+                deprecated_since_version="1.2").warn()
+        if len(mat) != len(b):
+            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
+        n = len(mat)
+        if mat.shape != (1,n):
+            mat = mat.reshape(1,n)
+        if b.shape != (n,1):
+            b = b.reshape(n,1)
+        prod = (mat * b)[0]
+        return prod
 
     def dual(self):
         """Returns the dual of a matrix, which is:
