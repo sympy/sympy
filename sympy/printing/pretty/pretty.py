@@ -2235,6 +2235,13 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.left('Omega'))
         return pform
 
+    def _print_Quantity(self, e):
+        if str(e) == 'degree':
+            pform = self._print(u"\N{DEGREE SIGN}")
+            return pform
+        else:
+            return self.emptyPrinter(e)
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

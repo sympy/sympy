@@ -430,6 +430,10 @@ class prettyForm(stringPict):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
+        quantity = {
+            'degree': u"\N{DEGREE SIGN}"
+        }
+
         if len(others) == 0:
             return self # We aren't actually multiplying... So nothing to do here.
 
@@ -438,7 +442,8 @@ class prettyForm(stringPict):
             arg = stringPict(*args.parens())
         result = [args]
         for arg in others:
-            result.append(xsym('*'))
+            if arg.s not in quantity.values():
+                result.append(xsym('*'))
             #add parentheses for weak binders
             if arg.binding > prettyForm.MUL:
                 arg = stringPict(*arg.parens())

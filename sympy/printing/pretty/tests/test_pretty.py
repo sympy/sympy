@@ -24,7 +24,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
-from sympy.physics.units import joule
+from sympy.physics.units import joule, degree
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 
@@ -5981,6 +5981,11 @@ def test_MatrixElement_printing():
     F = C[0, 0].subs(C, A - B)
     assert pretty(F)  == ascii_str1
     assert upretty(F) == ucode_str1
+
+
+def test_degree_printing():
+    deg = 90*degree
+    assert pretty(deg) == u'90°'
 
 
 def test_vector_expr_pretty_printing():
