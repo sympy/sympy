@@ -893,6 +893,7 @@ def test_solve_lambert():
 
 def test_solveset():
     x = Symbol('x')
+    f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
     assert solveset(x, 1) == S.EmptySet
     assert solveset(x - 1, 1) == FiniteSet(x)
@@ -908,6 +909,7 @@ def test_solveset():
     assert solveset(exp(x) - 1, exp(x), S.Reals) == FiniteSet(1)
     A = Indexed('A', x)
     assert solveset(A - 1, A, S.Reals) == FiniteSet(1)
+    assert solveset(f(1)**2 -1, f(1), S.Reals) == FiniteSet(-1, 1)
 
     assert solveset(x - 1 >= 0, x, S.Reals) == Interval(1, oo)
     assert solveset(exp(x) - 1 >= 0, x, S.Reals) == Interval(0, oo)
