@@ -7,6 +7,7 @@ from sympy import (
     And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
 )
 from sympy.functions.elementary.complexes import periodic_argument
+from sympy.functions.elementary.integers import floor
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
@@ -1089,7 +1090,7 @@ def test_issue_4803():
 
 
 def test_issue_4234():
-    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x) / sqrt(1 + tan(x)**2)
+    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x)/sqrt(1 + tan(x)**2) + 2*floor((x - pi/2)/pi)
 
 
 def test_issue_4492():
