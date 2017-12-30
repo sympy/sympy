@@ -2236,7 +2236,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Quantity(self, e):
-        if str(e) == 'degree':
+        if e.name.name == 'degree':
             pform = self._print(u"\N{DEGREE SIGN}")
             return pform
         else:
