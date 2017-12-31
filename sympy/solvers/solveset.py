@@ -901,7 +901,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         for arg in f.args:
             if not (arg.has(symbol) or arg.is_Number):
                 raise ValueError("%s is not a valid SymPy expression" % (f))
-        dummy_var = Dummy('x') 
+        dummy_var = Dummy('x')
         f = f.xreplace({symbol: dummy_var})
         return _solveset(f, dummy_var, domain, _check=True)
 
