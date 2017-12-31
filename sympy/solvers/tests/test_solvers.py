@@ -1301,15 +1301,16 @@ def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
     assert check_assumptions(1, x) == True
+    raises(AssertionError, lambda: check_assumptions(2*x, x, positive=True))
+    raises(TypeError, lambda: check_assumptions(1, 1))
 
 def test_failing_assumptions():
     x = Symbol('x', real=True, positive=True)
     y = Symbol('y')
-    assert failing_assumptions(6*x + y, x) == None
-    assert failing_assumptions(x**2 - 1, positive=True) == None
-    assert failing_assumptions(-2*x - 6, real=True, positive=True) == ['positive']
-    assert failing_assumptions(x**2, positive=True) == []
-
+    assert failing_assumptions(6*x + y, **x.assumptions0) == \
+    {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
+    'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
+    'negative': None, 'zero': None}
 
 def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []

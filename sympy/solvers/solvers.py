@@ -361,48 +361,36 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def failing_assumptions(expr, against=None, **assumptions):
-    """
-    Helper for ``check_assumptions``.
+def failing_assumptions(expr, **assumptions):
+    """Returns a dictionary of assumptions that does not satisfies `expr`,
+    with value changed to the one that would satisfy the `expr`.
 
-    Returns empty list `[]` if all assumptions are True, or a list
-    of  assumption(s) that the expression does not satisfy or
-    `None` if it can't conclude.
 
     Examples
     ========
 
-        >>> from sympy import Symbol
-        >>> from sympy.solvers.solvers import failing_assumptions
-        >>> failing_assumptions(-5, integer=False, positive=True)
-        ['integer', 'positive']
+    >>> from sympy.solvers.solvers import failing_assumptions
+    >>> from sympy import Symbol
 
-        >>> x = Symbol('x', positive=True)
-        >>> y = Symbol('y')
-        >>> failing_assumptions(6*x, positive=True)
-        []
+    >>> x = Symbol('x', real=True, positive=True)
+    >>> y = Symbol('y')
+    >>> failing_assumptions(6*x + y, real=True, positive=True)
+    {'positive': None, 'real': None}
 
-        >>> failing_assumptions(y, real=True)
+    >>> failing_assumptions(x**2 - 1, positive=True)
+    {'positive': None}
+
+    If all assumptions satisfy the `expr` an empty dictionary is returned.
+    >>> failing_assumptions(x**2, positive=True)
+    {}
     """
-    if against is not None:
-        assumptions = against.assumptions0
-
     expr = sympify(expr)
-
-    flag = True
-    fail_list = []
-    for key, expected in ordered(assumptions.items()):
-        if expected is None:
-            continue
-        test = getattr(expr, 'is_' + key, None)
-        if test is expected:
-            continue
-        elif test is not None:
-            fail_list.append(key)
-            flag = True
-            continue
-        flag = False
-    return fail_list if flag else None
+    failed = {}
+    for key in list(assumptions.keys()):
+        test = getattr(expr, 'is_%s' % key, None)
+        if test is not assumptions[key]:
+            failed[key] = test
+    return failed  # {} or {assumption: value != desired}
 
 
 def check_assumptions(expr, against=None, **assumptions):
@@ -442,9 +430,19 @@ def check_assumptions(expr, against=None, **assumptions):
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
     """
-    ans = failing_assumptions(expr, against, **assumptions)
-    return None if ans is None else not ans
-
+    expr = sympify(expr)
+    if against:
+        if not isinstance(against, Symbol):
+            raise TypeError('against should be of type Symbol')
+        if assumptions:
+            raise AssertionError('No assumptions should be specified')
+        assumptions = against.assumptions0
+    a = assumptions
+    flag = []
+    for key in a:
+        test = getattr(expr, 'is_' + key, None)
+        flag.append(None) if test is None else flag.append(test is a[key])
+    return True if all(flag) else False if False in flag else None
 
 def solve(f, *symbols, **flags):
     r"""
