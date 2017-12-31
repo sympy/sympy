@@ -524,7 +524,11 @@ class Integral(AddWithLimits):
                 else:
                     terms = tuple((antideriv,))
                 for term in terms:
-                    if term.has(atan):
+                    logset = term.atoms(log)
+                    if len(logset) != 0:
+                        if logset.pop().args[0].has(tan):
+                            break
+                    else:
                         argtan = []
                         for part in term.atoms(tan) | term.atoms(cot):
                             argtan.append(part.args)
