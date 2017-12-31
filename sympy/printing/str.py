@@ -801,6 +801,9 @@ def sstr(expr, **settings):
 class StrReprPrinter(StrPrinter):
     """(internal) -- see sstrrepr"""
 
+    def _print_Ordinal(self, expr):
+        return expr.__str__()
+
     def _print_str(self, s):
         return repr(s)
 
