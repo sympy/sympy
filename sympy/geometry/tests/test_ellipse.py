@@ -385,3 +385,13 @@ def test_is_tangent():
     assert e1.is_tangent(Polygon((3, 0), (5, 7), (6, -5))) is False
     raises(TypeError, lambda: e1.is_tangent(Point(0, 0, 0)))
     raises(TypeError, lambda: e1.is_tangent(Rational(5)))
+
+def test_parameter_value():
+    e = Ellipse(Point(0,0), 3, 5)
+
+    param = e.parameter_value((3,0))
+    assert param == 0
+
+    # Outise ellipse
+    with raises(ValueError):
+        e.parameter_value((4,0))

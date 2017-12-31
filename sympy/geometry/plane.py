@@ -776,3 +776,7 @@ class Plane(GeometryEntity):
             rng = random
         t = Dummy('t')
         return self.arbitrary_point(t).subs(t, Rational(rng.random()))
+
+    @property
+    def ambient_dimension(self):
+        return self.p1.ambient_dimension

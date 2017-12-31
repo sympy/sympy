@@ -99,3 +99,14 @@ def test_length():
 
     c3 = Curve((t ** 2, t), (t, 2, 5))
     assert c3.length == -sqrt(17) - asinh(4) / 4 + asinh(10) / 4 + 5 * sqrt(101) / 2
+
+def test_parameter_value():
+    t = Symbol('t')
+    C = Curve([2*t, t**2], (t, 0, 2))
+
+    param = C.parameter_value((2,1))
+    assert param == 1
+
+    # Not on curve
+    with raises(ValueError):
+        C.parameter_value((2,0))

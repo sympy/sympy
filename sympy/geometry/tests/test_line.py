@@ -713,3 +713,14 @@ def test_issue_2941():
     # midline intersection
     c, d = (-2, -3), (-2, 0)
     _check()
+
+def test_parameter_value():
+    p1, p2 = Point(0,1), Point(5,6)
+    l = Line(p1,p2)
+
+    param = l.parameter_value((5,6))
+    assert param == 1
+
+    # Point not on Line
+    with raises(ValueError):
+        l.parameter_value((0,0))
