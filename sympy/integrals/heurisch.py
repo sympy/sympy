@@ -602,7 +602,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         for poly in list(irreducibles):
             m = poly.match(x + I*y)
             if m[y] == 0:  # No coefficient of I
-                continue 
+                continue
             pairs.add((m[x], m[y]))  # It is enough to save the coefficients
             irreducibles.remove(poly)
 
