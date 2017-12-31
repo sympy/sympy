@@ -2438,7 +2438,7 @@ class MatrixBase(MatrixDeprecated,
         if (1 not in mat.shape) or (1 not in b.shape) :
             SymPyDeprecationWarning(
                 feature="dot() no longer support dot of (m,n) and (1,n) matrices.",
-                issue=13808,
+                issue=13815,
                 deprecated_since_version="1.2").warn()
             return super(MatrixBase,self)._array_dot(b)
         if len(mat) != len(b):
