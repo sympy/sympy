@@ -3,7 +3,7 @@ from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
 from sympy.printing.conventions import split_super_sub, requires_partial
-
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_super_sub():
     assert split_super_sub("beta_13_2") == ("beta", [], ["13", "2"])
@@ -81,6 +81,10 @@ def test_requires_partial():
     g = sum(f)
     assert requires_partial(Derivative(g, t)) is False
 
+
+@XFAIL
+def test_requires_partial_unspecified_variables():
+    x, y = symbols('x y')
     # function of unspecified variables
     f = symbols('f', cls=Function)
     assert requires_partial(Derivative(f, x)) is False
