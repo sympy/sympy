@@ -81,6 +81,14 @@ def test_requires_partial():
     g = sum(f)
     assert requires_partial(Derivative(g, t)) is False
 
+    f = symbols('f', cls=Function)
+    assert requires_partial(Derivative(f(x), x)) is False
+    assert requires_partial(Derivative(f(x), y)) is False
+    assert requires_partial(Derivative(f(x, y), x)) is True
+    assert requires_partial(Derivative(f(x, y), y)) is True
+    assert requires_partial(Derivative(f(x, y), z)) is True
+    assert requires_partial(Derivative(f(x, y), x, y)) is True
+
 
 @XFAIL
 def test_requires_partial_unspecified_variables():
