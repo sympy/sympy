@@ -202,3 +202,60 @@ def bspline_basis_set(d, knots, x):
     """
     n_splines = len(knots) - d - 1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
+
+def interpolating_spline(d, x, xv='x', yv='y'):
+    """Return B-splines at ``x`` of degree ``d`` for given ``xv`` and corresponding ``yv`` values.
+
+    This function returns a list of Piecewise polynomials that are the
+    B-splines of degree ``d`` for the given points. This function
+    calls ``bspline_basis_set(n, knots, x)`` for different values of ``n``.
+
+    Examples
+    ========
+
+    >>> from sympy interpolating_spline
+    >>> from sympy.abc import x
+    >>> d = 2
+    >>> splines=interpolating_spline(d, x, [1,2,3], [1,2,3])
+    >>> splines
+    [4*Piecewise((-x**2/4 + x - 3/4, (x >= 1) & (x <= 3)), (0, True)) 
+     + Piecewise((x**2/4 - 3*x/2 + 9/4, (x >= 1) & (x <= 3)), (0, True)) 
+     + 3*Piecewise((x**2/4 - x/2 + 1/4, (x >= 1) & (x <= 3)), (0, True))
+    ] 
+
+    See Also
+    ========
+
+    bsplines_basis_set
+    """
+    from sympy import symbols
+    from sympy.solvers.solveset import linsolve
+    from sympy.matrices.dense import Matrix
+    
+    
+    ## IF no xv and yv values are passed as a argument
+    if isinstance(xv, str):
+        xv = symbols("%s:%s" % (xv, d))
+
+    if isinstance(yv, str):
+        yv = symbols("%s:%s" % (yv, d))
+
+
+    ##EVALUATING knots value
+    if d % 2 == 1:
+        j = (d+1) // 2
+        interior_knots = xv[j:-j]
+    else:
+        j = d // 2
+        interior_knots = [Rational(a+b, 2) for a, b in zip(xv[j:-j-1], xv[j+1:-j])]
+
+    knots = [xv[0]] * (d+1) + list(interior_knots) + [xv[-1]] * (d+1)
+
+    basis = bspline_basis_set(d, knots, x)
+
+    A = [[b.subs(x, v) for b in basis] for v in xv]
+    coeff = linsolve((Matrix(A), Matrix(yv)), symbols('c0:{}'.format(len(basis))))
+    spline = sum([c*b for c, b in zip(list(coeff)[0], basis)])
+
+    return(spline)
+
