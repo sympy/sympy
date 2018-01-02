@@ -368,8 +368,7 @@ def failing_assumptions(expr, **assumptions):
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import failing_assumptions
-    >>> from sympy import Symbol
+    >>> from sympy import failing_assumptions, Symbol
 
     >>> x = Symbol('x', real=True, positive=True)
     >>> y = Symbol('y')
