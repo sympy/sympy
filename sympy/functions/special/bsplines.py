@@ -203,7 +203,7 @@ def bspline_basis_set(d, knots, x):
     n_splines = len(knots) - d - 1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
 
-def interpolating_spline(d, x, xv='x', yv='y'):
+def interpolating_spline(d, x, X, Y):
     """Return B-splines at ``x`` of degree ``d`` for given ``xv`` and corresponding ``yv`` values.
 
     This function returns a list of Piecewise polynomials that are the
@@ -215,13 +215,10 @@ def interpolating_spline(d, x, xv='x', yv='y'):
 
     >>> from sympy interpolating_spline
     >>> from sympy.abc import x
-    >>> d = 2
-    >>> splines=interpolating_spline(d, x, [1,2,3], [1,2,3])
+    >>> d = 3
+    >>> splines=interpolating_spline(3, x, [1,2,4,7], [3,6,5,7])
     >>> splines
-    [4*Piecewise((-x**2/4 + x - 3/4, (x >= 1) & (x <= 3)), (0, True)) 
-     + Piecewise((x**2/4 - 3*x/2 + 9/4, (x >= 1) & (x <= 3)), (0, True)) 
-     + 3*Piecewise((x**2/4 - x/2 + 1/4, (x >= 1) & (x <= 3)), (0, True))
-    ] 
+    Piecewise((7*x**3/30 - 14*x**2/5 + 293*x/30 - 21/5, (x >= 1) & (x <= 7)))
 
     See Also
     ========
@@ -231,31 +228,37 @@ def interpolating_spline(d, x, xv='x', yv='y'):
     from sympy import symbols
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
-    
-    
-    ## IF no xv and yv values are passed as a argument
-    if isinstance(xv, str):
-        xv = symbols("%s:%s" % (xv, d))
 
-    if isinstance(yv, str):
-        yv = symbols("%s:%s" % (yv, d))
-
+    ## Input sanitization
+    if not(isinstance(d, int) and d > 0):
+        raise ValueError("Spline degree must be a positive integer, not %s" % d)
+    if len(X) != len(Y):
+        raise ValueError('Number of X and Y co-ordinates passed not equal')
+    if len(X) < d+1:
+        raise ValueError('degree of B-splines is always be lesser than number of control points')
+    if len(set(X)) != len(X):
+        raise ValueError('Duplicate values of X not allowed')
 
     ##EVALUATING knots value
     if d % 2 == 1:
         j = (d+1) // 2
-        interior_knots = xv[j:-j]
+        interior_knots = X[j:-j]
     else:
         j = d // 2
-        interior_knots = [Rational(a+b, 2) for a, b in zip(xv[j:-j-1], xv[j+1:-j])]
+        interior_knots = [Rational(a+b, 2) for a, b in zip(X[j:-j-1], X[j+1:-j])]
 
-    knots = [xv[0]] * (d+1) + list(interior_knots) + [xv[-1]] * (d+1)
+    knots = [X[0]] * (d+1) + list(interior_knots) + [X[-1]] * (d+1)
 
     basis = bspline_basis_set(d, knots, x)
 
-    A = [[b.subs(x, v) for b in basis] for v in xv]
-    coeff = linsolve((Matrix(A), Matrix(yv)), symbols('c0:{}'.format(len(basis))))
-    spline = sum([c*b for c, b in zip(list(coeff)[0], basis)])
+    A = [[b.subs(x, v) for b in basis] for v in X]
 
-    return(spline)
-
+    coeff = linsolve((Matrix(A), Matrix(Y)), symbols('c0:%d' % len(X)))
+    coeff = list(coeff)[0]
+    intervals = set([c for b in basis for (e, c) in b.args if c != True])
+    basis_dicts = [dict((c, e) for (e, c) in b.args) for b in basis]
+    spline = []
+    for i in intervals:
+        piece = sum([c*d.get(i, S.Zero) for (c, d) in zip(coeff, basis_dicts)], S.Zero)
+        spline.append((piece, i))
+    return(Piecewise(*spline))
