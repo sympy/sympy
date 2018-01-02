@@ -258,9 +258,9 @@ class Printer(object):
             # Function('gamma') does not get dispatched to _print_gamma
             classes = type(expr).__mro__
             if AppliedUndef in classes:
-                classes = classes[1 + classes.index(AppliedUndef):]
+                classes = classes[classes.index(AppliedUndef):]
             if UndefinedFunction in classes:
-                classes = classes[1 + classes.index(UndefinedFunction):]
+                classes = classes[classes.index(UndefinedFunction):]
             for cls in classes:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
