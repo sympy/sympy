@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Dummy, S, Symbol, symbols, pi, sqrt, asin
+from sympy import Dummy, S, Symbol, symbols, pi, sqrt, asin, sin, cos
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
 from sympy.utilities.pytest import raises, slow
@@ -83,10 +83,10 @@ def test_plane():
     assert pl6.distance(pl6.arbitrary_point(t)) == 0
     assert pl7.distance(pl7.arbitrary_point(t)) == 0
     assert pl6.p1.distance(pl6.arbitrary_point(t)).simplify() == 1
-    assert pl7.p1.distance(pl7.arbitrary_point(t)) == 1
+    assert pl7.p1.distance(pl7.arbitrary_point(t)).simplify() == 1
     assert pl3.arbitrary_point(t) == Point3D(-sqrt(30)*sin(t)/30 + \
         2*sqrt(5)*cos(t)/5, sqrt(30)*sin(t)/15 + sqrt(5)*cos(t)/5, sqrt(30)*sin(t)/6)
-    assert p13.arbitrary_point(u, v) == Point3D(2*u - v, u + 2*v, 5*v)
+    assert pl3.arbitrary_point(u, v) == Point3D(2*u - v, u + 2*v, 5*v)
 
     assert pl7.distance(Point3D(1, 3, 5)) == 5*sqrt(6)/6
     assert pl6.distance(Point3D(0, 0, 0)) == 4*sqrt(3)
