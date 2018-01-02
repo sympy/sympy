@@ -26,7 +26,7 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge, _canonical
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
 
@@ -362,9 +362,8 @@ def checksol(f, symbol, sol=None, **flags):
 
 
 def failing_assumptions(expr, **assumptions):
-    """Returns a dictionary of assumptions that does not satisfies `expr`,
-    with value changed to the one that would satisfy the `expr`.
-
+    """Return a dictionary containing assumptions with values not
+    matching those of the passed assumptions.
 
     Examples
     ========
@@ -381,6 +380,7 @@ def failing_assumptions(expr, **assumptions):
     {'positive': None}
 
     If all assumptions satisfy the `expr` an empty dictionary is returned.
+
     >>> failing_assumptions(x**2, positive=True)
     {}
     """
@@ -429,6 +429,10 @@ def check_assumptions(expr, against=None, **assumptions):
        >>> check_assumptions(2*x - 1, real=True, positive=True)
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
+
+    See Also
+    ========
+    failing_assumptions
     """
     expr = sympify(expr)
     if against:
@@ -442,7 +446,7 @@ def check_assumptions(expr, against=None, **assumptions):
     for key in a:
         test = getattr(expr, 'is_' + key, None)
         flag.append(None) if test is None else flag.append(test is a[key])
-    return True if all(flag) else False if False in flag else None
+    return fuzzy_and(flag)
 
 def solve(f, *symbols, **flags):
     r"""
