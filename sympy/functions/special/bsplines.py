@@ -203,27 +203,28 @@ def bspline_basis_set(d, knots, x):
     n_splines = len(knots) - d - 1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
 
-def interpolating_spline(d, x, X, Y):
-    """Return B-splines at ``x`` of degree ``d`` for given ``xv`` and corresponding ``yv`` values.
 
-    This function returns a list of Piecewise polynomials that are the
-    B-splines of degree ``d`` for the given points. This function
-    calls ``bspline_basis_set(n, knots, x)`` for different values of ``n``.
+def interpolating_spline(d, x, X, Y):
+    """A spline of degree ``d`` interpolating the points with given ``X`` and ``Y`` coordinates.
+
+    This function returns a piecewise function such that each part is a polynomial of degree
+    at most ``d`` and the value at each number in X is the corresponding number in Y.
+    The degree ``d`` must be at least 1. The values listed in X must be strictly increasing.
 
     Examples
     ========
 
-    >>> from sympy interpolating_spline
+    >>> from sympy import interpolating_spline
     >>> from sympy.abc import x
-    >>> d = 3
-    >>> splines=interpolating_spline(3, x, [1,2,4,7], [3,6,5,7])
-    >>> splines
-    Piecewise((7*x**3/30 - 14*x**2/5 + 293*x/30 - 21/5, (x >= 1) & (x <= 7)))
+    >>> interpolating_spline(1, x, [1, 2, 4, 7], [3, 6, 5, 7])
+    Piecewise((-x/2 + 7, (x >= 2) & (x <= 4)), (3*x, (x >= 1) & (x <= 2)), (2*x/3 + 7/3, (x >= 4) & (x <= 7)))
+    >>> interpolating_spline(3, x, [-2, 0, 1, 3, 4], [4, 2, 1, 1, 3])
+    Piecewise((5*x**3/36 - 13*x**2/36 - 11*x/18 + 7/3, (x >= 1) & (x <= 4)), (-x**3/36 - x**2/36 - 17*x/18 + 2, (x >= -2) & (x <= 1)))
 
     See Also
     ========
 
-    bsplines_basis_set
+    bsplines_basis_set, sympy.polys.specialpolys.interpolating_poly
     """
     from sympy import symbols
     from sympy.solvers.solveset import linsolve
@@ -235,9 +236,9 @@ def interpolating_spline(d, x, X, Y):
     if len(X) != len(Y):
         raise ValueError('Number of X and Y co-ordinates passed not equal')
     if len(X) < d+1:
-        raise ValueError('degree of B-splines is always be lesser than number of control points')
-    if len(set(X)) != len(X):
-        raise ValueError('Duplicate values of X not allowed')
+        raise ValueError('Degree must be less than the number of control points')
+    if not all(a < b for a, b in zip(X, X[1:])):
+        raise ValueError('The x-coordinates must be strictly increasing')
 
     ##EVALUATING knots value
     if d % 2 == 1:
