@@ -175,6 +175,7 @@ from __future__ import print_function, division
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
+from sympy.core.function import AppliedUndef, UndefinedFunction
 
 from functools import cmp_to_key
 
@@ -253,7 +254,14 @@ class Printer(object):
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
-            for cls in type(expr).__mro__:
+            # Exception: ignore the subclasses of Undefined, so that, e.g.,
+            # Function('gamma') does not get dispatched to _print_gamma
+            classes = type(expr).__mro__
+            if AppliedUndef in classes:
+                classes = classes[1 + classes.index(AppliedUndef):]
+            if UndefinedFunction in classes:
+                classes = classes[1 + classes.index(UndefinedFunction):]
+            for cls in classes:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
                     return getattr(self, printmethod)(expr, *args, **kwargs)

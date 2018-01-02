@@ -7,7 +7,7 @@ from sympy import (
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
-    assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
+    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
@@ -257,11 +257,19 @@ def test_latex_functions():
     assert latex(Li) == r'\operatorname{Li}'
     assert latex(Li(x)) == r'\operatorname{Li}{\left (x \right )}'
 
-    beta = Function('beta')
-
+    mybeta = Function('beta')
     # not to be confused with the beta function
-    assert latex(beta(x)) == r"\beta{\left (x \right )}"
-    assert latex(beta) == r"\beta"
+    assert latex(mybeta(x, y, z)) == r"\beta{\left (x,y,z \right )}"
+    assert latex(beta(x, y)) == r'\operatorname{B}\left(x, y\right)'
+    assert latex(mybeta(x)) == r"\beta{\left (x \right )}"
+    assert latex(mybeta) == r"\beta"
+
+    g = Function('gamma')
+    # not to be confused with the gamma function
+    assert latex(g(x, y, z)) == r"\gamma{\left (x,y,z \right )}"
+    assert latex(g(x)) == r"\gamma{\left (x \right )}"
+    assert latex(g) == r"\gamma"
+
 
     a1 = Function('a_1')
 
@@ -314,9 +322,9 @@ def test_latex_functions():
     assert latex(re(x + y)) == r"\Re{\left(x\right)} + \Re{\left(y\right)}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
-    assert latex(gamma(x)) == r"\Gamma{\left(x \right)}"
+    assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
-    assert latex(gamma(w)) == r"\Gamma{\left(w \right)}"
+    assert latex(gamma(w)) == r"\Gamma\left(w\right)"
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
@@ -368,9 +376,8 @@ def test_latex_functions():
     assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
-    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
-    assert latex(Chi(x)) == r'\operatorname{Chi}{\left (x \right )}'
-
+    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}\left(x\right)'
+    assert latex(Chi(x)) == r'\operatorname{Chi}\left(x\right)'
     assert latex(
         jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'
     assert latex(jacobi(n, a, b, x)**2) == r'\left(P_{n}^{\left(a,b\right)}\left(x\right)\right)^{2}'
@@ -1564,6 +1571,7 @@ def test_builtin_without_args_mismatched_names():
 
 def test_builtin_no_args():
     assert latex(Chi) == r'\operatorname{Chi}'
+    assert latex(beta) == r'\operatorname{B}'
     assert latex(gamma) == r'\Gamma'
     assert latex(KroneckerDelta) == r'\delta'
     assert latex(DiracDelta) == r'\delta'

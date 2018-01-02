@@ -13,6 +13,7 @@ from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
+from sympy.core.function import UndefinedFunction, AppliedUndef
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -685,7 +686,6 @@ class LatexPrinter(Printer):
             mindful of undercores in the name
         '''
         func = self._deal_with_super_sub(func)
-
         if func in accepted_latex_functions:
             name = r"\%s" % func
         elif len(func) == 1 or func.startswith('\\'):
@@ -707,8 +707,9 @@ class LatexPrinter(Printer):
         exp is an exponent
         '''
         func = expr.func.__name__
-
-        if hasattr(self, '_print_' + func):
+        if hasattr(self, '_print_' + func) and \
+            not isinstance(expr.func, AppliedUndef) and \
+            not isinstance(expr.func, UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
@@ -767,10 +768,21 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_FunctionClass(self, expr):
-        if hasattr(expr, '_latex_no_arg'):
-            return expr._latex_no_arg(self)
-
-        return self._hprint_Function(str(expr))
+        from sympy.functions.special.tensor_functions import KroneckerDelta
+        from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.beta_functions import beta
+        from sympy.functions.special.delta_functions import DiracDelta
+        from sympy.functions.special.error_functions import Chi
+        special_cases = {KroneckerDelta: r'\delta',
+                         gamma:  r'\Gamma',
+                         lowergamma: r'\gamma',
+                         beta: r'\operatorname{B}',
+                         DiracDelta: r'\delta',
+                         Chi: r'\operatorname{Chi}'}
+        if expr in special_cases:
+            return special_cases[expr]
+        else:
+            return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):
         symbols, expr = expr.args
@@ -947,6 +959,15 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
+    def _print_beta(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"\operatorname{B}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{B}%s" % tex
+
     def _print_gamma(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
@@ -972,6 +993,14 @@ class LatexPrinter(Printer):
             return r"\gamma^{%s}%s" % (exp, tex)
         else:
             return r"\gamma%s" % tex
+
+    def _print_Chi(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"\operatorname{Chi}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{Chi}%s" % tex
 
     def _print_expint(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[1])

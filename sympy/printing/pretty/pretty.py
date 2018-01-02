@@ -1193,14 +1193,16 @@ class PrettyPrinter(Printer):
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
 
-    def _print_Function(self, e, sort=False):
+    def _print_Function(self, e, sort=False, func_name=None):
+        # optional argument func_name for supplying custom names
         # XXX works only for applied functions
         func = e.func
         args = e.args
         if sort:
             args = sorted(args, key=default_sort_key)
 
-        func_name = func.__name__
+        if not func_name:
+            func_name = func.__name__
 
         prettyFunc = self._print(Symbol(func_name))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
@@ -1213,6 +1215,27 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
 
         return pform
+
+    def _print_FunctionClass(self, expr):
+        from sympy.functions.special.tensor_functions import KroneckerDelta
+        from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.beta_functions import beta
+        from sympy.functions.special.delta_functions import DiracDelta
+        from sympy.functions.special.error_functions import Chi
+        special_cases = {KroneckerDelta: [greek_unicode['delta'], 'delta'],
+            gamma: [greek_unicode['Gamma'], 'Gamma'],
+            lowergamma: [greek_unicode['gamma'], 'gamma'],
+            beta: [greek_unicode['Beta'], 'B'],
+            DiracDelta: [greek_unicode['delta'], 'delta'],
+            Chi: ['Chi', 'Chi']}
+        if expr in special_cases:
+            if self._use_unicode:
+                return prettyForm(special_cases[expr][0])
+            else:
+                return prettyForm(special_cases[expr][1])
+        else:
+            func_name = expr.__name__
+            return prettyForm(pretty_symbol(func_name))
 
     def _print_GeometryEntity(self, expr):
         # GeometryEntity is based on Tuple but should not print like a Tuple
@@ -1267,38 +1290,21 @@ class PrettyPrinter(Printer):
             base = self._print_seq(shift, "<", ">", ' ')
             return base**n
 
+    def _print_beta(self, e):
+        func_name = greek_unicode['Beta'] if self._use_unicode else 'B'
+        return self._print_Function(e, func_name=func_name)
+
     def _print_gamma(self, e):
-        from sympy.functions import gamma
-        if self._use_unicode:
-            pform = self._print(e.args[0])
-            pform = prettyForm(*pform.parens())
-            if e.func == gamma:
-                pform = prettyForm(*pform.left(greek_unicode['Gamma']))
-            else:
-                pform = prettyForm(*pform.left(greek_unicode['gamma']))
-            return pform
-        else:
-            return self._print_Function(e)
+        func_name = greek_unicode['Gamma'] if self._use_unicode else 'Gamma'
+        return self._print_Function(e, func_name=func_name)
 
     def _print_uppergamma(self, e):
-        if self._use_unicode:
-            pform = self._print(e.args[0])
-            pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
-            pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek_unicode['Gamma']))
-            return pform
-        else:
-            return self._print_Function(e)
+        func_name = greek_unicode['Gamma'] if self._use_unicode else 'Gamma'
+        return self._print_Function(e, func_name=func_name)
 
     def _print_lowergamma(self, e):
-        if self._use_unicode:
-            pform = self._print(e.args[0])
-            pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
-            pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek_unicode['gamma']))
-            return pform
-        else:
-            return self._print_Function(e)
+        func_name = greek_unicode['gamma'] if self._use_unicode else 'lowergamma'
+        return self._print_Function(e, func_name=func_name)
 
     def _print_DiracDelta(self, e):
         if self._use_unicode:
