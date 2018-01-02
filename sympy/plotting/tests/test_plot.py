@@ -78,8 +78,13 @@ def plot_and_save(name):
 
     raises(ValueError, lambda: plot(x, y))
 
-    p = plot(Piecewise((1, x > 0), (0, True)),(x,-1,1))
+    #Piecewise plots
+    p = plot(Piecewise((1, x > 0), (0, True)), (x, -1, 1))
     p.save(tmp_file('%s_plot_piecewise' % name))
+    p._backend.close()
+
+    p = plot(Piecewise((x, x < 1), (x**2, True)), (x, -3, 3))
+    p.save(tmp_file('%s_plot_piecewise_2' % name))
     p._backend.close()
 
     #parametric 2d plots.
