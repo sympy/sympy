@@ -229,6 +229,12 @@ def test_derivative():
     assert f(sin(x)) == sin(x) + cos(x)
     assert f(cos(x)) == cos(x) - sin(x)
 
+def test_double_derivative():
+    expr = func + func.diff(x) + func.diff(x, x)
+    f = lambdify((func, func.diff(x), func.diff(x, x)), expr)
+    assert f(sin(x)) == cos(x)
+    assert f(cos(x)) == -sin(x)
+
 #================== Test some functions ============================
 
 
