@@ -230,8 +230,8 @@ def interpolating_spline(d, x, X, Y):
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 
-    ## Input sanitization
-    d=sympify(d)
+    # Input sanitization
+    d = sympify(d)
     if not(d.is_integer and d.is_positive):
         raise ValueError("Spline degree must be a positive integer, not %s" % d)
     if len(X) != len(Y):
@@ -241,8 +241,8 @@ def interpolating_spline(d, x, X, Y):
     if not all(a < b for a, b in zip(X, X[1:])):
         raise ValueError('The x-coordinates must be strictly increasing')
 
-    ##EVALUATING knots value
-    if d.is_odd :
+    # Evaluating knots value
+    if d.is_odd:
         j = (d+1) // 2
         interior_knots = X[j:-j]
     else:
@@ -259,12 +259,12 @@ def interpolating_spline(d, x, X, Y):
     coeff = list(coeff)[0]
     intervals = set([c for b in basis for (e, c) in b.args if c != True])
 
-    #sorting the intervals
-    ival=[e.atoms(Number) for e in intervals]   #list containing end-points of each interval
-    ival=[list(sorted(e))[0] for e in ival]
-    com= zip(ival,intervals)
-    com=sorted(com, key=lambda x: x[0])
-    intervals = [y for x,y in com]
+    # Sorting the intervals
+    ival = [e.atoms(Number) for e in intervals]   # List containing end-points of each interval
+    ival = [list(sorted(e))[0] for e in ival]
+    com = zip(ival, intervals)
+    com = sorted(com, key=lambda x: x[0])
+    intervals = [y for x, y in com]
 
     basis_dicts = [dict((c, e) for (e, c) in b.args) for b in basis]
     spline = []

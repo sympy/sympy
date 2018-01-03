@@ -101,13 +101,14 @@ def test_repeated_degree_2():
                                    (-3*x**2/2 + 10*x - 16, And(x <= 4, x >= 3)),
                                    (0, True))
 
-### tests for interpolating_spline
+# Tests for interpolating_spline
+
 
 def test_10_points_degree_1():
-    d=1
-    X=[-5, 2, 3, 4, 7, 9, 10, 30, 31, 34]
-    Y=[-10, -2, 2, 4, 7, 6, 20, 45, 19, 25]
-    spline = interpolating_spline(d,x,X,Y)
+    d = 1
+    X = [-5, 2, 3, 4, 7, 9, 10, 30, 31, 34]
+    Y = [-10, -2, 2, 4, 7, 6, 20, 45, 19, 25]
+    spline = interpolating_spline(d, x, X, Y)
 
     assert spline == Piecewise((8*x/7 - 30/7, (x >= -5) & (x <= 2)), (4*x - 10, (x >= 2) & (x <= 3)),
                                (2*x - 4, (x >= 3) & (x <= 4)), (x, (x >= 4) & (x <= 7)),
@@ -117,19 +118,19 @@ def test_10_points_degree_1():
 
 
 def test_3_points_degree_2():
-    d=2
-    X=[-3, 10, 19]
-    Y=[3, -4, 30]
-    spline = interpolating_spline(d,x,X,Y)
+    d = 2
+    X = [-3, 10, 19]
+    Y = [3, -4, 30]
+    spline = interpolating_spline(d, x, X, Y)
 
     assert spline == Piecewise((505*x**2/2574 - 4921*x/2574 - 1931/429, (x >= -3) & (x <= 19)))
 
 
 def test_6_points_degree_3():
-    d=3
-    X=[-1, 0, 2, 3, 9, 12]
-    Y=[-4, 3, 3, 7, 9, 20]
-    spline = interpolating_spline(d,x,X,Y)
+    d = 3
+    X = [-1, 0, 2, 3, 9, 12]
+    Y = [-4, 3, 3, 7, 9, 20]
+    spline = interpolating_spline(d, x, X, Y)
 
     assert spline == Piecewise((6058*x**3/5301 - 18427*x**2/5301 + 12622*x/5301 + 3, (x >= -1) & (x <= 2)),
                                (-8327*x**3/5301 + 67883*x**2/5301 - 159998*x/5301 + 43661/1767, (x >= 2) & (x <= 3)),
