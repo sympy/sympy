@@ -75,7 +75,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
 
-    For example, it will convert Python ints into instance of sympy.Rational,
+    For example, it will convert Python ints into instances of sympy.Integer,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
