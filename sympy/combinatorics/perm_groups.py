@@ -4099,7 +4099,7 @@ class PermutationGroup(Basic):
                         f = GroupHomomorphism(G, K_s_act, images)
 
                         K_act = PermutationGroup([f(g) for g in K.generators])
-                        success, new_rels = K_s_act._verify(K_act, f.compose(phi, check=False), f(z), d)
+                        success, new_rels = K_s_act._verify(K_act, f.compose(phi), f(z), d)
 
                 for n in new_rels:
                     if not n in rels:
