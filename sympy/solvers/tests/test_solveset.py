@@ -893,6 +893,7 @@ def test_solve_lambert():
 
 def test_solveset():
     x = Symbol('x')
+    f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
     assert solveset(x, 1) == S.EmptySet
     assert solveset(x - 1, 1) == FiniteSet(x)
@@ -915,6 +916,8 @@ def test_solveset():
     assert solveset(exp(x) - 1, x) == imageset(Lambda(n, 2*I*pi*n), S.Integers)
     assert solveset(Eq(exp(x), 1), x) == imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers)
+    # issue 13825
+    assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
 
 
 def test_conditionset():
