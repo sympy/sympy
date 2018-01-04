@@ -1090,7 +1090,7 @@ def test_issue_4803():
 
 
 def test_issue_4234():
-    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x)/sqrt(1 + tan(x)**2) + 2*floor((x - pi/2)/pi)
+    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x)/sqrt(1 + tan(x)**2)
 
 
 def test_issue_4492():
