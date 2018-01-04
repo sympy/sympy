@@ -4,7 +4,7 @@ from sympy.physics.units.dimensions import (
     acceleration, action, amount_of_substance, capacitance, charge,
     conductance, current, energy, force, frequency, information, impedance, inductance,
     length, luminous_intensity, magnetic_density, magnetic_flux, mass, power,
-    pressure, temperature, time, velocity, voltage)
+    pressure, temperature, time, velocity, voltage, nucleas_decays)
 from sympy.physics.units.prefixes import (
     centi, deci, kilo, micro, milli, nano, pico,
     kibi, mebi, gibi, tebi, pebi, exbi)
@@ -65,6 +65,8 @@ lux = lx = Quantity("lux", luminous_intensity/length**2, steradian*candela/meter
 katal = kat = Quantity("katal", amount_of_substance/time, mol/second)
 # gray is the SI unit of absorbed dose
 gray = Gy = Quantity("gray", energy/mass, meter**2/second**2)
+# becquerel is the SI unit of radioactivity
+becquerel = Bq = Quantity("becquerel", nucleas_decays/time, 1/second)
 
 # Common length units
 
