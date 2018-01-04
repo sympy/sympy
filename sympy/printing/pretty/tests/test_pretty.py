@@ -24,7 +24,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
-from sympy.physics.units import joule, degree
+from sympy.physics.units import joule, degree, radian
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 
@@ -5990,6 +5990,26 @@ def test_degree_printing():
     assert pretty(expr2) == u'x°'
     expr3 = cos(x*degree + 90*degree)
     assert pretty(expr3) == u'cos(x° + 90°)'
+
+
+def test_radian_printing():
+    space = u"\N{ZERO WIDTH NO-BREAK SPACE}"
+    ucode_str1 = \
+u('''\
+  rad\n\
+90 %s \
+''') % space
+
+    ucode_str2 = \
+u('''\
+ rad\n\
+x %s \
+''') % space
+
+    expr1 = 90*radian
+    assert pretty(expr1) == ucode_str1
+    expr2 = x*radian
+    assert pretty(expr2) == ucode_str2
 
 
 def test_vector_expr_pretty_printing():

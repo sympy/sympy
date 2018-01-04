@@ -32,7 +32,7 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import degree
+from sympy.physics.units import degree, radian
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -1694,3 +1694,12 @@ def test_latex_degree():
     assert latex(expr2) == r"x ^\circ"
     expr3 = cos(x*degree + 90*degree)
     assert latex(expr3) == r'\cos{\left (x ^\circ + 90 ^\circ \right )}'
+
+
+def test_latex_radian():
+    expr1 = 90*radian
+    assert latex(expr1) == r"90 ^rad"
+    expr2 = x*radian
+    assert latex(expr2) == r"x ^rad"
+    expr3 = cos(x*radian + 90*radian)
+    assert latex(expr3) == r'\cos{\left (x ^rad + 90 ^rad \right )}'

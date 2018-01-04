@@ -33,8 +33,8 @@ from sympy.utilities import default_sort_key
 pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
 
-quantity = [
-    'degree'
+angular_quantity = [
+    'degree', 'radian'
 ]
 
 
@@ -1479,11 +1479,11 @@ class PrettyPrinter(Printer):
         if self.order not in ('old', 'none'):
             args = product.as_ordered_factors()
         else:
-            args = product.args
+            args = list(product.args)
 
         # If quantity is present append them at the back
         for i in range(len(args)):
-            if str(args[i]) in quantity:
+            if str(args[i]) in angular_quantity:
                 args.append(args[i])
                 del args[i]
 
@@ -2249,6 +2249,9 @@ class PrettyPrinter(Printer):
         if e.name.name == 'degree':
             pform = self._print(u"\N{DEGREE SIGN}")
             return pform
+        elif e.name.name == 'radian':
+            pform = self._print(u"\N{ZERO WIDTH NO-BREAK SPACE}")
+            return prettyForm(*pform.above(self._print('rad')))
         else:
             return self.emptyPrinter(e)
 
