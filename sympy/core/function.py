@@ -1102,8 +1102,17 @@ class Derivative(Expr):
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer
         from sympy.tensor.array import Array, NDimArray, derive_by_array
+        from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
+        try:
+            has_symbol_set = isinstance(expr.free_symbols, set)
+        except AttributeError:
+            has_symbol_set = False
+        if not has_symbol_set:
+            raise ValueError(filldedent('''
+                Since there are no variables in the expression %s,
+                it cannot be differentiated.''' % expr))
 
         # There are no variables, we differentiate wrt all of the free symbols
         # in expr.
@@ -1112,7 +1121,6 @@ class Derivative(Expr):
             if len(variables) != 1:
                 if expr.is_number:
                     return S.Zero
-                from sympy.utilities.misc import filldedent
                 if len(variables) == 0:
                     raise ValueError(filldedent('''
                         Since there are no variables in the expression,
@@ -1168,7 +1176,6 @@ class Derivative(Expr):
                 if count == 0:
                     continue
                 if not v._diff_wrt:
-                    from sympy.utilities.misc import filldedent
                     last_digit = int(str(count)[-1])
                     ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
                     raise ValueError(filldedent('''
