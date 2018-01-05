@@ -121,6 +121,31 @@ def invert_real(f_x, y, x, domain=S.Reals):
     """
     return _invert(f_x, y, x, domain)
 
+
+def power(x, y):
+    """
+    Returns an integer if `y` can be expressed in terms of power of `x`,
+    otherwise `False`.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import power
+    >>> power(2, 8)
+    3
+    >>> power(3, 7)
+    False
+    """
+    if x == 1:
+        return y == 1
+    powe = 1
+    c=0
+    while powe < y:
+        powe *= x
+        c+=1
+    return c if powe == y else False
+
+
 def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
 
@@ -191,12 +216,18 @@ def _invert_real(f, g_ys, symbol):
                 return _invert_real(base, res, symbol)
 
         if not base_has_sym:
-            if base is not S.Zero:
+            rhs = g_ys.args[0]
+            if base is not S.Zero and rhs > 0:
                 return _invert_real(expo,
                     imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
-            elif g_ys.args[0] is S.One:
+            elif base is not S.Zero and rhs < 0:
+                powe = power(base, -rhs)
+                if powe is not False and powe%2 == 0:
+                    return (expo, FiniteSet(powe))
+            elif rhs is S.One:
                 #special case: 0**x - 1
                 return (expo, FiniteSet(0))
+            return (expo, S.EmptySet)
 
 
     if isinstance(f, TrigonometricFunction):
