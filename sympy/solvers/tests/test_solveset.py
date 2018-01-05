@@ -893,9 +893,15 @@ def test_solve_lambert():
 
 def test_solveset():
     x = Symbol('x')
+    f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
     assert solveset(x, 1) == S.EmptySet
+    assert solveset(f(1)**2 + y + 1, f(1)
+        ) == FiniteSet(-sqrt(-y - 1), sqrt(-y - 1))
+    assert solveset(f(1)**2 - 1, f(1), S.Reals) == FiniteSet(-1, 1)
+    assert solveset(f(1)**2 + 1, f(1)) == FiniteSet(-I, I)
     assert solveset(x - 1, 1) == FiniteSet(x)
+    assert solveset(sin(x) - cos(x), sin(x)) == FiniteSet(cos(x))
 
     assert solveset(0, domain=S.Reals) == S.Reals
     assert solveset(1) == S.EmptySet

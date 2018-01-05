@@ -898,7 +898,19 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     free_symbols = f.free_symbols
 
-    if not free_symbols:
+    if symbol is None:
+        if len(free_symbols) == 1:
+            symbol = free_symbols.pop()
+        elif free_symbols:
+            raise ValueError(filldedent('''
+                The independent variable must be specified for a
+                multivariate equation.'''))
+    elif not isinstance(symbol, Symbol):
+        f, s, swap = recast_to_symbols([f], [symbol])
+        # the xreplace will be needed if a ConditionSet is returned
+        return solveset(f[0], s[0], domain).xreplace(swap)
+
+    elif not free_symbols:
         b = Eq(f, 0)
         if b is S.true:
             return domain
@@ -907,19 +919,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
         else:
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
-
-    if symbol is None:
-        if len(free_symbols) == 1:
-            symbol = free_symbols.pop()
-        else:
-            raise ValueError(filldedent('''
-                The independent variable must be specified for a
-                multivariate equation.'''))
-    elif not isinstance(symbol, Symbol):
-        s = Dummy()
-        f = f.subs(symbol, s)
-        # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f, s, domain).xreplace({s: symbol})
 
     if isinstance(f, Eq):
         from sympy.core import Add
