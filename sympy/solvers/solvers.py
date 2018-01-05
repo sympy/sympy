@@ -440,12 +440,12 @@ def check_assumptions(expr, against=None, **assumptions):
         if assumptions:
             raise AssertionError('No assumptions should be specified')
         assumptions = against.assumptions0
-    a = assumptions
-    flag = []
-    for key in a:
-        test = getattr(expr, 'is_' + key, None)
-        flag.append(None) if test is None else flag.append(test is a[key])
-    return fuzzy_and(flag)
+    def _test(key):
+        v = getattr(expr, 'is_' + key, None)
+        if v is not None:
+            return assumptions[key] is v
+    return fuzzy_and(_test(key) for key in assumptions)
+
 
 def solve(f, *symbols, **flags):
     r"""
