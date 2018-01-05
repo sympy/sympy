@@ -579,7 +579,11 @@ def test_subs_in_derivative():
     assert Derivative(f(g(x), h(y)), h(y)).subs(h(y), u(y)) == \
         Derivative(f(g(x), u(y)), u(y))
     issue_13791 = v(x, y, u(x, y)).diff(y).diff(x).diff(y)
-    # no assertion (it's a complicated formula) but in 13791 this threw an exception
+    # no assertion (it's a long formula) but in 13791 this threw an exception. Related:
+    F = lambda x, y: exp(2*x + 3*y)
+    abstract = f(x, f(x, x)).diff(x, 2)
+    concrete = F(x, F(x, x)).diff(x, 2)
+    assert (abstract.replace(f, F).doit() - concrete).simplify() == 0
 
 
 def test_diff_wrt_not_allowed():
