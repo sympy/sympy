@@ -4822,6 +4822,14 @@ def test_beta():
     assert xpretty(mybeta, use_unicode=True) == u'β'
 
 
+# test that notation passes to subclasses if not overridden there
+def test_function_subclass():
+    class Subgamma(gamma):
+        pass
+    assert xpretty(Subgamma, use_unicode=True) == u'Γ'
+    assert xpretty(Subgamma(x), use_unicode=True) == u'Γ(x)'
+
+
 def test_SingularityFunction():
     assert xpretty(SingularityFunction(x, 0, n), use_unicode=True) == (
 """\

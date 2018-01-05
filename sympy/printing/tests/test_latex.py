@@ -270,7 +270,6 @@ def test_latex_functions():
     assert latex(g(x)) == r"\gamma{\left (x \right )}"
     assert latex(g) == r"\gamma"
 
-
     a1 = Function('a_1')
 
     assert latex(a1) == r"\operatorname{a_{1}}"
@@ -449,6 +448,14 @@ def test_latex_functions():
     assert latex(fjlkd(x)) == r'\operatorname{fjlkd}{\left (x \right )}'
     # even when it is referred to without an argument
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
+
+
+# test that notation passes to subclasses if not overridden there
+def test_function_subclass():
+    class Subgamma(gamma):
+        pass
+    assert latex(Subgamma) == r"\Gamma"
+    assert latex(Subgamma(x)) == r"\Gamma\left(x\right)"
 
 
 def test_hyper_printing():

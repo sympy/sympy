@@ -779,10 +779,10 @@ class LatexPrinter(Printer):
                          beta: r'\operatorname{B}',
                          DiracDelta: r'\delta',
                          Chi: r'\operatorname{Chi}'}
-        if expr in special_cases:
-            return special_cases[expr]
-        else:
-            return self._hprint_Function(str(expr))
+        for cls in special_cases:
+            if issubclass(expr, cls):
+                return special_cases[cls]
+        return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):
         symbols, expr = expr.args

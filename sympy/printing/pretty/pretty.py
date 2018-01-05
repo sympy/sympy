@@ -1228,14 +1228,14 @@ class PrettyPrinter(Printer):
             beta: [greek_unicode['Beta'], 'B'],
             DiracDelta: [greek_unicode['delta'], 'delta'],
             Chi: ['Chi', 'Chi']}
-        if expr in special_cases:
-            if self._use_unicode:
-                return prettyForm(special_cases[expr][0])
-            else:
-                return prettyForm(special_cases[expr][1])
-        else:
-            func_name = expr.__name__
-            return prettyForm(pretty_symbol(func_name))
+        for cls in special_cases:
+            if issubclass(expr, cls):
+                if self._use_unicode:
+                    return prettyForm(special_cases[cls][0])
+                else:
+                    return prettyForm(special_cases[cls][1])
+        func_name = expr.__name__
+        return prettyForm(pretty_symbol(func_name))
 
     def _print_GeometryEntity(self, expr):
         # GeometryEntity is based on Tuple but should not print like a Tuple
