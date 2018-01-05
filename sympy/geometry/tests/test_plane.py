@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Dummy, S, Symbol, pi, sqrt, asin
+from sympy import Dummy, S, Symbol, symbols, pi, sqrt, asin, sin, cos
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
 from sympy.utilities.pytest import raises, slow
@@ -8,9 +8,7 @@ from sympy.utilities.pytest import raises, slow
 
 @slow
 def test_plane():
-    x = Symbol('x', real=True)
-    y = Symbol('y', real=True)
-    z = Symbol('z', real=True)
+    x, y, z, u, v = symbols('x y z u v', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
@@ -80,6 +78,16 @@ def test_plane():
     assert pl6.is_perpendicular(pl7)
     assert pl6.is_perpendicular(l1) is False
 
+    assert pl6.distance(pl6.arbitrary_point(u, v)) == 0
+    assert pl7.distance(pl7.arbitrary_point(u, v)) == 0
+    assert pl6.distance(pl6.arbitrary_point(t)) == 0
+    assert pl7.distance(pl7.arbitrary_point(t)) == 0
+    assert pl6.p1.distance(pl6.arbitrary_point(t)).simplify() == 1
+    assert pl7.p1.distance(pl7.arbitrary_point(t)).simplify() == 1
+    assert pl3.arbitrary_point(t) == Point3D(-sqrt(30)*sin(t)/30 + \
+        2*sqrt(5)*cos(t)/5, sqrt(30)*sin(t)/15 + sqrt(5)*cos(t)/5, sqrt(30)*sin(t)/6)
+    assert pl3.arbitrary_point(u, v) == Point3D(2*u - v, u + 2*v, 5*v)
+
     assert pl7.distance(Point3D(1, 3, 5)) == 5*sqrt(6)/6
     assert pl6.distance(Point3D(0, 0, 0)) == 4*sqrt(3)
     assert pl6.distance(pl6.p1) == 0
@@ -106,6 +114,7 @@ def test_plane():
     assert Plane.are_concurrent(pl3, pl4, pl5) is False
     assert Plane.are_concurrent(pl6) is False
     raises(ValueError, lambda: Plane.are_concurrent(Point3D(0, 0, 0)))
+    raises(ValueError, lambda: Plane((1, 2, 3), normal_vector=(0, 0, 0)))
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))
