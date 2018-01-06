@@ -766,21 +766,24 @@ class LatexPrinter(Printer):
     def _print_UndefinedFunction(self, expr):
         return self._hprint_Function(str(expr))
 
-    def _print_FunctionClass(self, expr):
+    @property
+    def _special_function_classes(self):
         from sympy.functions.special.tensor_functions import KroneckerDelta
         from sympy.functions.special.gamma_functions import gamma, lowergamma
         from sympy.functions.special.beta_functions import beta
         from sympy.functions.special.delta_functions import DiracDelta
         from sympy.functions.special.error_functions import Chi
-        special_cases = {KroneckerDelta: r'\delta',
-                         gamma:  r'\Gamma',
-                         lowergamma: r'\gamma',
-                         beta: r'\operatorname{B}',
-                         DiracDelta: r'\delta',
-                         Chi: r'\operatorname{Chi}'}
-        for cls in special_cases:
+        return {KroneckerDelta: r'\delta',
+                gamma:  r'\Gamma',
+                lowergamma: r'\gamma',
+                beta: r'\operatorname{B}',
+                DiracDelta: r'\delta',
+                Chi: r'\operatorname{Chi}'}
+
+    def _print_FunctionClass(self, expr):
+        for cls in self._special_function_classes:
             if issubclass(expr, cls):
-                return special_cases[cls]
+                return self._special_function_classes[cls]
         return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):

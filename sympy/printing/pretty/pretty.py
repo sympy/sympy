@@ -1216,24 +1216,27 @@ class PrettyPrinter(Printer):
 
         return pform
 
-    def _print_FunctionClass(self, expr):
+    @property
+    def _special_function_classes(self):
         from sympy.functions.special.tensor_functions import KroneckerDelta
         from sympy.functions.special.gamma_functions import gamma, lowergamma
         from sympy.functions.special.beta_functions import beta
         from sympy.functions.special.delta_functions import DiracDelta
         from sympy.functions.special.error_functions import Chi
-        special_cases = {KroneckerDelta: [greek_unicode['delta'], 'delta'],
-            gamma: [greek_unicode['Gamma'], 'Gamma'],
-            lowergamma: [greek_unicode['gamma'], 'gamma'],
-            beta: [greek_unicode['Beta'], 'B'],
-            DiracDelta: [greek_unicode['delta'], 'delta'],
-            Chi: ['Chi', 'Chi']}
-        for cls in special_cases:
+        return {KroneckerDelta: [greek_unicode['delta'], 'delta'],
+                gamma: [greek_unicode['Gamma'], 'Gamma'],
+                lowergamma: [greek_unicode['gamma'], 'gamma'],
+                beta: [greek_unicode['Beta'], 'B'],
+                DiracDelta: [greek_unicode['delta'], 'delta'],
+                Chi: ['Chi', 'Chi']}
+
+    def _print_FunctionClass(self, expr):
+        for cls in self._special_function_classes:
             if issubclass(expr, cls):
                 if self._use_unicode:
-                    return prettyForm(special_cases[cls][0])
+                    return prettyForm(self._special_function_classes[cls][0])
                 else:
-                    return prettyForm(special_cases[cls][1])
+                    return prettyForm(self._special_function_classes[cls][1])
         func_name = expr.__name__
         return prettyForm(pretty_symbol(func_name))
 
