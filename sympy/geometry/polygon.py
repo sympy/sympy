@@ -441,6 +441,38 @@ class Polygon(GeometrySet):
         for i in range(-len(args), 0):
             res.append(Segment(args[i], args[i + 1]))
         return res
+    
+    @property
+    def sides_rays(self):
+        """The line rays that form the sides of the polygon (sides as directed Rays).
+
+        Returns
+        =======
+
+        sides_rays : list of sides as rays
+            Each side is a Ray (directed).
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point, sympy.geometry.line.Ray
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Polygon
+        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> poly = Polygon(p1, p2, p3, p4)
+        >>> poly.sides_rays
+        [Ray2D(Point2D(0, 0), Point2D(1, 0)), Ray2D(Point2D(1, 0), Point2D(5, 1)), Ray2D(Point2D(5, 1), Point2D(0, 1)), Ray2D(Point2D(0, 1), Point2D(0, 0))]
+
+
+        """
+        res = []
+        args = self.vertices
+        for i in range(-len(args), 0):
+            res.append(Ray(args[i], args[i + 1]))
+        return res
 
     @property
     def bounds(self):
@@ -585,7 +617,8 @@ class Polygon(GeometrySet):
         The parameter, varying from 0 to 1, assigns points to the position on
         the perimeter that is that fraction of the total perimeter. So the
         point evaluated at t=1/2 would return the point from the first vertex
-        that is 1/2 way around the polygon.
+        that is 1/2 way around the polygon (the direction of the point is related
+        to the direction of the points used to create the Polygon).
 
         Parameters
         ==========
@@ -628,10 +661,11 @@ class Polygon(GeometrySet):
         sides = []
         perimeter = self.perimeter
         perim_fraction_start = 0
-        for s in self.sides:
-            side_perim_fraction = s.length/perimeter
+        for r in self.sides_rays:
+            length = r.points[0].distance(r.points[1])
+            side_perim_fraction = length/perimeter
             perim_fraction_end = perim_fraction_start + side_perim_fraction
-            pt = s.arbitrary_point(parameter).subs(
+            pt = r.arbitrary_point(parameter).subs(
                 t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append(
                 (pt, (And(perim_fraction_start <= t, t < perim_fraction_end))))
