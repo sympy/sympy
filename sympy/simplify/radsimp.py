@@ -1090,9 +1090,30 @@ def split_surds(expr):
 
 def _split_gcd(*a):
     """
-    split the list of integers ``a`` into a list of integers, ``a1`` having
-    ``g = gcd(a1)``, and a list ``a2`` whose elements are not divisible by
-    ``g``.  Returns ``g, a1, a2``
+    Parameters
+    =========
+
+    *a : integers, floats
+    atleast one integer or float should be passed as a parameter
+
+    Return
+    =========
+
+    (g, a1, a2) : a tuple with 3 elements
+
+    First element of the tuple is an int or a float(depending on the parameter),
+    second element is a list ``a1`` and third element is a list ``a2``.
+    The first element is g the gcd of the elements of the list ''a1``, and the
+    list ``a2`` contains those elements which are not divisible by ``g``.
+    The first element of the list `a1`` is always the first element of the list ``a``,
+    passed as a parameter.Thus the list ``a1`` and the int g is returned
+    depending on the first int passed as parameter, and thus order of parameters passed
+    is important and same set of parameters can yield different outputs when passed
+    in different order. Check Examples to get clarity
+    Since this function uses gcd() function of sympy, thus the gcd of a float with
+    any other int or float is 1.0 and the output is evaluated accordingly.
+
+    When no parameter is passed, an IndexError is returned.
 
     Examples
     ========
@@ -1100,6 +1121,19 @@ def _split_gcd(*a):
     >>> from sympy.simplify.radsimp import _split_gcd
     >>> _split_gcd(55, 35, 22, 14, 77, 10)
     (5, [55, 35, 10], [22, 14, 77])
+    >>> _split_gcd(9, 2, 3, 6)
+    (3, [9, 3, 6], [2])
+    >>> _split_gcd(2, 3, 6, 9)
+    (2, [2, 6], [3, 9])
+    >>> _split_gcd(6, 12, 9, 4)
+    (3, [6, 12, 9], [4])
+    >>> _split_gcd(6, 12, 4, 9)
+    (2, [6, 12, 4], [9])
+    >>> _split_gcd(2.6, 3, 6)
+    (2.6, [2.6], [3, 6])
+    >>> _split_gcd(3, 6, 2.6)
+    (3, [3, 6], [2.6])
+
     """
     g = a[0]
     b1 = [g]
