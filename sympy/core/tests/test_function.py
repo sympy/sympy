@@ -866,6 +866,8 @@ def test_issue_13843():
     assert Derivative(Derivative(f(x), (x, m)), (x, n)) == Derivative(f(x), (x, m + n))
     assert Derivative(Derivative(f(x), (x, m+5)), (x, n+3)) == Derivative(f(x), (x, m + n + 8))
 
+    assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
+
 def test_undefined_function_eq():
     f = Function('f')
     f2 = Function('f')
