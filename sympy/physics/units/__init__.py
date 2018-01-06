@@ -41,7 +41,7 @@ from .dimensions import (
     force, frequency, impedance, inductance, length,
     luminous_intensity, magnetic_density,
     magnetic_flux, mass, momentum, power, pressure, temperature, time,
-    velocity, voltage, volume, nucleas_decays
+    velocity, voltage, volume, nucleus_decays
 )
 
 Unit = Quantity
