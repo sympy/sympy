@@ -1235,7 +1235,7 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
-            elif not count.is_Integer and not count.is_integer:
+            elif not count.is_Integer and not count.is_symbol:
                 obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
@@ -1249,14 +1249,14 @@ class Derivative(Expr):
                     old_v = v
                     v = new_v
                 obj = expr
-                try:
+                if not n.is_symbol:
                     for i in range(count):
                         obj2 = deriv_fun(obj, v)
                         if obj == obj2:
                             break
                         obj = obj2
                         nderivs += 1
-                except TypeError:
+                else:
                     obj = deriv_fun(obj, Tuple(v, count))
                     nderivs += 1
                 if not is_symbol:
@@ -1392,7 +1392,7 @@ class Derivative(Expr):
         # If the variable s we are diff wrt is not in self.variables, we
         # assume that we might be able to take the derivative.
         if v not in self.variables:
-            if type(v) == Tuple and v[1].is_integer:
+            if type(v) == Tuple and v[1].is_symbol:
                 obj = self.expr.diff(v[0])
                 return obj.func(obj.expr, *(self.variable_count + ((v),)))
             else:
