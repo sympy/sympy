@@ -1235,8 +1235,6 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
-            elif not count.is_Integer and not count.is_symbol:
-                obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
                     deriv_fun = derive_by_array
@@ -1249,16 +1247,23 @@ class Derivative(Expr):
                     old_v = v
                     v = new_v
                 obj = expr
-                if not n.is_symbol:
+                if count.is_Integer:
                     for i in range(count):
                         obj2 = deriv_fun(obj, v)
                         if obj == obj2:
                             break
                         obj = obj2
                         nderivs += 1
+                elif obj.is_Derivative:
+                    dict_var_count = dict(obj.variable_count)
+                    if v in dict_var_count:
+                        dict_var_count[v] += count
+                    else:
+                        dict_var_count[v] = count
+                    obj = Derivative(obj.expr, *dict_var_count.items())
+                    nderivs += count
                 else:
-                    obj = deriv_fun(obj, Tuple(v, count))
-                    nderivs += 1
+                    obj = None
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1289,7 +1294,7 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variable_count(expr.args[1:])
                 )
 
-        if nderivs > 1 and assumptions.get('simplify', True):
+        if (nderivs > 1) == True and assumptions.get('simplify', True):
             from sympy.core.exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
@@ -1392,11 +1397,7 @@ class Derivative(Expr):
         # If the variable s we are diff wrt is not in self.variables, we
         # assume that we might be able to take the derivative.
         if v not in self.variables:
-            if type(v) == Tuple and v[1].is_symbol:
-                obj = self.expr.diff(v[0])
-                return obj.func(obj.expr, *(self.variable_count + ((v),)))
-            else:
-                obj = self.expr.diff(v)
+            obj = self.expr.diff(v)
             if obj is S.Zero:
                 return S.Zero
             if isinstance(obj, Derivative):
