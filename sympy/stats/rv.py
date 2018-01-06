@@ -765,6 +765,38 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
         return result
 
 
+def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
+    """
+    Characterisfic Function of a random expression.
+
+    optionally given a second condition
+
+    This function will take on different forms for different types of
+    probability spaces.
+    Discrete variables produce Dicts.
+    Continuous variables produce Lambdas.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, characteristic_function
+
+    >>> X = Normal('X', 0, 1)
+
+    >>> characteristic_function(X)
+    Lambda(_t, exp(-_t**2/2))
+    """
+    if condition is not None:
+        return characteristic_function(given(expr, condition, **kwargs), **kwargs)
+
+    result = pspace(expr).compute_characteristic_function(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
+
+
 def where(condition, given_condition=None, **kwargs):
     """
     Returns the domain where a condition is True.
