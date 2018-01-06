@@ -205,11 +205,13 @@ def bspline_basis_set(d, knots, x):
 
 
 def interpolating_spline(d, x, X, Y):
-    """A spline of degree ``d`` interpolating the points with given ``X`` and ``Y`` coordinates.
+    """Return spline of degree ``d`` interpolating for given
+    ``X`` and ``Y`` values.
 
-    This function returns a piecewise function such that each part is a polynomial of degree
-    at most ``d`` and the value at each number in X is the corresponding number in Y.
-    The degree ``d`` must be at least 1. The values listed in X must be strictly increasing.
+    This function returns a piecewise function such that each part is
+    a polynomial of degreeat most ``d`` .
+    The degree ``d`` must be at least 1. The values listed in X must
+    be strictly increasing.
 
     Examples
     ========
@@ -217,9 +219,12 @@ def interpolating_spline(d, x, X, Y):
     >>> from sympy import interpolating_spline
     >>> from sympy.abc import x
     >>> interpolating_spline(1, x, [1, 2, 4, 7], [3, 6, 5, 7])
-    Piecewise((3*x, (x >= 1) & (x <= 2)), (-x/2 + 7, (x >= 2) & (x <= 4)), (2*x/3 + 7/3, (x >= 4) & (x <= 7)))
+    Piecewise((3*x, (x >= 1) & (x <= 2)),
+            (-x/2 + 7, (x >= 2) & (x <= 4)),
+            (2*x/3 + 7/3, (x >= 4) & (x <= 7)))
     >>> interpolating_spline(3, x, [-2, 0, 1, 3, 4], [4, 2, 1, 1, 3])
-    Piecewise((-x**3/36 - x**2/36 - 17*x/18 + 2, (x >= -2) & (x <= 1)), (5*x**3/36 - 13*x**2/36 - 11*x/18 + 7/3, (x >= 1) & (x <= 4)))
+    Piecewise((-x**3/36 - x**2/36 - 17*x/18 + 2, (x >= -2) & (x <= 1)),
+            (5*x**3/36 - 13*x**2/36 - 11*x/18 + 7/3, (x >= 1) & (x <= 4)))
 
     See Also
     ========
