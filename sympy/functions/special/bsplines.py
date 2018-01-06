@@ -232,7 +232,7 @@ def interpolating_spline(d, x, X, Y):
 
     # Input sanitization
     d = sympify(d)
-    if not(d.is_integer and d.is_positive):
+    if not(d.is_Integer and d.is_positive):
         raise ValueError("Spline degree must be a positive integer, not %s" % d)
     if len(X) != len(Y):
         raise ValueError('Number of X and Y co-ordinates passed not equal')
