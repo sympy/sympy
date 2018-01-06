@@ -859,6 +859,13 @@ def test_issue_12005():
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
 
+def test_issue_13843():
+    x = symbols('x')
+    f = Function('f')
+    m, n = symbols('m n', integer=True)
+    assert Derivative(Derivative(f(x), (x, m)), (x, n)) == Derivative(f(x), (x, m + n))
+    assert Derivative(Derivative(f(x), (x, m+5)), (x, n+3)) == Derivative(f(x), (x, m + n + 8))
+
 def test_undefined_function_eq():
     f = Function('f')
     f2 = Function('f')
