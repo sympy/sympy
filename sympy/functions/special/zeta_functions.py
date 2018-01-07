@@ -276,7 +276,7 @@ class polylog(Function):
         elif z == -1:
             return -dirichlet_eta(s)
         elif z == 0:
-            return 0
+            return S.Zero
         if s == 2:
             if z == S.Half:
                 return pi**2/12 - log(2)**2/2
