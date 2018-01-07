@@ -434,7 +434,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
-        else:return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
+        else:
+            return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
 
     def compute_density(self, expr, **kwargs):
         # http://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
