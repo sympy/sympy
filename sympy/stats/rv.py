@@ -767,9 +767,7 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
 
 def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
     """
-    Characterisfic Function of a random expression.
-
-    optionally given a second condition
+    Characteristic function of a random expression, optionally given a second condition
 
     Returns a Lambda
 
@@ -784,7 +782,7 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     >>> Y = DiscreteUniform('Y', [1,2,7])
     >>> characteristic_function(Y)
-    Lambda(t, exp(7*I*t)/3 + exp(2*I*t)/3 + exp(I*t)/3)
+    Lambda(_t, exp(7*_t*I)/3 + exp(2*_t*I)/3 + exp(_t*I)/3)
 
     >>> Z = Poisson('Z', 2)
     >>> characteristic_function(Z)
