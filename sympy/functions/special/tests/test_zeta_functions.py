@@ -138,7 +138,7 @@ def test_polylog_values():
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
     assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
     for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
-        assert Abs(polylog(2, z) - polylog(2, z + 1e-13)).evalf() < 1e-12
+        assert Abs(polylog(2, z).evalf() - polylog(2, z, evaluate=False).evalf()) < 1e-15
 
 
 def test_lerchphi_expansion():
