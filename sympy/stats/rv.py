@@ -771,20 +771,24 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     optionally given a second condition
 
-    This function will take on different forms for different types of
-    probability spaces.
-    Discrete variables produce Dicts.
-    Continuous variables produce Lambdas.
+    Returns a Lambda
 
     Examples
     ========
 
-    >>> from sympy.stats import Normal, characteristic_function
+    >>> from sympy.stats import Normal, DiscreteUniform, Poisson, characteristic_function
 
     >>> X = Normal('X', 0, 1)
-
     >>> characteristic_function(X)
     Lambda(_t, exp(-_t**2/2))
+
+    >>> Y = DiscreteUniform('Y', [1,2,7])
+    >>> characteristic_function(Y)
+    Lambda(t, exp(7*I*t)/3 + exp(2*I*t)/3 + exp(I*t)/3)
+
+    >>> Z = Poisson('Z', 2)
+    >>> characteristic_function(Z)
+    Lambda(_t, Sum(2**_x*exp(-2)*exp(_t*_x*I)/factorial(_x), (_x, 0, oo)))
     """
     if condition is not None:
         return characteristic_function(given(expr, condition, **kwargs), **kwargs)
