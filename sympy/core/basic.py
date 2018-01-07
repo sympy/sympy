@@ -924,6 +924,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @cacheit
     def _subs(self, old, new, **hints):
+        from sympy.physics.units.quantities import Quantity
         """Substitutes an expression old -> new.
 
         If self is not equal to old then _eval_subs is called.
@@ -999,7 +1000,10 @@ class Basic(with_metaclass(ManagedProperties)):
             Try to replace old with new in any of self's arguments.
             """
             hit = False
-            args = list(self.args)
+            if isinstance(self, Quantity):
+                return self
+            else:
+                args = list(self.args)
             for i, arg in enumerate(args):
                 if not hasattr(arg, '_eval_subs'):
                     continue
