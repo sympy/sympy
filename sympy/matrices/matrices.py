@@ -1678,7 +1678,7 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
-    def _array_dot(self, b):
+    def _legacy_array_dot(self, b):
         """Compatibility function for deprecated behavior of ``matrix.dot(vector)``
         """
         from .dense import Matrix
@@ -2395,9 +2395,9 @@ class MatrixBase(MatrixDeprecated,
         return self._diagonal_solve(rhs)
 
     def dot(self, b):
-        """Return the dot product of Matrix self and b only if they are either
-        row or column matrix of same length and a scalar is returned. dot
-        product will also performed if b is an iterable of same length.
+        """Return the dot product of two vectors of equal length. ``self`` must
+        be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be either a
+        matrix of size 1 x n, n x 1, or a list/tuple of length n. A scalar is returned.
 
         Examples
         ========
@@ -2436,20 +2436,22 @@ class MatrixBase(MatrixDeprecated,
 
         mat = self
         if (1 not in mat.shape) or (1 not in b.shape) :
-            SymPyDeprecationWarning(
-                feature="dot() no longer support dot of (m,n) and (1,n) matrices.",
-                issue=13815,
-                deprecated_since_version="1.2").warn()
-            return super(MatrixBase,self)._array_dot(b)
+            if hasattr(mat, '_legacy_array_dot'):
+                SymPyDeprecationWarning(
+                    feature="dot() no longer support dot of (m,n) and (1,n) matrices.",
+                    issue=13815,
+                    deprecated_since_version="1.2").warn()
+                return mat._legacy_array_dot(b)
+            raise ShapeError("Can only evaluate `dot` on row or column matrices, not matrices of size {}".format(mat.shape))
         if len(mat) != len(b):
             raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
         n = len(mat)
-        if mat.shape != (1,n):
-            mat = mat.reshape(1,n)
-        if b.shape != (n,1):
-            b = b.reshape(n,1)
-        prod = (mat * b)[0]
-        return prod
+        if mat.shape != (1, n):
+            mat = mat.reshape(1, n)
+        if b.shape != (n, 1):
+            b = b.reshape(n, 1)
+        # Now ``mat`` is a row vector and ``b`` is a column vector.
+        return (mat * b)[0]
 
     def dual(self):
         """Returns the dual of a matrix, which is:
