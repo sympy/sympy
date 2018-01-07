@@ -16,7 +16,7 @@ def _add_splines(c, b1, d, b2):
         new_args = []
         n_intervals = len(b1.args)
         if n_intervals != len(b2.args):
-            # Args of b1 and b2 are not equal. Just combining the Piecewise without any fancy optimisation
+            # Args of b1 and b2 are not equal. Just combining the Piecewise without any fancy optimization
             p1 = piecewise_fold(c*b1)
             p2 = piecewise_fold(d*b2)
 
@@ -111,7 +111,7 @@ def bspline_basis(d, knots, n, x):
     B-splines and their derivatives:
 
         >>> d = 1
-        >>> knots = [0,0,2,3,4]
+        >>> knots = [0, 0, 2, 3, 4]
         >>> bspline_basis(d, knots, 0, x)
         Piecewise((-x/2 + 1, (x >= 0) & (x <= 2)), (0, True))
 
@@ -240,21 +240,21 @@ def interpolating_spline(d, x, X, Y):
     if not(d.is_Integer and d.is_positive):
         raise ValueError("Spline degree must be a positive integer, not %s" % d)
     if len(X) != len(Y):
-        raise ValueError('Number of X and Y co-ordinates passed not equal')
-    if len(X) < d+1:
+        raise ValueError('Number of X and Y coordinates passed not equal')
+    if len(X) < d + 1:
         raise ValueError('Degree must be less than the number of control points')
     if not all(a < b for a, b in zip(X, X[1:])):
         raise ValueError('The x-coordinates must be strictly increasing')
 
     # Evaluating knots value
     if d.is_odd:
-        j = (d+1) // 2
+        j = (d + 1) // 2
         interior_knots = X[j:-j]
     else:
         j = d // 2
-        interior_knots = [Rational(a+b, 2) for a, b in zip(X[j:-j-1], X[j+1:-j])]
+        interior_knots = [Rational(a + b, 2) for a, b in zip(X[j:-j - 1], X[j + 1:-j])]
 
-    knots = [X[0]] * (d+1) + list(interior_knots) + [X[-1]] * (d+1)
+    knots = [X[0]] * (d + 1) + list(interior_knots) + [X[-1]] * (d + 1)
 
     basis = bspline_basis_set(d, knots, x)
 
