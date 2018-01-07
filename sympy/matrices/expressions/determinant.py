@@ -32,13 +32,13 @@ class Determinant(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, expand=False):
+    def doit(self, expand=False, **kwargs):
         try:
-            return self.arg._eval_determinant()
+            return self.arg._eval_determinant(**kwargs)
         except (AttributeError, NotImplementedError):
             return self
 
-def det(matexpr):
+def det(matexpr, **kwargs):
     """ Matrix Determinant
 
     >>> from sympy import MatrixSymbol, det, eye
@@ -50,7 +50,7 @@ def det(matexpr):
     1
     """
 
-    return Determinant(matexpr).doit()
+    return Determinant(matexpr).doit(**kwargs)
 
 
 from sympy.assumptions.ask import ask, Q

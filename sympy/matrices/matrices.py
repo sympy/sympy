@@ -266,10 +266,10 @@ class MatrixDeterminant(MatrixCommon):
         # return det(P)*det(U)
         return det
 
-    def _eval_determinant(self):
+    def _eval_determinant(self, **kwargs):
         """Assumed to exist by matrix expressions; If we subclass
         MatrixDeterminant, we can fully evaluate determinants."""
-        return self.det()
+        return self.det(**kwargs)
 
     def adjugate(self, method="berkowitz"):
         """Returns the adjugate, or classical adjoint, of
@@ -379,7 +379,7 @@ class MatrixDeterminant(MatrixCommon):
         return self._new(self.rows, self.cols,
                          lambda i, j: self.cofactor(i, j, method))
 
-    def det(self, method="bareiss"):
+    def det(self, **kwargs):
         """Computes the determinant of a matrix.  If the matrix
         is at most 3x3, a hard-coded formula is used.
         Otherwise, the determinant using the method `method`.
@@ -392,6 +392,7 @@ class MatrixDeterminant(MatrixCommon):
         """
 
         # sanitize `method`
+        method = kwargs.get('method', "bareiss")
         method = method.lower()
         if method == "bareis":
             method = "bareiss"
