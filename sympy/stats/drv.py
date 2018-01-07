@@ -75,7 +75,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, t = symbols('x, t', integer=True, finite=True, cls=Dummy)
+        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
         pdf = self.pdf(x)
         cf = summation(exp(I*t*x)*pdf, (x, self.set.inf, self.set.sup))
         return Lambda(t, cf)
