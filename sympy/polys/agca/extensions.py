@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.polys.polytools import Poly
 
 class ExtensionElement(object):
@@ -70,11 +70,57 @@ class ExtensionElement(object):
 
     __rmul__ = __mul__
 
+    def inverse(f):
+        """Multiplicative inverse.
+
+        Raises
+        ======
+        NotInvertible
+            If the element is a zero divisor.
+
+        """
+        if not f.ext.domain.is_Field:
+            raise NotImplementedError("base field expected")
+        return ExtElem(f.rep.invert(f.ext.mod), f.ext)
+
+    def _invrep(f, g):
+        rep = f._get_rep(g)
+        if rep is not None:
+            return rep.invert(f.ext.mod)
+        else:
+            return None
+
+    def __truediv__(f, g):
+        if not f.ext.domain.is_Field:
+            return NotImplemented
+        try:
+            rep = f._invrep(g)
+        except NotInvertible:
+            raise ZeroDivisionError
+
+        if rep is not None:
+            return f*ExtElem(rep, f.ext)
+        else:
+            return NotImplemented
+
+    __div__ = __truediv__
+
+    def __rtruediv__(f, g):
+        try:
+            return f.ext.convert(g)/f
+        except CoercionFailed:
+            return NotImplemented
+
+    __rdiv__ = __rtruediv__
+
     def __pow__(f, n):
         if not isinstance(n, int):
             raise TypeError("exponent of type 'int' expected")
         if n < 0:
-            raise ValueError("negative powers are not defined")
+            try:
+                f, n = f.inverse(), -n
+            except NotImplementedError:
+                raise ValueError("negative powers are not defined")
 
         b = f.rep
         m = f.ext.mod
