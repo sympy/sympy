@@ -1,7 +1,7 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
                    airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul,
-                   integrate)
+                   integrate, Dummy)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -146,7 +146,6 @@ def test_fps():
     assert fps(2, x) == 2
     assert fps(2, x, dir='+') == 2
     assert fps(2, x, dir='-') == 2
-    assert fps(x**2 + x + 1) == x**2 + x + 1
     assert fps(1/x + 1/x**2) == 1/x + 1/x**2
     assert fps(log(1 + x), hyper=False, rational=False) == log(1 + x)
 
@@ -495,3 +494,15 @@ def test_fps__operations():
     fi = f2.integrate(x)
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)
+
+
+def test_issue_12310():
+    x, c=symbols('x c')
+    f = fps(x**2 + x**3/3 + x**8/12)
+    k = f.ak.variables[0]
+    assert f[0] == 0
+    assert f[3] == x**3/3
+    assert f[8] == x**8/12
+    assert f.truncate(4) == x**2 + x**3/3 + O(x**4)
+    assert f.polynomial() == x**2 + x**3/3
+    assert f.infinite == Sum(c*x**k, (k, 0, oo))
