@@ -1885,3 +1885,8 @@ def test_issue_12476():
             {x0: 1, x3: -S(1)/3, x2: S(1)/3, x4: -sqrt(5)/3, x1: sqrt(5)/3, x5: -1}]
 
     assert solve(eqns) == sols
+
+
+def test_issue_13849():
+    t = symbols('t')
+    assert solve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == []
