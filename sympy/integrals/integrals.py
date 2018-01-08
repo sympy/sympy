@@ -137,6 +137,44 @@ class Integral(AddWithLimits):
         if self.function.is_zero is False and got_none is False:
             return False
 
+    # Variables may be temporarily replaced by dummies to enforce assumptions
+    # inferred from limits. This is done by _rewrite_with_assumptions method.
+    # The _restore_vars will get the original variables back if they remain.
+    # This is only attempted when _replace_variables is true
+
+    _replace_variables = False
+    _replacement_dict = {}
+    _restoration_dict = {}
+
+    def _rewrite_with_assumptions(self, function):
+        self._replacement_dict = {}
+        self._restoration_dict = {}
+        dummy_number = 0
+        for xab in self.limits:
+            if len(xab) < 3:
+                continue
+            assumptions = xab[0].assumptions0
+            for property in ["real", "nonnegative", "positive", "nonpositive",
+                             "negative"]:
+                if getattr(xab[1], "is_" + property) and \
+                    getattr(xab[2], "is_" + property):
+                    assumptions[property] = True
+            if assumptions != xab[0].assumptions0:
+                _nu = Dummy("nu_%s" % dummy_number, **assumptions)
+                dummy_number += 1
+                self._replacement_dict[xab[0]] = _nu
+                self._restoration_dict[_nu] = xab[0]
+        function = function.xreplace(self._replacement_dict)
+        limits = sympify(self.limits).xreplace(self._replacement_dict)
+        return function, limits
+
+    def _restore_vars(self, expr):
+        # expr is sometimes a Python tuple, so sympify to make a SymPy tuple
+        restored_expr = sympify(expr).xreplace(self._restoration_dict)
+        # reset the flag for replacing variables
+        self._replace_variables = False
+        return restored_expr
+
     def transform(self, x, u):
         r"""
         Performs a change of variables from `x` to `u` using the relationship
@@ -418,10 +456,19 @@ class Integral(AddWithLimits):
         # There is no trivial answer and special handling
         # is done so continue
 
+        # Consider rewriting the integral using assumptions inferred from limits
+        # (so we know if this is even possible), but don't use the rewritten form
+        # unless the flag _replace_variables is set
+        new_function, new_limits = self._rewrite_with_assumptions(function)
+        if self._replace_variables:
+            function, limits = new_function, new_limits
+        else:
+            limits = self.limits
+
         undone_limits = []
         # ulj = free symbols of any undone limits' upper and lower limits
         ulj = set()
-        for xab in self.limits:
+        for xab in limits:
             # compute uli, the free symbols in the
             # Upper and Lower limits of limit I
             if len(xab) == 1:
@@ -586,6 +633,15 @@ class Integral(AddWithLimits):
                             factored_function = function.factor()
                             if not isinstance(factored_function, Integral):
                                 function = factored_function
+
+        if self._replace_variables:
+            function = self._restore_vars(function)
+        elif isinstance(function, Integral) and self._replacement_dict:
+            # Did not quite succeed with this definite integral,
+            # so let's try again with assumptions inferred
+            self._replace_variables = True
+            function = self.doit()
+
         return function
 
     def _eval_derivative(self, sym):

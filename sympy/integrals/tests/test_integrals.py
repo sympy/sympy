@@ -1193,3 +1193,12 @@ def test_issue_12645():
 
 def test_issue_12677():
     assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
+
+def test_abs_value_issue_8430():
+    assert integrate(Abs(x), (x, 0, 1)) == S(1)/2
+    assert integrate(Abs(x), (x, -2, 0)) == 2
+    assert integrate(Abs(2*x + 1), (x, 1, 3)) == 10
+
+def test_inferred_assumptions():
+    assert integrate(exp(-x*y)*y, (x, 1, oo), (y, 1, oo)) == exp(-1)
+    assert integrate(exp(-x*y)*x, (x, 1, oo), (y, 1, oo)) == exp(-1)
