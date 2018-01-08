@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex)
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -478,10 +478,10 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
     if result is not None:
         if isinstance(result, FiniteSet):
             # this is to simplify solutions like -sqrt(-I) to sqrt(2)/2
-            # - sqrt(2)*I/2. We are not expanding for solution with free
-            # variables because that makes the solution more complicated. For
-            # example expand_complex(a) returns re(a) + I*im(a)
-            if all([s.free_symbols == set() and not isinstance(s, RootOf)
+            # - sqrt(2)*I/2. We are not expanding for solution with symbols
+            # or undefined functions because that makes the solution more complicated.
+            # For example, expand_complex(a) returns re(a) + I*im(a)
+            if all([s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
                     for s in result]):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
@@ -898,7 +898,19 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     free_symbols = f.free_symbols
 
-    if not free_symbols:
+    if symbol is None:
+        if len(free_symbols) == 1:
+            symbol = free_symbols.pop()
+        elif free_symbols:
+            raise ValueError(filldedent('''
+                The independent variable must be specified for a
+                multivariate equation.'''))
+    elif not isinstance(symbol, Symbol):
+        f, s, swap = recast_to_symbols([f], [symbol])
+        # the xreplace will be needed if a ConditionSet is returned
+        return solveset(f[0], s[0], domain).xreplace(swap)
+
+    elif not free_symbols:
         b = Eq(f, 0)
         if b is S.true:
             return domain
@@ -907,19 +919,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
         else:
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
-
-    if symbol is None:
-        if len(free_symbols) == 1:
-            symbol = free_symbols.pop()
-        else:
-            raise ValueError(filldedent('''
-                The independent variable must be specified for a
-                multivariate equation.'''))
-    elif not isinstance(symbol, Symbol):
-        s = Dummy()
-        f = f.subs(symbol, s)
-        # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f, s, domain).xreplace({s: symbol})
 
     if isinstance(f, Eq):
         from sympy.core import Add

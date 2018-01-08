@@ -670,6 +670,7 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/galgebra.py", # raises ImportError
+        "sympy/this.py", # Prints text to the terminal
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
@@ -1791,7 +1792,7 @@ SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
 class SymPyOutputChecker(pdoctest.OutputChecker):
     """
     Compared to the OutputChecker from the stdlib our OutputChecker class
-    supports numerical comparison of floats occuring in the output of the
+    supports numerical comparison of floats occurring in the output of the
     doctest examples
     """
 

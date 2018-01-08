@@ -54,8 +54,27 @@ def test_reflect_entity_overrides():
     l = Line((0, pi), slope=sqrt(2))
     rpent = pent.reflect(l)
     assert rpent.center == pent.center.reflect(l)
-    assert str([w.n(3) for w in rpent.vertices]) == (
-        '[Point2D(-0.586, 4.27), Point2D(-1.69, 4.66), '
-        'Point2D(-2.41, 3.73), Point2D(-1.74, 2.76), '
-        'Point2D(-0.616, 3.10)]')
+    rvert = [i.reflect(l) for i in pent.vertices]
+    for v in rpent.vertices:
+        for i in range(len(rvert)):
+            ri = rvert[i]
+            if ri.equals(v):
+                rvert.remove(ri)
+                break
+    assert not rvert
     assert pent.area.equals(-rpent.area)
+
+    # regular polygon test
+    pent = RegularPolygon((0,0), 1, 5)
+    p = pent.vertices[1]
+    for slope in range(-1, 2):
+        l = Line(p, slope=slope)
+        rpent = pent.reflect(l)
+        rvert = [i.reflect(l) for i in pent.vertices]
+        for v in rpent.vertices:
+            for i in range(len(rvert)):
+                ri = rvert[i]
+                if ri.equals(v):
+                    rvert.remove(ri)
+                    break
+        assert not rvert

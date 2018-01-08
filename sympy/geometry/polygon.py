@@ -16,7 +16,7 @@ from sympy.utilities.iterables import has_dups, has_variety, uniq
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .ellipse import Circle
-from .line import Line, Segment
+from .line import Line, Segment, Ray
 
 from sympy import sqrt
 
@@ -51,8 +51,6 @@ class Polygon(GeometrySet):
     GeometryError
         If all parameters are not Points.
 
-        If the Polygon has intersecting sides.
-
     See Also
     ========
 
@@ -84,16 +82,14 @@ class Polygon(GeometrySet):
     >>> Polygon(p1, p2, p5)
     Segment2D(Point2D(0, 0), Point2D(3, 0))
 
-    While the sides of a polygon are not allowed to cross implicitly, they
-    can do so explicitly. For example, a polygon shaped like a Z with the top
-    left connecting to the bottom right of the Z must have the point in the
-    middle of the Z explicitly given:
+    The area of a polygon is calculated as positive when vertices are
+    traversed in a ccw direction. When the sides of a polygon cross the
+    area will have positive and negative contributions. The following
+    defines a Z shape where the bottom right connects back to the top
+    left.
 
-    >>> mid = Point(1, 1)
-    >>> Polygon((0, 2), (2, 2), mid, (0, 0), (2, 0), mid).area
+    >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
     0
-    >>> Polygon((0, 2), (2, 2), mid, (2, 0), (0, 0), mid).area
-    -2
 
     When the the keyword `n` is used to define the number of sides of the
     Polygon then a RegularPolygon is created and the other arguments are
@@ -137,19 +133,11 @@ class Polygon(GeometrySet):
         if len(nodup) > 1 and nodup[-1] == nodup[0]:
             nodup.pop()  # last point was same as first
 
-        # remove collinear points unless they are shared points
-        got = set()
-        shared = set()
-        for p in nodup:
-            if p in got:
-                shared.add(p)
-            else:
-                got.add(p)
-        del got
+        # remove collinear points
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
             a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
-            if b not in shared and Point.is_collinear(a, b, c):
+            if Point.is_collinear(a, b, c):
                 nodup.pop(i + 1)
                 if a == c:
                     nodup.pop(i)
@@ -159,49 +147,13 @@ class Polygon(GeometrySet):
         vertices = list(nodup)
 
         if len(vertices) > 3:
-            rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
+            return GeometryEntity.__new__(cls, *vertices, **kwargs)
         elif len(vertices) == 3:
             return Triangle(*vertices, **kwargs)
         elif len(vertices) == 2:
             return Segment(*vertices, **kwargs)
         else:
             return Point(*vertices, **kwargs)
-
-        # reject polygons that have intersecting sides unless the
-        # intersection is a shared point or a generalized intersection.
-        # A self-intersecting polygon is easier to detect than a
-        # random set of segments since only those sides that are not
-        # part of the convex hull can possibly intersect with other
-        # sides of the polygon...but for now we use the n**2 algorithm
-        # and check if any side intersects with any preceding side,
-        # excluding the ones it is connected to
-        try:
-            convex = rv.is_convex()
-        except ValueError:
-            convex = True
-        if not convex:
-            sides = rv.sides
-            for i, si in enumerate(sides):
-                pts = si.args
-                # exclude the sides connected to si
-                for j in range(1 if i == len(sides) - 1 else 0, i - 1):
-                    sj = sides[j]
-                    if sj.p1 not in pts and sj.p2 not in pts:
-                        hit = si.intersection(sj)
-                        if not hit:
-                            continue
-                        hit = hit[0]
-                        # don't complain unless the intersection is definite;
-                        # if there are symbols present then the intersection
-                        # might not occur; this may not be necessary since if
-                        # the convex test passed, this will likely pass, too.
-                        # But we are about to raise an error anyway so it
-                        # won't matter too much.
-                        if all(i.is_number for i in hit.args):
-                            raise GeometryError(
-                                "Polygon has intersecting sides.")
-
-        return rv
 
     @property
     def area(self):
@@ -212,7 +164,8 @@ class Polygon(GeometrySet):
         =====
 
         The area calculation can be positive or negative based on the
-        orientation of the points.
+        orientation of the points. If any side of the polygon crosses
+        any other side, there will be areas having opposite signs.
 
         See Also
         ========
@@ -227,6 +180,20 @@ class Polygon(GeometrySet):
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.area
         3
+
+        In the Z shaped polygon (with the lower right connecting back
+        to the upper left) the areas cancel out:
+
+        >>> Z = Polygon((0, 1), (1, 1), (0, 0), (1, 0))
+        >>> Z.area
+        0
+
+        In the M shaped polygon, areas do not cancel because no side
+        crosses any other (though there is a point of contact).
+
+        >>> M = Polygon((0, 0), (0, 1), (2, 0), (3, 1), (3, 0))
+        >>> M.area
+        -3/2
 
         """
         area = 0
@@ -296,7 +263,7 @@ class Polygon(GeometrySet):
         ret = {}
         for i in range(len(args)):
             a, b, c = args[i - 2], args[i - 1], args[i]
-            ang = Line.angle_between(Line(b, a), Line(b, c))
+            ang = Ray(b, a).angle_between(Ray(b, c))
             if cw ^ self._isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
             else:
@@ -460,20 +427,13 @@ class Polygon(GeometrySet):
 
     @property
     def sides(self):
-        """The line segments that form the sides of the polygon.
+        """The directed line segments that form the sides of the polygon.
 
         Returns
         =======
 
         sides : list of sides
-            Each side is a Segment.
-
-        Notes
-        =====
-
-        The Segments that represent the sides are an undirected
-        line segment so cannot be used to tell the orientation of
-        the polygon.
+            Each side is a directed Segment.
 
         See Also
         ========
@@ -489,7 +449,7 @@ class Polygon(GeometrySet):
         >>> poly.sides
         [Segment2D(Point2D(0, 0), Point2D(1, 0)),
         Segment2D(Point2D(1, 0), Point2D(5, 1)),
-        Segment2D(Point2D(0, 1), Point2D(5, 1)), Segment2D(Point2D(0, 0), Point2D(0, 1))]
+        Segment2D(Point2D(5, 1), Point2D(0, 1)), Segment2D(Point2D(0, 1), Point2D(0, 0))]
 
         """
         res = []
@@ -514,7 +474,7 @@ class Polygon(GeometrySet):
         """Is the polygon convex?
 
         A polygon is convex if all its interior angles are less than 180
-        degrees.
+        degrees and there are no intersections between sides.
 
         Returns
         =======
@@ -537,14 +497,23 @@ class Polygon(GeometrySet):
         True
 
         """
-
         # Determine orientation of points
         args = self.vertices
         cw = self._isright(args[-2], args[-1], args[0])
         for i in range(1, len(args)):
             if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
                 return False
-
+        # check for intersecting sides
+        sides = self.sides
+        for i, si in enumerate(sides):
+            pts = si.args
+            # exclude the sides connected to si
+            for j in range(1 if i == len(sides) - 1 else 0, i - 1):
+                sj = sides[j]
+                if sj.p1 not in pts and sj.p2 not in pts:
+                    hit = si.intersection(sj)
+                    if hit:
+                        return False
         return True
 
     def encloses_point(self, p):
@@ -1180,7 +1149,7 @@ class RegularPolygon(Polygon):
         obj._n = n
         obj._center = c
         obj._radius = r
-        obj._rot = rot
+        obj._rot = rot % (2*S.Pi/n) if rot.is_number else rot
         return obj
 
     @property
@@ -1346,9 +1315,17 @@ class RegularPolygon(Polygon):
         ========
 
         >>> from sympy import pi
+        >>> from sympy.abc import a
         >>> from sympy.geometry import RegularPolygon, Point
+        >>> RegularPolygon(Point(0, 0), 3, 4, pi/4).rotation
+        pi/4
+
+        Numerical rotation angles are made canonical:
+
+        >>> RegularPolygon(Point(0, 0), 3, 4, a).rotation
+        a
         >>> RegularPolygon(Point(0, 0), 3, 4, pi).rotation
-        pi
+        0
 
         """
         return self._rot
@@ -1654,19 +1631,28 @@ class RegularPolygon(Polygon):
         """Override GeometryEntity.reflect since this is not made of only
         points.
 
+        Examples
+        ========
+
         >>> from sympy import RegularPolygon, Line
 
         >>> RegularPolygon((0, 0), 1, 4).reflect(Line((0, 1), slope=-2))
-        RegularPolygon(Point2D(4/5, 2/5), -1, 4, acos(3/5))
+        RegularPolygon(Point2D(4/5, 2/5), -1, 4, atan(4/3))
 
         """
         c, r, n, rot = self.args
-        cc = c.reflect(line)
         v = self.vertices[0]
+        d = v - c
+        cc = c.reflect(line)
         vv = v.reflect(line)
-        # see how much it must get spun at the new center
-        ang = Segment(cc, vv).angle_between(Segment(c, v))
-        rot = (rot + ang + pi) % (2*pi/n)
+        dd = vv - cc
+        # calculate rotation about the new center
+        # which will align the vertices
+        l1 = Ray((0, 0), dd)
+        l2 = Ray((0, 0), d)
+        ang = l1.closing_angle(l2)
+        rot += ang
+        # change sign of radius as point traversal is reversed
         return self.func(cc, -r, n, rot)
 
     @property
@@ -2173,7 +2159,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> from sympy import sqrt
-        >>> t.bisectors()[p2] == Segment(Point(0, sqrt(2) - 1), Point(1, 0))
+        >>> t.bisectors()[p2] == Segment(Point(1, 0), Point(0, sqrt(2) - 1))
         True
 
         """

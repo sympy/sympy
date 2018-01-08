@@ -1110,7 +1110,7 @@ class Expr(Basic, EvalfMixin):
         self is treated as a Mul and the ordering of the factors is maintained.
         If ``cset`` is True the commutative factors will be returned in a set.
         If there were repeated factors (as may happen with an unevaluated Mul)
-        then an error will be raised unless it is explicitly supressed by
+        then an error will be raised unless it is explicitly suppressed by
         setting ``warn`` to False.
 
         Note: -1 is always separated from a Number unless split_1 is False.
@@ -1319,8 +1319,8 @@ class Expr(Basic, EvalfMixin):
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
-            the first occurance from the left is returned, else the last
-            occurance is returned. Return None if sub is not in l.
+            the first occurrence from the left is returned, else the last
+            occurrence is returned. Return None if sub is not in l.
 
             >> l = range(5)*2
             >> find(l, [2, 3])
@@ -1550,7 +1550,8 @@ class Expr(Basic, EvalfMixin):
         following interpretation:
 
         * i will has no variable that appears in deps
-        * d will be 1 or else have terms that contain variables that are in deps
+        * d will either have terms that contain variables that are in deps, or
+          be equal to 0 (when self is an Add) or 1 (when self is a Mul)
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
         * otherwise (self, S.One) or (S.One, self) is returned.

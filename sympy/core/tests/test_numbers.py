@@ -1464,7 +1464,7 @@ def test_issue_4122():
     x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
 
-    # similarily for negative infinity
+    # similarly for negative infinity
     x = Symbol('x', nonnegative=True)
     assert (-oo + x).is_Add
     x = Symbol('x', finite=True)
@@ -1764,15 +1764,15 @@ def test_numpy_to_float():
         skip('numpy not installed. Abort numpy tests.')
 
     def check_prec_and_relerr(npval, ratval):
-        prec = np.finfo(npval).nmant
+        prec = np.finfo(npval).nmant + 1
         x = Float(npval)
         assert x._prec == prec
         y = Float(ratval, precision=prec)
-        assert abs((x - y)/y) < 2**(-(prec+1))
+        assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2)/3, S(2)/3)
-    check_prec_and_relerr(np.float32(2)/3, S(2)/3)
-    check_prec_and_relerr(np.float64(2)/3, S(2)/3)
+    check_prec_and_relerr(np.float16(2/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2/3), S(2)/3)
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
     check_prec_and_relerr(x, S(2)/3)
