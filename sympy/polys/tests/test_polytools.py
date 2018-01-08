@@ -3234,12 +3234,19 @@ def test_issue_11198():
     assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
     assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])
 
+
 def test_Poly_precision():
     # Make sure Poly doesn't lose precision
     p = Poly(pi.evalf(100)*x)
     assert p.as_expr() == pi.evalf(100)*x
 
+
 def test_issue_12400():
     # Correction of check for negative exponents
     assert poly(1/(1+sqrt(2)), x) == \
             Poly(1/(1+sqrt(2)), x , domain='EX')
+
+
+def test_issue_13073():
+    assert factor_list(x**3/a + y**2*x**2/b) == (1, [(y**2/b + x/a, 1), (x, 2)])
+    assert factor_list(x**2/y + x/y) == (1, [(1/y, 1), (x, 1), (x + 1, 1)])
