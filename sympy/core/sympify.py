@@ -62,7 +62,9 @@ def _convert_numpy_types(a):
     else:
         try:
             from sympy.core.numbers import Float
-            prec = np.finfo(a).nmant
+            prec = np.finfo(a).nmant + 1
+            # E.g. double precision means prec=53 but nmant=52
+            # Leading bit of mantissa is always 1, so is not stored
             a = str(list(np.reshape(np.asarray(a),
                                     (1, np.size(a)))[0]))[1:-1]
             return Float(a, precision=prec)
