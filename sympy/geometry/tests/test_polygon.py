@@ -411,6 +411,12 @@ def test_intersection():
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
 
 
+def test_parameter_value():
+    sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
+    assert sq.parameter_value((0.5, 1)) == 3/8
+    raises(ValueError, lambda: sq.parameter_value((5, 6)))
+
+
 def test_issue_12966():
     poly = Polygon(Point(0, 0), Point(0, 10), Point(5, 10), Point(5, 5),
         Point(10, 5), Point(10, 0))
@@ -420,13 +426,3 @@ def test_issue_12966():
     assert [pt.subs(t, DELTA*i) for i in range(int(1/DELTA))] == [
         Point(0, 0), Point(0, 5), Point(0, 10), Point(5, 10),
         Point(5, 5), Point(10, 5), Point(10, 0), Point(5, 0)]
-
-
-def test_parameter_value():
-    sq = Polygon((0,0),(0,1),(1,1),(1,0))
-
-    param = sq.parameter_value((0.5,1))
-    assert param == 3/8
-
-    with raises(ValueError):
-        sq.parameter_value((5,6))

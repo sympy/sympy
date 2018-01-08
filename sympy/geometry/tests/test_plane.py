@@ -229,11 +229,8 @@ def test_dimension_normalization():
         ).intersection((2, 1)) == [Point(2, 1, 0)]
 
 def test_parameter_value():
+    u, v = symbols("u v")
     p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
-
-    param = p.parameter_value((0,1,0))
-    # (0,cos(t),sin(t))
-    assert param == 0
-
-    with raises(ValueError):
-        p.parameter_value((1,0,0))
+    assert p.parameter_value((0, -3, 2)) == asin(2*sqrt(13)/13)
+    assert p.parameter_value((0, -3, 2), u, v) == {u: 3, v: 2}
+    raises(ValueError, lambda: p.parameter_value((1, 0, 0)))

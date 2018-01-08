@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, range, ordered
-from sympy.core.symbol import _symbol
+from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -12,6 +12,7 @@ from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_dups, has_variety, uniq
+from sympy.utilities.misc import func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
@@ -611,25 +612,25 @@ class Polygon(GeometrySet):
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
-    def parameter_value(self,other):
-        from sympy.geometry.point import Point
-        from sympy.core.symbol import Dummy
+    def parameter_value(self, other):
         from sympy.solvers.solvers import solve
         if not isinstance(other,GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):
             raise ValueError("other must be a point")
-        t = Dummy()
-        p = self.arbitrary_point(t)
-        num_conditions = len(p.args)
-        for c in p.args:
-            arb_point = c.args[0]
-            sol = solve(arb_point - other, t, dict=True)
-            if len(sol) != 0:
-                value = sol[0].get(t)
-                if c.args[1].subs(t,value):
-                        return value
-        raise ValueError("Given point is not on %s" %type(self).__name__)
+        if other.free_symbols:
+            raise NotImplementedError('non-numeric coordinates')
+        if self.contains(other):
+            t = Dummy('t', real=True)
+            p = self.arbitrary_point(t)
+            for pt, cond in p.args:
+                sol = solve(pt - other, t, dict=True)
+                if not sol:
+                    continue
+                value = sol[0][t]
+                if cond.subs(t, value):
+                    return value
+        raise ValueError("Given point is not on %s" % func_name(self))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the polygon.

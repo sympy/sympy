@@ -14,8 +14,8 @@ from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve, linsolve
-from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
+from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity
 from .point import Point, Point3D
@@ -136,21 +136,31 @@ class Plane(GeometryEntity):
 
 
     def arbitrary_point(self, u=None, v=None):
-        """ Returns an arbitrary point on the Plane. If given two parameters,
-        the point ranges over the entire plane. If given one or no parameters,
-        returns a point with one parameter, varying which from 0 to 2*pi will
-        move the point in a circle of radius 1 about p1 of the Plane.
+        """ Returns an arbitrary point on the Plane. If given two
+        parameters, the point ranges over the entire plane. If given 1
+        or no parameters, returns a point with one parameter which,
+        when varying from 0 to 2*pi, moves the point in a circle of
+        radius 1 about p1 of the Plane.
 
         Examples
         ========
 
-        >>> from sympy.geometry.plane import Plane
+        >>> from sympy.geometry import Plane, Ray
         >>> from sympy.abc import u, v, t
-        >>> p = Plane((3, 1, 4), (2, 0, 1), (-1, -2, -2))
+        >>> p = Plane((1, 1, 1), normal_vector=(1, 0, 0))
         >>> p.arbitrary_point(u, v)
-        Point3D(-6*u - 3*v + 3, -3*u + 6*v + 1, 45*v + 4)
+        Point3D(1, u + 1, v + 1)
         >>> p.arbitrary_point(t)
-        Point3D(-sqrt(230)*sin(t)/230 - 2*sqrt(5)*cos(t)/5 + 3, sqrt(230)*sin(t)/115 - sqrt(5)*cos(t)/5 + 1, 3*sqrt(230)*sin(t)/46 + 4)
+        Point3D(1, cos(t) + 1, sin(t) + 1)
+
+        While arbitrary values of u and v can move the point anywhere in
+        the plane, the single-parameter point can be moved on a ray
+        relative to the p1 value. For example, to locate it a distance
+        of 2 from p1 one could do:
+
+        >>> delta = (_ - p.p1)
+        >>> p.p1 + delta*2
+        Point3D(1, 2*cos(t) + 1, 2*sin(t) + 1)
 
         Returns
         =======
@@ -159,7 +169,7 @@ class Plane(GeometryEntity):
 
         """
         circle = v is None
-        u = u or Dummy('u', real=True)
+        u = u or Dummy('t' if circle else 'u', real=True)
         v = v or Dummy('v', real=True)
         x, y, z = self.normal_vector
         a, b, c = self.p1.args
@@ -777,15 +787,30 @@ class Plane(GeometryEntity):
             return rv
         return self.intersection(Line3D(rv, rv + Point3D(self.normal_vector)))[0]
 
-
     def random_point(self, seed=None):
-        """ Returns a random point on the Plane.
+        """ Returns a random point on the Plane somewhere within
+        the unit square centered on p1 of the plane.
 
         Returns
         =======
 
         Point3D
 
+        Examples
+        ========
+
+        >>> from sympy import Plane
+        >>> p = Plane((1, 0, 0), normal_vector=(0, 1, 0))
+        >>> r = p.random_point(seed=42)  # seed value is optional
+        >>> r.n(3)
+        Point3D(0.721, 0, -0.95)
+
+        The random point can be moved to lie on the circle of radius
+        1 centered on p1:
+
+        >>> c = p.p1 + (r - p.p1).unit
+        >>> c.distance(p.p1).equals(1)
+        True
         """
         import random
         if seed is not None:
@@ -793,8 +818,74 @@ class Plane(GeometryEntity):
         else:
             rng = random
         u, v = Dummy('u'), Dummy('v')
-        params = {u: Rational(rng.random()), v: Rational(rng.random())}
+        params = {
+            u: 2*Rational(rng.random()) - 1,
+            v: 2*Rational(rng.random()) - 1}
         return self.arbitrary_point(u, v).subs(params)
+
+    def parameter_value(self, other, u=None, v=None):
+        """Return the parameter(s) corresponding to the given point.
+
+        Examples
+        ========
+
+        >>> from sympy import Plane, Point, pi
+        >>> from sympy.abc import t, u, v
+        >>> p = Plane((2, 0, 0), (0, 0, 1), (0, 1, 0))
+
+        By default, the parameter value returned defines a point
+        that is a distance of 1 from the Plane's p1 value and
+        in line with the given point:
+
+        >>> on_circle = p.arbitrary_point(t).subs(t, pi/4)
+        >>> on_circle.distance(p.p1)
+        1
+        >>> p.parameter_value(on_circle)
+        pi/4
+
+        Moving the point twice as far from p1 does not change
+        the parameter value:
+
+        >>> off_circle = p.p1 + (on_circle - p.p1)*2
+        >>> off_circle.distance(p.p1)
+        2
+        >>> p.parameter_value(off_circle)
+        pi/4
+
+        If the 2-value parameter is desired, supply the two
+        parameter symbols and a replacement dictionary will
+        be returned:
+
+        >>> p.parameter_value(on_circle, u, v)
+        {u: sqrt(10)/10, v: sqrt(10)/30}
+        >>> p.parameter_value(off_circle, u, v)
+        {u: sqrt(10)/5, v: sqrt(10)/15}
+        """
+        from sympy.geometry.point import Point
+        from sympy.core.symbol import Dummy
+        from sympy.solvers.solvers import solve
+        if not isinstance(other, GeometryEntity):
+            other = Point(other, dim=self.ambient_dimension)
+        if not isinstance(other, Point):
+            raise ValueError("other must be a point")
+        if other == self.p1:
+            return other
+        t = u is None and v is None
+        if t:
+            x = Dummy('t', real=True)
+            u = self.arbitrary_point(x) - self.p1
+            eq = u - (other - self.p1).unit
+            sol = solve(eq, x, dict=True)
+        elif isinstance(u, Symbol) and isinstance(v, Symbol):
+            pt = self.arbitrary_point(u, v)
+            sol = solve(pt - other, (u, v), dict=True)
+        else:
+            raise ValueError('expecting 0 or 2 symbols')
+        if not sol:
+            raise ValueError("Given point is not on %s" % func_name(self))
+        if t:
+            return sol[0][x]  # val
+        return sol[0]  # {u: uval, v: vval}
 
     @property
     def ambient_dimension(self):

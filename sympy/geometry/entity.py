@@ -29,6 +29,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
 from sympy.sets import Set
+from sympy.utilities.misc import func_name
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -456,7 +457,7 @@ class GeometryEntity(Basic):
         Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.scale(2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)/2), Point2D(-1, -sqrt(3)/2))
-        >>> t.scale(2,2)
+        >>> t.scale(2, 2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3)))
 
         """
@@ -496,16 +497,17 @@ class GeometryEntity(Basic):
                 newargs.append(a)
         return self.func(*newargs)
 
-    def parameter_value(self,other):
-        """Return the parameter corresponding to the given point. Evaluating
-        the entity at this parameter value will return the given point.
+    def parameter_value(self, other):
+        """Return the parameter corresponding to the given point.
+        Evaluating an arbitrary point of the entity at this parameter
+        value will return the given point.
 
         Examples
         ========
 
         >>> from sympy import Line, Point
         >>> from sympy.abc import t
-        >>> a = Point(0,0)
+        >>> a = Point(0, 0)
         >>> b = Point(2, 2)
         >>> Line(a, b).parameter_value((1, 1))
         1/2
@@ -515,16 +517,16 @@ class GeometryEntity(Basic):
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
         from sympy.solvers.solvers import solve
-        if not isinstance(other,GeometryEntity):
+        if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
-        if not isinstance(other,Point):
+        if not isinstance(other, Point):
             raise ValueError("other must be a point")
-        t = Dummy()
+        t = Dummy('t', real=True)
         sol = solve(self.arbitrary_point(t) - other, t, dict=True)
-        if len(sol) == 0:
-            raise ValueError("Given point is not on %s" %type(self).__name__)
-        v = sol[0].get(t)
-        return v
+        if not sol:
+            raise ValueError("Given point is not on %s" % func_name(self))
+        return sol[0].get(t)
+
 
 class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
