@@ -50,6 +50,9 @@ def det(matexpr, **kwargs):
     1
     """
 
+    if isinstance(matexpr, MatrixExpr) and kwargs:
+        raise ValueError("Keyword arguments not supported for matrix expressions.")
+
     return Determinant(matexpr).doit(**kwargs)
 
 
