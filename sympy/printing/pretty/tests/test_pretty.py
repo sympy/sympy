@@ -13,7 +13,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
-    lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
+    meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
@@ -37,6 +37,9 @@ from sympy.core.compatibility import range
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 from sympy.tensor.functions import TensorProduct
 
+import sympy as sym
+class lowergamma(sym.lowergamma):
+    pass   # testing notation inheritance by a subclass with same name
 
 a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
 f = Function("f")
