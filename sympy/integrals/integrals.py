@@ -19,7 +19,7 @@ from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign
+from sympy.functions import Piecewise, sqrt, sign, piecewise_fold
 from sympy.functions.elementary.exponential import log
 from sympy.series import limit
 from sympy.series.order import Order
@@ -443,6 +443,9 @@ class Integral(AddWithLimits):
                     function = factored_function
                 continue
 
+            if function.has(Piecewise) and \
+                not isinstance(function, Piecewise):
+                    function = piecewise_fold(function)
             if isinstance(function, Piecewise):
                 if len(xab) == 1:
                     antideriv = function._eval_integral(xab[0],
