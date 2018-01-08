@@ -782,7 +782,7 @@ class LatexPrinter(Printer):
 
     def _print_FunctionClass(self, expr):
         for cls in self._special_function_classes:
-            if issubclass(expr, cls):
+            if issubclass(expr, cls) and expr.__name__ == cls.__name__:
                 return self._special_function_classes[cls]
         return self._hprint_Function(str(expr))
 

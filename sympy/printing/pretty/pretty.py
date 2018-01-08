@@ -1232,7 +1232,7 @@ class PrettyPrinter(Printer):
 
     def _print_FunctionClass(self, expr):
         for cls in self._special_function_classes:
-            if issubclass(expr, cls):
+            if issubclass(expr, cls) and expr.__name__ == cls.__name__:
                 if self._use_unicode:
                     return prettyForm(self._special_function_classes[cls][0])
                 else:

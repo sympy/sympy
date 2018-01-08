@@ -450,12 +450,12 @@ def test_latex_functions():
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
 
 
-# test that notation passes to subclasses if not overridden there
-def test_function_subclass():
-    class Subgamma(gamma):
+# test that notation passes to subclasses of the same name only
+def test_function_subclass_different_name():
+    class mygamma(gamma):
         pass
-    assert latex(Subgamma) == r"\Gamma"
-    assert latex(Subgamma(x)) == r"\Gamma\left(x\right)"
+    assert latex(mygamma) == r"\operatorname{mygamma}"
+    assert latex(mygamma(x)) == r"\operatorname{mygamma}{\left (x \right )}"
 
 
 def test_hyper_printing():
