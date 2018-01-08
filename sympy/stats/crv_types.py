@@ -153,6 +153,15 @@ class ArcsinDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
 
+    def _cdf(self, x):
+        from sympy import asin
+        a, b = self.a, self.b
+        return Piecewise(
+            (S.Zero, x < a),
+            (2*asin( sqrt((x - a)/(b - a)))/pi, x <= b),
+            (S.One, True))
+
+
 def Arcsin(name, a=0, b=1):
     r"""
     Create a Continuous Random Variable with an arcsin distribution.
@@ -189,6 +198,12 @@ def Arcsin(name, a=0, b=1):
 
     >>> density(X)(z)
     1/(pi*sqrt((-a + z)*(b - z)))
+
+    >>> cdf(X)(z)
+    Piecewise((0, a > z),
+            (2*asin(sqrt((-a + z)/(-a + b)))/pi, b >= z),
+            (1, True))
+
 
     References
     ==========
@@ -670,6 +685,11 @@ class DagumDistribution(SingleContinuousDistribution):
         p, a, b = self.p, self.a, self.b
         return a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
 
+    def _cdf(self, x):
+        #from sympy import power
+        p, a, b = self.p, self.a, self.b
+        return (S.One + (x/b)**(-a))**(-p)
+
 
 def Dagum(name, p, a, b):
     r"""
@@ -698,7 +718,7 @@ def Dagum(name, p, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import Dagum, density
+    >>> from sympy.stats import Dagum, density, cdf
     >>> from sympy import Symbol, simplify
 
     >>> p = Symbol("p", positive=True)
@@ -710,6 +730,10 @@ def Dagum(name, p, a, b):
 
     >>> density(X)(z)
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
+
+    >>> cdf(X)(z)
+    (1 + (z/b)**(-a))**(-p)
+
 
     References
     ==========
