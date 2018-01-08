@@ -2436,13 +2436,11 @@ class MatrixBase(MatrixDeprecated,
 
         mat = self
         if (1 not in mat.shape) or (1 not in b.shape) :
-            if hasattr(mat, '_legacy_array_dot'):
-                SymPyDeprecationWarning(
-                    feature="dot() no longer support dot of (m,n) and (1,n) matrices.",
-                    issue=13815,
-                    deprecated_since_version="1.2").warn()
-                return mat._legacy_array_dot(b)
-            raise ShapeError("Can only evaluate `dot` on row or column matrices, not matrices of size {}".format(mat.shape))
+            SymPyDeprecationWarning(
+                feature="dot() no longer support dot of (m,n) and (1,n) matrices.",
+                issue=13815,
+                deprecated_since_version="1.2").warn()
+            return mat._legacy_array_dot(b)
         if len(mat) != len(b):
             raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
         n = len(mat)
