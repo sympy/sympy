@@ -974,7 +974,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     d = Wild('d', exclude=[df, f(x).diff(x, 2)])
     e = Wild('e', exclude=[df])
     k = Wild('k', exclude=[df])
-    n = Wild('n', exclude=[f(x)])
+    n = Wild('n', exclude=[x, f(x), df])
     c1 = Wild('c1', exclude=[x])
     a2 = Wild('a2', exclude=[x, f(x), df])
     b2 = Wild('b2', exclude=[x, f(x), df])
