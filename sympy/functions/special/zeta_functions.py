@@ -253,7 +253,7 @@ class polylog(Function):
     >>> from sympy import expand_func
     >>> from sympy.abc import z
     >>> expand_func(polylog(1, z))
-    -log(1 - z)
+    -log(-z + 1)
     >>> expand_func(polylog(0, z))
     z/(-z + 1)
 
@@ -290,8 +290,9 @@ class polylog(Function):
                 return pi**2/15 - log((sqrt(5)-1)/2)**2
             elif z == (sqrt(5) - 1)/2:
                 return pi**2/10 - log((sqrt(5)-1)/2)**2
-        elif s == 1:
-            return -log(1 - z)
+        # For s = 0 or -1 use explicit formulas to evaluate, but
+        # automatically expanding polylog(1, z) to -log(1-z) seems undesirable
+        # for summation methods based on hypergeometric functions
         elif s == 0:
             return z/(1 - z)
         elif s == -1:
