@@ -226,19 +226,24 @@ def find_unit(quantity):
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge']
     >>> u.find_unit("ampere")
-    ['ampere', 'amperes']
+    ['A', 'ampere', 'amperes', 'planck_current']
     >>> u.find_unit('volt')
-    ['volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
+    ['V', 'v', 'volt', 'volts', 'planck_voltage']
+    >>> u.find_unit('energy')
+    ['J', 'eV', 'joule', 'joules', 'electronvolt', 'electronvolts', 'planck_energy']
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
     """
+
     import sympy.physics.units as u
     rv = []
     if isinstance(quantity, string_types):
-        rv = [i for i in dir(u) if quantity in i and isinstance(getattr(u, i), Quantity)]
         dim = getattr(u, quantity)
-        if isinstance(dim, Dimension):
-            rv.extend(find_unit(dim))
+        if isinstance(dim, Quantity): dim = dim.dimension
+        for i in dir(u):
+            quant_attr = getattr(u, i)
+            if isinstance(quant_attr, Quantity) and quant_attr.dimension == dim:
+                rv.append(i)
     else:
         for i in sorted(dir(u)):
             other = getattr(u, i)
@@ -252,7 +257,7 @@ def find_unit(quantity):
                     rv.append(str(i))
             elif other.dimension == Dimension(Quantity.get_dimensional_expr(quantity)):
                 rv.append(str(i))
-    return sorted(set(rv), key=lambda x: (len(x), x))
+    return sorted(rv, key=len)
 
 # NOTE: the old units module had additional variables:
 # 'density', 'illuminance', 'resistance'.
