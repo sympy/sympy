@@ -222,15 +222,15 @@ def find_unit(quantity):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'charge', 'coulomb', 'coulombs', 'planck_charge']
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge']
     >>> u.find_unit("ampere")
     ['A', 'ampere', 'amperes', 'planck_current']
     >>> u.find_unit('volt')
-    ['V', 'v', 'volt', 'volts', 'planck_voltage']
+    ['V', 'v', 'volt', 'volts', 'voltage', 'electronvolt', 'electronvolts', 'planck_voltage']
     >>> u.find_unit('energy')
-    ['J', 'eV', 'joule', 'joules', 'electronvolt', 'electronvolts', 'planck_energy']
+    ['J', 'eV', 'joule', 'energy', 'joules', 'electronvolt', 'electronvolts', 'planck_energy', 'planck_energy_density']
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
     """
@@ -242,7 +242,7 @@ def find_unit(quantity):
         if isinstance(dim, Quantity): dim = dim.dimension
         for i in dir(u):
             quant_attr = getattr(u, i)
-            if isinstance(quant_attr, Quantity) and quant_attr.dimension == dim:
+            if quantity in i or (isinstance(quant_attr, Quantity) and quant_attr.dimension == dim):
                 rv.append(i)
     else:
         for i in sorted(dir(u)):
