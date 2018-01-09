@@ -1,9 +1,11 @@
 from __future__ import division
 
-from sympy import Symbol, pi, sqrt
+from sympy import Symbol, pi, sqrt, Rational
 from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, Parabola
 from sympy.geometry.entity import scale
 from sympy.utilities.pytest import raises
+
+from random import random
 
 
 def test_subs():
@@ -51,7 +53,8 @@ def test_reflect_entity_overrides():
     assert c.area == -cr.area
 
     pent = RegularPolygon((1, 2), 1, 5)
-    l = Line((0, pi), slope=sqrt(2))
+    l = Line(pent.vertices[1],
+        slope=Rational(random() - .5, random() - .5))
     rpent = pent.reflect(l)
     assert rpent.center == pent.center.reflect(l)
     rvert = [i.reflect(l) for i in pent.vertices]
@@ -63,18 +66,3 @@ def test_reflect_entity_overrides():
                 break
     assert not rvert
     assert pent.area.equals(-rpent.area)
-
-    # regular polygon test
-    pent = RegularPolygon((0,0), 1, 5)
-    p = pent.vertices[1]
-    for slope in range(-1, 2):
-        l = Line(p, slope=slope)
-        rpent = pent.reflect(l)
-        rvert = [i.reflect(l) for i in pent.vertices]
-        for v in rpent.vertices:
-            for i in range(len(rvert)):
-                ri = rvert[i]
-                if ri.equals(v):
-                    rvert.remove(ri)
-                    break
-        assert not rvert
