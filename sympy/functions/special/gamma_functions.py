@@ -23,7 +23,7 @@ class gamma(Function):
     The gamma function
 
     .. math::
-        \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t.
+        \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{-t} \mathrm{d}t.
 
     The ``gamma`` function implements the function which passes through the
     values of the factorial function, i.e. `\Gamma(n) = (n - 1)!` when n is
@@ -284,6 +284,8 @@ class lowergamma(Function):
         #    of both s and x), i.e.
         #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
         from sympy import unpolarify, I
+        if x == 0:
+            return S.Zero
         nx, n = x.extract_branch_factor()
         if a.is_integer and a.is_positive:
             nx = unpolarify(x)

@@ -31,7 +31,7 @@ from sympy.polys.domains import QQ
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.utilities import lambdify, public
+from sympy.utilities import lambdify, public, sift
 
 from sympy.core.compatibility import range
 
@@ -272,7 +272,6 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _separate_imaginary_from_complex(cls, complexes):
-        from sympy.utilities.iterables import sift
 
         def is_imag(c):
             '''
@@ -709,7 +708,7 @@ class ComplexRootOf(RootOf):
         # CRootOf instance. It must also be a number that agrees with the
         # is_real value of the CRootOf instance.
         if type(self) == type(other):
-            return sympify(self.__eq__(other))
+            return sympify(self == other)
         if not (other.is_number and not other.has(AppliedUndef)):
             return S.false
         if not other.is_finite:

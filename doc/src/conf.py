@@ -15,7 +15,7 @@ import sys
 import sympy
 
 # If your extensions are in another directory, add it here.
-sys.path = ['../sympy', 'ext'] + sys.path
+sys.path = ['ext'] + sys.path
 
 # General configuration
 # ---------------------
@@ -32,7 +32,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
 mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['.templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -40,9 +40,11 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+suppress_warnings = ['ref.citation', 'ref.footnote']
+
 # General substitutions.
 project = 'SymPy'
-copyright = '2017 SymPy Development Team'
+copyright = '2018 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

@@ -13,11 +13,12 @@ from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError
-from sympy.solvers import solve
 from sympy.series.limits import limit
 from sympy.series.order import O
+from sympy.sets.sets import FiniteSet
+from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-from sympy.tensor.indexed import Idx
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -285,7 +286,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 for subterm in subterms:
                     # go through each term
                     if isinstance(subterm, Sum):
-                        # if it's a sum, simpify it
+                        # if it's a sum, simplify it
                         out_terms.append(subterm._eval_simplify())
                     else:
                         # otherwise, add it as is
@@ -404,9 +405,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         # Piecewise function handle
         if sequence_term.is_Piecewise:
-            for func_cond in sequence_term.args:
-                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
-                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            for func, cond in sequence_term.args:
+                # see if it represents something going to oo
+                if cond == True or cond.as_set().sup is S.Infinity:
+                    s = Sum(func, (sym, lower_limit, upper_limit))
+                    return s.is_convergent()
             return S.true
 
         ###  -------- Divergence test ----------- ###
@@ -483,14 +486,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        if is_decreasing(sequence_term, interval):
-            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            try:
-                integral_val_evaluated = integral_val.doit()
-                if integral_val_evaluated.is_number:
-                    return S(integral_val_evaluated.is_finite)
-            except NotImplementedError:
-                pass
+        maxima = solveset(sequence_term.diff(sym), sym, interval)
+        if not maxima:
+            check_interval = interval
+        elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
+            check_interval = Interval(maxima.sup, interval.sup)
+            if (
+                    is_decreasing(sequence_term, check_interval) or
+                    is_decreasing(-sequence_term, check_interval)):
+                integral_val = Integral(
+                    sequence_term, (sym, lower_limit, upper_limit))
+                try:
+                    integral_val_evaluated = integral_val.doit()
+                    if integral_val_evaluated.is_number:
+                        return S(integral_val_evaluated.is_finite)
+                except NotImplementedError:
+                    pass
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:

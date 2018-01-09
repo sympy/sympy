@@ -12,7 +12,7 @@ import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import string_types, range, SYMPY_INTS
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -588,7 +588,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
     """
     m = qubit_to_matrix(qubit, format)
 
-    if isinstance(bits, (int, Integer)):
+    if isinstance(bits, (SYMPY_INTS, Integer)):
         bits = (int(bits),)
 
     if format == 'sympy':

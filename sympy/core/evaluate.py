@@ -2,21 +2,24 @@ from .cache import clear_cache
 from contextlib import contextmanager
 
 
-class _global_evaluate(list):
-    """ The cache must be cleared whenever global_evaluate is changed. """
+class _global_function(list):
+    """ The cache must be cleared whenever _global_function is changed. """
 
     def __setitem__(self, key, value):
-        clear_cache()
-        super(_global_evaluate, self).__setitem__(key, value)
+        if (self[key] != value):
+            clear_cache()
+        super(_global_function, self).__setitem__(key, value)
 
-global_evaluate = _global_evaluate([True])
+
+global_evaluate = _global_function([True])
+global_distribute = _global_function([True])
 
 
 @contextmanager
 def evaluate(x):
     """ Control automatic evaluation
 
-    This context managers controls whether or not all SymPy functions evaluate
+    This context manager controls whether or not all SymPy functions evaluate
     by default.
 
     Note that much of SymPy expects evaluated expressions.  This functionality
@@ -40,3 +43,30 @@ def evaluate(x):
     global_evaluate[0] = x
     yield
     global_evaluate[0] = old
+
+
+@contextmanager
+def distribute(x):
+    """ Control automatic distribution of Number over Add
+
+    This context manager controls whether or not Mul distribute Number over
+    Add. Plan is to avoid distributing Number over Add in all of sympy. Once
+    that is done, this contextmanager will be removed.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy.core.evaluate import distribute
+    >>> print(2*(x + 1))
+    2*x + 2
+    >>> with distribute(False):
+    ...     print(2*(x + 1))
+    2*(x + 1)
+    """
+
+    old = global_distribute[0]
+
+    global_distribute[0] = x
+    yield
+    global_distribute[0] = old

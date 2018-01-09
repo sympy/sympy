@@ -272,6 +272,8 @@ def test_coth():
 
     assert coth(k*pi*I) == -cot(k*pi)*I
 
+    assert coth(log(tan(2))) == coth(log(-tan(2)))
+    assert coth(1 + I*pi/2) == tanh(1)
 
 def test_coth_series():
     x = Symbol('x')
@@ -499,6 +501,11 @@ def test_acosh():
     assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
 
 
+def test_acosh_rewrite():
+    x = Symbol('x')
+    assert acosh(x).rewrite(log) == log(x + sqrt(x - 1)*sqrt(x + 1))
+
+
 def test_acosh_series():
     x = Symbol('x')
     assert acosh(x).series(x, 0, 8) == \
@@ -574,7 +581,7 @@ def test_asech_series():
 
 def test_asech_rewrite():
     x = Symbol('x')
-    assert asech(x).rewrite(log) == log(1/x + sqrt(1/x**2 - 1))
+    assert asech(x).rewrite(log) == log(1/x + sqrt(1/x - 1) * sqrt(1/x + 1))
 
 
 def test_acsch():
@@ -683,6 +690,11 @@ def test_atanh():
     assert atanh(oo) == -I*pi/2
 
 
+def test_atanh_rewrite():
+    x = Symbol('x')
+    assert atanh(x).rewrite(log) == (log(1 + x) - log(1 - x)) / 2
+
+
 def test_atanh_series():
     x = Symbol('x')
     assert atanh(x).series(x, 0, 10) == \
@@ -723,6 +735,11 @@ def test_acoth():
     assert acoth(-I*(2 + sqrt(3))) == pi*I/12
     assert acoth(I*(2 - sqrt(3))) == -5*pi*I/12
     assert acoth(I*(sqrt(3) - 2)) == 5*pi*I/12
+
+
+def test_acoth_rewrite():
+    x = Symbol('x')
+    assert acoth(x).rewrite(log) == (log(1 + 1/x) - log(1 - 1/x)) / 2
 
 
 def test_acoth_series():
@@ -920,3 +937,28 @@ def test_cosh_expansion():
     assert cosh(2*x).expand(trig=True) == cosh(x)**2 + sinh(x)**2
     assert cosh(3*x).expand(trig=True).expand() == \
         3*sinh(x)**2*cosh(x) + cosh(x)**3
+
+def test_real_assumptions():
+    z = Symbol('z', real=False)
+    assert sinh(z).is_real is None
+    assert cosh(z).is_real is None
+    assert tanh(z).is_real is None
+    assert sech(z).is_real is None
+    assert csch(z).is_real is None
+    assert coth(z).is_real is None
+
+def test_sign_assumptions():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    assert sinh(n).is_negative is True
+    assert sinh(p).is_positive is True
+    assert cosh(n).is_positive is True
+    assert cosh(p).is_positive is True
+    assert tanh(n).is_negative is True
+    assert tanh(p).is_positive is True
+    assert csch(n).is_negative is True
+    assert csch(p).is_positive is True
+    assert sech(n).is_positive is True
+    assert sech(p).is_positive is True
+    assert coth(n).is_negative is True
+    assert coth(p).is_positive is True

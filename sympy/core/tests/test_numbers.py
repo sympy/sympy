@@ -2,12 +2,14 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin)
+                   AlgebraicNumber, simplify, sin, fibonacci, RealField,
+                   sympify, srepr)
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
-    mpf_norm, comp, mod_inverse)
+    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
+from sympy.core.mod import Mod
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
@@ -76,7 +78,6 @@ def test_mod():
 
     p = Symbol('p', infinite=True)
 
-    assert zoo % 0 == nan
     assert oo % oo == nan
     assert zoo % oo == nan
     assert 5 % oo == nan
@@ -217,6 +218,24 @@ def test_igcd():
     for args in permutations((1, 2, None)):
         raises(ValueError, lambda: igcd(*args))
 
+
+def test_igcd_lehmer():
+    a, b = fibonacci(10001), fibonacci(10000)
+    # len(str(a)) == 2090
+    # small divisors, long Euclidean sequence
+    assert igcd_lehmer(a, b) == 1
+    c = fibonacci(100)
+    assert igcd_lehmer(a*c, b*c) == c
+    # big divisor
+    assert igcd_lehmer(a, 10**1000) == 1
+
+
+def test_igcd2():
+    # short loop
+    assert igcd2(2**100 - 1, 2**99 - 1) == 1
+    # Lehmer's algorithm
+    a, b = int(fibonacci(10001)), int(fibonacci(10000))
+    assert igcd2(a, b) == 1
 
 def test_ilcm():
     assert ilcm(0, 0) == 0
@@ -487,14 +506,38 @@ def test_Float():
     assert Float(decimal.Decimal('-Infinity')) == S.NegativeInfinity
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
-    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == \
+        '3.14159265358979323846264338327950288'
 
     assert Float(oo) == Float('+inf')
     assert Float(-oo) == Float('-inf')
 
     # unicode
-    assert Float(u'0.73908513321516064100000000') == Float('0.73908513321516064100000000')
-    assert Float(u'0.73908513321516064100000000', 28) == Float('0.73908513321516064100000000', 28)
+    assert Float(u'0.73908513321516064100000000') == \
+        Float('0.73908513321516064100000000')
+    assert Float(u'0.73908513321516064100000000', 28) == \
+        Float('0.73908513321516064100000000', 28)
+
+    # binary precision
+    # Decimal value 0.1 cannot be expressed precisely as a base 2 fraction
+    a = Float(S(1)/10, dps=15)
+    b = Float(S(1)/10, dps=16)
+    p = Float(S(1)/10, precision=53)
+    q = Float(S(1)/10, precision=54)
+    assert a._mpf_ == p._mpf_
+    assert not a._mpf_ == q._mpf_
+    assert not b._mpf_ == q._mpf_
+
+    # Precision specifying errors
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=10))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=10))
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=""))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=""))
+
+    # from NumberSymbol
+    assert same_and_same_prec(Float(pi, 32), pi.evalf(32))
+    assert same_and_same_prec(Float(Catalan), Catalan.evalf())
+
 
 @conserve_mpmath_dps
 def test_float_mpf():
@@ -507,6 +550,12 @@ def test_float_mpf():
     mpmath.mp.dps = 15
 
     assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
+
+def test_Float_RealElement():
+    repi = RealField(dps=100)(pi.evalf(100))
+    # We still have to pass the precision because Float doesn't know what
+    # RealElement is, but make sure it keeps full precision from the result.
+    assert Float(repi, 100) == pi.evalf(100)
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))
@@ -531,6 +580,12 @@ def test_Float_issue_2107():
     assert b + (-b) == 0
     assert S.Zero + b - b == 0
     assert S.Zero + b + (-b) == 0
+
+
+def test_Float_from_tuple():
+    a = Float((0, '1L', 0, 1))
+    b = Float((0, '1', 0, 1))
+    assert a == b
 
 
 def test_Infinity():
@@ -1409,7 +1464,7 @@ def test_issue_4122():
     x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
 
-    # similarily for negative infinity
+    # similarly for negative infinity
     x = Symbol('x', nonnegative=True)
     assert (-oo + x).is_Add
     x = Symbol('x', finite=True)
@@ -1609,3 +1664,120 @@ def test_mod_inverse():
 
 def test_golden_ratio_rewrite_as_sqrt():
     assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half
+
+def test_comparisons_with_unknown_type():
+    class Foo(object):
+        """
+        Class that is unaware of Basic, and relies on both classes returning
+        the NotImplemented singleton for equivalence to evaluate to False.
+
+        """
+
+    ni, nf, nr = Integer(3), Float(1.0), Rational(1, 3)
+    foo = Foo()
+
+    for n in ni, nf, nr, oo, -oo, zoo, nan:
+        assert n != foo
+        assert foo != n
+        assert not n == foo
+        assert not foo == n
+        raises(TypeError, lambda: n < foo)
+        raises(TypeError, lambda: foo > n)
+        raises(TypeError, lambda: n > foo)
+        raises(TypeError, lambda: foo < n)
+        raises(TypeError, lambda: n <= foo)
+        raises(TypeError, lambda: foo >= n)
+        raises(TypeError, lambda: n >= foo)
+        raises(TypeError, lambda: foo <= n)
+
+    class Bar(object):
+        """
+        Class that considers itself equal to any instance of Number except
+        infinities and nans, and relies on sympy types returning the
+        NotImplemented singleton for symmetric equality relations.
+
+        """
+        def __eq__(self, other):
+            if other in (oo, -oo, zoo, nan):
+                return False
+            if isinstance(other, Number):
+                return True
+            return NotImplemented
+
+        def __ne__(self, other):
+            return not self == other
+
+    bar = Bar()
+
+    for n in ni, nf, nr:
+        assert n == bar
+        assert bar == n
+        assert not n != bar
+        assert not bar != n
+
+    for n in oo, -oo, zoo, nan:
+        assert n != bar
+        assert bar != n
+        assert not n == bar
+        assert not bar == n
+
+    for n in ni, nf, nr, oo, -oo, zoo, nan:
+        raises(TypeError, lambda: n < bar)
+        raises(TypeError, lambda: bar > n)
+        raises(TypeError, lambda: n > bar)
+        raises(TypeError, lambda: bar < n)
+        raises(TypeError, lambda: n <= bar)
+        raises(TypeError, lambda: bar >= n)
+        raises(TypeError, lambda: n >= bar)
+        raises(TypeError, lambda: bar <= n)
+
+def test_NumberSymbol_comparison():
+    rpi = Rational('905502432259640373/288230376151711744')
+    fpi = Float(float(pi))
+
+    assert (rpi == pi) == (pi == rpi)
+    assert (rpi != pi) == (pi != rpi)
+    assert (rpi < pi) == (pi > rpi)
+    assert (rpi <= pi) == (pi >= rpi)
+    assert (rpi > pi) == (pi < rpi)
+    assert (rpi >= pi) == (pi <= rpi)
+
+    assert (fpi == pi) == (pi == fpi)
+    assert (fpi != pi) == (pi != fpi)
+    assert (fpi < pi) == (pi > fpi)
+    assert (fpi <= pi) == (pi >= fpi)
+    assert (fpi > pi) == (pi < fpi)
+    assert (fpi >= pi) == (pi <= fpi)
+
+def test_Integer_precision():
+    # Make sure Integer inputs for keyword args work
+    assert Float('1.0', dps=Integer(15))._prec == 53
+    assert Float('1.0', precision=Integer(15))._prec == 15
+    assert type(Float('1.0', precision=Integer(15))._prec) == int
+    assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
+
+def test_numpy_to_float():
+    from sympy.utilities.pytest import skip
+    from sympy.external import import_module
+    np = import_module('numpy')
+    if not np:
+        skip('numpy not installed. Abort numpy tests.')
+
+    def check_prec_and_relerr(npval, ratval):
+        prec = np.finfo(npval).nmant + 1
+        x = Float(npval)
+        assert x._prec == prec
+        y = Float(ratval, precision=prec)
+        assert abs((x - y)/y) < 2**(-(prec + 1))
+
+    check_prec_and_relerr(np.float16(2/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2/3), S(2)/3)
+    # extended precision, on some arch/compilers:
+    x = np.longdouble(2)/3
+    check_prec_and_relerr(x, S(2)/3)
+    y = Float(x, precision=10)
+    assert same_and_same_prec(y, Float(S(2)/3, precision=10))
+
+    raises(TypeError, lambda: Float(np.complex64(1+2j)))
+    raises(TypeError, lambda: Float(np.complex128(1+2j)))

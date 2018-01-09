@@ -3,4 +3,8 @@ from sympy.tensor.array.ndim_array import NDimArray
 
 class MutableNDimArray(NDimArray):
 
-    pass
+    def as_immutable(self):
+        raise NotImplementedError("abstract method")
+
+    def as_mutable(self):
+        return self

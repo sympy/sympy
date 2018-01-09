@@ -8,14 +8,14 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
-                         StudentT, Triangular, Uniform, UniformSum,
+                         StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
 
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func)
+                   floor, expand_func, Rational)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -121,7 +121,7 @@ def test_cdf():
     X = Normal('x', 0, 1)
 
     d = cdf(X)
-    assert P(X < 1) == d(1)
+    assert P(X < 1) == d(1).rewrite(erfc)
     assert d(0) == S.Half
 
     d = cdf(X, X > 0)  # given X>0
@@ -379,6 +379,7 @@ def test_lognormal():
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
 
+
 def test_maxwell():
     a = Symbol("a", positive=True)
 
@@ -444,11 +445,13 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
     eta = Symbol("eta", positive=True)
     X = ShiftedGompertz("x", b, eta)
     assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
+
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
@@ -456,6 +459,23 @@ def test_studentt():
     X = StudentT('x', nu)
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
 
+
+def test_trapezoidal():
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
+    c = Symbol("c", real=True)
+    d = Symbol("d", real=True)
+
+    X = Trapezoidal('x', a, b, c, d)
+    assert density(X)(x) == Piecewise(((-2*a + 2*x)/((-a + b)*(-a - b + c + d)), (a <= x) & (x < b)),
+                                      (2/(-a - b + c + d), (b <= x) & (x < c)),
+                                      ((2*d - 2*x)/((-c + d)*(-a - b + c + d)), (c <= x) & (x <= d)),
+                                      (0, True))
+
+    X = Trapezoidal('x', 0, 1, 2, 3)
+    assert E(X) == S(3)/2
+    assert variance(X) == S(5)/12
+    assert P(X < 2) == S(3)/4
 
 @XFAIL
 def test_triangular():
@@ -479,6 +499,7 @@ def test_quadratic_u():
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
 
+
 def test_uniform():
     l = Symbol('l', real=True, finite=True)
     w = Symbol('w', positive=True, finite=True)
@@ -487,11 +508,21 @@ def test_uniform():
     assert simplify(E(X)) == l + w/2
     assert simplify(variance(X)) == w**2/12
 
-
     # With numbers all is well
     X = Uniform('x', 3, 5)
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
+
+    z = Symbol('z')
+    p = density(X)(z)
+    assert p.subs(z, 3.7) == S(1)/2
+    assert p.subs(z, -1) == 0
+    assert p.subs(z, 6) == 0
+
+    c = cdf(X)
+    assert c(2) == 0 and c(3) == 0
+    assert c(S(7)/2) == S(1)/4
+    assert c(5) == 1 and c(6) == 1
 
 
 def test_uniform_P():
@@ -542,7 +573,7 @@ def test_weibull_numeric():
     bvals = [S.Half, 1, S(3)/2, 5]
     for b in bvals:
         X = Weibull('x', a, b)
-        assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
+        assert simplify(E(X)) == expand_func(a * gamma(1 + 1/S(b)))
         assert simplify(variance(X)) == simplify(
             a**2 * gamma(1 + 2/S(b)) - E(X)**2)
         # Not testing Skew... it's slow with int/frac values > 3/2
@@ -620,7 +651,7 @@ def test_density_unevaluated():
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
-    assert nd.cdf(x) == (1 - erfc(sqrt(2)*x/2))/2 + S.One/2
+    assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
     assert isinstance(nd.sample(), float) or nd.sample().is_Number
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
@@ -660,3 +691,25 @@ def test_issue_10003():
     G = Gamma('g', 1, 2)
     assert P(X < -1) == S.Zero
     assert P(G < -1) == S.Zero
+
+def test_precomputed_cdf():
+    x = symbols("x", real=True, finite=True)
+    mu = symbols("mu", real=True, finite=True)
+    sigma, xm, alpha = symbols("sigma xm alpha", positive=True, finite=True)
+    n = symbols("n", integer=True, positive=True, finite=True)
+    distribs = [
+            Normal("X", mu, sigma),
+            Pareto("P", xm, alpha),
+            ChiSquared("C", n),
+            Exponential("E", sigma),
+            # LogNormal("L", mu, sigma),
+    ]
+    for X in distribs:
+        compdiff = cdf(X)(x) - simplify(X.pspace.density.compute_cdf()(x))
+        compdiff = simplify(compdiff.rewrite(erfc))
+        assert compdiff == 0
+
+def test_issue_13324():
+    X = Uniform('X', 0, 1)
+    assert E(X, X > Rational(1,2)) == Rational(3,4)
+    assert E(X, X > 0) == Rational(1,2)

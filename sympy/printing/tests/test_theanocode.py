@@ -243,7 +243,7 @@ def test_DenseMatrix():
         X = MatrixType([[sy.cos(t), -sy.sin(t)], [sy.sin(t), sy.cos(t)]])
         tX = theano_code(X)
         assert isinstance(tX, tt.TensorVariable)
-        assert tX.owner.op == tt.join
+        assert tX.owner.op == tt.join_
 
 def test_AppliedUndef():
     t = sy.Symbol('t')

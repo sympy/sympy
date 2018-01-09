@@ -470,8 +470,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2 - 1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
-    half = Rational(1, 2)
-    R = pi/2 * factorial(b)**2 / factorial(b - half) / factorial(b + half)
+    R = pi*gamma(b + 1)**2/(2*gamma(b + S(1)/2)*gamma(b + S(3)/2))
     assert simplify(A.doit()) == R
     assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
@@ -961,7 +960,16 @@ def test_is_convergent():
     f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
     assert Sum(f, (n, 1, oo)).is_convergent() is S.false
     assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
-    assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+    #assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+
+    # integral test
+
+    assert Sum(log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(-log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    # the following function has maxima located at (x, y) =
+    # (1.2, 0.43), (3.0, -0.25) and (6.8, 0.050)
+    eq = (x - 2)*(x**2 - 6*x + 4)*exp(-x)
+    assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
 
 
 def test_is_absolutely_convergent():
@@ -972,8 +980,6 @@ def test_is_absolutely_convergent():
 @XFAIL
 def test_convergent_failing():
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    # is_decreasing is not handling "is_decreasing(1)", so raises error
 
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true

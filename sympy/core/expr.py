@@ -11,7 +11,6 @@ from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
-
 class Expr(Basic, EvalfMixin):
     """
     Base class for algebraic expressions.
@@ -147,8 +146,25 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
-    def __pow__(self, other):
+    def _pow(self, other):
         return Pow(self, other)
+
+    def __pow__(self, other, mod=None):
+        if mod is None:
+            return self._pow(other)
+        try:
+            _self, other, mod = as_int(self), as_int(other), as_int(mod)
+            if other >= 0:
+                return pow(_self, other, mod)
+            else:
+                from sympy.core.numbers import mod_inverse
+                return mod_inverse(pow(_self, -other, mod), mod)
+        except ValueError:
+            power = self._pow(other)
+            try:
+                return power%mod
+            except TypeError:
+                return NotImplemented
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
@@ -188,7 +204,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__floordiv__')
     def __rfloordiv__(self, other):
         from sympy.functions.elementary.integers import floor
-        return floor(self / other)
+        return floor(other / self)
 
     def __int__(self):
         # Although we only need to round to the units position, we'll
@@ -251,11 +267,13 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 >= 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonnegative is not None and \
@@ -270,11 +288,13 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 <= 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonpositive is not None and \
@@ -289,11 +309,13 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 > 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_positive is not None and \
@@ -308,11 +330,13 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
-            if (me.is_complex and me.is_real is False) or \
-                    me.has(S.ComplexInfinity):
+            if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 < 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_negative is not None and \
@@ -335,27 +359,53 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' has no free symbols.
-        It will be faster than `if not self.free_symbols`, however, since
-        `is_number` will fail as soon as it hits a free symbol.
+        """Returns True if ``self`` has no free symbols and no
+        undefined functions (AppliedUndef, to be precise). It will be
+        faster than ``if not self.free_symbols``, however, since
+        ``is_number`` will fail as soon as it hits a free symbol
+        or undefined function.
 
         Examples
         ========
 
-        >>> from sympy import log, Integral
+        >>> from sympy import log, Integral, cos, sin, pi
+        >>> from sympy.core.function import Function
         >>> from sympy.abc import x
+        >>> f = Function('f')
 
         >>> x.is_number
         False
+        >>> f(1).is_number
+        False
         >>> (2*x).is_number
         False
-        >>> (2 + log(2)).is_number
-        True
         >>> (2 + Integral(2, x)).is_number
         False
         >>> (2 + Integral(2, (x, 1, 2))).is_number
         True
 
+        Not all numbers are Numbers in the SymPy sense:
+
+        >>> pi.is_number, pi.is_Number
+        (True, False)
+
+        If something is a number it should evaluate to a number with
+        real and imaginary parts that are Numbers; the result may not
+        be comparable, however, since the real and/or imaginary part
+        of the result may not have precision.
+
+        >>> cos(1).is_number and cos(1).is_comparable
+        True
+
+        >>> z = cos(1)**2 + sin(1)**2 - 1
+        >>> z.is_number
+        True
+        >>> z.is_comparable
+        False
+
+        See Also
+        ========
+        sympy.core.basic.is_comparable
         """
         return all(obj.is_number for obj in self.args)
 
@@ -507,20 +557,11 @@ class Expr(Basic, EvalfMixin):
 
         simplify = flags.get('simplify', True)
 
-        # Except for expressions that contain units, only one of these should
-        # be necessary since if something is
-        # known to be a number it should also know that there are no
-        # free symbols. But is_number quits as soon as it hits a non-number
-        # whereas free_symbols goes until all free symbols have been collected,
-        # thus is_number should be faster. But a double check on free symbols
-        # is made just in case there is a discrepancy between the two.
-        free = self.free_symbols
-        if self.is_number or not free:
-            # if the following assertion fails then that object's free_symbols
-            # method needs attention: if an expression is a number it cannot
-            # have free symbols
-            assert not free
+        if self.is_number:
             return True
+        free = self.free_symbols
+        if not free:
+            return True  # assume f(1) is some constant
 
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
@@ -774,12 +815,13 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.series import limit, Limit
         from sympy.solvers.solveset import solveset
+        from sympy.sets.sets import Interval
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
 
         if a == b:
-            return 0;
+            return 0
 
         if a is None:
             A = 0
@@ -815,7 +857,11 @@ class Expr(Basic, EvalfMixin):
         value = B - A
 
         if a.is_comparable and b.is_comparable:
-            singularities = list(solveset(self.cancel().as_numer_denom()[1], x))
+            if a < b:
+                domain = Interval(a, b)
+            else:
+                domain = Interval(b, a)
+            singularities = list(solveset(self.cancel().as_numer_denom()[1], x, domain = domain))
             for s in singularities:
                 if a < s < b:
                     value += -limit(self, x, s, "+") + limit(self, x, s, "-")
@@ -1064,13 +1110,13 @@ class Expr(Basic, EvalfMixin):
         self is treated as a Mul and the ordering of the factors is maintained.
         If ``cset`` is True the commutative factors will be returned in a set.
         If there were repeated factors (as may happen with an unevaluated Mul)
-        then an error will be raised unless it is explicitly supressed by
+        then an error will be raised unless it is explicitly suppressed by
         setting ``warn`` to False.
 
         Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
-        >>> A, B = symbols('A B', commutative=False)
+        >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
@@ -1120,11 +1166,12 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term(s) containing ``x**n`` or None. If ``n``
+        Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
 
-        When x is noncommutative, the coeff to the left (default) or right of x
-        can be returned. The keyword 'right' is ignored when x is commutative.
+        When ``x`` is noncommutative, the coefficient to the left (default) or
+        right of ``x`` can be returned. The keyword 'right' is ignored when
+        ``x`` is commutative.
 
         See Also
         ========
@@ -1272,8 +1319,8 @@ class Expr(Basic, EvalfMixin):
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
-            the first occurance from the left is returned, else the last
-            occurance is returned. Return None if sub is not in l.
+            the first occurrence from the left is returned, else the last
+            occurrence is returned. Return None if sub is not in l.
 
             >> l = range(5)*2
             >> find(l, [2, 3])
@@ -1503,7 +1550,8 @@ class Expr(Basic, EvalfMixin):
         following interpretation:
 
         * i will has no variable that appears in deps
-        * d will be 1 or else have terms that contain variables that are in deps
+        * d will either have terms that contain variables that are in deps, or
+          be equal to 0 (when self is an Add) or 1 (when self is a Mul)
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
         * otherwise (self, S.One) or (S.One, self) is returned.
@@ -1623,7 +1671,7 @@ class Expr(Basic, EvalfMixin):
             return S.Zero, S.Zero
 
         func = self.func
-        if hint.get('as_Add', func is Add):
+        if hint.get('as_Add', isinstance(self, Add) ):
             want = Add
         else:
             want = Mul
@@ -1746,10 +1794,10 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_mul(self, *deps, **kwargs):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
-        c should be a Rational multiplied by any terms of the Mul that are
+        c should be a Rational multiplied by any factors of the Mul that are
         independent of deps.
 
-        args should be a tuple of all other terms of m; args is empty
+        args should be a tuple of all other factors of m; args is empty
         if self is a Number or if self is independent of deps (when given).
 
         This should be used when you don't know if self is a Mul or not but
@@ -1844,7 +1892,7 @@ class Expr(Basic, EvalfMixin):
         """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
         should always be positive and ``Mul(*foo.as_content_primitive()) == foo``.
-        The primitive need no be in canonical form and should try to preserve
+        The primitive need not be in canonical form and should try to preserve
         the underlying structure if possible (i.e. expand_mul should not be
         applied to self).
 
@@ -1911,10 +1959,17 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def normal(self):
+        from .mul import _unevaluated_Mul
         n, d = self.as_numer_denom()
         if d is S.One:
             return n
-        return n/d
+        if d.is_Number:
+            if d is S.One:
+                return n
+            else:
+                return _unevaluated_Mul(n, 1/d)
+        else:
+            return n/d
 
     def extract_multiplicatively(self, c):
         """Return None if it's not possible to make self in the form
@@ -1939,6 +1994,8 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from .function import _coeff_isneg
+
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -1946,15 +2003,18 @@ class Expr(Basic, EvalfMixin):
             return self
         elif c == self:
             return S.One
+
         if c.is_Add:
             cc, pc = c.primitive()
             if cc is not S.One:
                 c = Mul(cc, pc, evaluate=False)
+
         if c.is_Mul:
             a, b = c.as_two_terms()
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
+
         quotient = self / c
         if self.is_Number:
             if self is S.Infinity:
@@ -1997,16 +2057,31 @@ class Expr(Basic, EvalfMixin):
                 return quotient
         elif self.is_Add:
             cs, ps = self.primitive()
-            if cs is not S.One:
-                return Mul(cs, ps, evaluate=False).extract_multiplicatively(c)
+            # assert cs >= 1
+            if c.is_Number and c is not S.NegativeOne:
+                # assert c != 1 (handled at top)
+                if cs is not S.One:
+                    if c.is_negative:
+                        xc = -(cs.extract_multiplicatively(-c))
+                    else:
+                        xc = cs.extract_multiplicatively(c)
+                    if xc is not None:
+                        return xc*ps  # rely on 2-arg Mul to restore Add
+                return  # |c| != 1 can only be extracted from cs
+            if c == ps:
+                return cs
+            # check args of ps
             newargs = []
-            for arg in self.args:
+            for arg in ps.args:
                 newarg = arg.extract_multiplicatively(c)
-                if newarg is not None:
-                    newargs.append(newarg)
-                else:
-                    return None
-            return Add(*newargs)
+                if newarg is None:
+                    return  # all or nothing
+                newargs.append(newarg)
+            # args should be in same order so use unevaluated return
+            if cs is not S.One:
+                return Add._from_args([cs*t for t in newargs])
+            else:
+                return Add._from_args(newargs)
         elif self.is_Mul:
             args = list(self.args)
             for i, arg in enumerate(args):
@@ -2129,21 +2204,50 @@ class Expr(Basic, EvalfMixin):
         coeffs.append(self)
         return Add(*coeffs)
 
+    @property
+    def expr_free_symbols(self):
+        """
+        Like ``free_symbols``, but returns the free symbols only if they are contained in an expression node.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> (x + y).expr_free_symbols
+        {x, y}
+
+        If the expression is contained in a non-expression object, don't return
+        the free symbols. Compare:
+
+        >>> from sympy import Tuple
+        >>> t = Tuple(x + y)
+        >>> t.expr_free_symbols
+        set()
+        >>> t.free_symbols
+        {x, y}
+        """
+        return {j for i in self.args for j in i.expr_free_symbols}
+
     def could_extract_minus_sign(self):
-        """Canonical way to choose an element in the set {e, -e} where
-           e is any expression. If the canonical element is e, we have
-           e.could_extract_minus_sign() == True, else
-           e.could_extract_minus_sign() == False.
+        """Return True if self is not in a canonical form with respect
+        to its sign.
 
-           For any expression, the set ``{e.could_extract_minus_sign(),
-           (-e).could_extract_minus_sign()}`` must be ``{True, False}``.
+        For most expressions, e, there will be a difference in e and -e.
+        When there is, True will be returned for one and False for the
+        other; False will be returned if there is no difference.
 
-           >>> from sympy.abc import x, y
-           >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
-           True
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> e = x - y
+        >>> {i.could_extract_minus_sign() for i in (e, -e)}
+        {False, True}
 
         """
         negative_self = -self
+        if self == negative_self:
+            return False  # e.g. zoo*x == -zoo*x
         self_has_minus = (self.extract_multiplicatively(-1) is not None)
         negative_self_has_minus = (
             (negative_self).extract_multiplicatively(-1) is not None)
@@ -2207,7 +2311,7 @@ class Expr(Basic, EvalfMixin):
         args = Mul.make_args(self)
         exps = []
         for arg in args:
-            if arg.func is exp_polar:
+            if isinstance(arg, exp_polar):
                 exps += [arg.exp]
             else:
                 res *= arg
@@ -2249,7 +2353,7 @@ class Expr(Basic, EvalfMixin):
         return False
 
     def is_polynomial(self, *syms):
-        """
+        r"""
         Return True if self is a polynomial in syms and False otherwise.
 
         This checks if self is an exact polynomial in syms.  This function
@@ -2813,7 +2917,7 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        if not x.is_Symbol:
+        if not x.is_symbol:
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
             return self
@@ -3101,6 +3205,11 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import combsimp
         return combsimp(self)
 
+    def gammasimp(self):
+        """See the gammasimp function in sympy.simplify"""
+        from sympy.simplify import gammasimp
+        return gammasimp(self)
+
     def factor(self, *gens, **args):
         """See the factor() function in sympy.polys.polytools"""
         from sympy.polys import factor
@@ -3255,6 +3364,10 @@ class AtomicExpr(Atom, Expr):
     def _eval_nseries(self, x, n, logx):
         return self
 
+    @property
+    def expr_free_symbols(self):
+        return {self}
+
 
 def _mag(x):
     """Return integer ``i`` such that .1 <= x/10**i < 1
@@ -3304,6 +3417,7 @@ class UnevaluatedExpr(Expr):
     """
 
     def __new__(cls, arg, **kwargs):
+        arg = _sympify(arg)
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
@@ -3312,6 +3426,18 @@ class UnevaluatedExpr(Expr):
             return self.args[0].doit(*args, **kwargs)
         else:
             return self.args[0]
+
+
+def _n2(a, b):
+    """Return (a - b).evalf(2) if a and b are comparable, else None.
+    This should only be used when a and b are already sympified.
+    """
+    # /!\ it is very important (see issue 8245) not to
+    # use a re-evaluated number in the calculation of dif
+    if a.is_comparable and b.is_comparable:
+        dif = (a - b).evalf(2)
+        if dif.is_comparable:
+            return dif
 
 
 from .mul import Mul

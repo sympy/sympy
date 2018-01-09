@@ -47,6 +47,17 @@ def test_general_function():
     assert edxdx == diff(diff(nu(x), x), x)
     assert edxdy == 0
 
+def test_general_function_nullary():
+    nu = Function('nu')
+
+    e = nu()
+    edx = e.diff(x)
+    edxdx = e.diff(x).diff(x)
+    assert e == nu()
+    assert edx != nu()
+    assert edx == 0
+    assert edxdx == 0
+
 
 def test_derivative_subs_bug():
     e = diff(g(x), x)
@@ -81,7 +92,7 @@ def test_derivative_evaluate():
 
 def test_diff_symbols():
     assert diff(f(x, y, z), x, y, z) == Derivative(f(x, y, z), x, y, z)
-    assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
+    assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x) == Derivative(f(x, y, z), (x, 3))
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
 
     # issue 5028
@@ -96,6 +107,15 @@ def test_diff_symbols():
 
 
 def test_Function():
+    class myfunc(Function):
+        @classmethod
+        def eval(cls):  # zero args
+            return
+
+    assert myfunc.nargs == FiniteSet(0)
+    assert myfunc().nargs == FiniteSet(0)
+    raises(TypeError, lambda: myfunc(x).nargs)
+
     class myfunc(Function):
         @classmethod
         def eval(cls, x):  # one arg
@@ -136,6 +156,12 @@ def test_Lambda():
     assert e(x) == x**2
     assert e(y) == y**2
 
+    assert Lambda((), 42)() == 42
+    assert Lambda((), 42) == Lambda((), 42)
+    assert Lambda((), 42) != Lambda((), 43)
+    assert Lambda((), f(x))() == f(x)
+    assert Lambda((), 42).nargs == FiniteSet(0)
+
     assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
@@ -161,6 +187,7 @@ def test_Lambda():
     assert Lambda(x, 1)(1) is S.One
 
 
+
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
     assert Lambda(x, 2*x) is not S.IdentityFunction
@@ -170,11 +197,14 @@ def test_IdentityFunction():
 def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
     assert Lambda(x, x*y).free_symbols == {y}
+    assert Lambda((), 42).free_symbols == set()
+    assert Lambda((), x*y).free_symbols == {x,y}
 
 
 def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
     raises(TypeError, lambda: Lambda((x, y), x + y)(x))
+    raises(TypeError, lambda: Lambda((), 42)(x))
 
 
 def test_Lambda_equality():
@@ -315,8 +345,8 @@ def test_func_deriv():
     assert f(x).diff(x) == Derivative(f(x), x)
     # issue 4534
     assert f(x, y).diff(x, y) - f(x, y).diff(y, x) == 0
-    assert Derivative(f(x, y), x, y).args[1:] == (x, y)
-    assert Derivative(f(x, y), y, x).args[1:] == (y, x)
+    assert Derivative(f(x, y), x, y).args[1:] == ((x, 1), (y, 1))
+    assert Derivative(f(x, y), y, x).args[1:] == ((y, 1), (x, 1))
     assert (Derivative(f(x, y), x, y) - Derivative(f(x, y), y, x)).doit() == 0
 
 
@@ -382,12 +412,12 @@ def test_function__eval_nseries():
     assert sin(x)._eval_nseries(x, 2, None) == x + O(x**2)
     assert sin(x + 1)._eval_nseries(x, 2, None) == x*cos(1) + sin(1) + O(x**2)
     assert sin(pi*(1 - x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
-    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
+    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x**2) + O(x**2)
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
         polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1 - x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1 + x)._eval_nseries(x, 2, None))
+    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + O(x)
+    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + O(x)  # XXX: wrong, branch cuts
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
@@ -828,3 +858,43 @@ def test_issue_12005():
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+
+def test_issue_13843():
+    x = symbols('x')
+    f = Function('f')
+    m, n = symbols('m n', integer=True)
+    assert Derivative(Derivative(f(x), (x, m)), (x, n)) == Derivative(f(x), (x, m + n))
+    assert Derivative(Derivative(f(x), (x, m+5)), (x, n+3)) == Derivative(f(x), (x, m + n + 8))
+
+    assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
+
+def test_undefined_function_eq():
+    f = Function('f')
+    f2 = Function('f')
+    g = Function('g')
+    f_real = Function('f', is_real=True)
+
+    # This test may only be meaningful if the cache is turned off
+    assert f == f2
+    assert hash(f) == hash(f2)
+    assert f == f
+
+    assert f != g
+
+    assert f != f_real
+
+def test_function_assumptions():
+    x = Symbol('x')
+    f = Function('f')
+    f_real = Function('f', real=True)
+
+    assert f != f_real
+    assert f(x) != f_real(x)
+
+    assert f(x).is_real is None
+    assert f_real(x).is_real is True
+
+    # Can also do it this way, but it won't be equal to f_real because of the
+    # way UndefinedFunction.__new__ works.
+    f_real2 = Function('f', is_real=True)
+    assert f_real2(x).is_real is True
