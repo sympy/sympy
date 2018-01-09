@@ -118,6 +118,9 @@ def test_float_1():
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
 
+    # test for issue #12168
+    assert ask(Q.rational(math.pi)) is None
+
 
 def test_zero_0():
     z = Integer(0)
@@ -2214,10 +2217,6 @@ def test_issue_9636():
     assert ask(Q.composite(4.0)) is False
     assert ask(Q.even(2.0)) is False
     assert ask(Q.odd(3.0)) is False
-
-
-def test_issue_12168():
-    assert ask(Q.rational(math.pi)) is None
 
 
 @XFAIL

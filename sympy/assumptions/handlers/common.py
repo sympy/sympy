@@ -12,10 +12,6 @@ class CommonHandler(AskHandler):
     """Defines some useful methods common to most Handlers """
 
     @staticmethod
-    def Float(expr, assumptions):
-        return None
-
-    @staticmethod
     def AlwaysTrue(expr, assumptions):
         return True
 
