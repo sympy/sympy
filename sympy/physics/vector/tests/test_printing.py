@@ -9,7 +9,7 @@ from sympy.physics.vector.printing import vlatex
 a, b, c, d = symbols('a, b, c, d')
 alpha, omega, beta, theta, q = dynamicsymbols('alpha, omega, beta, theta, q')
 phi1, phi2, phi3 = dynamicsymbols('phi1, phi2, phi3')
-theta1, theta2, theta3 = symbols('theta1, theta2, theta3')
+theta1 = symbols('theta1')
 A = ReferenceFrame('A')
 N = ReferenceFrame('N')
 
