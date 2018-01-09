@@ -780,7 +780,7 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
     >>> characteristic_function(X)
     Lambda(_t, exp(-_t**2/2))
 
-    >>> Y = DiscreteUniform('Y', [1,2,7])
+    >>> Y = DiscreteUniform('Y', [1, 2, 7])
     >>> characteristic_function(Y)
     Lambda(_t, exp(7*_t*I)/3 + exp(2*_t*I)/3 + exp(_t*I)/3)
 
