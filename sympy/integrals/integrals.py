@@ -524,20 +524,40 @@ class Integral(AddWithLimits):
                 else:
                     terms = tuple((antideriv,))
                 for term in terms:
-                    logset = term.atoms(log)
-                    if len(logset) != 0:
-                        if logset.pop().args[0].has(tan):
-                            break
-                    else:
-                        argtan = []
-                        for part in term.atoms(tan) | term.atoms(cot):
-                            argtan.append(part.args)
-                        for arg in argtan:
-                            from sympy import solve
-                            a = arg[0]
-                            K = solve(a-pi/2,sym)[0]
-                            P = limit(term, sym, K, dir="-") - limit(term, sym, K, dir="+")
-                            antideriv += P*floor((a-pi/2)/pi)
+                    atan_arg = term.atoms(atan)
+                    if atan_arg:
+                        atan_arg = atan_arg.pop()
+                        # Checking `atan_arg` to be linear combination of `tan` or `cot`
+                        if atan_arg.has(tan):
+                            x1 = Dummy('x1')
+                            tan_part = atan_arg.atoms(tan).pop()
+                            tan_exp1 = atan_arg.subs(tan_part,x1)
+                            # If `tan_part` has any other function then `tan`,
+                            # then diff() raises `ValueError`
+                            try:
+                                tan_exp1.diff()
+                                from sympy import solve
+                                a = tan_part.args[0]
+                                K = solve(a-pi/2,sym)[0]
+                                P = limit(term, sym, K, dir="-") - limit(term, sym, K, dir="+")
+                                antideriv += P*floor((a-pi/2)/pi)
+                            except ValueError:
+                                break
+                        elif atan_arg.has(cot):
+                            x1 = Dummy('x1')
+                            cot_part = atan_arg.atoms(cot).pop()
+                            cot_exp1 = atan_arg.subs(cot_part,x1)
+                            # If `cot_part` has any other function then `cot`,
+                            # then diff() raises `ValueError`
+                            try:
+                                cot_exp1.diff()
+                                from sympy import solve
+                                a = cot_part.args[0]
+                                K = solve(a-pi/2,sym)[0]
+                                P = limit(term, sym, K, dir="-") - limit(term, sym, K, dir="+")
+                                antideriv += P*floor((a)/pi)
+                            except ValueError:
+                                break
 
             if antideriv is None:
                 undone_limits.append(xab)
