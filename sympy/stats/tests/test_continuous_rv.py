@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          moment, cmoment, smoment)
 
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
-                   Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
                    floor, expand_func, Rational)
 
@@ -295,6 +295,7 @@ def test_frechet():
 
     X = Frechet("x", a, s=s, m=m)
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
+    assert cdf(X)(x) == exp(-((x - m)/s)**(-a))
 
 def test_gamma():
     k = Symbol("k", positive=True)
@@ -323,6 +324,7 @@ def test_gamma_inverse():
 
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
+    assert cdf(X)(x) == uppergamma(a, b/x)/gamma(a)
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -344,6 +346,9 @@ def test_kumaraswamy():
 
     X = Kumaraswamy("x", a, b)
     assert density(X)(x) == x**(a - 1)*a*b*(-x**a + 1)**(b - 1)
+    assert cdf(X)(x) == Piecewise((0, x < 0),
+                                (-(-x**a + 1)**b + 1, x <= 1),
+                                (1, True))
 
 def test_laplace():
     mu = Symbol("mu")
@@ -351,6 +356,8 @@ def test_laplace():
 
     X = Laplace('x', mu, b)
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
+    assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
+                            (-exp((mu - x)/b)/2 + 1, True))
 
 def test_logistic():
     mu = Symbol("mu", real=True)
@@ -358,6 +365,8 @@ def test_logistic():
 
     X = Logistic('x', mu, s)
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
+    assert cdf(X)(x) == exp((mu - x)/s) + 1
+
 
 def test_lognormal():
     mean = Symbol('mu', real=True, finite=True)
@@ -408,6 +417,7 @@ def test_nakagami():
            *gamma(mu + S.Half)/gamma(mu + 1))
     assert simplify(variance(X, meijerg=True)) == (
     omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
+    assert cdf(X)(x) == lowergamma(mu, mu*x**2/omega)/gamma(mu)
 
 
 def test_pareto():

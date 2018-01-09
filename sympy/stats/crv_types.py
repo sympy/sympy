@@ -47,12 +47,13 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc)
+                   Lambda, Basic, lowergamma, erf, erfc, uppergamma)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
+from mpmath import hyp2f1
 import random
 
 oo = S.Infinity
@@ -810,7 +811,7 @@ def Erlang(name, k, l):
     .. [2] http://mathworld.wolfram.com/ErlangDistribution.html
     """
 
-    return rv(name, GammaDistribution, (k, 1/l))
+    return rv(name, GammaDistribution, (k, S.One/l))
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
@@ -1063,6 +1064,10 @@ class FrechetDistribution(SingleContinuousDistribution):
         a, s, m = self.a, self.s, self.m
         return a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
 
+    def _cdf(self, x):
+        a, s, m = self.a, self.s, self.m
+        return exp(-((x-m)/s)**(-a))
+
 def Frechet(name, a, s=1, m=0):
     r"""
     Create a continuous random variable with a Frechet distribution.
@@ -1103,6 +1108,9 @@ def Frechet(name, a, s=1, m=0):
     >>> density(X)(z)
     a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s
 
+    >>> cdf(X)(z)
+     exp(-((x-m)/s)**(-a))
+
     References
     ==========
 
@@ -1131,6 +1139,10 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def sample(self):
         return random.gammavariate(self.k, self.theta)
+
+    def _cdf(self, x):
+        k, theta = self.k, self.theta
+        return lowergamma(k, S(x)/theta)/gamma(k)
 
 
 def Gamma(name, k, theta):
@@ -1221,6 +1233,10 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
 
+    def _cdf(self, x):
+        a, b = self.a, self.b
+        return uppergamma(a,b/x)/gamma(a)
+
 def GammaInverse(name, a, b):
     r"""
     Create a continuous random variable with an inverse Gamma distribution.
@@ -1264,6 +1280,9 @@ def GammaInverse(name, a, b):
     b *z      *e
     ---------------
        gamma(a)
+
+    >>>cdf(X)(z)
+    uppergamma(a, b/z)/gamma(a)
 
     References
     ==========
@@ -1406,6 +1425,14 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         return a * b * x**(a-1) * (1-x**a)**(b-1)
 
+    def _cdf(self, x):
+        a, b = self.a, self.b
+        return Piecewise(
+            (S.Zero, x < S.Zero),
+            (1 - (1 - x**a)**b, x <= S.One),
+            (S.One, True))
+
+
 def Kumaraswamy(name, a, b):
     r"""
     Create a Continuous Random Variable with a Kumaraswamy distribution.
@@ -1446,6 +1473,10 @@ def Kumaraswamy(name, a, b):
          a - 1 /   a    \
     a*b*z     *\- z  + 1/
 
+    >>> cdf(X)(z)
+    Piecewise((0, z < 0),
+            (-(-z**a + 1)**b + 1, z <= 1),
+            (1, True))
 
     References
     ==========
@@ -1465,6 +1496,13 @@ class LaplaceDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         mu, b = self.mu, self.b
         return 1/(2*b)*exp(-Abs(x - mu)/b)
+
+    def _cdf(self, x):
+        mu, b = self.mu, self.b
+        return Piecewise(
+                    (S.Half*exp((x - mu)/b), x < mu),
+                    (S.One - S.Half*exp(-(x - mu)/b), x>= mu)
+                        )
 
 
 def Laplace(name, mu, b):
@@ -1490,7 +1528,7 @@ def Laplace(name, mu, b):
     Examples
     ========
 
-    >>> from sympy.stats import Laplace, density
+    >>> from sympy.stats import Laplace, density, cdf
     >>> from sympy import Symbol
 
     >>> mu = Symbol("mu")
@@ -1501,6 +1539,10 @@ def Laplace(name, mu, b):
 
     >>> density(X)(z)
     exp(-Abs(mu - z)/b)/(2*b)
+
+    >>> cdf(X)(z)
+    Piecewise((exp((-mu + z)/b)/2, mu > z),
+            (-exp((mu - z)/b)/2 + 1, True))
 
     References
     ==========
@@ -1521,6 +1563,10 @@ class LogisticDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         mu, s = self.mu, self.s
         return exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
+
+    def _cdf(self, x):
+        mu, s = self.mu, self.s
+        return 1 + exp(-(x - mu)/s)
 
 
 def Logistic(name, mu, s):
@@ -1557,6 +1603,9 @@ def Logistic(name, mu, s):
 
     >>> density(X)(z)
     exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)
+
+    >>> cdf(X)(z)
+    exp((mu - z)/s) + 1
 
     References
     ==========
@@ -1732,6 +1781,10 @@ class NakagamiDistribution(SingleContinuousDistribution):
         mu, omega = self.mu, self.omega
         return 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu - 1)*exp(-mu/omega*x**2)
 
+    def _cdf(self, x):
+        mu, omega = self.mu, self.omega
+        return lowergamma(mu, (mu/omega)*x**2)/gamma(mu)
+
 
 def Nakagami(name, mu, omega):
     r"""
@@ -1787,6 +1840,9 @@ def Nakagami(name, mu, omega):
              omega*gamma (mu + 1/2)
     omega - -----------------------
             gamma(mu)*gamma(mu + 1)
+
+    >>> cdf(X)(x)
+    lowergamma(mu, mu*x**2/omega)/gamma(mu)
 
     References
     ==========
@@ -2245,6 +2301,10 @@ class StudentTDistribution(SingleContinuousDistribution):
         nu = self.nu
         return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
 
+    def _cdf(self, x):
+        nu = self.nu
+        return S.Half + x*gamma((nu+1)/2)*hyp2f1(S.Half, (nu+1)/2, S(3)/2, -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
+
 
 def StudentT(name, nu):
     r"""
@@ -2568,6 +2628,12 @@ class UniformSumDistribution(SingleContinuousDistribution):
         return 1/factorial(
             n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
+
+    def _cdf(self, x):
+        n = self.n
+        x=Dummy("x")
+        k = Dummy("k")
+        return 1/factorial(n)*Sum((-1)**k*binomial(n, k)*(x - k)**n, (k, 0, floor(x)))
 
 
 def UniformSum(name, n):
