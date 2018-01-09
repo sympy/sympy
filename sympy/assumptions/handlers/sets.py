@@ -135,9 +135,7 @@ class AskRationalHandler(CommonHandler):
 
     Rational = staticmethod(CommonHandler.AlwaysTrue)
 
-    @staticmethod
-    def Float(expr, assumptions):
-        return None
+    Float = staticmethod(CommonHandler.AlwaysNone)
 
     ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
         [staticmethod(CommonHandler.AlwaysFalse)]*6
