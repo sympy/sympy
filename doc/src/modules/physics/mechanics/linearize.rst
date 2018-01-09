@@ -183,7 +183,9 @@ Alternatively, the `A` and `B` form can be generated instead by specifying
   Matrix(0, 0, [])
 
 An operating point can also be specified as a dictionary or an iterable of
-dictionaries. This will evaluate the linearized form at the specified
+dictionaries.(Note : You must not specify python floats as for op_points as
+due to limited precision, it could leave udots, only specify sympy types.)
+This will evaluate the linearized form at the specified
 point before returning the matrices: ::
 
   >>> op_point = {q1: 0, u1: 0}
