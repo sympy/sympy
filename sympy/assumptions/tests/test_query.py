@@ -19,7 +19,7 @@ from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
+import math
 
 def test_int_1():
     z = 1
@@ -85,10 +85,10 @@ def test_float_1():
     z = 1.0
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is True
+    assert ask(Q.rational(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is False
+    assert ask(Q.irrational(z)) is None
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.positive(z)) is True
     assert ask(Q.negative(z)) is False
@@ -103,10 +103,10 @@ def test_float_1():
     z = 7.2123
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is True
+    assert ask(Q.rational(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is False
+    assert ask(Q.irrational(z)) is None
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.positive(z)) is True
     assert ask(Q.negative(z)) is False
@@ -2214,6 +2214,10 @@ def test_issue_9636():
     assert ask(Q.composite(4.0)) is False
     assert ask(Q.even(2.0)) is False
     assert ask(Q.odd(3.0)) is False
+
+
+def test_issue_12168():
+    assert ask(Q.rational(math.pi)) is None
 
 
 @XFAIL
