@@ -247,7 +247,8 @@ def test_dagum():
 
     X = Dagum('x', p, a, b)
     assert density(X)(x) == a*p*(x/b)**(a*p)*((x/b)**a + 1)**(-p - 1)/x
-    assert cdf(X)(x) == (1 + (x/b)**(-a))**(-p)
+    assert cdf(X)(x) == Piecewise(((1 + x**(-a)/b)**(-p), x >= 0),
+                            (0, True))
 
 def test_erlang():
     k = Symbol("k", integer=True, positive=True)
@@ -255,6 +256,8 @@ def test_erlang():
 
     X = Erlang("x", k, l)
     assert density(X)(x) == x**(k - 1)*l**k*exp(-x*l)/gamma(k)
+    assert cdf(X)(x) == Piecewise((lowergamma(k, l*x)/gamma(k), x > 0),
+                               (0, True))
 
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, finite=True)
@@ -295,7 +298,7 @@ def test_frechet():
 
     X = Frechet("x", a, s=s, m=m)
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
-    assert cdf(X)(x) == exp(-((x - m)/s)**(-a))
+    assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
 def test_gamma():
     k = Symbol("k", positive=True)
@@ -324,7 +327,7 @@ def test_gamma_inverse():
 
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
-    assert cdf(X)(x) == uppergamma(a, b/x)/gamma(a)
+    assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -417,7 +420,9 @@ def test_nakagami():
            *gamma(mu + S.Half)/gamma(mu + 1))
     assert simplify(variance(X, meijerg=True)) == (
     omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
-    assert cdf(X)(x) == lowergamma(mu, mu*x**2/omega)/gamma(mu)
+    assert cdf(X)(x) == Piecewise(
+                                (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0), 
+                                (0, True))
 
 
 def test_pareto():

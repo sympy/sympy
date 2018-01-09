@@ -689,7 +689,8 @@ class DagumDistribution(SingleContinuousDistribution):
     def _cdf(self, x):
         #from sympy import power
         p, a, b = self.p, self.a, self.b
-        return (S.One + (x/b)**(-a))**(-p)
+        return Piecewise(((S.One + x**-a/b)**-p, x>=0),
+                    (S.Zero, True))
 
 
 def Dagum(name, p, a, b):
@@ -733,7 +734,7 @@ def Dagum(name, p, a, b):
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     >>> cdf(X)(z)
-    (1 + (z/b)**(-a))**(-p)
+    Piecewise(((1 + z**(-a)/b)**(-p), z >= 0), (0, True))
 
 
     References
@@ -1066,7 +1067,8 @@ class FrechetDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         a, s, m = self.a, self.s, self.m
-        return exp(-((x-m)/s)**(-a))
+        return Piecewise((exp(-((x-m)/s)**(-a)), x>=m),
+                        (S.Zero, True))
 
 def Frechet(name, a, s=1, m=0):
     r"""
@@ -1109,7 +1111,7 @@ def Frechet(name, a, s=1, m=0):
     a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s
 
     >>> cdf(X)(z)
-     exp(-((x-m)/s)**(-a))
+     Piecewise((exp(-((-m + z)/s)**(-a)), m <= z), (0, True))
 
     References
     ==========
@@ -1142,7 +1144,9 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
-        return lowergamma(k, S(x)/theta)/gamma(k)
+        return Piecewise(
+                    (lowergamma(k, S(x)/theta)/gamma(k), x>0),
+                    (S.Zero, True))
 
 
 def Gamma(name, k, theta):
@@ -1235,7 +1239,8 @@ class GammaInverseDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         a, b = self.a, self.b
-        return uppergamma(a,b/x)/gamma(a)
+        return Piecewise((uppergamma(a,b/x)/gamma(a), x>0),
+                        (S.Zero, True))
 
 def GammaInverse(name, a, b):
     r"""
@@ -1282,7 +1287,8 @@ def GammaInverse(name, a, b):
        gamma(a)
 
     >>>cdf(X)(z)
-    uppergamma(a, b/z)/gamma(a)
+    Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
+
 
     References
     ==========
@@ -1783,7 +1789,9 @@ class NakagamiDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mu, omega = self.mu, self.omega
-        return lowergamma(mu, (mu/omega)*x**2)/gamma(mu)
+        return Piecewise(
+                    (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x>0),
+                    (S.Zero, True))
 
 
 def Nakagami(name, mu, omega):
@@ -1842,7 +1850,9 @@ def Nakagami(name, mu, omega):
             gamma(mu)*gamma(mu + 1)
 
     >>> cdf(X)(x)
-    lowergamma(mu, mu*x**2/omega)/gamma(mu)
+    Piecewise((lowergamma(mu, mu*z**2/omega)/gamma(mu), z > 0),
+            (0, True))
+
 
     References
     ==========
