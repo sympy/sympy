@@ -742,7 +742,7 @@ def test_issue_8469():
 
 def test_should_evalf():
     # This should not take forever to run (see #8506)
-    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
+    assert sin((1.0 + 1.0*I)**10000 + 1).func is sin
 
 
 def test_Derivative_as_finite_difference():
@@ -891,7 +891,9 @@ def test_function_assumptions():
     assert f != f_real
     assert f(x) != f_real(x)
 
+    assert f.is_real is None
     assert f(x).is_real is None
+    assert f_real.is_real is True
     assert f_real(x).is_real is True
 
     # Can also do it this way, but it won't be equal to f_real because of the
