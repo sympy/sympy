@@ -251,7 +251,6 @@ class Vector(object):
         """Pretty Printing method. """
         from sympy.physics.vector.printing import VectorPrettyPrinter
         from sympy.printing.pretty.stringpict import prettyForm
-        from sympy.core.symbol import Symbol
         e = self
 
         class Fake(object):
@@ -265,18 +264,13 @@ class Vector(object):
                 pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
-                        # get pretty form of unit vector (e.g. subscripted x for n_x)
-                        uvpform = vp._print(
-                            Symbol(ar[i][1].pretty_vecs[j])
-                            if vp._use_unicode
-                            else ar[i][1].pretty_vecs[j])
-
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            pform = uvpform
+                            pform = vp._print(ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            pform = prettyForm(*uvpform.left(" - "))
+                            pform = vp._print(ar[i][1].pretty_vecs[j])
+                            pform = prettyForm(*pform.left(" - "))
                             bin = prettyForm.NEG
                             pform = prettyForm(binding=bin, *pform)
                         elif ar[i][0][j] != 0:
@@ -288,7 +282,8 @@ class Vector(object):
                             else:
                                 pform = vp._print(
                                     ar[i][0][j])
-                            pform = prettyForm(*pform.right(" ", uvpform))
+                            pform = prettyForm(*pform.right(" ",
+                                                ar[i][1].pretty_vecs[j]))
                         else:
                             continue
                         pforms.append(pform)

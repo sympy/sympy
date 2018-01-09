@@ -61,6 +61,9 @@ def uvpretty(expr):
 def test_vpretty_basic():
     """ASCII, Unicode basic testing"""
 
+    # TODO : The unit vectors should print with subscripts but they just
+    # print as `n_x` instead of making `x` a subscript with unicode.
+
     expr = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z
     ascii_str = """\
  2
@@ -68,7 +71,7 @@ a  n_x + b n_y + c*sin(alpha) n_z\
 """
     ucode_str = u("""\
  2
-a  nₓ + b n_y + c⋅sin(α) n_z\
+a  n_x + b n_y + c⋅sin(α) n_z\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
@@ -78,7 +81,7 @@ a  nₓ + b n_y + c⋅sin(α) n_z\
 alpha n_x + sin(omega) n_y + alpha*beta n_z\
 """
     ucode_str = u("""\
-α nₓ + sin(ω) n_y + α⋅β n_z\
+α n_x + sin(ω) n_y + α⋅β n_z\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
@@ -93,7 +96,7 @@ b         a         b\
     ucode_str = u("""\
                     2
 a      b + c       c
-─ nₓ + ───── n_y + ── n_z
+─ n_x + ───── n_y + ── n_z
 b        a         b\
 """)
     assert vpretty(expr) == ascii_str
@@ -174,7 +177,7 @@ a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
     ucode_str = u("""\
  2
-a  nₓ⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
+a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
@@ -182,27 +185,27 @@ a  nₓ⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
     expr = (alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) +
             alpha * beta * (N.z | N.x))
     ascii_str = u('alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x')
-    ucode_str = u('α nₓ⊗nₓ + sin(ω) n_y⊗n_z + α⋅β n_z⊗nₓ')
+    ucode_str = u('α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x')
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
 
 
 def test_dyadic_latex():
-    expr = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
-    latex_str = (r'a^{2}\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + '
-                 r'b\mathbf{\hat{n}_y}\otimes \mathbf{\hat{n}_y} + '
-                 r'c \operatorname{sin}\left(\alpha\right)'
-                 r'\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_y}')
+    expr1 = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
+    latex_str1 = (r'a^{2}\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + '
+                  r'b\mathbf{\hat{n}_y}\otimes \mathbf{\hat{n}_y} + '
+                  r'c \operatorname{sin}\left(\alpha\right)'
+                  r'\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_y}')
 
-    assert vlatex(expr) == latex_str
+    assert vlatex(expr1) == latex_str1
 
-    expr = (alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) +
+    expr2 = (alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) +
             alpha * beta * (N.z | N.x))
-    latex_str = (r'\alpha\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_x} + '
+    latex_str2 = (r'\alpha\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_x} + '
                  r'\operatorname{sin}\left(\omega\right)\mathbf{\hat{n}_y}'
                  r'\otimes \mathbf{\hat{n}_z} + '
                  r'\alpha \beta\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_x}')
-    assert vlatex(expr) == latex_str
+    assert vlatex(expr2) == latex_str2
 
 
 def test_vlatex(): # vlatex is broken #12078
