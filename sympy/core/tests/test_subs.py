@@ -8,7 +8,7 @@ from sympy import (
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y, z
-from sympy.physics.units import kilogram, meter, second
+from sympy.physics.units import kilogram, meter, second, gravitational_constant
 
 
 def test_subs():
@@ -783,7 +783,10 @@ def test_issue_12657():
 
 
 def test_issue_13139():
-    energy, mass = symbols('energy mass')
-    expr = energy/mass
+    energy, mass, force = symbols('energy mass force')
+    expr1 = energy/mass
     units = {energy: kilogram*meter**2/second**2, mass: kilogram}
-    assert expr.subs(units) == meter**2/second**2
+    assert expr1.subs(units) == meter**2/second**2
+    expr2 = force/mass
+    units = {force:gravitational_constant*kilogram**2/meter**2, mass:kilogram}
+    assert expr2.subs(units) == gravitational_constant*kilogram/meter**2
