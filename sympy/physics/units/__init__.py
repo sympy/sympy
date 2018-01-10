@@ -210,12 +210,17 @@ from .definitions import (
 
 def find_unit(quantity):
     """
-    Return a list of matching units or dimension names.
+    This function returns a list of matching unit and dimension names to a
+    input keyword, dimension or unit. If `quantity` is a string -- keyword/units
+    /dimensions, it returns all instances of units/dimensions with these arguments.
+    This function also returns all units/dimensions which have string input keyword
+    as substring. If input `quantity` is a Quantity/ Dimension -- unit or dimension,
+    then all units having matching base units or dimensions are returned.
 
-    - If ``quantity`` is a string -- units/dimensions containing the string
-    `quantity`.
-    - If ``quantity`` is a unit or dimension -- units having matching base
-    units or dimensions.
+    Parameters
+    ==========
+
+    quantity : string, Dimension or Quantity
 
     Examples
     ========
@@ -233,8 +238,8 @@ def find_unit(quantity):
     ['J', 'eV', 'joule', 'energy', 'joules', 'electronvolt', 'electronvolts', 'planck_energy', 'planck_energy_density']
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
-    """
 
+    """
     import sympy.physics.units as u
     rv = []
     if isinstance(quantity, string_types):
