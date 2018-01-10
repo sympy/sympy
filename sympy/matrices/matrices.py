@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import collections
+import random
 from sympy.assumptions.refine import refine
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
@@ -8,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
-from sympy.core.numbers import Integer, ilcm, Float
+from sympy.core.numbers import Integer, ilcm, Float, Rational
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -174,9 +175,19 @@ class MatrixDeterminant(MatrixCommon):
         """
 
         # XXX included as a workaround for issue #12362.  Should use `_find_reasonable_pivot` instead
+        # As of 2018-01-09, `_find_reasonable_pivot` could be used but it slows down the computation,
+        # by the factor of 2.5 in one test. The issue #10279 is relevant.
+        # As a compromise, check for the value being nonzero at a random rational point
         def _find_pivot(l):
-            for pos,val in enumerate(l):
+            for pos, val in enumerate(l):
                 if val:
+                    variables = val.free_symbols
+                    if len(variables) > 0:
+                        substitutions = {v: Rational(random.choice((-1, 1)) * \
+                            random.randint(100, 200), random.randint(201, 300)) \
+                            for v in variables}
+                        if val.xreplace(substitutions) == 0:
+                            continue
                     return (pos, val, None, None)
             return (None, None, None, None)
 
