@@ -211,11 +211,12 @@ from .definitions import (
 def find_unit(quantity):
     """
     This function returns a list of matching unit and dimension names to a
-    input keyword, dimension or unit. If `quantity` is a string -- keyword/units
-    /dimensions, it returns all instances of units/dimensions with these arguments.
-    This function also returns all units/dimensions which have string input keyword
-    as substring. If input `quantity` is a Quantity/ Dimension -- unit or dimension,
-    then all units having matching base units or dimensions are returned.
+    input keyword, dimension or unit. If `quantity` is a string -- keyword/
+    units/dimensions, it returns all instances of units/dimensions with
+    these arguments. This function also returns all units/dimensions
+    which have string input keyword as sub-string. If input `quantity` is
+    a Quantity/Dimension -- unit or dimension, then all units having
+    matching base units or dimensions are returned.
 
     Parameters
     ==========
