@@ -536,9 +536,7 @@ class Integral(AddWithLimits):
                             # then diff() raises `ValueError`
                             try:
                                 tan_exp1.diff()
-                                from sympy import solve
                                 a = tan_part.args[0]
-                                K = solve(a-pi/2,sym)[0]
                                 nterm = term.subs(atan_part,Add(atan_part,pi*floor((a-pi/2)/pi)))
                                 antideriv += nterm - term
                             except ValueError:
@@ -551,9 +549,7 @@ class Integral(AddWithLimits):
                             # then diff() raises `ValueError`
                             try:
                                 cot_exp1.diff()
-                                from sympy import solve
                                 a = cot_part.args[0]
-                                K = solve(a-pi/2,sym)[0]
                                 nterm = term.subs(atan_part,Add(atan_part,pi*floor((a)/pi)))
                                 antideriv += nterm - term
                             except ValueError:
