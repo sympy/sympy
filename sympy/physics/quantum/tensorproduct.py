@@ -352,14 +352,8 @@ def tensor_product_simp_Pow(e):
     new_arg = []
     new_arg = tuple([arg**e.exp for arg in e.base.args])
 
-    if isinstance(e.base, Add):
-        return Add(*[tensor_product_simp(arg) for arg in new_arg])
     if isinstance(e.base, Mul):
         return tensor_product_simp_Mul(e.base) ** e.exp
-    elif isinstance(e.base, Commutator):
-        return Commutator(*[tensor_product_simp(arg) for arg in new_arg])
-    elif isinstance(e.base, AntiCommutator):
-        return AntiCommutator(*[tensor_product_simp(arg) for arg in new_arg])
     else:
         return TensorProduct(*new_arg)
 
@@ -401,7 +395,11 @@ def tensor_product_simp(e, **hints):
     if isinstance(e, Add):
         return Add(*[tensor_product_simp(arg) for arg in e.args])
     elif isinstance(e, Pow):
-        return tensor_product_simp_Pow(e)
+        if isinstance(e.base, (Add, Commutator, AntiCommutator)):
+            return tensor_product_simp(e.base) ** e.exp
+        else:
+            return tensor_product_simp_Pow(e)
+
     elif isinstance(e, Mul):
         return tensor_product_simp_Mul(e)
     elif isinstance(e, Commutator):
