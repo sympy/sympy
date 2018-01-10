@@ -1341,7 +1341,7 @@ class ReduceOrder(Operator):
         n = ai - bj
         if not n.is_Integer or n < 0:
             return None
-        if bj.is_integer and bj <= 0:
+        if bj.is_integer and bj.is_nonpositive:
             return None
 
         expr = Operator.__new__(cls)
