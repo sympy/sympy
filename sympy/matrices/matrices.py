@@ -177,18 +177,22 @@ class MatrixDeterminant(MatrixCommon):
         # XXX included as a workaround for issue #12362.  Should use `_find_reasonable_pivot` instead
         # As of 2018-01-09, `_find_reasonable_pivot` could be used but it slows down the computation,
         # by the factor of 2.5 in one test. The issue #10279 is relevant.
-        # As a compromise, check for the value being nonzero at a random rational point
+        # As a compromise, check for the value being nonzero at several random rational points
         def _find_pivot(l):
             for pos, val in enumerate(l):
                 if val:
                     variables = val.free_symbols
+                    good_pivot = True
                     if len(variables) > 0:
-                        substitutions = {v: Rational(random.choice((-1, 1)) * \
-                            random.randint(100, 200), random.randint(201, 300)) \
-                            for v in variables}
-                        if val.xreplace(substitutions) == 0:
-                            continue
-                    return (pos, val, None, None)
+                        for _ in range(5):
+                            substitutions = {v: random.randint(-10, 10) + Rational(
+                                random.randint(100, 200), random.randint(201, 300)) \
+                                for v in variables}
+                            if val.xreplace(substitutions) == 0:
+                                good_pivot = False
+                                break
+                    if good_pivot:
+                        return (pos, val, None, None)
             return (None, None, None, None)
 
 
