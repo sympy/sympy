@@ -22,8 +22,9 @@ import warnings
 
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
+from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
-from sympy.core.symbol import _symbol
+from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -978,7 +979,7 @@ class LinearEntity(GeometrySet):
         raise GeometryError(
             "Do not know how to project %s onto %s" % (other, self))
 
-    def random_point(self):
+    def random_point(self, seed=None):
         """A random point on a LinearEntity.
 
         Returns
@@ -994,32 +995,37 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line
+        >>> from sympy import Point, Line, Ray, Segment
         >>> p1, p2 = Point(0, 0), Point(5, 3)
-        >>> l1 = Line(p1, p2)
-        >>> p3 = l1.random_point()
-        >>> # random point - don't know its coords in advance
-        >>> p3 # doctest: +ELLIPSIS
-        Point2D(...)
-        >>> # point should belong to the line
-        >>> p3 in l1
+        >>> line = Line(p1, p2)
+        >>> r = line.random_point(seed=42)  # seed value is optional
+        >>> r.n(3)
+        Point2D(-0.72, -0.432)
+        >>> r in line
         True
+        >>> Ray(p1, p2).random_point(seed=42).n(3)
+        Point2D(0.72, 0.432)
+        >>> Segment(p1, p2).random_point(seed=42).n(3)
+        Point2D(3.2, 1.92)
 
         """
-        from random import randint
-        from sympy.functions import floor
+        import random
 
-        # The lower and upper
-        lower, upper = -2**32 - 1, 2**32
-
+        if seed is not None:
+            rng = random.Random(seed)
+        else:
+            rng = random
+        t = Dummy()
+        pt = self.arbitrary_point(t)
         if isinstance(self, Ray):
-            lower = 0
-        if isinstance(self, Segment):
-            lower = 0
-            upper = floor(self.length)
-        t = randint(lower, upper)
-
-        return self.direction*t/abs(self.direction) + self.p1
+            v = abs(rng.gauss(0, 1))
+        elif isinstance(self, Segment):
+            v = rng.random()
+        elif isinstance(self, Line):
+            v = rng.gauss(0, 1)
+        else:
+            raise NotImplementedError('unhandled line type')
+        return pt.subs(t, Rational(v))
 
 
 class Line(LinearEntity):
