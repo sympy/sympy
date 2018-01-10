@@ -532,28 +532,22 @@ class Integral(AddWithLimits):
                             x1 = Dummy('x1')
                             tan_part = atan_arg.atoms(tan).pop()
                             tan_exp1 = atan_arg.subs(tan_part,x1)
-                            # If `tan_part` has any other function then `tan`,
-                            # then diff() raises `ValueError`
-                            try:
-                                tan_exp1.diff()
+                            # The coefficient of `tan` should be constant
+                            coeff = tan_exp1.diff(x1)
+                            if not coeff.free_symbols:
                                 a = tan_part.args[0]
-                                nterm = term.subs(atan_part,Add(atan_part,pi*floor((a-pi/2)/pi)))
+                                nterm = term.subs(atan_part,Add(atan_part,sign(coeff)*pi*floor((a-pi/2)/pi)))
                                 antideriv += nterm - term
-                            except ValueError:
-                                break
                         elif atan_arg.has(cot):
                             x1 = Dummy('x1')
                             cot_part = atan_arg.atoms(cot).pop()
                             cot_exp1 = atan_arg.subs(cot_part,x1)
-                            # If `cot_part` has any other function then `cot`,
-                            # then diff() raises `ValueError`
-                            try:
-                                cot_exp1.diff()
+                            # The coefficient of `cot` should be constant
+                            coeff = cot_exp1.diff(x1)
+                            if not coeff.free_symbols:
                                 a = cot_part.args[0]
-                                nterm = term.subs(atan_part,Add(atan_part,pi*floor((a)/pi)))
+                                nterm = term.subs(atan_part,Add(atan_part,sign(coeff)*pi*floor((a)/pi)))
                                 antideriv += nterm - term
-                            except ValueError:
-                                break
 
             if antideriv is None:
                 undone_limits.append(xab)
