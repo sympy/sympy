@@ -47,13 +47,12 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, uppergamma)
+                   Lambda, Basic, lowergamma, erf, erfc, uppergamma, hyper)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
-from mpmath import hyp2f1
 import random
 
 oo = S.Infinity
@@ -134,6 +133,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     dist = ContinuousDistributionHandmade(pdf, set)
     return SingleContinuousPSpace(symbol, dist).value
 
+
 def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
@@ -159,7 +159,7 @@ class ArcsinDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         return Piecewise(
             (S.Zero, x < a),
-            (2*asin( sqrt((x - a)/(b - a)))/pi, x <= b),
+            (2*asin(sqrt((x - a)/(b - a)))/pi, x <= b),
             (S.One, True))
 
 
@@ -619,7 +619,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
     def _cdf(self, x):
         k = self.k
         return Piecewise(
-                (S.One/gamma(k/2)*lowergamma(k/2, x/2), x>=0),
+                (S.One/gamma(k/2)*lowergamma(k/2, x/2), x >= 0),
                 (0, True)
         )
 
@@ -687,7 +687,6 @@ class DagumDistribution(SingleContinuousDistribution):
         return a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
 
     def _cdf(self, x):
-        #from sympy import power
         p, a, b = self.p, self.a, self.b
         return Piecewise(((S.One + x**-a/b)**-p, x>=0),
                     (S.Zero, True))
@@ -747,6 +746,7 @@ def Dagum(name, p, a, b):
 
 #-------------------------------------------------------------------------------
 # Erlang distribution ----------------------------------------------------------
+
 
 def Erlang(name, k, l):
     r"""
@@ -835,7 +835,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         return Piecewise(
-                (S.One - exp(-self.rate*x), x>=0),
+                (S.One - exp(-self.rate*x), x >= 0),
                 (0, True),
         )
 
@@ -1067,7 +1067,7 @@ class FrechetDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         a, s, m = self.a, self.s, self.m
-        return Piecewise((exp(-((x-m)/s)**(-a)), x>=m),
+        return Piecewise((exp(-((x-m)/s)**(-a)), x >= m),
                         (S.Zero, True))
 
 def Frechet(name, a, s=1, m=0):
@@ -1145,7 +1145,7 @@ class GammaDistribution(SingleContinuousDistribution):
     def _cdf(self, x):
         k, theta = self.k, self.theta
         return Piecewise(
-                    (lowergamma(k, S(x)/theta)/gamma(k), x>0),
+                    (lowergamma(k, S(x)/theta)/gamma(k), x > 0),
                     (S.Zero, True))
 
 
@@ -1223,6 +1223,7 @@ def Gamma(name, k, theta):
 #-------------------------------------------------------------------------------
 # Inverse Gamma distribution ---------------------------------------------------
 
+
 class GammaInverseDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
@@ -1239,8 +1240,9 @@ class GammaInverseDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         a, b = self.a, self.b
-        return Piecewise((uppergamma(a,b/x)/gamma(a), x>0),
+        return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
+
 
 def GammaInverse(name, a, b):
     r"""
@@ -1300,6 +1302,7 @@ def GammaInverse(name, a, b):
 
 #-------------------------------------------------------------------------------
 # Gumbel distribution --------------------------------------------------------
+
 
 class GumbelDistribution(SingleContinuousDistribution):
     _argnames = ('beta', 'mu')
@@ -1369,6 +1372,7 @@ class GompertzDistribution(SingleContinuousDistribution):
         eta, b = self.eta, self.b
         return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
 
+
 def Gompertz(name, b, eta):
     r"""
     Create a Continuous Random Variable with Gompertz distribution.
@@ -1416,6 +1420,7 @@ def Gompertz(name, b, eta):
 
 #-------------------------------------------------------------------------------
 # Kumaraswamy distribution -----------------------------------------------------
+
 
 class KumaraswamyDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
@@ -1507,7 +1512,7 @@ class LaplaceDistribution(SingleContinuousDistribution):
         mu, b = self.mu, self.b
         return Piecewise(
                     (S.Half*exp((x - mu)/b), x < mu),
-                    (S.One - S.Half*exp(-(x - mu)/b), x>= mu)
+                    (S.One - S.Half*exp(-(x - mu)/b), x >= mu)
                         )
 
 
@@ -1641,7 +1646,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
     def _cdf(self, x):
         mean, std = self.mean, self.std
         return Piecewise(
-                (S.Half + S.Half*erf((log(x) - mean)/sqrt(2)/std), x>0),
+                (S.Half + S.Half*erf((log(x) - mean)/sqrt(2)/std), x > 0),
                 (S.Zero, True)
         )
 
@@ -1790,7 +1795,7 @@ class NakagamiDistribution(SingleContinuousDistribution):
     def _cdf(self, x):
         mu, omega = self.mu, self.omega
         return Piecewise(
-                    (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x>0),
+                    (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
                     (S.Zero, True))
 
 
@@ -2030,6 +2035,7 @@ def Pareto(name, xm, alpha):
 #-------------------------------------------------------------------------------
 # QuadraticU distribution ------------------------------------------------------
 
+
 class QuadraticUDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
@@ -2120,6 +2126,7 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
         return Piecewise(
                 ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
                 (S.Zero, True))
+
 
 def RaisedCosine(name, mu, s):
     r"""
@@ -2313,7 +2320,8 @@ class StudentTDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         nu = self.nu
-        return S.Half + x*gamma((nu+1)/2)*hyp2f1(S.Half, (nu+1)/2, S(3)/2, -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
+        return S.Half + x*gamma((nu+1)/2)*hyper((S.Half, (nu+1)/2),
+                                (S(3)/2,), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
 
 
 def StudentT(name, nu):
@@ -2362,6 +2370,11 @@ def StudentT(name, nu):
     \/ nu *beta|1/2, --|
                \     2 /
 
+    >>> cdf(X)(z)
+    1/2 + z*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2), (3/2,),
+                                -z**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+
+
     References
     ==========
 
@@ -2374,6 +2387,7 @@ def StudentT(name, nu):
 #-------------------------------------------------------------------------------
 # Trapezoidal distribution ------------------------------------------------------
 
+
 class TrapezoidalDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c', 'd')
 
@@ -2384,6 +2398,7 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2 / (d+c-a-b), And(b <= x, x < c)),
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
+
 
 def Trapezoidal(name, a, b, c, d):
     r"""
@@ -2638,12 +2653,13 @@ class UniformSumDistribution(SingleContinuousDistribution):
         return 1/factorial(
             n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
-
     def _cdf(self, x):
         n = self.n
-        x=Dummy("x")
         k = Dummy("k")
-        return 1/factorial(n)*Sum((-1)**k*binomial(n, k)*(x - k)**n, (k, 0, floor(x)))
+        return Piecewise((S.Zero, x < 0),
+                        (1/factorial(n)*Sum((-1)**k*binomial(n, k)*(x - k)**(n),
+                        (k, 0, floor(x))), x <= n),
+                        (S.One, True))
 
 
 def UniformSum(name, n):
@@ -2692,6 +2708,11 @@ def UniformSum(name, n):
      k = 0
     --------------------------------
                 (n - 1)!
+
+    >>> cdf(X)(z)
+    Piecewise((0, z < 0), (Sum((-1)**_k*(-_k + z)**n*binomial(n, _k),
+                            (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
+
 
     References
     ==========

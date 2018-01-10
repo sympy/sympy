@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational)
+                   floor, expand_func, Rational, hyper)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -234,11 +234,13 @@ def test_chi_noncentral():
     assert density(X)(x) == (x**k*l*(x*l)**(-k/2)*
                           exp(-x**2/2 - l**2/2)*besseli(k/2 - 1, x*l))
 
+
 def test_chi_squared():
     k = Symbol("k", integer=True)
 
     X = ChiSquared('x', k)
     assert density(X)(x) == 2**(-k/2)*x**(k/2 - 1)*exp(-x/2)/gamma(k/2)
+
 
 def test_dagum():
     p = Symbol("p", positive=True)
@@ -250,6 +252,7 @@ def test_dagum():
     assert cdf(X)(x) == Piecewise(((1 + x**(-a)/b)**(-p), x >= 0),
                             (0, True))
 
+
 def test_erlang():
     k = Symbol("k", integer=True, positive=True)
     l = Symbol("l", positive=True)
@@ -258,6 +261,7 @@ def test_erlang():
     assert density(X)(x) == x**(k - 1)*l**k*exp(-x*l)/gamma(k)
     assert cdf(X)(x) == Piecewise((lowergamma(k, l*x)/gamma(k), x > 0),
                                (0, True))
+
 
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, finite=True)
@@ -274,6 +278,7 @@ def test_exponential():
     assert P(X > 10) == exp(-10*rate)
 
     assert where(X <= 1).set == Interval(0, 1)
+
 
 def test_f_distribution():
     d1 = Symbol("d1", positive=True)
@@ -300,6 +305,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
+
 def test_gamma():
     k = Symbol("k", positive=True)
     theta = Symbol("theta", positive=True)
@@ -321,6 +327,7 @@ def test_gamma():
     # The following is too slow
     # assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
+
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
     b = Symbol("b", positive=True)
@@ -329,6 +336,7 @@ def test_gamma_inverse():
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
 
+
 def test_gompertz():
     b = Symbol("b", positive=True)
     eta = Symbol("eta", positive=True)
@@ -336,12 +344,14 @@ def test_gompertz():
     X = Gompertz("x", b, eta)
     assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
 
+
 def test_gumbel():
     beta = Symbol("beta", positive=True)
     mu = Symbol("mu")
     x = Symbol("x")
     X = Gumbel("x", beta, mu)
     assert simplify(density(X)(x)) == exp((beta*exp((mu - x)/beta) + mu - x)/beta)/beta
+
 
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
@@ -352,6 +362,7 @@ def test_kumaraswamy():
     assert cdf(X)(x) == Piecewise((0, x < 0),
                                 (-(-x**a + 1)**b + 1, x <= 1),
                                 (1, True))
+
 
 def test_laplace():
     mu = Symbol("mu")
@@ -417,11 +428,11 @@ def test_nakagami():
     assert density(X)(x) == (2*x**(2*mu - 1)*mu**mu*omega**(-mu)
                                 *exp(-x**2*mu/omega)/gamma(mu))
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
-           *gamma(mu + S.Half)/gamma(mu + 1))
+                                            *gamma(mu + S.Half)/gamma(mu + 1))
     assert simplify(variance(X, meijerg=True)) == (
     omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
     assert cdf(X)(x) == Piecewise(
-                                (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0), 
+                                (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
 
 
@@ -479,6 +490,8 @@ def test_studentt():
 
     X = StudentT('x', nu)
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
+    assert cdf(X)(x) == 1/2 + x*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2),
+                                (3/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
 
 
 def test_trapezoidal():
@@ -663,6 +676,7 @@ def test_probability_unevaluated():
     T = Normal('T', 30, 3)
     assert type(P(T > 33, evaluate=False)) == Integral
 
+
 def test_density_unevaluated():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 2)
@@ -678,6 +692,7 @@ def test_NormalDistribution():
     assert nd.expectation(x, x) == 0
     assert nd.expectation(x**2, x) == 1
 
+
 def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
@@ -686,16 +701,19 @@ def test_random_parameters():
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 
+
 def test_random_parameters_given():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert given(meas, Eq(mu, 5)) == Normal('T', 5, 1)
+
 
 def test_conjugate_priors():
     mu = Normal('mu', 2, 3)
     x = Normal('x', mu, 1)
     assert isinstance(simplify(density(mu, Eq(x, y), evaluate=False)(z)),
             Integral)
+
 
 def test_difficult_univariate():
     """ Since using solve in place of deltaintegrate we're able to perform
@@ -712,6 +730,7 @@ def test_issue_10003():
     G = Gamma('g', 1, 2)
     assert P(X < -1) == S.Zero
     assert P(G < -1) == S.Zero
+
 
 def test_precomputed_cdf():
     x = symbols("x", real=True, finite=True)
@@ -730,7 +749,8 @@ def test_precomputed_cdf():
         compdiff = simplify(compdiff.rewrite(erfc))
         assert compdiff == 0
 
+
 def test_issue_13324():
     X = Uniform('X', 0, 1)
-    assert E(X, X > Rational(1,2)) == Rational(3,4)
-    assert E(X, X > 0) == Rational(1,2)
+    assert E(X, X > Rational(1, 2)) == Rational(3, 4)
+    assert E(X, X > 0) == Rational(1, 2)
