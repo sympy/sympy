@@ -332,6 +332,9 @@ class StrPrinter(Printer):
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
+    def _print_Ordinal(self, expr):
+        return expr.__str__()
+
     def _print_Cycle(self, expr):
         return expr.__str__()
 

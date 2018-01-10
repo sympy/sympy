@@ -1100,9 +1100,19 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **assumptions):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy.tensor.array import NDimArray, derive_by_array
+        from sympy import Integer
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
+        from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
+        try:
+            has_symbol_set = isinstance(expr.free_symbols, set)
+        except AttributeError:
+            has_symbol_set = False
+        if not has_symbol_set:
+            raise ValueError(filldedent('''
+                Since there are no variables in the expression %s,
+                it cannot be differentiated.''' % expr))
 
         # There are no variables, we differentiate wrt all of the free symbols
         # in expr.
@@ -1111,7 +1121,6 @@ class Derivative(Expr):
             if len(variables) != 1:
                 if expr.is_number:
                     return S.Zero
-                from sympy.utilities.misc import filldedent
                 if len(variables) == 0:
                     raise ValueError(filldedent('''
                         Since there are no variables in the expression,
@@ -1132,8 +1141,10 @@ class Derivative(Expr):
         # derivative.
         variable_count = []
         j = 0
+        array_likes = (tuple, list, Tuple)
+
         for i, v in enumerate(variables):
-            if v.is_Integer:
+            if isinstance(v, Integer):
                 count = v
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
@@ -1146,14 +1157,25 @@ class Derivative(Expr):
                 else:
                     variable_count[j-1] = Tuple(prev, count)
             else:
-                if isinstance(v, (Tuple, tuple)):
-                    v, count = v
+                if isinstance(v, array_likes):
+                    if len(v) == 0:
+                        # Ignore empty tuples: Derivative(expr, ... , (), ... )
+                        continue
+                    if isinstance(v[0], array_likes):
+                        # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
+                        if len(v) == 1:
+                            v = Array(v[0])
+                            count = 1
+                        else:
+                            v, count = v
+                            v = Array(v)
+                    else:
+                        v, count = v
                 else:
                     count = S(1)
                 if count == 0:
                     continue
                 if not v._diff_wrt:
-                    from sympy.utilities.misc import filldedent
                     last_digit = int(str(count)[-1])
                     ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
                     raise ValueError(filldedent('''
@@ -1220,25 +1242,35 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
-            elif not count.is_Integer:
-                obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-                    expr = derive_by_array(expr, v)
-                    nderivs += 1
-                    continue
+                    deriv_fun = derive_by_array
+                    is_symbol = True
+                else:
+                    deriv_fun = lambda x, y: x._eval_derivative(y)
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
                 obj = expr
-                for i in range(count):
-                    obj2 = obj._eval_derivative(v)
-                    if obj == obj2:
-                        break
-                    obj = obj2
-                    nderivs += 1
+                if count.is_Integer:
+                    for i in range(count):
+                        obj2 = deriv_fun(obj, v)
+                        if obj == obj2:
+                            break
+                        obj = obj2
+                        nderivs += 1
+                elif obj.is_Derivative:
+                    dict_var_count = dict(obj.variable_count)
+                    if v in dict_var_count:
+                        dict_var_count[v] += count
+                    else:
+                        dict_var_count[v] = count
+                    obj = Derivative(obj.expr, *dict_var_count.items())
+                    nderivs += count
+                else:
+                    obj = None
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1269,7 +1301,7 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variable_count(expr.args[1:])
                 )
 
-        if nderivs > 1 and assumptions.get('simplify', True):
+        if (nderivs > 1) == True and assumptions.get('simplify', True):
             from sympy.core.exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
@@ -1398,7 +1430,7 @@ class Derivative(Expr):
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return self.func(expr, *self.variables, **hints)
+        return self.func(expr, *self.variable_count, **hints)
 
     @_sympifyit('z0', NotImplementedError)
     def doit_numerically(self, z0):
