@@ -512,7 +512,7 @@ class GeometryEntity(Basic):
         >>> b = Point(2, 2)
         >>> Line(a, b).parameter_value((1, 1), t)
         {t: 1/2}
-        >>> Line(a, b).arbitrary_point(t).subs(t, 0.5)
+        >>> Line(a, b).arbitrary_point(t).subs(_)
         Point2D(1, 1)
         """
         from sympy.geometry.point import Point
