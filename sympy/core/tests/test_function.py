@@ -868,6 +868,10 @@ def test_issue_13843():
 
     assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
 
+def test_issue_13873():
+    from sympy.abc import x
+    raises(ValueError, lambda: Derivative(sin(x), (x,-1)))
+
 def test_undefined_function_eq():
     f = Function('f')
     f2 = Function('f')
