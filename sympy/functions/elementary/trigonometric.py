@@ -932,7 +932,7 @@ class tan(TrigonometricFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.One + self(*args)**2
+            return S.One + self**2
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1227,7 +1227,7 @@ class cot(TrigonometricFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.NegativeOne - self(*args)**2
+            return S.NegativeOne - self**2
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1785,7 +1785,7 @@ class sinc(TrigonometricFunction):
     """
 
     def fdiff(self, argindex=1):
-        x = args[0]
+        x = self.args[0]
         if argindex == 1:
             return (x*cos(x) - sin(x)) / x**2
         else:
