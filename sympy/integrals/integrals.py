@@ -524,9 +524,9 @@ class Integral(AddWithLimits):
                 else:
                     terms = tuple((antideriv,))
                 for term in terms:
-                    atan_arg = term.atoms(atan)
-                    if atan_arg:
-                        atan_arg = atan_arg.pop()
+                    atan_part = term.atoms(atan)
+                    if atan_part and len(atan_part)==1:
+                        atan_arg = atan_part.pop().args[0]
                         # Checking `atan_arg` to be linear combination of `tan` or `cot`
                         if atan_arg.has(tan):
                             x1 = Dummy('x1')
@@ -539,8 +539,8 @@ class Integral(AddWithLimits):
                                 from sympy import solve
                                 a = tan_part.args[0]
                                 K = solve(a-pi/2,sym)[0]
-                                P = limit(term, sym, K, dir="-") - limit(term, sym, K, dir="+")
-                                antideriv += P*floor((a-pi/2)/pi)
+                                nterm = term.subs(atan_part,Add(atan_part,pi*floor((a-pi/2)/pi)))
+                                antideriv += nterm - term
                             except ValueError:
                                 break
                         elif atan_arg.has(cot):
@@ -554,8 +554,8 @@ class Integral(AddWithLimits):
                                 from sympy import solve
                                 a = cot_part.args[0]
                                 K = solve(a-pi/2,sym)[0]
-                                P = limit(term, sym, K, dir="-") - limit(term, sym, K, dir="+")
-                                antideriv += P*floor((a)/pi)
+                                nterm = term.subs(atan_part,Add(atan_part,pi*floor((a)/pi)))
+                                antideriv += nterm - term
                             except ValueError:
                                 break
 
