@@ -1187,6 +1187,11 @@ class Derivative(Expr):
                     variable_count.append(Tuple(v, count))
                     j += 1
 
+        # Since negative order derivatives are meaningless, we make a special
+        # case to raise ValueError for them.
+        if any(count.is_negative for v, count in variable_count):
+            raise ValueError("Negative order derivatives are not allowed")
+
         # We make a special case for 0th derivative, because there is no
         # good way to unambiguously print this.
         if len(variable_count) == 0:
