@@ -1201,7 +1201,7 @@ class Derivative(Expr):
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
-            symbol_set = set(sc[0] for sc in variable_count)
+            symbol_set = set(sc[0] for sc in variable_count if sc[1].is_positive)
             if symbol_set.difference(expr.free_symbols):
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)

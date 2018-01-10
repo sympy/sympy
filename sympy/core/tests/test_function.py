@@ -868,6 +868,14 @@ def test_issue_13843():
 
     assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
 
+def test_order_could_be_zero():
+    x, y = symbols('x, y')
+    n = symbols('n', integer=True, nonnegative=True)
+    m = symbols('m', integer=True, positive=True)
+    assert diff(y, (x, n)) == Derivative(y, (x, n))
+    assert diff(y, (x, n + 1)) == S.Zero
+    assert diff(y, (x, m)) == S.Zero
+
 def test_undefined_function_eq():
     f = Function('f')
     f2 = Function('f')
