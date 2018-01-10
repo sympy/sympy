@@ -147,7 +147,7 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy.geometry import Plane, Ray
-        >>> from sympy.abc import u, v, t
+        >>> from sympy.abc import u, v, t, r
         >>> p = Plane((1, 1, 1), normal_vector=(1, 0, 0))
         >>> p.arbitrary_point(u, v)
         Point3D(1, u + 1, v + 1)
@@ -155,13 +155,12 @@ class Plane(GeometryEntity):
         Point3D(1, cos(t) + 1, sin(t) + 1)
 
         While arbitrary values of u and v can move the point anywhere in
-        the plane, the single-parameter point can be moved on a ray
-        relative to the p1 value. For example, to locate it a distance
-        of 2 from p1 one could do:
+        the plane, the single-parameter point can be used to construct a
+        ray whose arbitrary point can be located at angle t and radius
+        r from p.p1:
 
-        >>> delta = (_ - p.p1)
-        >>> p.p1 + delta*2
-        Point3D(1, 2*cos(t) + 1, 2*sin(t) + 1)
+        >>> Ray(p.p1, _).arbitrary_point(r)
+        Point3D(1, r*cos(t) + 1, r*sin(t) + 1)
 
         Returns
         =======
