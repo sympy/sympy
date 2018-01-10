@@ -9,6 +9,7 @@ from __future__ import division, print_function
 
 from sympy import simplify
 from sympy.core import Dummy, Rational, S, Symbol
+from sympy.core.symbol import _symbol
 from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from sympy.matrices import Matrix
@@ -169,8 +170,11 @@ class Plane(GeometryEntity):
 
         """
         circle = v is None
-        u = u or Dummy('t' if circle else 'u', real=True)
-        v = v or Dummy('v', real=True)
+        if circle:
+            u = _symbol(u or 't', real=True)
+        else:
+            u = _symbol(u or 'u', real=True)
+            v = _symbol(v or 'v', real=True)
         x, y, z = self.normal_vector
         a, b, c = self.p1.args
         # x1, y1, z1 is a nonzero vector parallel to the plane
@@ -788,8 +792,7 @@ class Plane(GeometryEntity):
         return self.intersection(Line3D(rv, rv + Point3D(self.normal_vector)))[0]
 
     def random_point(self, seed=None):
-        """ Returns a random point on the Plane somewhere within
-        the unit square centered on p1 of the plane.
+        """ Returns a random point on the Plane.
 
         Returns
         =======
@@ -803,7 +806,7 @@ class Plane(GeometryEntity):
         >>> p = Plane((1, 0, 0), normal_vector=(0, 1, 0))
         >>> r = p.random_point(seed=42)  # seed value is optional
         >>> r.n(3)
-        Point3D(0.721, 0, -0.95)
+        Point3D(2.29, 0, -1.35)
 
         The random point can be moved to lie on the circle of radius
         1 centered on p1:
@@ -819,11 +822,11 @@ class Plane(GeometryEntity):
             rng = random
         u, v = Dummy('u'), Dummy('v')
         params = {
-            u: 2*Rational(rng.random()) - 1,
-            v: 2*Rational(rng.random()) - 1}
+            u: 2*Rational(rng.gauss(0, 1)) - 1,
+            v: 2*Rational(rng.gauss(0, 1)) - 1}
         return self.arbitrary_point(u, v).subs(params)
 
-    def parameter_value(self, other, u=None, v=None):
+    def parameter_value(self, other, u, v=None):
         """Return the parameter(s) corresponding to the given point.
 
         Examples
@@ -840,8 +843,8 @@ class Plane(GeometryEntity):
         >>> on_circle = p.arbitrary_point(t).subs(t, pi/4)
         >>> on_circle.distance(p.p1)
         1
-        >>> p.parameter_value(on_circle)
-        pi/4
+        >>> p.parameter_value(on_circle, t)
+        {t: pi/4}
 
         Moving the point twice as far from p1 does not change
         the parameter value:
@@ -849,8 +852,8 @@ class Plane(GeometryEntity):
         >>> off_circle = p.p1 + (on_circle - p.p1)*2
         >>> off_circle.distance(p.p1)
         2
-        >>> p.parameter_value(off_circle)
-        pi/4
+        >>> p.parameter_value(off_circle, t)
+        {t: pi/4}
 
         If the 2-value parameter is desired, supply the two
         parameter symbols and a replacement dictionary will
@@ -870,22 +873,18 @@ class Plane(GeometryEntity):
             raise ValueError("other must be a point")
         if other == self.p1:
             return other
-        t = u is None and v is None
-        if t:
-            x = Dummy('t', real=True)
-            u = self.arbitrary_point(x) - self.p1
-            eq = u - (other - self.p1).unit
-            sol = solve(eq, x, dict=True)
+        if isinstance(u, Symbol) and v is None:
+            delta = self.arbitrary_point(u) - self.p1
+            eq = delta - (other - self.p1).unit
+            sol = solve(eq, u, dict=True)
         elif isinstance(u, Symbol) and isinstance(v, Symbol):
             pt = self.arbitrary_point(u, v)
             sol = solve(pt - other, (u, v), dict=True)
         else:
-            raise ValueError('expecting 0 or 2 symbols')
+            raise ValueError('expecting 1 or 2 symbols')
         if not sol:
             raise ValueError("Given point is not on %s" % func_name(self))
-        if t:
-            return sol[0][x]  # val
-        return sol[0]  # {u: uval, v: vval}
+        return sol[0]  # {t: tval} or {u: uval, v: vval}
 
     @property
     def ambient_dimension(self):

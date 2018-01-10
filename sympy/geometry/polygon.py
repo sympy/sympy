@@ -612,7 +612,7 @@ class Polygon(GeometrySet):
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
-    def parameter_value(self, other):
+    def parameter_value(self, other, t):
         from sympy.solvers.solvers import solve
         if not isinstance(other,GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
@@ -620,16 +620,19 @@ class Polygon(GeometrySet):
             raise ValueError("other must be a point")
         if other.free_symbols:
             raise NotImplementedError('non-numeric coordinates')
-        if self.contains(other):
-            t = Dummy('t', real=True)
-            p = self.arbitrary_point(t)
-            for pt, cond in p.args:
-                sol = solve(pt - other, t, dict=True)
-                if not sol:
-                    continue
-                value = sol[0][t]
-                if cond.subs(t, value):
-                    return value
+        unknown = False
+        T = Dummy('t', real=True)
+        p = self.arbitrary_point(T)
+        for pt, cond in p.args:
+            sol = solve(pt - other, T, dict=True)
+            if not sol:
+                continue
+            value = sol[0][T]
+            if simplify(cond.subs(T, value)) == True:
+                return {t: value}
+            unknown = True
+        if unknown:
+            raise ValueError("Given point may not be on %s" % func_name(self))
         raise ValueError("Given point is not on %s" % func_name(self))
 
     def plot_interval(self, parameter='t'):

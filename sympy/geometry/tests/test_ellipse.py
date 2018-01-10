@@ -388,6 +388,7 @@ def test_is_tangent():
 
 
 def test_parameter_value():
+    t = Symbol('t')
     e = Ellipse(Point(0, 0), 3, 5)
-    assert e.parameter_value((3, 0)) == 0
-    raises(ValueError, lambda: e.parameter_value((4, 0)))
+    assert e.parameter_value((3, 0), t) == {t: 0}
+    raises(ValueError, lambda: e.parameter_value((4, 0), t))

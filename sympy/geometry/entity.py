@@ -25,6 +25,7 @@ from __future__ import division, print_function
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
+from sympy.core.symbol import _symbol
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
@@ -497,7 +498,7 @@ class GeometryEntity(Basic):
                 newargs.append(a)
         return self.func(*newargs)
 
-    def parameter_value(self, other):
+    def parameter_value(self, other, t):
         """Return the parameter corresponding to the given point.
         Evaluating an arbitrary point of the entity at this parameter
         value will return the given point.
@@ -509,8 +510,8 @@ class GeometryEntity(Basic):
         >>> from sympy.abc import t
         >>> a = Point(0, 0)
         >>> b = Point(2, 2)
-        >>> Line(a, b).parameter_value((1, 1))
-        1/2
+        >>> Line(a, b).parameter_value((1, 1), t)
+        {t: 1/2}
         >>> Line(a, b).arbitrary_point(t).subs(t, 0.5)
         Point2D(1, 1)
         """
@@ -521,11 +522,11 @@ class GeometryEntity(Basic):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
             raise ValueError("other must be a point")
-        t = Dummy('t', real=True)
-        sol = solve(self.arbitrary_point(t) - other, t, dict=True)
+        T = Dummy('t', real=True)
+        sol = solve(self.arbitrary_point(T) - other, T, dict=True)
         if not sol:
             raise ValueError("Given point is not on %s" % func_name(self))
-        return sol[0].get(t)
+        return {t: sol[0][T]}
 
 
 class GeometrySet(GeometryEntity, Set):
