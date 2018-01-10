@@ -289,6 +289,15 @@ def test_contains():
         assert len(w) == 1
 
 
+def test_coordinate():
+    p1, p2, p3 = Point(0, 1), Point(2, 3), Point(3, 4)
+    l = Line(p1, p2)
+    # Line parameter
+    assert l.coordinate(p3.args) == Rational(3, 2)
+    p4 = Point(1, 1) # not collinear
+    raises(ValueError, lambda: l.coordinate(p4))
+
+
 def test_contains_nonreal_symbols():
     u, v, w, z = symbols('u, v, w, z')
     l = Segment(Point(u, w), Point(v, z))

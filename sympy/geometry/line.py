@@ -1131,6 +1131,39 @@ class Line(LinearEntity):
             return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
         return False
 
+    def coordinate(self, other):
+        """
+        Finds the parameter ``t`` for which
+        ``other == t * self.p1 + (1 - t) self.p2`` is True.
+
+        Raises
+        ======
+
+        ValueError
+            When ``other`` is not contained in the line.
+
+            When ``other`` is not a ``Point``.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2, p3 = Point(0, 1), Point(2, 3), Point(4, 5)
+        >>> l = Line(p1, p2)
+        >>> l.coordinate(p3)
+        2
+        """
+        if not isinstance(other, GeometryEntity):
+            other = Point(other, dim=self.ambient_dimension)
+        if isinstance(other, Point):
+            if Point.is_collinear(self.p1, self.p2, other):
+                if self.p1.x != self.p2.x:
+                    return (other.x - self.p1.x)/(self.p2.x - self.p1.x)
+                elif self.p1.y != self.p2.y:
+                    return (other.y - self.p1.y)/(self.p2.y - self.p1.y)
+            raise ValueError("Point is not collinear.")
+        raise ValueError('Other should be a Point')
+
     def distance(self, other):
         """
         Finds the shortest distance between a line and a point.
