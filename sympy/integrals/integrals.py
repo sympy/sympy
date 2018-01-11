@@ -526,7 +526,7 @@ class Integral(AddWithLimits):
                 for term in terms:
                     atan_part = term.atoms(atan)
                     for atan_term in atan_part:
-                        atan_arg = atan_term.pop().args[0]
+                        atan_arg = atan_term.args[0]
                         # Checking `atan_arg` to be linear combination of `tan` or `cot`
                         if atan_arg.has(tan):
                             x1 = Dummy('x1')
