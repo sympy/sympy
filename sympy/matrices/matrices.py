@@ -39,6 +39,28 @@ def _iszero(x):
         return None
 
 
+def _is_probably_zero(x):
+    """Returns True if x is probably zero, False if it is probably not,
+       None if undecided"""
+    try:
+        is_zero = x.is_zero
+    except AttributeError:
+        is_zero = None
+    if is_zero is None:
+        variables = x.free_symbols
+        if isinstance(variables, set) and len(variables) > 0:
+            for _ in range(5):
+                substitutions = {v: random.randint(-10, 10) + \
+                    + Rational(random.randint(100, 200), random.randint(201, 300)) \
+                    for v in variables}
+                if x.xreplace(substitutions) != 0:
+                    is_zero = False
+                    break
+            if is_zero is None:
+                is_zero = True
+    return is_zero
+
+
 class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
 
@@ -174,28 +196,6 @@ class MatrixDeterminant(MatrixCommon):
         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
         """
 
-        # XXX included as a workaround for issue #12362.  Should use `_find_reasonable_pivot` instead
-        # As of 2018-01-09, `_find_reasonable_pivot` could be used but it slows down the computation,
-        # by the factor of 2.5 in one test. The issue #10279 is relevant.
-        # As a compromise, check for the value being nonzero at several random rational points
-        def _find_pivot(l):
-            for pos, val in enumerate(l):
-                if val:
-                    variables = val.free_symbols
-                    good_pivot = True
-                    if len(variables) > 0:
-                        for _ in range(5):
-                            substitutions = {v: random.randint(-10, 10) + Rational(
-                                random.randint(100, 200), random.randint(201, 300)) \
-                                for v in variables}
-                            if val.xreplace(substitutions) == 0:
-                                good_pivot = False
-                                break
-                    if good_pivot:
-                        return (pos, val, None, None)
-            return (None, None, None, None)
-
-
         # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
         # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         def bareiss(mat, cumm=1):
@@ -205,8 +205,11 @@ class MatrixDeterminant(MatrixCommon):
                 return mat[0, 0]
 
             # find a pivot and extract the remaining matrix
-            # XXX should use `_find_reasonable_pivot`.  Blocked by issue #12362
-            pivot_pos, pivot_val, _, _ = _find_pivot(mat[:, 0])
+            # Wuth the default iszerofunc,  _find_reasonable_pivot slows down
+            # the compotation by the factor of 2.5 in one test.
+            # Relevant issues #10279 and #13877.
+            pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
+                                         iszerofunc=_is_probably_zero)
             if pivot_pos == None:
                 return S.Zero
 
