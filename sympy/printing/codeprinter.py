@@ -373,6 +373,8 @@ class CodePrinter(StrPrinter):
         return self._print_NumberSymbol(expr)
     def _print_GoldenRatio(self, expr):
         return self._print_NumberSymbol(expr)
+    def _print_TribonacciConstant(self, expr):
+        return self._print_NumberSymbol(expr)
     def _print_Exp1(self, expr):
         return self._print_NumberSymbol(expr)
     def _print_Pi(self, expr):
