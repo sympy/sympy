@@ -883,7 +883,7 @@ class Polygon(GeometrySet):
             e2_next = point1
 
         '''
-        Loop which determins the distance between anti-podal pairs and updates the
+        Loop which determines the distance between anti-podal pairs and updates the
         minimum distance accordingly. It repeats until it reaches the starting position.
         '''
         while True:

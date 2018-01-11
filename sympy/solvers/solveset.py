@@ -1596,7 +1596,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     # sometimes solveset returns soln
                     # with intersection `S.Reals`, to confirm that
                     # soln is in `domain=S.Reals` or not. We don't consider
-                    # that intersecton.
+                    # that intersection.
                     intersections[sym] = sol.args[0]
                 sol = sol.args[1]
             # after intersection and complement Imageset should

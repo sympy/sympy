@@ -3296,7 +3296,7 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        This function is extremely lenghty and complicated and will require
+        This function is extremely lengthy and complicated and will require
         some careful attention. The implementation is described in
         [1], pp. 114-117, and the comments for the code here follow the lines
         of the pseudocode in the book for clarity.

@@ -5227,11 +5227,11 @@ def _solve_variation_of_parameters(eq, func, order, match):
         # The wronskian will be 0 iff the solutions are not linearly
         # independent.
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply " +
+        " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " + str(eq) + " (Wronskian == 0)")
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply " +
+        " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " +
         str(eq) + " (number of terms != order)")
     negoneterm = (-1)**(order)
@@ -5998,7 +5998,7 @@ def lie_heuristic_bivariate(match, comp=False):
 def lie_heuristic_chi(match, comp=False):
     r"""
     The aim of the fourth heuristic is to find the function `\chi(x, y)`
-    that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
+    that satisfies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
     - \frac{\partial h}{\partial y}\chi = 0`.
 
     This assumes `\chi` to be a bivariate polynomial in `x` and `y`. By intution,
