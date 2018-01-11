@@ -924,7 +924,6 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @cacheit
     def _subs(self, old, new, **hints):
-        from sympy.physics.units.quantities import Quantity
         """Substitutes an expression old -> new.
 
         If self is not equal to old then _eval_subs is called.
@@ -1000,40 +999,32 @@ class Basic(with_metaclass(ManagedProperties)):
             Try to replace old with new in any of self's arguments.
             """
             hit = False
-            def subs_old_new(self,old,new,hit):
-                for i, arg in enumerate(args):
-                    if not hasattr(arg, '_eval_subs'):
-                        continue
-                    arg = arg._subs(old, new, **hints)
-                    if not _aresame(arg, args[i]):
-                        hit = True
-                        args[i] = arg
-                if hit:
-                    rv = self.func(*args)
-                    hack2 = hints.get('hack2', False)
-                    if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
-                        coeff = S.One
-                        nonnumber = []
-                        for i in args:
-                            if i.is_Number:
-                                coeff *= i
-                            else:
-                                nonnumber.append(i)
-                        nonnumber = self.func(*nonnumber)
-                        if coeff is S.One:
-                            return nonnumber
-                        else:
-                            return self.func(coeff, nonnumber, evaluate=False)
-                    return rv
-                return self
-
             args = list(self.args)
-            try:
-                return subs_old_new(self,old,new,hit)
-            except AttributeError:
-                if isinstance(self, Quantity):
-                    args = [self.name]
-                    return subs_old_new(self,old,new,hit)
+            for i, arg in enumerate(args):
+                if not hasattr(arg, '_eval_subs'):
+                    continue
+                arg = arg._subs(old, new, **hints)
+                if not _aresame(arg, args[i]):
+                    hit = True
+                    args[i] = arg
+            if hit:
+                rv = self.func(*args)
+                hack2 = hints.get('hack2', False)
+                if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
+                    coeff = S.One
+                    nonnumber = []
+                    for i in args:
+                        if i.is_Number:
+                            coeff *= i
+                        else:
+                            nonnumber.append(i)
+                    nonnumber = self.func(*nonnumber)
+                    if coeff is S.One:
+                        return nonnumber
+                    else:
+                        return self.func(coeff, nonnumber, evaluate=False)
+                return rv
+            return self
 
         if _aresame(self, old):
             return new
