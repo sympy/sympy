@@ -16,18 +16,21 @@ def _add_splines(c, b1, d, b2):
         new_args = []
         n_intervals = len(b1.args)
         if n_intervals != len(b2.args):
-            # Args of b1 and b2 are not equal. Just combining the Piecewise without any fancy optimization
+            # Args of b1 and b2 are not equal. Just combining the
+            # Piecewise without any fancy optimization
             p1 = piecewise_fold(c*b1)
             p2 = piecewise_fold(d*b2)
 
             # Search all Piecewise arguments except (0, True)
             p2args = list(p2.args[:-1])
 
-            # This merging algorithm assume the conditions in p1 and p2 are sorted
+            # This merging algorithm assumes the conditions in
+            # p1 and p2 are sorted
             for arg in p1.args[:-1]:
                 # Conditional of Piecewise are And objects
-                # the args of the And object is a tuple of two Relational objects
-                # the numerical value is in the .rhs of the Relational object
+                # the args of the And object is a tuple of two
+                # Relational objects the numerical value is in the .rhs
+                # of the Relational object
                 expr = arg.expr
                 cond = arg.cond
 
@@ -49,7 +52,9 @@ def _add_splines(c, b1, d, b2):
                         # No need to check the rest
                         break
                     elif lower_2 < lower and upper_2 <= lower:
-                        # Check if arg2 condition smaller than arg1, add to new_args by itself (no match expected in p1)
+                        # Check if arg2 condition smaller than arg1,
+                        # add to new_args by itself (no match expected
+                        # in p1)
                         new_args.append(arg2)
                         del p2args[i]
                         break
@@ -80,8 +85,9 @@ def _add_splines(c, b1, d, b2):
 def bspline_basis(d, knots, n, x):
     """The `n`-th B-spline at `x` of degree `d` with knots.
 
-    B-Splines are piecewise polynomials of degree `d` [1]_.  They are defined on
-    a set of knots, which is a sequence of integers or floats.
+    B-Splines are piecewise polynomials of degree `d` [1]_.  They are
+    defined on a set of knots, which is a sequence of integers or
+    floats.
 
     The 0th degree splines have a value of one on a single interval:
 
@@ -92,8 +98,8 @@ def bspline_basis(d, knots, n, x):
         >>> bspline_basis(d, knots, 0, x)
         Piecewise((1, (x >= 0) & (x <= 1)), (0, True))
 
-    For a given ``(d, knots)`` there are ``len(knots)-d-1`` B-splines defined, that
-    are indexed by ``n`` (starting at 0).
+    For a given ``(d, knots)`` there are ``len(knots)-d-1`` B-splines
+    defined, that are indexed by ``n`` (starting at 0).
 
     Here is an example of a cubic B-spline:
 
@@ -115,9 +121,9 @@ def bspline_basis(d, knots, n, x):
         >>> bspline_basis(d, knots, 0, x)
         Piecewise((-x/2 + 1, (x >= 0) & (x <= 2)), (0, True))
 
-    It is quite time consuming to construct and evaluate B-splines. If you
-    need to evaluate a B-splines many times, it is best to lambdify them
-    first:
+    It is quite time consuming to construct and evaluate B-splines. If
+    you need to evaluate a B-splines many times, it is best to
+    lambdify them first:
 
         >>> from sympy import lambdify
         >>> d = 3
@@ -171,11 +177,13 @@ def bspline_basis(d, knots, n, x):
 
 
 def bspline_basis_set(d, knots, x):
-    """Return the ``len(knots)-d-1`` B-splines at ``x`` of degree ``d`` with ``knots``.
+    """Return the ``len(knots)-d-1`` B-splines at ``x`` of degree ``d``
+    with ``knots``.
 
     This function returns a list of Piecewise polynomials that are the
-    ``len(knots)-d-1`` B-splines of degree ``d`` for the given knots. This function
-    calls ``bspline_basis(d, knots, n, x)`` for different values of ``n``.
+    ``len(knots)-d-1`` B-splines of degree ``d`` for the given knots.
+    This function calls ``bspline_basis(d, knots, n, x)`` for different
+    values of ``n``.
 
     Examples
     ========
@@ -205,13 +213,13 @@ def bspline_basis_set(d, knots, x):
 
 
 def interpolating_spline(d, x, X, Y):
-    """Return spline of degree ``d`` interpolating for given
-    ``X`` and ``Y`` values.
+    """Return spline of degree ``d``, passing through the given ``X``
+    and ``Y`` values.
 
     This function returns a piecewise function such that each part is
-    a polynomial of degreeat most ``d`` .
-    The degree ``d`` must be at least 1. The values listed in X must
-    be strictly increasing.
+    a polynomial of degree not greater than ``d``. The value of ``d``
+    must be 1 or greater and the values of ``X`` must be strictly
+    increasing.
 
     Examples
     ========
@@ -238,13 +246,17 @@ def interpolating_spline(d, x, X, Y):
     # Input sanitization
     d = sympify(d)
     if not(d.is_Integer and d.is_positive):
-        raise ValueError("Spline degree must be a positive integer, not %s" % d)
+        raise ValueError(
+            "Spline degree must be a positive integer, not %s." % d)
     if len(X) != len(Y):
-        raise ValueError('Number of X and Y coordinates passed not equal')
+        raise ValueError(
+            "Number of X and Y coordinates must be the same.")
     if len(X) < d + 1:
-        raise ValueError('Degree must be less than the number of control points')
+        raise ValueError(
+            "Degree must be less than the number of control points.")
     if not all(a < b for a, b in zip(X, X[1:])):
-        raise ValueError('The x-coordinates must be strictly increasing')
+        raise ValueError(
+            "The x-coordinates must be strictly increasing.")
 
     # Evaluating knots value
     if d.is_odd:
@@ -252,7 +264,8 @@ def interpolating_spline(d, x, X, Y):
         interior_knots = X[j:-j]
     else:
         j = d // 2
-        interior_knots = [Rational(a + b, 2) for a, b in zip(X[j:-j - 1], X[j + 1:-j])]
+        interior_knots = [Rational(a + b, 2) for a, b in
+            zip(X[j:-j - 1], X[j + 1:-j])]
 
     knots = [X[0]] * (d + 1) + list(interior_knots) + [X[-1]] * (d + 1)
 
@@ -260,12 +273,15 @@ def interpolating_spline(d, x, X, Y):
 
     A = [[b.subs(x, v) for b in basis] for v in X]
 
-    coeff = linsolve((Matrix(A), Matrix(Y)), symbols('c0:{}'.format(len(X)), cls=Dummy))
+    coeff = linsolve((Matrix(A), Matrix(Y)), symbols('c0:{}'.format(
+        len(X)), cls=Dummy))
     coeff = list(coeff)[0]
-    intervals = set([c for b in basis for (e, c) in b.args if c != True])
+    intervals = set([c for b in basis for (e, c) in b.args
+        if c != True])
 
     # Sorting the intervals
-    ival = [e.atoms(Number) for e in intervals]   # List containing end-points of each interval
+    #  ival contains the end-points of each interval
+    ival = [e.atoms(Number) for e in intervals]
     ival = [list(sorted(e))[0] for e in ival]
     com = zip(ival, intervals)
     com = sorted(com, key=lambda x: x[0])
@@ -274,6 +290,7 @@ def interpolating_spline(d, x, X, Y):
     basis_dicts = [dict((c, e) for (e, c) in b.args) for b in basis]
     spline = []
     for i in intervals:
-        piece = sum([c*d.get(i, S.Zero) for (c, d) in zip(coeff, basis_dicts)], S.Zero)
+        piece = sum([c*d.get(i, S.Zero) for (c, d) in
+            zip(coeff, basis_dicts)], S.Zero)
         spline.append((piece, i))
     return(Piecewise(*spline))

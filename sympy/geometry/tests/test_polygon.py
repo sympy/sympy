@@ -408,9 +408,9 @@ def test_intersection():
         Segment(Point(1, 0), Point(0, 1))]
     assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) == [Point(-5/7, 6/7),
                                                                                     Segment(Point2D(0, 1), Point(1, 0))]
-    assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
-
-
+    assert poly1.intersection(RegularPolygon((-12, -15)
+                                             
+                                             
 def test_second_moment_of_area():
     x, y = symbols('x, y')
     #triangle
@@ -440,10 +440,19 @@ def test_second_moment_of_area():
     assert (I_yy - rectangle.second_moment_of_area(p)[1]) == 0
     assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0
 
+                                             
+def test_parameter_value():
+    t = Symbol('t')
+    sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
+    assert sq.parameter_value((0.5, 1), t) == {t: 3/8}
+    q = Polygon((0, 0), (2, 1), (2, 4), (4, 0))
+    assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)}  # ~= 0.708
+    raises(ValueError, lambda: sq.parameter_value((5, 6), t))
+
 
 def test_issue_12966():
     poly = Polygon(Point(0, 0), Point(0, 10), Point(5, 10), Point(5, 5),
-    Point(10, 5), Point(10, 0))
+        Point(10, 5), Point(10, 0))
     t = Symbol('t')
     pt = poly.arbitrary_point(t)
     DELTA = 5/poly.perimeter

@@ -194,7 +194,7 @@ def test_ellipse_geom():
     assert e1.intersection(Circle(Point(0, 2), 1)) == [Point(0, 1)]
     assert e1.intersection(Circle(Point(5, 0), 1)) == []
     assert e1.intersection(Ellipse(Point(2, 0), 1, 1)) == [Point(1, 0)]
-    assert e1.intersection(Ellipse(Point(5, 0), 1, 1,)) == []
+    assert e1.intersection(Ellipse(Point(5, 0), 1, 1)) == []
     assert e1.intersection(Point(2, 0)) == []
     assert e1.intersection(e1) == e1
     assert intersection(Ellipse(Point(0, 0), 2, 1), Ellipse(Point(3, 0), 1, 2)) == [Point(2, 0)]
@@ -205,7 +205,7 @@ def test_ellipse_geom():
     assert Circle((0, 0), 1/2).intersection(
         Triangle((-1, 0), (1, 0), (0, 1))) == [
         Point(-1/2, 0), Point(1/2, 0)]
-    raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0,0,1))))
+    raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0, 0, 1))))
     raises(TypeError, lambda: intersection(e2, Rational(12)))
     # some special case intersections
     csmall = Circle(p1, 3)
@@ -325,7 +325,7 @@ def test_transform():
 
 
 def test_bounds():
-    e1 = Ellipse(Point(0,0), 3, 5)
+    e1 = Ellipse(Point(0, 0), 3, 5)
     e2 = Ellipse(Point(2, -2), 7, 7)
     c1 = Circle(Point(2, -2), 7)
     c2 = Circle(Point(-2, 0), Point(0, 2), Point(2, 0))
@@ -348,7 +348,7 @@ def test_reflect():
 
 
 def test_is_tangent():
-    e1 = Ellipse(Point(0,0), 3, 5)
+    e1 = Ellipse(Point(0, 0), 3, 5)
     c1 = Circle(Point(2, -2), 7)
     assert e1.is_tangent(Point(0, 0)) is False
     assert e1.is_tangent(Point(3, 0)) is False
@@ -385,3 +385,10 @@ def test_is_tangent():
     assert e1.is_tangent(Polygon((3, 0), (5, 7), (6, -5))) is False
     raises(TypeError, lambda: e1.is_tangent(Point(0, 0, 0)))
     raises(TypeError, lambda: e1.is_tangent(Rational(5)))
+
+
+def test_parameter_value():
+    t = Symbol('t')
+    e = Ellipse(Point(0, 0), 3, 5)
+    assert e.parameter_value((3, 0), t) == {t: 0}
+    raises(ValueError, lambda: e.parameter_value((4, 0), t))
