@@ -9,6 +9,8 @@ from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
+from sympy.ntheory import isprime
+
 @public
 class FiniteField(Field, SimpleDomain):
     """General class for finite fields. """
@@ -27,6 +29,8 @@ class FiniteField(Field, SimpleDomain):
     def __init__(self, mod, dom=None, symmetric=True):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
+        if not(isprime(mod)):
+            raise ValueError("Only fields of prime order are supported")
         if dom is None:
             from sympy.polys.domains import ZZ
             dom = ZZ
