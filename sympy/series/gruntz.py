@@ -412,12 +412,15 @@ def sign(e, x):
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
     # rewrite e in terms of tractable functions only
+    from sympy.calculus.util import periodicity
     e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
         return e  # e is a constant
     if e.has(Order):
         e = e.expand().removeO()
+    if periodicity(e, x):
+        raise ValueError("periodic functions have no limit at infinity.")
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical behavior from the expression.

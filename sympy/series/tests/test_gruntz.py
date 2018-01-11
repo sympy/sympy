@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
+    atan, tan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
@@ -467,3 +467,9 @@ def test_issue_6682():
 def test_issue_7096():
     from sympy.functions import sign
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+
+def test_issue_13585():
+    from sympy.utilities.pytest import raises
+    from sympy.series.gruntz import limitinf
+    raises(ValueError, lambda : limitinf(tan(x), x))
+    raises(ValueError, lambda : limitinf(tan(tan(x)), x) )
