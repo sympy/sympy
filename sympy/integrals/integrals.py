@@ -525,8 +525,8 @@ class Integral(AddWithLimits):
                     terms = tuple((antideriv,))
                 for term in terms:
                     atan_part = term.atoms(atan)
-                    if atan_part and len(atan_part)==1:
-                        atan_arg = atan_part.pop().args[0]
+                    for atan_term in atan_part:
+                        atan_arg = atan_term.pop().args[0]
                         # Checking `atan_arg` to be linear combination of `tan` or `cot`
                         if atan_arg.has(tan):
                             x1 = Dummy('x1')
@@ -536,7 +536,7 @@ class Integral(AddWithLimits):
                             coeff = tan_exp1.diff(x1)
                             if not coeff.free_symbols:
                                 a = tan_part.args[0]
-                                nterm = term.subs(atan_part,Add(atan_part,sign(coeff)*pi*floor((a-pi/2)/pi)))
+                                nterm = term.subs(atan_term,Add(atan_term,sign(coeff)*pi*floor((a-pi/2)/pi)))
                                 antideriv += nterm - term
                         elif atan_arg.has(cot):
                             x1 = Dummy('x1')
@@ -546,7 +546,7 @@ class Integral(AddWithLimits):
                             coeff = cot_exp1.diff(x1)
                             if not coeff.free_symbols:
                                 a = cot_part.args[0]
-                                nterm = term.subs(atan_part,Add(atan_part,sign(coeff)*pi*floor((a)/pi)))
+                                nterm = term.subs(atan_term,Add(atan_term,sign(coeff)*pi*floor((a)/pi)))
                                 antideriv += nterm - term
 
             if antideriv is None:
