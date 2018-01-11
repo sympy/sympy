@@ -10,6 +10,8 @@ from sympy.polys.domains.modularinteger import ModularIntegerFactory
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
+from sympy.ntheory import isprime
+
 @public
 class FiniteField(Field, SimpleDomain):
     """General class for finite fields. """
@@ -31,6 +33,8 @@ class FiniteField(Field, SimpleDomain):
         if dom is None:
             from sympy.polys.domains import ZZ
             dom = ZZ
+        if not isprime(mod):
+            raise ValueError("Only fields of prime order are supported")
 
         self.dtype = ModularIntegerFactory(mod, dom, symmetric, self)
         self.zero = self.dtype(0)

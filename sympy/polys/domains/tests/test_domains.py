@@ -3,7 +3,7 @@
 from sympy import S, sqrt, sin, oo, Poly, Float
 from sympy.abc import x, y, z
 
-from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
+from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX, FiniteField
 from sympy.polys.domains.realfield import RealField
 
 from sympy.polys.rings import ring
@@ -485,6 +485,9 @@ def test_PolynomialRing__init():
     R, = ring("", ZZ)
     assert ZZ.poly_ring() == R.to_domain()
 
+
+def test_FiniteField__init():
+    raises(ValueError, lambda: FiniteField(42))
 
 def test_FractionField__init():
     F, = field("", ZZ)
