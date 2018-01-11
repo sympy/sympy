@@ -1473,6 +1473,7 @@ class PrettyPrinter(Printer):
         return prettyForm.__add__(*pforms)
 
     def _print_Mul(self, product):
+        from sympy.physics.units import Quantity
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
@@ -1483,9 +1484,10 @@ class PrettyPrinter(Printer):
 
         # If quantity is present append them at the back
         for i in range(len(args)):
-            if str(args[i]) in angular_quantity:
-                args.append(args[i])
-                del args[i]
+            if isinstance(args[i], Quantity):
+                if args[i].name.name in angular_quantity:
+                    args.append(args[i])
+                    del args[i]
 
         # Gather terms for numerator/denominator
         for item in args:
@@ -2250,7 +2252,7 @@ class PrettyPrinter(Printer):
             pform = self._print(u"\N{DEGREE SIGN}")
             return pform
         elif e.name.name == 'radian':
-            pform = self._print(u"\N{ZERO WIDTH NO-BREAK SPACE}")
+            pform = self._print(' '*len('rad'))
             return prettyForm(*pform.above(self._print('rad')))
         else:
             return self.emptyPrinter(e)

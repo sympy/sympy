@@ -376,6 +376,7 @@ class LatexPrinter(Printer):
 
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
+        from sympy.physics.units import Quantity
         include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
@@ -404,9 +405,10 @@ class LatexPrinter(Printer):
 
                 # If angular quantity is present append them at the back
                 for i in range(len(args)):
-                    if str(args[i]) in angular_quantity:
-                        args.append(args[i])
-                        del args[i]
+                    if isinstance(args[i], Quantity):
+                        if args[i].name.name in angular_quantity:
+                            args.append(args[i])
+                            del args[i]
 
                 for i, term in enumerate(args):
                     term_tex = self._print(term)

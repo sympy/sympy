@@ -5993,18 +5993,17 @@ def test_degree_printing():
 
 
 def test_radian_printing():
-    space = u"\N{ZERO WIDTH NO-BREAK SPACE}"
     ucode_str1 = \
 u('''\
   rad\n\
-90 %s \
-''') % space
+90   \
+''')
 
     ucode_str2 = \
 u('''\
  rad\n\
-x %s \
-''') % space
+x   \
+''')
 
     expr1 = 90*radian
     assert pretty(expr1) == ucode_str1
