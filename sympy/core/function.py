@@ -1253,24 +1253,7 @@ class Derivative(Expr):
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                obj = expr
-                if count.is_Integer:
-                    for i in range(count):
-                        obj2 = deriv_fun(obj, v)
-                        if obj == obj2:
-                            break
-                        obj = obj2
-                        nderivs += 1
-                elif obj.is_Derivative:
-                    dict_var_count = dict(obj.variable_count)
-                    if v in dict_var_count:
-                        dict_var_count[v] += count
-                    else:
-                        dict_var_count[v] = count
-                    obj = Derivative(obj.expr, *dict_var_count.items())
-                    nderivs += count
-                else:
-                    obj = None
+                obj = expr._eval_derivative_n_times(v, count)
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1306,6 +1289,28 @@ class Derivative(Expr):
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
         return expr
+
+    @staticmethod
+    def _helper_apply_n_times(expr, s, n, func):
+        from sympy import Integer
+        if isinstance(n, (int, Integer)):
+            obj = expr
+            for i in range(n):
+                obj2 = func(obj, s)
+                if obj == obj2:
+                    break
+                obj = obj2
+            return obj
+        elif expr.is_Derivative:
+            dict_var_count = dict(expr.variable_count)
+            if s in dict_var_count:
+                dict_var_count[s] += n
+            else:
+                dict_var_count[s] = n
+            from sympy import Derivative
+            return Derivative(expr.expr, *dict_var_count.items())
+        else:
+            return None
 
     @classmethod
     def _remove_derived_once(cls, v):
