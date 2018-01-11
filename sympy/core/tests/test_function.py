@@ -557,6 +557,11 @@ def test_diff_wrt():
 
     assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
 
+def test_issue_11868():
+    f = Function('f')
+    f.is_real = True
+    x = Symbol('x', real=True)
+    assert Derivative(f(x), x).is_real is True
 
 def test_diff_wrt_func_subs():
     assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)

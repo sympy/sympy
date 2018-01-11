@@ -1097,6 +1097,11 @@ class Derivative(Expr):
         else:
             return False
 
+    @property
+    def is_real(self):
+        if self.expr.is_real and self.expr.is_Function and self.expr.args[0].is_real:
+            return True
+
     def __new__(cls, expr, *variables, **assumptions):
 
         from sympy.matrices.common import MatrixCommon
