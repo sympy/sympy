@@ -188,7 +188,7 @@ def Arcsin(name, a=0, b=1):
     Examples
     ========
 
-    >>> from sympy.stats import Arcsin, density
+    >>> from sympy.stats import Arcsin, density, cdf
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", real=True)
@@ -688,7 +688,7 @@ class DagumDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         p, a, b = self.p, self.a, self.b
-        return Piecewise(((S.One + x**-a/b)**-p, x>=0),
+        return Piecewise(((S.One + (S(x)/b)**-a)**-p, x>=0),
                     (S.Zero, True))
 
 
@@ -733,7 +733,7 @@ def Dagum(name, p, a, b):
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     >>> cdf(X)(z)
-    Piecewise(((1 + z**(-a)/b)**(-p), z >= 0), (0, True))
+    Piecewise(((1 + (z/b)**(-a))**(-p), z >= 0), (0, True))
 
 
     References
@@ -1097,7 +1097,7 @@ def Frechet(name, a, s=1, m=0):
     Examples
     ========
 
-    >>> from sympy.stats import Frechet, density, E, std
+    >>> from sympy.stats import Frechet, density, E, std, cdf
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", positive=True)
@@ -1288,7 +1288,7 @@ def GammaInverse(name, a, b):
     ---------------
        gamma(a)
 
-    >>>cdf(X)(z)
+    >>> cdf(X)(z)
     Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
 
 
@@ -1469,7 +1469,7 @@ def Kumaraswamy(name, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import Kumaraswamy, density, E, variance
+    >>> from sympy.stats import Kumaraswamy, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
 
     >>> a = Symbol("a", positive=True)
@@ -1577,7 +1577,7 @@ class LogisticDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mu, s = self.mu, self.s
-        return 1 + exp(-(x - mu)/s)
+        return S.One/(1 + exp(-(x - mu)/s))
 
 
 def Logistic(name, mu, s):
@@ -1603,7 +1603,7 @@ def Logistic(name, mu, s):
     Examples
     ========
 
-    >>> from sympy.stats import Logistic, density
+    >>> from sympy.stats import Logistic, density, cdf
     >>> from sympy import Symbol
 
     >>> mu = Symbol("mu", real=True)
@@ -1616,7 +1616,7 @@ def Logistic(name, mu, s):
     exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)
 
     >>> cdf(X)(z)
-    exp((mu - z)/s) + 1
+    1/(exp((mu - z)/s) + 1)
 
     References
     ==========
@@ -1825,7 +1825,7 @@ def Nakagami(name, mu, omega):
     Examples
     ========
 
-    >>> from sympy.stats import Nakagami, density, E, variance
+    >>> from sympy.stats import Nakagami, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", positive=True)
@@ -1854,7 +1854,7 @@ def Nakagami(name, mu, omega):
     omega - -----------------------
             gamma(mu)*gamma(mu + 1)
 
-    >>> cdf(X)(x)
+    >>> cdf(X)(z)
     Piecewise((lowergamma(mu, mu*z**2/omega)/gamma(mu), z > 0),
             (0, True))
 
@@ -2348,7 +2348,7 @@ def StudentT(name, nu):
     Examples
     ========
 
-    >>> from sympy.stats import StudentT, density, E, variance
+    >>> from sympy.stats import StudentT, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
 
     >>> nu = Symbol("nu", positive=True)
@@ -2688,7 +2688,7 @@ def UniformSum(name, n):
     Examples
     ========
 
-    >>> from sympy.stats import UniformSum, density
+    >>> from sympy.stats import UniformSum, density, cdf
     >>> from sympy import Symbol, pprint
 
     >>> n = Symbol("n", integer=True)

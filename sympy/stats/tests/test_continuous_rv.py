@@ -1,4 +1,5 @@
 from __future__ import division
+import random
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
@@ -15,7 +16,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, hyper)
+                   floor, expand_func, Rational, hyper, diff)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -249,8 +250,8 @@ def test_dagum():
 
     X = Dagum('x', p, a, b)
     assert density(X)(x) == a*p*(x/b)**(a*p)*((x/b)**a + 1)**(-p - 1)/x
-    assert cdf(X)(x) == Piecewise(((1 + x**(-a)/b)**(-p), x >= 0),
-                            (0, True))
+    assert cdf(X)(x) == Piecewise(((1 + (x/b)**(-a))**(-p), x >= 0),
+                                    (0, True))
 
 
 def test_erlang():
@@ -379,7 +380,7 @@ def test_logistic():
 
     X = Logistic('x', mu, s)
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
-    assert cdf(X)(x) == exp((mu - x)/s) + 1
+    assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
 
 
 def test_lognormal():
@@ -748,6 +749,27 @@ def test_precomputed_cdf():
         compdiff = cdf(X)(x) - simplify(X.pspace.density.compute_cdf()(x))
         compdiff = simplify(compdiff.rewrite(erfc))
         assert compdiff == 0
+
+
+def test_long_precomputed_cdf():
+    x = symbols("x", real=True, finite=True)
+    distribs = [
+            Arcsin("A", -5, 9),
+            Dagum("D", 4, 10, 3),
+            Erlang("E", 14, 5),
+            Frechet("F", 2, 6, -3),
+            Gamma("G", 2, 7),
+            GammaInverse("GI", 3, 5),
+            Kumaraswamy("K", 6, 8),
+            Laplace("LA", -5, 4),
+            Logistic("L", -6, 7),
+            Nakagami("N", 2, 7),
+            StudentT("S", 4)
+            ]
+    for distr in distribs:
+        for _ in range(5):
+            assert abs((simplify(diff(cdf(distr)(x), x))
+                - density(distr)(x)).evalf(subs={x: random.random()})) < 1e-15
 
 
 def test_issue_13324():
