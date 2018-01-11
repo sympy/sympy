@@ -5,6 +5,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
+from sympy.functions.special.gamma_functions import gamma
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -140,6 +141,8 @@ def test_periodicity():
 
     assert periodicity((x**2 + 4)%2, x) is None
     assert periodicity((E**x)%3, x) is None
+
+    assert periodicity(gamma(S(1)/7 + 1/x), x) is None
 
 def test_periodicity_check():
     x = Symbol('x')
