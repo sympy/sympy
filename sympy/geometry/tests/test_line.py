@@ -715,3 +715,11 @@ def test_issue_2941():
     # midline intersection
     c, d = (-2, -3), (-2, 0)
     _check()
+
+
+def test_parameter_value():
+    t = Symbol('t')
+    p1, p2 = Point(0, 1), Point(5, 6)
+    l = Line(p1, p2)
+    assert l.parameter_value((5, 6), t) == {t: 1}
+    raises(ValueError, lambda: l.parameter_value((0, 0), t))

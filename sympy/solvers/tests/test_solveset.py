@@ -1644,3 +1644,8 @@ def test__is_finite_with_finite_vars():
 
 def test_issue_13550():
     assert solveset(x**2 - 2*x - 15, symbol = x, domain = Interval(-oo, 0)) == FiniteSet(-3)
+
+
+def test_issue_13849():
+    t = symbols('t')
+    assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == EmptySet()

@@ -1013,21 +1013,6 @@ class Ellipse(GeometrySet):
 
         point : Point
 
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-        arbitrary_point : Returns parameterized point on ellipse
-
-        Notes
-        -----
-
-        A random point may not appear to be on the ellipse, ie, `p in e` may
-        return False. This is because the coordinates of the point will be
-        floating point values, and when these values are substituted into the
-        equation for the ellipse the result may not be zero because of floating
-        point rounding error.
-
         Examples
         ========
 
@@ -1038,33 +1023,29 @@ class Ellipse(GeometrySet):
         >>> p1 = e1.random_point(seed=0); p1.n(2)
         Point2D(2.1, 1.4)
 
-        The random_point method assures that the point will test as being
-        in the ellipse:
-
-        >>> p1 in e1
-        True
-
         Notes
         =====
 
-        An arbitrary_point with a random value of t substituted into it may
-        not test as being on the ellipse because the expression tested that
-        a point is on the ellipse doesn't simplify to zero and doesn't evaluate
-        exactly to zero:
+        When creating a random point, one may simply replace the
+        parameter with a random number. When doing so, however, the
+        random number should be made a Rational or else the point
+        may not test as being in the ellipse:
 
         >>> from sympy.abc import t
-        >>> e1.arbitrary_point(t)
+        >>> from sympy import Rational
+        >>> arb = e1.arbitrary_point(t); arb
         Point2D(3*cos(t), 2*sin(t))
-        >>> p2 = _.subs(t, 0.1)
-        >>> p2 in e1
+        >>> arb.subs(t, .1) in e1
         False
+        >>> arb.subs(t, Rational(.1)) in e1
+        True
+        >>> arb.subs(t, Rational('.1')) in e1
+        True
 
-        Note that arbitrary_point routine does not take this approach. A value
-        for cos(t) and sin(t) (not t) is substituted into the arbitrary point.
-        There is a small chance that this will give a point that will not
-        test as being in the ellipse, so the process is repeated (up to 10
-        times) until a valid point is obtained.
-
+        See Also
+        ========
+        sympy.geometry.point.Point
+        arbitrary_point : Returns parameterized point on ellipse
         """
         from sympy import sin, cos, Rational
         t = _symbol('t', real=True)
@@ -1075,15 +1056,11 @@ class Ellipse(GeometrySet):
             rng = random.Random(seed)
         else:
             rng = random
-        for i in range(10):  # should be enough?
-            # simplify this now or else the Float will turn s into a Float
-            c = 2*Rational(rng.random()) - 1
-            s = sqrt(1 - c**2)
-            p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
-            if p1 in self:
-                return p1
-        raise GeometryError(
-            'Having problems generating a point in the ellipse.')
+        # simplify this now or else the Float will turn s into a Float
+        r = Rational(rng.random())
+        c = 2*r - 1
+        s = sqrt(1 - c**2)
+        return Point(x.subs(cos(t), c), y.subs(sin(t), s))
 
     def reflect(self, line):
         """Override GeometryEntity.reflect since the radius
