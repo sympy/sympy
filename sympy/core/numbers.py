@@ -3674,7 +3674,8 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
         return 2
 
     def _eval_evalf(self, prec):
-        return self._eval_expand_func(function=True)._eval_evalf(prec)
+        rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
+        return Float(rv, precision=prec)
 
     def _eval_expand_func(self, **hints):
         from sympy import sqrt, cbrt

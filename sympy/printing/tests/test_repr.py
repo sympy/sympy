@@ -69,6 +69,7 @@ def test_Singletons():
     sT(S.EulerGamma, 'EulerGamma')
     sT(S.Exp1, 'E')
     sT(S.GoldenRatio, 'GoldenRatio')
+    sT(S.TribonacciConstant, 'TribonacciConstant')
     sT(S.Half, 'Rational(1, 2)')
     sT(S.ImaginaryUnit, 'I')
     sT(S.Infinity, 'oo')

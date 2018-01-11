@@ -181,8 +181,8 @@ def test_Singletons():
         copiers += [lambda x: cloudpickle.loads(cloudpickle.dumps(x))]
 
     for obj in (Integer(-1), Integer(0), Integer(1), Rational(1, 2), pi, E, I,
-            oo, -oo, zoo, nan, S.GoldenRatio, S.EulerGamma, S.Catalan,
-            S.EmptySet, S.IdentityFunction):
+            oo, -oo, zoo, nan, S.GoldenRatio, S.TribonacciConstant,
+            S.EulerGamma, S.Catalan, S.EmptySet, S.IdentityFunction):
         for func in copiers:
             assert func(obj) is obj
 
@@ -195,7 +195,7 @@ from sympy.functions import (Piecewise, lowergamma, acosh,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
         LambertW, zeta, log, factorial, asinh, acoth, Znm,
         cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
-        conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
+        tribonacci, conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
         polygamma, exp)
 
@@ -205,7 +205,7 @@ def test_functions():
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
             gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
-            conjugate, tan, floor, atanh, sin, atan, lucas, exp)
+            tribonacci, conjugate, tan, floor, atanh, sin, atan, lucas, exp)
     two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
             atan2, polygamma, hermite, legendre, uppergamma)
     x, y, z = symbols("x,y,z")
