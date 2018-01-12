@@ -2285,7 +2285,7 @@ class Integer(Rational):
         else:
             result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, expt.q))
             if self.is_negative:
-                result *= Pow(-1, expt)
+                result *= Pow(S.NegativeOne, expt)
         return result
 
     def _eval_is_prime(self):
