@@ -63,7 +63,7 @@ class Inverse(MatPow):
         else:
             return self.arg.inverse()
 
-def inv(matexpr):
+def invert_matrix(matexpr):
     """ Matrix Inverse"""
     return Inverse(matexpr).doit()
 
