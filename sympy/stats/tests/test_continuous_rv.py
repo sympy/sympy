@@ -771,6 +771,11 @@ def test_long_precomputed_cdf():
             assert abs((simplify(diff(cdf(distr)(x), x))
                 - density(distr)(x)).evalf(subs={x: random.random()})) < 1e-15
 
+    US = UniformSum("US", 5)
+    pdf01 = density(US)(x).subs(floor(x), 0).doit()   # pdf on (0, 1)
+    cdf01 = cdf(US, evaluate=False)(x).subs(floor(x), 0).doit()   # cdf on (0, 1)
+    (diff(cdf01, x) - pdf01).subs(x, random.random()) == 0
+
 
 def test_issue_13324():
     X = Uniform('X', 0, 1)
