@@ -153,8 +153,8 @@ class exp_polar(ExpBase):
     is_comparable = False  # cannot be evalf'd
 
     def _eval_Abs(self):   # Abs is never a polar number
-        from sympy.functions.elementary.complexes import Abs
-        return Abs(exp(self.args[0]), evaluate=True)
+        from sympy.functions.elementary.complexes import re
+        return exp(re(self.args[0]))
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
