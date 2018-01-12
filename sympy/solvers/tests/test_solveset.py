@@ -190,7 +190,7 @@ def test_domain_check():
     assert domain_check(0, x, oo) is False
 
 def test_issue_11536():
-    assert solveset(0**x - 100, x, S.Reals) == ConditionSet(x, Eq(0**x - 100, 0), S.Reals)
+    assert solveset(0**x - 100, x, S.Reals) == S.EmptySet
     assert solveset(0**x - 1, x, S.Reals) == FiniteSet(0)
 
 def test_is_function_class_equation():
@@ -722,6 +722,14 @@ def test_solveset_complex_exp():
     assert solveset_complex(1/exp(x), x) == S.EmptySet
     assert solveset_complex(sinh(x).rewrite(exp), x) == \
         imageset(Lambda(n, n*pi*I), S.Integers)
+
+
+def test_solveset_real_exp():
+    from sympy.abc import x
+    assert solveset(Eq(-2**x, 4), x, S.Reals) == FiniteSet(2)
+    assert solveset(Eq(-3**x, 27), x, S.Reals) == S.EmptySet
+    assert solveset(Eq(-5**(x+1),27), x, S.Reals) == S.EmptySet
+    assert solveset(Eq(2**(x-3), -16), x, S.Reals) == FiniteSet(7)
 
 
 def test_solve_complex_log():
