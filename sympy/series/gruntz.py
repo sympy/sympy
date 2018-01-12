@@ -419,8 +419,11 @@ def limitinf(e, x):
         return e  # e is a constant
     if e.has(Order):
         e = e.expand().removeO()
-    if periodicity(e, x):
-        raise ValueError("periodic functions have no limit at infinity.")
+    try:
+        if periodicity(e, x):
+            raise ValueError("periodic functions have no limit at infinity.")
+    except NotImplementedError:
+        pass
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical behavior from the expression.
