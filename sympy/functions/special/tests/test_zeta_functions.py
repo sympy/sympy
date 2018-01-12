@@ -136,15 +136,16 @@ def test_polylog_expansion():
 
 
 def test_polylog_values():
-    import random
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
     assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
     for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
         assert Abs(polylog(2, z).evalf() - polylog(2, z, evaluate=False).evalf()) < 1e-15
     for s in [-1, 0, 1]:
-        for _ in range(10):
-            z = random.uniform(-5, 5) + I*random.uniform(-5, 5)
-            assert Abs(polylog(s, z).evalf() - polylog(s, z, evaluate=False).evalf()) < 1e-15
+        for x in [0, 1.34, 3.2, -2.13, 0.34, -0.63, -4.212]:
+            for y in [0, 1.76, -1.42, -3.45, 3.232, 4.5, -0.1, 0.3]:
+                z = x + I*y
+                assert Abs(polylog(s, z).evalf() - polylog(s, z, evaluate=False).evalf()) \
+                    < 1e-15
 
 
 def test_lerchphi_expansion():
