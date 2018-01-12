@@ -227,12 +227,22 @@ class NDimArray(object):
         return Derivative(self.as_immutable(), *args, evaluate=True)
 
     def _eval_derivative(self, arg):
-        return self.applyfunc(lambda x: x.diff(arg))
+        from sympy import derive_by_array
+        from sympy import Derivative, Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(arg, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+            return derive_by_array(self, arg)
+        else:
+            return self.applyfunc(lambda x: x.diff(arg))
 
     def _eval_derivative_n_times(self, s, n):
         from sympy.tensor.array import derive_by_array
-        from sympy import Derivative
-        return Derivative._helper_apply_n_times(self, s, n, derive_by_array)
+        from sympy import Derivative, Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+            return Derivative._helper_apply_n_times(self, s, n, derive_by_array)
+        else:
+            return Derivative._helper_apply_n_times(self, s, n, lambda self, x: self._eval_derivative(x))
 
     def applyfunc(self, f):
         """Apply a function to each element of the N-dim array.

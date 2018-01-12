@@ -897,6 +897,9 @@ class Mul(Expr, AssocOp):
                 terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
         return Add(*terms)
 
+    #def _eval_derivative_n_times(self, s, n):
+        #pass
+
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
         arg0 = self.args[0]

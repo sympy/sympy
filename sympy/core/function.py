@@ -1244,10 +1244,7 @@ class Derivative(Expr):
                 obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-                    deriv_fun = derive_by_array
                     is_symbol = True
-                else:
-                    deriv_fun = lambda x, y: x._eval_derivative(y)
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
@@ -1292,7 +1289,13 @@ class Derivative(Expr):
 
     @staticmethod
     def _helper_apply_n_times(expr, s, n, func):
-        from sympy import Integer
+        from sympy import Integer, Tuple, NDimArray
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+            from sympy import derive_by_array
+            func = derive_by_array
+        #else:
+            #func = lambda x, y: x._eval_derivative(y)
         if isinstance(n, (int, Integer)):
             obj = expr
             for i in range(n):
