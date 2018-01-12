@@ -43,6 +43,8 @@ known_fcns_src2 = {
     "laguerre": "laguerreL",
     "li": "logint",
     "loggamma": "gammaln",
+    "Max": "max",
+    "Min": "min",
     "polygamma": "psi",
     "Shi": "sinhint",
     "Si": "sinint",

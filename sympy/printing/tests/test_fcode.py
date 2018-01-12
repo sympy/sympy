@@ -1,6 +1,7 @@
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
     factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
-    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
+    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign,
+    Max, Min)
 
 from sympy.codegen import For, Assignment
 from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_
@@ -74,6 +75,7 @@ def test_fcode_Float():
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+    assert fcode(Max(x, y) + Min(x, y)) == "      max(x, y) + min(x, y)"
 
 
 #issue 6814
