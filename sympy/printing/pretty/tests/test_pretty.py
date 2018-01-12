@@ -2450,7 +2450,7 @@ dα      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-
+    n = symbols('n', integer=True, nonnegative=True)
     expr = Derivative(f(x), (x, n))
 
     ascii_str = \

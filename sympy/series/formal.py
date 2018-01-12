@@ -366,6 +366,7 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
     sol = []
     for i in range(k_max + 1, k_max + m + 1):
+        i = abs(i)
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r is S.Zero:
             continue
@@ -430,6 +431,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
 
     ind, mp = S.Zero, -oo
     for i in range(k_max + m + 1):
+        i = abs(i)
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r.is_finite is False:
             old_f = f

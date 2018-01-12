@@ -531,6 +531,7 @@ def test_latex_derivatives():
 
     # mixed partial derivatives
     f = Function("f")
+    n = symbols('n', integer=True, nonnegative=True)
     assert latex(diff(diff(f(x,y), x, evaluate=False), y, evaluate=False)) == \
         r"\frac{\partial^{2}}{\partial y\partial x} " + latex(f(x,y))
 

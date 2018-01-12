@@ -109,7 +109,7 @@ def test_diff_nth_derivative():
     f =  Function("f")
     x = Symbol("x")
     y = Symbol("y")
-    n = Symbol("n", integer=True)
+    n = Symbol("n", integer=True, nonnegative=True)
 
     expr = diff(sin(x), (x, n))
     expr2 = diff(f(x), (x, 2))
