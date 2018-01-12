@@ -149,9 +149,7 @@ def test_heurisch_symbolic_coeffs_1130():
         (-1/x, Eq(y, 0)),
         (-I*log(x - I*sqrt(y))/(2*sqrt(y)) + I*log(x + I*sqrt(y))/(2*sqrt(y)), True))
     y = Symbol('y', positive=True)
-    assert heurisch_wrapper(1/(x**2 + y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 -
-    I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) /
-        (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
+    assert heurisch_wrapper(1/(x**2 + y), x) == (atan(x/sqrt(y))/sqrt(y))
 
 
 def test_heurisch_hacking():
@@ -203,8 +201,7 @@ def test_heurisch_wrapper():
         - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
 
 def test_issue_3609():
-    assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
-        I*log(log(x) - I)/2
+    assert heurisch(1/(x * (1 + log(x)**2)), x) == atan(log(x))
 
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
