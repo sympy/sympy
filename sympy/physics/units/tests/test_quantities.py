@@ -237,7 +237,7 @@ def test_find_unit():
         'l', 'cl', 'dl', 'ml', 'liter', 'quart', 'liters', 'quarts',
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
-    assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'voltage', 'planck_voltage']
+    assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
 
 
 def test_Quantity_derivative():

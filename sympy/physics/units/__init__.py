@@ -210,13 +210,13 @@ from .definitions import (
 
 def find_unit(quantity):
     """
-    This function returns a list of matching unit and dimension names to a
-    input keyword, dimension or unit. If `quantity` is a string -- keyword/
-    units/dimensions, it returns all instances of units/dimensions with
-    these arguments. This function also returns all units/dimensions
-    which have string input keyword as sub-string. If input `quantity` is
-    a Quantity/Dimension -- unit or dimension, then all units having
-    matching base units or dimensions are returned.
+    This function returns a list of units matching to input keyword,
+    dimension or unit. If `quantity` is a string -- keyword/
+    unit/dimension, it returns units which have input keyword as its
+    sub-script/same dimensions as input unit/dimensions matching to
+    input dimension. If input `quantity` is a Quantity/ Dimension --
+    unit or dimension, then all units having matching base units or
+    dimensions are returned.
 
     Parameters
     ==========
@@ -228,15 +228,15 @@ def find_unit(quantity):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'charge', 'coulomb', 'coulombs', 'planck_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge']
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge']
     >>> u.find_unit("ampere")
     ['A', 'ampere', 'amperes', 'planck_current']
     >>> u.find_unit('volt')
-    ['V', 'v', 'volt', 'volts', 'voltage', 'electronvolt', 'electronvolts', 'planck_voltage']
+    ['V', 'v', 'volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
     >>> u.find_unit('energy')
-    ['J', 'eV', 'joule', 'energy', 'joules', 'electronvolt', 'electronvolts', 'planck_energy', 'planck_energy_density']
+    ['J', 'eV', 'joule', 'joules', 'electronvolt', 'electronvolts', 'planck_energy', 'planck_energy_density']
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
 
@@ -249,7 +249,8 @@ def find_unit(quantity):
         for i in dir(u):
             quant_attr = getattr(u, i)
             if quantity in i or (isinstance(quant_attr, Quantity) and quant_attr.dimension == dim):
-                rv.append(i)
+                if not isinstance(quant_attr, Dimension): rv.append(i)
+
     else:
         for i in sorted(dir(u)):
             other = getattr(u, i)
