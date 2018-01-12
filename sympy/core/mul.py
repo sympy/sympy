@@ -897,8 +897,29 @@ class Mul(Expr, AssocOp):
                 terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
         return Add(*terms)
 
-    #def _eval_derivative_n_times(self, s, n):
-        #pass
+    def _eval_derivative_n_times(self, s, n):
+        # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
+        from sympy import Integer, factorial, prod, Dummy, symbols, Sum
+        if isinstance(n, (int, Integer)):
+            return super(Mul, self)._eval_derivative_n_times(s, n)
+        def sum_to_n(n, m):
+            if m == 1:
+                yield (n,)
+            else:
+                for x in range(n+1):
+                    for y in sum_to_n(n-x, m-1):
+                        yield (x,) + y
+
+        m = len(self.args)
+        kvals = symbols("k1:%i" % m, cls=Dummy)
+        klast = n - sum(kvals)
+        result = Sum(
+            # better to use the multinomial?
+            factorial(n)/prod(map(factorial, kvals))/factorial(klast)*\
+            prod([self.args[t].diff((s, kvals[t])) for t in range(m-1)])*\
+            self.args[-1].diff((s, klast)),
+            *[(k, 0, n) for k in kvals])
+        return result
 
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
