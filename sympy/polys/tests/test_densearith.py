@@ -39,7 +39,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_polys
-from sympy.polys.domains import FF, ZZ, QQ
+from sympy.polys.domains import FF, ZZ, QQ, FiniteRing
 
 from sympy.utilities.pytest import raises
 
@@ -450,7 +450,7 @@ def test_dup_mul():
 
     assert dup_mul(f, f, ZZ) == h
 
-    K = FF(6)
+    K = FiniteRing(6)
 
     assert dup_mul([K(2), K(1)], [K(3), K(4)], K) == [K(5), K(4)]
 
@@ -670,7 +670,7 @@ def test_dmp_mul():
     assert dmp_mul([[[QQ(2, 7)]]], [[[QQ(1, 3)]]], 2, QQ) == [[[QQ(2, 21)]]]
     assert dmp_mul([[[QQ(1, 7)]]], [[[QQ(2, 3)]]], 2, QQ) == [[[QQ(2, 21)]]]
 
-    K = FF(6)
+    K = FiniteRing(6)
 
     assert dmp_mul(
         [[K(2)], [K(1)]], [[K(3)], [K(4)]], 1, K) == [[K(5)], [K(4)]]
@@ -689,7 +689,7 @@ def test_dup_sqr():
 
     assert dup_sqr(f, ZZ) == dup_normal([4, 0, 0, 4, 28, 0, 1, 14, 49], ZZ)
 
-    K = FF(9)
+    K = FiniteRing(9)
 
     assert dup_sqr([K(3), K(4)], K) == [K(6), K(7)]
 
@@ -704,7 +704,7 @@ def test_dmp_sqr():
     assert dmp_sqr([[[]]], 2, QQ) == [[[]]]
     assert dmp_sqr([[[QQ(2, 3)]]], 2, QQ) == [[[QQ(4, 9)]]]
 
-    K = FF(9)
+    K = FiniteRing(9)
 
     assert dmp_sqr([[K(3)], [K(4)]], 1, K) == [[K(6)], [K(7)]]
 

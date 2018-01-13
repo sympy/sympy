@@ -10,6 +10,10 @@ from . import finitefield
 __all__.extend(finitefield.__all__)
 from .finitefield import *
 
+from . import finitering
+__all__.extend(finitering.__all__)
+from .finitering import *
+
 from . import integerring
 __all__.extend(integerring.__all__)
 from .integerring import *
