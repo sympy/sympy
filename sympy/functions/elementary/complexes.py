@@ -608,6 +608,8 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
+        if isinstance(arg, exp_polar):
+            return im(arg.exp)
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
             if arg_.is_Mul:
