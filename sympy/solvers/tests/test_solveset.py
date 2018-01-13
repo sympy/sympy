@@ -36,7 +36,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars)
-
+from sympy.functions.elementary.miscellaneous import Max, Min
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -931,8 +931,8 @@ def test_solveset():
                                                   S.Integers)
     # issue 13825
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
-    assert solveset(x*Max(x, 15) - 10, x) == {2/3}                                #issue 10158
-    assert solveset(x*Min(x, 15) - 10, x) == {10}
+    assert solveset(x*Max(x, 15) - 10, x) == FiniteSet(S("2/3"))                                #issue 10158
+    assert solveset(x*Min(x, 15) - 10, x) == FiniteSet(-sqrt(10), sqrt(10))
 
 
 def test_conditionset():

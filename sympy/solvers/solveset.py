@@ -34,7 +34,8 @@ from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.miscellaneous import Max, Min
 from types import GeneratorType
 
 
@@ -932,7 +933,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 relationship between value and 0 is unknown: %s''' % b))
 
     if f.has(Max) or f.has(Min):
-        from sympy.functions.elementary.piecewise import Piecewise
         f = f.rewrite(Piecewise())
 
     if isinstance(f, Eq):
