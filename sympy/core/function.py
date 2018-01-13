@@ -130,8 +130,6 @@ def _getnargs_new(eval_):
         return tuple(range(num_no_default, num_no_default+num_with_default+1))
 
 
-
-
 class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
@@ -161,6 +159,9 @@ class FunctionClass(ManagedProperties):
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+    def __instancecheck__(cls, instance):
+        return isinstance(instance, AppliedFunction) and instance.func == cls
 
     @property
     def __signature__(self):
@@ -221,6 +222,12 @@ class FunctionClass(ManagedProperties):
     def __repr__(cls):
         return cls.__name__
 
+    def _eval_subs(self, old, new):
+        if (old.is_Function and new.is_Function and
+            callable(old) and callable(new) and
+            old == self.func and len(self.args) in new.nargs):
+            return new(*self.args)
+
 
 class Application(with_metaclass(FunctionClass, Basic)):
     """
@@ -229,51 +236,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
-
     is_Function = True
-
-    @cacheit
-    def __new__(cls, *args, **options):
-        from sympy.sets.fancysets import Naturals0
-        from sympy.sets.sets import FiniteSet
-
-        args = list(map(sympify, args))
-        evaluate = options.pop('evaluate', global_evaluate[0])
-        # WildFunction (and anything else like it) may have nargs defined
-        # and we throw that value away here
-        options.pop('nargs', None)
-
-        if options:
-            raise ValueError("Unknown options: %s" % options)
-
-        if evaluate:
-            evaluated = cls.eval(*args)
-            if evaluated is not None:
-                return evaluated
-
-        obj = super(Application, cls).__new__(cls, *args, **options)
-
-        # make nargs uniform here
-        try:
-            # things passing through here:
-            #  - functions subclassed from Function (e.g. myfunc(1).nargs)
-            #  - functions like cos(1).nargs
-            #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
-            # Canonicalize nargs here
-            if is_sequence(obj.nargs):
-                nargs = tuple(ordered(set(obj.nargs)))
-            elif obj.nargs is not None:
-                nargs = (as_int(obj.nargs),)
-            else:
-                nargs = None
-        except AttributeError:
-            # things passing through here:
-            #  - WildFunction('f').nargs
-            #  - AppliedUndef with no nargs like Function('f')(1).nargs
-            nargs = obj._nargs  # note the underscore here
-        # convert to FiniteSet
-        obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
-        return obj
 
     @classmethod
     def eval(cls, *args):
@@ -306,12 +269,6 @@ class Application(with_metaclass(FunctionClass, Basic)):
     @property
     def func(self):
         return self.__class__
-
-    def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and
-            callable(old) and callable(new) and
-            old == self.func and len(self.args) in new.nargs):
-            return new(*self.args)
 
 
 class Function(Application, Expr):
@@ -397,53 +354,17 @@ class Function(Application, Expr):
 
     """
 
-    @property
-    def _diff_wrt(self):
-        """Allow derivatives wrt functions.
-
-        Examples
-        ========
-
-        >>> from sympy import Function, Symbol
-        >>> f = Function('f')
-        >>> x = Symbol('x')
-        >>> f(x)._diff_wrt
-        True
-
-        """
-        return True
-
     @cacheit
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
         if cls is Function:
             return UndefinedFunction(*args, **options)
 
-        n = len(args)
-        if n not in cls.nargs:
-            # XXX: exception message must be in exactly this format to
-            # make it work with NumPy's functions like vectorize(). See,
-            # for example, https://github.com/numpy/numpy/issues/1697.
-            # The ideal solution would be just to attach metadata to
-            # the exception and change NumPy to take advantage of this.
-            temp = ('%(name)s takes %(qual)s %(args)s '
-                   'argument%(plural)s (%(given)s given)')
-            raise TypeError(temp % {
-                'name': cls,
-                'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
-                'args': min(cls.nargs),
-                'plural': 's'*(min(cls.nargs) != 1),
-                'given': n})
-
-        evaluate = options.get('evaluate', global_evaluate[0])
-        result = super(Function, cls).__new__(cls, *args, **options)
-        if evaluate and isinstance(result, cls) and result.args:
-            pr2 = min(cls._should_evalf(a) for a in result.args)
-            if pr2 > 0:
-                pr = max(cls._should_evalf(a) for a in result.args)
-                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
-
-        return result
+        return AppliedFunction(cls, *args, **options)
+        obj = super(Function, cls).__new__(cls, **options)
+        if args:
+            return obj(*args, **options)
+        return obj
 
     @classmethod
     def _should_evalf(cls, arg):
@@ -555,150 +476,11 @@ class Function(Application, Expr):
 
         return Expr._from_mpmath(v, prec)
 
-    def _eval_derivative(self, s):
-        # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
-        i = 0
-        l = []
-        for a in self.args:
-            i += 1
-            da = a.diff(s)
-            if da is S.Zero:
-                continue
-            try:
-                df = self.fdiff(i)
-            except ArgumentIndexError:
-                df = Function.fdiff(self, i)
-            l.append(df * da)
-        return Add(*l)
-
-    def _eval_is_commutative(self):
-        return fuzzy_and(a.is_commutative for a in self.args)
-
-    def _eval_is_complex(self):
-        return fuzzy_and(a.is_complex for a in self.args)
-
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).
         """
         return self, S.One
-
-    def _eval_aseries(self, n, args0, x, logx):
-        """
-        Compute an asymptotic expansion around args0, in terms of self.args.
-        This function is only used internally by _eval_nseries and should not
-        be called directly; derived classes can overwrite this to implement
-        asymptotic expansions.
-        """
-        from sympy.utilities.misc import filldedent
-        raise PoleError(filldedent('''
-            Asymptotic expansion of %s around %s is
-            not implemented.''' % (type(self), args0)))
-
-    def _eval_nseries(self, x, n, logx):
-        """
-        This function does compute series for multivariate functions,
-        but the expansion is always in terms of *one* variable.
-        Examples
-        ========
-
-        >>> from sympy import atan2
-        >>> from sympy.abc import x, y
-        >>> atan2(x, y).series(x, n=2)
-        atan2(0, y) + x/y + O(x**2)
-        >>> atan2(x, y).series(y, n=2)
-        -y/x + atan2(x, 0) + O(y**2)
-
-        This function also computes asymptotic expansions, if necessary
-        and possible:
-
-        >>> from sympy import loggamma
-        >>> loggamma(1/x)._eval_nseries(x,0,None)
-        -1/x - log(x)/x + log(x)/2 + O(1)
-
-        """
-        from sympy import Order
-        from sympy.sets.sets import FiniteSet
-        args = self.args
-        args0 = [t.limit(x, 0) for t in args]
-        if any(t.is_finite is False for t in args0):
-            from sympy import oo, zoo, nan
-            # XXX could use t.as_leading_term(x) here but it's a little
-            # slower
-            a = [t.compute_leading_term(x, logx=logx) for t in args]
-            a0 = [t.limit(x, 0) for t in a]
-            if any([t.has(oo, -oo, zoo, nan) for t in a0]):
-                return self._eval_aseries(n, args0, x, logx)
-            # Careful: the argument goes to oo, but only logarithmically so. We
-            # are supposed to do a power series expansion "around the
-            # logarithmic term". e.g.
-            #      f(1+x+log(x))
-            #     -> f(1+logx) + x*f'(1+logx) + O(x**2)
-            # where 'logx' is given in the argument
-            a = [t._eval_nseries(x, n, logx) for t in args]
-            z = [r - r0 for (r, r0) in zip(a, a0)]
-            p = [Dummy() for t in z]
-            q = []
-            v = None
-            for ai, zi, pi in zip(a0, z, p):
-                if zi.has(x):
-                    if v is not None:
-                        raise NotImplementedError
-                    q.append(ai + pi)
-                    v = pi
-                else:
-                    q.append(ai)
-            e1 = self.func(*q)
-            if v is None:
-                return e1
-            s = e1._eval_nseries(v, n, logx)
-            o = s.getO()
-            s = s.removeO()
-            s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
-            return s
-        if (self.func.nargs is S.Naturals0
-                or (self.func.nargs == FiniteSet(1) and args0[0])
-                or any(c > 1 for c in self.func.nargs)):
-            e = self
-            e1 = e.expand()
-            if e == e1:
-                #for example when e = sin(x+1) or e = sin(cos(x))
-                #let's try the general algorithm
-                term = e.subs(x, S.Zero)
-                if term.is_finite is False or term is S.NaN:
-                    raise PoleError("Cannot expand %s around 0" % (self))
-                series = term
-                fact = S.One
-                _x = Dummy('x')
-                e = e.subs(x, _x)
-                for i in range(n - 1):
-                    i += 1
-                    fact *= Rational(i)
-                    e = e.diff(_x)
-                    subs = e.subs(_x, S.Zero)
-                    if subs is S.NaN:
-                        # try to evaluate a limit if we have to
-                        subs = e.limit(_x, S.Zero)
-                    if subs.is_finite is False:
-                        raise PoleError("Cannot expand %s around 0" % (self))
-                    term = subs*(x**i)/fact
-                    term = term.expand()
-                    series += term
-                return series + Order(x**n, x)
-            return e1.nseries(x, n=n, logx=logx)
-        arg = self.args[0]
-        l = []
-        g = None
-        # try to predict a number of terms needed
-        nterms = n + 2
-        cf = Order(arg.as_leading_term(x), x).getn()
-        if cf != 0:
-            nterms = int(nterms / cf)
-        for i in range(nterms):
-            g = self.taylor_term(i, arg, g)
-            g = g.nseries(x, n=n, logx=logx)
-            l.append(g)
-        return Add(*l) + Order(x**n, x)
 
     def fdiff(self, argindex=1):
         """
@@ -723,14 +505,14 @@ class Function(Application, Expr):
         return Subs(Derivative(self.func(*new_args), arg_dummy),
             arg_dummy, self.args[argindex - 1])
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(cls, args, x):
         """Stub that should be overridden by new Functions to return
         the first non-zero term in a series if ever an x-dependent
         argument whose leading term vanishes as x -> 0 might be encountered.
         See, for example, cos._eval_as_leading_term.
         """
         from sympy import Order
-        args = [a.as_leading_term(x) for a in self.args]
+        args = [a.as_leading_term(x) for a in args]
         o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
             # Whereas x and any finite number are contained in O(1, x),
@@ -747,29 +529,9 @@ class Function(Application, Expr):
             #      sin(x)        x        <- _eval_as_leading_term needed
             #
             raise NotImplementedError(
-                '%s has no _eval_as_leading_term routine' % self.func)
+                '%s has no _eval_as_leading_term routine' % function)
         else:
             return self.func(*args)
-
-    def _sage_(self):
-        import sage.all as sage
-        fname = self.func.__name__
-        func = getattr(sage, fname,None)
-        args = [arg._sage_() for arg in self.args]
-
-        # In the case the function is not known in sage:
-        if func is None:
-            import sympy
-            if getattr(sympy, fname,None) is None:
-                # abstract function
-                return sage.function(fname)(*args)
-
-            else:
-                # the function defined in sympy is not known in sage
-                # this exception is caught in sage
-                raise AttributeError
-
-        return func(*args)
 
 
 class AppliedUndef(Function):
@@ -795,6 +557,7 @@ class AppliedUndef(Function):
         func = sage.function(fname)(*args)
         return func
 
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -802,7 +565,7 @@ class UndefinedFunction(FunctionClass):
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
         __dict__ = __dict__ or {}
         # Allow Function('f', real=True)
-        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        __dict__.update({'is_' + arg: kwargs.get(arg, None) for arg in _assume_defined})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,
         # just subclass Function)
@@ -812,9 +575,6 @@ class UndefinedFunction(FunctionClass):
         __dict__['__module__'] = None # For pickling
         ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         return ret
-
-    def __instancecheck__(cls, instance):
-        return cls in type(instance).__mro__
 
     _extra_kwargs = {}
 
@@ -2785,6 +2545,409 @@ def nfloat(expr, n=15, exponent=False):
     return rv.xreplace(Transform(
         lambda x: x.func(*nfloat(x.args, n, exponent)),
         lambda x: isinstance(x, Function)))
+
+
+class AppliedFunction(Expr):
+    """
+
+    """
+
+    is_Function = True
+
+    #@cacheit
+    def __new__(cls, func, *args, **options):
+        n = len(args)
+        if n not in func.nargs:
+            # XXX: exception message must be in exactly this format to
+            # make it work with NumPy's functions like vectorize(). See,
+            # for example, https://github.com/numpy/numpy/issues/1697.
+            # The ideal solution would be just to attach metadata to
+            # the exception and change NumPy to take advantage of this.
+            temp = ('%(name)s takes %(qual)s %(args)s '
+                   'argument%(plural)s (%(given)s given)')
+            raise TypeError(temp % {
+                'name': func,
+                'qual': 'exactly' if len(func.nargs) == 1 else 'at least',
+                'args': min(func.nargs),
+                'plural': 's'*(min(func.nargs) != 1),
+                'given': n})
+
+        evaluate = options.get('evaluate', global_evaluate[0])
+
+        result = cls._application(func, args, options)
+        if evaluate and isinstance(result, AppliedFunction) and result.args:
+            pr2 = min(cls._should_evalf(func, a) for a in result.args)
+            if pr2 > 0:
+                pr = max(cls._should_evalf(func, a) for a in result.args)
+                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
+
+        return result
+
+    def __getattr__(self, attr):
+        # Remapping the `_eval_*` to `self.func`:
+        if (not attr.startswith("_eval_")):
+            raise AttributeError
+        if not hasattr(self.func, attr):
+            raise AttributeError
+        return lambda *args, **kwargs: getattr(self.func, attr)(self, *args, **kwargs)
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    @property
+    def args(self):
+        return self._args[1:]
+
+    @classmethod
+    def _should_evalf(cls, func, arg):
+        """
+        Decide if the function should automatically evalf().
+
+        By default (in this implementation), this happens if (and only if) the
+        ARG is a floating point number.
+        This function is used by __new__.
+
+        Returns the precision to evalf to, or -1 if it shouldn't evalf.
+        """
+        from sympy.core.evalf import pure_complex
+        if arg.is_Float:
+            return arg._prec
+        if not arg.is_Add:
+            return -1
+        m = pure_complex(arg)
+        if m is None or not (m[0].is_Float or m[1].is_Float):
+            return -1
+        l = [i._prec for i in m if i.is_Float]
+        l.append(-1)
+        return max(l)
+
+    @classmethod
+    def _application(cls, func, args, options):
+        from sympy.sets.fancysets import Naturals0
+        from sympy.sets.sets import FiniteSet
+
+        args = list(map(sympify, args))
+        evaluate = options.pop('evaluate', global_evaluate[0])
+        # WildFunction (and anything else like it) may have nargs defined
+        # and we throw that value away here
+        options.pop('nargs', None)
+
+        if options:
+            raise ValueError("Unknown options: %s" % options)
+
+        if evaluate:
+            evaluated = func.eval(*args)
+            if evaluated is not None:
+                return evaluated
+
+        obj = super(AppliedFunction, cls).__new__(cls, func, *args, **options)
+
+        # make nargs uniform here
+        try:
+            # things passing through here:
+            #  - functions subclassed from Function (e.g. myfunc(1).nargs)
+            #  - functions like cos(1).nargs
+            #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
+            # Canonicalize nargs here
+            if is_sequence(obj.nargs):
+                nargs = tuple(ordered(set(func.nargs)))
+            elif obj.nargs is not None:
+                nargs = (as_int(func.nargs),)
+            else:
+                nargs = None
+        except AttributeError:
+            # things passing through here:
+            #  - WildFunction('f').nargs
+            #  - AppliedUndef with no nargs like Function('f')(1).nargs
+            nargs = func._nargs  # note the underscore here
+        # convert to FiniteSet
+        obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
+        return obj
+
+    def _eval_subs(self, old, new):
+        # TODO: fix
+        if (old.is_Function and new.is_Function and
+            callable(old) and callable(new) and
+            old == self.func and len(self.args) in new.nargs):
+            return new(*self.args)
+
+    @property
+    def free_symbols(self):
+        return set.union(*[a.free_symbols for a in self.args])
+
+    def _eval_derivative(self, s):
+        # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
+        function = self.func
+        args = self.args
+        i = 0
+        l = []
+        for a in args:
+            i += 1
+            da = a.diff(s)
+            if da is S.Zero:
+                continue
+            try:
+                df = function.fdiff(self, i)
+            except ArgumentIndexError:
+                df = Function.fdiff(self, i)
+            l.append(df * da)
+        return Add(*l)
+
+    def _eval_is_commutative(self):
+        return fuzzy_and(a.is_commutative for a in self.args)
+
+    def _eval_is_complex(self):
+        return fuzzy_and(a.is_complex for a in self.args)
+
+    def as_base_exp(self):
+        """
+        Returns the method as the 2-tuple (base, exponent).
+        """
+        return self, S.One
+
+    def _eval_aseries(self, n, args0, x, logx):
+        """
+        Compute an asymptotic expansion around args0, in terms of self.args.
+        This function is only used internally by _eval_nseries and should not
+        be called directly; derived classes can overwrite this to implement
+        asymptotic expansions.
+        """
+        from sympy.utilities.misc import filldedent
+        raise PoleError(filldedent('''
+            Asymptotic expansion of %s around %s is
+            not implemented.''' % (type(self), args0)))
+
+    def _eval_nseries(self, x, n, logx):
+        """
+        This function does compute series for multivariate functions,
+        but the expansion is always in terms of *one* variable.
+        Examples
+        ========
+
+        >>> from sympy import atan2
+        >>> from sympy.abc import x, y
+        >>> atan2(x, y).series(x, n=2)
+        atan2(0, y) + x/y + O(x**2)
+        >>> atan2(x, y).series(y, n=2)
+        -y/x + atan2(x, 0) + O(y**2)
+
+        This function also computes asymptotic expansions, if necessary
+        and possible:
+
+        >>> from sympy import loggamma
+        >>> loggamma(1/x)._eval_nseries(x,0,None)
+        -1/x - log(x)/x + log(x)/2 + O(1)
+
+        """
+        from sympy import Order
+        from sympy.sets.sets import FiniteSet
+        function = self.func
+        args = self.args
+        args0 = [t.limit(x, 0) for t in args]
+        if any(t.is_finite is False for t in args0):
+            from sympy import oo, zoo, nan
+            # XXX could use t.as_leading_term(x) here but it's a little
+            # slower
+            a = [t.compute_leading_term(x, logx=logx) for t in args]
+            a0 = [t.limit(x, 0) for t in a]
+            if any([t.has(oo, -oo, zoo, nan) for t in a0]):
+                return self._eval_aseries(n, args0, x, logx)
+            # Careful: the argument goes to oo, but only logarithmically so. We
+            # are supposed to do a power series expansion "around the
+            # logarithmic term". e.g.
+            #      f(1+x+log(x))
+            #     -> f(1+logx) + x*f'(1+logx) + O(x**2)
+            # where 'logx' is given in the argument
+            a = [t._eval_nseries(x, n, logx) for t in args]
+            z = [r - r0 for (r, r0) in zip(a, a0)]
+            p = [Dummy() for t in z]
+            q = []
+            v = None
+            for ai, zi, pi in zip(a0, z, p):
+                if zi.has(x):
+                    if v is not None:
+                        raise NotImplementedError
+                    q.append(ai + pi)
+                    v = pi
+                else:
+                    q.append(ai)
+            e1 = self.func(*q)
+            if v is None:
+                return e1
+            s = e1._eval_nseries(v, n, logx)
+            o = s.getO()
+            s = s.removeO()
+            s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
+            return s
+        if (function.nargs is S.Naturals0
+                or (function.nargs == FiniteSet(1) and args0[0])
+                or any(c > 1 for c in function.nargs)):
+            e = self
+            e1 = e.expand()
+            if e == e1:
+                #for example when e = sin(x+1) or e = sin(cos(x))
+                #let's try the general algorithm
+                term = e.subs(x, S.Zero)
+                if term.is_finite is False or term is S.NaN:
+                    raise PoleError("Cannot expand %s around 0" % (self))
+                series = term
+                fact = S.One
+                _x = Dummy('x')
+                e = e.subs(x, _x)
+                for i in range(n - 1):
+                    i += 1
+                    fact *= Rational(i)
+                    e = e.diff(_x)
+                    subs = e.subs(_x, S.Zero)
+                    if subs is S.NaN:
+                        # try to evaluate a limit if we have to
+                        subs = e.limit(_x, S.Zero)
+                    if subs.is_finite is False:
+                        raise PoleError("Cannot expand %s around 0" % (self))
+                    term = subs*(x**i)/fact
+                    term = term.expand()
+                    series += term
+                return series + Order(x**n, x)
+            return e1.nseries(x, n=n, logx=logx)
+        arg = self.args[0]
+        l = []
+        g = None
+        # try to predict a number of terms needed
+        nterms = n + 2
+        cf = Order(arg.as_leading_term(x), x).getn()
+        if cf != 0:
+            nterms = int(nterms / cf)
+        for i in range(nterms):
+            g = function.taylor_term(i, arg, g)
+            g = g.nseries(x, n=n, logx=logx)
+            l.append(g)
+        return Add(*l) + Order(x**n, x)
+
+    def _eval_as_leading_term(self, x):
+        function = self.func
+        args = self.args
+        return function._eval_as_leading_term(self, x)
+
+    def _sage_(self):
+        import sage.all as sage
+        fname = self.func.__name__
+        func = getattr(sage, fname,None)
+        args = [arg._sage_() for arg in self.args]
+
+        # In the case the function is not known in sage:
+        if func is None:
+            import sympy
+            if getattr(sympy, fname,None) is None:
+                # abstract function
+                return sage.function(fname)(*args)
+
+            else:
+                # the function defined in sympy is not known in sage
+                # this exception is caught in sage
+                raise AttributeError
+
+        return func(*args)
+
+    def _eval_subs(self, old, new):
+        newargs = [a._subs(old, new) for a in self.args]
+        if self.func == old:
+            return AppliedFunction(new, *newargs)
+        else:
+            return self.func(*newargs)
+
+    @property
+    def _diff_wrt(self):
+        """Allow derivatives wrt functions.
+
+        Examples
+        ========
+
+        >>> from sympy import Function, Symbol
+        >>> f = Function('f')
+        >>> x = Symbol('x')
+        >>> f(x)._diff_wrt
+        True
+
+        """
+        return True
+
+    # Assumption eval remapped:
+
+    def _eval_is_algebraic(self):
+        return self.func.is_algebraic
+
+    def _eval_is_antihermitian(self):
+        return self.func.is_antihermitian
+
+    def _eval_is_commutative(self):
+        return self.func.is_commutative
+
+    def _eval_is_complex(self):
+        return self.func.is_complex
+
+    def _eval_is_composite(self):
+        return self.func.is_composite
+
+    def _eval_is_even(self):
+        return self.func.is_even
+
+    def _eval_is_finite(self):
+        return self.func.is_finite
+
+    def _eval_is_hermitian(self):
+        return self.func.is_hermitian
+
+    def _eval_is_imaginary(self):
+        return self.func.is_imaginary
+
+    def _eval_is_infinite(self):
+        return self.func.is_infinite
+
+    def _eval_is_integer(self):
+        return self.func.is_integer
+
+    def _eval_is_irrational(self):
+        return self.func.is_irrational
+
+    def _eval_is_negative(self):
+        return self.func.is_negative
+
+    def _eval_is_noninteger(self):
+        return self.func.is_noninteger
+
+    def _eval_is_nonnegative(self):
+        return self.func.is_nonnegative
+
+    def _eval_is_nonpositive(self):
+        return self.func.is_nonpositive
+
+    def _eval_is_nonzero(self):
+        return self.func.is_nonzero
+
+    def _eval_is_odd(self):
+        return self.func.is_odd
+
+    def _eval_is_polar(self):
+        return self.func.is_polar
+
+    def _eval_is_positive(self):
+        return self.func.is_positive
+
+    def _eval_is_prime(self):
+        return self.func.is_prime
+
+    def _eval_is_rational(self):
+        return self.func.is_rational
+
+    def _eval_is_real(self):
+        return self.func.is_real
+
+    def _eval_is_transcendental(self):
+        return self.func.is_transcendental
+
+    def _eval_is_zero(self):
+        return self.func.is_zero
 
 
 from sympy.core.symbol import Dummy, Symbol

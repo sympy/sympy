@@ -58,6 +58,11 @@ class ReprPrinter(Printer):
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
 
+    def _print_AppliedFunction(self, expr):
+        r = self._print(expr.func)
+        r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
+        return r
+
     def _print_FunctionClass(self, expr):
         if issubclass(expr, AppliedUndef):
             return 'Function(%r)' % (expr.__name__)

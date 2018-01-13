@@ -1214,6 +1214,26 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_AppliedFunction(self, e, sort=False):
+        func = e.func
+        args = e.args
+        if sort:
+            args = sorted(args, key=default_sort_key)
+
+        func_name = func.__name__
+
+        prettyFunc = self._print(Symbol(func_name))
+        prettyArgs = prettyForm(*self._print_seq(args).parens())
+
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
+
     def _print_GeometryEntity(self, expr):
         # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
