@@ -136,15 +136,18 @@ def test_polylog_expansion():
 
 
 def test_polylog_values():
-    import random
+    from sympy.utilities.randtest import verify_numerically as tn
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
     assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
     for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
         assert Abs(polylog(2, z).evalf() - polylog(2, z, evaluate=False).evalf()) < 1e-15
-    for s in [-1, 0, 1]:
+    z = Symbol("z")
+    for s in [-1, 0]:
         for _ in range(10):
-            z = random.uniform(-5, 5) + I*random.uniform(-5, 5)
-            assert Abs(polylog(s, z).evalf() - polylog(s, z, evaluate=False).evalf()) < 1e-15
+            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
+                a=-3, b=-2, c=S.Half, d=2)
+            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
+                a=2, b=-2, c=5, d=2)
 
 
 def test_lerchphi_expansion():
