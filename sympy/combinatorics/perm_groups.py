@@ -4067,6 +4067,12 @@ class PermutationGroup(Basic):
                         rel = rel*phi.invert(g)**-1
                     new_rels = [rel]
                 elif len(orbit_k) == 1:
+                    # `success` is always true because `strong_gens`
+                    # and `base` are already a verified BSGS. Later
+                    # this could be changed to start with a randomly
+                    # generated (potential) BSGS, and then new elements
+                    # would have to be appended to it when `success`
+                    # is false.
                     success, new_rels = K_s._verify(K, phi, z, alpha)
                 else:
                     # K.orbit(alpha) should be a block
