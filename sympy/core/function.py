@@ -1251,6 +1251,7 @@ class Derivative(Expr):
                     old_v = v
                     v = new_v
                 obj = expr._eval_derivative_n_times(v, count)
+                nderivs += count
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
