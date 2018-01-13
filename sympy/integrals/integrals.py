@@ -444,6 +444,9 @@ class Integral(AddWithLimits):
                     function = factored_function
                 continue
 
+            if function.has(Piecewise) and \
+                not isinstance(function, Piecewise):
+                    function = piecewise_fold(function)
             if isinstance(function, Piecewise):
                 if len(xab) == 1:
                     antideriv = function._eval_integral(xab[0],

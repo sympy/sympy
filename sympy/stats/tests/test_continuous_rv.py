@@ -379,6 +379,7 @@ def test_lognormal():
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
 
+
 def test_maxwell():
     a = Symbol("a", positive=True)
 
@@ -444,17 +445,20 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
     eta = Symbol("eta", positive=True)
     X = ShiftedGompertz("x", b, eta)
     assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
+
 def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
+
 
 def test_trapezoidal():
     a = Symbol("a", real=True)
@@ -495,6 +499,7 @@ def test_quadratic_u():
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
 
+
 def test_uniform():
     l = Symbol('l', real=True, finite=True)
     w = Symbol('w', positive=True, finite=True)
@@ -503,11 +508,21 @@ def test_uniform():
     assert simplify(E(X)) == l + w/2
     assert simplify(variance(X)) == w**2/12
 
-
     # With numbers all is well
     X = Uniform('x', 3, 5)
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
+
+    z = Symbol('z')
+    p = density(X)(z)
+    assert p.subs(z, 3.7) == S(1)/2
+    assert p.subs(z, -1) == 0
+    assert p.subs(z, 6) == 0
+
+    c = cdf(X)
+    assert c(2) == 0 and c(3) == 0
+    assert c(S(7)/2) == S(1)/4
+    assert c(5) == 1 and c(6) == 1
 
 
 def test_uniform_P():

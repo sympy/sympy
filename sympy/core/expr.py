@@ -1550,7 +1550,8 @@ class Expr(Basic, EvalfMixin):
         following interpretation:
 
         * i will has no variable that appears in deps
-        * d will be 1 or else have terms that contain variables that are in deps
+        * d will either have terms that contain variables that are in deps, or
+          be equal to 0 (when self is an Add) or 1 (when self is a Mul)
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
         * otherwise (self, S.One) or (S.One, self) is returned.
