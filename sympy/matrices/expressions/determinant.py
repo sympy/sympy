@@ -33,13 +33,13 @@ class Determinant(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, expand=False, **kwargs):
+    def doit(self, expand=False, method=None):
         try:
-            return self.arg._eval_determinant(**kwargs)
+            return self.arg._eval_determinant(method=method)
         except (AttributeError, NotImplementedError):
             return self
 
-def det(matexpr, **kwargs):
+def det(matexpr, method=None):
     """ Matrix Determinant
 
     >>> from sympy import MatrixSymbol, det, eye
@@ -51,10 +51,10 @@ def det(matexpr, **kwargs):
     1
     """
 
-    if isinstance(matexpr, MatrixExpr) and kwargs:
+    if isinstance(matexpr, MatrixExpr) and not method:
         raise ValueError("Keyword arguments not supported for matrix expressions.")
 
-    return Determinant(matexpr).doit(**kwargs)
+    return Determinant(matexpr).doit(method=method)
 
 
 from sympy.assumptions.ask import ask, Q
