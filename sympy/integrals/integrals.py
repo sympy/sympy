@@ -19,7 +19,7 @@ from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign, tan, cot, atan
+from sympy.functions import Piecewise, sqrt, sign, piecewise_fold, tan, cot, atan
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.series import limit
