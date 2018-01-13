@@ -4,6 +4,7 @@ from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
         Piecewise, S, cacheit, Sum)
 from sympy.solvers.solveset import solveset
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
+from sympy.functions.elementary.integers import floor
 import random
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
