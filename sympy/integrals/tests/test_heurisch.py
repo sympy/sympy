@@ -98,7 +98,10 @@ def test_heurisch_trigonometric():
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16 - x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
-    assert heurisch(sin(x)/(cos(x)**2+1),x) == -atan(cos(x)) #fixes issue 13723
+    assert heurisch(sin(x)/(cos(x)**2+1), x) == -atan(cos(x)) #fixes issue 13723
+    assert heurisch(1/(cos(x)+2), x) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
+    assert heurisch(2*sin(x)*cos(x)/(sin(x)**4 + 1), x) == atan(sqrt(2)*sin(x)
+        - 1) - atan(sqrt(2)*sin(x) + 1)
 
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)

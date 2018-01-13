@@ -616,7 +616,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 irreducibles.add(x*x + y*y)
                 atans.add(atan(x/y))
             else:
-                irreducibles.add(x+I*y)
+                irreducibles.add(x + I*y)
 
 
         B = _symbols('B', len(irreducibles))
