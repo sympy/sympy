@@ -797,7 +797,8 @@ class legendre(OrthogonalPolynomial):
             elif x == S.Infinity:
                 return S.Infinity
         else:
-            # n is a given fixed integer, evaluate into polynomial
+            # n is a given fixed integer, evaluate into polynomial;
+            # L_{-n}(x)  --->  L_{n-1}(x)
             if n.is_negative:
                 n = -n - S.One
             return cls._eval_at_order(n, x)
