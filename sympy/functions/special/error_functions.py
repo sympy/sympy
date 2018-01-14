@@ -1793,9 +1793,6 @@ class Ci(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
-    def _eval_expand_func(self, **hints):
-        return self.rewrite(expint)
-
     def _sage_(self):
         import sage.all as sage
         return sage.cos_integral(self.args[0]._sage_())
