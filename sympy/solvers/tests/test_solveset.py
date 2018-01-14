@@ -1657,3 +1657,8 @@ def test_issue_13550():
 def test_issue_13849():
     t = symbols('t')
     assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == EmptySet()
+
+def test_issue_13992():
+    x, y = symbols('x y')
+    assert solveset(2**x - y, x, domain = S.Reals) == Intersection(
+        S.Reals, {log(y)/log(2)})
