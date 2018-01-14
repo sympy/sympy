@@ -4,7 +4,7 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
+    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction, Max, Min
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -527,6 +527,20 @@ def test_integrate_returns_piecewise():
         (0, Eq(n, 0)), (-x*cos(n*x)/n + sin(n*x)/n**2, True))
     assert integrate(exp(x*y),(x,0,z)) == Piecewise( \
         (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
+
+
+def test_max_min():
+    assert integrate(Min(x, 2), (x, 0, 3)) == 4
+    assert integrate(Max(x**2, x**3), (x, 0, 2)) == S(49)/12
+    assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
+        (exp(2*x)/2, x <= 0), (1 - exp(-2*x)/2, True))
+    # issue 7907
+    c = symbols('c', real=True)
+    int1 = integrate(Max(c, x)*exp(-x**2), (x, -oo, oo))
+    int2 = integrate(c*exp(-x**2), (x, -oo, c))
+    int3 = integrate(x*exp(-x**2), (x, c, oo))
+    assert int1 == int2 + int3 == sqrt(pi)*c*erf(c)/2 + \
+        sqrt(pi)*c/2 + exp(-c**2)/2
 
 
 def test_subs1():
