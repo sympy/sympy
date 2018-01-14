@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum)
+        Piecewise, S, cacheit, Sum, exp, I, oo)
 from sympy.solvers.solveset import solveset
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
@@ -69,6 +69,21 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         """ Cumulative density function """
         return self.compute_cdf(**kwargs)(x)
 
+    @cacheit
+    def compute_characteristic_function(self, **kwargs):
+        """ Compute the characteristic function from the PDF
+
+        Returns a Lambda
+        """
+        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        pdf = self.pdf(x)
+        cf = summation(exp(I*t*x)*pdf, (x, self.set.inf, self.set.sup))
+        return Lambda(t, cf)
+
+    def characteristic_function(self, t, **kwargs):
+        """ Characteristic function """
+        return self.compute_characteristic_function(**kwargs)(t)
+
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes
@@ -130,3 +145,9 @@ class SingleDiscretePSpace(SinglePSpace):
         if expr == self.value:
             return self.distribution
         raise NotImplementedError()
+
+    def compute_characteristic_function(self, expr, **kwargs):
+        if expr == self.value:
+            return self.distribution.compute_characteristic_function(**kwargs)
+        else:
+            raise NotImplementedError()
