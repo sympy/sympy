@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aaa7b086-4d18-401b-8a93-5d27b7d0a293" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/sympy/functions/special/polynomials.py" afterPath="$PROJECT_DIR$/sympy/functions/special/polynomials.py" />
-      <change beforePath="$PROJECT_DIR$/sympy/functions/special/tests/test_spec_polynomials.py" afterPath="$PROJECT_DIR$/sympy/functions/special/tests/test_spec_polynomials.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -20,8 +20,8 @@
       <file leaf-file-name="polynomials.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sympy/functions/special/polynomials.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="294">
-              <caret line="802" column="43" lean-forward="true" selection-start-line="802" selection-start-column="43" selection-end-line="802" selection-end-column="43" />
+            <state relative-caret-position="21870">
+              <caret line="1238" column="35" lean-forward="true" selection-start-line="1238" selection-start-column="35" selection-end-line="1238" selection-end-column="35" />
               <folding />
             </state>
           </provider>
@@ -30,8 +30,8 @@
       <file leaf-file-name="test_spec_polynomials.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sympy/functions/special/tests/test_spec_polynomials.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="36">
-              <caret line="89" column="31" lean-forward="true" selection-start-line="89" selection-start-column="31" selection-end-line="89" selection-end-column="31" />
+            <state relative-caret-position="648">
+              <caret line="123" column="0" lean-forward="true" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
               <folding>
                 <element signature="e#0#348#0" expanded="true" />
               </folding>
@@ -378,8 +378,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sympy/functions/special/tests/test_spec_polynomials.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="36">
-          <caret line="89" column="31" lean-forward="true" selection-start-line="89" selection-start-column="31" selection-end-line="89" selection-end-column="31" />
+        <state relative-caret-position="648">
+          <caret line="123" column="0" lean-forward="true" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
           <folding>
             <element signature="e#0#348#0" expanded="true" />
           </folding>
@@ -388,8 +388,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sympy/functions/special/polynomials.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="802" column="43" lean-forward="true" selection-start-line="802" selection-start-column="43" selection-end-line="802" selection-end-column="43" />
+        <state relative-caret-position="21870">
+          <caret line="1238" column="35" lean-forward="true" selection-start-line="1238" selection-start-column="35" selection-end-line="1238" selection-end-column="35" />
           <folding />
         </state>
       </provider>
