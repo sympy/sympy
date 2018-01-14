@@ -1192,7 +1192,7 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        evaluate = kwargs.pop('evaluate', False)
+        evaluate = kwargs.get('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
         # expression at all. Note, this cannot check non-symbols like
