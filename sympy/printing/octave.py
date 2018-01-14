@@ -15,7 +15,8 @@ from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.codegen.ast import Assignment
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.ccode import _as_macro_if_defined
+from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
@@ -77,12 +78,16 @@ class OctaveCodePrinter(CodePrinter):
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
 
+    _ns = ''
+
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
+        self.headers = set()
+        self.libraries = set()
 
 
     def _rate_index_position(self, p):
@@ -432,6 +437,35 @@ class OctaveCodePrinter(CodePrinter):
         # argument order is reversed
         args = ", ".join([self._print(x) for x in reversed(expr.args)])
         return "lambertw(" + args + ")"
+
+    @requires(headers={'math.h'}, libraries={'m'})
+    def _print_math_func(self, expr, nest=False):
+        known = self.known_functions[expr.__class__.__name__]
+        if not isinstance(known, string_types):
+            for cb, name in known:
+                if cb(*expr.args):
+                    known = name
+                    break
+            else:
+                raise ValueError("No matching printer")
+
+        if nest:
+            args = self._print(expr.args[0])
+            if len(expr.args) > 1:
+                args += ', %s' % self._print(expr.func(*expr.args[1:]))
+        else:
+            args = ', '.join(map(self._print, expr.args))
+        return '{ns}{name}({args})'.format(
+            ns=self._ns,
+            name=known,
+            args=args
+        )
+
+    def _print_Max(self, expr):
+        return self._print_math_func(expr, nest=True)
+
+    def _print_Min(self, expr):
+        return self._print_math_func(expr, nest=True)
 
 
     def _print_Piecewise(self, expr):
