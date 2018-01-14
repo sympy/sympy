@@ -1097,7 +1097,7 @@ class Derivative(Expr):
         else:
             return False
 
-    def __new__(cls, expr, *variables, **assumptions):
+    def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer
@@ -1192,9 +1192,7 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        # Pop evaluate because it is not really an assumption and we will need
-        # to track it carefully below.
-        evaluate = assumptions.pop('evaluate', False)
+        evaluate = kwargs.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
         # expression at all. Note, this cannot check non-symbols like
@@ -1219,10 +1217,7 @@ class Derivative(Expr):
             if evaluate:
                 #TODO: check if assumption of discontinuous derivatives exist
                 variable_count = cls._sort_variable_count(variable_count)
-            # Here we *don't* need to reinject evaluate into assumptions
-            # because we are done with it and it is not an assumption that
-            # Expr knows about.
-            obj = Expr.__new__(cls, expr, *variable_count, **assumptions)
+            obj = Expr.__new__(cls, expr, *variable_count)
             return obj
 
         # Compute the derivative now by repeatedly calling the
@@ -1292,7 +1287,7 @@ class Derivative(Expr):
 
         if unhandled_variable_count:
             unhandled_variable_count = cls._sort_variable_count(unhandled_variable_count)
-            expr = Expr.__new__(cls, expr, *unhandled_variable_count, **assumptions)
+            expr = Expr.__new__(cls, expr, *unhandled_variable_count)
         else:
             # We got a Derivative at the end of it all, and we rebuild it by
             # sorting its variables.
@@ -1301,7 +1296,7 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variable_count(expr.args[1:])
                 )
 
-        if (nderivs > 1) == True and assumptions.get('simplify', True):
+        if (nderivs > 1) == True and kwargs.get('simplify', True):
             from sympy.core.exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))

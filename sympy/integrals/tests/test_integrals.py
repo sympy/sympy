@@ -1166,6 +1166,10 @@ def test_issue_8901():
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
+@slow
+def test_issue_12996():
+    # can't integrate it yet, but at least don't throw an exception
+    assert isinstance(integrate(log(abs(x)), x), Expr)
 
 @slow
 def test_issue_7130():
