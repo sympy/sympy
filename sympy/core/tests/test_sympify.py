@@ -602,3 +602,7 @@ def test_sympify_numpy():
 def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)
+
+
+def test_issue_13924():
+    assert S(1)*numpy.array([1]) == [1]
