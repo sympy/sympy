@@ -135,7 +135,9 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | 1**oo        | nan     | Because there are various cases where         |
     | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
-    | 1**zoo       |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    +--------------+---------+-----------------------------------------------+
+    | b**zoo       | nan     | b can be any general complex number.          |
     +--------------+---------+-----------------------------------------------+
     | (-1)**oo     | nan     | Because of oscillations in the limit.         |
     | (-1)**(-oo)  |         |                                               |
@@ -193,6 +195,9 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
         if evaluate:
+            from sympy import zoo
+            if e is zoo:
+                return S.NaN
             if e is S.Zero:
                 return S.One
             elif e is S.One:
