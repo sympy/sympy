@@ -86,8 +86,6 @@ class OctaveCodePrinter(CodePrinter):
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-        self.headers = set()
-        self.libraries = set()
 
 
     def _rate_index_position(self, p):
@@ -438,17 +436,9 @@ class OctaveCodePrinter(CodePrinter):
         args = ", ".join([self._print(x) for x in reversed(expr.args)])
         return "lambertw(" + args + ")"
 
-    @requires(headers={'math.h'}, libraries={'m'})
+
     def _print_math_func(self, expr, nest=False):
         known = self.known_functions[expr.__class__.__name__]
-        if not isinstance(known, string_types):
-            for cb, name in known:
-                if cb(*expr.args):
-                    known = name
-                    break
-            else:
-                raise ValueError("No matching printer")
-
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
