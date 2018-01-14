@@ -303,6 +303,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     except AttributeError:
         pass
 
+    try:
+        from ..tensor.array import Array
+        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+    except AttributeError:
+        pass
+
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
@@ -312,12 +318,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if strict:
         raise SympifyError(a)
-
-    try:
-        from ..tensor.array import Array
-        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
-    except AttributeError:
-        pass
 
     if iterable(a):
         try:

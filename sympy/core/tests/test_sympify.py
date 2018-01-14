@@ -13,6 +13,7 @@ from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+from sympy.tensor.array import Array
 from sympy.external import import_module
 
 import mpmath
@@ -602,3 +603,7 @@ def test_sympify_numpy():
 def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)
+
+
+def test_issue_13924():
+    assert S(1)*numpy.array([1]) == Array([1])
