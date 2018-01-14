@@ -608,7 +608,7 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
-        if arg.is_polar:
+        if isinstance(arg, exp_polar):
             return periodic_argument(arg, oo)
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
