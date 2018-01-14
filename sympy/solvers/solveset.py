@@ -199,11 +199,12 @@ def _invert_real(f, g_ys, symbol):
             elif base is not S.Zero and rhs < 0:
                 from sympy.core.power import integer_nthroot
                 from sympy.ntheory import multiplicity
-                s, b = integer_log(-rhs, 2)
+                s, b = integer_nthroot(-rhs, 2)
                 if b:
-                    m = multiplicity(base, s)
-                    if pow(base, m) == s:
-                        return expo, FiniteSet(2*m)
+                    m = integer_log(-rhs, base)
+                    m = list(m)
+                    if not m[0] % 2 :
+                        return expo, FiniteSet(m[0])
             elif rhs is S.One:
                 #special case: 0**x - 1
                 return (expo, FiniteSet(0))
@@ -234,24 +235,25 @@ def _invert_real(f, g_ys, symbol):
 
 
 def integer_log(y, x):
-    """Returns (e, bool) where e is the largest positive integer
+    """Returns (e, bool) where e is the largest nonnegative integer
     such that y >= x**e and bool is True if y == x**e"""
+    assert x > 1
     y = as_int(y)
     x = as_int(x)
-    assert x > 1 and y > 1
     if x == 2:
         e = y.bit_length() - 1
         return e, 2**e == y
-    e = 0
+    r = e = 0
     while y >= x:
         d = x
         m = 1
-        while d <= y:
-            y //= d
+        while y >= d:
+            y, r = divmod(y, d)
             e += m
-            d *= d
-            m *= 2
-    return e, y == 1
+            if y > d:
+                d *= d
+                m *= 2
+    return e, y == 1 and r == 0
 
 
 def _invert_complex(f, g_ys, symbol):
