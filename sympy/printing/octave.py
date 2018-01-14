@@ -78,7 +78,6 @@ class OctaveCodePrinter(CodePrinter):
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
 
-    _ns = ''
 
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
@@ -445,8 +444,7 @@ class OctaveCodePrinter(CodePrinter):
                 args += ', %s' % self._print(expr.func(*expr.args[1:]))
         else:
             args = ', '.join(map(self._print, expr.args))
-        return '{ns}{name}({args})'.format(
-            ns=self._ns,
+        return '{name}({args})'.format(
             name=known,
             args=args
         )
