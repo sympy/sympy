@@ -137,7 +137,8 @@ class Pow(Expr):
     | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
     |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
     +--------------+---------+-----------------------------------------------+
-    | b**zoo       | nan     | b can be any general complex number.          |
+    | b**zoo       | nan     | Because b**z has no limit as |z|->oo when z   |
+    |              |         | is a complex number.                          |
     +--------------+---------+-----------------------------------------------+
     | (-1)**oo     | nan     | Because of oscillations in the limit.         |
     | (-1)**(-oo)  |         |                                               |
