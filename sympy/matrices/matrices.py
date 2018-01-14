@@ -269,7 +269,10 @@ class MatrixDeterminant(MatrixCommon):
     def _eval_determinant(self, method=None):
         """Assumed to exist by matrix expressions; If we subclass
         MatrixDeterminant, we can fully evaluate determinants."""
-        return self.det(method=method)
+        if method is None:
+            return self.det()
+        else:
+            return self.det(method=method)
 
     def adjugate(self, method="berkowitz"):
         """Returns the adjugate, or classical adjoint, of

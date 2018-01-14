@@ -51,7 +51,7 @@ def det(matexpr, method=None):
     1
     """
 
-    if isinstance(matexpr, MatrixExpr) and not method:
+    if isinstance(matexpr, MatrixExpr) and  method is not None:
         raise ValueError("Keyword arguments not supported for matrix expressions.")
 
     return Determinant(matexpr).doit(method=method)
