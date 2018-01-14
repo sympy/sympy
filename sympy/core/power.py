@@ -109,8 +109,8 @@ def integer_log(y, x):
 
     >>> from sympy import integer_log
     >>> integer_log(125, 5)
-    (5, True)
-    >>>integer_log(17, 9)
+    (3, True)
+    >>> integer_log(17, 9)
     (1, False)
 
     See Also
