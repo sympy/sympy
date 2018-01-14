@@ -303,13 +303,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     except AttributeError:
         pass
 
-    if iterable(a):
-        try:
-            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a])
-        except TypeError:
-            # Not all iterables are rebuildable with their type.
-            pass
+    try:
+        from ..tensor.array import Array
+        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+    except AttributeError:
+        pass
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
@@ -321,12 +319,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if strict:
         raise SympifyError(a)
 
-    try:
-        from ..tensor.array import Array
-        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
-    except AttributeError:
-        pass
-
+    if iterable(a):
+        try:
+            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+                rational=rational) for x in a])
+        except TypeError:
+            # Not all iterables are rebuildable with their type.
+            pass
     if isinstance(a, dict):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
