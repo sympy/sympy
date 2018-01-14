@@ -52,6 +52,7 @@ def integer_nthroot(y, n):
     See Also
     ========
     sympy.ntheory.primetest.is_square
+    integer_log
     """
     y, n = as_int(y), as_int(n)
     if y < 0:
@@ -97,6 +98,48 @@ def integer_nthroot(y, n):
         x -= 1
         t = x**n
     return int(x), t == y  # int converts long to int if possible
+
+
+def integer_log(y, x):
+    """Returns (e, bool) where e is the largest nonnegative integer
+    such that y >= x**e and bool is True if y == x**e
+
+    Examples
+    ========
+
+    >>> from sympy import integer_log
+    >>> integer_log(125, 5)
+    (5, True)
+    >>>integer_log(17, 9)
+    (1, False)
+
+    See Also
+    ========
+    integer_nthroot
+    sympy.ntheory.primetest.is_square
+    sympy.ntheory.factor_.multiplicity
+    sympy.ntheory.factor_.perfect_power
+    """
+    if x <= 1:
+        raise AssertionError('x should have value greater than 1')
+    if y <= 0:
+        raise AssertionError('y should have value greater than 0')
+    y = as_int(y)
+    x = as_int(x)
+    if x == 2:
+        e = y.bit_length() - 1
+        return e, 2**e == y
+    r = e = 0
+    orig_y = y
+    while y >= x:
+        d = x
+        m = 1
+        while y >= d:
+            y, r = divmod(y, d)
+            e += m
+            d *= d
+            m *= 2
+    return e, x**e == orig_y
 
 
 class Pow(Expr):

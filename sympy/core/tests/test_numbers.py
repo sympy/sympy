@@ -5,7 +5,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr)
 from sympy.core.compatibility import long
-from sympy.core.power import integer_nthroot, isqrt
+from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
@@ -951,6 +951,22 @@ def test_powers():
 def test_integer_nthroot_overflow():
     assert integer_nthroot(10**(50*50), 50) == (10**50, True)
     assert integer_nthroot(10**100000, 10000) == (10**10, True)
+
+
+def test_integer_log():
+    raises(AssertionError, lambda: integer_log(2, 1))
+    raises(AssertionError, lambda: integer_log(0, 2))
+    raises(ValueError, lambda: integer_log(1.1, 2))
+    raises(ValueError, lambda: integer_log(1, 2.2))
+
+    assert integer_log(1, 2) == (0, True)
+    assert integer_log(1, 3) == (0, True)
+    assert integer_log(2, 3) == (0, False)
+    assert integer_log(3, 3) == (1, True)
+    assert integer_log(3*2, 3) == (1, False)
+    assert integer_log(3**2, 3) == (2, True)
+    assert integer_log(3*4, 3) == (2, False)
+    assert integer_log(3**3, 3) == (3, True)
 
 
 def test_isqrt():

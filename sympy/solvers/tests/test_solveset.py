@@ -730,6 +730,7 @@ def test_solveset_real_exp():
     assert solveset(Eq(-3**x, 27), x, S.Reals) == S.EmptySet
     assert solveset(Eq(-5**(x+1),27), x, S.Reals) == S.EmptySet
     assert solveset(Eq(2**(x-3), -16), x, S.Reals) == FiniteSet(7)
+    assert solveset(Eq(3**(x - 3), -3**39), x, S.Reals) == S.EmptySet
 
 
 def test_solve_complex_log():
