@@ -1661,10 +1661,10 @@ def test_issue_13849():
 
 def test_issue_13908():
     raises(AssertionError, lambda: integer_log(2, 1))
-    raises(ValueError, lambda: integer_log(1.1, 2)) 
+    raises(ValueError, lambda: integer_log(1.1, 2))
     raises(ValueError, lambda: integer_log(1, 2.2))
 
-    assert integer_log(1, 2) == (0, True)  
+    assert integer_log(1, 2) == (0, True)
     assert integer_log(1, 3) == (0, True)
     assert integer_log(2, 3) == (0, False)
     assert integer_log(3, 3) == (1, True)
