@@ -195,8 +195,7 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
         if evaluate:
-            from sympy import zoo
-            if e is zoo:
+            if e is S.ComplexInfinity:
                 return S.NaN
             if e is S.Zero:
                 return S.One
