@@ -1020,7 +1020,7 @@ class FormalPowerSeries(SeriesBase):
 
     def _eval_term(self, pt):
         if (self.args[0].is_polynomial()):
-            return (self.args[0].coeff(self.x, pt))*(self.x)**pt
+            return (self.function.coeff(self.x, pt))*(self.x)**pt
         try:
             pt_xk = self.xk.coeff(pt)
             pt_ak = self.ak.coeff(pt).simplify()  # Simplify the coefficients
