@@ -1121,7 +1121,7 @@ def linear_eq_to_matrix(equations, *symbols):
         symbols = symbols[0]
 
     M = Matrix([symbols])
-    # initialise Matrix with symbols + 1 columns
+    # initialize Matrix with symbols + 1 columns
     M = M.col_insert(len(symbols), Matrix([1]))
     row_no = 1
 
@@ -1142,7 +1142,7 @@ def linear_eq_to_matrix(equations, *symbols):
         M = M.row_insert(row_no, Matrix([coeff_list]))
         row_no += 1
 
-    # delete the initialised (Ist) trivial row
+    # delete the initialized (Ist) trivial row
     M.row_del(0)
     A, b = M[:, :-1], M[:, -1:]
     return A, b

@@ -667,7 +667,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
-    differential equations. This minimises the computation in calling
+    differential equations. This minimizes the computation in calling
     :py:meth:`~sympy.solvers.deutils._desolve` multiple times.
     """
     r = match
@@ -4622,7 +4622,7 @@ def ode_1st_power_series(eq, func, order, match):
     if not h:
         return Eq(f(x), value)
 
-    # Initialisation
+    # Initialization
     series = value
     if terms > 1:
         hc = h.subs({x: point, y: value})
