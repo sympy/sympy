@@ -39,6 +39,8 @@ def test_Function():
     assert mcode(abs(x)) == "abs(x)"
     assert mcode(ceiling(x)) == "ceil(x)"
     assert mcode(Max(x, y) + Min(x, y)) == "max(x, y) + min(x, y)"
+    assert mcode(Max(x, y, z)) == "max(x, max(y, z))"
+    assert mcode(Min(x, y, z)) == "min(x, min(y, z))"
 
 
 def test_Pow():
