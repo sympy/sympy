@@ -438,9 +438,8 @@ class OctaveCodePrinter(CodePrinter):
     def _print_math_func(self, expr):
         known = self.known_functions[expr.__class__.__name__]
         args = self._print(expr.args[0])
-        if len(expr.args) > 1:
-            args += ', %s' % self._print(expr.func(*expr.args[1:]))
-        
+        args += ', %s' % self._print(expr.func(*expr.args[1:]))
+
         return '{name}({args})'.format(
             name=known,
             args=args
