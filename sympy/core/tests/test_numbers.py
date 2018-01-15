@@ -954,8 +954,8 @@ def test_integer_nthroot_overflow():
 
 
 def test_integer_log():
-    raises(AssertionError, lambda: integer_log(2, 1))
-    raises(AssertionError, lambda: integer_log(0, 2))
+    raises(ValueError, lambda: integer_log(2, 1))
+    raises(ValueError, lambda: integer_log(0, 2))
     raises(ValueError, lambda: integer_log(1.1, 2))
     raises(ValueError, lambda: integer_log(1, 2.2))
 
@@ -967,7 +967,12 @@ def test_integer_log():
     assert integer_log(3**2, 3) == (2, True)
     assert integer_log(3*4, 3) == (2, False)
     assert integer_log(3**3, 3) == (3, True)
-
+    assert integer_log(27, 5) == (2, False)
+    assert integer_log(2, 3) == (0, False)
+    assert integer_log(-4, -2) == (2, False)
+    assert integer_log(27, -3) == (3, False)
+    assert integer_log(-49, 7) == (0, False)
+    assert integer_log(-49, -7) == (2, False)
 
 def test_isqrt():
     from math import sqrt as _sqrt
