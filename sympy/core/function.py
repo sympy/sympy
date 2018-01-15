@@ -1292,11 +1292,17 @@ class Derivative(Expr):
     def _helper_apply_n_times(expr, s, n, func):
         from sympy import Integer, Tuple, NDimArray
         from sympy.matrices.common import MatrixCommon
+
+        # This `if` could be avoided with double dispatch, combinations of type
+        # requiring `derive_by_array`:
+        # (array, array)
+        # (array, scalar)
+        # (scalar, array) ==> this one is managed by the following `if` clause.
+        # Pair (x=scalar, y=scalar) should be passed to x._eval_derivative(y).
         if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
             from sympy import derive_by_array
             func = derive_by_array
-        #else:
-            #func = lambda x, y: x._eval_derivative(y)
+
         if isinstance(n, (int, Integer)):
             obj = expr
             for i in range(n):

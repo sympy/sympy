@@ -741,10 +741,6 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_derivative_n_times(self, s, n):
-        from sympy import Derivative
-        return Derivative._helper_apply_n_times(self, s, n, lambda x, s: x._eval_derivative(s))
-
     def _eval_is_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic

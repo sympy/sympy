@@ -1581,6 +1581,10 @@ class Basic(with_metaclass(ManagedProperties)):
                     return rewritten
         return self.func(*args)
 
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Derivative
+        return Derivative._helper_apply_n_times(self, s, n, lambda x, s: x._eval_derivative(s))
+
     def rewrite(self, *args, **hints):
         """ Rewrite functions in terms of other functions.
 
