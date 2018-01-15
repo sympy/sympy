@@ -32,8 +32,8 @@ DAMAGE.
 Patches taken from the Diofant project (https://github.com/diofant/diofant)
 are licensed as:
 
-Copyright (c) 2006-2017 SymPy Development Team,
-              2013-2017 Sergey B Kirpichev
+Copyright (c) 2006-2018 SymPy Development Team,
+              2013-2018 Sergey B Kirpichev
 
 All rights reserved.
 
