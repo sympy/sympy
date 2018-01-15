@@ -176,6 +176,7 @@ def test_assoc_legendre():
 
     assert conjugate(assoc_legendre(n, m, x)) == \
         assoc_legendre(n, conjugate(m), conjugate(x))
+    raises(ValueError, lambda: Plm(0, 1, x))
 
 
 def test_chebyshev():
