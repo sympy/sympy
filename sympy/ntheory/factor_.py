@@ -496,7 +496,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     A search is made for factors next to even numbers having a power smoothness
     less than ``B``. Choosing a larger B increases the likelihood of finding a
     larger factor but takes longer. Whether a factor of n is found or not
-    depends on ``a`` and the power smoothness of the even mumber just less than
+    depends on ``a`` and the power smoothness of the even number just less than
     the factor p (hence the name p - 1).
 
     Although some discussion of what constitutes a good ``a`` some

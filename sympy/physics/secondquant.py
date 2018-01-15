@@ -2335,7 +2335,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     Controlling output:
 
     By default the dummy symbols that are already present in the expression
-    will be reused in a different permuation.  However, if new_indices=True,
+    will be reused in a different permutation.  However, if new_indices=True,
     new dummies will be generated and inserted.  The keyword 'pretty_indices'
     can be used to control this generation of new symbols.
 

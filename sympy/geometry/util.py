@@ -601,7 +601,7 @@ def intersection(*entities, **kwargs):
     or else failures due to floating point issues may result.
 
     Case 1: When the keyword argument 'pairwise' is False (default value):
-    In this case, the functon returns a list of intersections common to
+    In this case, the function returns a list of intersections common to
     all entities.
 
     Case 2: When the keyword argument 'pairwise' is True:

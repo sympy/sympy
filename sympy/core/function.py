@@ -499,7 +499,7 @@ class Function(Application, Expr):
     @property
     def is_commutative(self):
         """
-        Returns whether the functon is commutative.
+        Returns whether the function is commutative.
         """
         if all(getattr(t, 'is_commutative') for t in self.args):
             return True

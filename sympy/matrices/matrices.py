@@ -724,7 +724,7 @@ class MatrixReductions(MatrixDeterminant):
         return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
-        """Perfoms the elementary column operation `op`.
+        """Performs the elementary column operation `op`.
 
         `op` may be one of
 
@@ -754,7 +754,7 @@ class MatrixReductions(MatrixDeterminant):
             return self._eval_col_op_add_multiple_to_other_col(col, k, col2)
 
     def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
-        """Perfoms the elementary row operation `op`.
+        """Performs the elementary row operation `op`.
 
         `op` may be one of
 
