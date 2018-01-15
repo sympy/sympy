@@ -704,6 +704,11 @@ class meijerg(TupleParametersBase):
             c.f. references. """
         return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
 
+    @property
+    def is_number(self):
+        """ Returns true if expression has numeric data only. """
+        return not self.free_symbols
+
 
 class HyperRep(Function):
     """

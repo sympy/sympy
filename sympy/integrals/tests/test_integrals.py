@@ -4,13 +4,13 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
+    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction, Max, Min
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 
 
@@ -160,6 +160,7 @@ def test_multiple_integration():
     assert integrate((y**2)*(x**2), x, y) == Rational(1, 9)*(x**3)*(y**3)
     assert integrate(1/(x + 3)/(1 + x)**3, x) == \
         -S(1)/8*log(3 + x) + S(1)/8*log(1 + x) + x/(4 + 8*x + 4*x**2)
+    assert integrate(sin(x*y)*y, (x, 0, 1), (y, 0, 1)) == -sin(1) + 1
 
 
 def test_issue_3532():
@@ -528,6 +529,20 @@ def test_integrate_returns_piecewise():
         (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
 
 
+def test_max_min():
+    assert integrate(Min(x, 2), (x, 0, 3)) == 4
+    assert integrate(Max(x**2, x**3), (x, 0, 2)) == S(49)/12
+    assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
+        (exp(2*x)/2, x <= 0), (1 - exp(-2*x)/2, True))
+    # issue 7907
+    c = symbols('c', real=True)
+    int1 = integrate(Max(c, x)*exp(-x**2), (x, -oo, oo))
+    int2 = integrate(c*exp(-x**2), (x, -oo, c))
+    int3 = integrate(x*exp(-x**2), (x, c, oo))
+    assert int1 == int2 + int3 == sqrt(pi)*c*erf(c)/2 + \
+        sqrt(pi)*c/2 + exp(-c**2)/2
+
+
 def test_subs1():
     e = Integral(exp(x - y), x)
     assert e.subs(y, 3) == Integral(exp(x - 3), x)
@@ -731,7 +746,7 @@ def test_is_number():
     assert Integral(x, (y, 1, x)).is_number is False
     assert Integral(x, (y, 1, 2)).is_number is False
     assert Integral(x, (x, 1, 2)).is_number is True
-    # `foo.is_number` should always be eqivalent to `not foo.free_symbols`
+    # `foo.is_number` should always be equivalent to `not foo.free_symbols`
     # in each of these cases, there are pseudo-free symbols
     i = Integral(x, (y, 1, 1))
     assert i.is_number is False and i.n() == 0
@@ -843,7 +858,7 @@ def test_issue_5167():
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
     assert Integral(1, x, y).args != Integral(1, y, x).args
-    # do as many as possibble
+    # do as many as possible
     assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
     assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
         y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))
@@ -872,8 +887,9 @@ def test_issue_4517():
 
 def test_issue_4527():
     k, m = symbols('k m', integer=True)
-    assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)) == Piecewise(
-        (0, And(Eq(k, 0), Eq(m, 0))),
+    ans = integrate(sin(k*x)*sin(m*x), (x, 0, pi)
+            ).simplify() == Piecewise(
+        (0, Eq(k, 0) | Eq(m, 0)),
         (-pi/2, Eq(k, -m)),
         (pi/2, Eq(k, m)),
         (0, True))
@@ -883,6 +899,7 @@ def test_issue_4527():
         (x*sin(m*x)**2/2 + x*cos(m*x)**2/2 - sin(m*x)*cos(m*x)/(2*m), Eq(k, m)),
         (m*sin(k*x)*cos(m*x)/(k**2 - m**2) -
          k*sin(m*x)*cos(k*x)/(k**2 - m**2), True))
+
 
 def test_issue_4199():
     ypos = Symbol('y', positive=True)
@@ -909,7 +926,7 @@ def test_issue_3940():
 
 
 def test_issue_5413():
-    # Note that this is not the same as testing ratint() becuase integrate()
+    # Note that this is not the same as testing ratint() because integrate()
     # pulls out the coefficient.
     assert integrate(-a/(a**2 + x**2), x) == I*log(-I*a + x)/2 - I*log(I*a + x)/2
 
@@ -1021,7 +1038,6 @@ def test_issue_4487():
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 
-@XFAIL
 def test_issue_4215():
     x = Symbol("x")
     assert integrate(1/(x**2), (x, -1, 1)) == oo
@@ -1108,7 +1124,7 @@ def test_issue_2708():
     assert integrate(2*f + exp(z), (z, 2, 3)) == \
         2*integral_f - exp(2) + exp(3)
     assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
-        1.0*NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
+        NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
                                   (z, 0, x))
 
 def test_issue_8368():
@@ -1153,6 +1169,8 @@ def test_issue_8901():
 
 @slow
 def test_issue_7130():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
@@ -1178,3 +1196,15 @@ def test_singularities():
 
     assert integrate(1/x**2, (x, 1, -1)) == -oo
     assert integrate(1/(x - 1)**2, (x, 2, -2)) == -oo
+
+def test_issue_12645():
+    x, y = symbols('x y', real=True)
+    assert (integrate(sin(x*x + y*y),
+                      (x, -sqrt(pi - y*y), sqrt(pi - y*y)),
+                      (y, -sqrt(pi), sqrt(pi)))
+                == Integral(sin(x**2 + y**2),
+                            (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
+                            (y, -sqrt(pi), sqrt(pi))))
+
+def test_issue_12677():
+    assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)

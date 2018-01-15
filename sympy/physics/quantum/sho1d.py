@@ -161,7 +161,7 @@ class RaisingOp(SHOOp):
 
     def _print_contents_latex(self, printer, *args):
         arg = printer._print(self.args[0])
-        return '%s^{\\dag}' % arg
+        return '%s^{\\dagger}' % arg
 
 class LoweringOp(SHOOp):
     """The Lowering Operator or 'a'.

@@ -250,7 +250,7 @@ class ModuleElement(object):
         return self.eq(self.data, om.data)
 
     def __ne__(self, om):
-        return not self.__eq__(om)
+        return not self == om
 
 ##########################################################################
 ## Free Modules ##########################################################
@@ -687,7 +687,7 @@ class SubModule(Module):
 
         Some implementations allow further options to be passed. Currently, the
         only one implemented is ``relations=True``, which may only be passed
-        if ``other`` is prinicipal. In this case the function
+        if ``other`` is principal. In this case the function
         will return a pair ``(res, rel)`` where ``res`` is the ideal, and
         ``rel`` is a list of coefficient vectors, expressing the generators of
         the ideal, multiplied by the generator of ``other`` in terms of

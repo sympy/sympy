@@ -434,6 +434,15 @@ class bell(Function):
 
     @classmethod
     def eval(cls, n, k_sym=None, symbols=None):
+        if n is S.Infinity:
+            if k_sym is None:
+                return S.Infinity
+            else:
+                raise ValueError("Bell polynomial is not defined")
+
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("a non-negative integer expected")
+
         if n.is_Integer and n.is_nonnegative:
             if k_sym is None:
                 return Integer(cls._bell(int(n)))
@@ -694,9 +703,9 @@ class harmonic(Function):
 
 class euler(Function):
     r"""
-    Euler numbers
+    Euler numbers / Euler polynomials
 
-    The euler numbers are given by::
+    The Euler numbers are given by::
 
                   2*n+1   k
                    ___   ___            j          2*n+1
@@ -708,18 +717,51 @@ class euler(Function):
           E     = 0
            2n+1
 
-    * euler(n) gives the n-th Euler number, E_n
+    Euler numbers and Euler polynomials are related by
+
+    .. math:: E_n = 2^n E_n\left(\frac{1}{2}\right).
+
+    We compute symbolic Euler polynomials using [5]
+
+    .. math:: E_n(x) = \sum_{k=0}^n \binom{n}{k} \frac{E_k}{2^k}
+                       \left(x - \frac{1}{2}\right)^{n-k}.
+
+    However, numerical evaluation of the Euler polynomial is computed
+    more efficiently (and more accurately) using the mpmath library.
+
+    * euler(n) gives the n-th Euler number, `E_n`.
+    * euler(n, x) gives the n-th Euler polynomial, `E_n(x)`.
 
     Examples
     ========
 
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, S
     >>> from sympy.functions import euler
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
     >>> n = Symbol("n")
     >>> euler(n+2*n)
     euler(3*n)
+
+    >>> x = Symbol("x")
+    >>> euler(n, x)
+    euler(n, x)
+
+    >>> euler(0, x)
+    1
+    >>> euler(1, x)
+    x - 1/2
+    >>> euler(2, x)
+    x**2 - x
+    >>> euler(3, x)
+    x**3 - 3*x**2/2 + 1/4
+    >>> euler(4, x)
+    x**4 - 2*x**3 + x
+
+    >>> euler(12, S.Half)
+    2702765/4096
+    >>> euler(12)
+    2702765
 
     References
     ==========
@@ -728,6 +770,7 @@ class euler(Function):
     .. [2] http://mathworld.wolfram.com/EulerNumber.html
     .. [3] http://en.wikipedia.org/wiki/Alternating_permutation
     .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [5] http://dlmf.nist.gov/24.2#ii
 
     See Also
     ========
@@ -736,35 +779,74 @@ class euler(Function):
     """
 
     @classmethod
-    def eval(cls, m):
-        if m.is_odd:
-            return S.Zero
-        if m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            m = m._to_mpmath(mp.prec)
-            res = mp.eulernum(m, exact=True)
-            return Integer(res)
+    def eval(cls, m, sym=None):
+        if m.is_Number:
+            if m.is_Integer and m.is_nonnegative:
+                # Euler numbers
+                if sym is None:
+                    if m.is_odd:
+                        return S.Zero
+                    from mpmath import mp
+                    m = m._to_mpmath(mp.prec)
+                    res = mp.eulernum(m, exact=True)
+                    return Integer(res)
+                # Euler polynomial
+                else:
+                    from sympy.core.evalf import pure_complex
+                    reim = pure_complex(sym, or_real=True)
+                    # Evaluate polynomial numerically using mpmath
+                    if reim and all(a.is_Float or a.is_Integer for a in reim) \
+                            and any(a.is_Float for a in reim):
+                        from mpmath import mp
+                        from sympy import Expr
+                        m = int(m)
+                        # XXX ComplexFloat (#12192) would be nice here, above
+                        prec = min([a._prec for a in reim if a.is_Float])
+                        with workprec(prec):
+                            res = mp.eulerpoly(m, sym)
+                        return Expr._from_mpmath(res, prec)
+                    # Construct polynomial symbolically from definition
+                    m, result = int(m), []
+                    for k in range(m + 1):
+                        result.append(binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k))
+                    return Add(*result).expand()
+            else:
+                raise ValueError("Euler numbers are defined only"
+                                 " for nonnegative integer indices.")
+        if sym is None:
+            if m.is_odd and m.is_positive:
+                return S.Zero
 
-    def _eval_rewrite_as_Sum(self, arg):
+    def _eval_rewrite_as_Sum(self, n, x=None):
         from sympy import Sum
-        if arg.is_even:
+        if x is None and n.is_even:
             k = Dummy("k", integer=True)
             j = Dummy("j", integer=True)
-            n = self.args[0] / 2
+            n = n / 2
             Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
-
             return Em
+        if x:
+            k = Dummy("k", integer=True)
+            return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
 
     def _eval_evalf(self, prec):
-        m = self.args[0]
+        m, x = (self.args[0], None) if len(self.args) == 1 else self.args
 
-        if m.is_Integer and m.is_nonnegative:
+        if x is None and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
             from sympy import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
                 res = mp.eulernum(m)
+            return Expr._from_mpmath(res, prec)
+        if x and x.is_number and m.is_Integer and m.is_nonnegative:
+            from mpmath import mp
+            from sympy import Expr
+            m = int(m)
+            x = x._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.eulerpoly(m, x)
             return Expr._from_mpmath(res, prec)
 
 #----------------------------------------------------------------------------#
@@ -819,7 +901,7 @@ class catalan(Function):
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
-    continuous real funtion in n:
+    continuous real function in n:
 
     >>> diff(catalan(n), n)
     (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
@@ -894,6 +976,18 @@ class catalan(Function):
             return self
         k = Dummy('k', integer=True, positive=True)
         return Product((n + k) / k, (k, 2, n))
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_composite(self):
+        if self.args[0].is_integer and (self.args[0] - 3).is_positive:
+            return True
 
     def _eval_evalf(self, prec):
         from sympy import gamma
@@ -1262,7 +1356,7 @@ def nC(n, k=None, replacement=False):
     35
 
     If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``
-    then the total of all combinations of length 0 hrough ``k`` is the
+    then the total of all combinations of length 0 through ``k`` is the
     product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity
     of each item is 1 (i.e., k unique items) then there are 2**k
     combinations. For example, if there are 4 unique items, the total number

@@ -195,7 +195,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.functions.elementary.hyperbolic import (
-    cosh, sinh, tanh, coth, HyperbolicFunction)
+    cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
 from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
@@ -239,10 +239,10 @@ def TR1(rv):
     """
 
     def f(rv):
-        if rv.func is sec:
+        if isinstance(rv, sec):
             a = rv.args[0]
             return S.One/cos(a)
-        elif rv.func is csc:
+        elif isinstance(rv, csc):
             a = rv.args[0]
             return S.One/sin(a)
         return rv
@@ -269,10 +269,10 @@ def TR2(rv):
     """
 
     def f(rv):
-        if rv.func is tan:
+        if isinstance(rv, tan):
             a = rv.args[0]
             return sin(a)/cos(a)
-        elif rv.func is cot:
+        elif isinstance(rv, cot):
             a = rv.args[0]
             return cos(a)/sin(a)
         return rv
@@ -323,7 +323,7 @@ def TR2i(rv, half=False):
                 k.func in (sin, cos) or (half and
                 k.is_Add and
                 len(k.args) >= 2 and
-                any(any(ai.func is cos or ai.is_Pow and ai.base is cos
+                any(any(isinstance(ai, cos) or ai.is_Pow and ai.base is cos
                 for ai in Mul.make_args(a)) for a in k.args))))
 
         n = n.as_powers_dict()
@@ -363,7 +363,7 @@ def TR2i(rv, half=False):
         # joining
         t = []
         for k in n:
-            if k.func is sin:
+            if isinstance(k, sin):
                 a = cos(k.args[0], evaluate=False)
                 if a in d and d[a] == n[k]:
                     t.append(tan(k.args[0])**n[k])
@@ -373,13 +373,13 @@ def TR2i(rv, half=False):
                     if a1 in d and d[a1] == n[k]:
                         t.append((tan(k.args[0]/2))**n[k])
                         n[k] = d[a1] = None
-            elif k.func is cos:
+            elif isinstance(k, cos):
                 a = sin(k.args[0], evaluate=False)
                 if a in d and d[a] == n[k]:
                     t.append(tan(k.args[0])**-n[k])
                     n[k] = d[a] = None
             elif half and k.is_Add and k.args[0] is S.One and \
-                    k.args[1].func is cos:
+                    isinstance(k.args[1], cos):
                 a = sin(k.args[1].args[0], evaluate=False)
                 if a in d and d[a] == n[k] and (d[a].is_integer or \
                         a.is_positive):
@@ -1090,7 +1090,7 @@ def TR12i(rv):
             if m:
                 g, f, s = m
                 if s is S.NegativeOne and f.is_Mul and len(f.args) == 2 and \
-                        all(fi.func is tan for fi in f.args):
+                        all(isinstance(fi, tan) for fi in f.args):
                     return g, f
 
         d_args = list(Mul.make_args(d))
@@ -1125,7 +1125,7 @@ def TR12i(rv):
         def ok(ni):
             if ni.is_Add and len(ni.args) == 2:
                 a, b = ni.args
-                if a.func is tan and b.func is tan:
+                if isinstance(a, tan) and isinstance(b, tan):
                     return a, b
         n_args = list(Mul.make_args(factor_terms(n)))
         hit = False
@@ -1292,7 +1292,7 @@ def TRmorrie(rv):
         other = []
         for c in rv.args:
             b, e = c.as_base_exp()
-            if e.is_Integer and b.func is cos:
+            if e.is_Integer and isinstance(b, cos):
                 co, a = b.args[0].as_coeff_Mul()
                 args[a].append(co)
                 coss[b] = e
@@ -1431,7 +1431,7 @@ def TR14(rv, first=True):
                                 rem[e] -= take
                                 process.insert(0, rem)
 
-                            if A[f].func is cos:
+                            if isinstance(A[f], cos):
                                 t = sin
                             else:
                                 t = cos
@@ -1444,7 +1444,7 @@ def TR14(rv, first=True):
                         if A[si] != B[si]:
                             B = process.pop(0)
                             take = A[e]
-                            if A[f].func is cos:
+                            if isinstance(A[f], cos):
                                 t = sin
                             else:
                                 t = cos
@@ -1479,7 +1479,7 @@ def TR15(rv, max=4, pow=False):
     """
 
     def f(rv):
-        if not (isinstance(rv, Pow) and rv.base.func is sin):
+        if not (isinstance(rv, Pow) and isinstance(rv.base, sin)):
             return rv
 
         ia = 1/rv
@@ -1508,7 +1508,7 @@ def TR16(rv, max=4, pow=False):
     """
 
     def f(rv):
-        if not (isinstance(rv, Pow) and rv.base.func is cos):
+        if not (isinstance(rv, Pow) and isinstance(rv.base, cos)):
             return rv
 
         ia = 1/rv
@@ -1541,11 +1541,11 @@ def TR111(rv):
             (rv.base.is_positive or rv.exp.is_integer and rv.exp.is_negative)):
             return rv
 
-        if rv.base.func is tan:
+        if isinstance(rv.base, tan):
             return cot(rv.base.args[0])**-rv.exp
-        elif rv.base.func is sin:
+        elif isinstance(rv.base, sin):
             return csc(rv.base.args[0])**-rv.exp
-        elif rv.base.func is cos:
+        elif isinstance(rv.base, cos):
             return sec(rv.base.args[0])**-rv.exp
         return rv
 
@@ -1621,7 +1621,7 @@ RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 
 
 # XXX it's a little unclear how this one is to be implemented
-# see Fu paper of reference, page 7. What is the Union symbol refering to?
+# see Fu paper of reference, page 7. What is the Union symbol referring to?
 # The diagram shows all these as one chain of transformations, but the
 # text refers to them being applied independently. Also, a break
 # if L starts to increase has not been implemented.
@@ -1877,9 +1877,9 @@ def trig_split(a, b, two=False):
             else:
                 args = [a]
             a = args.pop(0)
-            if a.func is cos:
+            if isinstance(a, cos):
                 c = a
-            elif a.func is sin:
+            elif isinstance(a, sin):
                 s = a
             elif a.is_Pow and a.exp is S.Half:  # autoeval doesn't allow -1/2
                 co *= a
@@ -1887,12 +1887,12 @@ def trig_split(a, b, two=False):
                 return None
             if args:
                 b = args[0]
-                if b.func is cos:
+                if isinstance(b, cos):
                     if c:
                         s = b
                     else:
                         c = b
-                elif b.func is sin:
+                elif isinstance(b, sin):
                     if s:
                         c = b
                     else:
@@ -1902,9 +1902,9 @@ def trig_split(a, b, two=False):
                 else:
                     return None
             return co if co is not S.One else None, c, s
-        elif a.func is cos:
+        elif isinstance(a, cos):
             c = a
-        elif a.func is sin:
+        elif isinstance(a, sin):
             s = a
         if c is None and s is None:
             return
@@ -1922,24 +1922,24 @@ def trig_split(a, b, two=False):
     cob, cb, sb = m
 
     # check them
-    if (not ca) and cb or ca and ca.func is sin:
+    if (not ca) and cb or ca and isinstance(ca, sin):
         coa, ca, sa, cob, cb, sb = cob, cb, sb, coa, ca, sa
         n1, n2 = n2, n1
     if not two:  # need cos(x) and cos(y) or sin(x) and sin(y)
         c = ca or sa
         s = cb or sb
-        if c.func is not s.func:
+        if not isinstance(c, s.func):
             return None
-        return gcd, n1, n2, c.args[0], s.args[0], c.func is cos
+        return gcd, n1, n2, c.args[0], s.args[0], isinstance(c, cos)
     else:
         if not coa and not cob:
             if (ca and cb and sa and sb):
-                if not ((ca.func is sa.func) is (cb.func is sb.func)):
+                if isinstance(ca, sa.func) is not isinstance(cb, sb.func):
                     return
                 args = {j.args for j in (ca, sa)}
                 if not all(i.args in args for i in (cb, sb)):
                     return
-                return gcd, n1, n2, ca.args[0], sa.args[0], ca.func is sa.func
+                return gcd, n1, n2, ca.args[0], sa.args[0], isinstance(ca, sa.func)
         if ca and sa or cb and sb or \
             two and (ca is None and sa is None or cb is None and sb is None):
             return
@@ -2041,14 +2041,18 @@ def _osborne(e, d):
             return rv
         a = rv.args[0]
         a = a*d if not a.is_Add else Add._from_args([i*d for i in a.args])
-        if rv.func is sinh:
+        if isinstance(rv, sinh):
             return I*sin(a)
-        elif rv.func is cosh:
+        elif isinstance(rv, cosh):
             return cos(a)
-        elif rv.func is tanh:
+        elif isinstance(rv, tanh):
             return I*tan(a)
-        elif rv.func is coth:
+        elif isinstance(rv, coth):
             return cot(a)/I
+        elif isinstance(rv, sech):
+            return sec(a)
+        elif isinstance(rv, csch):
+            return csc(a)/I
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
@@ -2074,19 +2078,20 @@ def _osbornei(e, d):
     def f(rv):
         if not isinstance(rv, TrigonometricFunction):
             return rv
-        a = rv.args[0].xreplace({d: S.One})
-        if rv.func is sin:
+        const, x = rv.args[0].as_independent(d, as_Add=True)
+        a = x.xreplace({d: S.One}) + const*I
+        if isinstance(rv, sin):
             return sinh(a)/I
-        elif rv.func is cos:
+        elif isinstance(rv, cos):
             return cosh(a)
-        elif rv.func is tan:
+        elif isinstance(rv, tan):
             return tanh(a)/I
-        elif rv.func is cot:
+        elif isinstance(rv, cot):
             return coth(a)*I
-        elif rv.func is sec:
-            return 1/cosh(a)
-        elif rv.func is csc:
-            return I/sinh(a)
+        elif isinstance(rv, sec):
+            return sech(a)
+        elif isinstance(rv, csc):
+            return csch(a)*I
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 

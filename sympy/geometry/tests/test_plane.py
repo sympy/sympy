@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Dummy, S, Symbol, pi, sqrt, asin
+from sympy import Dummy, S, Symbol, symbols, pi, sqrt, asin, sin, cos
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
 from sympy.utilities.pytest import raises, slow
@@ -8,22 +8,20 @@ from sympy.utilities.pytest import raises, slow
 
 @slow
 def test_plane():
-    x = Symbol('x', real=True)
-    y = Symbol('y', real=True)
-    z = Symbol('z', real=True)
+    x, y, z, u, v = symbols('x y z u v', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
-    p4 = Point3D(x, x, x)
-    p5 = Point3D(y, y, y)
-
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
     pl4b = Plane(p1, p2)
     pl5 = Plane(p3, normal_vector=(1, 2, 3))
     pl6 = Plane(Point3D(2, 3, 7), normal_vector=(2, 2, 2))
     pl7 = Plane(Point3D(1, -5, -6), normal_vector=(1, -2, 1))
-
+    pl8 = Plane(p1, normal_vector=(0, 0, 1))
+    pl9 = Plane(p1, normal_vector=(0, 12, 0))
+    pl10 = Plane(p1, normal_vector=(-2, 0, 0))
+    pl11 = Plane(p2, normal_vector=(0, 0, 1))
     l1 = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
     l2 = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
@@ -71,7 +69,6 @@ def test_plane():
                Ray3D(Point3D(14/3, 11/3, 11/3), Point3D(13/3, 13/3, 10/3))
     assert pl3.perpendicular_line(r.args) == pl3.perpendicular_line(r)
 
-
     assert pl3.is_parallel(pl6) is False
     assert pl4.is_parallel(pl6)
     assert pl6.is_parallel(l1) is False
@@ -80,6 +77,16 @@ def test_plane():
     assert pl4.is_perpendicular(pl7)
     assert pl6.is_perpendicular(pl7)
     assert pl6.is_perpendicular(l1) is False
+
+    assert pl6.distance(pl6.arbitrary_point(u, v)) == 0
+    assert pl7.distance(pl7.arbitrary_point(u, v)) == 0
+    assert pl6.distance(pl6.arbitrary_point(t)) == 0
+    assert pl7.distance(pl7.arbitrary_point(t)) == 0
+    assert pl6.p1.distance(pl6.arbitrary_point(t)).simplify() == 1
+    assert pl7.p1.distance(pl7.arbitrary_point(t)).simplify() == 1
+    assert pl3.arbitrary_point(t) == Point3D(-sqrt(30)*sin(t)/30 + \
+        2*sqrt(5)*cos(t)/5, sqrt(30)*sin(t)/15 + sqrt(5)*cos(t)/5, sqrt(30)*sin(t)/6)
+    assert pl3.arbitrary_point(u, v) == Point3D(2*u - v, u + 2*v, 5*v)
 
     assert pl7.distance(Point3D(1, 3, 5)) == 5*sqrt(6)/6
     assert pl6.distance(Point3D(0, 0, 0)) == 4*sqrt(3)
@@ -97,7 +104,7 @@ def test_plane():
     assert pl6.angle_between(Ray3D(Point3D(2, 4, 1), Point3D(6, 5, 3))) == \
         asin(sqrt(7)/3)
     assert pl7.angle_between(Segment3D(Point3D(5, 6, 1), Point3D(1, 2, 4))) == \
-        -asin(7*sqrt(246)/246)
+        asin(7*sqrt(246)/246)
 
     assert are_coplanar(l1, l2, l3) is False
     assert are_coplanar(l1) is False
@@ -107,6 +114,7 @@ def test_plane():
     assert Plane.are_concurrent(pl3, pl4, pl5) is False
     assert Plane.are_concurrent(pl6) is False
     raises(ValueError, lambda: Plane.are_concurrent(Point3D(0, 0, 0)))
+    raises(ValueError, lambda: Plane((1, 2, 3), normal_vector=(0, 0, 0)))
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))
@@ -157,8 +165,38 @@ def test_plane():
     r = Ray(Point(2, 3), Point(4, 2))
     assert Plane((1,2,0), normal_vector=(0,0,1)).intersection(r) == [
         Ray3D(Point(2, 3), Point(4, 2))]
-
+    assert pl9.intersection(pl8) == [Line3D(Point3D(0, 0, 0), Point3D(12, 0, 0))]
+    assert pl10.intersection(pl11) == [Line3D(Point3D(0, 0, 1), Point3D(0, 2, 1))]
+    assert pl4.intersection(pl8) == [Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
+    assert pl11.intersection(pl8) == []
+    assert pl9.intersection(pl11) == [Line3D(Point3D(0, 0, 1), Point3D(12, 0, 1))]
+    assert pl9.intersection(pl4) == [Line3D(Point3D(0, 0, 0), Point3D(12, 0, -12))]
     assert pl3.random_point() in pl3
+
+    # test geometrical entity using equals
+    assert pl4.intersection(pl4.p1)[0].equals(pl4.p1)
+    assert pl3.intersection(pl6)[0].equals(Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6)))
+    pl8 = Plane((1, 2, 0), normal_vector=(0, 0, 1))
+    assert pl8.intersection(Line3D(p1, (1, 12, 0)))[0].equals(Line((0, 0, 0), (0.1, 1.2, 0)))
+    assert pl8.intersection(Ray3D(p1, (1, 12, 0)))[0].equals(Ray((0, 0, 0), (1, 12, 0)))
+    assert pl8.intersection(Segment3D(p1, (21, 1, 0)))[0].equals(Segment3D(p1, (21, 1, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(0, 0, 112)))[0].equals(pl8)
+    assert pl8.intersection(Plane(p1, normal_vector=(0, 12, 0)))[0].equals(
+        Line3D(p1, direction_ratio=(112 * pi, 0, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(11, 0, 1)))[0].equals(
+        Line3D(p1, direction_ratio=(0, -11, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(1, 0, 11)))[0].equals(
+        Line3D(p1, direction_ratio=(0, 11, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(-1, -1, -11)))[0].equals(
+        Line3D(p1, direction_ratio=(1, -1, 0)))
+    assert pl3.random_point() in pl3
+    assert len(pl8.intersection(Ray3D(Point3D(0, 2, 3), Point3D(1, 0, 3)))) is 0
+    # check if two plane are equals
+    assert pl6.intersection(pl6)[0].equals(pl6)
+    assert pl8.equals(Plane(p1, normal_vector=(0, 12, 0))) is False
+    assert pl8.equals(pl8)
+    assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12)))
+    assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12*sqrt(3))))
 
     # issue 8570
     l2 = Line3D(Point3D(S(50000004459633)/5000000000000,
@@ -189,3 +227,11 @@ def test_dimension_normalization():
     assert p.perpendicular_plane(a, b) == Plane(Point3D(0, 0, 0), (1, 0, 0))
     assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
         ).intersection((2, 1)) == [Point(2, 1, 0)]
+
+
+def test_parameter_value():
+    t, u, v = symbols("t, u v")
+    p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
+    assert p.parameter_value((0, -3, 2), t) == {t: asin(2*sqrt(13)/13)}
+    assert p.parameter_value((0, -3, 2), u, v) == {u: 3, v: 2}
+    raises(ValueError, lambda: p.parameter_value((1, 0, 0), t))

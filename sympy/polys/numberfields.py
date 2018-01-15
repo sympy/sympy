@@ -134,8 +134,8 @@ def _separate_sq(p):
             else:
                 raise NotImplementedError
             continue
-        sifted = sift(y.args, is_sqrt)
-        a.append((Mul(*sifted[False]), Mul(*sifted[True])**2))
+        T, F = sift(y.args, is_sqrt, binary=True)
+        a.append((Mul(*F), Mul(*T)**2))
     a.sort(key=lambda z: z[1])
     if a[-1][1] is S.One:
         # there are no surds
@@ -813,8 +813,11 @@ __all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
-    for coeffs in variations([1, -1], n, repetition=True):
-        yield list(coeffs)
+    for coeffs in variations([1, -1, 2, -2, 3, -3], n, repetition=True):
+        # Two linear combinations with coeffs of opposite signs are
+        # opposites of each other. Hence it suffices to test only one.
+        if coeffs[0] > 0:
+            yield list(coeffs)
 
 
 @public
