@@ -35,7 +35,7 @@ from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars)
+    _is_finite_with_finite_vars, integer_log)
 
 
 a = Symbol('a', real=True)
@@ -1657,3 +1657,27 @@ def test_issue_13550():
 def test_issue_13849():
     t = symbols('t')
     assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == EmptySet()
+
+
+def test_issue_13908():
+    raises(AssertionError, lambda: integer_log(2, 1))
+    raises(ValueError, lambda: integer_log(1.1, 2))
+    raises(ValueError, lambda: integer_log(1, 2.2))
+
+    assert integer_log(27, 5) == (2, False)
+    assert integer_log(1, 2) == (0, True)
+    assert integer_log(1, 3) == (0, True)
+    assert integer_log(2, 3) == (0, False)
+    assert integer_log(3, 3) == (1, True)
+    assert integer_log(3*2, 3) == (1, False)
+    assert integer_log(3**2, 3) == (2, True)
+    assert integer_log(3*4, 3) == (2, False)
+    assert integer_log(3**3, 3) == (3, True)
+    assert integer_log(4, -2) == (2, True)
+    assert integer_log(-4, -2) == (2, False)
+    assert integer_log(8, -2) == (3, False)
+    assert integer_log(-8, -2) == (3, True)
+    assert integer_log(9, -3) == (2, True)
+    assert integer_log(-9, -3) == (2, False)
+    assert integer_log(27, -3) == (3, False)
+    assert integer_log(-27, -3) == (3, True)

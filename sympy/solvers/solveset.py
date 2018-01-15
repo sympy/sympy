@@ -33,7 +33,7 @@ from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.calculus.util import periodicity, continuous_domain
-from sympy.core.compatibility import ordered, default_sort_key, is_sequence
+from sympy.core.compatibility import ordered, default_sort_key, is_sequence, as_int
 
 from types import GeneratorType
 
@@ -201,9 +201,10 @@ def _invert_real(f, g_ys, symbol):
                 from sympy.ntheory import multiplicity
                 s, b = integer_nthroot(-rhs, 2)
                 if b:
-                    m = multiplicity(base, s)
-                    if pow(base, m) == s:
-                        return expo, FiniteSet(2*m)
+                    m = integer_log(-rhs, base)
+                    m = list(m)
+                    if not m[0] % 2 :
+                        return expo, FiniteSet(m[0])
             elif rhs is S.One:
                 #special case: 0**x - 1
                 return (expo, FiniteSet(0))
@@ -231,6 +232,35 @@ def _invert_real(f, g_ys, symbol):
             return _invert_real(f.args[0], invs, symbol)
 
     return (f, g_ys)
+
+
+def integer_log(y, x):
+    """Returns (e, bool) where e is the largest nonnegative integer
+    such that |y| >= |x**e| and bool is True if y == x**e"""
+    if x in (-2, 2):
+        x = int(x)
+        y = as_int(y)
+        e = y.bit_length() - 1
+        return e, x**e == y
+    if x < 0:
+        n, b = integer_log(y if y > 0 else -y, -x)
+        return n, b and (n % 2 if y < 0 else not n % 2)
+    x = as_int(x)
+    y = as_int(y)
+    assert x > 1
+    assert y > 0
+    r = e = 0
+    while y >= x:
+        d = x
+        m = 1
+        while y >= d:
+            y, rem = divmod(y, d)
+            r = r or rem
+            e += m
+            if y > d:
+                d *= d
+                m *= 2
+    return e, r == 0 and y == 1
 
 
 def _invert_complex(f, g_ys, symbol):
