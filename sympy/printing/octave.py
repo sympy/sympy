@@ -15,8 +15,7 @@ from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.codegen.ast import Assignment
-from sympy.printing.ccode import _as_macro_if_defined
-from sympy.printing.codeprinter import CodePrinter, requires
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
