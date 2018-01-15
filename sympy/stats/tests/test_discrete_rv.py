@@ -2,7 +2,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
         Poisson)
 from sympy.abc import x
 from sympy import S, Sum
-from sympy.stats import E, variance, density
+from sympy.stats import E, variance, density, characteristic_function
 
 def test_PoissonDistribution():
     l = 3
@@ -19,6 +19,7 @@ def test_Poisson():
     assert density(x) == PoissonDistribution(l)
     assert isinstance(E(x, evaluate=False), Sum)
     assert isinstance(E(2*x, evaluate=False), Sum)
+    assert characteristic_function(x)(0).doit() == 1
 
 def test_GeometricDistribution():
     p = S.One / 5
@@ -26,3 +27,4 @@ def test_GeometricDistribution():
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+    assert d.characteristic_function(0).doit() == 1

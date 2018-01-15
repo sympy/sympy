@@ -286,7 +286,7 @@ def igcd_lehmer(a, b):
 
         # Elements of the Euclidean gcd sequence are linear
         # combinations of a and b with integer coefficients.
-        # Compute the coefficients of consequtive pairs
+        # Compute the coefficients of consecutive pairs
         #     a' = A*a + B*b, b' = C*a + D*b
         # using small integer arithmetic as far as possible.
         A, B, C, D = 1, 0, 0, 1  # initial values

@@ -47,7 +47,7 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc)
+                   Lambda, Basic, lowergamma, erf, erfc, I)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
@@ -813,6 +813,9 @@ class ExponentialDistribution(SingleContinuousDistribution):
                 (0, True),
         )
 
+    def _characteristic_function(self, t):
+        rate = self.rate
+        return rate / (rate - I*t)
 
 def Exponential(name, rate):
     r"""
@@ -1793,6 +1796,9 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
 
+    def _characteristic_function(self, t):
+        mean, std = self.mean, self.std
+        return exp(I*mean*t - std**2*t**2/2)
 
 def Normal(name, mean, std):
     r"""
@@ -2456,6 +2462,10 @@ class UniformDistribution(SingleContinuousDistribution):
             ((x - left)/(right - left), x <= right),
             (S.One, True)
         )
+
+    def _characteristic_function(self, t):
+        left, right = self.left, self.right
+        return (exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left))
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min

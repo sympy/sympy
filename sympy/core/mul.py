@@ -423,6 +423,11 @@ class Mul(Expr, AssocOp):
             changed = False
             for b, e in c_powers:
                 if e.is_zero:
+                    # canceling out infinities yields NaN
+                    if (b.is_Add or b.is_Mul) and any(infty in b.args
+                        for infty in (S.ComplexInfinity, S.Infinity,
+                                      S.NegativeInfinity)):
+                        return [S.NaN], [], None
                     continue
                 if e is S.One:
                     if b.is_Number:

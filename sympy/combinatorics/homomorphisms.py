@@ -151,7 +151,7 @@ class GroupHomomorphism(object):
 
         '''
         if not elem in self.domain:
-            if isinstance(elem, list):
+            if isinstance(elem, (list, tuple)):
                 return [self._apply(e) for e in elem]
             raise ValueError("The supplied element doesn't belong to the domain")
         if elem.is_identity:
@@ -214,6 +214,19 @@ class GroupHomomorphism(object):
 
         '''
         return self.image().order() == 1
+
+    def compose(self, other):
+        '''
+        Return the composition of `self` and `other`, i.e.
+        the homomorphism phi such that for all g in the domain
+        of `other`, phi(g) = self(other(g))
+
+        '''
+        if not other.image().is_subgroup(self.domain):
+            raise ValueError("The image of `other` must be a subgroup of "
+                    "the domain of `self`")
+        images = {g: self(other(g)) for g in other.images}
+        return GroupHomomorphism(other.domain, self.codomain, images)
 
     def restrict_to(self, H):
         '''

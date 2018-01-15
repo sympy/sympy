@@ -419,6 +419,8 @@ def test_polar():
     x, y = symbols('x y', polar=True)
 
     assert abs(exp_polar(I*4)) == 1
+    assert abs(exp_polar(0)) == 1
+    assert abs(exp_polar(2 + 3*I)) == exp(2)
     assert exp_polar(I*10).n() == exp_polar(I*10)
 
     assert log(exp_polar(z)) == z

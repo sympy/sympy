@@ -29,7 +29,7 @@ def together(expr, deep=False):
     so ``apart(together(expr))`` should return expr unchanged. Note
     however, that :func:`together` uses only symbolic methods, so
     it might be necessary to use :func:`cancel` to perform algebraic
-    simplification and minimise degree of the numerator and denominator.
+    simplification and minimize degree of the numerator and denominator.
 
     Examples
     ========

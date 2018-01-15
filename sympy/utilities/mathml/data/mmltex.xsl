@@ -2298,7 +2298,7 @@ priority="2">
 		</xsl:variable>
 		<xsl:value-of select="($valueColor1b*16 + $valueColor2b) div 255"/>
 	</xsl:when>
-<!-- ======================= if color specifed as an html-color-name ========================================== -->
+<!-- ======================= if color specified as an html-color-name ========================================== -->
 	<xsl:when test="$colora='aqua'"><xsl:text>0,1,1</xsl:text></xsl:when>
 	<xsl:when test="$colora='black'"><xsl:text>0,0,0</xsl:text></xsl:when>
 	<xsl:when test="$colora='blue'"><xsl:text>0,0,1</xsl:text></xsl:when>

@@ -4,7 +4,7 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
+    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction, Max, Min
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -160,6 +160,7 @@ def test_multiple_integration():
     assert integrate((y**2)*(x**2), x, y) == Rational(1, 9)*(x**3)*(y**3)
     assert integrate(1/(x + 3)/(1 + x)**3, x) == \
         -S(1)/8*log(3 + x) + S(1)/8*log(1 + x) + x/(4 + 8*x + 4*x**2)
+    assert integrate(sin(x*y)*y, (x, 0, 1), (y, 0, 1)) == -sin(1) + 1
 
 
 def test_issue_3532():
@@ -528,6 +529,20 @@ def test_integrate_returns_piecewise():
         (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
 
 
+def test_max_min():
+    assert integrate(Min(x, 2), (x, 0, 3)) == 4
+    assert integrate(Max(x**2, x**3), (x, 0, 2)) == S(49)/12
+    assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
+        (exp(2*x)/2, x <= 0), (1 - exp(-2*x)/2, True))
+    # issue 7907
+    c = symbols('c', real=True)
+    int1 = integrate(Max(c, x)*exp(-x**2), (x, -oo, oo))
+    int2 = integrate(c*exp(-x**2), (x, -oo, c))
+    int3 = integrate(x*exp(-x**2), (x, c, oo))
+    assert int1 == int2 + int3 == sqrt(pi)*c*erf(c)/2 + \
+        sqrt(pi)*c/2 + exp(-c**2)/2
+
+
 def test_subs1():
     e = Integral(exp(x - y), x)
     assert e.subs(y, 3) == Integral(exp(x - 3), x)
@@ -731,7 +746,7 @@ def test_is_number():
     assert Integral(x, (y, 1, x)).is_number is False
     assert Integral(x, (y, 1, 2)).is_number is False
     assert Integral(x, (x, 1, 2)).is_number is True
-    # `foo.is_number` should always be eqivalent to `not foo.free_symbols`
+    # `foo.is_number` should always be equivalent to `not foo.free_symbols`
     # in each of these cases, there are pseudo-free symbols
     i = Integral(x, (y, 1, 1))
     assert i.is_number is False and i.n() == 0

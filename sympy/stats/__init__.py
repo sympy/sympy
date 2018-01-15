@@ -40,7 +40,7 @@ __all__ = []
 
 from . import rv_interface
 from .rv_interface import (
-    cdf, covariance, density, dependent, E, given, independent, P, pspace,
+    cdf, characteristic_function, covariance, density, dependent, E, given, independent, P, pspace,
     random_symbols, sample, sample_iter, skewness, std, variance, where,
     correlation, moment, cmoment, smoment, sampling_density,
 )
