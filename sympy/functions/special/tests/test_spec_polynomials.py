@@ -91,7 +91,6 @@ def test_gegenbauer():
 
 
 def test_legendre():
-    raises(ValueError, lambda: legendre(-1, x))
     assert legendre(0, x) == 1
     assert legendre(1, x) == x
     assert legendre(2, x) == ((3*x**2 - 1)/2).expand()
@@ -174,9 +173,6 @@ def test_assoc_legendre():
     assert isinstance(X, assoc_legendre)
 
     assert Plm(n, 0, x) == legendre(n, x)
-
-    raises(ValueError, lambda: Plm(-1, 0, x))
-    raises(ValueError, lambda: Plm(0, 1, x))
 
     assert conjugate(assoc_legendre(n, m, x)) == \
         assoc_legendre(n, conjugate(m), conjugate(x))
