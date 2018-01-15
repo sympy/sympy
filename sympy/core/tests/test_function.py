@@ -740,6 +740,12 @@ def test_issue_8469():
     expr = functools.reduce(g,ws)
 
 
+def test_issue_12996():
+    # foo=True imitates the sort of arguments that Derivative can get
+    # from Integral when it passes doit to the expression
+    assert Derivative(im(x), x).doit(foo=True) == Derivative(im(x), x)
+
+
 def test_should_evalf():
     # This should not take forever to run (see #8506)
     assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
