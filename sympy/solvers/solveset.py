@@ -408,6 +408,7 @@ def _solve_trig(f, symbol, domain):
     from sympy import lcm
     f = trigsimp(f)
     f_original = f
+    f_ex = f
     try:
         f = f.rewrite(exp)
         f = together(f)
@@ -429,9 +430,9 @@ def _solve_trig(f, symbol, domain):
         else:
             return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
-    except PolynomialError:
+    except BaseException as error:
         from sympy import expand_trig
-        trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
+        trig_functions = f_ex.atoms(sin, cos, tan, sec, cot, csc)
         trig_arguments = [e.args for e in trig_functions]
         denominators = []
         for ar in trig_arguments:
@@ -447,34 +448,34 @@ def _solve_trig(f, symbol, domain):
             denominators.append(Rational(c).q)
 
         x = Dummy('x')
-        f=f.subs(symbol, 2*lcm(denominators)*x)
-        f = f.rewrite(tan)
-        f = together(f)
-        g, h = fraction(f)
+        f_ex = f_ex.subs(symbol, 2*lcm(denominators)*x)
+        f_ex = f_ex.rewrite(tan)
+        f_ex = expand_trig(f_ex)
+        f_ex = together(f_ex)
+        g, h = fraction(f_ex)
         y = Dummy('y')
-        g, h = expand_trig(g), expand_trig(h)
+        g, h = g.expand(), h.expand()
         g, h = g.subs(tan(x), y), h.subs(tan(x), y)
 
-
         if g.has(x) or h.has(x):
-            f=f.subs(x, symbol/(2*lcm(denominators)))
-            return ConditionSet(symbol, Eq(f, 0), S.Reals)
+            print("here3")
+            return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
-        solns = solveset_complex(g, y) - solveset_complex(h, y)
-        print(solns)
-        print(" ")
+        solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
 
-        # print((solns))
         if isinstance(solns, FiniteSet):
             result = Union(*[invert_real(tan(symbol/(2*lcm(denominators))), s, symbol)[1]
                            for s in solns])
-
             return Intersection(result, domain)
         elif solns is S.EmptySet:
             return S.EmptySet
         else:
             return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
+    else:
+        raise NotImplementedError(filldedent('''
+            Solution to this kind of triginometric equations
+            is yet to be implemented'''))
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
