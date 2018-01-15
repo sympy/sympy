@@ -1661,4 +1661,4 @@ def test_issue_13849():
 def test_issue_13992():
     x, y = symbols('x y')
     assert solveset(2**x - y, x, domain = S.Reals) == Intersection(
-        S.Reals, {log(y)/log(2)})
+        S.Reals, FiniteSet(log(y)/log(2)))
