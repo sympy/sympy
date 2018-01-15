@@ -236,24 +236,31 @@ def _invert_real(f, g_ys, symbol):
 
 def integer_log(y, x):
     """Returns (e, bool) where e is the largest nonnegative integer
-    such that y >= x**e and bool is True if y == x**e"""
-    assert x > 1
-    y = as_int(y)
-    x = as_int(x)
-    if x == 2:
+    such that |y| >= |x**e| and bool is True if y == x**e"""
+    if x in (-2, 2):
+        x = int(x)
+        y = as_int(y)
         e = y.bit_length() - 1
-        return e, 2**e == y
+        return e, x**e == y
+    if x < 0:
+        n, b = integer_log(y if y > 0 else -y, -x)
+        return n, b and (n % 2 if y < 0 else not n % 2)
+    x = as_int(x)
+    y = as_int(y)
+    assert x > 1
+    assert y > 0
     r = e = 0
     while y >= x:
         d = x
         m = 1
         while y >= d:
-            y, r = divmod(y, d)
+            y, rem = divmod(y, d)
+            r = r or rem
             e += m
             if y > d:
                 d *= d
                 m *= 2
-    return e, y == 1 and r == 0
+    return e, r == 0 and y == 1
 
 
 def _invert_complex(f, g_ys, symbol):
