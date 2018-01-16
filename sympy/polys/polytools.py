@@ -5945,7 +5945,11 @@ def _generic_factor_list(expr, gens, args, method):
         cq, fq = _symbolic_factor_list(denom, opt, method)
 
         if fq and not opt.frac:
-            raise PolynomialError("a polynomial expected, got %s" % expr)
+            try:
+                expr = Poly(expr, polys=False)
+                return _generic_factor_list(expr,gens,args,method)
+            except:
+                raise PolynomialError("a polynomial expected, got %s" % expr)
 
         _opt = opt.clone(dict(expand=True))
 
