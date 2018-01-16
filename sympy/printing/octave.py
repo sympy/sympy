@@ -435,21 +435,20 @@ class OctaveCodePrinter(CodePrinter):
         return "lambertw(" + args + ")"
 
 
-    def _print_math_func(self, expr):
-        known = self.known_functions[expr.__class__.__name__]
+    def _nested_binary_math_func(self, expr):
         args = self._print(expr.args[0])
         args += ', %s' % self._print(expr.func(*expr.args[1:]))
 
         return '{name}({args})'.format(
-            name=known,
+            name=self.known_functions[expr.__class__.__name__],
             args=args
         )
 
     def _print_Max(self, expr):
-        return self._print_math_func(expr)
+        return self._nested_binary_math_func(expr)
 
     def _print_Min(self, expr):
-        return self._print_math_func(expr)
+        return self._nested_binary_math_func(expr)
 
 
     def _print_Piecewise(self, expr):
