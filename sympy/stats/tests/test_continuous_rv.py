@@ -1,5 +1,5 @@
 from __future__ import division
-import random
+from sympy.utilities.randtest import verify_numerically as tn
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
@@ -785,13 +785,12 @@ def test_long_precomputed_cdf():
             ]
     for distr in distribs:
         for _ in range(5):
-            assert abs((simplify(diff(cdf(distr)(x), x))
-                - density(distr)(x)).evalf(subs={x: random.random()})) < 1e-15
+            assert tn(diff(cdf(distr)(x), x), density(distr)(x), x, a=0, b=0, c=1, d=0) 
 
     US = UniformSum("US", 5)
     pdf01 = density(US)(x).subs(floor(x), 0).doit()   # pdf on (0, 1)
     cdf01 = cdf(US, evaluate=False)(x).subs(floor(x), 0).doit()   # cdf on (0, 1)
-    (diff(cdf01, x) - pdf01).subs(x, random.random()) == 0
+    assert tn(diff(cdf01, x), pdf01, x, a=0, b=0, c=1, d=0)
 
 
 def test_issue_13324():
