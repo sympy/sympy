@@ -907,3 +907,8 @@ class binomial(CombinatorialFunction):
             return True
         elif k.is_integer is False:
             return False
+
+    def _eval_is_nonnegative(self):
+        if self.args[0].is_integer and self.args[1].is_integer:
+            if self.args[0].is_nonnegative and self.args[1].is_nonnegative:
+                return True

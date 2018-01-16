@@ -401,7 +401,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
     from sympy.polys import lcm, roots
     from sympy.integrals import integrate
 
-    # tranformation - c
+    # transformation - c
     proots, qroots = roots(P, k), roots(Q, k)
     all_roots = dict(proots)
     all_roots.update(qroots)

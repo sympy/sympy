@@ -1694,7 +1694,7 @@ class MatrixOperations(MatrixRequired):
                 perm = reversed(perm)
 
             # since Permutation doesn't let us have non-disjoint cycles,
-            # we'll construct the explict mapping ourselves XXX Bug #12479
+            # we'll construct the explicit mapping ourselves XXX Bug #12479
             mapping = list(range(max_index))
             for (i, j) in perm:
                 mapping[i], mapping[j] = mapping[j], mapping[i]

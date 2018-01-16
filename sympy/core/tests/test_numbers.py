@@ -5,7 +5,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr)
 from sympy.core.compatibility import long
-from sympy.core.power import integer_nthroot, isqrt
+from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
@@ -953,6 +953,27 @@ def test_integer_nthroot_overflow():
     assert integer_nthroot(10**100000, 10000) == (10**10, True)
 
 
+def test_integer_log():
+    raises(ValueError, lambda: integer_log(2, 1))
+    raises(ValueError, lambda: integer_log(0, 2))
+    raises(ValueError, lambda: integer_log(1.1, 2))
+    raises(ValueError, lambda: integer_log(1, 2.2))
+
+    assert integer_log(1, 2) == (0, True)
+    assert integer_log(1, 3) == (0, True)
+    assert integer_log(2, 3) == (0, False)
+    assert integer_log(3, 3) == (1, True)
+    assert integer_log(3*2, 3) == (1, False)
+    assert integer_log(3**2, 3) == (2, True)
+    assert integer_log(3*4, 3) == (2, False)
+    assert integer_log(3**3, 3) == (3, True)
+    assert integer_log(27, 5) == (2, False)
+    assert integer_log(2, 3) == (0, False)
+    assert integer_log(-4, -2) == (2, False)
+    assert integer_log(27, -3) == (3, False)
+    assert integer_log(-49, 7) == (0, False)
+    assert integer_log(-49, -7) == (2, False)
+
 def test_isqrt():
     from math import sqrt as _sqrt
     limit = 17984395633462800708566937239551
@@ -1764,15 +1785,15 @@ def test_numpy_to_float():
         skip('numpy not installed. Abort numpy tests.')
 
     def check_prec_and_relerr(npval, ratval):
-        prec = np.finfo(npval).nmant
+        prec = np.finfo(npval).nmant + 1
         x = Float(npval)
         assert x._prec == prec
         y = Float(ratval, precision=prec)
-        assert abs((x - y)/y) < 2**(-(prec+1))
+        assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2)/3, S(2)/3)
-    check_prec_and_relerr(np.float32(2)/3, S(2)/3)
-    check_prec_and_relerr(np.float64(2)/3, S(2)/3)
+    check_prec_and_relerr(np.float16(2/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2/3), S(2)/3)
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
     check_prec_and_relerr(x, S(2)/3)

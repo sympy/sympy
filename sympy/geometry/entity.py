@@ -25,10 +25,12 @@ from __future__ import division, print_function
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
+from sympy.core.symbol import _symbol
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
 from sympy.sets import Set
+from sympy.utilities.misc import func_name
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -365,7 +367,7 @@ class GeometryEntity(Basic):
         >>> pent = RegularPolygon((1, 2), 1, 5)
         >>> rpent = pent.reflect(l)
         >>> rpent
-        RegularPolygon(Point2D(-2*sqrt(2)*pi/3 - 1/3 + 4*sqrt(2)/3, 2/3 + 2*sqrt(2)/3 + 2*pi/3), -1, 5, -pi/5 + acos(1/3))
+        RegularPolygon(Point2D(-2*sqrt(2)*pi/3 - 1/3 + 4*sqrt(2)/3, 2/3 + 2*sqrt(2)/3 + 2*pi/3), -1, 5, -atan(2*sqrt(2)) + 3*pi/5)
 
         >>> from sympy import pi, Line, Circle, Point
         >>> l = Line((0, pi), slope=1)
@@ -456,7 +458,7 @@ class GeometryEntity(Basic):
         Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.scale(2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)/2), Point2D(-1, -sqrt(3)/2))
-        >>> t.scale(2,2)
+        >>> t.scale(2, 2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3)))
 
         """
@@ -495,6 +497,37 @@ class GeometryEntity(Basic):
             else:
                 newargs.append(a)
         return self.func(*newargs)
+
+    def parameter_value(self, other, t):
+        """Return the parameter corresponding to the given point.
+        Evaluating an arbitrary point of the entity at this parameter
+        value will return the given point.
+
+        Examples
+        ========
+
+        >>> from sympy import Line, Point
+        >>> from sympy.abc import t
+        >>> a = Point(0, 0)
+        >>> b = Point(2, 2)
+        >>> Line(a, b).parameter_value((1, 1), t)
+        {t: 1/2}
+        >>> Line(a, b).arbitrary_point(t).subs(_)
+        Point2D(1, 1)
+        """
+        from sympy.geometry.point import Point
+        from sympy.core.symbol import Dummy
+        from sympy.solvers.solvers import solve
+        if not isinstance(other, GeometryEntity):
+            other = Point(other, dim=self.ambient_dimension)
+        if not isinstance(other, Point):
+            raise ValueError("other must be a point")
+        T = Dummy('t', real=True)
+        sol = solve(self.arbitrary_point(T) - other, T, dict=True)
+        if not sol:
+            raise ValueError("Given point is not on %s" % func_name(self))
+        return {t: sol[0][T]}
+
 
 class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets

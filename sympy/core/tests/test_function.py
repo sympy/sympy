@@ -740,6 +740,12 @@ def test_issue_8469():
     expr = functools.reduce(g,ws)
 
 
+def test_issue_12996():
+    # foo=True imitates the sort of arguments that Derivative can get
+    # from Integral when it passes doit to the expression
+    assert Derivative(im(x), x).doit(foo=True) == Derivative(im(x), x)
+
+
 def test_should_evalf():
     # This should not take forever to run (see #8506)
     assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
@@ -858,6 +864,23 @@ def test_issue_12005():
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+
+def test_issue_13843():
+    x = symbols('x')
+    f = Function('f')
+    m, n = symbols('m n', integer=True)
+    assert Derivative(Derivative(f(x), (x, m)), (x, n)) == Derivative(f(x), (x, m + n))
+    assert Derivative(Derivative(f(x), (x, m+5)), (x, n+3)) == Derivative(f(x), (x, m + n + 8))
+
+    assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
+
+def test_order_could_be_zero():
+    x, y = symbols('x, y')
+    n = symbols('n', integer=True, nonnegative=True)
+    m = symbols('m', integer=True, positive=True)
+    assert diff(y, (x, n)) == Derivative(y, (x, n))
+    assert diff(y, (x, n + 1)) == S.Zero
+    assert diff(y, (x, m)) == S.Zero
 
 def test_undefined_function_eq():
     f = Function('f')

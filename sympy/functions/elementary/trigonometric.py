@@ -1386,7 +1386,7 @@ class cot(TrigonometricFunction):
             return -I*(x**-I + x**I)/(x**-I - x**I)
 
     def _eval_rewrite_as_sin(self, x):
-        return 2*sin(2*x)/sin(x)**2
+        return sin(2*x)/(2*(sin(x)**2))
 
     def _eval_rewrite_as_cos(self, x):
         return cos(x) / cos(x - S.Pi / 2, evaluate=False)
@@ -1744,7 +1744,7 @@ class csc(ReciprocalTrigonometricFunction):
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
 
 
-class sinc(TrigonometricFunction):
+class sinc(Function):
     r"""Represents unnormalized sinc function
 
     Examples

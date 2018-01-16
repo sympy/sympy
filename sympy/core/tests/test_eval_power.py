@@ -352,6 +352,15 @@ def test_issue_8650():
     assert (x**(5*(n + 1))).is_positive is True
 
 
+def test_issue_13914():
+    b = Symbol('b')
+    assert (-1)**zoo is nan
+    assert 2**zoo is nan
+    assert (S.Half)**(1 + zoo) is nan
+    assert I**(zoo + I) is nan
+    assert b**(I + zoo) is nan
+
+
 def test_better_sqrt():
     n = Symbol('n', integer=True, nonnegative=True)
     assert sqrt(3 + 4*I) == 2 + I

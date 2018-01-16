@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex)
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -121,6 +121,7 @@ def invert_real(f_x, y, x, domain=S.Reals):
     """
     return _invert(f_x, y, x, domain)
 
+
 def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
 
@@ -191,12 +192,19 @@ def _invert_real(f, g_ys, symbol):
                 return _invert_real(base, res, symbol)
 
         if not base_has_sym:
-            if base is not S.Zero:
+            rhs = g_ys.args[0]
+            if base > S.Zero:
                 return _invert_real(expo,
                     imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
-            elif g_ys.args[0] is S.One:
+            elif base < S.Zero:
+                from sympy.core.power import integer_log
+                s, b = integer_log(rhs, base)
+                if b:
+                    return expo, FiniteSet(s)
+            elif rhs is S.One:
                 #special case: 0**x - 1
                 return (expo, FiniteSet(0))
+            return (expo, S.EmptySet)
 
 
     if isinstance(f, TrigonometricFunction):
@@ -478,10 +486,10 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
     if result is not None:
         if isinstance(result, FiniteSet):
             # this is to simplify solutions like -sqrt(-I) to sqrt(2)/2
-            # - sqrt(2)*I/2. We are not expanding for solution with free
-            # variables because that makes the solution more complicated. For
-            # example expand_complex(a) returns re(a) + I*im(a)
-            if all([s.free_symbols == set() and not isinstance(s, RootOf)
+            # - sqrt(2)*I/2. We are not expanding for solution with symbols
+            # or undefined functions because that makes the solution more complicated.
+            # For example, expand_complex(a) returns re(a) + I*im(a)
+            if all([s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
                     for s in result]):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
@@ -898,7 +906,19 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     free_symbols = f.free_symbols
 
-    if not free_symbols:
+    if symbol is None:
+        if len(free_symbols) == 1:
+            symbol = free_symbols.pop()
+        elif free_symbols:
+            raise ValueError(filldedent('''
+                The independent variable must be specified for a
+                multivariate equation.'''))
+    elif not isinstance(symbol, Symbol):
+        f, s, swap = recast_to_symbols([f], [symbol])
+        # the xreplace will be needed if a ConditionSet is returned
+        return solveset(f[0], s[0], domain).xreplace(swap)
+
+    elif not free_symbols:
         b = Eq(f, 0)
         if b is S.true:
             return domain
@@ -907,19 +927,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
         else:
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
-
-    if symbol is None:
-        if len(free_symbols) == 1:
-            symbol = free_symbols.pop()
-        else:
-            raise ValueError(filldedent('''
-                The independent variable must be specified for a
-                multivariate equation.'''))
-    elif not isinstance(symbol, Symbol):
-        s = Dummy()
-        f = f.subs(symbol, s)
-        # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f, s, domain).xreplace({s: symbol})
 
     if isinstance(f, Eq):
         from sympy.core import Add
@@ -1111,7 +1118,7 @@ def linear_eq_to_matrix(equations, *symbols):
         symbols = symbols[0]
 
     M = Matrix([symbols])
-    # initialise Matrix with symbols + 1 columns
+    # initialize Matrix with symbols + 1 columns
     M = M.col_insert(len(symbols), Matrix([1]))
     row_no = 1
 
@@ -1132,7 +1139,7 @@ def linear_eq_to_matrix(equations, *symbols):
         M = M.row_insert(row_no, Matrix([coeff_list]))
         row_no += 1
 
-    # delete the initialised (Ist) trivial row
+    # delete the initialized (Ist) trivial row
     M.row_del(0)
     A, b = M[:, :-1], M[:, -1:]
     return A, b
@@ -1586,7 +1593,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     # sometimes solveset returns soln
                     # with intersection `S.Reals`, to confirm that
                     # soln is in `domain=S.Reals` or not. We don't consider
-                    # that intersecton.
+                    # that intersection.
                     intersections[sym] = sol.args[0]
                 sol = sol.args[1]
             # after intersection and complement Imageset should

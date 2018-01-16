@@ -1,7 +1,7 @@
 from __future__ import division
 import random
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
-                         given, pspace, cdf, ContinuousRV, sample,
+                         given, pspace, cdf, characteristic_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
@@ -16,7 +16,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, hyper, diff)
+                   floor, expand_func, Rational, I, hyper, diff)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -139,6 +139,23 @@ def test_cdf():
     f = cdf(Z)
     z = Symbol('z')
     assert f(z) == Piecewise((1 - exp(-z), z >= 0), (0, True))
+
+
+def test_characteristic_function():
+    X = Uniform('x', 0, 1)
+
+    cf = characteristic_function(X)
+    assert cf(1) == -I*(-1 + exp(I))
+
+    Y = Normal('y', 1, 1)
+    cf = characteristic_function(Y)
+    assert cf(0) == 1
+    assert simplify(cf(1)) == exp(I - S(1)/2)
+
+    Z = Exponential('z', 5)
+    cf = characteristic_function(Z)
+    assert cf(0) == 1
+    assert simplify(cf(1)) == S(25)/26 + 5*I/26
 
 
 def test_sample():

@@ -499,7 +499,7 @@ class Function(Application, Expr):
     @property
     def is_commutative(self):
         """
-        Returns whether the functon is commutative.
+        Returns whether the function is commutative.
         """
         if all(getattr(t, 'is_commutative') for t in self.args):
             return True
@@ -1097,13 +1097,22 @@ class Derivative(Expr):
         else:
             return False
 
-    def __new__(cls, expr, *variables, **assumptions):
+    def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer
         from sympy.tensor.array import Array, NDimArray, derive_by_array
+        from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
+        try:
+            has_symbol_set = isinstance(expr.free_symbols, set)
+        except AttributeError:
+            has_symbol_set = False
+        if not has_symbol_set:
+            raise ValueError(filldedent('''
+                Since there are no variables in the expression %s,
+                it cannot be differentiated.''' % expr))
 
         # There are no variables, we differentiate wrt all of the free symbols
         # in expr.
@@ -1112,7 +1121,6 @@ class Derivative(Expr):
             if len(variables) != 1:
                 if expr.is_number:
                     return S.Zero
-                from sympy.utilities.misc import filldedent
                 if len(variables) == 0:
                     raise ValueError(filldedent('''
                         Since there are no variables in the expression,
@@ -1168,7 +1176,6 @@ class Derivative(Expr):
                 if count == 0:
                     continue
                 if not v._diff_wrt:
-                    from sympy.utilities.misc import filldedent
                     last_digit = int(str(count)[-1])
                     ordinal = 'st' if last_digit == 1 else 'nd' if last_digit == 2 else 'rd' if last_digit == 3 else 'th'
                     raise ValueError(filldedent('''
@@ -1185,16 +1192,14 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        # Pop evaluate because it is not really an assumption and we will need
-        # to track it carefully below.
-        evaluate = assumptions.pop('evaluate', False)
+        evaluate = kwargs.get('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
         # expression at all. Note, this cannot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
-            symbol_set = set(sc[0] for sc in variable_count)
+            symbol_set = set(sc[0] for sc in variable_count if sc[1].is_positive)
             if symbol_set.difference(expr.free_symbols):
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
@@ -1212,10 +1217,7 @@ class Derivative(Expr):
             if evaluate:
                 #TODO: check if assumption of discontinuous derivatives exist
                 variable_count = cls._sort_variable_count(variable_count)
-            # Here we *don't* need to reinject evaluate into assumptions
-            # because we are done with it and it is not an assumption that
-            # Expr knows about.
-            obj = Expr.__new__(cls, expr, *variable_count, **assumptions)
+            obj = Expr.__new__(cls, expr, *variable_count)
             return obj
 
         # Compute the derivative now by repeatedly calling the
@@ -1235,8 +1237,6 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
-            elif not count.is_Integer:
-                obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
                     deriv_fun = derive_by_array
@@ -1249,12 +1249,23 @@ class Derivative(Expr):
                     old_v = v
                     v = new_v
                 obj = expr
-                for i in range(count):
-                    obj2 = deriv_fun(obj, v)
-                    if obj == obj2:
-                        break
-                    obj = obj2
-                    nderivs += 1
+                if count.is_Integer:
+                    for i in range(count):
+                        obj2 = deriv_fun(obj, v)
+                        if obj == obj2:
+                            break
+                        obj = obj2
+                        nderivs += 1
+                elif obj.is_Derivative:
+                    dict_var_count = dict(obj.variable_count)
+                    if v in dict_var_count:
+                        dict_var_count[v] += count
+                    else:
+                        dict_var_count[v] = count
+                    obj = Derivative(obj.expr, *dict_var_count.items())
+                    nderivs += count
+                else:
+                    obj = None
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1276,7 +1287,7 @@ class Derivative(Expr):
 
         if unhandled_variable_count:
             unhandled_variable_count = cls._sort_variable_count(unhandled_variable_count)
-            expr = Expr.__new__(cls, expr, *unhandled_variable_count, **assumptions)
+            expr = Expr.__new__(cls, expr, *unhandled_variable_count)
         else:
             # We got a Derivative at the end of it all, and we rebuild it by
             # sorting its variables.
@@ -1285,7 +1296,7 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variable_count(expr.args[1:])
                 )
 
-        if nderivs > 1 and assumptions.get('simplify', True):
+        if (nderivs > 1) == True and kwargs.get('simplify', True):
             from sympy.core.exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
@@ -1414,7 +1425,7 @@ class Derivative(Expr):
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return self.func(expr, *self.variables, **hints)
+        return self.func(expr, *self.variable_count, **hints)
 
     @_sympifyit('z0', NotImplementedError)
     def doit_numerically(self, z0):

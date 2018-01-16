@@ -667,7 +667,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
-    differential equations. This minimises the computation in calling
+    differential equations. This minimizes the computation in calling
     :py:meth:`~sympy.solvers.deutils._desolve` multiple times.
     """
     r = match
@@ -974,7 +974,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     d = Wild('d', exclude=[df, f(x).diff(x, 2)])
     e = Wild('e', exclude=[df])
     k = Wild('k', exclude=[df])
-    n = Wild('n', exclude=[f(x)])
+    n = Wild('n', exclude=[x, f(x), df])
     c1 = Wild('c1', exclude=[x])
     a2 = Wild('a2', exclude=[x, f(x), df])
     b2 = Wild('b2', exclude=[x, f(x), df])
@@ -4622,7 +4622,7 @@ def ode_1st_power_series(eq, func, order, match):
     if not h:
         return Eq(f(x), value)
 
-    # Initialisation
+    # Initialization
     series = value
     if terms > 1:
         hc = h.subs({x: point, y: value})
@@ -5227,11 +5227,11 @@ def _solve_variation_of_parameters(eq, func, order, match):
         # The wronskian will be 0 iff the solutions are not linearly
         # independent.
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply " +
+        " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " + str(eq) + " (Wronskian == 0)")
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply " +
+        " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " +
         str(eq) + " (number of terms != order)")
     negoneterm = (-1)**(order)
@@ -5998,7 +5998,7 @@ def lie_heuristic_bivariate(match, comp=False):
 def lie_heuristic_chi(match, comp=False):
     r"""
     The aim of the fourth heuristic is to find the function `\chi(x, y)`
-    that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
+    that satisfies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
     - \frac{\partial h}{\partial y}\chi = 0`.
 
     This assumes `\chi` to be a bivariate polynomial in `x` and `y`. By intution,

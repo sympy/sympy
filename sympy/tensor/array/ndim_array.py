@@ -273,7 +273,7 @@ class NDimArray(object):
 
     def tolist(self):
         """
-        Conveting MutableDenseNDimArray to one-dim list
+        Converting MutableDenseNDimArray to one-dim list
 
         Examples
         ========
