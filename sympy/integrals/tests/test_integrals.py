@@ -559,6 +559,8 @@ def test_integrate_Abs_sign():
         (-t**2/2, t <= 0), (t**2/2, True))
     assert integrate(Abs(2*t - 6), t) == Piecewise(
         (-t**2 + 6*t, t <= 3), (t**2 - 6*t + 18, True))
+    assert (integrate(abs(t - s**2), (t, 0, 2)) ==
+        2*s**2*Min(2, s**2) - 2*s**2 - Min(2, s**2)**2 + 2)
     assert integrate(exp(-Abs(t)), t) == Piecewise(
         (exp(t), t <= 0), (2 - exp(-t), True))
     assert integrate(sign(2*t - 6), t) == Piecewise(
