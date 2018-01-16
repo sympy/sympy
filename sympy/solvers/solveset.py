@@ -933,7 +933,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 relationship between value and 0 is unknown: %s''' % b))
 
     if f.has(Max) or f.has(Min):
-        f = f.rewrite(Piecewise())
+        f = f.rewrite(Piecewise)
 
     if isinstance(f, Eq):
         from sympy.core import Add
