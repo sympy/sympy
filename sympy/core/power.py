@@ -1081,8 +1081,6 @@ class Pow(Expr):
         return self * (dexp * log(self.base) + dbase * self.exp/self.base)
 
     def _eval_derivative_n_times(self, s, n):
-        if isinstance(n, (int, Integer)) or (not self.exp.is_Integer):
-            return super(Pow, self)._eval_derivative_n_times(s, n)
         return Mul(*[self.base for i in range(self.exp)], evaluate=False)._eval_derivative_n_times(s, n)
 
     def _eval_evalf(self, prec):

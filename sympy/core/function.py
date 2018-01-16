@@ -1250,7 +1250,10 @@ class Derivative(Expr):
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                obj = expr._eval_derivative_n_times(v, count)
+                if count.is_Integer:
+                    obj = Derivative._helper_apply_n_times(expr, v, count, lambda x, y: x._eval_derivative(y))
+                else:
+                    obj = expr._eval_derivative_n_times(v, count)
                 nderivs += count
                 if not is_symbol:
                     if obj is not None:
@@ -1295,10 +1298,14 @@ class Derivative(Expr):
 
         # This `if` could be avoided with double dispatch, combinations of type
         # requiring `derive_by_array`:
-        # (array, array)
-        # (array, scalar)
-        # (scalar, array) ==> this one is managed by the following `if` clause.
-        # Pair (x=scalar, y=scalar) should be passed to x._eval_derivative(y).
+        # 1. (array, array) ==> this is managed by the following `if`.
+        # 2. (array, scalar)
+        # 3. (scalar, array) ==> this is managed by the following `if`.
+        # 4. (scalar, scalar)
+        #
+        # Case 1. is handled by `_eval_derivative` of `NDimArray`.
+        # Case 4., i.e. pair (x=scalar, y=scalar) should be passed to
+        # x._eval_derivative(y).
         if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
             from sympy import derive_by_array
             func = derive_by_array

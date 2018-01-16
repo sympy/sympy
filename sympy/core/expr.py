@@ -3352,6 +3352,13 @@ class AtomicExpr(Atom, Expr):
             return S.One
         return S.Zero
 
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Piecewise, Eq
+        if self == s:
+            return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+        else:
+            return Piecewise((self, Eq(n, 0)), (0, True))
+
     def _eval_is_polynomial(self, syms):
         return True
 

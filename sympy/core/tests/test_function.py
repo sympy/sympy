@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat)
+        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
@@ -872,7 +872,7 @@ def test_order_could_be_zero():
     x, y = symbols('x, y')
     n = symbols('n', integer=True, nonnegative=True)
     m = symbols('m', integer=True, positive=True)
-    assert diff(y, (x, n)) == Derivative(y, (x, n))
+    assert diff(y, (x, n)) == Piecewise((y, Eq(n, 0)), (0, True))
     assert diff(y, (x, n + 1)) == S.Zero
     assert diff(y, (x, m)) == S.Zero
 

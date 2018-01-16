@@ -900,9 +900,6 @@ class Mul(Expr, AssocOp):
     def _eval_derivative_n_times(self, s, n):
         # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
         from sympy import Integer, factorial, prod, Dummy, symbols, Sum
-        if isinstance(n, (int, Integer)):
-            return super(Mul, self)._eval_derivative_n_times(s, n)
-
         args = [arg for arg in self.args if arg.has(s)]
         coeff_args = [arg for arg in self.args if arg not in args]
         m = len(args)
