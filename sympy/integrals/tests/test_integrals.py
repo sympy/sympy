@@ -438,14 +438,13 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-@XFAIL
 def test_failing_integrals():
     #---
     # Double integrals not implemented
-    assert NS(Integral(
+    assert NS(integrate(
         sqrt(x) + x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
     # double integral + zero detection
-    assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
+    assert NS(integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0'
 
 
 def test_integrate_SingularityFunction():
@@ -1208,3 +1207,6 @@ def test_issue_12645():
 
 def test_issue_12677():
     assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
+
+
+test_failing_integrals()
