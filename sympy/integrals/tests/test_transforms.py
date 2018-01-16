@@ -12,7 +12,7 @@ from sympy import (
     cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    combsimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
+    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -86,7 +86,6 @@ def test_mellin_transform_fail():
             (-1, -S(1)/2), True)
 
 
-@slow
 def test_mellin_transform():
     from sympy import Max, Min
     MT = mellin_transform
@@ -100,22 +99,24 @@ def test_mellin_transform():
         (1/(nu + s), (-re(nu), oo), True)
 
     assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == \
-        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(-beta) < 0)
+        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), -re(beta) < 0)
     assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == \
         (gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
-            (-oo, -re(beta) + 1), re(-beta) < 0)
+            (-oo, -re(beta) + 1), -re(beta) < 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
         (gamma(s)*gamma(rho - s)/gamma(rho), (0, re(rho)), True)
 
-    # TODO also the conditions should be simplified
+    # TODO also the conditions should be simplified, e.g.
+    # And(re(rho) - 1 < 0, re(rho) < 1) should just be
+    # re(rho) < 1
     assert MT(abs(1 - x)**(-rho), x, s) == (
         2*sin(pi*rho/2)*gamma(1 - rho)*
         cos(pi*(rho/2 - s))*gamma(s)*gamma(rho-s)/pi,
         (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
-    assert mt[1], mt[2] == ((0, -re(beta) + 1), True)
+    assert mt[1], mt[2] == ((0, -re(beta) + 1), -re(beta) < 0)
 
     assert MT((x**a - b**a)/(x - b), x, s)[0] == \
         pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s)))
@@ -146,6 +147,14 @@ def test_mellin_transform():
     assert MT(log(abs(1 - x)), x, s) == (pi/(s*tan(pi*s)), (-1, 0), True)
     assert MT(log(abs(1 - 1/x)), x, s) == (pi/(s*tan(pi*s)), (0, 1), True)
 
+    # 8.4.14
+    assert MT(erf(sqrt(x)), x, s) == \
+        (-gamma(s + S(1)/2)/(sqrt(pi)*s), (-S(1)/2, 0), True)
+
+
+@slow
+def test_mellin_transform2():
+    MT = mellin_transform
     # TODO we cannot currently do these (needs summation of 3F2(-1))
     #      this also implies that they cannot be written as a single g-function
     #      (although this is possible)
@@ -158,10 +167,6 @@ def test_mellin_transform():
     mt = MT(log(x)/(x + 1)**2, x, s)
     assert mt[1:] == ((0, 2), True)
     assert not hyperexpand(mt[0], allow_hyper=True).has(meijerg)
-
-    # 8.4.14
-    assert MT(erf(sqrt(x)), x, s) == \
-        (-gamma(s + S(1)/2)/(sqrt(pi)*s), (-S(1)/2, 0), True)
 
 
 @slow
@@ -253,7 +258,7 @@ def test_mellin_transform_bessel():
     # TODO products of besselk are a mess
 
     mt = MT(exp(-x/2)*besselk(a, x/2), x, s)
-    mt0 = combsimp((trigsimp(combsimp(mt[0].expand(func=True)))))
+    mt0 = gammasimp((trigsimp(gammasimp(mt[0].expand(func=True)))))
     assert mt0 == 2*pi**(S(3)/2)*cos(pi*s)*gamma(-s + S(1)/2)/(
         (cos(2*pi*a) - cos(2*pi*s))*gamma(-a - s + 1)*gamma(a - s + 1))
     assert mt[1:] == ((Max(-re(a), re(a)), oo), True)
@@ -294,7 +299,7 @@ def test_expint():
     # TODO LT of Si, Shi, Chi is a mess ...
     assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
     assert laplace_transform(expint(a, x), x, s) == \
-        (lerchphi(s*polar_lift(-1), 1, a), 0, S(0) < re(a))
+        (lerchphi(s*exp_polar(I*pi), 1, a), 0, S(0) < re(a))
     assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
     assert laplace_transform(expint(2, x), x, s) == \
         ((s - log(s + 1))/s**2, 0, True)
@@ -460,10 +465,9 @@ def test_laplace_transform():
 
     # test a bug
     spos = symbols('s', positive=True)
-    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), True)
+    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), 1)
 
     # basic tests from wikipedia
-
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
         ((s + c)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
     assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), 0, True)
@@ -480,13 +484,12 @@ def test_laplace_transform():
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
-    assert LT(erf(t), t, s) == ((erfc(s/2))*exp(s**2/4)/s, 0, True)
+    assert LT(erf(t), t, s) == (erfc(s/2)*exp(s**2/4)/s, 0, True)
 
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)
     # TODO would be nice to have these come out better
-    assert LT(
-        exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2), -a, True)
+    assert LT(exp(-a*t)*sin(b*t), t, s) == (b/(b**2 + (a + s)**2), -a, True)
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
         ((a + s)/(b**2 + (a + s)**2), -a, True)
 
@@ -507,9 +510,11 @@ def test_laplace_transform():
         ((-sin(s**2/(2*pi))*fresnels(s/pi) + sin(s**2/(2*pi))/2 -
             cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
     assert laplace_transform(fresnelc(t), t, s) == (
-        (sin(s**2/(2*pi))*fresnelc(s/pi)/s - cos(s**2/(2*pi))*fresnels(s/pi)/s
-        + sqrt(2)*cos(s**2/(2*pi) + pi/4)/(2*s), 0, True))
+        ((2*sin(s**2/(2*pi))*fresnelc(s/pi) - 2*cos(s**2/(2*pi))*fresnels(s/pi)
+        + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
 
+    cond = Ne(1/s, 1) & (
+        S(0) < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
     assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
         Matrix([
             [(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],
@@ -524,8 +529,8 @@ def test_issue_8368_7173():
     assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
     assert LT(sinh(x + 3), x, s) == (
         (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
-    assert LT(sinh(x)*cosh(x), x, s) == (1/(s**2 - 4), 2, Ne(s/2, 1))
-
+    assert LT(sinh(x)*cosh(x), x, s) == (
+        1/(s**2 - 4), 2, Ne(s/2, 1))
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
@@ -650,8 +655,7 @@ def test_sine_transform():
     assert sine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
     assert inverse_sine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
 
-    assert sine_transform(
-        (1/sqrt(t))**3, t, w) == sqrt(w)*gamma(S(1)/4)/(2*gamma(S(5)/4))
+    assert sine_transform((1/sqrt(t))**3, t, w) == 2*sqrt(w)
 
     assert sine_transform(t**(-a), t, w) == 2**(
         -a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma((a + 1)/2)
@@ -766,12 +770,18 @@ def test_issue_8882():
 
 
 def test_issue_7173():
-    assert laplace_transform(sinh(a*x)*cosh(a*x), x, s) == \
-        (a/(s**2 - 4*a**2), 0,
-        And(Or(Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <
-        pi/2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)) <=
-        pi/2), Or(Abs(periodic_argument(a, oo)) < pi/2,
-        Abs(periodic_argument(a, oo)) <= pi/2)))
+    from sympy import cse
+    x0, x1, x2 = symbols('x:3')
+    ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
+    r, e = cse(ans)
+    assert r == [
+        (x0, pi/2),
+        (x1, Abs(periodic_argument(a, oo))),
+        (x2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)))]
+    assert e == [
+        a/(-4*a**2 + s**2),
+        0,
+        ((x0 >= x1) | (x1 < x0)) & ((x0 >= x2) | (x2 < x0))]
 
 
 def test_issue_8514():
@@ -779,10 +789,15 @@ def test_issue_8514():
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t', positive=True)
     ft = simplify(inverse_laplace_transform(1/(a*s**2+b*s+c),s, t))
-    assert ft == ((exp(t*(exp(I*atan2(0, -4*a*c + b**2)/2) -
-                  exp(-I*atan2(0, -4*a*c + b**2)/2))*
-                  sqrt(Abs(4*a*c - b**2))/(4*a))*exp(t*cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2))/a) + I*sin(t*sin(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2))/(2*a)) - cos(t*sin(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2))
+    assert ft == (I*exp(t*cos(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
+                  b**2))/a)*sin(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(
+                  4*a*c - b**2))/(2*a)) + exp(t*cos(atan2(0, -4*a*c + b**2)
+                  /2)*sqrt(Abs(4*a*c - b**2))/a)*cos(t*sin(atan2(0, -4*a*c
+                  + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a)) + I*sin(t*sin(
+                  atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a))
+                  - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
+                  b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
+                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)
+def test_issue_12591():
+    x, y = symbols("x y", real=True)
+    assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)

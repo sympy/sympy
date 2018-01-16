@@ -19,7 +19,9 @@ class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
     def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import combsimp
+        from sympy.simplify.combsimp import combsimp
+        # combinatorial function with non-integer arguments is
+        # automatically passed to gammasimp
         expr = combsimp(self)
         if measure(expr) <= ratio*measure(self):
             return expr
@@ -189,15 +191,39 @@ class factorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_is_even(self):
+        x = self.args[0]
+        if x.is_integer and x.is_nonnegative:
+            return (x - 2).is_nonnegative
+
     def _eval_is_composite(self):
         x = self.args[0]
-        if x.is_integer:
+        if x.is_integer and x.is_nonnegative:
             return (x - 3).is_nonnegative
 
     def _eval_is_real(self):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
+
+    def _eval_Mod(self, q):
+        x = self.args[0]
+        if x.is_integer and x.is_nonnegative and q.is_integer:
+            aq = abs(q)
+            d = x - aq
+            if d.is_nonnegative:
+                return 0
+            elif d == -1:
+                '''
+                Apply Wilson's theorem-if a natural number n > 1
+                is a prime number, (n-1)! = -1 mod n-and its
+                inverse-if n > 4 is a composite number,
+                (n-1)! = 0 mod n
+                '''
+                if aq.is_prime:
+                    return -1 % q
+                elif aq.is_composite and (aq - 6).is_nonnegative:
+                    return 0
 
 
 class MultiFactorial(CombinatorialFunction):
@@ -764,6 +790,9 @@ class binomial(CombinatorialFunction):
     @classmethod
     def _eval(self, n, k):
         # n.is_Number and k.is_Integer and k != 1 and n != k
+        from sympy.functions.elementary.exponential import log
+        from sympy.core import N
+
         if k.is_Integer:
             if n.is_Integer and n >= 0:
                 n, k = int(n), int(k)
@@ -773,27 +802,37 @@ class binomial(CombinatorialFunction):
                 elif k > n // 2:
                     k = n - k
 
-                M, result = int(_sqrt(n)), 1
+                if HAS_GMPY:
+                    from sympy.core.compatibility import gmpy
+                    return Integer(gmpy.bincoef(n, k))
 
-                for prime in sieve.primerange(2, n + 1):
-                    if prime > n - k:
-                        result *= prime
-                    elif prime > n // 2:
-                        continue
-                    elif prime > M:
-                        if n % prime < k % prime:
+                prime_count_estimate = N(n / log(n))
+
+                # if the number of primes less than n is less than k, use prime sieve method
+                # otherwise it is more memory efficient to compute factorials explicitly
+                if prime_count_estimate < k:
+                    M, result = int(_sqrt(n)), 1
+                    for prime in sieve.primerange(2, n + 1):
+                        if prime > n - k:
                             result *= prime
-                    else:
-                        N, K = n, k
-                        exp = a = 0
+                        elif prime > n // 2:
+                            continue
+                        elif prime > M:
+                            if n % prime < k % prime:
+                                result *= prime
+                        else:
+                            N, K = n, k
+                            exp = a = 0
 
-                        while N > 0:
-                            a = int((N % prime) < (K % prime + a))
-                            N, K = N // prime, K // prime
-                            exp = a + exp
+                            while N > 0:
+                                a = int((N % prime) < (K % prime + a))
+                                N, K = N // prime, K // prime
+                                exp = a + exp
 
-                        if exp > 0:
-                            result *= prime**exp
+                            if exp > 0:
+                                result *= prime**exp
+                else:
+                    result = ff(n, k) / factorial(k)
                 return Integer(result)
             else:
                 d = result = n - k + 1
@@ -868,3 +907,8 @@ class binomial(CombinatorialFunction):
             return True
         elif k.is_integer is False:
             return False
+
+    def _eval_is_nonnegative(self):
+        if self.args[0].is_integer and self.args[1].is_integer:
+            if self.args[0].is_nonnegative and self.args[1].is_nonnegative:
+                return True

@@ -4,6 +4,14 @@
 This file contains some classical ciphers and routines
 implementing a linear-feedback shift register (LFSR)
 and the Diffie-Hellman key exchange.
+
+.. warning::
+
+   This module is intended for educational purposes only. Do not use the
+   functions in this module for real cryptographic applications. If you wish
+   to encrypt real data, we recommend using something like the `cryptography
+   <https://cryptography.io/en/latest/>`_ module.
+
 """
 
 from __future__ import print_function
@@ -21,6 +29,7 @@ from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
 from sympy.utilities.randtest import _randrange
+
 
 def AZ(s=None):
     """Return the letters of ``s`` in uppercase. In case more than
@@ -373,7 +382,7 @@ def encipher_substitution(msg, old, new=None):
     >>> encipher_substitution(ct, new, old)
     'GONAVYBEATARMY'
 
-    In the special case where ``old`` and ``new`` are a permuation of
+    In the special case where ``old`` and ``new`` are a permutation of
     order 2 (representing a transposition of characters) their order
     is immaterial:
 
@@ -479,7 +488,7 @@ def encipher_vigenere(msg, key, symbols=None):
                corresponding integers. Let ``n1 = len(L1)``.
             2. Compute from the string ``msg`` a list ``L2`` of
                corresponding integers. Let ``n2 = len(L2)``.
-            3. Break ``L2`` up sequencially into sublists of size
+            3. Break ``L2`` up sequentially into sublists of size
                ``n1``; the last sublist may be smaller than ``n1``
             4. For each of these sublists ``L`` of ``L2``, compute a
                new list ``C`` given by ``C[i] = L[i] + L1[i] (mod N)``
@@ -997,7 +1006,7 @@ def encipher_bifid5(msg, key):
     >>> from sympy.crypto.crypto import (
     ...     encipher_bifid5, decipher_bifid5)
 
-    "J" will be omitted unless it is replaced with somthing else:
+    "J" will be omitted unless it is replaced with something else:
 
     >>> round_trip = lambda m, k: \
     ...     decipher_bifid5(encipher_bifid5(m, k), k)
@@ -1935,7 +1944,7 @@ def dh_private_key(digit=10, seed=None):
     =======
 
     (p, g, a) : p = prime number, g = primitive root of p,
-                a = random number from 2 thru p - 1
+                a = random number from 2 through p - 1
 
     Notes
     =====
@@ -2037,3 +2046,203 @@ def dh_shared_key(key, b):
             than prime %s.''' % p))
 
     return pow(x, b, p)
+
+
+################ Goldwasser-Micali Encryption  #########################
+
+
+def _legendre(a, p):
+    """
+    Returns the legendre symbol of a and p
+    assuming that p is a prime
+
+    i.e. 1 if a is a quadratic residue mod p
+        -1 if a is not a quadratic residue mod p
+         0 if a is divisible by p
+
+    Parameters
+    ==========
+
+    a : int the number to test
+    p : the prime to test a against
+
+    Returns
+    =======
+
+    legendre symbol (a / p) (int)
+
+    """
+    sig = pow(a%p, (p - 1)//2) % p
+    if sig == 1:
+        return 1
+    elif sig == 0:
+        return 0
+    else:
+        return -1
+
+
+def _random_coprime_stream(n, seed=None):
+    randrange = _randrange(seed)
+    while True:
+        y = randrange(n)
+        if gcd(y, n) == 1:
+            yield y
+
+
+def gm_private_key(p, q, a=None):
+    """
+    Check if p and q can be used as private keys for
+    the Goldwasser-Micali encryption. The method works
+    roughly as follows.
+
+    Pick two large primes p ands q. Call their product N.
+    Given a message as an integer i, write i in its
+    bit representation b_0,...,b_n. For each k,
+
+     if b_k = 0:
+        let a_k be a random square
+        (quadratic residue) modulo p * q
+        such that jacobi_symbol(a, p * q) = 1
+     if b_k = 1:
+        let a_k be a random non-square
+        (non-quadratic residue) modulo p * q
+        such that jacobi_symbol(a, p * q) = 1
+
+    return [a_1, a_2,...]
+
+    b_k can be recovered by checking whether or not
+    a_k is a residue. And from the b_k's, the message
+    can be reconstructed.
+
+    The idea is that, while jacobi_symbol(a, p * q)
+    can be easily computed (and when it is equal to -1 will
+    tell you that a is not a square mod p * q), quadratic
+    residuosity modulo a composite number is hard to compute
+    without knowing its factorization.
+
+    Moreover, approximately half the numbers coprime to p * q have
+    jacobi_symbol equal to 1. And among those, approximately half
+    are residues and approximately half are not. This maximizes the
+    entropy of the code.
+
+    Parameters
+    ==========
+
+    p, q, a : initialization variables
+
+    Returns
+    =======
+
+    p, q : the input value p and q
+
+    Raises
+    ======
+
+    ValueError : if p and q are not distinct odd primes
+
+    """
+    if p == q:
+        raise ValueError("expected distinct primes, "
+                         "got two copies of %i" % p)
+    elif not isprime(p) or not isprime(q):
+        raise ValueError("first two arguments must be prime, "
+                         "got %i of %i" % (p, q))
+    elif p == 2 or q == 2:
+        raise ValueError("first two arguments must not be even, "
+                         "got %i of %i" % (p, q))
+    return p, q
+
+
+def gm_public_key(p, q, a=None, seed=None):
+    """
+    Compute public keys for p and q.
+    Note that in Goldwasser-Micali Encrpytion,
+    public keys are randomly selected.
+
+    Parameters
+    ==========
+
+    p, q, a : (int) initialization variables
+
+    Returns
+    =======
+
+    (a, N) : tuple[int]
+        a is the input a if it is not None otherwise
+        some random integer coprime to p and q.
+
+        N is the product of p and q
+    """
+
+    p, q = gm_private_key(p, q)
+    N = p * q
+
+    if a is None:
+        randrange = _randrange(seed)
+        while True:
+            a = randrange(N)
+            if _legendre(a, p) == _legendre(a, q) == -1:
+                break
+    else:
+        if _legendre(a, p) != -1 or _legendre(a, q) != -1:
+            return False
+    return (a, N)
+
+
+def encipher_gm(i, key, seed=None):
+    """
+    Encrypt integer 'i' using public_key 'key'
+    Note that gm uses random encrpytion.
+
+    Parameters
+    ==========
+
+    i: (int) the message to encrypt
+    key: Tuple (a, N) the public key
+
+    Returns
+    =======
+
+    List[int] the randomized encrpyted message.
+
+    """
+    if i < 0:
+        raise ValueError(
+            "message must be a non-negative "
+            "integer: got %d instead" % i)
+    a, N = key
+    bits = []
+    while i > 0:
+        bits.append(i % 2)
+        i //= 2
+
+    gen = _random_coprime_stream(N, seed)
+    rev = reversed(bits)
+    encode = lambda b: next(gen)**2*pow(a, b) % N
+    return [ encode(b) for b in rev ]
+
+
+
+def decipher_gm(message, key):
+    """
+    Decrypt message 'message' using public_key 'key'.
+
+    Parameters
+    ==========
+
+    List[int]: the randomized encrpyted message.
+    key: Tuple (p, q) the private key
+
+    Returns
+    =======
+
+    i (int) the encrpyted message
+    """
+    p, q = key
+    res = lambda m, p: _legendre(m, p) > 0
+    bits = [res(m, p) * res(m, q) for m in message]
+    m = 0
+    for b in bits:
+        m <<= 1
+        m += not b
+    return m

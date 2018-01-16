@@ -1,5 +1,5 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs)
+                   cot, sec, csc, Abs, symbols)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds)
 from sympy.core import Add, Mul, Pow
@@ -11,16 +11,39 @@ a = Symbol('a', real=True)
 
 
 def test_function_range():
-    x = Symbol('x')
-    assert function_range(sin(x), x, Interval(-pi/2, pi/2)) == Interval(-1, 1)
-    assert function_range(sin(x), x, Interval(0, pi)) == Interval(0, 1)
-    assert function_range(tan(x), x, Interval(0, pi)) == Interval(-oo, oo)
-    assert function_range(tan(x), x, Interval(pi/2, pi)) == Interval(-oo, 0)
-    assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)) == Interval(-oo, oo)
-    assert function_range(1/(x**2), x, Interval(-1, 1)) == Interval(1, oo)
-    assert function_range(exp(x), x, Interval(-1, 1)) == Interval(exp(-1), exp(1))
-    assert function_range(log(x) - x, x, S.Reals) == Interval(-oo, -1)
-    assert function_range(sqrt(3*x - 1), x, Interval(0, 2)) == Interval(0, sqrt(5))
+    x, y, a, b = symbols('x y a b')
+    assert function_range(sin(x), x, Interval(-pi/2, pi/2)
+        ) == Interval(-1, 1)
+    assert function_range(sin(x), x, Interval(0, pi)
+        ) == Interval(0, 1)
+    assert function_range(tan(x), x, Interval(0, pi)
+        ) == Interval(-oo, oo)
+    assert function_range(tan(x), x, Interval(pi/2, pi)
+        ) == Interval(-oo, 0)
+    assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)
+        ) == Union(Interval(-oo, 2/7), Interval(8/3, oo))
+    assert function_range(1/(x**2), x, Interval(-1, 1)
+        ) == Interval(1, oo)
+    assert function_range(exp(x), x, Interval(-1, 1)
+        ) == Interval(exp(-1), exp(1))
+    assert function_range(log(x) - x, x, S.Reals
+        ) == Interval(-oo, -1)
+    assert function_range(sqrt(3*x - 1), x, Interval(0, 2)
+        ) == Interval(0, sqrt(5))
+    assert function_range(x*(x - 1) - (x**2 - x), x, S.Reals
+        ) == FiniteSet(0)
+    assert function_range(x*(x - 1) - (x**2 - x) + y, x, S.Reals
+        ) == FiniteSet(y)
+    assert function_range(sin(x), x, Union(Interval(-5, -3), FiniteSet(4))
+        ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
+    assert function_range(cos(x), x, Interval(-oo, -4)
+        ) == Interval(-1, 1)
+    raises(NotImplementedError, lambda : function_range(
+        exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
+    raises(NotImplementedError, lambda : function_range(
+        log(x), x, S.Integers))
+    raises(NotImplementedError, lambda : function_range(
+        sin(x)/2, x, S.Naturals))
 
 
 def test_continuous_domain():
@@ -34,6 +57,10 @@ def test_continuous_domain():
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
         Interval(1/4, oo, True, True)
     assert continuous_domain(1/sqrt(x - 3), x, S.Reals) == Interval(3, oo, True, True)
+    assert continuous_domain(1/x - 2, x, S.Reals) == \
+        Union(Interval.open(-oo, 0), Interval.open(0, oo))
+    assert continuous_domain(1/(x**2 - 4) + 2, x, S.Reals) == \
+        Union(Interval.open(-oo, -2), Interval.open(-2, 2), Interval.open(2, oo))
 
 
 def test_not_empty_in():
@@ -85,6 +112,11 @@ def test_periodicity():
     assert periodicity(cos(sec(x) - csc(2*x)), x) == 2*pi
     assert periodicity(tan(sin(2*x)), x) == pi
     assert periodicity(2*tan(x)**2, x) == pi
+    assert periodicity(sin(x%4), x) == 4
+    assert periodicity(sin(x)%4, x) == 2*pi
+    assert periodicity(tan((3*x-2)%4), x) == 4/3
+    assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
+    assert periodicity((x**2+1) % x, x) == None
 
     assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
     assert periodicity(tan(x), y) == S.Zero
@@ -94,10 +126,20 @@ def test_periodicity():
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
 
+    assert periodicity(Abs(sin(Abs(sin(x)))), x) == pi
+    assert all(periodicity(Abs(f(x)), x) == pi for f in (
+        cos, sin, sec, csc, tan, cot))
+    assert periodicity(Abs(sin(tan(x))), x) == pi
+    assert periodicity(Abs(sin(sin(x) + tan(x))), x) == 2*pi
+    assert periodicity(sin(x) > S.Half, x) is 2*pi
+
+    assert periodicity(x > 2, x) is None
     assert periodicity(x**3 - x**2 + 1, x) is None
     assert periodicity(Abs(x), x) is None
     assert periodicity(Abs(x**2 - 1), x) is None
 
+    assert periodicity((x**2 + 4)%2, x) is None
+    assert periodicity((E**x)%3, x) is None
 
 def test_periodicity_check():
     x = Symbol('x')
@@ -105,8 +147,9 @@ def test_periodicity_check():
 
     assert periodicity(tan(x), x, check=True) == pi
     assert periodicity(sin(x) + cos(x), x, check=True) == 2*pi
-    raises(NotImplementedError, lambda: periodicity(sec(x), x, check=True))
-    raises(NotImplementedError, lambda: periodicity(sin(x*y), x, check=True))
+    assert periodicity(sec(x), x) == 2*pi
+    assert periodicity(sin(x*y), x) == 2*pi/abs(y)
+    assert periodicity(Abs(sec(sec(x))), x) == pi
 
 
 def test_lcim():
@@ -293,19 +336,26 @@ def test_AccumBounds_pow():
 def test_comparison_AccumBounds():
     assert (AccumBounds(1, 3) < 4) == S.true
     assert (AccumBounds(1, 3) < -1) == S.false
-    assert (AccumBounds(1, 3) < 2) is None
+    assert (AccumBounds(1, 3) < 2).rel_op == '<'
+    assert (AccumBounds(1, 3) <= 2).rel_op == '<='
 
     assert (AccumBounds(1, 3) > 4) == S.false
     assert (AccumBounds(1, 3) > -1) == S.true
-    assert (AccumBounds(1, 3) > 2) is None
+    assert (AccumBounds(1, 3) > 2).rel_op == '>'
+    assert (AccumBounds(1, 3) >= 2).rel_op == '>='
 
     assert (AccumBounds(1, 3) < AccumBounds(4, 6)) == S.true
-    assert (AccumBounds(1, 3) < AccumBounds(2, 4)) is None
+    assert (AccumBounds(1, 3) < AccumBounds(2, 4)).rel_op == '<'
     assert (AccumBounds(1, 3) < AccumBounds(-2, 0)) == S.false
 
+    # issue 13499
+    assert (cos(x) > 0).subs(x, oo) == (AccumBounds(-1, 1) > 0)
 
 def test_contains_AccumBounds():
     assert (1 in AccumBounds(1, 2)) == S.true
     raises(TypeError, lambda: a in AccumBounds(1, 2))
+    assert 0 in AccumBounds(-1, 0)
+    raises(TypeError, lambda:
+        (cos(1)**2 + sin(1)**2 - 1) in AccumBounds(-1, 0))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true

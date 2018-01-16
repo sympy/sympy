@@ -155,12 +155,23 @@ class LatexPrinter(Printer):
             "dot": r" \cdot ",
             "times": r" \times "
         }
-
-        self._settings['mul_symbol_latex'] = \
-            mul_symbol_table[self._settings['mul_symbol']]
-
-        self._settings['mul_symbol_latex_numbers'] = \
-            mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+        try:
+            self._settings['mul_symbol_latex'] = \
+                mul_symbol_table[self._settings['mul_symbol']]
+        except KeyError:
+            self._settings['mul_symbol_latex'] = \
+                self._settings['mul_symbol']
+        try:
+            self._settings['mul_symbol_latex_numbers'] = \
+                mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+        except KeyError:
+            if (self._settings['mul_symbol'].strip() in
+                    ['', ' ', '\\', '\\,', '\\:', '\\;', '\\quad']):
+                self._settings['mul_symbol_latex_numbers'] = \
+                    mul_symbol_table['dot']
+            else:
+                self._settings['mul_symbol_latex_numbers'] = \
+                    self._settings['mul_symbol']
 
         self._delim_dict = {'(': ')', '[': ']'}
 
@@ -255,6 +266,8 @@ class LatexPrinter(Printer):
         if expr.is_Relational:
             return True
         if any([expr.has(x) for x in (Mod,)]):
+            return True
+        if expr.is_Add:
             return True
         return False
 
@@ -372,6 +385,7 @@ class LatexPrinter(Printer):
         return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
+        from sympy.core.power import Pow
         include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
@@ -416,10 +430,11 @@ class LatexPrinter(Printer):
                     last_term_tex = term_tex
                 return _tex
 
-        if denom is S.One:
+        if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
             # use the original expression here, since fraction() may have
             # altered it when producing numer and denom
             tex += convert(expr)
+
         else:
             snumer = convert(numer)
             sdenom = convert(denom)
@@ -596,41 +611,26 @@ class LatexPrinter(Printer):
         return self._print(expr.label)
 
     def _print_Derivative(self, expr):
-        dim = len(expr.variables)
         if requires_partial(expr):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
 
+        tex = ""
+        dim = 0
+        for x, num in reversed(expr.variable_count):
+            dim += num
+            if num == 1:
+                tex += r"%s %s" % (diff_symbol, self._print(x))
+            else:
+                tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), num)
 
         if dim == 1:
-            tex = r"\frac{%s}{%s %s}" % (diff_symbol, diff_symbol,
-                self._print(expr.variables[0]))
+            tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
-            multiplicity, i, tex = [], 1, ""
-            current = expr.variables[0]
+            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, dim, tex)
 
-            for symbol in expr.variables[1:]:
-                if symbol == current:
-                    i = i + 1
-                else:
-                    multiplicity.append((current, i))
-                    current, i = symbol, 1
-            else:
-                multiplicity.append((current, i))
-
-            for x, i in multiplicity:
-                if i == 1:
-                    tex += r"%s %s" % (diff_symbol, self._print(x))
-                else:
-                    tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), i)
-
-            tex = r"\frac{%s^{%s}}{%s} " % (diff_symbol, dim, tex)
-
-        if isinstance(expr.expr, AssocOp):
-            return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
-        else:
-            return r"%s %s" % (tex, self._print(expr.expr))
+        return r"%s %s" % (tex, self.parenthesize(expr.expr, PRECEDENCE["Mul"], strict=True))
 
     def _print_Subs(self, subs):
         expr, old, new = subs.args
@@ -677,7 +677,7 @@ class LatexPrinter(Printer):
         e, z, z0, dir = expr.args
 
         tex = r"\lim_{%s \to " % self._print(z)
-        if z0 in (S.Infinity, S.NegativeInfinity):
+        if str(dir) == '+-' or z0 in (S.Infinity, S.NegativeInfinity):
             tex += r"%s}" % self._print(z0)
         else:
             tex += r"%s^%s}" % (self._print(z0), self._print(dir))
@@ -1424,9 +1424,9 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^\dag" % self._print(mat)
+            return r"\left(%s\right)^\dagger" % self._print(mat)
         else:
-            return r"%s^\dag" % self._print(mat)
+            return r"%s^\dagger" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         terms = list(expr.args)
@@ -1473,6 +1473,9 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}"
 
     def _print_NDimArray(self, expr):
+
+        if expr.rank() == 0:
+            return self._print(expr[()])
 
         mat_str = self._settings['mat_str']
         if mat_str is None:
@@ -1526,6 +1529,14 @@ class LatexPrinter(Printer):
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
             r", \quad ".join([ self._print(i) for i in expr ])
+
+    def _print_TensorProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \otimes '.join(elements)
+
+    def _print_WedgeProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' \wedge '.join(elements)
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
@@ -1597,14 +1608,15 @@ class LatexPrinter(Printer):
             return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
-        except Exception:
-            try:
-                return ('Domain: ' + self._print(d.symbols) + ' in ' +
-                        self._print(d.set))
-            except:
-                return 'Domain on ' + self._print(d.symbols)
+        elif hasattr(d, 'set'):
+            return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                    self._print(d.set))
+        elif hasattr(d, 'symbols'):
+            return 'Domain on ' + self._print(d.symbols)
+        else:
+            return self._print(None)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
@@ -1815,8 +1827,14 @@ class LatexPrinter(Printer):
             denom = self._print(frac.denom)
             return r"\frac{%s}{%s}" % (numer, denom)
 
-    def _print_euler(self, expr):
-        return r"E_{%s}" % self._print(expr.args[0])
+    def _print_euler(self, expr, exp=None):
+        m, x = (expr.args[0], None) if len(expr.args) == 1 else expr.args
+        tex = r"E_{%s}" % self._print(m)
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        if x is not None:
+            tex = r"%s\left(%s\right)" % (tex, self._print(x))
+        return tex
 
     def _print_catalan(self, expr, exp=None):
         tex = r"C_{%s}" % self._print(expr.args[0])
@@ -1943,6 +1961,13 @@ class LatexPrinter(Printer):
     def _print_ModuleImplementedIdeal(self, m):
         return r"\left< %s \right>" % ",".join(
             '{' + self._print(x) + '}' for [x] in m._module.gens)
+
+    def _print_Quaternion(self, expr):
+        # TODO: This expression is potentially confusing,
+        # shall we print it as `Quaternion( ... )`?
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...

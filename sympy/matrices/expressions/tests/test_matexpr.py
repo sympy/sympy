@@ -2,6 +2,7 @@ from sympy import KroneckerDelta, diff, Piecewise, And
 from sympy import Sum
 
 from sympy.core import S, symbols, Add, Mul
+from sympy.core.compatibility import long
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
@@ -212,6 +213,7 @@ def test_indexing():
 def test_single_indexing():
     A = MatrixSymbol('A', 2, 3)
     assert A[1] == A[0, 1]
+    assert A[long(1)] == A[0, 1]
     assert A[3] == A[1, 0]
     assert list(A[:2, :2]) == [A[0, 0], A[0, 1], A[1, 0], A[1, 1]]
     raises(IndexError, lambda: A[6])
@@ -287,8 +289,8 @@ def test_matrixelement_diff():
 
     assert w[k, p].diff(w[k, p]) == 1
     assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k)*KroneckerDelta(0, p)
-    assert str(dexpr) == "Sum(KroneckerDelta(_k, p)*D[k, _k], (_k, 0, n - 1))"
-    assert str(dexpr.doit()) == 'Piecewise((D[k, p], (0 <= p) & (p <= n - 1)), (0, True))'
+    assert str(dexpr) == "Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1))"
+    assert str(dexpr.doit()) == 'Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True))'
 
 
 def test_MatrixElement_with_values():

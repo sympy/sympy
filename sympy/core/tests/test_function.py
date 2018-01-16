@@ -92,7 +92,7 @@ def test_derivative_evaluate():
 
 def test_diff_symbols():
     assert diff(f(x, y, z), x, y, z) == Derivative(f(x, y, z), x, y, z)
-    assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
+    assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x) == Derivative(f(x, y, z), (x, 3))
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
 
     # issue 5028
@@ -345,8 +345,8 @@ def test_func_deriv():
     assert f(x).diff(x) == Derivative(f(x), x)
     # issue 4534
     assert f(x, y).diff(x, y) - f(x, y).diff(y, x) == 0
-    assert Derivative(f(x, y), x, y).args[1:] == (x, y)
-    assert Derivative(f(x, y), y, x).args[1:] == (y, x)
+    assert Derivative(f(x, y), x, y).args[1:] == ((x, 1), (y, 1))
+    assert Derivative(f(x, y), y, x).args[1:] == ((y, 1), (x, 1))
     assert (Derivative(f(x, y), x, y) - Derivative(f(x, y), y, x)).doit() == 0
 
 
@@ -412,12 +412,12 @@ def test_function__eval_nseries():
     assert sin(x)._eval_nseries(x, 2, None) == x + O(x**2)
     assert sin(x + 1)._eval_nseries(x, 2, None) == x*cos(1) + sin(1) + O(x**2)
     assert sin(pi*(1 - x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
-    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
+    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x**2) + O(x**2)
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
         polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1 - x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1 + x)._eval_nseries(x, 2, None))
+    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + O(x)
+    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + O(x)  # XXX: wrong, branch cuts
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
@@ -740,6 +740,12 @@ def test_issue_8469():
     expr = functools.reduce(g,ws)
 
 
+def test_issue_12996():
+    # foo=True imitates the sort of arguments that Derivative can get
+    # from Integral when it passes doit to the expression
+    assert Derivative(im(x), x).doit(foo=True) == Derivative(im(x), x)
+
+
 def test_should_evalf():
     # This should not take forever to run (see #8506)
     assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
@@ -858,6 +864,23 @@ def test_issue_12005():
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+
+def test_issue_13843():
+    x = symbols('x')
+    f = Function('f')
+    m, n = symbols('m n', integer=True)
+    assert Derivative(Derivative(f(x), (x, m)), (x, n)) == Derivative(f(x), (x, m + n))
+    assert Derivative(Derivative(f(x), (x, m+5)), (x, n+3)) == Derivative(f(x), (x, m + n + 8))
+
+    assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
+
+def test_order_could_be_zero():
+    x, y = symbols('x, y')
+    n = symbols('n', integer=True, nonnegative=True)
+    m = symbols('m', integer=True, positive=True)
+    assert diff(y, (x, n)) == Derivative(y, (x, n))
+    assert diff(y, (x, n + 1)) == S.Zero
+    assert diff(y, (x, m)) == S.Zero
 
 def test_undefined_function_eq():
     f = Function('f')

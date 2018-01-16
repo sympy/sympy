@@ -87,7 +87,9 @@ def _test_args(obj):
 
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
+    from sympy import Q
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
+    assert _test_args(Q.is_true(True))
 
 def test_sympy__assumptions__assume__Predicate():
     from sympy.assumptions.assume import Predicate
@@ -759,6 +761,11 @@ def test_sympy__core__power__Pow():
     assert _test_args(Pow(x, 2))
 
 
+def test_sympy__algebras__quaternion__Quaternion():
+    from sympy.algebras.quaternion import Quaternion
+    assert _test_args(Quaternion(x, 1, 2, 3))
+
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
@@ -808,6 +815,22 @@ def test_sympy__calculus__util__AccumulationBounds():
     from sympy.calculus.util import AccumulationBounds
     assert _test_args(AccumulationBounds(0, 1))
 
+
+def test_sympy__sets__ordinals__OmegaPower():
+    from sympy.sets.ordinals import OmegaPower
+    assert _test_args(OmegaPower(1, 1))
+
+def test_sympy__sets__ordinals__Ordinal():
+    from sympy.sets.ordinals import Ordinal, OmegaPower
+    assert _test_args(Ordinal(OmegaPower(2, 1)))
+
+def test_sympy__sets__ordinals__OrdinalOmega():
+    from sympy.sets.ordinals import OrdinalOmega
+    assert _test_args(OrdinalOmega())
+
+def test_sympy__sets__ordinals__OrdinalZero():
+    from sympy.sets.ordinals import OrdinalZero
+    assert _test_args(OrdinalZero())
 
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
@@ -1319,6 +1342,9 @@ def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
     assert _test_args(StudentTDistribution(1))
 
+def test_sympy__stats__crv_types__TrapezoidalDistribution():
+    from sympy.stats.crv_types import TrapezoidalDistribution
+    assert _test_args(TrapezoidalDistribution(1, 2, 3, 4))
 
 def test_sympy__stats__crv_types__TriangularDistribution():
     from sympy.stats.crv_types import TriangularDistribution
@@ -2342,7 +2368,7 @@ def test_sympy__liealgebras__type_g__TypeG():
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
-    assert _test_args(And(x, y, 2))
+    assert _test_args(And(x, y, 1))
 
 
 @SKIP("abstract class")
@@ -2373,7 +2399,7 @@ def test_sympy__logic__boolalg__Equivalent():
 
 def test_sympy__logic__boolalg__ITE():
     from sympy.logic.boolalg import ITE
-    assert _test_args(ITE(x, y, 2))
+    assert _test_args(ITE(x, y, 1))
 
 
 def test_sympy__logic__boolalg__Implies():
@@ -2383,7 +2409,7 @@ def test_sympy__logic__boolalg__Implies():
 
 def test_sympy__logic__boolalg__Nand():
     from sympy.logic.boolalg import Nand
-    assert _test_args(Nand(x, y, 2))
+    assert _test_args(Nand(x, y, 1))
 
 
 def test_sympy__logic__boolalg__Nor():
@@ -3461,6 +3487,12 @@ def test_sympy__physics__units__dimensions__Dimension():
     assert _test_args(Dimension("length", "L"))
 
 
+def test_sympy__physics__units__dimensions__DimensionSystem():
+    from sympy.physics.units.dimensions import DimensionSystem
+    from sympy.physics.units.dimensions import length, time, velocity
+    assert _test_args(DimensionSystem((length, time), (velocity,)))
+
+
 def test_sympy__physics__units__quantities__Quantity():
     from sympy.physics.units.quantities import Quantity
     from sympy.physics.units import length
@@ -3603,6 +3635,12 @@ def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
     from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
     sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert _test_args(sparr)
+
+
+def test_sympy__tensor__functions__TensorProduct():
+    from sympy.tensor.functions import TensorProduct
+    tp = TensorProduct(3, 4, evaluate=False)
+    assert _test_args(tp)
 
 
 def test_sympy__tensor__indexed__Idx():

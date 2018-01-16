@@ -306,7 +306,7 @@ class FCodePrinter(CodePrinter):
             )
         elif expr.exp == 0.5:
             if expr.base.is_integer:
-                # Fortan intrinsic sqrt() does not accept integer argument
+                # Fortran intrinsic sqrt() does not accept integer argument
                 if expr.base.is_Number:
                     return 'sqrt(%s.0d0)' % self._print(expr.base, *args, **kwargs)
                 else:
@@ -495,7 +495,7 @@ class FCodePrinter(CodePrinter):
                 if pos == 0:
                     return endpos
             return pos
-        # split line by line and add the splitted lines to result
+        # split line by line and add the split lines to result
         result = []
         if self._settings['source_format'] == 'free':
             trailing = ' &'

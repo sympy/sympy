@@ -5,7 +5,9 @@ from sympy import (symbols, Function, Integer, Matrix, Abs,
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
-from sympy.polys import ring, field, ZZ, QQ, lex, grlex
+from sympy.polys import ring, field, ZZ, QQ, lex, grlex, Poly
+from sympy.polys.polyclasses import DMP
+from sympy.polys.agca.extensions import FiniteExtension
 
 x, y = symbols('x,y')
 
@@ -212,6 +214,36 @@ def test_PolyElement():
 def test_FracElement():
     F, x, y = field("x,y", ZZ)
     assert srepr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
+
+def test_FractionField():
+    assert srepr(QQ.frac_field(x)) == \
+        "FractionField(FracField((Symbol('x'),), QQ, lex))"
+    assert srepr(QQ.frac_field(x, y, order=grlex)) == \
+        "FractionField(FracField((Symbol('x'), Symbol('y')), QQ, grlex))"
+
+
+def test_PolynomialRingBase():
+    assert srepr(ZZ.old_poly_ring(x)) == \
+        "GlobalPolynomialRing(ZZ, Symbol('x'))"
+    assert srepr(ZZ[x].old_poly_ring(y)) == \
+        "GlobalPolynomialRing(ZZ[x], Symbol('y'))"
+    assert srepr(QQ.frac_field(x).old_poly_ring(y)) == \
+        "GlobalPolynomialRing(FractionField(FracField((Symbol('x'),), QQ, lex)), Symbol('y'))"
+
+
+def test_DMP():
+    assert srepr(DMP([1, 2], ZZ)) == 'DMP([1, 2], ZZ)'
+    assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
+        "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
+
+def test_FiniteExtension():
+    assert srepr(FiniteExtension(Poly(x**2 + 1, x))) == \
+        "FiniteExtension(Poly(x**2 + 1, x, domain='ZZ'))"
+
+def test_ExtensionElement():
+    A = FiniteExtension(Poly(x**2 + 1, x))
+    assert srepr(A.generator) == \
+        "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
 
 def test_BooleanAtom():
     assert srepr(true) == "S.true"

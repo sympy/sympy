@@ -27,8 +27,8 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
                    "erfc", "erfi", "erf", "erfinv", "erfcinv",
                    "besseli", "besselj", "besselk", "bessely",
-                   "exp", "factorial", "floor", "fresnelc", "fresnels",
-                   "gamma", "log", "polylog", "sign", "zeta"]
+                   "euler", "exp", "factorial", "floor", "fresnelc",
+                   "fresnels", "gamma", "log", "polylog", "sign", "zeta"]
 
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
@@ -580,7 +580,7 @@ def octave_code(expr, assign_to=None, **settings):
 
     Matrices are supported using Octave inline notation.  When using
     ``assign_to`` with matrices, the name can be specified either as a string
-    or as a ``MatrixSymbol``.  The dimenions must align in the latter case.
+    or as a ``MatrixSymbol``.  The dimensions must align in the latter case.
 
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])

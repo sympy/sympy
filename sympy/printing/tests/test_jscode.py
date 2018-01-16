@@ -1,5 +1,7 @@
-from sympy.core import pi, oo, symbols, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
-from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
+from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
+                        EulerGamma, Catalan, Lambda, Dummy, S)
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+                             sinh, cosh, tanh, asin, acos, acosh, Max, Min)
 from sympy.utilities.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -18,7 +20,7 @@ def test_printmethod():
 def test_jscode_sqrt():
     assert jscode(sqrt(x)) == "Math.sqrt(x)"
     assert jscode(x**0.5) == "Math.sqrt(x)"
-    assert jscode(sqrt(x)) == "Math.sqrt(x)"
+    assert jscode(x**(S(1)/3)) == "Math.cbrt(x)"
 
 
 def test_jscode_Pow():
@@ -59,6 +61,10 @@ def test_jscode_Integer():
 
 def test_jscode_functions():
     assert jscode(sin(x) ** cos(x)) == "Math.pow(Math.sin(x), Math.cos(x))"
+    assert jscode(sinh(x) * cosh(x)) == "Math.sinh(x)*Math.cosh(x)"
+    assert jscode(Max(x, y) + Min(x, y)) == "Math.max(x, y) + Math.min(x, y)"
+    assert jscode(tanh(x)*acosh(y)) == "Math.tanh(x)*Math.acosh(y)"
+    assert jscode(asin(x)-acos(y)) == "-Math.acos(y) + Math.asin(x)"
 
 
 def test_jscode_inline_function():

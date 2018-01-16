@@ -15,67 +15,13 @@ from __future__ import division, print_function
 from sympy import Function, Symbol, solve
 from sympy.core.compatibility import (
     is_sequence, range, string_types, ordered)
+from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
 
 
 def _ordered_points(p):
     """Return the tuple of points sorted numerically according to args"""
     return tuple(sorted(p, key=lambda x: x.args))
-
-
-def _symbol(s, matching_symbol=None):
-    """Return s if s is a Symbol, else return either a new Symbol (real=True)
-    with the same name s or the matching_symbol if s is a string and it matches
-    the name of the matching_symbol.
-
-    >>> from sympy import Symbol
-    >>> from sympy.geometry.util import _symbol
-    >>> x = Symbol('x')
-    >>> _symbol('y')
-    y
-    >>> _.is_real
-    True
-    >>> _symbol(x)
-    x
-    >>> _.is_real is None
-    True
-    >>> arb = Symbol('foo')
-    >>> _symbol('arb', arb) # arb's name is foo so foo will not be returned
-    arb
-    >>> _symbol('foo', arb) # now it will
-    foo
-
-    NB: the symbol here may not be the same as a symbol with the same
-    name defined elsewhere as a result of different assumptions.
-
-    See Also
-    ========
-
-    sympy.core.symbol.Symbol
-
-    """
-    if isinstance(s, string_types):
-        if matching_symbol and matching_symbol.name == s:
-            return matching_symbol
-        return Symbol(s, real=True)
-    elif isinstance(s, Symbol):
-        return s
-    else:
-        raise ValueError('symbol must be string for symbol name or Symbol')
-
-
-def _uniquely_named_symbol(xname, *exprs):
-    """Return a symbol which, when printed, will have a name unique
-    from any other already in the expressions given. The name is made
-    unique by prepending underscores.
-    """
-    prefix = '%s'
-    x = prefix % xname
-    syms = set().union(*[e.free_symbols for e in exprs])
-    while any(x == str(s) for s in syms):
-        prefix = '_' + prefix
-        x = prefix % xname
-    return _symbol(x)
 
 
 def are_coplanar(*e):
@@ -418,7 +364,7 @@ def convex_hull(*args, **kwargs):
     from .polygon import Polygon
 
     polygon = kwargs.get('polygon', True)
-    p = set()
+    p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
             try:
@@ -655,7 +601,7 @@ def intersection(*entities, **kwargs):
     or else failures due to floating point issues may result.
 
     Case 1: When the keyword argument 'pairwise' is False (default value):
-    In this case, the functon returns a list of intersections common to
+    In this case, the function returns a list of intersections common to
     all entities.
 
     Case 2: When the keyword argument 'pairwise' is True:

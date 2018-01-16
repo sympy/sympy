@@ -137,10 +137,10 @@ if matchpy:
 
         Uncomment the lines to add integration capabilities of that module.
 
-        Currently, there are some issues with integrand_simplification, special_function,
-        derivative, miscellaneous_integration. Hence they are commented.
+        Currently, there are parsing issues with special_function,
+        derivative nad miscellaneous_integration. Hence they are commented.
         '''
-        #from sympy.integrals.rubi.rules.integrand_simplification import integrand_simplification
+        from sympy.integrals.rubi.rules.integrand_simplification import integrand_simplification
         from sympy.integrals.rubi.rules.linear_products import linear_products
         from sympy.integrals.rubi.rules.quadratic_products import quadratic_products
         from sympy.integrals.rubi.rules.binomial_products import binomial_products
@@ -198,7 +198,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
-    if isinstance(expr, int) or isinstance(expr, float) or (not expr.has(var)):
+    if isinstance(expr, int) or isinstance(expr, float):
         return S(expr)*var
 
     result = rubi.replace(Integral(expr, var))

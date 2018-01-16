@@ -164,24 +164,24 @@ class Routine(object):
         symbols = set([])
         for arg in arguments:
             if isinstance(arg, OutputArgument):
-                symbols.update(arg.expr.free_symbols)
+                symbols.update(arg.expr.free_symbols - arg.expr.atoms(Indexed))
             elif isinstance(arg, InputArgument):
                 input_symbols.add(arg.name)
             elif isinstance(arg, InOutArgument):
                 input_symbols.add(arg.name)
-                symbols.update(arg.expr.free_symbols)
+                symbols.update(arg.expr.free_symbols - arg.expr.atoms(Indexed))
             else:
                 raise ValueError("Unknown Routine argument: %s" % arg)
 
         for r in results:
             if not isinstance(r, Result):
                 raise ValueError("Unknown Routine result: %s" % r)
-            symbols.update(r.expr.free_symbols)
+            symbols.update(r.expr.free_symbols - r.expr.atoms(Indexed))
 
         local_symbols = set()
         for r in local_vars:
             if isinstance(r, Result):
-                symbols.update(r.expr.free_symbols)
+                symbols.update(r.expr.free_symbols - r.expr.atoms(Indexed))
                 local_symbols.add(r.name)
             else:
                 local_symbols.add(r)
@@ -627,6 +627,8 @@ class CodeGen(object):
             if isinstance(symbol, Idx):
                 new_symbols.remove(symbol)
                 new_symbols.update(symbol.args[1].free_symbols)
+            if isinstance(symbol, Indexed):
+                new_symbols.remove(symbol)
         symbols = new_symbols
 
         # Decide whether to use output argument or return value
@@ -1134,7 +1136,7 @@ class FCodeGen(CodeGen):
             elif isinstance(arg, OutputArgument):
                 typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
             else:
-                raise CodeGenError("Unkown Argument type: %s" % type(arg))
+                raise CodeGenError("Unknown Argument type: %s" % type(arg))
 
             fprint = self._get_symbol
 
@@ -1315,7 +1317,7 @@ class JuliaCodeGen(CodeGen):
         for s in old_symbols:
             if isinstance(s, Idx):
                 symbols.update(s.args[1].free_symbols)
-            else:
+            elif not isinstance(s, Indexed):
                 symbols.add(s)
 
         # Julia supports multiple return values
@@ -1527,7 +1529,7 @@ class OctaveCodeGen(CodeGen):
         for s in old_symbols:
             if isinstance(s, Idx):
                 symbols.update(s.args[1].free_symbols)
-            else:
+            elif not isinstance(s, Indexed):
                 symbols.add(s)
 
         # Octave supports multiple return values
@@ -1755,7 +1757,7 @@ class RustCodeGen(CodeGen):
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = expressions.free_symbols - local_vars - global_vars - expressions.atoms(Indexed)
 
         # Rust supports multiple return values
         return_vals = []
@@ -1943,7 +1945,7 @@ class RustCodeGen(CodeGen):
 
 
 
-def get_code_generator(language, project=None, standard=None):
+def get_code_generator(language, project=None, standard=None, printer = None):
     if language == 'C':
         if standard is None:
             pass
@@ -1957,7 +1959,7 @@ def get_code_generator(language, project=None, standard=None):
                     "RUST": RustCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
-    return CodeGenClass(project)
+    return CodeGenClass(project, printer)
 
 
 #
@@ -1967,7 +1969,7 @@ def get_code_generator(language, project=None, standard=None):
 
 def codegen(name_expr, language=None, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None, standard=None, code_gen=None):
+            global_vars=None, standard=None, code_gen=None, printer = None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -2012,7 +2014,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
         CodeGenError is raised if required arguments are missing.
         Redundant arguments are used without warning.  If omitted,
         arguments will be ordered alphabetically, but with all input
-        aguments first, and then output or in-out arguments.
+        arguments first, and then output or in-out arguments.
 
     global_vars : iterable, optional
         Sequence of global variables used by the routine.  Variables
@@ -2101,7 +2103,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     else:
         if code_gen is not None:
             raise ValueError("You cannot specify both language and code_gen.")
-        code_gen = get_code_generator(language, project, standard)
+        code_gen = get_code_generator(language, project, standard, printer)
 
     if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.

@@ -31,7 +31,7 @@ from sympy.polys.domains import QQ
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.utilities import lambdify, public
+from sympy.utilities import lambdify, public, sift
 
 from sympy.core.compatibility import range
 
@@ -272,7 +272,6 @@ class ComplexRootOf(RootOf):
 
     @classmethod
     def _separate_imaginary_from_complex(cls, complexes):
-        from sympy.utilities.iterables import sift
 
         def is_imag(c):
             '''

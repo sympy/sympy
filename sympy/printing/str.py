@@ -104,7 +104,9 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_Derivative(self, expr, *args, **kwargs):
-        return 'Derivative(%s)' % ", ".join(map(lambda arg: self._print(arg, *args, **kwargs), expr.args))
+        dexpr = expr.expr
+        dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
+        return 'Derivative(%s)' % ", ".join(map(lambda arg: self._print(arg, *args, **kwargs), [dexpr] + dvars))
 
     def _print_dict(self, d, *args, **kwargs):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -119,16 +121,14 @@ class StrPrinter(Printer):
     def _print_Dict(self, expr, *args, **kwargs):
         return self._print_dict(expr, *args, **kwargs)
 
-
     def _print_RandomDomain(self, d, *args, **kwargs):
-        try:
+        if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean(), *args, **kwargs)
-        except Exception:
-            try:
-                return ('Domain: ' + self._print(d.symbols, *args, **kwargs) + ' in ' +
-                        self._print(d.set, *args, **kwargs))
-            except:
-                return 'Domain on ' + self._print(d.symbols, *args, **kwargs)
+        elif hasattr(d, 'set'):
+            return ('Domain: ' + self._print(d.symbols, *args, **kwargs) + ' in ' +
+                    self._print(d.set, *args, **kwargs))
+        else:
+            return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr, *args, **kwargs):
         return '_' + expr.name
@@ -195,15 +195,8 @@ class StrPrinter(Printer):
         return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i, *args, **kwargs):
-        left = '<'
-        right = '>'
-
-        return "%s%s, %s%s" % (
-            left,
-            self._print(i.min, *args, **kwargs),
-            self._print(i.max, *args, **kwargs),
-            right
-        )
+        return "AccumBounds(%s, %s)" % (self._print(i.min, *args, **kwargs),
+                                        self._print(i.max, *args, **kwargs))
 
     def _print_Inverse(self, I, *args, **kwargs):
         return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
@@ -339,6 +332,9 @@ class StrPrinter(Printer):
                 return 'O(%s)' % self.stringify((expr.expr,) + expr.variables, ', ', 0)
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
+
+    def _print_Ordinal(self, expr, *args, **kwargs):
+        return expr.__str__()
 
     def _print_Cycle(self, expr, *args, **kwargs):
         return expr.__str__()
@@ -718,6 +714,11 @@ class StrPrinter(Printer):
 
     def _print_Quantity(self, expr, *args, **kwargs):
         return "%s" % expr.name
+
+    def _print_Quaternion(self, expr, *args, **kwargs):
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_Dimension(self, expr, *args, **kwargs):
         return str(expr)

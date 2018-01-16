@@ -49,3 +49,9 @@ def test_homomorphism():
     assert T.is_injective()
     assert not T.is_isomorphism()
     assert T.invert(p**3) == p**3
+
+    T2 = homomorphism(F, P, [F.generators[0]], P.generators)
+    T = T.compose(T2)
+    assert T.domain == F
+    assert T.codomain == D
+    assert T(a*b) == p

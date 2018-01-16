@@ -13,6 +13,19 @@ from .singleton import S
 from inspect import getmro
 
 
+def as_Basic(expr):
+    """Return expr as a Basic instance using strict sympify
+    or raise a TypeError; this is just a wrapper to _sympify,
+    raising a TypeError instead of a SympifyError."""
+    from sympy.utilities.misc import func_name
+    try:
+        return _sympify(expr)
+    except SympifyError:
+        raise TypeError(
+            'Argument must be a Basic object, not `%s`' % func_name(
+            expr))
+
+
 class Basic(with_metaclass(ManagedProperties)):
     """
     Base class for all objects in SymPy.
@@ -77,6 +90,8 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Matrix = False
     is_Vector = False
     is_Point = False
+    is_MatAdd = False
+    is_MatMul = False
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -305,11 +320,6 @@ class Basic(with_metaclass(ManagedProperties)):
             return True
 
         if type(self) is not type(other):
-            # issue 6100 a**1.0 == a like a**2.0 == a**2
-            if isinstance(self, Pow) and self.exp == 1:
-                return self.base == other
-            if isinstance(other, Pow) and other.exp == 1:
-                return self == other.base
             try:
                 other = _sympify(other)
             except SympifyError:
@@ -487,6 +497,10 @@ class Basic(with_metaclass(ManagedProperties)):
         return set().union(*[a.free_symbols for a in self.args])
 
     @property
+    def expr_free_symbols(self):
+        return set([])
+
+    @property
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
         ``self.variables`` as underscore-suffixed numbers
@@ -506,7 +520,7 @@ class Basic(with_metaclass(ManagedProperties)):
         if not hasattr(self, 'variables'):
             return {}
         u = "_"
-        while any(s.name.endswith(u) for s in self.free_symbols):
+        while any(str(s).endswith(u) for s in self.free_symbols):
             u += "_"
         name = '%%i%s' % u
         V = self.variables
@@ -586,12 +600,13 @@ class Basic(with_metaclass(ManagedProperties)):
         is_real = self.is_real
         if is_real is False:
             return False
-        is_number = self.is_number
-        if is_number is False:
+        if not self.is_number:
             return False
+        # don't re-eval numbers that are already evaluated since
+        # this will create spurious precision
         n, i = [p.evalf(2) if not p.is_Number else p
             for p in self.as_real_imag()]
-        if not i.is_Number or not n.is_Number:
+        if not (i.is_Number and n.is_Number):
             return False
         if i:
             # if _prec = 1 we can't decide and if not,

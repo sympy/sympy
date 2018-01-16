@@ -15,7 +15,7 @@ import sys
 import sympy
 
 # If your extensions are in another directory, add it here.
-sys.path = ['../sympy', 'ext'] + sys.path
+sys.path = ['ext'] + sys.path
 
 # General configuration
 # ---------------------
@@ -44,7 +44,7 @@ suppress_warnings = ['ref.citation', 'ref.footnote']
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2017 SymPy Development Team'
+copyright = '2018 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

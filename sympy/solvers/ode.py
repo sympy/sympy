@@ -364,6 +364,9 @@ def sub_func_doit(eq, func, new):
         repu[u] = d.subs(func, new).doit()
         reps[d] = u
 
+    # Make sure that expressions such as ``Derivative(f(x), (x, 2))`` get
+    # replaced before ``Derivative(f(x), x)``:
+    reps = sorted(reps.items(), key=lambda x: -x[0].derivative_count)
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
@@ -566,7 +569,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='1st_exact')
     [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [Eq(f(x), -acos(C1/sqrt(-cos(x)**2)) + 2*pi), Eq(f(x), acos(C1/sqrt(-cos(x)**2)))]
+    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
@@ -664,7 +667,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
-    differential equations. This minimises the computation in calling
+    differential equations. This minimizes the computation in calling
     :py:meth:`~sympy.solvers.deutils._desolve` multiple times.
     """
     r = match
@@ -971,7 +974,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     d = Wild('d', exclude=[df, f(x).diff(x, 2)])
     e = Wild('e', exclude=[df])
     k = Wild('k', exclude=[df])
-    n = Wild('n', exclude=[f(x)])
+    n = Wild('n', exclude=[x, f(x), df])
     c1 = Wild('c1', exclude=[x])
     a2 = Wild('a2', exclude=[x, f(x), df])
     b2 = Wild('b2', exclude=[x, f(x), df])
@@ -2194,7 +2197,7 @@ def odesimp(eq, func, order, constants, hint):
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When CRootOf is implemented in solve(), we will want to return a CRootOf
-    # everytime instead of an Equality.
+    # every time instead of an Equality.
 
     # Get the f(x) on the left if possible.
     if eq.rhs == func and not eq.lhs.has(func):
@@ -2270,7 +2273,7 @@ def odesimp(eq, func, order, constants, hint):
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
                 newi = logcombine(eqi, force=True)
-                if newi.lhs.func is log and newi.rhs == 0:
+                if isinstance(newi.lhs, log) and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
@@ -2319,12 +2322,12 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     This function returns a tuple.  The first item in the tuple is ``True`` if
     the substitution results in ``0``, and ``False`` otherwise. The second
     item in the tuple is what the substitution results in.  It should always
-    be ``0`` if the first item is ``True``. Note that sometimes this function
-    will ``False``, but with an expression that is identically equal to ``0``,
-    instead of returning ``True``.  This is because
-    :py:meth:`~sympy.simplify.simplify.simplify` cannot reduce the expression
-    to ``0``.  If an expression returned by this function vanishes
-    identically, then ``sol`` really is a solution to ``ode``.
+    be ``0`` if the first item is ``True``. Sometimes this function will
+    return ``False`` even when an expression is identically equal to ``0``.
+    This happens when :py:meth:`~sympy.simplify.simplify.simplify` does not
+    reduce the expression to ``0``.  If an expression returned by this
+    function vanishes identically, then ``sol`` really is a solution to
+    the ``ode``.
 
     If this function seems to hang, it is probably because of a hard
     simplification.
@@ -2653,7 +2656,7 @@ def __remove_linear_redundancies(expr, Cs):
     Cs = [i for i in Cs if cnts[i] > 0]
 
     def _linear(expr):
-        if expr.func is Add:
+        if isinstance(expr, Add):
             xs = [i for i in Cs if expr.count(i)==cnts[i] \
                 and 0 == expr.diff(i, 2)]
             d = {}
@@ -2675,10 +2678,10 @@ def __remove_linear_redundancies(expr, Cs):
         expr = _linear(expr)
         return expr
 
-    if expr.func is Equality:
+    if isinstance(expr, Equality):
         lhs, rhs = [_recursive_walk(i) for i in expr.args]
         f = lambda i: isinstance(i, Number) or i in Cs
-        if lhs.func is Symbol and lhs in Cs:
+        if isinstance(lhs, Symbol) and lhs in Cs:
             rhs, lhs = lhs, rhs
         if lhs.func in (Add, Symbol) and rhs.func in (Add, Symbol):
             dlhs = sift([lhs] if isinstance(lhs, AtomicExpr) else lhs.args, f)
@@ -2792,7 +2795,9 @@ def constantsimp(expr, constants):
         rexpr = rexpr[0]
         for s in commons:
             cs = list(s[1].atoms(Symbol))
-            if len(cs) == 1 and cs[0] in Cs:
+            if len(cs) == 1 and cs[0] in Cs and \
+                cs[0] not in rexpr.atoms(Symbol) and \
+                not any(cs[0] in ex for ex in commons if ex != s):
                 rexpr = rexpr.subs(s[0], cs[0])
             else:
                 rexpr = rexpr.subs(*s)
@@ -2809,10 +2814,10 @@ def constantsimp(expr, constants):
             infac = False
             asfac = False
             for m in new_expr.args:
-                if m.func is exp:
+                if isinstance(m, exp):
                     asfac = True
                 elif m.is_Add:
-                    infac = any(fi.func is exp for t in m.args
+                    infac = any(isinstance(fi, exp) for t in m.args
                         for fi in Mul.make_args(t))
                 if asfac and infac:
                     new_expr = expr
@@ -3539,12 +3544,12 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
     >>> sol = dsolve(genform, y)
     >>> pprint(sol, wrap_line=False)
-                                             /        __________________       \
-                       __________________    |       /                2        |
-                      /                2     |     \/  4*b*d - (a + c)  *log(x)|
-           -a - c + \/  4*b*d - (a + c)  *tan|C1 + ----------------------------|
-                                             \                 2*a             /
-    f(x) = ---------------------------------------------------------------------
+            /                                 /        __________________       \\
+            |           __________________    |       /                2        ||
+            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
+           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
+            \                                 \                 2*a             //
+    f(x) = ------------------------------------------------------------------------
                                             2*b*x
 
     >>> checkodesol(genform, sol, order=1)[0]
@@ -4000,11 +4005,12 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) \
-                    or f == func):
-                return None
-            else:
+            if isinstance(f, Derivative) and set(f.variables) == one_x:
+                terms[f.derivative_count] += c
+            elif f == func:
                 terms[len(f.args[1:])] += c
+            else:
+                return None
     return terms
 
 
@@ -4616,7 +4622,7 @@ def ode_1st_power_series(eq, func, order, match):
     if not h:
         return Eq(f(x), value)
 
-    # Initialisation
+    # Initialization
     series = value
     if terms > 1:
         hc = h.subs({x: point, y: value})
@@ -5215,17 +5221,17 @@ def _solve_variation_of_parameters(eq, func, order, match):
         wr = simplify(wr)  # We need much better simplification for
                            # some ODEs. See issue 4662, for example.
 
-        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
+        # To reduce commonly occurring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly
         # independent.
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply " +
+        " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " + str(eq) + " (Wronskian == 0)")
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply " +
+        " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " +
         str(eq) + " (number of terms != order)")
     negoneterm = (-1)**(order)
@@ -5406,7 +5412,7 @@ def ode_lie_group(eq, func, order, match):
                  \frac{\partial r}{\partial x} + h(x, y)\frac{\partial r}{\partial y}}
 
     After finding the solution by integration, it is then converted back to the original
-    coordinate system by subsituting `r` and `s` in terms of `x` and `y` again.
+    coordinate system by substituting `r` and `s` in terms of `x` and `y` again.
 
     Examples
     ========
@@ -5992,7 +5998,7 @@ def lie_heuristic_bivariate(match, comp=False):
 def lie_heuristic_chi(match, comp=False):
     r"""
     The aim of the fourth heuristic is to find the function `\chi(x, y)`
-    that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
+    that satisfies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
     - \frac{\partial h}{\partial y}\chi = 0`.
 
     This assumes `\chi` to be a bivariate polynomial in `x` and `y`. By intution,
@@ -6579,7 +6585,7 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
 
     .. math:: y = C_1 (\lambda_1 - a) e^{\lambda_1 t} + C_2 (\lambda_2 - a) e^{\lambda_2 t}
 
-    where `C_1` and `C_2` being arbitary constants
+    where `C_1` and `C_2` being arbitrary constants
 
     1.2. If `D < 0`. The characteristics equation has two conjugate
     roots, `\lambda_1 = \sigma + i \beta` and `\lambda_2 = \sigma - i \beta`.
@@ -6605,7 +6611,7 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
     .. math:: x = (b C_1 t + C_2) e^{a t} , y = C_1 e^{a t}
 
     2. Case when `ad - bc = 0` and `a^{2} + b^{2} > 0`. The whole straight
-    line `ax + by = 0` consists of singular points. The orginal system of differential
+    line `ax + by = 0` consists of singular points. The original system of differential
     equaitons can be rewritten as
 
     .. math:: x' = ax + by , y' = k (ax + by)
@@ -6730,7 +6736,7 @@ def _linear_2eq_order1_type3(x, y, t, r, eq):
 
     .. math:: x = e^{F} (C_1 e^{G} + C_2 e^{-G}) , y = e^{F} (C_1 e^{G} - C_2 e^{-G})
 
-    where `C_1` and `C_2` are arbitary constants, and
+    where `C_1` and `C_2` are arbitrary constants, and
 
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
@@ -6754,7 +6760,7 @@ def _linear_2eq_order1_type4(x, y, t, r, eq):
 
     .. math:: x = F (C_1 \cos(G) + C_2 \sin(G)), y = F (-C_1 \sin(G) + C_2 \cos(G))
 
-    where `C_1` and `C_2` are arbitary constants, and
+    where `C_1` and `C_2` are arbitrary constants, and
 
     .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
 
@@ -6889,7 +6895,7 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
 
     .. math:: y = C_1 y_0(t) + C_2 [\frac{F(t) P(t)}{x_0(t)} + y_0(t) \int \frac{g(t) F(t) P(t)}{x_0^{2}(t)} \,dt]
 
-    where C1 and C2 are arbitary constants and
+    where C1 and C2 are arbitrary constants and
 
     .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
 
@@ -6996,7 +7002,7 @@ def _linear_2eq_order2_type1(x, y, t, r, eq):
 
     .. math:: y = C_1 (\lambda_1^{2} - a) e^{\lambda_1 t} + C_2 (\lambda_2^{2} - a) e^{\lambda_2 t} + C_3 (\lambda_3^{2} - a) e^{\lambda_3 t} + C_4 (\lambda_4^{2} - a) e^{\lambda_4 t}
 
-    where `C_1,..., C_4` are arbitary constants.
+    where `C_1,..., C_4` are arbitrary constants.
 
     1.2. If `D = 0` and `a \neq d`:
 
@@ -7004,7 +7010,7 @@ def _linear_2eq_order2_type1(x, y, t, r, eq):
 
     .. math:: y = C_1 (d - a) t e^{\frac{kt}{2}} + C_2 (d - a) t e^{\frac{-kt}{2}} + C_3 [(d - a) t + 2k] e^{\frac{kt}{2}} + C_4 [(d - a) t - 2k] e^{\frac{-kt}{2}}
 
-    where `C_1,..., C_4` are arbitary constants and `k = \sqrt{2 (a + d)}`
+    where `C_1,..., C_4` are arbitrary constants and `k = \sqrt{2 (a + d)}`
 
     1.3. If `D = 0` and `a = d \neq 0` and `b = 0`:
 
@@ -7239,7 +7245,7 @@ def _linear_2eq_order2_type4(x, y, t, r, eq):
 
 def _linear_2eq_order2_type5(x, y, t, r, eq):
     r"""
-    The equation which come under this catagory are
+    The equation which come under this category are
 
     .. math:: x'' = a (t y' - y)
 
@@ -7267,7 +7273,7 @@ def _linear_2eq_order2_type5(x, y, t, r, eq):
 
     .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\frac{1}{2} \sqrt{\left|ab\right|} t^2) + C_2 \sqrt{\left|ab\right|} \cos(-\frac{1}{2} \sqrt{\left|ab\right|} t^2)
 
-    where `C_1` and `C_2` are arbitary constants. On substituting the value of `u` and `v`
+    where `C_1` and `C_2` are arbitrary constants. On substituting the value of `u` and `v`
     in above equations and integrating the resulting expressions, the general solution will become
 
     .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
@@ -7380,7 +7386,7 @@ def _linear_2eq_order2_type7(x, y, t, r, eq):
 
 def _linear_2eq_order2_type8(x, y, t, r, eq):
     r"""
-    The equation of this catagory are
+    The equation of this category are
 
     .. math:: x'' = a f(t) (t y' - y)
 
@@ -7408,7 +7414,7 @@ def _linear_2eq_order2_type8(x, y, t, r, eq):
 
     .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\sqrt{\left|ab\right|} \int t f(t) \,dt) + C_2 \sqrt{\left|ab\right|} \cos(-\sqrt{\left|ab\right|} \int t f(t) \,dt)
 
-    where `C_1` and `C_2` are arbitary constants. On substituting the value of `u` and `v`
+    where `C_1` and `C_2` are arbitrary constants. On substituting the value of `u` and `v`
     in above equations and integrating the resulting expressions, the general solution will become
 
     .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
@@ -7493,7 +7499,7 @@ def _linear_2eq_order2_type9(x, y, t, r, eq):
 
 def _linear_2eq_order2_type10(x, y, t, r, eq):
     r"""
-    The equation of this catagory are
+    The equation of this category are
 
     .. math:: (\alpha t^2 + \beta t + \gamma)^{2} x'' = ax + by
 
@@ -7693,7 +7699,7 @@ def _linear_3eq_order1_type3(x, y, z, t, r, eq):
 
     .. math:: a^2 x + b^2 y + c^2 z = A
 
-    where A is an arbitary constant. It follows that the integral lines are plane curves.
+    where A is an arbitrary constant. It follows that the integral lines are plane curves.
 
     2. Solution:
 
@@ -7787,7 +7793,7 @@ def _linear_neq_order1_type1(match_):
     .. math:: r \vec{v} = A \vec{v}
 
     where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
-    of `A` corresponding to `r`. There are three possiblities of eigenvalues of `A`
+    of `A` corresponding to `r`. There are three possibilities of eigenvalues of `A`
 
     - `n` distinct real eigenvalues
     - complex conjugate eigenvalues
@@ -8191,19 +8197,11 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
     x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
     y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
-    try:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x).rhs
-    except:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x, hint='separable_Integral')
-    try:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y).rhs
-    except:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y, hint='separable_Integral')
-    try:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z).rhs
-    except:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z, hint='separable_Integral')
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x)
+    sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y)
+    sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z)
+    return [sol1, sol2, sol3]
+
 
 def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     r"""
@@ -8255,19 +8253,10 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
     x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
     y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
-    try:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f]).rhs
-    except:
-        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f], hint='separable_Integral')
-    try:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f]).rhs
-    except:
-        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f], hint='separable_Integral')
-    try:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f]).rhs
-    except:
-        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f])
+    sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f])
+    sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f])
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     r"""
@@ -8326,7 +8315,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     sol1 = dsolve(diff(u(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     r"""
@@ -8385,7 +8374,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     sol1 = dsolve(diff(u(t),t) - (c*w*F2 - b*v*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (a*u*F3 - c*w*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (b*v*F1 - a*u*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type5(x, y, t, eq):
     r"""
@@ -8435,4 +8424,4 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol1 = dsolve(diff(u(t),t) - (u*(c*F2-b*F3)).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+    return [sol1, sol2, sol3]

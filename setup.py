@@ -21,7 +21,7 @@ In addition, there are some other commands:
     python setup.py bench -> will run the complete benchmark suite
     python setup.py audit -> will run pyflakes checker on source code
 
-To get a full list of avaiable commands, read the output of:
+To get a full list of available commands, read the output of:
 
     python setup.py --help-commands
 
@@ -45,8 +45,15 @@ extra_kwargs = {}
 try:
     from setuptools import setup, Command
     extra_kwargs['zip_safe'] = False
+    extra_kwargs['entry_points'] = {
+        'console_scripts': [
+            'isympy = isympy:main',
+        ]
+    }
 except ImportError:
     from distutils.core import setup, Command
+
+    extra_kwargs['scripts'] = ['bin/isympy']
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
@@ -62,14 +69,16 @@ except ImportError:
 PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2, 7):
-    print("SymPy requires Python 2.7 or newer. Python %d.%d detected"
+if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
+    (sys.version_info[0] == 3 and sys.version_info[1] < 4)):
+    print("SymPy requires Python 2.7 or 3.4 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_module_list.py
 modules = [
+    'sympy.algebras',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',
@@ -267,6 +276,7 @@ class run_benchmarks(Command):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
+    'sympy.algebras.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
@@ -347,8 +357,8 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='http://sympy.org',
+          py_modules = ['isympy'],
           packages=['sympy'] + modules + tests,
-          scripts=['bin/isympy'],
           ext_modules=[],
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
@@ -369,11 +379,11 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.2',
-            'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: Implementation :: CPython',
+            'Programming Language :: Python :: Implementation :: PyPy',
             ],
           install_requires=['mpmath>=%s' % mpmath_version],
           **extra_kwargs

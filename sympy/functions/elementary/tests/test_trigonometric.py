@@ -6,6 +6,8 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         AccumBounds)
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.core.relational import Ne, Eq
+from sympy.functions.elementary.piecewise import Piecewise
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -89,7 +91,7 @@ def test_sin():
 
     assert sin(pi/8) == sqrt((2 - sqrt(2))/4)
 
-    assert sin(pi/10) == -1/4 + sqrt(5)/4
+    assert sin(pi/10) == -S(1)/4 + sqrt(5)/4
 
     assert sin(pi/12) == -sqrt(2)/4 + sqrt(6)/4
     assert sin(5*pi/12) == sqrt(2)/4 + sqrt(6)/4
@@ -638,7 +640,7 @@ def test_cot_series():
 def test_cot_rewrite():
     neg_exp, pos_exp = exp(-x*I), exp(x*I)
     assert cot(x).rewrite(exp) == I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
-    assert cot(x).rewrite(sin) == 2*sin(2*x)/sin(x)**2
+    assert cot(x).rewrite(sin) == sin(2*x)/(2*(sin(x)**2))
     assert cot(x).rewrite(cos) == cos(x)/cos(x - pi/2, evaluate=False)
     assert cot(x).rewrite(tan) == 1/tan(x)
     assert cot(sinh(x)).rewrite(
@@ -712,7 +714,7 @@ def test_sinc():
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 
     assert sinc(x).rewrite(jn) == jn(0, x)
-    assert sinc(x).rewrite(sin) == sin(x) / x
+    assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))
 
 
 def test_asin():
@@ -938,7 +940,7 @@ def test_acot():
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
     assert acot(x).is_positive is None
-    assert acot(r).is_positive is True
+    assert acot(n).is_positive is False
     assert acot(p).is_positive is True
     assert acot(I).is_positive is False
 
@@ -1528,6 +1530,35 @@ def test_trig_period():
     assert tan(3*x).period(y) == S.Zero
     raises(NotImplementedError, lambda: sin(x**2).period(x))
 
+
 def test_issue_7171():
     assert sin(x).rewrite(sqrt) == sin(x)
     assert sin(x).rewrite(pow) == sin(x)
+
+
+def test_issue_11864():
+    w, k = symbols('w, k', real=True)
+    F = Piecewise((1, Eq(2*pi*k, 0)), (sin(pi*k)/(pi*k), True))
+    soln = Piecewise((1, Eq(2*pi*k, 0)), (sinc(pi*k), True))
+    assert F.rewrite(sinc) == soln
+
+def test_real_assumptions():
+    z = Symbol('z', real=False)
+    assert sin(z).is_real is None
+    assert cos(z).is_real is None
+    assert tan(z).is_real is False
+    assert sec(z).is_real is None
+    assert csc(z).is_real is None
+    assert cot(z).is_real is False
+    assert asin(p).is_real is None
+    assert asin(n).is_real is None
+    assert asec(p).is_real is None
+    assert asec(n).is_real is None
+    assert acos(p).is_real is None
+    assert acos(n).is_real is None
+    assert acsc(p).is_real is None
+    assert acsc(n).is_real is None
+    assert atan(p).is_positive is True
+    assert atan(n).is_negative is True
+    assert acot(p).is_positive is True
+    assert acot(n).is_negative is True

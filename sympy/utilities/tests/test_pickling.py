@@ -41,9 +41,7 @@ def check(a, exclude=[], check_attr=True):
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
     if sys.version_info >= (3,):
-        protocols.extend([3])
-    if sys.version_info >= (3, 4):
-        protocols.extend([4])
+        protocols.extend([3, 4])
     if cloudpickle:
         protocols.extend([cloudpickle])
 
@@ -103,6 +101,12 @@ def test_core_symbol():
 def test_core_numbers():
     for c in (Integer(2), Rational(2, 3), Float("1.2")):
         check(c)
+
+
+def test_core_float_copy():
+    # See gh-7457
+    y = Symbol("x") + 1.0
+    check(y)  # does not raise TypeError ("argument is not an mpz")
 
 
 def test_core_relational():
@@ -169,9 +173,7 @@ def test_core_multidimensional():
 def test_Singletons():
     protocols = [0, 1, 2]
     if sys.version_info >= (3,):
-        protocols.extend([3])
-    if sys.version_info >= (3, 4):
-        protocols.extend([4])
+        protocols.extend([3, 4])
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]

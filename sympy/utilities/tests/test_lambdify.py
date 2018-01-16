@@ -1,3 +1,4 @@
+from distutils.version import LooseVersion as V
 from itertools import product
 import math
 
@@ -302,7 +303,7 @@ def test_math():
 
 def test_sin():
     f = lambdify(x, sin(x)**2)
-    assert isinstance(f(2), (float, mpmath.ctx_mp_python.mpf))
+    assert isinstance(f(2), float)
     f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)
 
@@ -390,10 +391,6 @@ def test_issue9474():
         f = lambdify(x, floor(sympy.S(1)/x), modules=mod)
         assert f(2) == 0
 
-    if mpmath:
-        f = lambdify(x, sympy.S(1)/sympy.Abs(x), modules=['mpmath'])
-        assert isinstance(f(2), mpmath.mpf)
-
     for absfunc, modules in product([Abs, abs], mods):
         f = lambdify(x, absfunc(x), modules=modules)
         assert f(-1) == 1
@@ -436,12 +433,17 @@ def test_numpy_logical_ops():
     if not numpy:
         skip("numpy not installed.")
     and_func = lambdify((x, y), And(x, y), modules="numpy")
+    and_func_3 = lambdify((x, y, z), And(x, y, z), modules="numpy")
     or_func = lambdify((x, y), Or(x, y), modules="numpy")
+    or_func_3 = lambdify((x, y, z), Or(x, y, z), modules="numpy")
     not_func = lambdify((x), Not(x), modules="numpy")
     arr1 = numpy.array([True, True])
     arr2 = numpy.array([False, True])
+    arr3 = numpy.array([True, False])
     numpy.testing.assert_array_equal(and_func(arr1, arr2), numpy.array([False, True]))
+    numpy.testing.assert_array_equal(and_func_3(arr1, arr2, arr3), numpy.array([False, False]))
     numpy.testing.assert_array_equal(or_func(arr1, arr2), numpy.array([True, True]))
+    numpy.testing.assert_array_equal(or_func_3(arr1, arr2, arr3), numpy.array([True, True]))
     numpy.testing.assert_array_equal(not_func(arr2), numpy.array([True, False]))
 
 def test_numpy_matmul():
@@ -510,7 +512,10 @@ def test_tensorflow_variables():
     func = lambdify(x, expr, modules="tensorflow")
     a = tensorflow.Variable(0, dtype=tensorflow.float32)
     s = tensorflow.Session()
-    s.run(tensorflow.initialize_all_variables())
+    if V(tensorflow.__version__) < '1.0':
+        s.run(tensorflow.initialize_all_variables())
+    else:
+        s.run(tensorflow.global_variables_initializer())
     assert func(a).eval(session=s) == 0.5
 
 def test_tensorflow_logical_operations():

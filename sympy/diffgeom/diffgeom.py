@@ -874,10 +874,6 @@ class TensorProduct(Expr):
         multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, fields)]
         return TensorProduct(*multipliers)
 
-    def _latex(self, printer, *args):
-        elements = [printer._print(a) for a in self.args]
-        return r'\otimes'.join(elements)
-
 
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.
@@ -1130,7 +1126,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     param
         the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `\gamma(0)`
+        the point which corresponds to `\gamma(0)`
     n
         the order to which to expand
     coord_sys
@@ -1242,7 +1238,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     param
         the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `\gamma(0)`
+        the point which corresponds to `\gamma(0)`
     coord_sys
         the coordinate system in which to give the equations
 

@@ -128,7 +128,6 @@ def test_factorial():
     s = Symbol('s', integer=False, negative=True)
     t = Symbol('t', nonnegative=True)
     u = Symbol('u', noninteger=True)
-    v = Symbol('v', integer=True, negative=True)
 
     assert factorial(-2) == zoo
     assert factorial(0) == 1
@@ -162,7 +161,6 @@ def test_factorial():
     assert factorial(s).is_composite is None
     assert factorial(t).is_composite is None
     assert factorial(u).is_composite is None
-    assert factorial(v).is_composite is False
 
     assert factorial(oo) == oo
 
@@ -283,6 +281,8 @@ def test_binomial():
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
     nt = Symbol('nt', integer=False)
+    a = Symbol('a', integer=True, nonnegative=True)
+    b = Symbol('b', integer=True, nonnegative=True)
 
     assert binomial(0, 0) == 1
     assert binomial(1, 1) == 1
@@ -321,6 +321,9 @@ def test_binomial():
     assert binomial(nt, k).is_integer is None
     assert binomial(x, nt).is_integer is False
 
+    assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
+
+    assert binomial(a, b).is_nonnegative is True
 
 def test_binomial_diff():
     n = Symbol('n', integer=True)

@@ -45,7 +45,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group, sift, public
+from sympy.utilities import group, sift, public, filldedent
 
 import sympy.polys
 import mpmath
@@ -56,8 +56,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable, range
-
+from sympy.core.compatibility import iterable, range, ordered
 
 @public
 class Poly(Expr):
@@ -3073,6 +3072,41 @@ class Poly(Expr):
 
         return [(f.per(g), k) for g, k in result]
 
+    def norm(f):
+        """
+        Computes the product, ``Norm(f)``, of the conjugates of
+        a polynomial ``f`` defined over a number field ``K``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
+        >>> from sympy.abc import x
+
+        >>> a, b = sqrt(2), sqrt(3)
+
+        A polynomial over a quadratic extension.
+        Two conjugates x - a and x + a.
+
+        >>> f = Poly(x - a, x, extension=a)
+        >>> f.norm()
+        Poly(x**2 - 2, x, domain='QQ')
+
+        A polynomial over a quartic extension.
+        Four conjugates x - a, x - a, x + a and x + a.
+
+        >>> f = Poly(x - a, x, extension=(a, b))
+        >>> f.norm()
+        Poly(x**4 - 4*x**2 + 4, x, domain='QQ')
+
+        """
+        if hasattr(f.rep, 'norm'):
+            r = f.rep.norm()
+        else:  # pragma: no cover
+            raise OperationNotSupported(f, 'norm')
+
+        return f.per(r)
+
     def sqf_norm(f):
         """
         Computes square-free norm of ``f``.
@@ -4426,8 +4460,67 @@ def degree(f, gen=0):
             p, _ = poly_from_expr(f.as_expr())
         if gen not in p.gens:
             return S.Zero
+    elif not f.is_Poly and len(f.free_symbols) > 1:
+        raise TypeError(filldedent('''
+         A symbolic generator of interest is required for a multivariate
+         expression like func = %s, e.g. degree(func, gen = %s) instead of
+         degree(func, gen = %s).
+        ''' % (f, next(ordered(f.free_symbols)), gen)))
 
     return Integer(p.degree(gen))
+
+
+@public
+def total_degree(f, *gens):
+    """
+    Return the total_degree of ``f`` in the given variables.
+
+    Examples
+    ========
+    >>> from sympy import total_degree, Poly
+    >>> from sympy.abc import x, y, z
+
+    >>> total_degree(1)
+    0
+    >>> total_degree(x + x*y)
+    2
+    >>> total_degree(x + x*y, x)
+    1
+
+    If the expression is a Poly and no variables are given
+    then the generators of the Poly will be used:
+
+    >>> p = Poly(x + x*y, y)
+    >>> total_degree(p)
+    1
+
+    To deal with the underlying expression of the Poly, convert
+    it to an Expr:
+
+    >>> total_degree(p.as_expr())
+    2
+
+    This is done automatically if any variables are given:
+
+    >>> total_degree(p, x)
+    1
+
+    See also
+    ========
+    degree
+    """
+
+    p = sympify(f)
+    if p.is_Poly:
+        p = p.as_expr()
+    if p.is_Number:
+        rv = 0
+    else:
+        if f.is_Poly:
+            gens = gens or f.gens
+        rv = Poly(p, gens).total_degree()
+
+    return Integer(rv)
 
 
 @public
@@ -5983,8 +6076,7 @@ def to_rational_coeffs(f):
                 func = c.func
             else:
                 args = [c]
-            sifted = sift(args, lambda z: z.is_rational)
-            c1, c2 = sifted[True], sifted[False]
+            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
             alpha = -func(*c2)/n
             f2 = f1.shift(alpha)
             return alpha, f2
@@ -6470,8 +6562,9 @@ def cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
-            c, nc = sifted[True], sifted[False]
+            c, nc = sift(f.args, lambda x:
+                x.is_commutative is True and not x.has(Piecewise),
+                binary=True)
             nc = [cancel(i) for i in nc]
             return f.func(cancel(f.func._from_args(c)), *nc)
         else:
@@ -6930,7 +7023,8 @@ def poly(expr, *gens, **args):
             for factor in Mul.make_args(term):
                 if factor.is_Add:
                     poly_factors.append(_poly(factor, opt))
-                elif factor.is_Pow and factor.base.is_Add and factor.exp.is_Integer:
+                elif factor.is_Pow and factor.base.is_Add and \
+                        factor.exp.is_Integer and factor.exp >= 0:
                     poly_factors.append(
                         _poly(factor.base, opt).pow(factor.exp))
                 else:

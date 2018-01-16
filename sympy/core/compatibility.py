@@ -294,11 +294,12 @@ def is_sequence(i, include=None):
 
 try:
     from itertools import zip_longest
-except ImportError: # <= Python 2.7
+except ImportError:  # Python 2.7
     from itertools import izip_longest as zip_longest
 
 
 try:
+    # Python 2.7
     from string import maketrans
 except ImportError:
     maketrans = str.maketrans
@@ -684,7 +685,7 @@ if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
 
 
-# lru_cache compatible with py2.6->py3.2 copied directly from
+# lru_cache compatible with py2.7 copied directly from
 #   http://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
@@ -863,6 +864,6 @@ if sys.version_info[:2] >= (3, 3):
 
 try:
     from itertools import filterfalse
-except ImportError:
+except ImportError:  # Python 2.7
     def filterfalse(pred, itr):
         return filter(lambda x: not pred(x), itr)

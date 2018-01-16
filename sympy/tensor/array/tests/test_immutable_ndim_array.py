@@ -2,6 +2,7 @@ from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy import Symbol, Rational, SparseMatrix, Dict, diff, symbols, Indexed, IndexedBase
+from sympy.core.compatibility import long
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
 from sympy.utilities.pytest import raises
@@ -56,6 +57,27 @@ def test_ndim_array_initiation():
     assert array_with_many_args.shape == shape
     assert array_with_many_args[0, 0] == 0
     assert array_with_many_args.rank() == 2
+
+    shape = (long(3), long(3))
+    array_with_long_shape = ImmutableSparseNDimArray.zeros(*shape)
+    assert len(array_with_long_shape) == 3 * 3
+    assert array_with_long_shape.shape == shape
+    assert array_with_long_shape[long(0), long(0)] == 0
+    assert array_with_long_shape.rank() == 2
+
+    vector_with_long_shape = ImmutableDenseNDimArray(range(5), long(5))
+    assert len(vector_with_long_shape) == 5
+    assert vector_with_long_shape.shape == (long(5),)
+    assert vector_with_long_shape.rank() == 1
+    raises(ValueError, lambda: vector_with_long_shape[long(5)])
+
+    from sympy.abc import x
+    rank_zero_array = ImmutableDenseNDimArray(x)
+    assert len(rank_zero_array) == 0
+    assert rank_zero_array.shape == ()
+    assert rank_zero_array.rank() == 0
+    assert rank_zero_array[()] == x
+    raises(ValueError, lambda: rank_zero_array[0])
 
 
 def test_reshape():

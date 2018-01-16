@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -376,13 +376,14 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, Expr) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a) for a in e.args])
+        return e.func(*[signsimp(a, evaluate) for a in e.args])
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
+    # type: (object, object, object, object) -> object
     """
     Simplifies the given expression.
 
@@ -504,6 +505,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
+
+    If rational=True, Floats will be recast as Rationals before simplification.
+    If rational=None, Floats will be recast as Rationals but the result will
+    be recast as Floats. If rational=False(default) then nothing will be done
+    to the Floats.
     """
     expr = sympify(expr)
 
@@ -526,8 +532,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
                isinstance(expr.args[0], expr.inverse(argindex=1)):
                 return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure, fu=fu)
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                                measure=measure, rational=rational)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
                          for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -540,6 +546,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
+
+    # rationalize Floats
+    floats = False
+    if rational is not False and expr.has(Float):
+        floats = True
+        expr = nsimplify(expr, rational=True)
 
     expr = bottom_up(expr, lambda w: w.normal())
     expr = Mul(*powsimp(expr).as_content_primitive())
@@ -564,14 +576,15 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
-    if expr.has(TrigonometricFunction) and not fu or expr.has(
-            HyperbolicFunction):
+    if expr.has(TrigonometricFunction, HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
     if expr.has(log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
     if expr.has(CombinatorialFunction, gamma):
+        # expression with gamma functions or non-integer arguments is
+        # automatically passed to gammasimp
         expr = combsimp(expr)
 
     if expr.has(Sum):
@@ -581,9 +594,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         expr = product_simplify(expr)
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+    short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
     if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
-        short = exptrigsimp(short, simplify=False)
+        short = exptrigsimp(short)
 
     # get rid of hollow 2-arg Mul factorization
     hollow_mul = Transform(
@@ -609,6 +623,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
+
+    # restore floats
+    if floats and rational is None:
+        expr = nfloat(expr, exponent=False)
 
     return expr
 
@@ -912,7 +930,7 @@ def logcombine(expr, force=False):
         logs = []
         log1 = defaultdict(list)
         for a in Add.make_args(rv):
-            if a.func is log and goodlog(a):
+            if isinstance(a, log) and goodlog(a):
                 log1[()].append(([], a))
             elif not a.is_Mul:
                 other.append(a)
@@ -924,7 +942,7 @@ def logcombine(expr, force=False):
                     if ai.is_Rational and ai < 0:
                         ot.append(S.NegativeOne)
                         co.append(-ai)
-                    elif ai.func is log and goodlog(ai):
+                    elif isinstance(ai, log) and goodlog(ai):
                         lo.append(ai)
                     elif gooda(ai):
                         co.append(ai)
@@ -955,7 +973,7 @@ def logcombine(expr, force=False):
                 li = l.pop(0)
                 e = log(li.args[0]**e)
             c, l = Mul(*o), e
-            if l.func is log:  # it should be, but check to be sure
+            if isinstance(l, log):  # it should be, but check to be sure
                 log1[(c,)].append(([], l))
             else:
                 other.append(c*l)
@@ -983,6 +1001,33 @@ def logcombine(expr, force=False):
         return Add(*other)
 
     return bottom_up(expr, f)
+
+
+def walk(e, *target):
+    """iterate through the args that are the given types (target) and
+    return a list of the args that were traversed; arguments
+    that are not of the specified types are not traversed.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import walk
+    >>> from sympy import Min, Max
+    >>> from sympy.abc import x, y, z
+    >>> list(walk(Min(x, Max(y, Min(1, z))), Min))
+    [Min(x, Max(y, Min(1, z)))]
+    >>> list(walk(Min(x, Max(y, Min(1, z))), Min, Max))
+    [Min(x, Max(y, Min(1, z))), Max(y, Min(1, z)), Min(1, z)]
+
+    See Also
+    ========
+    bottom_up
+    """
+    if isinstance(e, target):
+        yield e
+        for i in e.args:
+            for w in walk(i, *target):
+                yield w
 
 
 def bottom_up(rv, F, atoms=False, nonbasic=False):
@@ -1078,7 +1123,7 @@ def besselsimp(expr):
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) == S(1)/2:
-                return exptrigsimp(trigsimp(unpolarify(
+                return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))
             elif nu.is_Integer and nu > 1:

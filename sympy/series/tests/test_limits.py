@@ -55,6 +55,13 @@ def test_basic1():
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
+    # test bi-directional limits
+    assert limit(sin(x)/x, x, 0, dir="+-") == 1
+    assert limit(x**2, x, 0, dir="+-") == 0
+    assert limit(1/x**2, x, 0, dir="+-") == oo
+
+    # test failing bi-directional limits
+    raises(ValueError, lambda: limit(1/x, x, 0, dir="+-"))
     # approaching 0
     # from dir="+"
     assert limit(1 + 1/x, x, 0) == oo
@@ -115,6 +122,7 @@ def test_issue_10382():
 def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
     assert Limit(sin(x)/x, x, 0).doit() == 1
+    assert Limit(x, x, 0, dir='+-').args == (x, x, 0, Symbol('+-'))
 
 
 def test_floor():
@@ -505,3 +513,11 @@ def test_issue_6599():
 def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, -oo) == 2
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo
+
+def test_issue_12564():
+    assert limit(x**2 + x*sin(x) + cos(x), x, -oo) == oo
+    assert limit(x**2 + x*sin(x) + cos(x), x, oo) == oo
+    assert limit(((x + cos(x))**2).expand(), x, oo) == oo
+    assert limit(((x + sin(x))**2).expand(), x, oo) == oo
+    assert limit(((x + cos(x))**2).expand(), x, -oo) == oo
+    assert limit(((x + sin(x))**2).expand(), x, -oo) == oo

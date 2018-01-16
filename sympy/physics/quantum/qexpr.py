@@ -180,7 +180,7 @@ class QExpr(Expr):
         of arguments to be run through the constructor.
 
         NOTE: Any classes that override this MUST return a tuple of arguments.
-        Should be overidden by subclasses to specify the default arguments for kets and operators
+        Should be overridden by subclasses to specify the default arguments for kets and operators
         """
         raise NotImplementedError("No default arguments for this class!")
 
@@ -364,7 +364,7 @@ class QExpr(Expr):
             def _represent_Position(self, basis, **options):
 
         Usually, basis object will be instances of Operator subclasses, but
-        there is a chance we will relax this in the future to accomodate other
+        there is a chance we will relax this in the future to accommodate other
         types of basis sets that are not associated with an operator.
 
         If the ``format`` option is given it can be ("sympy", "numpy",

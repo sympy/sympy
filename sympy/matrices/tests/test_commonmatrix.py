@@ -200,6 +200,14 @@ def test_col_insert():
         l = [0, 0, 0]
         l.insert(i, 4)
         assert flatten(zeros_Shaping(3).col_insert(i, c4).row(0).tolist()) == l
+    # issue 13643
+    assert eye_Shaping(6).col_insert(3, Matrix([[2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2]])) == \
+           Matrix([[1, 0, 0, 2, 2, 0, 0, 0],
+                   [0, 1, 0, 2, 2, 0, 0, 0],
+                   [0, 0, 1, 2, 2, 0, 0, 0],
+                   [0, 0, 0, 2, 2, 1, 0, 0],
+                   [0, 0, 0, 2, 2, 0, 1, 0],
+                   [0, 0, 0, 2, 2, 0, 0, 1]])
 
 def test_extract():
     m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
@@ -665,6 +673,30 @@ def test_multiplication():
         assert c[0, 1] == 2*5
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
+
+def test_matmul():
+    a = Matrix([[1, 2], [3, 4]])
+
+    assert a.__matmul__(2) == NotImplemented
+
+    assert a.__rmatmul__(2) == NotImplemented
+
+    #This is done this way because @ is only supported in Python 3.5+
+    #To check 2@a case
+    try:
+        eval('2 @ a')
+    except SyntaxError:
+        pass
+    except TypeError:  #TypeError is raised in case of NotImplemented is returned
+        pass
+
+    #Check a@2 case
+    try:
+        eval('a @ 2')
+    except SyntaxError:
+        pass
+    except TypeError:  #TypeError is raised in case of NotImplemented is returned
+        pass
 
 def test_power():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
@@ -1300,9 +1332,11 @@ def test_singular_values():
 
 
 # CalculusOnlyMatrix tests
+@XFAIL
 def test_diff():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [x, y])
+    # TODO: currently not working as ``_MinimalMatrix`` cannot be sympified:
     assert m.diff(x) == Matrix(2, 1, [1, 0])
 
 def test_integrate():
@@ -1330,3 +1364,9 @@ def test_limit():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [1/x, y])
     assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])
+
+def test_issue_13774():
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    v = [1,1,1]
+    raises(TypeError, lambda: M*v)
+    raises(TypeError, lambda: v*M)

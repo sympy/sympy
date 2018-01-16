@@ -1,8 +1,10 @@
 from __future__ import division
-from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-        abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify, zoo, Subs, RootOf, AccumBounds)
+from sympy import (
+    Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
+    Integer, Eq, symbols, Add, I, Float, log, Rational,
+    Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
+    Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
+    AccumBounds, Matrix, zeros)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y, z
@@ -18,6 +20,14 @@ def test_subs():
     assert e == 2*x
     e = e.subs(x, n3)
     assert e == Rational(6)
+
+
+def test_subs_Matrix():
+    z = zeros(2)
+    assert (x*y).subs({x:z, y:0}) == z
+    assert (x*y).subs({y:z, x:0}) == 0
+    assert (x*y).subs({y:z, x:0}, simultaneous=True) == z
+    assert (x + y).subs({x: z, y: z}) == z
 
 
 def test_subs_AccumBounds():
@@ -155,7 +165,6 @@ def test_deriv_sub_bug3():
 
 def test_equality_subs1():
     f = Function('f')
-    x = abc.x
     eq = Eq(f(x)**2, x)
     res = Eq(Integer(16), x)
     assert eq.subs(f(x), 4) == res
@@ -163,7 +172,6 @@ def test_equality_subs1():
 
 def test_equality_subs2():
     f = Function('f')
-    x = abc.x
     eq = Eq(f(x)**2, 16)
     assert bool(eq.subs(f(x), 3)) is False
     assert bool(eq.subs(f(x), 4)) is True
@@ -443,7 +451,7 @@ def test_add():
     assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)
     assert ((-x + 1)*y).subs(x + 1, t) == y*(-t + 2)
 
-    # this should work everytime:
+    # this should work every time:
     e = a**2 - b - c
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
     assert e.subs(a**2 - c, d) == d - b
@@ -486,6 +494,7 @@ def test_derivative_subs():
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)
 
+
 def test_derivative_subs2():
     x, y, z = symbols('x y z')
     f_func, g_func = symbols('f g', cls=Function)
@@ -515,6 +524,7 @@ def test_derivative_subs3():
     dex = Derivative(exp(x), x)
     assert Derivative(dex, x).subs(dex, exp(x)) == dex
     assert dex.subs(exp(x), dex) == Derivative(exp(x), x, x)
+
 
 def test_issue_5284():
     A, B = symbols('A B', commutative=False)
@@ -620,7 +630,6 @@ def test_issue_6158():
 
 
 def test_Function_subs():
-    from sympy.abc import x, y
     f, g, h, i = symbols('f g h i', cls=Function)
     p = Piecewise((g(f(x, y)), x < -1), (g(x), x <= 1))
     assert p.subs(g, h) == Piecewise((h(f(x, y)), x < -1), (h(x), x <= 1))
@@ -724,15 +733,13 @@ def test_issue_5217():
 
 
 def test_issue_10829():
-    from sympy.abc import x, y
-
     assert (4**x).subs(2**x, y) == y**2
     assert (9**x).subs(3**x, y) == y**2
+
 
 def test_pow_eval_subs_no_cache():
     # Tests pull request 9376 is working
     from sympy.core.cache import clear_cache
-    from sympy.abc import x, y
 
     s = 1/sqrt(x**2)
     # This bug only appeared when the cache was turned off.
@@ -755,7 +762,6 @@ def test_RootOf_issue_10092():
 
 def test_issue_8886():
     from sympy.physics.mechanics import ReferenceFrame as R
-    from sympy.abc import x
     # if something can't be sympified we assume that it
     # doesn't play well with SymPy and disallow the
     # substitution

@@ -11,18 +11,21 @@ from sympy.series.order import Order
 from .gruntz import gruntz
 from sympy.core.exprtools import factor_terms
 from sympy.simplify.ratsimp import ratsimp
-from sympy.polys import PolynomialError
+from sympy.polys import PolynomialError, factor
+from sympy.simplify.simplify import together
 
 def limit(e, z, z0, dir="+"):
     """
-    Compute the limit of e(z) at the point z0.
+    Compute the limit of ``e(z)`` at the point ``z0``.
 
-    z0 can be any expression, including oo and -oo.
+    ``z0`` can be any expression, including ``oo`` and ``-oo``.
 
-    For dir="+" (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-).  For infinite
-    z0 (oo or -oo), the dir argument is determined from the direction
-    of the infinity (i.e., dir="-" for oo).
+    For ``dir="+-"`` it calculates the bi-directional limit; for
+    ``dir="+"`` (default) it calculates the limit from the right
+    (z->z0+) and for dir="-" the limit from the left (z->z0-).
+    For infinite ``z0`` (``oo`` or ``-oo``), the ``dir`` argument is
+    determined from the direction of the infinity (i.e.,
+    ``dir="-"`` for ``oo``).
 
     Examples
     ========
@@ -31,10 +34,15 @@ def limit(e, z, z0, dir="+"):
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
     1
-    >>> limit(1/x, x, 0, dir="+")
+    >>> limit(1/x, x, 0) # default dir='+'
     oo
     >>> limit(1/x, x, 0, dir="-")
     -oo
+    >>> limit(1/x, x, 0, dir='+-')
+    Traceback (most recent call last):
+        ...
+    ValueError: The limit does not exist since left hand limit = -oo and right hand limit = oo
+
     >>> limit(1/x, x, oo)
     0
 
@@ -46,7 +54,18 @@ def limit(e, z, z0, dir="+"):
     Gruntz algorithm (see the gruntz() function).
     """
 
-    return Limit(e, z, z0, dir).doit(deep=False)
+    if dir == "+-":
+        llim = Limit(e, z, z0, dir="-").doit(deep=False)
+        rlim = Limit(e, z, z0, dir="+").doit(deep=False)
+        if llim == rlim:
+            return rlim
+        else:
+            # TODO: choose a better error?
+            raise ValueError("The limit does not exist since "
+                    "left hand limit = %s and right hand limit = %s"
+                    % (llim, rlim))
+    else:
+        return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):
@@ -60,6 +79,15 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             l = limit(a, z, z0, dir)
             if l.has(S.Infinity) and l.is_finite is None:
+                if isinstance(e, Add):
+                    m = factor_terms(e)
+                    if not isinstance(m, Mul): # try together
+                        m = together(m)
+                    if not isinstance(m, Mul): # try factor if the previous methods failed
+                        m = factor(e)
+                    if isinstance(m, Mul):
+                        return heuristics(m, z, z0, dir)
+                    return
                 return
             elif isinstance(l, Limit):
                 return
@@ -108,10 +136,11 @@ class Limit(Expr):
         if isinstance(dir, string_types):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
-            raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))
-        if str(dir) not in ('+', '-'):
-            raise ValueError(
-                "direction must be either '+' or '-', not %s" % dir)
+            raise TypeError("direction must be of type basestring or "
+                    "Symbol, not %s" % type(dir))
+        if str(dir) not in ('+', '-', '+-'):
+            raise ValueError("direction must be one of '+', '-' "
+                    "or '+-', not %s" % dir)
 
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)

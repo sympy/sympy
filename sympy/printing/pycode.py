@@ -124,6 +124,9 @@ class PythonCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return lines
 
+    def _get_statement(self, codestring):
+        return "%s" % codestring
+
     def _get_comment(self, text):
         return "  # {0}".format(text)
 
@@ -409,14 +412,14 @@ class NumPyPrinter(PythonCodePrinter):
         # We have to override LambdaPrinter because it uses Python 'and' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format(self._module_format('numpy.logical_and'), ','.join(self._print(i, *args, **kwargs) for i in expr.args))
+        return '{0}.reduce(({1}))'.format(self._module_format('numpy.logical_and'), ','.join(self._print(i, *args, **kwargs) for i in expr.args))
 
     def _print_Or(self, expr, *args, **kwargs):
         "Logical Or printer"
         # We have to override LambdaPrinter because it uses Python 'or' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format(self._module_format('numpy.logical_or'), ','.join(self._print(i, *args, **kwargs) for i in expr.args))
+        return '{0}.reduce(({1}))'.format(self._module_format('numpy.logical_or'), ','.join(self._print(i, *args, **kwargs) for i in expr.args))
 
     def _print_Not(self, expr, *args, **kwargs):
         "Logical Not printer"

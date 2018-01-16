@@ -4,6 +4,7 @@ from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
     degree, degree_list,
+    total_degree,
     LC, LM, LT,
     pdiv, prem, pquo, pexquo,
     div, rem, quo, exquo,
@@ -1166,10 +1167,10 @@ def test_Poly_degree():
     assert degree(x*y**2, y) == 2
     assert degree(x*y**2, z) == 0
 
-    assert degree(y**2+x**3) == 3
-    assert degree(y**2+x**3, 1) == 2
     assert degree(pi) == 1
 
+    raises(TypeError, lambda: degree(y**2 + x**3))
+    raises(TypeError, lambda: degree(y**2 + x**3, 1))
     raises(PolynomialError, lambda: degree(x, 1.1))
 
     assert degree(Poly(0,x),z) == -oo
@@ -1204,6 +1205,13 @@ def test_Poly_total_degree():
     assert Poly(x*y*z + z**4).total_degree() == 4
     assert Poly(x**3 + x + 1).total_degree() == 3
 
+    assert total_degree(x*y + z**3) == 3
+    assert total_degree(x*y + z**3, x, y) == 2
+    assert total_degree(1) == 0
+    assert total_degree(Poly(y**2 + x**3 + z**4)) == 4
+    assert total_degree(Poly(y**2 + x**3 + z**4, x)) == 3
+    assert total_degree(Poly(y**2 + x**3 + z**4, x), z) == 4
+    assert total_degree(Poly(x**9 + x*z*y + x**3*z**2 + z**7,x), z) == 7
 
 def test_Poly_homogenize():
     assert Poly(x**2+y).homogenize(z) == Poly(x**2+y*z)
@@ -2209,6 +2217,12 @@ def test_gff():
     assert gff_list(f) == [(x**2 - 5*x + 4, 1), (x**2 - 5*x + 4, 2), (x, 3)]
 
     raises(NotImplementedError, lambda: gff(f))
+
+
+def test_norm():
+    a, b = sqrt(2), sqrt(3)
+    f = Poly(a*x + b*y, x, y, extension=(a, b))
+    assert f.norm() == Poly(4*x**4 - 12*x**2*y**2 + 9*y**4, x, y, domain='QQ')
 
 
 def test_sqf_norm():
@@ -3224,3 +3238,8 @@ def test_Poly_precision():
     # Make sure Poly doesn't lose precision
     p = Poly(pi.evalf(100)*x)
     assert p.as_expr() == pi.evalf(100)*x
+
+def test_issue_12400():
+    # Correction of check for negative exponents
+    assert poly(1/(1+sqrt(2)), x) == \
+            Poly(1/(1+sqrt(2)), x , domain='EX')

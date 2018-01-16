@@ -11,7 +11,7 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
-from sympy.printing.precedence import PRECEDENCE, precedence
+from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
@@ -322,14 +322,15 @@ class PrettyPrinter(Printer):
             deriv_symbol = U('PARTIAL DIFFERENTIAL')
         else:
             deriv_symbol = r'd'
-        syms = list(reversed(deriv.variables))
         x = None
+        count_total_deriv = 0
 
-        for sym, num in group(syms, multiple=False):
+        for sym, num in reversed(deriv.variable_count):
             s = self._print(sym)
             ds = prettyForm(*s.left(deriv_symbol))
+            count_total_deriv += num
 
-            if num > 1:
+            if (not num.is_Integer) or (num > 1):
                 ds = ds**prettyForm(str(num))
 
             if x is None:
@@ -343,8 +344,8 @@ class PrettyPrinter(Printer):
 
         pform = prettyForm(deriv_symbol)
 
-        if len(syms) > 1:
-            pform = pform**prettyForm(str(len(syms)))
+        if (count_total_deriv > 1) != False:
+            pform = pform**prettyForm(str(count_total_deriv))
 
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
@@ -636,7 +637,7 @@ class PrettyPrinter(Printer):
             LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
 
-        if z0 in (S.Infinity, S.NegativeInfinity):
+        if str(dir) == '+-' or z0 in (S.Infinity, S.NegativeInfinity):
             dir = ""
         else:
             if self._use_unicode:
@@ -725,6 +726,18 @@ class PrettyPrinter(Printer):
         return D
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
+
+    def _print_TensorProduct(self, expr):
+        # This should somehow share the code with _print_WedgeProduct:
+        circled_times = "\u2297"
+        return self._print_seq(expr.args, None, None, circled_times,
+            parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
+
+    def _print_WedgeProduct(self, expr):
+        # This should somehow share the code with _print_TensorProduct:
+        wedge_symbol = u"\u2227"
+        return self._print_seq(expr.args, None, None, wedge_symbol,
+            parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
     def _print_Trace(self, e):
         D = self._print(e.arg)
@@ -932,7 +945,7 @@ class PrettyPrinter(Printer):
         from sympy import ImmutableMatrix
 
         if expr.rank() == 0:
-            return self._print_matrix_contents(expr.tomatrix())
+            return self._print(expr[()])
 
         level_str = [[]] + [[] for i in range(expr.rank())]
         shape_ranges = [list(range(i)) for i in expr.shape]
@@ -1017,6 +1030,10 @@ class PrettyPrinter(Printer):
         D.baseline = D.height()//2
         D.binding = prettyForm.OPEN
         return D
+
+    def _print_ITE(self, ite):
+        from sympy.functions.elementary.piecewise import Piecewise
+        return self._print(ite.rewrite(Piecewise))
 
     def _hprint_vec(self, v):
         D = None
@@ -1400,7 +1417,8 @@ class PrettyPrinter(Printer):
             else:
                 pform_neg = ' - '
 
-            if pform.binding > prettyForm.NEG:
+            if (pform.binding > prettyForm.NEG
+                or pform.binding == prettyForm.ADD):
                 p = stringPict(*pform.parens())
             else:
                 p = pform
@@ -1652,7 +1670,7 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
-    def _print_AccumuBounds(self, i):
+    def _print_AccumulationBounds(self, i):
         left = '<'
         right = '>'
 
@@ -1846,13 +1864,22 @@ class PrettyPrinter(Printer):
         return self._print_dict(d)
 
     def _print_set(self, s):
+        if not s:
+            return prettyForm('set()')
         items = sorted(s, key=default_sort_key)
-        pretty = self._print_seq(items, '[', ']')
+        pretty = self._print_seq(items)
+        pretty = prettyForm(*pretty.parens('{', '}', ifascii_nougly=True))
+        return pretty
+
+    def _print_frozenset(self, s):
+        if not s:
+            return prettyForm('frozenset()')
+        items = sorted(s, key=default_sort_key)
+        pretty = self._print_seq(items)
+        pretty = prettyForm(*pretty.parens('{', '}', ifascii_nougly=True))
         pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
-
-    _print_frozenset = _print_set
 
     def _print_PolyRing(self, ring):
         return prettyForm(sstr(ring))
@@ -2009,6 +2036,16 @@ class PrettyPrinter(Printer):
         pform_arg = prettyForm(" "*arg.width())
         pform_arg = prettyForm(*pform_arg.below(arg))
         pform = prettyForm(*pform.right(pform_arg))
+        if len(e.args) == 1:
+            return pform
+        m, x = e.args
+        # TODO: copy-pasted from _print_Function: can we do better?
+        prettyFunc = pform
+        prettyArgs = prettyForm(*self._print_seq([x]).parens())
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
         return pform
 
     def _print_catalan(self, e):
@@ -2033,20 +2070,22 @@ class PrettyPrinter(Printer):
         return prettyForm(binding=prettyForm.POW, *bot.below(top))
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             pform = self._print('Domain: ')
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
-
-        except Exception:
-            try:
-                pform = self._print('Domain: ')
-                pform = prettyForm(*pform.right(self._print(d.symbols)))
-                pform = prettyForm(*pform.right(self._print(' in ')))
-                pform = prettyForm(*pform.right(self._print(d.set)))
-                return pform
-            except:
-                return self._print(None)
+        elif hasattr(d, 'set'):
+            pform = self._print('Domain: ')
+            pform = prettyForm(*pform.right(self._print(d.symbols)))
+            pform = prettyForm(*pform.right(self._print(' in ')))
+            pform = prettyForm(*pform.right(self._print(d.set)))
+            return pform
+        elif hasattr(d, 'symbols'):
+            pform = self._print('Domain on ')
+            pform = prettyForm(*pform.right(self._print(d.symbols)))
+            return pform
+        else:
+            return self._print(None)
 
     def _print_DMP(self, p):
         try:

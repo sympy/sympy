@@ -8,15 +8,17 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
+from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3)
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
-from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.relational import Eq, Ne
+from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
+from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -169,7 +171,7 @@ class Set(Basic):
 
     def complement(self, universe):
         r"""
-        The complement of 'self' w.r.t the given the universe.
+        The complement of 'self' w.r.t the given universe.
 
         Examples
         ========
@@ -193,9 +195,9 @@ class Set(Basic):
             # We can conveniently represent these options easily using a
             # ProductSet
 
-            # XXX: this doesn't work if the dimentions of the sets isn't same.
+            # XXX: this doesn't work if the dimensions of the sets isn't same.
             # A - B is essentially same as A if B has a different
-            # dimentionality than A
+            # dimensionality than A
             switch_sets = ProductSet(FiniteSet(o, o - s) for s, o in
                                      zip(self.sets, other.sets))
             product_sets = (ProductSet(*set) for set in switch_sets)
@@ -216,7 +218,13 @@ class Set(Basic):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            return FiniteSet(*[el for el in other if self.contains(el) != True])
+            from sympy.utilities.iterables import sift
+
+            sifted = sift(other, lambda x: fuzzy_bool(self.contains(x)))
+            # ignore those that are contained in self
+            return Union(FiniteSet(*(sifted[False])),
+                Complement(FiniteSet(*(sifted[None])), self, evaluate=False)
+                if sifted[None] else S.EmptySet)
 
     def symmetric_difference(self, other):
         """
@@ -1406,6 +1414,11 @@ class Union(Set, EvalfMixin):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
+        if len(self.args) == 2:
+            a, b = self.args
+            if (a.sup == b.inf and a.inf is S.NegativeInfinity
+                    and b.sup is S.Infinity):
+                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
@@ -1415,8 +1428,11 @@ class Union(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         try:
             return Union(set._eval_evalf(prec) for set in self.args)
-        except Exception:
-            raise TypeError("Not all sets are evalf-able")
+        except (TypeError, ValueError, NotImplementedError):
+            import sys
+            raise (TypeError("Not all sets are evalf-able"),
+                   None,
+                   sys.exc_info()[2])
 
     def __iter__(self):
         import itertools
@@ -1543,15 +1559,13 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
-        from sympy.utilities.iterables import sift
 
-        sifted = sift(args, lambda x: x.is_FiniteSet)
-        fs_args = sifted.pop(True, [])
+        fs_args, other = sift(args, lambda x: x.is_FiniteSet,
+            binary=True)
         if not fs_args:
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
-        other = sifted.pop(False, [])
 
         res = []
         unk = []
@@ -2000,12 +2014,12 @@ class FiniteSet(Set, EvalfMixin):
         """
         r = false
         for e in self._elements:
+            # override global evaluation so we can use Eq to do
+            # do the evaluation
             t = Eq(e, other, evaluate=True)
-            if isinstance(t, Eq):
-                t = t.simplify()
-            if t == true:
+            if t is true:
                 return t
-            elif t != false:
+            elif t is not false:
                 r = None
         return r
 
@@ -2164,7 +2178,6 @@ def imageset(*args):
     """
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
-    from sympy.geometry.util import _uniquely_named_symbol
 
     if len(args) not in (2, 3):
         raise ValueError('imageset expects 2 or 3 args, got: %s' % len(args))
