@@ -1250,10 +1250,7 @@ class Derivative(Expr):
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                if count.is_Integer:
-                    obj = Derivative._helper_apply_n_times(expr, v, count, lambda x, y: x._eval_derivative(y))
-                else:
-                    obj = expr._eval_derivative_n_times(v, count)
+                obj = expr._eval_derivative_n_times(v, count)
                 nderivs += count
                 if not is_symbol:
                     if obj is not None:

@@ -132,3 +132,9 @@ def test_diff_nth_derivative():
     assert isinstance(mul_diff, Sum)
     for i in range(5):
         assert mul_diff.subs(n, i).doit() == exprm.diff((x, i)).expand()
+
+    exprm2 = 2*y*x*sin(x)*cos(x)*log(x)*exp(x)
+    dex = exprm2.diff((x, n))
+    assert isinstance(dex/2/y, Sum)
+    for i in range(7):
+        assert dex.subs(n, i).doit().expand() == exprm2.diff((x, i)).expand()
