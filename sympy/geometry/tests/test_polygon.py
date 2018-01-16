@@ -1,14 +1,14 @@
 from __future__ import division
 import warnings
 
-from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
+from sympy import Abs, Rational, Float, S, Symbol, symbols, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
                             convex_hull, intersection, Line)
 from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
-
+from sympy import integrate
 
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
@@ -408,9 +408,39 @@ def test_intersection():
         Segment(Point(1, 0), Point(0, 1))]
     assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) == [Point(-5/7, 6/7),
                                                                                     Segment(Point2D(0, 1), Point(1, 0))]
-    assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
+    assert poly1.intersection(RegularPolygon((-12, -15)
+                                             
+                                             
+def test_second_moment_of_area():
+    x, y = symbols('x, y')
+    #triangle
+    p1, p2, p3 = [(0, 0), (4, 0), (0, 2)]
+    p=(0, 0)
+    #equation of hypotenuse
+    eq_y = (1-x/4)*2
+    I_yy = integrate((x**2) * (integrate(1, (y, 0, eq_y))), (x, 0, 4))
+    I_xx = integrate(1 * (integrate(y**2, (y, 0, eq_y))), (x, 0, 4))
+    I_xy = integrate(x * (integrate(y, (y, 0, eq_y))), (x, 0, 4))
 
+    triangle = Polygon(p1, p2, p3)
 
+    assert (I_xx - triangle.second_moment_of_area(p)[0]) == 0
+    assert (I_yy - triangle.second_moment_of_area(p)[1]) == 0
+    assert (I_xy - triangle.second_moment_of_area(p)[2]) == 0
+
+    #rectangle
+    p1, p2, p3, p4=[(0, 0), (4, 0), (4, 2), (0, 2)]
+    I_yy = integrate((x**2) * integrate(1, (y, 0, 2)), (x, 0, 4))
+    I_xx = integrate(1 * integrate(y**2, (y, 0, 2)), (x, 0, 4))
+    I_xy = integrate(x * integrate(y, (y, 0, 2)), (x, 0, 4))
+
+    rectangle = Polygon(p1, p2, p3, p4)
+
+    assert (I_xx - rectangle.second_moment_of_area(p)[0]) == 0
+    assert (I_yy - rectangle.second_moment_of_area(p)[1]) == 0
+    assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0
+
+                                             
 def test_parameter_value():
     t = Symbol('t')
     sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
