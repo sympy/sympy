@@ -107,19 +107,6 @@ def test_legendre():
     assert legendre(11, 0) == 0
 
     assert legendre(-1, x) == 1
-    assert legendre(-2, x) == x
-    assert legendre(-3, x) == ((3*x**2 - 1)/2).expand()
-    assert legendre(-4, x) == ((5*x**3 - 3*x)/2).expand()
-    assert legendre(-5, x) == ((35*x**4 - 30*x**2 + 3)/8).expand()
-    assert legendre(-6, x) == ((63*x**5 - 70*x**3 + 15*x)/8).expand()
-    assert legendre(-7, x) == ((231*x**6 - 315*x**4 + 105*x**2 - 5)/16).expand()
-
-    assert legendre(-11, -1) == 1
-    assert legendre(-12, -1) == -1
-    assert legendre(-11, 1) == 1
-    assert legendre(-12, 1) == 1
-    assert legendre(-11, 0) != 0
-    assert legendre(-12, 0) == 0
 
     assert roots(legendre(4, x), x) == {
         sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
@@ -180,7 +167,6 @@ def test_assoc_legendre():
 
 
 def test_chebyshev():
-
     assert chebyshevt(0, x) == 1
     assert chebyshevt(1, x) == x
     assert chebyshevt(2, x) == 2*x**2 - 1
