@@ -22,7 +22,7 @@ def test_aux_dep():
     # u[3], u[4] and u[5].
 
 
-    # First, mannual derivation of Fr, Fr_star, Fr_star_steady.
+    # First, manual derivation of Fr, Fr_star, Fr_star_steady.
 
     # Symbols for time and constant parameters.
     # Symbols for contact forces: Fx, Fy, Fz.

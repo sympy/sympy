@@ -523,6 +523,9 @@ def test_arg():
     assert arg(1 + I) == pi/4
     assert arg(-1 + I) == 3*pi/4
     assert arg(1 - I) == -pi/4
+    assert arg(exp_polar(4*pi*I)) == 4*pi
+    assert arg(exp_polar(-7*pi*I)) == -7*pi
+    assert arg(exp_polar(5 - 3*pi*I/4)) == -3*pi/4
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 

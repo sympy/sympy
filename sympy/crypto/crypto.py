@@ -382,7 +382,7 @@ def encipher_substitution(msg, old, new=None):
     >>> encipher_substitution(ct, new, old)
     'GONAVYBEATARMY'
 
-    In the special case where ``old`` and ``new`` are a permuation of
+    In the special case where ``old`` and ``new`` are a permutation of
     order 2 (representing a transposition of characters) their order
     is immaterial:
 
@@ -488,7 +488,7 @@ def encipher_vigenere(msg, key, symbols=None):
                corresponding integers. Let ``n1 = len(L1)``.
             2. Compute from the string ``msg`` a list ``L2`` of
                corresponding integers. Let ``n2 = len(L2)``.
-            3. Break ``L2`` up sequencially into sublists of size
+            3. Break ``L2`` up sequentially into sublists of size
                ``n1``; the last sublist may be smaller than ``n1``
             4. For each of these sublists ``L`` of ``L2``, compute a
                new list ``C`` given by ``C[i] = L[i] + L1[i] (mod N)``
@@ -1006,7 +1006,7 @@ def encipher_bifid5(msg, key):
     >>> from sympy.crypto.crypto import (
     ...     encipher_bifid5, decipher_bifid5)
 
-    "J" will be omitted unless it is replaced with somthing else:
+    "J" will be omitted unless it is replaced with something else:
 
     >>> round_trip = lambda m, k: \
     ...     decipher_bifid5(encipher_bifid5(m, k), k)

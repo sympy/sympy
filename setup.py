@@ -21,7 +21,7 @@ In addition, there are some other commands:
     python setup.py bench -> will run the complete benchmark suite
     python setup.py audit -> will run pyflakes checker on source code
 
-To get a full list of avaiable commands, read the output of:
+To get a full list of available commands, read the output of:
 
     python setup.py --help-commands
 
