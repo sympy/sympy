@@ -31,16 +31,15 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def sample(self):
         u = random.uniform(0, 1)
         inf = self.set.inf
-        self.cdf(10)
         interval = Interval(self.cdf(inf), self.cdf(inf + 1))
-        # print(interval)
         if u < self.cdf(inf):
             return inf
+        # Iterate through the subintervals until the solution for
+        # u is found.
         while(interval.sup <= self.set.sup) and u not in interval:
             inf = inf + 1
             interval =  Interval(
                 (self.cdf(inf)), self.cdf(inf + 1)).evalf(n = 18)
-            # print(u, inf, interval)
         return inf
 
 
