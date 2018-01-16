@@ -40,7 +40,8 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
     """ Compile source code files to object files.
 
     Parameters
-    ----------
+    ==========
+
     files : iterable of str
         Paths to source files, if ``cwd`` is given, the paths are taken as relative.
     Runner: CompilerRunner subclass (optional)
@@ -123,7 +124,8 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
     """ Link object files.
 
     Parameters
-    ----------
+    ==========
+
     obj_files: iterable of str
         Paths to object files.
     out_file: str (optional)
@@ -144,7 +146,8 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
         Keyword arguments passed to ``Runner``.
 
     Returns
-    -------
+    =======
+
     The absolute path to the generated shared object / executable.
 
     """
@@ -191,7 +194,8 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
     """ Link python extension module (shared object) for importing
 
     Parameters
-    ----------
+    ==========
+
     obj_files: iterable of str
         Paths to object files to be linked.
     so_file: str
@@ -210,7 +214,8 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
         Keyword arguments passed to ``link(...)``.
 
     Returns
-    -------
+    =======
+
     Absolute path to the generate shared object.
     """
     libraries = libraries or []
@@ -247,7 +252,8 @@ def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
     """ Generates a C file from a Cython source file.
 
     Parameters
-    ----------
+    ==========
+
     src: str
         Path to Cython source.
     destdir: str (optional)
@@ -313,7 +319,8 @@ def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs
     are dispatched to pyx2obj.
 
     Parameters
-    ----------
+    ==========
+
     srcpath: str
         Path to source file.
     Runner: CompilerRunner subclass (optional)
@@ -383,7 +390,8 @@ def pyx2obj(pyxpath, objpath=None, destdir=None, cwd=None,
     destination
 
     Parameters
-    ----------
+    ==========
+
     pyxpath: str
         Path to Cython source file.
     objpath: str (optional)
@@ -403,7 +411,8 @@ def pyx2obj(pyxpath, objpath=None, destdir=None, cwd=None,
         keyword arguments passed onto src2obj
 
     Returns
-    -------
+    =======
+
     Absolute path of generated object file.
 
     """
@@ -477,7 +486,8 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     are not recompiled but instead it is imported.
 
     Parameters
-    ----------
+    ==========
+
     sources : string
         List of paths to sources.
     extname : string
@@ -491,11 +501,13 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
         keyword arguments passed to ``link_py_so``
 
     Returns
-    -------
+    =======
+
     The imported module from of the python extension.
 
     Examples
-    --------
+    ========
+
     >>> mod = compile_link_import_py_ext(['fft.f90', 'conv.cpp', '_fft.pyx'])  # doctest: +SKIP
     >>> Aprim = mod.fft(A)  # doctest: +SKIP
 
@@ -545,7 +557,8 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
     """ Compiles, links and imports extension module from source.
 
     Parameters
-    ----------
+    ==========
+
     sources : iterable of name/source pair tuples
     build_dir : string (default: None)
         Path. ``None`` implies use a temporary directory.
@@ -553,7 +566,8 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
         Keyword arguments passed onto `compile_link_import_py_ext`.
 
     Returns
-    -------
+    =======
+
     mod : module
         The compiled and imported extension module.
     info : dict
@@ -570,7 +584,8 @@ def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=Non
     """ Compiles, links and runs a program built from sources.
 
     Parameters
-    ----------
+    ==========
+
     sources : iterable of name/source pair tuples
     build_dir : string (default: None)
         Path. ``None`` implies use a temporary directory.
@@ -585,7 +600,8 @@ def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=Non
         Keyword arguments passed onto ``link``
 
     Returns
-    -------
+    =======
+
     (stdout, stderr): pair of strings
     info: dict
         Containing exit status as 'exit_status' and ``build_dir`` as 'build_dir'

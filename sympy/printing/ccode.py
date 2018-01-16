@@ -107,7 +107,8 @@ def get_math_macros():
     via a compilation flag).
 
     Returns
-    -------
+    =======
+
     Dictionary mapping sympy expressions to strings (macro names)
 
     """

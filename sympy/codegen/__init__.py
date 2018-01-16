@@ -1,5 +1,5 @@
 """ The ``sympy.codegen`` module contains classes and functions for building
-abstract syntax trees of algorithms. This trees may then be printed by the
+abstract syntax trees of algorithms. These trees may then be printed by the
 code-printers in ``sympy.printing``.
 
 There are several submodules available:

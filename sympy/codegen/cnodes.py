@@ -23,7 +23,8 @@ def sizeof(arg):
     """ Generate of FunctionCall instance for calling 'sizeof'
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import real
     >>> from sympy.codegen.cnodes import sizeof
     >>> from sympy.printing.ccode import ccode
@@ -43,7 +44,8 @@ class Label(String):
     """ Label for use with e.g. goto statement.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.cnodes import Label
     >>> from sympy.printing.ccode import ccode
     >>> print(ccode(Label('foo')))
@@ -58,10 +60,11 @@ class goto(Token):
 
 
 class PreDecrement(Basic):
-    """ Represents the pre-decrement oparator
+    """ Represents the pre-decrement operator
 
     Examples
-    --------
+    ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cnodes import PreDecrement
     >>> from sympy.printing.ccode import ccode
@@ -73,17 +76,17 @@ class PreDecrement(Basic):
 
 
 class PostDecrement(Basic):
-    """ Represents the post-decrement oparator """
+    """ Represents the post-decrement operator """
     nargs = 1
 
 
 class PreIncrement(Basic):
-    """ Represents the pre-increment oparator """
+    """ Represents the pre-increment operator """
     nargs = 1
 
 
 class PostIncrement(Basic):
-    """ Represents the post-increment oparator """
+    """ Represents the post-increment operator """
     nargs = 1
 
 

@@ -248,7 +248,8 @@ class BreakToken(Token):
     Use the premade instance ``break_`` or instantiate manually.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import ccode, fcode
     >>> from sympy.codegen.ast import break_
     >>> ccode(break_)
@@ -266,7 +267,8 @@ class ContinueToken(Token):
     Use the premade instance ``continue_`` or instantiate manually.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import ccode, fcode
     >>> from sympy.codegen.ast import continue_
     >>> ccode(continue_)
@@ -283,7 +285,8 @@ class NoneToken(Token):
     The corresponding instance of Python's ``None`` is ``none``.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import none, Variable
     >>> from sympy.printing.pycode import pycode
     >>> print(pycode(Variable('x').as_Declaration(value=none)))
@@ -308,7 +311,8 @@ class Assignment(Relational):
     Represents variable assignment for code generation.
 
     Parameters
-    ----------
+    ==========
+
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -415,7 +419,8 @@ def aug_assign(lhs, op, rhs):
     directly, like AddAugmentedAssignment(x, y).
 
     Parameters
-    ----------
+    ==========
+
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -432,7 +437,7 @@ def aug_assign(lhs, op, rhs):
         the dimensions will not align.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import aug_assign
@@ -645,14 +650,15 @@ class For(Token):
             body..."
 
     Parameters
-    ----------
+    ==========
+
     target : symbol
     iter : iterable
     body : CodeBlock or iterable
-        When passed an iterable it is used to instantiate a CodeBlock.
+!        When passed an iterable it is used to instantiate a CodeBlock.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols, Range
     >>> from sympy.codegen.ast import aug_assign, For
@@ -688,11 +694,13 @@ class String(Token):
     Atomic object which is not an expression (as opposed to Symbol).
 
     Parameters
-    ----------
+    ==========
+
     text : str
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import String
     >>> f = String('foo')
     >>> f
@@ -727,7 +735,8 @@ class Node(Token):
     """ Subclass of Token, carrying the attribute 'attrs' (Tuple)
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import Node, value_const, pointer_const
     >>> n1 = Node([value_const])
     >>> n1.attr_params('value_const')  # get the parameters of attribute (by name)
@@ -765,15 +774,17 @@ class Type(Token):
     exception if rounding error is not within tolerances, or if the value is not
     representable by the underlying data type (e.g. unsigned integers).
 
-    Arguments
-    ---------
+    Parameters
+    ==========
+
     name : str
         Name of the type, e.g. ``object``, ``int16``, ``float16`` (where the latter two
         would use the ``Type`` sub-classes ``IntType`` and ``FloatType`` respectively).
         If a ``Type`` instance is given, the said instance is returned.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import Type
     >>> t = Type.from_expr(42)
     >>> t
@@ -802,8 +813,9 @@ class Type(Token):
     'boost::multiprecision::cpp_dec_float_50 x'
 
     References
-    ----------
-    https://docs.scipy.org/doc/numpy/user/basics.types.html
+    ==========
+
+    .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
     __slots__ = ['name']
@@ -818,12 +830,14 @@ class Type(Token):
         """ Deduces type from an expression or a ``Symbol``.
 
         Parameters
-        ----------
+        ==========
+
         expr : number or SymPy object
             The type will be deduced from type or properties.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.codegen.ast import Type, integer, complex_
         >>> Type.from_expr(2) == integer
         True
@@ -836,7 +850,8 @@ class Type(Token):
         ValueError: Could not deduce type from expr.
 
         Raises
-        ------
+        ======
+
         ValueError when type deduction fails.
 
         """
@@ -860,7 +875,8 @@ class Type(Token):
         """ Casts a value to the data type of the instance.
 
         Parameters
-        ----------
+        ==========
+
         value : number
         rtol : floating point number
             Relative tolerance. (will be deduced if not given).
@@ -873,7 +889,8 @@ class Type(Token):
             Maps substitutions for Type, e.g. {integer: int64, real: float32}
 
         Examples
-        --------
+        ========
+
         >>> from sympy.codegen.ast import Type, integer, float32, int8
         >>> integer.cast_check(3.0) == 3
         True
@@ -977,7 +994,8 @@ class FloatType(FloatBaseType):
     Base 2 & one sign bit is assumed.
 
     Parameters
-    ----------
+    ==========
+
     name : str
         Name of the type.
     nbits : integer
@@ -988,7 +1006,8 @@ class FloatType(FloatBaseType):
         Number of bits used to represent the mantissa.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import S, Float
     >>> from sympy.codegen.ast import FloatType
     >>> half_precision = FloatType('f16', nbits=16, nmant=10, nexp=5)
@@ -1136,12 +1155,13 @@ class Attribute(Token):
     ``Attribute`` as ``attrs``).
 
     Parameters
-    ----------
+    ==========
     name : str
     parameters : Tuple
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import Attribute
     >>> volatile = Attribute('volatile')
     >>> volatile
@@ -1174,7 +1194,8 @@ class Variable(Node):
     """ Represents a variable
 
     Parameters
-    ----------
+    ==========
+
     symbol : Symbol
     type : Type (optional)
         Type of the variable.
@@ -1182,7 +1203,8 @@ class Variable(Node):
         Will be stored as a Tuple.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol
     >>> from sympy.codegen.ast import Variable, float32, integer
     >>> x = Symbol('x')
@@ -1234,7 +1256,8 @@ class Variable(Node):
         Deduces type primarily from ``symbol``, secondarily from ``value``.
 
         Parameters
-        ----------
+        ==========
+
         symbol : Symbol
         value : expr
             (optional) value of the variable.
@@ -1243,7 +1266,8 @@ class Variable(Node):
             Whether to apply ``Type.cast_check`` on ``value``.
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.codegen.ast import Variable, complex_
         >>> n = Symbol('n', integer=True)
@@ -1278,7 +1302,8 @@ class Variable(Node):
         the ``value`` of the Variable instance).
 
         Examples
-        --------
+        ========
+
         >>> from sympy.codegen.ast import Variable
         >>> x = Variable('x')
         >>> decl1 = x.as_Declaration()
@@ -1302,7 +1327,8 @@ class Element(Token):
     """ Element in (a possibly N-dimensional) array.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import Element
     >>> elem = Element('x', 'ijk')
     >>> elem.symbol.name == 'x'
@@ -1328,11 +1354,13 @@ class Declaration(Token):
     """ Represents a variable declaration
 
     Parameters
-    ----------
+    ==========
+
     variable : Variable
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol
     >>> from sympy.codegen.ast import Declaration, Type, Variable, integer, untyped
     >>> z = Declaration('z')
@@ -1353,13 +1381,14 @@ class While(Token):
              body..."
 
     Parameters
-    ----------
+    ==========
+
     condition : expression convertable to Boolean
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols, Gt, Abs
     >>> from sympy.codegen import aug_assign, Assignment, While
@@ -1386,7 +1415,8 @@ class Scope(Token):
     """ Represents a scope in the code.
 
     Parameters
-    ----------
+    ==========
+
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 
@@ -1412,11 +1442,13 @@ class Stream(Token):
     There are two predefined Stream instances ``stdout`` & ``stderr``.
 
     Parameters
-    ----------
+    ==========
+
     name : str
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol
     >>> from sympy.printing.pycode import pycode
     >>> from sympy.codegen.ast import Print, stderr, QuotedString
@@ -1438,12 +1470,14 @@ class Print(Token):
     """ Represents print command in the code.
 
     Parameters
-    ----------
+    ==========
+
     formatstring : str
     *args : Basic instances (or convertible to such through sympify)
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import Print
     >>> from sympy.printing.pycode import pycode
     >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
@@ -1465,14 +1499,16 @@ class FunctionPrototype(Node):
     Allows the user to generate forward declaration in e.g. C/C++.
 
     Parameters
-    ----------
+    ==========
+
     return_type : Type
     name : str
     parameters: iterable of Variable instances
     attrs : iterable of Attribute instances
 
     Examples
-    --------
+    ========
+
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
     >>> from sympy.printing.ccode import ccode
@@ -1517,7 +1553,8 @@ class FunctionDefinition(FunctionPrototype):
     """ Represents a function definition in the code.
 
     Parameters
-    ----------
+    ==========
+
     return_type : Type
     name : str
     parameters: iterable of Variable instances
@@ -1525,7 +1562,8 @@ class FunctionDefinition(FunctionPrototype):
     attrs : iterable of Attribute instances
 
     Examples
-    --------
+    ========
+
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
     >>> from sympy.printing.ccode import ccode
@@ -1566,12 +1604,14 @@ class FunctionCall(Token, Expr):
     """ Represents a call to a function in the code.
 
     Parameters
-    ----------
+    ==========
+
     name : str
     function_args : Tuple
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import FunctionCall
     >>> from sympy.printing.pycode import pycode
     >>> fcall = FunctionCall('foo', 'bar baz'.split())

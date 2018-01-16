@@ -250,7 +250,8 @@ def pycode(expr, **settings):
     """ Converts an expr to a string of Python code
 
     Parameters
-    ----------
+    ==========
+
     expr : Expr
         A SymPy expression.
     fully_qualified_modules : bool
@@ -258,7 +259,8 @@ def pycode(expr, **settings):
         (``math.sin`` vs. ``sin``). default: ``True``.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import tan, Symbol
     >>> from sympy.printing.pycode import pycode
     >>> pycode(tan(Symbol('x')) + 1)

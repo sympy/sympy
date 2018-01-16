@@ -12,7 +12,8 @@ def render_as_module(definitions, name, declarations=(), printer_settings=None):
     This generates Fortran source code for a module with the correct ``use`` statements.
 
     Parameters
-    ----------
+    ==========
+
     definitions : iterable
         Passed to :class:`sympy.codegen.fnodes.Module`.
     name : str

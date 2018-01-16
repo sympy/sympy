@@ -24,7 +24,8 @@ def get_abspath(path, cwd='.'):
     """ Returns the aboslute path.
 
     Parameters
-    ----------
+    ==========
+
     path : str
         (relative) path.
     cwd : str
@@ -62,7 +63,8 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
     """ Variation of ``shutil.copy`` with extra options.
 
     Parameters
-    ----------
+    ==========
+
     src : str
         Path to source file.
     dst : str
@@ -80,7 +82,8 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         Creates directories if needed.
 
     Returns
-    -------
+    =======
+
     Path to the copied file.
 
     """
@@ -147,14 +150,16 @@ def sha256_of_file(path, nblocks=128):
     """ Computes the SHA256 hash of a file.
 
     Parameters
-    ----------
+    ==========
+
     path : string
         Path to file to compute hash of.
     nblocks : int
         Number of blocks to read per iteration.
 
     Returns
-    -------
+    =======
+
     hashlib sha256 hash object. Use ``.digest()`` or ``.hexdigest()``
     on returned object to get binary or hex encoded string.
     """
@@ -205,14 +210,16 @@ def import_module_from_file(filename, only_if_newer_than=None):
     instead silently use old module. Use unique names for this reason.
 
     Parameters
-    ----------
+    ==========
+
     filename : str
         Path to shared object.
     only_if_newer_than : iterable of strings
         Paths to dependencies of the shared object.
 
     Raises
-    ------
+    ======
+
     ``ImportError`` if any of the files specified in ``only_if_newer_than`` are newer
     than the file given by filename.
     """
@@ -236,12 +243,14 @@ def find_binary_of_command(candidates):
     first hit.
 
     Parameters
-    ----------
+    ==========
+
     candidates : iterable of str
         Names of candidate commands
 
     Raises
-    ------
+    ======
+
     FileNotFoundError if no candidates match.
     """
     from distutils.spawn import find_executable

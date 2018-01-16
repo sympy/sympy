@@ -16,7 +16,8 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     method of root-finding.
 
     Parameters
-    ----------
+    ==========
+
     expr : expression
     wrt : Symbol
         With respect to, i.e. what is the variable.
@@ -32,7 +33,8 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
         Will be a ``Dummy`` if ``None``.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import symbols, cos
     >>> from sympy.codegen.ast import Assignment
     >>> from sympy.codegen.algorithms import newtons_method
@@ -44,7 +46,8 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
 
     References
     ==========
-    https://en.wikipedia.org/wiki/Newton%27s_method
+
+    .. [1] https://en.wikipedia.org/wiki/Newton%27s_method
 
     """
 
@@ -77,7 +80,7 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
 def _symbol_of(arg):
     if isinstance(arg, Declaration):
         arg = arg.variable.symbol
-    if isinstance(arg, Variable):
+    elif isinstance(arg, Variable):
         arg = arg.symbol
     return arg
 
@@ -86,7 +89,8 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
     """ Generates an AST for a function implementing the Newton-Raphson method.
 
     Parameters
-    ----------
+    ==========
+
     expr : expression
     wrt : Symbol
         With respect to, i.e. what is the variable

@@ -34,7 +34,8 @@ class Program(Token):
     """ Represents a 'program' block in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Program
     >>> prog = Program('myprogram', [Print([42])])
@@ -53,7 +54,8 @@ class use_rename(Token):
     """ Represents a renaming in a use statement in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.fnodes import use_rename, use
     >>> from sympy.printing import fcode
     >>> ren = use_rename("thingy", "convolution2d")
@@ -77,7 +79,8 @@ class use(Token):
     """ Represents a use statement in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.fnodes import use
     >>> from sympy.printing import fcode
     >>> fcode(use('signallib'), source_format='free')
@@ -98,7 +101,8 @@ class Module(Token):
     """ Represents a module in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.fnodes import Module
     >>> from sympy.printing import fcode
     >>> print(fcode(Module('signallib', ['implicit none'], []), source_format='free'))
@@ -122,7 +126,8 @@ class Subroutine(Node):
     """ Represents a subroutine in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Subroutine
@@ -151,7 +156,8 @@ class SubroutineCall(Token):
     """ Represents a call to a subroutine in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.fnodes import SubroutineCall
     >>> from sympy.printing import fcode
     >>> fcode(SubroutineCall('mysub', 'x y'.split()))
@@ -166,7 +172,8 @@ class Do(Token):
     """ Represents a Do loop in in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import aug_assign, Print
     >>> from sympy.codegen.fnodes import Do
@@ -202,7 +209,8 @@ class ArrayConstructor(Token):
     """ Represents an array constructor
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.fnodes import ArrayConstructor
     >>> ac = ArrayConstructor([1, 2, 3])
@@ -220,7 +228,8 @@ class ImpliedDoLoop(Token):
     """ Represents an implied do loop in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol, fcode
     >>> from sympy.codegen.fnodes import ImpliedDoLoop, ArrayConstructor
     >>> i = Symbol('i', integer=True)
@@ -243,7 +252,8 @@ class Extent(Basic):
     """ Represents a dimension extent.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.fnodes import Extent
     >>> e = Extent(-3, 3)  # -3, -2, -1, 0, 1, 2, 3
     >>> from sympy.printing import fcode
@@ -278,7 +288,8 @@ def dimension(*args):
     """ Creates a 'dimension' Attribute with (up to 7) extents.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.fnodes import dimension, intent_in
     >>> dim = dimension('2', ':')  # 2 rows, runtime determined number of columns
@@ -314,7 +325,8 @@ def array(symbol, dim, intent=None, **kwargs):
     """ Convenience function for creating a Variable instance for a Fortran array
 
     Parameters
-    ----------
+    ==========
+
     symbol : symbol
     dim : Attribute or iterable
         If dim is an ``Attribute`` it need to have the name 'dimension'. If it is
@@ -325,7 +337,8 @@ def array(symbol, dim, intent=None, **kwargs):
         Keyword arguments for ``Variable`` ('type' & 'value')
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.ast import integer, real
     >>> from sympy.codegen.fnodes import array
@@ -362,7 +375,8 @@ def allocated(array):
     """ Creates an AST node for a function call to Fortran's "allocated(...)"
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.fnodes import allocated
     >>> alloc = allocated('x')
@@ -376,13 +390,15 @@ def lbound(array, dim=None, kind=None):
     """ Creates an AST node for a function call to Fortran's "lbound(...)"
 
     Parameters
-    ----------
+    ==========
+
     array : Symbol or String
     dim : expr
     kind : expr
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.fnodes import lbound
     >>> lb = lbound('arr', dim=2)
@@ -410,12 +426,14 @@ def shape(source, kind=None):
     """ Creates an AST node for a function call to Fortran's "shape(...)"
 
     Parameters
-    ----------
+    ==========
+
     source : Symbol or String
     kind : expr
 
     Examples
-    --------
+    ========
+
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.fnodes import shape
     >>> shp = shape('x')
@@ -433,7 +451,8 @@ def size(array, dim=None, kind=None):
     """ Creates an AST node for a function call to Fortran's "size(...)"
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
@@ -461,7 +480,8 @@ def reshape(source, shape, pad=None, order=None):
     """ Creates an AST node for a function call to Fortran's "reshape(...)"
 
     Parameters
-    ----------
+    ==========
+
     source : Symbol or String
     shape : ArrayExpr
     """
@@ -477,11 +497,13 @@ def bind_C(name=None):
     """ Creates an Attribute ``bind_C`` with a name
 
     Parameters
-    ----------
+    ==========
+
     name : str
 
     Examples
-    --------
+    ========
+
     >>> from sympy import Symbol
     >>> from sympy.printing import fcode
     >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
@@ -504,7 +526,8 @@ class GoTo(Token):
     """ Represents a goto statement in Fortran
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.fnodes import GoTo
     >>> go = GoTo([10, 20, 30], 'i')
     >>> from sympy.printing import fcode
@@ -527,7 +550,8 @@ class FortranReturn(Token):
     to generate a fortran RETURN statement, this node should be used.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.codegen.fnodes import FortranReturn
     >>> from sympy.printing import fcode
     >>> fcode(FortranReturn('x'))

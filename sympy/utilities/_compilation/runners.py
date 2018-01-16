@@ -18,7 +18,8 @@ class CompilerRunner(object):
     """ CompilerRunner base class.
 
     Parameters
-    ----------
+    ==========
+
     sources : list of str
         Paths to sources.
     out : str
@@ -45,7 +46,8 @@ class CompilerRunner(object):
         name of preferred vendor e.g. 'gnu' or 'intel'
 
     Methods
-    -------
+    =======
+
     run():
         Invoke compilation as a subprocess.
 

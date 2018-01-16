@@ -1,5 +1,5 @@
 """
-AST nodes specific for C++.
+AST nodes specific to C++.
 """
 
 from sympy.codegen.ast import Attribute, String, Token, Type, none
