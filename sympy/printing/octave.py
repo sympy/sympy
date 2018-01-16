@@ -444,11 +444,7 @@ class OctaveCodePrinter(CodePrinter):
             args=args
         )
 
-    def _print_Max(self, expr):
-        return self._nested_binary_math_func(expr)
-
-    def _print_Min(self, expr):
-        return self._nested_binary_math_func(expr)
+    _print_Max = _print_Min = _nested_binary_math_func
 
 
     def _print_Piecewise(self, expr):
