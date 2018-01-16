@@ -404,78 +404,87 @@ def _solve_as_rational(f, symbol, domain):
 
 
 def _solve_trig(f, symbol, domain):
-    """ Helper to solve trigonometric equations """
-    from sympy import lcm
-    f = trigsimp(f)
-    f_original = f
-    f_ex = f
+    """Function to call other helpers to solve trigonometric equations """
     try:
-        f = f.rewrite(exp)
-        f = together(f)
-        g, h = fraction(f)
-        y = Dummy('y')
-        g, h = g.expand(), h.expand()
-        g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
-        if g.has(symbol) or h.has(symbol):
-            return ConditionSet(symbol, Eq(f, 0), S.Reals)
-
-        solns = solveset_complex(g, y) - solveset_complex(h, y)
-
-        if isinstance(solns, FiniteSet):
-            result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
-                           for s in solns])
-            return Intersection(result, domain)
-        elif solns is S.EmptySet:
-            return S.EmptySet
-        else:
-            return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        return _solve_trig1(f, symbol, domain)
 
     except BaseException as error:
-        from sympy import expand_trig
-        trig_functions = f_ex.atoms(sin, cos, tan, sec, cot, csc)
-        trig_arguments = [e.args for e in trig_functions]
-        denominators = []
-        for ar in trig_arguments:
-            try:
-                poly_ar = Poly(ar, symbol)
-            except ValueError:
-                raise ValueError("give up, we can't solve if this is not a polynomial in x")
-            if poly_ar.degree() > 1:  # degree >1 still bad
-                raise ValueError("degree of variable inside polynomail should not exceed one")
-            if poly_ar.degree() == 0:  # degree 0, no x, don't care
-                continue
-            c = poly_ar.all_coeffs(x)[0]   # got the coefficient of x
-            denominators.append(Rational(c).q)
+        return _solve_trig2(f, symbol, domain)
 
-        x = Dummy('x')
-        f_ex = f_ex.subs(symbol, 2*lcm(denominators)*x)
-        f_ex = f_ex.rewrite(tan)
-        f_ex = expand_trig(f_ex)
-        f_ex = together(f_ex)
-        g, h = fraction(f_ex)
-        y = Dummy('y')
-        g, h = g.expand(), h.expand()
-        g, h = g.subs(tan(x), y), h.subs(tan(x), y)
-
-        if g.has(x) or h.has(x):
-            print("here3")
-            return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
-
-        solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
-
-        if isinstance(solns, FiniteSet):
-            result = Union(*[invert_real(tan(symbol/(2*lcm(denominators))), s, symbol)[1]
-                           for s in solns])
-            return Intersection(result, domain)
-        elif solns is S.EmptySet:
-            return S.EmptySet
-        else:
-            return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
-
-    else:
+    else :
         raise NotImplementedError(filldedent('''
             Solution to this kind of triginometric equations
             is yet to be implemented'''))
+
+
+def _solve_trig1(f, symbol, domain):
+    """ Helper to solve trigonometric equations """
+    f = trigsimp(f)
+    f_original = f
+    f = f.rewrite(exp)
+    f = together(f)
+    g, h = fraction(f)
+    y = Dummy('y')
+    g, h = g.expand(), h.expand()
+    g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
+    if g.has(symbol) or h.has(symbol):
+        return ConditionSet(symbol, Eq(f, 0), S.Reals)
+
+    solns = solveset_complex(g, y) - solveset_complex(h, y)
+
+    if isinstance(solns, FiniteSet):
+        result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
+                       for s in solns])
+        return Intersection(result, domain)
+    elif solns is S.EmptySet:
+        return S.EmptySet
+    else:
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
+
+
+def _solve_trig2(f, symbol, domain):
+    """ Helper to solve trigonometric equations """
+    from sympy import lcm, expand_trig
+    f = trigsimp(f)
+    f_original = f
+    trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
+    trig_arguments = [e.args for e in trig_functions]
+    denominators = []
+    for ar in trig_arguments:
+        try:
+            poly_ar = Poly(ar, symbol)
+        except ValueError:
+            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+        if poly_ar.degree() > 1:  # degree >1 still bad
+            raise ValueError("degree of variable inside polynomail should not exceed one")
+        if poly_ar.degree() == 0:  # degree 0, no x, don't care
+            continue
+        c = poly_ar.all_coeffs(x)[0]   # got the coefficient of x
+        denominators.append(Rational(c).q)
+
+    x = Dummy('x')
+    f = f.subs(symbol, 2*lcm(denominators)*x)
+    f = f.rewrite(tan)
+    f = expand_trig(f)
+    f = together(f)
+    g, h = fraction(f)
+    y = Dummy('y')
+    g, h = g.expand(), h.expand()
+    g, h = g.subs(tan(x), y), h.subs(tan(x), y)
+
+    if g.has(x) or h.has(x):
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
+
+    solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
+
+    if isinstance(solns, FiniteSet):
+        result = Union(*[invert_complex(tan(symbol/(2*lcm(denominators))), s, symbol)[1]
+                       for s in solns])
+        return Intersection(result, domain)
+    elif solns is S.EmptySet:
+        return S.EmptySet
+    else:
+        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
