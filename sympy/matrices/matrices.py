@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 import collections
-import random
 from sympy.assumptions.refine import refine
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
@@ -19,6 +18,7 @@ from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types
 
+from sympy.utilities.randtest import random_complex_number
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
@@ -40,8 +40,12 @@ def _iszero(x):
 
 
 def _is_probably_zero(x):
-    """Returns True if x is probably zero, False if it is probably not,
-       None if undecided"""
+    """Tests by plugging in random rational numbers. Returns True if several
+    substitution resulted in zero, otherwise returns False. Does not attempt
+    floating point evaluation or any symbolic simplification, thus returns
+    quickly. Suitable for polynomials and rational functions because, for
+    example, ``x*(x+1) - x - x**2`` evaluates to zero when any rational number
+    is plugged in."""
     try:
         is_zero = x.is_zero
     except AttributeError:
@@ -50,9 +54,8 @@ def _is_probably_zero(x):
         variables = x.free_symbols
         if isinstance(variables, set) and len(variables) > 0:
             for _ in range(5):
-                substitutions = {v: random.randint(-10, 10) + \
-                    + Rational(random.randint(100, 200), random.randint(201, 300)) \
-                    for v in variables}
+                substitutions = {v: random_complex_number(-5, 0, 5, 0, rational=True,
+                    tolerance=0.001) for v in variables}
                 if x.xreplace(substitutions) != 0:
                     is_zero = False
                     break
