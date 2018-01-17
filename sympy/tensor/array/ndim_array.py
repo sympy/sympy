@@ -60,9 +60,9 @@ class NDimArray(object):
 
     _diff_wrt = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
-        return ImmutableDenseNDimArray(*args, **kwargs)
+        return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
     def _parse_index(self, index):
 
