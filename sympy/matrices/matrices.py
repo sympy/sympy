@@ -8,7 +8,7 @@ from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
-from sympy.core.numbers import Integer, ilcm, Float, Rational
+from sympy.core.numbers import Integer, ilcm, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
