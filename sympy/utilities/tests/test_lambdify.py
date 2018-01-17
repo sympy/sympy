@@ -8,7 +8,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy,MatrixSymbol)
+    DotProduct, Eq, Dummy, MatrixSymbol)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -816,4 +816,5 @@ def test_lambdify_dummy_arg():
 def test_issue_11044():
     x = MatrixSymbol('x',3,1)
     f = lambdify(x,x.T*x)
-    assert f(Matrix([[1],[2],[3]])) == 14
+    assert f(Matrix([[1], [2], [3]])) == 14
+    assert f(Matrix([[2], [3], [5]])) == 38
