@@ -270,7 +270,6 @@ current = Dimension(name='current', symbol='I')
 temperature = Dimension("temperature", "T")
 amount_of_substance = Dimension("amount_of_substance")
 luminous_intensity = Dimension("luminous_intensity")
-nucleus_decays = Dimension("nucleus_decays")
 
 # derived dimensions (MKS)
 velocity = Dimension(name="velocity")
