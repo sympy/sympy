@@ -1879,6 +1879,7 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
     raises(SymPyDeprecationWarning, lambda: Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]])))
+    raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
     raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
@@ -2458,6 +2459,7 @@ def test_is_Identity():
 def test_dot():
     assert ones(1, 3).dot(ones(3, 1)) == 3
     assert ones(1, 3).dot([1, 1, 1]) == 3
+    assert Matrix([1, 2, 3]).dot(Matrix([1, 2, 3])) == 14
 
 
 def test_dual():
