@@ -107,6 +107,9 @@ def test_legendre():
     assert legendre(11, 0) == 0
 
     assert legendre(-1, x) == 1
+    
+    var('k')
+    assert legendre(5 - k, x).subs(k, 2) == ((5*x**3 - 3*x)/2).expand()
 
     assert roots(legendre(4, x), x) == {
         sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
