@@ -41,9 +41,9 @@ class Determinant(Expr):
 
 def det(matexpr, **kwargs):
     """ Matrix Determinant. If matexpr is a concrete matrix, the determinant takes
-    a keyword argument 'method" which can be one of "bareiss", "berkowitz", and 
+    a keyword argument 'method" which can be one of "bareiss", "berkowitz", and
     "lu"; the default is "bareiss".
-    
+
     >>> from sympy import MatrixSymbol, det, eye
     >>> A = MatrixSymbol('A', 3, 3)
     >>> det(A)
