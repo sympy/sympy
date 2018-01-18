@@ -1,10 +1,11 @@
 from sympy import (
-    Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos, sinh,
-    cosh, tanh, Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma,
-    Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
-    LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
-    sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction, Max, Min
+    Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
+    tanh, Derivative, diff, DiracDelta, E, Eq, exp, erf, erfi,
+    EulerGamma, Expr, factor, Function, I, im, Integral, integrate,
+    Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
+    Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, sign,
+    simplify, sin, SingularityFunction, sqrt, sstr, Sum, Symbol,
+    symbols, sympify, tan, trigsimp, Tuple
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -438,14 +439,12 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-@XFAIL
-def test_failing_integrals():
-    #---
-    # Double integrals not implemented
-    assert NS(Integral(
+def test_double_integrals():
+    #double integral
+    assert NS(integrate(
         sqrt(x) + x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
     # double integral + zero detection
-    assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
+    assert NS(integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0'
 
 
 def test_integrate_SingularityFunction():
@@ -529,7 +528,7 @@ def test_integrate_returns_piecewise():
         (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
 
 
-def test_max_min():
+def test_integrate_max_min():
     assert integrate(Min(x, 2), (x, 0, 3)) == 4
     assert integrate(Max(x**2, x**3), (x, 0, 2)) == S(49)/12
     assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
@@ -541,6 +540,33 @@ def test_max_min():
     int3 = integrate(x*exp(-x**2), (x, c, oo))
     assert int1 == int2 + int3 == sqrt(pi)*c*erf(c)/2 + \
         sqrt(pi)*c/2 + exp(-c**2)/2
+
+
+def test_integrate_Abs_sign():
+    assert integrate(Abs(x), (x, -2, 1)) == S(5)/2
+    assert integrate(Abs(x), (x, 0, 1)) == S(1)/2
+    assert integrate(Abs(x + 1), (x, 0, 1)) == S(3)/2
+    assert integrate(Abs(x**2 - 1), (x, -2, 2)) == 4
+    assert integrate(Abs(x**2 - 3*x), (x, -15, 15)) == 2259
+    assert integrate(sign(x), (x, -1, 2)) == 1
+    assert integrate(sign(x)*sin(x), (x, -pi, pi)) == 4
+    assert integrate(sign(x - 2) * x**2, (x, 0, 3)) == S(11)/3
+
+    t, s = symbols('t s', real=True)
+    assert integrate(Abs(t), t) == Piecewise(
+        (-t**2/2, t <= 0), (t**2/2, True))
+    assert integrate(Abs(2*t - 6), t) == Piecewise(
+        (-t**2 + 6*t, t <= 3), (t**2 - 6*t + 18, True))
+    assert (integrate(abs(t - s**2), (t, 0, 2)) ==
+        2*s**2*Min(2, s**2) - 2*s**2 - Min(2, s**2)**2 + 2)
+    assert integrate(exp(-Abs(t)), t) == Piecewise(
+        (exp(t), t <= 0), (2 - exp(-t), True))
+    assert integrate(sign(2*t - 6), t) == Piecewise(
+        (-t, t < 3), (t - 6, True))
+    assert integrate(2*t*sign(t**2 - 1), t) == Piecewise(
+        (t**2, t < -1), (-t**2 + 2, t < 1), (t**2, True))
+    assert integrate(sign(t), (t, s + 1)) == Piecewise(
+        (s + 1, s + 1 > 0), (-s - 1, s + 1 < 0), (0, True))
 
 
 def test_subs1():

@@ -9,7 +9,8 @@ from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, energy, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
     minute, pressure, quart, s, second, speed_of_light, temperature, bit,
-    byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte)
+    byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
+    kilogram, gravitational_constant)
 
 from sympy.physics.units.dimensions import Dimension, charge, length, time, dimsys_default
 from sympy.physics.units.prefixes import PREFIXES, kilo
@@ -358,3 +359,13 @@ def test_binary_information():
     assert convert_to(a, byte) == 10240*byte*hour
     assert convert_to(a, minute) == 600*kibibyte*minute
     assert convert_to(a, [byte, minute]) == 614400*byte*minute
+
+
+def test_eval_subs():
+    energy, mass, force = symbols('energy mass force')
+    expr1 = energy/mass
+    units = {energy: kilogram*meter**2/second**2, mass: kilogram}
+    assert expr1.subs(units) == meter**2/second**2
+    expr2 = force/mass
+    units = {force:gravitational_constant*kilogram**2/meter**2, mass:kilogram}
+    assert expr2.subs(units) == gravitational_constant*kilogram/meter**2

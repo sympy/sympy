@@ -193,17 +193,14 @@ def _invert_real(f, g_ys, symbol):
 
         if not base_has_sym:
             rhs = g_ys.args[0]
-            if base is not S.Zero and rhs > 0:
+            if base > S.Zero:
                 return _invert_real(expo,
                     imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
-            elif base is not S.Zero and rhs < 0:
-                from sympy.core.power import integer_nthroot
-                from sympy.ntheory import multiplicity
-                s, b = integer_nthroot(-rhs, 2)
+            elif base < S.Zero:
+                from sympy.core.power import integer_log
+                s, b = integer_log(rhs, base)
                 if b:
-                    m = multiplicity(base, s)
-                    if pow(base, m) == s:
-                        return expo, FiniteSet(2*m)
+                    return expo, FiniteSet(s)
             elif rhs is S.One:
                 #special case: 0**x - 1
                 return (expo, FiniteSet(0))
