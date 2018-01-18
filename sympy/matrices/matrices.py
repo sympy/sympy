@@ -208,9 +208,9 @@ class MatrixDeterminant(MatrixCommon):
                 return mat[0, 0]
 
             # find a pivot and extract the remaining matrix
-            # Wuth the default iszerofunc,  _find_reasonable_pivot slows down
-            # the compotation by the factor of 2.5 in one test.
-            # Relevant issues #10279 and #13877.
+            # With the default iszerofunc, _find_reasonable_pivot slows down
+            # the computation by the factor of 2.5 in one test.
+            # Relevant issues: #10279 and #13877.
             pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
                                          iszerofunc=_is_probably_zero)
             if pivot_pos == None:
