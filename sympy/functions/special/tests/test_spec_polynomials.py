@@ -107,7 +107,6 @@ def test_legendre():
     assert legendre(11, 0) == 0
 
     assert legendre(-1, x) == 1
-    
     k = Symbol('k')
     assert legendre(5 - k, x).subs(k, 2) == ((5*x**3 - 3*x)/2).expand()
 
