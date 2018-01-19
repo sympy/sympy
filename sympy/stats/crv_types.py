@@ -1457,6 +1457,7 @@ class LaplaceDistribution(SingleContinuousDistribution):
         mu, b = self.mu, self.b
         return 1/(2*b)*exp(-Abs(x - mu)/b)
 
+
 def Laplace(name, mu, b):
     r"""
     Create a continuous random variable with a Laplace distribution.
