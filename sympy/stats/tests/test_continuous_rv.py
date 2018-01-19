@@ -754,11 +754,11 @@ def test_precomputed_characteristic_functions():
     test_cf(ChiSquared('c', 2), 5, 0, mpmath.inf)
     test_cf(Exponential('e', 6), 11, 0, mpmath.inf)
     test_cf(Logistic('l', 1, 2), 8, -mpmath.inf, mpmath.inf)
+    test_cf(Normal('n', -1, 5), -7, -mpmath.inf, mpmath.inf)
     test_cf(RaisedCosine('r', 3, 1), 3.5, 2, 4)
     test_cf(Rayleigh('r', 0.5), 2, 0, mpmath.inf)
-    test_cf(WignerSemicircle('w', 3), 2, -3, 3)
-    test_cf(Normal('n', -1, 5), -7, -mpmath.inf, mpmath.inf)
     test_cf(Uniform('u', -1, 1), -0.5, -1, 1)
+    test_cf(WignerSemicircle('w', 3), 2, -3, 3)
 
 
 def test_issue_13324():
