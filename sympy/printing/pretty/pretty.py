@@ -20,7 +20,7 @@ from sympy.core.add import Add
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
-from sympy.printing.conventions import requires_partial
+from sympy.printing.conventions import requires_partial, split_super_sub
 
 from .stringpict import prettyForm, stringPict
 from .pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
@@ -74,8 +74,22 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Symbol(self, e):
-        symb = pretty_symbol(e.name)
-        return prettyForm(symb)
+        def ascii_symbol(e):
+            name, supers, subs = split_super_sub(e.name)
+            # glue all items together:
+            pform_sym = self._print(name)
+            pform = self._print(' '*max(len(supers),len(subs)))
+            if len(supers) > 0:
+                pform = prettyForm(*pform.above(self._print(''.join(supers))))
+            if len(subs) > 0:
+                pform = prettyForm(*pform.below(self._print(''.join(subs))))
+            return prettyForm(*pform_sym.right(pform))
+
+        if self._settings.get("use_unicode", True):
+            symb = pretty_symbol(e.name)
+            return prettyForm(symb)
+        else:
+            return ascii_symbol(e)
     _print_RandomSymbol = _print_Symbol
 
     def _print_Float(self, e):

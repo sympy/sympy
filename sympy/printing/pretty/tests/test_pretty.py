@@ -5438,11 +5438,6 @@ u("""\
     assert upretty(1/sqrt(x)) == ucode_str
 
 
-def test_complicated_symbol_unchanged():
-    for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
-        assert pretty(Symbol(symb_name)) == symb_name
-
-
 def test_categories():
     from sympy.categories import (Object, IdentityMorphism,
         NamedMorphism, Category, Diagram, DiagramGrid)
@@ -5960,18 +5955,45 @@ u("""\
     assert upretty(M) == ucode_str
 
 
+def test_issue_12158():
+    sym1 = Symbol('x_2__i')
+    ascii_str1 = \
+'''\
+ i\n\
+x \n\
+ 2\
+'''
+    assert pretty(sym1) == ascii_str1
+    sym2 = Symbol('x^k^t_j_i')
+    ascii_str2 = \
+'''\
+ kt\n\
+x  \n\
+ ji\
+'''
+    assert pretty(sym2) == ascii_str2
+
+
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
 
-    ascii_str1 = "A_00"
+    ascii_str1 = \
+'''\
+A  \n\
+ 00\
+'''
     ucode_str1 = u("A₀₀")
     assert pretty(A[0, 0])  == ascii_str1
     assert upretty(A[0, 0]) == ucode_str1
 
-    ascii_str1 = "3*A_00"
+    ascii_str1 = \
+'''\
+3*A  \n\
+   00\
+'''
     ucode_str1 = u("3⋅A₀₀")
     assert pretty(3*A[0, 0])  == ascii_str1
     assert upretty(3*A[0, 0]) == ucode_str1
