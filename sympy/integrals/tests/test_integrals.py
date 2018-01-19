@@ -286,6 +286,10 @@ def test_transcendental_functions():
         -x + x*LambertW(2*x) + x/LambertW(2*x)
 
 
+def test_log_polylog():
+    assert integrate(log(1 - x)/x, (x, 0, 1)) == -pi**2/6
+
+
 def test_issue_3740():
     f = 4*log(x) - 2*log(x)**2
     fid = diff(integrate(f, x), x)
