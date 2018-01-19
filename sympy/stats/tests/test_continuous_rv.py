@@ -742,7 +742,7 @@ def test_precomputed_characteristic_functions():
         f = lambdify([x,t], pdf(x)*exp(I*x*t), 'mpmath')
         cf2 = lambda t: mpmath.quad(lambda x: f(x,t), [support_lower_limit, support_upper_limit], maxdegree=10)
 
-        # compare the two functions at the given points
+        # compare the two functions at the given point
         n1 = cf1(test_point)
         n2 = cf2(test_point)
 
