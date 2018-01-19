@@ -5,7 +5,7 @@ from sympy.core.relational import (Eq, Gt,
     Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
-from sympy.functions.elementary.complexes import (Abs, arg, im, re)
+from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     atanh, sinh, tanh)
@@ -1535,8 +1535,8 @@ def test_issue_9557():
 def test_issue_9778():
     assert solveset(x**3 + 1, x, S.Reals) == FiniteSet(-1)
     assert solveset(x**(S(3)/5) + 1, x, S.Reals) == S.EmptySet
-    assert solveset(x**3 + y, x, S.Reals) == Intersection(Interval(-oo, oo), \
-        FiniteSet((-y)**(S(1)/3)*Piecewise((1, Ne(-im(y), 0)), ((-1)**(S(2)/3), -y < 0), (1, True))))
+    assert solveset(x**3 + y, x, S.Reals) == \
+        FiniteSet(-Abs(y)**(S(1)/3)*sign(y))
 
 
 @XFAIL

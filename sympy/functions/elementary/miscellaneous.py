@@ -18,7 +18,7 @@ from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 
 def _minmax_as_Piecewise(op, *args):
     # helper for Min/Max rewrite as Piecewise
@@ -308,6 +308,7 @@ def real_root(arg, n=None):
     from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
         return Piecewise(
+            (root(arg, n), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
             (sign(arg)*root(Abs(arg), n), And(Eq(im(arg), S.Zero),
                 Eq(Mod(n, 2), S.One))),
             (root(arg, n), True))
