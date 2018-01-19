@@ -1244,12 +1244,17 @@ class Derivative(Expr):
                 obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+                    # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
+                # Evaluate the derivative `n` times.  If
+                # `_eval_derivative_n_times` is not overridden by the current
+                # object, the default in `Basic` will call a loop over
+                # `_eval_derivative`:
                 obj = expr._eval_derivative_n_times(v, count)
                 nderivs += count
                 if not is_symbol:
