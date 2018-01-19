@@ -44,11 +44,11 @@ def det(matexpr, **kwargs):
 
     Possible 'kwargs' are:
     method : string, optional (default='bareiss')
-            specifies the algorithm to be used for computing the algorithm.
-            It must be one of 'bareiss', 'lu' or 'berkowitz'.
-            If matexpr is a concrete matrix, the determinant takes
-            a keyword argument 'method" which can be one of "bareiss", "berkowitz", and
-            "lu"; the default is "bareiss".
+        specifies the algorithm to be used for computing the algorithm.
+        It must be one of 'bareiss', 'lu' or 'berkowitz'.
+        If matexpr is a concrete matrix, the determinant takes
+        a keyword argument 'method" which can be one of "bareiss", "berkowitz", and
+        "lu"; the default is "bareiss".
 
     >>> from sympy import MatrixSymbol, det, eye
     >>> A = MatrixSymbol('A', 3, 3)
