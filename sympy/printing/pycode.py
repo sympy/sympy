@@ -134,8 +134,6 @@ class PythonCodePrinter(CodePrinter):
         for arg in expr.args:
             e = arg.expr
             c = arg.cond
-            # print(e)
-            # print(c)
             if i == 0:
                 result.append('(')
             result.append(self._print(e))
