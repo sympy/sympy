@@ -324,22 +324,22 @@ class NumPyPrinter(PythonCodePrinter):
         # If this is not the case, it may be triggered prematurely.
         return '{0}({1}, {2}, default=numpy.nan)'.format(self._module_format('numpy.select'), conds, exprs)
 
-    # def _print_Relational(self, expr):
-    #     "Relational printer for Equality and Unequality"
-    #     op = {
-    #         '==' :'equal',
-    #         '!=' :'not_equal',
-    #         '<'  :'less',
-    #         '<=' :'less_equal',
-    #         '>'  :'greater',
-    #         '>=' :'greater_equal',
-    #     }
-    #     if expr.rel_op in op:
-    #         lhs = self._print(expr.lhs)
-    #         rhs = self._print(expr.rhs)
-    #         return '{op}({lhs}, {rhs})'.format(op=self._module_format('numpy.'+op[expr.rel_op]),
-    #                                            lhs=lhs, rhs=rhs)
-    #     return super(NumPyPrinter, self)._print_Relational(expr)
+    def _print_Relational(self, expr):
+        "Relational printer for Equality and Unequality"
+        op = {
+            '==' :'equal',
+            '!=' :'not_equal',
+            '<'  :'less',
+            '<=' :'less_equal',
+            '>'  :'greater',
+            '>=' :'greater_equal',
+        }
+        if expr.rel_op in op:
+            lhs = self._print(expr.lhs)
+            rhs = self._print(expr.rhs)
+            return '{op}({lhs}, {rhs})'.format(op=self._module_format('numpy.'+op[expr.rel_op]),
+                                               lhs=lhs, rhs=rhs)
+        return super(NumPyPrinter, self)._print_Relational(expr)
 
     def _print_And(self, expr):
         "Logical And printer"
