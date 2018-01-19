@@ -2721,16 +2721,17 @@ def UniformSum(name, n):
 
     >>> cdf(X)(z)
     Piecewise((0, z < 0), (Sum((-1)**_k*(-_k + z)**n*binomial(n, _k),
-                            (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
+                    (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
 
 
     Compute cdf with specific 'x' and 'n' values as follows :
     >>> cdf(UniformSum("x", 5), evaluate=False)(2).doit()
     9/40
 
-    In above formof cdf functtion evaluate=False prevents an attempt at premature evaluation of the sum,
-    before the argument 2 is passed. Once 2 is passed, the sum is easily
-    evaluated with doit and without any hypergeometric complications.
+    The argument evaluate=False prevents an attempt at evaluation
+    of the sum for general n, before the argument 2 is passed.
+    Once 2 is passed, the sum is easilyevaluated with doit and without
+    any hypergeometric complications.
 
     References
     ==========
