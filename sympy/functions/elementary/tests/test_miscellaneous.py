@@ -11,8 +11,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.utilities.pytest import raises
-
+from sympy.utilities.pytest import raises, skip
 
 def test_Min():
     from sympy.abc import x, y, z
