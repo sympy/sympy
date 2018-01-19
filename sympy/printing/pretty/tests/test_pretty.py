@@ -4701,7 +4701,7 @@ k = ─────                                \n\
 
 def test_units():
     expr = joule
-    ascii_str = \
+    ascii_str1 = \
 """\
               2\n\
 kilogram*meter \n\
@@ -4709,7 +4709,7 @@ kilogram*meter \n\
           2    \n\
     second     \
 """
-    unicode_str = \
+    unicode_str1 = \
 u("""\
               2\n\
 kilogram⋅meter \n\
@@ -4717,12 +4717,31 @@ kilogram⋅meter \n\
           2    \n\
     second     \
 """)
+
+    ascii_str2 = \
+"""\
+                    2\n\
+3*x*y*kilogram*meter \n\
+---------------------\n\
+             2       \n\
+       second        \
+"""
+    unicode_str2 = \
+u("""\
+                    2\n\
+3⋅x⋅y⋅kilogram⋅meter \n\
+─────────────────────\n\
+             2       \n\
+       second        \
+""")
+
     from sympy.physics.units import kg, m, s
     assert upretty(expr) == u("joule")
     assert pretty(expr) == "joule"
-    assert upretty(expr.convert_to(kg*m**2/s**2)) == unicode_str
-    assert pretty(expr.convert_to(kg*m**2/s**2)) == ascii_str
-
+    assert upretty(expr.convert_to(kg*m**2/s**2)) == unicode_str1
+    assert pretty(expr.convert_to(kg*m**2/s**2)) == ascii_str1
+    assert upretty(3*kg*x*m**2*y/s**2) == unicode_str2
+    assert pretty(3*kg*x*m**2*y/s**2) == ascii_str2
 
 def test_pretty_Subs():
     f = Function('f')
