@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I)
+                   floor, expand_func, Rational, I, re, im, lambdify)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -725,6 +725,41 @@ def test_precomputed_cdf():
         compdiff = cdf(X)(x) - simplify(X.pspace.density.compute_cdf()(x))
         compdiff = simplify(compdiff.rewrite(erfc))
         assert compdiff == 0
+
+
+def test_precomputed_characteristic_functions():
+    import mpmath
+
+    def test_cf(dist, test_point, support_lower_limit, support_upper_limit):
+        pdf = density(dist)
+        t = Symbol('t')
+        x = Symbol('x')
+
+        # first function is the hardcoded CF of the distribution
+        cf1 = lambdify([t], characteristic_function(dist)(t), 'mpmath')
+
+        # second function is the Fourier transform of the density function
+        f = lambdify([x,t], pdf(x)*exp(I*x*t), 'mpmath')
+        cf2 = lambda t: mpmath.quad(lambda x: f(x,t), [support_lower_limit, support_upper_limit], maxdegree=10)
+
+        # compare the two functions at the given points
+        n1 = cf1(test_point)
+        n2 = cf2(test_point)
+
+        assert abs(re(n1) - re(n2)) < 1e-12
+        assert abs(im(n1) - im(n2)) < 1e-12
+
+    test_cf(Beta('b', 1, 2), 0.5, 0, 1)
+    test_cf(Chi('c', 3), 5, 0, mpmath.inf)
+    test_cf(ChiSquared('c', 2), 5, 0, mpmath.inf)
+    test_cf(Exponential('e', 6), 11, 0, mpmath.inf)
+    test_cf(Logistic('l', 1, 2), 8, -mpmath.inf, mpmath.inf)
+    test_cf(RaisedCosine('r', 3, 1), 3.5, 2, 4)
+    test_cf(Rayleigh('r', 0.5), 2, 0, mpmath.inf)
+    test_cf(WignerSemicircle('w', 3), 2, -3, 3)
+    test_cf(Normal('n', -1, 5), -7, -mpmath.inf, mpmath.inf)
+    test_cf(Uniform('u', -1, 1), -0.5, -1, 1)
+
 
 def test_issue_13324():
     X = Uniform('X', 0, 1)

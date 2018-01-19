@@ -47,10 +47,9 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, erfi, I, hyper, sinh,
-                   uppergamma)
+                   Lambda, Basic, lowergamma, erf, erfi, I, hyper, sinh)
 from sympy import beta as beta_fn
-from sympy import cos, sin, exp, besseli, besselj, besselk
+from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
@@ -427,9 +426,6 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
-    def _characteristic_function(self, t):
-        return exp(self.x0*I*t - self.gamma * Abs(t))
-
 def Cauchy(name, x0, gamma):
     r"""
     Create a continuous random variable with a Cauchy distribution.
@@ -551,9 +547,6 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
-
-    def _characteristic_function(self, t):
-        return exp(I*self.l*t / (1 - 2*I*t)) / (1 - 2*I*t)**(self.k/2)
 
 def ChiNoncentral(name, k, l):
     r"""
@@ -916,16 +909,6 @@ class FDistributionDistribution(SingleContinuousDistribution):
         return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
                / (x * beta_fn(d1/2, d2/2)))
 
-    def _characteristic_function(self, t):
-
-        def U(a, b, z):
-            part_1 = gamma(1-b) * hyper((a,), (b,), z) / gamma(a + 1 - b)
-            part_2 = gamma(b-1) * z**(1-b) * hyper((a+1-b,), (2-b,), z) / gamma(a)
-            return part_1 + part_2
-
-        d1, d2 = self.d1, self.d2
-        return gamma((d1+d2)/2) * U(d1/2, 1 - d2/2, -d2*I*t/d1) / gamma(d2/2)
-
 def FDistribution(name, d1, d2):
     r"""
     Create a continuous random variable with a F distribution.
@@ -1137,10 +1120,6 @@ class GammaDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.gammavariate(self.k, self.theta)
 
-    def _characteristic_function(self, t):
-        return (1 - self.theta*I*t)**(-self.k)
-
-
 def Gamma(name, k, theta):
     r"""
     Create a continuous random variable with a Gamma distribution.
@@ -1229,10 +1208,6 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
 
-    def _characteristic_function(self, t):
-        a, b = self.a, self.b
-        return 2*(-I*b*t)**(a/2) * besselk(a, sqrt(-4*I*b*t)) / gamma(a)
-
 def GammaInverse(name, a, b):
     r"""
     Create a continuous random variable with an inverse Gamma distribution.
@@ -1296,9 +1271,6 @@ class GumbelDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         beta, mu = self.beta, self.mu
         return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
-
-    def _characteristic_function(self, t):
-        return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
 
 def Gumbel(name, beta, mu):
     r"""
@@ -1480,9 +1452,6 @@ class LaplaceDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         mu, b = self.mu, self.b
         return 1/(2*b)*exp(-Abs(x - mu)/b)
-
-    def _characteristic_function(self, t):
-        return exp(self.mu*I*t) / (1 + self.b**2*t**2)
 
 def Laplace(name, mu, b):
     r"""
@@ -1936,11 +1905,6 @@ class ParetoDistribution(SingleContinuousDistribution):
                 (0, True),
         )
 
-    def _characteristic_function(self, t):
-        xm, alpha = self.xm, self.alpha
-        return alpha * (-I*xm*t)**alpha * uppergamma(-alpha, -I*xm*t)
-
-
 def Pareto(name, xm, alpha):
     r"""
     Create a continuous random variable with the Pareto distribution.
@@ -2004,10 +1968,6 @@ class QuadraticUDistribution(SingleContinuousDistribution):
         return Piecewise(
                   (alpha * (x-beta)**2, And(a<=x, x<=b)),
                   (S.Zero, True))
-
-    def _characteristic_function(self, t):
-        a, b = self.a, self.b
-        return 3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) / ((a-b)**3*t**2)
 
 def QuadraticU(name, a, b):
     r"""
@@ -2282,10 +2242,6 @@ class StudentTDistribution(SingleContinuousDistribution):
         nu = self.nu
         return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
 
-    def _characteristic_function(self, t):
-        nu = self.nu
-        return besselk(nu/2, sqrt(nu)*abs(t)) * (sqrt(nu)*abs(t))**(nu/2) / (gamma(nu/2) * 2**(nu/2) - 1)
-
 def StudentT(name, nu):
     r"""
     Create a continuous random variable with a student's t distribution.
@@ -2433,10 +2389,6 @@ class TriangularDistribution(SingleContinuousDistribution):
             (2/(b - a), Eq(x, c)),
             (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
             (S.Zero, True))
-
-    def _characteristic_function(self, t):
-        a, b, c = self.a, self.b, self.c
-        return -2 * ((b-c)*exp(I*a*t) - (b-a)*exp(I*c*t) + (c-a)*exp(I*b*t)) / ((b-a)*(c-a)*(b-c)*t**2)
 
 def Triangular(name, a, b, c):
     r"""
@@ -2615,9 +2567,6 @@ class UniformSumDistribution(SingleContinuousDistribution):
         return 1/factorial(
             n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
-    def _characteristic_function(self, t):
-        return ((exp(I*t) - 1) / (I*t))**self.n
-
 def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
@@ -2690,9 +2639,6 @@ class VonMisesDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
-
-    def _characteristic_function(self, t):
-        return besseli(Abs(t), self.k) * exp(I*t*self.mu) / besseli(0, self.k)
 
 def VonMises(name, mu, k):
     r"""
