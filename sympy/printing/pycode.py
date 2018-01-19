@@ -134,15 +134,21 @@ class PythonCodePrinter(CodePrinter):
         for arg in expr.args:
             e = arg.expr
             c = arg.cond
-            result.append('((')
+            # print(e)
+            # print(c)
+            if i == 0:
+                result.append('(')
             result.append(self._print(e))
-            result.append(') if (')
+            result.append(' if ')
             result.append(self._print(c))
-            result.append(') else (')
+            result.append(' else ')
             i += 1
         result = result[:-1]
-        result.append(') else None)')
-        result.append(')'*(2*i - 2))
+        if result[-1] == 'True':
+            result=result[:-2]
+            result.append(')')
+        else:
+            result.append(' else None)')
         return ''.join(result)
 
     def _print_Relational(self, expr):
@@ -158,8 +164,7 @@ class PythonCodePrinter(CodePrinter):
         if expr.rel_op in op:
             lhs = self._print(expr.lhs)
             rhs = self._print(expr.rhs)
-            return '{op}({lhs}, {rhs})'.format(op=self._module_format('numpy.'+op[expr.rel_op]),
-                                               lhs=lhs, rhs=rhs)
+            return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
         return super(PythonCodePrinter, self)._print_Relational(expr)
 
     def _print_ITE(self, expr):
