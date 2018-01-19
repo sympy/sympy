@@ -426,6 +426,7 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
+
 def Cauchy(name, x0, gamma):
     r"""
     Create a continuous random variable with a Cauchy distribution.
@@ -547,6 +548,7 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
+
 
 def ChiNoncentral(name, k, l):
     r"""
@@ -909,6 +911,7 @@ class FDistributionDistribution(SingleContinuousDistribution):
         return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
                / (x * beta_fn(d1/2, d2/2)))
 
+
 def FDistribution(name, d1, d2):
     r"""
     Create a continuous random variable with a F distribution.
@@ -1119,6 +1122,7 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def sample(self):
         return random.gammavariate(self.k, self.theta)
+
 
 def Gamma(name, k, theta):
     r"""
@@ -1905,6 +1909,7 @@ class ParetoDistribution(SingleContinuousDistribution):
                 (0, True),
         )
 
+
 def Pareto(name, xm, alpha):
     r"""
     Create a continuous random variable with the Pareto distribution.
@@ -1968,6 +1973,7 @@ class QuadraticUDistribution(SingleContinuousDistribution):
         return Piecewise(
                   (alpha * (x-beta)**2, And(a<=x, x<=b)),
                   (S.Zero, True))
+
 
 def QuadraticU(name, a, b):
     r"""
@@ -2242,6 +2248,7 @@ class StudentTDistribution(SingleContinuousDistribution):
         nu = self.nu
         return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
 
+
 def StudentT(name, nu):
     r"""
     Create a continuous random variable with a student's t distribution.
@@ -2389,6 +2396,7 @@ class TriangularDistribution(SingleContinuousDistribution):
             (2/(b - a), Eq(x, c)),
             (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
             (S.Zero, True))
+
 
 def Triangular(name, a, b, c):
     r"""
@@ -2567,6 +2575,7 @@ class UniformSumDistribution(SingleContinuousDistribution):
         return 1/factorial(
             n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
+
 def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
@@ -2640,6 +2649,7 @@ class VonMisesDistribution(SingleContinuousDistribution):
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
 
+
 def VonMises(name, mu, k):
     r"""
     Create a Continuous Random Variable with a von Mises distribution.
@@ -2711,6 +2721,7 @@ class WeibullDistribution(SingleContinuousDistribution):
 
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
+
 
 def Weibull(name, alpha, beta):
     r"""
