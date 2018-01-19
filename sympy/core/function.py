@@ -1239,33 +1239,19 @@ class Derivative(Expr):
                 obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-                    deriv_fun = derive_by_array
+                    # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
-                else:
-                    deriv_fun = lambda x, y: x._eval_derivative(y)
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                obj = expr
-                if count.is_Integer:
-                    for i in range(count):
-                        obj2 = deriv_fun(obj, v)
-                        if obj == obj2:
-                            break
-                        obj = obj2
-                        nderivs += 1
-                elif obj.is_Derivative:
-                    dict_var_count = dict(obj.variable_count)
-                    if v in dict_var_count:
-                        dict_var_count[v] += count
-                    else:
-                        dict_var_count[v] = count
-                    obj = Derivative(obj.expr, *dict_var_count.items())
-                    nderivs += count
-                else:
-                    obj = None
+                # Evaluate the derivative `n` times.  If
+                # `_eval_derivative_n_times` is not overridden by the current
+                # object, the default in `Basic` will call a loop over
+                # `_eval_derivative`:
+                obj = expr._eval_derivative_n_times(v, count)
+                nderivs += count
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1301,6 +1287,44 @@ class Derivative(Expr):
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
         return expr
+
+    @staticmethod
+    def _helper_apply_n_times(expr, s, n, func):
+        from sympy import Integer, Tuple, NDimArray
+        from sympy.matrices.common import MatrixCommon
+
+        # This `if` could be avoided with double dispatch, combinations of type
+        # requiring `derive_by_array`:
+        # 1. (array, array) ==> this is managed by the following `if`.
+        # 2. (array, scalar)
+        # 3. (scalar, array) ==> this is managed by the following `if`.
+        # 4. (scalar, scalar)
+        #
+        # Case 1. is handled by `_eval_derivative` of `NDimArray`.
+        # Case 4., i.e. pair (x=scalar, y=scalar) should be passed to
+        # x._eval_derivative(y).
+        if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+            from sympy import derive_by_array
+            func = derive_by_array
+
+        if isinstance(n, (int, Integer)):
+            obj = expr
+            for i in range(n):
+                obj2 = func(obj, s)
+                if obj == obj2:
+                    break
+                obj = obj2
+            return obj
+        elif expr.is_Derivative:
+            dict_var_count = dict(expr.variable_count)
+            if s in dict_var_count:
+                dict_var_count[s] += n
+            else:
+                dict_var_count[s] = n
+            from sympy import Derivative
+            return Derivative(expr.expr, *dict_var_count.items())
+        else:
+            return None
 
     @classmethod
     def _remove_derived_once(cls, v):
