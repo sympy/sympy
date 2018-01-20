@@ -3,6 +3,7 @@ from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
 from sympy import trigsimp
 from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
+from sympy.printing.pretty.pretty import prettyForm
 
 __all__ = ['Vector']
 
@@ -279,6 +280,8 @@ class Vector(object):
                             if isinstance(ar[i][0][j], Add):
                                 pform = vp._print(
                                     ar[i][0][j]).parens()
+                                # Necessary becaus parens() returns a string.
+                                pform = prettyForm(*pform)
                             else:
                                 pform = vp._print(
                                     ar[i][0][j])
