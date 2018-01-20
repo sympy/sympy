@@ -730,7 +730,7 @@ def test_precomputed_cdf():
 def test_precomputed_characteristic_functions():
     import mpmath
 
-    def test_cf(dist, test_point, support_lower_limit, support_upper_limit):
+    def test_cf(dist, support_lower_limit, support_upper_limit):
         pdf = density(dist)
         t = Symbol('t')
         x = Symbol('x')
@@ -739,26 +739,27 @@ def test_precomputed_characteristic_functions():
         cf1 = lambdify([t], characteristic_function(dist)(t), 'mpmath')
 
         # second function is the Fourier transform of the density function
-        f = lambdify([x,t], pdf(x)*exp(I*x*t), 'mpmath')
-        cf2 = lambda t: mpmath.quad(lambda x: f(x,t), [support_lower_limit, support_upper_limit], maxdegree=10)
+        f = lambdify([x, t], pdf(x)*exp(I*x*t), 'mpmath')
+        cf2 = lambda t: mpmath.quad(lambda x: f(x, t), [support_lower_limit, support_upper_limit], maxdegree=10)
 
-        # compare the two functions at the given point
-        n1 = cf1(test_point)
-        n2 = cf2(test_point)
+        # compare the two functions at various points
+        for test_point in [2, 5, 8, 11]:
+            n1 = cf1(test_point)
+            n2 = cf2(test_point)
 
-        assert abs(re(n1) - re(n2)) < 1e-12
-        assert abs(im(n1) - im(n2)) < 1e-12
+            assert abs(re(n1) - re(n2)) < 1e-12
+            assert abs(im(n1) - im(n2)) < 1e-12
 
-    test_cf(Beta('b', 1, 2), 0.5, 0, 1)
-    test_cf(Chi('c', 3), 5, 0, mpmath.inf)
-    test_cf(ChiSquared('c', 2), 5, 0, mpmath.inf)
-    test_cf(Exponential('e', 6), 11, 0, mpmath.inf)
-    test_cf(Logistic('l', 1, 2), 8, -mpmath.inf, mpmath.inf)
-    test_cf(Normal('n', -1, 5), -7, -mpmath.inf, mpmath.inf)
-    test_cf(RaisedCosine('r', 3, 1), 3.5, 2, 4)
-    test_cf(Rayleigh('r', 0.5), 2, 0, mpmath.inf)
-    test_cf(Uniform('u', -1, 1), -0.5, -1, 1)
-    test_cf(WignerSemicircle('w', 3), 2, -3, 3)
+    test_cf(Beta('b', 1, 2), 0, 1)
+    test_cf(Chi('c', 3), 0, mpmath.inf)
+    test_cf(ChiSquared('c', 2), 0, mpmath.inf)
+    test_cf(Exponential('e', 6), 0, mpmath.inf)
+    test_cf(Logistic('l', 1, 2), -mpmath.inf, mpmath.inf)
+    test_cf(Normal('n', -1, 5), -mpmath.inf, mpmath.inf)
+    test_cf(RaisedCosine('r', 3, 1), 2, 4)
+    test_cf(Rayleigh('r', 0.5), 0, mpmath.inf)
+    test_cf(Uniform('u', -1, 1), -1, 1)
+    test_cf(WignerSemicircle('w', 3), -3, 3)
 
 
 def test_issue_13324():
