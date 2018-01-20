@@ -816,4 +816,4 @@ def test_lambdify_dummy_arg():
 def test_issue_11044():
     x = MatrixSymbol('x', 3, 1)
     f = lambdify(x, x.T*x)
-    assert f(Matrix([[1], [2], [3]])) == S(14)
+    assert f(Matrix([1, 2, 3])) == S(14)
