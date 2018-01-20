@@ -116,9 +116,6 @@ _between_two_numbers_p = (
     re.compile(r'[{ ]*[-+0-9]'),  # match
 )
 
-angular_quantity = [
-    'degree', 'radian'
-]
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
@@ -403,11 +400,18 @@ class LatexPrinter(Printer):
                 else:
                     args = list(expr.args)
 
-                # If angular quantity is present append them at the back
+                # If quantities are present append them at the back
+                quantities_index = []
                 for i in range(len(args)):
-                    if isinstance(args[i], Quantity):
-                        if args[i].name.name in angular_quantity:
-                            args.append(args[i])
+                    if isinstance(args[i], Quantity) or (isinstance(args[i], Pow) and
+                                                        isinstance(args[i].base, Quantity)):
+                        args.append(args[i])
+                        quantities_index.append(i)
+
+                if quantities_index != []:
+                    for i in range(len(args)-1, -1, -1):
+                        if quantities_index != [] and i == quantities_index[-1]:
+                            del quantities_index[-1]
                             del args[i]
 
                 for i, term in enumerate(args):
