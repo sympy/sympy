@@ -1657,9 +1657,9 @@ class LatexPrinter(Printer):
         else:
             printset = tuple(s)
 
-        return (r"\left\["
+        return (r"\left["
               + r", ".join(self._print(el) for el in printset)
-              + r"\right\]")
+              + r"\right]")
 
     _print_SeqPer = _print_SeqFormula
     _print_SeqAdd = _print_SeqFormula
