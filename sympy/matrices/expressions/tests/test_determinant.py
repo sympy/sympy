@@ -34,3 +34,9 @@ def test_eval_determinant():
 def test_refine():
     assert refine(det(A), Q.orthogonal(A)) == 1
     assert refine(det(A), Q.singular(A)) == 0
+
+
+def test_issue_13842():
+    assert det(eye(3), method="bareiss") == 1
+    assert det(eye(3), method="berkowitz") == 1
+    raises(ValueError, lambda: det(C, method="bareiss"))

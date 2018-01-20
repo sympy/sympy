@@ -33,7 +33,7 @@ class Determinant(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, expand=False, **kwargs):
+    def doit(self, **kwargs):
         try:
             return self.arg._eval_determinant(**kwargs)
         except (AttributeError, NotImplementedError):
@@ -46,9 +46,7 @@ def det(matexpr, **kwargs):
     method : string, optional (default='bareiss')
         specifies the algorithm to be used for computing the algorithm.
         It must be one of 'bareiss', 'lu' or 'berkowitz'.
-        If matexpr is a concrete matrix, the determinant takes
-        a keyword argument 'method" which can be one of "bareiss", "berkowitz", and
-        "lu"; the default is "bareiss".
+        "method" is only applicable for a concrete matrix.
 
     >>> from sympy import MatrixSymbol, det, eye
     >>> A = MatrixSymbol('A', 3, 3)
@@ -60,7 +58,8 @@ def det(matexpr, **kwargs):
     """
 
     if isinstance(matexpr, MatrixExpr) and  kwargs:
-        raise ValueError("Keyword arguments not supported for matrix expressions.")
+        raise ValueError(
+            "Keyword arguments not supported for matrix expressions.")
 
     return Determinant(matexpr).doit(**kwargs)
 
