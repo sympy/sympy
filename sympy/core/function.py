@@ -1293,27 +1293,6 @@ class Derivative(Expr):
             expr = factor_terms(signsimp(expr))
         return expr
 
-    @staticmethod
-    def _apply_for_loop_n_times(expr, s, n, func):
-        from sympy import Integer
-        if isinstance(n, (int, Integer)):
-            obj = expr
-            for i in range(n):
-                obj2 = func(obj, s)
-                if obj == obj2:
-                    break
-                obj = obj2
-            return obj
-        elif expr.is_Derivative:
-            dict_var_count = dict(expr.variable_count)
-            if s in dict_var_count:
-                dict_var_count[s] += n
-            else:
-                dict_var_count[s] = n
-            return Derivative(expr.expr, *dict_var_count.items())
-        else:
-            return None
-
     @classmethod
     def _remove_derived_once(cls, v):
         return [i[0] if i[1] == 1 else i for i in v]
@@ -1406,6 +1385,19 @@ class Derivative(Expr):
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Integer
+        if isinstance(n, (int, Integer)):
+            # TODO: it would be desirable to squash `_eval_derivative` into
+            # this code.
+            return super(Derivative, self)._eval_derivative_n_times(s, n)
+        dict_var_count = dict(self.variable_count)
+        if s in dict_var_count:
+            dict_var_count[s] += n
+        else:
+            dict_var_count[s] = n
+        return Derivative(self.expr, *dict_var_count.items())
 
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we

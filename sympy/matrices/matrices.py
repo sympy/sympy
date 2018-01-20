@@ -1566,6 +1566,19 @@ class MatrixCalculus(MatrixCommon):
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
 
+    def _accept_eval_derivative(self, s):
+        return s._visit_eval_derivative_array(self)
+
+    def _visit_eval_derivative_scalar(self, base):
+        # Types are (base: scalar, self: matrix)
+        from sympy import derive_by_array
+        return derive_by_array(base, self)
+
+    def _visit_eval_derivative_array(self, base):
+        # Types are (base: array/matrix, self: matrix)
+        from sympy import derive_by_array
+        return derive_by_array(base, self)
+
     def integrate(self, *args):
         """Integrate each element of the matrix.  ``args`` will
         be passed to the ``integrate`` function.

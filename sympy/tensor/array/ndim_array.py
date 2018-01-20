@@ -226,6 +226,18 @@ class NDimArray(object):
         from sympy import Derivative
         return Derivative(self.as_immutable(), *args, evaluate=True)
 
+    def _accept_eval_derivative(self, s):
+        return s._visit_eval_derivative_array(self)
+
+    def _visit_eval_derivative_scalar(self, base):
+        # Types are (base: scalar, self: array)
+        return self.applyfunc(lambda x: base.diff(x))
+
+    def _visit_eval_derivative_array(self, base):
+        # Types are (base: array/matrix, self: array)
+        from sympy import derive_by_array
+        return derive_by_array(base, self)
+
     def _eval_derivative_n_times(self, s, n):
         return Basic._eval_derivative_n_times(self, s, n)
 
