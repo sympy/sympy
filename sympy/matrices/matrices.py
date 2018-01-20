@@ -1571,8 +1571,7 @@ class MatrixCalculus(MatrixCommon):
 
     def _visit_eval_derivative_scalar(self, base):
         # Types are (base: scalar, self: matrix)
-        from sympy import derive_by_array
-        return derive_by_array(base, self)
+        return self.applyfunc(lambda x: base.diff(x))
 
     def _visit_eval_derivative_array(self, base):
         # Types are (base: array/matrix, self: matrix)
