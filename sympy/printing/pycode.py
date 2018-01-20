@@ -136,7 +136,9 @@ class PythonCodePrinter(CodePrinter):
             c = arg.cond
             if i == 0:
                 result.append('(')
+            result.append('(')
             result.append(self._print(e))
+            result.append(')')
             result.append(' if ')
             result.append(self._print(c))
             result.append(' else ')
