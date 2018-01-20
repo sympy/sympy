@@ -206,7 +206,7 @@ class FracField(DefaultPrinting):
 
     def _rebuild_expr(self, expr, mapping):
         domain = self.domain
-        powers = tuple((gen, *gen.as_base_exp()) for gen in mapping.keys()
+        powers = tuple((gen, gen.as_base_exp()) for gen in mapping.keys()
             if gen.is_Pow or isinstance(gen, ExpBase))
 
         def _rebuild(expr):
@@ -221,7 +221,7 @@ class FracField(DefaultPrinting):
             elif expr.is_Pow or isinstance(expr, ExpBase):
                 b, e = expr.as_base_exp()
                 # look for bg**eg whose integer power may be b**e
-                choices = tuple((gen, bg, eg) for gen, bg, eg in powers
+                choices = tuple((gen, bg, eg) for gen, (bg, eg) in powers
                     if bg == b and Mod(e, eg) == 0)
                 if len(choices) > 0:
                     gen, bg, eg = choices[0]
