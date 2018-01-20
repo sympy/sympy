@@ -1033,8 +1033,12 @@ class Expr(Basic, EvalfMixin):
 
         k, indices = len(gens), {}
 
-        for i, g in enumerate(gens):
-            indices[g] = i
+        if any(hasattr(item, 'indices') for item in gens):
+            for g in gens:
+                indices[g] = g.indices[0]
+        else:
+            for i, g in enumerate(gens):
+                indices[g] = i
 
         result = []
 

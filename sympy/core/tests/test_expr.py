@@ -7,7 +7,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp)
+                   integrate, gammasimp, IndexedBase)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1448,6 +1448,10 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
     assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
+
+    a = IndexedBase("a")
+
+    assert (a[2]+a[1]+a[0]).as_ordered_terms() == [a[0], a[1], a[2]]
 
 
 def test_sort_key_atomic_expr():
