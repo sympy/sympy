@@ -327,7 +327,11 @@ def tensor_product_simp_Mul(e):
     elif e.has(TensorProduct):
         current = nc_part[0]
         if not isinstance(current, TensorProduct):
-            raise TypeError('TensorProduct expected, got: %r' % current)
+            if isinstance(current, Pow):
+                if isinstance(current.base, TensorProduct):
+                    current = tensor_product_simp_Pow(current)
+            else:
+                raise TypeError('TensorProduct expected, got: %r' % current)
         n_terms = len(current.args)
         new_args = list(current.args)
         for next in nc_part[1:]:
@@ -342,14 +346,14 @@ def tensor_product_simp_Mul(e):
                     new_args[i] = new_args[i] * next.args[i]
             else:
                 if isinstance(next, Pow):
-                    new_tp = tensor_product_simp_Pow(next)
-                    for i in range(len(new_args)):
-                        new_args[i] = new_args[i] * new_tp.args[i]
+                    if isinstance(next.base, TensorProduct):
+                        new_tp = tensor_product_simp_Pow(next)
+                        for i in range(len(new_args)):
+                            new_args[i] = new_args[i] * new_tp.args[i]
+                    else:
+                        raise TypeError('TensorProduct expected, got: %r' % next)
                 else:
-                    # this won't quite work as we don't want next in the
-                    # TensorProduct
-                    for i in range(len(new_args)):
-                        new_args[i] = new_args[i] * next
+                    raise TypeError('TensorProduct expected, got: %r' % next)
             current = next
         return Mul(*c_part) * TensorProduct(*new_args)
     elif e.has(Pow):
