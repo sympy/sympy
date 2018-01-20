@@ -226,6 +226,9 @@ class NDimArray(object):
         from sympy import Derivative
         return Derivative(self.as_immutable(), *args, evaluate=True)
 
+    def _eval_derivative_n_times(self, s, n):
+        return Basic._eval_derivative_n_times(self, s, n)
+
     def _eval_derivative(self, arg):
         from sympy import derive_by_array
         from sympy import Derivative, Tuple
@@ -388,12 +391,6 @@ class NDimArray(object):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
-
-    def _eval_diff(self, *args, **kwargs):
-        if kwargs.pop("evaluate", True):
-            return self.diff(*args)
-        else:
-            return Derivative(self, *args, **kwargs)
 
     def _eval_transpose(self):
         if self.rank() != 2:

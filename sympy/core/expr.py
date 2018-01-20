@@ -9,7 +9,7 @@ from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range
 from mpmath.libmp import mpf_log, prec_to_dps
 
-from collections import defaultdict
+from collections import defaultdict, Iterable
 
 class Expr(Basic, EvalfMixin):
     """
@@ -3354,6 +3354,10 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_derivative_n_times(self, s, n):
         from sympy import Piecewise, Eq
+        from sympy import NDimArray, Tuple, derive_by_array
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(s, (NDimArray, MatrixCommon, Tuple, Iterable)):
+            return Derivative._apply_for_loop_n_times(self, s, n, derive_by_array)
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
         else:

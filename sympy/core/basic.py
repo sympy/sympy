@@ -1589,7 +1589,7 @@ class Basic(with_metaclass(ManagedProperties)):
         # method should be overridden if the object has a closed form for its
         # symbolic n-th derivative.
         from sympy import Derivative
-        return Derivative._helper_apply_n_times(self, s, n, lambda x, s: x._eval_derivative(s))
+        return Derivative._apply_for_loop_n_times(self, s, n, lambda x, s: x._eval_derivative(s))
 
     def rewrite(self, *args, **hints):
         """ Rewrite functions in terms of other functions.

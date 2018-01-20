@@ -1294,24 +1294,8 @@ class Derivative(Expr):
         return expr
 
     @staticmethod
-    def _helper_apply_n_times(expr, s, n, func):
-        from sympy import Integer, Tuple, NDimArray
-        from sympy.matrices.common import MatrixCommon
-
-        # This `if` could be avoided with double dispatch, combinations of type
-        # requiring `derive_by_array`:
-        # 1. (array, array) ==> this is managed by the following `if`.
-        # 2. (array, scalar)
-        # 3. (scalar, array) ==> this is managed by the following `if`.
-        # 4. (scalar, scalar)
-        #
-        # Case 1. is handled by `_eval_derivative` of `NDimArray`.
-        # Case 4., i.e. pair (x=scalar, y=scalar) should be passed to
-        # x._eval_derivative(y).
-        if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-            from sympy import derive_by_array
-            func = derive_by_array
-
+    def _apply_for_loop_n_times(expr, s, n, func):
+        from sympy import Integer
         if isinstance(n, (int, Integer)):
             obj = expr
             for i in range(n):
@@ -1326,7 +1310,6 @@ class Derivative(Expr):
                 dict_var_count[s] += n
             else:
                 dict_var_count[s] = n
-            from sympy import Derivative
             return Derivative(expr.expr, *dict_var_count.items())
         else:
             return None
