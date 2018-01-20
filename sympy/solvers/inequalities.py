@@ -455,6 +455,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
     # real.
+    orig_expr = expr
     _gen = gen
     _domain = domain
     if gen.is_real is False:
@@ -518,7 +519,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 solns = solvify(e, gen, domain)
                 if solns is None:
                     # in which case we raise ValueError
-                    raise ValueError
+                    e = orig_expr.lhs - orig_expr.rhs
+                    return set((Poly(e, _gen).all_roots()))
             except (ValueError, NotImplementedError):
                 # replace gen with generic x since it's
                 # univariate anyway
