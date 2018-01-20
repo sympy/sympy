@@ -21,6 +21,7 @@ class StrPrinter(Printer):
         "order": None,
         "full_prec": "auto",
         "sympy_integers": False,
+        "abbrev": False,
     }
 
     _relationals = dict()
@@ -706,6 +707,8 @@ class StrPrinter(Printer):
         return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
+        if self._settings.get("abbrev", True):
+            return "%s" % expr.abbrev
         return "%s" % expr.name
 
     def _print_Quaternion(self, expr):
