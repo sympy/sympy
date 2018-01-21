@@ -115,6 +115,7 @@ def test_imag():
     assert mcode(5*I) == "5i"
     assert mcode((S(3)/2)*I) == "3*1i/2"
     assert mcode(3+4*I) == "3 + 4i"
+    assert mcode(sqrt(3)*I) == "sqrt(3)*1i"
 
 
 def test_constants():
