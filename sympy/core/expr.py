@@ -1031,14 +1031,14 @@ class Expr(Basic, EvalfMixin):
 
         gens = sorted(gens, key=default_sort_key)
 
-        k, indices = len(gens), {}
+        k, Indices = len(gens), {}
 
-        if any(hasattr(item, 'indices') for item in gens):
+        if any(hasattr(item, 'indices') and item.indices[0].is_Integer for item in gens):
             for g in gens:
-                indices[g] = g.indices[0]
+                Indices[g] = g.indices[0]
         else:
             for i, g in enumerate(gens):
-                indices[g] = i
+                Indices[g] = i
 
         result = []
 
@@ -1046,7 +1046,7 @@ class Expr(Basic, EvalfMixin):
             monom = [0]*k
 
             for base, exp in cpart.items():
-                monom[indices[base]] = exp
+                monom[Indices[base]] = exp
 
             result.append((term, (coeff, tuple(monom), ncpart)))
 
