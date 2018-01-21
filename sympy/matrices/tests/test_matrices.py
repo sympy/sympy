@@ -1690,6 +1690,14 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert Jmust == J
 
+    # checking for maximum precision to remain unchanged
+    m = Matrix([[Float('1.0', precision=110), Float('2.0', precision=110)],
+                [Float('3.14159265358979323846264338327', precision=110), Float('4.0', precision=110)]])
+    P, J = m.jordan_form()
+    for term in J._mat:
+        if isinstance(term, Float):
+            assert term._prec == 110
+
 
 def test_jordan_form_complex_issue_9274():
     A = Matrix([[ 2,  4,  1,  0],

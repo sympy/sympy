@@ -12,7 +12,7 @@ from sympy.core.numbers import Integer, ilcm, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import Abs, exp, factorial
+from sympy.functions import Abs, exp, factorial, log
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -1333,11 +1333,22 @@ class MatrixEigen(MatrixSubspaces):
         mat = self
         has_floats = any(v.has(Float) for v in self)
 
+        def dps(expr):
+            C = log(10)/log(2)
+            return max(1, int(round(int(max_prec) / C - 1)))
+
+        if has_floats:
+            max_prec = 0
+            for term in self._mat:
+                if isinstance(term, Float):
+                    max_prec = max(max_prec, term._prec)
+            max_dps = dps(max_prec)
+
         def restore_floats(*args):
             """If `has_floats` is `True`, cast all `args` as
             matrices of floats."""
             if has_floats:
-                args = [m.evalf(chop=chop) for m in args]
+                args = [m.evalf(prec=max_dps, chop=chop) for m in args]
             if len(args) == 1:
                 return args[0]
             return args
