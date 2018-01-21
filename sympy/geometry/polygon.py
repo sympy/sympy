@@ -381,16 +381,15 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        p : Point, two-tuple of sympifiable objects, or None
+        p : Point, two-tuple of sympifiable objects, or None (default=None)
             p is the point about which second moment of area is to be found.
-            If None, the point will be taken as the centroid of the polygon.
+            if None, it will be calculated about the centroid of the polygon.
 
         Notes
         =====
 
-        Returns the second moment of area and products of area of a two dimensional polygon
-        about the axis passing through the point p. If p is None then about the axis passing
-        through the centroid of the polygon.
+        If p is None then it will be calculated about the axis passing through
+        the centroid of the polygon.
 
         Examples
         ========
@@ -421,7 +420,7 @@ class Polygon(GeometrySet):
         I_xx_c = (I_xx/12) - (A*(c_y**2))
         I_yy_c = (I_yy/12) - (A*(c_x**2))
         I_xy_c = (I_xy/24) - (A*(c_x*c_y))
-        if(p == None):
+        if(p is None):
             return I_xx_c, I_yy_c, I_xy_c
 
         I_xx = (I_xx_c + A*((p[1]-c_y)**2))
