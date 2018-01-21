@@ -29,7 +29,9 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
     assert prntr.doprint(Piecewise((1, Eq(x, 0)),
                         (2, x>6))) == '((1) if (x == 0) else (2) if (x > 6) else None)'
-    assert prntr.doprint(Piecewise((2, Le(x, 0)), (3, Gt(x, 0)))) == '((2) if (x <= 0) else (3))'
+    assert prntr.doprint(Piecewise((2, Le(x, 0)),
+                        (3, Gt(x, 0)), evaluate=False)) == '((2) if (x <= 0) else'\
+                                                        ' (3) if (x > 0) else None)'
 
 
 def test_SciPyPrinter():

@@ -140,6 +140,17 @@ def test_piecewise():
     assert l == "((1) if (x < 1) else (2) if (x < 2) else (3) if (x < 3)"\
                             " else (4) if (x < 4) else (5) if (x < 5) else (6))"
 
+    p = Piecewise(
+        (Piecewise(
+            (1, x > 0),
+            (2, True)
+        ), y > 0),
+        (3, True)
+    )
+    l = lambdarepr(p)
+    eval(h + l)
+    assert l == "((((1) if (x > 0) else (2))) if (y > 0) else (3))"
+
 
 def test_sum__1():
     # In each case, test eval() the lambdarepr() to make sure that

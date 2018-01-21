@@ -145,7 +145,7 @@ class PythonCodePrinter(CodePrinter):
             i += 1
         result = result[:-1]
         if result[-1] == 'True':
-            result=result[:-2]
+            result = result[:-2]
             result.append(')')
         else:
             result.append(' else None)')
