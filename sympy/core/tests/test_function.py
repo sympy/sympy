@@ -578,9 +578,10 @@ def test_subs_in_derivative():
     assert Derivative(f(x, y), y).subs(y, g(y)) == Derivative(f(x, g(y)), g(y))
     assert Derivative(f(g(x), h(y)), h(y)).subs(h(y), u(y)) == \
         Derivative(f(g(x), u(y)), u(y))
-    issue_13791 = v(x, y, u(x, y)).diff(y).diff(x).diff(y)
-    # no assertion (it's a long formula) but in 13791 this threw an exception. Related:
-    F = lambda x, y: exp(2*x + 3*y)
+    # Issue 13791. No comparison (it's a long formula) but this used to raise an exception.
+    assert isinstance(v(x, y, u(x, y)).diff(y).diff(x).diff(y), Expr)
+    # This is also related to issues 13791 and 13795
+    F = Lambda((x, y), exp(2*x + 3*y))
     abstract = f(x, f(x, x)).diff(x, 2)
     concrete = F(x, F(x, x)).diff(x, 2)
     assert (abstract.replace(f, F).doit() - concrete).simplify() == 0
