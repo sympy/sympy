@@ -1335,7 +1335,7 @@ class MatrixEigen(MatrixSubspaces):
 
         def dps(expr):
             C = log(10)/log(2)
-            return max(1, int(round(int(max_prec) / C - 1)))
+            return max(1, int(round(int(expr) / C - 1)))
 
         if has_floats:
             max_prec = 0
