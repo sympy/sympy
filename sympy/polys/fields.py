@@ -223,7 +223,7 @@ class FracField(DefaultPrinting):
                 # look for bg**eg whose integer power may be b**e
                 choices = tuple((gen, bg, eg) for gen, (bg, eg) in powers
                     if bg == b and Mod(e, eg) == 0)
-                if len(choices) > 0:
+                if choices:
                     gen, bg, eg = choices[0]
                     return mapping.get(gen)**(e/eg)
                 elif e.is_Integer:
