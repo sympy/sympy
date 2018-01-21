@@ -519,8 +519,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 solns = solvify(e, gen, domain)
                 if solns is None:
                     # in which case we raise ValueError
-                    e = orig_expr.lhs - orig_expr.rhs
-                    return set((Poly(e, _gen).all_roots()))
+                    try:
+                        e = orig_expr.lhs - orig_expr.rhs
+                        return set((Poly(e, _gen).all_roots()))
+                    except PolynomialError:
+                        raise ValueError
             except (ValueError, NotImplementedError):
                 # replace gen with generic x since it's
                 # univariate anyway
