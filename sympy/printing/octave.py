@@ -128,7 +128,7 @@ class OctaveCodePrinter(CodePrinter):
         # print complex numbers nicely in Octave
         if (expr.is_number and expr.is_imaginary and
                 expr.as_coeff_Mul()[0].is_integer):
-            return "%si" % self._print(-S.ImaginaryUnit*expr)
+            return "%s*i" % self._print(-S.ImaginaryUnit*expr)
 
         # cribbed from str.py
         prec = precedence(expr)
