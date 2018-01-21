@@ -1187,6 +1187,13 @@ class Derivative(Expr):
                     variable_count.append(Tuple(v, count))
                     j += 1
 
+        # Since only non-negative order derivatives are meaningfull, we make a special
+        # case to raise ValueError if the order is not non-negative
+        if any(count.is_nonnegative is False or
+               count.is_integer is False or
+               count.is_finite is False for v, count in variable_count):
+            raise ValueError("Derivative order must be a non negative integer")
+
         # We make a special case for 0th derivative, because there is no
         # good way to unambiguously print this.
         if len(variable_count) == 0:
