@@ -25,6 +25,8 @@ def test_prefix_operations():
     m = Quantity("meter", 1, 6)
     assert dodeca / m == 12 / m
 
+    assert kilo*3 == kilo*3
+
 
 def test_prefix_unit():
     length = Dimension("length")
