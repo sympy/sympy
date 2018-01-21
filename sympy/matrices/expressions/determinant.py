@@ -46,7 +46,7 @@ def det(matexpr, **kwargs):
     method : string, optional (default='bareiss')
         specifies the algorithm to be used for computing the algorithm.
         It must be one of 'bareiss', 'lu' or 'berkowitz'.
-        "method" is only applicable for a concrete matrix.
+        ``method`` is only applicable for a concrete matrix.
 
     >>> from sympy import MatrixSymbol, det, eye
     >>> A = MatrixSymbol('A', 3, 3)
@@ -57,7 +57,7 @@ def det(matexpr, **kwargs):
     1
     """
 
-    if isinstance(matexpr, MatrixExpr) and  kwargs:
+    if isinstance(matexpr, MatrixExpr) and kwargs:
         raise ValueError(
             "Keyword arguments not supported for matrix expressions.")
 
