@@ -1,4 +1,5 @@
 import itertools as it
+import warnings
 
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
@@ -11,7 +12,9 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
+from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, skip
+from sympy.external import import_module
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -336,12 +339,9 @@ def test_real_root():
 
 
 def test_issue_11463():
-    from sympy.external import import_module
     numpy = import_module('numpy')
     if not numpy:
         skip("numpy not installed.")
-    from sympy.utilities.lambdify import lambdify
-    import warnings
     x = Symbol('x')
     f = lambdify(x, real_root((log(x/(x-2))), 3), 'numpy')
     # numpy.select evaluates all options before considering conditions,
