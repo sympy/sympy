@@ -42,9 +42,9 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
         Used by sample
         """
-        x = symbols('x', real = True, positive = True,
+        x = symbols('x', positive = True,
          integer = True, cls=Dummy)
-        y, z = symbols('y z', real=True, positive=True, cls=Dummy)
+        y, z = symbols('y z', positive=True, cls=Dummy)
         cdf_temp = self.cdf(x).subs(x, y)
         # Invert CDF
         try:
