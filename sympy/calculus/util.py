@@ -473,12 +473,13 @@ def periodicity(f, symbol, check=False):
         g_s = decompogen(f, symbol)
         num_of_gs = len(g_s)
         if num_of_gs > 1:
-            for index, g in enumerate(reversed(g_s)):
+            for index in range(num_of_gs):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
                 # Fix for issue 12620
-                if decompogen(g, symbol) != decompogen(orig_f, symbol) \
-                 and decompogen(g, symbol) != decompogen(f, symbol):
+                decomp = decompogen(g, symbol)
+                if decomp != decompogen(orig_f, symbol) \
+                 and decomp != decompogen(f, symbol):
                     period = periodicity(g, symbol)
                     if period is not None:
                         break
