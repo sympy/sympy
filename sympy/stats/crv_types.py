@@ -2730,8 +2730,6 @@ def UniformSum(name, n):
 
     The argument evaluate=False prevents an attempt at evaluation
     of the sum for general n, before the argument 2 is passed.
-    Once 2 is passed, the sum is easilyevaluated with doit and without
-    any hypergeometric complications.
 
     References
     ==========
