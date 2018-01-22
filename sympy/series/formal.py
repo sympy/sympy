@@ -20,6 +20,7 @@ from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.polys.polytools import degree
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 from sympy.series.order import Order
@@ -782,7 +783,15 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         c = Symbol('c')
         ind = f.coeff(x, 0)
         xk = sequence(x**k, (k, 0, oo))
-        ak = sequence(c, (k, 0, oo))
+
+        ak = list()
+        deg = degree(f, gen=x) + 1
+        m = 0
+        while(deg != 0):
+            ak.append(f.coeff(x, m))
+            m += 1
+            deg -= 1
+
         return ak, xk, ind
 
     #  Break instances of Add

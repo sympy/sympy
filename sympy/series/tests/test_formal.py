@@ -499,10 +499,8 @@ def test_fps__operations():
 def test_issue_12310():
     x, c=symbols('x c')
     f = fps(x**2 + x**3/3 + x**8/12)
-    k = f.ak.variables[0]
     assert f[0] == 0
     assert f[3] == x**3/3
     assert f[8] == x**8/12
     assert f.truncate(4) == x**2 + x**3/3 + O(x**4)
     assert f.polynomial() == x**2 + x**3/3
-    assert f.infinite == Sum(c*x**k, (k, 0, oo))
