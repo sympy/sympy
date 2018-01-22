@@ -26,6 +26,7 @@ from sympy.core.compatibility import reduce
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.strategies.core import switch, do_one, null_safe, condition
+from sympy.utilities.misc import debug as _debug
 
 
 ZERO = sympy.S.Zero
@@ -1194,9 +1195,9 @@ def eval_dontknowrule(integrand, symbol):
     return sympy.Integral(integrand, symbol)
 
 def _manualintegrate(rule):
+    _debug("using {}".format(rule))
     evaluator = evaluators.get(rule.__class__)
     if not evaluator:
-
         raise ValueError("Cannot evaluate rule %s" % repr(rule))
     return evaluator(*rule)
 
@@ -1246,4 +1247,5 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
+    _debug("Integrating {}".format(f))
     return _manualintegrate(integral_steps(f, var))
