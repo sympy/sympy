@@ -1335,14 +1335,15 @@ class MatrixEigen(MatrixSubspaces):
 
         def dps(expr):
             C = log(10)/log(2)
-            return max(1, int(round(int(expr) / C - 1)))
+            return max(1, int(round((int(expr) / C - 1).evalf())))
 
         if has_floats:
             max_prec = 0
             for term in self._mat:
                 if isinstance(term, Float):
                     max_prec = max(max_prec, term._prec)
-            max_dps = dps(max_prec)
+            # setting minimum value of max_dps to 15
+            max_dps = max(dps(max_prec), 15)
 
         def restore_floats(*args):
             """If `has_floats` is `True`, cast all `args` as
