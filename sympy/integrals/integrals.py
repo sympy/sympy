@@ -1047,16 +1047,16 @@ class Integral(AddWithLimits):
                 break
         return integrate(leading_term, *self.args[1:])
 
-    def as_sum(self, n, method="midpoint", evaluate=True):
+    def as_sum(self, n=None, method="midpoint", evaluate=True):
         """
         Approximates a definite integral by a sum.
 
         Arguments
         ---------
         n
-            The number of subintervals to use.
+            The number of subintervals to use, optional.
         method
-            One of: 'left', 'right', 'midpoint', 'trapezoid'
+            One of: 'left', 'right', 'midpoint', 'trapezoid'.
         evaluate
             If False, returns an unevaluated Sum expression. The default
             is True, evaluate the sum.
@@ -1121,15 +1121,16 @@ class Integral(AddWithLimits):
         >>> e.as_sum(5, 'left')
         zoo
 
-        The number of intervals can be left unspecified.
+        The number of intervals can be symbolic. If omitted, a dummy symbol
+        will be used for it.
         >>> e = Integral(x**2, (x, 0, 2))
         >>> e.as_sum(n, 'right').expand()
         8/3 + 4/n + 4/(3*n**2)
 
         This shows that the midpoint rule is more accurate, as its error
         term decays as the square of n:
-        >>> e.as_sum(n, 'midpoint').expand()
-        8/3 - 2/(3*n**2)
+        >>> e.as_sum(method='midpoint').expand()
+        8/3 - 2/(3*_n**2)
 
         A symbolic sum is returned with evaluate=False:
         >>> e.as_sum(n, 'midpoint', evaluate=False)
@@ -1152,7 +1153,10 @@ class Integral(AddWithLimits):
                 limit[2].is_finite is False):
                 raise ValueError("Expecting a definite integral over "
                                   "a finite interval.")
-        n = sympify(n)
+        if n is None:
+            n = Dummy('n', integer=True, positive=True)
+        else:
+            n = sympify(n)
         if (n.is_positive is False or n.is_integer is False or
             n.is_finite is False):
             raise ValueError("n must be a positive integer, got %s" % n)
