@@ -18,7 +18,6 @@ from sympy.physics.quantum.matrixutils import (
     matrix_tensor_product
 )
 
-from sympy import srepr
 
 __all__ = [
     'TensorProduct',
@@ -311,7 +310,7 @@ def tensor_product_simp_Mul(e):
         (A*C)x(B*D)
 
     """
-    # TODO: This don't work with Muls that have other composites of
+    # TODO: This won't work with Muls that have other composites of
     # TensorProducts, like an Add, Commutator, etc.
     # TODO: This only works for the equivalent of single Qbit gates.
     if not isinstance(e, Mul):
