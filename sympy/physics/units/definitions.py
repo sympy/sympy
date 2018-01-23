@@ -65,6 +65,8 @@ lux = lx = Quantity("lux", luminous_intensity/length**2, steradian*candela/meter
 katal = kat = Quantity("katal", amount_of_substance/time, mol/second)
 # gray is the SI unit of absorbed dose
 gray = Gy = Quantity("gray", energy/mass, meter**2/second**2)
+# becquerel is the SI unit of radioactivity
+becquerel = Bq = Quantity("becquerel", 1/time, 1/second)
 
 # Common length units
 

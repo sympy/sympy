@@ -1744,7 +1744,7 @@ class csc(ReciprocalTrigonometricFunction):
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
 
 
-class sinc(TrigonometricFunction):
+class sinc(Function):
     r"""Represents unnormalized sinc function
 
     Examples

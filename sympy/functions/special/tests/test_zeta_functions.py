@@ -1,6 +1,6 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes, Abs)
+                   exp_polar, polar_lift, O, stieltjes, Abs, Sum)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically as tn)
 
@@ -127,12 +127,20 @@ def test_polylog_expansion():
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == -dirichlet_eta(s)
+    assert polylog(s, exp_polar(4*I*pi/3)) == polylog(s, exp(4*I*pi/3))
+    assert polylog(s, exp_polar(I*pi)/3) == polylog(s, exp(I*pi)/3)
 
     assert myexpand(polylog(1, z), -log(1 - z))
     assert myexpand(polylog(0, z), z/(1 - z))
     assert myexpand(polylog(-1, z), z/(1 - z)**2)
     assert ((1-z)**3 * expand_func(polylog(-2, z))).simplify() == z*(1 + z)
     assert myexpand(polylog(-5, z), None)
+
+
+def test_issue_8404():
+    i = Symbol('i', integer=True)
+    assert Abs(Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit().n(4)
+        - 1.122) < 0.001
 
 
 def test_polylog_values():
