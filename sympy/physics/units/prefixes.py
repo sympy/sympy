@@ -73,8 +73,8 @@ class Prefix(Expr):
     __repr__ = __str__
 
     def __mul__(self, other):
-        if isinstance(sympify(other), Number):
-            return other*self
+        if not isinstance(other, Prefix):
+            return super(Prefix, self).__mul__(other)
 
         fact = self.scale_factor * other.scale_factor
 

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from sympy import symbols, log
+from sympy import symbols, log, Mul, Symbol
 from sympy.physics.units import Quantity, Dimension
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
     kibi
 
+x = Symbol('x')
 
 def test_prefix_operations():
     m = PREFIXES['m']
@@ -25,7 +26,13 @@ def test_prefix_operations():
     m = Quantity("meter", 1, 6)
     assert dodeca / m == 12 / m
 
-    assert kilo*3 == kilo*3
+    expr1 = kilo*3
+    assert isinstance(expr1, Mul)
+    assert (expr1).args == (3, kilo)
+
+    expr2 = kilo*x
+    assert isinstance(expr2, Mul)
+    assert (expr2).args == (x, kilo)
 
 
 def test_prefix_unit():
