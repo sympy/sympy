@@ -785,7 +785,7 @@ def frac_in(f, t, **kwargs):
     Returns the tuple (fa, fd), where fa and fd are Polys in t.
 
     This is a common idiom in the Risch Algorithm functions, so we abstract
-    it out here.  f should be a basic expresion, a Poly, or a tuple (fa, fd),
+    it out here.  f should be a basic expression, a Poly, or a tuple (fa, fd),
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """

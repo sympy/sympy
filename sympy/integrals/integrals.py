@@ -20,6 +20,7 @@ from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
 from sympy.functions import Piecewise, sqrt, sign, piecewise_fold
+from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series import limit
@@ -444,7 +445,15 @@ class Integral(AddWithLimits):
                     function = factored_function
                 continue
 
-            if function.has(Min, Max):
+            if function.has(Abs, sign) and (
+                (len(xab) < 3 and all(x.is_real for x in xab)) or
+                (len(xab) == 3 and all(x.is_real and x.is_finite for
+                 x in xab[1:]))):
+                    # some improper integrals are better off with Abs
+                    xr = Dummy("xr", real=True)
+                    function = (function.xreplace({xab[0]: xr})
+                        .rewrite(Piecewise).xreplace({xr: xab[0]}))
+            elif function.has(Min, Max):
                 function = function.rewrite(Piecewise)
             if function.has(Piecewise) and \
                 not isinstance(function, Piecewise):

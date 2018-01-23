@@ -439,7 +439,7 @@ class DiagramGrid(object):
         aspects of layout.  For triangles with only simple morphisms
         in the edge, this assures that triangles with all three edges
         visible will get typeset after triangles with less visible
-        edges, which sometimes minimises the necessity in diagonal
+        edges, which sometimes minimizes the necessity in diagonal
         arrows.  For triangles with composite morphisms in the edges,
         this assures that objects connected with shorter morphisms
         will be laid out first, resulting the visual proximity of

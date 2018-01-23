@@ -43,6 +43,8 @@ known_fcns_src2 = {
     "laguerre": "laguerreL",
     "li": "logint",
     "loggamma": "gammaln",
+    "Max": "max",
+    "Min": "min",
     "polygamma": "psi",
     "Shi": "sinhint",
     "Si": "sinint",
@@ -74,6 +76,7 @@ class OctaveCodePrinter(CodePrinter):
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
+
 
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
@@ -124,7 +127,7 @@ class OctaveCodePrinter(CodePrinter):
     def _print_Mul(self, expr):
         # print complex numbers nicely in Octave
         if (expr.is_number and expr.is_imaginary and
-                expr.as_coeff_Mul()[0].is_integer):
+                (S.ImaginaryUnit*expr).is_Integer):
             return "%si" % self._print(-S.ImaginaryUnit*expr)
 
         # cribbed from str.py
@@ -430,6 +433,16 @@ class OctaveCodePrinter(CodePrinter):
         # argument order is reversed
         args = ", ".join([self._print(x) for x in reversed(expr.args)])
         return "lambertw(" + args + ")"
+
+
+    def _nested_binary_math_func(self, expr):
+        return '{name}({arg1}, {arg2})'.format(
+            name=self.known_functions[expr.__class__.__name__],
+            arg1=self._print(expr.args[0]),
+            arg2=self._print(expr.func(*expr.args[1:]))
+            )
+
+    _print_Max = _print_Min = _nested_binary_math_func
 
 
     def _print_Piecewise(self, expr):

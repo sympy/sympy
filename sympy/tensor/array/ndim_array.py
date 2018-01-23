@@ -60,9 +60,9 @@ class NDimArray(object):
 
     _diff_wrt = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
-        return ImmutableDenseNDimArray(*args, **kwargs)
+        return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
     def _parse_index(self, index):
 
@@ -227,7 +227,13 @@ class NDimArray(object):
         return Derivative(self.as_immutable(), *args, evaluate=True)
 
     def _eval_derivative(self, arg):
-        return self.applyfunc(lambda x: x.diff(arg))
+        from sympy import derive_by_array
+        from sympy import Derivative, Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(arg, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+            return derive_by_array(self, arg)
+        else:
+            return self.applyfunc(lambda x: x.diff(arg))
 
     def applyfunc(self, f):
         """Apply a function to each element of the N-dim array.
@@ -273,7 +279,7 @@ class NDimArray(object):
 
     def tolist(self):
         """
-        Conveting MutableDenseNDimArray to one-dim list
+        Converting MutableDenseNDimArray to one-dim list
 
         Examples
         ========

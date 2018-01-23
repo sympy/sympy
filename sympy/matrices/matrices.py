@@ -724,7 +724,7 @@ class MatrixReductions(MatrixDeterminant):
         return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
-        """Perfoms the elementary column operation `op`.
+        """Performs the elementary column operation `op`.
 
         `op` may be one of
 
@@ -754,7 +754,7 @@ class MatrixReductions(MatrixDeterminant):
             return self._eval_col_op_add_multiple_to_other_col(col, k, col2)
 
     def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
-        """Perfoms the elementary row operation `op`.
+        """Performs the elementary row operation `op`.
 
         `op` may be one of
 
@@ -3378,7 +3378,7 @@ class MatrixBase(MatrixDeprecated,
         =====  ============================  ==========================
         None   Frobenius norm                2-norm
         'fro'  Frobenius norm                - does not exist
-        inf    --                            max(abs(x))
+        inf    maximum row sum               max(abs(x))
         -inf   --                            min(abs(x))
         1      maximum column sum            as below
         -1     --                            as below
@@ -3405,6 +3405,8 @@ class MatrixBase(MatrixDeprecated,
         >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
         0
         >>> A.norm() # Frobenius Norm
+        2
+        >>> A.norm(oo) # Infinity Norm
         2
         >>> Matrix([1, -2]).norm(oo)
         2
@@ -3451,6 +3453,10 @@ class MatrixBase(MatrixDeprecated,
             elif ord == -2:
                 # Minimum singular value
                 return Min(*self.singular_values())
+
+            elif ord == S.Infinity:   # Infinity Norm - Maximum row sum
+                m = self.applyfunc(abs)
+                return Max(*[sum(m.row(i)) for i in range(m.rows)])
 
             elif (ord is None or isinstance(ord,
                                             string_types) and ord.lower() in

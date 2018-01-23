@@ -1581,6 +1581,16 @@ class Basic(with_metaclass(ManagedProperties)):
                     return rewritten
         return self.func(*args)
 
+    def _eval_derivative_n_times(self, s, n):
+        # This is the default evaluator for derivatives (as called by `diff`
+        # and `Derivative`), it will attempt a loop to derive the expression
+        # `n` times by calling the corresponding `_eval_derivative` method,
+        # while leaving the derivative unevaluated if `n` is symbolic.  This
+        # method should be overridden if the object has a closed form for its
+        # symbolic n-th derivative.
+        from sympy import Derivative
+        return Derivative._helper_apply_n_times(self, s, n, lambda x, s: x._eval_derivative(s))
+
     def rewrite(self, *args, **hints):
         """ Rewrite functions in terms of other functions.
 

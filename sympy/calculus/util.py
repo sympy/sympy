@@ -678,7 +678,7 @@ class AccumulationBounds(AtomicExpr):
     that expression.
 
     Same expression can be evaluated to different values depending upon
-    the form it is used for substituion. For example:
+    the form it is used for substitution. For example:
 
     >>> (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1))
     AccumBounds(-1, 4)
