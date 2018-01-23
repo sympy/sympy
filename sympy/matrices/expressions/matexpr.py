@@ -261,8 +261,7 @@ class MatrixExpr(Expr):
     def inverse(self):
         return self._eval_inverse()
 
-    def inv(self):
-        return self**-1
+    inv = inverse
 
     @property
     def I(self):
