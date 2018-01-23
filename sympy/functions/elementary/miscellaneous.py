@@ -7,17 +7,18 @@ from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
 from sympy.core.expr import Expr
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Equality, Relational
+from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 
 def _minmax_as_Piecewise(op, *args):
     # helper for Min/Max rewrite as Piecewise
@@ -180,7 +181,7 @@ def cbrt(arg):
 
 def root(arg, n, k=0):
     """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
-    principle root (k=0).
+    principal root (k=0).
 
 
     Examples
@@ -230,7 +231,7 @@ def root(arg, n, k=0):
     >>> root(-8, 3)
     2*(-1)**(1/3)
 
-    The real_root function can be used to either make the principle
+    The real_root function can be used to either make the principal
     result real (or simply to return the real root directly):
 
     >>> from sympy import real_root
@@ -271,7 +272,7 @@ def root(arg, n, k=0):
 def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
-    will only create a real root of a principle root -- the presence of
+    will only create a real root of a principal root -- the presence of
     other factors may cause the result to not be real.
 
     Examples
@@ -287,7 +288,7 @@ def real_root(arg, n=None):
     >>> real_root(_)
     -2
 
-    If one creates a non-principle root and applies real_root, the
+    If one creates a non-principal root and applies real_root, the
     result will not be real (so use with caution):
 
     >>> root(-8, 3, 2)
@@ -303,24 +304,15 @@ def real_root(arg, n=None):
     sympy.core.power.integer_nthroot
     root, sqrt
     """
-    from sympy import im, Piecewise
+    from sympy.functions.elementary.complexes import Abs, im, sign
+    from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
-        try:
-            n = as_int(n)
-            arg = sympify(arg)
-            if arg.is_positive or arg.is_negative:
-                rv = root(arg, n)
-            else:
-                raise ValueError
-        except ValueError:
-            return root(arg, n)*Piecewise(
-                (S.One, ~Equality(im(arg), 0)),
-                (Pow(S.NegativeOne, S.One/n)**(2*floor(n/2)), And(
-                    Equality(n % 2, 1),
-                    arg < 0)),
-                (S.One, True))
-    else:
-        rv = sympify(arg)
+        return Piecewise(
+            (root(arg, n), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
+            (sign(arg)*root(Abs(arg), n), And(Eq(im(arg), S.Zero),
+                Eq(Mod(n, 2), S.One))),
+            (root(arg, n), True))
+    rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
                       x.is_Pow and
