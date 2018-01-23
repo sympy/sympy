@@ -412,7 +412,21 @@ def _solve_as_rational(f, symbol, domain):
 
 
 def _solve_trig(f, symbol, domain):
-    """ Helper to solve trigonometric equations """
+    """Function to call other helpers to solve trigonometric equations """
+    try:
+        return _solve_trig1(f, symbol, domain)
+
+    except BaseException as error:
+        return _solve_trig2(f, symbol, domain)
+
+    else :
+        raise NotImplementedError(filldedent('''
+            Solution to this kind of trigonometric equations
+            is yet to be implemented'''))
+
+
+def _solve_trig1(f, symbol, domain):
+    """Primary Helper to solve trigonometric equations """
     f = trigsimp(f)
     f_original = f
     f = f.rewrite(exp)
@@ -429,6 +443,60 @@ def _solve_trig(f, symbol, domain):
     if isinstance(solns, FiniteSet):
         result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
+        return Intersection(result, domain)
+    elif solns is S.EmptySet:
+        return S.EmptySet
+    else:
+        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+
+
+def _solve_trig2(f, symbol, domain):
+    """Secondary helper to solve trigonometric equations,
+    called when first helper fails """
+    from sympy import ilcm, igcd, expand_trig, degree, simplify
+    f = trigsimp(f)
+    f_original = f
+    trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
+    trig_arguments = [e.args[0] for e in trig_functions]
+    denominators = []
+    numerators = []
+
+    for ar in trig_arguments:
+        try:
+            poly_ar = Poly(ar, symbol)
+
+        except ValueError:
+            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+        if poly_ar.degree() > 1:  # degree >1 still bad
+            raise ValueError("degree of variable inside polynomial should not exceed one")
+        if poly_ar.degree() == 0:  # degree 0, don't care
+            continue
+        c = poly_ar.all_coeffs()[0]   # got the coefficient of 'symbol'
+        numerators.append(Rational(c).p)
+        denominators.append(Rational(c).q)
+
+    x = Dummy('x')
+    mu = Rational(2)*ilcm(*denominators)/igcd(*numerators)
+    f = f.subs(symbol, mu*x)
+    f = f.rewrite(tan)
+    f = expand_trig(f)
+    f = together(f)
+
+    g, h = fraction(f)
+    y = Dummy('y')
+    g, h = g.expand(), h.expand()
+    g, h = g.subs(tan(x), y), h.subs(tan(x), y)
+
+    if g.has(x) or h.has(x):
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
+    solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
+
+    if isinstance(solns, FiniteSet):
+        result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
+                       for s in solns])
+        dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
+        if degree(h) > degree(g):                   # If degree(denom)>degree(num) then there
+            result = Union(result, dsol)            # would be another sol at Lim(denom-->oo)
         return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet

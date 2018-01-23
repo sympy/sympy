@@ -783,6 +783,24 @@ def test_solve_trig():
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
         imageset(Lambda(n, 2*n*pi), S.Integers)
 
+    # Tests for _solve_trig2() function
+    assert solveset_real(2*cos(x)*cos(2*x) - 1, x) == \
+          Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(-2*2**(S(1)/3)*(67 +
+                  9*sqrt(57))**(S(2)/3) + 8*2**(S(2)/3) + 11*(67 +
+                  9*sqrt(57))**(S(1)/3))/(3*(67 + 9*sqrt(57))**(S(1)/6)))), S.Integers),
+                  ImageSet(Lambda(n, 2*n*pi - 2*atan(sqrt(-2*2**(S(1)/3)*(67 +
+                  9*sqrt(57))**(S(2)/3) + 8*2**(S(2)/3) + 11*(67 +
+                  9*sqrt(57))**(S(1)/3))/(3*(67 + 9*sqrt(57))**(S(1)/6))) +
+                  2*pi), S.Integers))
+
+    assert solveset_real(2*tan(x)*sin(x) + 1, x) == \
+        Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(4
+                + sqrt(17)))), S.Integers), ImageSet(Lambda(n, 2*n*pi
+                - 2*atan(sqrt(4 + sqrt(17))) + 2*pi), S.Integers))
+
+    assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
+                            ImageSet(Lambda(n, n*pi), S.Integers)
+
 
 @XFAIL
 def test_solve_trig_abs():
