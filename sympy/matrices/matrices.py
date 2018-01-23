@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import collections
+from mpmath.libmp.libmpf import prec_to_dps
 from sympy.assumptions.refine import refine
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
@@ -12,7 +13,7 @@ from sympy.core.numbers import Integer, ilcm, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import Abs, exp, factorial, log
+from sympy.functions import Abs, exp, factorial
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -1333,14 +1334,10 @@ class MatrixEigen(MatrixSubspaces):
         mat = self
         has_floats = any(v.has(Float) for v in self)
 
-        def dps(expr):
-            C = log(10)/log(2)
-            return max(1, int(round((int(expr) / C - 1).evalf())))
-
         if has_floats:
             max_prec = max(term._prec for term in self._mat if isinstance(term, Float))
             # setting minimum value of max_dps to 15
-            max_dps = max(dps(max_prec), 15)
+            max_dps = max(prec_to_dps(max_prec), 15)
 
         def restore_floats(*args):
             """If `has_floats` is `True`, cast all `args` as
