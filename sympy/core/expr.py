@@ -1033,12 +1033,23 @@ class Expr(Basic, EvalfMixin):
 
         k, Indices = len(gens), {}
 
-        if any(hasattr(item, 'indices') and item.indices[0].is_Integer for item in gens):
-            for g in gens:
-                Indices[g] = g.indices[0]
-        else:
-            for i, g in enumerate(gens):
+        indexed, index = [], []
+        for _term in gens:
+            if hasattr(_term, 'indices') and _term.indices[0].is_Integer:
+                indexed.append(_term)
+                index.append(_term.indices[0])
+
+        index = sorted(index)
+
+        i = 0
+        for g in gens:
+            if g not in indexed:
                 Indices[g] = i
+                i += 1
+
+        n = len(Indices)
+        for item in indexed:
+            Indices[item] = n + index.index(item.indices[0])
 
         result = []
 

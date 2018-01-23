@@ -1450,8 +1450,11 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
     a = IndexedBase("a")
+    k, b = symbols('k b')
 
     assert (a[2]+a[1]+a[0]).as_ordered_terms() == [a[0], a[1], a[2]]
+    assert(b + Sum(a[k], (k, 0, 3)).doit()) == b + a[0] + a[1] + a[2] + a[3]
+    assert(b + Sum(a[2*k], (k, 1, 4)).doit()) == b + a[2] + a[4] + a[6] + a[8]
 
 
 def test_sort_key_atomic_expr():
