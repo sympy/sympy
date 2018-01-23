@@ -18,10 +18,10 @@ Available Entities
 
 The following entities are currently available in the geometry module:
 
-* ``Point``
-* ``Line``, ``Ray``, ``Segment``
-* ``Ellipse``, ``Circle``
-* ``Polygon``, ``RegularPolygon``, ``Triangle``
+* :class:`~sympy.geometry.point.Point`
+* :class:`~sympy.geometry.line.Line`, :class:`~sympy.geometry.line.Segment`, :class:`~sympy.geometry.line.Ray`
+* :class:`~sympy.geometry.ellipse.Ellipse`, :class:`~sympy.geometry.ellipse.Circle`
+* :class:`~sympy.geometry.polygon.Polygon`, :class:`~sympy.geometry.polygon.RegularPolygon`, :class:`~sympy.geometry.polygon.Triangle`
 
 Most of the work one will do will be through the properties and methods of
 these entities, but several global methods exist:
