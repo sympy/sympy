@@ -210,35 +210,42 @@ from .definitions import (
 
 def find_unit(quantity):
     """
-    This function returns a list of units matching to input keyword,
-    dimension or unit. If `quantity` is a string -- keyword/
-    unit/dimension, it returns units which have input keyword as its
-    sub-script/same dimensions as input unit/dimensions matching to
-    input dimension. If input `quantity` is a Quantity/ Dimension --
-    unit or dimension, then all units having matching base units or
-    dimensions are returned.
+    Return the list of units that match the given quantity.
 
     Parameters
     ==========
 
-    quantity : string, Dimension or Quantity
+    quantity : Dimension Quantity or string
 
     Examples
     ========
 
     >>> from sympy.physics import units as u
-    >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+
+    # When the input quantity is a Dimension, it returns all units
+    # corresponding to it.
+
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge']
-    >>> u.find_unit("ampere")
-    ['A', 'ampere', 'amperes', 'planck_current']
-    >>> u.find_unit('volt')
-    ['V', 'v', 'volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
-    >>> u.find_unit('energy')
-    ['J', 'eV', 'joule', 'joules', 'electronvolt', 'electronvolts', 'planck_energy', 'planck_energy_density']
+
+    # Similarly, when the input is a unit(Quantity), it returns
+    # all the units congruous to it.
+
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
+
+    # When the input is a string, it returns units which have input
+    # keyword as its sub-script or units corresponding to the input
+    # unit or dimension.
+
+    >>> u.find_unit('charge')
+    ['C', 'coulomb', 'coulombs', 'planck_charge']
+    >>> u.find_unit('volt')
+    ['V', 'v', 'volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
+    >>> u.find_unit("ampere")
+    ['A', 'ampere', 'amperes', 'planck_current']
+    >>> u.find_unit('energy')
+    ['J', 'eV', 'joule', 'joules', 'electronvolt', 'electronvolts', 'planck_energy', 'planck_energy_density']
 
     """
     import sympy.physics.units as u
