@@ -1335,8 +1335,14 @@ class MatrixEigen(MatrixSubspaces):
         has_floats = any(v.has(Float) for v in self)
 
         if has_floats:
-            max_prec = max(term._prec for term in self._mat if isinstance(term, Float))
-            # setting minimum value of max_dps to 15
+            try:
+                max_prec = max(term._prec for term in self._mat if isinstance(term, Float))
+            except ValueError:
+                # if no term in the matrix is explicitly a Float calling max()
+                # will throw a error so setting max_prec to default value of 53
+                max_prec = 53
+            # setting minimum max_dps to 15 to prevent loss of precision in
+            # matrix containing non evaluated expressions
             max_dps = max(prec_to_dps(max_prec), 15)
 
         def restore_floats(*args):
