@@ -8,7 +8,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
@@ -19,7 +19,7 @@ from sympy.functions import hankel1, hankel2, jn, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
@@ -114,7 +114,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     >>> heurisch(cos(n*x), x)
     sin(n*x)/n
     >>> heurisch_wrapper(cos(n*x), x)
-    Piecewise((x, Eq(n, 0)), (sin(n*x)/n, True))
+    Piecewise((sin(n*x)/n, Ne(n, 0)), (x, True))
 
     See Also
     ========
@@ -163,9 +163,19 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
                         degree_offset, unnecessary_permutations)
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
+        generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
         pairs.append((expr, cond))
-    pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
-                           degree_offset, unnecessary_permutations), True))
+    # If there is one condition, put the generic case first. Otherwise,
+    # doing so may lead to longer Piecewise formulas
+    if len(pairs) == 1:
+        pairs = [(heurisch(f, x, rewrite, hints, mappings, retries,
+                              degree_offset, unnecessary_permutations),
+                              generic),
+                 (pairs[0][0], True)]
+    else:
+        pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
+                              degree_offset, unnecessary_permutations),
+                              True))
     return Piecewise(*pairs)
 
 class BesselTable(object):
