@@ -78,6 +78,15 @@ def test_fcode_functions():
     assert fcode(Max(x, y) + Min(x, y)) == "      max(x, y) + min(x, y)"
 
 
+def test_case():
+    x,x_,x__,y,X,X_,Y = symbols('x,x_,x__,y,X,X_,Y')
+    assert fcode(exp(x_) + sin(x*y) + cos(X*Y)) == \
+                        '      exp(x__) + sin(x_*y_) + cos(X*Y)'
+
+    assert fcode(exp(x__) + 2*x*Y*X_**Rational(7, 2)) == \
+                        '      2*X_**(7.0d0/2.0d0)*Y*x + exp(x__)'
+
+
 #issue 6814
 def test_fcode_functions_with_integers():
     x= symbols('x')
