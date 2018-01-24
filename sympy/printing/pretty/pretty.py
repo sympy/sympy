@@ -1479,18 +1479,8 @@ class PrettyPrinter(Printer):
             args = list(product.args)
 
         # If quantities are present append them at the back
-        quantities_index = []
-        for i in range(len(args)):
-            if isinstance(args[i], Quantity) or (isinstance(args[i], Pow) and
-                                                isinstance(args[i].base, Quantity)):
-                args.append(args[i])
-                quantities_index.append(i)
-
-        if quantities_index != []:
-            for i in range(len(args)-1, -1, -1):
-                if quantities_index != [] and i == quantities_index[-1]:
-                    del quantities_index[-1]
-                    del args[i]
+        args = sorted(args, key=lambda x: isinstance(x, Quantity) or
+                     (isinstance(x, Pow) and isinstance(x.base, Quantity)))
 
         # Gather terms for numerator/denominator
         for item in args:
