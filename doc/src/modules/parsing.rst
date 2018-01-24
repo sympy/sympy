@@ -88,16 +88,24 @@ future releases.
 `\LaTeX` Parsing Exceptions Reference
 -------------------------------------
 
-.. autoclass:: sympy.parsing.latex.LaTeXSyntaxError
+.. autoclass:: sympy.parsing.latex.LaTeXParsingError
 
 Runtime Installation
 --------------------
 
-The currently-packaged backend is partially generated with
+The currently-packaged parser backend is partially generated with
 `ANTLR4 <http://antlr4.org>`_,
-but to use the parser, you only need the ``antlr4`` python package, provided by
-one of::
+but to use the parser, you only need the ``antlr4`` Python package available.
 
-    $ conda install -c conda-forge antlr-python-runtime
-    $ pip install antlr4-python3-runtime
+Depending on your package manager, you can install the right package with, for
+example, ``pip3`` (Python 3 only)::
+
+    $ pip3 install antlr4-python3-runtime
+
+or ``pip`` (Python 2 only)::
+
     $ pip install antlr4-python2-runtime
+
+or ``conda`` (Python 2 or Python 3)::
+
+    $ conda install --channel=conda-forge antlr-python-runtime
