@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -364,7 +364,8 @@ class Integral(AddWithLimits):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((2, Eq(log(x), 0)), (x**3/log(x) - x/log(x), True))
+        Piecewise((x**3/log(x) - x/log(x),
+            (x > 1) | ((x >= 0) & (x < 1))), (2, True))
 
         See Also
         ========
@@ -899,7 +900,7 @@ class Integral(AddWithLimits):
                     else:
                         h1 = log(g.base)
                         h2 = g.base**(g.exp + 1) / (g.exp + 1)
-                        h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
+                        h = Piecewise((h2, Ne(g.exp, -1)), (h1, True))
 
                     parts.append(coeff * h / M[a])
                     continue

@@ -2,7 +2,7 @@ from __future__ import division
 
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
-    Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
+    Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
@@ -2512,16 +2512,17 @@ def test_issue_6879():
 def test_issue_6989():
     f = Function('f')
     k = Symbol('k')
-    assert dsolve(f(x).diff(x) - x*exp(-k*x), f(x)) == \
-        Eq(f(x), C1 + Piecewise(
-            (x**2/2, Eq(k**3, 0)),
-            ((-k**2*x - k)*exp(-k*x)/k**3, True)
+    assert dsolve(f(x).diff(x) - x*exp(-k*x), f(x)) == Eq(f(x),
+        C1 + Piecewise(
+            ((-k**2*x - k)*exp(-k*x)/k**3, Ne(k**3, 0)),
+            (x**2/2, True)
         ))
     eq = -f(x).diff(x) + x*exp(-k*x)
     sol = dsolve(eq, f(x))
-    actual_sol = Eq(f(x), Piecewise((C1 + x**2/2, Eq(k**3, 0)),
-            (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, True)
-        ))
+    actual_sol = Eq(f(x), Piecewise(
+        (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, Ne(k**3, 0)),
+        (C1 + x**2/2, True)
+    ))
     errstr = str(eq) + ' : ' + str(sol) + ' == ' + str(actual_sol)
     assert sol == actual_sol, errstr
 
