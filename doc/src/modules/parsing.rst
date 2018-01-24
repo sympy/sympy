@@ -80,6 +80,23 @@ Experimental `\LaTeX` Parsing
 and its API should remain stable, the parsing behavior or backend may change in
 future releases.
 
+`\LaTeX` Parsing Caveats
+------------------------
+
+The current implementation is experimental. The behavior, parser backend and
+API might change in the future. Unlike some of the other parsers, `\LaTeX` is
+designed as a *type-setting* language, not a *computer algebra system* and so
+can contain typographical conventions that might be interpreted multiple ways.
+
+In its current definition, the parser will at times will fail to fully parse
+the expression, but not throw a warning::
+
+    parse_latex(r'x -')
+
+Will simply find ``x``. What is covered by this behavior will almost certainly
+change between releases, and become stricter, more relaxed, or some mix.
+
+
 `\LaTeX` Parsing Functions Reference
 ------------------------------------
 
