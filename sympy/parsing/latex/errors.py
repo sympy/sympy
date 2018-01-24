@@ -1,2 +1,2 @@
-class LaTeXSyntaxError(Exception):
+class LaTeXParsingError(Exception):
     pass

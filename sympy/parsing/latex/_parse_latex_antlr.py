@@ -6,7 +6,7 @@ import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
 
-from .errors import LaTeXSyntaxError
+from .errors import LaTeXParsingError
 
 
 LaTeXParser = LaTeXLexer = MathErrorListener = None
@@ -56,11 +56,18 @@ else:
                                   marker))
             else:
                 err = fmt % ("I don't understand this", self.src, marker)
-            raise LaTeXSyntaxError(err)
+            raise LaTeXParsingError(err)
 
 
 def parse_latex(sympy):
     antlr4 = import_module('antlr4', warn_not_installed=True)
+
+    if None in [antlr4, MathErrorListener]:
+        raise ImportError("LaTeX parsing requires the antlr4 python package,"
+                          " provided by pip (antlr4-python2-runtime or"
+                          " antlr4-python3-runtime) or"
+                          " conda (antlr-python-runtime)")
+
     matherror = MathErrorListener(sympy)
 
     stream = antlr4.InputStream(sympy)
@@ -161,7 +168,7 @@ def convert_unary(unary):
 
 def convert_postfix_list(arr, i=0):
     if i >= len(arr):
-        raise LaTeXSyntaxError("Index out of bounds")
+        raise LaTeXParsingError("Index out of bounds")
 
     res = convert_postfix(arr[i])
     if isinstance(res, sympy.Expr):
@@ -187,7 +194,7 @@ def convert_postfix_list(arr, i=0):
     else:  # must be derivative
         wrt = res[0]
         if i == len(arr) - 1:
-            raise LaTeXSyntaxError("Expected expression for derivative")
+            raise LaTeXParsingError("Expected expression for derivative")
         else:
             expr = convert_postfix_list(arr, i + 1)
             return sympy.Derivative(expr, wrt)
@@ -218,7 +225,7 @@ def convert_postfix(postfix):
     for op in postfix.postfix_op():
         if op.BANG():
             if isinstance(exp, list):
-                raise LaTeXSyntaxError("Cannot apply postfix to derivative")
+                raise LaTeXParsingError("Cannot apply postfix to derivative")
             exp = sympy.factorial(exp, evaluate=False)
         elif op.eval_at():
             ev = op.eval_at()
@@ -247,7 +254,7 @@ def convert_exp(exp):
     if exp_nested:
         base = convert_exp(exp_nested)
         if isinstance(base, list):
-            raise LaTeXSyntaxError("Cannot raise derivative to power")
+            raise LaTeXParsingError("Cannot raise derivative to power")
         if exp.atom():
             exponent = convert_atom(exp.atom())
         elif exp.expr():

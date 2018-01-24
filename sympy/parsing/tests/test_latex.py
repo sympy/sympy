@@ -179,7 +179,7 @@ GOOD_PAIRS = [
     ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x))
 ]
 
-# These bad LaTeX strings should raise a LaTeXSyntaxError when parsed
+# These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [
     "(",
     ")",
@@ -254,9 +254,9 @@ def test_failing_parseable():
 
 
 def test_not_parseable():
-    from sympy.parsing.latex import parse_latex, LaTeXSyntaxError
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
     for latex_str in BAD_STRINGS:
-        with pytest.raises(LaTeXSyntaxError):
+        with pytest.raises(LaTeXParsingError):
             print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
                 latex_str, parse_latex(latex_str)))
 
