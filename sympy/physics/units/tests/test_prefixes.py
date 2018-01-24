@@ -39,9 +39,9 @@ def test_prefix_operations():
     assert isinstance(expr3, Mul)
     assert (expr3).args == (1/3, kilo)
 
-    expr3 = kilo / x
-    assert isinstance(expr3, Mul)
-    assert (expr3).args == (1/x, kilo)
+    expr4 = kilo / x
+    assert isinstance(expr4, Mul)
+    assert (expr4).args == (1/x, kilo)
 
 
 def test_prefix_unit():
