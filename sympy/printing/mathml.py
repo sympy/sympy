@@ -15,7 +15,6 @@ from .conventions import split_super_sub, requires_partial
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
-
     MathMLPresentationPrinter.
     """
 
@@ -897,12 +896,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
 
 def mathml(expr, printer='content', **settings):
-    """Returns the MathML representation of expr
-
-    If printer is presentation then prints Presentation MathML
-
-    else prints content MathML.
-
+    """Returns the MathML representation of expr. If printer is presentation then
+     prints Presentation MathML else prints content MathML.
     """
     if printer == 'presentation':
         return MathMLPresentationPrinter(settings).doprint(expr)
@@ -912,11 +907,8 @@ def mathml(expr, printer='content', **settings):
 
 def print_mathml(expr, printer='content', **settings):
     """
-    Prints a pretty representation of the MathML code for expr
-
-    If printer is presentation then prints Presentation MathML
-
-    else prints content MathML.
+    Prints a pretty representation of the MathML code for expr. If printer is
+    presentation then prints Presentation MathML else prints content MathML.
 
     Examples
     ========
