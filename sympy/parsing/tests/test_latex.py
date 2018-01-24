@@ -1,4 +1,3 @@
-import hashlib
 import os
 import glob
 import tempfile
