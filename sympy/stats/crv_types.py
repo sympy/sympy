@@ -48,7 +48,7 @@ from __future__ import print_function, division
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi, erfc, I, hyper, uppergamma,
-                   sinh)
+                   sinh, Ne)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj
@@ -1597,8 +1597,7 @@ class LogisticDistribution(SingleContinuousDistribution):
         return S.One/(1 + exp(-(x - mu)/s))
 
     def _characteristic_function(self, t):
-        return exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t)
-
+        return Piecewise((exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t), Ne(t, 0)), (S.One, True))
 
 def Logistic(name, mu, s):
     r"""
