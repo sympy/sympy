@@ -2,7 +2,7 @@ from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
 from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
-                             sinc)
+                             sinc, Max, Min)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -38,6 +38,9 @@ def test_Function():
     assert mcode(sin(x) ** cos(x)) == "sin(x).^cos(x)"
     assert mcode(abs(x)) == "abs(x)"
     assert mcode(ceiling(x)) == "ceil(x)"
+    assert mcode(Max(x, y) + Min(x, y)) == "max(x, y) + min(x, y)"
+    assert mcode(Max(x, y, z)) == "max(x, max(y, z))"
+    assert mcode(Min(x, y, z)) == "min(x, min(y, z))"
 
 
 def test_Pow():
@@ -112,6 +115,7 @@ def test_imag():
     assert mcode(5*I) == "5i"
     assert mcode((S(3)/2)*I) == "3*1i/2"
     assert mcode(3+4*I) == "3 + 4i"
+    assert mcode(sqrt(3)*I) == "sqrt(3)*1i"
 
 
 def test_constants():

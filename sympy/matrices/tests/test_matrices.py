@@ -2131,6 +2131,7 @@ def test_matrix_norm():
     assert A.norm(-2) == 0
     assert A.norm('frobenius') == 2
     assert eye(10).norm(2) == eye(10).norm(-2) == 1
+    assert A.norm(oo) == 2
 
     # Test with Symbols and more complex entries
     A = Matrix([[3, y, y], [x, S(1)/2, -pi]])

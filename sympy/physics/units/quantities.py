@@ -108,6 +108,10 @@ class Quantity(AtomicExpr):
         return self.func(self.name, self.dimension, Abs(self.scale_factor),
                          self.abbrev, self.dim_sys)
 
+    def _eval_subs(self, old, new):
+        if isinstance(new, Quantity) and self != old:
+            return self
+
     @staticmethod
     def get_dimensional_expr(expr):
         if isinstance(expr, Mul):

@@ -1082,7 +1082,7 @@ def test_M37():
 
 
 def test_M38():
-    variabes = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
+    variables = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
     system = [
         -b*k8/a + c*k8/a, -b*k11/a + c*k11/a, -b*k10/a + c*k10/a + k2, -k3 - b*k9/a + c*k9/a,
         -b*k14/a + c*k14/a, -b*k15/a + c*k15/a, -b*k18/a + c*k18/a - k2, -b*k17/a + c*k17/a,
@@ -1133,7 +1133,7 @@ def test_M38():
         k2:  0, k1:  0,
         k34: b/c*k42, k31: k39, k26: a/c*k42, k23: k39
     }
-    assert solve_lin_sys(system, variabes) == solution
+    assert solve_lin_sys(system, variables) == solution
 
 
 def test_M39():

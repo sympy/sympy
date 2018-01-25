@@ -4,7 +4,7 @@
 A tool to generate AUTHORS. We started tracking authors before moving
 to git, so we have to do some manual rearrangement of the git history
 authors in order to get the order in AUTHORS. bin/mailmap_update.py
-should be run before commiting the results.
+should be run before committing the results.
 """
 
 from __future__ import unicode_literals

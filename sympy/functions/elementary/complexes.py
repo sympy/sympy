@@ -47,7 +47,7 @@ class re(Function):
     """
 
     is_real = True
-    unbranched = True  # implicitely works on the projection to C
+    unbranched = True  # implicitly works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -143,7 +143,7 @@ class im(Function):
     """
 
     is_real = True
-    unbranched = True  # implicitely works on the projection to C
+    unbranched = True  # implicitly works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -225,13 +225,13 @@ class sign(Function):
     """
     Returns the complex sign of an expression:
 
-    If the expresssion is real the sign will be:
+    If the expression is real the sign will be:
 
         * 1 if expression is positive
         * 0 if expression is equal to zero
         * -1 if expression is negative
 
-    If the expresssion is imaginary the sign will be:
+    If the expression is imaginary the sign will be:
 
         * I if im(expression) is positive
         * -I if im(expression) is negative

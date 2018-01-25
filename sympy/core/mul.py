@@ -423,6 +423,11 @@ class Mul(Expr, AssocOp):
             changed = False
             for b, e in c_powers:
                 if e.is_zero:
+                    # canceling out infinities yields NaN
+                    if (b.is_Add or b.is_Mul) and any(infty in b.args
+                        for infty in (S.ComplexInfinity, S.Infinity,
+                                      S.NegativeInfinity)):
+                        return [S.NaN], [], None
                     continue
                 if e is S.One:
                     if b.is_Number:
@@ -896,6 +901,44 @@ class Mul(Expr, AssocOp):
             if d:
                 terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
         return Add(*terms)
+
+    @cacheit
+    def _eval_derivative_n_times(self, s, n):
+        # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
+        from sympy import Integer, factorial, prod, Dummy, symbols, Sum
+        args = [arg for arg in self.args if arg.has(s)]
+        coeff_args = [arg for arg in self.args if arg not in args]
+        m = len(args)
+        if m == 1:
+            return args[0].diff((s, n))*Mul.fromiter(coeff_args)
+
+        if isinstance(n, (int, Integer)):
+            return super(Mul, self)._eval_derivative_n_times(s, n)
+
+            # Code not yet activated:
+            def sum_to_n(n, m):
+                if m == 1:
+                    yield (n,)
+                else:
+                    for x in range(n+1):
+                        for y in sum_to_n(n-x, m-1):
+                            yield (x,) + y
+            accum_sum = S.Zero
+            for kvals in sum_to_n(n, m):
+                part1 = factorial(n)/prod([factorial(k) for k in kvals])
+                part2 = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
+                accum_sum += part1 * part2
+            return accum_sum * Mul.fromiter(coeff_args)
+
+        kvals = symbols("k1:%i" % m, cls=Dummy)
+        klast = n - sum(kvals)
+        result = Sum(
+            # better to use the multinomial?
+            factorial(n)/prod(map(factorial, kvals))/factorial(klast)*\
+            prod([args[t].diff((s, kvals[t])) for t in range(m-1)])*\
+            args[-1].diff((s, klast)),
+            *[(k, 0, n) for k in kvals])
+        return result*Mul.fromiter(coeff_args)
 
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
