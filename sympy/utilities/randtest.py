@@ -11,6 +11,7 @@ from sympy.core.containers import Tuple
 from sympy.core.numbers import comp
 from sympy.core.symbol import Symbol
 from sympy.core.compatibility import is_sequence, as_int
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
@@ -54,6 +55,56 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()
     return comp(z1, z2, tol)
+
+
+def test_at_rationals(f, g, z=None, attempts=5, a=-5, b=5, digits=3,
+        randomize=True):
+    """
+    Tests whether f and g yield exactly the same expression when symbol
+    z is replaced by a rational number. Does not attempt floating point
+    evaluation or any symbolic simplification, thus returns quickly.
+    Suitable for polynomials with rational coefficients because, for
+    example, ``x*(x+1) - x - x**2`` evaluates to zero when any rational
+    number is plugged in.
+
+    If z is None, all symbols will be tested. The test consists of n
+    substitutions of rational numbers, which are taken from interval
+    [a, b]. The parameter digits prescribes the approximate number of
+    digits in the denominator.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy.utilities.randtest import test_at_rationals
+    >>> test_at_rationals(x*(x + 1), x + x**2)
+    True
+    """
+    f, g, z = Tuple(f, g, z)
+    h = f - g
+    z = {z} if isinstance(z, Symbol) else h.free_symbols
+    if not z:
+        return h == 0
+    tol = 10**(-digits)
+    if randomize:   # use random rational numbers
+        for _ in range(attempts):
+            substitutions = {v: random_complex_number(a, 0, b, 0, rational=True,
+                tolerance=tol) for v in z}
+            if h.xreplace(substitutions) != 0:
+                return False
+    else:  # use cyclic shifts by golden ratio within [a, b]
+        counter = 0
+        golden_ratio = ((sqrt(5) + 1)/2).n(digits + 1)
+        z = sorted(list(z), key=lambda v: v.name)
+        for _ in range(attempts):
+            substitutions = {}
+            for v in z:
+                counter += 1
+                x = a + (counter*golden_ratio % 1)*(b - a)
+                substitutions[v] = nsimplify(x, rational=True, tolerance=tol)
+            if h.xreplace(substitutions) != 0:
+                return False
+    return True
 
 
 def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):

@@ -18,7 +18,7 @@ from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types
 
-from sympy.utilities.randtest import random_complex_number
+from sympy.utilities.randtest import test_at_rationals
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
@@ -40,28 +40,9 @@ def _iszero(x):
 
 
 def _is_probably_zero(x):
-    """Tests by plugging in random rational numbers. Returns True if several
-    substitution resulted in zero, otherwise returns False. Does not attempt
-    floating point evaluation or any symbolic simplification, thus returns
-    quickly. Suitable for polynomials and rational functions because, for
-    example, ``x*(x+1) - x - x**2`` evaluates to zero when any rational number
-    is plugged in."""
-    try:
-        is_zero = x.is_zero
-    except AttributeError:
-        is_zero = None
-    if is_zero is None:
-        variables = x.free_symbols
-        if isinstance(variables, set) and len(variables) > 0:
-            for _ in range(5):
-                substitutions = {v: random_complex_number(-5, 0, 5, 0, rational=True,
-                    tolerance=0.001) for v in variables}
-                if x.xreplace(substitutions) != 0:
-                    is_zero = False
-                    break
-            if is_zero is None:
-                is_zero = True
-    return is_zero
+    """Tests by plugging in several rational numbers. Returns True if all
+    substitutions resulted in zero, otherwise returns False."""
+    return test_at_rationals(x, 0, attempts=5, a=-5, b=5, digits=3, randomize=False)
 
 
 class DeferredVector(Symbol, NotIterable):
