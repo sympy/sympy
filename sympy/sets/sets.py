@@ -849,10 +849,7 @@ class Interval(Set, EvalfMixin):
         if end == S.Infinity:
             right_open = true
 
-        interval = Basic.__new__(cls, start, end, left_open, right_open)
-        if not (end == start and (left_open or right_open)):
-            interval.is_EmptySet = (end - start).is_negative
-        return interval
+        return Basic.__new__(cls, start, end, left_open, right_open)
 
     @property
     def start(self):
@@ -940,6 +937,11 @@ class Interval(Set, EvalfMixin):
 
         """
         return self._args[3]
+
+    @property
+    def is_EmptySet(self):
+        if not (self.end == self.start and (self.left_open or self.right_open)):
+            return (self.end - self.start).is_negative
 
     def _intersect(self, other):
         """
