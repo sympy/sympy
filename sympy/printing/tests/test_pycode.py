@@ -32,7 +32,7 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Piecewise((2, Le(x, 0)),
                         (3, Gt(x, 0)), evaluate=False)) == '((2) if (x <= 0) else'\
                                                         ' (3) if (x > 0) else None)'
-    assert prntr.doprint(sign(x)) == '(0 if x == 0 else math.copysign(1, x))'
+    assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
 
 
 def test_MpmathPrinter():
