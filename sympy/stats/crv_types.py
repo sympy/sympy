@@ -2151,7 +2151,9 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         mu, s = self.mu, self.s
-        return pi**2*sin(s*t)*exp(I*mu*t) / (s*t*(pi**2 - s**2*t**2))
+        return Piecewise((exp(-I*pi*mu/s)/2, Eq(t, -pi/s)),
+                         (exp(I*pi*mu/s)/2, Eq(t, pi/s)),
+                         (pi**2*sin(s*t)*exp(I*mu*t) / (s*t*(pi**2 - s**2*t**2)), True))
 
 
 def RaisedCosine(name, mu, s):
@@ -2598,7 +2600,8 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         left, right = self.left, self.right
-        return (exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left))
+        return Piecewise(((exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left)), Ne(t, 0)),
+                         (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
@@ -2925,7 +2928,8 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
         return 2/(pi*R**2)*sqrt(R**2 - x**2)
 
     def _characteristic_function(self, t):
-        return 2 * besselj(1, self.R*t) / (self.R*t)
+        return Piecewise((2 * besselj(1, self.R*t) / (self.R*t), Ne(t, 0)),
+                         (S.One, True))
 
 def WignerSemicircle(name, R):
     r"""
