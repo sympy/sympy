@@ -73,10 +73,10 @@ class Prefix(Expr):
     __repr__ = __str__
 
     def __mul__(self, other):
-        try:
-            fact = self.scale_factor * other.scale_factor
-        except AttributeError:
+        if not hasattr(other, "scale_factor"):
             return super(Prefix, self).__mul__(other)
+
+        fact = self.scale_factor * other.scale_factor
 
         if fact == 1:
             return 1
@@ -90,10 +90,10 @@ class Prefix(Expr):
         return self.scale_factor * other
 
     def __div__(self, other):
-        try:
-            fact = self.scale_factor / other.scale_factor
-        except AttributeError:
+        if not hasattr(other, "scale_factor"):
             return super(Prefix, self).__div__(other)
+
+        fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
             return 1
