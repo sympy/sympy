@@ -1536,10 +1536,9 @@ def test_issue_9778():
         FiniteSet((-y)**(S(1)/3)*Piecewise((1, Ne(-im(y), 0)), ((-1)**(S(2)/3), -y < 0), (1, True))))
 
 
-@XFAIL
-def test_issue_failing_pow():
+def test_issue_10214():
     assert solveset(x**(S(3)/2) + 4, x, S.Reals) == S.EmptySet
-
+    assert solveset(x**(S(-3)/2) + 4, x, S.Reals) == S.EmptySet
 
 def test_issue_9849():
     assert solveset(Abs(sin(x)) + 1, x, S.Reals) == S.EmptySet
