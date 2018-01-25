@@ -5,6 +5,7 @@ from sympy.assumptions.refine import refine
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
+from sympy.core.function import expand_mul
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
@@ -18,11 +19,10 @@ from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types
 
-from sympy.utilities.randtest import test_at_rationals
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
+from sympy.core.compatibility import (is_sequence, default_sort_key, range,
+    NotIterable)
 
 
 from types import FunctionType
@@ -39,10 +39,10 @@ def _iszero(x):
         return None
 
 
-def _is_probably_zero(x):
-    """Tests by plugging in several rational numbers. Returns True if all
-    substitutions resulted in zero, otherwise returns False."""
-    return test_at_rationals(x, 0, attempts=5, a=-5, b=5, digits=3, randomize=False)
+def _is_zero_after_expand_mul(x):
+    """Tests by expand_mul only, suitable for polynomials and rational
+    functions."""
+    return expand_mul(x) == 0
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -193,7 +193,7 @@ class MatrixDeterminant(MatrixCommon):
             # the computation by the factor of 2.5 in one test.
             # Relevant issues: #10279 and #13877.
             pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
-                                         iszerofunc=_is_probably_zero)
+                                         iszerofunc=_is_zero_after_expand_mul)
             if pivot_pos == None:
                 return S.Zero
 
