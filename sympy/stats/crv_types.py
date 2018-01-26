@@ -47,9 +47,11 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, I, uppergamma, hyper)
+                   Lambda, Basic, lowergamma, erf, erfi, erfc, I, hyper, uppergamma,
+                   sinh, Ne)
+
 from sympy import beta as beta_fn
-from sympy import cos, exp, besseli
+from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
@@ -308,6 +310,9 @@ class BetaDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.betavariate(self.alpha, self.beta)
 
+    def _characteristic_function(self, t):
+        return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
+
 
 def Beta(name, alpha, beta):
     r"""
@@ -497,6 +502,13 @@ class ChiDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
 
+    def _characteristic_function(self, t):
+        k = self.k
+
+        part_1 = hyper((k/2,), (S(1)/2,), -t**2/2)
+        part_2 = I*t*sqrt(2)*gamma((k+1)/2)/gamma(k/2)
+        part_3 = hyper(((k+1)/2,), (S(3)/2,), -t**2/2)
+        return part_1 + part_2*part_3
 
 def Chi(name, k):
     r"""
@@ -623,6 +635,8 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
                 (0, True)
         )
 
+    def _characteristic_function(self, t):
+        return (1 - 2*I*t)**(-self.k/2)
 
 def ChiSquared(name, k):
     r"""
@@ -1582,6 +1596,8 @@ class LogisticDistribution(SingleContinuousDistribution):
         mu, s = self.mu, self.s
         return S.One/(1 + exp(-(x - mu)/s))
 
+    def _characteristic_function(self, t):
+        return Piecewise((exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t), Ne(t, 0)), (S.One, True))
 
 def Logistic(name, mu, s):
     r"""
@@ -2133,6 +2149,12 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
                 ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
                 (S.Zero, True))
 
+    def _characteristic_function(self, t):
+        mu, s = self.mu, self.s
+        return Piecewise((exp(-I*pi*mu/s)/2, Eq(t, -pi/s)),
+                         (exp(I*pi*mu/s)/2, Eq(t, pi/s)),
+                         (pi**2*sin(s*t)*exp(I*mu*t) / (s*t*(pi**2 - s**2*t**2)), True))
+
 
 def RaisedCosine(name, mu, s):
     r"""
@@ -2198,6 +2220,10 @@ class RayleighDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
+
+    def _characteristic_function(self, t):
+        sigma = self.sigma
+        return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/sqrt(2)) - I)
 
 
 def Rayleigh(name, sigma):
@@ -2574,7 +2600,8 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         left, right = self.left, self.right
-        return (exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left))
+        return Piecewise(((exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left)), Ne(t, 0)),
+                         (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
@@ -2670,7 +2697,6 @@ class UniformSumDistribution(SingleContinuousDistribution):
                         (1/factorial(n)*Sum((-1)**k*binomial(n, k)*(x - k)**(n),
                         (k, 0, floor(x))), x <= n),
                         (S.One, True))
-
 
 def UniformSum(name, n):
     r"""
@@ -2901,6 +2927,9 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
         R = self.R
         return 2/(pi*R**2)*sqrt(R**2 - x**2)
 
+    def _characteristic_function(self, t):
+        return Piecewise((2 * besselj(1, self.R*t) / (self.R*t), Ne(t, 0)),
+                         (S.One, True))
 
 def WignerSemicircle(name, R):
     r"""
