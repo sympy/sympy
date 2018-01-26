@@ -325,6 +325,25 @@ def test_binomial():
 
     assert binomial(a, b).is_nonnegative is True
 
+    # issue #13980 and #13981
+    assert binomial(-7, -5) == 0
+    assert binomial(-23, -12) == 0
+    assert binomial(13/2, -10) == 0
+
+    assert binomial(-49, -51) == binomial(-49, -51)
+    assert binomial(19, -7/2).rewrite(gamma) == -68719476736/(911337863661225*pi.evalf())
+    assert binomial(-3, -7/2).rewrite(gamma) == zoo
+    assert binomial(0, S(3)/2).rewrite(gamma) == -2/(3*pi)
+
+    assert binomial(20/3, -10/8) == binomial(20/3, -5/4)
+    assert binomial(19/2, -7/2) == -1615/8388608
+    assert binomial(-13/5, -7/8) == gamma(-13/5 + 1)/(gamma(-7/8 + 1)*gamma(-13/5 - (-7/8) + 1))
+
+    b1 = binomial(S("-19/8"), S("-13/5")).rewrite(gamma)
+    g1 = gamma(S("-11/8"))/(gamma(S("-8/5"))*gamma(S("49/40")))
+    assert b1 == g1
+
+
 def test_binomial_diff():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True)
