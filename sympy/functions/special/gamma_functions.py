@@ -307,6 +307,8 @@ class lowergamma(Function):
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
+                    if a.is_integer:
+                        return factorial(b) - exp(-x) * factorial(b) * sum([x ** k / factorial(k) for k in range(a)])
                     return b*cls(b, x) - x**b * exp(-x)
 
                 if not a.is_Integer:
@@ -454,6 +456,8 @@ class uppergamma(Function):
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
+                    if a.is_integer:
+                        return exp(-z) * factorial(b) * sum([z**k / factorial(k) for k in range(a)])
                     return b*cls(b, z) + z**b * exp(-z)
                 elif b.is_Integer:
                     return expint(-b, z)*unpolarify(z)**(b + 1)
