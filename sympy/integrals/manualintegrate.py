@@ -351,8 +351,6 @@ def _parts_rule(integrand, symbol):
         if algebraic:
             u = sympy.Mul(*algebraic)
             dv = (integrand / u).cancel()
-            if not u.is_polynomial() and isinstance(dv, sympy.exp):
-                return
             return u, dv
 
     def pull_out_u(*functions):
@@ -385,6 +383,10 @@ def _parts_rule(integrand, symbol):
 
             # Don't pick u to be a constant if possible
             if symbol not in u.free_symbols and not u.has(dummy):
+                return
+
+            # Don't pick a non-polynomial algebraic to be differentiated
+            if rule == pull_out_algebraic and not u.is_polynomial():
                 return
 
             u = u.subs(dummy, 1)
