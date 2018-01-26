@@ -89,6 +89,7 @@ class FCodePrinter(CodePrinter):
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
+        'name_mangling' : True,
     }
 
     _operators = {
@@ -103,7 +104,9 @@ class FCodePrinter(CodePrinter):
         '!=': '/=',
     }
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}, mangled_symbols={}):
+        self.mangled_symbols = mangled_symbols         ## Dict showing mapping of all words
+        self.used_name= []
         self.type_aliases = dict(chain(self.type_aliases.items(),
                                        settings.pop('type_aliases', {}).items()))
         self.type_mappings = dict(chain(self.type_mappings.items(),
@@ -119,7 +122,6 @@ class FCodePrinter(CodePrinter):
                              'standard'])
         self.module_uses = defaultdict(set)  # e.g.: use iso_c_binding, only: c_int
 
-
     @property
     def _lead(self):
         if self._settings['source_format'] == 'fixed':
@@ -128,6 +130,33 @@ class FCodePrinter(CodePrinter):
             return {'code': "", 'cont': "      ", 'comment': "! "}
         else:
             raise ValueError("Unknown source format: %s" % self._settings['source_format'])
+
+    def _print_Symbol(self, expr):
+        if self._settings['name_mangling'] is True:
+            from sympy import symbols, ordered, Symbol
+            for sym in tuple(ordered(expr.atoms(Symbol))):
+                if sym not in self.mangled_symbols:
+                    name = sym.name
+                    while name.lower() in self.used_name:
+                        name += '_'
+                    self.used_name.append(name.lower())
+                    if name == sym.name:
+                        self.mangled_symbols[sym] = sym
+                    else:
+                        self.mangled_symbols[sym] = symbols(name, cls=sym.__class__, **sym.assumptions0)
+
+            expr = expr.xreplace(self.mangled_symbols)
+
+        name = super(CodePrinter, self)._print_Symbol(expr)
+
+        if name in self.reserved_words:
+            if self._settings['error_on_reserved']:
+                msg = ('This expression includes the symbol "{}" which is a '
+                       'reserved keyword in this language.')
+                raise ValueError(msg.format(name))
+            return name + self._settings['reserved_word_suffix']
+        else:
+            return name
 
     def _rate_index_position(self, p):
         return -p*5
@@ -506,12 +535,14 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, assign_to=None, **settings):
+def fcode(fob, expr, assign_to = None, **settings):
     """Converts an expr to a string of fortran code
 
     Parameters
     ==========
 
+    fob : FCodePrinter
+        A FCodePrinter instance.
     expr : Expr
         A sympy expression to be converted.
     assign_to : optional
@@ -546,15 +577,22 @@ def fcode(expr, assign_to=None, **settings):
         Note that currently the only distinction internally is between
         standards before 95, and those 95 and after. This may change later as
         more features are added.
+    mangled_symbols : bool, optional
+        If True, then variables (which would have been identical in
+        case-insensitive Fortan) are mangled by appending different number
+        of `_` at the end. If False, SymPy won't interfere with naming of
+        variables. [default=True]
 
     Examples
     ========
 
     >>> from sympy import fcode, symbols, Rational, sin, ceiling, floor
+    >>> from sympy.printing.fcode import FCodePrinter
+    >>> ob = FCodePrinter()
     >>> x, tau = symbols("x, tau")
-    >>> fcode((2*tau)**Rational(7, 2))
+    >>> fcode(ob, (2*tau)**Rational(7, 2))
     '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
-    >>> fcode(sin(x), assign_to="s")
+    >>> fcode(ob, sin(x), assign_to="s")
     '      s = sin(x)'
 
     Custom printing can be defined for certain types by passing a dictionary of
@@ -567,7 +605,7 @@ def fcode(expr, assign_to=None, **settings):
     ...   "floor": [(lambda x: not x.is_integer, "FLOOR1"),
     ...             (lambda x: x.is_integer, "FLOOR2")]
     ... }
-    >>> fcode(floor(x) + ceiling(x), user_functions=custom_functions)
+    >>> fcode(ob, floor(x) + ceiling(x), user_functions=custom_functions)
     '      CEIL(x) + FLOOR1(x)'
 
     ``Piecewise`` expressions are converted into conditionals. If an
@@ -579,7 +617,7 @@ def fcode(expr, assign_to=None, **settings):
 
     >>> from sympy import Piecewise
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
-    >>> print(fcode(expr, tau))
+    >>> print(fcode(ob, expr, tau))
           if (x > 0) then
              tau = x + 1
           else
@@ -598,7 +636,7 @@ def fcode(expr, assign_to=None, **settings):
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
     >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-    >>> fcode(e.rhs, assign_to=e.lhs, contract=False)
+    >>> fcode(ob, e.rhs, assign_to=e.lhs, contract=False)
     '      Dy(i) = (y(i + 1) - y(i))/(t(i + 1) - t(i))'
 
     Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
@@ -608,7 +646,7 @@ def fcode(expr, assign_to=None, **settings):
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
     >>> A = MatrixSymbol('A', 3, 1)
-    >>> print(fcode(mat, A))
+    >>> print(fcode(ob, mat, A))
           A(1, 1) = x**2
              if (x > 0) then
           A(2, 1) = x + 1
@@ -617,22 +655,7 @@ def fcode(expr, assign_to=None, **settings):
              end if
           A(3, 1) = sin(x)
     """
-    from sympy import symbols, ordered, Symbol
-    used_name = []
-    word_map = {}
-
-    for sym in tuple(ordered(expr.atoms(Symbol))):
-        name = sym.name
-        while name.lower() in used_name:
-            name += '_'
-        used_name.append(name.lower())
-        if name == sym.name:
-            word_map[sym] = sym
-        else:
-            word_map[sym] = symbols(name, cls=sym.__class__, **sym.assumptions0)
-
-    expr = expr.xreplace(word_map)
-    return FCodePrinter(settings).doprint(expr, assign_to)
+    return FCodePrinter(settings, fob.mangled_symbols).doprint(expr, assign_to)
 
 
 def print_fcode(expr, **settings):
