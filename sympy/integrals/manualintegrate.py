@@ -385,12 +385,12 @@ def _parts_rule(integrand, symbol):
             if symbol not in u.free_symbols and not u.has(dummy):
                 return
 
-            # Don't pick a non-polynomial algebraic to be differentiated
-            if rule == pull_out_algebraic and not u.is_polynomial():
-                return
-
             u = u.subs(dummy, 1)
             dv = dv.subs(dummy, 1)
+
+            # Don't pick a non-polynomial algebraic to be differentiated
+            if rule == pull_out_algebraic and not u.is_polynomial(symbol):
+                return
 
             for rule in liate_rules[index + 1:]:
                 r = rule(integrand)
