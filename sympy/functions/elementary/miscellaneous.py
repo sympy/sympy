@@ -61,7 +61,7 @@ Id = S.IdentityFunction
 ###############################################################################
 
 
-def sqrt(arg):
+def sqrt(arg, evaluate=True):
     """The square root function
 
     sqrt(x) -> Returns the principal square root of x.
@@ -129,7 +129,7 @@ def sqrt(arg):
     return Pow(arg, S.Half)
 
 
-def cbrt(arg):
+def cbrt(arg, evaluate=True):
     """This function computes the principal cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
 
@@ -179,7 +179,7 @@ def cbrt(arg):
     return Pow(arg, Rational(1, 3))
 
 
-def root(arg, n, k=0):
+def root(arg, n, k=0, evaluate=True):
     """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
     principal root (k=0).
 
@@ -269,7 +269,7 @@ def root(arg, n, k=0):
     return Pow(arg, 1/n)
 
 
-def real_root(arg, n=None):
+def real_root(arg, n=None, evaluate=True):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
     will only create a real root of a principal root -- the presence of
