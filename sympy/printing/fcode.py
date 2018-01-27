@@ -23,8 +23,8 @@ from collections import defaultdict
 from itertools import chain
 import string
 
-from sympy.core import S, Add, N, Float
-from sympy.core.compatibility import string_types, range
+from sympy.core import S, Add, N, Float, Symbol, symbols
+from sympy.core.compatibility import string_types, range, ordered
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
@@ -104,8 +104,8 @@ class FCodePrinter(CodePrinter):
         '!=': '/=',
     }
 
-    def __init__(self, settings={}, mangled_symbols={}):
-        self.mangled_symbols = mangled_symbols         ## Dict showing mapping of all words
+    def __init__(self, settings={}):
+        self.mangled_symbols = {}         ## Dict showing mapping of all words
         self.used_name= []
         self.type_aliases = dict(chain(self.type_aliases.items(),
                                        settings.pop('type_aliases', {}).items()))
@@ -132,8 +132,7 @@ class FCodePrinter(CodePrinter):
             raise ValueError("Unknown source format: %s" % self._settings['source_format'])
 
     def _print_Symbol(self, expr):
-        if self._settings['name_mangling'] is True:
-            from sympy import symbols, ordered, Symbol
+        if self._settings['name_mangling'] == True:
             for sym in tuple(ordered(expr.atoms(Symbol))):
                 if sym not in self.mangled_symbols:
                     name = sym.name
@@ -535,7 +534,7 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, assign_to = None, **settings):
+def fcode(expr, assign_to=None, **settings):
     """Converts an expr to a string of fortran code
 
     Parameters
@@ -576,8 +575,8 @@ def fcode(expr, assign_to = None, **settings):
         standards before 95, and those 95 and after. This may change later as
         more features are added.
     name_mangling : bool, optional
-        If True, then variables (which would have been identical in
-        case-insensitive Fortan) are mangled by appending different number
+        If True, then the variables that would become identical in
+        case-insensitive Fortran are mangled by appending different number
         of `_` at the end. If False, SymPy won't interfere with naming of
         variables. [default=True]
 
@@ -603,16 +602,6 @@ def fcode(expr, assign_to = None, **settings):
     ... }
     >>> fcode(floor(x) + ceiling(x), user_functions=custom_functions)
     '      CEIL(x) + FLOOR1(x)'
-
-    Returned Fortan code can have different variables in comparison to ``expr``
-    whenever there are similar variables with different case.Name mangling
-    can be stopped by setting ``name_mangling`` to ``False``.
-
-    >>> Z, z = symbols('Z,z')
-    >>> fcode(Z - z)
-    '      Z - z_'
-    >>> fcode(Z - z, name_mangling= False)
-    '      Z - z'
 
     ``Piecewise`` expressions are converted into conditionals. If an
     ``assign_to`` variable is provided an if statement is created, otherwise

@@ -77,12 +77,18 @@ def test_fcode_functions():
 
 
 def test_case():
+    ob = FCodePrinter()
     x,x_,x__,y,X,X_,Y = symbols('x,x_,x__,y,X,X_,Y')
     assert fcode(exp(x_) + sin(x*y) + cos(X*Y)) == \
-                        '      exp(x_) + sin(x*y) + cos(X*Y)'
-
+                        '      exp(x_) + sin(x*y) + cos(X__*Y_)'
     assert fcode(exp(x__) + 2*x*Y*X_**Rational(7, 2)) == \
                         '      2*X_**(7.0d0/2.0d0)*Y*x + exp(x__)'
+    assert fcode(exp(x_) + sin(x*y) + cos(X*Y), name_mangling=False) == \
+                        '      exp(x_) + sin(x*y) + cos(X*Y)'
+    assert fcode(x - cos(X), name_mangling=False) == '      x - cos(X)'
+    assert ob.doprint(X*sin(x) + x_, assign_to='me') == '      me = X*sin(x_) + x__'
+    assert ob.doprint(X*sin(x), assign_to='mu') == '      mu = X*sin(x_)'
+    assert ob.doprint(x_, assign_to='ad') == '      ad = x__'
 
 
 #issue 6814
