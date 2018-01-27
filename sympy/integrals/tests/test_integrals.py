@@ -249,12 +249,12 @@ def test_issue_3618():
 
 def test_issue_3623():
     assert integrate(cos((n + 1)*x), x) == Piecewise(
-        (x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True))
+        (sin(x*(n + 1))/(n + 1), Ne(n + 1, 0)), (x, True))
     assert integrate(cos((n - 1)*x), x) == Piecewise(
-        (x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
+        (sin(x*(n - 1))/(n - 1), Ne(n - 1, 0)), (x, True))
     assert integrate(cos((n + 1)*x) + cos((n - 1)*x), x) == \
-        Piecewise((x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True)) + \
-        Piecewise((x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
+        Piecewise((sin(x*(n - 1))/(n - 1), Ne(n - 1, 0)), (x, True)) + \
+        Piecewise((sin(x*(n + 1))/(n + 1), Ne(n + 1, 0)), (x, True))
 
 
 def test_issue_3664():
@@ -284,6 +284,10 @@ def test_integrate_units():
 def test_transcendental_functions():
     assert integrate(LambertW(2*x), x) == \
         -x + x*LambertW(2*x) + x/LambertW(2*x)
+
+
+def test_log_polylog():
+    assert integrate(log(1 - x)/x, (x, 0, 1)) == -pi**2/6
 
 
 def test_issue_3740():
@@ -501,32 +505,31 @@ def test_integrate_DiracDelta_fails():
 
 def test_integrate_returns_piecewise():
     assert integrate(x**y, x) == Piecewise(
-        (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+        (x**(y + 1)/(y + 1), Ne(y, -1)), (log(x), True))
     assert integrate(x**y, y) == Piecewise(
-        (y, Eq(log(x), 0)), (x**y/log(x), True))
+        (x**y/log(x), Ne(log(x), 0)), (y, True))
     assert integrate(exp(n*x), x) == Piecewise(
-        (x, Eq(n, 0)), (exp(n*x)/n, True))
+        (exp(n*x)/n, Ne(n, 0)), (x, True))
     assert integrate(x*exp(n*x), x) == Piecewise(
-        (x**2/2, Eq(n**3, 0)), ((x*n**2 - n)*exp(n*x)/n**3, True))
+        ((n**2*x - n)*exp(n*x)/n**3, Ne(n**3, 0)), (x**2/2, True))
     assert integrate(x**(n*y), x) == Piecewise(
-        (log(x), Eq(n*y, -1)), (x**(n*y + 1)/(n*y + 1), True))
+        (x**(n*y + 1)/(n*y + 1), Ne(n*y, -1)), (log(x), True))
     assert integrate(x**(n*y), y) == Piecewise(
-        (y, Eq(n*log(x), 0)), (x**(n*y)/(n*log(x)), True))
+        (x**(n*y)/(n*log(x)), Ne(n*log(x), 0)), (y, True))
     assert integrate(cos(n*x), x) == Piecewise(
-        (x, Eq(n, 0)), (sin(n*x)/n, True))
+        (sin(n*x)/n, Ne(n, 0)), (x, True))
     assert integrate(cos(n*x)**2, x) == Piecewise(
-        (x, Eq(n, 0)), ((n*x/2 + sin(n*x)*cos(n*x)/2)/n, True))
+        ((n*x/2 + sin(n*x)*cos(n*x)/2)/n, Ne(n, 0)), (x, True))
     assert integrate(x*cos(n*x), x) == Piecewise(
-        (x**2/2, Eq(n, 0)), (x*sin(n*x)/n + cos(n*x)/n**2, True))
+        (x*sin(n*x)/n + cos(n*x)/n**2, Ne(n, 0)), (x**2/2, True))
     assert integrate(sin(n*x), x) == Piecewise(
-        (0, Eq(n, 0)), (-cos(n*x)/n, True))
+        (-cos(n*x)/n, Ne(n, 0)), (0, True))
     assert integrate(sin(n*x)**2, x) == Piecewise(
-        (0, Eq(n, 0)), ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, True))
+        ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, Ne(n, 0)), (0, True))
     assert integrate(x*sin(n*x), x) == Piecewise(
-        (0, Eq(n, 0)), (-x*cos(n*x)/n + sin(n*x)/n**2, True))
-    assert integrate(exp(x*y),(x,0,z)) == Piecewise( \
-        (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
-
+        (-x*cos(n*x)/n + sin(n*x)/n**2, Ne(n, 0)), (0, True))
+    assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
+        (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
 
 def test_integrate_max_min():
     assert integrate(Min(x, 2), (x, 0, 3)) == 4
@@ -679,10 +682,13 @@ def test_as_sum_midpoint1():
 
 def test_as_sum_midpoint2():
     e = Integral((x + y)**2, (x, 0, 1))
+    n = Symbol('n', positive=True, integer=True)
     assert e.as_sum(1, method="midpoint").expand() == S(1)/4 + y + y**2
     assert e.as_sum(2, method="midpoint").expand() == S(5)/16 + y + y**2
     assert e.as_sum(3, method="midpoint").expand() == S(35)/108 + y + y**2
     assert e.as_sum(4, method="midpoint").expand() == S(21)/64 + y + y**2
+    assert e.as_sum(n, method="midpoint").expand() == \
+        y**2 + y + 1/3 - 1/(12*n**2)
 
 
 def test_as_sum_left():
@@ -691,7 +697,9 @@ def test_as_sum_left():
     assert e.as_sum(2, method="left").expand() == S(1)/8 + y/2 + y**2
     assert e.as_sum(3, method="left").expand() == S(5)/27 + 2*y/3 + y**2
     assert e.as_sum(4, method="left").expand() == S(7)/32 + 3*y/4 + y**2
-
+    assert e.as_sum(n, method="left").expand() == \
+        y**2 + y + S(1)/3 - y/n - 1/(2*n) + 1/(6*n**2)
+    assert e.as_sum(10, method="left", evaluate=False).has(Sum)
 
 def test_as_sum_right():
     e = Integral((x + y)**2, (x, 0, 1))
@@ -699,15 +707,27 @@ def test_as_sum_right():
     assert e.as_sum(2, method="right").expand() == S(5)/8 + 3*y/2 + y**2
     assert e.as_sum(3, method="right").expand() == S(14)/27 + 4*y/3 + y**2
     assert e.as_sum(4, method="right").expand() == S(15)/32 + 5*y/4 + y**2
+    assert e.as_sum(n, method="right").expand() == \
+        y**2 + y + S(1)/3 + y/n + 1/(2*n) + 1/(6*n**2)
 
+
+def test_as_sum_trapezoid():
+    e = Integral((x + y)**2, (x, 0, 1))
+    assert e.as_sum(1, method="trapezoid").expand() == y**2 + y + S(1)/2
+    assert e.as_sum(2, method="trapezoid").expand() == y**2 + y + S(3)/8
+    assert e.as_sum(3, method="trapezoid").expand() == y**2 + y + S(19)/54
+    assert e.as_sum(4, method="trapezoid").expand() == y**2 + y + S(11)/32
+    assert e.as_sum(n, method="trapezoid").expand() == \
+        y**2 + y + S(1)/3 + 1/(6*n**2)
+    assert Integral(sign(x), (x, 0, 1)).as_sum(1, 'trapezoid') == S(1)/2
 
 def test_as_sum_raises():
     e = Integral((x + y)**2, (x, 0, 1))
     raises(ValueError, lambda: e.as_sum(-1))
     raises(ValueError, lambda: e.as_sum(0))
     raises(ValueError, lambda: Integral(x).as_sum(3))
-    raises(NotImplementedError, lambda: e.as_sum(oo))
-    raises(NotImplementedError, lambda: e.as_sum(3, method='xxxx2'))
+    raises(ValueError, lambda: e.as_sum(oo))
+    raises(ValueError, lambda: e.as_sum(3, method='xxxx2'))
 
 
 def test_nested_doit():

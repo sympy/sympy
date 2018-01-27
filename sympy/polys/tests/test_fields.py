@@ -1,6 +1,6 @@
 """Test sparse rational functions. """
 
-from sympy.polys.fields import field, sfield, FracField
+from sympy.polys.fields import field, sfield, FracField, FracElement
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orderings import lex
@@ -128,6 +128,12 @@ def test_FracElement_from_expr():
 
     raises(ValueError, lambda: F.from_expr(2**x))
     raises(ValueError, lambda: F.from_expr(7*x + sqrt(2)))
+
+    assert isinstance(ZZ[2**x].get_field().convert(2**(-x)),
+        FracElement)
+    assert isinstance(ZZ[x**2].get_field().convert(x**(-6)),
+        FracElement)
+
 
 def test_FracElement__lt_le_gt_ge__():
     F, x, y = field("x,y", ZZ)

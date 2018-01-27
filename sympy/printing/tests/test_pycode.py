@@ -2,10 +2,10 @@
 from __future__ import (absolute_import, division, print_function)
 
 from sympy.codegen import Assignment
-from sympy.core import Expr, Mod, symbols
+from sympy.core import Expr, Mod, symbols, Eq, Le, Gt
 from sympy.core.numbers import pi
 from sympy.logic import And, Or
-from sympy.functions import acos
+from sympy.functions import acos, Piecewise
 from sympy.matrices import SparseMatrix
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
@@ -27,6 +27,11 @@ def test_PythonCodePrinter():
     assert prntr.module_imports == {'math': {'pi'}}
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
     assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
+    assert prntr.doprint(Piecewise((1, Eq(x, 0)),
+                        (2, x>6))) == '((1) if (x == 0) else (2) if (x > 6) else None)'
+    assert prntr.doprint(Piecewise((2, Le(x, 0)),
+                        (3, Gt(x, 0)), evaluate=False)) == '((2) if (x <= 0) else'\
+                                                        ' (3) if (x > 0) else None)'
 
 
 def test_SciPyPrinter():
