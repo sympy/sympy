@@ -395,7 +395,7 @@ def _parts_rule(integrand, symbol):
             for rule in liate_rules[index + 1:]:
                 r = rule(integrand)
                 # make sure dv is amenable to integration
-                if r and sympy.simplify(r[0].subs(dummy, 1)) == sympy.simplify(dv):
+                if r and r[0].subs(dummy, 1).equals(dv):
                     du = u.diff(symbol)
                     v_step = integral_steps(sympy.simplify(dv), symbol)
                     v = _manualintegrate(v_step)
