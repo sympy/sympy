@@ -60,7 +60,7 @@ Id = S.IdentityFunction
 ###############################################################################
 
 
-def sqrt(arg, evaluate=True):
+def sqrt(arg, evaluate=None):
     """The square root function
 
     sqrt(x) -> Returns the principal square root of x.
@@ -125,10 +125,10 @@ def sqrt(arg, evaluate=True):
     .. [2] http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
-    return Pow(arg, S.Half)
+    return Pow(arg, S.Half, evaluate=evaluate)
 
 
-def cbrt(arg, evaluate=True):
+def cbrt(arg, evaluate=None):
     """This function computes the principal cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
 
@@ -175,10 +175,10 @@ def cbrt(arg, evaluate=True):
     * http://en.wikipedia.org/wiki/Principal_value
 
     """
-    return Pow(arg, Rational(1, 3))
+    return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
-def root(arg, n, k=0, evaluate=True):
+def root(arg, n, k=0, evaluate=None):
     """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
     principle root (k=0).
 
@@ -264,11 +264,11 @@ def root(arg, n, k=0, evaluate=True):
     """
     n = sympify(n)
     if k:
-        return Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
-    return Pow(arg, 1/n)
+        return Pow(arg, S.One/n, evaluate=evaluate)*S.NegativeOne**(2*k/n)
+    return Pow(arg, 1/n, evaluate=evaluate)
 
 
-def real_root(arg, n=None, evaluate=True):
+def real_root(arg, n=None, evaluate=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
     will only create a real root of a principle root -- the presence of
@@ -315,7 +315,7 @@ def real_root(arg, n=None, evaluate=True):
         except ValueError:
             return root(arg, n)*Piecewise(
                 (S.One, ~Equality(im(arg), 0)),
-                (Pow(S.NegativeOne, S.One/n)**(2*floor(n/2)), And(
+                (Pow(S.NegativeOne, S.One/n, evaluate=evaluate)**(2*floor(n/2)), And(
                     Equality(n % 2, 1),
                     arg < 0)),
                 (S.One, True))
