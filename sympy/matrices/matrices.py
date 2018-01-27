@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import collections
+from mpmath.libmp.libmpf import prec_to_dps
 from sympy.assumptions.refine import refine
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
@@ -1333,11 +1334,22 @@ class MatrixEigen(MatrixSubspaces):
         mat = self
         has_floats = any(v.has(Float) for v in self)
 
+        if has_floats:
+            try:
+                max_prec = max(term._prec for term in self._mat if isinstance(term, Float))
+            except ValueError:
+                # if no term in the matrix is explicitly a Float calling max()
+                # will throw a error so setting max_prec to default value of 53
+                max_prec = 53
+            # setting minimum max_dps to 15 to prevent loss of precision in
+            # matrix containing non evaluated expressions
+            max_dps = max(prec_to_dps(max_prec), 15)
+
         def restore_floats(*args):
             """If `has_floats` is `True`, cast all `args` as
             matrices of floats."""
             if has_floats:
-                args = [m.evalf(chop=chop) for m in args]
+                args = [m.evalf(prec=max_dps, chop=chop) for m in args]
             if len(args) == 1:
                 return args[0]
             return args
