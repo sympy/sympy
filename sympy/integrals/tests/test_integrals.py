@@ -5,7 +5,7 @@ from sympy import (
     Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, sign,
     simplify, sin, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple
+    symbols, sympify, tan, trigsimp, Tuple, Si, Ci
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -858,6 +858,14 @@ def test_series():
     i = Integral(cos(x), (x, x))
     e = i.lseries(x)
     assert i.nseries(x, n=8).removeO() == Add(*[next(e) for j in range(4)])
+
+
+def test_trig_nonelementary_integrals():
+    x = Symbol('x')
+    assert integrate((1 + sin(x))/x, x) == log(x) + Si(x)
+    # next one comes out as log(x) + log(x**2)/2 + Ci(x)
+    # so not hardcoding this log ugliness
+    assert integrate((cos(x) + 2)/x, x).has(Ci)
 
 
 def test_issue_4403():
