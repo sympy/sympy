@@ -555,7 +555,7 @@ def test_diff_wrt():
     assert f(
         sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
 
-    assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert diff(f(g(x)), g(x)) == Derivative(f(g(x)), g(x))
 
 
 def test_diff_wrt_func_subs():
@@ -882,7 +882,7 @@ def test_issue_12005():
     assert e4.diff(y) == S.Zero
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
-    assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+    assert f(g(x)).diff(g(x), g(x)) == Derivative(f(g(x)), g(x), g(x))
 
 def test_undefined_function_eq():
     f = Function('f')

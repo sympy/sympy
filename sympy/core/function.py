@@ -1259,8 +1259,8 @@ class Derivative(Expr):
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
                             # Derivative evaluated at a point that is not a
-                            # symbol
-                            obj = Subs(obj, v, old_v)
+                            # symbol, let subs check if this is okay to replace
+                            obj = obj.subs(v, old_v)
                         else:
                             obj = obj.xreplace({v: old_v})
                     v = old_v
@@ -1484,7 +1484,9 @@ class Derivative(Expr):
         # Derivative(expr, vars). Disallowed:
         # (1) changing expr by introducing a variable among vars
         # (2) changing vars by introducing a variable contained in expr
-        # However, it is always allowed to replace the entire expr by new.
+        # However, it is always allowed to replace the entire expr by new,
+        # as this is useful for temporarily replacing an expression with
+        # a dummy variable, which `solve` sometimes does.
         old_symbols = (old.free_symbols if isinstance(old.free_symbols, set)
             else set())
         new_symbols = (new.free_symbols if isinstance(new.free_symbols, set)
