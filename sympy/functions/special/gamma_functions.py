@@ -308,8 +308,9 @@ class lowergamma(Function):
                 b = a - 1
                 if b.is_positive:
                     if a.is_integer:
-                        return factorial(b) - exp(-x) * factorial(b) * sum([x ** k / factorial(k) for k in range(a)])
-                    return b*cls(b, x) - x**b * exp(-x)
+                        return factorial(b) - exp(-x) * factorial(b) * Add(*[x ** k / factorial(k) for k in range(a)])
+                    else:
+                        return gamma(a) * (lowergamma(S.Half, x)/sqrt(pi) - exp(-x) * Add(*[x**(k-S.Half) / gamma(S.Half+k) for k in range(1, a+S.Half)]))
 
                 if not a.is_Integer:
                     return (cls(a + 1, x) + x**a * exp(-x))/a
@@ -457,8 +458,9 @@ class uppergamma(Function):
                 b = a - 1
                 if b.is_positive:
                     if a.is_integer:
-                        return exp(-z) * factorial(b) * sum([z**k / factorial(k) for k in range(a)])
-                    return b*cls(b, z) + z**b * exp(-z)
+                        return exp(-z) * factorial(b) * Add(*[z**k / factorial(k) for k in range(a)])
+                    else:
+                        return gamma(a) * erfc(sqrt(z)) + (-1)**(a - S(3)/2) * exp(-z) * sqrt(z) * Add(*[gamma(-S(1)/2 - k) * (-z)**k / gamma(1-a) for k in range(a - S(1)/2)])
                 elif b.is_Integer:
                     return expint(-b, z)*unpolarify(z)**(b + 1)
 
