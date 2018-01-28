@@ -6633,24 +6633,29 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
     D = (a - d)**2 + 4*b*c
     l1 = (a + d + sqrt(D))/2
     l2 = (a + d - sqrt(D))/2
-    equal_roots = Eq(D, 0).simplify()
+    equal_roots = Eq(D, 0).expand()
     gsol1, gsol2 = [], []
 
     # Solutions have exponential form if either D > 0 with real coefficients
     # or D != 0 with complex coefficients. Eigenvalues are distinct.
-    # For each eigenvalue, pick an eigenvector, making sure we don't get (0, 0)
-    assumption = D > 0 if real_coeff else Not(equal_roots)
-    vector1 = Matrix((l1 - d, c)) if b == l1 - a == 0 else Matrix((b, l1 - a))
-    vector2 = Matrix((l2 - d, c)) if b == l2 - a == 0 else Matrix((b, l2 - a))
+    # For each eigenvalue lam, pick an eigenvector, making sure we don't get (0, 0)
+    # The candidates are (b, lam-a) and (lam-d, c).
+    exponential_form = D > 0 if real_coeff else Not(equal_roots)
+    bad_ab_vector1 = And(Eq(b, 0), Eq(l1, a))
+    bad_ab_vector2 = And(Eq(b, 0), Eq(l2, a))
+    vector1 = Matrix((Piecewise((l1 - d, bad_ab_vector1), (b, True)),
+                      Piecewise((c, bad_ab_vector1), (l1 - a, True))))
+    vector2 = Matrix((Piecewise((l2 - d, bad_ab_vector2), (b, True)),
+                      Piecewise((c, bad_ab_vector2), (l2 - a, True))))
     sol_vector = C1*exp(l1*t)*vector1 + C2*exp(l2*t)*vector2
-    gsol1.append((sol_vector[0], assumption))
-    gsol2.append((sol_vector[1], assumption))
+    gsol1.append((sol_vector[0], exponential_form))
+    gsol2.append((sol_vector[1], exponential_form))
 
     # Solutions have trigonometric form for real coefficients with D < 0
     # Both b and c are nonzero in this case, so (b, lam-a) is an eigenvector
     # It splits into real/imag parts as (b, sigma-a) and (0, beta). Then
     # multiply it by C1(cos(beta*t) + I*C2*sin(beta*t)) and separate real/imag
-    assumption = D < 0 if real_coeff else False
+    trigonometric_form = D < 0 if real_coeff else False
     sigma = re(l1)
     if im(l1).is_positive:
         beta = im(l1)
@@ -6660,27 +6665,29 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
     vector2 = Matrix((0, beta))
     sol_vector = exp(sigma*t) * (C1*(cos(beta*t)*vector1 - sin(beta*t)*vector2) + \
         C2*(sin(beta*t)*vector1 + cos(beta*t)*vector2))
-    gsol1.append((sol_vector[0], assumption))
-    gsol2.append((sol_vector[1], assumption))
+    gsol1.append((sol_vector[0], trigonometric_form))
+    gsol2.append((sol_vector[1], trigonometric_form))
 
     # Final case is D == 0, a single eigenvalue. If the eigenspace is 2-dimensional
     # then we have a scalar matrix, deal with this case first.
-    assumption = equal_roots
-    if a == d and b == c == 0:
-        vector1 = Matrix((S.One, S.Zero))
-        vector2 = Matrix((S.Zero, S.One))
-        sol_vector = exp(l1*t) * (C1*vector1 + C2*vector2)
-    else:
+    scalar_matrix = And(Eq(a, d), Eq(b, 0), Eq(c, 0))
+
+    vector1 = Matrix((S.One, S.Zero))
+    vector2 = Matrix((S.Zero, S.One))
+    sol_vector = exp(l1*t) * (C1*vector1 + C2*vector2)
+    gsol1.append((sol_vector[0], scalar_matrix))
+    gsol2.append((sol_vector[1], scalar_matrix))
+
     # Have one eigenvector. Get a generalized eigenvector from (A-lam)*vector2 = vector1
-        if b == l1 - a == 0:
-            vector1 = Matrix((l1 - d, c))
-            vector2 = Matrix((S.One, S.Zero))
-        else:
-            vector1 = Matrix((b, l1 - a))
-            vector2 = Matrix((S.Zero, S.One)) if a == l1 else Matrix((b/(a-l1), S.Zero))
-        sol_vector = exp(l1*t) * (C1*vector1  + C2*(vector2 + t*vector1))
-    gsol1.append((sol_vector[0], assumption))
-    gsol2.append((sol_vector[1], assumption))
+    vector1 = Matrix((Piecewise((l1 - d, bad_ab_vector1), (b, True)),
+                      Piecewise((c, bad_ab_vector1), (l1 - a, True))))
+    vector2 = Matrix((Piecewise((S.One, bad_ab_vector1), (S.Zero, Eq(a, l1)),
+                                (b/(a - l1), True)),
+                      Piecewise((S.Zero, bad_ab_vector1), (S.One, Eq(a, l1)),
+                                (S.Zero, True))))
+    sol_vector = exp(l1*t) * (C1*vector1  + C2*(vector2 + t*vector1))
+    gsol1.append((sol_vector[0], equal_roots))
+    gsol2.append((sol_vector[1], equal_roots))
     return [Eq(x(t), Piecewise(*gsol1)), Eq(y(t), Piecewise(*gsol2))]
 
 

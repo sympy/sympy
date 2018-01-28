@@ -210,16 +210,20 @@ def test_sysode_linear_2eq_order1_many_zeros():
 
 def test_dsolve_linsystem_symbol_piecewise():
     u = Symbol('u')
-    eq = (Eq(diff(f(x), x), f(x) + g(x)),
+    eq = (Eq(diff(f(x), x), 2*f(x) + g(x)),
            Eq(diff(g(x), x), u*f(x)))
-    s1 = [Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 1)/2 + 1/2)) + \
-          C2*exp(x*(-sqrt(4*u + 1)/2 + 1/2)), Ne(4*u + 1, 0)), \
-          ((C1 + C2*(x + 1/(-sqrt(4*u + 1)/2 + 1/2)))*exp(x*(sqrt(4*u + 1)/2 \
-          + 1/2)), True))), Eq(g(x), Piecewise((C1*(sqrt(4*u + 1)/2 - 1/2) * \
-          exp(x*(sqrt(4*u + 1)/2 + 1/2)) + C2*(-sqrt(4*u + 1)/2 - 1/2) * \
-          exp(x*(-sqrt(4*u + 1)/2 + 1/2)), Ne(4*u + 1, 0)), \
-          ((C1*(sqrt(4*u + 1)/2 - 1/2) + C2*x*(sqrt(4*u + 1)/2 - 1/2)) * \
-          exp(x*(sqrt(4*u + 1)/2 + 1/2)), True)))]
+    s1 = [
+        Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1))
+            + C2*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4, 0)),
+            ((C1 + C2*(x + Piecewise((0, Eq(sqrt(4*u + 4)/2 + 1, 2)),
+            (1/(-sqrt(4*u + 4)/2 + 1), True))))*exp(x*(sqrt(4*u + 4)/2 + 1)),
+            True))),
+        Eq(g(x), Piecewise((C1*(sqrt(4*u + 4)/2 - 1)*exp(x*(sqrt(4*u + 4)/2 + 1))
+            + C2*(-sqrt(4*u + 4)/2 - 1)*exp(x*(-sqrt(4*u + 4)/2 + 1)),
+            Ne(4*u + 4, 0)), ((C1*(sqrt(4*u + 4)/2 - 1) + C2*(x*(sqrt(4*u + 4)/2 - 1)
+            + Piecewise((1, Eq(sqrt(4*u + 4)/2 + 1, 2)),
+            (0, True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True)))
+    ]
     s = dsolve(eq)
     assert s == s1
     s = [(l.lhs, l.rhs) for l in s]
@@ -234,7 +238,8 @@ def test_dsolve_linsystem_symbol_piecewise():
     eq1 = r1*c1*Derivative(x1(t), t) + x1(t) - x2(t) - r1*i
     eq2 = r2*c1*Derivative(x1(t), t) + r2*c2*Derivative(x2(t), t) + x2(t) - r2*i
     sol = dsolve((eq1, eq2))
-    # no assertion (it's a complicated Piecewise), but this was previously a TypeError
+    # it's a complicated formula, was previously a TypeError
+    assert all(s.has(Piecewise) for s in sol)
 
 
 def test_linear_2eq_order2():
