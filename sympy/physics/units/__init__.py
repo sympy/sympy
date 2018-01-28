@@ -250,6 +250,8 @@ def find_unit(quantity):
     IA = [(i, getattr(u, i)) for i in dir(u)]
     IA = [(i, a) for i, a in IA if isinstance(a, (Quantity, Dimension))]
     if isinstance(quantity, string_types):
+        if quantity is '':
+            return []
         dim = getattr(u, quantity, None)
         if dim is None:
             for i, a in IA:

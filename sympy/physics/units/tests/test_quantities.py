@@ -218,6 +218,7 @@ def test_issue_5565():
 
 
 def test_find_unit():
+    assert find_unit('') == []
     assert find_unit('coulomb') == ['C', 'coulomb', 'coulombs',
                                     'planck_charge', 'coulomb_constant']
     assert find_unit('char') == ['C', 'charge', 'coulomb', 'coulombs',
