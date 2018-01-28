@@ -299,7 +299,6 @@ class lowergamma(Function):
 
         # Special values.
         if a.is_Number:
-            # TODO this should be non-recursive
             if a is S.One:
                 return S.One - exp(-x)
             elif a is S.Half:
@@ -449,7 +448,6 @@ class uppergamma(Function):
 
         # Special values.
         if a.is_Number:
-            # TODO this should be non-recursive
             if a is S.One:
                 return exp(-z)
             elif a is S.Half:
