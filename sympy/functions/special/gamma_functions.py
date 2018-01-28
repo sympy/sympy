@@ -313,7 +313,7 @@ class lowergamma(Function):
                         return gamma(a) * (lowergamma(S.Half, x)/sqrt(pi) - exp(-x) * Add(*[x**(k-S.Half) / gamma(S.Half+k) for k in range(1, a+S.Half)]))
 
                 if not a.is_Integer:
-                    return (cls(a + 1, x) + x**a * exp(-x))/a
+                    return (-1)**(S.Half - a) * pi*erf(sqrt(x)) / gamma(1-a) + exp(-x) * Add(*[x**(k+a-1)*gamma(a) / gamma(a+k) for k in range(1, S(3)/2-a)])
 
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
@@ -460,12 +460,12 @@ class uppergamma(Function):
                     if a.is_integer:
                         return exp(-z) * factorial(b) * Add(*[z**k / factorial(k) for k in range(a)])
                     else:
-                        return gamma(a) * erfc(sqrt(z)) + (-1)**(a - S(3)/2) * exp(-z) * sqrt(z) * Add(*[gamma(-S(1)/2 - k) * (-z)**k / gamma(1-a) for k in range(a - S(1)/2)])
+                        return gamma(a) * erfc(sqrt(z)) + (-1)**(a - S(3)/2) * exp(-z) * sqrt(z) * Add(*[gamma(-S.Half - k) * (-z)**k / gamma(1-a) for k in range(a - S.Half)])
                 elif b.is_Integer:
                     return expint(-b, z)*unpolarify(z)**(b + 1)
 
                 if not a.is_Integer:
-                    return (cls(a + 1, z) - z**a * exp(-z))/a
+                    return (-1)**(S.Half - a) * pi*erfc(sqrt(z))/gamma(1-a) - z**a * exp(-z) * Add(*[z**k * gamma(a) / gamma(a+k+1) for k in range(S.Half - a)])
 
     def _eval_conjugate(self):
         z = self.args[1]
