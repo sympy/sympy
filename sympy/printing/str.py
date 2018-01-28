@@ -707,7 +707,7 @@ class StrPrinter(Printer):
         return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
-        if self._settings.get("abbrev", True):
+        if self._settings.get("abbrev", False):
             return "%s" % expr.abbrev
         return "%s" % expr.name
 
