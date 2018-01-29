@@ -89,14 +89,21 @@ def test_case():
     assert ob.doprint(X*sin(x) + x_, assign_to='me') == '      me = X*sin(x_) + x__'
     assert ob.doprint(X*sin(x), assign_to='mu') == '      mu = X*sin(x_)'
     assert ob.doprint(x_, assign_to='ad') == '      ad = x__'
+    n, m = symbols('n,m', integer=True)
     A = IndexedBase('A')
-    i = Idx('i', symbols('n', integer=True))
-    sq = implemented_function('sq', Lambda(x, x**2))
-    assert fcode(sq(A[i]), assign_to=A[i]) == (
-        '      do i = 1, n\n'
-        '         A(i) = A(i)**2\n'
-        '      end do'
-    )
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    i = Idx('i', m)
+    I = Idx('I', n)
+    assert fcode(A[i, I]*x[I], assign_to=y[i], source_format='free') == (
+                                            "do i = 1, m\n"
+                                            "   y(i) = 0\n"
+                                            "end do\n"
+                                            "do i = 1, m\n"
+                                            "   do I_ = 1, n\n"
+                                            "      y(i) = A(i, I_)*x(I_) + y(i)\n"
+                                            "   end do\n"
+                                            "end do" )
 
 
 #issue 6814
