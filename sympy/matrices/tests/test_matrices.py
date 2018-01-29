@@ -2006,6 +2006,14 @@ def test_diff():
     fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
     fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
 
+    # Test scalar derived by matrix remains matrix:
+    res = x.diff(Matrix([[x, y]]))
+    assert isinstance(res, ImmutableDenseMatrix)
+    assert res == Matrix([[1, 0]])
+    res = (x**3).diff(Matrix([[x, y]]))
+    assert isinstance(res, ImmutableDenseMatrix)
+    assert res == Matrix([[3*x**2, 0]])
+
 
 def test_getattr():
     A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))

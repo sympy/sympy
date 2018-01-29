@@ -1237,6 +1237,8 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
+            elif (count < 0) == True:
+                obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
@@ -1287,44 +1289,6 @@ class Derivative(Expr):
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
         return expr
-
-    @staticmethod
-    def _helper_apply_n_times(expr, s, n, func):
-        from sympy import Integer, Tuple, NDimArray
-        from sympy.matrices.common import MatrixCommon
-
-        # This `if` could be avoided with double dispatch, combinations of type
-        # requiring `derive_by_array`:
-        # 1. (array, array) ==> this is managed by the following `if`.
-        # 2. (array, scalar)
-        # 3. (scalar, array) ==> this is managed by the following `if`.
-        # 4. (scalar, scalar)
-        #
-        # Case 1. is handled by `_eval_derivative` of `NDimArray`.
-        # Case 4., i.e. pair (x=scalar, y=scalar) should be passed to
-        # x._eval_derivative(y).
-        if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-            from sympy import derive_by_array
-            func = derive_by_array
-
-        if isinstance(n, (int, Integer)):
-            obj = expr
-            for i in range(n):
-                obj2 = func(obj, s)
-                if obj == obj2:
-                    break
-                obj = obj2
-            return obj
-        elif expr.is_Derivative:
-            dict_var_count = dict(expr.variable_count)
-            if s in dict_var_count:
-                dict_var_count[s] += n
-            else:
-                dict_var_count[s] = n
-            from sympy import Derivative
-            return Derivative(expr.expr, *dict_var_count.items())
-        else:
-            return None
 
     @classmethod
     def _remove_derived_once(cls, v):
@@ -1418,6 +1382,19 @@ class Derivative(Expr):
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Integer
+        if isinstance(n, (int, Integer)):
+            # TODO: it would be desirable to squash `_eval_derivative` into
+            # this code.
+            return super(Derivative, self)._eval_derivative_n_times(s, n)
+        dict_var_count = dict(self.variable_count)
+        if s in dict_var_count:
+            dict_var_count[s] += n
+        else:
+            dict_var_count[s] = n
+        return Derivative(self.expr, *dict_var_count.items())
 
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we
