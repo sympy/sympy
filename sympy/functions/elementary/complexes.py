@@ -901,7 +901,7 @@ class periodic_argument(Function):
         unbranched = cls._getunbranched(ar)
         if unbranched is None:
             return None
-        if unbranched.has(periodic_argument, atan2, arg, atan):
+        if unbranched.has(periodic_argument, atan2, atan):
             return None
         if period == oo:
             return unbranched
