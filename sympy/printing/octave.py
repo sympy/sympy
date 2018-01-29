@@ -34,7 +34,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
-    "arg": "angle",
+    "arg": "angle",  # arg/angle ok in Octave but only angle in Matlab
     "ceiling": "ceil",
     "Chi": "coshint",
     "Ci": "cosint",
