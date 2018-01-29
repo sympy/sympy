@@ -150,6 +150,13 @@ def test_boolean():
     assert mcode((x | y) & z) == "z & (x | y)"
 
 
+def test_KroneckerDelta():
+    from sympy.functions import KroneckerDelta
+    assert mcode(KroneckerDelta(x, y)) == "double(x == y)"
+    assert mcode(KroneckerDelta(x, y + 1)) == "double(x == (y + 1))"
+    assert mcode(KroneckerDelta(2**x, y)) == "double((2.^x) == y)"
+
+
 def test_Matrices():
     assert mcode(Matrix(1, 1, [10])) == "10"
     A = Matrix([[1, sin(x/2), abs(x)],

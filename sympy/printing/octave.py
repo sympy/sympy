@@ -382,6 +382,12 @@ class OctaveCodePrinter(CodePrinter):
         return self._print(expr.label)
 
 
+    def _print_KroneckerDelta(self, expr):
+        prec = PRECEDENCE["Pow"]
+        return "double(%s == %s)" % tuple(self.parenthesize(x, prec)
+                                          for x in expr.args)
+
+
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
 
