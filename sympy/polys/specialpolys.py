@@ -62,10 +62,9 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         ex = x**4 - 10*x**2 + 1
     elif n == 3:
         ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
-    if polys == False:
-        return ex
-    else:
-        return PurePoly(ex, x)
+
+    return PurePoly(ex, x) if polys else ex
+
 
 @public
 def cyclotomic_poly(n, x=None, polys=False):
@@ -83,10 +82,7 @@ def cyclotomic_poly(n, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 @public
@@ -112,10 +108,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
     """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
 
-    if not polys:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 @public

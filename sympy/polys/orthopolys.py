@@ -52,10 +52,7 @@ def jacobi_poly(n, a, b, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 def dup_gegenbauer(n, a, K):
@@ -88,10 +85,7 @@ def gegenbauer_poly(n, a, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 def dup_chebyshevt(n, K):
@@ -120,10 +114,7 @@ def chebyshevt_poly(n, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 def dup_chebyshevu(n, K):
@@ -152,10 +143,7 @@ def chebyshevu_poly(n, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 def dup_hermite(n, K):
@@ -188,10 +176,7 @@ def hermite_poly(n, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 def dup_legendre(n, K):
@@ -222,10 +207,7 @@ def legendre_poly(n, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 def dup_laguerre(n, alpha, K):
@@ -262,10 +244,7 @@ def laguerre_poly(n, x=None, alpha=None, polys=False):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 def dup_spherical_bessel_fn(n, K):
@@ -334,7 +313,4 @@ def spherical_bessel_fn(n, x=None, polys=False):
     else:
         poly = PurePoly.new(poly, 1/Dummy('x'))
 
-    if polys == False:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
