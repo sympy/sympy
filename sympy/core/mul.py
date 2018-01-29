@@ -899,14 +899,16 @@ class Mul(Expr, AssocOp):
         for i in range(len(args)):
             d = args[i].diff(s)
             if d:
-                terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
-        return Add(*terms)
+                # Note: reduce is used in step of Mul as Mul is unable to
+                # handle subtypes and operation priority:
+                terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
+        return reduce(lambda x, y: x+y, terms, S.Zero)
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
         # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
         from sympy import Integer, factorial, prod, Dummy, symbols, Sum
-        args = [arg for arg in self.args if arg.has(s)]
+        args = [arg for arg in self.args if arg.free_symbols & s.free_symbols]
         coeff_args = [arg for arg in self.args if arg not in args]
         m = len(args)
         if m == 1:

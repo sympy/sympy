@@ -7,6 +7,8 @@ from operator import add, mul, lt, le, gt, ge
 from sympy.core.compatibility import is_sequence, reduce, string_types
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
+from sympy.core.numbers import Exp1
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
@@ -218,16 +220,14 @@ class FracField(DefaultPrinting):
                 return reduce(add, list(map(_rebuild, expr.args)))
             elif expr.is_Mul:
                 return reduce(mul, list(map(_rebuild, expr.args)))
-            elif expr.is_Pow or isinstance(expr, ExpBase):
+            elif expr.is_Pow or isinstance(expr, (ExpBase, Exp1)):
                 b, e = expr.as_base_exp()
                 # look for bg**eg whose integer power may be b**e
-                choices = tuple((gen, bg, eg) for gen, (bg, eg) in powers
-                    if bg == b and Mod(e, eg) == 0)
-                if choices:
-                    gen, bg, eg = choices[0]
-                    return mapping.get(gen)**(e/eg)
-                elif e.is_Integer:
-                    return _rebuild(expr.base)**int(expr.exp)
+                for gen, (bg, eg) in powers:
+                    if bg == b and Mod(e, eg) == 0:
+                        return mapping.get(gen)**int(e/eg)
+                if e.is_Integer and e is not S.One:
+                    return _rebuild(b)**int(e)
 
             try:
                 return domain.convert(expr)

@@ -87,6 +87,13 @@ def plot_and_save(name):
     p.save(tmp_file('%s_plot_piecewise_2' % name))
     p._backend.close()
 
+    # test issue 7471
+    p1 = plot(x)
+    p2 = plot(3)
+    p1.extend(p2)
+    p.save(tmp_file('%s_horizontal_line' % name))
+    p._backend.close()
+
     # test issue 10925
     f = Piecewise((-1, x < -1), (x, And(-1 <= x, x < 0)), \
         (x**2, And(0 <= x, x < 1)), (x**3, x >= 1))

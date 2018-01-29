@@ -353,7 +353,7 @@ def Beta(name, alpha, beta):
      alpha - 1         beta - 1
     z         *(-z + 1)
     ---------------------------
-         beta(alpha, beta)
+           B(alpha, beta)
 
     >>> expand_func(simplify(E(X, meijerg=True)))
     alpha/(alpha + beta)
@@ -423,7 +423,7 @@ def BetaPrime(name, alpha, beta):
      alpha - 1        -alpha - beta
     z         *(z + 1)
     -------------------------------
-           beta(alpha, beta)
+             B(alpha, beta)
 
     References
     ==========
@@ -801,14 +801,14 @@ def Erlang(name, k, l):
      k  k - 1  -l*z
     l *z     *e
     ---------------
-        gamma(k)
+        Gamma(k)
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
     /   -2*I*pi*k
     |k*e         *lowergamma(k, l*z)
     |-------------------------------  for z >= 0
-    <          gamma(k + 1)
+    <          Gamma(k + 1)
     |
     |               0                 otherwise
     \
@@ -985,9 +985,9 @@ def FDistribution(name, d1, d2):
       2    /       d1            -d1 - d2
     d2  *\/  (d1*z)  *(d1*z + d2)
     --------------------------------------
-                      /d1  d2\
-                z*beta|--, --|
-                      \2   2 /
+                    /d1  d2\
+                 z*B|--, --|
+                    \2   2 /
 
     References
     ==========
@@ -1053,9 +1053,9 @@ def FisherZ(name, d1, d2):
         2    2  /    2*z     \           d1*z
     2*d1  *d2  *\d1*e    + d2/         *e
     -----------------------------------------
-                       /d1  d2\
-                   beta|--, --|
-                       \2   2 /
+                     /d1  d2\
+                    B|--, --|
+                     \2   2 /
 
     References
     ==========
@@ -1207,7 +1207,7 @@ def Gamma(name, k, theta):
          -k  k - 1  theta
     theta  *z     *e
     ---------------------
-           gamma(k)
+           Gamma(k)
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
@@ -1215,7 +1215,7 @@ def Gamma(name, k, theta):
     |k*lowergamma|k, -----|
     |            \   theta/
     <----------------------  for z >= 0
-    |     gamma(k + 1)
+    |     Gamma(k + 1)
     |
     \          0             otherwise
 
@@ -1303,7 +1303,7 @@ def GammaInverse(name, a, b):
      a  -a - 1   z
     b *z      *e
     ---------------
-       gamma(a)
+       Gamma(a)
 
     >>> cdf(X)(z)
     Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
@@ -1861,7 +1861,7 @@ def Nakagami(name, mu, omega):
         mu      -mu  2*mu - 1  omega
     2*mu  *omega   *z        *e
     ----------------------------------
-                gamma(mu)
+                Gamma(mu)
 
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
@@ -1869,9 +1869,9 @@ def Nakagami(name, mu, omega):
     >>> V = simplify(variance(X, meijerg=True))
     >>> pprint(V, use_unicode=False)
                         2
-             omega*gamma (mu + 1/2)
+             omega*Gamma (mu + 1/2)
     omega - -----------------------
-            gamma(mu)*gamma(mu + 1)
+            Gamma(mu)*Gamma(mu + 1)
 
     >>> cdf(X)(z)
     Piecewise((lowergamma(mu, mu*z**2/omega)/gamma(mu), z > 0),
@@ -2390,17 +2390,17 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                nu   1
-              - -- - -
-                2    2
-      /     2\
-      |    z |
-      |1 + --|
-      \    nu/
-    --------------------
-      ____     /     nu\
-    \/ nu *beta|1/2, --|
-               \     2 /
+               nu   1
+             - -- - -
+               2    2
+     /     2\
+     |    z |
+     |1 + --|
+     \    nu/
+    -----------------
+      ____  /     nu\
+    \/ nu *B|1/2, --|
+            \     2 /
 
     >>> cdf(X)(z)
     1/2 + z*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2), (3/2,),
