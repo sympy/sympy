@@ -389,7 +389,11 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Identity(self, expr):
-        return "eye(%s)" % self._print(expr.shape[0])
+        shape = expr.shape
+        if len(shape) == 2 and shape[0] == shape[1]:
+            shape = [shape[0]]
+        s = ", ".join(self._print(n) for n in shape)
+        return "eye(" + s + ")"
 
 
     def _print_uppergamma(self, expr):
