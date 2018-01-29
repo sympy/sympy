@@ -34,8 +34,10 @@ from sympy.core.compatibility import range
 
 
 @public
-def swinnerton_dyer_poly(n, x=None, **args):
-    """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
+def swinnerton_dyer_poly(n, x=None, polys=False):
+    """Generates n-th Swinnerton-Dyer polynomial in `x`.
+    Returns a Poly object when polys=True, otherwise
+    returns an expression.  """
     from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
@@ -60,14 +62,16 @@ def swinnerton_dyer_poly(n, x=None, **args):
         ex = x**4 - 10*x**2 + 1
     elif n == 3:
         ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
-    if not args.get('polys', False):
+    if polys == False:
         return ex
     else:
         return PurePoly(ex, x)
 
 @public
-def cyclotomic_poly(n, x=None, **args):
-    """Generates cyclotomic polynomial of order `n` in `x`. """
+def cyclotomic_poly(n, x=None, polys=False):
+    """Generates cyclotomic polynomial of order `n` in `x`.
+    Returns a Poly object when polys=True, otherwise
+    returns an expression. """
     if n <= 0:
         raise ValueError(
             "can't generate cyclotomic polynomial of order %s" % n)
@@ -79,7 +83,7 @@ def cyclotomic_poly(n, x=None, **args):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if not args.get('polys', False):
+    if polys == False:
         return poly.as_expr()
     else:
         return poly
