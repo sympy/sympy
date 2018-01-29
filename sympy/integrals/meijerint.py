@@ -593,7 +593,7 @@ def _condsimp(cond):
     """
     from sympy import (
         symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
-        periodic_argument, oo, polar_lift)
+        arg, periodic_argument, oo, polar_lift)
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
@@ -604,6 +604,10 @@ def _condsimp(cond):
         (Or(p < q, Eq(p, q)), p <= q),
         # The next two obviously are instances of a general pattern, but it is
         # easier to spell out the few cases we care about.
+        (And(abs(arg(p)) <= pi, abs(arg(p) - 2*pi) <= pi),
+         Eq(arg(p) - pi, 0)),
+        (And(abs(2*arg(p) + pi) <= pi, abs(2*arg(p) - pi) <= pi),
+         Eq(arg(p), 0)),
         (And(abs(unbranched_argument(p)) <= pi,
            abs(unbranched_argument(exp_polar(-2*pi*I)*p)) <= pi),
        Eq(unbranched_argument(exp_polar(-I*pi)*p), 0)),
@@ -617,13 +621,13 @@ def _condsimp(cond):
         for fro, to in rules:
             if fro.func != cond.func:
                 continue
-            for n, arg in enumerate(cond.args):
+            for n, arg1 in enumerate(cond.args):
                 if r in fro.args[0].free_symbols:
-                    m = arg.match(fro.args[1])
+                    m = arg1.match(fro.args[1])
                     num = 1
                 else:
                     num = 0
-                    m = arg.match(fro.args[0])
+                    m = arg1.match(fro.args[0])
                 if not m:
                     continue
                 otherargs = [x.subs(m) for x in fro.args[:num] + fro.args[num + 1:]]
@@ -645,7 +649,7 @@ def _condsimp(cond):
                             break
                 if len(otherlist) != len(otherargs) + 1:
                     continue
-                newargs = [arg for (k, arg) in enumerate(cond.args)
+                newargs = [arg_ for (k, arg_) in enumerate(cond.args)
                            if k not in otherlist] + [to.subs(m)]
                 cond = cond.func(*newargs)
                 change = True
@@ -659,7 +663,9 @@ def _condsimp(cond):
             expr = orig.lhs
         else:
             return orig
-        m = expr.match(unbranched_argument(polar_lift(p)**q))
+        m = expr.match(arg(p)**q)
+        if not m:
+            m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
             if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
                     and expr.args[1] == oo:
