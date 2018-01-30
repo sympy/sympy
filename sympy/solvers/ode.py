@@ -663,7 +663,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             hint = hints['hint']
             return _helper_simplify(eq, hint, hints, simplify, ics=ics)
 
-def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
+def _helper_simplify(eq, hint, match, simplify=True, ics=None):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
@@ -812,7 +812,8 @@ def solve_ics(sols, funcs, constants, ics):
 
     return solved_constants[0]
 
-def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
+def classify_ode(eq, func=None, dict=False, ics=None, xi=None, eta=None,
+        n=None, x0=0, prep=True):
     r"""
     Returns a tuple of possible :py:meth:`~sympy.solvers.ode.dsolve`
     classifications for an ODE.
@@ -840,6 +841,18 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     See :py:data:`~sympy.solvers.ode.allhints` or the
     :py:mod:`~sympy.solvers.ode` docstring for a list of all supported hints
     that can be returned from :py:meth:`~sympy.solvers.ode.classify_ode`.
+
+    Keyword arguments
+    :prep -- True/False, if true then it preprocess the equality and then generate a function from it,
+    which is _preprocess()
+
+    :n -- no. of terms
+
+    :eta -- Used for the lie_group hint
+
+    :x0 -- Point, to find out a definite power series solution
+
+    :xi -- Used for the lie_group hint
 
     Notes
     =====
@@ -910,7 +923,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         will evaluate all hints and return the best, using the same
         considerations as the normal ``best`` meta-hint.
 
-
     Examples
     ========
 
@@ -934,7 +946,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     """
     ics = sympify(ics)
 
-    prep = kwargs.pop('prep', True)
+    # prep = kwargs.pop('prep', True)
 
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
@@ -946,10 +958,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     x = func.args[0]
     f = func.func
     y = Dummy('y')
-    xi = kwargs.get('xi')
-    eta = kwargs.get('eta')
-    terms = kwargs.get('n')
-
+    # xi = kwargs.get('xi')
+    # eta = kwargs.get('eta')
+    # terms = kwargs.get('n')
+    terms = n
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return classify_ode(eq.lhs - eq.rhs, func, ics=ics, xi=xi,
@@ -1311,7 +1323,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if all([r[key].is_polynomial() for key in r]):
                 p = cancel(r[b3]/r[a3])  # Used below
                 q = cancel(r[c3]/r[a3])  # Used below
-                point = kwargs.get('x0', 0)
+                point = x0
                 check = p.subs(x, point)
                 if not check.has(oo) and not check.has(NaN) and \
                     not check.has(zoo) and not check.has(-oo):
@@ -1414,7 +1426,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     else:
         return tuple(retlist)
 
-def classify_sysode(eq, funcs=None, **kwargs):
+def classify_sysode(eq, funcs=None):
     r"""
     Returns a dictionary of parameter names and values that define the system
     of ordinary differential equations in ``eq``.

@@ -230,7 +230,8 @@ def _handle_Integral(expr, func, order, hint):
         return expr
 
 
-def classify_pde(eq, func=None, dict=False, **kwargs):
+def classify_pde(eq, func=None, dict=False, ics=None, xi=None, eta=0,
+        n=None, x0=0, prep=True):
     """
     Returns a tuple of possible pdsolve() classifications for a PDE.
 
@@ -246,6 +247,9 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     hint:match expression terms. This is intended for internal use by
     pdsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
+
+    If ``prep`` is true, and func is None then it will preprocess the equation and
+    will get the function from preprocessing of the equation
 
     You can get help on different hints by doing help(pde.pde_hintname),
     where hintname is the name of the hint without "_Integral".
@@ -268,9 +272,6 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     >>> classify_pde(eq)
     ('1st_linear_constant_coeff_homogeneous',)
     """
-
-    prep = kwargs.pop('prep', True)
-
     if func and len(func.args) != 2:
         raise NotImplementedError("Right now only partial "
             "differential equations of two variables are supported")

@@ -305,7 +305,7 @@ def _solve_lambert(f, symbol, gens):
     return list(ordered(soln))
 
 
-def bivariate_type(f, x, y, **kwargs):
+def bivariate_type(f, x, y, first=True):
     """Given an expression, f, 3 tests will be done to see what type
     of composite bivariate it might be, options for u(x, y) are::
 
@@ -324,6 +324,10 @@ def bivariate_type(f, x, y, **kwargs):
     ``P(u) = 0`` when ``p`` are the solutions of ``P(u) = 0``.
 
     Only positive values of ``u`` are considered.
+
+    If the first is True, this will result, the variables of the ``f`` will
+    be replaced by the dummy variables _x, _y and bivariate_type() will be called
+    back with first=False, which will calculate the actual bivarients, if possible
 
     Examples
     ========
@@ -346,7 +350,7 @@ def bivariate_type(f, x, y, **kwargs):
 
     u = Dummy('u', positive=True)
 
-    if kwargs.pop('first', True):
+    if first:
         p = Poly(f, x, y)
         f = p.as_expr()
         _x = Dummy()
