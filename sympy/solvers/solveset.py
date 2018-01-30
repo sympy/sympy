@@ -434,6 +434,7 @@ def _solve_trig1(f, symbol, domain):
     y = Dummy('y')
     g, h = g.expand(), h.expand()
     g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
+    g, h = g.subs(exp(symbol), y), h.subs(exp(symbol), y)
     if g.has(symbol) or h.has(symbol):
         return ConditionSet(symbol, Eq(f, 0), S.Reals)
 

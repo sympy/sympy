@@ -1676,6 +1676,7 @@ def test__is_finite_with_finite_vars():
         Dummy(), Dummy(real=True), Dummy(complex=True)))
     assert f(1/Dummy(real=False)) is True  # b/c it's finite but not 0
 
+
 def test_issue_13550():
     assert solveset(x**2 - 2*x - 15, symbol = x, domain = Interval(-oo, 0)) == FiniteSet(-3)
 
@@ -1683,3 +1684,8 @@ def test_issue_13550():
 def test_issue_13849():
     t = symbols('t')
     assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == EmptySet()
+
+
+def test_issue_9606():
+    n = Dummy('n')
+    assert solveset(sinh(x), x) == Union(ImageSet(Lambda(n, 2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))
