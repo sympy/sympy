@@ -24,7 +24,6 @@ import sympy
 
 from sympy.core.compatibility import reduce
 from sympy.core.logic import fuzzy_not
-from sympy.core.singleton import S
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.strategies.core import switch, do_one, null_safe, condition
@@ -395,9 +394,9 @@ def _parts_rule(integrand, symbol):
                 return
             # Don't trade one logarithm for another
             if isinstance(u, sympy.log):
-                rec_dv = sympy.Pow(dv, S.NegativeOne)
+                rec_dv = 1/dv
                 if (rec_dv.is_polynomial(symbol) and
-                    degree(rec_dv, symbol) is S.One):
+                    degree(rec_dv, symbol) == 1):
                         return
 
             for rule in liate_rules[index + 1:]:
