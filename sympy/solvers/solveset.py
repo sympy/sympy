@@ -597,11 +597,6 @@ def _solve_abs(f, symbol, domain):
         return ConditionSet(symbol, Eq(f, 0), domain)
 
 
-def _solve_min_max(f, symbol, domain):
-    f = f.rewrite(Piecewise)
-    return _solveset(f, symbol, domain, _check=True)
-
-
 def solve_decomposition(f, symbol, domain):
     """
     Function to solve equations via the principle of "Decomposition
@@ -768,10 +763,6 @@ def _solveset(f, symbol, domain, _check=False):
                                                  solver)
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
-
-                    elif equation.has(Max) or equation.has(Min):
-                        result = _solve_min_max(equation, symbol, domain)
-
                     else:
                         result += _solve_as_rational(equation, symbol, domain)
                 else:
@@ -940,6 +931,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
         else:
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
+
+    if f.has(Max) or f.has(Min):
+        f = f.rewrite(Piecewise)
 
     if isinstance(f, Eq):
         from sympy.core import Add
