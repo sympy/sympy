@@ -23,7 +23,7 @@ class gamma(Function):
     The gamma function
 
     .. math::
-        \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t.
+        \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{-t} \mathrm{d}t.
 
     The ``gamma`` function implements the function which passes through the
     values of the factorial function, i.e. `\Gamma(n) = (n - 1)!` when n is
@@ -184,19 +184,6 @@ class gamma(Function):
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
-    def _latex(self, printer, exp=None):
-        if len(self.args) != 1:
-            raise ValueError("Args length should be 1")
-        aa = printer._print(self.args[0])
-        if exp:
-            return r'\Gamma^{%s}{\left(%s \right)}' % (printer._print(exp), aa)
-        else:
-            return r'\Gamma{\left(%s \right)}' % aa
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\Gamma'
-
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -226,7 +213,7 @@ class lowergamma(Function):
     >>> lowergamma(s, x)
     lowergamma(s, x)
     >>> lowergamma(3, x)
-    -x**2*exp(-x) - 2*x*exp(-x) + 2 - 2*exp(-x)
+    -2*(x**2/2 + x + 1)*exp(-x) + 2
     >>> lowergamma(-S(1)/2, x)
     -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
@@ -299,7 +286,6 @@ class lowergamma(Function):
 
         # Special values.
         if a.is_Number:
-            # TODO this should be non-recursive
             if a is S.One:
                 return S.One - exp(-x)
             elif a is S.Half:
@@ -307,10 +293,13 @@ class lowergamma(Function):
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
-                    return b*cls(b, x) - x**b * exp(-x)
+                    if a.is_integer:
+                        return factorial(b) - exp(-x) * factorial(b) * Add(*[x ** k / factorial(k) for k in range(a)])
+                    else:
+                        return gamma(a) * (lowergamma(S.Half, x)/sqrt(pi) - exp(-x) * Add(*[x**(k-S.Half) / gamma(S.Half+k) for k in range(1, a+S.Half)]))
 
                 if not a.is_Integer:
-                    return (cls(a + 1, x) + x**a * exp(-x))/a
+                    return (-1)**(S.Half - a) * pi*erf(sqrt(x)) / gamma(1-a) + exp(-x) * Add(*[x**(k+a-1)*gamma(a) / gamma(a+k) for k in range(1, S(3)/2-a)])
 
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
@@ -335,9 +324,6 @@ class lowergamma(Function):
             return self
         return self.rewrite(uppergamma).rewrite(expint)
 
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\gamma'
 
 class uppergamma(Function):
     r"""
@@ -370,7 +356,7 @@ class uppergamma(Function):
     >>> uppergamma(s, x)
     uppergamma(s, x)
     >>> uppergamma(3, x)
-    x**2*exp(-x) + 2*x*exp(-x) + 2*exp(-x)
+    2*(x**2/2 + x + 1)*exp(-x)
     >>> uppergamma(-S(1)/2, x)
     -2*sqrt(pi)*erfc(sqrt(x)) + 2*exp(-x)/sqrt(x)
     >>> uppergamma(-2, x)
@@ -446,7 +432,6 @@ class uppergamma(Function):
 
         # Special values.
         if a.is_Number:
-            # TODO this should be non-recursive
             if a is S.One:
                 return exp(-z)
             elif a is S.Half:
@@ -454,12 +439,15 @@ class uppergamma(Function):
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
-                    return b*cls(b, z) + z**b * exp(-z)
+                    if a.is_integer:
+                        return exp(-z) * factorial(b) * Add(*[z**k / factorial(k) for k in range(a)])
+                    else:
+                        return gamma(a) * erfc(sqrt(z)) + (-1)**(a - S(3)/2) * exp(-z) * sqrt(z) * Add(*[gamma(-S.Half - k) * (-z)**k / gamma(1-a) for k in range(a - S.Half)])
                 elif b.is_Integer:
                     return expint(-b, z)*unpolarify(z)**(b + 1)
 
                 if not a.is_Integer:
-                    return (cls(a + 1, z) - z**a * exp(-z))/a
+                    return (-1)**(S.Half - a) * pi*erfc(sqrt(z))/gamma(1-a) - z**a * exp(-z) * Add(*[z**k * gamma(a) / gamma(a+k+1) for k in range(S.Half - a)])
 
     def _eval_conjugate(self):
         z = self.args[1]

@@ -21,7 +21,7 @@ In addition, there are some other commands:
     python setup.py bench -> will run the complete benchmark suite
     python setup.py audit -> will run pyflakes checker on source code
 
-To get a full list of avaiable commands, read the output of:
+To get a full list of available commands, read the output of:
 
     python setup.py --help-commands
 
@@ -30,7 +30,6 @@ sympy@googlegroups.com and ask for help.
 """
 
 import sys
-import subprocess
 import os
 import shutil
 import glob
@@ -116,6 +115,8 @@ modules = [
     'sympy.matrices.expressions',
     'sympy.ntheory',
     'sympy.parsing',
+    'sympy.parsing.latex',
+    'sympy.parsing.latex._antlr',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.hep',
@@ -273,6 +274,28 @@ class run_benchmarks(Command):
         from sympy.utilities import benchmarking
         benchmarking.main(['sympy'])
 
+
+class antlr(Command):
+    """Generate code with antlr4"""
+    description = "generate parser code from antlr grammars"
+    user_options = []  # distutils complains if this is not here.
+
+    def __init__(self, *args):
+        self.args = args[0]  # so we can pass it to other classes
+        Command.__init__(self, *args)
+
+    def initialize_options(self):  # distutils wants this
+        pass
+
+    def finalize_options(self):    # this too
+        pass
+
+    def run(self):
+        from sympy.parsing.latex._build_latex_antlr import build_parser
+        if not build_parser():
+            sys.exit(-1)
+
+
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
@@ -356,18 +379,22 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='http://sympy.org',
-          py_modules = ['isympy'],
+          py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
+              'sympy.parsing.latex': ['*.txt', '*.g4'],
+              'sympy.parsing.latex._antlr': ['*.interp', '*.tokens'],
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
                     'bench': run_benchmarks,
                     'clean': clean,
-                    'audit': audit},
+                    'audit': audit,
+                    'antlr': antlr,
+                    },
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
@@ -384,6 +411,8 @@ if __name__ == '__main__':
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             ],
-          install_requires=['mpmath>=%s' % mpmath_version],
+          install_requires=[
+            'mpmath>=%s' % mpmath_version,
+            ],
           **extra_kwargs
           )

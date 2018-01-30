@@ -1891,7 +1891,7 @@ def _meijerint_definite_2(f, x):
     f1, f2, ... of f (e.g. by calling expand_mul(), trigexpand()
     - see _guess_expansion) and calls _meijerint_definite_3 with each of
     these in succession.
-    If _meijerint_definite_3 succeedes with any of the simplified functions,
+    If _meijerint_definite_3 succeeds with any of the simplified functions,
     returns this result.
     """
     # This function does preparation for (2), calls

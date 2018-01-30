@@ -378,6 +378,9 @@ class erfc(Function):
     def _eval_rewrite_as_expint(self, z):
         return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
+    def _eval_expand_func(self, **hints):
+        return self.rewrite(erf)
+
     def _eval_as_leading_term(self, x):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
@@ -556,6 +559,9 @@ class erfi(Function):
     def _eval_rewrite_as_expint(self, z):
         return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
 
+    def _eval_expand_func(self, **hints):
+        return self.rewrite(erf)
+
     def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
@@ -705,6 +711,10 @@ class erf2(Function):
     def _eval_rewrite_as_expint(self, x, y):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
 
+    def _eval_expand_func(self, **hints):
+        return self.rewrite(erf)
+
+
 class erfinv(Function):
     r"""
     Inverse Error Function. The erfinv function is defined as:
@@ -789,6 +799,7 @@ class erfinv(Function):
     def _eval_rewrite_as_erfcinv(self, z):
        return erfcinv(1-z)
 
+
 class erfcinv (Function):
     r"""
     Inverse Complementary Error Function. The erfcinv function is defined as:
@@ -858,6 +869,7 @@ class erfcinv (Function):
 
     def _eval_rewrite_as_erfinv(self, z):
         return erfinv(1-z)
+
 
 class erf2inv(Function):
     r"""
@@ -1968,20 +1980,6 @@ class Chi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
-
-    def _latex(self, printer, exp=None):
-        if len(self.args) != 1:
-            raise ValueError("Arg length should be 1")
-        if exp:
-            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
-                % (printer._print(exp), printer._print(self.args[0]))
-        else:
-            return r'\operatorname{Chi}{\left (%s \right )}' \
-                % printer._print(self.args[0])
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\operatorname{Chi}'
 
     def _sage_(self):
         import sage.all as sage

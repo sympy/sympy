@@ -103,7 +103,7 @@ class TypeA(Standard_Cartan):
 
     def highest_root(self):
         """
-        Returns the heighest weight root for A_n
+        Returns the highest weight root for A_n
         """
 
         return self.basic_root(0, self.n)

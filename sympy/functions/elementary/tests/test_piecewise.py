@@ -854,18 +854,12 @@ def test_issue_12557():
     True))*cos(_n*x)/pi, (_n, 1, oo)), SeqFormula(0, (_k, 1, oo))))
     '''
     x = symbols("x", real=True)
-    k = symbols('k',  integer=True)
+    k = symbols('k', integer=True, finite=True)
     abs2 = lambda x: Piecewise((-x, x <= 0), (x, x > 0))
     assert integrate(abs2(x), (x, -pi, pi)) == pi**2
-    # attempting a Piecewise rewrite is not automatic so this needs
-    # help
     func = cos(k*x)*sqrt(x**2)
-    assert integrate(func, (x, -pi, pi)
-        ) == Integral(cos(k*x)*Abs(x), (x, -pi, pi))
-    assert factor_terms(integrate(func.rewrite(Piecewise), (x, -pi, pi)
-        )) == Piecewise(
-        (pi**2, Eq(k, 0)), (((-1)**k - 1)/k**2*2, True))
-
+    assert integrate(func, (x, -pi, pi)) == Piecewise(
+        (2*(-1)**k/k**2 - 2/k**2, Ne(k, 0)), (pi**2, True))
 
 def test_issue_6900():
     from itertools import permutations

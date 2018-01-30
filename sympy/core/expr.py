@@ -9,7 +9,7 @@ from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range
 from mpmath.libmp import mpf_log, prec_to_dps
 
-from collections import defaultdict
+from collections import defaultdict, Iterable
 
 class Expr(Basic, EvalfMixin):
     """
@@ -1550,7 +1550,8 @@ class Expr(Basic, EvalfMixin):
         following interpretation:
 
         * i will has no variable that appears in deps
-        * d will be 1 or else have terms that contain variables that are in deps
+        * d will either have terms that contain variables that are in deps, or
+          be equal to 0 (when self is an Add) or 1 (when self is a Mul)
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
         * otherwise (self, S.One) or (S.One, self) is returned.
@@ -3350,6 +3351,17 @@ class AtomicExpr(Atom, Expr):
         if self == s:
             return S.One
         return S.Zero
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Piecewise, Eq
+        from sympy import NDimArray, Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(s, (NDimArray, MatrixCommon, Tuple, Iterable)):
+            return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
+        if self == s:
+            return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+        else:
+            return Piecewise((self, Eq(n, 0)), (0, True))
 
     def _eval_is_polynomial(self, syms):
         return True

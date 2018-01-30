@@ -21,6 +21,7 @@ class StrPrinter(Printer):
         "order": None,
         "full_prec": "auto",
         "sympy_integers": False,
+        "abbrev": False,
     }
 
     _relationals = dict()
@@ -103,7 +104,9 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_Derivative(self, expr):
-        return 'Derivative(%s)' % ", ".join(map(self._print, expr.args))
+        dexpr = expr.expr
+        dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
+        return 'Derivative(%s)' % ", ".join(map(self._print, [dexpr] + dvars))
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -329,6 +332,9 @@ class StrPrinter(Printer):
                 return 'O(%s)' % self.stringify((expr.expr,) + expr.variables, ', ', 0)
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
+
+    def _print_Ordinal(self, expr):
+        return expr.__str__()
 
     def _print_Cycle(self, expr):
         return expr.__str__()
@@ -706,6 +712,8 @@ class StrPrinter(Printer):
         return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
+        if self._settings.get("abbrev", False):
+            return "%s" % expr.abbrev
         return "%s" % expr.name
 
     def _print_Quaternion(self, expr):
@@ -781,7 +789,8 @@ def sstr(expr, **settings):
     """Returns the expression as a string.
 
     For large expressions where speed is a concern, use the setting
-    order='none'.
+    order='none'. If abbrev=True setting is used then units are printed in
+    abbreviated form.
 
     Examples
     ========

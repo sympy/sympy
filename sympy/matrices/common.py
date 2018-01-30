@@ -1694,7 +1694,7 @@ class MatrixOperations(MatrixRequired):
                 perm = reversed(perm)
 
             # since Permutation doesn't let us have non-disjoint cycles,
-            # we'll construct the explict mapping ourselves XXX Bug #12479
+            # we'll construct the explicit mapping ourselves XXX Bug #12479
             mapping = list(range(max_index))
             for (i, j) in perm:
                 mapping[i], mapping[j] = mapping[j], mapping[i]
@@ -1973,6 +1973,10 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
+            return NotImplemented
+
         return self.__mul__(other)
 
     @call_highest_priority('__rmul__')
@@ -2018,12 +2022,14 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_mul(self, other)
 
-        try:
-            return self._eval_scalar_mul(other)
-        except TypeError:
-            pass
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, collections.Iterable):
+            try:
+                return self._eval_scalar_mul(other)
+            except TypeError:
+                pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        return NotImplemented
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
@@ -2066,6 +2072,10 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
+            return NotImplemented
+
         return self.__rmul__(other)
 
     @call_highest_priority('__mul__')
@@ -2084,12 +2094,14 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
 
-        try:
-            return self._eval_scalar_rmul(other)
-        except TypeError:
-            pass
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, collections.Iterable):
+            try:
+                return self._eval_scalar_rmul(other)
+            except TypeError:
+                pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        return NotImplemented
 
     @call_highest_priority('__sub__')
     def __rsub__(self, a):

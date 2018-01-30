@@ -15,6 +15,7 @@ from __future__ import division, print_function
 from sympy import Function, Symbol, solve
 from sympy.core.compatibility import (
     is_sequence, range, string_types, ordered)
+from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
 
 
@@ -363,7 +364,7 @@ def convex_hull(*args, **kwargs):
     from .polygon import Polygon
 
     polygon = kwargs.get('polygon', True)
-    p = set()
+    p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
             try:
@@ -600,7 +601,7 @@ def intersection(*entities, **kwargs):
     or else failures due to floating point issues may result.
 
     Case 1: When the keyword argument 'pairwise' is False (default value):
-    In this case, the functon returns a list of intersections common to
+    In this case, the function returns a list of intersections common to
     all entities.
 
     Case 2: When the keyword argument 'pairwise' is True:
