@@ -39,8 +39,8 @@ def dup_jacobi(n, a, b, K):
 @public
 def jacobi_poly(n, a, b, x=None, polys=False):
     """Generates Jacobi polynomial of degree `n` in `x`.
-    Returns a Poly object when polys=True, otherwise
-    returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression. """
     if n < 0:
         raise ValueError("can't generate Jacobi polynomial of degree %s" % n)
 
@@ -71,8 +71,8 @@ def dup_gegenbauer(n, a, K):
 
 def gegenbauer_poly(n, a, x=None, polys=False):
     """Generates Gegenbauer polynomial of degree `n` in `x`.
-    Returns a Poly object when polys=True, otherwise
-    returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression. """
     if n < 0:
         raise ValueError(
             "can't generate Gegenbauer polynomial of degree %s" % n)
@@ -102,7 +102,8 @@ def dup_chebyshevt(n, K):
 @public
 def chebyshevt_poly(n, x=None, polys=False):
     """Generates Chebyshev polynomial of the first kind of degree `n` in `x`.
-    Returns a Poly object when polys=True, otherwise returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise (default) returns an
+    expression. """
     if n < 0:
         raise ValueError(
             "can't generate 1st kind Chebyshev polynomial of degree %s" % n)
@@ -131,7 +132,8 @@ def dup_chebyshevu(n, K):
 @public
 def chebyshevu_poly(n, x=None, polys=False):
     """Generates Chebyshev polynomial of the second kind of degree `n` in `x`.
-    Returns a Poly object when polys=True, otherwise returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise (default) returns an
+    expression. """
     if n < 0:
         raise ValueError(
             "can't generate 2nd kind Chebyshev polynomial of degree %s" % n)
@@ -164,8 +166,8 @@ def dup_hermite(n, K):
 @public
 def hermite_poly(n, x=None, polys=False):
     """Generates Hermite polynomial of degree `n` in `x`.
-    Returns a Poly object when polys=True, otherwise
-    returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression. """
     if n < 0:
         raise ValueError("can't generate Hermite polynomial of degree %s" % n)
 
@@ -195,8 +197,8 @@ def dup_legendre(n, K):
 @public
 def legendre_poly(n, x=None, polys=False):
     """Generates Legendre polynomial of degree `n` in `x`.
-    Returns a Poly object when polys=True, otherwise
-    returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression. """
     if n < 0:
         raise ValueError("can't generate Legendre polynomial of degree %s" % n)
 
@@ -226,8 +228,8 @@ def dup_laguerre(n, alpha, K):
 @public
 def laguerre_poly(n, x=None, alpha=None, polys=False):
     """Generates Laguerre polynomial of degree `n` in `x`.
-    Returns a Poly object when polys=True, otherwise
-    returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression. """
     if n < 0:
         raise ValueError("can't generate Laguerre polynomial of degree %s" % n)
 
@@ -281,8 +283,8 @@ def spherical_bessel_fn(n, x=None, polys=False):
     fn(1, z) = 1/z**2
     fn(n-1, z) + fn(n+1, z) == (2*n+1)/z * fn(n, z)
 
-    Returns a Poly object when polys=True, otherwise
-    returns an expression.
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression.
 
     Examples
     ========

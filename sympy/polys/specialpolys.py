@@ -36,8 +36,8 @@ from sympy.core.compatibility import range
 @public
 def swinnerton_dyer_poly(n, x=None, polys=False):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.
-    Returns a Poly object when polys=True, otherwise
-    returns an expression.  """
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression.  """
     from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
@@ -69,8 +69,8 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
 @public
 def cyclotomic_poly(n, x=None, polys=False):
     """Generates cyclotomic polynomial of order `n` in `x`.
-    Returns a Poly object when polys=True, otherwise
-    returns an expression. """
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression. """
     if n <= 0:
         raise ValueError(
             "can't generate cyclotomic polynomial of order %s" % n)
