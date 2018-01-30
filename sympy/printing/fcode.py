@@ -23,8 +23,8 @@ from collections import defaultdict
 from itertools import chain
 import string
 
-from sympy.core import S, Add, N, Float, Symbol, symbols
-from sympy.core.compatibility import string_types, range, ordered
+from sympy.core import S, Add, N, Float, Symbol
+from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
@@ -133,16 +133,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_Symbol(self, expr):
         if self._settings['name_mangling'] == True:
-            for sym in tuple(ordered(expr.atoms(Symbol))):
-                if sym not in self.mangled_symbols:
-                    name = sym.name
-                    while name.lower() in self.used_name:
-                        name += '_'
-                    self.used_name.append(name.lower())
-                    if name == sym.name:
-                        self.mangled_symbols[sym] = sym
-                    else:
-                        self.mangled_symbols[sym] = symbols(name, cls=sym.__class__, **sym.assumptions0)
+            if expr not in self.mangled_symbols:
+                name = expr.name
+                while name.lower() in self.used_name:
+                    name += '_'
+                self.used_name.append(name.lower())
+                if name == expr.name:
+                    self.mangled_symbols[expr] = expr
+                else:
+                    self.mangled_symbols[expr] = Symbol(name)
 
             expr = expr.xreplace(self.mangled_symbols)
 
