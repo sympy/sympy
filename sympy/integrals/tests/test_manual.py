@@ -48,6 +48,8 @@ def test_manualintegrate_parts():
     assert manualintegrate((3*x**2 + 5) * exp(x), x) == \
         3*x**2*exp(x) - 6*x*exp(x) + 11*exp(x)
     assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
+    # Make sure _parts_rule does not go into an infinite loop here
+    assert manualintegrate(log(1/x)/(x + 1), x).has(Integral)
 
     # Make sure _parts_rule doesn't pick u = constant but can pick dv =
     # constant if necessary, e.g. for integrate(atan(x))

@@ -24,10 +24,12 @@ import sympy
 
 from sympy.core.compatibility import reduce
 from sympy.core.logic import fuzzy_not
+from sympy.core.singleton import S
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
+from sympy.polys.polytools import degree
 
 ZERO = sympy.S.Zero
 
@@ -391,6 +393,12 @@ def _parts_rule(integrand, symbol):
             # Don't pick a non-polynomial algebraic to be differentiated
             if rule == pull_out_algebraic and not u.is_polynomial(symbol):
                 return
+            # Don't trade one logarithm for another
+            if isinstance(u, sympy.log):
+                rec_dv = sympy.Pow(dv, S.NegativeOne)
+                if (rec_dv.is_polynomial(symbol) and
+                    degree(rec_dv, symbol) is S.One):
+                        return
 
             for rule in liate_rules[index + 1:]:
                 r = rule(integrand)
