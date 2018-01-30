@@ -5,6 +5,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
@@ -275,7 +276,7 @@ class Product(ExprWithIntLimits):
             return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
-            factored = term.factor()
+            factored = factor_terms(term, fraction=True)
             if factored.is_Mul:
                 return self._eval_product(factored, (k, a, n))
 
