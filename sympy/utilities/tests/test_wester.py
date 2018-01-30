@@ -677,7 +677,7 @@ def test_J4():
 
 
 def test_J5():
-    assert polygamma(0, R(1, 3)) == -EulerGamma - pi/2*sqrt(R(1, 3)) - R(3, 2)*log(3)
+    assert polygamma(0, R(1, 3)) == -log(3) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3))
 
 
 def test_J6():
