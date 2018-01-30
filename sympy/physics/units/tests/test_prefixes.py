@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from sympy import symbols, log, Mul, Symbol
-from sympy.physics.units import Quantity, Dimension, meter
+from sympy import symbols, log, Mul, Symbol, S
+from sympy.physics.units import Quantity, Dimension
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
     kibi
 
@@ -19,8 +19,8 @@ def test_prefix_operations():
     assert k / m == M
 
     assert dodeca * dodeca == 144
-    assert 1 / dodeca == 1 / 12
-    assert k / dodeca == 1000 / 12
+    assert 1 / dodeca == S(1) / 12
+    assert k / dodeca == S(1000) / 12
     assert dodeca / dodeca == 1
 
     m = Quantity("meter", 1, 6)
