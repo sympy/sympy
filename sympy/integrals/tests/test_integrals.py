@@ -4,7 +4,7 @@ from sympy import (
     EulerGamma, Expr, factor, Function, I, im, Integral, integrate,
     Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, sign,
-    simplify, sin, SingularityFunction, sqrt, sstr, Sum, Symbol,
+    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple, Si, Ci
 )
 from sympy.functions.elementary.complexes import periodic_argument
@@ -1236,6 +1236,10 @@ def test_issue_10567():
     vt = Matrix([a*t, b, c])
     assert integrate(vt, t) == Integral(vt, t).doit()
     assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
+
+def test_issue_11856():
+    t = symbols('t')
+    assert integrate(sinc(pi*t), t) == Si(pi*t)/pi
 
 def test_issue_4950():
     assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
