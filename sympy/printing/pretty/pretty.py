@@ -42,6 +42,7 @@ class PrettyPrinter(Printer):
         "order": None,
         "full_prec": "auto",
         "use_unicode": None,
+        "root_notation": True,
         "wrap_line": True,
         "num_columns": None,
         "use_unicode_sqrt_char": True,
@@ -1584,7 +1585,7 @@ class PrettyPrinter(Printer):
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer:
+            if n is S.One and d.is_Atom and not e.is_Integer and self._settings['root_notation']:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))

@@ -125,6 +125,7 @@ class LatexPrinter(Printer):
         "order": None,
         "mode": "plain",
         "itex": False,
+        "root_notation": True,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
@@ -481,7 +482,7 @@ class LatexPrinter(Printer):
 
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
-        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
+        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1 and self._settings['root_notation']:
             base = self._print(expr.base)
             expq = expr.exp.q
 
