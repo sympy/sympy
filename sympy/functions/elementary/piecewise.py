@@ -773,11 +773,8 @@ class Piecewise(Function):
                         nonsym = cond2
                 if rhs is not None and cond not in (S.true, S.false):
                     lower = upper = rhs
-                    cond_temp = cond.subs(sym, lower)
-
-                    if cond_temp is S.false:
-                        cond = S.false
-                    if cond_temp is S.true:
+                    cond = cond.subs(sym, lower)
+                    if cond is S.true:
                         cond = Eq(sym, lower)
 
                 # cond might have evaluated b/c of an Eq
