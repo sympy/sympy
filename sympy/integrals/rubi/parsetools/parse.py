@@ -426,7 +426,7 @@ def {}(rubi):
     # can raise errors while sympifying
     for i in temporary_variable_replacement:
         fullform = fullform.replace(i, temporary_variable_replacement[i])
-    # Permamenely rename these variables
+    # Permanently rename these variables
     for i in permanent_variable_replacement:
         fullform = fullform.replace(i, permanent_variable_replacement[i])
 
