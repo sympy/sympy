@@ -230,7 +230,7 @@ def test_polygamma():
     assert t(4, 3)
     assert t(3, 4)
     assert t(2, 3)
-    assert t(23, 7)
+    assert t(123, 5)
 
     assert polygamma(0, x).rewrite(zeta) == polygamma(0, x)
     assert polygamma(1, x).rewrite(zeta) == zeta(2, x)

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, oo, pi, Dummy
+from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -661,18 +661,9 @@ class polygamma(Function):
 
                 p, q = z.as_numer_denom()
 
-                # Reference:
-                #   Values of the polygamma functions at rational arguments, J. Choi, 2007
-                part_1 = -S.EulerGamma - pi*cot(p*pi/q)/2 - log(q) + Add(*[cos(2*k*pi*p/q) * log(2*sin(k*pi/q)) for k in range(1, q)])
-
-                if z > 0:
-                    n = floor(z)
-                    z0 = z - n
-                    return part_1 + Add(*[1 / (z0 + k) for k in range(n)])
-                elif z < 0:
-                    n = floor(1 - z)
-                    z0 = z + n
-                    return part_1 - Add(*[1 / (z0 - 1 - k) for k in range(n)])
+                # only expand for small denominators to avoid creating long expressions
+                if q <= 5:
+                    return expand_func(polygamma(n, z, evaluate=False))
 
             elif z in (S.Infinity, S.NegativeInfinity):
                 return S.Infinity
@@ -709,6 +700,23 @@ class polygamma(Function):
                     else:
                         return Add(*tail)/coeff**(n + 1)
                 z *= coeff
+
+        if n == 0 and z.is_rational:
+            p, q = z.as_numer_denom()
+
+            # Reference:
+            #   Values of the polygamma functions at rational arguments, J. Choi, 2007
+            part_1 = -S.EulerGamma - pi * cot(p * pi / q) / 2 - log(q) + Add(
+                *[cos(2 * k * pi * p / q) * log(2 * sin(k * pi / q)) for k in range(1, q)])
+
+            if z > 0:
+                n = floor(z)
+                z0 = z - n
+                return part_1 + Add(*[1 / (z0 + k) for k in range(n)])
+            elif z < 0:
+                n = floor(1 - z)
+                z0 = z + n
+                return part_1 - Add(*[1 / (z0 - 1 - k) for k in range(n)])
 
         return polygamma(n, z)
 
