@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
+    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
     factor_terms, DiracDelta, Heaviside)
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
@@ -936,6 +936,9 @@ def test__intervals():
         (1, True))._intervals(x) == [(-oo, oo, 1, 1)]
     assert Piecewise((1, Ne(x, I)), (0, True))._intervals(x) == [
         (-oo, oo, 1, 0)]
+    assert Piecewise((-cos(x), sin(x) >= 0), (cos(x), True))._intervals(x) == [
+        (2*pi, 2*pi, -1, 0), (0, pi, -cos(x), 0), (2*pi, 2*pi, -cos(x), 0),
+         (-oo, oo, cos(x), 1)]
 
 
 def test_containment():
