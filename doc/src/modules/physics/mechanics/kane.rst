@@ -13,10 +13,11 @@ Structure of Equations
 In :mod:`~sympy.physics.mechanics.kane` we describe a multi-body system with 5
 general sets of equations given the:
 
-- :math:`n`: number of generalized coordinates and number of generalized speeds
+- :math:`N` : number of coordinates
 - :math:`M` : number of holonomic constraint equations
+- :math:`n` : number of independent generalized coordinates and number of generalized speeds, i.e. :math:`n=N-M`
 - :math:`m` : number of nonholonomic constraint equations
-- :math:`p` : number of independent generalized speeds, i.e. :math:`n-m`
+- :math:`p` : number of independent generalized speeds, i.e. :math:`p=n-m`
 - :math:`\mathbf{q}` : vector of generalized coordinates where :math:`\mathbf{q} \in \mathbb{R}^n`
 - :math:`\mathbf{u}` : vector of generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^n`
 - :math:`\mathbf{u}_r` : dependent generalized speeds where :math:`\mathbf{u}_r \in \mathbb{R}^m`
@@ -31,7 +32,19 @@ The equations are then as follows:
       \mathrm{where} \quad
       \mathbf{f}_h \in \mathbb{R}^M
 
-2. Nonholonomic constraints
+2. Kinematic differential equations
+
+   .. math::
+      \mathbf{M}_{k\dot{q}}(\mathbf{q}, t) \dot{\mathbf{q}} + \mathbf{M}_{ku}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{k}(\mathbf{q}, t) = 0 \quad
+      \mathrm{where} \quad
+      \mathbf{M}_{k\dot{q}} \in \mathbb{R}^{n \times n}
+      \mathrm{,\ }
+      \mathbf{M}_{ku} \in \mathbb{R}^{n \times n}
+      \mathrm{,\ }
+      \mathbf{f}_{k} \in \mathbb{R}^n
+
+
+3. Nonholonomic constraints
 
    .. math::
       \mathbf{M}_{n}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{n}(\mathbf{q}, t) = 0 \quad
@@ -50,17 +63,6 @@ The equations are then as follows:
       \mathbf{M}_{ns} \in \mathbb{R}^{m \times p}
       \mathrm{,\ }
       \mathbf{f}_{n} \in \mathbb{R}^m
-
-3. Kinematic differential equations
-
-   .. math::
-      \mathbf{M}_{k\dot{q}}(\mathbf{q}, t) \dot{\mathbf{q}} + \mathbf{M}_{ku}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{k}(\mathbf{q}, t) = 0 \quad
-      \mathrm{where} \quad
-      \mathbf{M}_{k\dot{q}} \in \mathbb{R}^{n \times n}
-      \mathrm{,\ }
-      \mathbf{M}_{ku} \in \mathbb{R}^{n \times n}
-      \mathrm{,\ }
-      \mathbf{f}_{k} \in \mathbb{R}^n
 
 4. Dynamic differential equations
 
@@ -97,16 +99,17 @@ Equation sets 1 through 3 are provided by the analyst, where as the sets 4 and
 Holonomic Constraint Equations
 ------------------------------
 
-The first set of equations describes the configuration constraints which are
-generally non-linear in the generalized coordinates. For the purposes of
-forming the non-linear equations of motion, these are additional equations that
+The first set of equations describes the configuration constraints which are,
+in general, non-linear in the generalized coordinates. For the purposes of
+forming the non-linear equations of motion, these are additional algebraic equations that
 must be satisfied along with the other equations. Note that
-:class:`~sympy.physics.mechanics.kane.KanesMethod` only uses the holonomic
-constraints if the equations are linearized. It is assumed that the equations
-are not easily solvable for the dependent coordinate(s) [1]_.
+:class:`~sympy.physics.mechanics.kane.KanesMethod` only makes use of the holonomic
+constraints during linearization of the equations. If provided, it is assumed that the
+equations are not easily solvable for the dependent coordinate(s) [1]_.
 
-The left hand side equations should be passed to
-:class:`~sympy.physics.mechanics.kane.KanesMethod` on initialization, e.g.::
+The expressions that make up the non-zero side of the equations should be
+passed to :class:`~sympy.physics.mechanics.kane.KanesMethod` on initialization,
+e.g.::
 
    >>> KanesMethod(..., configuration_constraints=(expr_0, expr_1, ...), ...)
 
@@ -120,14 +123,40 @@ where the constraint expressions are equivalent to zero.
    smaller set of coordinates. Alternatively, the time-differentiated holonomic
    constraints can be supplied.
 
+Kinematic Differential Equations
+--------------------------------
+
+The third set of equations are the kinematic differential equations and they
+describe the relationship between the generalized speeds and the derivatives of
+the generalized coordinates. These are defined by the analyst and can reduce
+the length of the dynamic equations of motion if chosen carefully
+[Mitiguy1996]_. The simplest and always valid choice is :math:`\mathbf{u} =
+\dot{\mathbf{q}}`. These equations are needed to transform the second order
+equations of motion into first order form.
+
+These are passed into :class:`~sympy.physics.mechanics.kane.KanesMethod` class
+as such::
+
+   >>> KanesMethod(..., kd_eqs=(expr_0, expr_1), ...)
+
+where each expression the left hand side of the above equations.
+
+The :meth:`~sympy.physics.mechanics.kane.KanesMethod.kindiff`` method returns a
+dictionary with expressions for derivatives of the generalized coordinates,
+i.e.:
+
+.. math::
+
+   \dot{\mathbf{q}} = -\mathbf{M}_{k\dot{q}}(\mathbf{q}, t)^{-1}\left[\mathbf{M}_{ku}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{k}(\mathbf{q}, t)\right]
+
 Nonholonomic Constraint Equations
 ---------------------------------
 
 The second set of equations describe the nonholonomic constraints, otherwise
-known as velocity constraints, that are linear in the generalized speeds. There
-are fewer equations than generalized speeds, and thus describe the relationship
-between the dependent and independent generalized speeds. There are :math:`m`
-dependent speeds and :math:`p=n-m` independent speeds.
+known as velocity constraints. These must be linear in the generalized speeds.
+There are fewer equations than generalized speeds, and thus describe the
+relationship between the dependent and independent generalized speeds. There
+are :math:`m` dependent speeds and :math:`p=n-m` independent speeds.
 
 To solve these for the dependent speeds :math:`\mathbf{u}` can be broken into
 the dependent and independent speeds:
@@ -143,31 +172,6 @@ These nonholonomic constraint expressions should be passed directly to the
 
 where each expression is one entry of the left hand side of the second set of
 equations above.
-
-Kinematic Differential Equations
---------------------------------
-
-The third set of equations are the kinematic differential equations and they
-describe the relationship between the generalized speeds and the derivatives of
-the generalized coordinates. These are defined by the analyst and can reduce
-the length of the final equations of motion if chosen carefully [Mitiguy1996]_.
-The simplest and always valid choice is :math:`\mathbf{u} = \dot{\mathbf{q}}`.
-These equations are needed to transform the second order equations of motion
-into first order form.
-
-These are passed into :class:`~sympy.physics.mechanics.kane.KanesMethod` class
-as such::
-
-   >>> KanesMethod(..., kd_eqs=(expr_0, expr_1), ...)
-
-where each expression the left hand side of the above equations.
-
-The :meth:`~sympy.physics.mechanics.kane.KanesMethod.kindiff`` method returns a dictionary
-with expressions for derivatives of the generalized coordinates, i.e.:
-
-.. math::
-
-   \dot{\mathbf{q}} = -\mathbf{M}_{k\dot{q}}(\mathbf{q}, t)^{-1}\left[\mathbf{M}_{ku}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{k}(\mathbf{q}, t)\right]
 
 Dynamic Differential Equations
 ------------------------------
@@ -214,7 +218,7 @@ constraints, we will get :math:`p = n - m` dynamic equations. The
 the following fashion:
 
 .. math::
-  \mathbf{M}(\mathbf{q}, t) &=
+   \mathbf{M}(\mathbf{q}, t) &=
    \begin{bmatrix}
      \mathbf{M}_{d}(\mathbf{q}, t) & \mathbf{0}_{m \times p} \\
      \mathbf{0}_{p \times m} & \mathbf{M}_{\dot{n}r}(\mathbf{q}, t) \end{bmatrix}\\
