@@ -457,6 +457,23 @@ x \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    #see issue #14033
+    expr = x**Rational(1, 3)
+    ascii_str = \
+"""\
+ 1/3\n\
+x   \
+"""
+    ucode_str = \
+u("""\
+ 1/3\n\
+x   \
+""")
+    assert xpretty(expr, use_unicode=False, wrap_line=False,\
+    root_notation = False) == ascii_str
+    assert xpretty(expr, use_unicode=True, wrap_line=False,\
+    root_notation = False) == ucode_str
+
     expr = x**Rational(-5, 2)
     ascii_str = \
 """\
@@ -470,21 +487,6 @@ u("""\
  1  \n\
 ────\n\
  5/2\n\
-x   \
-""")
-    assert pretty(expr, root_notation = False) == ascii_str
-    assert upretty(expr, root_notation = False) == ucode_str
-
-    #see issue #14033
-    expr = x**Rational(1, 3)
-    ascii_str = \
-"""\
- 1/3\n\
-x   \
-"""
-    ucode_str = \
-u("""\
- 1/3\n\
 x   \
 """)
     assert pretty(expr) == ascii_str
