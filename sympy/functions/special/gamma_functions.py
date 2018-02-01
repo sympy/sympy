@@ -701,7 +701,7 @@ class polygamma(Function):
                         return Add(*tail)/coeff**(n + 1)
                 z *= coeff
 
-        if n == 0 and z.is_rational and z.is_Number:
+        if n == 0 and z.is_rational:
             p, q = z.as_numer_denom()
 
             # Reference:
