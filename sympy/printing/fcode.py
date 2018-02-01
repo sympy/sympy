@@ -145,7 +145,7 @@ class FCodePrinter(CodePrinter):
 
             expr = expr.xreplace(self.mangled_symbols)
 
-        name = super(CodePrinter, self)._print_Symbol(expr)
+        name = super(FCodePrinter, self)._print_Symbol(expr)
 
         if name in self.reserved_words:
             if self._settings['error_on_reserved']:
