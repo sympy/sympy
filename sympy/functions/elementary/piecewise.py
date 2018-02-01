@@ -775,7 +775,8 @@ class Piecewise(Function):
                     lower = upper = rhs
                     cond = cond.subs(sym, lower)
                     if cond is S.true:
-                        cond = Eq(sym, lower)
+                        int_expr.append((rhs, rhs, expr.subs(sym, rhs), iarg))
+                        continue
 
                 # cond might have evaluated b/c of an Eq
                 if cond is S.true:
@@ -807,7 +808,7 @@ class Piecewise(Function):
             int_expr.append(
                 (S.NegativeInfinity, S.Infinity, default, idefault))
 
-        return int_expr
+        return list(uniq(int_expr))
 
     def _eval_nseries(self, x, n, logx):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
