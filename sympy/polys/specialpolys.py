@@ -87,7 +87,12 @@ def cyclotomic_poly(n, x=None, polys=False):
 
 @public
 def symmetric_poly(n, *gens, **args):
-    """Generates symmetric polynomial of order `n`. """
+    """Generates symmetric polynomial of order `n`.
+
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression.
+    """
+    # TODO: use an explicit keyword argument when Python 2 support is dropped
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:
@@ -105,7 +110,9 @@ def symmetric_poly(n, *gens, **args):
 
 @public
 def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
-    """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
+    """Generates a polynomial of degree ``n`` with coefficients in
+    ``[inf, sup]``. Returns a Poly object when ``polys=True``,
+    otherwise (default) returns an expression. """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
 
     return poly if polys else poly.as_expr()
