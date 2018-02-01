@@ -2166,6 +2166,15 @@ def latex(expr, **settings):
     >>> print(latex((2*mu)**Rational(7,2), mode='equation', itex=True))
     $$8 \sqrt{2} \mu^{\frac{7}{2}}$$
 
+    root_notation: Specifies if expressions having rational powers of the form
+    1/n are to be printed in their root form or fractional form. The default
+    value is 'True' for root form, False otherwise.
+
+    >>> print(latex(x**Rational(1, 7)))
+    \sqrt[7]{x}
+    >>> print(latex(x**Rational(1, 7), root_notation = False))
+    x^{\frac{1}{7}}
+
     fold_frac_powers: Emit "^{p/q}" instead of "^{\frac{p}{q}}" for fractional
     powers.
 

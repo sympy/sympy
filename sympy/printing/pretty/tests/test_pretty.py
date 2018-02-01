@@ -59,6 +59,7 @@ oo
 1/x
 y*x**-2
 x**Rational(-5,2)
+x**Rational(1, 3)
 (-2)**x
 Pow(3, 1, evaluate=False)
 (x**2 + x + 1)  #
@@ -469,6 +470,21 @@ u("""\
  1  \n\
 ────\n\
  5/2\n\
+x   \
+""")
+    assert pretty(expr, root_notation = False) == ascii_str
+    assert upretty(expr, root_notation = False) == ucode_str
+
+    #see issue #14033
+    expr = x**Rational(1, 3)
+    ascii_str = \
+"""\
+ 1/3\n\
+x   \
+"""
+    ucode_str = \
+u("""\
+ 1/3\n\
 x   \
 """)
     assert pretty(expr) == ascii_str
