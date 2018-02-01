@@ -280,6 +280,7 @@ install:
       python -We:invalid setup.py install;
       pip list --format=columns;
     fi
+  - pip install multipledispatch
 script:
   # Don't run doctr if the build fails
   - set -e
