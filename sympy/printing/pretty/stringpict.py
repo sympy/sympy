@@ -431,8 +431,7 @@ class prettyForm(stringPict):
         Parentheses are needed around +, - and neg.
         """
         quantity = {
-            'degree': u"\N{DEGREE SIGN}",
-            'radian': u"rad"
+            'degree': u"\N{DEGREE SIGN}"
         }
 
         if len(others) == 0:

@@ -6011,25 +6011,6 @@ def test_degree_printing():
     assert pretty(expr3) == u'cos(x° + 90°)'
 
 
-def test_radian_printing():
-    ucode_str1 = \
-u('''\
-  rad\n\
-90   \
-''')
-
-    ucode_str2 = \
-u('''\
- rad\n\
-x   \
-''')
-
-    expr1 = 90*radian
-    assert pretty(expr1) == ucode_str1
-    expr2 = x*radian
-    assert pretty(expr2) == ucode_str2
-
-
 def test_vector_expr_pretty_printing():
     A = CoordSys3D('A')
 

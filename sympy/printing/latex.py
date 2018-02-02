@@ -2066,8 +2066,6 @@ class LatexPrinter(Printer):
     def _print_Quantity(self, expr):
         if expr.name.name == 'degree':
             return r"^\circ"
-        elif expr.name.name == 'radian':
-            return r"^rad"
         return r"%s" % expr
 
 def translate(s):

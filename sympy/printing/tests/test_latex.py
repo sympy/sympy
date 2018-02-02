@@ -1699,12 +1699,3 @@ def test_latex_degree():
     assert latex(expr2) == r"x ^\circ"
     expr3 = cos(x*degree + 90*degree)
     assert latex(expr3) == r'\cos{\left (x ^\circ + 90 ^\circ \right )}'
-
-
-def test_latex_radian():
-    expr1 = 90*radian
-    assert latex(expr1) == r"90 ^rad"
-    expr2 = x*radian
-    assert latex(expr2) == r"x ^rad"
-    expr3 = cos(x*radian + 90*radian)
-    assert latex(expr3) == r'\cos{\left (x ^rad + 90 ^rad \right )}'

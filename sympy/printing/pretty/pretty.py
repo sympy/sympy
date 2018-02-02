@@ -2244,9 +2244,6 @@ class PrettyPrinter(Printer):
         if e.name.name == 'degree':
             pform = self._print(u"\N{DEGREE SIGN}")
             return pform
-        elif e.name.name == 'radian':
-            pform = self._print(' '*len('rad'))
-            return prettyForm(*pform.above(self._print('rad')))
         else:
             return self.emptyPrinter(e)
 
