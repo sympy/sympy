@@ -4,8 +4,8 @@ Kane's Method
 
 The :mod:`~sympy.physics.mechanics.kane` module provides functionality for
 deriving equations of motion using Kane's method [Kane1985]_. This document
-describes Kane's method as used in this module, please refer to [Kane1985]_ and the
-source code for the mathematical details of the underlying algorithms.
+describes Kane's method as used in this module, please refer to [Kane1985]_ and
+the source code for the mathematical details of the underlying algorithms.
 
 Structure of Equations
 ======================
@@ -13,19 +13,18 @@ Structure of Equations
 In :mod:`~sympy.physics.mechanics.kane` we describe a multi-body system with 5
 general sets of equations given the:
 
-- :math:`N` : number of coordinates
 - :math:`M` : number of holonomic constraint equations
-- :math:`n` : number of independent generalized coordinates and number of generalized speeds, i.e. :math:`n=N-M`
+- :math:`n` : number of generalized coordinates and number of generalized speeds, i.e. :math:`n=N-M`
 - :math:`m` : number of nonholonomic constraint equations
 - :math:`p` : number of independent generalized speeds, i.e. :math:`p=n-m`
-- :math:`\mathbf{q}` : vector of generalized coordinates where :math:`\mathbf{q} \in \mathbb{R}^n`
+- :math:`\mathbf{q}` : vector of independent generalized coordinates where :math:`\mathbf{q} \in \mathbb{R}^n`
 - :math:`\mathbf{u}` : vector of generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^n`
 - :math:`\mathbf{u}_r` : dependent generalized speeds where :math:`\mathbf{u}_r \in \mathbb{R}^m`
 - :math:`\mathbf{u}_s` : independent generalized speeds where :math:`\mathbf{u}_s \in \mathbb{R}^p`
 
-The equations are then as follows:
+The equations that result from applying Kane's Method are then as follows:
 
-1. Holonomic constraints
+1. Holonomic (configuration) constraints
 
    .. math::
       \mathbf{f}_h(\mathbf{q}, t) = 0 \quad
@@ -43,8 +42,7 @@ The equations are then as follows:
       \mathrm{,\ }
       \mathbf{f}_{k} \in \mathbb{R}^n
 
-
-3. Nonholonomic constraints
+3. Nonholonomic (velocity) constraints
 
    .. math::
       \mathbf{M}_{n}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{n}(\mathbf{q}, t) = 0 \quad
@@ -53,7 +51,7 @@ The equations are then as follows:
       \mathrm{,\ }
       \mathbf{f}_{n} \in \mathbb{R}^m
 
-   or
+   or with the dependent and independent speeds explicit:
 
    .. math::
       \mathbf{M}_{nr}(\mathbf{q}, t) \mathbf{u}_r + \mathbf{M}_{ns}(\mathbf{q}, t) \mathbf{u}_s + \mathbf{f}_{n}(\mathbf{q}, t) = 0 \quad
@@ -76,16 +74,16 @@ The equations are then as follows:
 5. Differentiated non-holonomic equations
 
    .. math::
-      \mathbf{M}_{\dot{n}}(\mathbf{q}, t) \dot{\mathbf{u}} + \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
+      \mathbf{M}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, t) \dot{\mathbf{u}} + \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
       \mathrm{where} \quad
       \mathbf{M}_{\dot{n}} \in \mathbb{R}^{m \times n}
       \mathrm{,\ }
       \mathbf{f}_{\dot{n}} \in \mathbb{R}^m
 
-   or
+   or with the dependent and independent speeds explicit:
 
    .. math::
-      \mathbf{M}_{\dot{n}r}(\mathbf{q}, t) \dot{\mathbf{u}}_r + \mathbf{M}_{\dot{n}s}(\mathbf{q}, t) \dot{\mathbf{u}}_s + \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
+      \mathbf{M}_{\dot{n}r}(\mathbf{q}, \dot{\mathbf{q}}, t) \dot{\mathbf{u}}_r + \mathbf{M}_{\dot{n}s}(\mathbf{q}, \dot{\mathbf{q}}, t) \dot{\mathbf{u}}_s + \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
       \mathrm{where} \quad
       \mathbf{M}_{\dot{n}r} \in \mathbb{R}^{m \times m}
       \mathrm{,\ }
@@ -93,7 +91,7 @@ The equations are then as follows:
       \mathrm{,\ }
       \mathbf{f}_{\dot{n}} \in \mathbb{R}^m
 
-Equation sets 1 through 3 are provided by the analyst, where as the sets 4 and
+Equation sets 1 through 3 are provided by the user, whereas the sets 4 and
 5 are computed by the :class:`~sympy.physics.mechanics.kane.KanesMethod` class.
 
 Holonomic Constraint Equations
@@ -126,7 +124,7 @@ where the constraint expressions are equivalent to zero.
 Kinematic Differential Equations
 --------------------------------
 
-The third set of equations are the kinematic differential equations and they
+The second set of equations are the kinematic differential equations and they
 describe the relationship between the generalized speeds and the derivatives of
 the generalized coordinates. These are defined by the analyst and can reduce
 the length of the dynamic equations of motion if chosen carefully
@@ -152,7 +150,7 @@ i.e.:
 Nonholonomic Constraint Equations
 ---------------------------------
 
-The second set of equations describe the nonholonomic constraints, otherwise
+The third set of equations describe the nonholonomic constraints, otherwise
 known as velocity constraints. These must be linear in the generalized speeds.
 There are fewer equations than generalized speeds, and thus describe the
 relationship between the dependent and independent generalized speeds. There
