@@ -241,6 +241,12 @@ asech
 .. autoclass:: sympy.functions.elementary.hyperbolic.asech
    :members:
 
+acsch
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.acsch
+   :members:
+
 sympy.functions.elementary.integers
 ===================================
 
@@ -342,3 +348,15 @@ sqrt
 ----
 
 .. autofunction:: sympy.functions.elementary.miscellaneous.sqrt
+
+
+cbrt
+----
+
+.. autofunction:: sympy.functions.elementary.miscellaneous.cbrt
+
+
+real_root
+---------
+
+.. autofunction:: sympy.functions.elementary.miscellaneous.real_root

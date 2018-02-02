@@ -17,6 +17,7 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, DiracDelta, sympify)
 from sympy.core.relational import Relational
+from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
 from sympy.solvers.solveset import solveset
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -146,7 +147,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(self, sym) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(sym, self) for sym in self.domain.symbols)
 
     @property
     def symbols(self):
@@ -174,7 +175,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, str):
+        if isinstance(s, string_types):
             s = Symbol(s)
         if not isinstance(s, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -182,7 +183,7 @@ class SinglePSpace(PSpace):
 
     @property
     def value(self):
-        return RandomSymbol(self, self.symbol)
+        return RandomSymbol(self.symbol, self)
 
     @property
     def symbol(self):
@@ -223,24 +224,24 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
-    def __new__(cls, pspace, symbol=None):
-        if symbol is None:
+    def __new__(cls, symbol, pspace=None):
+        if pspace is None:
             # Allow single arg, representing pspace == PSpace()
-            pspace, symbol = PSpace(), pspace
+            pspace = PSpace()
         if not isinstance(symbol, Symbol):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
-        return Basic.__new__(cls, pspace, symbol)
+        return Basic.__new__(cls, symbol, pspace)
 
     is_finite = True
-    is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     _diff_wrt = True
 
-    pspace = property(lambda self: self.args[0])
-    symbol = property(lambda self: self.args[1])
+    pspace = property(lambda self: self.args[1])
+    symbol = property(lambda self: self.args[0])
     name   = property(lambda self: self.symbol.name)
 
     def _eval_is_positive(self):
@@ -466,7 +467,7 @@ def rs_swap(a, b):
 
 
 def given(expr, condition=None, **kwargs):
-    """ Conditional Random Expression
+    r""" Conditional Random Expression
     From a random expression and a condition on that expression creates a new
     probability space from the condition and returns the same expression on that
     conditional probability space.
@@ -737,7 +738,6 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     ========
 
     >>> from sympy.stats import density, Die, Normal, cdf
-    >>> from sympy import Symbol
 
     >>> D = Die('D', 6)
     >>> X = Normal('X', 0, 1)
@@ -750,7 +750,7 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
 
     >>> cdf(X)
-    Lambda(_z, -erfc(sqrt(2)*_z/2)/2 + 1)
+    Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)
     """
     if condition is not None:  # If there is a condition
         # Recompute on new conditional expr
@@ -758,6 +758,40 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
 
     # Otherwise pass work off to the ProbabilitySpace
     result = pspace(expr).compute_cdf(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
+
+
+def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
+    """
+    Characteristic function of a random expression, optionally given a second condition
+
+    Returns a Lambda
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, DiscreteUniform, Poisson, characteristic_function
+
+    >>> X = Normal('X', 0, 1)
+    >>> characteristic_function(X)
+    Lambda(_t, exp(-_t**2/2))
+
+    >>> Y = DiscreteUniform('Y', [1, 2, 7])
+    >>> characteristic_function(Y)
+    Lambda(_t, exp(7*_t*I)/3 + exp(2*_t*I)/3 + exp(_t*I)/3)
+
+    >>> Z = Poisson('Z', 2)
+    >>> characteristic_function(Z)
+    Lambda(_t, Sum(2**_x*exp(-2)*exp(_t*_x*I)/factorial(_x), (_x, 0, oo)))
+    """
+    if condition is not None:
+        return characteristic_function(given(expr, condition, **kwargs), **kwargs)
+
+    result = pspace(expr).compute_characteristic_function(expr, **kwargs)
 
     if evaluate and hasattr(result, 'doit'):
         return result.doit()
@@ -780,13 +814,14 @@ def where(condition, given_condition=None, **kwargs):
     >>> X = Normal('x', 0, 1)
 
     >>> where(X**2<1)
-    Domain: And(-1 < x, x < 1)
+    Domain: (-1 < x) & (x < 1)
 
     >>> where(X**2<1).set
-    (-1, 1)
+    Interval.open(-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
-    Domain: Or(And(Eq(a, 1), Eq(b, 1)), And(Eq(a, 1), Eq(b, 2)), And(Eq(a, 2), Eq(b, 2)))    """
+    Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
+    """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)

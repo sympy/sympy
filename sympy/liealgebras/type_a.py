@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.compatibility import range
 from sympy.liealgebras.cartan_type import Standard_Cartan
-from sympy.matrices import eye
+from sympy.core.backend import eye
 
 
 class TypeA(Standard_Cartan):
@@ -36,7 +36,7 @@ class TypeA(Standard_Cartan):
         """
         This is a method just to generate roots
         with a 1 iin the ith position and a -1
-        in the jth postion.
+        in the jth position.
 
         """
 
@@ -103,7 +103,7 @@ class TypeA(Standard_Cartan):
 
     def highest_root(self):
         """
-        Returns the heighest weight root for A_n
+        Returns the highest weight root for A_n
         """
 
         return self.basic_root(0, self.n)

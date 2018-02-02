@@ -99,6 +99,7 @@ def tn_branch(s, func):
 
 def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
+    assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert td(lowergamma(x, randcplx()), x)
@@ -138,6 +139,11 @@ def test_lowergamma():
     assert lowergamma(k, y).rewrite(expint) == lowergamma(k, y)
     assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
 
+    assert lowergamma(70, 6) == factorial(69) - 69035724522603011058660187038367026272747334489677105069435923032634389419656200387949342530805432320 * exp(-6)
+    assert (lowergamma(S(77) / 2, 6) - lowergamma(S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+    assert (lowergamma(-S(77) / 2, 6) - lowergamma(-S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+
+
 def test_uppergamma():
     from sympy import meijerg, exp_polar, I, expint
     assert uppergamma(4, 0) == 6
@@ -176,6 +182,9 @@ def test_uppergamma():
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
     assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
 
+    assert uppergamma(70, 6) == 69035724522603011058660187038367026272747334489677105069435923032634389419656200387949342530805432320*exp(-6)
+    assert (uppergamma(S(77) / 2, 6) - uppergamma(S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+    assert (uppergamma(-S(77) / 2, 6) - uppergamma(-S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
 
 def test_polygamma():
     from sympy import I
@@ -400,7 +409,7 @@ def test_issue_8657():
     m = Symbol('m', integer=True)
     o = Symbol('o', positive=True)
     p = Symbol('p', negative=True, integer=False)
-    assert gamma(n).is_real is None
+    assert gamma(n).is_real is False
     assert gamma(m).is_real is None
     assert gamma(o).is_real is True
     assert gamma(p).is_real is True

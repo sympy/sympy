@@ -3,7 +3,6 @@ from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
 from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy import ImmutableMatrix as Matrix
-from sympy.core.compatibility import u
 import sympy.vector
 
 
@@ -50,8 +49,8 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> D1 = N.i.outer(N.j)
         >>> D2 = N.j.outer(N.j)
         >>> D1.dot(D2)
@@ -101,8 +100,8 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> d = N.i.outer(N.i)
         >>> d.cross(N.j)
         (N.i|N.k)
@@ -136,19 +135,19 @@ class Dyadic(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The coordinate system that the rows and columns of the matrix
             correspond to. If a second system is provided, this
             only corresponds to the rows of the matrix.
-        second_system : CoordSysCartesian, optional, default=None
+        second_system : CoordSys3D, optional, default=None
             The coordinate system that the columns of the matrix correspond
             to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> v = N.i + 2*N.j
         >>> d = v.outer(N.i)
         >>> d.to_matrix(N)
@@ -197,7 +196,7 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._measure_number = 1
         obj._components = {obj: S(1)}
         obj._sys = vector1._sys
-        obj._pretty_form = u('(' + vector1._pretty_form + '|' +
+        obj._pretty_form = (u'(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
         obj._latex_form = ('(' + vector1._latex_form + "{|}" +
                            vector2._latex_form + ')')
@@ -258,7 +257,7 @@ class DyadicZero(BasisDependentZero, Dyadic):
 
     _op_priority = 13.1
     _pretty_form = u'(0|0)'
-    _latex_form = '(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
+    _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)

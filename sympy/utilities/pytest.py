@@ -10,7 +10,7 @@ from sympy.core.compatibility import get_function_name
 
 try:
     import py
-    from py.test import skip
+    from py.test import skip, raises
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
@@ -147,6 +147,7 @@ if not USE_PYTEST:
             func()
 
         func_wrapper = functools.update_wrapper(func_wrapper, func)
+        func_wrapper.__wrapped__ = func
         return func_wrapper
 
 else:

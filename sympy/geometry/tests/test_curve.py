@@ -1,8 +1,8 @@
 from __future__ import division
 
-from sympy import Symbol, pi, symbols, Tuple, S
+from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 
 def test_curve():
@@ -48,6 +48,7 @@ def test_curve():
     raises(ValueError, lambda: Curve((s, s + t), (t, 1, 2)).arbitrary_point(s))
 
 
+@slow
 def test_free_symbols():
     a, b, c, d, e, f, s = symbols('a:f,s')
     assert Point(a, b).free_symbols == {a, b}
@@ -85,3 +86,23 @@ def test_transform():
         Curve((x + 1/2, 3*x), (x, 0, 1))
     assert Curve((x, 3*x), (x, 0, 1)).translate(4, 5) == \
         Curve((x + 4, 3*x + 5), (x, 0, 1))
+
+
+def test_length():
+    t = Symbol('t', real=True)
+
+    c1 = Curve((t, 0), (t, 0, 1))
+    assert c1.length == 1
+
+    c2 = Curve((t, t), (t, 0, 1))
+    assert c2.length == sqrt(2)
+
+    c3 = Curve((t ** 2, t), (t, 2, 5))
+    assert c3.length == -sqrt(17) - asinh(4) / 4 + asinh(10) / 4 + 5 * sqrt(101) / 2
+
+
+def test_parameter_value():
+    t = Symbol('t')
+    C = Curve([2*t, t**2], (t, 0, 2))
+    assert C.parameter_value((2, 1), t) == {t: 1}
+    raises(ValueError, lambda: C.parameter_value((2, 0), t))

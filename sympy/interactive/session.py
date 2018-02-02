@@ -382,7 +382,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     sin(x)
     >>> sqrt(5) #doctest: +SKIP
       ___
-    \/ 5
+    \\/ 5
     >>> init_session(pretty_print=False) #doctest: +SKIP
     >>> sqrt(5) #doctest: +SKIP
     sqrt(5)
@@ -416,15 +416,11 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
-            if V(IPython.__version__) >= '0.11':
-                try:
-                    ip = get_ipython()
-                except NameError:
-                    ip = None
-            else:
-                ip = IPython.ipapi.get()
-                if ip:
-                    ip = ip.IP
+            try:
+                from IPython import get_ipython
+                ip = get_ipython()
+            except ImportError:
+                ip = None
         in_ipython = bool(ip)
         if ipython is None:
             ipython = in_ipython
@@ -433,9 +429,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip = init_python_session()
         mainloop = ip.interact
     else:
-        if ip is None:
-            ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-                auto_int_to_Integer=auto_int_to_Integer)
+        ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
+            auto_int_to_Integer=auto_int_to_Integer)
 
         if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't
@@ -472,9 +467,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
     message = _make_message(ipython, quiet, _preexec_source)
 
     if not in_ipython:
-        mainloop(message)
+        print(message)
+        mainloop()
         sys.exit('Exiting ...')
     else:
-        ip.write(message)
+        print(message)
         import atexit
-        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)
+        atexit.register(lambda: print("Exiting ...\n"))

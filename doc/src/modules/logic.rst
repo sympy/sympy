@@ -18,11 +18,11 @@ You can build Boolean expressions with the standard python operators ``&``
     >>> from sympy import *
     >>> x, y = symbols('x,y')
     >>> y | (x & y)
-    Or(And(x, y), y)
+    y | (x & y)
     >>> x | y
-    Or(x, y)
+    x | y
     >>> ~x
-    Not(x)
+    ~x
 
 You can also form implications with ``>>`` and ``<<``::
 
@@ -36,7 +36,7 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
     >>> (y & x).subs({x: True, y: True})
     True
     >>> (x | y).atoms()
-    set([x, y])
+    {x, y}
 
 The logic module also includes the following functions to derive boolean expressions
 from their truth tables-

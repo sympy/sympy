@@ -127,6 +127,7 @@ def test_erfc():
     assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
     assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
+    assert expand_func(erf(x) + erfc(x)) == S.One
 
     assert erfc(x).as_real_imag() == \
         ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
@@ -180,6 +181,7 @@ def test_erfi():
     assert erfi(z).rewrite('uppergamma') == (sqrt(-z**2)/z*(uppergamma(S.Half,
         -z**2)/sqrt(S.Pi) - S.One))
     assert erfi(z).rewrite('expint') == sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
+    assert expand_func(erfi(I*z)) == I*erf(z)
 
     assert erfi(x).as_real_imag() == \
         ((erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
@@ -224,6 +226,8 @@ def test_erf2():
 
     assert erf2(I, 0).is_real is False
     assert erf2(0, 0).is_real is True
+
+    assert expand_func(erf(x) + erf2(x, y)) == erf(y)
 
     assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
 
@@ -312,10 +316,6 @@ def tn_branch(func, s=None):
 
 
 def test_ei():
-    pos = Symbol('p', positive=True)
-    neg = Symbol('n', negative=True)
-    assert Ei(-pos) == Ei(polar_lift(-1)*pos) - I*pi
-    assert Ei(neg) == Ei(polar_lift(neg)) - I*pi
     assert tn_branch(Ei)
     assert mytd(Ei(x), exp(x)/x, x)
     assert mytn(Ei(x), Ei(x).rewrite(uppergamma),
@@ -338,6 +338,7 @@ def test_ei():
     assert Ei(x).series(x) == EulerGamma + log(x) + x + x**2/4 + \
         x**3/18 + x**4/96 + x**5/600 + O(x**6)
 
+    assert str(Ei(cos(2)).evalf(n=10)) == '-0.6760647401'
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),

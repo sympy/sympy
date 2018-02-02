@@ -8,7 +8,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
@@ -19,7 +19,7 @@ from sympy.functions import hankel1, hankel2, jn, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
@@ -45,7 +45,7 @@ def components(f, x):
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)
-    set([x, sin(x), cos(x)])
+    {x, sin(x), cos(x)}
 
     See Also
     ========
@@ -114,7 +114,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     >>> heurisch(cos(n*x), x)
     sin(n*x)/n
     >>> heurisch_wrapper(cos(n*x), x)
-    Piecewise((x, Eq(n, 0)), (sin(n*x)/n, True))
+    Piecewise((sin(n*x)/n, Ne(n, 0)), (x, True))
 
     See Also
     ========
@@ -163,9 +163,19 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
                         degree_offset, unnecessary_permutations)
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
+        generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
         pairs.append((expr, cond))
-    pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
-                           degree_offset, unnecessary_permutations), True))
+    # If there is one condition, put the generic case first. Otherwise,
+    # doing so may lead to longer Piecewise formulas
+    if len(pairs) == 1:
+        pairs = [(heurisch(f, x, rewrite, hints, mappings, retries,
+                              degree_offset, unnecessary_permutations),
+                              generic),
+                 (pairs[0][0], True)]
+    else:
+        pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
+                              degree_offset, unnecessary_permutations),
+                              True))
     return Piecewise(*pairs)
 
 class BesselTable(object):
@@ -365,7 +375,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
             for g in set(terms):  # using copy of terms
                 if g.is_Function:
-                    if g.func is li:
+                    if isinstance(g, li):
                         M = g.args[0].match(a*x**b)
 
                         if M is not None:
@@ -374,7 +384,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             #terms.add( x*(li(M[a]*x**M[b]) - x*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
                             #terms.add( li(M[a]*x**M[b]) - Ei((M[b]+1)*log(M[a]*x**M[b])/M[b]) )
 
-                    elif g.func is exp:
+                    elif isinstance(g, exp):
                         M = g.args[0].match(a*x**2)
 
                         if M is not None:
@@ -507,12 +517,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     for term in terms:
         if term.is_Function:
-            if term.func is tan:
+            if isinstance(term, tan):
                 special[1 + _substitute(term)**2] = False
-            elif term.func is tanh:
+            elif isinstance(term, tanh):
                 special[1 + _substitute(term)] = False
                 special[1 - _substitute(term)] = False
-            elif term.func is LambertW:
+            elif isinstance(term, LambertW):
                 special[_substitute(term)] = True
 
     F = _substitute(f)
@@ -605,7 +615,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         # TODO: Currently it's better to use symbolic expressions here instead
         # of rational functions, because it's simpler and FracElement doesn't
-        # give big speed improvement yet. This is because cancelation is slow
+        # give big speed improvement yet. This is because cancellation is slow
         # due to slow polynomial GCD algorithms. If this gets improved then
         # revise this code.
         candidate = poly_part/poly_denom + Add(*log_part)

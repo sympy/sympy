@@ -1,15 +1,32 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, Mul, Pow, S
+from functools import wraps
+
+from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
-from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core.sympify import _sympify, sympify
+
+# Backwards compatibility
+from sympy.codegen.ast import Assignment
+
+
+class requires(object):
+    """ Decorator for registering requirements on print methods. """
+    def __init__(self, **kwargs):
+        self._req = kwargs
+
+    def __call__(self, method):
+        def _method_wrapper(self_, *args, **kwargs):
+            for k, v in self._req.items():
+                getattr(self_, k).update(v)
+            return method(self_, *args, **kwargs)
+        return wraps(method)(_method_wrapper)
 
 
 class AssignmentError(Exception):
@@ -17,74 +34,6 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
-
-
-class Assignment(Relational):
-    """
-    Represents variable assignment for code generation.
-
-    Parameters
-    ----------
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assignment
-    >>> x, y, z = symbols('x, y, z')
-    >>> Assignment(x, y)
-    Assignment(x, y)
-    >>> Assignment(x, 0)
-    Assignment(x, 0)
-    >>> A = MatrixSymbol('A', 1, 3)
-    >>> mat = Matrix([x, y, z]).T
-    >>> Assignment(A, mat)
-    Assignment(A, Matrix([[x, y, z]]))
-    >>> Assignment(A[0, 1], x)
-    Assignment(A[0, 1], x)
-    """
-
-    rel_op = ':='
-    __slots__ = []
-
-    def __new__(cls, lhs, rhs=0, **assumptions):
-        from sympy.matrices.expressions.matexpr import (
-            MatrixElement, MatrixSymbol)
-        from sympy.tensor.indexed import Indexed
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
-
-# XXX: This should be handled better
-Relational.ValidRelationOperator[':='] = Assignment
 
 class CodePrinter(StrPrinter):
     """
@@ -97,16 +46,21 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    _default_settings = {'order': None,
-                         'full_prec': 'auto',
-                         'error_on_reserved': False,
-                         'reserved_word_suffix': '_'}
+    _default_settings = {
+        'order': None,
+        'full_prec': 'auto',
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
+        'human': True,
+        'inline': False
+    }
 
     def __init__(self, settings=None):
 
         super(CodePrinter, self).__init__(settings=settings)
 
-        self.reserved_words = set()
+        if not hasattr(self, 'reserved_words'):
+            self.reserved_words = set()
 
     def doprint(self, expr, assign_to=None):
         """
@@ -160,8 +114,8 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            result = (self._number_symbols, self._not_supported,
-                    "\n".join(lines))
+            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            result = (num_syms, self._not_supported, "\n".join(lines))
         del self._not_supported
         del self._number_symbols
         return result
@@ -319,6 +273,15 @@ class CodePrinter(StrPrinter):
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
 
+    def _print_Dummy(self, expr):
+        if expr.name.startswith('Dummy_'):
+            return '_' + expr.name
+        else:
+            return '%s_%d' % (expr.name, expr.dummy_index)
+
+    def _print_CodeBlock(self, expr):
+        return '\n'.join([self._print(i) for i in expr.args])
+
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -345,7 +308,7 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
-        elif self._settings["contract"] and (lhs.has(IndexedBase) or
+        elif self._settings.get("contract", False) and (lhs.has(IndexedBase) or
                 rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
@@ -368,7 +331,7 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
-    def _print_Function(self, expr):
+    def _print_Function(self, expr, **kwargs):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
@@ -379,23 +342,30 @@ class CodePrinter(StrPrinter):
                     if cond(*expr.args):
                         break
             if func is not None:
-                return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                try:
+                    return func(self, *[self.parenthesize(item, 0) for item in expr.args], **kwargs)
+                except TypeError:
+                    try:
+                        return func(*[self.parenthesize(item, 0) for item in expr.args])
+                    except TypeError:
+                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         else:
             return self._print_not_supported(expr)
 
-    def _print_NumberSymbol(self, expr):
-        # A Number symbol that is not implemented here or with _printmethod
-        # is registered and evaluated
-        self._number_symbols.add((expr,
-            self._print(expr.evalf(self._settings["precision"]))))
-        return str(expr)
+    _print_Expr = _print_Function
 
-    def _print_Dummy(self, expr):
-        # dummies must be printed as unique symbols
-        return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
+    def _print_NumberSymbol(self, expr):
+        if self._settings.get("inline", False):
+            return self._print(Float(expr.evalf(self._settings["precision"])))
+        else:
+            # A Number symbol that is not implemented here or with _printmethod
+            # is registered and evaluated
+            self._number_symbols.add((expr,
+                Float(expr.evalf(self._settings["precision"]))))
+            return str(expr)
 
     def _print_Catalan(self, expr):
         return self._print_NumberSymbol(expr)
@@ -486,7 +456,6 @@ class CodePrinter(StrPrinter):
     _print_Basic = _print_not_supported
     _print_ComplexInfinity = _print_not_supported
     _print_Derivative = _print_not_supported
-    _print_dict = _print_not_supported
     _print_ExprCondPair = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported
@@ -494,9 +463,9 @@ class CodePrinter(StrPrinter):
     _print_Interval = _print_not_supported
     _print_AccumulationBounds = _print_not_supported
     _print_Limit = _print_not_supported
-    _print_list = _print_not_supported
     _print_Matrix = _print_not_supported
     _print_ImmutableMatrix = _print_not_supported
+    _print_ImmutableDenseMatrix = _print_not_supported
     _print_MutableDenseMatrix = _print_not_supported
     _print_MatrixBase = _print_not_supported
     _print_DeferredVector = _print_not_supported
@@ -510,7 +479,6 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
-    _print_tuple = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported

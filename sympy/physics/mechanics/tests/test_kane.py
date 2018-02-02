@@ -1,7 +1,8 @@
 import warnings
 
-from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
-                   simplify, zeros, ordered)
+from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
+                                zeros)
+from sympy import simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
@@ -67,36 +68,17 @@ def test_one_dof():
     # doesn't cause py.test to fail.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        kane.kanes_equations(loads, bodies)
+        KM.kanes_equations(FL, BL)
 
-    assert kane.bodies == kane.bodylist == bodies
-    assert kane.loads == kane.forcelist == loads
-
-    assert kane.fr == kane.generalized_active_forces == Matrix([[-c*u - k*q]])
-    assert kane.frstar == kane.generalized_inertia_forces == Matrix([[-m*ud]])
-    assert kane.mass_matrix == Matrix([[m]])
-    assert kane.forcing == Matrix([[-c*u - k*q]])
-    assert kane.mass_matrix_full == Matrix([[1, 0], [0, m]])
-    assert kane.forcing_full == Matrix([[u], [-c*u - k*q]])
-
-    MM = kane.mass_matrix
-    forcing = kane.forcing
-    rhs = MM.LUsolve(forcing)
+    MM = KM.mass_matrix
+    forcing = KM.forcing
+    rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert (kane.linearize(A_and_B=True, new_method=True)[0] ==
-            Matrix([[0, 1], [-k/m, -c/m]]))
 
-    # Ensure that the old linearizer still works and that the new linearizer
-    # gives the same results. The old linearizer is deprecated and should be
-    # removed in >= 1.0.
-    M_old = kane.mass_matrix_full
-    # The old linearizer raises a deprecation warning, so catch it here so
-    # it doesn't cause py.test to fail.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        F_A_old, F_B_old, r_old = kane.linearize()
-    M_new, F_A_new, F_B_new, r_new = kane.linearize(new_method=True)
-    assert simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old) == zeros(2)
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
+
+    assert (KM.linearize(A_and_B=True, )[0] == Matrix([[0, 1], [-k/m, -c/m]]))
 
 
 def test_two_dof():
@@ -138,6 +120,9 @@ def test_two_dof():
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
 
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
+
 
 def test_pend():
     q, u = dynamicsymbols('q u')
@@ -161,6 +146,8 @@ def test_pend():
     rhs = MM.inv() * forcing
     rhs.simplify()
     assert expand(rhs[0]) == expand(-g / l * sin(q))
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
 
 
 def test_rolling_disc():
@@ -250,18 +237,16 @@ def test_rolling_disc():
     rhs.simplify()
     assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(6, 1)
 
     # This code tests our output vs. benchmark values. When r=g=m=1, the
     # critical speed (where all eigenvalues of the linearized equations are 0)
     # is 1 / sqrt(3) for the upright case.
-    A = KM.linearize(A_and_B=True, new_method=True)[0]
-    # NOTE : I had to add this simplify call because the resulting A matrix
-    # will evaluate such that some entries are NaN, i.e. zeros in denominators.
-    # This is a fundamental issue that needs to be addressed about the new
-    # linearizer.
-    A.simplify()
+    A = KM.linearize(A_and_B=True)[0]
     A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
-    assert A_upright.subs(u2, 1 / sqrt(3)).eigenvals() == {S(0): 6}
+    import sympy
+    assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S(0): 6}
 
 
 def test_aux():

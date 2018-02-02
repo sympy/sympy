@@ -297,20 +297,19 @@ def rational_interpolate(data, degnum, X=symbols('x')):
 
     xdata, ydata = list(zip(*data))
 
-    m = degnum + 1
-    k = len(xdata) - m - 1
-    if k<1:
+    k = len(xdata) - degnum - 1
+    if k<0:
         raise OptionError("Too few values for the required degree.")
-    c = ones(m+k+1, m+k+2)
-    for j in range(max(m, k)):
-        for i in range(m+k+1):
+    c = ones(degnum+k+1, degnum+k+2)
+    for j in range(max(degnum, k)):
+        for i in range(degnum+k+1):
             c[i, j+1] = c[i, j]*xdata[i]
     for j in range(k+1):
-        for i in range(m+k+1):
-            c[i, m+k+1-j] = -c[i, k-j]*ydata[i]
+        for i in range(degnum+k+1):
+            c[i, degnum+k+1-j] = -c[i, k-j]*ydata[i]
     r = c.nullspace()[0]
-    return (sum(r[i] * X**i for i in range(m+1))
-            / sum(r[i+m+1] * X**i for i in range(k+1)))
+    return (sum(r[i] * X**i for i in range(degnum+1))
+            / sum(r[i+degnum+1] * X**i for i in range(k+1)))
 
 
 @public

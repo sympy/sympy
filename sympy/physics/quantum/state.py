@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
@@ -113,7 +113,7 @@ class StateBase(QExpr):
 
     @classmethod
     def dual_class(self):
-        """Return the class used to construt the dual."""
+        """Return the class used to construct the dual."""
         raise NotImplementedError(
             'dual_class must be implemented in a subclass'
         )
@@ -234,7 +234,7 @@ class KetBase(StateBase):
     #-------------------------------------------------------------------------
 
     def _eval_innerproduct(self, bra, **hints):
-        """Evaluate the inner product betweeen this ket and a bra.
+        """Evaluate the inner product between this ket and a bra.
 
         This is called to compute <bra|ket>, where the ket is ``self``.
 
@@ -934,7 +934,7 @@ class Wavefunction(Function):
             return Wavefunction((const)**(-1)*self.expr, *self.args[1:])
 
     def prob(self):
-        """
+        r"""
         Return the absolute magnitude of the w.f., `|\psi(x)|^2`
 
         Examples

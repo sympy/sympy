@@ -8,9 +8,9 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Derivative, sin, cos, tan, simplify, Mul
-from sympy.core.function import AppliedUndef
-from sympy.core.basic import S
+from sympy import simplify
+from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
+                                tan, AppliedUndef, S)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -37,6 +37,10 @@ mlatex = vlatex
 
 
 def mechanics_printing(**kwargs):
+    """
+    Initializes time derivative printing for all SymPy objects in
+    mechanics module.
+    """
 
     init_vprinting(**kwargs)
 
@@ -47,7 +51,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     """Simple way to create inertia Dyadic object.
 
     If you don't know what a Dyadic is, just treat this like the inertia
-    tensor.  Then, do the easy thing and define it in a body-fixed frame.
+    tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
     ==========
@@ -395,20 +399,44 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def find_dynamicsymbols(expression, exclude=None):
+def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
-
-    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
-    >>> x, y = dynamicsymbols('x, y')
-    >>> expr = x + x.diff()*y
-    >>> find_dynamicsymbols(expr)
-    set([x(t), y(t), Derivative(x(t), t)])
 
     If the optional ``exclude`` kwarg is used, only dynamicsymbols
     not in the iterable ``exclude`` are returned.
+    If we intend to apply this function on a vector, the optional
+    ''reference_frame'' is also used to inform about the corresponding frame
+    with respect to which the dynamic symbols of the given vector is to be
+    determined.
 
-    >>> find_dynamicsymbols(expr, [x, y])
-    set([Derivative(x(t), t)])
+    Parameters
+    ==========
+
+    expression : sympy expression
+
+    exclude : iterable of dynamicsymbols, optional
+
+    reference_frame : ReferenceFrame, optional
+        The frame with respect to which the dynamic symbols of the
+        given vector is to be determined.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
+    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> x, y = dynamicsymbols('x, y')
+    >>> expr = x + x.diff()*y
+    >>> find_dynamicsymbols(expr)
+    {x(t), y(t), Derivative(x(t), t)}
+    >>> find_dynamicsymbols(expr, exclude=[x, y])
+    {Derivative(x(t), t)}
+    >>> a, b, c = dynamicsymbols('a, b, c')
+    >>> A = ReferenceFrame('A')
+    >>> v = a * A.x + b * A.y + c * A.z
+    >>> find_dynamicsymbols(v, reference_frame=A)
+    {a(t), b(t), c(t)}
+
     """
     t_set = {dynamicsymbols._t}
     if exclude:
@@ -418,6 +446,12 @@ def find_dynamicsymbols(expression, exclude=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
+    if isinstance(expression, Vector):
+        if reference_frame is None:
+            raise ValueError("You must provide reference_frame when passing a "
+                             "vector expression, got %s." % reference_frame)
+        else:
+            expression = expression.to_matrix(reference_frame)
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
             i.free_symbols == t_set]) - exclude_set
 
@@ -455,12 +489,16 @@ def msubs(expr, *sub_dicts, **kwargs):
     the denominator. If this results in 0, simplification of the entire
     fraction is attempted. Using this selective simplification, only
     subexpressions that result in 1/0 are targeted, resulting in faster
-    performance."""
+    performance.
+
+    """
 
     sub_dict = dict_merge(*sub_dicts)
     smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
+    elif hasattr(expr, 'msubs'):
+        return expr.msubs(sub_dict)
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
     if isinstance(expr, (Matrix, Vector, Dyadic)):
@@ -507,6 +545,7 @@ def _smart_subs(expr, sub_dict):
         If so, attempt to simplify it out. Then if node is in sub_dict,
         sub in the corresponding value."""
     expr = _crawl(expr, _tan_repl_func)
+
     def _recurser(expr, sub_dict):
         # Decompose the expression into num, den
         num, den = _fraction_decomp(expr)

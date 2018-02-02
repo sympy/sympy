@@ -218,7 +218,7 @@ def test_jl_output_arg_mixed_unordered():
 
 
 def test_jl_piecewise_():
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True), evaluate=False)
     name_expr = ("pwtest", pw)
     result, = codegen(name_expr, "Julia", header=False, empty=False)
     source = result[1]
@@ -528,7 +528,7 @@ def test_jl_tensor_loops_multiple_contractions():
         '        for j = 1:n\n'
         '            for k = 1:o\n'
         '                for l = 1:p\n'
-        '                    y[i] = y[i] + B[j,k,l].*A[i,j,k,l]\n'
+        '                    y[i] = A[i,j,k,l].*B[j,k,l] + y[i]\n'
         '                end\n'
         '            end\n'
         '        end\n'

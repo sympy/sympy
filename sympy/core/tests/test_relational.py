@@ -1,11 +1,12 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
+    log, cos, sin)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne)
+                                   Gt, Ge, Ne, _canonical)
 from sympy.sets.sets import Interval, FiniteSet
 
 x, y, z, t = symbols('x,y,z,t')
@@ -93,6 +94,8 @@ def test_Eq():
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
+    # issue 13348
+    assert Eq(True, 1) is S.false
 
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
@@ -266,7 +269,8 @@ def test_new_relational():
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
             if relation_type not in ('==', 'eq', '!=', '<>', 'ne', '>=', 'ge',
-                                     '<=', 'le', '>', 'gt', '<', 'lt'):
+                                     '<=', 'le', '>', 'gt', '<', 'lt', ':=',
+                                     '+=', '-=', '*=', '/=', '%='):
                 break
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
@@ -570,6 +574,8 @@ def test_issue_8245():
     assert (r >= a) == False
     assert (r <= a) == True
 
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+
 
 def test_issue_8449():
     p = Symbol('p', nonnegative=True)
@@ -581,7 +587,18 @@ def test_issue_8449():
 
 def test_simplify():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    assert simplify(S(1) < -x) == (x < -1)
+    r = S(1) < x
+    # canonical operations are not the same as simplification,
+    # so if there is no simplification, canonicalization will
+    # be done unless the measure forbids it
+    assert simplify(r) == r.canonical
+    assert simplify(r, ratio=0) != r.canonical
+    # this is not a random test; in _eval_simplify
+    # this will simplify to S.false and that is the
+    # reason for the 'if r.is_Relational' in Relational's
+    # _eval_simplify routine
+    assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
+        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
 
 
 def test_equals():
@@ -613,34 +630,22 @@ def test_reversed():
 
 
 def test_canonical():
-    one = S(1)
+    c = [i.canonical for i in (
+        x + y < z,
+        x + 2 > 3,
+        x < 2,
+        S(2) > x,
+        x**2 > -x/y,
+        Gt(3, 2, evaluate=False)
+        )]
+    assert [i.canonical for i in c] == c
+    assert [i.reversed.canonical for i in c] == c
+    assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
 
-    def unchanged(v):
-        c = v.canonical
-        return v.is_Relational and c.is_Relational and v == c
-
-    def isreversed(v):
-        return v.canonical == v.reversed
-
-    assert unchanged(x < one)
-    assert unchanged(x <= one)
-    assert isreversed(Eq(one, x, evaluate=False))
-    assert unchanged(Eq(x, one, evaluate=False))
-    assert isreversed(Ne(one, x, evaluate=False))
-    assert unchanged(Ne(x, one, evaluate=False))
-    assert unchanged(x >= one)
-    assert unchanged(x > one)
-
-    assert unchanged(x < y)
-    assert unchanged(x <= y)
-    assert isreversed(Eq(y, x, evaluate=False))
-    assert unchanged(Eq(x, y, evaluate=False))
-    assert isreversed(Ne(y, x, evaluate=False))
-    assert unchanged(Ne(x, y, evaluate=False))
-    assert isreversed(x >= y)
-    assert isreversed(x > y)
-    assert (-x < 1).canonical == (x > -1)
-    assert isreversed(-x > y)
+    c = [i.reversed.func(i.rhs, i.lhs, evaluate=False).canonical for i in c]
+    assert [i.canonical for i in c] == c
+    assert [i.reversed.canonical for i in c] == c
+    assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
 
 
 @XFAIL
@@ -663,7 +668,7 @@ def test_issue_8444():
 
 
 def test_issue_10304():
-    d = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    d = cos(1)**2 + sin(1)**2 - 1
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
@@ -688,6 +693,7 @@ def test_issue_10401():
     assert Eq(inf/fin, 0) is F
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+    assert Eq(inf, -inf) is F
 
 
     assert Eq(fin/(fin + 1), 1) is S.false
@@ -704,3 +710,79 @@ def test_issue_10633():
     assert Eq(False, True) == False
     assert Eq(True, True) == True
     assert Eq(False, False) == True
+
+
+def test_issue_10927():
+    x = symbols('x')
+    assert str(Eq(x, oo)) == 'Eq(x, oo)'
+    assert str(Eq(x, -oo)) == 'Eq(x, -oo)'
+
+
+def test_issues_13081_12583_12534():
+    # 13081
+    r = Rational('905502432259640373/288230376151711744')
+    assert (r < pi) is S.false
+    assert (r > pi) is S.true
+    # 12583
+    v = sqrt(2)
+    u = sqrt(v) + 2/sqrt(10 - 8/sqrt(2 - v) + 4*v*(1/sqrt(2 - v) - 1))
+    assert (u >= 0) is S.true
+    # 12534; Rational vs NumberSymbol
+    # here are some precisions for which Rational forms
+    # at a lower and higher precision bracket the value of pi
+    # e.g. for p = 20:
+    # Rational(pi.n(p + 1)).n(25) = 3.14159265358979323846 2834
+    #                    pi.n(25) = 3.14159265358979323846 2643
+    # Rational(pi.n(p    )).n(25) = 3.14159265358979323846 1987
+    assert [p for p in range(20, 50) if
+            (Rational(pi.n(p)) < pi) and
+            (pi < Rational(pi.n(p + 1)))
+        ] == [20, 24, 27, 33, 37, 43, 48]
+    # pick one such precision and affirm that the reversed operation
+    # gives the opposite result, i.e. if x < y is true then x > y
+    # must be false
+    p = 20
+    # Rational vs NumberSymbol
+    G = [Rational(pi.n(i)) > pi for i in (p, p + 1)]
+    L = [Rational(pi.n(i)) < pi for i in (p, p + 1)]
+    assert G == [False, True]
+    assert all(i is not j for i, j in zip(L, G))
+    # Float vs NumberSymbol
+    G = [pi.n(i) > pi for i in (p, p + 1)]
+    L = [pi.n(i) < pi for i in (p, p + 1)]
+    assert G == [False, True]
+    assert all(i is not j for i, j in zip(L, G))
+    # Float vs Float
+    G = [pi.n(p) > pi.n(p + 1)]
+    L = [pi.n(p) < pi.n(p + 1)]
+    assert G == [True]
+    assert all(i is not j for i, j in zip(L, G))
+    # Float vs Rational
+    # the rational form is less than the floating representation
+    # at the same precision
+    assert [i for i in range(15, 50) if Rational(pi.n(i)) > pi.n(i)
+        ] == []
+    # this should be the same if we reverse the relational
+    assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))
+        ] == []
+
+
+def test_binary_symbols():
+    ans = set([x])
+    for f in Eq, Ne:
+        for t in S.true, S.false:
+            eq = f(x, S.true)
+            assert eq.binary_symbols == ans
+            assert eq.reversed.binary_symbols == ans
+        assert f(x, 1).binary_symbols == set()
+
+
+def test_rel_args():
+    # can't have Boolean args; this is automatic with Python 3
+    # so this test and the __lt__, etc..., definitions in
+    # relational.py and boolalg.py which are marked with ///
+    # can be removed.
+    for op in ['<', '<=', '>', '>=']:
+        for b in (S.true, x < 1, And(x, y)):
+            for v in (0.1, 1, 2**32, t, S(1)):
+                raises(TypeError, lambda: Relational(b, v, op))

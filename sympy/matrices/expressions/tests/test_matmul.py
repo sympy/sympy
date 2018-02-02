@@ -6,7 +6,7 @@ from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
-from sympy import refine, Q
+from sympy import refine, Q, Symbol
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -118,6 +118,10 @@ def test_collapse_MatrixBase():
 def test_refine():
     assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D
 
+    kC = k*C
+    assert refine(kC*C.T, Q.orthogonal(C)).doit() == k*Identity(n)
+    assert refine(kC* kC.T, Q.orthogonal(C)).doit() == (k**2)*Identity(n)
+
 def test_matmul_no_matrices():
     assert MatMul(1) == 1
     assert MatMul(n, m) == n*m
@@ -127,3 +131,7 @@ def test_matmul_args_cnc():
     a, b = symbols('a b', commutative=False)
     assert MatMul(n, a, b, A, A.T).args_cnc() == ([n], [a, b, A, A.T])
     assert MatMul(A, A.T).args_cnc() == ([1], [A, A.T])
+
+def test_issue_12950():
+    M = Matrix([[Symbol("x")]]) * MatrixSymbol("A", 1, 1)
+    assert MatrixSymbol("A", 1, 1).as_explicit()[0]*Symbol('x') == M.as_explicit()[0]

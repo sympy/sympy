@@ -288,6 +288,11 @@ def test_factor_terms():
     assert factor_terms(e, sign=False) == e
     assert factor_terms(exp(-4*x - 2) - x) == -x + exp(Mul(-2, 2*x + 1, evaluate=False))
 
+    # sum tests
+    assert factor_terms(Sum(x, (y, 1, 10))) == x * Sum(1, (y, 1, 10))
+    assert factor_terms(Sum(x, (y, 1, 10)) + x) == x * (1 + Sum(1, (y, 1, 10)))
+    assert factor_terms(Sum(x*y + x*y**2, (y, 1, 10))) == x*Sum(y*(y + 1), (y, 1, 10))
+
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
@@ -379,8 +384,11 @@ def test_monotonic_sign():
     assert F(-x) is None
     assert F(Dummy(prime=True)) == 2
     assert F(Dummy(prime=True, odd=True)) == 3
+    assert F(Dummy(composite=True)) == 4
+    assert F(Dummy(composite=True, odd=True)) == 9
     assert F(Dummy(positive=True, integer=True)) == 1
     assert F(Dummy(positive=True, even=True)) == 2
+    assert F(Dummy(positive=True, even=True, prime=False)) == 4
     assert F(Dummy(negative=True, integer=True)) == -1
     assert F(Dummy(negative=True, even=True)) == -2
     assert F(Dummy(zero=True)) == 0
