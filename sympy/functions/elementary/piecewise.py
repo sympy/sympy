@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
+from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number, Eq
 from sympy.core.basic import as_Basic
 from sympy.core.sympify import SympifyError
 from sympy.core.relational import Equality, Relational, _canonical
@@ -774,6 +774,10 @@ class Piecewise(Function):
                 if rhs is not None and cond not in (S.true, S.false):
                     lower = upper = rhs
                     cond = cond.subs(sym, lower)
+                    if cond is S.true:
+                        int_expr.append((rhs, rhs, expr.subs(sym, rhs), iarg))
+                        continue
+
                 # cond might have evaluated b/c of an Eq
                 if cond is S.true:
                     default = expr
@@ -804,7 +808,7 @@ class Piecewise(Function):
             int_expr.append(
                 (S.NegativeInfinity, S.Infinity, default, idefault))
 
-        return int_expr
+        return list(uniq(int_expr))
 
     def _eval_nseries(self, x, n, logx):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
