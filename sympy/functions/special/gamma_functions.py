@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, oo, pi, Dummy
+from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -10,6 +10,7 @@ from .error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 
@@ -487,9 +488,9 @@ class polygamma(Function):
     >>> polygamma(0, 1/S(2))
     -2*log(2) - EulerGamma
     >>> polygamma(0, 1/S(3))
-    -3*log(3)/2 - sqrt(3)*pi/6 - EulerGamma
+    -log(3) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3))
     >>> polygamma(0, 1/S(4))
-    -3*log(2) - pi/2 - EulerGamma
+    -pi/2 - log(4) - log(2) - EulerGamma
     >>> polygamma(0, 2)
     -EulerGamma + 1
     >>> polygamma(0, 23)
@@ -657,22 +658,13 @@ class polygamma(Function):
             if z is S.NaN:
                 return S.NaN
             elif z.is_Rational:
-                # TODO actually *any* n/m can be done, but that is messy
-                lookup = {S(1)/2: -2*log(2) - S.EulerGamma,
-                          S(1)/3: -S.Pi/2/sqrt(3) - 3*log(3)/2 - S.EulerGamma,
-                          S(1)/4: -S.Pi/2 - 3*log(2) - S.EulerGamma,
-                          S(3)/4: -3*log(2) - S.EulerGamma + S.Pi/2,
-                          S(2)/3: -3*log(3)/2 + S.Pi/2/sqrt(3) - S.EulerGamma}
-                if z > 0:
-                    n = floor(z)
-                    z0 = z - n
-                    if z0 in lookup:
-                        return lookup[z0] + Add(*[1/(z0 + k) for k in range(n)])
-                elif z < 0:
-                    n = floor(1 - z)
-                    z0 = z + n
-                    if z0 in lookup:
-                        return lookup[z0] - Add(*[1/(z0 - 1 - k) for k in range(n)])
+
+                p, q = z.as_numer_denom()
+
+                # only expand for small denominators to avoid creating long expressions
+                if q <= 5:
+                    return expand_func(polygamma(n, z, evaluate=False))
+
             elif z in (S.Infinity, S.NegativeInfinity):
                 return S.Infinity
             else:
@@ -708,6 +700,23 @@ class polygamma(Function):
                     else:
                         return Add(*tail)/coeff**(n + 1)
                 z *= coeff
+
+        if n == 0 and z.is_Rational:
+            p, q = z.as_numer_denom()
+
+            # Reference:
+            #   Values of the polygamma functions at rational arguments, J. Choi, 2007
+            part_1 = -S.EulerGamma - pi * cot(p * pi / q) / 2 - log(q) + Add(
+                *[cos(2 * k * pi * p / q) * log(2 * sin(k * pi / q)) for k in range(1, q)])
+
+            if z > 0:
+                n = floor(z)
+                z0 = z - n
+                return part_1 + Add(*[1 / (z0 + k) for k in range(n)])
+            elif z < 0:
+                n = floor(1 - z)
+                z0 = z + n
+                return part_1 - Add(*[1 / (z0 - 1 - k) for k in range(n)])
 
         return polygamma(n, z)
 
