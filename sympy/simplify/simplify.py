@@ -994,10 +994,16 @@ def logcombine(expr, force=False):
                 num, den = k, -k
                 if num.count_ops() > den.count_ops():
                     num, den = den, num
-                abc = int(log1.pop(num).args[0])
-                pqr = int(log1.pop(den).args[0])
-                xyz = abc/pqr
-                other.append(log(num*xyz , evaluate = False))
+                abc = log1.pop(num).args[0]
+                pqr = log1.pop(den).args[0]
+                if (abc.is_Number) and (pqr.is_Number) :
+                    abc1 = int(abc)
+                    pqr1 = int(pqr)
+                    xyz = (abc1/pqr1)
+                    other.append(log(num*xyz , evaluate = False))
+                else :
+                    xyz = abc/pqr
+                    other.append(log(num*xyz , evaluate = False))
             else:
                 other.append(k*log1.pop(k))
 
