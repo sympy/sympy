@@ -1,7 +1,7 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
     LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
-    besselj, besselk, bessely, jn
+    besselj, besselk, bessely, jn, tanh
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 from sympy.integrals.integrals import integrate
@@ -102,6 +102,8 @@ def test_heurisch_trigonometric():
     assert heurisch(1/(cos(x)+2), x) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
     assert heurisch(2*sin(x)*cos(x)/(sin(x)**4 + 1), x) == atan(sqrt(2)*sin(x)
         - 1) - atan(sqrt(2)*sin(x) + 1)
+
+    assert heurisch(1/cosh(x), x) == 2*atan(tanh(x/2))
 
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)
