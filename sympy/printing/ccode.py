@@ -553,7 +553,7 @@ class C89CodePrinter(CodePrinter):
     def _print_Print(self, expr, *args, **kwargs):
         return 'printf({fmt}, {pargs})'.format(
             fmt=self._print(expr.format_string, *args, **kwargs),
-            pargs= ', '.join(map(lambda arg: self._print(arg, *args, **kwargs), expr.print_args))
+            pargs=', '.join(map(lambda arg: self._print(arg, *args, **kwargs), expr.print_args))
         )
 
     def _print_FunctionPrototype(self, expr, *args, **kwargs):

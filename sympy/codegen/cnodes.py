@@ -8,6 +8,7 @@ from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
 from sympy.codegen.ast import Attribute, Declaration, Node, Statement, String, Token, Type, none, FunctionCall
 
+void = Type('void')
 
 restrict = Attribute('restrict')  # guarantees no pointer aliasing
 volatile = Attribute('volatile')

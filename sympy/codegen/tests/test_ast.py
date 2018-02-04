@@ -2,7 +2,7 @@ import math
 from sympy import (
     Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
 )
-from sympy.core.relational import Relational
+from sympy.core.relational import Relational, StrictLessThan
 from sympy.utilities.pytest import raises
 
 
@@ -319,12 +319,16 @@ def test_Pointer():
     assert p.func(*p.args) == p
 
     u = symbols('u', real=True)
-    py = Pointer(u, type=Type.from_expr(u), attrs={value_const, pointer_const})
-    assert py.symbol is u
-    assert py.type == real
-    assert value_const in py.attrs
-    assert pointer_const in py.attrs
-    assert py.func(*py.args) == py
+    pu = Pointer(u, type=Type.from_expr(u), attrs={value_const, pointer_const})
+    assert pu.symbol is u
+    assert pu.type == real
+    assert value_const in pu.attrs
+    assert pointer_const in pu.attrs
+    assert pu.func(*pu.args) == pu
+
+    i = symbols('i', integer=True)
+    deref = pu[i]
+    assert deref.indices == (i,)
 
 
 def test_Declaration():
@@ -333,6 +337,9 @@ def test_Declaration():
     assert Declaration(vu).variable.type == real
     vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
+
+    lt = vu < vn
+    assert isinstance(lt, StrictLessThan)
 
     vuc = Variable(u, Type.from_expr(u), value=3.0, attrs={value_const})
     assert value_const in vuc.attrs

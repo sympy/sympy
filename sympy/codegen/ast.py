@@ -117,12 +117,10 @@ There is a function constructing a loop (or a complete function) like this in
 
 """
 
-
-
 from __future__ import print_function, division
 
+from functools import total_ordering
 from itertools import chain
-
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -1190,6 +1188,7 @@ value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
 
 
+@total_ordering
 class Variable(Node):
     """ Represents a variable
 
@@ -1318,9 +1317,40 @@ class Variable(Node):
         kw.update(kwargs)
         return Declaration(self.func(**kw))
 
+    def __lt__(self, other):
+        try:
+            return self.symbol < other.symbol
+        except AttributeError:
+            return self.symbol < other
+
+    def __eq__(self, other):
+        try:
+            return self.symbol == other.symbol
+        except AttributeError:
+            return self.symbol == other
+
 
 class Pointer(Variable):
-    """ Represents a pointer. See ``Variable``. """
+    """ Represents a pointer. See ``Variable``.
+
+    Examples
+    ========
+
+    Can create instances of ``Element``:
+
+    >>> from sympy.codegen.ast import Pointer, Variable
+    >>> i = Variable('i')
+    >>> p = Pointer('x')
+    >>> p[i+1]
+    p[i+1]
+
+    """
+
+    def __getitem__(self, key):
+        try:
+            return Element(self.symbol, key)
+        except TypeError:
+            return Element(self.symbol, (key,))
 
 
 class Element(Token):
