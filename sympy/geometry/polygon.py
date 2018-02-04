@@ -565,7 +565,7 @@ class Polygon(GeometrySet):
         False
 
         References
-        =========
+        ==========
 
         [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
