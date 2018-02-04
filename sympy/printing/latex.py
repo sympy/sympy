@@ -796,25 +796,17 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_Min(self, expr, exp=None):
+    def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\min\left(%s\right)" % ", ".join(texargs)
+        tex = r"%s\left(%s\right)" % (self._print(expr.func), ", ".join(texargs))
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
-
-    def _print_Max(self, expr, exp=None):
-        args = sorted(expr.args, key=default_sort_key)
-        texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\max\left(%s\right)" % ", ".join(texargs)
-
-        if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
-        else:
-            return tex
+    _print_Min = _print_Max \
+    = _hprint_variadic_function
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
