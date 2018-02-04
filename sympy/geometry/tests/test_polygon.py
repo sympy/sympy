@@ -434,10 +434,10 @@ def test_issue_12966():
 
 def test_second_moment_of_area():
     x, y = symbols('x, y')
-    #triangle
+    # triangle
     p1, p2, p3 = [(0, 0), (4, 0), (0, 2)]
-    p=(0, 0)
-    #equation of hypotenuse
+    p = (0, 0)
+    # equation of hypotenuse
     eq_y = (1-x/4)*2
     I_yy = integrate((x**2) * (integrate(1, (y, 0, eq_y))), (x, 0, 4))
     I_xx = integrate(1 * (integrate(y**2, (y, 0, eq_y))), (x, 0, 4))
@@ -449,7 +449,7 @@ def test_second_moment_of_area():
     assert (I_yy - triangle.second_moment_of_area(p)[1]) == 0
     assert (I_xy - triangle.second_moment_of_area(p)[2]) == 0
 
-    #rectangle
+    # rectangle
     p1, p2, p3, p4=[(0, 0), (4, 0), (4, 2), (0, 2)]
     I_yy = integrate((x**2) * integrate(1, (y, 0, 2)), (x, 0, 4))
     I_xx = integrate(1 * integrate(y**2, (y, 0, 2)), (x, 0, 4))
