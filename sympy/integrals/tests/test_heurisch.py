@@ -130,8 +130,8 @@ def test_heurisch_radicals():
     assert heurisch(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
         2*sqrt(x)*cos(y*sqrt(x))/y
     assert heurisch_wrapper(sin(y*sqrt(x)), x) == Piecewise(
-        (0, Eq(y, 0)),
-        (-2*sqrt(x)*cos(sqrt(x)*y)/y + 2*sin(sqrt(x)*y)/y**2, True))
+        (-2*sqrt(x)*cos(sqrt(x)*y)/y + 2*sin(sqrt(x)*y)/y**2, Ne(y, 0)),
+        (0, True))
     y = Symbol('y', positive=True)
     assert heurisch_wrapper(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
         2*sqrt(x)*cos(y*sqrt(x))/y
@@ -151,8 +151,9 @@ def test_heurisch_symbolic_coeffs():
 def test_heurisch_symbolic_coeffs_1130():
     y = Symbol('y')
     assert heurisch_wrapper(1/(x**2 + y), x) == Piecewise(
-        (-1/x, Eq(y, 0)),
-        (-I*log(x - I*sqrt(y))/(2*sqrt(y)) + I*log(x + I*sqrt(y))/(2*sqrt(y)), True))
+        (-I*log(x - I*sqrt(y))/(2*sqrt(y))
+         + I*log(x + I*sqrt(y))/(2*sqrt(y)), Ne(y, 0)),
+        (-1/x, True))
     y = Symbol('y', positive=True)
     assert heurisch_wrapper(1/(x**2 + y), x) == (atan(x/sqrt(y))/sqrt(y))
 
@@ -198,8 +199,8 @@ def test_heurisch_wrapper():
     f = 1/(y - x)
     assert heurisch_wrapper(f, x) == -log(x - y)
     f = 1/((y - x)*(y + x))
-    assert heurisch_wrapper(f, x) == \
-        Piecewise((1/x, Eq(y, 0)), (log(x + y)/2/y - log(x - y)/2/y, True))
+    assert heurisch_wrapper(f, x) == Piecewise(
+        (-log(x - y)/(2*y) + log(x + y)/(2*y), Ne(y, 0)), (1/x, True))
     # issue 6926
     f = sqrt(x**2/((y - x)*(y + x)))
     assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \

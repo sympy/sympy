@@ -13,6 +13,7 @@ from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
+from sympy.core.function import UndefinedFunction, AppliedUndef
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -155,12 +156,23 @@ class LatexPrinter(Printer):
             "dot": r" \cdot ",
             "times": r" \times "
         }
-
-        self._settings['mul_symbol_latex'] = \
-            mul_symbol_table[self._settings['mul_symbol']]
-
-        self._settings['mul_symbol_latex_numbers'] = \
-            mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+        try:
+            self._settings['mul_symbol_latex'] = \
+                mul_symbol_table[self._settings['mul_symbol']]
+        except KeyError:
+            self._settings['mul_symbol_latex'] = \
+                self._settings['mul_symbol']
+        try:
+            self._settings['mul_symbol_latex_numbers'] = \
+                mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+        except KeyError:
+            if (self._settings['mul_symbol'].strip() in
+                    ['', ' ', '\\', '\\,', '\\:', '\\;', '\\quad']):
+                self._settings['mul_symbol_latex_numbers'] = \
+                    mul_symbol_table['dot']
+            else:
+                self._settings['mul_symbol_latex_numbers'] = \
+                    self._settings['mul_symbol']
 
         self._delim_dict = {'(': ')', '[': ']'}
 
@@ -255,6 +267,8 @@ class LatexPrinter(Printer):
         if expr.is_Relational:
             return True
         if any([expr.has(x) for x in (Mod,)]):
+            return True
+        if expr.is_Add:
             return True
         return False
 
@@ -598,41 +612,26 @@ class LatexPrinter(Printer):
         return self._print(expr.label)
 
     def _print_Derivative(self, expr):
-        dim = len(expr.variables)
         if requires_partial(expr):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
 
+        tex = ""
+        dim = 0
+        for x, num in reversed(expr.variable_count):
+            dim += num
+            if num == 1:
+                tex += r"%s %s" % (diff_symbol, self._print(x))
+            else:
+                tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), num)
 
         if dim == 1:
-            tex = r"\frac{%s}{%s %s}" % (diff_symbol, diff_symbol,
-                self._print(expr.variables[0]))
+            tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
-            multiplicity, i, tex = [], 1, ""
-            current = expr.variables[0]
+            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, dim, tex)
 
-            for symbol in expr.variables[1:]:
-                if symbol == current:
-                    i = i + 1
-                else:
-                    multiplicity.append((current, i))
-                    current, i = symbol, 1
-            else:
-                multiplicity.append((current, i))
-
-            for x, i in multiplicity:
-                if i == 1:
-                    tex += r"%s %s" % (diff_symbol, self._print(x))
-                else:
-                    tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), i)
-
-            tex = r"\frac{%s^{%s}}{%s} " % (diff_symbol, dim, tex)
-
-        if isinstance(expr.expr, AssocOp):
-            return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
-        else:
-            return r"%s %s" % (tex, self._print(expr.expr))
+        return r"%s %s" % (tex, self.parenthesize(expr.expr, PRECEDENCE["Mul"], strict=True))
 
     def _print_Subs(self, subs):
         expr, old, new = subs.args
@@ -698,7 +697,6 @@ class LatexPrinter(Printer):
             mindful of undercores in the name
         '''
         func = self._deal_with_super_sub(func)
-
         if func in accepted_latex_functions:
             name = r"\%s" % func
         elif len(func) == 1 or func.startswith('\\'):
@@ -720,8 +718,8 @@ class LatexPrinter(Printer):
         exp is an exponent
         '''
         func = expr.func.__name__
-
-        if hasattr(self, '_print_' + func):
+        if hasattr(self, '_print_' + func) and \
+            not isinstance(expr.func, UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
@@ -779,10 +777,24 @@ class LatexPrinter(Printer):
     def _print_UndefinedFunction(self, expr):
         return self._hprint_Function(str(expr))
 
-    def _print_FunctionClass(self, expr):
-        if hasattr(expr, '_latex_no_arg'):
-            return expr._latex_no_arg(self)
+    @property
+    def _special_function_classes(self):
+        from sympy.functions.special.tensor_functions import KroneckerDelta
+        from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.beta_functions import beta
+        from sympy.functions.special.delta_functions import DiracDelta
+        from sympy.functions.special.error_functions import Chi
+        return {KroneckerDelta: r'\delta',
+                gamma:  r'\Gamma',
+                lowergamma: r'\gamma',
+                beta: r'\operatorname{B}',
+                DiracDelta: r'\delta',
+                Chi: r'\operatorname{Chi}'}
 
+    def _print_FunctionClass(self, expr):
+        for cls in self._special_function_classes:
+            if issubclass(expr, cls) and expr.__name__ == cls.__name__:
+                return self._special_function_classes[cls]
         return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):
@@ -960,6 +972,15 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
+    def _print_beta(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"\operatorname{B}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{B}%s" % tex
+
     def _print_gamma(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
@@ -985,6 +1006,14 @@ class LatexPrinter(Printer):
             return r"\gamma^{%s}%s" % (exp, tex)
         else:
             return r"\gamma%s" % tex
+
+    def _print_Chi(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"\operatorname{Chi}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{Chi}%s" % tex
 
     def _print_expint(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[1])
@@ -1657,9 +1686,9 @@ class LatexPrinter(Printer):
         else:
             printset = tuple(s)
 
-        return (r"\left\["
+        return (r"\left["
               + r", ".join(self._print(el) for el in printset)
-              + r"\right\]")
+              + r"\right]")
 
     _print_SeqPer = _print_SeqFormula
     _print_SeqAdd = _print_SeqFormula

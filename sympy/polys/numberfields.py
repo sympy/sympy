@@ -813,8 +813,11 @@ __all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
-    for coeffs in variations([1, -1], n, repetition=True):
-        yield list(coeffs)
+    for coeffs in variations([1, -1, 2, -2, 3, -3], n, repetition=True):
+        # Two linear combinations with coeffs of opposite signs are
+        # opposites of each other. Hence it suffices to test only one.
+        if coeffs[0] > 0:
+            yield list(coeffs)
 
 
 @public

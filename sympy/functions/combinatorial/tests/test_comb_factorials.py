@@ -281,6 +281,8 @@ def test_binomial():
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
     nt = Symbol('nt', integer=False)
+    a = Symbol('a', integer=True, nonnegative=True)
+    b = Symbol('b', integer=True, nonnegative=True)
 
     assert binomial(0, 0) == 1
     assert binomial(1, 1) == 1
@@ -320,6 +322,8 @@ def test_binomial():
     assert binomial(x, nt).is_integer is False
 
     assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
+
+    assert binomial(a, b).is_nonnegative is True
 
 def test_binomial_diff():
     n = Symbol('n', integer=True)

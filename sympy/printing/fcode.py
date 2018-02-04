@@ -50,7 +50,9 @@ known_functions = {
     "exp": "exp",
     "erf": "erf",
     "Abs": "abs",
-    "conjugate": "conjg"
+    "conjugate": "conjg",
+    "Max": "max",
+    "Min": "min"
 }
 
 
@@ -292,7 +294,7 @@ class FCodePrinter(CodePrinter):
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:
-                # Fortan intrinsic sqrt() does not accept integer argument
+                # Fortran intrinsic sqrt() does not accept integer argument
                 if expr.base.is_Number:
                     return 'sqrt(%s.0d0)' % self._print(expr.base)
                 else:

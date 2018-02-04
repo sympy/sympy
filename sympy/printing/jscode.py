@@ -20,18 +20,26 @@ from sympy.core.compatibility import string_types, range
 # Used in JavascriptCodePrinter._print_Function(self)
 known_functions = {
     'Abs': 'Math.abs',
-    'sin': 'Math.sin',
-    'cos': 'Math.cos',
-    'tan': 'Math.tan',
     'acos': 'Math.acos',
+    'acosh': 'Math.acosh',
     'asin': 'Math.asin',
+    'asinh': 'Math.asinh',
     'atan': 'Math.atan',
     'atan2': 'Math.atan2',
+    'atanh': 'Math.atanh',
     'ceiling': 'Math.ceil',
-    'floor': 'Math.floor',
-    'sign': 'Math.sign',
+    'cos': 'Math.cos',
+    'cosh': 'Math.cosh',
     'exp': 'Math.exp',
+    'floor': 'Math.floor',
     'log': 'Math.log',
+    'Max': 'Math.max',
+    'Min': 'Math.min',
+    'sign': 'Math.sign',
+    'sin': 'Math.sin',
+    'sinh': 'Math.sinh',
+    'tan': 'Math.tan',
+    'tanh': 'Math.tanh',
 }
 
 
@@ -94,6 +102,8 @@ class JavascriptCodePrinter(CodePrinter):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'Math.sqrt(%s)' % self._print(expr.base)
+        elif expr.exp == S(1)/3:
+            return 'Math.cbrt(%s)' % self._print(expr.base)
         else:
             return 'Math.pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))

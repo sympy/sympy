@@ -286,7 +286,7 @@ def igcd_lehmer(a, b):
 
         # Elements of the Euclidean gcd sequence are linear
         # combinations of a and b with integer coefficients.
-        # Compute the coefficients of consequtive pairs
+        # Compute the coefficients of consecutive pairs
         #     a' = A*a + B*b, b' = C*a + D*b
         # using small integer arithmetic as far as possible.
         A, B, C, D = 1, 0, 0, 1  # initial values
@@ -1678,11 +1678,7 @@ class Rational(Number):
                 if (ne is S.One):
                     return Rational(self.q, self.p)
                 if self.is_negative:
-                    if expt.q != 1:
-                        return -(S.NegativeOne)**((expt.p % expt.q) /
-                               S(expt.q))*Rational(self.q, -self.p)**ne
-                    else:
-                        return S.NegativeOne**ne*Rational(self.q, -self.p)**ne
+                    return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
                 else:
                     return Rational(self.q, self.p)**ne
             if expt is S.Infinity:  # -oo already caught by test for negative
@@ -2223,11 +2219,7 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                if expt.q != 1:
-                    return -(S.NegativeOne)**((expt.p % expt.q) /
-                            S(expt.q))*Rational(1, -self)**ne
-                else:
-                    return (S.NegativeOne)**ne*Rational(1, -self)**ne
+                    return S.NegativeOne**expt*Rational(1, -self)**ne
             else:
                 return Rational(1, self.p)**ne
         # see if base is a perfect root, sqrt(4) --> 2
@@ -2248,11 +2240,9 @@ class Integer(Rational):
         if p is not False:
             dict = {p[0]: p[1]}
         else:
-            dict = Integer(self).factors(limit=2**15)
+            dict = Integer(b_pos).factors(limit=2**15)
 
         # now process the dict of factors
-        if self.is_negative:
-            dict[-1] = 1
         out_int = 1  # integer part
         out_rad = 1  # extracted radicals
         sqr_int = 1
@@ -2282,10 +2272,12 @@ class Integer(Rational):
                     break
         for k, v in sqr_dict.items():
             sqr_int *= k**(v//sqr_gcd)
-        if sqr_int == self and out_int == 1 and out_rad == 1:
+        if sqr_int == b_pos and out_int == 1 and out_rad == 1:
             result = None
         else:
             result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, expt.q))
+            if self.is_negative:
+                result *= Pow(S.NegativeOne, expt)
         return result
 
     def _eval_is_prime(self):

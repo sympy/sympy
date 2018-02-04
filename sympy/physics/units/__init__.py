@@ -41,7 +41,7 @@ from .dimensions import (
     force, frequency, impedance, inductance, length,
     luminous_intensity, magnetic_density,
     magnetic_flux, mass, momentum, power, pressure, temperature, time,
-    velocity, voltage, volume,
+    velocity, voltage, volume
 )
 
 Unit = Quantity
@@ -114,6 +114,9 @@ from .definitions import (
     weber, webers, Wb, wb,
     optical_power, dioptre, D,
     lux, lx,
+    katal, kat,
+    gray, Gy,
+    becquerel, Bq,
     km, kilometer, kilometers,
     dm, decimeter, decimeters,
     cm, centimeter, centimeters,

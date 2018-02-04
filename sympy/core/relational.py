@@ -665,7 +665,7 @@ class GreaterThan(_Greater):
         >>> S(1) < x
         1 < x
 
-        (2) use one of the wrappers or less succint methods described
+        (2) use one of the wrappers or less succinct methods described
         above
 
         >>> Lt(1, x)

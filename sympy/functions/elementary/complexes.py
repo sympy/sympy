@@ -4,14 +4,15 @@ from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
-from sympy.core.numbers import pi
+from sympy.core.numbers import pi, I, oo
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
 from sympy.core.logic import fuzzy_not
-from sympy.functions.elementary.exponential import exp, exp_polar
-from sympy.functions.elementary.trigonometric import atan2
+from sympy.functions.elementary.exponential import exp, exp_polar, log
+from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.integers import ceiling
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -46,7 +47,7 @@ class re(Function):
     """
 
     is_real = True
-    unbranched = True  # implicitely works on the projection to C
+    unbranched = True  # implicitly works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -142,7 +143,7 @@ class im(Function):
     """
 
     is_real = True
-    unbranched = True  # implicitely works on the projection to C
+    unbranched = True  # implicitly works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -224,13 +225,13 @@ class sign(Function):
     """
     Returns the complex sign of an expression:
 
-    If the expresssion is real the sign will be:
+    If the expression is real the sign will be:
 
         * 1 if expression is positive
         * 0 if expression is equal to zero
         * -1 if expression is negative
 
-    If the expresssion is imaginary the sign will be:
+    If the expression is imaginary the sign will be:
 
         * I if im(expression) is positive
         * -I if im(expression) is negative
@@ -367,7 +368,7 @@ class sign(Function):
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, arg):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         if arg.is_real:
             return Heaviside(arg)*2-1
 
@@ -571,7 +572,7 @@ class Abs(Function):
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         if arg.is_real:
             return arg*(Heaviside(arg) - Heaviside(-arg))
 
@@ -580,7 +581,6 @@ class Abs(Function):
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg):
-        from sympy import sign
         return arg/sign(arg)
 
 
@@ -608,6 +608,8 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
+        if isinstance(arg, exp_polar):
+            return periodic_argument(arg, oo)
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
             if arg_.is_Mul:
@@ -618,7 +620,7 @@ class arg(Function):
             arg_ = arg
         if arg_.atoms(AppliedUndef):
             return
-        x, y = re(arg_), im(arg_)
+        x, y = arg_.as_real_imag()
         rv = atan2(y, x)
         if rv.is_number:
             return rv
@@ -626,12 +628,12 @@ class arg(Function):
             return cls(arg_, evaluate=False)
 
     def _eval_derivative(self, t):
-        x, y = re(self.args[0]), im(self.args[0])
+        x, y = self.args[0].as_real_imag()
         return (x * Derivative(y, t, evaluate=True) - y *
                     Derivative(x, t, evaluate=True)) / (x**2 + y**2)
 
     def _eval_rewrite_as_atan2(self, arg):
-        x, y = re(self.args[0]), im(self.args[0])
+        x, y = self.args[0].as_real_imag()
         return atan2(y, x)
 
 
@@ -791,7 +793,7 @@ class polar_lift(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import exp_polar, pi, I, arg as argument
+        from sympy.functions.elementary.complexes import arg as argument
         if arg.is_number:
             ar = argument(arg)
             # In general we want to affirm that something is known,
@@ -860,7 +862,6 @@ class periodic_argument(Function):
 
     @classmethod
     def _getunbranched(cls, ar):
-        from sympy import exp_polar, log, polar_lift
         if ar.is_Mul:
             args = ar.args
         else:
@@ -887,7 +888,6 @@ class periodic_argument(Function):
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
         # period != 2*pi and non-polar numbers.
-        from sympy import ceiling, oo, atan2, atan, polar_lift, pi, Mul
         if not period.is_positive:
             return None
         if period == oo and isinstance(ar, principal_branch):
@@ -911,7 +911,6 @@ class periodic_argument(Function):
                 return unbranched - n
 
     def _eval_evalf(self, prec):
-        from sympy import ceiling, oo
         z, period = self.args
         if period == oo:
             unbranched = periodic_argument._getunbranched(z)
@@ -923,7 +922,6 @@ class periodic_argument(Function):
 
 
 def unbranched_argument(arg):
-    from sympy import oo
     return periodic_argument(arg, oo)
 
 
