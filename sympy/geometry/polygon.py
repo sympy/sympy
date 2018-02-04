@@ -375,7 +375,7 @@ class Polygon(GeometrySet):
         return Point(simplify(A*cx), simplify(A*cy))
 
 
-    def second_moment_of_area(self, p=None):
+    def second_moment_of_area(self, p='centroid'):
         """Returns the second moment and product moment of area of a two dimensional polygon.
 
         Parameters
@@ -426,7 +426,7 @@ class Polygon(GeometrySet):
         I_xx_c = (I_xx/12) - (A*(c_y**2))
         I_yy_c = (I_yy/12) - (A*(c_x**2))
         I_xy_c = (I_xy/24) - (A*(c_x*c_y))
-        if(p is None):
+        if(p == 'centroid'):
             return I_xx_c, I_yy_c, I_xy_c
 
         I_xx = (I_xx_c + A*((p[1]-c_y)**2))
