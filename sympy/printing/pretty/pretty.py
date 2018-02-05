@@ -2285,10 +2285,8 @@ def pretty_print(expr, **settings):
     use_unicode : bool or None, optional
         use unicode characters, such as the Greek letter pi instead of
         the string pi.
-    root_notation : bool, optional
-        use root form or fractional form for expressions having rational
-        roots of the form 1/n. Set to False for fractional form;
-        default is True.
+    root_notation : bool
+        use root form for powers with exponent of the form 1/n. Default is True.
     full_prec : bool or string, optional
         use full precision. Default to "auto"
     order : bool or string, optional
