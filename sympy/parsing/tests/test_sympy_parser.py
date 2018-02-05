@@ -2,7 +2,7 @@ from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, 
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
 from sympy.series import Limit
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
@@ -22,6 +22,8 @@ def test_sympy_parser():
         'x!!': factorial2(x),
         '(x + 1)! - 1': factorial(x + 1) - 1,
         '3.[3]': Rational(10, 3),
+        '.0[3]': Rational(1, 30),
+        '3.2[3]': Rational(97, 30),
         '10!': 3628800,
         '-(2)': -Integer(2),
         '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)],
@@ -57,6 +59,21 @@ def test_factorial_fail():
         except TokenError:
             assert True
 
+
+def test_repeated_fail():
+    inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1j[1]']
+
+    # All are valid Python, so only raise TypeError for invalid indexing
+    for text in inputs:
+        raises(TypeError, lambda: parse_expr(text))
+
+    inputs = ['0.1[', '0.1[1']
+    for text in inputs:
+        raises(TokenError, lambda: parse_expr(text))
+
+@XFAIL
+def test_repeated_dot_only():
+    assert parse_expr('.[1]') == Rational(1, 9)
 
 def test_local_dict():
     local_dict = {

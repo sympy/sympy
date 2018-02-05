@@ -8,14 +8,11 @@ from tokenize import (generate_tokens, untokenize, TokenError,
 from keyword import iskeyword
 
 import ast
-import re
 import unicodedata
 
 import sympy
 from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic
-
-_re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
 def _token_splittable(token):
     """
@@ -623,16 +620,88 @@ def convert_xor(tokens, local_dict, global_dict):
 
     return result
 
+def repeated_decimals(tokens, local_dict, global_dict):
+    """
+    Allows 0.2[1] notation to represent the repeated decimal 0.21... (19/90)
+
+    Run this before auto_number.
+
+    TODO: This would be much easier to implement as an AST transformer.
+    """
+    result = []
+
+    # num will running match any DECIMAL [ INTEGER ]
+    num = []
+    for toknum, tokval in tokens:
+        if toknum == NUMBER:
+            if (not num and '.' in tokval and 'e' not in tokval.lower() and
+                'j' not in tokval.lower() and 'x' not in tokval.lower()):
+                num.append((toknum, tokval))
+            elif tokval.isdecimal() and len(num) == 2:
+                num.append((toknum, tokval))
+            else:
+                num = []
+        elif toknum == OP:
+            if tokval == '[' and len(num) == 1:
+                num.append((OP, tokval))
+            elif tokval == ']' and len(num) == 3:
+                num.append((OP, tokval))
+            else:
+                num = []
+        else:
+            num = []
+
+        result.append((toknum, tokval))
+        if len(num) == 4:
+            # pre.post[repeatend] = a + b/c + d/e where a = pre, b/c = post,
+            # and d/e = repeatend
+            result = result[:-4]
+            pre, post = num[0][1].split('.')
+            repetend = num[2][1]
+
+            zeros = '0'*len(post)
+            post, repetends = [w.lstrip('0') for w in [post, repetend]]
+                                        # or else interpreted as octal
+
+            a = pre or '0'
+            b, c = post or '0', '1' + zeros
+            d, e = repetends, ('9'*len(repetend)) + zeros
+
+            seq = [
+                (OP, '('),
+                    (NAME, 'Integer'),
+                    (OP, '('),
+                        (NUMBER, a),
+                    (OP, ')'),
+                    (OP, '+'),
+                    (NAME, 'Rational'),
+                    (OP, '('),
+                        (NUMBER, b),
+                        (OP, ','),
+                        (NUMBER, c),
+                    (OP, ')'),
+                    (OP, '+'),
+                    (NAME, 'Rational'),
+                    (OP, '('),
+                        (NUMBER, d),
+                    (OP, ','),
+                    (NUMBER, e),
+                    (OP, ')'),
+                (OP, ')'),
+            ]
+            result.extend(seq)
+
+    return result
 
 def auto_number(tokens, local_dict, global_dict):
-    """Converts numeric literals to use SymPy equivalents.
+    """
+    Converts numeric literals to use SymPy equivalents.
 
-    Complex numbers use ``I``; integer literals use ``Integer``, float
-    literals use ``Float``, and repeating decimals use ``Rational``.
+    Complex numbers use ``I``, integer literals use ``Integer``, and float
+    literals use ``Float``.
 
     """
     result = []
-    prevtoken = ''
 
     for toknum, tokval in tokens:
         if toknum == NUMBER:
@@ -645,35 +714,8 @@ def auto_number(tokens, local_dict, global_dict):
 
             if '.' in number or (('e' in number or 'E' in number) and
                     not (number.startswith('0x') or number.startswith('0X'))):
-                match = _re_repeated.match(number)
-
-                if match is not None:
-                    # Clear repeating decimals, e.g. 3.4[31] -> (3 + 4/10 + 31/990)
-                    pre, post, repetend = match.groups()
-
-                    zeros = '0'*len(post)
-                    post, repetends = [w.lstrip('0') for w in [post, repetend]]
-                                                # or else interpreted as octal
-
-                    a = pre or '0'
-                    b, c = post or '0', '1' + zeros
-                    d, e = repetends, ('9'*len(repetend)) + zeros
-
-                    seq = [
-                        (OP, '('),
-                        (NAME,
-                         'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
-                        (OP, '+'),
-                        (NAME, 'Rational'), (OP, '('), (
-                            NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
-                        (OP, '+'),
-                        (NAME, 'Rational'), (OP, '('), (
-                            NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
-                        (OP, ')'),
-                    ]
-                else:
-                    seq = [(NAME, 'Float'), (OP, '('),
-                           (NUMBER, repr(str(number))), (OP, ')')]
+                seq = [(NAME, 'Float'), (OP, '('),
+                    (NUMBER, repr(str(number))), (OP, ')')]
             else:
                 seq = [(NAME, 'Integer'), (OP, '('), (
                     NUMBER, number), (OP, ')')]
@@ -683,7 +725,6 @@ def auto_number(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
-
 
 def rationalize(tokens, local_dict, global_dict):
     """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
@@ -773,7 +814,8 @@ def convert_equals_signs(result, local_dict, global_dict):
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations = (lambda_notation, auto_symbol, auto_number, factorial_notation)
+standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
+    factorial_notation)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):
