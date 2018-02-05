@@ -147,6 +147,12 @@ def test_issue_6308():
         x - (a0**2 + k**2)*atan(x/sqrt(a0**2 + 1))/sqrt(a0**2 + 1)
 
 
+def test_issue_5907():
+    a = symbols('a', real=True)
+    assert integrate(1/(x**2 + a**2)**2, x) == \
+         x/(2*a**4 + 2*a**2*x**2) + atan(x/a)/(2*a**3)
+
+
 def test_log_to_atan():
     f, g = (Poly(x + S(1)/2, x, domain='QQ'), Poly(sqrt(3)/2, x, domain='EX'))
     fg_ans = 2*atan(2*sqrt(3)*x/3 + sqrt(3)/3)
