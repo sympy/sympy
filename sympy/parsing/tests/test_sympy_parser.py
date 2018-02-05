@@ -25,6 +25,9 @@ def test_sympy_parser():
         '3.[3]': Rational(10, 3),
         '.0[3]': Rational(1, 30),
         '3.2[3]': Rational(97, 30),
+        '1 + 3.[3]': Rational(13, 3),
+        '1 + .0[3]': Rational(31, 30),
+        '1 + 3.2[3]': Rational(127, 30),
         '10!': 3628800,
         '-(2)': -Integer(2),
         '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)],
@@ -62,7 +65,7 @@ def test_factorial_fail():
 
 
 def test_repeated_fail():
-    inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1j[1]']
+    inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1j[1]', '1.1[1 + 1]']
 
     # All are valid Python, so only raise TypeError for invalid indexing
     for text in inputs:
@@ -74,6 +77,7 @@ def test_repeated_fail():
 
 def test_repeated_dot_only():
     assert parse_expr('.[1]') == Rational(1, 9)
+    assert parse_expr('1 + .[1]') == Rational(10, 9)
 
 def test_local_dict():
     local_dict = {
