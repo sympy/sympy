@@ -1,3 +1,5 @@
+import sys
+
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.core.compatibility import PY3
 from sympy.functions import exp, factorial, factorial2, sin
@@ -171,3 +173,10 @@ def test_unicode_names():
         skip("test_unicode_names can only pass in Python 3")
 
     assert parse_expr(u'α') == Symbol(u'α')
+
+def test_python3_features():
+    # Make sure the tokenizer can handle Python 3-only features
+    if sys.version_info < (3, 6):
+        skip("test_python3_features requires Python 3.6 or newer")
+
+    assert parse_expr("123_456") == 123456
