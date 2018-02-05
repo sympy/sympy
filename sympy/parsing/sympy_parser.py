@@ -646,6 +646,9 @@ def repeated_decimals(tokens, local_dict, global_dict):
                 num.append((OP, tokval))
             elif tokval == ']' and len(num) == 3:
                 num.append((OP, tokval))
+            elif tokval == '.' and not num:
+                # handle .[1]
+                num.append((NUMBER, '0.'))
             else:
                 num = []
         else:

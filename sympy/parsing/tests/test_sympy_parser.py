@@ -71,7 +71,6 @@ def test_repeated_fail():
     for text in inputs:
         raises(TokenError, lambda: parse_expr(text))
 
-@XFAIL
 def test_repeated_dot_only():
     assert parse_expr('.[1]') == Rational(1, 9)
 
