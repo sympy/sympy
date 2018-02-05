@@ -5,6 +5,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
@@ -275,18 +276,9 @@ class Product(ExprWithIntLimits):
             return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
-            p, q = term.as_numer_denom()
-            q = self._eval_product(q, (k, a, n))
-            if q.is_Number:
-
-                # There is expression, which couldn't change by
-                # as_numer_denom(). E.g. n**(2/3) + 1 --> (n**(2/3) + 1, 1).
-                # We have to catch this case.
-                from sympy.concrete.summations import Sum
-                p = exp(Sum(log(p), (k, a, n)))
-            else:
-                p = self._eval_product(p, (k, a, n))
-            return p / q
+            factored = factor_terms(term, fraction=True)
+            if factored.is_Mul:
+                return self._eval_product(factored, (k, a, n))
 
         elif term.is_Mul:
             exclude, include = [], []
