@@ -8,7 +8,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    atanh, sinh, tanh)
+    atanh, sinh, tanh, cosh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -1688,4 +1688,9 @@ def test_issue_13849():
 
 def test_issue_9606():
     n = Dummy('n')
-    assert solveset(sinh(x), x) == Union(ImageSet(Lambda(n, 2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))
+    # assert solveset(sinh(x), x) == Union(Intersection(ImageSet(Lambda(_n, 2*_n*I*pi), S.Integers), \
+        # Complexes(S.Reals x S.Reals, False)), Intersection(Complexes(S.Reals x S.Reals, False), \
+        # ImageSet(Lambda(_n, I*(2*_n*pi + pi)), S.Integers)))
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+    assert solveset(sinh(x)+cosh(x),x) == S.EmptySet
+    assert solveset(sinh(x)+cos(x),x) == ConditionSet(x, Eq(cos(x) + sinh(x), 0), S.Complexes)

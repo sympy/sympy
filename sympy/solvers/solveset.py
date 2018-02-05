@@ -426,6 +426,10 @@ def _solve_trig(f, symbol, domain):
 
 def _solve_trig1(f, symbol, domain):
     """Primary Helper to solve trigonometric equations """
+    if _is_function_class_equation(HyperbolicFunction, f, symbol):
+        cov = exp(symbol)
+    else:
+        cov = exp(I*symbol)
     f = trigsimp(f)
     f_original = f
     f = f.rewrite(exp)
@@ -434,14 +438,14 @@ def _solve_trig1(f, symbol, domain):
     y = Dummy('y')
     g, h = g.expand(), h.expand()
     g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
-    g, h = g.subs(exp(symbol), y), h.subs(exp(symbol), y)
+    g, h = g.subs(cov, y), h.subs(cov, y)
     if g.has(symbol) or h.has(symbol):
         return ConditionSet(symbol, Eq(f, 0), S.Reals)
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
 
     if isinstance(solns, FiniteSet):
-        result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
+        result = Union(*[invert_complex(cov, s, symbol)[1]
                        for s in solns])
         return Intersection(result, domain)
     elif solns is S.EmptySet:
