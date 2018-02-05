@@ -931,7 +931,8 @@ def test_solveset():
                                                   S.Integers)
     # issue 13825
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
-    assert solveset(x*Max(x, 15) - 10, x) == FiniteSet(S("2/3"))                                #issue 10158
+    #issue 10158
+    assert solveset(x*Max(x, 15) - 10, x) == FiniteSet(S("2/3"))
     assert solveset(x*Min(x, 15) - 10, x) == FiniteSet(-sqrt(10), sqrt(10))
 
 

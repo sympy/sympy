@@ -932,7 +932,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
-    if f.has(Max) or f.has(Min):
+    if not f.has(Abs):
         f = f.rewrite(Piecewise)
 
     if isinstance(f, Eq):
