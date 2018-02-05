@@ -994,7 +994,9 @@ def logcombine(expr, force=False):
                 num, den = k, -k
                 if num.count_ops() > den.count_ops():
                     num, den = den, num
-                other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0] , evaluate = False))
+                other.append(
+                    num*log(log1.pop(num).args[0]/log1.pop(den).args[0] ,
+                            evaluate = False))
             else:
                 other.append(k*log1.pop(k))
 
