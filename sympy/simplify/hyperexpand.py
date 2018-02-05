@@ -942,7 +942,7 @@ class Operator(object):
     *not* blindly differentiate but instead use a different representation
     of the z*d/dz operator (see make_derivative_operator).
 
-    To subclass from this, define a __init__ method that initalises a
+    To subclass from this, define a __init__ method that initializes a
     self._poly variable. This variable stores a polynomial. By convention
     the generator is z*d/dz, and acts to the right of all coefficients.
 

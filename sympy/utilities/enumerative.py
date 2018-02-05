@@ -730,7 +730,7 @@ class MultisetPartitionTraverser():
         """
         return self.pstack[self.f[self.lpart]:self.f[self.lpart + 1]]
 
-    # Same interface and funtionality as multiset_partitions_taocp(),
+    # Same interface and functionality as multiset_partitions_taocp(),
     # but some might find this refactored version easier to follow.
     def enum_all(self, multiplicities):
         """Enumerate the partitions of a multiset.

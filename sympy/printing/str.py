@@ -21,6 +21,7 @@ class StrPrinter(Printer):
         "order": None,
         "full_prec": "auto",
         "sympy_integers": False,
+        "abbrev": False,
     }
 
     _relationals = dict()
@@ -711,6 +712,8 @@ class StrPrinter(Printer):
         return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
+        if self._settings.get("abbrev", False):
+            return "%s" % expr.abbrev
         return "%s" % expr.name
 
     def _print_Quaternion(self, expr):
@@ -786,7 +789,8 @@ def sstr(expr, **settings):
     """Returns the expression as a string.
 
     For large expressions where speed is a concern, use the setting
-    order='none'.
+    order='none'. If abbrev=True setting is used then units are printed in
+    abbreviated form.
 
     Examples
     ========

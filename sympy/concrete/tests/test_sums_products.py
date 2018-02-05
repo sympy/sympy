@@ -279,6 +279,16 @@ def test_geometric_sums():
     assert Sum(1.0**n, (n, 1, oo)).doit() == oo
     assert Sum(2.43**n, (n, 1, oo)).doit() == oo
 
+    # Issue 13979:
+    i, k, q = symbols('i k q', integer=True)
+    result = summation(
+        exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
+    )
+    assert result.simplify() == Piecewise(
+            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
+    )
+
+
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
     assert summation(1/k, (k, 1, n)) == harmonic(n)

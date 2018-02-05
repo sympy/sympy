@@ -31,7 +31,7 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm, oo, I
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
+from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered, range
@@ -785,7 +785,7 @@ def frac_in(f, t, **kwargs):
     Returns the tuple (fa, fd), where fa and fd are Polys in t.
 
     This is a common idiom in the Risch Algorithm functions, so we abstract
-    it out here.  f should be a basic expresion, a Poly, or a tuple (fa, fd),
+    it out here.  f should be a basic expression, a Poly, or a tuple (fa, fd),
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
@@ -1511,8 +1511,8 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
         # XXX: Does qd = 0 always necessarily correspond to the exponential
         # equaling 1?
         ret += Piecewise(
-                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), Eq(qds, 0)),
-                (qas/qds, True)
+                (qas/qds, Ne(qds, 0)),
+                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), True)
             )
     else:
         ret += qas/qds

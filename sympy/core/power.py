@@ -52,6 +52,7 @@ def integer_nthroot(y, n):
     See Also
     ========
     sympy.ntheory.primetest.is_square
+    integer_log
     """
     y, n = as_int(y), as_int(n)
     if y < 0:
@@ -99,6 +100,60 @@ def integer_nthroot(y, n):
     return int(x), t == y  # int converts long to int if possible
 
 
+def integer_log(y, x):
+    """Returns (e, bool) where e is the largest nonnegative integer
+    such that |y| >= |x**e| and bool is True if y == x**e
+
+    Examples
+    ========
+
+    >>> from sympy import integer_log
+    >>> integer_log(125, 5)
+    (3, True)
+    >>> integer_log(17, 9)
+    (1, False)
+    >>> integer_log(4, -2)
+    (2, True)
+    >>> integer_log(-125,-5)
+    (3, True)
+
+    See Also
+    ========
+    integer_nthroot
+    sympy.ntheory.primetest.is_square
+    sympy.ntheory.factor_.multiplicity
+    sympy.ntheory.factor_.perfect_power
+    """
+    if x == 1:
+        raise ValueError('x cannot take value as 1')
+    if y == 0:
+        raise ValueError('y cannot take value as 0')
+
+    if x in (-2, 2):
+        x = int(x)
+        y = as_int(y)
+        e = y.bit_length() - 1
+        return e, x**e == y
+    if x < 0:
+        n, b = integer_log(y if y > 0 else -y, -x)
+        return n, b and bool(n % 2 if y < 0 else not n % 2)
+
+    x = as_int(x)
+    y = as_int(y)
+    r = e = 0
+    while y >= x:
+        d = x
+        m = 1
+        while y >= d:
+            y, rem = divmod(y, d)
+            r = r or rem
+            e += m
+            if y > d:
+                d *= d
+                m *= 2
+    return e, r == 0 and y == 1
+
+
 class Pow(Expr):
     """
     Defines the expression x**y as "x raised to a power y"
@@ -135,7 +190,9 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | 1**oo        | nan     | Because there are various cases where         |
     | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
-    | 1**zoo       |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    +--------------+---------+-----------------------------------------------+
+    | b**zoo       | nan     | Because b**z has no limit as z -> zoo         |
     +--------------+---------+-----------------------------------------------+
     | (-1)**oo     | nan     | Because of oscillations in the limit.         |
     | (-1)**(-oo)  |         |                                               |
@@ -193,6 +250,8 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
         if evaluate:
+            if e is S.ComplexInfinity:
+                return S.NaN
             if e is S.Zero:
                 return S.One
             elif e is S.One:

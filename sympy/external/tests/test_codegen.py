@@ -141,7 +141,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     assert language in main_template
     assert language in numerical_test_template
 
-    # Check that evironment variable makes sense
+    # Check that environment variable makes sense
     clean = os.getenv('SYMPY_TEST_CLEAN_TEMP', 'always').lower()
     if clean not in ('always', 'success', 'never'):
         raise ValueError("SYMPY_TEST_CLEAN_TEMP must be one of the following: 'always', 'success' or 'never'.")

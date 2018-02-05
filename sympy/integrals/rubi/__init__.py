@@ -4,7 +4,7 @@ rules to integrate an expression. All the transformation rules are compiled as a
 discrimination-net which helps in matching expression with the rule efficiently.
 
 Due to large number of rules, the module would normally take lot of time to load.
-Hence, it is better to use Rubi while doing multipe integrations.
+Hence, it is better to use Rubi while doing multiple integrations.
 
 Rules are taken from Rubi version 4.10.8.
 

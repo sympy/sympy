@@ -279,7 +279,7 @@ class AssocOp(Basic):
                     if not nc:
                         return True
                     elif len(nc) <= len(_nc):
-                        for i in range(len(_nc) - len(nc)):
+                        for i in range(len(_nc) - len(nc) + 1):
                             if _nc[i:i + len(nc)] == nc:
                                 return True
             return False

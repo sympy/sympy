@@ -499,7 +499,7 @@ class Function(Application, Expr):
     @property
     def is_commutative(self):
         """
-        Returns whether the functon is commutative.
+        Returns whether the function is commutative.
         """
         if all(getattr(t, 'is_commutative') for t in self.args):
             return True
@@ -1097,7 +1097,7 @@ class Derivative(Expr):
         else:
             return False
 
-    def __new__(cls, expr, *variables, **assumptions):
+    def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer
@@ -1192,9 +1192,7 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        # Pop evaluate because it is not really an assumption and we will need
-        # to track it carefully below.
-        evaluate = assumptions.pop('evaluate', False)
+        evaluate = kwargs.get('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
         # expression at all. Note, this cannot check non-symbols like
@@ -1219,10 +1217,7 @@ class Derivative(Expr):
             if evaluate:
                 #TODO: check if assumption of discontinuous derivatives exist
                 variable_count = cls._sort_variable_count(variable_count)
-            # Here we *don't* need to reinject evaluate into assumptions
-            # because we are done with it and it is not an assumption that
-            # Expr knows about.
-            obj = Expr.__new__(cls, expr, *variable_count, **assumptions)
+            obj = Expr.__new__(cls, expr, *variable_count)
             return obj
 
         # Compute the derivative now by repeatedly calling the
@@ -1242,35 +1237,23 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
+            elif (count < 0) == True:
+                obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-                    deriv_fun = derive_by_array
+                    # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
-                else:
-                    deriv_fun = lambda x, y: x._eval_derivative(y)
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                obj = expr
-                if count.is_Integer:
-                    for i in range(count):
-                        obj2 = deriv_fun(obj, v)
-                        if obj == obj2:
-                            break
-                        obj = obj2
-                        nderivs += 1
-                elif obj.is_Derivative:
-                    dict_var_count = dict(obj.variable_count)
-                    if v in dict_var_count:
-                        dict_var_count[v] += count
-                    else:
-                        dict_var_count[v] = count
-                    obj = Derivative(obj.expr, *dict_var_count.items())
-                    nderivs += count
-                else:
-                    obj = None
+                # Evaluate the derivative `n` times.  If
+                # `_eval_derivative_n_times` is not overridden by the current
+                # object, the default in `Basic` will call a loop over
+                # `_eval_derivative`:
+                obj = expr._eval_derivative_n_times(v, count)
+                nderivs += count
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1292,7 +1275,7 @@ class Derivative(Expr):
 
         if unhandled_variable_count:
             unhandled_variable_count = cls._sort_variable_count(unhandled_variable_count)
-            expr = Expr.__new__(cls, expr, *unhandled_variable_count, **assumptions)
+            expr = Expr.__new__(cls, expr, *unhandled_variable_count)
         else:
             # We got a Derivative at the end of it all, and we rebuild it by
             # sorting its variables.
@@ -1301,7 +1284,7 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variable_count(expr.args[1:])
                 )
 
-        if (nderivs > 1) == True and assumptions.get('simplify', True):
+        if (nderivs > 1) == True and kwargs.get('simplify', True):
             from sympy.core.exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
@@ -1399,6 +1382,19 @@ class Derivative(Expr):
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Integer
+        if isinstance(n, (int, Integer)):
+            # TODO: it would be desirable to squash `_eval_derivative` into
+            # this code.
+            return super(Derivative, self)._eval_derivative_n_times(s, n)
+        dict_var_count = dict(self.variable_count)
+        if s in dict_var_count:
+            dict_var_count[s] += n
+        else:
+            dict_var_count[s] = n
+        return Derivative(self.expr, *dict_var_count.items())
 
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we

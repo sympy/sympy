@@ -35,7 +35,7 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 
 
 warnings.showwarning = warn_with_traceback
-warnings.simplefilter('always', UserWarning)  # make sure to show warnings every time they occurr
+warnings.simplefilter('always', UserWarning)  # make sure to show warnings every time they occur
 
 
 def feq(a, b):
