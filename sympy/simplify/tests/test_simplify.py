@@ -468,6 +468,12 @@ def test_logcombine_complex_coeff():
     assert logcombine(i, force=True) == i
     assert logcombine(i + 2*log(x), force=True) == \
         i + log(x**2)
+        
+        
+def test_issue_5950():
+    assert logcombine(log(3) - log(2)) == log(3/2)
+    assert logcombine(log(x) - log(y)) == log(x/y)
+    assert logcombine(log(Rational(3,2) , evaluate = False) - log(2))
 
 
 def test_posify():
