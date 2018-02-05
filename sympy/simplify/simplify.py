@@ -982,7 +982,7 @@ def logcombine(expr, force=False):
         for k in list(log1.keys()):
             log1[Mul(*k)] = log(logcombine(Mul(*[
                 l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
-                force=force) , evaluate = False)
+                force=force), evaluate=False)
 
         # logs that have oppositely signed coefficients can divide
         for k in ordered(list(log1.keys())):
@@ -995,8 +995,8 @@ def logcombine(expr, force=False):
                 if num.count_ops() > den.count_ops():
                     num, den = den, num
                 other.append(
-                    num*log(log1.pop(num).args[0]/log1.pop(den).args[0] ,
-                            evaluate = False))
+                    num*log(log1.pop(num).args[0]/log1.pop(den).args[0],
+                            evaluate=False))
             else:
                 other.append(k*log1.pop(k))
 
