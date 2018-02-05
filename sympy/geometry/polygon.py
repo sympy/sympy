@@ -381,15 +381,10 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        p : Point, two-tuple of sympifiable objects, or None (default=None)
+        p : Point, two-tuple of sympifiable objects, or centroid(default=centroid)
             p is the point about which second moment of area is to be found.
-            if None, it will be calculated about the centroid of the polygon.
-
-        Notes
-        =====
-
-        If p is None then it will be calculated about the axis passing through
-        the centroid of the polygon.
+            if centroid, it will be calculated about the axis passing through the
+            centroid of the polygon.
 
         Examples
         ========
