@@ -146,15 +146,7 @@ class FCodePrinter(CodePrinter):
             expr = expr.xreplace(self.mangled_symbols)
 
         name = super(FCodePrinter, self)._print_Symbol(expr)
-
-        if name in self.reserved_words:
-            if self._settings['error_on_reserved']:
-                msg = ('This expression includes the symbol "{}" which is a '
-                       'reserved keyword in this language.')
-                raise ValueError(msg.format(name))
-            return name + self._settings['reserved_word_suffix']
-        else:
-            return name
+        return name
 
     def _rate_index_position(self, p):
         return -p*5
