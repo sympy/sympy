@@ -361,7 +361,7 @@ def log_to_real(h, q, x, t):
         R_v_paired = [] # take one from each pair of conjugate roots
         for r_v in R_v:
             if r_v not in R_v_paired and -r_v not in R_v_paired:
-                if r_v.is_negative:
+                if r_v.is_negative or r_v.could_extract_minus_sign():
                     R_v_paired.append(-r_v)
                 elif not r_v.is_zero:
                     R_v_paired.append(r_v)
