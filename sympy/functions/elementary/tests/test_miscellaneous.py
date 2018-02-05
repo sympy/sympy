@@ -1,4 +1,5 @@
 import itertools as it
+import warnings
 
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
@@ -7,11 +8,13 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
                                                       Max, real_root)
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.utilities.pytest import raises
-
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.pytest import raises, skip
+from sympy.external import import_module
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -333,6 +336,20 @@ def test_real_root():
     assert g.subs(dict(x=I, n=3)) == cbrt(I)
     assert g.subs(dict(x=-8, n=2)) == sqrt(-8)
     assert g.subs(dict(x=I, n=2)) == sqrt(I)
+
+
+def test_issue_11463():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+    x = Symbol('x')
+    f = lambdify(x, real_root((log(x/(x-2))), 3), 'numpy')
+    # numpy.select evaluates all options before considering conditions,
+    # so it raises a warning about root of negative number which does
+    # not affect the outcome. This warning is suppressed here
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        assert f(numpy.array(-1)) < -1
 
 
 def test_rewrite_MaxMin_as_Heaviside():

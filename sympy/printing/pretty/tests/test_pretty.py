@@ -11,9 +11,9 @@ from sympy import (
 from sympy.core.expr import UnevaluatedExpr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
-    Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
-    euler, exp, expint, factorial, factorial2, floor, hyper, log,
-    lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
+    Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
+    euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
+    meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
@@ -37,6 +37,9 @@ from sympy.core.compatibility import range
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 from sympy.tensor.functions import TensorProduct
 
+import sympy as sym
+class lowergamma(sym.lowergamma):
+    pass   # testing notation inheritance by a subclass with same name
 
 a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
 f = Function("f")
@@ -4803,11 +4806,31 @@ u("""\
 
 
 def test_gammas():
-    from sympy import gamma
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
     assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
+    assert xpretty(gamma, use_unicode=True) == u'Γ'
     assert xpretty(symbols('gamma', cls=Function)(x), use_unicode=True) == u'γ(x)'
+    assert xpretty(symbols('gamma', cls=Function), use_unicode=True) == u'γ'
+
+
+def test_beta():
+    assert xpretty(beta(x,y), use_unicode=True) == u'Β(x, y)'
+    assert xpretty(beta(x,y), use_unicode=False) == u'B(x, y)'
+    assert xpretty(beta, use_unicode=True) == u'Β'
+    assert xpretty(beta, use_unicode=False) == u'B'
+    mybeta = Function('beta')
+    assert xpretty(mybeta(x), use_unicode=True) == u'β(x)'
+    assert xpretty(mybeta(x, y, z), use_unicode=False) == u'beta(x, y, z)'
+    assert xpretty(mybeta, use_unicode=True) == u'β'
+
+
+# test that notation passes to subclasses of the same name only
+def test_function_subclass_different_name():
+    class mygamma(gamma):
+        pass
+    assert xpretty(mygamma, use_unicode=True) == r"mygamma"
+    assert xpretty(mygamma(x), use_unicode=True) == r"mygamma(x)"
 
 
 def test_SingularityFunction():

@@ -5,7 +5,7 @@ from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import log, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
@@ -271,6 +271,7 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
+        s, z = sympify((s, z))
         if z == 1:
             return zeta(s)
         elif z == -1:
@@ -297,6 +298,11 @@ class polylog(Function):
             return z/(1 - z)
         elif s == -1:
             return z/(1 - z)**2
+        # polylog is branched, but not over the unit disk
+        from sympy.functions.elementary.complexes import (Abs, unpolarify,
+            polar_lift)
+        if z.has(exp_polar, polar_lift) and (Abs(z) <= S.One) == True:
+            return cls(s, unpolarify(z))
 
     def fdiff(self, argindex=1):
         s, z = self.args

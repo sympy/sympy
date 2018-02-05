@@ -56,7 +56,9 @@ known_functions = {
     "exp": "exp",
     "erf": "erf",
     "Abs": "abs",
-    "conjugate": "conjg"
+    "conjugate": "conjg",
+    "Max": "max",
+    "Min": "min"
 }
 
 

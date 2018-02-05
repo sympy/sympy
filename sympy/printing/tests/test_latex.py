@@ -7,10 +7,10 @@ from sympy import (
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
-    assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
+    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
-    hyper, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
+    hyper, im, jacobi, laguerre, legendre, lerchphi, log,
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
@@ -18,7 +18,6 @@ from sympy import (
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
      UnevaluatedExpr, Quaternion)
-
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -38,6 +37,10 @@ from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+
+import sympy as sym
+class lowergamma(sym.lowergamma):
+    pass   # testing notation inheritance by a subclass with same name
 
 x, y, z, t, a, b, c = symbols('x y z t a b c')
 k, m, n = symbols('k m n', integer=True)
@@ -259,11 +262,18 @@ def test_latex_functions():
     assert latex(Li) == r'\operatorname{Li}'
     assert latex(Li(x)) == r'\operatorname{Li}{\left (x \right )}'
 
-    beta = Function('beta')
-
+    mybeta = Function('beta')
     # not to be confused with the beta function
-    assert latex(beta(x)) == r"\beta{\left (x \right )}"
-    assert latex(beta) == r"\beta"
+    assert latex(mybeta(x, y, z)) == r"\beta{\left (x,y,z \right )}"
+    assert latex(beta(x, y)) == r'\operatorname{B}\left(x, y\right)'
+    assert latex(mybeta(x)) == r"\beta{\left (x \right )}"
+    assert latex(mybeta) == r"\beta"
+
+    g = Function('gamma')
+    # not to be confused with the gamma function
+    assert latex(g(x, y, z)) == r"\gamma{\left (x,y,z \right )}"
+    assert latex(g(x)) == r"\gamma{\left (x \right )}"
+    assert latex(g) == r"\gamma"
 
     a1 = Function('a_1')
 
@@ -316,9 +326,9 @@ def test_latex_functions():
     assert latex(re(x + y)) == r"\Re{\left(x\right)} + \Re{\left(y\right)}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
-    assert latex(gamma(x)) == r"\Gamma{\left(x \right)}"
+    assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
-    assert latex(gamma(w)) == r"\Gamma{\left(w \right)}"
+    assert latex(gamma(w)) == r"\Gamma\left(w\right)"
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
@@ -370,9 +380,8 @@ def test_latex_functions():
     assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
-    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
-    assert latex(Chi(x)) == r'\operatorname{Chi}{\left (x \right )}'
-
+    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}\left(x\right)'
+    assert latex(Chi(x)) == r'\operatorname{Chi}\left(x\right)'
     assert latex(
         jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'
     assert latex(jacobi(n, a, b, x)**2) == r'\left(P_{n}^{\left(a,b\right)}\left(x\right)\right)^{2}'
@@ -444,6 +453,14 @@ def test_latex_functions():
     assert latex(fjlkd(x)) == r'\operatorname{fjlkd}{\left (x \right )}'
     # even when it is referred to without an argument
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
+
+
+# test that notation passes to subclasses of the same name only
+def test_function_subclass_different_name():
+    class mygamma(gamma):
+        pass
+    assert latex(mygamma) == r"\operatorname{mygamma}"
+    assert latex(mygamma(x)) == r"\operatorname{mygamma}{\left (x \right )}"
 
 
 def test_hyper_printing():
@@ -620,46 +637,46 @@ def test_latex_sequences():
     s1 = SeqFormula(a**2, (0, oo))
     s2 = SeqPer((1, 2))
 
-    latex_str = r'\left\[0, 1, 4, 9, \ldots\right\]'
+    latex_str = r'\left[0, 1, 4, 9, \ldots\right]'
     assert latex(s1) == latex_str
 
-    latex_str = r'\left\[1, 2, 1, 2, \ldots\right\]'
+    latex_str = r'\left[1, 2, 1, 2, \ldots\right]'
     assert latex(s2) == latex_str
 
     s3 = SeqFormula(a**2, (0, 2))
     s4 = SeqPer((1, 2), (0, 2))
 
-    latex_str = r'\left\[0, 1, 4\right\]'
+    latex_str = r'\left[0, 1, 4\right]'
     assert latex(s3) == latex_str
 
-    latex_str = r'\left\[1, 2, 1\right\]'
+    latex_str = r'\left[1, 2, 1\right]'
     assert latex(s4) == latex_str
 
     s5 = SeqFormula(a**2, (-oo, 0))
     s6 = SeqPer((1, 2), (-oo, 0))
 
-    latex_str = r'\left\[\ldots, 9, 4, 1, 0\right\]'
+    latex_str = r'\left[\ldots, 9, 4, 1, 0\right]'
     assert latex(s5) == latex_str
 
-    latex_str = r'\left\[\ldots, 2, 1, 2, 1\right\]'
+    latex_str = r'\left[\ldots, 2, 1, 2, 1\right]'
     assert latex(s6) == latex_str
 
-    latex_str = r'\left\[1, 3, 5, 11, \ldots\right\]'
+    latex_str = r'\left[1, 3, 5, 11, \ldots\right]'
     assert latex(SeqAdd(s1, s2)) == latex_str
 
-    latex_str = r'\left\[1, 3, 5\right\]'
+    latex_str = r'\left[1, 3, 5\right]'
     assert latex(SeqAdd(s3, s4)) == latex_str
 
-    latex_str = r'\left\[\ldots, 11, 5, 3, 1\right\]'
+    latex_str = r'\left[\ldots, 11, 5, 3, 1\right]'
     assert latex(SeqAdd(s5, s6)) == latex_str
 
-    latex_str = r'\left\[0, 2, 4, 18, \ldots\right\]'
+    latex_str = r'\left[0, 2, 4, 18, \ldots\right]'
     assert latex(SeqMul(s1, s2)) == latex_str
 
-    latex_str = r'\left\[0, 2, 4\right\]'
+    latex_str = r'\left[0, 2, 4\right]'
     assert latex(SeqMul(s3, s4)) == latex_str
 
-    latex_str = r'\left\[\ldots, 18, 4, 2, 0\right\]'
+    latex_str = r'\left[\ldots, 18, 4, 2, 0\right]'
     assert latex(SeqMul(s5, s6)) == latex_str
 
 
@@ -1566,6 +1583,7 @@ def test_builtin_without_args_mismatched_names():
 
 def test_builtin_no_args():
     assert latex(Chi) == r'\operatorname{Chi}'
+    assert latex(beta) == r'\operatorname{B}'
     assert latex(gamma) == r'\Gamma'
     assert latex(KroneckerDelta) == r'\delta'
     assert latex(DiracDelta) == r'\delta'

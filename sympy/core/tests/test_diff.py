@@ -1,5 +1,5 @@
 from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
-    Derivative, Expr, symbols, pi, I, S, diff
+    Derivative, Expr, symbols, pi, I, S, diff, Piecewise, Eq, ff, Sum
 from sympy.utilities.pytest import raises
 
 
@@ -123,3 +123,18 @@ def test_diff_nth_derivative():
     # Currently not supported (cannot determine if `n > 1`):
     #assert expr3.subs(Derivative(f(x), x), y) == Derivative(y, (x, n-1))
     assert expr3 == Derivative(f(x), (x, n))
+
+    assert diff(x, (x, n)) == Piecewise((x, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+    assert diff(2*x, (x, n)) == 2*Piecewise((x, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+    # TODO: assert diff(x**2, (x, n)) == x**(2-n)*ff(2, n)
+    exprm = x*sin(x)
+    mul_diff = diff(exprm, (x, n))
+    assert isinstance(mul_diff, Sum)
+    for i in range(5):
+        assert mul_diff.subs(n, i).doit() == exprm.diff((x, i)).expand()
+
+    exprm2 = 2*y*x*sin(x)*cos(x)*log(x)*exp(x)
+    dex = exprm2.diff((x, n))
+    assert isinstance(dex/2/y, Sum)
+    for i in range(7):
+        assert dex.subs(n, i).doit().expand() == exprm2.diff((x, i)).expand()

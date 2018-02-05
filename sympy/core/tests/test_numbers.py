@@ -1041,6 +1041,16 @@ def test_powers_Integer():
         -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
     assert (-3) ** Rational(-2, 3) == \
         -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
+    assert (-2) ** Rational(-10, 3) == \
+        (-1)**Rational(2, 3)*2**Rational(2, 3)/16
+    assert abs(Pow(-2, Rational(-10, 3)).n() -
+        Pow(-2, Rational(-10, 3), evaluate=False).n()) < 1e-16
+
+    # negative base and rational power with some simplification
+    assert (-8) ** Rational(2, 5) == \
+        2*(-1)**Rational(2, 5)*2**Rational(1, 5)
+    assert (-4) ** Rational(9, 5) == \
+        -8*(-1)**Rational(4, 5)*2**Rational(3, 5)
 
     assert S(1234).factors() == {617: 1, 2: 1}
     assert Rational(2*3, 3*5*7).factors() == {2: 1, 5: -1, 7: -1}
@@ -1115,6 +1125,10 @@ def test_powers_Rational():
         -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \
         -(-1)**Rational(1, 3)*2**Rational(2, 3)*3**Rational(1, 3)/3
+    assert Rational(-3, 2)**Rational(-10, 3) == \
+        8*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/81
+    assert abs(Pow(Rational(-2, 3), Rational(-7, 4)).n() -
+        Pow(Rational(-2, 3), Rational(-7, 4), evaluate=False).n()) < 1e-16
 
     # negative integer power and negative rational base
     assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
@@ -1213,6 +1227,14 @@ def test_issue_3423():
 def test_issue_3449():
     x = Symbol("x")
     assert sqrt(x - 1).subs(x, 5) == 2
+
+
+def test_issue_13890():
+    x = Symbol("x")
+    e = (-x/4 - S(1)/12)**x - 1
+    f = simplify(e)
+    a = S(9)/5
+    assert abs(e.subs(x,a).evalf() - f.subs(x,a).evalf()) < 1e-15
 
 
 def test_Integer_factors():

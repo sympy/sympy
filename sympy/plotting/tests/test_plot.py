@@ -1,5 +1,5 @@
 from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
-                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise)
+                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show
@@ -78,8 +78,27 @@ def plot_and_save(name):
 
     raises(ValueError, lambda: plot(x, y))
 
-    p = plot(Piecewise((1, x > 0), (0, True)),(x,-1,1))
+    #Piecewise plots
+    p = plot(Piecewise((1, x > 0), (0, True)), (x, -1, 1))
     p.save(tmp_file('%s_plot_piecewise' % name))
+    p._backend.close()
+
+    p = plot(Piecewise((x, x < 1), (x**2, True)), (x, -3, 3))
+    p.save(tmp_file('%s_plot_piecewise_2' % name))
+    p._backend.close()
+
+    # test issue 7471
+    p1 = plot(x)
+    p2 = plot(3)
+    p1.extend(p2)
+    p.save(tmp_file('%s_horizontal_line' % name))
+    p._backend.close()
+
+    # test issue 10925
+    f = Piecewise((-1, x < -1), (x, And(-1 <= x, x < 0)), \
+        (x**2, And(0 <= x, x < 1)), (x**3, x >= 1))
+    p = plot(f, (x, -3, 3))
+    p.save(tmp_file('%s_plot_piecewise_3' % name))
     p._backend.close()
 
     #parametric 2d plots.
