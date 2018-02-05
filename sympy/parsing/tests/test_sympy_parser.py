@@ -1,5 +1,5 @@
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
-from sympy.functions import exp, factorial, sin
+from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
 from sympy.series import Limit
 from sympy.utilities.pytest import raises
@@ -19,6 +19,8 @@ def test_sympy_parser():
         '2+3j': 2 + 3*I,
         'exp(x)': exp(x),
         'x!': factorial(x),
+        'x!!': factorial2(x),
+        '(x + 1)! - 1': factorial(x + 1) - 1,
         '3.[3]': Rational(10, 3),
         '10!': 3628800,
         '-(2)': -Integer(2),
