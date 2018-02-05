@@ -2,9 +2,8 @@
 
 from __future__ import print_function, division
 
-from .sympy_tokenize import \
-    generate_tokens, untokenize, TokenError, \
-    NUMBER, STRING, NAME, OP, ENDMARKER
+from tokenize import (generate_tokens, untokenize, TokenError,
+    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN)
 
 from keyword import iskeyword
 
