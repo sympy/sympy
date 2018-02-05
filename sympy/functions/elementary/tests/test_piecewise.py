@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
+    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
     factor_terms, DiracDelta, Heaviside)
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
@@ -928,13 +928,19 @@ def test_issue_4313():
 
 
 def test__intervals():
-    assert Piecewise((x + 2, Eq(x, 3)))._intervals(x) == [(3, 3, 5, 0)]
+    assert Piecewise((x + 2, Eq(x, 3)))._intervals(x) == []
     assert Piecewise(
         (1, x > x + 1),
         (Piecewise((1, x < x + 1)), 2*x < 2*x + 1),
         (1, True))._intervals(x) == [(-oo, oo, 1, 1)]
     assert Piecewise((1, Ne(x, I)), (0, True))._intervals(x) == [
         (-oo, oo, 1, 0)]
+    assert Piecewise((-cos(x), sin(x) >= 0), (cos(x), True)
+        )._intervals(x) == [(0, pi, -cos(x), 0), (-oo, oo, cos(x), 1)]
+    # the following tests that duplicates are removed and that non-Eq
+    # generated zero-width intervals are removed
+    assert Piecewise((1, Abs(x**(-2)) > 1), (0, True)
+        )._intervals(x) == [(-1, 0, 1, 0), (0, 1, 1, 0), (-oo, oo, 0, 1)]
 
 
 def test_containment():
@@ -1069,3 +1075,7 @@ def test_Piecewise_rewrite_as_ITE():
     # used to detect this
     raises(NotImplementedError, lambda: _ITE((x, x < y), (y, x >= a)))
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
+
+
+def test_issue_14052():
+    assert integrate(abs(sin(x)), (x, 0, 2*pi)) == 4
