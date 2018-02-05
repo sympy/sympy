@@ -3026,3 +3026,4 @@ def test_deprecated():
         P, Jcells = m.jordan_cells()
         assert Jcells[1] == Matrix(1, 1, [2])
         assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+        assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
