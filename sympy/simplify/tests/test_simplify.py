@@ -471,9 +471,9 @@ def test_logcombine_complex_coeff():
         
         
 def test_issue_5950():
-    assert logcombine(log(3) - log(2)) == log(3/2)
+    assert logcombine(log(3) - log(2)) == log(Rational(3,2), evaluate=False)
     assert logcombine(log(x) - log(y)) == log(x/y)
-    assert logcombine(log(Rational(3,2), evaluate=False) - log(2)) == log(3/4)
+    assert logcombine(log(Rational(3,2), evaluate=False) - log(2)) == log(Rational(3,4), evaluate=False)
 
 
 def test_posify():
