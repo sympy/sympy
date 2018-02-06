@@ -413,11 +413,19 @@ class LatexPrinter(Printer):
                     args = expr.args
 
                 for i, term in enumerate(args):
-                    term_tex = self._print(term)
+                    power = False
+                    if not term.is_Pow:
+                        term_tex = self._print(term)
+                    else:
+                        term_tex = self._print(term.args[0])
+                        term, power = term.args[0], term.args[1]
 
                     if self._needs_mul_brackets(term, first=(i == 0),
                                                 last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
+
+                    if power:
+                        term_tex = r"%s^{%s}" % (term_tex, power)
 
                     if _between_two_numbers_p[0].search(last_term_tex) and \
                             _between_two_numbers_p[1].match(term_tex):
