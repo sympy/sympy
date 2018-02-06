@@ -535,35 +535,27 @@ class Integral(AddWithLimits):
 
             if not isinstance(antideriv, Integral) and antideriv is not None:
                 sym = xab[0]
-                if antideriv.is_Add:
-                    terms = antideriv.args
-                else:
-                    terms = tuple((antideriv,))
-                for term in terms:
-                    atan_part = term.atoms(atan)
-                    for atan_term in atan_part:
-                        atan_arg = atan_term.args[0]
-                        # Checking `atan_arg` to be linear combination of `tan` or `cot`
-                        for tan_part in atan_arg.atoms(tan):
-                            x1 = Dummy('x1')
-                            tan_exp1 = atan_arg.subs(tan_part, x1)
-                            # The coefficient of `tan` should be constant
-                            coeff = tan_exp1.diff(x1)
-                            if x1 not in coeff.free_symbols:
-                                a = tan_part.args[0]
-                                nterm = term.subs(atan_term, Add(atan_term,
-                                    sign(coeff)*pi*floor((a-pi/2)/pi)))
-                                antideriv += nterm - term
-                        for cot_part in atan_arg.atoms(cot):
-                            x1 = Dummy('x1')
-                            cot_exp1 = atan_arg.subs(cot_part, x1)
-                            # The coefficient of `cot` should be constant
-                            coeff = cot_exp1.diff(x1)
-                            if x1 not in coeff.free_symbols:
-                                a = cot_part.args[0]
-                                nterm = term.subs(atan_term, Add(atan_term,
-                                    sign(coeff)*pi*floor((a)/pi)))
-                                antideriv += nterm - term
+                for atan_term in antideriv.atoms(atan):
+                    atan_arg = atan_term.args[0]
+                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
+                    for tan_part in atan_arg.atoms(tan):
+                        x1 = Dummy('x1')
+                        tan_exp1 = atan_arg.subs(tan_part, x1)
+                        # The coefficient of `tan` should be constant
+                        coeff = tan_exp1.diff(x1)
+                        if x1 not in coeff.free_symbols:
+                            a = tan_part.args[0]
+                            antideriv = antideriv.subs(atan_term, Add(atan_term,
+                                sign(coeff)*pi*floor((a-pi/2)/pi)))
+                    for cot_part in atan_arg.atoms(cot):
+                        x1 = Dummy('x1')
+                        cot_exp1 = atan_arg.subs(cot_part, x1)
+                        # The coefficient of `cot` should be constant
+                        coeff = cot_exp1.diff(x1)
+                        if x1 not in coeff.free_symbols:
+                            a = cot_part.args[0]
+                            antideriv = antideriv.subs(atan_term, Add(atan_term,
+                                sign(coeff)*pi*floor((a)/pi)))
 
             if antideriv is None:
                 undone_limits.append(xab)
