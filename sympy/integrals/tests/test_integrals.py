@@ -317,6 +317,18 @@ def test_issue_7450():
     assert re(ans) == S.Half and im(ans) == -S.Half
 
 
+def test_issue_8623():
+    assert integrate(cos(x)**2 / (1 + sin(x)**2), (x, 0, pi) == pi*(sqrt(2)-1)
+
+
+def test_issue_9569():
+    assert integrate(1 / (2 - cos(x)), (x, 0, pi) == pi/sqrt(3)
+
+
+def test_issue_13749():
+    assert integrate(1 / (2 + cos(x)), (x, 0, pi) == 2*pi/sqrt(3)
+
+
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
 
