@@ -635,16 +635,20 @@ def repeated_decimals(tokens, local_dict, global_dict):
     for toknum, tokval in tokens:
         if toknum == NUMBER:
             if (not num and '.' in tokval and 'e' not in tokval.lower() and
-                'j' not in tokval.lower() and 'x' not in tokval.lower()):
+                'j' not in tokval.lower()):
                 num.append((toknum, tokval))
             elif tokval.isdigit() and len(num) == 2:
+                num.append((toknum, tokval))
+            elif tokval.isdigit() and len(num) == 3 and num[-1][1].isdigit():
+                # Python 3 tokenizes 00123 as '00', '123'
+                # Python 3 tokenizes 01289 as '012', '89'
                 num.append((toknum, tokval))
             else:
                 num = []
         elif toknum == OP:
             if tokval == '[' and len(num) == 1:
                 num.append((OP, tokval))
-            elif tokval == ']' and len(num) == 3:
+            elif tokval == ']' and len(num) >= 3:
                 num.append((OP, tokval))
             elif tokval == '.' and not num:
                 # handle .[1]
@@ -655,12 +659,15 @@ def repeated_decimals(tokens, local_dict, global_dict):
             num = []
 
         result.append((toknum, tokval))
-        if len(num) == 4:
+
+        if num and num[-1][1] == ']':
             # pre.post[repetend] = a + b/c + d/e where a = pre, b/c = post,
             # and d/e = repetend
-            result = result[:-4]
+            result = result[:-len(num)]
             pre, post = num[0][1].split('.')
             repetend = num[2][1]
+            if len(num) == 5:
+                repetend += num[3][1]
 
             zeros = '0'*len(post)
             post, repetends = [w.lstrip('0') for w in [post, repetend]]
@@ -687,12 +694,13 @@ def repeated_decimals(tokens, local_dict, global_dict):
                     (NAME, 'Rational'),
                     (OP, '('),
                         (NUMBER, d),
-                    (OP, ','),
-                    (NUMBER, e),
+                        (OP, ','),
+                        (NUMBER, e),
                     (OP, ')'),
                 (OP, ')'),
             ]
             result.extend(seq)
+            num = []
 
     return result
 
