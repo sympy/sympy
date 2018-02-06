@@ -1,6 +1,7 @@
 from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.core import Integer, Float
 import inspect, re
 
 if matchpy:
@@ -198,7 +199,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
-    if isinstance(expr, int) or isinstance(expr, float):
+    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
 
     result = rubi.replace(Integral(expr, var))
