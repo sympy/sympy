@@ -136,7 +136,15 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         else:
             val = self.val
 
-        return self.__class__(val**exp)
+        m = self.mod
+        r = self.dom.one
+        while exp > 0:
+            if exp % 2:
+                r = (r * val) % m
+            val = (val * val) % m
+            exp //= 2
+
+        return self.__class__(r)
 
     def _compare(self, other, op):
         val = self._get_val(other)
