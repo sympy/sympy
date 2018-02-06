@@ -1,6 +1,9 @@
+from __future__ import print_function
+
 import os
 import subprocess
 import glob
+
 
 here = os.path.dirname(__file__)
 grammar_file = os.path.join(here, "LaTeX.g4")
@@ -26,7 +29,7 @@ def check_antlr_version(verbose=False):
     try:
         out = subprocess.check_output(["antlr4"]).decode("utf-8")
         if verbose:
-            print(out.split("\n")[0])
+            print("\t" + out.split("\n")[0])
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("The antlr4 command line tool is not installed, "
@@ -36,7 +39,7 @@ def check_antlr_version(verbose=False):
 
 
 def build_parser(output_dir=dir_latex_antlr, verbose=False):
-    check_antlr_version()
+    check_antlr_version(verbose=verbose)
 
     if verbose:
         print("Updating ANTLR-generated code in {}".format(output_dir))
@@ -65,8 +68,7 @@ def build_parser(output_dir=dir_latex_antlr, verbose=False):
 
     for path in glob.glob(os.path.join(output_dir, "LaTeX*.*")):
         offset = 0
-        new_path = os.path.join(output_dir,
-                                os.path.basename(path).lower())
+        new_path = os.path.join(output_dir, os.path.basename(path).lower())
         with open(new_path, "w+") as out_file:
             if path.endswith(".py"):
                 out_file.write(header)
