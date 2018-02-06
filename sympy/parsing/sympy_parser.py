@@ -622,7 +622,7 @@ def convert_xor(tokens, local_dict, global_dict):
 
 def repeated_decimals(tokens, local_dict, global_dict):
     """
-    Allows 0.2[1] notation to represent the repeated decimal 0.21... (19/90)
+    Allows 0.2[1] notation to represent the repeated decimal 0.2111... (19/90)
 
     Run this before auto_number.
 
