@@ -656,8 +656,8 @@ def repeated_decimals(tokens, local_dict, global_dict):
 
         result.append((toknum, tokval))
         if len(num) == 4:
-            # pre.post[repeatend] = a + b/c + d/e where a = pre, b/c = post,
-            # and d/e = repeatend
+            # pre.post[repetend] = a + b/c + d/e where a = pre, b/c = post,
+            # and d/e = repetend
             result = result[:-4]
             pre, post = num[0][1].split('.')
             repetend = num[2][1]
