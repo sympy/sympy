@@ -799,14 +799,15 @@ class LatexPrinter(Printer):
     def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"%s\left(%s\right)" % (self._print(expr.func), ", ".join(texargs))
+        tex = r"%s\left(%s\right)" % \
+            (self._print(expr.func), ", ".join(texargs))
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
-    _print_Min = _print_Max \
-    = _hprint_variadic_function
+
+    _print_Min = _print_Max = _hprint_variadic_function
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
