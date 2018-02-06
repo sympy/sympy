@@ -256,15 +256,13 @@ def test_not_parseable():
     from sympy.parsing.latex import parse_latex, LaTeXParsingError
     for latex_str in BAD_STRINGS:
         with pytest.raises(LaTeXParsingError):
-            print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
-                latex_str, parse_latex(latex_str)))
+            parse_latex(latex_str)
 
 
 def test_failing_not_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str in FAILING_BAD_STRINGS:
-        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
-            latex_str, parse_latex(latex_str)))
+        parse_latex(latex_str)
 
 
 def test_antlr_generation():
@@ -281,7 +279,6 @@ def test_antlr_generation():
 
         for filename in sorted(glob.glob(os.path.join(tmpdir, "*.*"))):
             base = os.path.basename(filename)
-            print("Comparing {}...".format(base))
             with open(filename) as generated:
                 with open(os.path.join(dir_latex_antlr, base)) as checked_in:
                     diff = difflib.context_diff(

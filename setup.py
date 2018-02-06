@@ -292,7 +292,7 @@ class antlr(Command):
 
     def run(self):
         from sympy.parsing.latex._build_latex_antlr import build_parser
-        if not build_parser():
+        if not build_parser(verbose=True):
             sys.exit(-1)
 
 

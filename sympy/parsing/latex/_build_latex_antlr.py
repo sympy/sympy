@@ -19,12 +19,14 @@ header = '''
 '''
 
 
-def check_antlr_version():
-    print("Checking antlr4 version...")
+def check_antlr_version(verbose=False):
+    if verbose:
+        print("Checking antlr4 version...")
 
     try:
-        print(subprocess.check_output(["antlr4"])
-              .decode('utf-8').split("\n")[0])
+        out = subprocess.check_output(["antlr4"]).decode("utf-8")
+        if verbose:
+            print(out.split("\n")[0])
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("The antlr4 command line tool is not installed, "
@@ -33,10 +35,11 @@ def check_antlr_version():
         return False
 
 
-def build_parser(output_dir=dir_latex_antlr):
+def build_parser(output_dir=dir_latex_antlr, verbose=False):
     check_antlr_version()
 
-    print("Updating ANTLR-generated code in {}".format(output_dir))
+    if verbose:
+        print("Updating ANTLR-generated code in {}".format(output_dir))
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -53,10 +56,13 @@ def build_parser(output_dir=dir_latex_antlr):
         "-no-listener",
     ]
 
-    print("Running code generation...\n\t$ {}".format(" ".join(args)))
+    if verbose:
+        print("Running code generation...\n\t$ {}".format(" ".join(args)))
     subprocess.check_output(args, cwd=output_dir)
 
-    print("Applying headers and renaming...")
+    if verbose:
+        print("Applying headers and renaming...")
+
     for path in glob.glob(os.path.join(output_dir, "LaTeX*.*")):
         offset = 0
         new_path = os.path.join(output_dir,
@@ -71,7 +77,8 @@ def build_parser(output_dir=dir_latex_antlr):
                     for line in in_file.readlines()[offset:]
                 ])
         os.unlink(path)
-        print("\t{}".format(new_path))
+        if verbose:
+            print("\t{}".format(new_path))
 
     return True
 
