@@ -510,12 +510,12 @@ class Number(AtomicExpr):
     Represents any kind of number in sympy.
 
     Floating point numbers are represented by the Float class.
-    Integer numbers (of any size), together with rational numbers (again,
-    there is no limit on their size) are represented by the Rational class.
+    Integer numbers (of any size) are represented by the Integer class.
+    Rational numbers (of any size) are represented by the Rational class.
 
-    If you want to represent, for example, ``1+sqrt(2)``, then you need to do::
+    For example, ``2/3 + sqrt(5)`` can be represented as::
 
-      Rational(1) + sqrt(Rational(2))
+      Rational(2, 3) + sqrt(Integer(5))
     """
     is_commutative = True
     is_number = True
