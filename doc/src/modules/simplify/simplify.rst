@@ -98,7 +98,7 @@ powdenest
 .. autofunction:: powdenest
 
 Combinatorial simplification
----------------------------
+----------------------------
 .. module:: sympy.simplify.combsimp
 
 combsimp
@@ -106,7 +106,7 @@ combsimp
 .. autofunction:: combsimp
 
 Square Root Denesting
-------------------
+---------------------
 .. module:: sympy.simplify.sqrtdenest
 
 sqrtdenest
@@ -114,7 +114,7 @@ sqrtdenest
 .. autofunction:: sqrtdenest
 
 Common Subexpression Elimination
--------------------------------
+--------------------------------
 .. module:: sympy.simplify.cse_main
 
 cse
