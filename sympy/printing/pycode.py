@@ -1,7 +1,7 @@
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
-from sympy.core import sympify
+from sympy.core import sympify, S
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -385,6 +385,9 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))
+
+    def _print_sinc(self, expr):
+        return "%s(%s)" % (self._module_format('numpy.sinc'), self._print(expr.args[0]/S.Pi))
 
     def _print_MatrixBase(self, expr):
         func = self.known_functions.get(expr.__class__.__name__, None)
