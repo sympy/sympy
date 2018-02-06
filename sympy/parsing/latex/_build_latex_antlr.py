@@ -4,8 +4,10 @@ import os
 import subprocess
 import glob
 
+from sympy.core.compatibility import FileNotFoundError
 
-here = os.path.dirname(__file__)
+
+here = os.path.abspath(os.path.dirname(__file__))
 grammar_file = os.path.join(here, "LaTeX.g4")
 dir_latex_antlr = os.path.join(here, "_antlr")
 
