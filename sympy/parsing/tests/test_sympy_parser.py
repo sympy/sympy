@@ -5,7 +5,7 @@ from sympy.core.compatibility import PY3
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
 from sympy.series import Limit
-from sympy.utilities.pytest import raises, XFAIL, skip
+from sympy.utilities.pytest import raises, skip
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
@@ -27,6 +27,7 @@ def test_sympy_parser():
         '3.[3]': Rational(10, 3),
         '.0[3]': Rational(1, 30),
         '3.2[3]': Rational(97, 30),
+        '1.3[12]': Rational(433, 330),
         '1 + 3.[3]': Rational(13, 3),
         '1 + .0[3]': Rational(31, 30),
         '1 + 3.2[3]': Rational(127, 30),
@@ -67,15 +68,15 @@ def test_factorial_fail():
 
 
 def test_repeated_fail():
-    inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1j[1]', '1.1[1 + 1]']
+    inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1j[1]', '1.1[1 + 1]', '0.1[[1]]']
 
     # All are valid Python, so only raise TypeError for invalid indexing
     for text in inputs:
         raises(TypeError, lambda: parse_expr(text))
 
-    inputs = ['0.1[', '0.1[1']
+    inputs = ['0.1[', '0.1[1', '0.1[]']
     for text in inputs:
-        raises(TokenError, lambda: parse_expr(text))
+        raises((TokenError, SyntaxError), lambda: parse_expr(text))
 
 def test_repeated_dot_only():
     assert parse_expr('.[1]') == Rational(1, 9)
