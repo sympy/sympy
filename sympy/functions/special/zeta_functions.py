@@ -159,7 +159,6 @@ class lerchphi(Function):
                 *[polylog(s, zet**k*root)._eval_expand_func(**hints)
                   / (unpolarify(zet)**k*root)**m for k in range(n)])
 
-        # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
         if isinstance(z, exp) and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
             if z == -1:
