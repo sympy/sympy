@@ -87,7 +87,7 @@ Newton's method::
     >>> from sympy.printing import pycode
     >>> py_str = pycode(whl)
     >>> print(py_str)
-    while abs(delta) > tol:
+    while (abs(delta) > tol):
         delta = (val**3 - math.cos(val))/(-3*val**2 - math.sin(val))
         val += delta
         print(val)
@@ -126,8 +126,8 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.compatibility import string_types
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Relational
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.relational import Relational, Lt, Le, Ge, Gt
+from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
 
@@ -1188,7 +1188,6 @@ value_const = Attribute('value_const')
 pointer_const = Attribute('pointer_const')
 
 
-@total_ordering
 class Variable(Node):
     """ Represents a variable
 
@@ -1317,17 +1316,19 @@ class Variable(Node):
         kw.update(kwargs)
         return Declaration(self.func(**kw))
 
-    def __lt__(self, other):
+    def _relation(self, rhs, op):
         try:
-            return self.symbol < other.symbol
-        except AttributeError:
-            return self.symbol < other
+            rhs = _sympify(rhs)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s < %s" % (self, rhs))
+        return op(self, rhs, evaluate=False)
 
-    def __eq__(self, other):
-        try:
-            return self.symbol == other.symbol
-        except AttributeError:
-            return self.symbol == other
+    __lt__ = lambda self, other: self._relation(other, Lt)
+    __le__ = lambda self, other: self._relation(other, Le)
+    __ge__ = lambda self, other: self._relation(other, Ge)
+    __gt__ = lambda self, other: self._relation(other, Gt)
+
+
 
 
 class Pointer(Variable):
@@ -1338,11 +1339,12 @@ class Pointer(Variable):
 
     Can create instances of ``Element``:
 
-    >>> from sympy.codegen.ast import Pointer, Variable
-    >>> i = Variable('i')
+    >>> from sympy import Symbol
+    >>> from sympy.codegen.ast import Pointer
+    >>> i = Symbol('i', integer=True)
     >>> p = Pointer('x')
     >>> p[i+1]
-    p[i+1]
+    Element(x, indices=((i + 1,),))
 
     """
 

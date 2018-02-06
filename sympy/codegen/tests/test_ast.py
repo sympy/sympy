@@ -338,7 +338,7 @@ def test_Declaration():
     vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
 
-    lt = vu < vn
+    lt = StrictLessThan(vu, vn)
     assert isinstance(lt, StrictLessThan)
 
     vuc = Variable(u, Type.from_expr(u), value=3.0, attrs={value_const})
