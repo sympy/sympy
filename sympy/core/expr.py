@@ -868,8 +868,11 @@ class Expr(Basic, EvalfMixin):
                 domain=domain)
             for logterm in self.atoms(log):
                 singularities = singularities | solveset(logterm.args[0], x,
-                domain=domain)
+                    domain=domain)
             for s in singularities:
+                if value is S.NaN:
+                    # no need to keep adding, it will stay NaN
+                    break
                 if not s.is_comparable:
                     continue
                 if (a < s) == (s < b) == True:
