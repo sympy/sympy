@@ -626,7 +626,6 @@ def repeated_decimals(tokens, local_dict, global_dict):
 
     Run this before auto_number.
 
-    TODO: This would be much easier to implement as an AST transformer.
     """
     result = []
 
