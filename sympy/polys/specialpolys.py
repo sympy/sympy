@@ -36,8 +36,16 @@ from sympy.core.compatibility import range
 @public
 def swinnerton_dyer_poly(n, x=None, polys=False):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.
-    Returns a Poly object when ``polys=True``, otherwise
-    (default) returns an expression.  """
+
+    Parameters
+    ----------
+    n : int
+        `n` decides the order of polynomial
+    x : optional
+    polys : bool, optional
+        ``polys=True`` returns an expression, otherwise
+        (default) returns an expression.
+    """
     from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
@@ -69,8 +77,16 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
 @public
 def cyclotomic_poly(n, x=None, polys=False):
     """Generates cyclotomic polynomial of order `n` in `x`.
-    Returns a Poly object when ``polys=True``, otherwise
-    (default) returns an expression. """
+
+    Parameters
+    ----------
+    n : int
+        `n` decides the order of polynomial
+    x : optional
+    polys : bool, optional
+        ``polys=True`` returns an expression, otherwise
+        (default) returns an expression.
+    """
     if n <= 0:
         raise ValueError(
             "can't generate cyclotomic polynomial of order %s" % n)
@@ -111,8 +127,25 @@ def symmetric_poly(n, *gens, **args):
 @public
 def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
     """Generates a polynomial of degree ``n`` with coefficients in
-    ``[inf, sup]``. Returns a Poly object when ``polys=True``,
-    otherwise (default) returns an expression. """
+    ``[inf, sup]``.
+
+    Parameters
+    ----------
+    x
+        `x` is the independent term of polynomial
+    n : int
+        `n` decides the order of polynomial
+    inf
+        Lower limit of range in which coefficients lie
+    sup
+        Upper limit of range in which coefficients lie
+    domain : optional
+         Decides what ring the coefficients are supposed
+         to belong. Default is set to Integers.
+    polys : bool, optional
+        ``polys=True`` returns an expression, otherwise
+        (default) returns an expression.
+    """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
 
     return poly if polys else poly.as_expr()
