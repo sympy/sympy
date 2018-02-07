@@ -7,6 +7,11 @@ import sys
 # by the command line will break.
 
 # hook in-tree SymPy into Python path, if possible
+print ("Viet Dung Nguyen")
+print ("Chad Boyer")
+print ("Ian Swire")
+print ("Will Ferrick")
+print ("Prosper Mapfeka")
 
 isympy_path = os.path.abspath(__file__)
 isympy_dir = os.path.dirname(isympy_path)
