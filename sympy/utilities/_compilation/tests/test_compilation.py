@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
 
+import shutil
 from sympy.external import import_module
 from sympy.utilities.pytest import skip
 
@@ -48,8 +49,13 @@ def test_compile_link_import_strings():
         skip("cython not installed.")
 
     compile_kw = dict(std='c99', include_dirs=[numpy.get_include()])
-    mod = compile_link_import_strings(_sources1, compile_kwargs=compile_kw)
-    data = numpy.random.random(1024*1024*8)  # 64 MB of RAM needed..
-    res_mod = mod.sigmoid(data)
-    res_npy = npy(data)
-    assert numpy.allclose(res_mod, res_npy)
+    info = None
+    try:
+        mod, info = compile_link_import_strings(_sources1, compile_kwargs=compile_kw)
+        data = numpy.random.random(1024*1024*8)  # 64 MB of RAM needed..
+        res_mod = mod.sigmoid(data)
+        res_npy = npy(data)
+        assert numpy.allclose(res_mod, res_npy)
+    finally:
+        if info and info['build_dir']:
+            shutil.rmtree(info['build_dir'])

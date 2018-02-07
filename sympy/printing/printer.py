@@ -235,7 +235,7 @@ class Printer(object):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, *args, **kwargs):
+    def _print(self, expr, **kwargs):
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -250,7 +250,7 @@ class Printer(object):
             # should be printed, use that method.
             if (self.printmethod and hasattr(expr, self.printmethod)
                     and not isinstance(expr, BasicMeta)):
-                return getattr(expr, self.printmethod)(self, *args, **kwargs)
+                return getattr(expr, self.printmethod)(self, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
@@ -271,7 +271,7 @@ class Printer(object):
             for cls in classes:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
-                    return getattr(self, printmethod)(expr, *args, **kwargs)
+                    return getattr(self, printmethod)(expr, **kwargs)
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
         finally:

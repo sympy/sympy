@@ -103,7 +103,7 @@ class GLSLPrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-    def _print_MatrixBase(self, mat, *args, **kwargs):
+    def _print_MatrixBase(self, mat, **kwargs):
         mat_separator = self._settings['mat_separator']
         mat_transpose = self._settings['mat_transpose']
         glsl_types = self._settings['glsl_types']
@@ -111,7 +111,7 @@ class GLSLPrinter(CodePrinter):
         A = mat.transpose() if mat_transpose != column_vector else mat
 
         if A.cols == 1:
-            return self._print(A[0], *args, **kwargs);
+            return self._print(A[0], **kwargs);
         if A.rows <= 4 and A.cols <= 4 and glsl_types:
             if A.rows == 1:
                 return 'vec%s%s' % (A.cols, A.table(self,rowstart='(',rowend=')'))
@@ -147,7 +147,7 @@ class GLSLPrinter(CodePrinter):
             cols,rows = mat.shape
         return ((i, j) for i in range(cols) for j in range(rows))
 
-    def _print_MatrixElement(self, expr, *args, **kwargs):
+    def _print_MatrixElement(self, expr, **kwargs):
         # print('begin _print_MatrixElement')
         nest = self._settings['mat_nested'];
         glsl_types = self._settings['glsl_types'];
@@ -158,7 +158,7 @@ class GLSLPrinter(CodePrinter):
         else:
             rows,cols = expr.parent.shape
             i,j = expr.i,expr.j
-        pnt = self._print(expr.parent, *args, **kwargs)
+        pnt = self._print(expr.parent, **kwargs)
         if glsl_types and ((rows <= 4 and cols <=4) or nest):
             # print('end _print_MatrixElement case A',nest,glsl_types)
             return "%s[%s][%s]" % (pnt, i, j)
@@ -166,8 +166,8 @@ class GLSLPrinter(CodePrinter):
             # print('end _print_MatrixElement case B',nest,glsl_types)
             return "{0}[{1}]".format(pnt, i + j*rows)
 
-    def _print_list(self, expr, *args, **kwargs):
-        l = ', '.join(self._print(item, *args, **kwargs) for item in expr)
+    def _print_list(self, expr, **kwargs):
+        l = ', '.join(self._print(item, **kwargs) for item in expr)
         glsl_types = self._settings['glsl_types']
         if len(expr) <= 4 and glsl_types:
             return 'vec%s(%s)' % (len(expr),l)
@@ -190,7 +190,7 @@ class GLSLPrinter(CodePrinter):
             close_lines.append("}")
         return open_lines, close_lines
 
-    def _print_Function_with_args(self, func, func_args, *args, **kwargs):
+    def _print_Function_with_args(self, func, func_args, **kwargs):
         if func in self.known_functions:
             cond_func = self.known_functions[func]
             func = None
@@ -207,11 +207,11 @@ class GLSLPrinter(CodePrinter):
                     return "%s(%s)" % (func, self.stringify(func_args, ", "))
         elif isinstance(func, Lambda):
             # inlined function
-            return self._print(func(*func_args), *args, **kwargs)
+            return self._print(func(*func_args), **kwargs)
         else:
             return self._print_not_supported(func)
 
-    def _print_Piecewise(self, expr, *args, **kwargs):
+    def _print_Piecewise(self, expr, **kwargs):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
@@ -224,12 +224,12 @@ class GLSLPrinter(CodePrinter):
         if expr.has(Assignment):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
-                    lines.append("if (%s) {" % self._print(c, *args, **kwargs))
+                    lines.append("if (%s) {" % self._print(c, **kwargs))
                 elif i == len(expr.args) - 1 and c == True:
                     lines.append("else {")
                 else:
-                    lines.append("else if (%s) {" % self._print(c, *args, **kwargs))
-                code0 = self._print(e, *args, **kwargs)
+                    lines.append("else if (%s) {" % self._print(c, **kwargs))
+                code0 = self._print(e, **kwargs)
                 lines.append(code0)
                 lines.append("}")
             return "\n".join(lines)
@@ -238,16 +238,16 @@ class GLSLPrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c, *args, **kwargs),
-                                               self._print(e, *args, **kwargs))
+            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c, **kwargs),
+                                               self._print(e, **kwargs))
                     for e, c in expr.args[:-1]]
-            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr, *args, **kwargs)
+            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr, **kwargs)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
-    def _print_Idx(self, expr, *args, **kwargs):
-        return self._print(expr.label, *args, **kwargs)
+    def _print_Idx(self, expr, **kwargs):
+        return self._print(expr.label, **kwargs)
 
-    def _print_Indexed(self, expr, *args, **kwargs):
+    def _print_Indexed(self, expr, **kwargs):
         # calculate index for 1d array
         dims = expr.shape
         elem = S.Zero
@@ -255,63 +255,63 @@ class GLSLPrinter(CodePrinter):
         for i in reversed(range(expr.rank)):
             elem += expr.indices[i]*offset
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label, *args, **kwargs),
-                           self._print(elem, *args, **kwargs))
+        return "%s[%s]" % (self._print(expr.base.label, **kwargs),
+                           self._print(elem, **kwargs))
 
-    def _print_Pow(self, expr, *args, **kwargs):
+    def _print_Pow(self, expr, **kwargs):
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return 'sqrt(%s)' % self._print(expr.base, *args, **kwargs)
+            return 'sqrt(%s)' % self._print(expr.base, **kwargs)
         else:
             try:
-                e = self._print(float(expr.exp), *args, **kwargs)
+                e = self._print(float(expr.exp), **kwargs)
             except TypeError:
-                e = self._print(expr.exp, *args, **kwargs)
+                e = self._print(expr.exp, **kwargs)
             # return self.known_functions['pow']+'(%s, %s)' % (self._print(expr.base),e)
             return self._print_Function_with_args('pow', (
-                self._print(expr.base, *args, **kwargs),
+                self._print(expr.base, **kwargs),
                 e
-            ), *args, **kwargs)
+            ), **kwargs)
 
-    def _print_int(self, expr, *args, **kwargs):
+    def _print_int(self, expr, **kwargs):
         return str(float(expr))
 
-    def _print_Rational(self, expr, *args, **kwargs):
+    def _print_Rational(self, expr, **kwargs):
         return "%s.0/%s.0" % (expr.p, expr.q)
 
-    def _print_Add(self, expr, order=None, *args, **kwargs):
+    def _print_Add(self, expr, order=None, **kwargs):
         if(self._settings['use_operators']):
-            return CodePrinter._print_Add(self,expr,order, *args, **kwargs)
+            return CodePrinter._print_Add(self, expr, order=order, **kwargs)
 
         terms = expr.as_ordered_terms()
 
         def partition(p,l):
             return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))
         def add(a,b):
-            return self._print_Function_with_args('add', (a, b), *args, **kwargs)
+            return self._print_Function_with_args('add', (a, b), **kwargs)
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
-        s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t, *args, **kwargs),pos))
+        s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t, **kwargs),pos))
         if(len(neg) > 0):
             # sum the absolute values of the negative terms
-            neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n, *args, **kwargs),neg))
+            neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n, **kwargs),neg))
             # then subtract them from the positive terms
-            s = self._print_Function_with_args('sub', (pos,neg), *args, **kwargs)
+            s = self._print_Function_with_args('sub', (pos,neg), **kwargs)
             # s = self.known_functions['sub']+'(%s, %s)' % (pos,neg)
         return s
 
-    def _print_Mul(self, expr, *args, **kwargs):
+    def _print_Mul(self, expr, **kwargs):
         order = kwargs.get('order', None)
         if(self._settings['use_operators']):
-            return CodePrinter._print_Mul(self, expr, *args, **kwargs)
+            return CodePrinter._print_Mul(self, expr, **kwargs)
         terms = expr.as_ordered_factors()
         def mul(a,b):
             # return self.known_functions['mul']+'(%s, %s)' % (a,b)
-            return self._print_Function_with_args('mul', (a,b), *args, **kwargs)
+            return self._print_Function_with_args('mul', (a,b), **kwargs)
 
-        s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t, *args, **kwargs), terms))
+        s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t, **kwargs), terms))
         return s
 
 def glsl_code(expr,assign_to=None,**settings):

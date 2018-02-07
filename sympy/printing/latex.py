@@ -504,14 +504,14 @@ class LatexPrinter(Printer):
             if '^' in base and expr.base.is_Symbol:
                 base = r"\left(%s\right)" % base
             if expr.base.is_Function:
-                return self._print(expr.base, "%s/%s" % (p, q))
+                return self._print(expr.base, exp="%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
             # Things like 1/x
             return self._print_Mul(expr)
         else:
             if expr.base.is_Function:
-                return self._print(expr.base, self._print(expr.exp))
+                return self._print(expr.base, exp=self._print(expr.exp))
             else:
                 if expr.is_commutative and expr.exp == -1:
                     #solves issue 4129
