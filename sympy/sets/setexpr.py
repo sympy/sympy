@@ -1,10 +1,11 @@
 from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import sift, latex, Min, Max, Set, sympify, Lambda, symbols
-from sympy.sets import imageset, Interval, FiniteSet, Union, ImageSet, ProductSet
+from sympy import latex, Min, Max, Set, sympify, Lambda, symbols
+from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
+        ProductSet)
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.multipledispatch import dispatch, Dispatcher
-
-from itertools import count
+from sympy.sets.dispatchers import (add_sets, sub_sets, mul_sets, div_sets,
+        pow_sets, function_sets)
 
 
 d = Dummy('d')
@@ -90,140 +91,8 @@ class SetExpr(Expr):
     __rtruediv__ = __rdiv__
 
     def _eval_func(self, func):
-        return SetExpr(imageset(func, self.set))
-
-
-_x, _y = symbols("x y")
-
-
-@dispatch(Set, Set)
-def add_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x+_y)), ProductSet(x, y))
-
-
-@dispatch(Expr, Expr)
-def add_sets(x, y):
-    return x+y
-
-
-@dispatch(Interval, Interval)
-def add_sets(x, y):
-    """
-    Additions in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    return Interval(x.start + y.start, x.end + y.end,
-        x.left_open or y.left_open, x.right_open or y.right_open)
-
-
-@dispatch(Expr, Expr)
-def sub_sets(x, y):
-    return x-y
-
-
-@dispatch(Set, Set)
-def sub_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x - _y)), ProductSet(x, y))
-
-
-@dispatch(Interval, Interval)
-def sub_sets(x, y):
-    """
-    Subtractions in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    return Interval(x.start - y.end, x.end - y.start,
-        x.left_open or y.right_open, x.right_open or y.left_open)
-
-
-@dispatch(Set, Set)
-def mul_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x * _y)), ProductSet(x, y))
-
-
-@dispatch(Expr, Expr)
-def mul_sets(x, y):
-    return x*y
-
-
-@dispatch(Interval, Interval)
-def mul_sets(x, y):
-    """
-    Multiplications in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    comvals = (
-        (x.start * y.start, bool(x.left_open or y.left_open)),
-        (x.start * y.end, bool(x.left_open or y.right_open)),
-        (x.end * y.start, bool(x.right_open or y.left_open)),
-        (x.end * y.end, bool(x.right_open or y.right_open)),
-    )
-    # TODO: handle symbolic intervals
-    minval, minopen = min(comvals)
-    maxval, maxopen = max(comvals)
-    return Interval(
-        minval,
-        maxval,
-        minopen,
-        maxopen
-    )
-    return SetExpr(Interval(start, end))
-
-
-@dispatch(Expr, Expr)
-def div_sets(x, y):
-    return x/y
-
-
-@dispatch(Set, Set)
-def div_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x / _y)), ProductSet(x, y))
-
-
-@dispatch(Interval, Interval)
-def div_sets(x, y):
-    """
-    Divisions in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    if (y.start*y.end).is_negative:
-        from sympy import oo
-        return Interval(-oo, oo)
-    return mul_sets(x, Interval(1/y.end, 1/y.start, y.right_open, y.left_open))
-
-
-@dispatch(Set, Set)
-def pow_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x ** _y)), ProductSet(x, y))
-
-
-@dispatch(Expr, Expr)
-def pow_sets(x, y):
-    return x**y
-
-
-@dispatch(Interval, Integer)
-def pow_sets(x, y):
-    """
-    Powers in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    exponent = sympify(exponent)
-    if exponent.is_odd:
-        return Interval(x.start**exponent, x.end**exponent, x.left_open, x.right_open)
-    if exponent.is_even:
-        if (x.start*x.end).is_negative:
-            if -x.start > x.end:
-                left_limit = x.start
-                left_open = x.right_open
-            else:
-                left_limit = x.end
-                left_open = x.left_open
-            return Interval(S.Zero, left_limit ** exponent, S.Zero not in x, left_open)
-        elif x.start.is_negative and x.end.is_negative:
-            return Interval(x.end**exponent, x.start**exponent, x.right_open, x.left_open)
-        else:
-            return Interval(x.start**exponent, x.end**exponent, x.left_open, x.right_open)
+        # TODO: this could be implemented straight into `imageset`:
+        return SetExpr(function_sets(func, self.set))
 
 
 @dispatch(FiniteSet, FiniteSet, Dispatcher)
