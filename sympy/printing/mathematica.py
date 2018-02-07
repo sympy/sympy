@@ -30,6 +30,7 @@ known_functions = {
     "acoth": [(lambda x: True, "ArcCoth")],
     "asech": [(lambda x: True, "ArcSech")],
     "acsch": [(lambda x: True, "ArcCsch")],
+    "conjugate": [(lambda x: True, "Conjugate")],
 
 }
 
