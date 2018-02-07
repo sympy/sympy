@@ -322,11 +322,11 @@ def test_issue_8623():
 
 
 def test_issue_9569():
-    assert integrate(1 / (2 - cos(x)), (x, 0, pi) == pi/sqrt(3)
+    assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
 
 
 def test_issue_13749():
-    assert integrate(1 / (2 + cos(x)), (x, 0, pi) == 2*pi/sqrt(3)
+    assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == 2*pi/sqrt(3)
 
 
 def test_matrices():
