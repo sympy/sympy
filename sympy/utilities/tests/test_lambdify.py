@@ -609,6 +609,13 @@ def test_namespace_order():
     assert if1(1) == 'first f'
 
 
+def test_namespace_type():
+    # lambdify had a bug where it would reject modules of type unicode
+    # on Python 2.
+    x = sympy.Symbol('x')
+    lambdify(x, x, modules=u'math')
+
+
 def test_imps():
     # Here we check if the default returned functions are anonymous - in
     # the sense that we can have more than one function with the same name
