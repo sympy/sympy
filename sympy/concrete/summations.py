@@ -8,6 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.add import Add
 from sympy.calculus.singularities import is_decreasing
+from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
@@ -416,6 +417,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         try:
             lim_val = limit(sequence_term, sym, upper_limit)
             if lim_val.is_number and lim_val is not S.Zero:
+                return S.false
+            if isinstance(lim_val, AccumulationBounds):
                 return S.false
         except NotImplementedError:
             pass
