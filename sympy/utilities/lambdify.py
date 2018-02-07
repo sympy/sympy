@@ -500,7 +500,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
-    from sympy import Dummy, sympify, Symbol, Function, flatten
+    from sympy import Dummy, sympify, Symbol, Function, flatten, Derivative
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -527,6 +527,12 @@ def lambdastr(args, expr, printer=None, dummify=False):
             if isinstance(args, (Function, Symbol)):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
+                return str(dummies)
+            elif isinstance(args ,(Function, Derivative)):
+                arg = [str(a) for a in args]
+                arg.sort()
+                dummies = Dummy()
+                dummies_dict.update({arg : dummies})
                 return str(dummies)
             else:
                 return str(args)
