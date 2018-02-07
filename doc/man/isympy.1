@@ -77,12 +77,15 @@ Example: isympy -p no
 .TP 
 \*(T<\fB\-t \fR\*(T>\fITYPE\fR, \*(T<\fB\-\-types=\fR\*(T>\fITYPE\fR
 Setup the ground types for the polys. By default, gmpy ground types
-are used if gmpy is installed, otherwise it falls back to python
+are used if gmpy2 or gmpy is installed, otherwise it falls back to python
 ground types, which are a little bit slower. You can manually
 choose python ground types even if gmpy is installed (e.g., for testing purposes).
 
 Note that sympy ground types are not supported, and should be used
 only for experimental purposes.
+
+Note that the gmpy1 ground type is primarily intended for testing; it the
+use of gmpy even if gmpy2 is available.
 
 This is the same as setting the environment variable
 SYMPY_GROUND_TYPES to the given ground type (e.g.,
@@ -94,7 +97,7 @@ sympy.polys.domains.GROUND_TYPES inside the isympy shell itself.
 Example: isympy -t python
 
 \fITYPE\fR must be one of 'gmpy',
-\&'python' or 'sympy'.
+\&'gmpy1' or 'python'.
 .TP 
 \*(T<\fB\-o \fR\*(T>\fIORDER\fR, \*(T<\fB\-\-order=\fR\*(T>\fIORDER\fR
 Setup the ordering of terms for printing. The default is lex, which
@@ -178,7 +181,7 @@ Print isympy version information and exit.
 Saves the history of commands when using the python
 shell as backend.
 .SH BUGS
-The upstreams BTS can be found at \(lahttp://code.google.com/p/sympy/issues/list\(ra
+The upstreams BTS can be found at \(lahttps://github.com/sympy/sympy/issues\(ra
 Please report all bugs that you find in there, this will help improve
 the overall quality of SymPy.
 .SH "SEE ALSO"

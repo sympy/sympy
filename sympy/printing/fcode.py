@@ -19,31 +19,77 @@ the responsibility for generating properly cased Fortran code to the user.
 
 from __future__ import print_function, division
 
+from collections import defaultdict
+from itertools import chain
 import string
 
-from sympy.core import S, C, Add, N
-from sympy.core.compatibility import string_types
+from sympy.core import S, Add, N, Float
+from sympy.core.compatibility import string_types, range
+from sympy.core.function import Function
+from sympy.core.relational import Eq
+from sympy.sets import Range
+from sympy.codegen.ast import (Assignment, Declaration, Pointer, Type,
+                               float32, float64, complex64, complex128, intc,
+                               real, integer, bool_, complex_)
+from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
+
+known_functions = {
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "asin": "asin",
+    "acos": "acos",
+    "atan": "atan",
+    "atan2": "atan2",
+    "sinh": "sinh",
+    "cosh": "cosh",
+    "tanh": "tanh",
+    "log": "log",
+    "exp": "exp",
+    "erf": "erf",
+    "Abs": "abs",
+    "conjugate": "conjg",
+    "Max": "max",
+    "Min": "min"
+}
+
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
     printmethod = "_fcode"
+    language = "Fortran"
+
+    type_aliases = {
+        real: float64,
+        complex_: complex128,
+    }
+
+    type_mappings = {
+        intc: 'integer(c_int)',
+        float32: 'real(4)',
+        float64: 'real(8)',
+        complex64: 'complex(4)',
+        complex128: 'complex(8)',
+        integer: 'integer',
+        bool_: 'logical'
+    }
+
+    type_modules = {
+        intc: {'iso_c_binding': 'c_int'}
+    }
 
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'assign_to': None,
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'source_format': 'fixed',
+        'contract': True,
+        'standard': 77,
     }
-
-    _implicit_functions = set([
-        "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh",
-        "cosh", "tanh", "sqrt", "log", "exp", "erf", "Abs", "sign", "conjugate",
-    ])
 
     _operators = {
         'and': '.and.',
@@ -57,55 +103,58 @@ class FCodePrinter(CodePrinter):
         '!=': '/=',
     }
 
-    def __init__(self, settings=None):
-        CodePrinter.__init__(self, settings)
-        self._init_leading_padding()
-        assign_to = self._settings['assign_to']
-        if isinstance(assign_to, string_types):
-            self._settings['assign_to'] = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("FCodePrinter cannot assign to object of type %s" %
-                    type(assign_to))
+    def __init__(self, settings={}):
+        self.type_aliases = dict(chain(self.type_aliases.items(),
+                                       settings.pop('type_aliases', {}).items()))
+        self.type_mappings = dict(chain(self.type_mappings.items(),
+                                        settings.pop('type_mappings', {}).items()))
+        super(FCodePrinter, self).__init__(settings)
+        self.known_functions = dict(known_functions)
+        userfuncs = settings.get('user_functions', {})
+        self.known_functions.update(userfuncs)
+        # leading columns depend on fixed or free format
+        standards = {66, 77, 90, 95, 2003, 2008}
+        if self._settings['standard'] not in standards:
+            raise ValueError("Unknown Fortran standard: %s" % self._settings[
+                             'standard'])
+        self.module_uses = defaultdict(set)  # e.g.: use iso_c_binding, only: c_int
+
+
+    @property
+    def _lead(self):
+        if self._settings['source_format'] == 'fixed':
+            return {'code': "      ", 'cont': "     @ ", 'comment': "C     "}
+        elif self._settings['source_format'] == 'free':
+            return {'code': "", 'cont': "      ", 'comment': "! "}
+        else:
+            raise ValueError("Unknown source format: %s" % self._settings['source_format'])
 
     def _rate_index_position(self, p):
-        """function to calculate score based on position among indices
-
-        This method is used to sort loops in an optimized order, see
-        CodePrinter._sort_optimized()
-        """
         return -p*5
 
     def _get_statement(self, codestring):
         return codestring
 
-    def _init_leading_padding(self):
-        # leading columns depend on fixed or free format
-        if self._settings['source_format'] == 'fixed':
-            self._lead_code = "      "
-            self._lead_cont = "     @ "
-            self._lead_comment = "C     "
-        elif self._settings['source_format'] == 'free':
-            self._lead_code = ""
-            self._lead_cont = "      "
-            self._lead_comment = "! "
-        else:
-            raise ValueError(
-                "Unknown source format: %s" % self._settings[
-                'source_format']
-            )
+    def _get_comment(self, text):
+        return "! {0}".format(text)
 
-    def _pad_leading_columns(self, lines):
-        result = []
-        for line in lines:
-            if line.startswith('!'):
-                result.append(self._lead_comment + line[1:].lstrip())
-            else:
-                result.append(self._lead_code + line)
-        return result
+    def _declare_number_const(self, name, value):
+        return "parameter ({0} = {1})".format(name, self._print(value))
+
+    def _print_NumberSymbol(self, expr):
+        # A Number symbol that is not implemented here or with _printmethod
+        # is registered and evaluated
+        self._number_symbols.add((expr, Float(expr.evalf(self._settings['precision']))))
+        return str(expr)
+
+    def _format_code(self, lines):
+        return self._wrap_fortran(self.indent_code(lines))
+
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for j in range(cols) for i in range(rows))
 
     def _get_loop_opening_ending(self, indices):
-        """Returns a tuple (open_lines, close_lines) containing lists of codelines
-        """
         open_lines = []
         close_lines = []
         for i in indices:
@@ -116,19 +165,29 @@ class FCodePrinter(CodePrinter):
             close_lines.append("end do")
         return open_lines, close_lines
 
-    def doprint(self, expr):
-        """Returns Fortran code for expr (as a string)"""
-        # find all number symbols
-        self._number_symbols = set()
+    def _print_sign(self, expr):
+        from sympy import Abs
+        arg, = expr.args
+        if arg.is_integer:
+            new_expr = merge(0, isign(1, arg), Eq(arg, 0))
+        elif arg.is_complex:
+            new_expr = merge(cmplx(literal_dp(0), literal_dp(0)), arg/Abs(arg), Eq(Abs(arg), literal_dp(0)))
+        else:
+            new_expr = merge(literal_dp(0), dsign(literal_dp(1), arg), Eq(arg, literal_dp(0)))
+        return self._print(new_expr)
 
-        # keep a set of expressions that are not strictly translatable to
-        # Fortran.
-        self._not_supported = set()
 
+    def _print_Piecewise(self, expr):
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
         lines = []
-        from sympy.functions import Piecewise
-        if isinstance(expr, Piecewise):
-            # support for top-level Piecewise function
+        if expr.has(Assignment):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
@@ -136,36 +195,33 @@ class FCodePrinter(CodePrinter):
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
-                lines.extend(
-                    self._doprint_a_piece(e, self._settings['assign_to']))
+                lines.append(self._print(e))
             lines.append("end if")
+            return "\n".join(lines)
+        elif self._settings["standard"] >= 95:
+            # Only supported in F95 and newer:
+            # The piecewise was used in an expression, need to do inline
+            # operators. This has the downside that inline operators will
+            # not work for statements that span multiple lines (Matrix or
+            # Indexed expressions).
+            pattern = "merge({T}, {F}, {COND})"
+            code = self._print(expr.args[-1].expr)
+            terms = list(expr.args[:-1])
+            while terms:
+                e, c = terms.pop()
+                expr = self._print(e)
+                cond = self._print(c)
+                code = pattern.format(T=expr, F=code, COND=cond)
+            return code
         else:
-            lines.extend(
-                self._doprint_a_piece(expr, self._settings['assign_to']))
+            # `merge` is not supported prior to F95
+            raise NotImplementedError("Using Piecewise as an expression using "
+                                      "inline operators is not supported in "
+                                      "standards earlier than Fortran95.")
 
-        # format the output
-        if self._settings["human"]:
-            frontlines = []
-            if len(self._not_supported) > 0:
-                frontlines.append("! Not Fortran:")
-                for expr in sorted(self._not_supported, key=self._print):
-                    frontlines.append("! %s" % repr(expr))
-            for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("parameter (%s = %s)" % (str(name), value))
-            frontlines.extend(lines)
-            lines = frontlines
-            lines = self.indent_code(lines)
-            lines = self._wrap_fortran(lines)
-            result = "\n".join(lines)
-        else:
-            lines = self.indent_code(lines)
-            lines = self._wrap_fortran(lines)
-            result = self._number_symbols, self._not_supported, "\n".join(
-                lines)
-
-        del self._not_supported
-        del self._number_symbols
-        return result
+    def _print_MatrixElement(self, expr):
+        return "{0}({1}, {2})".format(self.parenthesize(expr.parent,
+                PRECEDENCE["Atom"], strict=True), expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -207,26 +263,14 @@ class FCodePrinter(CodePrinter):
             return CodePrinter._print_Add(self, expr)
 
     def _print_Function(self, expr):
-        name = self._settings["user_functions"].get(expr.__class__)
-        eargs = expr.args
-        if name is None:
-            from sympy.functions import conjugate
-            if expr.func == conjugate:
-                name = "conjg"
-            else:
-                name = expr.func.__name__
-            if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
-                # inlined function.
-                # the expression is printed with _print to avoid loops
-                return self._print(expr._imp_(*eargs))
-            if expr.func.__name__ not in self._implicit_functions:
-                self._not_supported.add(expr)
-            else:
-                # convert all args to floats
-                eargs = map(N, eargs)
-        return "%s(%s)" % (name, self.stringify(eargs, ", "))
-
-    _print_factorial = _print_Function
+        # All constant function args are evaluated as floats
+        prec =  self._settings['precision']
+        args = [N(a, prec) for a in expr.args]
+        eval_expr = expr.func(*args)
+        if not isinstance(eval_expr, Function):
+            return self._print(eval_expr)
+        else:
+            return CodePrinter._print_Function(self, expr.func(*args))
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -244,16 +288,13 @@ class FCodePrinter(CodePrinter):
         else:
             return CodePrinter._print_Mul(self, expr)
 
-    _print_Exp1 = CodePrinter._print_NumberSymbol
-    _print_Pi = CodePrinter._print_NumberSymbol
-
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:
-                # Fortan intrinsic sqrt() does not accept integer argument
+                # Fortran intrinsic sqrt() does not accept integer argument
                 if expr.base.is_Number:
                     return 'sqrt(%s.0d0)' % self._print(expr.base)
                 else:
@@ -280,6 +321,68 @@ class FCodePrinter(CodePrinter):
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    def _print_For(self, expr):
+        target = self._print(expr.target)
+        if isinstance(expr.iterable, Range):
+            start, stop, step = expr.iterable.args
+        else:
+            raise NotImplementedError("Only iterable currently supported is Range")
+        body = self._print(expr.body)
+        return ('do {target} = {start}, {stop}, {step}\n'
+                '{body}\n'
+                'end do').format(target=target, start=start, stop=stop,
+                        step=step, body=body)
+
+    def _print_Equality(self, expr):
+        lhs, rhs = expr.args
+        return ' == '.join(map(self._print, (lhs, rhs)))
+
+    def _print_Unequality(self, expr):
+        lhs, rhs = expr.args
+        return ' /= '.join(map(self._print, (lhs, rhs)))
+
+    def _print_Type(self, type_):
+        type_ = self.type_aliases.get(type_, type_)
+        type_str = self.type_mappings.get(type_, type_.name)
+        module_uses = self.type_modules.get(type_)
+        if module_uses:
+            for k, v in module_uses:
+                self.module_uses[k].add(v)
+        return type_str
+
+    def _print_Declaration(self, expr):
+        var, val = expr.variable, expr.value
+        if isinstance(var, Pointer):
+            raise NotImplementedError("Pointers are not available by default in Fortran.")
+        if self._settings["standard"] >= 90:
+            result = '{t}{vc} :: {s}'.format(
+                t=self._print(var.type),
+                vc=', parameter' if var.value_const else '',
+                s=self._print(var.symbol)
+            )
+            if val is not None:
+                result += ' = %s' % self._print(val)
+        else:
+            if var.value_const or val:
+                raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
+            result = ' '.join(self._print(var.type), self._print(var.symbol))
+        return result
+
+    def _print_BooleanTrue(self, expr):
+        return '.true.'
+
+    def _print_BooleanFalse(self, expr):
+        return '.false.'
+
+    def _pad_leading_columns(self, lines):
+        result = []
+        for line in lines:
+            if line.startswith('!'):
+                result.append(self._lead['comment'] + line[1:].lstrip())
+            else:
+                result.append(self._lead['code'] + line)
+        return result
 
     def _wrap_fortran(self, lines):
         """Wrap long Fortran lines
@@ -308,14 +411,14 @@ class FCodePrinter(CodePrinter):
                 if pos == 0:
                     return endpos
             return pos
-        # split line by line and add the splitted lines to result
+        # split line by line and add the split lines to result
         result = []
         if self._settings['source_format'] == 'free':
             trailing = ' &'
         else:
             trailing = ''
         for line in lines:
-            if line.startswith(self._lead_comment):
+            if line.startswith(self._lead['comment']):
                 # comment line
                 if len(line) > 72:
                     pos = line.rfind(" ", 6, 72)
@@ -330,10 +433,10 @@ class FCodePrinter(CodePrinter):
                             pos = 66
                         hunk = line[:pos]
                         line = line[pos:].lstrip()
-                        result.append("%s%s" % (self._lead_comment, hunk))
+                        result.append("%s%s" % (self._lead['comment'], hunk))
                 else:
                     result.append(line)
-            elif line.startswith(self._lead_code):
+            elif line.startswith(self._lead['code']):
                 # code line
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
@@ -347,7 +450,7 @@ class FCodePrinter(CodePrinter):
                     line = line[pos:].lstrip()
                     if line:
                         hunk += trailing
-                    result.append("%s%s" % (self._lead_cont, hunk))
+                    result.append("%s%s" % (self._lead['cont'], hunk))
             else:
                 result.append(line)
         return result
@@ -403,49 +506,119 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, **settings):
-    """Converts an expr to a string of Fortran 77 code
+def fcode(expr, assign_to=None, **settings):
+    """Converts an expr to a string of fortran code
 
-       Parameters
-       ==========
+    Parameters
+    ==========
 
-       expr : sympy.core.Expr
-           a sympy expression to be converted
-       assign_to : optional
-           When given, the argument is used as the name of the
-           variable to which the Fortran expression is assigned.
-           (This is helpful in case of line-wrapping.)
-       precision : optional
-           the precision for numbers such as pi [default=15]
-       user_functions : optional
-           A dictionary where keys are FunctionClass instances and values
-           are there string representations.
-       human : optional
-           If True, the result is a single string that may contain some
-           parameter statements for the number symbols. If False, the same
-           information is returned in a more programmer-friendly data
-           structure.
-       source_format : optional
-           The source format can be either 'fixed' or 'free'.
-           [default='fixed']
+    expr : Expr
+        A sympy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
+        line-wrapping, or for expressions that generate multi-line statements.
+    precision : integer, optional
+        DEPRECATED. Use type_mappings instead. The precision for numbers such
+        as pi [default=17].
+    user_functions : dict, optional
+        A dictionary where keys are ``FunctionClass`` instances and values are
+        their string representations. Alternatively, the dictionary value can
+        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
+        for examples.
+    human : bool, optional
+        If True, the result is a single string that may contain some constant
+        declarations for the number symbols. If False, the same information is
+        returned in a tuple of (symbols_to_declare, not_supported_functions,
+        code_text). [default=True].
+    contract: bool, optional
+        If True, ``Indexed`` instances are assumed to obey tensor contraction
+        rules and the corresponding nested loops over indices are generated.
+        Setting contract=False will not generate loops, instead the user is
+        responsible to provide values for the indices in the code.
+        [default=True].
+    source_format : optional
+        The source format can be either 'fixed' or 'free'. [default='fixed']
+    standard : integer, optional
+        The Fortran standard to be followed. This is specified as an integer.
+        Acceptable standards are 66, 77, 90, 95, 2003, and 2008. Default is 77.
+        Note that currently the only distinction internally is between
+        standards before 95, and those 95 and after. This may change later as
+        more features are added.
 
-       Examples
-       ========
+    Examples
+    ========
 
-       >>> from sympy import fcode, symbols, Rational, pi, sin
-       >>> x, tau = symbols('x,tau')
-       >>> fcode((2*tau)**Rational(7,2))
-       '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
-       >>> fcode(sin(x), assign_to="s")
-       '      s = sin(x)'
-       >>> print(fcode(pi))
-             parameter (pi = 3.14159265358979d0)
-             pi
+    >>> from sympy import fcode, symbols, Rational, sin, ceiling, floor
+    >>> x, tau = symbols("x, tau")
+    >>> fcode((2*tau)**Rational(7, 2))
+    '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
+    >>> fcode(sin(x), assign_to="s")
+    '      s = sin(x)'
 
+    Custom printing can be defined for certain types by passing a dictionary of
+    "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
+    dictionary value can be a list of tuples i.e. [(argument_test,
+    cfunction_string)].
+
+    >>> custom_functions = {
+    ...   "ceiling": "CEIL",
+    ...   "floor": [(lambda x: not x.is_integer, "FLOOR1"),
+    ...             (lambda x: x.is_integer, "FLOOR2")]
+    ... }
+    >>> fcode(floor(x) + ceiling(x), user_functions=custom_functions)
+    '      CEIL(x) + FLOOR1(x)'
+
+    ``Piecewise`` expressions are converted into conditionals. If an
+    ``assign_to`` variable is provided an if statement is created, otherwise
+    the ternary operator is used. Note that if the ``Piecewise`` lacks a
+    default term, represented by ``(expr, True)`` then an error will be thrown.
+    This is to prevent generating an expression that may not evaluate to
+    anything.
+
+    >>> from sympy import Piecewise
+    >>> expr = Piecewise((x + 1, x > 0), (x, True))
+    >>> print(fcode(expr, tau))
+          if (x > 0) then
+             tau = x + 1
+          else
+             tau = x
+          end if
+
+    Support for loops is provided through ``Indexed`` types. With
+    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=False`` will just print the assignment expression that should be
+    looped over:
+
+    >>> from sympy import Eq, IndexedBase, Idx
+    >>> len_y = 5
+    >>> y = IndexedBase('y', shape=(len_y,))
+    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+    >>> i = Idx('i', len_y-1)
+    >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> fcode(e.rhs, assign_to=e.lhs, contract=False)
+    '      Dy(i) = (y(i + 1) - y(i))/(t(i + 1) - t(i))'
+
+    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
+    must be provided to ``assign_to``. Note that any expression that can be
+    generated normally can also exist inside a Matrix:
+
+    >>> from sympy import Matrix, MatrixSymbol
+    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
+    >>> A = MatrixSymbol('A', 3, 1)
+    >>> print(fcode(mat, A))
+          A(1, 1) = x**2
+             if (x > 0) then
+          A(2, 1) = x + 1
+             else
+          A(2, 1) = x
+             end if
+          A(3, 1) = sin(x)
     """
-    # run the printer
-    printer = FCodePrinter(settings)
-    return printer.doprint(expr)
+
+    return FCodePrinter(settings).doprint(expr, assign_to)
 
 
 def print_fcode(expr, **settings):

@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from sympy import Matrix, I, Expr, Integer
+from sympy.core.compatibility import range
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
 
@@ -277,7 +278,7 @@ def matrix_eye(n, **options):
 
 
 def _numpy_zeros(m, n, **options):
-    """numpy verson of zeros."""
+    """numpy version of zeros."""
     dtype = options.get('dtype', 'float64')
     if not np:
         raise ImportError
@@ -285,7 +286,7 @@ def _numpy_zeros(m, n, **options):
 
 
 def _scipy_sparse_zeros(m, n, **options):
-    """scipy.sparse verson of zeros."""
+    """scipy.sparse version of zeros."""
     spmatrix = options.get('spmatrix', 'csr')
     dtype = options.get('dtype', 'float64')
     if not sparse:

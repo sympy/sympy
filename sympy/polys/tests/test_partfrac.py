@@ -3,15 +3,13 @@ functions. """
 
 from sympy.polys.partfrac import (
     apart_undetermined_coeffs,
-    apart_full_decomposition,
     apart,
-    apart_list_full_decomposition,
     apart_list, assemble_partfrac_list
 )
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
-                   Symbol, Dummy, factor, together, sqrt, Expr)
-from sympy.utilities.pytest import raises
+                   Symbol, Dummy, factor, together, sqrt, Expr, Rational)
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.abc import x, y, a, b, c
 
 
@@ -38,6 +36,18 @@ def test_apart():
         2 - E + E*pi + E*x + (E*pi + 2)*(pi - 1)/(x - pi)
 
     assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
+
+    assert apart(x/2, y) == x/2
+
+    f, g = (x+y)/(2*x - y), Rational(3/2)*y/((2*x - y)) + Rational(1/2)
+
+    assert apart(f, x, full=False) == g
+    assert apart(f, x, full=True) == g
+
+    f, g = (x+y)/(2*x - y), 3*x/(2*x - y) - 1
+
+    assert apart(f, y, full=False) == g
+    assert apart(f, y, full=True) == g
 
     raises(NotImplementedError, lambda: apart(1/(x + 1)/(y + 2)))
 
@@ -73,7 +83,7 @@ def test_apart_extension():
 
     f = x/((x - 2)*(x + I))
 
-    assert factor(together(apart(f))) == f
+    assert factor(together(apart(f)).expand()) == f
 
 
 def test_apart_full():
@@ -149,7 +159,9 @@ def test_assemble_partfrac_list():
     assert assemble_partfrac_list(pfd) == -1/(sqrt(2)*(x + sqrt(2))) + 1/(sqrt(2)*(x - sqrt(2)))
 
 
+@XFAIL
 def test_noncommutative_pseudomultivariate():
+    # apart doesn't go inside noncommutative expressions
     class foo(Expr):
         is_commutative=False
     e = x/(x + x*y)
@@ -157,8 +169,14 @@ def test_noncommutative_pseudomultivariate():
     assert apart(e + foo(e)) == c + foo(c)
     assert apart(e*foo(e)) == c*foo(c)
 
+def test_noncommutative():
+    class foo(Expr):
+        is_commutative=False
+    e = x/(x + x*y)
+    c = 1/(1 + y)
+    assert apart(e + foo()) == c + foo()
 
-def test_issue_2699():
+def test_issue_5798():
     assert apart(
         2*x/(x**2 + 1) - (x - 1)/(2*(x**2 + 1)) + 1/(2*(x + 1)) - 2/x) == \
         (3*x + 1)/(x**2 + 1)/2 + 1/(x + 1)/2 - 2/x

@@ -15,7 +15,7 @@ import sys
 import sympy
 
 # If your extensions are in another directory, add it here.
-sys.path = ['../sympy', 'ext'] + sys.path
+sys.path = ['ext'] + sys.path
 
 # General configuration
 # ---------------------
@@ -29,10 +29,10 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
 # MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
-mathjax_path = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['.templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -40,9 +40,11 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+suppress_warnings = ['ref.citation', 'ref.footnote']
+
 # General substitutions.
 project = 'SymPy'
-copyright = '2013 SymPy Development Team'
+copyright = '2018 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -93,25 +95,12 @@ html_static_path = ['_static']
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
 
+html_theme = 'classic'
+
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 # See http://sphinx-doc.org/theming.html#builtin-themes.
-html_theme_options = {
-    'collapsiblesidebar': True,
-    'relbarbgcolor': '#2f441e',
-    'sidebarbgcolor': '#3b5526',
-    'sidebarbtncolor': '#4F663C',
-    'sidebarlinkcolor': '#81B953',
-    'linkcolor': '#29A329',
-    'visitedlinkcolor': '#307748',
-    'headtextcolor': '#2f441e',
-    'footerbgcolor': '#293b1b',
-    'headlinkcolor': '#AAAAAA',
-    'sidebartextcolor': '#DDDDDD',
-    'footertextcolor': '#DDDDDD',
-    'relbartextcolor': '#DDDDDD',
-    'relbarlinkcolor': '#81B953',
-}
+
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -129,6 +118,7 @@ html_theme_options = {
 
 # If false, no module index is generated.
 #html_use_modindex = True
+html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
 #html_copy_source = True
@@ -162,6 +152,7 @@ latex_elements = {
 \usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
+\usepackage[english]{babel}
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}

@@ -5,7 +5,8 @@ from __future__ import print_function, division
 from inspect import getmro
 
 from .core import all_classes as sympy_classes
-from .compatibility import iterable, string_types
+from .compatibility import iterable, string_types, range
+from .evaluate import global_evaluate
 
 
 class SympifyError(ValueError):
@@ -27,8 +28,8 @@ class CantSympify(object):
     """
     Mix in this trait to a class to disallow sympification of its instances.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.core.sympify import sympify, CantSympify
 
@@ -49,10 +50,34 @@ class CantSympify(object):
     """
     pass
 
-def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, evaluate=True):
+
+def _convert_numpy_types(a):
+    """
+    Converts a numpy datatype input to an appropriate sympy type.
+    """
+    import numpy as np
+    if not isinstance(a, np.floating):
+        func = converter[complex] if np.iscomplex(a) else sympify
+        return func(np.asscalar(a))
+    else:
+        try:
+            from sympy.core.numbers import Float
+            prec = np.finfo(a).nmant + 1
+            # E.g. double precision means prec=53 but nmant=52
+            # Leading bit of mantissa is always 1, so is not stored
+            a = str(list(np.reshape(np.asarray(a),
+                                    (1, np.size(a)))[0]))[1:-1]
+            return Float(a, precision=prec)
+        except NotImplementedError:
+            raise SympifyError('Translation for numpy float : %s '
+                               'is not implemented' % a)
+
+
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
+        evaluate=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
 
-    For example, it will convert Python ints into instance of sympy.Rational,
+    For example, it will convert Python ints into instances of sympy.Integer,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
@@ -63,6 +88,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave ``None`` unchanged)
        - lists, sets or tuples containing any of the above
+
+    .. warning::
+        Note that this function uses ``eval``, and thus shouldn't be used on
+        unsanitized input.
 
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -95,7 +124,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     The sympification happens with access to everything that is loaded
     by ``from sympy import *``; anything used in a string that is not
     defined by that import will be converted to a symbol. In the following,
-    the ``bitcout`` function is treated as a symbol and the ``O`` is
+    the ``bitcount`` function is treated as a symbol and the ``O`` is
     interpreted as the Order object (used with series) and it raises
     an error when used improperly:
 
@@ -138,8 +167,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     >>> from sympy.abc import _clash1
     >>> _clash1
     {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
-    >>> sympify('C & Q', _clash1)
-    And(C, Q)
+    >>> sympify('I & Q', _clash1)
+    I & Q
 
     Strict
     ------
@@ -182,7 +211,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     ...     def __iter__(self):
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     ...     def _sympy_(self): return Matrix(self)
     >>> sympify(MyList1())
@@ -199,7 +228,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     ...     def __iter__(self):  #     Use _sympy_!
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     >>> from sympy.core.sympify import converter
     >>> converter[MyList2] = lambda x: Matrix(x)
@@ -228,6 +257,16 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
+    if evaluate is None:
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
+    try:
+        if a in sympy_classes:
+            return a
+    except TypeError: # Type of a is unhashable
+        pass
     try:
         cls = a.__class__
     except AttributeError:  # a is probably an old-style class object
@@ -239,6 +278,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
             raise SympifyError(a)
         else:
             return a
+
+    # Support for basic numpy datatypes
+    # Note that this check exists to avoid importing NumPy when not necessary
+    if type(a).__module__ == 'numpy':
+        import numpy as np
+        if np.isscalar(a):
+            return _convert_numpy_types(a)
 
     try:
         return converter[cls](a)
@@ -256,6 +302,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
         return a._sympy_()
     except AttributeError:
         pass
+
+    if not strict:
+        # Put numpy array conversion _before_ float/int, see
+        # <https://github.com/sympy/sympy/issues/13924>.
+        try:
+            from ..tensor.array import Array
+            return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+        except AttributeError:
+            pass
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
@@ -368,7 +423,7 @@ def kernS(s):
     If use of the hack fails, the un-hacked string will be passed to sympify...
     and you get what you get.
 
-    XXX This hack should not be necessary once issue 1497 has been resolved.
+    XXX This hack should not be necessary once issue 4596 has been resolved.
     """
     import re
     from sympy.core.symbol import Symbol

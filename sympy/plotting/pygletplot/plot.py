@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Integer
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, SYMPY_INTS
 
 from threading import RLock
 
@@ -16,7 +16,6 @@ from plot_object import PlotObject
 from plot_axes import PlotAxes
 from plot_window import PlotWindow
 from plot_mode import PlotMode
-import plot_modes
 
 from time import sleep
 from os import getcwd, listdir
@@ -32,7 +31,7 @@ class PygletPlot(object):
     Plot Examples
     =============
 
-    See examples/advaned/pyglet_plotting.py for many more examples.
+    See examples/advanced/pyglet_plotting.py for many more examples.
 
 
     >>> from sympy.plotting.pygletplot import PygletPlot as Plot
@@ -305,7 +304,7 @@ class PygletPlot(object):
         Parses and adds a PlotMode to the function
         list.
         """
-        if not (isinstance(i, (int, Integer)) and i >= 0):
+        if not (isinstance(i, (SYMPY_INTS, Integer)) and i >= 0):
             raise ValueError("Function index must "
                              "be an integer >= 0.")
 

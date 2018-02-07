@@ -1,6 +1,6 @@
 """Test ideals.py code."""
 
-from sympy.polys import QQ, lex, ilex
+from sympy.polys import QQ, ilex
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import raises
 

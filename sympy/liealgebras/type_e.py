@@ -1,21 +1,21 @@
-from sympy.core import Set, Dict, Tuple, Rational
+from sympy.core.compatibility import range
 from .cartan_type import Standard_Cartan
-from sympy.matrices import eye
+from sympy.core.backend import eye, Rational
 
 
 class TypeE(Standard_Cartan):
 
     def __new__(cls, n):
-        assert n >= 6
-        assert n <= 8
+        if n < 6 or n > 8:
+            raise ValueError("Invalid value of n")
         return Standard_Cartan.__new__(cls, "E", n)
 
     def dimension(self):
-        """
-        Returns the dimension of the vector space
-        V underlying the Lie algebra
-        Example
+        """Dimension of the vector space V underlying the Lie algebra
+
+        Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.dimension()
@@ -28,7 +28,7 @@ class TypeE(Standard_Cartan):
         """
         This is a method just to generate roots
         with a -1 in the ith position and a 1
-        in the jth postion.
+        in the jth position.
 
         """
 
@@ -52,6 +52,7 @@ class TypeE(Standard_Cartan):
 
         Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.simple_root(2)
@@ -83,8 +84,9 @@ class TypeE(Standard_Cartan):
         by multiplying all the positive roots by -1 we
         get the negative roots.
 
-        Example
-        ======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
@@ -233,8 +235,9 @@ class TypeE(Standard_Cartan):
         roots, (alpha[1], ...., alpha[l]).  Then the ijth
         entry of the Cartan matrix is (<alpha[i],alpha[j]>).
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('A4')
         >>> c.cartan_matrix()
@@ -280,6 +283,6 @@ class TypeE(Standard_Cartan):
         diag += " "*8 + "0\n"
         diag += " "*8 + "|\n"
         diag += " "*8 + "|\n"
-        diag += "---".join("0" for i in range (1, n)) + "\n"
+        diag += "---".join("0" for i in range(1, n)) + "\n"
         diag += "1   " + "   ".join(str(i) for i in range(3, n+1))
         return diag

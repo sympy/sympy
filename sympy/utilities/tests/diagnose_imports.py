@@ -117,7 +117,7 @@ if __name__ == "__main__":
         """Is module relevant for import checking?
 
         Only imports between relevant modules will be checked."""
-        return in_module(module, 'sympy') and not in_module(module, 'sympy.mpmath')
+        return in_module(module, 'sympy')
 
     sorted_messages = []
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             for symbol in result.__dict__.iterkeys():
                 definition = Definition(
                     symbol, result.__dict__[symbol], importer_module)
-                if not symbol_definers.has_key(definition):
+                if not definition in symbol_definers:
                     symbol_definers[definition] = importee_module
             if hasattr(result, '__path__'):
                 ##PACKAGE##

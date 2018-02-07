@@ -1,15 +1,18 @@
-from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
-from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
-from sympy import Function, Rational, Integer, Lambda
+from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
+    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
+    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign,
+    Max, Min)
 
+from sympy.codegen import For, Assignment
+from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
+from sympy.matrices import Matrix, MatrixSymbol
 
 
 def test_printmethod():
@@ -19,6 +22,16 @@ def test_printmethod():
         def _fcode(self, printer):
             return "nint(%s)" % printer._print(self.args[0])
     assert fcode(nint(x)) == "      nint(x)"
+
+
+def test_fcode_sign():  #issue 12267
+    x=symbols('x')
+    y=symbols('y', integer=True)
+    z=symbols('z', complex=True)
+    assert fcode(sign(x), standard=95, source_format='free') == "merge(0d0, dsign(1d0, x), x == 0d0)"
+    assert fcode(sign(y), standard=95, source_format='free') == "merge(0, isign(1, y), y == 0)"
+    assert fcode(sign(z), standard=95, source_format='free') == "merge(cmplx(0d0, 0d0), z/abs(z), abs(z) == 0d0)"
+    raises(NotImplementedError, lambda: fcode(sign(x)))
 
 
 def test_fcode_Pow():
@@ -35,10 +48,7 @@ def test_fcode_Pow():
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
     assert fcode(x**-1.0) == '      1.0/x'
-    assert fcode(x**-2.0,
-                 assign_to='y',
-                 source_format='free',
-                 human=True) == 'y = x**(-2.0d0)'  # 2823
+    assert fcode(x**-2.0, 'y', source_format='free') == 'y = x**(-2.0d0)'  # 2823
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 
 
@@ -65,38 +75,43 @@ def test_fcode_Float():
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+    assert fcode(Max(x, y) + Min(x, y)) == "      max(x, y) + min(x, y)"
 
 
-#issue 3715
+#issue 6814
 def test_fcode_functions_with_integers():
     x= symbols('x')
-    assert fcode(x * log(10)) == "      x*log(10.0d0)"
-    assert fcode(x * log(S(10))) == "      x*log(10.0d0)"
-    assert fcode(log(S(10))) == "      log(10.0d0)"
-    assert fcode(exp(10)) == "      exp(10.0d0)"
-    assert fcode(x * log(log(10))) == "      x*log(2.30258509299405d0)"
-    assert fcode(x * log(log(S(10)))) == "      x*log(2.30258509299405d0)"
+    log10_17 = log(10).evalf(17)
+    loglog10_17 = '0.8340324452479558d0'
+    assert fcode(x * log(10)) == "      x*%sd0" % log10_17
+    assert fcode(x * log(10)) == "      x*%sd0" % log10_17
+    assert fcode(x * log(S(10))) == "      x*%sd0" % log10_17
+    assert fcode(log(S(10))) == "      %sd0" % log10_17
+    assert fcode(exp(10)) == "      %sd0" % exp(10).evalf(17)
+    assert fcode(x * log(log(10))) == "      x*%s" % loglog10_17
+    assert fcode(x * log(log(S(10)))) == "      x*%s" % loglog10_17
 
 
 def test_fcode_NumberSymbol():
+    prec = 17
     p = FCodePrinter()
-    assert fcode(Catalan) == '      parameter (Catalan = 0.915965594177219d0)\n      Catalan'
-    assert fcode(EulerGamma) == '      parameter (EulerGamma = 0.577215664901533d0)\n      EulerGamma'
-    assert fcode(E) == '      parameter (E = 2.71828182845905d0)\n      E'
-    assert fcode(GoldenRatio) == '      parameter (GoldenRatio = 1.61803398874989d0)\n      GoldenRatio'
-    assert fcode(pi) == '      parameter (pi = 3.14159265358979d0)\n      pi'
+    assert fcode(Catalan) == '      parameter (Catalan = %sd0)\n      Catalan' % Catalan.evalf(prec)
+    assert fcode(EulerGamma) == '      parameter (EulerGamma = %sd0)\n      EulerGamma' % EulerGamma.evalf(prec)
+    assert fcode(E) == '      parameter (E = %sd0)\n      E' % E.evalf(prec)
+    assert fcode(GoldenRatio) == '      parameter (GoldenRatio = %sd0)\n      GoldenRatio' % GoldenRatio.evalf(prec)
+    assert fcode(pi) == '      parameter (pi = %sd0)\n      pi' % pi.evalf(prec)
     assert fcode(
-        pi, precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
+        pi, precision=5) == '      parameter (pi = %sd0)\n      pi' % pi.evalf(5)
     assert fcode(Catalan, human=False) == (set(
-        [(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
+        [(Catalan, p._print(Catalan.evalf(prec)))]), set([]), '      Catalan')
     assert fcode(EulerGamma, human=False) == (set([(EulerGamma, p._print(
-        EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
+        EulerGamma.evalf(prec)))]), set([]), '      EulerGamma')
     assert fcode(E, human=False) == (
-        set([(E, p._print(E.evalf(15)))]), set([]), '      E')
+        set([(E, p._print(E.evalf(prec)))]), set([]), '      E')
     assert fcode(GoldenRatio, human=False) == (set([(GoldenRatio, p._print(
-        GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
+        GoldenRatio.evalf(prec)))]), set([]), '      GoldenRatio')
     assert fcode(pi, human=False) == (
-        set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
+        set([(pi, p._print(pi.evalf(prec)))]), set([]), '      pi')
     assert fcode(pi, precision=5, human=False) == (
         set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
 
@@ -126,22 +141,22 @@ def test_not_fortran():
     x = symbols('x')
     g = Function('g')
     assert fcode(
-        gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
-    assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
-    assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
+        gamma(x)) == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
+    assert fcode(Integral(sin(x))) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
+    assert fcode(g(x)) == "C     Not supported in Fortran:\nC     g\n      g(x)"
 
 
 def test_user_functions():
     x = symbols('x')
-    assert fcode(sin(x), user_functions={sin: "zsin"}) == "      zsin(x)"
+    assert fcode(sin(x), user_functions={"sin": "zsin"}) == "      zsin(x)"
     x = symbols('x')
     assert fcode(
-        gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
+        gamma(x), user_functions={"gamma": "mygamma"}) == "      mygamma(x)"
     g = Function('g')
-    assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
+    assert fcode(g(x), user_functions={"g": "great"}) == "      great(x)"
     n = symbols('n', integer=True)
     assert fcode(
-        factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+        factorial(n), user_functions={"factorial": "fct"}) == "      fct(n)"
 
 
 def test_inline_function():
@@ -150,15 +165,15 @@ def test_inline_function():
     assert fcode(g(x)) == "      2*x"
     g = implemented_function('g', Lambda(x, 2*pi/x))
     assert fcode(g(x)) == (
-        "      parameter (pi = 3.14159265358979d0)\n"
+        "      parameter (pi = %sd0)\n"
         "      2*pi/x"
-    )
+    ) % pi.evalf(17)
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
         "      do i = 1, n\n"
-        "         A(i) = A(i)*(1 + A(i))*(2 + A(i))\n"
+        "         A(i) = (A(i) + 1)*(A(i) + 2)*A(i)\n"
         "      end do"
     )
 
@@ -354,14 +369,11 @@ def test_fcode_Relational():
 
 def test_fcode_Piecewise():
     x = symbols('x')
-    code = fcode(Piecewise((x, x < 1), (x**2, True)))
-    expected = (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else\n"
-        "         x**2\n"
-        "      end if"
-    )
+    expr = Piecewise((x, x < 1), (x**2, True))
+    # Check that inline conditional (merge) fails if standard isn't 95+
+    raises(NotImplementedError, lambda: fcode(expr))
+    code = fcode(expr, standard=95)
+    expected = "      merge(x, x**2, x < 1)"
     assert code == expected
     assert fcode(Piecewise((x, x < 1), (x**2, True)), assign_to="var") == (
         "      if (x < 1) then\n"
@@ -372,7 +384,7 @@ def test_fcode_Piecewise():
     )
     a = cos(x)/x
     b = sin(x)/x
-    for i in xrange(10):
+    for i in range(10):
         a = diff(a, x)
         b = diff(b, x)
     expected = (
@@ -390,24 +402,12 @@ def test_fcode_Piecewise():
     )
     code = fcode(Piecewise((a, x < 0), (b, True)), assign_to="weird_name")
     assert code == expected
-    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True))) == (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else if (x > 1) then\n"
-        "         x**2\n"
-        "      else\n"
-        "         sin(x)\n"
-        "      end if"
-    )
-    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))) == (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else if (x > 1) then\n"
-        "         x**2\n"
-        "      else if (x > 0) then\n"
-        "         sin(x)\n"
-        "      end if"
-    )
+    code = fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True)), standard=95)
+    expected = "      merge(x, merge(x**2, sin(x), x > 1), x < 1)"
+    assert code == expected
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: fcode(expr))
 
 
 def test_wrap_fortran():
@@ -517,7 +517,7 @@ def test_free_form_continuation_line():
 
 
 def test_free_form_comment_line():
-    printer = FCodePrinter({ 'source_format': 'free'})
+    printer = FCodePrinter({'source_format': 'free'})
     lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
     expected = [
         '! This is a long comment on a single line that must be wrapped properly',
@@ -546,13 +546,12 @@ def test_loops():
 
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
-            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'})
+            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'} or
+            code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'} or
+            code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'})
 
 
 def test_dummy_loops():
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -566,15 +565,24 @@ def test_dummy_loops():
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
 
+def test_fcode_Indexed_without_looking_for_contraction():
+    len_y = 5
+    y = IndexedBase('y', shape=(len_y,))
+    x = IndexedBase('x', shape=(len_y,))
+    Dy = IndexedBase('Dy', shape=(len_y-1,))
+    i = Idx('i', len_y-1)
+    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    code0 = fcode(e.rhs, assign_to=e.lhs, contract=False)
+    assert code0.endswith('Dy(i) = (y(i + 1) - y(i))/(x(i + 1) - x(i))')
+
 
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):
         _default_settings = FCodePrinter._default_settings.copy()
-        _default_settings['assign_to'] = "bork"
 
     printer = MyFancyFCodePrinter()
     x = symbols('x')
-    assert printer.doprint(sin(x)) == "      bork = sin(x)"
+    assert printer.doprint(sin(x), "bork") == "      bork = sin(x)"
 
 
 def test_indent():
@@ -639,3 +647,85 @@ def test_indent():
     p = FCodePrinter({'source_format': 'free'})
     result = p.indent_code(codelines)
     assert result == expected
+
+def test_Matrix_printing():
+    x, y, z = symbols('x,y,z')
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert fcode(mat, A) == (
+        "      A(1, 1) = x*y\n"
+        "      if (y > 0) then\n"
+        "         A(2, 1) = x + 2\n"
+        "      else\n"
+        "         A(2, 1) = y\n"
+        "      end if\n"
+        "      A(3, 1) = sin(z)")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert fcode(expr, standard=95) == (
+        "      merge(2*A(3, 1), A(3, 1), x > 0) + sin(A(2, 1)) + A(1, 1)")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert fcode(m, M) == (
+        "      M(1, 1) = sin(q(2, 1))\n"
+        "      M(2, 1) = q(2, 1) + q(3, 1)\n"
+        "      M(3, 1) = 2*q(5, 1)/q(2, 1)\n"
+        "      M(1, 2) = 0\n"
+        "      M(2, 2) = q(4, 1)\n"
+        "      M(3, 2) = sqrt(q(1, 1)) + 4\n"
+        "      M(1, 3) = cos(q(3, 1))\n"
+        "      M(2, 3) = 5\n"
+        "      M(3, 3) = 0")
+
+
+def test_fcode_For():
+    x, y = symbols('x y')
+
+    f = For(x, Range(0, 10, 2), [Assignment(y, x * y)])
+    sol = fcode(f)
+    assert sol == ("      do x = 0, 10, 2\n"
+                   "         y = x*y\n"
+                   "      end do")
+
+
+def test_fcode_Declaration():
+    def check(expr, ref, **kwargs):
+        assert fcode(expr, standard=95, source_format='free', **kwargs) == ref
+
+    i = symbols('i', integer=True)
+    var1 = Variable.deduced(i)
+    dcl1 = Declaration(var1)
+    check(dcl1, "integer :: i")
+
+
+    x, y = symbols('x y')
+    var2 = Variable(x, {value_const}, float32)
+    dcl2b = Declaration(var2, 42)
+    check(dcl2b, 'real(4), parameter :: x = 42')
+
+    var3 = Variable(y, (), bool_)
+    dcl3 = Declaration(var3)
+    check(dcl3, 'logical :: y')
+
+    check(float32, "real(4)")
+    check(float64, "real(8)")
+    check(real, "real(4)", type_aliases={real: float32})
+    check(real, "real(8)", type_aliases={real: float64})
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(fcode(A[0, 0]) == "      A(1, 1)")
+    assert(fcode(3 * A[0, 0]) == "      3*A(1, 1)")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(fcode(F) == "      ((-1)*B + A)(1, 1)")

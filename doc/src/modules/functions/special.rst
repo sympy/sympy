@@ -11,13 +11,17 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
    :members:
 
-beta
-----
+Singularity Function
+--------------------
+.. module:: sympy.functions.special.singularity_functions
 
-.. autofunction:: sympy.functions.special.gamma_functions.beta
+.. autoclass:: sympy.functions.special.singularity_functions.SingularityFunction
+   :members:
 
-Gamma and Related Functions
----------------------------
+Gamma, Beta and related Functions
+---------------------------------
+.. module:: sympy.functions.special.gamma_functions
+
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
@@ -30,10 +34,30 @@ Gamma and Related Functions
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
+.. module:: sympy.functions.special.beta_functions
+.. autoclass:: sympy.functions.special.beta_functions.beta
+   :members:
 
-Special Cases of the Incomplete Gamma Functions
------------------------------------------------
+Error Functions and Fresnel Integrals
+-------------------------------------
 .. module:: sympy.functions.special.error_functions
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.erfc
+.. autoclass:: sympy.functions.special.error_functions.erfi
+.. autoclass:: sympy.functions.special.error_functions.erf2
+.. autoclass:: sympy.functions.special.error_functions.erfinv
+.. autoclass:: sympy.functions.special.error_functions.erfcinv
+.. autoclass:: sympy.functions.special.error_functions.erf2inv
+
+.. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
+   :members:
+
+.. autoclass:: fresnels
+.. autoclass:: fresnelc
+
+Exponential, Logarithmic and Trigonometric Integrals
+----------------------------------------------------
 
 .. autoclass:: Ei
 .. autoclass:: expint
@@ -45,25 +69,10 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Shi
 .. autoclass:: Chi
 
-.. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
-   :members:
-
-.. autoclass:: fresnels
-.. autoclass:: fresnelc
-
-Error Functions
----------------
-
-.. autoclass:: sympy.functions.special.error_functions.erf
-.. autoclass:: sympy.functions.special.error_functions.erfc
-.. autoclass:: sympy.functions.special.error_functions.erfi
-.. autoclass:: sympy.functions.special.error_functions.erf2
-.. autoclass:: sympy.functions.special.error_functions.erfinv
-.. autoclass:: sympy.functions.special.error_functions.erfcinv
-.. autoclass:: sympy.functions.special.error_functions.erf2inv
-
 Bessel Type Functions
 ---------------------
+
+.. module:: sympy.functions.special.bessel
 
 .. autoclass:: sympy.functions.special.bessel.BesselBase
    :members:
@@ -80,6 +89,17 @@ Bessel Type Functions
 
 .. autofunction:: sympy.functions.special.bessel.jn_zeros
 
+Airy Functions
+--------------
+
+.. autoclass:: sympy.functions.special.bessel.AiryBase
+   :members:
+
+.. autoclass:: sympy.functions.special.bessel.airyai
+.. autoclass:: sympy.functions.special.bessel.airybi
+.. autoclass:: sympy.functions.special.bessel.airyaiprime
+.. autoclass:: sympy.functions.special.bessel.airybiprime
+
 B-Splines
 ---------
 
@@ -94,6 +114,7 @@ Riemann Zeta and Related Functions
 .. autoclass:: dirichlet_eta
 .. autoclass:: polylog
 .. autoclass:: lerchphi
+.. autoclass:: stieltjes
 
 Hypergeometric Functions
 ------------------------
@@ -111,6 +132,18 @@ Elliptic integrals
 .. autoclass:: elliptic_f
 .. autoclass:: elliptic_e
 .. autoclass:: elliptic_pi
+
+Mathieu Functions
+-----------------
+.. module:: sympy.functions.special.mathieu_functions
+
+.. autoclass:: sympy.functions.special.mathieu_functions.MathieuBase
+   :members:
+
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieus
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieuc
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieusprime
+.. autoclass:: sympy.functions.special.mathieu_functions.mathieucprime
 
 Orthogonal Polynomials
 ----------------------

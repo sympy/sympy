@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic, Add, sympify
+from sympy.core.compatibility import iterable
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
 
@@ -28,7 +29,7 @@ def together(expr, deep=False):
     so ``apart(together(expr))`` should return expr unchanged. Note
     however, that :func:`together` uses only symbolic methods, so
     it might be necessary to use :func:`cancel` to perform algebraic
-    simplification and minimise degree of the numerator and denominator.
+    simplification and minimize degree of the numerator and denominator.
 
     Examples
     ========
@@ -76,7 +77,7 @@ def together(expr, deep=False):
                 return expr.__class__(base, exp)
             else:
                 return expr.__class__(*[ _together(arg) for arg in expr.args ])
-        elif hasattr(expr, '__iter__'):
+        elif iterable(expr):
             return expr.__class__([ _together(ex) for ex in expr ])
 
         return expr

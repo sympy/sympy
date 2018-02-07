@@ -2,11 +2,12 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, I, pi, oo, ilcm, Mod, C
+from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, range
 from sympy.core.mul import Mul
+from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
@@ -28,7 +29,9 @@ def _prep_tuple(v):
     Turn an iterable argument V into a Tuple and unpolarify, since both
     hypergeometric and meijer g-functions are unbranched in their parameters.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.functions.special.hyper import _prep_tuple
     >>> _prep_tuple([1, 2, 3])
     (1, 2, 3)
@@ -37,7 +40,7 @@ def _prep_tuple(v):
     >>> _prep_tuple((7, 8, 9))
     (7, 8, 9)
     """
-    from sympy.simplify.simplify import unpolarify
+    from sympy import unpolarify
     return TupleArg(*[unpolarify(x) for x in v])
 
 
@@ -72,12 +75,12 @@ class hyper(TupleParametersBase):
     :math:`b_q`. It also has an argument :math:`z`. The series definition is
 
     .. math ::
-        {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+        {}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
                      \middle| z \right)
-        = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
+        = \sum_{n=0}^\infty \frac{(a_1)_n \cdots (a_p)_n}{(b_1)_n \cdots (b_q)_n}
                             \frac{z^n}{n!},
 
-    where :math:`(a)_n = (a)(a+1)\dots(a+n-1)` denotes the rising factorial.
+    where :math:`(a)_n = (a)(a+1)\cdots(a+n-1)` denotes the rising factorial.
 
     If one of the :math:`b_q` is a non-positive integer then the series is
     undefined unless one of the `a_p` is a larger (i.e. smaller in
@@ -173,7 +176,6 @@ class hyper(TupleParametersBase):
     .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
-    nargs = 3
 
     def __new__(cls, ap, bq, z):
         # TODO should we check convergence conditions?
@@ -205,11 +207,12 @@ class hyper(TupleParametersBase):
 
     def _eval_rewrite_as_Sum(self, ap, bq, z):
         from sympy.functions import factorial, RisingFactorial, Piecewise
-        n = C.Dummy("n", integer=True)
+        from sympy import Sum
+        n = Dummy("n", integer=True)
         rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
         rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
         coeff = Mul(*rfap) / Mul(*rfbq)
-        return Piecewise((C.Sum(coeff * z**n / factorial(n), (n, 0, oo)),
+        return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
     @property
@@ -254,9 +257,9 @@ class hyper(TupleParametersBase):
         >>> hyper((1, 2), (3, 4), z).radius_of_convergence
         oo
         """
-        if any(a.is_integer and (a <= 0) is True for a in self.ap + self.bq):
-            aints = [a for a in self.ap if a.is_Integer and (a <= 0) is True]
-            bints = [a for a in self.bq if a.is_Integer and (a <= 0) is True]
+        if any(a.is_integer and (a <= 0) == True for a in self.ap + self.bq):
+            aints = [a for a in self.ap if a.is_Integer and (a <= 0) == True]
+            bints = [a for a in self.bq if a.is_Integer and (a <= 0) == True]
             if len(aints) < len(bints):
                 return S(0)
             popped = False
@@ -302,6 +305,12 @@ class hyper(TupleParametersBase):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 
+    def _sage_(self):
+        import sage.all as sage
+        ap = [arg._sage_() for arg in self.args[0]]
+        bq = [arg._sage_() for arg in self.args[1]]
+        return sage.hypergeometric(ap, bq, self.argument._sage_())
+
 
 class meijerg(TupleParametersBase):
     r"""
@@ -311,16 +320,16 @@ class meijerg(TupleParametersBase):
 
     The Meijer G-function depends on four sets of parameters. There are
     "*numerator parameters*"
-    :math:`a_1, \dots, a_n` and :math:`a_{n+1}, \dots, a_p`, and there are
+    :math:`a_1, \ldots, a_n` and :math:`a_{n+1}, \ldots, a_p`, and there are
     "*denominator parameters*"
-    :math:`b_1, \dots, b_m` and :math:`b_{m+1}, \dots, b_q`.
+    :math:`b_1, \ldots, b_m` and :math:`b_{m+1}, \ldots, b_q`.
     Confusingly, it is traditionally denoted as follows (note the position
     of `m`, `n`, `p`, `q`, and how they relate to the lengths of the four
     parameter vectors):
 
     .. math ::
-        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
-                                        b_1, \dots, b_m & b_{m+1}, \dots, b_q
+        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \cdots, a_n & a_{n+1}, \cdots, a_p \\
+                                        b_1, \cdots, b_m & b_{m+1}, \cdots, b_q
                           \end{matrix} \middle| z \right).
 
     However, in sympy the four parameter vectors are always available
@@ -431,13 +440,12 @@ class meijerg(TupleParametersBase):
 
     """
 
-    nargs = 3
 
     def __new__(cls, *args):
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
-            raise TypeError("args must eiter be as, as', bs, bs', z or "
+            raise TypeError("args must be either as, as', bs, bs', z or "
                             "as, bs, z")
 
         def tr(p):
@@ -445,8 +453,16 @@ class meijerg(TupleParametersBase):
                 raise TypeError("wrong argument")
             return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
+        arg0, arg1 = tr(args[0]), tr(args[1])
+        if Tuple(arg0, arg1).has(oo, zoo, -oo):
+            raise ValueError("G-function parameters must be finite")
+        if any((a - b).is_Integer and a - b > 0
+               for a in arg0[0] for b in arg1[0]):
+            raise ValueError("no parameter a1, ..., an may differ from "
+                         "any b1, ..., bm by a positive integer")
+
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, tr(args[0]), tr(args[1]), args[2])
+        return Function.__new__(cls, arg0, arg1, args[2])
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -602,7 +618,8 @@ class meijerg(TupleParametersBase):
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
         from sympy.functions import exp_polar, ceiling
-        from sympy import mpmath, Expr
+        from sympy import Expr
+        import mpmath
         z = self.argument
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
@@ -614,7 +631,6 @@ class meijerg(TupleParametersBase):
             branch = S(0)
         n = ceiling(abs(branch/S.Pi)) + 1
         znum = znum**(S(1)/n)*exp(I*branch / n)
-        #print znum, branch, n
 
         # Convert all args to mpf or mpc
         try:
@@ -623,15 +639,8 @@ class meijerg(TupleParametersBase):
         except ValueError:
             return
 
-        # Set mpmath precision and apply. Make sure precision is restored
-        # afterwards
-        orig = mpmath.mp.prec
-        try:
-            mpmath.mp.prec = prec
+        with mpmath.workprec(prec):
             v = mpmath.meijerg(ap, bq, z, r)
-            #print ap, bq, z, r, v
-        finally:
-            mpmath.mp.prec = orig
 
         return Expr._from_mpmath(v, prec)
 
@@ -695,6 +704,11 @@ class meijerg(TupleParametersBase):
             c.f. references. """
         return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
 
+    @property
+    def is_number(self):
+        """ Returns true if expression has numeric data only. """
+        return not self.free_symbols
+
 
 class HyperRep(Function):
     """
@@ -711,14 +725,13 @@ class HyperRep(Function):
     supply the actual functions.
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, *args):
         from sympy import unpolarify
-        nargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
-        if args != nargs:
-            return cls(*nargs)
+        newargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
+        if args != newargs:
+            return cls(*newargs)
 
     @classmethod
     def _expr_small(cls, x):
@@ -744,17 +757,17 @@ class HyperRep(Function):
         from sympy import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
-        nargs = self.args[:-1] + (x,)
+        newargs = self.args[:-1] + (x,)
         if not n.is_Integer:
             minus = True
             n -= S(1)/2
-        nnargs = nargs + (n,)
+        newerargs = newargs + (n,)
         if minus:
-            small = self._expr_small_minus(*nargs)
-            big = self._expr_big_minus(*nnargs)
+            small = self._expr_small_minus(*newargs)
+            big = self._expr_big_minus(*newerargs)
         else:
-            small = self._expr_small(*nargs)
-            big = self._expr_big(*nnargs)
+            small = self._expr_small(*newargs)
+            big = self._expr_big(*newerargs)
 
         if big == small:
             return small
@@ -770,7 +783,6 @@ class HyperRep(Function):
 
 class HyperRep_power1(HyperRep):
     """ Return a representative for hyper([-a], [], z) == (1 - z)**a. """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, x):
@@ -795,7 +807,6 @@ class HyperRep_power1(HyperRep):
 
 class HyperRep_power2(HyperRep):
     """ Return a representative for hyper([a, a - 1/2], [2*a], z). """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, x):
@@ -908,7 +919,6 @@ class HyperRep_asin2(HyperRep):
 
 class HyperRep_sqrts1(HyperRep):
     """ Return a representative for hyper([-a, 1/2 - a], [1/2], z). """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -940,7 +950,6 @@ class HyperRep_sqrts2(HyperRep):
     """ Return a representative for
           sqrt(z)/2*[(1-sqrt(z))**2a - (1 + sqrt(z))**2a]
           == -2*z/(2*a+1) d/dz hyper([-a - 1/2, -a], [1/2], z)"""
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -997,7 +1006,6 @@ class HyperRep_cosasin(HyperRep):
     """ Represent hyper([a, -a], [1/2], z) == cos(2*a*asin(sqrt(z))). """
     # Note there are many alternative expressions, e.g. as powers of a sum of
     # square roots.
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -1019,7 +1027,6 @@ class HyperRep_cosasin(HyperRep):
 class HyperRep_sinasin(HyperRep):
     """ Represent 2*a*z*hyper([1 - a, 1 + a], [3/2], z)
         == sqrt(z)/sqrt(1-z)*sin(2*a*asin(sqrt(z))) """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):

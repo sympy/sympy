@@ -13,9 +13,9 @@
 # in a sequence. However you can and must indent your
 # expression using standard Pyhon rules.
 #
-# You can retrive the last output using '_' built-in
+# You can retrieve the last output using '_' built-in
 # symbol. If the previous command did not generate
-# any ouput, it will be assigned with None.
+# any output, it will be assigned with None.
 #
 # For a complete Python interface visit:
 #
@@ -69,7 +69,7 @@ _greek = 'alpha beta gamma delta epsilon zeta eta '  \
          'sigma tau upsilon phi chi psi omega'
 
 for _symbol in _greek.split(' '):
-    exec "%s = Symbol('%s')" % (_symbol, _symbol)
+    exec("%s = Symbol('%s')" % (_symbol, _symbol))
 
 del _symbol
 """

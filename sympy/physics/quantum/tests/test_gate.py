@@ -1,4 +1,5 @@
 from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
