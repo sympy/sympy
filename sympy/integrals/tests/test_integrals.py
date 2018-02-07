@@ -318,7 +318,7 @@ def test_issue_7450():
 
 
 def test_issue_8623():
-    assert integrate(cos(x)**2 / (1 + sin(x)**2), (x, 0, pi) == pi*(sqrt(2)-1)
+    assert integrate(cos(x)**2 / (1 + sin(x)**2), (x, 0, pi)) == pi*(sqrt(2)-1)
 
 
 def test_issue_9569():
