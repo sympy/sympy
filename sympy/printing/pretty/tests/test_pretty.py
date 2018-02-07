@@ -4091,12 +4091,12 @@ def test_pretty_Boolean():
     expr = Equivalent(x, y, evaluate=False)
 
     assert pretty(expr) == "Equivalent(x, y)"
-    assert upretty(expr) == u"x ≡ y"
+    assert upretty(expr) == u"x ⇔ y"
 
     expr = Equivalent(y, x, evaluate=False)
 
     assert pretty(expr) == "Equivalent(x, y)"
-    assert upretty(expr) == u"x ≡ y"
+    assert upretty(expr) == u"x ⇔ y"
 
 
 def test_pretty_Domain():
@@ -5747,12 +5747,12 @@ def test_pretty_Add():
 
 
 def test_issue_7179():
-    assert upretty(Not(Equivalent(x, y))) == u'x ≢ y'
+    assert upretty(Not(Equivalent(x, y))) == u'x ⇎ y'
     assert upretty(Not(Implies(x, y))) == u'x ↛ y'
 
 
 def test_issue_7180():
-    assert upretty(Equivalent(x, y)) == u'x ≡ y'
+    assert upretty(Equivalent(x, y)) == u'x ⇔ y'
 
 
 def test_pretty_Complement():
