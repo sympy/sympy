@@ -75,6 +75,7 @@ class Dispatcher(object):
     def register(self, *types, **kwargs):
         """ register dispatcher with new implementation
 
+        >>> from sympy.multipledispatch.dispatcher import Dispatcher
         >>> f = Dispatcher('f')
         >>> @f.register(int)
         ... def inc(x):
@@ -132,6 +133,7 @@ class Dispatcher(object):
     def add(self, signature, func, on_ambiguity=ambiguity_warn):
         """ Add new types/method pair to dispatcher
 
+        >>> from sympy.multipledispatch import Dispatcher
         >>> D = Dispatcher('add')
         >>> D.add((int, int), lambda x, y: x + y)
         >>> D.add((float, float), lambda x, y: x + y)
@@ -346,6 +348,7 @@ class MethodDispatcher(Dispatcher):
 def str_signature(sig):
     """ String representation of type signature
 
+    >>> from sympy.multipledispatch.dispatcher import str_signature
     >>> str_signature((int, float))
     'int, float'
     """

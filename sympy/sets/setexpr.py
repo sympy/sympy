@@ -1,50 +1,34 @@
-from sympy.core import Expr, Function, Add, Mul, Pow, Dummy
-from sympy import sift, latex, Min, Max, Set, sympify
-from sympy.sets import imageset, Interval, FiniteSet, Union
-#from sympy.core.compatibility import u
+from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
+from sympy import sift, latex, Min, Max, Set, sympify, Lambda, symbols
+from sympy.sets import imageset, Interval, FiniteSet, Union, ImageSet, ProductSet
 from sympy.core.decorators import call_highest_priority, _sympifyit
+from sympy.multipledispatch import dispatch, Dispatcher
 
 from itertools import count
 
 
-x = Dummy('x')
-
-
-def setexpr(inp):
-    if isinstance(inp, set):
-        return SetExpr(FiniteSet(inp))
-    if isinstance(inp, tuple) and len(inp) == 2:
-        return SetExpr(Interval(inp[0], inp[1], True, True))
-    if isinstance(inp, list) and len(inp) == 2:
-        return SetExpr(Interval(inp[0], inp[1], False, False))
-    return SetExpr(inp)
-
-
-counter = ('_%d'%i for i in count(1))
+d = Dummy('d')
 
 
 class SetExpr(Expr):
-    """ An expression that can take on values of a set
+    """An expression that can take on values of a set
 
     >>> from sympy import Interval, FiniteSet
-    >>> from sympy.sets.setexpr import SetExpr, simplify_set_expression
+    >>> from sympy.sets.setexpr import SetExpr
 
     >>> a = SetExpr(Interval(0, 5))
     >>> b = SetExpr(FiniteSet(1, 10))
-    >>> simplify_set_expression(a + b).set
-    [1, 6] U [10, 15]
-
-    >>> simplify_set_expression(2*a + b).set
-    [1, 20]
+    >>> (a + b).set
+    Union(Interval(1, 6), Interval(10, 15))
+    >>> (2*a + b).set
+    Interval(1, 20)
     """
     _op_priority = 11.0
 
-    def __new__(cls, set, token=None):
-        token = token or next(counter)
-        return Expr.__new__(cls, set, sympify(token))
+    def __new__(cls, setarg):
+        return Expr.__new__(cls, setarg)
 
     set = property(lambda self: self.args[0])
-    token = property(lambda self: self.args[1])
 
     def _latex(self, printer):
         return printer._print(self.set)
@@ -55,141 +39,223 @@ class SetExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return simplify_set_expression(Add(self, other))
+        return apply_operation(add_sets, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return simplify_set_expression(Add(self, other))
+        return apply_operation(add_sets, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return simplify_set_expression(Mul(self, other))
+        return apply_operation(mul_sets, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return simplify_set_expression(Mul(other, self))
+        return apply_operation(mul_sets, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return simplify_set_expression(Add(self, -other))
+        return apply_operation(sub_sets, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return simplify_set_expression(Add(other, -self))
+        return apply_operation(sub_sets, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        return simplify_set_expression(Pow(self, other))
+        return apply_operation(pow_sets, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        return simplify_set_expression(Pow(other, self))
+        return apply_operation(pow_sets, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return simplify_set_expression(Mul(self, 1/other))
+        return apply_operation(div_sets, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        return simplify_set_expression(Mul(other, Pow(self, -1)))
+        return apply_operation(div_sets, other, self)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def _eval_func(self, func):
         return SetExpr(imageset(func, self.set))
 
 
-def simplify_set_expression(inp):
-    """ Collapse expression containing SetExprs to single SetExpr """
-    if not inp.has(SetExpr):
-        return inp
-
-    # Recurse downwards
-    # e.g. simplify_set_expression(x + y) ->
-    # simplify_set_expression(simplify_set_expression(x) +
-    # simplify_set_expression(y))
-    inp = inp.func(*map(simplify_set_expression, inp.args))
-
-    op, args = inp.func, inp.args
-
-    # If operation is commutative and we have non-SetExprs then
-    # 1. Simplify op(*SetExprs)
-    # 2. Turn all non-SetExprs into a function, f = x -> op(x, *non-set-exprs)
-    # 3. Apply and simplify_set_expression, return
-    # simplify_set_expression(f(op(*SetExprs)))
-    if (isinstance(inp, (Add, Mul))
-            and not all(isinstance(arg, SetExpr) for arg in inp.args)):
-        groups = sift(inp.args, lambda x: isinstance(x, SetExpr))
-        setexprs, others = groups[True], groups[False]
-        se = simplify_set_expression(op(*setexprs))  # call out to many-setexpr function
-        return SetExpr(imageset(x, op(x, *others), se.set))
-
-    # Multiple dispatch to `_simplify_foo` functions defined below
-    # Dispatched on operator, and then type of argument or type of set if
-    # argument is SetExpr
-    args2 = [arg.set if isinstance(arg, SetExpr) else arg for arg in args]
-    for key, func in join_list:  # Multiple Dispatch
-        if (issubclass(op, key[0])
-            and len(key[1:]) == len(args2)
-            and all(isinstance(se, typ)
-                    for se, typ in zip(args2, key[1:]))):
-            return func(op, *args)
-
-    # Two args is a common case for _simplify_foo functions.
-    # Lets try a reduction with join.
-    if len(args) > 2:
-        result = args[0]
-        for se in args[1:]:
-            result = simplify_set_expression(op(result, se))
-        return result
-
-    return op(*args)
+_x, _y = symbols("x y")
 
 
-def _simplify_Function(func, a):
-    """ f(SetExpr(set)) -> SetExpr(imageset(f, set)) """
-    return SetExpr(imageset(func, a.set))
+@dispatch(Set, Set)
+def add_sets(x, y):
+    return ImageSet(Lambda((_x, _y), (_x+_y)), ProductSet(x, y))
 
 
-def _simplify_Pow(_, base, exp):
-    """ SetExpr(set)**expr -> SetExpr(imageset(x, x**expr, set)) """
-    return SetExpr(imageset(x, Pow(x, exp), base.set))
+@dispatch(Expr, Expr)
+def add_sets(x, y):
+    return x+y
 
 
-def _simplify_Add_Intervals(_, a, b):
-    """ SetExpr([x, y]) + SetExpr([m, n]) -> SetExpr([x + m, y + n]) """
-    return SetExpr(Interval(a.set.start + b.set.start,
-                            a.set.end + b.set.end,
-                            a.set.left_open or b.set.left_open,
-                            a.set.right_open or b.set.right_open))
+@dispatch(Interval, Interval)
+def add_sets(x, y):
+    """
+    Additions in interval arithmetic
+    https://en.wikipedia.org/wiki/Interval_arithmetic
+    """
+    return Interval(x.start + y.start, x.end + y.end,
+        x.left_open or y.left_open, x.right_open or y.right_open)
 
 
-def _simplify_Mul_Intervals(_, a, b):
-    """ SetExpr([x, y]) * SetExpr([m, n]) -> SetExpr([...]) """
-    start = Min(*[x * y for x in (a.set.start, a.set.end)
-                        for y in (b.set.start, b.set.end)])
-    end =   Max(*[x * y for x in (a.set.start, a.set.end)
-                        for y in (b.set.start, b.set.end)])
-    # TODO: Handle left_open right_open
+@dispatch(Expr, Expr)
+def sub_sets(x, y):
+    return x-y
+
+
+@dispatch(Set, Set)
+def sub_sets(x, y):
+    return ImageSet(Lambda((_x, _y), (_x - _y)), ProductSet(x, y))
+
+
+@dispatch(Interval, Interval)
+def sub_sets(x, y):
+    """
+    Subtractions in interval arithmetic
+    https://en.wikipedia.org/wiki/Interval_arithmetic
+    """
+    return Interval(x.start - y.end, x.end - y.start,
+        x.left_open or y.right_open, x.right_open or y.left_open)
+
+
+@dispatch(Set, Set)
+def mul_sets(x, y):
+    return ImageSet(Lambda((_x, _y), (_x * _y)), ProductSet(x, y))
+
+
+@dispatch(Expr, Expr)
+def mul_sets(x, y):
+    return x*y
+
+
+@dispatch(Interval, Interval)
+def mul_sets(x, y):
+    """
+    Multiplications in interval arithmetic
+    https://en.wikipedia.org/wiki/Interval_arithmetic
+    """
+    comvals = (
+        (x.start * y.start, bool(x.left_open or y.left_open)),
+        (x.start * y.end, bool(x.left_open or y.right_open)),
+        (x.end * y.start, bool(x.right_open or y.left_open)),
+        (x.end * y.end, bool(x.right_open or y.right_open)),
+    )
+    # TODO: handle symbolic intervals
+    minval, minopen = min(comvals)
+    maxval, maxopen = max(comvals)
+    return Interval(
+        minval,
+        maxval,
+        minopen,
+        maxopen
+    )
     return SetExpr(Interval(start, end))
 
 
-def _simplify_FiniteSet(op, a, b):
-    if isinstance(b.set, FiniteSet):
-        a, b = b, a
-    return SetExpr(Union(*[simplify_set_expression(op(x, b)).set for x in a.set]))
+@dispatch(Expr, Expr)
+def div_sets(x, y):
+    return x/y
 
 
-join_list = [[(Function, Set),              _simplify_Function],
-             [(Pow, Set, Expr),             _simplify_Pow],
-             [(Add, Interval, Interval),    _simplify_Add_Intervals],
-             [(Mul, Interval, Interval),    _simplify_Mul_Intervals],
-             [((Add, Mul), FiniteSet, Set), _simplify_FiniteSet],
-             [((Add, Mul), Set, FiniteSet), _simplify_FiniteSet]]
+@dispatch(Set, Set)
+def div_sets(x, y):
+    return ImageSet(Lambda((_x, _y), (_x / _y)), ProductSet(x, y))
+
+
+@dispatch(Interval, Interval)
+def div_sets(x, y):
+    """
+    Divisions in interval arithmetic
+    https://en.wikipedia.org/wiki/Interval_arithmetic
+    """
+    if (y.start*y.end).is_negative:
+        from sympy import oo
+        return Interval(-oo, oo)
+    return mul_sets(x, Interval(1/y.end, 1/y.start, y.right_open, y.left_open))
+
+
+@dispatch(Set, Set)
+def pow_sets(x, y):
+    return ImageSet(Lambda((_x, _y), (_x ** _y)), ProductSet(x, y))
+
+
+@dispatch(Expr, Expr)
+def pow_sets(x, y):
+    return x**y
+
+
+@dispatch(Interval, Integer)
+def pow_sets(x, y):
+    """
+    Powers in interval arithmetic
+    https://en.wikipedia.org/wiki/Interval_arithmetic
+    """
+    exponent = sympify(exponent)
+    if exponent.is_odd:
+        return Interval(x.start**exponent, x.end**exponent, x.left_open, x.right_open)
+    if exponent.is_even:
+        if (x.start*x.end).is_negative:
+            if -x.start > x.end:
+                left_limit = x.start
+                left_open = x.right_open
+            else:
+                left_limit = x.end
+                left_open = x.left_open
+            return Interval(S.Zero, left_limit ** exponent, S.Zero not in x, left_open)
+        elif x.start.is_negative and x.end.is_negative:
+            return Interval(x.end**exponent, x.start**exponent, x.right_open, x.left_open)
+        else:
+            return Interval(x.start**exponent, x.end**exponent, x.left_open, x.right_open)
+
+
+@dispatch(FiniteSet, FiniteSet, Dispatcher)
+def dispatch_on_operation(x, y, op):
+    return FiniteSet(*[op(i, j) for i in x for j in y])
+
+@dispatch(Set, FiniteSet, Dispatcher)
+def dispatch_on_operation(x, y, op):
+    return Union(*[dispatch_on_operation(x, i, op) for i in y])
+
+@dispatch(FiniteSet, Set, Dispatcher)
+def dispatch_on_operation(x, y, op):
+    return Union(*[dispatch_on_operation(i, y, op) for i in x])
+
+@dispatch(Basic, Basic, Dispatcher)
+def dispatch_on_operation(x, y, op):
+    return op(x, y)
+
+@dispatch(Expr, Set, Dispatcher)
+def dispatch_on_operation(x, y, op):
+    return ImageSet(Lambda(d, op(x, d)), y).doit()
+
+@dispatch(Set, Expr, Dispatcher)
+def dispatch_on_operation(x, y, op):
+    return ImageSet(Lambda(d, op(d, y)), x).doit()
+
+
+def apply_operation(op, x, y):
+    if isinstance(x, SetExpr):
+        x = x.set
+    if isinstance(y, SetExpr):
+        y = y.set
+    out = dispatch_on_operation(x, y, op)
+    assert isinstance(out, Set)
+    return SetExpr(out)

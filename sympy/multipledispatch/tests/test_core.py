@@ -1,5 +1,5 @@
 from sympy.multipledispatch import dispatch
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from functools import partial
 
 test_namespace = dict()
@@ -8,6 +8,7 @@ orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
 
 
+@XFAIL
 def test_singledispatch():
     @dispatch(int)
     def f(x):
@@ -28,7 +29,7 @@ def test_singledispatch():
     assert raises(NotImplementedError, lambda: f('hello'))
 
 
-def test_multipledispatch(benchmark):
+def test_multipledispatch():
     @dispatch(int, int)
     def f(x, y):
         return x + y
@@ -62,6 +63,7 @@ def test_inheritance():
     assert f(C()) == 'a'
 
 
+@XFAIL
 def test_inheritance_and_multiple_dispatch():
     @dispatch(A, A)
     def f(x, y):

@@ -1,6 +1,6 @@
 def expand_tuples(L):
     """
-
+    >>> from sympy.multipledispatch.utils import expand_tuples
     >>> expand_tuples([1, (2, 3)])
     [(1, 2), (1, 3)]
 
@@ -27,6 +27,7 @@ def _toposort(edges):
     outputs:
         L - an ordered list of nodes that satisfy the dependencies of edges
 
+    >>> from sympy.multipledispatch.utils import _toposort
     >>> _toposort({1: (2, 3), 2: (3, )})
     [1, 2, 3]
 
@@ -79,6 +80,7 @@ def reverse_dict(d):
 def groupby(func, seq):
     """ Group a collection by a key function
 
+    >>> from sympy.multipledispatch.utils import groupby
     >>> names = ['Alice', 'Bob', 'Charlie', 'Dan', 'Edith', 'Frank']
     >>> groupby(len, names)  # doctest: +SKIP
     {3: ['Bob', 'Dan'], 5: ['Alice', 'Edith', 'Frank'], 7: ['Charlie']}

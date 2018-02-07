@@ -18,6 +18,7 @@ def dispatch(*types, **kwargs):
     Examples
     --------
 
+    >>> from sympy.multipledispatch import dispatch
     >>> @dispatch(int)
     ... def f(x):
     ...     return x + 1
