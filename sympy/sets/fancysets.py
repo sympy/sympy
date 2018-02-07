@@ -387,7 +387,6 @@ class ImageSet(Set):
     def doit(self, **kwargs):
         return self.base_set._eval_imageset(self.lamda)
 
-
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine
         if self.base_set is S.Integers:

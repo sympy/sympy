@@ -229,8 +229,7 @@ class exp(ExpBase):
     def eval(cls, arg):
         from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
-        if hasattr(arg, '_eval_exp'):
-            return arg._eval_exp(cls)
+        from sympy.sets.setexpr import SetExpr
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -246,6 +245,8 @@ class exp(ExpBase):
             return arg.args[0]
         elif isinstance(arg, AccumBounds):
             return AccumBounds(exp(arg.min), exp(arg.max))
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
         elif arg.is_Mul:
             if arg.is_number or arg.is_Symbol:
                 coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
@@ -487,6 +488,8 @@ class log(Function):
     def eval(cls, arg, base=None):
         from sympy import unpolarify
         from sympy.calculus import AccumBounds
+        from sympy.sets.setexpr import SetExpr
+
         arg = sympify(arg)
 
         if base is not None:
@@ -515,9 +518,6 @@ class log(Function):
             else:
                 return cls(arg)
 
-        if hasattr(arg, '_eval_log'):
-            return arg._eval_log(cls)
-
         if arg.is_Number:
             if arg is S.Zero:
                 return S.ComplexInfinity
@@ -542,6 +542,8 @@ class log(Function):
                 return AccumBounds(log(arg.min), log(arg.max))
             else:
                 return
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
 
         if arg.is_number:
             if arg.is_negative:

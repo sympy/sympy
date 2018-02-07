@@ -667,7 +667,6 @@ def test_sympy__core__trace__Tr():
 
 def test_sympy__sets__setexpr__SetExpr():
     from sympy.sets.setexpr import SetExpr
-    from sympy.core.sets import Interval
     assert _test_args(SetExpr(Interval(0, 1)))
 
 

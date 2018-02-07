@@ -1,7 +1,7 @@
 from sympy.core import Expr, Function, Add, Mul, Pow, Dummy
 from sympy import sift, latex, Min, Max, Set, sympify
-from sympy.core.sets import imageset, Interval, FiniteSet, Union
-from sympy.core.compatibility import u
+from sympy.sets import imageset, Interval, FiniteSet, Union
+#from sympy.core.compatibility import u
 from sympy.core.decorators import call_highest_priority, _sympifyit
 
 from itertools import count
@@ -27,14 +27,14 @@ class SetExpr(Expr):
     """ An expression that can take on values of a set
 
     >>> from sympy import Interval, FiniteSet
-    >>> from sympy.sets.setexpr import SetExpr, simplify
+    >>> from sympy.sets.setexpr import SetExpr, simplify_set_expression
 
     >>> a = SetExpr(Interval(0, 5))
     >>> b = SetExpr(FiniteSet(1, 10))
-    >>> simplify(a + b).set
+    >>> simplify_set_expression(a + b).set
     [1, 6] U [10, 15]
 
-    >>> simplify(2*a + b).set
+    >>> simplify_set_expression(2*a + b).set
     [1, 20]
     """
     _op_priority = 11.0
@@ -55,78 +55,80 @@ class SetExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return simplify(Add(self, other))
+        return simplify_set_expression(Add(self, other))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return simplify(Add(self, other))
+        return simplify_set_expression(Add(self, other))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return simplify(Mul(self, other))
+        return simplify_set_expression(Mul(self, other))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return simplify(Mul(other, self))
+        return simplify_set_expression(Mul(other, self))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return simplify(Add(self, -other))
+        return simplify_set_expression(Add(self, -other))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return simplify(Add(other, -self))
+        return simplify_set_expression(Add(other, -self))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        return simplify(Pow(self, other))
+        return simplify_set_expression(Pow(self, other))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        return simplify(Pow(other, self))
+        return simplify_set_expression(Pow(other, self))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return simplify(Mul(self, 1/other))
+        return simplify_set_expression(Mul(self, 1/other))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        return simplify(Mul(other, Pow(self, -1)))
+        return simplify_set_expression(Mul(other, Pow(self, -1)))
 
     def _eval_func(self, func):
         return SetExpr(imageset(func, self.set))
-    _eval_exp = _eval_log = _eval_sin = _eval_cos = _eval_tan =_eval_func
 
 
-def simplify(inp):
+def simplify_set_expression(inp):
     """ Collapse expression containing SetExprs to single SetExpr """
     if not inp.has(SetExpr):
         return inp
 
     # Recurse downwards
-    # e.g. simplify(x + y) -> simplify(simplify(x) + simplify(y))
-    inp = inp.func(*map(simplify, inp.args))
+    # e.g. simplify_set_expression(x + y) ->
+    # simplify_set_expression(simplify_set_expression(x) +
+    # simplify_set_expression(y))
+    inp = inp.func(*map(simplify_set_expression, inp.args))
 
     op, args = inp.func, inp.args
 
     # If operation is commutative and we have non-SetExprs then
     # 1. Simplify op(*SetExprs)
     # 2. Turn all non-SetExprs into a function, f = x -> op(x, *non-set-exprs)
-    # 3. Apply and simplify, return simplify(f(op(*SetExprs)))
+    # 3. Apply and simplify_set_expression, return
+    # simplify_set_expression(f(op(*SetExprs)))
     if (isinstance(inp, (Add, Mul))
             and not all(isinstance(arg, SetExpr) for arg in inp.args)):
         groups = sift(inp.args, lambda x: isinstance(x, SetExpr))
         setexprs, others = groups[True], groups[False]
-        se = simplify(op(*setexprs))  # call out to many-setexpr function
+        se = simplify_set_expression(op(*setexprs))  # call out to many-setexpr function
         return SetExpr(imageset(x, op(x, *others), se.set))
 
     # Multiple dispatch to `_simplify_foo` functions defined below
@@ -145,7 +147,7 @@ def simplify(inp):
     if len(args) > 2:
         result = args[0]
         for se in args[1:]:
-            result = simplify(op(result, se))
+            result = simplify_set_expression(op(result, se))
         return result
 
     return op(*args)
@@ -182,7 +184,7 @@ def _simplify_Mul_Intervals(_, a, b):
 def _simplify_FiniteSet(op, a, b):
     if isinstance(b.set, FiniteSet):
         a, b = b, a
-    return SetExpr(Union(*[simplify(op(x, b)).set for x in a.set]))
+    return SetExpr(Union(*[simplify_set_expression(op(x, b)).set for x in a.set]))
 
 
 join_list = [[(Function, Set),              _simplify_Function],
