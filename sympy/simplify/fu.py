@@ -2204,4 +2204,7 @@ def sincos_to_sum(expr):
     7*sin(x) - 5*sin(3*x) + 3*sin(5*x) - sin(7*x)
     """
 
-    return TR8(expand_mul(TRpower(expr)))
+    if not expr.has(cos, sin):
+        return expr
+    else:
+        return TR8(expand_mul(TRpower(expr)))
