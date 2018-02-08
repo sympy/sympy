@@ -3,8 +3,14 @@ from __future__ import print_function, division
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
         Piecewise, S, cacheit, Sum, exp, I, oo)
 from sympy.solvers.solveset import solveset
-from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
+from sympy.solvers.inequalities import reduce_rational_inequalities
+from sympy.stats.crv import (reduce_rational_inequalities_wrap,
+        _reduce_inequalities)
+from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
+        random_symbols)
 from sympy.functions.elementary.integers import floor
+from sympy.sets.fancysets import Range, FiniteSet
+from sympy.utilities import filldedent
 import random
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
@@ -157,3 +163,38 @@ class SingleDiscretePSpace(SinglePSpace):
             return self.distribution.compute_characteristic_function(**kwargs)
         else:
             raise NotImplementedError()
+
+    def restricted_domain(self, condition):
+        rvs = random_symbols(condition)
+        assert all(r.symbol in self.symbols for r in rvs)
+        if (len(rvs) > 1):
+            raise NotImplementedError(filldedent('''Multivariate discrete
+            random variables are not yet supported.'''))
+        conditional_domain = reduce_rational_inequalities_wrap(condition,
+            rvs[0])
+        conditional_domain = conditional_domain.intersect(self.domain.set)
+        # return SingleDiscreteDomain(self.symbol, conditional_domain)
+        return conditional_domain
+
+    def probability(self, condition):
+        _domain = self.restricted_domain(condition)
+        if condition is False or _domain is S.EmptySet:
+            return S.Zero
+        if condition is True or _domain == self.set:
+            return S.One
+        n = symbols('n')
+        if isinstance(_domain, Range):
+            inf, sup, step = (r for r in _domain.args)
+            summand = ((self.pdf).replace(
+                self.symbol, inf + n*step))
+            rv = summation(summand,
+                (n, 0, floor((sup - inf)/step - 1))).doit()
+            return rv
+        elif isinstance(_domain, FiniteSet):
+            pdf = Lambda(self.symbol, self.pdf)
+            rv = sum(pdf(x) for x in _domain)
+            return rv
+        else:
+            raise NotImplementedError(filldedent('''Probability for %s
+                for conditions %s cannot be calculated.'''%(
+                self.random_symbol, condition)))
