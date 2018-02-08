@@ -61,7 +61,7 @@ Id = S.IdentityFunction
 ###############################################################################
 
 
-def sqrt(arg):
+def sqrt(arg, evaluate=None):
     """The square root function
 
     sqrt(x) -> Returns the principal square root of x.
@@ -126,10 +126,10 @@ def sqrt(arg):
     .. [2] http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
-    return Pow(arg, S.Half)
+    return Pow(arg, S.Half, evaluate=evaluate)
 
 
-def cbrt(arg):
+def cbrt(arg, evaluate=None):
     """This function computes the principal cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
 
@@ -176,10 +176,10 @@ def cbrt(arg):
     * http://en.wikipedia.org/wiki/Principal_value
 
     """
-    return Pow(arg, Rational(1, 3))
+    return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
-def root(arg, n, k=0):
+def root(arg, n, k=0, evaluate=None):
     """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
     principal root (k=0).
 
@@ -265,11 +265,11 @@ def root(arg, n, k=0):
     """
     n = sympify(n)
     if k:
-        return Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
-    return Pow(arg, 1/n)
+        return Pow(arg, S.One/n, evaluate=evaluate)*S.NegativeOne**(2*k/n)
+    return Pow(arg, 1/n, evaluate=evaluate)
 
 
-def real_root(arg, n=None):
+def real_root(arg, n=None, evaluate=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
     will only create a real root of a principal root -- the presence of
@@ -308,7 +308,7 @@ def real_root(arg, n=None):
     from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
         return Piecewise(
-            (root(arg, n), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
+            (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
             (sign(arg)*root(Abs(arg), n), And(Eq(im(arg), S.Zero),
                 Eq(Mod(n, 2), S.One))),
             (root(arg, n), True))
