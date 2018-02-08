@@ -685,7 +685,9 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, (Basic, MatrixBase)):
-        exprs = [exprs]
+        if not(isinstance(exprs, Tuple) and  (any(isinstance(n, (Matrix, ImmutableMatrix,
+            SparseMatrix, ImmutableSparseMatrix)) for n in exprs))):
+              exprs = [exprs]
 
     copy = exprs
     temp = []

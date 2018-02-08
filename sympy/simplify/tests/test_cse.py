@@ -526,3 +526,13 @@ def test_issue_13000():
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
+
+
+def test_issue():
+    x, y = symbols('x,y')
+    m1, m2 = Matrix([[x, sin(y)],[3, 4]]), Matrix([[sin(y), 2*sin(y)], [sin(y)**2, 7]])
+    assert cse(Tuple(m1, m2)) == ([(x0, sin(y))], [Matrix([
+                                [x, x0],
+                                [3,  4]]), Matrix([
+                                [   x0, 2*x0],
+                                [x0**2,    7]])])
