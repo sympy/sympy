@@ -29,8 +29,8 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
 
-    #def _cdf(self, k):
-        #return uppergamma(floor(k+1), self.lamda) / factorial(floor(k))
+    def _cdf(self, k):
+        return uppergamma(floor(k+1), self.lamda) / factorial(floor(k))
 
     def sample(self):
         if self.lamda < 30:
