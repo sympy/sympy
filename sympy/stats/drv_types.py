@@ -7,8 +7,6 @@ from sympy.sets.sets import Interval
 from mpmath import pi
 import random
 
-
-
 __all__ = ['Geometric', 'Poisson']
 
 
@@ -93,9 +91,6 @@ class PoissonDistribution(SingleDiscreteDistribution):
                     return k
                 else:
                     continue
-
-
-
 
 def Poisson(name, lamda):
     r"""
