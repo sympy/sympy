@@ -1293,3 +1293,15 @@ def test_issue_14064():
 def test_issue_14027():
     assert integrate(1/(1 + exp(x - S(1)/2)/(1 + exp(x))), x) == \
         x - exp(S(1)/2)*log(exp(x) + exp(S(1)/2)/(1 + exp(S(1)/2)))/(exp(S(1)/2) + E)
+
+def test_issue_8170():
+    assert integrate(tan(x), (x, 0, pi/2)) == S.Infinity
+
+def test_issue_8440_14040():
+    assert integrate(1/x, (x, -1, 1)) == S.NaN
+    assert integrate(1/(x + 1), (x, -2, 3)) == S.NaN
+
+def test_issue_14096():
+    assert integrate(1/(x + y)**2, (x, 0, 1)) == -1/(y + 1) + 1/y
+    assert integrate(1/(1 + x + y + z)**2, (x, 0, 1), (y, 0, 1), (z, 0, 1)) == \
+        -4*log(4) - 6*log(2) + 9*log(3)
