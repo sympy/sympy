@@ -639,7 +639,7 @@ def repeated_decimals(tokens, local_dict, global_dict):
             elif tokval.isdigit() and len(num) == 2:
                 num.append((toknum, tokval))
             elif tokval.isdigit() and len(num) == 3 and num[-1][1].isdigit():
-                # Python 3 tokenizes 00123 as '00', '123'
+                # Python 2 tokenizes 00123 as '00', '123'
                 # Python 3 tokenizes 01289 as '012', '89'
                 num.append((toknum, tokval))
             else:
