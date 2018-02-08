@@ -10,6 +10,7 @@ from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
         random_symbols)
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
+from sympy.sets.sets import Union
 from sympy.utilities import filldedent
 import random
 
@@ -173,7 +174,6 @@ class SingleDiscretePSpace(SinglePSpace):
         conditional_domain = reduce_rational_inequalities_wrap(condition,
             rvs[0])
         conditional_domain = conditional_domain.intersect(self.domain.set)
-        # return SingleDiscreteDomain(self.symbol, conditional_domain)
         return conditional_domain
 
     def probability(self, condition):
@@ -182,8 +182,16 @@ class SingleDiscretePSpace(SinglePSpace):
             return S.Zero
         if condition is True or _domain == self.set:
             return S.One
-        n = symbols('n')
+        try:
+            return self.eval_prob(_domain)
+        except:
+            raise NotImplementedError(filldedent('''Probability for %s
+                for conditions %s cannot be calculated.'''%(
+                self.random_symbol, condition)))
+
+    def eval_prob(self, _domain):
         if isinstance(_domain, Range):
+            n = symbols('n')
             inf, sup, step = (r for r in _domain.args)
             summand = ((self.pdf).replace(
                 self.symbol, inf + n*step))
@@ -194,7 +202,6 @@ class SingleDiscretePSpace(SinglePSpace):
             pdf = Lambda(self.symbol, self.pdf)
             rv = sum(pdf(x) for x in _domain)
             return rv
-        else:
-            raise NotImplementedError(filldedent('''Probability for %s
-                for conditions %s cannot be calculated.'''%(
-                self.random_symbol, condition)))
+        elif isinstance(_domain, Union):
+            rv = sum(self.eval_prob(x) for x in _domain.args)
+            return rv

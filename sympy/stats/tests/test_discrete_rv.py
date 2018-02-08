@@ -4,7 +4,7 @@ from sympy.abc import x
 from sympy import S, Sum
 from sympy.stats import P, E, variance, density, characteristic_function
 from sympy.stats.rv import sample
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 
 def test_PoissonDistribution():
@@ -43,5 +43,13 @@ def test_discrete_probability():
     assert P(Eq(X, 3)) == S(16)/125
     assert P(X < 3) == S(9)/25
     assert P(X > 3) == S(64)/125
+    assert P(X >= 3) == S(16)/25
+    assert P(X <= 3) == S(61)/125
+    assert P(Ne(X, 3)) == S(109)/125
     assert P(Eq(Y, 3)) == 32*exp(-4)/3
     assert P(Y < 3) == 13*exp(-4)
+    assert P(Y > 3).equals(32*(-S(71)/32 + 3*exp(4)/32)*exp(-4)/3)
+    assert P(Y >= 3).equals(32*(-39/32 + 3*exp(4)/32)*exp(-4)/3)
+    assert P(Y <= 3) == 71*exp(-4)/3
+    assert P(Ne(Y, 3)).equals(
+        13*exp(-4) + 32*(-71/32 + 3*exp(4)/32)*exp(-4)/3)
