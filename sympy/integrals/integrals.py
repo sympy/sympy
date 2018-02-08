@@ -27,6 +27,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
+from sympy.simplify.fu import sincos_to_sum
 
 
 class Integral(AddWithLimits):
@@ -1030,7 +1031,7 @@ class Integral(AddWithLimits):
             # collection on the expressions if they are already
             # in an expanded form
             if not h and len(args) == 1:
-                f = f.expand(mul=True, deep=False)
+                f = sincos_to_sum(f).expand(mul=True, deep=False)
                 if f.is_Add:
                     # Note: risch will be identical on the expanded
                     # expression, but maybe it will be able to pick out parts,
