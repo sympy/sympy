@@ -8,7 +8,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, pi
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -19,9 +19,10 @@ from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign, piecewise_fold
-from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions import Piecewise, sqrt, sign, piecewise_fold, tan, cot, atan
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series import limit
 from sympy.series.order import Order
@@ -531,6 +532,30 @@ class Integral(AddWithLimits):
                         if ret is not None:
                             function = ret
                             continue
+
+            if not isinstance(antideriv, Integral) and antideriv is not None:
+                sym = xab[0]
+                for atan_term in antideriv.atoms(atan):
+                    atan_arg = atan_term.args[0]
+                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
+                    for tan_part in atan_arg.atoms(tan):
+                        x1 = Dummy('x1')
+                        tan_exp1 = atan_arg.subs(tan_part, x1)
+                        # The coefficient of `tan` should be constant
+                        coeff = tan_exp1.diff(x1)
+                        if x1 not in coeff.free_symbols:
+                            a = tan_part.args[0]
+                            antideriv = antideriv.subs(atan_term, Add(atan_term,
+                                sign(coeff)*pi*floor((a-pi/2)/pi)))
+                    for cot_part in atan_arg.atoms(cot):
+                        x1 = Dummy('x1')
+                        cot_exp1 = atan_arg.subs(cot_part, x1)
+                        # The coefficient of `cot` should be constant
+                        coeff = cot_exp1.diff(x1)
+                        if x1 not in coeff.free_symbols:
+                            a = cot_part.args[0]
+                            antideriv = antideriv.subs(atan_term, Add(atan_term,
+                                sign(coeff)*pi*floor((a)/pi)))
 
             if antideriv is None:
                 undone_limits.append(xab)

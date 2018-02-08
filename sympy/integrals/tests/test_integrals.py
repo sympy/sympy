@@ -8,6 +8,7 @@ from sympy import (
     symbols, sympify, tan, trigsimp, Tuple, Si, Ci
 )
 from sympy.functions.elementary.complexes import periodic_argument
+from sympy.functions.elementary.integers import floor
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
@@ -314,6 +315,22 @@ def test_issue_4516():
 def test_issue_7450():
     ans = integrate(exp(-(1 + I)*x), (x, 0, oo))
     assert re(ans) == S.Half and im(ans) == -S.Half
+
+
+def test_issue_8623():
+    assert integrate((1 + cos(2*x)) / (3 - 2*cos(2*x)), (x, 0, pi)) == -pi/2 + sqrt(5)*pi/2
+    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*(atan(sqrt(5)*tan(x)) + \
+        pi*floor((x - pi/2)/pi))/2
+
+
+def test_issue_9569():
+    assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
+    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 - pi/2)/pi))/3
+
+
+def test_issue_13749():
+    assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
+    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
 
 
 def test_matrices():
@@ -1161,7 +1178,7 @@ def test_issue_4803():
 
 
 def test_issue_4234():
-    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x) / sqrt(1 + tan(x)**2)
+    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x)/sqrt(1 + tan(x)**2)
 
 
 def test_issue_4492():
