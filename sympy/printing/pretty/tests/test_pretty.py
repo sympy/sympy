@@ -4893,6 +4893,11 @@ u("""\
  (1)    \n\
 δ    (x)\
 """)
+    assert xpretty(x*DiracDelta(x, 1), use_unicode=True) == \
+u("""\
+   (1)    \n\
+x⋅δ    (x)\
+""")
 
 
 def test_hyper():
