@@ -1,5 +1,6 @@
 from sympy.core.compatibility import (default_sort_key, as_int, ordered,
     iterable, NotIterable)
+from sympy import Basic, Mul, Symbol
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
 
@@ -67,3 +68,28 @@ def test_ordered():
     assert list(ordered(l, warn=True)) == [[1], [1], [2]]
     raises(ValueError, lambda: list(ordered(['a', 'ab'], keys=[lambda x: x[0]],
         default=False, warn=True)))
+
+
+def test_multiple_dispatch():
+    """
+    Test presence of external library `multipledispatch`.
+    """
+    from multipledispatch import dispatch
+
+    @dispatch(Basic, Basic)
+    def f(x, y):
+        return "Basic Basic"
+
+    @dispatch(Mul, Symbol)
+    def f(x, y):
+        return "Mul Symbol"
+
+    @dispatch(Symbol, Mul)
+    def f(x, y):
+        return "Symbol Mul"
+
+    m = 3*x
+
+    assert f(x, x) == "Basic Basic"
+    assert f(x, m) == "Symbol Mul"
+    assert f(m, x) == "Mul Symbol"
