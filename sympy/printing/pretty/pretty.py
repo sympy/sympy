@@ -1784,6 +1784,11 @@ class PrettyPrinter(Printer):
     def _print_FormalPowerSeries(self, s):
         return self._print_Add(s.infinite)
 
+    def _print_SetExpr(self, se):
+        pretty_set = prettyForm(*self._print(se.set).parens())
+        pretty_name = self._print(Symbol("SetExpr"))
+        return prettyForm(*pretty_name.right(pretty_set))
+
     def _print_SeqFormula(self, s):
         if self._use_unicode:
             dots = u"\N{HORIZONTAL ELLIPSIS}"

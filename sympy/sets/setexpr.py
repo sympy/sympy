@@ -32,10 +32,7 @@ class SetExpr(Expr):
     set = property(lambda self: self.args[0])
 
     def _latex(self, printer):
-        return printer._print(self.set)
-
-    def _pretty(self, printer):
-        return printer._print(self.set)
+        return r"SetExpr\left({0}\right)".format(printer._print(self.set))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
