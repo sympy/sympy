@@ -629,6 +629,9 @@ def repeated_decimals(tokens, local_dict, global_dict):
     """
     result = []
 
+    def is_digit(s):
+        return all(i in '0123456789_' for i in s)
+
     # num will running match any DECIMAL [ INTEGER ]
     num = []
     for toknum, tokval in tokens:
@@ -636,9 +639,9 @@ def repeated_decimals(tokens, local_dict, global_dict):
             if (not num and '.' in tokval and 'e' not in tokval.lower() and
                 'j' not in tokval.lower()):
                 num.append((toknum, tokval))
-            elif tokval.isdigit() and len(num) == 2:
+            elif is_digit(tokval)and  len(num) == 2:
                 num.append((toknum, tokval))
-            elif tokval.isdigit() and len(num) == 3 and num[-1][1].isdigit():
+            elif is_digit(tokval) and len(num) == 3 and is_digit(num[-1][1]):
                 # Python 2 tokenizes 00123 as '00', '123'
                 # Python 3 tokenizes 01289 as '012', '89'
                 num.append((toknum, tokval))
@@ -668,6 +671,7 @@ def repeated_decimals(tokens, local_dict, global_dict):
             if len(num) == 5:
                 repetend += num[3][1]
 
+            repetend = repetend.replace('_', '')
             zeros = '0'*len(post)
             post, repetends = [w.lstrip('0') for w in [post, repetend]]
                                         # or else interpreted as octal
