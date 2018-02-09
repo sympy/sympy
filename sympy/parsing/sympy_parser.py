@@ -671,7 +671,10 @@ def repeated_decimals(tokens, local_dict, global_dict):
             if len(num) == 5:
                 repetend += num[3][1]
 
+            pre = pre.replace('_', '')
+            post = post.replace('_', '')
             repetend = repetend.replace('_', '')
+
             zeros = '0'*len(post)
             post, repetends = [w.lstrip('0') for w in [post, repetend]]
                                         # or else interpreted as octal
