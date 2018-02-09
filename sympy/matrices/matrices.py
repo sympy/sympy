@@ -1701,8 +1701,6 @@ class MatrixDeprecated(MatrixCommon):
                 mat = mat.T
                 b = b.T
             prod = flatten((mat * b).tolist())
-            if len(prod) == 1:
-                return prod[0]
             return prod
         if mat.cols == b.cols:
             return mat.dot(b.T)
