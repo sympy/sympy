@@ -1000,3 +1000,9 @@ def test_issue_10156():
     e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
+
+
+def test_issue_14129():
+    x, n, k = symbols('x,n,k', integer=True)
+    assert Sum( x**k, (k, 0, n-1)).doit() == \
+        Piecewise((n, Eq(x, 1)), ((-x**n + 1)/(-x + 1), True))

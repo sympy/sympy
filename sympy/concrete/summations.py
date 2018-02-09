@@ -988,6 +988,22 @@ def eval_sum_symbolic(f, limits):
 
         r = gosper_sum(f, (i, a, b))
 
+        from sympy import together, fraction, Mul, Add
+        if isinstance(r, (Mul,Add)):
+            var = r.atoms(Symbol)
+            gar, denom = fraction(together(r))
+
+            if any(x in denom.atoms(Symbol) for x in var):
+                cond = []
+                for v in var:
+                    for s in solve(denom, v):
+                        cond.append(Eq(v, s))
+                pic = []
+                for m in cond:
+                    pic.append((Sum(f_orig.subs(m.args[0], m.args[1]), limits).doit(),m))
+                pic.append((r, True))
+                r = Piecewise(*pic)
+
         if not r in (None, S.NaN):
             return r
 
