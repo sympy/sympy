@@ -7,7 +7,8 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
         _reduce_inequalities)
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols)
+        random_symbols, PSpace)
+from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
@@ -178,16 +179,14 @@ class SingleDiscretePSpace(SinglePSpace):
 
     def probability(self, condition):
         _domain = self.restricted_domain(condition)
-        if condition is False or _domain is S.EmptySet:
+        if condition == False or _domain is S.EmptySet:
             return S.Zero
-        if condition is True or _domain == self.set:
+        if condition == True or _domain == self.set:
             return S.One
         try:
             return self.eval_prob(_domain)
-        except:
-            raise NotImplementedError(filldedent('''Probability for %s
-                for conditions %s cannot be calculated.'''%(
-                self.random_symbol, condition)))
+        except NotImplementedError:
+            return Probability(condition)
 
     def eval_prob(self, _domain):
         if isinstance(_domain, Range):
@@ -205,3 +204,6 @@ class SingleDiscretePSpace(SinglePSpace):
         elif isinstance(_domain, Union):
             rv = sum(self.eval_prob(x) for x in _domain.args)
             return rv
+        else:
+            raise NotImplementedError(filldedent('''Probability for
+                the domain %s cannot be calculated.'''%(_domain)))
