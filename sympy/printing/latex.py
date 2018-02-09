@@ -414,11 +414,11 @@ class LatexPrinter(Printer):
 
                 for i, term in enumerate(args):
                     power = False
-                    if not term.is_Pow:
-                        term_tex = self._print(term)
-                    else:
+                    if term.is_Pow and bool(term.args[0].free_symbols) and term.args[1].is_Integer:
                         term_tex = self._print(term.args[0])
                         term, power = term.args[0], term.args[1]
+                    else:
+                        term_tex = self._print(term)
 
                     if self._needs_mul_brackets(term, first=(i == 0),
                                                 last=(i == len(args) - 1)):
