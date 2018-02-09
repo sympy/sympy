@@ -988,16 +988,18 @@ def eval_sum_symbolic(f, limits):
 
         r = gosper_sum(f, (i, a, b))
 
+        # to find Sum at points where denominator approaches to zero
         from sympy import together, fraction, Mul, Add
-        if isinstance(r, (Mul,Add)):
+        if isinstance(r, (Mul,Add)) and not(any(x in r.atoms(Symbol) for x in limits)):
             var = r.atoms(Symbol)
             gar, denom = fraction(together(r))
-
             if any(x in denom.atoms(Symbol) for x in var):
                 cond = []
                 for v in var:
                     for s in solve(denom, v):
-                        cond.append(Eq(v, s))
+                        m = Eq(v, s)
+                        if not(m == False and m == True):
+                            cond.append(m)
                 pic = []
                 for m in cond:
                     pic.append((Sum(f_orig.subs(m.args[0], m.args[1]), limits).doit(),m))
