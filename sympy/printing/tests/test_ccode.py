@@ -59,6 +59,8 @@ def test_ccode_Pow():
     assert ccode(2**x, user_functions={'Pow': _cond_cfunc2}) == 'exp2(x)'
     assert ccode(x**2, user_functions={'Pow': _cond_cfunc2}) == 'pow(x, 2)'
 
+    assert ccode(x**4, expand_int_pow=4) == 'x*x*x*x'
+
 
 def test_ccode_Max():
     # Test for gh-11926
