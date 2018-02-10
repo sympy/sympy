@@ -1003,13 +1003,12 @@ def test_issue_10156():
 
 
 def test_issue_14129():
-    x, y, n, k = symbols('x,y,n,k')
     assert Sum( x**k, (k, 0, n-1)).doit() == \
         Piecewise((n, Eq(x, 1)), ((-x**n + 1)/(-x + 1), True))
     assert Sum( k*(x/y+x)**k, (k, 0, n-1)).doit() == \
-        Piecewise((n*(n - 1)/2, Eq(x, y/(y + 1))),
-            (n**2/2 - n/2, Eq(y, -x/(x - 1))),
+        Piecewise((n**2/2 - n/2, Eq(y, -x/(x - 1))),
             (x*(y + 1)*(n*x*y*(x + x/y)**n/(x + x/y)
-            + n*x*(x + x/y)**n/(x + x/y) - n*y*(x +
-            x/y)**n/(x + x/y) - x*y*(x + x/y)**n/(x + x/y)
-            - x*(x + x/y)**n/(x + x/y) + y)/(x*y + x - y)**2, True))
+            + n*x*(x + x/y)**n/(x + x/y) - n*y*(x
+            + x/y)**n/(x + x/y) - x*y*(x + x/y)**n/(x
+            + x/y) - x*(x + x/y)**n/(x + x/y)
+            + y)/(x*y + x - y)**2, True))
