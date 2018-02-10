@@ -376,9 +376,9 @@ class CodeBlock(Basic):
 
         replacements, reduced_exprs = cse(self.right_hand_sides, symbols=symbols,
             optimizations=optimizations, postprocess=postprocess, order=order)
-        assert len(reduced_exprs) == 1
+
         new_block = tuple(Assignment(var, expr) for var, expr in
-            zip(self.left_hand_sides, reduced_exprs[0]))
+            zip(self.left_hand_sides, reduced_exprs))
         new_assignments = tuple(Assignment(*i) for i in replacements)
         return self.topological_sort(new_assignments + new_block)
 
