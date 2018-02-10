@@ -171,7 +171,7 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-        'expand_int_pow': 1,
+        'expand_int_pow': None,
     }
 
     type_aliases = {
@@ -277,7 +277,8 @@ class C89CodePrinter(CodePrinter):
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
             return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
-        elif isinstance(expr.exp, Integer) and expr.exp <= self._settings['expand_int_pow']:
+        elif (isinstance(expr.exp, Integer) and callable(self._settings['expand_int_pow'])
+              and self._settings['expand_int_pow'](*expr.args)):
             return '*'.join([self._print(expr.base)]*expr.exp)
         else:
             return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
@@ -670,10 +671,12 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
         Setting contract=False will not generate loops, instead the user is
         responsible to provide values for the indices in the code.
         [default=True].
-    expand_int_pow : int
-        Highest integer power which will be expanded to multiplications
-        (instead of call to ``pow``). Note that most compilers will do this
-        for you when passing the correct optimization flags.
+    expand_int_pow : callable, ``f(base, exp) -> bool``, optional
+        Predicate for whether to expand ``pow`` of integer power into
+        multiplications (instead of calling ``pow``). Note that most compilers
+        will do this for you when passed the correct optimization flags. If
+        use this predicate you probably want to ensure that ``base.is_symbol``
+        and that ``exp`` is not too large.
 
     Examples
     ========
@@ -768,7 +771,7 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
 
     >>> ccode(x**5 + x**3)
     'pow(x, 5) + pow(x, 3)'
-    >>> ccode(x**5 + x**3, expand_int_pow=3)
+    >>> ccode(x**5 + x**3, expand_int_pow=lambda b, e: b.is_symbol and e < 4)
     'pow(x, 5) + x*x*x'
 
     """
