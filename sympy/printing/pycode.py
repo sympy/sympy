@@ -135,9 +135,13 @@ class PythonCodePrinter(CodePrinter):
     def _print_Infinity(self, expr, **kwargs):
         return "float('inf')"
 
+    def _print_sign(self, e):
+        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
+            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
+
     def _print_Mod(self, expr, **kwargs):
         PREC = precedence(expr)
-        return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
+        return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC, **kwargs), expr.args)))
 
     def _print_Piecewise(self, expr, **kwargs):
         result = []
@@ -293,7 +297,9 @@ def pycode(expr, **settings):
 
 _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
-_known_functions_mpmath = dict(_in_mpmath)
+_known_functions_mpmath = dict(_in_mpmath, **{
+    'sign': 'sign',
+})
 _known_constants_mpmath = {
     'Pi': 'pi'
 }
@@ -359,6 +365,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'atan2': 'arctan2',
     'atanh': 'arctanh',
     'exp2': 'exp2',
+    'sign': 'sign',
 })
 
 

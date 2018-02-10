@@ -8,6 +8,7 @@ from sympy import (
     symbols, sympify, tan, trigsimp, Tuple, Si, Ci
 )
 from sympy.functions.elementary.complexes import periodic_argument
+from sympy.functions.elementary.integers import floor
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
@@ -314,6 +315,22 @@ def test_issue_4516():
 def test_issue_7450():
     ans = integrate(exp(-(1 + I)*x), (x, 0, oo))
     assert re(ans) == S.Half and im(ans) == -S.Half
+
+
+def test_issue_8623():
+    assert integrate((1 + cos(2*x)) / (3 - 2*cos(2*x)), (x, 0, pi)) == -pi/2 + sqrt(5)*pi/2
+    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*(atan(sqrt(5)*tan(x)) + \
+        pi*floor((x - pi/2)/pi))/2
+
+
+def test_issue_9569():
+    assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
+    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 - pi/2)/pi))/3
+
+
+def test_issue_13749():
+    assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
+    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
 
 
 def test_matrices():
@@ -1161,7 +1178,7 @@ def test_issue_4803():
 
 
 def test_issue_4234():
-    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x) / sqrt(1 + tan(x)**2)
+    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x)/sqrt(1 + tan(x)**2)
 
 
 def test_issue_4492():
@@ -1223,6 +1240,10 @@ def test_issue_8901():
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
+def test_issue_8945():
+    assert integrate(sin(x)**3/x, (x, 0, 1)) == -Si(3)/4 + 3*Si(1)/4
+    assert integrate(sin(x)**3/x, (x, 0, oo)) == pi/4
+    assert integrate(cos(x)**2/x**2, x) == -Si(2*x) - cos(2*x)/(2*x) - 1/(2*x)
 
 @slow
 def test_issue_7130():
@@ -1276,3 +1297,15 @@ def test_issue_14064():
 def test_issue_14027():
     assert integrate(1/(1 + exp(x - S(1)/2)/(1 + exp(x))), x) == \
         x - exp(S(1)/2)*log(exp(x) + exp(S(1)/2)/(1 + exp(S(1)/2)))/(exp(S(1)/2) + E)
+
+def test_issue_8170():
+    assert integrate(tan(x), (x, 0, pi/2)) == S.Infinity
+
+def test_issue_8440_14040():
+    assert integrate(1/x, (x, -1, 1)) == S.NaN
+    assert integrate(1/(x + 1), (x, -2, 3)) == S.NaN
+
+def test_issue_14096():
+    assert integrate(1/(x + y)**2, (x, 0, 1)) == -1/(y + 1) + 1/y
+    assert integrate(1/(1 + x + y + z)**2, (x, 0, 1), (y, 0, 1), (z, 0, 1)) == \
+        -4*log(4) - 6*log(2) + 9*log(3)

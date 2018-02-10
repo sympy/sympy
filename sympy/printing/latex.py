@@ -868,7 +868,7 @@ class LatexPrinter(Printer):
     def _print_Not(self, e):
         from sympy import Equivalent, Implies
         if isinstance(e.args[0], Equivalent):
-            return self._print_Equivalent(e.args[0], r"\not\equiv")
+            return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
         if isinstance(e.args[0], Implies):
             return self._print_Implies(e.args[0], r"\not\Rightarrow")
         if (e.args[0].is_Boolean):
@@ -908,7 +908,7 @@ class LatexPrinter(Printer):
 
     def _print_Equivalent(self, e, altchar=None):
         args = sorted(e.args, key=default_sort_key)
-        return self._print_LogOp(args, altchar or r"\equiv")
+        return self._print_LogOp(args, altchar or r"\Leftrightarrow")
 
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])

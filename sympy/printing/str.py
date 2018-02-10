@@ -26,11 +26,11 @@ class StrPrinter(Printer):
 
     _relationals = dict()
 
-    def parenthesize(self, item, level, strict=False, *args, **kwargs):
+    def parenthesize(self, item, level, strict=False, **kwargs):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
-            return "(%s)" % self._print(item, *args, **kwargs)
+            return "(%s)" % self._print(item, **kwargs)
         else:
-            return self._print(item, *args, **kwargs)
+            return self._print(item, **kwargs)
 
     def stringify(self, args, sep, level=0):
         return sep.join([self.parenthesize(item, level) for item in args])
