@@ -53,3 +53,5 @@ def test_discrete_probability():
     assert P(Y <= 3) == 71*exp(-4)/3
     assert P(Ne(Y, 3)).equals(
         13*exp(-4) + 32*(-71/32 + 3*exp(4)/32)*exp(-4)/3)
+    assert P(X < S.Infinity) is S.One
+    assert P(X > S.Infinity) is S.Zero

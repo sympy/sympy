@@ -7,7 +7,7 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
         _reduce_inequalities)
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols, PSpace)
+        random_symbols)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
