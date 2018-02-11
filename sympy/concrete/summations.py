@@ -992,7 +992,7 @@ def eval_sum_symbolic(f, limits):
         from sympy import together, fraction, Mul, Add, ordered
         if isinstance(r, (Mul,Add)) and not(any(x in r.atoms(Symbol) for x in limits)):
             var = ordered(r.atoms(Symbol))
-            gar, denom = fraction(together(r))
+            _, denom = fraction(together(r))
             if any(x in denom.atoms(Symbol) for x in var):
                 cond = []
                 for v in var:
