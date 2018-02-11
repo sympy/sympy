@@ -8,7 +8,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy)
+    DotProduct, Eq, Dummy, sinc)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -609,6 +609,13 @@ def test_namespace_order():
     assert if1(1) == 'first f'
 
 
+def test_namespace_type():
+    # lambdify had a bug where it would reject modules of type unicode
+    # on Python 2.
+    x = sympy.Symbol('x')
+    lambdify(x, x, modules=u'math')
+
+
 def test_imps():
     # Here we check if the default returned functions are anonymous - in
     # the sense that we can have more than one function with the same name
@@ -802,6 +809,16 @@ def test_issue_12173():
     exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
     assert exp1 == uppergamma(1, 2).evalf()
     assert exp2 == lowergamma(1, 2).evalf()
+
+def test_issue_13642():
+    if not numpy:
+        skip("numpy not installed")
+    f = lambdify(x, sinc(x))
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
+def test_sinc_mpmath():
+    f = lambdify(x, sinc(x), "mpmath")
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
 
 def test_lambdify_dummy_arg():
     d1 = Dummy()

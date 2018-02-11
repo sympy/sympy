@@ -34,8 +34,18 @@ from sympy.core.compatibility import range
 
 
 @public
-def swinnerton_dyer_poly(n, x=None, **args):
-    """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
+def swinnerton_dyer_poly(n, x=None, polys=False):
+    """Generates n-th Swinnerton-Dyer polynomial in `x`.
+
+    Parameters
+    ----------
+    n : int
+        `n` decides the order of polynomial
+    x : optional
+    polys : bool, optional
+        ``polys=True`` returns an expression, otherwise
+        (default) returns an expression.
+    """
     from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
@@ -60,14 +70,23 @@ def swinnerton_dyer_poly(n, x=None, **args):
         ex = x**4 - 10*x**2 + 1
     elif n == 3:
         ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
-    if not args.get('polys', False):
-        return ex
-    else:
-        return PurePoly(ex, x)
+
+    return PurePoly(ex, x) if polys else ex
+
 
 @public
-def cyclotomic_poly(n, x=None, **args):
-    """Generates cyclotomic polynomial of order `n` in `x`. """
+def cyclotomic_poly(n, x=None, polys=False):
+    """Generates cyclotomic polynomial of order `n` in `x`.
+
+    Parameters
+    ----------
+    n : int
+        `n` decides the order of polynomial
+    x : optional
+    polys : bool, optional
+        ``polys=True`` returns an expression, otherwise
+        (default) returns an expression.
+    """
     if n <= 0:
         raise ValueError(
             "can't generate cyclotomic polynomial of order %s" % n)
@@ -79,15 +98,17 @@ def cyclotomic_poly(n, x=None, **args):
     else:
         poly = PurePoly.new(poly, Dummy('x'))
 
-    if not args.get('polys', False):
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 @public
 def symmetric_poly(n, *gens, **args):
-    """Generates symmetric polynomial of order `n`. """
+    """Generates symmetric polynomial of order `n`.
+
+    Returns a Poly object when ``polys=True``, otherwise
+    (default) returns an expression.
+    """
+    # TODO: use an explicit keyword argument when Python 2 support is dropped
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:
@@ -105,13 +126,29 @@ def symmetric_poly(n, *gens, **args):
 
 @public
 def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
-    """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
+    """Generates a polynomial of degree ``n`` with coefficients in
+    ``[inf, sup]``.
+
+    Parameters
+    ----------
+    x
+        `x` is the independent term of polynomial
+    n : int
+        `n` decides the order of polynomial
+    inf
+        Lower limit of range in which coefficients lie
+    sup
+        Upper limit of range in which coefficients lie
+    domain : optional
+         Decides what ring the coefficients are supposed
+         to belong. Default is set to Integers.
+    polys : bool, optional
+        ``polys=True`` returns an expression, otherwise
+        (default) returns an expression.
+    """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
 
-    if not polys:
-        return poly.as_expr()
-    else:
-        return poly
+    return poly if polys else poly.as_expr()
 
 
 @public

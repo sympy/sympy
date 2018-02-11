@@ -37,6 +37,7 @@ from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+from sympy.sets.setexpr import SetExpr
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
@@ -613,6 +614,12 @@ def test_latex_sets():
     assert latex(s(*range(1, 6))) == r"\left\{1, 2, 3, 4, 5\right\}"
     assert latex(s(*range(1, 13))) == \
         r"\left\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\right\}"
+
+
+def test_latex_SetExpr():
+    iv = Interval(1, 3)
+    se = SetExpr(iv)
+    assert latex(se) == r"SetExpr\left(\left[1, 3\right]\right)"
 
 
 def test_latex_Range():
@@ -1397,7 +1404,7 @@ def test_boolean_args_order():
     assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
 
     expr = Equivalent(*syms)
-    assert latex(expr) == 'a \\equiv b \\equiv c \\equiv d \\equiv e \\equiv f'
+    assert latex(expr) == 'a \\Leftrightarrow b \\Leftrightarrow c \\Leftrightarrow d \\Leftrightarrow e \\Leftrightarrow f'
 
     expr = Xor(*syms)
     assert latex(expr) == 'a \\veebar b \\veebar c \\veebar d \\veebar e \\veebar f'
@@ -1618,8 +1625,8 @@ def test_Pow():
 
 
 def test_issue_7180():
-    assert latex(Equivalent(x, y)) == r"x \equiv y"
-    assert latex(Not(Equivalent(x, y))) == r"x \not\equiv y"
+    assert latex(Equivalent(x, y)) == r"x \Leftrightarrow y"
+    assert latex(Not(Equivalent(x, y))) == r"x \not\Leftrightarrow y"
 
 
 def test_issue_8409():
