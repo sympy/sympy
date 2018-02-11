@@ -128,13 +128,6 @@ class Integers(with_metaclass(Singleton, Set)):
         elif other.is_integer is False:
             return S.false
 
-    def _union(self, other):
-        intersect = Intersection(self, other)
-        if intersect == self:
-            return other
-        elif intersect == other:
-            return self
-
     def __iter__(self):
         yield S.Zero
         i = S.One
@@ -1429,24 +1422,6 @@ class ComplexRegion(Set):
                     return True
             return False
 
-    def _union(self, other):
-
-        if other.is_subset(S.Reals):
-            # treat a subset of reals as a complex region
-            other = ComplexRegion.from_real(other)
-
-        if other.is_ComplexRegion:
-
-            # self in rectangular form
-            if (not self.polar) and (not other.polar):
-                return ComplexRegion(Union(self.sets, other.sets))
-
-            # self in polar form
-            elif self.polar and other.polar:
-                return ComplexRegion(Union(self.sets, other.sets), polar=True)
-
-        return None
-
 
 class Complexes(with_metaclass(Singleton, ComplexRegion)):
 
@@ -1466,6 +1441,28 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
         return "S.Complexes"
 
 
+@dispatch(Integers, Set)
+def _simplify_union(self, other):
+    intersect = Intersection(self, other)
+    if intersect == self:
+        return other
+    elif intersect == other:
+        return self
+
+@dispatch(ComplexRegion, Set)
+def _simplify_union(a, b):
+    if b.is_subset(S.Reals):
+        # treat a subset of reals as a complex region
+        b = ComplexRegion.from_real(b)
+
+    if b.is_ComplexRegion:
+        # a in rectangular form
+        if (not a.polar) and (not b.polar):
+            return ComplexRegion(Union(a.sets, b.sets))
+        # a in polar form
+        elif a.polar and b.polar:
+            return ComplexRegion(Union(a.sets, b.sets), polar=True)
+    return None
 
 @dispatch(ComplexRegion, Set)
 def _simplify_intersection(self, other):

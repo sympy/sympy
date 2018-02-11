@@ -142,20 +142,6 @@ class Set(Basic):
         """
         return self.is_disjoint(other)
 
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        self._union(other) returns a new, joined set if self knows how
-        to join itself with other, otherwise it returns ``None``.
-        It may also return a python set of SymPy Sets if they are somehow
-        simpler. If it does this it must be idempotent i.e. the sets returned
-        must return ``None`` with _union'ed with each other
-
-        Used within the :class:`Union` class
-        """
-        return None
-
     def complement(self, universe):
         r"""
         The complement of 'self' w.r.t the given universe.
@@ -671,21 +657,6 @@ class ProductSet(Set):
         return And(*
             [set.contains(item) for set, item in zip(self.sets, element)])
 
-    def _union(self, other):
-        if other.is_subset(self):
-            return self
-        if not other.is_ProductSet:
-            return None
-        if len(other.args) != len(self.args):
-            return None
-        if self.args[0] == other.args[0]:
-            return self.args[0] * Union(ProductSet(self.args[1:]),
-                                        ProductSet(other.args[1:]))
-        if self.args[-1] == other.args[-1]:
-            return Union(ProductSet(self.args[:-1]),
-                         ProductSet(other.args[:-1])) * self.args[-1]
-        return None
-
     @property
     def sets(self):
         return self.args
@@ -928,52 +899,6 @@ class Interval(Set, EvalfMixin):
 
         return Set._complement(self, other)
 
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        See Set._union for docstring
-        """
-        if other.is_UniversalSet:
-            return S.UniversalSet
-        if other.is_Interval and self._is_comparable(other):
-            from sympy.functions.elementary.miscellaneous import Min, Max
-            # Non-overlapping intervals
-            end = Min(self.end, other.end)
-            start = Max(self.start, other.start)
-            if (end < start or
-               (end == start and (end not in self and end not in other))):
-                return None
-            else:
-                start = Min(self.start, other.start)
-                end = Max(self.end, other.end)
-
-                left_open = ((self.start != start or self.left_open) and
-                             (other.start != start or other.left_open))
-                right_open = ((self.end != end or self.right_open) and
-                              (other.end != end or other.right_open))
-
-                return Interval(start, end, left_open, right_open)
-
-        # If I have open end points and these endpoints are contained in other.
-        # But only in case, when endpoints are finite. Because
-        # interval does not contain oo or -oo.
-        open_left_in_other_and_finite = (self.left_open and
-                                         sympify(other.contains(self.start)) is S.true and
-                                         self.start.is_finite)
-        open_right_in_other_and_finite = (self.right_open and
-                                          sympify(other.contains(self.end)) is S.true and
-                                          self.end.is_finite)
-        if open_left_in_other_and_finite or open_right_in_other_and_finite:
-            # Fill in my end points and return
-            open_left = self.left_open and self.start not in other
-            open_right = self.right_open and self.end not in other
-            new_self = Interval(self.start, self.end, open_left, open_right)
-            return set((new_self, other))
-
-        return None
-
     @property
     def _boundary(self):
         finite_points = [p for p in (self.start, self.end)
@@ -1114,56 +1039,11 @@ class Union(Set, EvalfMixin):
 
         # Reduce sets using known rules
         if evaluate:
-            return Union.reduce(args)
+            return simplify_union(args)
 
         args = list(ordered(args, Set._infimum_key))
 
         return Basic.__new__(cls, *args)
-
-    @staticmethod
-    def reduce(args):
-        """
-        Simplify a :class:`Union` using known rules
-
-        We first start with global rules like
-        'Merge all FiniteSets'
-
-        Then we iterate through all pairs and ask the constituent sets if they
-        can simplify themselves with any other constituent
-        """
-
-        # ===== Global Rules =====
-        # Merge all finite sets
-        finite_sets = [x for x in args if x.is_FiniteSet]
-        if len(finite_sets) > 1:
-            a = (x for set in finite_sets for x in set)
-            finite_set = FiniteSet(*a)
-            args = [finite_set] + [x for x in args if not x.is_FiniteSet]
-
-        # ===== Pair-wise Rules =====
-        # Here we depend on rules built into the constituent sets
-        args = set(args)
-        new_args = True
-        while(new_args):
-            for s in args:
-                new_args = False
-                for t in args - set((s,)):
-                    new_set = s._union(t)
-                    # This returns None if s does not know how to intersect
-                    # with t. Returns the newly intersected set otherwise
-                    if new_set is not None:
-                        if not isinstance(new_set, set):
-                            new_set = set((new_set, ))
-                        new_args = (args - set((s, t))).union(new_set)
-                        break
-                if new_args:
-                    args = new_args
-                    break
-
-        if len(args) == 1:
-            return args.pop()
-        else:
-            return Union(args, evaluate=False)
 
     def _complement(self, universe):
         # DeMorgan's Law
@@ -1546,9 +1426,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def __len__(self):
         return 0
 
-    def _union(self, other):
-        return other
-
     def __iter__(self):
         return iter([])
 
@@ -1609,9 +1486,6 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     def as_relational(self, symbol):
         return true
-
-    def _union(self, other):
-        return self
 
     @property
     def _boundary(self):
@@ -1717,25 +1591,6 @@ class FiniteSet(Set, EvalfMixin):
             return Complement(FiniteSet(*not_true), unk)
 
         return Set._complement(self, other)
-
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        See Set._union for docstring
-        """
-        if other.is_FiniteSet:
-            return FiniteSet(*(self._elements | other._elements))
-
-        # If other set contains one of my elements, remove it from myself
-        if any(sympify(other.contains(x)) is S.true for x in self):
-            return set((
-                FiniteSet(*[x for x in self
-                    if other.contains(x) != True]), other))
-
-        return None
-
 
     def _contains(self, other):
         """
@@ -1994,7 +1849,7 @@ def is_function_invertible_in_set(func, setv):
 
 def simplify_union(args):
     """
-    Simplify a Union using known rules
+    Simplify a :class:`Union` using known rules
 
     We first start with global rules like 'Merge all FiniteSets'
 
@@ -2007,7 +1862,8 @@ def simplify_union(args):
     # Merge all finite sets
     finite_sets = [x for x in args if x.is_FiniteSet]
     if len(finite_sets) > 1:
-        finite_set = FiniteSet(x for set in finite_sets for x in set)
+        a = (x for set in finite_sets for x in set)
+        finite_set = FiniteSet(*a)
         args = [finite_set] + [x for x in args if not x.is_FiniteSet]
 
     # ===== Pair-wise Rules =====
@@ -2045,9 +1901,10 @@ def _simplify_union(a, b):
 def _simplify_union(a, b):
     return a
 
-
 @dispatch(ProductSet, ProductSet)
 def _simplify_union(a, b):
+    if b.is_subset(a):
+        return a
     if len(b.args) != len(a.args):
         return None
     if a.args[0] == b.args[0]:
@@ -2058,6 +1915,11 @@ def _simplify_union(a, b):
                      ProductSet(b.args[:-1])) * a.args[-1]
     return None
 
+@dispatch(ProductSet, Set)
+def _simplify_union(a, b):
+    if b.is_subset(a):
+        return self
+    return None
 
 @dispatch(Interval, Interval)
 def _simplify_union(a, b):
@@ -2077,38 +1939,42 @@ def _simplify_union(a, b):
                          (b.start != start or b.left_open))
             right_open = ((a.end != end or a.right_open) and
                           (b.end != end or b.right_open))
-
             return Interval(start, end, left_open, right_open)
 
+@dispatch(Interval, UniversalSet)
+def _simplify_union(self, other):
+    return S.UniversalSet
 
 @dispatch(Interval, Set)
 def _simplify_union(a, b):
     # If I have open end points and these endpoints are contained in b
-    if ((a.left_open and b.contains(a.start) is True) or
-            (a.right_open and b.contains(a.end) is True)):
+    # But only in case, when endpoints are finite. Because
+    # interval does not contain oo or -oo.
+    open_left_in_b_and_finite = (a.left_open and
+                                     sympify(b.contains(a.start)) is S.true and
+                                     a.start.is_finite)
+    open_right_in_b_and_finite = (a.right_open and
+                                      sympify(b.contains(a.end)) is S.true and
+                                      a.end.is_finite)
+    if open_left_in_b_and_finite or open_right_in_b_and_finite:
         # Fill in my end points and return
         open_left = a.left_open and a.start not in b
         open_right = a.right_open and a.end not in b
         new_a = Interval(a.start, a.end, open_left, open_right)
         return set((new_a, b))
-
     return None
-
 
 @dispatch(FiniteSet, FiniteSet)
 def _simplify_union(a, b):
     return FiniteSet(*(a._elements | b._elements))
 
-
 @dispatch(FiniteSet, Set)
 def _simplify_union(a, b):
-    # If b set contains one of my elements, remove it from myself
-    if any(b.contains(x) is True for x in a):
+    # If `b` set contains one of my elements, remove it from `a`
+    if any(b.contains(x) == True for x in a):
         return set((
-            FiniteSet(x for x in a if b.contains(x) is not True), b))
-
+            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
     return None
-
 
 @dispatch(Set, Set)
 def _simplify_union(a, b):
@@ -2186,13 +2052,11 @@ def simplify_intersection(args):
 def _simplify_intersection(a, b):
     if len(b.args) != len(a.args):
         return S.EmptySet
-    return ProductSet(a.intersect(b)
-            for a, b in zip(a.sets, b.sets))
-
+    return ProductSet(i.intersect(j)
+            for i, j in zip(a.sets, b.sets))
 
 @dispatch(Interval, Interval)
 def _simplify_intersection(a, b):
-
     # handle (-oo, oo)
     infty = S.NegativeInfinity, S.Infinity
     if a == Interval(*infty):
@@ -2256,13 +2120,6 @@ def _simplify_intersection(a, b):
         return FiniteSet(*[el for el in a if el in b])
     except TypeError:
         return None  # could not evaluate `el in b` due to symbolic ranges.
-
-@dispatch(ProductSet, ProductSet)
-def _simplify_intersection(a, b):
-    if len(b.args) != len(a.args):
-        return S.EmptySet
-    return ProductSet(i.intersect(j)
-            for i, j in zip(a.sets, b.sets))
 
 @dispatch(Set, Set)
 def _simplify_intersection(a, b):
