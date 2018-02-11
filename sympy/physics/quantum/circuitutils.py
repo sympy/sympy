@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import Symbol, Integer, Tuple, Mul, sympify, default_sort_key
+from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
 from sympy.utilities import numbered_symbols
 from sympy.core.compatibility import reduce
 from sympy.physics.quantum.gate import Gate

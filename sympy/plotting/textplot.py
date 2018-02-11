@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-from sympy import *
+from sympy.core.symbol import Dummy
+from sympy.core.compatibility import range
+from sympy.utilities.lambdify import lambdify
 
 
 def textplot(expr, a, b, W=55, H=18):

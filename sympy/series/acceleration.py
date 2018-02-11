@@ -12,6 +12,7 @@ extrapolation: pp. 375-377.)
 from __future__ import print_function, division
 
 from sympy import factorial, Integer, S
+from sympy.core.compatibility import range
 
 
 def richardson(A, k, n, N):

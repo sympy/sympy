@@ -1,4 +1,8 @@
-from sympy import ImmutableMatrix, Matrix, eye, zeros, S, Equality, Unequality
+from itertools import product
+
+from sympy import (ImmutableMatrix, Matrix, eye, zeros, S, Equality,
+        Unequality, ImmutableSparseMatrix, SparseMatrix, sympify,
+        integrate)
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
@@ -38,7 +42,10 @@ def test_subs():
 
 def test_as_immutable():
     X = Matrix([[1, 2], [3, 4]])
-    assert X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])
+    assert sympify(X) == X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])
+    X = SparseMatrix(5, 5, {})
+    assert sympify(X) == X.as_immutable() == ImmutableSparseMatrix(
+            [[0 for i in range(5)] for i in range(5)])
 
 
 def test_function_return_types():
@@ -60,7 +67,7 @@ def test_function_return_types():
     assert (type(L), type(D)) == (ImmutableMatrix, ImmutableMatrix)
 
     assert X.is_diagonalizable()
-    assert X.berkowitz_det() == -3
+    assert X.det() == -3
     assert X.norm(2) == 3
 
     assert type(X.eigenvects()[0][2][0]) == ImmutableMatrix
@@ -71,7 +78,7 @@ def test_function_return_types():
     assert type(X.lower_triangular_solve(Y)) == ImmutableMatrix
     assert type(X.T.upper_triangular_solve(Y)) == ImmutableMatrix
 
-    assert type(X.minorMatrix(0, 0)) == ImmutableMatrix
+    assert type(X.minor_submatrix(0, 0)) == ImmutableMatrix
 
 # issue 6279
 # https://github.com/sympy/sympy/issues/6279
@@ -106,3 +113,10 @@ def test_Equality():
     assert Unequality(M, M.subs(x, 2)).subs(x, 2) is S.false
     assert Equality(M, M.subs(x, 2)).subs(x, 3) is S.false
     assert Unequality(M, M.subs(x, 2)).subs(x, 3) is S.true
+
+
+def test_integrate():
+    intIM = integrate(IM, x)
+    assert intIM.shape == IM.shape
+    assert all([intIM[i, j] == (1 + j + 3*i)*x for i, j in
+                product(range(3), range(3))])

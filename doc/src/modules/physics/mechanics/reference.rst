@@ -2,6 +2,9 @@
 References for Physics/Mechanics
 ================================
 
+.. [Blajer1994] Blajer, Wojciech, Werner Schiehlen, and Walter Schirm.
+        "A projective criterion to the coordinate partitioning method
+        for multibody dynamics." Archive of Applied Mechanics 64: 86-98. Print.
 .. [Kane1983] Kane, Thomas R., Peter W. Likins, and David A. Levinson.
         Spacecraft Dynamics. New York: McGraw-Hill Book, 1983. Print.
 .. [Kane1985] Kane, Thomas R., and David A. Levinson. Dynamics, Theory and

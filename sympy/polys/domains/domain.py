@@ -5,13 +5,14 @@ from __future__ import print_function, division
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import SYMPY_INTS, HAS_GMPY, integer_types, is_sequence
+from sympy.core.compatibility import HAS_GMPY, integer_types, is_sequence
 
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.orderings import lex
 from sympy.polys.polyutils import _unify_gens
 
 from sympy.utilities import default_sort_key, public
+from sympy.core.decorators import deprecated
 
 @public
 class Domain(object):
@@ -21,8 +22,8 @@ class Domain(object):
     zero = None
     one = None
 
-    has_Ring = False
-    has_Field = False
+    is_Ring = False
+    is_Field = False
 
     has_assoc_Ring = False
     has_assoc_Field = False
@@ -42,11 +43,22 @@ class Domain(object):
 
     is_Simple = False
     is_Composite = False
+    is_PID = False
 
     has_CharacteristicZero = False
 
     rep = None
     alias = None
+
+    @property
+    @deprecated(useinstead="is_Field", issue=12723, deprecated_since_version="1.1")
+    def has_Field(self):
+        return self.is_Field
+
+    @property
+    @deprecated(useinstead="is_Ring", issue=12723, deprecated_since_version="1.1")
+    def has_Ring(self):
+        return self.is_Ring
 
     def __init__(self):
         raise NotImplementedError
@@ -270,13 +282,17 @@ class Domain(object):
 
             if ((K0.is_FractionField and K1.is_PolynomialRing or
                  K1.is_FractionField and K0.is_PolynomialRing) and
-                 (not K0_ground.has_Field or not K1_ground.has_Field) and domain.has_Field):
+                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field):
                 domain = domain.get_ring()
 
             if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
                 cls = K0.__class__
             else:
                 cls = K1.__class__
+
+            from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
+            if cls == GlobalPolynomialRing:
+                return cls(domain, symbols)
 
             return cls(domain, symbols, order)
 
@@ -327,7 +343,7 @@ class Domain(object):
 
     def __ne__(self, other):
         """Returns ``False`` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return not self == other
 
     def map(self, seq):
         """Rersively apply ``self`` to all elements of ``seq``. """
@@ -381,7 +397,7 @@ class Domain(object):
         return FractionField(self, *symbols, **kwargs)
 
     def algebraic_field(self, *extension):
-        """Returns an algebraic field, i.e. `K(\\alpha, \dots)`. """
+        r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
         raise DomainError("can't create algebraic field over %s" % self)
 
     def inject(self, *symbols):
@@ -504,12 +520,9 @@ class Domain(object):
         """Returns square root of ``a``. """
         raise NotImplementedError
 
-    def evalf(self, a, prec=None, **args):
+    def evalf(self, a, prec=None, **options):
         """Returns numerical approximation of ``a``. """
-        if prec is None:
-            return self.to_sympy(a).evalf(**args)
-        else:
-            return self.to_sympy(a).evalf(prec, **args)
+        return self.to_sympy(a).evalf(prec, **options)
 
     n = evalf
 

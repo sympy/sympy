@@ -23,7 +23,6 @@ def get_class(lookup_view):
     class Basic located in module sympy.core
     """
     if isinstance(lookup_view, str):
-        lookup_view = lookup_view
         mod_name, func_name = get_mod_func(lookup_view)
         if func_name != '':
             lookup_view = getattr(

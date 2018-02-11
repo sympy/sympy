@@ -38,14 +38,18 @@ def pprint_nodes(subtrees):
 
 def print_node(node):
     """
-    Returns an information about the "node".
+    Returns information about the "node".
 
     This includes class name, string representation and assumptions.
     """
     s = "%s: %s\n" % (node.__class__.__name__, str(node))
-    if len(node._assumptions) > 0:
-        for a in node._assumptions:
-            s += "%s: %s\n" % (a, node._assumptions[a])
+    d = node._assumptions
+    if len(d) > 0:
+        for a in sorted(d):
+            v = d[a]
+            if v is None:
+                continue
+            s += "%s: %s\n" % (a, v)
     return s
 
 
@@ -72,28 +76,41 @@ def print_tree(node):
     ========
 
     >>> from sympy.printing import print_tree
-    >>> from sympy.abc import x
-    >>> print_tree(x**2) # doctest: +SKIP
-    Pow: x**2
+    >>> from sympy import Symbol
+    >>> x = Symbol('x', odd=True)
+    >>> y = Symbol('y', even=True)
+    >>> print_tree(y**x)
+    Pow: y**x
+    +-Symbol: y
+    | algebraic: True
+    | commutative: True
+    | complex: True
+    | even: True
+    | hermitian: True
+    | imaginary: False
+    | integer: True
+    | irrational: False
+    | noninteger: False
+    | odd: False
+    | rational: True
+    | real: True
+    | transcendental: False
     +-Symbol: x
-    | comparable: False
-    +-Integer: 2
-      real: True
-      nonzero: True
-      comparable: True
+      algebraic: True
       commutative: True
-      infinitesimal: False
-      unbounded: False
-      noninteger: False
-      zero: False
       complex: True
-      bounded: True
-      rational: True
-      integer: True
+      even: False
+      hermitian: True
       imaginary: False
-      finite: True
+      integer: True
       irrational: False
-    <BLANKLINE>
+      noninteger: False
+      nonzero: True
+      odd: True
+      rational: True
+      real: True
+      transcendental: False
+      zero: False
 
     See also: tree()
     """

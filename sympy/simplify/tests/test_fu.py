@@ -1,12 +1,13 @@
 from sympy import (
-    Add, Mul, S, Symbol, cos, cot, csc, pi, I, sec, sin, sqrt, tan, root,
-    powsimp, symbols, sinh, cosh, tanh, coth)
+    Add, Mul, S, Symbol, cos, cot, pi, I, sin, sqrt, tan, root, csc, sec,
+    powsimp, symbols, sinh, cosh, tanh, coth, sech, csch, Dummy)
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
-    hyper_as_trig, csc, fu, process_common_addends, sec, trig_split,
+    TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
-from sympy.utilities.randtest import test_numerically
+from sympy.utilities.randtest import verify_numerically
+from sympy.core.compatibility import range
 from sympy.abc import a, b, c, x, y, z
 
 
@@ -31,7 +32,9 @@ def test_TR2i():
     assert TR2i(sin(x)*sin(y)/cos(x)) == tan(x)*sin(y)
     assert TR2i(1/(sin(x)/cos(x))) == 1/tan(x)
     assert TR2i(1/(sin(x)*sin(y)/cos(x))) == 1/tan(x)/sin(y)
+    assert TR2i(sin(x)/2/(cos(x) + 1)) == sin(x)/(cos(x) + 1)/2
 
+    assert TR2i(sin(x)/2/(cos(x) + 1), half=True) == tan(x/2)/2
     assert TR2i(sin(1)/(cos(1) + 1), half=True) == tan(S.Half)
     assert TR2i(sin(2)/(cos(2) + 1), half=True) == tan(1)
     assert TR2i(sin(4)/(cos(4) + 1), half=True) == tan(2)
@@ -62,7 +65,7 @@ def test_TR3():
     for f in (cos, sin, tan, cot, csc, sec):
         i = f(3*pi/7)
         j = TR3(i)
-        assert test_numerically(i, j) and i.func != j.func
+        assert verify_numerically(i, j) and i.func != j.func
 
 
 def test__TR56():
@@ -128,7 +131,7 @@ def test_TR9():
             ex = Add(*[Mul(*ai) for ai in args])
             t = TR9(ex)
             assert not (a[0].func == a[1].func and (
-                not test_numerically(ex, t.expand(trig=True)) or t.is_Add)
+                not verify_numerically(ex, t.expand(trig=True)) or t.is_Add)
                 or a[1].func != a[0].func and ex != t)
 
 
@@ -332,22 +335,43 @@ def test_TRmorrie():
     assert TR8(TR3(TRmorrie(e))) == S(1)/65536
 
 
+def test_TRpower():
+    assert TRpower(1/sin(x)**2) == 1/sin(x)**2
+    assert TRpower(cos(x)**3*sin(x/2)**4) == \
+        (3*cos(x)/4 + cos(3*x)/4)*(-cos(x)/2 + cos(2*x)/8 + S(3)/8)
+    for k in range(2, 8):
+        assert verify_numerically(sin(x)**k, TRpower(sin(x)**k))
+        assert verify_numerically(cos(x)**k, TRpower(cos(x)**k))
+
+
 def test_hyper_as_trig():
-    from sympy.simplify.fu import _osborne, _osbornei
+    from sympy.simplify.fu import _osborne as o, _osbornei as i, TR12
 
     eq = sinh(x)**2 + cosh(x)**2
     t, f = hyper_as_trig(eq)
     assert f(fu(t)) == cosh(2*x)
-    assert _osborne(cosh(x)) == cos(x)
-    assert _osborne(sinh(x)) == I*sin(x)
-    assert _osborne(tanh(x)) == I*tan(x)
-    assert _osborne(coth(x)) == cot(x)/I
-    assert _osbornei(cos(x)) == cosh(x)
-    assert _osbornei(sin(x)) == sinh(x)/I
-    assert _osbornei(tan(x)) == tanh(x)/I
-    assert _osbornei(cot(x)) == coth(x)*I
-    assert _osbornei(sec(x)) == 1/cosh(x)
-    assert _osbornei(csc(x)) == I/sinh(x)
+    e, f = hyper_as_trig(tanh(x + y))
+    assert f(TR12(e)) == (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
+
+    d = Dummy()
+    assert o(sinh(x), d) == I*sin(x*d)
+    assert o(tanh(x), d) == I*tan(x*d)
+    assert o(coth(x), d) == cot(x*d)/I
+    assert o(cosh(x), d) == cos(x*d)
+    assert o(sech(x), d) == sec(x*d)
+    assert o(csch(x), d) == csc(x*d)/I
+    for func in (sinh, cosh, tanh, coth, sech, csch):
+        h = func(pi)
+        assert i(o(h, d), d) == h
+    # /!\ the _osborne functions are not meant to work
+    # in the o(i(trig, d), d) direction so we just check
+    # that they work as they are supposed to work
+    assert i(cos(x*y + z), y) == cosh(x + z*I)
+    assert i(sin(x*y + z), y) == sinh(x + z*I)/I
+    assert i(tan(x*y + z), y) == tanh(x + z*I)/I
+    assert i(cot(x*y + z), y) == coth(x + z*I)*I
+    assert i(sec(x*y + z), y) == sech(x + z*I)
+    assert i(csc(x*y + z), y) == csch(x + z*I)*I
 
 
 def test_TR12i():

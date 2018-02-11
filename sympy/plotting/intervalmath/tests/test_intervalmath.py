@@ -1,7 +1,6 @@
 from __future__ import division
 from sympy.plotting.intervalmath import interval
 from sympy.utilities.pytest import raises
-from sympy.external import import_module
 
 
 def test_interval():

@@ -24,14 +24,16 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from __future__ import print_function, division
 
-from inspect import getargspec
-from itertools import chain
+import inspect
 from collections import Callable
 import warnings
+import sys
 
-from sympy import sympify, Expr, Tuple, Dummy
+from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
+from sympy.core.compatibility import range
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
@@ -53,6 +55,16 @@ def unset_show():
 ##############################################################################
 # The public interface
 ##############################################################################
+
+def _arity(f):
+    """
+    Python 2 and 3 compatible version that do not raise a Deprecation warning.
+    """
+    if sys.version_info < (3,):
+        return len(inspect.getargspec(f)[0])
+    else:
+       param = inspect.signature(f).parameters.values()
+       return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
 
 
 class Plot(object):
@@ -204,19 +216,66 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
-    def append(self, *args):
-        """Adds one more graph to the figure."""
-        if len(args) == 1 and isinstance(args[0], BaseSeries):
-            self._series.append(*args)
-        else:
-            self._series.append(Series(*args))
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
+    def append(self, arg):
+        """Adds an element from a plot's series to an existing plot.
 
+        Examples
+        ========
+
+        Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
+        second plot's first series object to the first, use the
+        ``append`` method, like so:
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot
+        >>> x = symbols('x')
+        >>> p1 = plot(x*x)
+        >>> p2 = plot(x)
+        >>> p1.append(p2[0])
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+        [1]: cartesian line: x for x over (-10.0, 10.0)
+
+        See Also
+        ========
+        extend
+
+        """
+        if isinstance(arg, BaseSeries):
+            self._series.append(arg)
+        else:
+            raise TypeError('Must specify element of plot to append.')
+
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def extend(self, arg):
-        """Adds the series from another plot or a list of series."""
+        """Adds all series from another plot.
+
+        Examples
+        ========
+
+        Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
+        second plot to the first, use the ``extend`` method, like so:
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot
+        >>> x = symbols('x')
+        >>> p1 = plot(x*x)
+        >>> p2 = plot(x)
+        >>> p1.extend(p2)
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+        [1]: cartesian line: x for x over (-10.0, 10.0)
+
+        """
         if isinstance(arg, Plot):
             self._series.extend(arg._series)
-        else:
+        elif is_sequence(arg):
             self._series.extend(arg)
+        else:
+            raise TypeError('Expecting Plot or sequence of BaseSeries')
 
 
 ##############################################################################
@@ -336,7 +395,7 @@ class Line2DBaseSeries(BaseSeries):
         c = self.line_color
         if hasattr(c, '__call__'):
             f = np.vectorize(c)
-            arity = len(getargspec(c)[0])
+            arity = _arity(c)
             if arity == 1 and self.is_parametric:
                 x = self.get_parameter_points()
                 return f(centers_of_segments(x))
@@ -370,7 +429,7 @@ class List2DSeries(Line2DBaseSeries):
 
 
 class LineOver1DRangeSeries(Line2DBaseSeries):
-    """Representation for a line consisting of a sympy expression over a range."""
+    """Representation for a line consisting of a SymPy expression over a range."""
 
     def __init__(self, expr, var_start_end, **kwargs):
         super(LineOver1DRangeSeries, self).__init__()
@@ -653,7 +712,7 @@ class SurfaceBaseSeries(BaseSeries):
         c = self.surface_color
         if isinstance(c, Callable):
             f = np.vectorize(c)
-            arity = len(getargspec(c)[0])
+            arity = _arity(c)
             if self.is_parametric:
                 variables = list(map(centers_of_faces, self.get_parameter_meshes()))
                 if arity == 1:
@@ -829,7 +888,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.spines['bottom'].set_position('zero')
             self.ax.spines['top'].set_color('none')
             self.ax.spines['left'].set_smart_bounds(True)
-            self.ax.spines['bottom'].set_smart_bounds(True)
+            self.ax.spines['bottom'].set_smart_bounds(False)
             self.ax.xaxis.set_ticks_position('bottom')
             self.ax.yaxis.set_ticks_position('left')
         elif all(are_3D):
@@ -863,9 +922,9 @@ class MatplotlibBackend(BaseBackend):
                 self.ax.set_zlim((min(z), max(z)))
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
-                collection = self.ax.plot_surface(x, y, z, cmap=self.cm.jet,
-                                                  rstride=1, cstride=1,
-                                                  linewidth=0.1)
+                collection = self.ax.plot_surface(x, y, z,
+                    cmap=getattr(self.cm, 'viridis', self.cm.jet),
+                    rstride=1, cstride=1, linewidth=0.1)
             elif s.is_implicit:
                 #Smart bounds have to be set to False for implicit plots.
                 self.ax.spines['left'].set_smart_bounds(False)
@@ -874,17 +933,16 @@ class MatplotlibBackend(BaseBackend):
                 if len(points) == 2:
                     #interval math plotting
                     x, y = _matplotlib_list(points[0])
-                    self.ax.fill(x, y, facecolor='b', edgecolor='None' )
+                    self.ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
                 else:
                     # use contourf or contour depending on whether it is
                     # an inequality or equality.
                     #XXX: ``contour`` plots multiple lines. Should be fixed.
                     ListedColormap = self.matplotlib.colors.ListedColormap
-                    colormap = ListedColormap(["white", "blue"])
+                    colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        self.ax.contour(xarray, yarray, zarray,
-                                contours=(0, 0), fill=False, cmap=colormap)
+                        self.ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
                         self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
@@ -925,6 +983,11 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_yscale(parent.yscale)
         if parent.xlim:
             self.ax.set_xlim(parent.xlim)
+        else:
+            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+                starts = [s.start for s in parent._series]
+                ends = [s.end for s in parent._series]
+                self.ax.set_xlim(min(starts), max(ends))
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
         if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
@@ -949,8 +1012,8 @@ class MatplotlibBackend(BaseBackend):
         if not parent.axis:
             self.ax.set_axis_off()
         if parent.legend:
-            self.ax.legend()
-            self.ax.legend_.set_visible(parent.legend)
+            if self.ax.legend():
+                self.ax.legend_.set_visible(parent.legend)
         if parent.margin:
             self.ax.set_xmargin(parent.margin)
             self.ax.set_ymargin(parent.margin)
@@ -1018,12 +1081,12 @@ plot_backends = {
 
 def centers_of_segments(array):
     np = import_module('numpy')
-    return np.average(np.vstack((array[:-1], array[1:])), 0)
+    return np.mean(np.vstack((array[:-1], array[1:])), 0)
 
 
 def centers_of_faces(array):
     np = import_module('numpy')
-    return np.average(np.dstack((array[:-1, :-1],
+    return np.mean(np.dstack((array[:-1, :-1],
                                  array[1:, :-1],
                                  array[:-1, 1: ],
                                  array[:-1, :-1],
@@ -1033,8 +1096,12 @@ def centers_of_faces(array):
 def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
     np = import_module('numpy')
-    vector_a = x - y
-    vector_b = z - y
+    # Workaround plotting piecewise (#8577):
+    #   workaround for `lambdify` in `.experimental_lambdify` fails
+    #   to return numerical values in some cases. Lower-level fix
+    #   in `lambdify` is possible.
+    vector_a = (x - y).astype(np.float)
+    vector_b = (z - y).astype(np.float)
     dot_product = np.dot(vector_a, vector_b)
     vector_a_norm = np.linalg.norm(vector_a)
     vector_b_norm = np.linalg.norm(vector_b)
@@ -1149,20 +1216,20 @@ def plot(*args, **kwargs):
     ``title`` : str. Title of the plot. It is set to the latex representation of
     the expression, if the plot has only one expression.
 
-    ``xlabel`` : str. Label for the x - axis.
+    ``xlabel`` : str. Label for the x-axis.
 
-    ``ylabel`` : str. Label for the y - axis.
+    ``ylabel`` : str. Label for the y-axis.
 
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
+    ``xscale``: {'linear', 'log'} Sets the scaling of the x-axis.
 
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
+    ``yscale``: {'linear', 'log'} Sets the scaling if the y-axis.
 
     ``axis_center``: tuple of two floats denoting the coordinates of the center or
     {'center', 'auto'}
 
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
+    ``xlim`` : tuple of two floats, denoting the x-axis limits.
 
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
+    ``ylim`` : tuple of two floats, denoting the y-axis limits.
 
     Examples
     ========
@@ -1206,6 +1273,17 @@ def plot(*args, **kwargs):
 
     """
     args = list(map(sympify, args))
+    free = set()
+    for a in args:
+        if isinstance(a, Expr):
+            free |= a.free_symbols
+            if len(free) > 1:
+                raise ValueError(
+                    'The same variable should be used in all '
+                    'univariate expressions being plotted.')
+    x = free.pop() if free else Symbol('x')
+    kwargs.setdefault('xlabel', x.name)
+    kwargs.setdefault('ylabel', 'f(%s)' % x.name)
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
@@ -1287,20 +1365,20 @@ def plot_parametric(*args, **kwargs):
 
     Arguments for ``Plot`` class:
 
-    ``xlabel`` : str. Label for the x - axis.
+    ``xlabel`` : str. Label for the x-axis.
 
-    ``ylabel`` : str. Label for the y - axis.
+    ``ylabel`` : str. Label for the y-axis.
 
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
+    ``xscale``: {'linear', 'log'} Sets the scaling of the x-axis.
 
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
+    ``yscale``: {'linear', 'log'} Sets the scaling if the y-axis.
 
     ``axis_center``: tuple of two floats denoting the coordinates of the center
     or {'center', 'auto'}
 
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
+    ``xlim`` : tuple of two floats, denoting the x-axis limits.
 
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
+    ``ylim`` : tuple of two floats, denoting the y-axis limits.
 
     Examples
     ========
@@ -1656,9 +1734,12 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
     Checks the arguments and converts into tuples of the
     form (exprs, ranges)
 
+    Examples
+    ========
+
     >>> from sympy import plot, cos, sin, symbols
     >>> from sympy.plotting.plot import check_arguments
-    >>> x,y,u,v = symbols('x y u v')
+    >>> x = symbols('x')
     >>> check_arguments([cos(x), sin(x)], 2, 1)
         [(cos(x), sin(x), (x, -10, 10))]
 
@@ -1678,7 +1759,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set.union(*[e.free_symbols for e in exprs]))
+        free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -1709,7 +1790,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         exprs = args[:i]
         assert all(isinstance(e, Expr) for expr in exprs for e in expr)
-        free_symbols = list(set.union(*[e.free_symbols for expr in exprs
+        free_symbols = list(set().union(*[e.free_symbols for expr in exprs
                                         for e in expr]))
 
         if len(free_symbols) > nb_of_free_symbols:
@@ -1727,7 +1808,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             for symbol in free_symbols:
                 ranges.append(Tuple(symbol) + default_range)
 
-            for i in range(len(free_symbols) - nb_of_free_symbols):
+            for i in range(nb_of_free_symbols - len(free_symbols)):
                 ranges.append(Tuple(Dummy()) + default_range)
             ranges = Tuple(*ranges)
             plots = [expr + ranges for expr in exprs]

@@ -1,5 +1,5 @@
 from sympy import diff, integrate, S
-from sympy.physics.vector import ReferenceFrame, Vector, express
+from sympy.physics.vector import Vector, express
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import _check_vector
 
@@ -137,7 +137,7 @@ def is_conservative(field):
     """
     Checks if a field is conservative.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector
@@ -169,7 +169,7 @@ def is_solenoidal(field):
     """
     Checks if a field is solenoidal.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector

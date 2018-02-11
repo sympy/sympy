@@ -2,8 +2,6 @@
 The Physics Vector Module
 =========================
 
-:Authors: Gilbert Gede, Luke Peterson, Angadh Nanjangud, Sachin Joglekar
-
 .. topic:: Abstract
 
    In this documentation the components of the sympy.physics.vector module
@@ -31,6 +29,7 @@ Guide to Vector
     vectors.rst
     kinematics.rst
     advanced.rst
+    fields.rst
 
 Vector API
 ==========
@@ -42,3 +41,4 @@ Vector API
     api/kinematics.rst
     api/printing.rst
     api/functions.rst
+    api/fieldfunctions.rst

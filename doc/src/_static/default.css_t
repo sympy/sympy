@@ -10,11 +10,29 @@
  */
 
 @import url("basic.css");
+@import url(http://fonts.googleapis.com/css?family=Open+Sans);
 
 /* -- page layout ----------------------------------------------------------- */
 
+{%  set theme_collapsiblesidebar = True %}
+{%  set theme_relbarbgcolor = '#2f441e'  %}
+{%  set theme_sidebarbgcolor = '#3b5526'  %}
+{%  set theme_sidebarbtncolor = '#4F663C'  %}
+{%  set theme_sidebarlinkcolor = '#81B953'  %}
+{%  set theme_linkcolor = '#29A329'  %}
+{%  set theme_visitedlinkcolor = '#307748'  %}
+{%  set theme_headtextcolor = '#2f441e'  %}
+{%  set theme_footerbgcolor = '#293b1b'  %}
+{%  set theme_headlinkcolor = '#AAAAAA'  %}
+{%  set theme_sidebartextcolor = '#DDDDDD'  %}
+{%  set theme_footertextcolor = '#DDDDDD'  %}
+{%  set theme_relbartextcolor = '#DDDDDD'  %}
+{%  set theme_relbarlinkcolor = '#81B953'  %}
+{%  set theme_bgcolor = '#FFFFFF'  %}
+
+
 body {
-    font-family: {{ theme_bodyfont }};
+    font-family: Open Sans, sans-serif;
     font-size: 100%;
     background-color: {{ theme_footerbgcolor }};
     color: #000;
@@ -307,4 +325,13 @@ div.viewcode-block:target {
     background-color: #f4debf;
     border-top: 1px solid #ac9;
     border-bottom: 1px solid #ac9;
+}
+
+/*
+To highlight inline code blocks
+*/
+code{
+    background-color: #ECF0F3;
+    border-radius: 3px;
+    padding: 2px;
 }

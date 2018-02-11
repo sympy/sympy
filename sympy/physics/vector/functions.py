@@ -1,13 +1,14 @@
 from __future__ import print_function, division
 
-from sympy import (sympify, diff, sin, cos, Matrix, Symbol, integrate,
-                   trigsimp, Function, symbols)
-from sympy.core.basic import S
+from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
+                                Function, S, Symbol)
+from sympy import integrate, trigsimp
 from sympy.core.compatibility import reduce
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
 from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
+from sympy.utilities.iterables import iterable
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
@@ -122,7 +123,7 @@ def express(expr, frame, frame2=None, variables=False):
             frame_set = set([])
             expr = sympify(expr)
             #Subsitute all the coordinate variables
-            for x in expr.atoms():
+            for x in expr.free_symbols:
                 if isinstance(x, CoordinateSym)and x.frame != frame:
                     frame_set.add(x.frame)
             subs_dict = {}
@@ -187,14 +188,15 @@ def time_derivative(expr, frame, order=1):
         raise ValueError("Unsupported value of order entered")
 
     if isinstance(expr, Vector):
-        outvec = Vector(0)
+        outlist = []
         for i, v in enumerate(expr.args):
             if v[1] == frame:
-                outvec += Vector([(express(v[0], frame,
-                                           variables=True).diff(t), frame)])
+                outlist += [(express(v[0], frame,
+                                           variables=True).diff(t), frame)]
             else:
-                outvec += time_derivative(Vector([v]), v[1]) + \
-                    (v[1].ang_vel_in(frame) ^ Vector([v]))
+                outlist += (time_derivative(Vector([v]), v[1]) + \
+                    (v[1].ang_vel_in(frame) ^ Vector([v]))).args
+        outvec = Vector(outlist)
         return time_derivative(outvec, frame, order - 1)
 
     if isinstance(expr, Dyadic):
@@ -516,12 +518,10 @@ def get_motion_params(frame, **kwargs):
         return (acc, vel, kwargs['position'])
 
 
-def partial_velocity(vel_list, u_list, frame):
-    """Returns a list of partial velocities.
-
-    For a list of velocity or angular velocity vectors the partial derivatives
-    with respect to the supplied generalized speeds are computed, in the
-    specified ReferenceFrame.
+def partial_velocity(vel_vecs, gen_speeds, frame):
+    """Returns a list of partial velocities with respect to the provided
+    generalized speeds in the given reference frame for each of the supplied
+    velocity vectors.
 
     The output is a list of lists. The outer list has a number of elements
     equal to the number of supplied velocity vectors. The inner lists are, for
@@ -531,12 +531,13 @@ def partial_velocity(vel_list, u_list, frame):
     Parameters
     ==========
 
-    vel_list : list
-        List of velocities of Point's and angular velocities of ReferenceFrame's
-    u_list : list
-        List of independent generalized speeds.
+    vel_vecs : iterable
+        An iterable of velocity vectors (angular or linear).
+    gen_speeds : iterable
+        An iterable of generalized speeds.
     frame : ReferenceFrame
-        The ReferenceFrame the partial derivatives are going to be taken in.
+        The reference frame that the partial derivatives are going to be taken
+        in.
 
     Examples
     ========
@@ -548,24 +549,27 @@ def partial_velocity(vel_list, u_list, frame):
     >>> N = ReferenceFrame('N')
     >>> P = Point('P')
     >>> P.set_vel(N, u * N.x)
-    >>> vel_list = [P.vel(N)]
-    >>> u_list = [u]
-    >>> partial_velocity(vel_list, u_list, N)
+    >>> vel_vecs = [P.vel(N)]
+    >>> gen_speeds = [u]
+    >>> partial_velocity(vel_vecs, gen_speeds, N)
     [[N.x]]
 
     """
-    if not hasattr(vel_list, '__iter__'):
-        raise TypeError('Provide velocities in an iterable')
-    if not hasattr(u_list, '__iter__'):
-        raise TypeError('Provide speeds in an iterable')
-    list_of_pvlists = []
-    for i in vel_list:
-        pvlist = []
-        for j in u_list:
-            vel = i.diff(j, frame)
-            pvlist += [vel]
-        list_of_pvlists += [pvlist]
-    return list_of_pvlists
+
+    if not iterable(vel_vecs):
+        raise TypeError('Velocity vectors must be contained in an iterable.')
+
+    if not iterable(gen_speeds):
+        raise TypeError('Generalized speeds must be contained in an iterable')
+
+    vec_partials = []
+    for vec in vel_vecs:
+        partials = []
+        for speed in gen_speeds:
+            partials.append(vec.diff(speed, frame, var_in_dcm=False))
+        vec_partials.append(partials)
+
+    return vec_partials
 
 
 def dynamicsymbols(names, level=0):
@@ -596,10 +600,9 @@ def dynamicsymbols(names, level=0):
     Derivative(q1(t), t)
 
     """
-
     esses = symbols(names, cls=Function)
     t = dynamicsymbols._t
-    if hasattr(esses, '__iter__'):
+    if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
         return esses
     else:

@@ -468,7 +468,7 @@ other. This is coded as: ::
   >>> C.set_ang_vel(B, -u2 * B.z)
   >>> D.set_ang_vel(C, u3 * C.y)
   >>> D.ang_vel_in(N)
-  u3*C.y - u2*B.z + u1*A.x
+  u1*A.x - u2*B.z + u3*C.y
 
 In :mod:`vector` the shortest path between two frames is used when finding
 the angular velocity. That would mean if we went back and set: ::
@@ -568,6 +568,3 @@ This is the particle moving on a ring, again. ::
   l*u1*C.y
   >>> P.v1pt_theory(Q, N, C)
   - R*u2*sin(q2)*C.x + (R*u2*cos(q2) + l*u1)*C.y + R*u1*sin(q2)*C.z
-
-
-

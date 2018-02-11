@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, solve, Sum)
+        Piecewise, S, cacheit, Sum, exp, I, oo)
+from sympy.solvers.solveset import solveset
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
+from sympy.functions.elementary.integers import floor
 import random
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
@@ -29,7 +31,10 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     def sample(self):
         """ A random realization from the distribution """
         icdf = self._inverse_cdf_expression()
-        return floor(icdf(random.uniform(0, 1)))
+        while True:
+            sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
+            if sample_ >= self.set.inf:
+                return sample_
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -37,16 +42,18 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
         Used by sample
         """
-        x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
+        x = symbols('x', positive=True,
+         integer=True, cls=Dummy)
+        z = symbols('z', positive=True, cls=Dummy)
+        cdf_temp = self.cdf(x)
         # Invert CDF
         try:
-            inverse_cdf = solve(self.cdf(x) - z, x)
+            inverse_cdf = solveset(cdf_temp - z, x, domain=S.Reals)
         except NotImplementedError:
             inverse_cdf = None
-        if not inverse_cdf or len(inverse_cdf) != 1:
+        if not inverse_cdf or len(inverse_cdf.free_symbols) != 1:
             raise NotImplementedError("Could not invert CDF")
-
-        return Lambda(z, inverse_cdf[0])
+        return Lambda(z, inverse_cdf)
 
     @cacheit
     def compute_cdf(self, **kwargs):
@@ -54,7 +61,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', integer=True, bounded=True, cls=Dummy)
+        x, z = symbols('x, z', integer=True, finite=True, cls=Dummy)
         left_bound = self.set.inf
 
         # CDF is integral of PDF from left bound to z
@@ -68,9 +75,23 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         """ Cumulative density function """
         return self.compute_cdf(**kwargs)(x)
 
+    @cacheit
+    def compute_characteristic_function(self, **kwargs):
+        """ Compute the characteristic function from the PDF
+
+        Returns a Lambda
+        """
+        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        pdf = self.pdf(x)
+        cf = summation(exp(I*t*x)*pdf, (x, self.set.inf, self.set.sup))
+        return Lambda(t, cf)
+
+    def characteristic_function(self, t, **kwargs):
+        """ Characteristic function """
+        return self.compute_characteristic_function(**kwargs)(t)
+
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        # return summation(expr * self.pdf(var), (var, self.set), **kwargs)
         # TODO: support discrete sets with non integer stepsizes
         if evaluate:
             return summation(expr * self.pdf(var),
@@ -116,7 +137,7 @@ class SingleDiscretePSpace(SinglePSpace):
         try:
             return self.distribution.expectation(expr, x, evaluate=False,
                     **kwargs)
-        except:
+        except NotImplementedError:
             return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
                     **kwargs)
 
@@ -130,3 +151,9 @@ class SingleDiscretePSpace(SinglePSpace):
         if expr == self.value:
             return self.distribution
         raise NotImplementedError()
+
+    def compute_characteristic_function(self, expr, **kwargs):
+        if expr == self.value:
+            return self.distribution.compute_characteristic_function(**kwargs)
+        else:
+            raise NotImplementedError()

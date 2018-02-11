@@ -2,8 +2,9 @@
 
 from __future__ import print_function, division
 
-from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
+from sympy.core.compatibility import range
+from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
+from sympy.functions import binomial, sin, cos, Piecewise
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -13,11 +14,15 @@ from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
 #
 # so we cache the pattern
 
+# need to use a function instead of lamda since hash of lambda changes on
+# each call to _pat_sincos
+def _integer_instance(n):
+    return isinstance(n , Integer)
 
 @cacheit
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
-    n, m = [Wild(s, exclude=[x], properties=[lambda n: isinstance(n, Integer)])
+    n, m = [Wild(s, exclude=[x], properties=[_integer_instance])
                 for s in 'nm']
     pat = sin(a*x)**n * cos(a*x)**m
     return pat, a, n, m
@@ -74,8 +79,25 @@ def trigintegrate(f, x, conds='piecewise'):
 
         # take smallest n or m -- to choose simplest substitution
         if n_ and m_:
-            n_ = n_ and (n < m)  # NB: careful here, one of the
-            m_ = m_ and not (n < m)  # conditions *must* be true
+
+            # Make sure to choose the positive one
+            # otherwise an incorrect integral can occur.
+            if n < 0 and m > 0:
+                m_ = True
+                n_ = False
+            elif m < 0 and n > 0:
+                n_ = True
+                m_ = False
+            # Both are negative so choose the smallest n or m
+            # in absolute value for simplest substitution.
+            elif (n < 0 and m < 0):
+                n_ = n > m
+                m_ = not (n > m)
+
+            # Both n and m are odd and positive
+            else:
+                n_ = (n < m)      # NB: careful here, one of the
+                m_ = not (n < m)  # conditions *must* be true
 
         #  n      m       u=C        (n-1)/2    m
         # S(x) * C(x) dx  --> -(1-u^2)       * u  du
@@ -92,7 +114,7 @@ def trigintegrate(f, x, conds='piecewise'):
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
         if conds == 'piecewise':
-            return Piecewise((zz, Eq(a, 0)), (fx / a, True))
+            return Piecewise((fx / a, Ne(a, 0)), (zz, True))
         return fx / a
 
     # n & m are both even
@@ -220,7 +242,7 @@ def trigintegrate(f, x, conds='piecewise'):
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
     if conds == 'piecewise':
-        return Piecewise((zz, Eq(a, 0)), (res.subs(x, a*x) / a, True))
+        return Piecewise((res.subs(x, a*x) / a, Ne(a, 0)), (zz, True))
     return res.subs(x, a*x) / a
 
 

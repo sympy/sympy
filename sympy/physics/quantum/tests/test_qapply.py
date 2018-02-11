@@ -1,18 +1,19 @@
-from sympy import I, Integer, sqrt, symbols, Matrix
+from sympy import I, Integer, sqrt, symbols
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import H
-from sympy.physics.quantum.operator import Operator, UnitaryOperator
+from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
 from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit
-from sympy.physics.quantum.gate import UGate
+from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
+from sympy.physics.quantum.tensorproduct import TensorProduct
+
 
 j, jp, m, mp = symbols("j j' m m'")
 
@@ -79,6 +80,24 @@ def test_outerproduct():
     assert qapply(e) == -hbar**2*mo
     assert qapply(e, ip_doit=False) == -hbar**2*(po.dual*po)*mo
     assert qapply(e).doit() == -hbar**2*mo
+
+
+def test_tensorproduct():
+    a = BosonOp("a")
+    b = BosonOp("b")
+    ket1 = TensorProduct(BosonFockKet(1), BosonFockKet(2))
+    ket2 = TensorProduct(BosonFockKet(0), BosonFockKet(0))
+    ket3 = TensorProduct(BosonFockKet(0), BosonFockKet(2))
+    bra1 = TensorProduct(BosonFockBra(0), BosonFockBra(0))
+    bra2 = TensorProduct(BosonFockBra(1), BosonFockBra(2))
+    assert qapply(TensorProduct(a, b ** 2) * ket1) == sqrt(2) * ket2
+    assert qapply(TensorProduct(a, Dagger(b) * b) * ket1) == 2 * ket3
+    assert qapply(bra1 * TensorProduct(a, b * b),
+                  dagger=True) == sqrt(2) * bra2
+    assert qapply(bra2 * ket1).doit() == TensorProduct(1, 1)
+    assert qapply(TensorProduct(a, b * b) * ket1) == sqrt(2) * ket2
+    assert qapply(Dagger(TensorProduct(a, b * b) * ket1),
+                  dagger=True) == sqrt(2) * Dagger(ket2)
 
 
 def test_dagger():

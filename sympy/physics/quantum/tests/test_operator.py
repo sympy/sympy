@@ -5,11 +5,14 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
 from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             HermitianOperator, OuterProduct,
-                                            DifferentialOperator)
+                                            DifferentialOperator,
+                                            IdentityOperator)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.represent import represent
 from sympy.core.trace import Tr
 from sympy.physics.quantum.spin import JzKet, JzBra
+from sympy.matrices import eye
 
 
 class CustomKet(Ket):
@@ -47,6 +50,7 @@ def test_operator():
     assert t_op.label[0] == Symbol(t_op.default_args()[0])
 
     assert Operator() == Operator("O")
+    assert A*IdentityOperator() == A
 
 
 def test_operator_inv():
@@ -78,6 +82,28 @@ def test_unitary():
     assert Dagger(U)*U == 1
     assert U.is_commutative is False
     assert Dagger(U).is_commutative is False
+
+
+def test_identity():
+    I = IdentityOperator()
+    O = Operator('O')
+    x = Symbol("x")
+
+    assert isinstance(I, IdentityOperator)
+    assert isinstance(I, Operator)
+
+    assert I * O == O
+    assert O * I == O
+    assert isinstance(I * I, IdentityOperator)
+    assert isinstance(3 * I, Mul)
+    assert isinstance(I * x, Mul)
+    assert I.inv() == I
+    assert Dagger(I) == I
+    assert qapply(I * O) == O
+    assert qapply(O * I) == O
+
+    for n in [2, 3, 5]:
+        assert represent(IdentityOperator(n)) == eye(n)
 
 
 def test_outer_product():
@@ -116,6 +142,23 @@ def test_outer_product():
 
     #test the _eval_trace
     assert Tr(OuterProduct(JzKet(1, 1), JzBra(1, 1))).doit() == 1
+
+    # test scaled kets and bras
+    assert OuterProduct(2 * k, b) == 2 * OuterProduct(k, b)
+    assert OuterProduct(k, 2 * b) == 2 * OuterProduct(k, b)
+
+    # test sums of kets and bras
+    k1, k2 = Ket('k1'), Ket('k2')
+    b1, b2 = Bra('b1'), Bra('b2')
+    assert (OuterProduct(k1 + k2, b1) ==
+            OuterProduct(k1, b1) + OuterProduct(k2, b1))
+    assert (OuterProduct(k1, b1 + b2) ==
+            OuterProduct(k1, b1) + OuterProduct(k1, b2))
+    assert (OuterProduct(1 * k1 + 2 * k2, 3 * b1 + 4 * b2) ==
+            3 * OuterProduct(k1, b1) +
+            4 * OuterProduct(k1, b2) +
+            6 * OuterProduct(k2, b1) +
+            8 * OuterProduct(k2, b2))
 
 
 def test_operator_dagger():

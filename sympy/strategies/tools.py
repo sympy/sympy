@@ -7,8 +7,8 @@ from .traverse import top_down
 def subs(d, **kwargs):
     """ Full simultaneous exact substitution
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.strategies.tools import subs
     >>> from sympy import Basic

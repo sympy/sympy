@@ -24,8 +24,9 @@ def test_prufer():
 
     # accept iterables but convert to list of lists
     tree = [(0, 1), (1, 5), (0, 3), (0, 2), (2, 6), (4, 7), (2, 4)]
-    Prufer(tree).tree_repr == tree
-    Prufer(set(tree)).tree_repr == tree
+    tree_lists = [list(t) for t in tree]
+    assert Prufer(tree).tree_repr == tree_lists
+    assert sorted(Prufer(set(tree)).tree_repr) == sorted(tree_lists)
 
     raises(ValueError, lambda: Prufer([[1, 2], [3, 4]]))  # 0 is missing
     assert Prufer(*Prufer.edges([1, 2], [3, 4])).prufer_repr == [1, 3]

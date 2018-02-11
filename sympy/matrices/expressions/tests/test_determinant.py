@@ -1,8 +1,7 @@
-from sympy.core import Lambda, S, symbols
-from sympy.functions import adjoint, conjugate, transpose
+from sympy.core import S, symbols
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (
-    Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Determinant,
+    Identity, MatrixExpr, MatrixSymbol, Determinant,
     det, ZeroMatrix, Transpose
 )
 from sympy.utilities.pytest import raises

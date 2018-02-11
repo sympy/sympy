@@ -1,6 +1,6 @@
 from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    Wild, pi
+    Wild, pi, meijerg
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -396,7 +396,7 @@ def test_match_wild_wild():
     assert p.match(q*r) is None
 
 
-def test_combine_inverse():
+def test__combine_inverse():
     x, y = symbols("x y")
     assert Mul._combine_inverse(x*I*y, x*I) == y
     assert Mul._combine_inverse(x*I*y, y*I) == x
@@ -404,6 +404,9 @@ def test_combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Add._combine_inverse(oo, oo) == S(0)
     assert Add._combine_inverse(oo*I, oo*I) == S(0)
+    assert Add._combine_inverse(x*oo, x*oo) == S(0)
+    assert Add._combine_inverse(-x*oo, -x*oo) == S(0)
+    assert Add._combine_inverse((x - oo)*(x + oo), -oo)
 
 
 def test_issue_3773():
@@ -434,7 +437,7 @@ def test_issue_3883():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: -S(1)/2, b: -(mu - x)**2/2, c: log(2*pi)/2}
+        {a: -S(1)/2, b: -(x - mu)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: -S(1)/2, b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
     g1 = Wild('g1', exclude=[gamma])
@@ -549,7 +552,10 @@ def test_issue_4559():
     assert (-e).match(sqrt(a)) is None
     assert (-e).match(a**2) == {a: I*sqrt(pi)}
 
-
+# The pattern matcher doesn't know how to handle (x - a)**2 == (a - x)**2. To
+# avoid ambiguity in actual applications, don't put a coefficient (including a
+# minus sign) in front of a wild.
+@XFAIL
 def test_issue_4883():
     a = Wild('a')
     x = Symbol('x')
@@ -565,7 +571,7 @@ def test_issue_4319():
     x, y = symbols('x y')
 
     p = -x*(S(1)/8 - y)
-    ans = set([S.Zero, y - S(1)/8])
+    ans = {S.Zero, y - S(1)/8}
 
     def ok(pat):
         assert set(p.match(pat).values()) == ans
@@ -599,3 +605,15 @@ def test_issue_3539():
     assert (x - 2).match(a - x) is None
     assert (6/x).match(a*x) is None
     assert (6/x**2).match(a/x) == {a: 6/x}
+
+def test_gh_issue_2711():
+    x = Symbol('x')
+    f = meijerg(((), ()), ((0,), ()), x)
+    a = Wild('a')
+    b = Wild('b')
+
+    assert f.find(a) == set([(S.Zero,), ((), ()), ((S.Zero,), ()), x, S.Zero,
+                             (), meijerg(((), ()), ((S.Zero,), ()), x)])
+    assert f.find(a + b) == \
+        {meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero}
+    assert f.find(a**2) == {meijerg(((), ()), ((S.Zero,), ()), x), x}

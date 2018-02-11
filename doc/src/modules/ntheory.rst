@@ -27,6 +27,10 @@ Ntheory Functions Reference
 
 .. autofunction:: cycle_length
 
+.. autofunction:: composite
+
+.. autofunction:: compositepi
+
 .. module:: sympy.ntheory.factor_
 
 .. autofunction:: smoothness
@@ -51,7 +55,29 @@ Ntheory Functions Reference
 
 .. autofunction:: divisor_count
 
+.. autofunction:: udivisors
+
+.. autofunction:: udivisor_count
+
+.. autofunction:: antidivisors
+
+.. autofunction:: antidivisor_count
+
 .. autofunction:: totient
+
+.. autofunction:: reduced_totient
+
+.. autofunction:: divisor_sigma
+
+.. autofunction:: udivisor_sigma
+
+.. autofunction:: core
+
+.. autofunction:: digits
+
+.. autofunction:: primenu
+
+.. autofunction:: primeomega
 
 .. module:: sympy.ntheory.modular
 
@@ -107,5 +133,14 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
+.. autofunction:: discrete_log
+
 .. automodule:: sympy.ntheory.continued_fraction
     :members:
+
+.. autoclass:: sympy.ntheory.mobius
+    :members:
+
+.. module:: sympy.ntheory.egyptian_fraction
+
+.. autofunction:: egyptian_fraction

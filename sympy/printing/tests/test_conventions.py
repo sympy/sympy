@@ -3,7 +3,7 @@ from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
 from sympy.printing.conventions import split_super_sub, requires_partial
-
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_super_sub():
     assert split_super_sub("beta_13_2") == ("beta", [], ["13", "2"])
@@ -29,6 +29,8 @@ def test_super_sub():
     assert split_super_sub("x__a__b__c__d") == ("x", ["a", "b", "c", "d"], [])
     assert split_super_sub("alpha_11") == ("alpha", [], ["11"])
     assert split_super_sub("alpha_11_11") == ("alpha", [], ["11", "11"])
+    assert split_super_sub("") == ("", [], [])
+
 
 def test_requires_partial():
     x, y, z, t, nu = symbols('x y z t nu')
@@ -79,6 +81,18 @@ def test_requires_partial():
     g = sum(f)
     assert requires_partial(Derivative(g, t)) is False
 
+    f = symbols('f', cls=Function)
+    assert requires_partial(Derivative(f(x), x)) is False
+    assert requires_partial(Derivative(f(x), y)) is False
+    assert requires_partial(Derivative(f(x, y), x)) is True
+    assert requires_partial(Derivative(f(x, y), y)) is True
+    assert requires_partial(Derivative(f(x, y), z)) is True
+    assert requires_partial(Derivative(f(x, y), x, y)) is True
+
+
+@XFAIL
+def test_requires_partial_unspecified_variables():
+    x, y = symbols('x y')
     # function of unspecified variables
     f = symbols('f', cls=Function)
     assert requires_partial(Derivative(f, x)) is False

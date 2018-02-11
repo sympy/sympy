@@ -14,7 +14,7 @@ Inertia (Dyadics)
 A dyadic tensor is a second order tensor formed by the juxtaposition of a
 pair of vectors. There are various operations defined with respect to dyadics,
 which have been implemented in :mod:`vector` in the form of class
-:mod:`Dyadic`. To know more, refer to the :mod:`Dyadic` and :mod:`Vector` 
+:mod:`Dyadic`. To know more, refer to the :mod:`Dyadic` and :mod:`Vector`
 class APIs.
 Dyadics are used to define the inertia of bodies within :mod:`mechanics`.
 Inertia dyadics can be defined explicitly but the ``inertia`` function is
@@ -152,4 +152,3 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
-
