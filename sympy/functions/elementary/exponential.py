@@ -594,6 +594,8 @@ class log(Function):
             p = perfect_power(int(arg))
             if p is not False:
                 return p[1]*self.func(p[0])
+        elif arg.is_Rational :
+            return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
             expr = []
             nonpos = []
