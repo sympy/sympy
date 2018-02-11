@@ -5,6 +5,7 @@ from __future__ import print_function, division
 import sys
 import functools
 import os
+import re
 
 from sympy.core.compatibility import get_function_name
 
@@ -89,6 +90,43 @@ if not USE_PYTEST:
         else:
             raise TypeError(
                 'raises() expects a callable for the 2nd argument.')
+
+    def assert_raise_message(expectedException, err_msg, code=None):
+        """
+        ``assert_raise_message`` is an enhanced version of ``raises``. It tests
+        that error message raised by ``code`` is also same as the expected error
+        message.
+
+        ``assert_raise_message()`` does nothing if the callable raises the expected
+        ``err_msg``, otherwise it raises an AssertionError.
+
+        Examples
+        ========
+
+        >>> from sympy.utilities.pytest import assert_raise_message
+
+        >>> assert_raise_message(ZeroDivisionError, 'zero', lambda: 1/0)
+        >>> assert_raise_message(ZeroDivisionError, 'one', lambda: 1/0)
+        Traceback (most recent call last):
+        ...
+        AssertionError: DID NOT RAISE
+
+        """
+        if code is None:
+            return RaisesContext(expectedException)
+        elif callable(code):
+            try:
+                code()
+            except expectedException as message:
+                message = message.args[0]
+                found = re.search(err_msg, message, re.M|re.I)
+                if found:
+                    return
+                else:
+                    raise AssertionError("DID NOT RAISE")
+        else:
+            raise TypeError(
+                'assert_raise_message() expects a callable for the 2nd argument.')
 
     class RaisesContext(object):
         def __init__(self, expectedException):

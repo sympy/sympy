@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises, USE_PYTEST
+from sympy.utilities.pytest import raises, USE_PYTEST, assert_raise_message
 
 if USE_PYTEST:
     import py.test
@@ -61,3 +61,9 @@ def test_unexpected_exception_is_passed_through_with():
 
 def test_second_argument_should_be_callable_or_string():
     raises(TypeError, lambda: raises("irrelevant", 42))
+
+
+def test_assert_raise_message():
+    assert_raise_message(ZeroDivisionError, 'integer division or modulo by zero', lambda: 1/0) # error message: 'integer division or modulo by zero'
+    assert_raise_message(ZeroDivisionError, 'zero', lambda: 1/0)
+    raises(AssertionError, lambda: assert_raise_message(ZeroDivisionError, 'one', lambda: 1/0))
