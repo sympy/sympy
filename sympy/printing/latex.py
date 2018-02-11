@@ -1298,7 +1298,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.point)
             else:
                 s += self._print(expr.point[0])
-        return r"\mathcal{O}\left(%s\right)" % s
+        return r"\big{O}\left(%s\right)" % s
 
     def _print_Symbol(self, expr):
         if expr in self._settings['symbol_names']:
