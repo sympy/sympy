@@ -972,7 +972,7 @@ x - -- + --- + O\\x /\n\
 u("""\
      3     5        \n\
     x     x     ⎛ 6⎞\n\
-x - ── + ─── + O⎝x ⎠\n\
+x - ── + ─── + ο⎝x ⎠\n\
     6    120        \
 """)
     assert pretty(expr, order=None) == ascii_str
@@ -2154,7 +2154,7 @@ O(1)\
 """
     ucode_str = \
 u("""\
-O(1)\
+ο(1)\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2169,7 +2169,7 @@ O|-|\n\
     ucode_str = \
 u("""\
  ⎛1⎞\n\
-O⎜─⎟\n\
+ο⎜─⎟\n\
  ⎝x⎠\
 """)
     assert pretty(expr) == ascii_str
@@ -2184,7 +2184,7 @@ O\\x  + y ; (x, y) -> (0, 0)/\
     ucode_str = \
 u("""\
  ⎛ 2    2                 ⎞\n\
-O⎝x  + y ; (x, y) → (0, 0)⎠\
+ο⎝x  + y ; (x, y) → (0, 0)⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2196,7 +2196,7 @@ O(1; x -> oo)\
 """
     ucode_str = \
 u("""\
-O(1; x → ∞)\
+ο(1; x → ∞)\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2211,7 +2211,7 @@ O|-; x -> oo|\n\
     ucode_str = \
 u("""\
  ⎛1       ⎞\n\
-O⎜─; x → ∞⎟\n\
+ο⎜─; x → ∞⎟\n\
  ⎝x       ⎠\
 """)
     assert pretty(expr) == ascii_str
@@ -2226,7 +2226,7 @@ O\\x  + y ; (x, y) -> (oo, oo)/\
     ucode_str = \
 u("""\
  ⎛ 2    2                 ⎞\n\
-O⎝x  + y ; (x, y) → (∞, ∞)⎠\
+ο⎝x  + y ; (x, y) → (∞, ∞)⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
