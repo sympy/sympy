@@ -38,6 +38,7 @@ from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 from sympy.tensor.functions import TensorProduct
 
 from sympy.sets.setexpr import SetExpr
+from sympy.sets import ImageSet
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
@@ -3598,6 +3599,25 @@ def test_pretty_SetExpr():
     ucode_str = u("SetExpr([1, 3])")
     assert pretty(se) == ascii_str
     assert upretty(se) == ucode_str
+
+
+def test_pretty_ImageSet():
+    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
+    ascii_str = '{x + y | x in {1, 2, 3} , y in {3, 4}}'
+    ucode_str = u('{x + y | x ∊ {1, 2, 3} , y ∊ {3, 4}}')
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
+
+    imgset = ImageSet(Lambda(x, x**2), S.Naturals)
+    ascii_str = \
+    '  2                   \n'\
+    '{x  | x in S.Naturals}'
+    ucode_str = u('''\
+⎧ 2        ⎫\n\
+⎨x  | x ∊ ℕ⎬\n\
+⎩          ⎭''')
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
 
 
 def test_pretty_ConditionSet():

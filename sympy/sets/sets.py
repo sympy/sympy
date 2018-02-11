@@ -553,8 +553,8 @@ class Set(Basic):
         raise NotImplementedError()
 
     def _eval_imageset(self, f):
-        from sympy.sets.fancysets import ImageSet
-        return ImageSet(f, self)
+        from sympy.sets.setexpr import SetExpr
+        return SetExpr(self)._eval_func(f).set
 
     @property
     def _measure(self):
@@ -1088,90 +1088,6 @@ class Interval(Set, EvalfMixin):
 
         return _sympify(expr)
 
-    def _eval_imageset(self, f):
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        from sympy.solvers.solveset import solveset
-        from sympy.core.function import diff, Lambda
-        from sympy.series import limit
-        from sympy.calculus.singularities import singularities
-        # TODO: handle functions with infinitely many solutions (eg, sin, tan)
-        # TODO: handle multivariate functions
-
-        expr = f.expr
-        if len(expr.free_symbols) > 1 or len(f.variables) != 1:
-            return
-        var = f.variables[0]
-
-        if expr.is_Piecewise:
-            result = S.EmptySet
-            domain_set = self
-            for (p_expr, p_cond) in expr.args:
-                if p_cond is true:
-                    intrvl = domain_set
-                else:
-                    intrvl = p_cond.as_set()
-                    intrvl = Intersection(domain_set, intrvl)
-
-                if p_expr.is_Number:
-                    image = FiniteSet(p_expr)
-                else:
-                    image = imageset(Lambda(var, p_expr), intrvl)
-                result = Union(result, image)
-
-                # remove the part which has been `imaged`
-                domain_set = Complement(domain_set, intrvl)
-                if domain_set.is_EmptySet:
-                    break
-            return result
-
-        if not self.start.is_comparable or not self.end.is_comparable:
-            return
-
-        try:
-            sing = [x for x in singularities(expr, var)
-                if x.is_real and x in self]
-        except NotImplementedError:
-            return
-
-        if self.left_open:
-            _start = limit(expr, var, self.start, dir="+")
-        elif self.start not in sing:
-            _start = f(self.start)
-        if self.right_open:
-            _end = limit(expr, var, self.end, dir="-")
-        elif self.end not in sing:
-            _end = f(self.end)
-
-        if len(sing) == 0:
-            solns = list(solveset(diff(expr, var), var))
-
-            extr = [_start, _end] + [f(x) for x in solns
-                                     if x.is_real and x in self]
-            start, end = Min(*extr), Max(*extr)
-
-            left_open, right_open = False, False
-            if _start <= _end:
-                # the minimum or maximum value can occur simultaneously
-                # on both the edge of the interval and in some interior
-                # point
-                if start == _start and start not in solns:
-                    left_open = self.left_open
-                if end == _end and end not in solns:
-                    right_open = self.right_open
-            else:
-                if start == _end and start not in solns:
-                    left_open = self.right_open
-                if end == _start and end not in solns:
-                    right_open = self.left_open
-
-            return Interval(start, end, left_open, right_open)
-        else:
-            return imageset(f, Interval(self.start, sing[0],
-                                        self.left_open, True)) + \
-                Union(*[imageset(f, Interval(sing[i], sing[i + 1], True, True))
-                        for i in range(0, len(sing) - 1)]) + \
-                imageset(f, Interval(sing[-1], self.end, True, self.right_open))
-
     @property
     def _measure(self):
         return self.end - self.start
@@ -1409,9 +1325,6 @@ class Union(Set, EvalfMixin):
             return b
         return Union(map(boundary_of_set, range(len(self.args))))
 
-    def _eval_imageset(self, f):
-        return Union(imageset(f, arg) for arg in self.args)
-
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
         if len(self.args) == 2:
@@ -1529,9 +1442,6 @@ class Intersection(Set):
     @property
     def _sup(self):
         raise NotImplementedError()
-
-    def _eval_imageset(self, f):
-        return Intersection(imageset(f, arg) for arg in self.args)
 
     def _contains(self, other):
         return And(*[set.contains(other) for set in self.args])
@@ -1794,9 +1704,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def __iter__(self):
         return iter([])
 
-    def _eval_imageset(self, f):
-        return self
-
     def _eval_powerset(self):
         return FiniteSet(self)
 
@@ -2023,9 +1930,6 @@ class FiniteSet(Set, EvalfMixin):
                 r = None
         return r
 
-    def _eval_imageset(self, f):
-        return FiniteSet(*map(f, self))
-
     @property
     def _boundary(self):
         return self
@@ -2179,47 +2083,56 @@ def imageset(*args):
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
 
-    if len(args) not in (2, 3):
-        raise ValueError('imageset expects 2 or 3 args, got: %s' % len(args))
+    if len(args) < 2:
+        raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
 
-    set = args[-1]
-    if not isinstance(set, Set):
-        name = func_name(set)
-        raise ValueError(
-            'last argument should be a set, not %s' % name)
-
-    if len(args) == 3:
-        f = Lambda(*args[:2])
-    elif len(args) == 2:
+    if isinstance(args[0], (Symbol, tuple)) and len(args) > 2:
+        f = Lambda(args[0], args[1])
+        set_list = args[2:]
+    else:
         f = args[0]
+        set_list = args[1:]
+
         if isinstance(f, Lambda):
             pass
         elif (
                 isinstance(f, FunctionClass) # like cos
                 or func_name(f) == '<lambda>'
                 ):
-            var = _uniquely_named_symbol(Symbol('x'), f(Dummy()))
-            expr = f(var)
+            # TODO: should we support a way to sympify `lambda`?
+            if len(set_list) == 1:
+                var = _uniquely_named_symbol(Symbol('x'), f(Dummy()))
+                expr = f(var)
+            else:
+                var = [Symbol('x%i' % (i+1)) for i in range(len(set_list))]
+                expr = f(*var)
             f = Lambda(var, expr)
         else:
             raise TypeError(filldedent('''
-        expecting lambda, Lambda, or FunctionClass, not \'%s\'''' %
+        expecting lambda, Lambda, or FunctionClass, not \'%s\'.''' %
         func_name(f)))
 
-    r = set._eval_imageset(f)
-    if isinstance(r, ImageSet):
-        f, set = r.args
+    if any(not isinstance(s, Set) for s in set_list):
+        name = [func_name(s) for s in set_list]
+        raise ValueError(
+            'arguments after mapping should be sets, not %s' % name)
 
-    if f.variables[0] == f.expr:
-        return set
+    if len(set_list) == 1:
+        set = set_list[0]
+        r = set._eval_imageset(f)
+        if isinstance(r, ImageSet):
+            f, set = r.args
 
-    if isinstance(set, ImageSet):
-        if len(set.lamda.variables) == 1 and len(f.variables) == 1:
-            return imageset(Lambda(set.lamda.variables[0],
-                                   f.expr.subs(f.variables[0], set.lamda.expr)),
-                            set.base_set)
+        if f.variables[0] == f.expr:
+            return set
 
-    if r is not None:
-        return r
+        if isinstance(set, ImageSet):
+            if len(set.lamda.variables) == 1 and len(f.variables) == 1:
+                return imageset(Lambda(set.lamda.variables[0],
+                                       f.expr.subs(f.variables[0], set.lamda.expr)),
+                                set.base_set)
 
-    return ImageSet(f, set)
+        if r is not None:
+            return r
+
+    return ImageSet(f, *set_list)

@@ -1722,12 +1722,15 @@ class PrettyPrinter(Printer):
             inn = u"\N{SMALL ELEMENT OF}"
         else:
             inn = 'in'
-        variables = self._print_seq(ts.lamda.variables)
+        variables = ts.lamda.variables
         expr = self._print(ts.lamda.expr)
         bar = self._print("|")
-        base = self._print(ts.base_set)
-
-        return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
+        sets = [self._print(i) for i in ts.args[1:]]
+        if len(sets) == 1:
+            return self._print_seq((expr, bar, variables[0], inn, sets[0]), "{", "}", ' ')
+        else:
+            pargs = tuple(j for var, setv in zip(variables, sets) for j in (var, inn, setv, ","))
+            return self._print_seq((expr, bar) + pargs[:-1], "{", "}", ' ')
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:
