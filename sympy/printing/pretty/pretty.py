@@ -1727,7 +1727,7 @@ class PrettyPrinter(Printer):
         bar = self._print("|")
         sets = [self._print(i) for i in ts.args[1:]]
         if len(sets) == 1:
-            return self._print_seq((expr, bar, variables, inn, sets[0]), "{", "}", ' ')
+            return self._print_seq((expr, bar, variables[0], inn, sets[0]), "{", "}", ' ')
         else:
             pargs = tuple(j for var, setv in zip(variables, sets) for j in (var, inn, setv, ","))
             return self._print_seq((expr, bar) + pargs[:-1], "{", "}", ' ')

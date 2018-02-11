@@ -247,7 +247,16 @@ def function_sets(f, x):
 
 @dispatch(FunctionUnion, Intersection)
 def function_sets(f, x):
-    return Intersection(imageset(f, arg) for arg in x.args)
+    # If the function is invertible, intersect the maps of the sets.
+    u = symbols("u")
+    fdiff = f(u).diff(u)
+    # TODO: find a better condition for invertible functions:
+    if ((f in (exp, log))  # functions known to be invertible
+        or (fdiff > 0) == True or (fdiff < 0) == True  # monotonous funcs
+        ):
+        return Intersection(imageset(f, arg) for arg in x.args)
+    else:
+        return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, EmptySet)
 def function_sets(f, x):
