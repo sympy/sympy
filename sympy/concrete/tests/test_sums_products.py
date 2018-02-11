@@ -1010,3 +1010,7 @@ def test_issue_10156():
     e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
+
+
+def test_issue_14112():
+    assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false

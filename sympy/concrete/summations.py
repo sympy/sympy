@@ -401,6 +401,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             lower_limit = -upper_limit
             upper_limit = S.Infinity
 
+        sym_ = Dummy(sym.name, integer=True, positive=True)
+        sequence_term = sequence_term.xreplace({sym: sym_})
+        sym = sym_
+
         interval = Interval(lower_limit, upper_limit)
 
         # Piecewise function handle
@@ -526,6 +530,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if dirich2 is not None:
                     return dirich2
 
+        _sym = self.limits[0][0]
+        sequence_term = sequence_term.xreplace({sym: _sym})
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
                                   "is not yet implemented" % (sequence_term))
 
