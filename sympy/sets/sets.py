@@ -835,8 +835,6 @@ class Interval(Set, EvalfMixin):
         # evaluate if possible
         if (end < start) == True:
             return S.EmptySet
-        elif (end - start).is_negative:
-            return S.EmptySet
 
         if end == start and (left_open or right_open):
             return S.EmptySet
@@ -939,6 +937,11 @@ class Interval(Set, EvalfMixin):
 
         """
         return self._args[3]
+
+    @property
+    def is_EmptySet(self):
+        if not (self.end == self.start and (self.left_open or self.right_open)):
+            return (self.end - self.start).is_negative
 
     def _intersect(self, other):
         """

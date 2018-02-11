@@ -1065,3 +1065,11 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+
+
+def test_issue_13956():
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    assert Interval(2, 7).is_EmptySet is False
+    assert Interval(a, b).is_EmptySet is None
+    assert Interval(a, a, left_open=True, right_open=True).is_EmptySet is True
