@@ -506,16 +506,29 @@ def mod_inverse(a, m):
 
 
 class Number(AtomicExpr):
-    """
-    Represents any kind of number in sympy.
+    """Represents atomic numbers in SymPy.
 
     Floating point numbers are represented by the Float class.
-    Integer numbers (of any size), together with rational numbers (again,
-    there is no limit on their size) are represented by the Rational class.
+    Rational numbers (of any size) are represented by the Rational class.
+    Integer numbers (of any size) are represented by the Integer class.
+    Float and Rational are subclasses of Number; Integer is a subclass
+    of Rational.
 
-    If you want to represent, for example, ``1+sqrt(2)``, then you need to do::
+    For example, ``2/3`` is represented as ``Rational(2, 3)`` which is
+    a different object from the floating point number obtained with
+    Python division ``2/3``. Even for numbers that are exactly
+    represented in binary, there is a difference between how two forms,
+    such as ``Rational(1, 2)`` and ``Float(0.5)``, are used in SymPy.
+    The rational form is to be preferred in symbolic computations.
 
-      Rational(1) + sqrt(Rational(2))
+    Other kinds of numbers, such as algebraic numbers ``sqrt(2)`` or
+    complex numbers ``3 + 4*I``, are not instances of Number class as
+    they are not atomic.
+
+    See Also
+    ========
+
+    Float, Integer, Rational
     """
     is_commutative = True
     is_number = True
@@ -1374,14 +1387,12 @@ RealNumber = Float
 
 
 class Rational(Number):
-    """Represents integers and rational numbers (p/q) of any size.
+    """Represents rational numbers (p/q) of any size.
 
     Examples
     ========
 
     >>> from sympy import Rational, nsimplify, S, pi
-    >>> Rational(3)
-    3
     >>> Rational(1, 2)
     1/2
 
@@ -1678,11 +1689,7 @@ class Rational(Number):
                 if (ne is S.One):
                     return Rational(self.q, self.p)
                 if self.is_negative:
-                    if expt.q != 1:
-                        return -(S.NegativeOne)**((expt.p % expt.q) /
-                               S(expt.q))*Rational(self.q, -self.p)**ne
-                    else:
-                        return S.NegativeOne**ne*Rational(self.q, -self.p)**ne
+                    return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
                 else:
                     return Rational(self.q, self.p)**ne
             if expt is S.Infinity:  # -oo already caught by test for negative
@@ -1955,7 +1962,32 @@ def int_trace(f):
 
 
 class Integer(Rational):
+    """Represents integer numbers of any size.
 
+    Examples
+    ========
+
+    >>> from sympy import Integer
+    >>> Integer(3)
+    3
+
+    If a float or a rational is passed to Integer, the fractional part
+    will be discarded; the effect is of rounding toward zero.
+
+    >>> Integer(3.8)
+    3
+    >>> Integer(-3.8)
+    -3
+
+    A string is acceptable input if it can be parsed as an integer:
+
+    >>> Integer("9" * 20)
+    99999999999999999999
+
+    It is rarely needed to explicitly instantiate an Integer, because
+    Python integers are automatically converted to Integer when they
+    are used in SymPy expressions.
+    """
     q = 1
     is_integer = True
     is_number = True
@@ -2223,11 +2255,7 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                if expt.q != 1:
-                    return -(S.NegativeOne)**((expt.p % expt.q) /
-                            S(expt.q))*Rational(1, -self)**ne
-                else:
-                    return (S.NegativeOne)**ne*Rational(1, -self)**ne
+                    return S.NegativeOne**expt*Rational(1, -self)**ne
             else:
                 return Rational(1, self.p)**ne
         # see if base is a perfect root, sqrt(4) --> 2

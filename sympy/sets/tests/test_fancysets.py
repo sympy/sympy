@@ -79,6 +79,10 @@ def test_ImageSet():
 
     assert harmonics.is_iterable
 
+    assert imageset(x, -x, Interval(0, 1)) == Interval(-1, 0)
+
+    assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
+
     c = ComplexRegion(Interval(1, 3)*Interval(1, 3))
     assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), c)
     assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), c)

@@ -266,15 +266,15 @@ class ImageSet(Set):
     ========
     sympy.sets.sets.imageset
     """
-    def __new__(cls, lamda, base_set):
-        if not isinstance(lamda, Lambda):
+    def __new__(cls, flambda, *sets):
+        if not isinstance(flambda, Lambda):
             raise ValueError('first argument must be a Lambda')
-        if lamda is S.IdentityFunction:
-            return base_set
-        if not lamda.expr.free_symbols or not lamda.expr.args:
-            return FiniteSet(lamda.expr)
+        if flambda is S.IdentityFunction and len(sets) == 1:
+            return sets[0]
+        if not flambda.expr.free_symbols or not flambda.expr.args:
+            return FiniteSet(flambda.expr)
 
-        return Basic.__new__(cls, lamda, base_set)
+        return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
@@ -383,6 +383,9 @@ class ImageSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+
+    def doit(self, **kwargs):
+        return self.base_set._eval_imageset(self.lamda)
 
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine

@@ -1,6 +1,6 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Eq, symbols, Rational,
+                   diff, I, sqrt, erf, Piecewise, Eq, Ne, symbols, Rational,
                    And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
                    Function)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
@@ -48,6 +48,8 @@ def test_manualintegrate_parts():
     assert manualintegrate((3*x**2 + 5) * exp(x), x) == \
         3*x**2*exp(x) - 6*x*exp(x) + 11*exp(x)
     assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
+    # Make sure _parts_rule does not go into an infinite loop here
+    assert manualintegrate(log(1/x)/(x + 1), x).has(Integral)
 
     # Make sure _parts_rule doesn't pick u = constant but can pick dv =
     # constant if necessary, e.g. for integrate(atan(x))
@@ -220,7 +222,7 @@ def test_issue_6799():
 
 def test_issue_12251():
     assert manualintegrate(x**y, x) == Piecewise(
-        (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+        (x**(y + 1)/(y + 1), Ne(y, -1)), (log(x), True))
 
 
 def test_issue_3796():
@@ -238,16 +240,16 @@ def test_manual_true():
 def test_issue_6746():
     y = Symbol('y')
     n = Symbol('n')
-    assert manualintegrate(y**x, x) == \
-        Piecewise((x, Eq(log(y), 0)), (y**x/log(y), True))
-    assert manualintegrate(y**(n*x), x) == \
-        Piecewise(
-            (x, Eq(n, 0)),
-            (Piecewise(
-                (n*x, Eq(log(y), 0)),
-                (y**(n*x)/log(y), True))/n, True))
-    assert manualintegrate(exp(n*x), x) == \
-        Piecewise((x, Eq(n, 0)), (exp(n*x)/n, True))
+    assert manualintegrate(y**x, x) == Piecewise(
+        (y**x/log(y), Ne(log(y), 0)), (x, True))
+    assert manualintegrate(y**(n*x), x) == Piecewise(
+        (Piecewise(
+            (y**(n*x)/log(y), Ne(log(y), 0)),
+            (n*x, True)
+        )/n, Ne(n, 0)),
+        (x, True))
+    assert manualintegrate(exp(n*x), x) == Piecewise(
+        (exp(n*x)/n, Ne(n, 0)), (x, True))
 
     y = Symbol('y', positive=True)
     assert manualintegrate((y + 1)**x, x) == (y + 1)**x/log(y + 1)
@@ -255,8 +257,8 @@ def test_issue_6746():
     assert manualintegrate((y + 1)**x, x) == x
     y = Symbol('y')
     n = Symbol('n', nonzero=True)
-    assert manualintegrate(y**(n*x), x) == \
-        Piecewise((n*x, Eq(log(y), 0)), (y**(n*x)/log(y), True))/n
+    assert manualintegrate(y**(n*x), x) == Piecewise(
+        (y**(n*x)/log(y), Ne(log(y), 0)), (n*x, True))/n
     y = Symbol('y', positive=True)
     assert manualintegrate((y + 1)**(n*x), x) == \
         (y + 1)**(n*x)/(n*log(y + 1))

@@ -256,6 +256,7 @@ class sin(TrigonometricFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
+        from sympy.sets.setexpr import SetExpr
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -285,6 +286,8 @@ class sin(TrigonometricFunction):
             else:
                 return AccumBounds(Min(sin(min), sin(max)),
                                 Max(sin(min), sin(max)))
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -525,6 +528,7 @@ class cos(TrigonometricFunction):
     def eval(cls, arg):
         from sympy.functions.special.polynomials import chebyshevt
         from sympy.calculus.util import AccumBounds
+        from sympy.sets.setexpr import SetExpr
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -539,6 +543,8 @@ class cos(TrigonometricFunction):
 
         if isinstance(arg, AccumBounds):
             return sin(arg + S.Pi/2)
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
 
         if arg.could_extract_minus_sign():
             return cls(-arg)

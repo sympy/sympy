@@ -216,7 +216,7 @@ def test_harmonic_rational():
     for h, a in zip(H, A):
         e = expand_func(h).doit()
         assert cancel(e/a) == 1
-        assert h.n() == a.n()
+        assert abs(h.n() - a.n()) < 1e-12
 
 
 def test_harmonic_evalf():

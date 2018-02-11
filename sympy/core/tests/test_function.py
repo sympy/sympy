@@ -874,6 +874,12 @@ def test_issue_13843():
 
     assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
 
+
+def test_issue_13873():
+    from sympy.abc import x
+    assert sin(x).diff((x, -1)).is_Derivative
+
+
 def test_order_could_be_zero():
     x, y = symbols('x, y')
     n = symbols('n', integer=True, nonnegative=True)
