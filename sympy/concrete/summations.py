@@ -433,6 +433,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         order = O(sequence_term, (sym, S.Infinity))
 
+        ### ----------- ratio test ---------------- ###
+        next_sequence_term = sequence_term.xreplace({sym: sym + 1})
+        ratio = simplify(next_sequence_term/sequence_term)
+        lim_ratio = limit(ratio, sym, upper_limit)
+        if (lim_ratio) > 1:
+            return S.false
+        if (lim_ratio) < 1:
+            return S.true
+
         ### --------- p-series test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
         if p1_series_test is not None:
