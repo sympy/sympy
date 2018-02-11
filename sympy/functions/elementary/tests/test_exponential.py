@@ -163,7 +163,7 @@ def test_log_values():
 
     assert exp(-log(3))**(-1) == 3
 
-    assert log(S.Half) == -log(2)
+    assert expand_log(log(S.Half)) == -log(2)
     assert log(2*3).func is log
     assert log(2*3**2).func is log
 
@@ -178,7 +178,7 @@ def test_log_base():
     assert log(3**3, 3) == 3
     assert log(5, 1) == zoo
     assert log(1, 1) == nan
-    assert log(Rational(2, 3), 10) == (-log(3) + log(2))/log(10)
+    assert log(Rational(2, 3), 10) == log(S(2)/3)/log(10)
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
         (-log(3) + log(2))/(-log(5) + log(2))
