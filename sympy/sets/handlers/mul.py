@@ -64,4 +64,3 @@ def div_sets(x, y):
         from sympy import oo
         return Interval(-oo, oo)
     return mul_sets(x, Interval(1/y.end, 1/y.start, y.right_open, y.left_open))
-

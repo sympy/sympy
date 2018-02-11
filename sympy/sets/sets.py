@@ -1855,9 +1855,9 @@ def simplify_union(args):
 
     Then we iterate through all pairs and ask the constituent sets if they
     can simplify themselves with any other constituent.  This process depends
-    on _simplify_union(a, b) functions.
+    on ``union_sets(a, b)`` functions.
     """
-    from sympy.sets.handlers.union import _simplify_union
+    from sympy.sets.handlers.union import union_sets
 
     # ===== Global Rules =====
     # Merge all finite sets
@@ -1875,7 +1875,7 @@ def simplify_union(args):
         for s in args:
             new_args = False
             for t in args - set((s,)):
-                new_set = _simplify_union(s, t)
+                new_set = union_sets(s, t)
                 # This returns None if s does not know how to intersect
                 # with t. Returns the newly intersected set otherwise
                 if new_set is not None:
@@ -1932,7 +1932,7 @@ def simplify_intersection(args):
             return Complement(Intersection(*other_sets), s.args[1])
 
 
-    from sympy.sets.handlers.intersection import _simplify_intersection
+    from sympy.sets.handlers.intersection import intersection_sets
 
     # At this stage we are guaranteed not to have any
     # EmptySets, FiniteSets, or Unions in the intersection
@@ -1945,7 +1945,7 @@ def simplify_intersection(args):
         for s in args:
             new_args = False
             for t in args - set((s,)):
-                new_set = _simplify_intersection(s, t)
+                new_set = intersection_sets(s, t)
                 # This returns None if s does not know how to intersect
                 # with t. Returns the newly intersected set otherwise
 

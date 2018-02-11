@@ -42,4 +42,3 @@ def pow_sets(x, y):
             return Interval(x.end**exponent, x.start**exponent, x.right_open, x.left_open)
         else:
             return Interval(x.start**exponent, x.end**exponent, x.left_open, x.right_open)
-

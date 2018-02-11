@@ -8,30 +8,30 @@ from sympy.multipledispatch import dispatch
 
 
 @dispatch(ConditionSet, ConditionSet)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return None
 
 @dispatch(ConditionSet, Set)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
 
 @dispatch(Naturals, Interval)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return Intersection(S.Integers, b, Interval(a._inf, S.Infinity))
 
 @dispatch(Interval, Naturals)
-def _simplify_intersection(a, b):
-    return _simplify_intersection(b, a)
+def intersection_sets(a, b):
+    return intersection_sets(b, a)
 
 @dispatch(Integers, Interval)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
     if b.measure < S.Infinity:
         s = Range(ceiling(b.left), floor(b.right) + 1)
-        return _simplify_intersection(s, b)  # take out endpoints if open interval
+        return intersection_sets(s, b)  # take out endpoints if open interval
 
 @dispatch(ComplexRegion, Set)
-def _simplify_intersection(self, other):
+def intersection_sets(self, other):
     if other.is_ComplexRegion:
         # self in rectangular form
         if (not self.polar) and (not other.polar):
@@ -78,11 +78,11 @@ def _simplify_intersection(self, other):
             return Intersection(new_interval, other)
 
 @dispatch(Integers, Reals)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return a
 
 @dispatch(Range, Interval)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
     from sympy.functions.elementary.miscellaneous import Min, Max
     if not all(i.is_number for i in b.args[:2]):
@@ -100,18 +100,18 @@ def _simplify_intersection(a, b):
     end = floor(min(b.sup, a.sup))
     if end not in b:
         end -= 1
-    return _simplify_intersection(a, Range(start, end + 1))
+    return intersection_sets(a, Range(start, end + 1))
 
 @dispatch(Range, Naturals)
-def _simplify_intersection(a, b):
-    return _simplify_intersection(a, Interval(1, S.Infinity))
+def intersection_sets(a, b):
+    return intersection_sets(a, Interval(1, S.Infinity))
 
 @dispatch(Naturals, Range)
-def _simplify_intersection(a, b):
-    return _simplify_intersection(b, a)
+def intersection_sets(a, b):
+    return intersection_sets(b, a)
 
 @dispatch(Range, Range)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     from sympy.solvers.diophantine import diop_linear
     from sympy.core.numbers import ilcm
     from sympy import sign
@@ -217,12 +217,12 @@ def _simplify_intersection(a, b):
 
 
 @dispatch(Range, Integers)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return a
 
 
 @dispatch(ImageSet, Set)
-def _simplify_intersection(self, other):
+def intersection_sets(self, other):
     from sympy.solvers.diophantine import diophantine
     if self.base_set is S.Integers:
         g = None
@@ -335,14 +335,14 @@ def _simplify_intersection(self, other):
 
 
 @dispatch(ProductSet, ProductSet)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     if len(b.args) != len(a.args):
         return S.EmptySet
     return ProductSet(i.intersect(j)
             for i, j in zip(a.sets, b.sets))
 
 @dispatch(Interval, Interval)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     # handle (-oo, oo)
     infty = S.NegativeInfinity, S.Infinity
     if a == Interval(*infty):
@@ -389,24 +389,24 @@ def _simplify_intersection(a, b):
     return Interval(start, end, left_open, right_open)
 
 @dispatch(EmptySet, Set)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return S.EmptySet
 
 @dispatch(UniversalSet, Set)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return b
 
 @dispatch(FiniteSet, FiniteSet)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return FiniteSet(*(a._elements & b._elements))
 
 @dispatch(FiniteSet, Set)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     try:
         return FiniteSet(*[el for el in a if el in b])
     except TypeError:
         return None  # could not evaluate `el in b` due to symbolic ranges.
 
 @dispatch(Set, Set)
-def _simplify_intersection(a, b):
+def intersection_sets(a, b):
     return None

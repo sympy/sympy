@@ -7,7 +7,7 @@ from sympy.multipledispatch import dispatch
 
 
 @dispatch(Integers, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     intersect = Intersection(a, b)
     if intersect == a:
         return b
@@ -15,7 +15,7 @@ def _simplify_union(a, b):
         return a
 
 @dispatch(ComplexRegion, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     if b.is_subset(S.Reals):
         # treat a subset of reals as a complex region
         b = ComplexRegion.from_real(b)
@@ -30,16 +30,16 @@ def _simplify_union(a, b):
     return None
 
 @dispatch(EmptySet, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     return b
 
 
 @dispatch(UniversalSet, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     return a
 
 @dispatch(ProductSet, ProductSet)
-def _simplify_union(a, b):
+def union_sets(a, b):
     if b.is_subset(a):
         return a
     if len(b.args) != len(a.args):
@@ -53,13 +53,13 @@ def _simplify_union(a, b):
     return None
 
 @dispatch(ProductSet, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     if b.is_subset(a):
         return a
     return None
 
 @dispatch(Interval, Interval)
-def _simplify_union(a, b):
+def union_sets(a, b):
     if a._is_comparable(b):
         from sympy.functions.elementary.miscellaneous import Min, Max
         # Non-overlapping intervals
@@ -79,11 +79,11 @@ def _simplify_union(a, b):
             return Interval(start, end, left_open, right_open)
 
 @dispatch(Interval, UniversalSet)
-def _simplify_union(a, b):
+def union_sets(a, b):
     return S.UniversalSet
 
 @dispatch(Interval, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     # If I have open end points and these endpoints are contained in b
     # But only in case, when endpoints are finite. Because
     # interval does not contain oo or -oo.
@@ -102,11 +102,11 @@ def _simplify_union(a, b):
     return None
 
 @dispatch(FiniteSet, FiniteSet)
-def _simplify_union(a, b):
+def union_sets(a, b):
     return FiniteSet(*(a._elements | b._elements))
 
 @dispatch(FiniteSet, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
         return set((
@@ -114,5 +114,5 @@ def _simplify_union(a, b):
     return None
 
 @dispatch(Set, Set)
-def _simplify_union(a, b):
+def union_sets(a, b):
     return None
