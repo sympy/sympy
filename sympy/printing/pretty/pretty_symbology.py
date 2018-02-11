@@ -128,6 +128,7 @@ greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
 greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
+greek_unicode['omicron'] = u'\N{GREEK SMALL LETTER OMICRON}'
 
 digit_2txt = {
     '0':    'ZERO',

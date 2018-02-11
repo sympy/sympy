@@ -1249,7 +1249,7 @@ class PrettyPrinter(Printer):
             else:
                 pform = prettyForm(*pform.right(self._print(expr.point[0])))
         pform = prettyForm(*pform.parens())
-        pform = prettyForm(*pform.left("O"))
+        pform = prettyForm(*pform.left(greek_unicode['omicron']))
         return pform
 
     def _print_SingularityFunction(self, e):
