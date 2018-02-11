@@ -123,7 +123,5 @@ def apply_operation(op, x, y):
     if isinstance(y, SetExpr):
         y = y.set
     out = dispatch_on_operation(x, y, op)
-    if not isinstance(out, Set):
-        import pdb; pdb.set_trace()
     assert isinstance(out, Set)
     return SetExpr(out)

@@ -374,116 +374,6 @@ class ImageSet(Set):
     def doit(self, **kwargs):
         return self.base_set._eval_imageset(self.lamda)
 
-    def _intersect(self, other):
-        from sympy.solvers.diophantine import diophantine
-        if self.base_set is S.Integers:
-            g = None
-            if isinstance(other, ImageSet) and other.base_set is S.Integers:
-                g = other.lamda.expr
-                m = other.lamda.variables[0]
-            elif other is S.Integers:
-                m = g = Dummy('x')
-            if g is not None:
-                f = self.lamda.expr
-                n = self.lamda.variables[0]
-                # Diophantine sorts the solutions according to the alphabetic
-                # order of the variable names, since the result should not depend
-                # on the variable name, they are replaced by the dummy variables
-                # below
-                a, b = Dummy('a'), Dummy('b')
-                f, g = f.subs(n, a), g.subs(m, b)
-                solns_set = diophantine(f - g)
-                if solns_set == set():
-                    return EmptySet()
-                solns = list(diophantine(f - g))
-
-                if len(solns) != 1:
-                    return
-
-                # since 'a' < 'b', select soln for n
-                nsol = solns[0][0]
-                t = nsol.free_symbols.pop()
-                return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
-
-        if other == S.Reals:
-            from sympy.solvers.solveset import solveset_real
-            from sympy.core.function import expand_complex
-            if len(self.lamda.variables) > 1:
-                return None
-
-            f = self.lamda.expr
-            n = self.lamda.variables[0]
-
-            n_ = Dummy(n.name, real=True)
-            f_ = f.subs(n, n_)
-
-            re, im = f_.as_real_imag()
-            im = expand_complex(im)
-
-            return imageset(Lambda(n_, re),
-                            self.base_set.intersect(
-                                solveset_real(im, n_)))
-
-        elif isinstance(other, Interval):
-            from sympy.solvers.solveset import (invert_real, invert_complex,
-                                                solveset)
-
-            f = self.lamda.expr
-            n = self.lamda.variables[0]
-            base_set = self.base_set
-            new_inf, new_sup = None, None
-            new_lopen, new_ropen = other.left_open, other.right_open
-
-            if f.is_real:
-                inverter = invert_real
-            else:
-                inverter = invert_complex
-
-            g1, h1 = inverter(f, other.inf, n)
-            g2, h2 = inverter(f, other.sup, n)
-
-            if all(isinstance(i, FiniteSet) for i in (h1, h2)):
-                if g1 == n:
-                    if len(h1) == 1:
-                        new_inf = h1.args[0]
-                if g2 == n:
-                    if len(h2) == 1:
-                        new_sup = h2.args[0]
-                # TODO: Design a technique to handle multiple-inverse
-                # functions
-
-                # Any of the new boundary values cannot be determined
-                if any(i is None for i in (new_sup, new_inf)):
-                    return
-
-
-                range_set = S.EmptySet
-
-                if all(i.is_real for i in (new_sup, new_inf)):
-                    # this assumes continuity of underlying function
-                    # however fixes the case when it is decreasing
-                    if new_inf > new_sup:
-                        new_inf, new_sup = new_sup, new_inf
-                    new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
-                    range_set = base_set._intersect(new_interval)
-                else:
-                    if other.is_subset(S.Reals):
-                        solutions = solveset(f, n, S.Reals)
-                        if not isinstance(range_set, (ImageSet, ConditionSet)):
-                            range_set = solutions._intersect(other)
-                        else:
-                            return
-
-                if range_set is S.EmptySet:
-                    return S.EmptySet
-                elif isinstance(range_set, Range) and range_set.size is not S.Infinity:
-                    range_set = FiniteSet(*list(range_set))
-
-                if range_set is not None:
-                    return imageset(Lambda(n, f), range_set)
-                return
-            else:
-                return
 
 
 class Range(Set):
@@ -835,14 +725,20 @@ class Range(Set):
 def _simplify_intersection(a, b):
     return Intersection(S.Integers, b, Interval(a._inf, S.Infinity))
 
+@dispatch(Interval, Naturals)
+def _simplify_intersection(a, b):
+    return _simplify_intersection(b, a)
 
 @dispatch(Integers, Interval)
 def _simplify_intersection(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
     if b.measure < S.Infinity:
         s = Range(ceiling(b.left), floor(b.right) + 1)
-        return s.intersect(b)  # take out endpoints if open interval
+        return _simplify_intersection(s, b)  # take out endpoints if open interval
 
+@dispatch(Integers, Reals)
+def _simplify_intersection(a, b):
+    return a
 
 @dispatch(Range, Interval)
 def _simplify_intersection(a, b):
@@ -852,7 +748,7 @@ def _simplify_intersection(a, b):
         return
 
     # In case of null Range, return an EmptySet.
-    if self.size == 0:
+    if a.size == 0:
         return S.EmptySet
 
     # trim down to self's size, and represent
@@ -861,18 +757,23 @@ def _simplify_intersection(a, b):
     if start not in b:
         start += 1
     end = floor(min(b.sup, a.sup))
-    if end not in other:
+    if end not in b:
         end -= 1
-    return a.intersect(Range(start, end + 1))
+    return _simplify_intersection(a, Range(start, end + 1))
 
 @dispatch(Range, Naturals)
 def _simplify_intersection(a, b):
     return _simplify_intersection(a, Interval(1, S.Infinity))
 
+@dispatch(Naturals, Range)
+def _simplify_intersection(a, b):
+    return _simplify_intersection(b, a)
+
 @dispatch(Range, Range)
 def _simplify_intersection(a, b):
     from sympy.solvers.diophantine import diop_linear
     from sympy.core.numbers import ilcm
+    from sympy import sign
 
     # non-overlap quick exits
     if not b:
@@ -899,10 +800,10 @@ def _simplify_intersection(a, b):
     # we want to know when the two equations might
     # have integer solutions so we use the diophantine
     # solver
-    a, b = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
+    va, vb = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
 
     # check for no solution
-    no_solution = a is None and b is None
+    no_solution = va is None and vb is None
     if no_solution:
         return S.EmptySet
 
@@ -910,7 +811,7 @@ def _simplify_intersection(a, b):
     # -------------------
 
     # find the coincident point, c
-    a0 = a.as_coeff_Add()[0]
+    a0 = va.as_coeff_Add()[0]
     c = eq(r1, a0)
 
     # find the first point, if possible, in each range
@@ -978,6 +879,118 @@ def _simplify_intersection(a, b):
 def _simplify_intersection(a, b):
     return a
 
+
+@dispatch(ImageSet, Set)
+def _simplify_intersection(self, other):
+    from sympy.solvers.diophantine import diophantine
+    if self.base_set is S.Integers:
+        g = None
+        if isinstance(other, ImageSet) and other.base_set is S.Integers:
+            g = other.lamda.expr
+            m = other.lamda.variables[0]
+        elif other is S.Integers:
+            m = g = Dummy('x')
+        if g is not None:
+            f = self.lamda.expr
+            n = self.lamda.variables[0]
+            # Diophantine sorts the solutions according to the alphabetic
+            # order of the variable names, since the result should not depend
+            # on the variable name, they are replaced by the dummy variables
+            # below
+            a, b = Dummy('a'), Dummy('b')
+            f, g = f.subs(n, a), g.subs(m, b)
+            solns_set = diophantine(f - g)
+            if solns_set == set():
+                return EmptySet()
+            solns = list(diophantine(f - g))
+
+            if len(solns) != 1:
+                return
+
+            # since 'a' < 'b', select soln for n
+            nsol = solns[0][0]
+            t = nsol.free_symbols.pop()
+            return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
+
+    if other == S.Reals:
+        from sympy.solvers.solveset import solveset_real
+        from sympy.core.function import expand_complex
+        if len(self.lamda.variables) > 1:
+            return None
+
+        f = self.lamda.expr
+        n = self.lamda.variables[0]
+
+        n_ = Dummy(n.name, real=True)
+        f_ = f.subs(n, n_)
+
+        re, im = f_.as_real_imag()
+        im = expand_complex(im)
+
+        return imageset(Lambda(n_, re),
+                        self.base_set.intersect(
+                            solveset_real(im, n_)))
+
+    elif isinstance(other, Interval):
+        from sympy.solvers.solveset import (invert_real, invert_complex,
+                                            solveset)
+
+        f = self.lamda.expr
+        n = self.lamda.variables[0]
+        base_set = self.base_set
+        new_inf, new_sup = None, None
+        new_lopen, new_ropen = other.left_open, other.right_open
+
+        if f.is_real:
+            inverter = invert_real
+        else:
+            inverter = invert_complex
+
+        g1, h1 = inverter(f, other.inf, n)
+        g2, h2 = inverter(f, other.sup, n)
+
+        if all(isinstance(i, FiniteSet) for i in (h1, h2)):
+            if g1 == n:
+                if len(h1) == 1:
+                    new_inf = h1.args[0]
+            if g2 == n:
+                if len(h2) == 1:
+                    new_sup = h2.args[0]
+            # TODO: Design a technique to handle multiple-inverse
+            # functions
+
+            # Any of the new boundary values cannot be determined
+            if any(i is None for i in (new_sup, new_inf)):
+                return
+
+
+            range_set = S.EmptySet
+
+            if all(i.is_real for i in (new_sup, new_inf)):
+                # this assumes continuity of underlying function
+                # however fixes the case when it is decreasing
+                if new_inf > new_sup:
+                    new_inf, new_sup = new_sup, new_inf
+                new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
+                range_set = base_set.intersect(new_interval)
+            else:
+                if other.is_subset(S.Reals):
+                    solutions = solveset(f, n, S.Reals)
+                    if not isinstance(range_set, (ImageSet, ConditionSet)):
+                        range_set = solutions.intersect(other)
+                    else:
+                        return
+
+            if range_set is S.EmptySet:
+                return S.EmptySet
+            elif isinstance(range_set, Range) and range_set.size is not S.Infinity:
+                range_set = FiniteSet(*list(range_set))
+
+            if range_set is not None:
+                return imageset(Lambda(n, f), range_set)
+            return
+        else:
+            return
 
 if PY3:
     converter[range] = Range
@@ -1416,53 +1429,6 @@ class ComplexRegion(Set):
                     return True
             return False
 
-    def _intersect(self, other):
-
-        if other.is_ComplexRegion:
-            # self in rectangular form
-            if (not self.polar) and (not other.polar):
-                return ComplexRegion(Intersection(self.sets, other.sets))
-
-            # self in polar form
-            elif self.polar and other.polar:
-                r1, theta1 = self.a_interval, self.b_interval
-                r2, theta2 = other.a_interval, other.b_interval
-                new_r_interval = Intersection(r1, r2)
-                new_theta_interval = Intersection(theta1, theta2)
-
-                # 0 and 2*Pi means the same
-                if ((2*S.Pi in theta1 and S.Zero in theta2) or
-                   (2*S.Pi in theta2 and S.Zero in theta1)):
-                    new_theta_interval = Union(new_theta_interval,
-                                               FiniteSet(0))
-                return ComplexRegion(new_r_interval*new_theta_interval,
-                                    polar=True)
-
-
-        if other.is_subset(S.Reals):
-            new_interval = []
-            x = symbols("x", cls=Dummy, real=True)
-
-            # self in rectangular form
-            if not self.polar:
-                for element in self.psets:
-                    if S.Zero in element.args[1]:
-                        new_interval.append(element.args[0])
-                new_interval = Union(*new_interval)
-                return Intersection(new_interval, other)
-
-            # self in polar form
-            elif self.polar:
-                for element in self.psets:
-                    if S.Zero in element.args[1]:
-                        new_interval.append(element.args[0])
-                    if S.Pi in element.args[1]:
-                        new_interval.append(ImageSet(Lambda(x, -x), element.args[0]))
-                    if S.Zero in element.args[0]:
-                        new_interval.append(FiniteSet(0))
-                new_interval = Union(*new_interval)
-                return Intersection(new_interval, other)
-
     def _union(self, other):
 
         if other.is_subset(S.Reals):
@@ -1498,3 +1464,52 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
 
     def __repr__(self):
         return "S.Complexes"
+
+
+
+@dispatch(ComplexRegion, Set)
+def _simplify_intersection(self, other):
+    if other.is_ComplexRegion:
+        # self in rectangular form
+        if (not self.polar) and (not other.polar):
+            return ComplexRegion(Intersection(self.sets, other.sets))
+
+        # self in polar form
+        elif self.polar and other.polar:
+            r1, theta1 = self.a_interval, self.b_interval
+            r2, theta2 = other.a_interval, other.b_interval
+            new_r_interval = Intersection(r1, r2)
+            new_theta_interval = Intersection(theta1, theta2)
+
+            # 0 and 2*Pi means the same
+            if ((2*S.Pi in theta1 and S.Zero in theta2) or
+               (2*S.Pi in theta2 and S.Zero in theta1)):
+                new_theta_interval = Union(new_theta_interval,
+                                           FiniteSet(0))
+            return ComplexRegion(new_r_interval*new_theta_interval,
+                                polar=True)
+
+
+    if other.is_subset(S.Reals):
+        new_interval = []
+        x = symbols("x", cls=Dummy, real=True)
+
+        # self in rectangular form
+        if not self.polar:
+            for element in self.psets:
+                if S.Zero in element.args[1]:
+                    new_interval.append(element.args[0])
+            new_interval = Union(*new_interval)
+            return Intersection(new_interval, other)
+
+        # self in polar form
+        elif self.polar:
+            for element in self.psets:
+                if S.Zero in element.args[1]:
+                    new_interval.append(element.args[0])
+                if S.Pi in element.args[1]:
+                    new_interval.append(ImageSet(Lambda(x, -x), element.args[0]))
+                if S.Zero in element.args[0]:
+                    new_interval.append(FiniteSet(0))
+            new_interval = Union(*new_interval)
+            return Intersection(new_interval, other)

@@ -8,6 +8,7 @@ from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
 from sympy.utilities.iterables import sift
+from sympy.multipledispatch import dispatch
 
 
 class ConditionSet(Set):
@@ -53,11 +54,15 @@ class ConditionSet(Set):
     condition = property(lambda self: self.args[1])
     base_set = property(lambda self: self.args[2])
 
-    def _intersect(self, other):
-        if not isinstance(other, ConditionSet):
-            return ConditionSet(self.sym, self.condition,
-                                Intersection(self.base_set, other))
-
     def contains(self, other):
         return And(Lambda(self.sym, self.condition)(
             other), self.base_set.contains(other))
+
+
+@dispatch(ConditionSet, ConditionSet)
+def _simplify_intersection(a, b):
+    return None
+
+@dispatch(ConditionSet, Set)
+def _simplify_intersection(a, b):
+    return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
