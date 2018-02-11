@@ -934,6 +934,7 @@ def test_is_convergent():
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
     assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
