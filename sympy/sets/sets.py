@@ -1857,6 +1857,7 @@ def simplify_union(args):
     can simplify themselves with any other constituent.  This process depends
     on _simplify_union(a, b) functions.
     """
+    from sympy.sets.handlers.union import _simplify_union
 
     # ===== Global Rules =====
     # Merge all finite sets
@@ -1890,95 +1891,6 @@ def simplify_union(args):
         return args.pop()
     else:
         return Union(args, evaluate=False)
-
-
-@dispatch(EmptySet, Set)
-def _simplify_union(a, b):
-    return b
-
-
-@dispatch(UniversalSet, Set)
-def _simplify_union(a, b):
-    return a
-
-@dispatch(ProductSet, ProductSet)
-def _simplify_union(a, b):
-    if b.is_subset(a):
-        return a
-    if len(b.args) != len(a.args):
-        return None
-    if a.args[0] == b.args[0]:
-        return a.args[0] * Union(ProductSet(a.args[1:]),
-                                    ProductSet(b.args[1:]))
-    if a.args[-1] == b.args[-1]:
-        return Union(ProductSet(a.args[:-1]),
-                     ProductSet(b.args[:-1])) * a.args[-1]
-    return None
-
-@dispatch(ProductSet, Set)
-def _simplify_union(a, b):
-    if b.is_subset(a):
-        return self
-    return None
-
-@dispatch(Interval, Interval)
-def _simplify_union(a, b):
-    if a._is_comparable(b):
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        # Non-overlapping intervals
-        end = Min(a.end, b.end)
-        start = Max(a.start, b.start)
-        if (end < start or
-           (end == start and (end not in a and end not in b))):
-            return None
-        else:
-            start = Min(a.start, b.start)
-            end = Max(a.end, b.end)
-
-            left_open = ((a.start != start or a.left_open) and
-                         (b.start != start or b.left_open))
-            right_open = ((a.end != end or a.right_open) and
-                          (b.end != end or b.right_open))
-            return Interval(start, end, left_open, right_open)
-
-@dispatch(Interval, UniversalSet)
-def _simplify_union(self, other):
-    return S.UniversalSet
-
-@dispatch(Interval, Set)
-def _simplify_union(a, b):
-    # If I have open end points and these endpoints are contained in b
-    # But only in case, when endpoints are finite. Because
-    # interval does not contain oo or -oo.
-    open_left_in_b_and_finite = (a.left_open and
-                                     sympify(b.contains(a.start)) is S.true and
-                                     a.start.is_finite)
-    open_right_in_b_and_finite = (a.right_open and
-                                      sympify(b.contains(a.end)) is S.true and
-                                      a.end.is_finite)
-    if open_left_in_b_and_finite or open_right_in_b_and_finite:
-        # Fill in my end points and return
-        open_left = a.left_open and a.start not in b
-        open_right = a.right_open and a.end not in b
-        new_a = Interval(a.start, a.end, open_left, open_right)
-        return set((new_a, b))
-    return None
-
-@dispatch(FiniteSet, FiniteSet)
-def _simplify_union(a, b):
-    return FiniteSet(*(a._elements | b._elements))
-
-@dispatch(FiniteSet, Set)
-def _simplify_union(a, b):
-    # If `b` set contains one of my elements, remove it from `a`
-    if any(b.contains(x) == True for x in a):
-        return set((
-            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
-    return None
-
-@dispatch(Set, Set)
-def _simplify_union(a, b):
-    return None
 
 
 def simplify_intersection(args):
@@ -2020,6 +1932,8 @@ def simplify_intersection(args):
             return Complement(Intersection(*other_sets), s.args[1])
 
 
+    from sympy.sets.handlers.intersection import _simplify_intersection
+
     # At this stage we are guaranteed not to have any
     # EmptySets, FiniteSets, or Unions in the intersection
 
@@ -2046,81 +1960,3 @@ def simplify_intersection(args):
         return args.pop()
     else:
         return Intersection(args, evaluate=False)
-
-
-@dispatch(ProductSet, ProductSet)
-def _simplify_intersection(a, b):
-    if len(b.args) != len(a.args):
-        return S.EmptySet
-    return ProductSet(i.intersect(j)
-            for i, j in zip(a.sets, b.sets))
-
-@dispatch(Interval, Interval)
-def _simplify_intersection(a, b):
-    # handle (-oo, oo)
-    infty = S.NegativeInfinity, S.Infinity
-    if a == Interval(*infty):
-        l, r = a.left, a.right
-        if l.is_real or l in infty or r.is_real or r in infty:
-            return b
-
-    # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
-    if not a._is_comparable(b):
-        return None
-
-    empty = False
-
-    if a.start <= b.end and b.start <= a.end:
-        # Get topology right.
-        if a.start < b.start:
-            start = b.start
-            left_open = b.left_open
-        elif a.start > b.start:
-            start = a.start
-            left_open = a.left_open
-        else:
-            start = a.start
-            left_open = a.left_open or b.left_open
-
-        if a.end < b.end:
-            end = a.end
-            right_open = a.right_open
-        elif a.end > b.end:
-            end = b.end
-            right_open = b.right_open
-        else:
-            end = a.end
-            right_open = a.right_open or b.right_open
-
-        if end - start == 0 and (left_open or right_open):
-            empty = True
-    else:
-        empty = True
-
-    if empty:
-        return S.EmptySet
-
-    return Interval(start, end, left_open, right_open)
-
-@dispatch(EmptySet, Set)
-def _simplify_intersection(a, b):
-    return S.EmptySet
-
-@dispatch(UniversalSet, Set)
-def _simplify_intersection(a, b):
-    return b
-
-@dispatch(FiniteSet, FiniteSet)
-def _simplify_intersection(a, b):
-    return FiniteSet(*(a._elements & b._elements))
-
-@dispatch(FiniteSet, Set)
-def _simplify_intersection(a, b):
-    try:
-        return FiniteSet(*[el for el in a if el in b])
-    except TypeError:
-        return None  # could not evaluate `el in b` due to symbolic ranges.
-
-@dispatch(Set, Set)
-def _simplify_intersection(a, b):
-    return None

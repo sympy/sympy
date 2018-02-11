@@ -57,12 +57,3 @@ class ConditionSet(Set):
     def contains(self, other):
         return And(Lambda(self.sym, self.condition)(
             other), self.base_set.contains(other))
-
-
-@dispatch(ConditionSet, ConditionSet)
-def _simplify_intersection(a, b):
-    return None
-
-@dispatch(ConditionSet, Set)
-def _simplify_intersection(a, b):
-    return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
