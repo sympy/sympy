@@ -141,6 +141,9 @@ def test_latex_basic():
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left (p \right )}"
 
+    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
+    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
+
 
 def test_latex_builtins():
     assert latex(True) == r"\mathrm{True}"

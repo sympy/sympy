@@ -134,6 +134,7 @@ class LatexPrinter(Printer):
         "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
+        "ln_notation": False,
     }
 
     def __init__(self, settings=None):
@@ -699,6 +700,8 @@ class LatexPrinter(Printer):
         func = self._deal_with_super_sub(func)
         if func in accepted_latex_functions:
             name = r"\%s" % func
+            if self._settings["ln_notation"] and name == r"\log":
+                name = r"\ln"
         elif len(func) == 1 or func.startswith('\\'):
             name = func
         else:
@@ -2123,7 +2126,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational
+    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
     >>> from sympy.abc import x, y, mu, r, tau
 
     >>> print(latex((2*tau)**Rational(7,2)))
@@ -2241,6 +2244,14 @@ def latex(expr, **settings):
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left [ 2 / x, \quad y\right ]$
+
+    ln_notation: If set to `True` "\ln" is used instead of default "\log"
+
+    >>> print(latex(log(10)))
+    \log{\left (10 \right )}
+
+    >>> print(latex(log(10), ln_notation=True))
+    \ln{\left (10 \right )}
 
     """
 
