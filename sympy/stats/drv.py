@@ -7,7 +7,7 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
         _reduce_inequalities)
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols)
+        random_symbols, RandomDomain)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
@@ -111,8 +111,43 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     def __call__(self, *args):
         return self.pdf(*args)
 
-class SingleDiscreteDomain(SingleDomain):
-    pass
+class DiscreteDomain(RandomDomain):
+    """
+    A domain with discrete support
+
+    Represented using an ImageSet or S.Integers, S.Naturals etc.
+    """
+    is_continuous = True
+
+    def __contains__(self, other):
+        return other is self.set
+
+    def as_boolean(self):
+        raise NotImplementedError
+
+class SingleDiscreteDomain(DiscreteDomain, SingleDomain):
+    """
+    A domain with univariate discrete support
+
+    Represented using an ImageSet or S.Integers, S.Naturals etc.
+    """
+
+    def __new__(cls, symbol, set):
+        if not isinstance(symbol, Symbol):
+            raise ValueError("symbol must be of the type Symbol")
+        if isinstance(set, ImageSet) and not isinstance(
+            set.lamda.args[1], Expr):
+            raise ValueError
+        if isinstance(set, Interval):
+            raise ValueError("Domain set must be discrete.")
+        return RandomDomain.__new__(cls, set, symbols)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    def as_boolean(self):
+        raise NotImplementedError
 
 class SingleDiscretePSpace(SinglePSpace):
     """ Discrete probability space over a single univariate variable """
