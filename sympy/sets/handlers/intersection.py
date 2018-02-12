@@ -26,9 +26,10 @@ def intersection_sets(a, b):
 @dispatch(Integers, Interval)
 def intersection_sets(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
-    if b.measure < S.Infinity:
-        s = Range(ceiling(b.left), floor(b.right) + 1)
-        return intersection_sets(s, b)  # take out endpoints if open interval
+    if b._inf == S.NegativeInfinity and b._sup == S.Infinity:
+        return a
+    s = Range(ceiling(b.left), floor(b.right) + 1)
+    return intersection_sets(s, b)  # take out endpoints if open interval
 
 @dispatch(ComplexRegion, Set)
 def intersection_sets(self, other):
