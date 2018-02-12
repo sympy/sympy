@@ -480,11 +480,11 @@ class zeta(Function):
                         return zeta - harmonic(a - 1, z)
                 elif len(sym) == 1:
                     n = sym.pop()
-                    if n.is_integer and n.is_positive:
+                    if z.is_positive and z.is_even:
                         if z == 2*n:
                             return ((-1)**(n+1) * bernoulli(z) * (2*pi)**z) / (2*factorial(z))
-                        elif z.is_negative:
-                            return ((-1)**n * bernoulli(n+1)) / (n+1)
+                    elif z == -n:
+                        return ((-1)**n * bernoulli(n+1)) / (n+1)
 
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
