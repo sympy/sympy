@@ -932,8 +932,25 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
-    if not f.has(Abs):
-        f = f.rewrite(Piecewise)
+    rep = []
+    if f.has(Abs):
+        # masking off the Abs() part from being rewritten into Piecewise
+        from sympy import numbered_symbols
+        e = [a for a in f.atoms(Abs) if symbol in a.free_symbols]
+        rep = numbered_symbols("t", cls=Dummy)
+        rep = [next(rep) for _ in range(len(e))]
+        newf = f
+        rep_dict = {}
+        for r in e:
+            newf =  newf.replace(r, rep[e.index(r)])
+            rep_dict[rep[e.index(r)]] = r
+        f = newf
+
+    f = f.rewrite(Piecewise)
+
+    for i in rep:
+        # replacing back the masked off part
+        f = f.replace(i, rep_dict[i])
 
     if isinstance(f, Eq):
         from sympy.core import Add

@@ -900,7 +900,7 @@ def test_solve_lambert():
 
 
 def test_solveset():
-    x = Symbol('x')
+    x, y = symbols('x, y')
     f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
     assert solveset(x, 1) == S.EmptySet
@@ -934,6 +934,8 @@ def test_solveset():
     #issue 10158
     assert solveset(x*Max(x, 15) - 10, x) == FiniteSet(S("2/3"))
     assert solveset(x*Min(x, 15) - 10, x) == FiniteSet(-sqrt(10), sqrt(10))
+    assert solveset(Max(abs(x-3)-1,x+2)-3, x, S.Reals) == FiniteSet(-1, 1)
+    assert solveset(Abs(x-1) - Abs(y), x, S.Reals) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
 
 
 def test_conditionset():
