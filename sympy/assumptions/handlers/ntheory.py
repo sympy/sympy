@@ -136,7 +136,7 @@ class AskEvenHandler(CommonHandler):
         Odd * Odd         -> Odd
         Even * Even       -> Even
         Integer * Integer -> Even if Integer + Integer = Odd
-                          -> ? otherwise
+        otherwise         -> ?
         """
         if expr.is_number:
             return AskEvenHandler._number(expr, assumptions)
