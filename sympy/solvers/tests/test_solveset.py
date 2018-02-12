@@ -1299,12 +1299,12 @@ def test_nonlinsolve_complex():
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
     soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
-    soln_real = FiniteSet((soln_x, -log(S(3))))
+    soln_real = FiniteSet((soln_x, -log(S(1)/3)))
     # Mod(-log(3), 2*I*pi) is equal to -log(3).
-    expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + Mod(-log(3), 2*I*pi)))) + \
-                log(Abs(sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi)))) + \
+                log(Abs(sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
     soln_x = ImageSet(Lambda(n, expr_x), S.Integers)
-    expr_y = 2*n*I*pi + Mod(-log(3), 2*I*pi)
+    expr_y = 2*n*I*pi + Mod(log(S(1)/3), 2*I*pi)
     soln_y = ImageSet(Lambda(n, expr_y), S.Integers)
     soln_complex = FiniteSet((soln_x, soln_y))
     soln = soln_real + soln_complex
@@ -1338,14 +1338,14 @@ def test_issue_5132_1():
 
     n = Dummy('n')
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    s_real_y = -log(3)
+    s_real_y = log(S(1)/3)
     s_real_z = sqrt(-exp(2*x) - sin(log(3)))
     soln_real = FiniteSet((s_real_y, s_real_z), (s_real_y, -s_real_z))
-    lam = Lambda(n, 2*n*I*pi + Mod(-log(3), 2*I*pi))
+    lam = Lambda(n, 2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))
     s_complex_y = ImageSet(lam, S.Integers)
-    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
     s_complex_z_1 = ImageSet(lam, S.Integers)
-    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
     s_complex_z_2 = ImageSet(lam, S.Integers)
     soln_complex = FiniteSet(
                                             (s_complex_y, s_complex_z_1),
@@ -1497,14 +1497,14 @@ def test_issue_5132_substitution():
 
     n = Dummy('n')
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    s_real_y = -log(3)
+    s_real_y = log(S(1)/3)
     s_real_z = sqrt(-exp(2*x) - sin(log(3)))
     soln_real = FiniteSet((s_real_y, s_real_z), (s_real_y, -s_real_z))
-    lam = Lambda(n, 2*n*I*pi + Mod(-log(3), 2*I*pi))
+    lam = Lambda(n, 2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))
     s_complex_y = ImageSet(lam, S.Integers)
-    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
     s_complex_z_1 = ImageSet(lam, S.Integers)
-    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
     s_complex_z_2 = ImageSet(lam, S.Integers)
     soln_complex = FiniteSet(
                                             (s_complex_y, s_complex_z_1),
