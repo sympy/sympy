@@ -158,7 +158,7 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 def Int(expr, var):
-    from .rubi import rubi_integrate
+    from sympy.integrals.rubi.rubi import rubi_integrate
     return rubi_integrate(expr, var)
 
 def Set(expr, value):
@@ -6062,7 +6062,7 @@ def SimpHelp(u, x):
                 w = i + w
         v = SmartSimplify(v)
         if SumQ(w):
-            w = Add(*[SimpHelp(i, x) for i in w])
+            w = Add(*[SimpHelp(i, x) for i in w.args])
         else:
             w = SimpHelp(w, x)
         return v + w
@@ -6678,8 +6678,27 @@ def PolyLog(n, p, z=None):
 def D(f, x):
     return f.diff(x)
 
+def IntegralFreeQ(u):
+    return FreeQ(u, Integral)
+
 def Dist(u, v, x):
-    return Mul(u, v)
+    #Dist(u,v)Dreturns the sum of u times each term of v, provided v is free of Int
+    #return Mul(u, v)
+    w = Simp(u*x**2, x)/x**2
+    if u == 1:
+        return v
+    elif u == 0:
+        return 0
+    elif NumericFactor(u) < 0 and NumericFactor(-u) > 0:
+        return -Dist(-u, v, x)
+    elif SumQ(v):
+        return Add(*[Dist(u, i, x) for i in v.args])
+    elif IntegralFreeQ(v):
+        return Simp(u*v, x)
+    elif w != u and FreeQ(w, x) and w == Simp(w, x) and w == Simp(w*x**2, x)/x**2:
+        return Dist(w, v, x)
+    else:
+        return Simp(u*v, x)
 
 def PureFunctionOfCothQ(u, v, x):
     # If u is a pure function of Coth[v], PureFunctionOfCothQ[u,v,x] returns True;
