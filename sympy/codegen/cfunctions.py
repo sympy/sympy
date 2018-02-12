@@ -135,9 +135,11 @@ class log1p(Function):
     @classmethod
     def eval(cls, arg):
         if not arg.is_Float:  # not safe to add 1 to Float
+            return log.eval(arg + S.One)
+        elif arg.is_Rational:
             return log(arg + S.One)
         elif arg.is_number:
-            return log.eval(Rational(arg) + S.One)
+            return log(Rational(arg) + S.One)
 
     def _eval_is_real(self):
         return (self.args[0] + S.One).is_nonnegative
