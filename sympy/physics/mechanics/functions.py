@@ -364,7 +364,7 @@ def gravity(acceleration, *body):
 >>> forceList = [(po, F1), (P, F2)]
 >>> forceList.extend(gravity(g*N.y, pa, B))
 >>> forcelist
-[(po, F1), (P, F2), (po, m*g*N.y), (P, M*g*N.y)]
+[(po, F1), (P, F2), (po, g*m*N.y), (P, g*M*N.y)]
     """
     gravity_force = []
     for e in body:
