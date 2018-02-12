@@ -348,22 +348,23 @@ def gravity(acceleration, *body):
 
     Examples
     ========
-    
-    >>> from sympy.physics.mechanics import *
-    >>> from sympy import *
-    >>> N = ReferenceFrame('N')
-    >>> m, M = symbols('m M')
-    >>> F1, F2 = dynamicsymbols('F1 F2')
-    >>> po = Point('po')
-    >>> pa = Particle('pa', po, m)
-    >>> A = ReferenceFrame('A')
-    >>> P = Point('P')
-    >>> I = outer(A.x, A.x)
-    >>> B = RigidBody('B', P, A, m, (I, P))
-    >>> forceList = [(po, F1), (P, F2)]
-    >>> forceList.extend(gravity(g*N.y, (pa, B)))
-    >>> forceList
-    [(po, F1), (P, F2), (po, m*g*N.y), (P, M*g*N.y)]
+
+>>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
+>>> from sympy.physics.mechanics.functions import gravity
+>>> from sympy import symbols
+>>> N = ReferenceFrame('N')
+>>> m, M, g = symbols('m M g')
+>>> F1, F2 = dynamicsymbols('F1 F2')
+>>> po = Point('po')
+>>> pa = Particle('pa', po, m)
+>>> A = ReferenceFrame('A')
+>>> P = Point('P')
+>>> I = outer(A.x, A.x)
+>>> B = RigidBody('B', P, A, m, (I, P))
+>>> forceList = [(po, F1), (P, F2)]
+>>> forceList.extend(gravity(g*N.y, pa, B))
+>>> forcelist
+[(po, F1), (P, F2), (po, m*g*N.y), (P, M*g*N.y)]
     """
     gravity_force = []
     for e in body:
@@ -371,6 +372,7 @@ def gravity(acceleration, *body):
             gravity_force.append((e.point, e.mass*acceleration))
         elif isinstance(e, RigidBody):
             gravity_force.append((e.masscenter, e.mass*acceleration))
+
     return gravity_force
 
 def Lagrangian(frame, *body):
