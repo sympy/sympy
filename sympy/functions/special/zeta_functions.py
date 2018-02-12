@@ -462,8 +462,10 @@ class zeta(Function):
                 return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
-            elif z.is_Integer:
-                if a.is_Integer:
+        if z.is_integer:
+            if a.is_Integer:
+                sym = z.free_symbols
+                if len(sym) == 0:
                     if z.is_negative:
                         zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
                     elif z.is_even:
@@ -476,15 +478,13 @@ class zeta(Function):
                         return zeta + harmonic(abs(a), z)
                     else:
                         return zeta - harmonic(a - 1, z)
-
-        sym = z.free_symbols
-        if len(sym)==1:
-            n = sym.pop()
-            if n.is_integer and n.is_positive:
-                if z == 2*n:
-                    return ((-1)**(n+1) * bernoulli(z) * (2*pi)**z) / (2*factorial(z))
-                elif z.is_negative:
-                    return ((-1)**n * bernoulli(n+1)) / (n+1)
+                elif len(sym) == 1:
+                    n = sym.pop()
+                    if n.is_integer and n.is_positive:
+                        if z == 2*n:
+                            return ((-1)**(n+1) * bernoulli(z) * (2*pi)**z) / (2*factorial(z))
+                        elif z.is_negative:
+                            return ((-1)**n * bernoulli(n+1)) / (n+1)
 
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
