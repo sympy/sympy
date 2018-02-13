@@ -341,10 +341,10 @@ def potential_energy(*body):
             raise TypeError('*body must have only Particle or RigidBody')
     return pe_sys
 
-def gravity(acceleration, *body):
+def gravity(acceleration, *bodies):
     """
     Returns a list of gravity forces given the acceleration
-    due to gravity and an iterable of bodies.
+    due to gravity and any number of particles or rigidbodies.
 
     Examples
     ========
@@ -360,18 +360,24 @@ def gravity(acceleration, *body):
 >>> A = ReferenceFrame('A')
 >>> P = Point('P')
 >>> I = outer(A.x, A.x)
->>> B = RigidBody('B', P, A, m, (I, P))
+>>> B = RigidBody('B', P, A, M, (I, P))
 >>> forceList = [(po, F1), (P, F2)]
 >>> forceList.extend(gravity(g*N.y, pa, B))
 >>> forceList
-[(po, F1), (P, F2), (po, g*m*N.y), (P, g*m*N.y)]
+[(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
     """
+
     gravity_force = []
-    for e in body:
-        if isinstance(e, Particle):
-            gravity_force.append((e.point, e.mass*acceleration))
-        elif isinstance(e, RigidBody):
-            gravity_force.append((e.masscenter, e.mass*acceleration))
+    if not bodies:
+        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
+
+    for e in bodies:
+        try:
+            point = e.masscenter
+        except AttributeError:
+            point = e.point
+
+        gravity_force.append((point, e.mass*acceleration))
 
     return gravity_force
 
