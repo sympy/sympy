@@ -1268,15 +1268,15 @@ class Ellipse(GeometrySet):
         return self.args[2]
 
 
-    def second_moment_of_area(self, p=None):
+    def second_moment_of_area(self, point=None):
         """Returns the second moment of area of a ellipse.
 
         Parameters
         ==========
 
-        p : Point, two-tuple of sympifiable objects, or None(default=None)
-            p is the point about which second moment of area is to be found.
-            If "p=None" it will be calculated about the axis passing through the
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
+            point is the point about which second moment of area is to be found.
+            If "point=None" it will be calculated about the axis passing through the
             centroid of the ellipse.
 
         Examples
@@ -1297,12 +1297,12 @@ class Ellipse(GeometrySet):
         I_xx = (S.Pi*(self.hradius)*(self.vradius**3))/4
         I_yy = (S.Pi*(self.hradius**3)*(self.vradius))/4
 
-        if(p == None):
+        if(point == None):
             return I_xx, I_yy
 
         # parallel axis theorem
-        I_xx = I_xx + self.area*(p[1]**2)
-        I_yy = I_yy + self.area*(p[0]**2)
+        I_xx = I_xx + self.area*(point[1]**2)
+        I_yy = I_yy + self.area*(point[0]**2)
 
         return I_xx, I_yy
 
