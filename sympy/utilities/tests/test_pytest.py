@@ -64,6 +64,18 @@ def test_second_argument_should_be_callable_or_string():
 
 
 def test_assert_raise_message():
-    assert_raise_message(ZeroDivisionError, 'integer division or modulo by zero', lambda: 1/0) # error message: 'integer division or modulo by zero'
-    assert_raise_message(ZeroDivisionError, 'zero', lambda: 1/0)
-    raises(AssertionError, lambda: assert_raise_message(ZeroDivisionError, 'one', lambda: 1/0))
+    import re
+
+    message1 = re.compile(r"division by zero", re.IGNORECASE)
+    message2 = re.compile(r"zero", re.IGNORECASE)
+    message3 = re.compile(r"one", re.IGNORECASE)
+    message4 = re.compile(r"some error message", re.IGNORECASE)
+
+    assert_raise_message(ZeroDivisionError, message1, lambda: 1/0) # error message: 'division by zero'
+    assert_raise_message(ZeroDivisionError, message2, lambda: 1/0)
+
+    raises(AssertionError, lambda: assert_raise_message(ZeroDivisionError, message3, lambda: 1/0))
+
+    #with assert_raise_message(ValueError, message4) as exc_wrapper:
+    #    raise ValueError("some error message")
+    #assert isinstance(exc_wrapper, ValueError)

@@ -5,7 +5,6 @@ from __future__ import print_function, division
 import sys
 import functools
 import os
-import re
 
 from sympy.core.compatibility import get_function_name
 
@@ -112,21 +111,23 @@ if not USE_PYTEST:
         AssertionError: DID NOT RAISE
 
         """
+        import re
+
         if code is None:
             return RaisesContext(expectedException)
         elif callable(code):
             try:
                 code()
             except expectedException as message:
-                message = message.args[0]
-                found = re.search(err_msg, message, re.M|re.I)
+                message = str(message)
+                found = err_msg.search(message)
                 if found:
                     return
                 else:
                     raise AssertionError("DID NOT RAISE")
         else:
             raise TypeError(
-                'assert_raise_message() expects a callable for the 2nd argument.')
+                'assert_raise_message() expects a callable for the 3rd argument.')
 
     class RaisesContext(object):
         def __init__(self, expectedException):
