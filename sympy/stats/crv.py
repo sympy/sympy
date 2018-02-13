@@ -30,6 +30,7 @@ class ContinuousDomain(RandomDomain):
     Represented using symbols and Intervals.
     """
     is_Continuous = True
+    is_Discrete = False
 
     def as_boolean(self):
         raise NotImplementedError("Not Implemented for generic Domains")

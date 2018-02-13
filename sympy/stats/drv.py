@@ -7,7 +7,7 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
         _reduce_inequalities)
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols, RandomDomain)
+        random_symbols, RandomDomain, PSpace)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
@@ -132,22 +132,58 @@ class SingleDiscreteDomain(DiscreteDomain, SingleDomain):
     Represented using an ImageSet or S.Integers, S.Naturals etc.
     """
 
-    def __new__(cls, symbol, set):
-        if not isinstance(symbol, Symbol):
-            raise ValueError("symbol must be of the type Symbol")
-        if isinstance(set, ImageSet) and not isinstance(
-            set.lamda.args[1], Expr):
-            raise ValueError
-        if isinstance(set, Interval):
-            raise ValueError("Domain set must be discrete.")
-        return RandomDomain.__new__(cls, set, symbols)
-
     @property
     def symbol(self):
         return self.args[0]
 
+    @property
+    def set(self):
+        return self.args[1]
+
     def as_boolean(self):
         raise NotImplementedError
+
+# class ProductDiscretePSpace(ProductDomain, DiscreteDomain):
+#     pass
+
+class DiscretePSpace(PSpace):
+    """
+    Represents the likelihood of an event space defined on a countably
+    infinite set.
+    """
+
+    is_real = True
+    is_discrete = True
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def density(self):
+        self.args[1]
+
+    def compute_density(self):
+        pass
+
+    def where(self, Condition):
+        rvs = random_symbols(condition)
+        assert all(r.symbol in self.symbols for r in rvs)
+        if (len(rvs) > 1):
+            raise NotImplementedError(filldedent('''Multivariate discrete
+                random variables are not yet supported.'''))
+        conditional_domain = reduce_rational_inequalities_wrap(condition,
+            rvs[0])
+        conditional_domain = conditional_domain.intersect(self.domain.set)
+        return SingleDiscreteDomain(rvs, conditional_domain)
+
+    def compute_cdf(self, expr):
+        rvs = random_symbols(expr)
+        if len(rvs) > 1:
+            raise NotImplementedError(filldedent('''Multivariate discrete
+                random variables are not yet supported.'''))
+        density = self.pdf(expr)
+        cdf = summation()
 
 class SingleDiscretePSpace(SinglePSpace):
     """ Discrete probability space over a single univariate variable """
