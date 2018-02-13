@@ -1268,6 +1268,45 @@ class Ellipse(GeometrySet):
         return self.args[2]
 
 
+    def second_moment_of_area(self, p=None):
+        """Returns the second moment of area of a ellipse.
+
+        Parameters
+        ==========
+
+        p : Point, two-tuple of sympifiable objects, or None(default=None)
+            p is the point about which second moment of area is to be found.
+            If "p=None" it will be calculated about the axis passing through the
+            centroid of the ellipse.
+
+        Examples
+        ========
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.second_moment_of_area()
+        (3*pi/4, 27*pi/4)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/List_of_second_moments_of_area
+
+        """
+
+        I_xx = (S.Pi*(self.hradius)*(self.vradius**3))/4
+        I_yy = (S.Pi*(self.hradius**3)*(self.vradius))/4
+
+        if(p == None):
+            return I_xx, I_yy
+
+        # parallel axis theorem
+        I_xx = I_xx + self.area*(p[1]**2)
+        I_yy = I_yy + self.area*(p[0]**2)
+
+        return I_xx, I_yy
+
+
 class Circle(Ellipse):
     """A circle in space.
 
