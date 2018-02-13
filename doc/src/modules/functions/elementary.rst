@@ -12,63 +12,54 @@ re
 --
 
 .. autoclass:: sympy.functions.elementary.complexes.re
-
    :members:
 
 im
 --
 
 .. autoclass:: sympy.functions.elementary.complexes.im
-
    :members:
 
 sign
 ----
 
 .. autoclass:: sympy.functions.elementary.complexes.sign
-
    :members:
 
 Abs
 ---
 
 .. autoclass:: sympy.functions.elementary.complexes.Abs
-
    :members:
 
 arg
 ---
 
 .. autoclass:: sympy.functions.elementary.complexes.arg
-
    :members:
 
 conjugate
 ---------
 
 .. autoclass:: sympy.functions.elementary.complexes.conjugate
-
    :members:
 
 polar_lift
 ----------
 
 .. autoclass:: sympy.functions.elementary.complexes.polar_lift
-
    :members:
 
 periodic_argument
 -----------------
 
 .. autoclass:: sympy.functions.elementary.complexes.periodic_argument
-
    :members:
 
 principal_branch
 -----------------
 
 .. autoclass:: sympy.functions.elementary.complexes.principal_branch
-
    :members:
 
 

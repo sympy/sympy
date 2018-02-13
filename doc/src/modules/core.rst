@@ -267,7 +267,6 @@ mod
 Mod
 ^^^
 .. autoclass:: Mod
-
    :members:
 
 relational
@@ -277,43 +276,36 @@ relational
 Rel
 ^^^
 .. autoclass:: Rel
-
    :members:
 
 Eq
 ^^
 .. autoclass:: Eq
-
    :members:
 
 Ne
 ^^
 .. autoclass:: Ne
-
    :members:
 
 Lt
 ^^
 .. autoclass:: Lt
-
    :members:
 
 Le
 ^^
 .. autoclass:: Le
-
    :members:
 
 Gt
 ^^
 .. autoclass:: Gt
-
    :members:
 
 Ge
 ^^
 .. autoclass:: Ge
-
    :members:
 
 Equality
