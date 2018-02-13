@@ -28,6 +28,9 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
+# To stop docstrings inheritance.
+autodoc_inherit_docstrings = False
+
 # MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
 mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
