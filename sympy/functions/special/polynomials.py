@@ -1152,7 +1152,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         x*(-a**2/2 - 5*a/2 - 3) + 1
 
     >>> assoc_laguerre(n, a, 0)
-    binomial(a + n, a)
+    gamma(a + n + 1)/(gamma(a + 1)*gamma(n + 1))
 
     >>> assoc_laguerre(n, a, x)
     assoc_laguerre(n, a, x)

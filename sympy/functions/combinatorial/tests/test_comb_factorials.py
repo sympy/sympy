@@ -295,31 +295,31 @@ def test_binomial():
     assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
-    assert binomial(n, -1).func == binomial
+    assert binomial(n, -1) == 0
     assert binomial(kp, -1) == 0
     assert binomial(nz, 0) == 1
     assert expand_func(binomial(n, 1)) == n
     assert expand_func(binomial(n, 2)) == n*(n - 1)/2
     assert expand_func(binomial(n, n - 2)) == n*(n - 1)/2
     assert expand_func(binomial(n, n - 1)) == n
-    assert binomial(n, 3).func == binomial
+    assert binomial(n, 3) == n*(n - 2)*(n - 1)/6
     assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
     assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
     assert binomial(n, n) == 1
     assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
     assert binomial(kp, kp + 1) == 0
-    assert binomial(n, u).func == binomial
-    assert binomial(kp, u) == 0
-    assert binomial(n, p).func == binomial
+    assert binomial(n, u) == gamma(n + 1)/(gamma(u + 1)*gamma(n - u + 1))
+    assert binomial(kp, u) == gamma(kp + 1)/(gamma(u + 1)*gamma(kp - u + 1))
+    assert binomial(n, p) == gamma(n + 1)/(gamma(p + 1)*gamma(n - p + 1))
     assert binomial(n, k).func == binomial
-    assert binomial(n, n + p).func == binomial
-    assert binomial(kp, kp + p) == 0
+    assert binomial(n, n + p) == gamma(n + 1)/(gamma(-p + 1)*gamma(n + p + 1))
+    assert binomial(kp, kp + p) == gamma(kp + 1)/(gamma(-p + 1)*gamma(kp + p + 1))
 
     assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
 
     assert binomial(n, k).is_integer
     assert binomial(nt, k).is_integer is None
-    assert binomial(x, nt).is_integer is False
+    assert binomial(x, nt) == gamma(x + 1)/(gamma(nt + 1)*gamma(-nt + x + 1))
 
     assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
 
@@ -330,18 +330,16 @@ def test_binomial():
     assert binomial(-23, -12) == 0
     assert binomial(13/2, -10) == 0
 
-    assert binomial(-49, -51) == binomial(-49, -51)
-    assert binomial(19, -7/2).rewrite(gamma) == -68719476736/(911337863661225*pi.evalf())
-    assert binomial(-3, -7/2).rewrite(gamma) == zoo
-    assert binomial(0, S(3)/2).rewrite(gamma) == -2/(3*pi)
+    assert binomial(-49, -51) == 0
+    assert binomial(19, S(-7)/2) == -68719476736/(911337863661225*pi)
+    assert binomial(-3, S(-7)/2) == zoo
+    assert binomial(0, S(3)/2) == -2/(3*pi)
 
-    assert binomial(20/3, -10/8) == binomial(20/3, -5/4)
-    assert binomial(19/2, -7/2) == -1615/8388608
-    assert binomial(-13/5, -7/8) == gamma(-13/5 + 1)/(gamma(-7/8 + 1)*gamma(-13/5 - (-7/8) + 1))
+    assert binomial(S(20)/3, S(-10)/8) == gamma(S(23)/3)/(gamma(S(-1)/4)*gamma(S(107)/12))
+    assert binomial(S(19)/2, S(-7)/2) == S(-1615)/8388608
+    assert binomial(S(-13)/5, S(-7)/8) == gamma(S(-8)/5)/(gamma(S(-29)/40)*gamma(S(1)/8))
 
-    b1 = binomial(S("-19/8"), S("-13/5")).rewrite(gamma)
-    g1 = gamma(S("-11/8"))/(gamma(S("-8/5"))*gamma(S("49/40")))
-    assert b1 == g1
+    assert binomial(S(-19)/8, S(-13)/5) == gamma(S(-11)/8)/(gamma(S(-8)/5)*gamma(S(49)/40))
 
 
 def test_binomial_diff():
