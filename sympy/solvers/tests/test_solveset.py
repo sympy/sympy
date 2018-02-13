@@ -1298,7 +1298,7 @@ def test_nonlinsolve_complex():
     assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == soln
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
-    soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
+    soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(-sin(log(S(1)/3)))), S.Integers)
     soln_real = FiniteSet((soln_x, log(S(1)/3)))
     # Mod(-log(3), 2*I*pi) is equal to -log(3).
     expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi)))) + \
@@ -1343,9 +1343,9 @@ def test_issue_5132_1():
     soln_real = FiniteSet((s_real_y, s_real_z), (s_real_y, -s_real_z))
     lam = Lambda(n, 2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))
     s_complex_y = ImageSet(lam, S.Integers)
-    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
+    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
     s_complex_z_1 = ImageSet(lam, S.Integers)
-    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
+    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
     s_complex_z_2 = ImageSet(lam, S.Integers)
     soln_complex = FiniteSet(
                                             (s_complex_y, s_complex_z_1),
@@ -1502,9 +1502,9 @@ def test_issue_5132_substitution():
     soln_real = FiniteSet((s_real_y, s_real_z), (s_real_y, -s_real_z))
     lam = Lambda(n, 2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))
     s_complex_y = ImageSet(lam, S.Integers)
-    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
+    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
     s_complex_z_1 = ImageSet(lam, S.Integers)
-    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(log(S(1)/3), 2*I*pi))))
+    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
     s_complex_z_2 = ImageSet(lam, S.Integers)
     soln_complex = FiniteSet(
                                             (s_complex_y, s_complex_z_1),
