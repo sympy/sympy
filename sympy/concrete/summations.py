@@ -16,6 +16,8 @@ from sympy.polys import apart, PolynomialError
 from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
@@ -435,7 +437,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ----------- ratio test ---------------- ###
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
-        ratio = simplify(next_sequence_term/sequence_term)
+        ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         lim_ratio = limit(ratio, sym, upper_limit)
         if (lim_ratio) > 1:
             return S.false
