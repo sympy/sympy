@@ -622,7 +622,7 @@ class harmonic(Function):
             else:
                 return cls
 
-        if n is S.Zero:
+        if n == 0:
             return S.Zero
 
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
