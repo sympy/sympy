@@ -265,7 +265,7 @@ def root(arg, n, k=0, evaluate=None):
     """
     n = sympify(n)
     if k:
-        return Pow(arg, S.One/n, evaluate=evaluate)*S.NegativeOne**(2*k/n)
+        return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)
     return Pow(arg, 1/n, evaluate=evaluate)
 
 
@@ -309,8 +309,8 @@ def real_root(arg, n=None, evaluate=None):
     if n is not None:
         return Piecewise(
             (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
-            (sign(arg)*root(Abs(arg), n, evaluate=evaluate), And(Eq(im(arg), S.Zero),
-                Eq(Mod(n, 2), S.One))),
+            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),
+            And(Eq(im(arg), S.Zero), Eq(Mod(n, 2), S.One))),
             (root(arg, n, evaluate=evaluate), True))
     rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
