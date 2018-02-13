@@ -464,27 +464,24 @@ class zeta(Function):
                 return S.ComplexInfinity
         if z.is_integer:
             if a.is_Integer:
-                sym = z.free_symbols
-                if len(sym) == 0:
-                    if z.is_negative:
-                        zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
-                    elif z.is_even:
-                        B, F = bernoulli(z), factorial(z)
-                        zeta = 2**(z - 1) * abs(B) * pi**z / F
-                    else:
-                        return
+                if z.is_negative:
+                    zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
+                elif z.is_even:
+                    B, F = bernoulli(z), factorial(z)
+                    zeta = 2**(z - 1) * abs(B) * pi**z / F
+                else:
+                    return
 
-                    if a.is_negative:
-                        return zeta + harmonic(abs(a), z)
-                    else:
-                        return zeta - harmonic(a - 1, z)
-                elif len(sym) == 1:
-                    n = sym.pop()
-                    if z.is_positive and z.is_even:
-                        if z == 2*n:
-                            return ((-1)**(n+1) * bernoulli(z) * (2*pi)**z) / (2*factorial(z))
-                    elif z == -n:
-                        return ((-1)**n * bernoulli(n+1)) / (n+1)
+                if a.is_negative:
+                    return zeta + harmonic(abs(a), z)
+                else:
+                    return zeta - harmonic(a - 1, z)
+
+                #if z.is_positive and z.is_even:
+                #    if z == 2*n:
+                #        return ((-1)**(n+1) * bernoulli(z) * (2*pi)**z) / (2*factorial(z))
+                #elif z == -n:
+                #    return ((-1)**n * bernoulli(n+1)) / (n+1)
 
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
