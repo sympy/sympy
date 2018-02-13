@@ -354,7 +354,7 @@ def gravity(acceleration, *body):
 >>> from sympy import symbols
 >>> N = ReferenceFrame('N')
 >>> m, M, g = symbols('m M g')
->>> F1, F2 = dynamicsymbols('F1 F2')
+>>> F1, F2 = symbols('F1 F2')
 >>> po = Point('po')
 >>> pa = Particle('pa', po, m)
 >>> A = ReferenceFrame('A')
@@ -363,8 +363,8 @@ def gravity(acceleration, *body):
 >>> B = RigidBody('B', P, A, m, (I, P))
 >>> forceList = [(po, F1), (P, F2)]
 >>> forceList.extend(gravity(g*N.y, pa, B))
->>> forcelist
-[(po, F1), (P, F2), (po, g*m*N.y), (P, g*M*N.y)]
+>>> forceList
+[(po, F1), (P, F2), (po, g*m*N.y), (P, g*m*N.y)]
     """
     gravity_force = []
     for e in body:
