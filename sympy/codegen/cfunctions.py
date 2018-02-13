@@ -97,7 +97,7 @@ class log1p(Function):
     ========
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log1p
-    >>> '%.0e' % log1p(1e-99).evalf()
+    >>> '%.0e' % expand_log(log1p(1e-99)).evalf()
     '1e-99'
     >>> from math import log
     >>> log(1 + 1e-99)
