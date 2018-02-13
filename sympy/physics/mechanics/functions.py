@@ -349,22 +349,22 @@ def gravity(acceleration, *bodies):
     Examples
     ========
 
->>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
->>> from sympy.physics.mechanics.functions import gravity
->>> from sympy import symbols
->>> N = ReferenceFrame('N')
->>> m, M, g = symbols('m M g')
->>> F1, F2 = symbols('F1 F2')
->>> po = Point('po')
->>> pa = Particle('pa', po, m)
->>> A = ReferenceFrame('A')
->>> P = Point('P')
->>> I = outer(A.x, A.x)
->>> B = RigidBody('B', P, A, M, (I, P))
->>> forceList = [(po, F1), (P, F2)]
->>> forceList.extend(gravity(g*N.y, pa, B))
->>> forceList
-[(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
+    >>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
+    >>> from sympy.physics.mechanics.functions import gravity
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> m, M, g = symbols('m M g')
+    >>> F1, F2 = symbols('F1 F2')
+    >>> po = Point('po')
+    >>> pa = Particle('pa', po, m)
+    >>> A = ReferenceFrame('A')
+    >>> P = Point('P')
+    >>> I = outer(A.x, A.x)
+    >>> B = RigidBody('B', P, A, M, (I, P))
+    >>> forceList = [(po, F1), (P, F2)]
+    >>> forceList.extend(gravity(g*N.y, pa, B))
+    >>> forceList
+    [(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
     """
 
     gravity_force = []
