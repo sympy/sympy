@@ -466,7 +466,7 @@ class zeta(Function):
             if a.is_Integer:
                 if z.is_negative:
                     zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
-                elif z.is_even:
+                elif z.is_even and z.is_positive:
                     B, F = bernoulli(z), factorial(z)
                     zeta = 2**(z - 1) * abs(B) * pi**z / F
                 else:

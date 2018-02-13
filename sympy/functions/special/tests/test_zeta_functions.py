@@ -230,3 +230,7 @@ def test_issue_14177():
 
     assert zeta(2*n) == 2**(2*n - 1)*pi**(2*n)*Abs(bernoulli(2*n))/factorial(2*n) - harmonic(0, 2*n)
     assert zeta(-n) == -harmonic(0, -n) + (-1)**(-n)*bernoulli(n + 1)/(n + 1)
+
+    n = Symbol('n')
+
+    assert zeta(2*n) == zeta(2*n) # As sign of z (= 2*n) is not determined
