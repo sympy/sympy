@@ -390,6 +390,8 @@ class Polygon(GeometrySet):
         =======
 
         I_xx, I_yy, I_xy : number or sympy expression
+                           I_xx, I_yy are second moment of area of a two dimensional polygon.
+                           I_xy is product moment of area of a two dimensional polygon.
 
         Examples
         ========
