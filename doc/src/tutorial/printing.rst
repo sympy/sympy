@@ -65,17 +65,17 @@ create some common Symbols, setup plotting, and run ``init_printing()``.
 
 In any case, this is what will happen:
 
-- In the IPython QTConsole, if `\LaTeX` is installed, it will enable a printer
-  that uses `\LaTeX`.
+- In the IPython QTConsole, if `\mathrm{\LaTeX}` is installed, it will enable a printer
+  that uses `\mathrm{\LaTeX}`.
 
   .. image:: ../pics/ipythonqtconsole.png
      :height: 500
 
-  If `\LaTeX` is not installed, but Matplotlib is installed, it will use the
+  If `\mathrm{\LaTeX}` is not installed, but Matplotlib is installed, it will use the
   Matplotlib rendering engine. If Matplotlib is not installed, it uses the
   Unicode pretty printer.
 
-- In the IPython notebook, it will use MathJax to render `\LaTeX`.
+- In the IPython notebook, it will use MathJax to render `\mathrm{\LaTeX}`.
 
   .. image:: ../pics/ipythonnotebook.png
      :height: 250
@@ -92,7 +92,7 @@ In any case, this is what will happen:
   .. image:: ../pics/consoleascii.png
      :width: 700
 
-To explicitly not use `\LaTeX`, pass ``use_latex=False`` to ``init_printing()``
+To explicitly not use `\mathrm{\LaTeX}`, pass ``use_latex=False`` to ``init_printing()``
 or ``init_session()``.  To explicitly not use Unicode, pass
 ``use_unicode=False``.
 
@@ -183,10 +183,10 @@ pass ``use_unicode=True`` to force it to use Unicode.
 
 .. _LaTeX:
 
-`\LaTeX`
---------
+`\mathrm{\LaTeX}`
+-----------------
 
-To get the `\LaTeX` form of an expression, use ``latex()``.
+To get the `\mathrm{\LaTeX}` form of an expression, use ``latex()``.
 
     >>> print(latex(Integral(sqrt(1/x), x)))
     \int \sqrt{\frac{1}{x}}\, dx

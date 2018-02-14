@@ -47,7 +47,7 @@ the tutorial to experiment.
 To show or hide the SymPy Live shell at any time, just click the green button
 on the bottom right of the screen.
 
-By default, the SymPy Live shell uses `\LaTeX` for output.  If you want the
+By default, the SymPy Live shell uses `\mathrm{\LaTeX}` for output.  If you want the
 output to look more like the output in the documentation, change the
 output format to ``Str`` or ``Unicode`` in the settings.
 
