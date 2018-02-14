@@ -386,6 +386,11 @@ class Polygon(GeometrySet):
             If "point=None" it will be calculated about the axis passing through the
             centroid of the polygon.
 
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+
         Examples
         ========
 

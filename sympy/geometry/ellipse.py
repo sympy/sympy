@@ -1279,13 +1279,18 @@ class Ellipse(GeometrySet):
             If "point=None" it will be calculated about the axis passing through the
             centroid of the ellipse.
 
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+
         Examples
         ========
         >>> from sympy import Point, Ellipse
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.second_moment_of_area()
-        (3*pi/4, 27*pi/4)
+        (3*pi/4, 27*pi/4, 0)
 
         References
         ==========
