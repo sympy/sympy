@@ -35,7 +35,7 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 from sympy.sets.setexpr import SetExpr
 
@@ -140,9 +140,6 @@ def test_latex_basic():
 
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left (p \right )}"
-
-    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
-    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
 
 
 def test_latex_builtins():
@@ -831,6 +828,14 @@ def test_latex_limits():
     assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
     # bi-directional limit
     assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
+
+
+def test_latex_log():
+    assert latex(log(x)) == r"\log{\left (x \right )}"
+    assert latex(ln(x)) == r"\log{\left (x \right )}"
+    assert latex(log(x), ln_notation=True) == r"\ln{\left (x \right )}"
+    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
+    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
 
 
 def test_issue_3568():

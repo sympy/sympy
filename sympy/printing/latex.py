@@ -700,8 +700,6 @@ class LatexPrinter(Printer):
         func = self._deal_with_super_sub(func)
         if func in accepted_latex_functions:
             name = r"\%s" % func
-            if self._settings["ln_notation"] and name == r"\log":
-                name = r"\ln"
         elif len(func) == 1 or func.startswith('\\'):
             name = func
         else:
@@ -843,6 +841,17 @@ class LatexPrinter(Printer):
 
     def _print_ceiling(self, expr, exp=None):
         tex = r"\lceil{%s}\rceil" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_log(self, expr, exp=None):
+        if not self._settings["ln_notation"]:
+            tex = r"\log{\left (%s \right )}" % self._print(expr.args[0])
+        else:
+            tex = r"\ln{\left (%s \right )}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -2245,7 +2254,7 @@ def latex(expr, **settings):
     >>> print(latex([2/x, y], mode='inline'))
     $\left [ 2 / x, \quad y\right ]$
 
-    ln_notation: If set to `True` "\ln" is used instead of default "\log"
+    ln_notation: If set to ``True`` "\ln" is used instead of default "\log"
 
     >>> print(latex(log(10)))
     \log{\left (10 \right )}
