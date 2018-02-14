@@ -392,3 +392,11 @@ def test_parameter_value():
     e = Ellipse(Point(0, 0), 3, 5)
     assert e.parameter_value((3, 0), t) == {t: 0}
     raises(ValueError, lambda: e.parameter_value((4, 0), t))
+
+def test_second_moment_of_area():
+    x, y = symbols('x, y')
+    e = Ellipse(Point(0, 0), 5, 4)
+    I_yy = 2*4*integrate(sqrt(25 - x**2)*x**2, (x, -5, 5))/5
+    I_xx = 2*5*integrate(sqrt(16 - y**2)*y**2, (y, -4, 4))/4
+    assert I_yy == e.second_moment_of_area()[1]
+    assert I_xx == e.second_moment_of_area()[0]

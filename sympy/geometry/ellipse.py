@@ -1269,7 +1269,7 @@ class Ellipse(GeometrySet):
 
 
     def second_moment_of_area(self, point=None):
-        """Returns the second moment of area of a ellipse.
+        """Returns the second moment and product moment area of an ellipse.
 
         Parameters
         ==========
@@ -1296,15 +1296,17 @@ class Ellipse(GeometrySet):
 
         I_xx = (S.Pi*(self.hradius)*(self.vradius**3))/4
         I_yy = (S.Pi*(self.hradius**3)*(self.vradius))/4
+        I_xy = 0
 
-        if(point == None):
-            return I_xx, I_yy
+        if point is None:
+            return I_xx, I_yy, I_xy
 
         # parallel axis theorem
-        I_xx = I_xx + self.area*(point[1]**2)
-        I_yy = I_yy + self.area*(point[0]**2)
+        I_xx = I_xx + self.area*((point[1] - self.center.y)**2)
+        I_yy = I_yy + self.area*((point[0] - self.center.x)**2)
+        I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
 
-        return I_xx, I_yy
+        return I_xx, I_yy, I_xy
 
 
 class Circle(Ellipse):

@@ -421,7 +421,7 @@ class Polygon(GeometrySet):
         I_xx_c = (I_xx/12) - (A*(c_y**2))
         I_yy_c = (I_yy/12) - (A*(c_x**2))
         I_xy_c = (I_xy/24) - (A*(c_x*c_y))
-        if(point == None):
+        if point is None:
             return I_xx_c, I_yy_c, I_xy_c
 
         I_xx = (I_xx_c + A*((point[1]-c_y)**2))
