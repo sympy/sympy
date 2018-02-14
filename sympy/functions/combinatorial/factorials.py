@@ -864,7 +864,7 @@ class binomial(CombinatorialFunction):
                     return S.Zero
                 if n.is_Number:
                     return cls._eval(n, k)
-            elif k.is_Number and k.is_Number:
+            elif n.is_Number and k.is_Number:
                 from sympy import gamma
                 return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
