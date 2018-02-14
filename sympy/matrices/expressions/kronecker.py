@@ -10,7 +10,6 @@ from sympy.strategies import unpack, flatten, condition, exhaust, do_one
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
 
-from sympy.printing.pretty.stringpict import prettyForm
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
 from sympy.matrices.matrices import MatrixBase
 
@@ -129,54 +128,6 @@ class KroneckerProduct(MatrixExpr):
         else:
             args = self.args
         return canonicalize(KroneckerProduct(*args))
-
-    def _sympystr(self, printer, *args):
-        from sympy.printing.str import sstr
-        length = len(self.args)
-        s = ''
-        for i in range(length):
-            if isinstance(self.args[i], (Add, Pow, Mul)):
-                s = s + '('
-            s = s + sstr(self.args[i])
-            if isinstance(self.args[i], (Add, Pow, Mul)):
-                s = s + ')'
-            if i != length - 1:
-                s = s + 'x'
-        return s
-
-    def _pretty(self, printer, *args):
-        length = len(self.args)
-        pform = printer._print('', *args)
-        for i in range(length):
-            next_pform = printer._print(self.args[i], *args)
-            if isinstance(self.args[i], (Add, Mul)):
-                next_pform = prettyForm(
-                    *next_pform.parens(left='(', right=')')
-                )
-            pform = prettyForm(*pform.right(next_pform))
-            if i != length - 1:
-                if printer._use_unicode:
-                    pform = prettyForm(
-                        *pform.right(u'\N{N-ARY CIRCLED TIMES OPERATOR}' + u' '))
-                else:
-                    pform = prettyForm(*pform.right('x' + ' '))
-        return pform
-
-    def _latex(self, printer, *args):
-        length = len(self.args)
-        s = ''
-        for i in range(length):
-            if isinstance(self.args[i], (Add, Mul)):
-                s = s + '\\left('
-            # The extra {} brackets are needed to get matplotlib's latex
-            # rendered to render this properly.
-            s = s + '{' + printer._print(self.args[i], *args) + '}'
-            if isinstance(self.args[i], (Add, Mul)):
-                s = s + '\\right)'
-            if i != length - 1:
-                s = s + '\\otimes '
-        return s
-
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):

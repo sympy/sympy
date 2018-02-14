@@ -311,6 +311,10 @@ class StrPrinter(Printer):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
+    def _print_KroneckerProduct(self, expr):
+        return 'x'.join([self.parenthesize(arg, precedence(expr))
+            for arg in expr.args])
+
     def _print_MatAdd(self, expr):
         return ' + '.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])

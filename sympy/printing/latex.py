@@ -1489,6 +1489,15 @@ class LatexPrinter(Printer):
             return self._print(x)
         return r' \circ '.join(map(parens, expr.args))
 
+    def _print_KroneckerProduct(self, expr):
+        from sympy import Add, MatAdd, MatMul
+
+        def parens(x):
+            if isinstance(x, (Add, MatAdd, MatMul)):
+                return r"\left(%s\right)" % self._print(x)
+            return self._print(x)
+        return r' \otimes '.join(map(parens, expr.args))
+
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         from sympy.matrices import MatrixSymbol

@@ -857,6 +857,15 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 
+    def _print_KroneckerProduct(self, expr):
+        from sympy import MatAdd, MatMul
+        if self._use_unicode:
+            delim = u' \N{N-ARY CIRCLED TIMES OPERATOR} '
+        else:
+            delim = 'x'
+        return self._print_seq(expr.args, None, None, delim,
+                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
+
     _print_MatrixSymbol = _print_Symbol
 
     def _print_FunctionMatrix(self, X):
