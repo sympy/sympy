@@ -136,10 +136,10 @@ Ntheory Functions Reference
 .. autofunction:: discrete_log
 
 .. automodule:: sympy.ntheory.continued_fraction
-    :members:
+   :members:
 
 .. autoclass:: sympy.ntheory.mobius
-    :members:
+   :members:
 
 .. module:: sympy.ntheory.egyptian_fraction
 

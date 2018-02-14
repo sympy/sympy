@@ -330,14 +330,14 @@ def test_latex_functions():
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
     assert latex(gamma(w)) == r"\Gamma\left(w\right)"
-    assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow \infty\right)"
-    assert latex(Order(x - y, (x, y))) == r"\mathcal{O}\left(x - y; x\rightarrow y\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
+    assert latex(Order(x)) == r"O\left(x\right)"
+    assert latex(Order(x, x)) == r"O\left(x\right)"
+    assert latex(Order(x, (x, 0))) == r"O\left(x\right)"
+    assert latex(Order(x, (x, oo))) == r"O\left(x; x\rightarrow \infty\right)"
+    assert latex(Order(x - y, (x, y))) == r"O\left(x - y; x\rightarrow y\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
@@ -769,6 +769,9 @@ def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+    y = Symbol('y')
+    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
+    assert latex(imgset) == r"\left\{x + y\; |\; x \in \left\{1, 2, 3\right\}, y \in \left\{3, 4\right\}\right\}"
 
 
 def test_latex_ConditionSet():
