@@ -762,10 +762,19 @@ class binomial(CombinatorialFunction):
     -195/128
 
     >>> binomial(n, 3)
-    n*(n - 2)*(n - 1)/6
+    binomial(n, 3)
 
     >>> binomial(n, 3).expand(func=True)
     n**3/6 - n**2/2 + n/3
+
+    >>> expand_func(binomial(n, 3))
+    n*(n - 2)*(n - 1)/6
+
+    References
+    ==========
+
+    .. [1] https://www.johndcook.com/blog/binomial_coefficients/
+
 
     """
 
@@ -841,22 +850,23 @@ class binomial(CombinatorialFunction):
 
     @classmethod
     def eval(cls, n, k):
-        from sympy import gamma
         n, k = map(sympify, (n, k))
         d = n - k
         if d.is_zero or k.is_zero:
             return S.One
-
-        if (k - 1).is_zero:
-            return n
-        if k.is_integer:
-            if k.is_negative:
-                return S.Zero
-            if n.is_integer and n.is_nonnegative and d.is_negative:
-                return S.Zero
-            return cls._eval(n, k)
-
-        return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+        elif d.is_zero is False:
+            if (k - 1).is_zero:
+                return n
+            if k.is_integer:
+                if k.is_negative:
+                    return S.Zero
+                if n.is_integer and n.is_nonnegative and d.is_negative:
+                    return S.Zero
+                if n.is_Number:
+                    return cls._eval(n, k)
+            elif k.is_Number and k.is_Number:
+                from sympy import gamma
+                return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
 
     def _eval_expand_func(self, **hints):

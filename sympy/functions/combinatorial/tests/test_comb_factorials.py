@@ -295,31 +295,32 @@ def test_binomial():
     assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
-    assert binomial(n, -1) == 0
+    assert binomial(n, -1).func == binomial
     assert binomial(kp, -1) == 0
     assert binomial(nz, 0) == 1
     assert expand_func(binomial(n, 1)) == n
     assert expand_func(binomial(n, 2)) == n*(n - 1)/2
     assert expand_func(binomial(n, n - 2)) == n*(n - 1)/2
     assert expand_func(binomial(n, n - 1)) == n
-    assert binomial(n, 3) == n*(n - 2)*(n - 1)/6
+    assert binomial(n, 3).func == binomial
     assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
     assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
     assert binomial(n, n) == 1
     assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
     assert binomial(kp, kp + 1) == 0
-    assert binomial(n, u) == gamma(n + 1)/(gamma(u + 1)*gamma(n - u + 1))
-    assert binomial(kp, u) == gamma(kp + 1)/(gamma(u + 1)*gamma(kp - u + 1))
-    assert binomial(n, p) == gamma(n + 1)/(gamma(p + 1)*gamma(n - p + 1))
+    assert binomial(n, u).func == binomial
+    assert binomial(kp, u).func == binomial
+    assert binomial(n, p).func == binomial
     assert binomial(n, k).func == binomial
-    assert binomial(n, n + p) == gamma(n + 1)/(gamma(-p + 1)*gamma(n + p + 1))
-    assert binomial(kp, kp + p) == gamma(kp + 1)/(gamma(-p + 1)*gamma(kp + p + 1))
+    assert binomial(n, n + p).func == binomial
+    assert binomial(kp, kp + p).func == binomial
+
 
     assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
 
     assert binomial(n, k).is_integer
     assert binomial(nt, k).is_integer is None
-    assert binomial(x, nt) == gamma(x + 1)/(gamma(nt + 1)*gamma(-nt + x + 1))
+    assert binomial(x, nt).is_integer is False
 
     assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
 
