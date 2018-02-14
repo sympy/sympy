@@ -1062,3 +1062,14 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+
+
+def test_issue_13956():
+    assert S.EmptySet.is_empty == True
+    assert Interval(0, 1).is_empty == False
+    assert Interval(0, 0).is_empty == None
+    assert Interval(0, 0, left_open=True, right_open=True).is_empty == True
+    assert Union(Interval(0, 1), Interval(0, 1)).is_empty == False
+    assert Intersection(Interval(0, 2), Interval(1, 3)).is_empty == False
+    assert Intersection(Interval(0, 1), Interval(1, 2, left_open=True)).is_empty == True
+    assert Intersection(Interval(0, 1), Interval(1, 2, left_open=False)).is_empty == None

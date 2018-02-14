@@ -40,6 +40,7 @@ class Set(Basic):
     is_number = False
     is_iterable = False
     is_interval = False
+    is_empty = None
 
     is_FiniteSet = False
     is_Interval = False
@@ -319,6 +320,17 @@ class Set(Basic):
 
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
+
+    @property
+    def is_empty(self):
+        if self.is_EmptySet:
+            is_empty = True
+        elif self.is_Interval or self.is_Union or self.is_Intersection:
+            is_empty = False
+        else:
+            is_empty = None
+
+        return is_empty
 
     def is_subset(self, other):
         """
