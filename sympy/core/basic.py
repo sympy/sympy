@@ -315,7 +315,6 @@ class Basic(with_metaclass(ManagedProperties)):
 
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
-        from sympy import Pow
         if self is other:
             return True
 
