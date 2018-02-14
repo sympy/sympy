@@ -321,17 +321,6 @@ class Set(Basic):
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
 
-    @property
-    def is_empty(self):
-        if self.is_EmptySet:
-            is_empty = True
-        elif self.is_Interval or self.is_Union or self.is_Intersection:
-            is_empty = False
-        else:
-            is_empty = None
-
-        return is_empty
-
     def is_subset(self, other):
         """
         Returns True if 'self' is a subset of 'other'.
@@ -952,6 +941,15 @@ class Interval(Set, EvalfMixin):
         """
         return self._args[3]
 
+    @property
+    def is_empty(self):
+        if self.start < self.end:
+            is_empty = False
+        else:
+            is_empty = None
+
+        return is_empty
+
     def _intersect(self, other):
         """
         This function should only be used internally
@@ -1434,6 +1432,16 @@ class Union(Set, EvalfMixin):
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
+    def is_empty(self):
+        a, b = self.args
+        if a.sup >= a.inf or b.sup >= b.inf:
+            is_empty = False
+        else:
+            is_empty = None
+
+        return is_empty
+
+    @property
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
 
@@ -1783,6 +1791,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     """
     is_EmptySet = True
     is_FiniteSet = True
+    is_empty = True
 
     def _intersect(self, other):
         return S.EmptySet
