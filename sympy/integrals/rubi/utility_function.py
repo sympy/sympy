@@ -754,6 +754,8 @@ def Numerator(u):
     return fraction(u)[0]
 
 def NumberQ(u):
+    if isinstance(u, (int, float)):
+        return True
     return u.is_number
 
 def NumericQ(u):
