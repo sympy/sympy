@@ -38,7 +38,6 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.miscellaneous import Max, Min
 from types import GeneratorType
 from sympy.utilities.iterables import numbered_symbols
-from collections import OrderedDict
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -934,7 +933,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
-    reps = OrderedDict(zip(
+    reps = list(zip(
         # do larger expressions first in case they contain
         # other Abs
         reversed(list(ordered(
@@ -946,8 +945,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     f = f.rewrite(Piecewise)
 
     if reps:
-        ireps = dict([(v, k) for k, v in reps.items()])
-        f = f.xreplace(ireps)
+        f = f.xreplace(dict([(n, o) for o, n in reps]))
 
 
     if isinstance(f, Eq):
