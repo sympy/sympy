@@ -43,6 +43,9 @@ def test_python_basic():
         "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3*y/(2*x)"]
 
     # Multiplication
+    from sympy import Mul, Pow
+    assert python(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False)
+        , evaluate=False)) == "x = Symbol('x')\ny = Symbol('y')\ne = -2*x/(y*y)"
     assert python(x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = x/y"
     assert python(-x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = -x/y"
     assert python((x + 2)/y) in [
