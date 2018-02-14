@@ -468,7 +468,7 @@ class zeta(Function):
                     zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
                 elif z.is_even and z.is_positive:
                     B, F = bernoulli(z), factorial(z)
-                    zeta = 2**(z - 1) * abs(B) * pi**z / F
+                    zeta = ((-1)**(z/2+1) * 2**(z - 1) * B * pi**z) / F
                 else:
                     return
 
@@ -476,12 +476,6 @@ class zeta(Function):
                     return zeta + harmonic(abs(a), z)
                 else:
                     return zeta - harmonic(a - 1, z)
-
-                #if z.is_positive and z.is_even:
-                #    if z == 2*n:
-                #        return ((-1)**(n+1) * bernoulli(z) * (2*pi)**z) / (2*factorial(z))
-                #elif z == -n:
-                #    return ((-1)**n * bernoulli(n+1)) / (n+1)
 
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
