@@ -936,6 +936,7 @@ def test_solveset():
     assert solveset(x*Min(x, 15) - 10, x) == FiniteSet(-sqrt(10), sqrt(10))
     assert solveset(Max(abs(x-3)-1,x+2)-3, x, S.Reals) == FiniteSet(-1, 1)
     assert solveset(Abs(x-1) - Abs(y), x, S.Reals) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
+    assert solveset(Abs(x**3 + 4*Abs(x+1)), x, S.Reals) == FiniteSet(-(54 + 6*sqrt(129))**S((S(1)/3))/3 + 4/(54 + 6*sqrt(129))**(S(1)/3))
 
 
 def test_conditionset():

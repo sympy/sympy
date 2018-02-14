@@ -37,6 +37,8 @@ from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.miscellaneous import Max, Min
 from types import GeneratorType
+from sympy.utilities.iterables import numbered_symbols
+from collections import OrderedDict
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -932,25 +934,21 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
-    rep = []
-    if f.has(Abs):
-        # masking off the Abs() part from being rewritten into Piecewise
-        from sympy import numbered_symbols
-        e = [a for a in f.atoms(Abs) if symbol in a.free_symbols]
-        rep = numbered_symbols("t", cls=Dummy)
-        rep = [next(rep) for _ in range(len(e))]
-        newf = f
-        rep_dict = {}
-        for r in e:
-            newf =  newf.replace(r, rep[e.index(r)])
-            rep_dict[rep[e.index(r)]] = r
-        f = newf
+    reps = OrderedDict(zip(
+        # do larger expressions first in case they contain
+        # other Abs
+        reversed(list(ordered(
+            [i for i in f.atoms(Abs) if symbol in i.free_symbols]))),
+        numbered_symbols("t", cls=Dummy)))
+    for k in reps:
+        f = f.replace(k, reps[k])
 
     f = f.rewrite(Piecewise)
 
-    for i in rep:
-        # replacing back the masked off part
-        f = f.replace(i, rep_dict[i])
+    if reps:
+        ireps = dict([(v, k) for k, v in reps.items()])
+        f = f.xreplace(ireps)
+
 
     if isinstance(f, Eq):
         from sympy.core import Add
