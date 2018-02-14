@@ -33,7 +33,7 @@ def test_log1p():
     # Eval
     assert log1p(0) == 0
     d = S(10)
-    assert log1p(d**-1000) - log(d**1000 + 1) + log(d**1000) == S.Zero
+    assert expand_log(log1p(d**-1000) - log(d**1000 + 1) + log(d**1000)) == 0
 
     x = Symbol('x', real=True, finite=True)
 
