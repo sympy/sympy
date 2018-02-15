@@ -134,6 +134,7 @@ class LatexPrinter(Printer):
         "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
+        "ln_notation": False,
     }
 
     def __init__(self, settings=None):
@@ -840,6 +841,17 @@ class LatexPrinter(Printer):
 
     def _print_ceiling(self, expr, exp=None):
         tex = r"\lceil{%s}\rceil" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_log(self, expr, exp=None):
+        if not self._settings["ln_notation"]:
+            tex = r"\log{\left (%s \right )}" % self._print(expr.args[0])
+        else:
+            tex = r"\ln{\left (%s \right )}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -2123,7 +2135,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational
+    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
     >>> from sympy.abc import x, y, mu, r, tau
 
     >>> print(latex((2*tau)**Rational(7,2)))
@@ -2241,6 +2253,14 @@ def latex(expr, **settings):
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left [ 2 / x, \quad y\right ]$
+
+    ln_notation: If set to ``True`` "\ln" is used instead of default "\log"
+
+    >>> print(latex(log(10)))
+    \log{\left (10 \right )}
+
+    >>> print(latex(log(10), ln_notation=True))
+    \ln{\left (10 \right )}
 
     """
 
