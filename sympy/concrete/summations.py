@@ -6,19 +6,21 @@ from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
+from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
-from sympy.polys import apart, PolynomialError
+from sympy.polys import apart, PolynomialError, together
 from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
+from sympy.simplify import denom
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -989,22 +991,21 @@ def eval_sum_symbolic(f, limits):
         r = gosper_sum(f, (i, a, b))
 
         # to find Sum at points where denominator approaches to zero
-        from sympy import together, fraction, Mul, Add, ordered
-        if isinstance(r, (Mul,Add)) and not(any(x in r.atoms(Symbol) for x in limits)):
-            var = ordered(r.atoms(Symbol))
-            _, denom = fraction(together(r))
-            if any(x in denom.atoms(Symbol) for x in var):
+        if isinstance(r, (Mul,Add)):
+            from sympy import ordered
+            var = r.free_symbols
+            var = [x for x in var if x not in limits]
+            den = denom(together(r))
+            if any(x in den.free_symbols for x in var):
                 cond = []
-                for v in var:
-                    for s in solve(denom, v):
+                for v in ordered(var):
+                    for s in solve(den, v):
                         m = Eq(v, s)
                         if not(m == False and m == True):
                             cond.append(m)
-                pic = []
-                for m in cond:
-                    pic.append((Sum(f_orig.subs(m.args[0], m.args[1]), limits).doit(),m))
-                pic.append((r, True))
-                r = Piecewise(*pic)
+                args = [(Sum(f_orig.subs(*m.args), limits).doit(), m) for m in cond]
+                args.append((r, True))
+                r = Piecewise(*args)
 
         if not r in (None, S.NaN):
             return r
