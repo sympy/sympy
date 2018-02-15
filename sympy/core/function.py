@@ -1213,6 +1213,8 @@ class Derivative(Expr):
         # derivative class by calling Expr.__new__.
         if (not (hasattr(expr, '_eval_derivative') and evaluate) and
            (not isinstance(expr, Derivative))):
+            # If we try to differentiate a variable with respect to itself,
+            # the result should always be 1.
             if evaluate and variables == [expr]:
                 return S.One
             # If we wanted to evaluate, we sort the variables into standard
