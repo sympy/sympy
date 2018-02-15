@@ -991,19 +991,21 @@ def eval_sum_symbolic(f, limits):
         r = gosper_sum(f, (i, a, b))
 
         # to find Sum at points where denominator approaches to zero
+        from sympy.utilities.iterables import subsets
         if isinstance(r, (Mul,Add)):
             from sympy import ordered
-            var = r.free_symbols
-            var = [x for x in var if x not in limits]
+            var = [x for x in r.free_symbols if x not in limits]
             den = denom(together(r))
             if any(x in den.free_symbols for x in var):
                 cond = []
-                for v in ordered(var):
+                for v in ordered(set(var) & den.free_symbols):
                     for s in solve(den, v):
                         m = Eq(v, s)
-                        if not(m == False and m == True):
-                            cond.append(m)
-                args = [(Sum(f_orig.subs(*m.args), limits).doit(), m) for m in cond]
+                        if m == False:
+                            continue
+                        cond.append(m)
+                args = [(Sum(f_orig.subs(dict(e.args for e in i)),
+                    limits).doit(), And(*i)) for i in reversed(list(subsets(cond))) if i]
                 args.append((r, True))
                 r = Piecewise(*args)
 

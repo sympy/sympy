@@ -1009,9 +1009,11 @@ def test_issue_14129():
     assert Sum( x**k, (k, 0, n-1)).doit() == \
         Piecewise((n, Eq(x, 1)), ((-x**n + 1)/(-x + 1), True))
     assert Sum( k*(x/y+x)**k, (k, 0, n-1)).doit() == \
-        Piecewise((n*(n - 1)/2, Eq(x, y/(y + 1))),
-        (n**2/2 - n/2, Eq(y, -x/(x - 1))), (x*(y
+        Piecewise(((-1)**(n - 1)*n*(n - 1)*(x - 1)**(n
+        - 1)*(x/(-x + 1) + 1)**(n - 1)/2, Eq(x, y/(y
+        + 1)) & Eq(y, -x/(x - 1))), (n**2/2 - n/2, Eq(y,
+        -x/(x - 1))), (n*(n - 1)/2, Eq(x, y/(y + 1))), (x*(y
         + 1)*(n*x*y*(x + x/y)**n/(x + x/y) + n*x*(x
-        + x/y)**n/(x + x/y) - n*y*(x + x/y)**n/(x + x/y)
-        - x*y*(x + x/y)**n/(x + x/y) - x*(x + x/y)**n/(x
-        + x/y) + y)/(x*y + x - y)**2, True))
+        + x/y)**n/(x + x/y) - n*y*(x + x/y)**n/(x
+        + x/y) - x*y*(x + x/y)**n/(x + x/y) - x*(x
+        + x/y)**n/(x + x/y) + y)/(x*y + x - y)**2, True))
