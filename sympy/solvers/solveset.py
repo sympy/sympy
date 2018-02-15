@@ -797,7 +797,7 @@ def _solveset(f, symbol, domain, _check=False):
                 in_set = in_set.as_set()
             if in_set.is_Interval:
                 dom -= in_set
-            solns = solver(expr, symbol, in_set)
+            solns = solver(expr, symbol, in_set) & in_set
             result += solns
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
