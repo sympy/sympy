@@ -44,7 +44,7 @@ def test_log1p():
 
     # Precision
     assert not abs(log(1e-99 + 1).evalf() - 1e-99) < 1e-100  # for comparison
-    assert abs(log1p(1e-99).evalf() - 1e-99) < 1e-100
+    assert abs(expand_log(log1p(1e-99)).evalf() - 1e-99) < 1e-100
 
     # Properties
     assert log1p(-2**(-S(1)/2)).is_real
