@@ -2,7 +2,9 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
         Poisson, Geometric)
 from sympy.abc import x
 from sympy import S, Sum
-from sympy.stats import P, E, variance, density, characteristic_function
+from sympy.sets import Range, Union
+from sympy.stats import (P, E, variance, density, characteristic_function,
+        where)
 from sympy.stats.rv import sample
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
@@ -55,3 +57,8 @@ def test_discrete_probability():
         13*exp(-4) + 32*(-71/32 + 3*exp(4)/32)*exp(-4)/3)
     assert P(X < S.Infinity) is S.One
     assert P(X > S.Infinity) is S.Zero
+def test_where():
+    X, Y = Geometric('X', S(1)/2), Poisson('Y', 3)
+    assert where(X**2 > 5).set == Range(3, S.Infinity, 1)
+    assert where(Ne(Y, 3)).set == Union(Range(0, 3, 1),
+        Range(4, S.Infinity, 1))

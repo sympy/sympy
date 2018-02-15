@@ -30,7 +30,6 @@ class ContinuousDomain(RandomDomain):
     Represented using symbols and Intervals.
     """
     is_Continuous = True
-    is_Discrete = False
 
     def as_boolean(self):
         raise NotImplementedError("Not Implemented for generic Domains")
@@ -268,14 +267,6 @@ class ContinuousPSpace(PSpace):
 
     is_Continuous = True
     is_real = True
-
-    @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
 
     @property
     def pdf(self):

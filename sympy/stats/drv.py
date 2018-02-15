@@ -7,7 +7,7 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
         _reduce_inequalities)
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols, RandomDomain, PSpace)
+        random_symbols, PSpace, ConditionalDomain, RandomDomain)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
@@ -113,79 +113,85 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
 class DiscreteDomain(RandomDomain):
     """
-    A domain with discrete support
-
-    Represented using an ImageSet or S.Integers, S.Naturals etc.
+    A domain with discrete support with step size one.
+    Represented using symbols and Range.
     """
-    is_continuous = True
-
-    def __contains__(self, other):
-        return other is self.set
-
-    def as_boolean(self):
-        raise NotImplementedError
+    is_continuous = False
+    is_finite = False
 
 class SingleDiscreteDomain(DiscreteDomain, SingleDomain):
-    """
-    A domain with univariate discrete support
 
-    Represented using an ImageSet or S.Integers, S.Naturals etc.
-    """
-
-    @property
-    def symbol(self):
-        return self.args[0]
-
-    @property
-    def set(self):
-        return self.args[1]
-
-    def as_boolean(self):
+    def boolean(self):
         raise NotImplementedError
+    pass
 
-# class ProductDiscretePSpace(ProductDomain, DiscreteDomain):
-#     pass
+class ConditionalDiscreteDomain(DiscreteDomain, ConditionalDomain):
+    """
+    Domain with discrete support of step size one, that is restricted by
+    some condition.
+    """
+    def set(self):
+        rv = self.symbols
+        if len(self.symbols) > 1:
+            raise NotImplementedError(filldedent('''
+                Multivariate condtional domains are not yet implemented.'''))
+        rv = rv[0]
+        conditional_set = DiscretePSpace(
+            DiscretePSpace, rv, self.fulldomain).where(condition)
+        return conditional_set
 
 class DiscretePSpace(PSpace):
-    """
-    Represents the likelihood of an event space defined on a countably
-    infinite set.
-    """
-
     is_real = True
-    is_discrete = True
+    is_continuous = False
 
-    @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        self.args[1]
-
-    def compute_density(self):
-        pass
-
-    def where(self, Condition):
-        rvs = random_symbols(condition)
-        assert all(r.symbol in self.symbols for r in rvs)
-        if (len(rvs) > 1):
-            raise NotImplementedError(filldedent('''Multivariate discrete
+    def where(self, condition):
+            rvs = random_symbols(condition)
+            assert all(r.symbol in self.symbols for r in rvs)
+            if (len(rvs) > 1):
+                raise NotImplementedError(filldedent('''Multivariate discrete
                 random variables are not yet supported.'''))
-        conditional_domain = reduce_rational_inequalities_wrap(condition,
-            rvs[0])
-        conditional_domain = conditional_domain.intersect(self.domain.set)
-        return SingleDiscreteDomain(rvs, conditional_domain)
+            conditional_domain = reduce_rational_inequalities_wrap(condition,
+                rvs[0])
+            conditional_domain = conditional_domain.intersect(self.domain.set)
+            return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
 
-    def compute_cdf(self, expr):
-        rvs = random_symbols(expr)
-        if len(rvs) > 1:
-            raise NotImplementedError(filldedent('''Multivariate discrete
-                random variables are not yet supported.'''))
-        density = self.pdf(expr)
-        cdf = summation()
+    def probability(self, condition):
+        _domain = self.where(condition)
+        if condition == False or _domain is S.EmptySet:
+            return S.Zero
+        if condition == True or _domain == self.set:
+            return S.One
+        try:
+            return self.eval_prob(_domain.set)
+        except NotImplementedError:
+            return Probability(condition)
 
-class SingleDiscretePSpace(SinglePSpace):
+    def eval_prob(self, _domain):
+        if isinstance(_domain, Range):
+            n = symbols('n')
+            inf, sup, step = (r for r in _domain.args)
+            summand = ((self.pdf).replace(
+                self.symbol, inf + n*step))
+            rv = summation(summand,
+                (n, 0, floor((sup - inf)/step - 1))).doit()
+            return rv
+        elif isinstance(_domain, FiniteSet):
+            pdf = Lambda(self.symbol, self.pdf)
+            rv = sum(pdf(x) for x in _domain)
+            return rv
+        elif isinstance(_domain, Union):
+            rv = sum(self.eval_prob(x) for x in _domain.args)
+            return rv
+        else:
+            raise NotImplementedError(filldedent('''Probability for
+                the domain %s cannot be calculated.'''%(_domain)))
+
+    def conditional_space(self, condition):
+        domain = ConditionalDiscreteDomain(self.domain, condition)
+        density = Lambda(self.symbols, self.density)/self.probability(condition)
+        return DiscretePSpace(domain, density)
+
+class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     """ Discrete probability space over a single univariate variable """
     is_real = True
 
@@ -236,45 +242,3 @@ class SingleDiscretePSpace(SinglePSpace):
             return self.distribution.compute_characteristic_function(**kwargs)
         else:
             raise NotImplementedError()
-
-    def restricted_domain(self, condition):
-        rvs = random_symbols(condition)
-        assert all(r.symbol in self.symbols for r in rvs)
-        if (len(rvs) > 1):
-            raise NotImplementedError(filldedent('''Multivariate discrete
-            random variables are not yet supported.'''))
-        conditional_domain = reduce_rational_inequalities_wrap(condition,
-            rvs[0])
-        conditional_domain = conditional_domain.intersect(self.domain.set)
-        return conditional_domain
-
-    def probability(self, condition):
-        _domain = self.restricted_domain(condition)
-        if condition == False or _domain is S.EmptySet:
-            return S.Zero
-        if condition == True or _domain == self.set:
-            return S.One
-        try:
-            return self.eval_prob(_domain)
-        except NotImplementedError:
-            return Probability(condition)
-
-    def eval_prob(self, _domain):
-        if isinstance(_domain, Range):
-            n = symbols('n')
-            inf, sup, step = (r for r in _domain.args)
-            summand = ((self.pdf).replace(
-                self.symbol, inf + n*step))
-            rv = summation(summand,
-                (n, 0, floor((sup - inf)/step - 1))).doit()
-            return rv
-        elif isinstance(_domain, FiniteSet):
-            pdf = Lambda(self.symbol, self.pdf)
-            rv = sum(pdf(x) for x in _domain)
-            return rv
-        elif isinstance(_domain, Union):
-            rv = sum(self.eval_prob(x) for x in _domain.args)
-            return rv
-        else:
-            raise NotImplementedError(filldedent('''Probability for
-                the domain %s cannot be calculated.'''%(_domain)))
