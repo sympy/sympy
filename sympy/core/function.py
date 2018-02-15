@@ -1213,6 +1213,8 @@ class Derivative(Expr):
         # derivative class by calling Expr.__new__.
         if (not (hasattr(expr, '_eval_derivative') and evaluate) and
            (not isinstance(expr, Derivative))):
+            if evaluate and variables == [expr]:
+                return S.One
             # If we wanted to evaluate, we sort the variables into standard
             # order for later comparisons. This is too aggressive if evaluate
             # is False, so we don't do it in that case.
