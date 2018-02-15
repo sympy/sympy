@@ -1,29 +1,39 @@
 """Implementation of the Kronecker product"""
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-
-from sympy.core import Add, Mul, Pow, sympify, prod
+from sympy.core import Add, Mul, Pow, prod, sympify
 from sympy.core.compatibility import range
-from sympy.strategies import unpack, flatten, condition, exhaust, do_one
-
 from sympy.functions import adjoint
-from sympy.matrices.expressions.transpose import transpose
-
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
+from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.matrices import MatrixBase
+from sympy.strategies import (
+    canon, condition, distribute, do_one, exhaust, flatten, typed, unpack)
+from sympy.strategies.traverse import bottom_up
+from sympy.utilities import sift
+
+from .matadd import MatAdd
+from .matmul import MatMul
 
 
 def kronecker_product(*matrices):
     """
     The Kronecker product of two or more arguments.
 
-    Returns a symbolic ``KroneckerProduct`` object.
+    This computes the explicit Kronecker product for subclasses of
+    ``MatrixBase`` i.e. explicit matrices. Otherwise, a symbolic
+    ``KroneckerProduct`` object is returned.
+
 
     Examples
     ========
 
-    >>> from sympy import pprint
+    For ``MatrixSymbol`` arguments a ``KroneckerProduct`` object is returned.
+    Elements of this matrix can be obtained by indexing, or for MatrixSymbols
+    with known dimension the explicit matrix can be obtained with
+    ``.as_explicit()``
+
     >>> from sympy.matrices import kronecker_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = MatrixSymbol('B', 2, 2)
@@ -33,14 +43,35 @@ def kronecker_product(*matrices):
     AxB
     >>> kronecker_product(A, B)[0, 1]
     A[0, 0]*B[0, 1]
-    >>> pprint(kronecker_product(A, B).as_explicit(), use_unicode=True)
-    ⎡A₀₀⋅B₀₀  A₀₀⋅B₀₁  A₀₁⋅B₀₀  A₀₁⋅B₀₁⎤
-    ⎢                                  ⎥
-    ⎢A₀₀⋅B₁₀  A₀₀⋅B₁₁  A₀₁⋅B₁₀  A₀₁⋅B₁₁⎥
-    ⎢                                  ⎥
-    ⎢A₁₀⋅B₀₀  A₁₀⋅B₀₁  A₁₁⋅B₀₀  A₁₁⋅B₀₁⎥
-    ⎢                                  ⎥
-    ⎣A₁₀⋅B₁₀  A₁₀⋅B₁₁  A₁₁⋅B₁₀  A₁₁⋅B₁₁⎦
+    >>> kronecker_product(A, B).as_explicit()
+    Matrix([
+        [A[0, 0]*B[0, 0], A[0, 0]*B[0, 1], A[0, 1]*B[0, 0], A[0, 1]*B[0, 1]],
+        [A[0, 0]*B[1, 0], A[0, 0]*B[1, 1], A[0, 1]*B[1, 0], A[0, 1]*B[1, 1]],
+        [A[1, 0]*B[0, 0], A[1, 0]*B[0, 1], A[1, 1]*B[0, 0], A[1, 1]*B[0, 1]],
+        [A[1, 0]*B[1, 0], A[1, 0]*B[1, 1], A[1, 1]*B[1, 0], A[1, 1]*B[1, 1]]])
+
+    For explicit matrices the Kronecker product is returned as a Matrix
+
+    >>> from sympy.matrices import Matrix, kronecker_product
+    >>> sigma_x = Matrix([
+    ... [0, 1],
+    ... [1, 0]])
+    ...
+    >>> Isigma_y = Matrix([
+    ... [0, 1],
+    ... [-1, 0]])
+    ...
+    >>> kronecker_product(sigma_x, Isigma_y)
+    Matrix([
+    [ 0, 0,  0, 1],
+    [ 0, 0, -1, 0],
+    [ 0, 1,  0, 0],
+    [-1, 0,  0, 0]])
+
+    See Also
+    ========
+        KroneckerProduct
+
     """
     if not matrices:
         raise TypeError("Empty Kronecker product is undefined")
@@ -53,19 +84,21 @@ def kronecker_product(*matrices):
 
 class KroneckerProduct(MatrixExpr):
     """
+    The Kronecker product of two or more arguments.
+
     The Kronecker product is a non-commutative product of matrices.
     Given two matrices of dimension (m, n) and (s, t) it produces a matrix
-    of of dimension (m s, n t).
+    of dimension (m s, n t).
 
     This is a symbolic object that simply stores its argument without
     evaluating it. To actually compute the product, use the function
     ``kronecker_product()`` or call the the ``.doit()`` or  ``.as_explicit()``
     methods.
 
-    >>> from sympy.matrices import kronecker_product, KroneckerProduct, MatrixSymbol
+    >>> from sympy.matrices import KroneckerProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
-    >>> isinstance(kronecker_product(A, B), KroneckerProduct)
+    >>> isinstance(KroneckerProduct(A, B), KroneckerProduct)
     True
     """
     is_KroneckerProduct = True
@@ -121,6 +154,65 @@ class KroneckerProduct(MatrixExpr):
             from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
+    def structurally_equal(self, other):
+        '''Determine whether two matrices have the same Kronecker product structure
+
+        Examples
+        ========
+
+        >>> from sympy import KroneckerProduct, MatrixSymbol, symbols
+        >>> m, n = symbols(r'm, n', integer=True)
+        >>> A = MatrixSymbol('A', m, m)
+        >>> B = MatrixSymbol('B', n, n)
+        >>> C = MatrixSymbol('C', m, m)
+        >>> D = MatrixSymbol('D', n, n)
+        >>> KroneckerProduct(A, B).structurally_equal(KroneckerProduct(C, D))
+        True
+        >>> KroneckerProduct(A, B).structurally_equal(KroneckerProduct(D, C))
+        False
+        >>> KroneckerProduct(A, B).structurally_equal(C)
+        False
+        '''
+        # Inspired by BlockMatrix
+        return (isinstance(other, KroneckerProduct)
+                and self.shape == other.shape
+                and len(self.args) == len(other.args)
+                and all(a.shape == b.shape for (a, b) in zip(self.args, other.args)))
+
+    def has_matching_shape(self, other):
+        '''Determine whether two matrices have the appropriate structure to bring matrix
+        multiplication inside the KroneckerProdut
+
+        Examples
+        ========
+        >>> from sympy import KroneckerProduct, MatrixSymbol, symbols
+        >>> m, n = symbols(r'm, n', integer=True)
+        >>> A = MatrixSymbol('A', m, n)
+        >>> B = MatrixSymbol('B', n, m)
+        >>> KroneckerProduct(A, B).has_matching_shape(KroneckerProduct(B, A))
+        True
+        >>> KroneckerProduct(A, B).has_matching_shape(KroneckerProduct(A, B))
+        False
+        >>> KroneckerProduct(A, B).has_matching_shape(A)
+        False
+        '''
+        return (isinstance(other, KroneckerProduct)
+                and self.cols == other.rows
+                and len(self.args) == len(other.args)
+                and all(a.cols == b.rows for (a, b) in zip(self.args, other.args)))
+
+    def _kronecker_add(self, other):
+        if self.structurally_equal(other):
+            return self.__class__(*[a + b for (a, b) in zip(self.args, other.args)])
+        else:
+            return self + other
+
+    def _kronecker_mul(self, other):
+        if self.has_matching_shape(other):
+            return self.__class__(*[a*b for (a, b) in zip(self.args, other.args)])
+        else:
+            return self * other
+
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
         if deep:
@@ -129,10 +221,13 @@ class KroneckerProduct(MatrixExpr):
             args = self.args
         return canonicalize(KroneckerProduct(*args))
 
+
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
 
+
+# rules
 
 def extract_commutative(kron):
     c_part = []
@@ -201,3 +296,85 @@ rules = (unpack,
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, KroneckerProduct),
                                  do_one(*rules)))
+
+
+def _kronecker_dims_key(expr):
+    if isinstance(expr, KroneckerProduct):
+        return tuple(a.shape for a in expr.args)
+    else:
+        return (0,)
+
+
+def kronecker_mat_add(expr):
+    from functools import reduce
+    args = sift(expr.args, _kronecker_dims_key)
+    nonkrons = args.pop((0,), None)
+    if not args:
+        return expr
+
+    krons = [reduce(lambda x, y: x._kronecker_add(y), group)
+             for group in args.values()]
+
+    if not nonkrons:
+        return MatAdd(*krons)
+    else:
+        return MatAdd(*krons) + nonkrons
+
+
+def kronecker_mat_mul(expr):
+    # modified from block matrix code
+    factor, matrices = expr.as_coeff_matrices()
+
+    i = 0
+    while i < len(matrices) - 1:
+        A, B = matrices[i:i+2]
+        if isinstance(A, KroneckerProduct) and isinstance(B, KroneckerProduct):
+            matrices[i] = A._kronecker_mul(B)
+            matrices.pop(i+1)
+        else:
+            i += 1
+
+    return factor*MatMul(*matrices)
+
+
+def kronecker_mat_pow(expr):
+    if isinstance(expr.base, KroneckerProduct):
+        return KroneckerProduct(*[MatPow(a, expr.exp) for a in expr.base.args])
+    else:
+        return expr
+
+
+def combine_kronecker(expr):
+    """Combine KronekeckerProduct with expression.
+
+    If possible write operations on KroneckerProducts of compatible shapes
+    as a single KroneckerProduct.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import MatrixSymbol, KroneckerProduct, combine_kronecker
+    >>> from sympy import symbols
+    >>> m, n = symbols(r'm, n', integer=True)
+    >>> A = MatrixSymbol('A', m, n)
+    >>> B = MatrixSymbol('B', n, m)
+    >>> combine_kronecker(KroneckerProduct(A, B)*KroneckerProduct(B, A))
+    (A*B)x(B*A)
+    >>> combine_kronecker(KroneckerProduct(A, B)+KroneckerProduct(B.T, A.T))
+    (A + B.T)x(B + A.T)
+    >>> combine_kronecker(KroneckerProduct(A, B)**m)
+    A**mxB**m
+    """
+    def haskron(expr):
+        return isinstance(expr, MatrixExpr) and expr.has(KroneckerProduct)
+
+    rule = exhaust(
+        bottom_up(exhaust(condition(haskron, typed(
+            {MatAdd: kronecker_mat_add,
+             MatMul: kronecker_mat_mul,
+             MatPow: kronecker_mat_pow})))))
+    result = rule(expr)
+    try:
+        return result.doit()
+    except AttributeError:
+        return result

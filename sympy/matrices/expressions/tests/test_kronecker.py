@@ -2,8 +2,9 @@ from sympy import I, symbols, Matrix
 from sympy.matrices import ShapeError, MatrixSymbol
 from sympy.matrices.expressions import det, trace
 
-from sympy.matrices.expressions.kronecker import KroneckerProduct
-from sympy.matrices.expressions.kronecker import kronecker_product
+from sympy.matrices.expressions.kronecker import (KroneckerProduct,
+                                                  kronecker_product,
+                                                  combine_kronecker)
 from sympy.core.trace import Tr
 
 mat1 = Matrix([[1, 2 * I], [1 + I, 3]])
@@ -96,9 +97,29 @@ def test_KroneckerProduct_inverse():
     assert kp.inverse() == kronecker_product(W.inverse(), Z.inverse())
 
 
-# def test_kronecker_product_expand():
-#     assert KroneckerProduct(A + B, B + C).expand(kroneckerproduct=True) == \
-#         KroneckerProduct(A, B) + KroneckerProduct(A, C) + KroneckerProduct(B, B) + KroneckerProduct(B, C)
+def test_KroneckerProduct_combine_add():
+    kp1 = kronecker_product(A, B)
+    kp2 = kronecker_product(C, W)
+    assert combine_kronecker(kp1*kp2) == kronecker_product(A*C, B*W)
+
+
+def test_KroneckerProduct_combine_mul():
+    X = MatrixSymbol('X', m, n)
+    Y = MatrixSymbol('Y', m, n)
+    kp1 = kronecker_product(A, X)
+    kp2 = kronecker_product(B, Y)
+    assert combine_kronecker(kp1+kp2) == kronecker_product(A+B, X+Y)
+
+
+def test_KroneckerProduct_combine_pow():
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', n, n)
+    assert combine_kronecker(KroneckerProduct(
+        X, Y)**x) == KroneckerProduct(X**x, Y**x)
+    assert combine_kronecker(x * KroneckerProduct(X, Y)
+                             ** 2) == x * KroneckerProduct(X**2, Y**2)
+    assert combine_kronecker(
+        x * (KroneckerProduct(X, Y)**2) * KroneckerProduct(A, B)) == x * KroneckerProduct(X**2 * A, Y**2 * B)
 
 
 # def test_kronecker_product_simp():

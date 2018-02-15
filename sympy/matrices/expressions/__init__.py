@@ -16,4 +16,4 @@ from .adjoint import Adjoint
 from .hadamard import hadamard_product, HadamardProduct
 from .diagonal import DiagonalMatrix, DiagonalOf
 from .dotproduct import DotProduct
-from .kronecker import kronecker_product, KroneckerProduct
+from .kronecker import kronecker_product, KroneckerProduct, combine_kronecker
