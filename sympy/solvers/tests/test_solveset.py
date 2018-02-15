@@ -9,7 +9,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     atanh, sinh, tanh)
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
     TrigonometricFunction, acos, acot, acsc, asec, asin, atan, atan2,
@@ -1683,3 +1683,7 @@ def test_issue_13550():
 def test_issue_13849():
     t = symbols('t')
     assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == EmptySet()
+
+
+def test_issue_14223():
+    assert solveset((Abs(x+Min(x,2))-2).rewrite(Piecewise),x,S.Reals) == {-1, 1}
