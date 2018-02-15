@@ -780,12 +780,14 @@ class LatexPrinter(Printer):
     @property
     def _special_function_classes(self):
         from sympy.functions.special.tensor_functions import KroneckerDelta
-        from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.gamma_functions import gamma,\
+                                                    lowergamma, uppergamma
         from sympy.functions.special.beta_functions import beta
         from sympy.functions.special.delta_functions import DiracDelta
         from sympy.functions.special.error_functions import Chi
         return {KroneckerDelta: r'\delta',
                 gamma:  r'\Gamma',
+                uppergamma: r'\Gamma',
                 lowergamma: r'\gamma',
                 beta: r'\operatorname{B}',
                 DiracDelta: r'\delta',
@@ -964,48 +966,22 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
-    def _print_beta(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
+    def _hprint_one_args_func(self, expr, exp=None):
+        if(len(expr.args) == 1):
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        elif(len(expr.args) == 2):
+            tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                            self._print(expr.args[1]))
+
+        print(expr.func)
 
         if exp is not None:
-            return r"\operatorname{B}^{%s}%s" % (exp, tex)
+            return r"%s^{%s}%s" % (self._print(expr.func), exp, tex)
         else:
-            return r"\operatorname{B}%s" % tex
+            return r"%s%s" % (self._print(expr.func), tex)
 
-    def _print_gamma(self, expr, exp=None):
-        tex = r"\left(%s\right)" % self._print(expr.args[0])
-
-        if exp is not None:
-            return r"\Gamma^{%s}%s" % (exp, tex)
-        else:
-            return r"\Gamma%s" % tex
-
-    def _print_uppergamma(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
-
-        if exp is not None:
-            return r"\Gamma^{%s}%s" % (exp, tex)
-        else:
-            return r"\Gamma%s" % tex
-
-    def _print_lowergamma(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
-
-        if exp is not None:
-            return r"\gamma^{%s}%s" % (exp, tex)
-        else:
-            return r"\gamma%s" % tex
-
-    def _print_Chi(self, expr, exp=None):
-        tex = r"\left(%s\right)" % self._print(expr.args[0])
-
-        if exp is not None:
-            return r"\operatorname{Chi}^{%s}%s" % (exp, tex)
-        else:
-            return r"\operatorname{Chi}%s" % tex
+    _print_Chi = _print_uppergamma = _print_lowergamma = _print_beta \
+                                = _print_gamma = _hprint_one_args_func
 
     def _print_expint(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[1])
