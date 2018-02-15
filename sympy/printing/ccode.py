@@ -233,6 +233,11 @@ class C89CodePrinter(CodePrinter):
         self.type_math_macro_suffixes = dict(chain(self.type_math_macro_suffixes.items(),
                                         settings.pop('type_math_macro_suffixes', {}).items()))
         super(C89CodePrinter, self).__init__(settings)
+        expand_int_pow = self._settings['expand_int_pow']
+        if isinstance(expand_int_pow, int):
+            self._settings['expand_int_pow'] = lambda b, e: (
+                b.is_symbol and e <= expand_int_pow)
+
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
         self.headers = set()
@@ -676,7 +681,9 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
         multiplications (instead of calling ``pow``). Note that most compilers
         will do this for you when passed the correct optimization flags. If
         use this predicate you probably want to ensure that ``base.is_symbol``
-        and that ``exp`` is not too large.
+        and that ``exp`` is not too large. If ``expand_int_pow`` is an integer
+        it will be turned into ``lambda b, e: b.is_symbol and e <= expand_int_pow``.
+
 
     Examples
     ========
@@ -771,8 +778,10 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
 
     >>> ccode(x**5 + x**3)
     'pow(x, 5) + pow(x, 3)'
-    >>> ccode(x**5 + x**3, expand_int_pow=lambda b, e: b.is_symbol and e < 4)
+    >>> ccode(x**5 + x**3, expand_int_pow=3)
     'pow(x, 5) + x*x*x'
+    >>> ccode(x**5 + x**3 + sin(x)**3, expand_int_pow=lambda b, e: b.is_symbol and e < 4)
+    'pow(x, 5) + x*x*x + pow(sin(x), 3)'
 
     """
     return c_code_printers[standard.lower()](settings).doprint(expr, assign_to)
