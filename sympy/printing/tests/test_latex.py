@@ -1682,8 +1682,6 @@ def test_issue_14041():
     r_dot = r.diff(t,N_frame).simplify()
     r_ddot = r_dot.diff(t,N_frame).simplify()
 
-    import pdb
-    #pdb.set_trace()
     assert latex(r_ddot) == r"-  L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{b}_x} + L \left(\ddot{\phi} + \ddot{\theta}\right)\mathbf{\hat{b}_y} -  R \dot{\theta}^{2}\mathbf{\hat{a}_x} + R \ddot{\theta}\mathbf{\hat{a}_y}"
 
 
