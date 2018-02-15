@@ -1550,10 +1550,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     (log(S(1)/3), sqrt(-exp(2*x) + sin(log(S(1)/3)))),
     (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(log(S(1)/3), 2*I*pi)), S.Integers),
     ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi +
-    Mod(log(S(1)/3), 2*I*pi)))), S.Integers)),
+    Mod(-log(3), 2*I*pi)))), S.Integers)),
     (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(log(S(1)/3), 2*I*pi)), S.Integers),
     ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi +
-        Mod(log(S(1)/3), 2*I*pi)))), S.Integers))}
+        Mod(-log(3), 2*I*pi)))), S.Integers))}
 
     """
 
