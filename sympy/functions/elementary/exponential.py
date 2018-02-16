@@ -13,6 +13,7 @@ from sympy.core.logic import fuzzy_not
 
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions import sin, cos
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.core.compatibility import range
 
