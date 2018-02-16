@@ -33,9 +33,10 @@ def test_GeometricDistribution():
     assert d.characteristic_function(0).doit() == 1
 
 def test_sample():
-    X, Y = Geometric('X', S(1)/2), Poisson('Y', 4)
+    X, Y, Z = Geometric('X', S(1)/2), Poisson('Y', 4), Poisson('Z', 1000)
     assert sample(X) in X.pspace.domain.set
     assert sample(Y) in Y.pspace.domain.set
+    assert sample(Z) in Z.pspace.domain.set
 
 def test_discrete_probability():
     X = Geometric('X', S(1)/5)
