@@ -13,7 +13,6 @@ from sympy.core.logic import fuzzy_not
 
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.core.compatibility import range
 
@@ -231,6 +230,7 @@ class exp(ExpBase):
         from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
+        from sympy.functions.elementary.trigonometric import sin, cos
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
