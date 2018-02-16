@@ -861,8 +861,9 @@ class binomial(CombinatorialFunction):
                 return S.Zero
             if n.is_integer and n.is_nonnegative and d.is_negative:
                 return S.Zero
-            if n.is_Number:
-                return cls._eval(n, k)
+            if n.is_number:
+                from sympy.simplify.simplify import simplify
+                return simplify(cls._eval(n, k))
         elif n.is_negative and n.is_integer and not k.is_integer:
             # a special case when binomial evaluates to complex infinity
             return S.ComplexInfinity

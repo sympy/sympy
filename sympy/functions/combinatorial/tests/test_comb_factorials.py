@@ -352,6 +352,9 @@ def test_binomial():
     assert binomial(-7, I) == zoo
     assert binomial(-7/S(6), I) == gamma(-1/S(6))/(gamma(-1/S(6) - I)*gamma(1 + I))
     assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
+    assert binomial(I, 5) == S(1)/3 - I/S(12)
+    assert binomial((2*I + 3), 7) == -13*I/S(63)
+    assert binomial(I, n).func == binomial
 
 
 
