@@ -339,10 +339,20 @@ def test_binomial():
     assert binomial(kn, kt) == zoo
 
     assert binomial(nt, kt).func == binomial
+    assert binomial(nt, S(15)/6) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - S(3)/2))
     assert binomial(S(20)/3, S(-10)/8) == gamma(S(23)/3)/(gamma(S(-1)/4)*gamma(S(107)/12))
     assert binomial(S(19)/2, S(-7)/2) == S(-1615)/8388608
     assert binomial(S(-13)/5, S(-7)/8) == gamma(S(-8)/5)/(gamma(S(-29)/40)*gamma(S(1)/8))
     assert binomial(S(-19)/8, S(-13)/5) == gamma(S(-11)/8)/(gamma(S(-8)/5)*gamma(S(49)/40))
+
+    # binomial for complexes
+    from sympy import I
+    assert binomial(I, S(-89)/8) == gamma(1 + I)/(gamma(S(-81)/8)*gamma(S(97)/8 + I))
+    assert binomial(I, 2*I) == gamma(1 + I)/(gamma(1 - I)*gamma(1 + 2*I))
+    assert binomial(-7, I) == zoo
+    assert binomial(-7/S(6), I) == gamma(-1/S(6))/(gamma(-1/S(6) - I)*gamma(1 + I))
+    assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
+
 
 
 def test_binomial_diff():
