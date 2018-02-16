@@ -15,6 +15,7 @@ from sympy.utilities import sift
 
 from .matadd import MatAdd
 from .matmul import MatMul
+from .matpow import MatPow
 
 
 def kronecker_product(*matrices):
@@ -200,6 +201,9 @@ class KroneckerProduct(MatrixExpr):
                 and self.cols == other.rows
                 and len(self.args) == len(other.args)
                 and all(a.cols == b.rows for (a, b) in zip(self.args, other.args)))
+
+    def _eval_expand_kroneckerproduct(self, **hints):
+        return flatten(canon(typed({KroneckerProduct: distribute(KroneckerProduct, MatAdd)}))(self))
 
     def _kronecker_add(self, other):
         if self.structurally_equal(other):

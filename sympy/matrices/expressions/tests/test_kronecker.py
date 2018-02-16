@@ -122,12 +122,10 @@ def test_KroneckerProduct_combine_pow():
         x * (KroneckerProduct(X, Y)**2) * KroneckerProduct(A, B)) == x * KroneckerProduct(X**2 * A, Y**2 * B)
 
 
-# def test_kronecker_product_simp():
-#     assert kronecker_product_simp(KroneckerProduct(A, B) * KroneckerProduct(B, C)) == KroneckerProduct(A * B, B * C)
-#     # tests for Pow-expressions
-#     assert kronecker_product_simp(KroneckerProduct(A, B)**x) == KroneckerProduct(A**x, B**x)
-#     assert kronecker_product_simp(x * KroneckerProduct(A, B)**2) == x * KroneckerProduct(A**2, B**2)
-#     assert kronecker_product_simp(
-#         x * (KroneckerProduct(A, B)**2) * KroneckerProduct(C, D)) == x * KroneckerProduct(A**2 * C, B**2 * D)
-#     assert kronecker_product_simp(KroneckerProduct(A, B) - KroneckerProduct(C, D)**x) == KroneckerProduct(A, B) - KroneckerProduct(
-#         C**x, D**x)
+def test_KroneckerProduct_expand():
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', n, n)
+
+    assert KroneckerProduct(X + Y, Y + Z).expand(kroneckerproduct=True) == \
+        KroneckerProduct(X, Y) + KroneckerProduct(X, Z) + \
+        KroneckerProduct(Y, Y) + KroneckerProduct(Y, Z)
