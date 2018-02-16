@@ -1,5 +1,5 @@
-from sympy import I, symbols, Matrix
-from sympy.matrices import ShapeError, MatrixSymbol
+from sympy import I, symbols, Matrix, eye
+from sympy.matrices import ShapeError, MatrixSymbol, Identity
 from sympy.matrices.expressions import det, trace
 
 from sympy.matrices.expressions.kronecker import (KroneckerProduct,
@@ -22,6 +22,11 @@ def test_KroneckerProduct():
     assert isinstance(KroneckerProduct(A, B), KroneckerProduct)
     assert KroneckerProduct(A, B).subs(A, C) == KroneckerProduct(C, B)
     assert KroneckerProduct(A, C).shape == (n*m, m*k)
+
+
+def test_KroneckerProduct_identity():
+    assert KroneckerProduct(Identity(m), Identity(n)) == Identity(m*n)
+    assert KroneckerProduct(eye(2), eye(3)) == eye(6)
 
 
 def test_KroneckerProduct_explicit():

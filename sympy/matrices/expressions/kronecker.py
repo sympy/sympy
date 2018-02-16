@@ -5,7 +5,7 @@ from __future__ import division, print_function
 from sympy.core import Add, Mul, Pow, prod, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity
 from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.matrices import MatrixBase
 from sympy.strategies import (
@@ -106,6 +106,13 @@ class KroneckerProduct(MatrixExpr):
 
     def __new__(cls, *args, **kwargs):
         args = list(map(sympify, args))
+        if all(a.is_Identity for a in args):
+            ret = Identity(prod(a.rows for a in args))
+            if all(isinstance(a, MatrixBase) for a in args):
+                return ret.as_explicit()
+            else:
+                return ret
+
         check = kwargs.get('check', True)
         if check:
             validate(*args)
