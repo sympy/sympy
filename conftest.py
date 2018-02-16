@@ -5,6 +5,7 @@ from __future__ import print_function, division, absolute_import
 import os
 from itertools import chain
 import json
+import sys
 import warnings
 import pytest
 
@@ -17,13 +18,14 @@ def _mk_group(group_dict):
 if os.path.exists(durations_path):
     veryslow_group, slow_group = [_mk_group(group_dict) for group_dict in json.loads(open(durations_path, 'rt').read())]
 else:
-    warnings.warn("Could not find %s, --quickcheck and --veryquickcheck will have no effect." % durations_path)
+    # warnings in conftest has issues: https://github.com/pytest-dev/pytest/issues/2891
+    warnings.warn("conftest.py:22: Could not find %s, --quickcheck and --veryquickcheck will have no effect.\n" % durations_path)
     veryslow_group, slow_group = [], []
 
 if os.path.exists(blacklist_path):
     blacklist_group = _mk_group(json.loads(open(blacklist_path, 'rt').read()))
 else:
-    warnings.warn("Could not find %s, no tests will be skipped due to blacklisting" % blacklist_path)
+    warnings.warn("conftest.py:28: Could not find %s, no tests will be skipped due to blacklisting\n" % blacklist_path)
     blacklist_group = []
 
 
