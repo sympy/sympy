@@ -44,8 +44,7 @@ def test_exp_values():
 
 def test_issue_14114():
     assert exp(pi*I/4) == sqrt(2)/2 + sqrt(2)*I/2
-    assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).doit() == /
-        1/(1 - sqrt(2)*(1 + I)/4)
+    assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
 
 
 def test_exp_log():
