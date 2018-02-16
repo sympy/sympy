@@ -980,10 +980,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
-    elif not isinstance(symbol, Symbol):
-        f, s, swap = recast_to_symbols([f], [symbol])
-        # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f[0], s[0], domain).xreplace(swap)
+    elif not getattr(symbol, 'is_Symbol', False):
+        from sympy import Function, Indexed
+        if isinstance(symbol, (Function, Indexed)):
+            f, s, swap = recast_to_symbols([f], [symbol])
+            # the xreplace will be needed if a ConditionSet is returned
+            return solveset(f[0], s[0], domain).xreplace(swap)
+        else:
+            raise ValueError('A Symbol must be given, not type %s: %s' %
+                (type(symbol), symbol))
 
     elif not free_symbols:
         b = Eq(f, 0)
