@@ -260,6 +260,8 @@ class exp(ExpBase):
                             return -S.ImaginaryUnit
                         elif ask(Q.odd(coeff + S.Half)):
                             return S.ImaginaryUnit
+                    else :
+                        return cos(S.Pi*coeff) + S.ImaginaryUnit*sin(S.Pi*coeff)
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
