@@ -42,6 +42,12 @@ def test_exp_values():
     assert exp(4*log(x)*log(y) + 3*log(x)) == x**3 * exp(4*log(x)*log(y))
 
 
+def test_issue_14114():
+    assert exp(pi*I/4) == sqrt(2)/2 + sqrt(2)*I/2
+    assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).doit() == /
+        1/(1 - sqrt(2)*(1 + I)/4)
+
+
 def test_exp_log():
     x = Symbol("x", real=True)
     assert log(exp(x)) == x
