@@ -866,7 +866,7 @@ class binomial(CombinatorialFunction):
         elif n.is_negative and n.is_integer and not k.is_integer:
             # a special case when binomial evaluates to complex infinity
             return S.ComplexInfinity
-        elif k.is_Number or k.has(S.ImaginaryUnit):
+        elif k.is_number:
             from sympy import gamma
             return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 

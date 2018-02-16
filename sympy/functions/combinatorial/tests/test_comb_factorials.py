@@ -277,7 +277,7 @@ def test_binomial():
     nz = Symbol('nz', integer=True, nonzero=True)
     k = Symbol('k', integer=True)
     kp = Symbol('kp', integer=True, positive=True)
-    kn =Symbol('kn', integer=True, negative=True)
+    kn = Symbol('kn', integer=True, negative=True)
     u = Symbol('u', negative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
