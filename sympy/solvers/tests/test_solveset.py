@@ -9,7 +9,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     atanh, sinh, tanh)
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
     TrigonometricFunction, acos, acot, acsc, asec, asin, atan, atan2,
@@ -55,6 +55,9 @@ def test_invert_real():
     n = Symbol('n')
     def ireal(x, s=S.Reals):
         return Intersection(s, x)
+
+    # issue 14223
+    assert invert_real(x, 0, x, Interval(1, 2)) == (x, S.EmptySet)
 
     minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
     plus_n = Intersection(Interval(0, oo), FiniteSet(n))
@@ -189,9 +192,11 @@ def test_domain_check():
     assert domain_check(x, x, oo) is False
     assert domain_check(0, x, oo) is False
 
+
 def test_issue_11536():
     assert solveset(0**x - 100, x, S.Reals) == S.EmptySet
     assert solveset(0**x - 1, x, S.Reals) == FiniteSet(0)
+
 
 def test_is_function_class_equation():
     from sympy.abc import x, a
@@ -988,8 +993,8 @@ def test_solveset_domain():
 def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
     x = Symbol('x')
-    y = exp(x+1/x**2)
-    solution = solveset(y**2+y, x, S.Reals)
+    y = exp(x + 1/x**2)
+    solution = solveset(y**2 + y, x, S.Reals)
     unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
     assert solution == unsolved_object
 
@@ -1676,6 +1681,7 @@ def test__is_finite_with_finite_vars():
         Dummy(), Dummy(real=True), Dummy(complex=True)))
     assert f(1/Dummy(real=False)) is True  # b/c it's finite but not 0
 
+
 def test_issue_13550():
     assert solveset(x**2 - 2*x - 15, symbol = x, domain = Interval(-oo, 0)) == FiniteSet(-3)
 
@@ -1683,3 +1689,11 @@ def test_issue_13550():
 def test_issue_13849():
     t = symbols('t')
     assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == EmptySet()
+
+
+def test_issue_14223():
+    x = Symbol('x')
+    assert solveset((Abs(x + Min(x, 2)) - 2).rewrite(Piecewise), x,
+        S.Reals) == FiniteSet(-1, 1)
+    assert solveset((Abs(x + Min(x, 2)) - 2).rewrite(Piecewise), x,
+        Interval(0, 2)) == FiniteSet(1)

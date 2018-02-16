@@ -105,7 +105,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     else:
         x1, s = _invert_complex(f_x, FiniteSet(y), x)
 
-    if not isinstance(s, FiniteSet) or x1 == f_x or x1 != x:
+    if not isinstance(s, FiniteSet) or x1 != x:
         return x1, s
 
     return x1, s.intersection(domain)
@@ -789,14 +789,12 @@ def _solveset(f, symbol, domain, _check=False):
         a = f.args[0]
         result = solveset_real(a > 0, symbol)
     elif f.is_Piecewise:
-        dom = domain
+        domain = domain & S.Reals  # Piecewise can only be solved in Reals
         result = EmptySet()
-        expr_set_pairs = f.as_expr_set_pairs()
+        expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
                 in_set = in_set.as_set()
-            if in_set.is_Interval:
-                dom -= in_set
             solns = solver(expr, symbol, in_set)
             result += solns
     else:
