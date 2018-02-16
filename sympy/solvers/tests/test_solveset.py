@@ -9,7 +9,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     atanh, sinh, tanh)
-from sympy.functions.elementary.miscellaneous import sqrt, Min
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
     TrigonometricFunction, acos, acot, acsc, asec, asin, atan, atan2,
@@ -1697,3 +1697,24 @@ def test_issue_14223():
         S.Reals) == FiniteSet(-1, 1)
     assert solveset((Abs(x + Min(x, 2)) - 2).rewrite(Piecewise), x,
         Interval(0, 2)) == FiniteSet(1)
+
+
+def test_issue_10158():
+    x = Symbol('x', real=True)
+    dom = S.Complexes
+    assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(2/S(3))
+    assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(
+        -sqrt(10), sqrt(10))
+    assert solveset(Max(abs(x-3)-1,x+2)-3, x, dom) == FiniteSet(-1, 1)
+    assert solveset(Abs(x - 1) - Abs(y), x, dom) == FiniteSet(
+        -Abs(y) + 1, Abs(y) + 1)
+    assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(
+        -4/S(3), -4/S(5))
+
+    x = Symbol('x')
+    dom = S.Reals
+    assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(2/S(3))
+    assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(-sqrt(10), sqrt(10))
+    assert solveset(Max(abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
+    assert solveset(Abs(x - 1) - Abs(y), x, dom) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
+    assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))

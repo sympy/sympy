@@ -11,17 +11,18 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex, AppliedUndef)
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
-                             piecewise_fold)
+                             piecewise_fold, Piecewise)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.functions.elementary.miscellaneous import real_root
+from sympy.functions.elementary.miscellaneous import real_root, Application
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement)
 from sympy.matrices import Matrix
@@ -757,8 +758,6 @@ def _solveset(f, symbol, domain, _check=False):
                               S.NegativeInfinity]):
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
-    f = piecewise_fold(f)
-
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
     if domain.is_subset(S.Reals):
@@ -971,6 +970,16 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     free_symbols = f.free_symbols
 
+    if symbol is None and not free_symbols:
+        b = Eq(f, 0)
+        if b is S.true:
+            return domain
+        elif b is S.false:
+            return S.EmptySet
+        else:
+            raise NotImplementedError(filldedent('''
+                relationship between value and 0 is unknown: %s''' % b))
+
     if symbol is None:
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
@@ -983,15 +992,35 @@ def solveset(f, symbol=None, domain=S.Complexes):
         # the xreplace will be needed if a ConditionSet is returned
         return solveset(f[0], s[0], domain).xreplace(swap)
 
-    elif not free_symbols:
-        b = Eq(f, 0)
-        if b is S.true:
-            return domain
-        elif b is S.false:
-            return S.EmptySet
-        else:
-            raise NotImplementedError(filldedent('''
-                relationship between value and 0 is unknown: %s''' % b))
+    if domain.is_subset(S.Reals) or symbol.is_real:
+        domain = domain & S.Reals
+        if not symbol.is_real:
+            assumptions = symbol.assumptions0
+            assumptions['real'] = True
+            try:
+                r = Dummy('r', **assumptions)
+                return solveset(f.xreplace({symbol: r}), r, domain
+                    ).xreplace({r: symbol})
+            except InconsistentAssumptions:
+                pass
+        # Application includes Min/Max atoms;
+        # Abs has its own handling method which avoids the
+        # rewriting property that the first piece of abs(x)
+        # is for x >=0 and the 2nd piece for x < 0 -- solutions
+        # can look better if the 2nd condition is x <= 0.
+        reps = [(func, func.rewrite(Piecewise)) for func in
+            ordered(f.atoms(Function, Application))
+            if symbol in func.free_symbols and
+            not isinstance(func, Abs)]
+        for i in range(-2, -len(reps) - 1, -1):
+            for j in range(i + 1, 0):
+                reps[j] = (
+                    reps[j][0].replace(*reps[i]),
+                    reps[j][1].replace(*reps[i]))
+        for i in reps:
+            f = f.replace(*i)
+
+    f = piecewise_fold(f)
 
     if isinstance(f, Eq):
         from sympy.core import Add
