@@ -19,7 +19,6 @@ from itertools import chain
 from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
-from sympy.core.numbers import Integer
 from sympy.codegen.ast import (
     Assignment, Pointer, Type, Variable, real, complex_, integer, bool_,
     float32, float64, float80, complex64, complex128, intc, value_const,
@@ -171,7 +170,6 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-        'expand_int_pow': None,
     }
 
     type_aliases = {
@@ -233,11 +231,6 @@ class C89CodePrinter(CodePrinter):
         self.type_math_macro_suffixes = dict(chain(self.type_math_macro_suffixes.items(),
                                         settings.pop('type_math_macro_suffixes', {}).items()))
         super(C89CodePrinter, self).__init__(settings)
-        expand_int_pow = self._settings['expand_int_pow']
-        if isinstance(expand_int_pow, int):
-            self._settings['expand_int_pow'] = lambda b, e: (
-                b.is_symbol and e <= expand_int_pow)
-
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
         self.headers = set()
@@ -282,9 +275,6 @@ class C89CodePrinter(CodePrinter):
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
             return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
-        elif (isinstance(expr.exp, Integer) and callable(self._settings['expand_int_pow'])
-              and self._settings['expand_int_pow'](*expr.args)):
-            return '*'.join([self._print(expr.base)]*expr.exp)
         else:
             return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
                                    self._print(expr.exp))
@@ -676,14 +666,6 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
         Setting contract=False will not generate loops, instead the user is
         responsible to provide values for the indices in the code.
         [default=True].
-    expand_int_pow : callable, ``f(base, exp) -> bool``, optional
-        Predicate for whether to expand ``pow`` of integer power into
-        multiplications (instead of calling ``pow``). Note that most compilers
-        will do this for you when passed the correct optimization flags. If
-        use this predicate you probably want to ensure that ``base.is_symbol``
-        and that ``exp`` is not too large. If ``expand_int_pow`` is an integer
-        it will be turned into ``lambda b, e: b.is_symbol and e <= expand_int_pow``.
-
 
     Examples
     ========
@@ -771,18 +753,6 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
        A[1] = x;
     }
     A[2] = sin(x);
-
-    If we want to avoid having small integer exponents call ``pow`` from C's
-    math library, we can set a custom value for the printer setting
-    ``expand_int_pow``:
-
-    >>> ccode(x**5 + x**3)
-    'pow(x, 5) + pow(x, 3)'
-    >>> ccode(x**5 + x**3, expand_int_pow=3)
-    'pow(x, 5) + x*x*x'
-    >>> ccode(x**5 + x**3 + sin(x)**3, expand_int_pow=lambda b, e: b.is_symbol and e < 4)
-    'pow(x, 5) + x*x*x + pow(sin(x), 3)'
-
     """
     return c_code_printers[standard.lower()](settings).doprint(expr, assign_to)
 
