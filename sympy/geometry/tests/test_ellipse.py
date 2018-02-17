@@ -399,5 +399,8 @@ def test_second_moment_of_area():
     e = Ellipse(Point(0, 0), 5, 4)
     I_yy = 2*4*integrate(sqrt(25 - x**2)*x**2, (x, -5, 5))/5
     I_xx = 2*5*integrate(sqrt(16 - y**2)*y**2, (y, -4, 4))/4
+    Y = 3*sqrt(1 - x**2/5**2)
+    I_xy = integrate(integrate(y, (y, -Y, Y))*x, (x, -5, 5))
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
+    assert I_xy == e.second_moment_of_area()[2]
