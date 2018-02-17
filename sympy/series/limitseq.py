@@ -9,6 +9,7 @@ from sympy.core.power import Pow
 from sympy.core.symbol import Dummy
 from sympy.core.function import PoleError
 from sympy.series.limits import Limit
+from sympy.simplify.simplify import simplify
 
 
 def difference_delta(expr, n=None, step=1):
@@ -112,6 +113,7 @@ def _limit_seq(expr, n, trials):
 
     for i in range(trials):
         if not expr.has(Sum):
+            expr = simplify(expr)
             result = _limit_inf(expr, n)
             if result is not None:
                 return result

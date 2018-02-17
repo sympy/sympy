@@ -1,4 +1,4 @@
-from sympy import symbols, oo, Sum, harmonic, Add, S, binomial, factorial
+from sympy import symbols, oo, Sum, harmonic, Add, S, binomial, factorial, sin, cos, AccumBounds
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
 from sympy.utilities.pytest import raises, XFAIL
@@ -112,3 +112,6 @@ def test_limit_seq_fail():
     e = (Sum(2**k*factorial(k) / k**2, (k, 1, 2*n)) /
          (Sum(4**k/k**2, (k, 1, n)) * Sum(factorial(k), (k, 1, 2*n))))
     assert limit_seq(e, n) == S(3) / 16
+
+def test_issue_14245():
+    assert limit_seq(sin(n)/cos(n)) == AccumBounds(-oo, oo)
