@@ -524,6 +524,8 @@ class log(Function):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
+            elif arg.is_Rational and arg.p == 1:
+                return -cls(arg.q)
 
         if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
