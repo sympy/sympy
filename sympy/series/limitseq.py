@@ -197,7 +197,7 @@ def limit_seq(expr, n=None, trials=5):
         elif not free:
             return expr
         else:
-            raise ValueError("expr %s has more than one variables. Please"
+            raise ValueError("expr %s has more than one variable. Please "
                              "specify a variable." % (expr))
     elif n not in expr.free_symbols:
         return expr
