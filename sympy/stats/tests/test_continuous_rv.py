@@ -351,9 +351,10 @@ def test_gamma_inverse():
     b = Symbol("b", positive=True)
 
     X = GammaInverse("x", a, b)
+    Y = GammaInverse("y", 1, 1)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
-
+    assert sample(Y) in Y.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)

@@ -1260,6 +1260,12 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
 
+    def sample(self):
+        try :
+            from scipy.stats import invgamma
+        except ImportError:
+            raise ImportError("can't find invgamma in scipy.stats")
+        return invgamma.rvs(float(self.a), 0, float(self.b))    
 
 def GammaInverse(name, a, b):
     r"""
@@ -1287,7 +1293,7 @@ def GammaInverse(name, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import GammaInverse, density, cdf, E, variance
+    >>> from sympy.stats import GammaInverse, density, cdf, E, variance, sample
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", positive=True)
@@ -1308,6 +1314,9 @@ def GammaInverse(name, a, b):
     >>> cdf(X)(z)
     Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
 
+    >>> Y = GammaInverse("y", 1, 1)
+    >>> isinstance(sample(Y), float)
+    True
 
     References
     ==========
