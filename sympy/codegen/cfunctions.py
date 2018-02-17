@@ -9,7 +9,7 @@ as a SymPy function for symbolic manipulation.
 import math
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational
-from sympy.core.function import ArgumentIndexError, Function, Lambda, expand_log
+from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp, log
