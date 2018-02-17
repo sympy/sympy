@@ -340,11 +340,10 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # return S.Zero if `domain` is empty set
-            domain_set = domain.set
-            if domain_set is S.EmptySet or isinstance(domain_set, FiniteSet):
+            if domain.set is S.EmptySet or isinstance(domain.set, FiniteSet):
                 return S.Zero
             # Integrate out the last variable over the special domain
-            return Integral(pdf(z), (z, domain_set), **kwargs)
+            return Integral(pdf(z), (z, domain.set), **kwargs)
 
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation
