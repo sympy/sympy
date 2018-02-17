@@ -16,7 +16,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I)
+        Basic, S, exp, I, FiniteSet)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
@@ -340,10 +340,11 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # return S.Zero if `domain` is empty set
-            if domain.set is S.EmptySet:
+            domain_set = domain.set
+            if domain_set is S.EmptySet or isinstance(domain_set, FiniteSet):
                 return S.Zero
             # Integrate out the last variable over the special domain
-            return Integral(pdf(z), (z, domain.set), **kwargs)
+            return Integral(pdf(z), (z, domain_set), **kwargs)
 
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation

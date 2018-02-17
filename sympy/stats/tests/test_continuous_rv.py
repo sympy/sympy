@@ -832,3 +832,11 @@ def test_issue_13324():
     X = Uniform('X', 0, 1)
     assert E(X, X > Rational(1, 2)) == Rational(3, 4)
     assert E(X, X > 0) == Rational(1, 2)
+
+def test_FiniteSet_prob():
+    x = symbols('x')
+    E = Exponential('E', 3)
+    N = Normal('N', 5, 7)
+    assert P(Eq(E, 1)) is S.Zero
+    assert P(Eq(N, 2)) is S.Zero
+    assert P(Eq(N, x)) is S.Zero
