@@ -1546,14 +1546,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    {(log(1/3), -sqrt(-exp(2*x) + sin(log(1/3)))),
-    (log(1/3), sqrt(-exp(2*x) + sin(log(1/3)))),
-    (log(1/3), -sqrt(-exp(2*x) - sin(log(3)))),
-    (log(1/3), sqrt(-exp(2*x) - sin(log(3)))),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(log(1/3), 2*I*pi)), S.Integers),
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
+    (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
     ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi +
     Mod(-log(3), 2*I*pi)))), S.Integers)),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(log(1/3), 2*I*pi)), S.Integers),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
     ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi +
     Mod(-log(3), 2*I*pi)))), S.Integers))}
 
