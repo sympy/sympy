@@ -862,7 +862,6 @@ class binomial(CombinatorialFunction):
             if n.is_integer and n.is_nonnegative and d.is_negative:
                 return S.Zero
             if n.is_number:
-                from sympy.core.function import expand
                 res = cls._eval(n, k)
                 return res.expand(basic=True) if res else res
         elif n.is_negative and n.is_integer and not k.is_integer:
