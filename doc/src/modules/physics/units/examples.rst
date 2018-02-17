@@ -32,15 +32,27 @@ should be :math:`L^3 M^{-1} T^{-2}`.
     >>> from sympy import symbols
     >>> from sympy.physics.units import length, mass, acceleration, force
     >>> from sympy.physics.units import gravitational_constant as G
+    >>> from sympy.physics.units.dimensions import dimsys_SI
     >>> F = mass*acceleration
     >>> F
     Dimension(acceleration*mass)
-    >>> F.get_dimensional_dependencies()
+    >>> dimsys_SI.get_dimensional_dependencies(F)
     {'length': 1, 'mass': 1, 'time': -2}
-    >>> force.get_dimensional_dependencies()
+    >>> dimsys_SI.get_dimensional_dependencies(force)
     {'length': 1, 'mass': 1, 'time': -2}
+
+    Dimensions cannot compared directly, even if in the SI convention they are
+    the same:
+
     >>> F == force
+    False
+
+    Dimension system objects provide a way to test the equivalence of
+    dimensions:
+
+    >>> dimsys_SI.equivalent_dims(F, force)
     True
+
     >>> m1, m2, r = symbols("m1 m2 r")
     >>> grav_eq = G * m1 * m2 / r**2
     >>> F2 = grav_eq.subs({m1: mass, m2: mass, r: length, G: G.dimension})

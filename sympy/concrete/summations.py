@@ -405,9 +405,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         # Piecewise function handle
         if sequence_term.is_Piecewise:
-            for func_cond in sequence_term.args:
-                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
-                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            for func, cond in sequence_term.args:
+                # see if it represents something going to oo
+                if cond == True or cond.as_set().sup is S.Infinity:
+                    s = Sum(func, (sym, lower_limit, upper_limit))
+                    return s.is_convergent()
             return S.true
 
         ###  -------- Divergence test ----------- ###
@@ -432,14 +434,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if p1_series_test is not None:
             if p1_series_test[p] < -1:
                 return S.true
-            if p1_series_test[p] > -1:
+            if p1_series_test[p] >= -1:
                 return S.false
 
         p2_series_test = order.expr.match((1/sym)**p)
         if p2_series_test is not None:
             if p2_series_test[p] > 1:
                 return S.true
-            if p2_series_test[p] < 1:
+            if p2_series_test[p] <= 1:
                 return S.false
 
         ### ----------- root test ---------------- ###
@@ -972,8 +974,16 @@ def eval_sum_symbolic(f, limits):
         c1 = Wild('c1', exclude=[i])
         c2 = Wild('c2', exclude=[i])
         c3 = Wild('c3', exclude=[i])
+        wexp = Wild('wexp')
 
-        e = f.match(c1**(c2*i + c3))
+        # Here we first attempt powsimp on f for easier matching with the
+        # exponential pattern, and attempt expansion on the exponent for easier
+        # matching with the linear pattern.
+        e = f.powsimp().match(c1 ** wexp)
+        if e is not None:
+            e_exp = e.pop(wexp).expand().match(c2*i + c3)
+            if e_exp is not None:
+                e.update(e_exp)
 
         if e is not None:
             p = (c1**c3).subs(e)

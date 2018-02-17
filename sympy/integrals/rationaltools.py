@@ -170,7 +170,7 @@ def ratint_ratpart(f, g, x):
 
 
 def ratint_logpart(f, g, x, t=None):
-    """
+    r"""
     Lazard-Rioboo-Trager algorithm.
 
     Given a field K and polynomials f and g in K[x], such that f and g
@@ -301,7 +301,7 @@ def log_to_atan(f, g):
 
 
 def log_to_real(h, q, x, t):
-    """
+    r"""
     Convert complex logarithms to real functions.
 
     Given real field K and polynomials h in K[t,x] and q in K[t],
@@ -358,9 +358,15 @@ def log_to_real(h, q, x, t):
         if len(R_v) != C.count_roots():
             return None
 
+        R_v_paired = [] # take one from each pair of conjugate roots
         for r_v in R_v:
-            if not r_v.is_positive:
-                continue
+            if r_v not in R_v_paired and -r_v not in R_v_paired:
+                if r_v.is_negative or r_v.could_extract_minus_sign():
+                    R_v_paired.append(-r_v)
+                elif not r_v.is_zero:
+                    R_v_paired.append(r_v)
+
+        for r_v in R_v_paired:
 
             D = d.subs({u: r_u, v: r_v})
 

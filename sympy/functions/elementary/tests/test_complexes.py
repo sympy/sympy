@@ -340,6 +340,9 @@ def test_as_real_imag():
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
+    assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)
+    assert ((1 + I)**3/(1 - I)).as_real_imag() == (-2, 0)
+
 
 @XFAIL
 def test_sign_issue_3068():
@@ -348,7 +351,7 @@ def test_sign_issue_3068():
     assert (n - i).round() == 1  # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
-    # only 1 digit is being requested for this situtation;
+    # only 1 digit is being requested for this situation;
     # 2 digits works
     assert (n - x).n(1, subs={x: i}) > 0
     assert (n - x).n(2, subs={x: i}) > 0
@@ -520,6 +523,9 @@ def test_arg():
     assert arg(1 + I) == pi/4
     assert arg(-1 + I) == 3*pi/4
     assert arg(1 - I) == -pi/4
+    assert arg(exp_polar(4*pi*I)) == 4*pi
+    assert arg(exp_polar(-7*pi*I)) == -7*pi
+    assert arg(exp_polar(5 - 3*pi*I/4)) == -3*pi/4
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
@@ -864,3 +870,10 @@ def test_issue_6167_6151():
     assert sign(simplify(e)) == 1
     for xi in (111, 11, 1, S(1)/10):
         assert sign(e.subs(x, xi)) == 1
+
+
+def test_issue_14216():
+    from sympy.functions.elementary.complexes import unpolarify
+    A = MatrixSymbol("A", 2, 2)
+    assert unpolarify(A[0, 0]) == A[0, 0]
+    assert unpolarify(A[0, 0]*A[1, 0]) == A[0, 0]*A[1, 0]

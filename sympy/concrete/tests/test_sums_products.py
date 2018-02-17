@@ -279,6 +279,16 @@ def test_geometric_sums():
     assert Sum(1.0**n, (n, 1, oo)).doit() == oo
     assert Sum(2.43**n, (n, 1, oo)).doit() == oo
 
+    # Issue 13979:
+    i, k, q = symbols('i k q', integer=True)
+    result = summation(
+        exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
+    )
+    assert result.simplify() == Piecewise(
+            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
+    )
+
+
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
     assert summation(1/k, (k, 1, n)) == harmonic(n)
@@ -470,8 +480,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2 - 1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
-    half = Rational(1, 2)
-    R = pi/2 * factorial(b)**2 / factorial(b - half) / factorial(b + half)
+    R = pi*gamma(b + 1)**2/(2*gamma(b + S(1)/2)*gamma(b + S(3)/2))
     assert simplify(A.doit()) == R
     assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
@@ -935,6 +944,7 @@ def test_is_convergent():
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
     assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
@@ -961,7 +971,7 @@ def test_is_convergent():
     f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
     assert Sum(f, (n, 1, oo)).is_convergent() is S.false
     assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
-    assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+    #assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
     # integral test
 

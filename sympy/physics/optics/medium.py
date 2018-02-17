@@ -22,7 +22,7 @@ class Medium(Symbol):
 
     """
     This class represents an optical medium. The prime reason to implement this is
-    to facilitate refraction, Fermat's priciple, etc.
+    to facilitate refraction, Fermat's principle, etc.
 
     An optical medium is a material through which electromagnetic waves propagate.
     The permittivity and permeability of the medium define how electromagnetic
@@ -183,10 +183,10 @@ class Medium(Symbol):
         return self.refractive_index < other.refractive_index
 
     def __gt__(self, other):
-        return not self.__lt__(other)
+        return not self < other
 
     def __eq__(self, other):
         return self.refractive_index == other.refractive_index
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other

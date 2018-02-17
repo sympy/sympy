@@ -36,12 +36,14 @@ from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
+from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.hyperbolic import \
     _rewrite_hyperbolics_as_exp, HyperbolicFunction
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.hyper import meijerg
 from sympy.utilities.iterables import multiset_partitions, ordered
 from sympy.utilities.misc import debug as _debug
@@ -635,12 +637,12 @@ def _condsimp(cond):
                         if arg2 == arg3:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[1] == r and \
-                                arg2.func is And and arg2.args[0] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[1] == r and \
+                                isinstance(arg2, And) and arg2.args[0] in arg3.args:
                             otherlist += [k]
                             break
-                        if arg3.func is And and arg2.args[0] == r and \
-                                arg2.func is And and arg2.args[1] in arg3.args:
+                        if isinstance(arg3, And) and arg2.args[0] == r and \
+                                isinstance(arg2, And) and arg2.args[1] in arg3.args:
                             otherlist += [k]
                             break
                 if len(otherlist) != len(otherargs) + 1:
@@ -661,7 +663,7 @@ def _condsimp(cond):
             return orig
         m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
-            if expr.func is periodic_argument and not expr.args[0].is_polar \
+            if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
                     and expr.args[1] == oo:
                 return (expr.args[0] > 0)
             return orig
@@ -717,7 +719,7 @@ def _rewrite_saxena_1(fac, po, g, x):
 
 
 def _check_antecedents_1(g, x, helper=False):
-    """
+    r"""
     Return a condition under which the mellin transform of g exists.
     Any power of x has already been absorbed into the G function,
     so this is just int_0^\infty g dx.
@@ -834,7 +836,7 @@ def _check_antecedents_1(g, x, helper=False):
 
 
 def _int0oo_1(g, x):
-    """
+    r"""
     Evaluate int_0^\infty g dx using G functions,
     assuming the necessary conditions are fulfilled.
 
@@ -845,7 +847,7 @@ def _int0oo_1(g, x):
     gamma(-a)*gamma(c + 1)/(y*gamma(-d)*gamma(b + 1))
     """
     # See [L, section 5.6.1]. Note that s=1.
-    from sympy import gamma, combsimp, unpolarify
+    from sympy import gamma, gammasimp, unpolarify
     eta, _ = _get_coeff_exp(g.argument, x)
     res = 1/eta
     # XXX TODO we should reduce order first
@@ -857,7 +859,7 @@ def _int0oo_1(g, x):
         res /= gamma(1 - b - 1)
     for a in g.aother:
         res /= gamma(a + 1)
-    return combsimp(unpolarify(res))
+    return gammasimp(unpolarify(res))
 
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
@@ -1346,7 +1348,7 @@ def _check_antecedents_inversion(g, x):
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z):
-        return And(*[statement(a - 1, 0, z) for a in g.an])
+        return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def H(z):
         return statement(theta, -sigma, 1/sigma, z)
@@ -1800,7 +1802,8 @@ def meijerint_definite(f, x, a, b):
             return res, cond
 
     elif a == oo:
-        return -meijerint_definite(f, x, b, oo)
+        res = meijerint_definite(f, x, b, oo)
+        return -res[0], res[1]
 
     elif (a, b) == (0, oo):
         # This is a common case - try it directly first.
@@ -1879,6 +1882,12 @@ def _guess_expansion(f, x):
             res += [(expanded, 'expand_trig, expand_mul')]
             saw.add(expanded)
 
+    if orig.has(cos, sin):
+        reduced = sincos_to_sum(orig)
+        if reduced not in saw:
+            res += [(reduced, 'trig power reduction')]
+            saw.add(reduced)
+
     return res
 
 
@@ -1890,7 +1899,7 @@ def _meijerint_definite_2(f, x):
     f1, f2, ... of f (e.g. by calling expand_mul(), trigexpand()
     - see _guess_expansion) and calls _meijerint_definite_3 with each of
     these in succession.
-    If _meijerint_definite_3 succeedes with any of the simplified functions,
+    If _meijerint_definite_3 succeeds with any of the simplified functions,
     returns this result.
     """
     # This function does preparation for (2), calls
@@ -2010,7 +2019,7 @@ def _meijerint_definite_4(f, x, only_double=False):
 
 
 def meijerint_inversion(f, x, t):
-    """
+    r"""
     Compute the inverse laplace transform
     :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
     for real c larger than the real part of all singularities of f.

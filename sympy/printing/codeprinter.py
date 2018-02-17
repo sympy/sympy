@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, Mul, Pow, S, sympify
+from functools import wraps
+
+from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
@@ -12,6 +14,19 @@ from sympy.printing.precedence import precedence
 
 # Backwards compatibility
 from sympy.codegen.ast import Assignment
+
+
+class requires(object):
+    """ Decorator for registering requirements on print methods. """
+    def __init__(self, **kwargs):
+        self._req = kwargs
+
+    def __call__(self, method):
+        def _method_wrapper(self_, *args, **kwargs):
+            for k, v in self._req.items():
+                getattr(self_, k).update(v)
+            return method(self_, *args, **kwargs)
+        return wraps(method)(_method_wrapper)
 
 
 class AssignmentError(Exception):
@@ -31,10 +46,14 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    _default_settings = {'order': None,
-                         'full_prec': 'auto',
-                         'error_on_reserved': False,
-                         'reserved_word_suffix': '_'}
+    _default_settings = {
+        'order': None,
+        'full_prec': 'auto',
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
+        'human': True,
+        'inline': False
+    }
 
     def __init__(self, settings=None):
 
@@ -95,8 +114,8 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            result = (self._number_symbols, self._not_supported,
-                    "\n".join(lines))
+            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            result = (num_syms, self._not_supported, "\n".join(lines))
         del self._not_supported
         del self._number_symbols
         return result
@@ -254,6 +273,11 @@ class CodePrinter(StrPrinter):
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
 
+    def _print_Dummy(self, expr):
+        if expr.name.startswith('Dummy_'):
+            return '_' + expr.name
+        else:
+            return '%s_%d' % (expr.name, expr.dummy_index)
 
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
@@ -284,7 +308,7 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
-        elif self._settings["contract"] and (lhs.has(IndexedBase) or
+        elif self._settings.get("contract", False) and (lhs.has(IndexedBase) or
                 rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
@@ -307,7 +331,7 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
-    def _print_Function(self, expr):
+    def _print_Function(self, expr, **kwargs):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
@@ -319,9 +343,12 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(*[self.parenthesize(item, 0) for item in expr.args])
+                    return func(self, *[self.parenthesize(item, 0) for item in expr.args], **kwargs)
                 except TypeError:
-                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    try:
+                        return func(*[self.parenthesize(item, 0) for item in expr.args])
+                    except TypeError:
+                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
@@ -331,15 +358,14 @@ class CodePrinter(StrPrinter):
     _print_Expr = _print_Function
 
     def _print_NumberSymbol(self, expr):
-        # A Number symbol that is not implemented here or with _printmethod
-        # is registered and evaluated
-        self._number_symbols.add((expr,
-            self._print(expr.evalf(self._settings["precision"]))))
-        return str(expr)
-
-    def _print_Dummy(self, expr):
-        # dummies must be printed as unique symbols
-        return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
+        if self._settings.get("inline", False):
+            return self._print(Float(expr.evalf(self._settings["precision"])))
+        else:
+            # A Number symbol that is not implemented here or with _printmethod
+            # is registered and evaluated
+            self._number_symbols.add((expr,
+                Float(expr.evalf(self._settings["precision"]))))
+            return str(expr)
 
     def _print_Catalan(self, expr):
         return self._print_NumberSymbol(expr)
@@ -430,7 +456,6 @@ class CodePrinter(StrPrinter):
     _print_Basic = _print_not_supported
     _print_ComplexInfinity = _print_not_supported
     _print_Derivative = _print_not_supported
-    _print_dict = _print_not_supported
     _print_ExprCondPair = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported
@@ -438,7 +463,6 @@ class CodePrinter(StrPrinter):
     _print_Interval = _print_not_supported
     _print_AccumulationBounds = _print_not_supported
     _print_Limit = _print_not_supported
-    _print_list = _print_not_supported
     _print_Matrix = _print_not_supported
     _print_ImmutableMatrix = _print_not_supported
     _print_ImmutableDenseMatrix = _print_not_supported
@@ -455,7 +479,6 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
-    _print_tuple = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported

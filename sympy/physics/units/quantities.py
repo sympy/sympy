@@ -6,16 +6,17 @@ Physical quantities.
 
 from __future__ import division
 
+from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
+    Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
-from sympy import sympify, Expr, Mul, Pow, S, Symbol, Add, AtomicExpr
-from sympy.physics.units import Dimension
-from sympy.physics.units import dimensions
+from sympy.physics.units import Dimension, dimensions
+from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 
 
 class Quantity(AtomicExpr):
     """
-    Physical quantity.
+    Physical quantity: can be a unit of measure, a constant or a generic quantity.
     """
 
     is_commutative = True
@@ -24,21 +25,30 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
-    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, **assumptions):
+    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, dim_sys=dimsys_default, **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
+
+        if not isinstance(dim_sys, DimensionSystem):
+            raise TypeError("%s is not a DimensionSystem" % dim_sys)
 
         if not isinstance(dimension, dimensions.Dimension):
             if dimension == 1:
                 dimension = Dimension(1)
             else:
                 raise ValueError("expected dimension or 1")
+        else:
+            for dim_sym in dimension.name.atoms(Dimension):
+                if dim_sym not in [i.name for i in dim_sys._dimensional_dependencies]:
+                    raise ValueError("Dimension %s is not registered in the "
+                                     "dimensional dependency tree." % dim_sym)
+
         scale_factor = sympify(scale_factor)
 
         dimex = Quantity.get_dimensional_expr(scale_factor)
         if dimex != 1:
-            if dimension != Dimension(dimex):
+            if not dim_sys.equivalent_dims(dimension, Dimension(dimex)):
                 raise ValueError("quantity value and dimension mismatch")
 
         # replace all prefixes by their ratio to canonical units:
@@ -55,6 +65,7 @@ class Quantity(AtomicExpr):
         obj._name = name
         obj._dimension = dimension
         obj._scale_factor = scale_factor
+        obj._dim_sys = dim_sys
         obj._abbrev = abbrev
         return obj
 
@@ -65,6 +76,10 @@ class Quantity(AtomicExpr):
     @property
     def dimension(self):
         return self._dimension
+
+    @property
+    def dim_sys(self):
+        return self._dim_sys
 
     @property
     def abbrev(self):
@@ -83,10 +98,19 @@ class Quantity(AtomicExpr):
         return self._scale_factor
 
     def _eval_is_positive(self):
-       return self.scale_factor.is_positive
+        return self.scale_factor.is_positive
 
     def _eval_is_constant(self):
         return self.scale_factor.is_constant()
+
+    def _eval_Abs(self):
+        # FIXME prefer usage of self.__class__ or type(self) instead
+        return self.func(self.name, self.dimension, Abs(self.scale_factor),
+                         self.abbrev, self.dim_sys)
+
+    def _eval_subs(self, old, new):
+        if isinstance(new, Quantity) and self != old:
+            return self
 
     @staticmethod
     def get_dimensional_expr(expr):
@@ -95,20 +119,29 @@ class Quantity(AtomicExpr):
         elif isinstance(expr, Pow):
             return Quantity.get_dimensional_expr(expr.base) ** expr.exp
         elif isinstance(expr, Add):
-            # return get_dimensional_expr()
-            raise NotImplementedError
+            return Quantity.get_dimensional_expr(expr.args[0])
+        elif isinstance(expr, Derivative):
+            dim = Quantity.get_dimensional_expr(expr.expr)
+            for independent, count in expr.variable_count:
+                dim /= Quantity.get_dimensional_expr(independent)**count
+            return dim
+        elif isinstance(expr, Function):
+            args = [Quantity.get_dimensional_expr(arg) for arg in expr.args]
+            if all(i == 1 for i in args):
+                return S.One
+            return expr.func(*args)
         elif isinstance(expr, Quantity):
             return expr.dimension.name
-        return 1
+        return S.One
 
     @staticmethod
     def _collect_factor_and_dimension(expr):
-
+        """Return tuple with factor expression and dimension expression."""
         if isinstance(expr, Quantity):
             return expr.scale_factor, expr.dimension
         elif isinstance(expr, Mul):
             factor = 1
-            dimension = 1
+            dimension = Dimension(1)
             for arg in expr.args:
                 arg_factor, arg_dim = Quantity._collect_factor_and_dimension(arg)
                 factor *= arg_factor
@@ -116,11 +149,38 @@ class Quantity(AtomicExpr):
             return factor, dimension
         elif isinstance(expr, Pow):
             factor, dim = Quantity._collect_factor_and_dimension(expr.base)
-            return factor ** expr.exp, dim ** expr.exp
+            exp_factor, exp_dim = Quantity._collect_factor_and_dimension(expr.exp)
+            if exp_dim.is_dimensionless:
+               exp_dim = 1
+            return factor ** exp_factor, dim ** (exp_factor * exp_dim)
         elif isinstance(expr, Add):
-            raise NotImplementedError
+            factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
+            for addend in expr.args[1:]:
+                addend_factor, addend_dim = \
+                    Quantity._collect_factor_and_dimension(addend)
+                if dim != addend_dim:
+                    raise ValueError(
+                        'Dimension of "{0}" is {1}, '
+                        'but it should be {2}'.format(
+                            addend, addend_dim.name, dim.name))
+                factor += addend_factor
+            return factor, dim
+        elif isinstance(expr, Derivative):
+            factor, dim = Quantity._collect_factor_and_dimension(expr.args[0])
+            for independent, count in expr.variable_count:
+                ifactor, idim = Quantity._collect_factor_and_dimension(independent)
+                factor /= ifactor**count
+                dim /= idim**count
+            return factor, dim
+        elif isinstance(expr, Function):
+            fds = [Quantity._collect_factor_and_dimension(
+                arg) for arg in expr.args]
+            return (expr.func(*(f[0] for f in fds)),
+                    expr.func(*(d[1] for d in fds)))
+        elif isinstance(expr, Dimension):
+            return 1, expr
         else:
-            return 1, 1
+            return expr, Dimension(1)
 
     def convert_to(self, other):
         """
@@ -144,4 +204,30 @@ class Quantity(AtomicExpr):
 
     @property
     def free_symbols(self):
-        return set([])
+        """Return free symbols from quantity."""
+        return self.scale_factor.free_symbols
+
+
+def _Quantity_constructor_postprocessor_Add(expr):
+    # Construction postprocessor for the addition,
+    # checks for dimension mismatches of the addends, thus preventing
+    # expressions like `meter + second` to be created.
+
+    deset = {
+        tuple(sorted(dimsys_default.get_dimensional_dependencies(
+            Dimension(Quantity.get_dimensional_expr(i) if not i.is_number else 1
+        )).items()))
+        for i in expr.args
+        if i.free_symbols == set()  # do not raise if there are symbols
+                    # (free symbols could contain the units corrections)
+    }
+    # If `deset` has more than one element, then some dimensions do not
+    # match in the sum:
+    if len(deset) > 1:
+        raise ValueError("summation of quantities of incompatible dimensions")
+    return expr
+
+
+Basic._constructor_postprocessor_mapping[Quantity] = {
+    "Add" : [_Quantity_constructor_postprocessor_Add],
+}

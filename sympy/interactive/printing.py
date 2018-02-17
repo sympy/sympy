@@ -160,7 +160,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode='plain', **settings)
-            s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
 
@@ -255,7 +254,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   latex_mode='equation*', print_builtin=True,
                   str_printer=None, pretty_printer=None,
                   latex_printer=None, **settings):
-    """
+    r"""
     Initializes pretty-printer depending on the environment.
 
     Parameters

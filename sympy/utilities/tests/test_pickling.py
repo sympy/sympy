@@ -41,9 +41,7 @@ def check(a, exclude=[], check_attr=True):
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
     if sys.version_info >= (3,):
-        protocols.extend([3])
-    if sys.version_info >= (3, 4):
-        protocols.extend([4])
+        protocols.extend([3, 4])
     if cloudpickle:
         protocols.extend([cloudpickle])
 
@@ -103,6 +101,12 @@ def test_core_symbol():
 def test_core_numbers():
     for c in (Integer(2), Rational(2, 3), Float("1.2")):
         check(c)
+
+
+def test_core_float_copy():
+    # See gh-7457
+    y = Symbol("x") + 1.0
+    check(y)  # does not raise TypeError ("argument is not an mpz")
 
 
 def test_core_relational():
@@ -169,9 +173,7 @@ def test_core_multidimensional():
 def test_Singletons():
     protocols = [0, 1, 2]
     if sys.version_info >= (3,):
-        protocols.extend([3])
-    if sys.version_info >= (3, 4):
-        protocols.extend([4])
+        protocols.extend([3, 4])
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]
@@ -427,10 +429,10 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (PythonIntegerRing, PythonIntegerRing()):
-        check(c)
+        check(c, check_attr=False)
 
     for c in (PythonRationalField, PythonRationalField()):
-        check(c)
+        check(c, check_attr=False)
 
     if HAS_GMPY:
         from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
@@ -442,10 +444,10 @@ def test_pickling_polys_domains():
         #     check(c)
 
         for c in (GMPYIntegerRing, GMPYIntegerRing()):
-            check(c)
+            check(c, check_attr=False)
 
         for c in (GMPYRationalField, GMPYRationalField()):
-            check(c)
+            check(c, check_attr=False)
 
     from sympy.polys.domains.realfield import RealField
     from sympy.polys.domains.complexfield import ComplexField
@@ -463,7 +465,7 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (AlgebraicField, AlgebraicField(QQ, sqrt(3))):
-        check(c)
+        check(c, check_attr=False)
 
     # TODO: AssertionError
     # for c in (PolynomialRing, PolynomialRing(ZZ, "x,y,z")):
@@ -474,13 +476,13 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (ExpressionDomain, ExpressionDomain()):
-        check(c)
+        check(c, check_attr=False)
 
 def test_pickling_polys_numberfields():
     from sympy.polys.numberfields import AlgebraicNumber
 
     for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
-        check(c)
+        check(c, check_attr=False)
 
 def test_pickling_polys_orderings():
     from sympy.polys.orderings import (LexOrder, GradedLexOrder,
@@ -623,7 +625,7 @@ def test_pickling_polys_rootoftools():
 
 #================== printing ====================
 from sympy.printing.latex import LatexPrinter
-from sympy.printing.mathml import MathMLPrinter
+from sympy.printing.mathml import MathMLContentPrinter, MathMLPresentationPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.printer import Printer
@@ -631,19 +633,25 @@ from sympy.printing.python import PythonPrinter
 
 
 def test_printing():
-    for c in (LatexPrinter, LatexPrinter(), MathMLPrinter,
-              PrettyPrinter, prettyForm, stringPict, stringPict("a"),
-              Printer, Printer(), PythonPrinter, PythonPrinter()):
+    for c in (LatexPrinter, LatexPrinter(), MathMLContentPrinter,
+              MathMLPresentationPrinter, PrettyPrinter, prettyForm, stringPict,
+              stringPict("a"), Printer, Printer(), PythonPrinter,
+              PythonPrinter()):
         check(c)
 
 
 @XFAIL
 def test_printing1():
-    check(MathMLPrinter())
+    check(MathMLContentPrinter())
 
 
 @XFAIL
 def test_printing2():
+    check(MathMLPresentationPrinter())
+
+
+@XFAIL
+def test_printing3():
     check(PrettyPrinter())
 
 #================== series ======================

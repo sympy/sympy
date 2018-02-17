@@ -1,4 +1,4 @@
-from sympy import S, Symbol, I, Rational, PurePoly
+from sympy import Abs, S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
 from sympy.utilities.pytest import raises
 
@@ -25,6 +25,12 @@ def test_sparse_matrix():
     assert a.col_join(b) == b
     assert type(a.row_join(b)) == type(a)
     assert type(a.col_join(b)) == type(a)
+
+    # make sure 0 x n matrices get stacked correctly
+    sparse_matrices = [SparseMatrix.zeros(0, n) for n in range(4)]
+    assert SparseMatrix.hstack(*sparse_matrices) == Matrix(0, 6, [])
+    sparse_matrices = [SparseMatrix.zeros(n, 0) for n in range(4)]
+    assert SparseMatrix.vstack(*sparse_matrices) == Matrix(6, 0, [])
 
     # test element assignment
     a = SparseMatrix((
@@ -256,6 +262,9 @@ def test_sparse_matrix():
     assert m0.applyfunc(lambda x: 2*x) == sparse_eye(3)*2
     assert m0.applyfunc(lambda x: 0 ) == sparse_zeros(3)
 
+    # test__eval_Abs
+    assert abs(SparseMatrix(((x, 1), (y, 2*y)))) == SparseMatrix(((Abs(x), 1), (Abs(y), 2*Abs(y))))
+
     # test_LUdecomp
     testmat = SparseMatrix([[ 0, 2, 5, 3],
                             [ 3, 3, 7, 4],
@@ -264,7 +273,7 @@ def test_sparse_matrix():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == sparse_zeros(4)
+    assert (L*U).permute_rows(p, 'backward') - testmat == sparse_zeros(4)
 
     testmat = SparseMatrix([[ 6, -2, 7, 4],
                             [ 0,  3, 6, 7],
@@ -273,14 +282,14 @@ def test_sparse_matrix():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == sparse_zeros(4)
+    assert (L*U).permute_rows(p, 'backward') - testmat == sparse_zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - M == sparse_zeros(3)
+    assert (L*U).permute_rows(p, 'backward') - M == sparse_zeros(3)
 
     # test_LUsolve
     A = SparseMatrix([[2, 3, 5],

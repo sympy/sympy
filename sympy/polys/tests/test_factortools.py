@@ -309,7 +309,7 @@ def test_dmp_zz_wang():
 
 
 def test_issue_6355():
-    # This tests a bug in the Wang algorithm that occured only with a very
+    # This tests a bug in the Wang algorithm that occurred only with a very
     # specific set of random numbers.
     random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]
 
@@ -528,7 +528,10 @@ def test_dup_factor_list():
 
     f = 6.7225336055071*x**2 - 10.6463972754741*x - 0.33469524022264
     coeff, factors = R.dup_factor_list(f)
-    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+    assert coeff == RR(10.6463972754741)
+    assert len(factors) == 1
+    assert factors[0][0].max_norm() == RR(1.0)
+    assert factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
     R, x = ring("x", Rt)
@@ -628,12 +631,15 @@ def test_dmp_factor_list():
     f = 2.0*x**2 - 8.0*y**2
 
     assert R.dmp_factor_list(f) == \
-        (RR(2.0), [(1.0*x - 2.0*y, 1),
-                   (1.0*x + 2.0*y, 1)])
+        (RR(8.0), [(0.5*x - y, 1),
+                   (0.5*x + y, 1)])
 
     f = 6.7225336055071*x**2*y**2 - 10.6463972754741*x*y - 0.33469524022264
     coeff, factors = R.dmp_factor_list(f)
-    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+    assert coeff == RR(10.6463972754741)
+    assert len(factors) == 1
+    assert factors[0][0].max_norm() == RR(1.0)
+    assert factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)

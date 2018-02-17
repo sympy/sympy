@@ -13,7 +13,7 @@ class ReorderError(NotImplementedError):
 
 class ExprWithIntLimits(ExprWithLimits):
     def change_index(self, var, trafo, newvar=None):
-        """
+        r"""
         Change index of a Sum or Product.
 
         Perform a linear transformation `x \mapsto a x + b` on the index variable
