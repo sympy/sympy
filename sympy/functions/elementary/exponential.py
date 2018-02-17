@@ -262,7 +262,9 @@ class exp(ExpBase):
                         elif ask(Q.odd(coeff + S.Half)):
                             return S.ImaginaryUnit
                     else :
-                        return cos(S.Pi*coeff) + S.ImaginaryUnit*sin(S.Pi*coeff)
+                        cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                        if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                            return cosine + S.ImaginaryUnit*sine
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
