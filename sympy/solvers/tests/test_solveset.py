@@ -657,7 +657,7 @@ def test_atan2():
     assert solveset_real(atan2(x, 2) - pi/3, x) == FiniteSet(2*sqrt(3))
 
 
-def test_piecewise():
+def test_piecewise_solveset():
     eq = Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3
     assert set(solveset_real(eq, x)) == set(FiniteSet(-1, 5))
 
@@ -798,10 +798,11 @@ def test_solve_trig():
                   9*sqrt(57))**(S(1)/3))/(3*(67 + 9*sqrt(57))**(S(1)/6))) +
                   2*pi), S.Integers))
 
-    assert solveset_real(2*tan(x)*sin(x) + 1, x) == \
-        Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(4
-                + sqrt(17)))), S.Integers), ImageSet(Lambda(n, 2*n*pi
-                - 2*atan(sqrt(4 + sqrt(17))) + 2*pi), S.Integers))
+    assert solveset_real(2*tan(x)*sin(x) + 1, x) == Union(
+        ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 + sqrt(17))/
+            (-sqrt(17) + 1)) + pi), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
+            (-sqrt(17) + 1)) + pi), S.Integers))
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
@@ -966,14 +967,15 @@ def test_conditionset():
     assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
         ConditionSet(x, Eq(x*(x + sin(x)) - 1, 0), S.Reals)
 
-    assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals) == \
-        ConditionSet(x, Eq(-x + sin(Abs(x)), 0), Interval(-oo, oo))
-
     assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x) == \
         imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
 
     assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
         ConditionSet(x, x + sin(x) > 1, S.Reals)
+
+    assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals) == Union(
+        ConditionSet(x, Eq(-x + sin(x), 0), Interval(0, oo)),
+        ConditionSet(x, Eq(-x - sin(x), 0), Interval.open(-oo, 0)))
 
 
 @XFAIL
@@ -993,9 +995,8 @@ def test_solveset_domain():
 def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
     x = Symbol('x')
-    y = exp(x + 1/x**2)
-    solution = solveset(y**2 + y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
+    solution = solveset(exp(x) + sin(x), x, S.Reals)
+    unsolved_object = ConditionSet(x, Eq(exp(x) + sin(x), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
@@ -1700,21 +1701,22 @@ def test_issue_14223():
 
 
 def test_issue_10158():
-    x = Symbol('x', real=True)
-    dom = S.Complexes
-    assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(2/S(3))
-    assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(
-        -sqrt(10), sqrt(10))
-    assert solveset(Max(abs(x-3)-1,x+2)-3, x, dom) == FiniteSet(-1, 1)
-    assert solveset(Abs(x - 1) - Abs(y), x, dom) == FiniteSet(
-        -Abs(y) + 1, Abs(y) + 1)
-    assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(
-        -4/S(3), -4/S(5))
-
     x = Symbol('x')
     dom = S.Reals
     assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(2/S(3))
     assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(-sqrt(10), sqrt(10))
-    assert solveset(Max(abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
+    assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
     assert solveset(Abs(x - 1) - Abs(y), x, dom) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
     assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))
+    dom = S.Complexes
+    assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(2/S(3))
+    assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(
+        -sqrt(10), sqrt(10))
+    # the following gets rewritten to
+    # Piecewise((x - 1, x + 2 >= Abs(x - 3) - 1), (Abs(x - 3) - 4, True))
+    # and the Abs in the relational is solved as though x were real so
+    # should there be a check in Piecewise for Abs in conditions when the
+    # domain is complex?
+    assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
+    raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
+    raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))

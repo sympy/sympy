@@ -11,6 +11,7 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function)
@@ -760,11 +761,7 @@ def _solveset(f, symbol, domain, _check=False):
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
-    if domain.is_subset(S.Reals):
-        inverter_func = invert_real
-    else:
-        inverter_func = invert_complex
-    inverter = lambda f, rhs, symbol: inverter_func(f, rhs, symbol, domain)
+    inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
     result = EmptySet()
 
@@ -788,14 +785,29 @@ def _solveset(f, symbol, domain, _check=False):
         a = f.args[0]
         result = solveset_real(a > 0, symbol)
     elif f.is_Piecewise:
-        domain = domain & S.Reals  # Piecewise can only be solved in Reals
         result = EmptySet()
-        expr_set_pairs = f.as_expr_set_pairs(domain)
+        # the conditions can only be solved on the real domain
+        expr_set_pairs = f.as_expr_set_pairs(domain & S.Reals)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
                 in_set = in_set.as_set()
             solns = solver(expr, symbol, in_set)
             result += solns
+    elif isinstance(f, Eq):
+        from sympy.core import Add
+        result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
+    elif f.is_Relational:
+        if not domain.is_subset(S.Reals):
+            raise NotImplementedError(filldedent('''
+                Inequalities in the complex domain are
+                not supported. Try the real domain by
+                setting domain=S.Reals'''))
+        try:
+            result = solve_univariate_inequality(
+            f, symbol, domain=domain, relational=False)
+        except NotImplementedError:
+            result = ConditionSet(symbol, f, domain)
+        return result
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
@@ -992,8 +1004,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         # the xreplace will be needed if a ConditionSet is returned
         return solveset(f[0], s[0], domain).xreplace(swap)
 
-    if domain.is_subset(S.Reals) or symbol.is_real:
-        domain = domain & S.Reals
+    if domain.is_subset(S.Reals):
         if not symbol.is_real:
             assumptions = symbol.assumptions0
             assumptions['real'] = True
@@ -1003,40 +1014,22 @@ def solveset(f, symbol=None, domain=S.Complexes):
                     ).xreplace({r: symbol})
             except InconsistentAssumptions:
                 pass
-        # Application includes Min/Max atoms;
-        # Abs has its own handling method which avoids the
-        # rewriting property that the first piece of abs(x)
-        # is for x >=0 and the 2nd piece for x < 0 -- solutions
-        # can look better if the 2nd condition is x <= 0.
-        reps = [(func, func.rewrite(Piecewise)) for func in
-            ordered(f.atoms(Function, Application))
-            if symbol in func.free_symbols and
-            not isinstance(func, Abs)]
-        for i in range(-2, -len(reps) - 1, -1):
-            for j in range(i + 1, 0):
-                reps[j] = (
-                    reps[j][0].replace(*reps[i]),
-                    reps[j][1].replace(*reps[i]))
-        for i in reps:
-            f = f.replace(*i)
+    # Application includes Min/Max atoms;
+    # Abs has its own handling method which avoids the
+    # rewriting property that the first piece of abs(x)
+    # is for x >=0 and the 2nd piece for x < 0 -- solutions
+    # can look better if the 2nd condition is x <= 0.
+    reps = [(func, func.rewrite(Piecewise)) for func in
+        ordered(f.atoms(Function, Application))
+        if symbol in func.free_symbols and
+        not isinstance(func, Abs)]
+    for i in range(-2, -len(reps) - 1, -1):
+        for j in range(i + 1, 0):
+            reps[j] = Tuple(*reps[j]).replace(*reps[i])
+    for i in reps:
+        f = f.replace(*i)
 
     f = piecewise_fold(f)
-
-    if isinstance(f, Eq):
-        from sympy.core import Add
-        f = Add(f.lhs, - f.rhs, evaluate=False)
-    elif f.is_Relational:
-        if not domain.is_subset(S.Reals):
-            raise NotImplementedError(filldedent('''
-                Inequalities in the complex domain are
-                not supported. Try the real domain by
-                setting domain=S.Reals'''))
-        try:
-            result = solve_univariate_inequality(
-            f, symbol, domain=domain, relational=False)
-        except NotImplementedError:
-            result = ConditionSet(symbol, f, domain)
-        return result
 
     return _solveset(f, symbol, domain, _check=True)
 
