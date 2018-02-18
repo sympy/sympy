@@ -346,10 +346,6 @@ class ContinuousPSpace(PSpace):
             # return S.Zero if `domain` is empty set
             if domain.set is S.EmptySet or isinstance(domain.set, FiniteSet):
                 return S.Zero if not cond_inv else S.One
-            if isinstance(domain.set, Union):
-                return sum(
-                    Integral(pdf(z), (z, subset), **kwargs) for subset in
-                    domain.set.args if isinstance(subset, Interval))
             # Integrate out the last variable over the special domain
             return Integral(pdf(z), (z, domain.set), **kwargs)
 
