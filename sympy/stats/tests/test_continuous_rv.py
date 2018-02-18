@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
 
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff)
@@ -840,3 +840,13 @@ def test_FiniteSet_prob():
     assert P(Eq(E, 1)) is S.Zero
     assert P(Eq(N, 2)) is S.Zero
     assert P(Eq(N, x)) is S.Zero
+
+def test_prob_neq():
+    E = Exponential('E', 4)
+    X = ChiSquared('X', 4)
+    assert P(Ne(E, 2)) == 1
+    assert P(Ne(X, 4)) == 1
+    # Integral returned is not simplified in all cases
+    X1 = ChiSquared('X1', 3)
+    assert P(Ne(X, 4)).evalf() == S(1)
+    assert P(Ne(X, 5)).evalf() == S(1)
