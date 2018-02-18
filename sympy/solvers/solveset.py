@@ -1000,6 +1000,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     """
     f = sympify(f)
+    symbol = sympify(symbol)
 
     if f is S.true:
         return domain
@@ -1009,6 +1010,12 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if not isinstance(f, (Expr, Number)):
         raise ValueError("%s is not a valid SymPy expression" % (f))
+    
+    if not isinstance(symbol, Expr) and  symbol is not None:
+        raise ValueError("%s is not a valid Sympy symbol" %(symbol))
+
+    if not isinstance(domain, Set):
+        raise ValueError("%s is not a valid domain" %(domain))
 
     free_symbols = f.free_symbols
 
