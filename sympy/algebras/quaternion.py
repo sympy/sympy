@@ -46,7 +46,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field = True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
         a = sympify(a)
         b = sympify(b)
         c = sympify(c)
@@ -486,7 +486,7 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v = None):
+    def to_rotation_matrix(self, v=None):
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if v is not passed.
 

@@ -518,3 +518,10 @@ def test_issue_10395():
     eq = x*Max(y, -1.1)
     assert nfloat(eq) == eq
     assert Max(y, 4).n() == Max(4.0, y)
+
+
+def test_issue_13098():
+    assert floor(log(S('9.'+'9'*20), 10)) == 0
+    assert ceiling(log(S('9.'+'9'*20), 10)) == 1
+    assert floor(log(20 - S('9.'+'9'*20), 10)) == 1
+    assert ceiling(log(20 - S('9.'+'9'*20), 10)) == 2

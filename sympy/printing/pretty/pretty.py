@@ -217,7 +217,7 @@ class PrettyPrinter(Printer):
             arg = e.args[0]
             pform = self._print(arg)
             if isinstance(arg, Equivalent):
-                return self._print_Equivalent(arg, altchar=u"\N{NOT IDENTICAL TO}")
+                return self._print_Equivalent(arg, altchar=u"\N{LEFT RIGHT DOUBLE ARROW WITH STROKE}")
             if isinstance(arg, Implies):
                 return self._print_Implies(arg, altchar=u"\N{RIGHTWARDS ARROW WITH STROKE}")
 
@@ -287,7 +287,7 @@ class PrettyPrinter(Printer):
 
     def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, altchar or u"\N{IDENTICAL TO}")
+            return self.__print_Boolean(e, altchar or u"\N{LEFT RIGHT DOUBLE ARROW}")
         else:
             return self._print_Function(e, sort=True)
 
@@ -1318,8 +1318,8 @@ class PrettyPrinter(Printer):
                 c = self._print(e.args[0])
                 c = prettyForm(*c.parens())
                 pform = a**b
-                pform = stringPict(*pform.right(' '))
-                pform = stringPict(*pform.right(c))
+                pform = prettyForm(*pform.right(' '))
+                pform = prettyForm(*pform.right(c))
                 return pform
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
@@ -1722,12 +1722,15 @@ class PrettyPrinter(Printer):
             inn = u"\N{SMALL ELEMENT OF}"
         else:
             inn = 'in'
-        variables = self._print_seq(ts.lamda.variables)
+        variables = ts.lamda.variables
         expr = self._print(ts.lamda.expr)
         bar = self._print("|")
-        base = self._print(ts.base_set)
-
-        return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
+        sets = [self._print(i) for i in ts.args[1:]]
+        if len(sets) == 1:
+            return self._print_seq((expr, bar, variables[0], inn, sets[0]), "{", "}", ' ')
+        else:
+            pargs = tuple(j for var, setv in zip(variables, sets) for j in (var, inn, setv, ","))
+            return self._print_seq((expr, bar) + pargs[:-1], "{", "}", ' ')
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:
@@ -1783,6 +1786,11 @@ class PrettyPrinter(Printer):
 
     def _print_FormalPowerSeries(self, s):
         return self._print_Add(s.infinite)
+
+    def _print_SetExpr(self, se):
+        pretty_set = prettyForm(*self._print(se.set).parens())
+        pretty_name = self._print(Symbol("SetExpr"))
+        return prettyForm(*pretty_name.right(pretty_set))
 
     def _print_SeqFormula(self, s):
         if self._use_unicode:

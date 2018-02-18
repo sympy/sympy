@@ -134,6 +134,7 @@ class LatexPrinter(Printer):
         "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
+        "ln_notation": False,
     }
 
     def __init__(self, settings=None):
@@ -846,6 +847,17 @@ class LatexPrinter(Printer):
         else:
             return tex
 
+    def _print_log(self, expr, exp=None):
+        if not self._settings["ln_notation"]:
+            tex = r"\log{\left (%s \right )}" % self._print(expr.args[0])
+        else:
+            tex = r"\ln{\left (%s \right )}" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
     def _print_Abs(self, expr, exp=None):
         tex = r"\left|{%s}\right|" % self._print(expr.args[0])
 
@@ -868,7 +880,7 @@ class LatexPrinter(Printer):
     def _print_Not(self, e):
         from sympy import Equivalent, Implies
         if isinstance(e.args[0], Equivalent):
-            return self._print_Equivalent(e.args[0], r"\not\equiv")
+            return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
         if isinstance(e.args[0], Implies):
             return self._print_Implies(e.args[0], r"\not\Rightarrow")
         if (e.args[0].is_Boolean):
@@ -908,7 +920,7 @@ class LatexPrinter(Printer):
 
     def _print_Equivalent(self, e, altchar=None):
         args = sorted(e.args, key=default_sort_key)
-        return self._print_LogOp(args, altchar or r"\equiv")
+        return self._print_LogOp(args, altchar or r"\Leftrightarrow")
 
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])
@@ -1329,7 +1341,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.point)
             else:
                 s += self._print(expr.point[0])
-        return r"\mathcal{O}\left(%s\right)" % s
+        return r"O\left(%s\right)" % s
 
     def _print_Symbol(self, expr):
         if expr in self._settings['symbol_names']:
@@ -1747,10 +1759,12 @@ class LatexPrinter(Printer):
         return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
-        return r"\left\{%s\; |\; %s \in %s\right\}" % (
+        sets = s.args[1:]
+        varsets = [r"%s \in %s" % (self._print(var), self._print(setv))
+            for var, setv in zip(s.lamda.variables, sets)]
+        return r"\left\{%s\; |\; %s\right\}" % (
             self._print(s.lamda.expr),
-            ', '.join([self._print(var) for var in s.lamda.variables]),
-            self._print(s.base_set))
+            ', '.join(varsets))
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
@@ -2121,7 +2135,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational
+    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
     >>> from sympy.abc import x, y, mu, r, tau
 
     >>> print(latex((2*tau)**Rational(7,2)))
@@ -2239,6 +2253,14 @@ def latex(expr, **settings):
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left [ 2 / x, \quad y\right ]$
+
+    ln_notation: If set to ``True`` "\ln" is used instead of default "\log"
+
+    >>> print(latex(log(10)))
+    \log{\left (10 \right )}
+
+    >>> print(latex(log(10), ln_notation=True))
+    \ln{\left (10 \right )}
 
     """
 

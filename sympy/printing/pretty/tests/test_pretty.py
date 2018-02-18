@@ -37,6 +37,9 @@ from sympy.core.compatibility import range
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 from sympy.tensor.functions import TensorProduct
 
+from sympy.sets.setexpr import SetExpr
+from sympy.sets import ImageSet
+
 import sympy as sym
 class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
@@ -3589,6 +3592,33 @@ frozenset({x , x*y})\
     assert upretty(Range(-2, -oo, -1)) == ucode_str
 
 
+def test_pretty_SetExpr():
+    iv = Interval(1, 3)
+    se = SetExpr(iv)
+    ascii_str = "SetExpr([1, 3])"
+    ucode_str = u("SetExpr([1, 3])")
+    assert pretty(se) == ascii_str
+    assert upretty(se) == ucode_str
+
+
+def test_pretty_ImageSet():
+    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
+    ascii_str = '{x + y | x in {1, 2, 3} , y in {3, 4}}'
+    ucode_str = u('{x + y | x ∊ {1, 2, 3} , y ∊ {3, 4}}')
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
+
+    imgset = ImageSet(Lambda(x, x**2), S.Naturals)
+    ascii_str = \
+    '  2                   \n'\
+    '{x  | x in S.Naturals}'
+    ucode_str = u('''\
+⎧ 2        ⎫\n\
+⎨x  | x ∊ ℕ⎬\n\
+⎩          ⎭''')
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
+
 
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
@@ -4091,12 +4121,12 @@ def test_pretty_Boolean():
     expr = Equivalent(x, y, evaluate=False)
 
     assert pretty(expr) == "Equivalent(x, y)"
-    assert upretty(expr) == u"x ≡ y"
+    assert upretty(expr) == u"x ⇔ y"
 
     expr = Equivalent(y, x, evaluate=False)
 
     assert pretty(expr) == "Equivalent(x, y)"
-    assert upretty(expr) == u"x ≡ y"
+    assert upretty(expr) == u"x ⇔ y"
 
 
 def test_pretty_Domain():
@@ -4892,6 +4922,11 @@ def test_deltas():
 u("""\
  (1)    \n\
 δ    (x)\
+""")
+    assert xpretty(x*DiracDelta(x, 1), use_unicode=True) == \
+u("""\
+   (1)    \n\
+x⋅δ    (x)\
 """)
 
 
@@ -5747,12 +5782,12 @@ def test_pretty_Add():
 
 
 def test_issue_7179():
-    assert upretty(Not(Equivalent(x, y))) == u'x ≢ y'
+    assert upretty(Not(Equivalent(x, y))) == u'x ⇎ y'
     assert upretty(Not(Implies(x, y))) == u'x ↛ y'
 
 
 def test_issue_7180():
-    assert upretty(Equivalent(x, y)) == u'x ≡ y'
+    assert upretty(Equivalent(x, y)) == u'x ⇔ y'
 
 
 def test_pretty_Complement():

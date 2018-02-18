@@ -36,12 +36,14 @@ from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
+from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.hyperbolic import \
     _rewrite_hyperbolics_as_exp, HyperbolicFunction
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.hyper import meijerg
 from sympy.utilities.iterables import multiset_partitions, ordered
 from sympy.utilities.misc import debug as _debug
@@ -1879,6 +1881,12 @@ def _guess_expansion(f, x):
         if expanded not in saw:
             res += [(expanded, 'expand_trig, expand_mul')]
             saw.add(expanded)
+
+    if orig.has(cos, sin):
+        reduced = sincos_to_sum(orig)
+        if reduced not in saw:
+            res += [(reduced, 'trig power reduction')]
+            saw.add(reduced)
 
     return res
 

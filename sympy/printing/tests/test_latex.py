@@ -35,8 +35,9 @@ from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+from sympy.sets.setexpr import SetExpr
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
@@ -329,14 +330,14 @@ def test_latex_functions():
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
     assert latex(gamma(w)) == r"\Gamma\left(w\right)"
-    assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow \infty\right)"
-    assert latex(Order(x - y, (x, y))) == r"\mathcal{O}\left(x - y; x\rightarrow y\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
+    assert latex(Order(x)) == r"O\left(x\right)"
+    assert latex(Order(x, x)) == r"O\left(x\right)"
+    assert latex(Order(x, (x, 0))) == r"O\left(x\right)"
+    assert latex(Order(x, (x, oo))) == r"O\left(x; x\rightarrow \infty\right)"
+    assert latex(Order(x - y, (x, y))) == r"O\left(x - y; x\rightarrow y\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
@@ -615,6 +616,12 @@ def test_latex_sets():
         r"\left\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\right\}"
 
 
+def test_latex_SetExpr():
+    iv = Interval(1, 3)
+    se = SetExpr(iv)
+    assert latex(se) == r"SetExpr\left(\left[1, 3\right]\right)"
+
+
 def test_latex_Range():
     assert latex(Range(1, 51)) == \
         r'\left\{1, 2, \ldots, 50\right\}'
@@ -762,6 +769,9 @@ def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+    y = Symbol('y')
+    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
+    assert latex(imgset) == r"\left\{x + y\; |\; x \in \left\{1, 2, 3\right\}, y \in \left\{3, 4\right\}\right\}"
 
 
 def test_latex_ConditionSet():
@@ -818,6 +828,16 @@ def test_latex_limits():
     assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
     # bi-directional limit
     assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
+
+
+def test_latex_log():
+    assert latex(log(x)) == r"\log{\left (x \right )}"
+    assert latex(ln(x)) == r"\log{\left (x \right )}"
+    assert latex(log(x), ln_notation=True) == r"\ln{\left (x \right )}"
+    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
+    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
+    assert latex(pow(log(x),x)) == r"\log{\left (x \right )}^{x}"
+    assert latex(pow(log(x),x), ln_notation=True) == r"\ln{\left (x \right )}^{x}"
 
 
 def test_issue_3568():
@@ -1397,7 +1417,7 @@ def test_boolean_args_order():
     assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
 
     expr = Equivalent(*syms)
-    assert latex(expr) == 'a \\equiv b \\equiv c \\equiv d \\equiv e \\equiv f'
+    assert latex(expr) == 'a \\Leftrightarrow b \\Leftrightarrow c \\Leftrightarrow d \\Leftrightarrow e \\Leftrightarrow f'
 
     expr = Xor(*syms)
     assert latex(expr) == 'a \\veebar b \\veebar c \\veebar d \\veebar e \\veebar f'
@@ -1618,8 +1638,8 @@ def test_Pow():
 
 
 def test_issue_7180():
-    assert latex(Equivalent(x, y)) == r"x \equiv y"
-    assert latex(Not(Equivalent(x, y))) == r"x \not\equiv y"
+    assert latex(Equivalent(x, y)) == r"x \Leftrightarrow y"
+    assert latex(Not(Equivalent(x, y))) == r"x \not\Leftrightarrow y"
 
 
 def test_issue_8409():
