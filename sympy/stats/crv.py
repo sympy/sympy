@@ -16,7 +16,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Union, Interval, Ne, Eq)
+        Basic, S, exp, I, FiniteSet, Interval, Ne, Eq)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
@@ -360,7 +360,7 @@ class ContinuousPSpace(PSpace):
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
-            return result if not cond_inv else 1 - result
+            return result if not cond_inv else S.One - result
 
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
