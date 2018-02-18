@@ -877,3 +877,9 @@ def test_issue_14216():
     A = MatrixSymbol("A", 2, 2)
     assert unpolarify(A[0, 0]) == A[0, 0]
     assert unpolarify(A[0, 0]*A[1, 0]) == A[0, 0]*A[1, 0]
+
+
+def test_issue_14238():
+    # doesn't cause recursion error
+    r = Symbol('r', real=True)
+    assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))

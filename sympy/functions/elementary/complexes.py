@@ -499,7 +499,7 @@ class Abs(Function):
                 return arg2
         # reject result if all new conjugates are just wrappers around
         # an expression that was already in the arg
-        conj = arg.conjugate()
+        conj = signsimp(arg.conjugate(), evaluate=False)
         new_conj = conj.atoms(conjugate) - arg.atoms(conjugate)
         if new_conj and all(arg.has(i.args[0]) for i in new_conj):
             return
