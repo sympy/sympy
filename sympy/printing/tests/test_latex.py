@@ -1699,7 +1699,18 @@ def test_MatrixElement_printing():
     assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
+    assert latex(F) == r"\left(-B + A\right)_{0, 0}"
+
+
+def test_MatrixSymbol_printing():
+    # test cases for issue #14237
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert latex(-A) == r"-A"
+    assert latex(A - A*B - B) == r"-B - A B + A"
+    assert latex(-A*B - A*B*C - B) == r"-B - A B - A B C"
 
 
 def test_Quaternion_latex_printing():
