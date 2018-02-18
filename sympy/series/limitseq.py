@@ -8,8 +8,9 @@ from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.core.symbol import Dummy
 from sympy.core.function import PoleError
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.series.limits import Limit
-from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import trigsimp
 
 
 def difference_delta(expr, n=None, step=1):
@@ -111,9 +112,12 @@ def _limit_inf(expr, n):
 def _limit_seq(expr, n, trials):
     from sympy.concrete.summations import Sum
 
+    _trig = TrigonometricFunction
+
     for i in range(trials):
         if not expr.has(Sum):
-            expr = simplify(expr)
+            if expr.has(_trig):
+                expr = trigsimp(expr)
             result = _limit_inf(expr, n)
             if result is not None:
                 return result
