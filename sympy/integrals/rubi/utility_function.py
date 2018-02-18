@@ -5395,6 +5395,36 @@ def Divides(y, u, x):
     else:
         return False
 
+def DerivativeDivides(y, u, x):
+    '''
+    If y not equal to x, y is easy to differentiate wrt x, and u divided by the derivative of y
+    is free of x, DerivativeDivides[y,u,x] returns the quotient; else it returns False.
+    '''
+    from matchpy import is_match
+    pattern0 = Pattern(Mul(a , b_), CustomConstraint(lambda a, b : FreeQ(a, b)))
+    def f1(y, u, x):
+        if PolynomialQ(y, x):
+            return PolynomialQ(u, x) and Exponent(u, x)==Exponent(y, x)-1
+        else:
+            return EasyDQ(y, x)
+
+    if is_match(y, pattern0):
+        return False
+
+    elif f1(y, u, x):
+        v = D(y ,x)
+        if EqQ(v, 0):
+            return False
+        else:
+            v = Simplify(u/v)
+            if FreeQ(v, x):
+                return v
+            else:
+                return False
+    else:
+        return False
+
+
 def EasyDQ(expr, x):
     # If u is easy to differentiate wrt x,  EasyDQ(u, x) returns True; else it returns False *)
     u = Wild('u',exclude=[1])
