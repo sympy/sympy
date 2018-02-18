@@ -230,6 +230,7 @@ class exp(ExpBase):
         from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
+        from sympy.matrices.matrices import MatrixBase
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -301,7 +302,7 @@ class exp(ExpBase):
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
-        elif arg.is_Matrix:
+        elif isinstance(arg, MatrixBase):
             return arg.exp()
 
     @property
