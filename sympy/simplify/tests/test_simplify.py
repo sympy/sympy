@@ -148,7 +148,7 @@ def test_simplify_other():
         (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/
         (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi) * \
         (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
-    assert simplify(ans) == -(-1)**(S(3)/4)*sqrt(pi)/sqrt(t)
+    assert simplify(ans) == sqrt(2)*sqrt(pi)*(1 - I)/(2*sqrt(t))
     # issue 6370
     assert simplify(2**(2 + x)/4) == 2**x
 
