@@ -66,6 +66,9 @@ def sqrt(arg, evaluate=None):
 
     sqrt(x) -> Returns the principal square root of x.
 
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate
+
     Examples
     ========
 
@@ -133,6 +136,9 @@ def cbrt(arg, evaluate=None):
     """This function computes the principal cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
 
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
+
     Examples
     ========
 
@@ -183,6 +189,8 @@ def root(arg, n, k=0, evaluate=None):
     """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
     principal root (k=0).
 
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
@@ -274,6 +282,9 @@ def real_root(arg, n=None, evaluate=None):
     all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
     will only create a real root of a principal root -- the presence of
     other factors may cause the result to not be real.
+
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
