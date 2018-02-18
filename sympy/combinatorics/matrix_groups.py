@@ -39,7 +39,7 @@ def spl_linear_group(dim = 2, min_val = 1, max_val = 10):
     _spl_linear_group = SplLinearGroup(dim, min_val, max_val)
     return _spl_linear_group
 
-def orthogonal_group(dim = 2, x = None):
+def spl_orthogonal_group(dim = 2, x = None):
     """
     Returns a Special Orthogonal Group of 2x2 matrices with entries as
     [  cos(x) sin(x)]
@@ -51,8 +51,8 @@ def orthogonal_group(dim = 2, x = None):
         raise ValueError("Size must be greater than or equal to 1")
     elif dim is 1:
         return [1]
-    _orthogonal_group = SplOrthogonalGroup(dim, x)
-    return _orthogonal_group
+    _spl_orthogonal_group = SplOrthogonalGroup(dim, x)
+    return _spl_orthogonal_group
 
 def finite_matrix_group(dim = 2, p = 2):
     """
@@ -61,18 +61,11 @@ def finite_matrix_group(dim = 2, p = 2):
     """
     if dim < 1:
         raise ValueError("Size must be greater than or equal to 1")
+    if not (isPrime(p)):
+        raise ValueError("p must be a Prime Number")
 
-    # if not (isPrime(p)):
-    #     raise ValueError("p must be a Prime Number")
-
-    if dim < 1:
-        raise ValueError("Size must be greater than or equal to 1")
-    elif dim is 1:
-        return [1]
-    _orthogonal_group = SplOrthogonalGroup(dim, x)
-    return _orthogonal_group
-    # _finite_matrix_group = FiniteMatrixGroup(dim, p)
-    # return _finite_matrix_group
+    _finite_matrix_group = FiniteMatrixGroup(dim, p)
+    return _finite_matrix_group
 
 
 class SplLinearGroup(Basic):
