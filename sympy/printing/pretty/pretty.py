@@ -2283,27 +2283,27 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     ==========
 
     expr : expression
-        the expression to print
+        The expression to print.
 
     wrap_line : bool, optional (default=True)
-        line wrapping enabled/disabled
+        Line wrapping enabled/disabled.
 
     num_columns : int or None, optional (default=None)
-        number of columns before line breaking (default to None which reads
+        Number of columns before line breaking (default to None which reads
         the terminal width), useful when using SymPy without terminal.
 
     use_unicode : bool or None, optional (default=None)
-        use unicode characters, such as the Greek letter pi instead of
+        Use unicode characters, such as the Greek letter pi instead of
         the string pi.
 
     full_prec : bool or string, optional (default="auto")
-        use full precision.
+        Use full precision.
 
     order : bool or string, optional (default=None)
-        set to 'none' for long expressions if slow; default is None
+        Set to 'none' for long expressions if slow; default is None.
 
     use_unicode_sqrt_char : bool, optional (default=True)
-        use compact single-character square root symbol (when unambiguous);
+        Use compact single-character square root symbol (when unambiguous).
 
     """
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
