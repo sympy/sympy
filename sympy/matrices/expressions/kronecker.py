@@ -41,7 +41,7 @@ def kronecker_product(*matrices):
     >>> kronecker_product(A)
     A
     >>> kronecker_product(A, B)
-    AxB
+    KroneckerProduct(A, B)
     >>> kronecker_product(A, B)[0, 1]
     A[0, 0]*B[0, 1]
     >>> kronecker_product(A, B).as_explicit()
@@ -370,11 +370,11 @@ def combine_kronecker(expr):
     >>> A = MatrixSymbol('A', m, n)
     >>> B = MatrixSymbol('B', n, m)
     >>> combine_kronecker(KroneckerProduct(A, B)*KroneckerProduct(B, A))
-    (A*B)x(B*A)
+    KroneckerProduct(A*B, B*A)
     >>> combine_kronecker(KroneckerProduct(A, B)+KroneckerProduct(B.T, A.T))
-    (A + B.T)x(B + A.T)
+    KroneckerProduct(A + B.T, B + A.T)
     >>> combine_kronecker(KroneckerProduct(A, B)**m)
-    A**mxB**m
+    KroneckerProduct(A**m, B**m)
     """
     def haskron(expr):
         return isinstance(expr, MatrixExpr) and expr.has(KroneckerProduct)
