@@ -1,3 +1,4 @@
+import warnings
 from sympy.core.compatibility import range
 from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
@@ -10,6 +11,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     correlation, moment, cmoment, smoment, characteristic_function)
 from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises, slow
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.abc import p, x, i
 
 oo = S.Infinity
@@ -97,10 +99,12 @@ def test_dice():
 
 
 def test_given():
-    X = Die('X', 6)
-    assert density(X, X > 5) == {S(6): S(1)}
-    assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
-    assert sample(X, X > 5) == 6
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        X = Die('X', 6)
+        assert density(X, X > 5) == {S(6): S(1)}
+        assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
+        assert sample(X, X > 5) == 6
 
 
 def test_domains():
