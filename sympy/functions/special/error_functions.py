@@ -181,7 +181,16 @@ class erf(Function):
         return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     def _eval_rewrite_as_tractable(self, z):
-        return S.One - _erfs(z)*exp(-z**2)
+        from sympy.series.limits import limit
+        if len(z.free_symbols) == 1:
+            sym = next(iter(z.free_symbols))
+            L = limit(z, sym, S.Infinity)
+            if L is S.Infinity:
+                return S.One - _erfs(z)*exp(-z**2)
+            elif L is S.NegativeInfinity:
+                return S.NegativeOne + _erfs(-z)*exp(-z**2)
+        else: # fall back on old behavior for compatibility
+            return S.One - _erfs(z)*exp(-z**2)
 
     def _eval_rewrite_as_erfc(self, z):
         return S.One - erfc(z)

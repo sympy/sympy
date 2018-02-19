@@ -64,6 +64,11 @@ def test_erf():
     assert limit((1 - erf(z))*exp(z**2)*z, z, oo) == 1/sqrt(pi)
     assert limit((1 - erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
     assert limit(((1 - erf(x))*exp(x**2)*sqrt(pi)*x - 1)*2*x**2, x, oo) == -1
+    assert limit(erf(x), x, oo) == 1
+    assert limit(erf(sqrt(x) - x), x, oo) == -1
+    assert limit(erf(x), x, -oo) == -1
+    assert limit(erf(x)/x, x, 0) == 2/sqrt(pi)
+    assert limit(x**(-4) - sqrt(pi)*erf(x**2) / (2*x**6), x, 0) == S(1)/3
 
     assert erf(x).as_real_imag() == \
         ((erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
