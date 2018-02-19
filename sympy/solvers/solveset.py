@@ -34,7 +34,9 @@ from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-
+from sympy.core.mod import Mod
+from sympy.ntheory.residue_ntheory import discrete_log
+from sympy import invert
 from types import GeneratorType
 
 
@@ -267,6 +269,63 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.args[0], exp_invs, symbol)
+
+    return (f, g_ys)
+
+
+def invert_modular(f_x, y, m, x, domain=S.Integers):
+    """Inverts a modular equation"""
+    x = sympify(x)
+    if not x.is_Symbol:
+        raise ValueError("x must be a symbol")
+    f_x = sympify(f_x)
+    if not f_x.has(x):
+        raise ValueError("Inverse of constant function doesn't exist")
+    y = sympify(y)
+    if y.has(x):
+        raise ValueError("y should be independent of x ")
+
+    if domain.is_subset(S.Integers):
+        x1, s = _invert_modular(f_x, FiniteSet(y), m, x)
+
+    return x1, s.intersection(domain)
+
+
+def _invert_modular(f, g_ys, m, symbol):
+    """Helper function for invert_modular()."""
+
+    if f == symbol:
+        return (f, g_ys)
+
+    n = Dummy('n', real=True)
+
+    if f.is_Add:
+        # f = g + h
+        g, h = f.as_independent(symbol)
+        if g is not S.Zero:
+            return _invert_modular(h, imageset(Lambda(n, Mod(n - g, m)), g_ys), m, symbol)
+
+    if f.is_Mul:
+        # f = g*h
+        g, h = f.as_independent(symbol)
+        if g is not S.One:
+            return _invert_modular(h, imageset(Lambda(n, Mod(n*invert(g, m), m)), g_ys), m, symbol)
+
+    if f.is_Pow:
+        base, expo = f.args
+        base_has_sym = base.has(symbol)
+        expo_has_sym = expo.has(symbol)
+
+        if not expo_has_sym :
+            if expo.is_rational:
+                numer, denom = expo.as_numer_denom()
+                if numer is S.One:
+                    res = imageset(Lambda(n, Mod(pow(n, denom , m), m)), g_ys)
+                    _inv, _set = _invert_modular(base, res, m, symbol)
+                    return (_inv, _set)
+        if not base_has_sym:
+            return _invert_modular(expo,
+                imageset(Lambda(n, Mod(discrete_log(m, g_ys.args[0], base), m)), g_ys), m, symbol)
 
     return (f, g_ys)
 
@@ -761,11 +820,33 @@ def _solveset(f, symbol, domain, _check=False):
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
-    if domain.is_subset(S.Reals):
-        inverter_func = invert_real
-    else:
-        inverter_func = invert_complex
-    inverter = lambda f, rhs, symbol: inverter_func(f, rhs, symbol, domain)
+
+    # check for Modular equations
+    is_mod = S.false
+    if f.has(Mod):
+        # in case symbol is not defined as integer
+        assumption = symbol.assumptions0
+        assumption['integer'] = True
+        t = Dummy('t', **assumption)
+        f = f.xreplace({symbol: t})
+
+        rep_eq = list(f.atoms(Mod))
+        if all([i.is_integer for i in rep_eq[0].args]):
+            is_mod = S.true
+            rep_eq = rep_eq[0]
+            m = rep_eq.args[1]
+            f = f.replace(rep_eq, rep_eq.args[0])
+            symbol = t
+            inverter = lambda f, rhs, mod, symbol: invert_modular(f, rhs, m, symbol, domain)
+        else:
+            f = f.xreplace({t: symbol})
+
+    if is_mod == S.false:
+        if domain.is_subset(S.Reals):
+            inverter_func = invert_real
+        else:
+            inverter_func = invert_complex
+        inverter = lambda f, rhs, symbol: inverter_func(f, rhs, symbol, domain)
 
     result = EmptySet()
 
@@ -800,7 +881,10 @@ def _solveset(f, symbol, domain, _check=False):
             solns = solver(expr, symbol, in_set)
             result += solns
     else:
-        lhs, rhs_s = inverter(f, 0, symbol)
+        try:
+            lhs, rhs_s = inverter(f, 0, symbol)
+        except TypeError:
+            lhs, rhs_s = inverter(f, 0, m, symbol)
         if lhs == symbol:
             # do some very minimal simplification since
             # repeated inversion may have left the result
