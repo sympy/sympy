@@ -529,9 +529,8 @@ class log(Function):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
-            elif arg.is_Rational:
-                if arg.q != 1:
-                    return cls(arg.p) - cls(arg.q)
+            elif arg.is_Rational and arg.p == 1:
+                return -cls(arg.q)
 
         if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
@@ -604,6 +603,8 @@ class log(Function):
             p = perfect_power(int(arg))
             if p is not False:
                 return p[1]*self.func(p[0])
+        elif arg.is_Rational:
+            return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
             expr = []
             nonpos = []
