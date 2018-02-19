@@ -120,6 +120,7 @@ if not USE_PYTEST:
                 code()
             except expectedException as message:
                 message = str(message)
+                err_msg = re.compile(err_msg, re.IGNORECASE)
                 found = err_msg.search(message)
                 if found:
                     return
