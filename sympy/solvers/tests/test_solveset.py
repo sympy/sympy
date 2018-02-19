@@ -268,6 +268,9 @@ def test_garbage_input():
     raises(ValueError, lambda: solveset_complex([x], x))
     assert solveset_complex(x, pi) == S.EmptySet
 
+def test_improper_params():
+    raises(ValueError, lambda: solveset(x + 1, S.Reals))
+    raises(ValueError, lambda: solveset(x + 1, x, 2))
 
 def test_solve_mul():
     assert solveset_real((a*x + b)*(exp(x) - 3), x) == \

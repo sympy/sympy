@@ -26,6 +26,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
 from sympy.functions.elementary.miscellaneous import real_root, Application
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement)
+from sympy.sets.sets import Set
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -1010,7 +1011,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if not isinstance(f, (Expr, Number)):
         raise ValueError("%s is not a valid SymPy expression" % (f))
-    
+
     if not isinstance(symbol, Expr) and  symbol is not None:
         raise ValueError("%s is not a valid Sympy symbol" %(symbol))
 
