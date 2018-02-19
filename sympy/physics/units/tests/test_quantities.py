@@ -211,6 +211,10 @@ def test_eval_simplify():
     assert ((cm/mm).simplify()) == 10
     assert ((km/m).simplify()) == 1000
     assert ((km/cm).simplify()) == 100000
+    
+    x = Quantity("x7", time, None, abbrev="xyl")
+    raises(AttributeError, lambda: (q/cm).simplify())
+    raises(AttributeError, lambda: (km/q).simplify())
 
 
 def test_issue_quart():
