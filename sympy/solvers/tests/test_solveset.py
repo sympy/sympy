@@ -166,6 +166,19 @@ def test_invert_complex():
     assert invert_complex(sinh(x), 0, x) != (x, FiniteSet(0))
 
 
+def test_invert_modular():
+    # issue #13178
+    n = symbols('n', integer=True)
+    a = 742938285
+    z = 1898888478
+    m = 2**31 - 1
+    x = 20170816
+    f = x - Mod(a**n*z, m)
+    assert solveset(f, n, S.Integers) == FiniteSet(100)
+    x = symbols('x')
+    assert solveset(2 - Mod(4*x, 5), x, S.Integers) == FiniteSet(3)
+
+
 def test_domain_check():
     assert domain_check(1/(1 + (1/(x+1))**2), x, -1) is False
     assert domain_check(x**2, x, 0) is True

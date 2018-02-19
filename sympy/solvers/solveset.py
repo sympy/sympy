@@ -46,7 +46,9 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-
+from sympy.core.mod import Mod
+from sympy.ntheory.residue_ntheory import discrete_log
+from sympy import invert
 from types import GeneratorType
 from collections import defaultdict
 
@@ -324,53 +326,61 @@ def _invert_complex(f, g_ys, symbol):
     return (f, g_ys)
 
 
-def _invert_abs(f, g_ys, symbol):
-    """Helper function for inverting absolute value functions.
+def invert_modular(f_x, y, m, x, domain=S.Integers):
+    """Inverts a modular equation"""
+    x = sympify(x)
+    if not x.is_Symbol:
+        raise ValueError("x must be a symbol")
+    f_x = sympify(f_x)
+    if not f_x.has(x):
+        raise ValueError("Inverse of constant function doesn't exist")
+    y = sympify(y)
+    if y.has(x):
+        raise ValueError("y should be independent of x ")
 
-    Returns the complete result of inverting an absolute value
-    function along with the conditions which must also be satisfied.
+    if domain.is_subset(S.Integers):
+        x1, s = _invert_modular(f_x, FiniteSet(y), m, x)
 
-    If it is certain that all these conditions are met, a `FiniteSet`
-    of all possible solutions is returned. If any condition cannot be
-    satisfied, an `EmptySet` is returned. Otherwise, a `ConditionSet`
-    of the solutions, with all the required conditions specified, is
-    returned.
+    return x1, s.intersection(domain)
 
-    """
-    if not g_ys.is_FiniteSet:
-        # this could be used for FiniteSet, but the
-        # results are more compact if they aren't, e.g.
-        # ConditionSet(x, Contains(n, Interval(0, oo)), {-n, n}) vs
-        # Union(Intersection(Interval(0, oo), {n}), Intersection(Interval(-oo, 0), {-n}))
-        # for the solution of abs(x) - n
-        pos = Intersection(g_ys, Interval(0, S.Infinity))
-        parg = _invert_real(f, pos, symbol)
-        narg = _invert_real(-f, pos, symbol)
-        if parg[0] != narg[0]:
-            raise NotImplementedError
-        return parg[0], Union(narg[1], parg[1])
 
-    # check conditions: all these must be true. If any are unknown
-    # then return them as conditions which must be satisfied
-    unknown = []
-    for a in g_ys.args:
-        ok = a.is_nonnegative if a.is_Number else a.is_positive
-        if ok is None:
-            unknown.append(a)
-        elif not ok:
-            return symbol, S.EmptySet
-    if unknown:
-        conditions = And(*[Contains(i, Interval(0, oo))
-            for i in unknown])
-    else:
-        conditions = True
+def _invert_modular(f, g_ys, m, symbol):
+    """Helper function for invert_modular()."""
+
+    if f == symbol:
+        return (f, g_ys)
+
     n = Dummy('n', real=True)
-    # this is slightly different than above: instead of solving
-    # +/-f on positive values, here we solve for f on +/- g_ys
-    g_x, values = _invert_real(f, Union(
-        imageset(Lambda(n, n), g_ys),
-        imageset(Lambda(n, -n), g_ys)), symbol)
-    return g_x, ConditionSet(g_x, conditions, values)
+
+    if f.is_Add:
+        # f = g + h
+        g, h = f.as_independent(symbol)
+        if g is not S.Zero:
+            return _invert_modular(h, imageset(Lambda(n, Mod(n - g, m)), g_ys), m, symbol)
+
+    if f.is_Mul:
+        # f = g*h
+        g, h = f.as_independent(symbol)
+        if g is not S.One:
+            return _invert_modular(h, imageset(Lambda(n, Mod(n*invert(g, m), m)), g_ys), m, symbol)
+
+    if f.is_Pow:
+        base, expo = f.args
+        base_has_sym = base.has(symbol)
+        expo_has_sym = expo.has(symbol)
+
+        if not expo_has_sym :
+            if expo.is_rational:
+                numer, denom = expo.as_numer_denom()
+                if numer is S.One:
+                    res = imageset(Lambda(n, Mod(pow(n, denom , m), m)), g_ys)
+                    _inv, _set = _invert_modular(base, res, m, symbol)
+                    return (_inv, _set)
+        if not base_has_sym:
+            return _invert_modular(expo,
+                imageset(Lambda(n, Mod(discrete_log(m, g_ys.args[0], base), m)), g_ys), m, symbol)
+
+    return (f, g_ys)
 
 
 def domain_check(f, symbol, p):
@@ -881,7 +891,33 @@ def _solveset(f, symbol, domain, _check=False):
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
-    inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
+
+    # check for Modular equations
+    is_mod = S.false
+    if f.has(Mod):
+        # in case symbol is not defined as integer
+        assumption = symbol.assumptions0
+        assumption['integer'] = True
+        t = Dummy('t', **assumption)
+        f = f.xreplace({symbol: t})
+
+        rep_eq = list(f.atoms(Mod))
+        if all([i.is_integer for i in rep_eq[0].args]):
+            is_mod = S.true
+            rep_eq = rep_eq[0]
+            m = rep_eq.args[1]
+            f = f.replace(rep_eq, rep_eq.args[0])
+            symbol = t
+            inverter = lambda f, rhs, mod, symbol: invert_modular(f, rhs, m, symbol, domain)
+        else:
+            f = f.xreplace({t: symbol})
+
+    if is_mod == S.false:
+        if domain.is_subset(S.Reals):
+            inverter_func = invert_real
+        else:
+            inverter_func = invert_complex
+        inverter = lambda f, rhs, symbol: inverter_func(f, rhs, symbol, domain)
 
     result = EmptySet()
 
@@ -928,7 +964,10 @@ def _solveset(f, symbol, domain, _check=False):
             result = ConditionSet(symbol, f, domain)
         return result
     else:
-        lhs, rhs_s = inverter(f, 0, symbol)
+        try:
+            lhs, rhs_s = inverter(f, 0, symbol)
+        except TypeError:
+            lhs, rhs_s = inverter(f, 0, m, symbol)
         if lhs == symbol:
             # do some very minimal simplification since
             # repeated inversion may have left the result
