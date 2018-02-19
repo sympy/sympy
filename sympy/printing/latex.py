@@ -2109,7 +2109,7 @@ class LatexPrinter(Printer):
     def _print_Quantity(self, expr):
         if expr.name.name == 'degree':
             return r"^\circ"
-        return r"%s" % expr
+        return r"\detokenize {%s}" % expr
 
 def translate(s):
     r'''
