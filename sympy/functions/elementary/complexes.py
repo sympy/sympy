@@ -480,6 +480,8 @@ class Abs(Function):
                 if base.is_negative:
                     return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
                 return
+            elif not base.has(Symbol) and exponent.is_real:
+                return Abs(base)**exponent
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):

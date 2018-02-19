@@ -387,7 +387,11 @@ def test_Abs():
 
     x = Symbol('x', real=True)
     n = Symbol('n', integer=True)
+    z = Symbol('z')
     assert Abs((-1)**n) == 1
+    assert Abs(I**n) == 1  # issue 14260
+    assert Abs((3 + 4*I)**x) == 5**x
+    assert Abs(I**z).has(Abs)
     assert x**(2*n) == Abs(x)**(2*n)
     assert Abs(x).diff(x) == sign(x)
     assert abs(x) == Abs(x)  # Python built-in
