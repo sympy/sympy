@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import warnings
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta)
@@ -8,6 +9,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, variance, cov
 from sympy.stats.rv import (ProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import range
 from sympy.abc import x
 
@@ -109,28 +111,31 @@ def test_E():
 
 
 def test_Sample():
-    X = Die('X', 6)
-    Y = Normal('Y', 0, 1)
-    z = Symbol('z')
+    #issue-14261
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        X = Die('X', 6)
+        Y = Normal('Y', 0, 1)
+        z = Symbol('z')
 
-    assert sample(X) in [1, 2, 3, 4, 5, 6]
-    assert sample(X + Y).is_Float
+        assert sample(X) in [1, 2, 3, 4, 5, 6]
+        assert sample(X + Y).is_Float
 
-    P(X + Y > 0, Y < 0, numsamples=10).is_number
-    assert E(X + Y, numsamples=10).is_number
-    assert variance(X + Y, numsamples=10).is_number
+        P(X + Y > 0, Y < 0, numsamples=10).is_number
+        assert E(X + Y, numsamples=10).is_number
+        assert variance(X + Y, numsamples=10).is_number
 
-    raises(ValueError, lambda: P(Y > z, numsamples=5))
+        raises(ValueError, lambda: P(Y > z, numsamples=5))
 
-    assert P(sin(Y) <= 1, numsamples=10) == 1
-    assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
+        assert P(sin(Y) <= 1, numsamples=10) == 1
+        assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
 
-    # Make sure this doesn't raise an error
-    E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
+        # Make sure this doesn't raise an error
+        E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
 
 
-    assert all(i in range(1, 7) for i in density(X, numsamples=10))
-    assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+        assert all(i in range(1, 7) for i in density(X, numsamples=10))
+        assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
 
 
 def test_given():
