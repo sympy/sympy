@@ -862,7 +862,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             delim = u' \N{N-ARY CIRCLED TIMES OPERATOR} '
         else:
-            delim = 'x'
+            delim = ' x '
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 
