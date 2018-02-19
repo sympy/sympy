@@ -180,7 +180,7 @@ def test_lerchphi_expansion():
                     2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, (a + 1)/2))
     assert myexpand(lerchphi(I, s, a), None)
     assert myexpand(lerchphi(-I, s, a), None)
-    assert myexpand(lerchphi(exp(2*I*pi/5), s, a), None) == exp(2*I*pi/5, evaluate=False)
+    assert myexpand(lerchphi(exp(2*I*pi/5, evaluate=False), s, a), None) == True
 
 
 def test_stieltjes():
