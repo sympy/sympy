@@ -819,7 +819,20 @@ class PrettyPrinter(Printer):
         return self._print(B.blocks)
 
     def _print_MatAdd(self, expr):
-        return self._print_seq(expr.args, None, None, ' + ')
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                if S(item.args[0]).is_negative:
+                    s = prettyForm(*stringPict.next(s, ' '))
+                    pform = self._print(item)
+                else:
+                    s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+
+        return s
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
