@@ -2273,35 +2273,42 @@ def pretty(expr, **settings):
         pretty_use_unicode(uflag)
 
 
-def pretty_print(expr, **settings):
+def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
+                 full_prec="auto", order=None, use_unicode_sqrt_char=True):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
-
 
     Parameters
     ==========
 
     expr : expression
-        the expression to print
-    wrap_line : bool, optional
-        line wrapping enabled/disabled, defaults to True
-    num_columns : int or None, optional
-        number of columns before line breaking (default to None which reads
+        The expression to print.
+
+    wrap_line : bool, optional (default=True)
+        Line wrapping enabled/disabled.
+
+    num_columns : int or None, optional (default=None)
+        Number of columns before line breaking (default to None which reads
         the terminal width), useful when using SymPy without terminal.
-    use_unicode : bool or None, optional
-        use unicode characters, such as the Greek letter pi instead of
+
+    use_unicode : bool or None, optional (default=None)
+        Use unicode characters, such as the Greek letter pi instead of
         the string pi.
-    full_prec : bool or string, optional
-        use full precision. Default to "auto"
-    order : bool or string, optional
-        set to 'none' for long expressions if slow; default is None
-    use_unicode_sqrt_char : bool, optional
-        use compact single-character square root symbol (when unambiguous);
-        default is True.
+
+    full_prec : bool or string, optional (default="auto")
+        Use full precision.
+
+    order : bool or string, optional (default=None)
+        Set to 'none' for long expressions if slow; default is None.
+
+    use_unicode_sqrt_char : bool, optional (default=True)
+        Use compact single-character square root symbol (when unambiguous).
 
     """
-    print(pretty(expr, **settings))
+    print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
+                 use_unicode=use_unicode, full_prec=full_prec, order=order,
+                 use_unicode_sqrt_char=use_unicode_sqrt_char))
 
 pprint = pretty_print
 
