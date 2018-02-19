@@ -47,7 +47,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
                 inf = 2**count
                 count += 1
             else:
-                prev_inf, inf = 2**(count - 1), 2**count
+                prev_inf, inf = 2**(count - 2), 2**(count - 1)
                 return search(prev_inf, inf, u)
 
 
