@@ -1480,13 +1480,18 @@ class PrettyPrinter(Printer):
         return prettyForm.__add__(*pforms)
 
     def _print_Mul(self, product):
+        from sympy.physics.units import Quantity
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
         if self.order not in ('old', 'none'):
             args = product.as_ordered_factors()
         else:
-            args = product.args
+            args = list(product.args)
+
+        # If quantities are present append them at the back
+        args = sorted(args, key=lambda x: isinstance(x, Quantity) or
+                     (isinstance(x, Pow) and isinstance(x.base, Quantity)))
 
         # Gather terms for numerator/denominator
         for item in args:
@@ -2253,6 +2258,13 @@ class PrettyPrinter(Printer):
         else:
             pform = prettyForm(*pform.left('Omega'))
         return pform
+
+    def _print_Quantity(self, e):
+        if e.name.name == 'degree':
+            pform = self._print(u"\N{DEGREE SIGN}")
+            return pform
+        else:
+            return self.emptyPrinter(e)
 
 
 def pretty(expr, **settings):
