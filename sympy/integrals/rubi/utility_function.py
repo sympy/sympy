@@ -6742,6 +6742,10 @@ def PureFunctionOfCothQ(u, v, x):
         return CothQ(u)
     return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
 
+def LogIntegral(z):
+    tx = symbols('tx')
+    return Integral(1/log(tx),(tx, 0, z))
+
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
     SimplifyAntiderivative_replacer = _SimplifyAntiderivative()
