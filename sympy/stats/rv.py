@@ -13,6 +13,7 @@ sympy.stats.rv_interface
 """
 
 from __future__ import print_function, division
+import warnings
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, DiracDelta, sympify)
@@ -21,6 +22,7 @@ from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
 from sympy.solvers.solveset import solveset
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.abc import x
 
 
@@ -562,6 +564,12 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     5
     """
 
+    if numsamples is not None:
+            SymPyDeprecationWarning(
+                            feature="numsamples parameter no longer needed",
+                            issue=14261,
+                            deprecated_since_version="1.2").warn()
+
     if not random_symbols(expr):  # expr isn't random?
         return expr
     if numsamples:  # Computing by monte carlo sampling?
@@ -619,6 +627,12 @@ def probability(condition, given_condition=None, numsamples=None,
 
     condition = sympify(condition)
     given_condition = sympify(given_condition)
+
+    if numsamples is not None:
+            SymPyDeprecationWarning(
+                            feature="numsamples parameter no longer needed",
+                            issue=14261,
+                            deprecated_since_version="1.2").warn()
 
     if given_condition is not None and \
             not isinstance(given_condition, (Relational, Boolean)):
@@ -715,6 +729,12 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     >>> density(X)(x)
     sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
     """
+
+    if numsamples is not None:
+            SymPyDeprecationWarning(
+                            feature="numsamples parameter no longer needed",
+                            issue=14261,
+                            deprecated_since_version="1.2").warn()
 
     if numsamples:
         return sampling_density(expr, condition, numsamples=numsamples,
@@ -842,6 +862,13 @@ def sample(expr, condition=None, **kwargs):
 
     >>> die_roll = sample(X + Y + Z) # A random realization of three dice
     """
+
+    if condition is not None:
+            SymPyDeprecationWarning(
+                            feature="sample method no longer needed",
+                            issue=14261,
+                            deprecated_since_version="1.2").warn()
+
     return next(sample_iter(expr, condition, numsamples=1))
 
 
@@ -872,6 +899,13 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     sample_iter_subs
     """
     # lambdify is much faster but not as robust
+
+    if condition is not None and numsamples is not S.Infinity:
+            SymPyDeprecationWarning(
+                            feature="sample_iter method no longer needed",
+                            issue=14261,
+                            deprecated_since_version="1.2").warn()
+
     try:
         return sample_iter_lambdify(expr, condition, numsamples, **kwargs)
     # use subs when lambdify fails
