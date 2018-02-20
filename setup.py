@@ -140,6 +140,7 @@ modules = [
     'sympy.series',
     'sympy.series.benchmarks',
     'sympy.sets',
+    'sympy.sets.handlers',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.solvers.benchmarks',

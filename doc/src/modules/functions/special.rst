@@ -4,13 +4,11 @@ Special
 DiracDelta
 ----------
 .. autoclass:: sympy.functions.special.delta_functions.DiracDelta
-
    :members:
 
 Heaviside
 ---------
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
-
    :members:
 
 Singularity Function
@@ -18,7 +16,6 @@ Singularity Function
 .. module:: sympy.functions.special.singularity_functions
 
 .. autoclass:: sympy.functions.special.singularity_functions.SingularityFunction
-
    :members:
 
 Gamma, Beta and related Functions
@@ -26,25 +23,19 @@ Gamma, Beta and related Functions
 .. module:: sympy.functions.special.gamma_functions
 
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
-
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
-
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
-
    :members:
 .. autofunction:: sympy.functions.special.gamma_functions.digamma
 .. autofunction:: sympy.functions.special.gamma_functions.trigamma
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
-
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
-
    :members:
 .. module:: sympy.functions.special.beta_functions
 .. autoclass:: sympy.functions.special.beta_functions.beta
-
    :members:
 
 Error Functions and Fresnel Integrals
@@ -60,7 +51,6 @@ Error Functions and Fresnel Integrals
 .. autoclass:: sympy.functions.special.error_functions.erf2inv
 
 .. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
-
    :members:
 
 .. autoclass:: fresnels
@@ -85,7 +75,6 @@ Bessel Type Functions
 .. module:: sympy.functions.special.bessel
 
 .. autoclass:: sympy.functions.special.bessel.BesselBase
-
    :members:
 
 .. autoclass:: sympy.functions.special.bessel.besselj
@@ -104,7 +93,6 @@ Airy Functions
 --------------
 
 .. autoclass:: sympy.functions.special.bessel.AiryBase
-
    :members:
 
 .. autoclass:: sympy.functions.special.bessel.airyai
@@ -131,11 +119,9 @@ Riemann Zeta and Related Functions
 Hypergeometric Functions
 ------------------------
 .. autoclass:: sympy.functions.special.hyper.hyper
-
    :members:
 
 .. autoclass:: sympy.functions.special.hyper.meijerg
-
    :members:
 
 Elliptic integrals
@@ -152,7 +138,6 @@ Mathieu Functions
 .. module:: sympy.functions.special.mathieu_functions
 
 .. autoclass:: sympy.functions.special.mathieu_functions.MathieuBase
-
    :members:
 
 .. autoclass:: sympy.functions.special.mathieu_functions.mathieus
@@ -169,7 +154,6 @@ Jacobi Polynomials
 ++++++++++++++++++
 
 .. autoclass:: sympy.functions.special.polynomials.jacobi
-
    :members:
 
 .. autofunction:: sympy.functions.special.polynomials.jacobi_normalized
@@ -178,54 +162,44 @@ Gegenbauer Polynomials
 ++++++++++++++++++++++
 
 .. autoclass:: sympy.functions.special.polynomials.gegenbauer
-
    :members:
 
 Chebyshev Polynomials
 +++++++++++++++++++++
 
 .. autoclass:: sympy.functions.special.polynomials.chebyshevt
-
    :members:
 
 .. autoclass:: sympy.functions.special.polynomials.chebyshevu
-
    :members:
 
 .. autoclass:: sympy.functions.special.polynomials.chebyshevt_root
-
    :members:
 
 .. autoclass:: sympy.functions.special.polynomials.chebyshevu_root
-
    :members:
 
 Legendre Polynomials
 ++++++++++++++++++++
 
 .. autoclass:: sympy.functions.special.polynomials.legendre
-
    :members:
 
 .. autoclass:: sympy.functions.special.polynomials.assoc_legendre
-
    :members:
 
 Hermite Polynomials
 +++++++++++++++++++
 
 .. autoclass:: sympy.functions.special.polynomials.hermite
-
    :members:
 
 Laguerre Polynomials
 ++++++++++++++++++++
 
 .. autoclass:: sympy.functions.special.polynomials.laguerre
-
    :members:
 .. autoclass:: sympy.functions.special.polynomials.assoc_laguerre
-
    :members:
 
 Spherical Harmonics
@@ -245,9 +219,7 @@ Tensor Functions
 .. autofunction:: sympy.functions.special.tensor_functions.eval_levicivita
 
 .. autoclass:: sympy.functions.special.tensor_functions.LeviCivita
-
    :members:
 
 .. autoclass:: sympy.functions.special.tensor_functions.KroneckerDelta
-
    :members:

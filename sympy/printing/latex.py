@@ -134,6 +134,7 @@ class LatexPrinter(Printer):
         "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
+        "ln_notation": False,
     }
 
     def __init__(self, settings=None):
@@ -387,6 +388,7 @@ class LatexPrinter(Printer):
 
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
+        from sympy.physics.units import Quantity
         include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
@@ -411,7 +413,11 @@ class LatexPrinter(Printer):
                 if self.order not in ('old', 'none'):
                     args = expr.as_ordered_factors()
                 else:
-                    args = expr.args
+                    args = list(expr.args)
+
+                # If quantities are present append them at the back
+                args = sorted(args, key=lambda x: isinstance(x, Quantity) or
+                             (isinstance(x, Pow) and isinstance(x.base, Quantity)))
 
                 for i, term in enumerate(args):
                     term_tex = self._print(term)
@@ -840,6 +846,17 @@ class LatexPrinter(Printer):
 
     def _print_ceiling(self, expr, exp=None):
         tex = r"\lceil{%s}\rceil" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_log(self, expr, exp=None):
+        if not self._settings["ln_notation"]:
+            tex = r"\log{\left (%s \right )}" % self._print(expr.args[0])
+        else:
+            tex = r"\ln{\left (%s \right )}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -2104,6 +2121,10 @@ class LatexPrinter(Printer):
                     self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
+    def _print_Quantity(self, expr):
+        if expr.name.name == 'degree':
+            return r"^\circ"
+        return r"%s" % expr
 
 def translate(s):
     r'''
@@ -2138,7 +2159,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational
+    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
     >>> from sympy.abc import x, y, mu, r, tau
 
     >>> print(latex((2*tau)**Rational(7,2)))
@@ -2256,6 +2277,14 @@ def latex(expr, **settings):
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left [ 2 / x, \quad y\right ]$
+
+    ln_notation: If set to ``True`` "\ln" is used instead of default "\log"
+
+    >>> print(latex(log(10)))
+    \log{\left (10 \right )}
+
+    >>> print(latex(log(10), ln_notation=True))
+    \ln{\left (10 \right )}
 
     """
 

@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
 
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff)
@@ -832,3 +832,21 @@ def test_issue_13324():
     X = Uniform('X', 0, 1)
     assert E(X, X > Rational(1, 2)) == Rational(3, 4)
     assert E(X, X > 0) == Rational(1, 2)
+
+def test_FiniteSet_prob():
+    x = symbols('x')
+    E = Exponential('E', 3)
+    N = Normal('N', 5, 7)
+    assert P(Eq(E, 1)) is S.Zero
+    assert P(Eq(N, 2)) is S.Zero
+    assert P(Eq(N, x)) is S.Zero
+
+def test_prob_neq():
+    E = Exponential('E', 4)
+    X = ChiSquared('X', 4)
+    x = symbols('x')
+    assert P(Ne(E, 2)) == 1
+    assert P(Ne(X, 4)) == 1
+    assert P(Ne(X, 4)) == 1
+    assert P(Ne(X, 5)) == 1
+    assert P(Ne(E, x)) == 1

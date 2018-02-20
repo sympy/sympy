@@ -4,8 +4,10 @@ from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
         ProductSet)
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.sets.dispatchers import (add_sets, sub_sets, mul_sets, div_sets,
-        pow_sets, function_sets)
+from sympy.sets.handlers.add import add_sets, sub_sets
+from sympy.sets.handlers.mul import mul_sets, div_sets
+from sympy.sets.handlers.power import pow_sets
+from sympy.sets.handlers.functions import function_sets
 
 
 d = Dummy('d')
@@ -123,7 +125,5 @@ def apply_operation(op, x, y):
     if isinstance(y, SetExpr):
         y = y.set
     out = dispatch_on_operation(x, y, op)
-    if not isinstance(out, Set):
-        import pdb; pdb.set_trace()
     assert isinstance(out, Set)
     return SetExpr(out)

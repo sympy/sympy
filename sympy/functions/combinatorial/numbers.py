@@ -622,9 +622,10 @@ class harmonic(Function):
             else:
                 return cls
 
+        if n == 0:
+            return S.Zero
+
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
-            if n == 0:
-                return S.Zero
             if not m in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
