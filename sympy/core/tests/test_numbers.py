@@ -582,6 +582,14 @@ def test_Float_issue_2107():
     assert S.Zero + b + (-b) == 0
 
 
+def test_issue_14289():
+    from sympy.polys.numberfields import to_number_field
+
+    a = 1 - sqrt(2)
+    b = to_number_field(a)
+    assert b.args[0] == a
+
+
 def test_Float_from_tuple():
     a = Float((0, '1L', 0, 1))
     b = Float((0, '1', 0, 1))
