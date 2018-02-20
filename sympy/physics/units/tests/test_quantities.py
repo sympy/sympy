@@ -208,6 +208,8 @@ def test_units():
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
     
 def test_eval_simplify():
+    from sympy.physics.units import cm, mm, km, m
+    from sympy.simplify.simplify import simplify
     assert ((cm/mm).simplify()) == 10
     assert ((km/m).simplify()) == 1000
     assert ((km/cm).simplify()) == 100000
