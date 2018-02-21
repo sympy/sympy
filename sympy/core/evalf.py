@@ -345,7 +345,7 @@ def get_integer_part(expr, no, options, return_ints=False):
         nint = int(to_int(nexpr, rnd))
         if is_int:
             # make sure that we had enough precision to distinguish
-            # bewteen nint and the re or im part (re_im) of expr that
+            # between nint and the re or im part (re_im) of expr that
             # was passed to calc_part
             ire, iim, ire_acc, iim_acc = evalf(
                 re_im - nint, 10, options)  # don't need much precision
