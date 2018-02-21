@@ -409,13 +409,13 @@ class Pow(Expr):
             if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
                 b, e, m = int(self.base), int(self.exp), int(q)
                 # for very large powers
-                if m <= 10**18 and _log(e, 2) > 4*m**(1/4): 
-                    # pollard rho for modulo will not be 
+                if m <= 10**18 and _log(e, 2) > 4*m**(1/4):
+                    # pollard rho for modulo will not be
                     # slower than binary exponentiation
                     
                     from sympy.ntheory import totient
                     phi = totient(m)
-                    return pow(b, phi + e%phi, m) 
+                    return pow(b, phi + e%phi, m)
                 else:
                     return pow(b, e, m)
 
