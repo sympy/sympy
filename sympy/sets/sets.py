@@ -525,10 +525,6 @@ class Set(Basic):
     def _boundary(self):
         raise NotImplementedError()
 
-    def _eval_imageset(self, f):
-        from sympy.sets.setexpr import SetExpr
-        return SetExpr(self)._eval_func(f).set
-
     @property
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
@@ -1772,6 +1768,7 @@ def imageset(*args):
     """
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
+    from sympy.sets.setexpr import function_sets
 
     if len(args) < 2:
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
@@ -1809,7 +1806,9 @@ def imageset(*args):
 
     if len(set_list) == 1:
         set = set_list[0]
-        r = set._eval_imageset(f)
+        r = function_sets(f, set)
+        if r is None:
+            r = ImageSet(f, set)
         if isinstance(r, ImageSet):
             f, set = r.args
 
