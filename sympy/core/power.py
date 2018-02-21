@@ -404,15 +404,17 @@ class Pow(Expr):
 
             '''
             For unevaluated Integer power, use built-in pow modular
-            exponentiation.
+            exponentiation, if powers are not too large wrt base.
             '''
             if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
                 b, e, m = int(self.base), int(self.exp), int(q)
-                # for very large powers
-                if m <= 10**18 and _log(e, 2) > 4*m**(1/4):
-                    # pollard rho for modulo will not be
-                    # slower than binary exponentiation
-                    
+                '''
+                For very large powers, use totient reduction.
+                Bound on m, is for safe factorization memory wise ie m^(1/4).
+                For pollard-rho to be faster than built-in pow and for e >= lg(m),
+                lg(e) > 4 m^(1/4) check is added.
+                '''
+                if m.bit_length() <= 80  and _log(e,2) > 4*m**(1/4):
                     from sympy.ntheory import totient
                     phi = totient(m)
                     return pow(b, phi + e%phi, m)
