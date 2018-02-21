@@ -439,9 +439,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         lim_ratio = limit(ratio, sym, upper_limit)
-        if (lim_ratio) > 1:
+        if abs((lim_ratio)) > 1:
             return S.false
-        if (lim_ratio) < 1:
+        if abs((lim_ratio)) < 1:
             return S.true
 
         ### --------- p-series test (1/n**p) ---------- ###
