@@ -2387,10 +2387,6 @@ class AlgebraicNumber(Expr):
             rep = DMP.from_list([1, 0], 0, dom)
             scoeffs = Tuple(1, 0)
 
-            if root.is_negative:
-                rep = -rep
-                scoeffs = Tuple(-1, 0)
-
         sargs = (root, scoeffs)
 
         if alias is not None:
