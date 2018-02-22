@@ -124,6 +124,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_Infinity(self, expr):
         return "float('inf')"
 
+    def _print_sign(self, e):
+        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
+            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
+
     def _print_NegativeInfinity(self, expr):
         return "float('-inf')"
 
