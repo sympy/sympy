@@ -1231,6 +1231,7 @@ class Derivative(Expr):
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
+                old_expr = expr
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
@@ -1248,7 +1249,7 @@ class Derivative(Expr):
                     if evaluate:
                         #TODO: check if assumption of discontinuous derivatives exist
                         variable_count = cls._sort_variable_count(variable_count)
-                    obj = Expr.__new__(cls, expr, *variable_count)
+                    obj = Expr.__new__(cls, old_expr, *variable_count)
                     return obj
 
                 # Evaluate the derivative `n` times.  If
