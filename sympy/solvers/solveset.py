@@ -34,10 +34,40 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+from sympy.utilities.iterables import numbered_symbols
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
+
+
+def _masked(f, *atoms):
+    """Return ``f``, with all objects given by ``atoms`` replaced with
+    Dummy symbols, and the dictionary of replacements whose keys are
+    the atoms that were replaced (with any instance of the atoms that
+    they contain recursively replaced).
+
+    Examples
+    ========
+
+    >>> from sympy import cos
+    >>> from sympy.abc import x
+    >>> from sympy.solvers.solveset import _masked
+
+    >>> _masked(cos(1 + cos(x)), cos)
+    (_a1, [(cos(x), _a0), (cos(_a0 + 1), _a1)])
+    """
+    sym = numbered_symbols('a', cls=Dummy)
+    mask = []
+    for a in ordered(f.atoms(*atoms)):
+        for i in mask:
+            a = a.replace(*i)
+        mask.append((a, next(sym)))
+    for o, n in reversed(mask):
+        f = f.replace(o, n)
+    if mask and f == mask[-1][0]:
+        f = mask[-1][1]
+    return f, mask
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -1014,21 +1044,16 @@ def solveset(f, symbol=None, domain=S.Complexes):
                     ).xreplace({r: symbol})
             except InconsistentAssumptions:
                 pass
-    # Application includes Min/Max atoms;
     # Abs has its own handling method which avoids the
     # rewriting property that the first piece of abs(x)
-    # is for x >=0 and the 2nd piece for x < 0 -- solutions
+    # is for x >= 0 and the 2nd piece for x < 0 -- solutions
     # can look better if the 2nd condition is x <= 0.
-    reps = [(func, func.rewrite(Piecewise)) for func in
-        ordered(f.atoms(Function, Application))
-        if symbol in func.free_symbols and
-        not isinstance(func, Abs)]
-    for i in range(-2, -len(reps) - 1, -1):
-        for j in range(i + 1, 0):
-            reps[j] = Tuple(*reps[j]).replace(*reps[i])
-    for i in reps:
-        f = f.replace(*i)
-
+    f, mask = _masked(f, Abs)
+    f = f.rewrite(Piecewise) # everything that's not in Abs
+    for o, n in reversed(mask):
+        # everything *in* abs
+        o = o.func(o.args[0].rewrite(Piecewise))
+        f = f.xreplace({n: o})
     f = piecewise_fold(f)
 
     return _solveset(f, symbol, domain, _check=True)
