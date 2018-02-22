@@ -1103,7 +1103,7 @@ def besselsimp(expr):
         def tofunc(nu, z):
             c, s = cos(S.Pi*nu), sin(S.Pi*nu)
             if not isinstance(c, cos) and not isinstance(s, sin):
-                return (c + S.ImaginaryUnit)*fro(nu, exp_polar(-I*pi)*z)
+                return (c + S.ImaginaryUnit*s)*fro(nu, exp_polar(-I*pi)*z)
             else :
                 return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
         return tofunc
