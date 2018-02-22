@@ -2,14 +2,13 @@ from distutils.version import LooseVersion as V
 from itertools import product
 import math
 
-import numpy
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy, sinc)
+    DotProduct, Eq, Dummy, sinc, zoo)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import PythonCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -834,10 +833,10 @@ def test_lambdify_dummy_arg():
 
 def test_issue_14283():
     prntr = PythonCodePrinter()
-    expr1 = x/0
+    expr1 = zoo
     func = lambdify(x, expr1, "numpy")
     assert prntr.doprint(func(1)) == "float('nan')"
 
-    expr2 = oo*-1
+    expr2 = -oo
     func = lambdify(x, expr2, "numpy")
     assert prntr.doprint(func(1)) == '-inf'
