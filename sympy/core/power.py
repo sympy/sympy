@@ -408,11 +408,12 @@ class Pow(Expr):
             '''
             if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
                 b, e, m = int(self.base), int(self.exp), int(q)
-                # For very large powers, use totient reduction.
+                # For very large powers, use totient reduction if e >= lg(m).
                 # Bound on m, is for safe factorization memory wise ie m^(1/4).
-                # For pollard-rho to be faster than built-in pow and for e >= lg(m),
-                # lg(e) > m^(1/4) check is added.
-                if m.bit_length() <= 80  and _log(e,2) > m**(1/4):
+                # For pollard-rho to be faster than built-in pow lg(e) > m^(1/4)
+                # check is added.
+                mb = m.bit_length()
+                if mb <= 80  and e >= mb and e.bit_length()**4 >= m:
                     from sympy.ntheory import totient
                     phi = totient(m)
                     return pow(b, phi + e%phi, m)
