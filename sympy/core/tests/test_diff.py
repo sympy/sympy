@@ -98,7 +98,7 @@ def test_diff_wrt_itself():
             return Expr.__new__(cls)
 
     v = Value()
-    assert diff(v, v) == 1
+    assert diff(v, v) is S.One
 
 def test_speed():
     # this should return in 0.0s. If it takes forever, it's wrong.
