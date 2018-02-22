@@ -124,6 +124,12 @@ class PythonCodePrinter(CodePrinter):
     def _print_Infinity(self, expr):
         return "float('inf')"
 
+    def _print_NegativeInfinity(self, expr):
+        return "float('-inf')"
+
+    def _print_ComplexInfinity(self, expr):
+        return "float('nan')"
+
     def _print_Mod(self, expr):
         PREC = precedence(expr)
         return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))

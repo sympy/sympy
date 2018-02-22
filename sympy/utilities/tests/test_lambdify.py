@@ -10,6 +10,7 @@ from sympy import (
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc)
 from sympy.printing.lambdarepr import LambdaPrinter
+from sympy.printing.pycode import PythonCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -829,3 +830,13 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+
+def test_issue_14283():
+    prntr = PythonCodePrinter()
+    expr1 = x/0
+    func = lambdify(x, expr1, "numpy")
+    assert prntr.doprint(func(1)) == "float('nan')"
+
+    expr2 = oo*-1
+    func = lambdify(x, expr2, "numpy")
+    assert prntr.doprint(func(1)) == '-inf'
