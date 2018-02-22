@@ -2,6 +2,7 @@ from distutils.version import LooseVersion as V
 from itertools import product
 import math
 
+import numpy
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
