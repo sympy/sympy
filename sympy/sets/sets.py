@@ -944,11 +944,9 @@ class Interval(Set, EvalfMixin):
     @property
     def is_empty(self):
         if self.start < self.end:
-            is_empty = False
+            return False
         else:
-            is_empty = None
-
-        return is_empty
+            return None
 
     def _intersect(self, other):
         """
@@ -1433,13 +1431,15 @@ class Union(Set, EvalfMixin):
 
     @property
     def is_empty(self):
-        a, b = self.args
-        if a.sup >= a.inf or b.sup >= b.inf:
-            is_empty = False
-        else:
-            is_empty = None
+        for arg in self.args:
+            if not arg.is_EmptySet:
+                return False
+            elif arg.is_EmptySet:
+                continue
+            else:
+                return None
 
-        return is_empty
+        return True
 
     @property
     def is_iterable(self):
