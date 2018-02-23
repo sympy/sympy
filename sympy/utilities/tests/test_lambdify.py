@@ -832,6 +832,8 @@ def test_lambdify_dummy_arg():
     assert f2(2) == 3
 
 def test_issue_14283():
+    if not numpy:
+        skip("numpy not installed.")
     prntr = PythonCodePrinter()
     expr1 = zoo
     func = lambdify(x, expr1, "numpy")
