@@ -593,6 +593,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     if expr.has(Product):
         expr = product_simplify(expr)
 
+    from sympy.physics.units import Quantity
+
     if expr.has(Quantity):
         expr = quantsimp(expr)
 
