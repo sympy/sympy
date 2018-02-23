@@ -24,7 +24,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
-from sympy.physics.units import joule
+from sympy.physics.units import joule, degree, radian
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 
@@ -4756,7 +4756,7 @@ k = ─────                                \n\
 
 def test_units():
     expr = joule
-    ascii_str = \
+    ascii_str1 = \
 """\
               2\n\
 kilogram*meter \n\
@@ -4764,7 +4764,7 @@ kilogram*meter \n\
           2    \n\
     second     \
 """
-    unicode_str = \
+    unicode_str1 = \
 u("""\
               2\n\
 kilogram⋅meter \n\
@@ -4772,12 +4772,31 @@ kilogram⋅meter \n\
           2    \n\
     second     \
 """)
+
+    ascii_str2 = \
+"""\
+                    2\n\
+3*x*y*kilogram*meter \n\
+---------------------\n\
+             2       \n\
+       second        \
+"""
+    unicode_str2 = \
+u("""\
+                    2\n\
+3⋅x⋅y⋅kilogram⋅meter \n\
+─────────────────────\n\
+             2       \n\
+       second        \
+""")
+
     from sympy.physics.units import kg, m, s
     assert upretty(expr) == u("joule")
     assert pretty(expr) == "joule"
-    assert upretty(expr.convert_to(kg*m**2/s**2)) == unicode_str
-    assert pretty(expr.convert_to(kg*m**2/s**2)) == ascii_str
-
+    assert upretty(expr.convert_to(kg*m**2/s**2)) == unicode_str1
+    assert pretty(expr.convert_to(kg*m**2/s**2)) == ascii_str1
+    assert upretty(3*kg*x*m**2*y/s**2) == unicode_str2
+    assert pretty(3*kg*x*m**2*y/s**2) == ascii_str2
 
 def test_pretty_Subs():
     f = Function('f')
@@ -6068,6 +6087,26 @@ def test_MatrixElement_printing():
     F = C[0, 0].subs(C, A - B)
     assert pretty(F)  == ascii_str1
     assert upretty(F) == ucode_str1
+
+
+def test_MatrixSymbol_printing():
+    # test cases for issue #14237
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert pretty(-A*B*C) == "-A*B*C"
+    assert pretty(A - B) == "-B + A"
+    assert pretty(A*B*C - A*B - B*C) == "-A*B -B*C + A*B*C"
+
+
+def test_degree_printing():
+    expr1 = 90*degree
+    assert pretty(expr1) == u'90°'
+    expr2 = x*degree
+    assert pretty(expr2) == u'x°'
+    expr3 = cos(x*degree + 90*degree)
+    assert pretty(expr3) == u'cos(x° + 90°)'
 
 
 def test_vector_expr_pretty_printing():

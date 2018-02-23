@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
+from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
@@ -480,6 +480,12 @@ class Abs(Function):
                 if base.is_negative:
                     return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
                 return
+            elif not base.has(Symbol): # complex base
+                # express base**exponent as exp(exponent*log(base))
+                a, b = log(base).as_real_imag()
+                z = a + I*b
+                return exp(re(exponent*z))
+
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
@@ -1089,7 +1095,7 @@ def polarify(eq, subs=True, lift=False):
 
 
 def _unpolarify(eq, exponents_only, pause=False):
-    if isinstance(eq, bool) or eq.is_Atom:
+    if not isinstance(eq, Basic) or eq.is_Atom:
         return eq
 
     if not pause:

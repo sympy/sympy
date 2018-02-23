@@ -32,10 +32,11 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
+from sympy.physics.units import degree, radian, kg, meter, R
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 from sympy.sets.setexpr import SetExpr
 
@@ -828,6 +829,16 @@ def test_latex_limits():
     assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
     # bi-directional limit
     assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
+
+
+def test_latex_log():
+    assert latex(log(x)) == r"\log{\left (x \right )}"
+    assert latex(ln(x)) == r"\log{\left (x \right )}"
+    assert latex(log(x), ln_notation=True) == r"\ln{\left (x \right )}"
+    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
+    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
+    assert latex(pow(log(x),x)) == r"\log{\left (x \right )}^{x}"
+    assert latex(pow(log(x),x), ln_notation=True) == r"\ln{\left (x \right )}^{x}"
 
 
 def test_issue_3568():
@@ -1699,7 +1710,18 @@ def test_MatrixElement_printing():
     assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
+    assert latex(F) == r"\left(-B + A\right)_{0, 0}"
+
+
+def test_MatrixSymbol_printing():
+    # test cases for issue #14237
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert latex(-A) == r"-A"
+    assert latex(A - A*B - B) == r"-B - A B + A"
+    assert latex(-A*B - A*B*C - B) == r"-B - A B - A B C"
 
 
 def test_Quaternion_latex_printing():
@@ -1723,3 +1745,19 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
+
+
+def test_units():
+    expr1 = 2*kg*x*meter**2
+    assert latex(expr1, mul_symbol='dot') == (r'2 \cdot x \cdot \detokenize {kilogram} \cdot \detokenize {meter}^{2}')
+    expr2 = 3*R
+    assert latex(expr2, mul_symbol='dot') == r'3 \cdot \detokenize {molar_gas_constant}'
+
+
+def test_latex_degree():
+    expr1 = 90*degree
+    assert latex(expr1) == r"90 ^\circ"
+    expr2 = x*degree
+    assert latex(expr2) == r"x ^\circ"
+    expr3 = cos(x*degree + 90*degree)
+    assert latex(expr3) == r'\cos{\left (x ^\circ + 90 ^\circ \right )}'

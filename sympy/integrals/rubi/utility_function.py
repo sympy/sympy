@@ -158,7 +158,7 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 def Int(expr, var):
-    from .rubi import rubi_integrate
+    from sympy.integrals.rubi.rubi import rubi_integrate
     return rubi_integrate(expr, var)
 
 def Set(expr, value):
@@ -754,6 +754,8 @@ def Numerator(u):
     return fraction(u)[0]
 
 def NumberQ(u):
+    if isinstance(u, (int, float)):
+        return True
     return u.is_number
 
 def NumericQ(u):
@@ -5393,6 +5395,36 @@ def Divides(y, u, x):
     else:
         return False
 
+def DerivativeDivides(y, u, x):
+    '''
+    If y not equal to x, y is easy to differentiate wrt x, and u divided by the derivative of y
+    is free of x, DerivativeDivides[y,u,x] returns the quotient; else it returns False.
+    '''
+    from matchpy import is_match
+    pattern0 = Pattern(Mul(a , b_), CustomConstraint(lambda a, b : FreeQ(a, b)))
+    def f1(y, u, x):
+        if PolynomialQ(y, x):
+            return PolynomialQ(u, x) and Exponent(u, x)==Exponent(y, x)-1
+        else:
+            return EasyDQ(y, x)
+
+    if is_match(y, pattern0):
+        return False
+
+    elif f1(y, u, x):
+        v = D(y ,x)
+        if EqQ(v, 0):
+            return False
+        else:
+            v = Simplify(u/v)
+            if FreeQ(v, x):
+                return v
+            else:
+                return False
+    else:
+        return False
+
+
 def EasyDQ(expr, x):
     # If u is easy to differentiate wrt x,  EasyDQ(u, x) returns True; else it returns False *)
     u = Wild('u',exclude=[1])
@@ -6062,7 +6094,7 @@ def SimpHelp(u, x):
                 w = i + w
         v = SmartSimplify(v)
         if SumQ(w):
-            w = Add(*[SimpHelp(i, x) for i in w])
+            w = Add(*[SimpHelp(i, x) for i in w.args])
         else:
             w = SimpHelp(w, x)
         return v + w
@@ -6271,7 +6303,7 @@ def _FixSimplify():
     replacer.add(rule7)
 
     pattern8 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(a_, b_), WC('m', S(1))), Pow(Add(c_, d_), n_))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda n: Not(IntegerQ(n))), CustomConstraint(lambda a, b, c, d: ZeroQ(Add(Mul(b, c), Mul(S(-1), Mul(a, d))))))
-    rule8 = ReplacementRule(pattern8, lambda a, n, c, b, d, m, w : With(List(Set(S('q'), Simplify(Mul(b, Pow(d, S(-1)))))), Condition(FixSimplify(Mul(w, Pow(S('q'), m), Pow(Add(c, d), Add(m, n)))))))
+    rule8 = ReplacementRule(pattern8, lambda a, n, c, b, d, m, w : With(List(Set(S('q'), Simplify(Mul(b, Pow(d, S(-1)))))), Condition(FixSimplify(Mul(w, Pow(S('q'), m), Pow(Add(c, d), Add(m, n)))), NonsumQ(S('q')))))
     replacer.add(rule8)
 
     pattern9 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(Mul(WC('u', S(1)), Pow(a_, WC('m', S(1)))), Mul(WC('v', S(1)), Pow(a_, WC('n', S(1))))), WC('t', S(1))))), CustomConstraint(lambda a: Not(RationalQ(a))), CustomConstraint(lambda t: IntegerQ(t)), CustomConstraint(lambda n, m: RationalQ(m, n)), CustomConstraint(lambda n, m: Inequality(S(0), Less, m, LessEqual, n)))
@@ -6678,8 +6710,27 @@ def PolyLog(n, p, z=None):
 def D(f, x):
     return f.diff(x)
 
+def IntegralFreeQ(u):
+    return FreeQ(u, Integral)
+
 def Dist(u, v, x):
-    return Mul(u, v)
+    #Dist(u,v)Dreturns the sum of u times each term of v, provided v is free of Int
+    #return Mul(u, v)
+    w = Simp(u*x**2, x)/x**2
+    if u == 1:
+        return v
+    elif u == 0:
+        return 0
+    elif NumericFactor(u) < 0 and NumericFactor(-u) > 0:
+        return -Dist(-u, v, x)
+    elif SumQ(v):
+        return Add(*[Dist(u, i, x) for i in v.args])
+    elif IntegralFreeQ(v):
+        return Simp(u*v, x)
+    elif w != u and FreeQ(w, x) and w == Simp(w, x) and w == Simp(w*x**2, x)/x**2:
+        return Dist(w, v, x)
+    else:
+        return Simp(u*v, x)
 
 def PureFunctionOfCothQ(u, v, x):
     # If u is a pure function of Coth[v], PureFunctionOfCothQ[u,v,x] returns True;
@@ -6690,6 +6741,10 @@ def PureFunctionOfCothQ(u, v, x):
     elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
         return CothQ(u)
     return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
+
+def LogIntegral(z):
+    tx = symbols('tx')
+    return Integral(1/log(tx),(tx, 0, z))
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
