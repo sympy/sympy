@@ -68,7 +68,8 @@ def test_represent_spin_states():
     assert represent(JyKet(1, 0), basis=Jy) == Matrix([0, 1, 0])
     assert represent(JyKet(1, -1), basis=Jy) == Matrix([0, 0, 1])
     assert represent(
-        JzKet(S(1)/2, S(1)/2), basis=Jy) == sqrt(2)*Matrix([-1, I])/2
+        JzKet(S(1)/2, S(1)/2), basis=Jy) == Matrix([[-sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [sqrt(2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2]])
     assert represent(
         JzKet(S(1)/2, -S(1)/2), basis=Jy) == sqrt(2)*Matrix([I, -1])/2
     assert represent(JzKet(1, 1), basis=Jy) == Matrix([1, -I*sqrt(2), -1])/2
@@ -108,7 +109,7 @@ def test_represent_uncoupled_states():
     assert represent(TensorProduct(JxKet(S(1)/2, -S(1)/2), JxKet(S(1)/2, -S(1)/2)), basis=Jx) == \
         Matrix([0, 0, 0, 1])
     assert represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, S(1)/2)), basis=Jx) == \
-        Matrix([-I, 0, 0, 0])
+        Matrix([[(sqrt(2)/2 - sqrt(2)*I/2)**2], [0], [0], [0]])
     assert represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, -S(1)/2)), basis=Jx) == \
         Matrix([0, 1, 0, 0])
     assert represent(TensorProduct(JyKet(S(1)/2, -S(1)/2), JyKet(S(1)/2, S(1)/2)), basis=Jx) == \
@@ -3593,7 +3594,7 @@ def test_rotation_d():
     # Numerical tests
     # j = 1/2
     assert Rotation.D(
-        S(1)/2, S(1)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/2
+        S(1)/2, S(1)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == sqrt(2)*(sqrt(2)/2 - sqrt(2)*I/2)**2/2
     assert Rotation.D(
         S(1)/2, S(1)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == -sqrt(2)/2
     assert Rotation.D(
