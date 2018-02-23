@@ -1085,6 +1085,8 @@ def besselsimp(expr):
     # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
     # - use contiguity relations?
 
+    from sympy.functions.elementary.trigonometric import sin, cos
+
     def replacer(fro, to, factors):
         factors = set(factors)
 
