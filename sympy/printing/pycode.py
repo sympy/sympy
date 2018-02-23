@@ -132,7 +132,7 @@ class PythonCodePrinter(CodePrinter):
         return "float('-inf')"
 
     def _print_ComplexInfinity(self, expr):
-        return "float('nan')"
+        return self._print_NaN(expr)
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
