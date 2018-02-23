@@ -943,7 +943,7 @@ class Interval(Set, EvalfMixin):
 
     @property
     def is_empty(self):
-        if self.start < self.end:
+        if (self.start < self.end) == True:
             return False
         else:
             return None
