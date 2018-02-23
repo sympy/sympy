@@ -10,7 +10,7 @@ This module contains functions to:
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality, Symbol
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef)
 from sympy.core.relational import Eq
@@ -1101,6 +1101,120 @@ def solvify(f, symbol, domain):
                 result += solution
 
     return result
+
+
+def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
+    r"""Solves a given equation `f` in domain `S.Integers`. `diophantine`,
+    defined in`solvers/diophantine.py`; is used to get the integer solution.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The target equation
+    symbols : list of Symbol
+        The variables for which the equation is solved. `symbols`is an optional
+        list of symbols which determines the order of the elements in the
+        returned tuple.
+    param : symbol that should be used in integer solution.
+        `t` is the optional parameter to be used.
+
+    Returns
+    =======
+
+    Set
+        A FiniteSet, if finite number of solution is present.
+
+        Parametrized solution in a ImageSet of FiniteSet of tuples for
+        `symbols` for which `f` is `True` or is equal to zero and base set
+        is `S.Integers` for free symbols present in the solution tuple.
+
+        An `EmptySet` is returned if `f` no Integers solution is found and
+        `ConditionSet` if it is not able to solve or not implemented for that
+        equation `f`.
+
+    Note
+    =====
+
+    symbols should contain all the symbols in the equation. We are free to
+    choose the order.
+
+    See Also
+    ========
+
+    solveset_real: solver for real domain
+    solveset_complex: solver for complex domain
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import solveset_integers
+    >>> from sympy import symbols, pprint, Symbol
+    >>> k = Symbol('k', integer=True)
+    >>> x, y, z, t_0, k_0, n1 = symbols('x, y, z, t_0, k_0, n1')
+    >>> eq = x**2 + 3*x*y + 4*x
+    >>> pprint(solveset_integers(eq), use_unicode = False)
+    {{(0, n1), (3*t_0 - 4, -t_0)} | n1, t_0 in Integers()}
+
+    >>> pprint(solveset_integers(eq, [x, y]), use_unicode = False)
+    {{(0, n1), (3*t_0 - 4, -t_0)} | n1, t_0 in Integers()}
+
+    >>> pprint(solveset_integers(eq, [x, y], param=None), use_unicode = False)
+    {{(-4, 0), (0, n1)} | n1 in Integers()}
+
+    >>> pprint(solveset_integers(eq, [y, x]), use_unicode = False)
+    {{(n1, 0), (-t_0, 3*t_0 - 4)} | n1, t_0 in Integers()}
+
+    >>> pprint(solveset_integers(eq, [y, x], k), use_unicode = False)
+    {{(-k_0, 3*k_0 - 4), (n1, 0)} | k_0, n1 in Integers()}
+
+    >>> pprint(solveset_integers(eq + x**5), use_unicode = False)
+                                        5    2
+    {{x, y} | {x, y} in Integers() and x  + x  + 3*x*y + 4*x}
+
+    >>> pprint(solveset_integers(2*x + 1), use_unicode = False)
+    EmptySet()
+
+    >>> pprint(solveset_integers(x + 1), use_unicode = False)
+    {(-1,)}
+
+    >>> pprint(solveset_integers(x**3 + y**3 + z**4 - 90), use_unicode = False)
+                                                  3    3    4
+    {{x, y, z} | {x, y, z} in Integers() and x  + y  + z  - 90}
+
+    See Also
+    ========
+
+    solveset_real, solveset_complex
+
+    """
+    from sympy.solvers.diophantine import diophantine, _is_int
+
+    try:
+        # solution will be in set
+        solution = diophantine(f, param, symbols)
+    except NotImplementedError:
+        free = FiniteSet(*[free_sym for free_sym in f.free_symbols])
+        return ConditionSet(free, f, S.Integers)
+    except TypeError:
+        msg = '''Equation should be a polynomial with Rational coefficients
+         for integer solution.'''
+        raise TypeError(filldedent(msg))
+
+    # soln in Imageset
+    int_variable = S.EmptySet
+    expr = S.EmptySet
+    for s in solution:
+        for s2 in s:
+            if not _is_int(s2):
+                int_variable += FiniteSet(*[s3 for s3 in s2.free_symbols])
+        expr += FiniteSet(s) if s is not None else S.EmptySet
+
+    if expr is S.EmptySet:
+        return S.EmptySet
+    if int_variable is S.EmptySet:
+        return expr
+    return imageset(Lambda(int_variable, expr), S.Integers)
 
 
 ###############################################################################
