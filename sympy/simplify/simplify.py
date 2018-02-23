@@ -593,6 +593,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     if expr.has(Product):
         expr = product_simplify(expr)
 
+    if expr.has(Quantity):
+        expr = quantsimp(expr)
+
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
@@ -866,6 +869,14 @@ def _nthroot_solve(p, n, prec):
             sol = sqrtdenest(sol)
             if _mexpand(sol**n) == p:
                 return sol
+
+
+def quantsimp(expr):
+    from sympy.physics.units import Quantity
+    a, b = symbols('a, b')
+    a = 1/expr.args[0]
+    b = expr.args[1]
+    return b.scale_factor/a.scale_factor
 
 
 def logcombine(expr, force=False):
