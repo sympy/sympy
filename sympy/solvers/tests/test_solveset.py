@@ -268,9 +268,10 @@ def test_garbage_input():
     raises(ValueError, lambda: solveset_complex([x], x))
     assert solveset_complex(x, pi) == S.EmptySet
 
-def test_improper_params():
+    raises(ValueError, lambda: solveset((x, y), x))
     raises(ValueError, lambda: solveset(x + 1, S.Reals))
     raises(ValueError, lambda: solveset(x + 1, x, 2))
+
 
 def test_solve_mul():
     assert solveset_real((a*x + b)*(exp(x) - 3), x) == \
@@ -286,7 +287,9 @@ def test_solve_invert():
     assert solveset_real(3**(x + 2), x) == FiniteSet()
     assert solveset_real(3**(2 - x), x) == FiniteSet()
 
-    assert solveset_real(y - b*exp(a/x), x) == Intersection(S.Reals, FiniteSet(a/log(y/b)))
+    assert solveset_real(y - b*exp(a/x), x) == Intersection(
+        S.Reals, FiniteSet(a/log(y/b)))
+
     # issue 4504
     assert solveset_real(2**x - 10, x) == FiniteSet(log(10)/log(2))
 

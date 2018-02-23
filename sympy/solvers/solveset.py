@@ -44,9 +44,11 @@ from types import GeneratorType
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
-    Dummy symbols, and the dictionary of replacements whose keys are
-    the atoms that were replaced (with any instance of the atoms that
-    they contain recursively replaced).
+    Dummy symbols, ``d``, and the list of replacements, ``(d, e)``,
+    where ``e`` is an object of type given by ``atoms`` in which
+    any other instances of atoms have been recursively replaced with
+    Dummy symbols, too. The tuples are ordered so that if they are
+    applied in sequence, the orgin ``f`` will be restored.
 
     Examples
     ========
@@ -55,8 +57,16 @@ def _masked(f, *atoms):
     >>> from sympy.abc import x
     >>> from sympy.solvers.solveset import _masked
 
-    >>> _masked(cos(1 + cos(x)), cos)
-    (_a1, [(cos(x), _a0), (cos(_a0 + 1), _a1)])
+    >>> f = cos(cos(x) + 1)
+    >>> f, reps = _masked(cos(1 + cos(x)), cos)
+    >>> f
+    _a1
+    >>> reps
+    [(_a1, cos(_a0 + 1)), (_a0, cos(x))]
+    >>> for d, e in reps:
+    ...     f = f.xreplace({d: e})
+    >>> f
+    cos(cos(x) + 1)
     """
     sym = numbered_symbols('a', cls=Dummy)
     mask = []
@@ -64,10 +74,12 @@ def _masked(f, *atoms):
         for i in mask:
             a = a.replace(*i)
         mask.append((a, next(sym)))
-    for o, n in reversed(mask):
+    mask = list(reversed(mask))
+    for i, (o, n) in enumerate(mask):
         f = f.replace(o, n)
-    if mask and f == mask[-1][0]:
-        f = mask[-1][1]
+        mask[i] = (n, o)
+    if mask and f == mask[0][1]:
+        f = mask[0][0]
     return f, mask
 
 
@@ -1010,10 +1022,10 @@ def solveset(f, symbol=None, domain=S.Complexes):
         return S.EmptySet
 
     if not isinstance(f, (Expr, Number)):
-        raise ValueError("%s is not a valid SymPy expression" % (f))
+        raise ValueError("%s is not a valid SymPy expression" % f)
 
     if not isinstance(symbol, Expr) and  symbol is not None:
-        raise ValueError("%s is not a valid Sympy symbol" %(symbol))
+        raise ValueError("%s is not a valid SymPy symbol" % symbol)
 
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" %(domain))
@@ -1055,13 +1067,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
     # Abs has its own handling method which avoids the
     # rewriting property that the first piece of abs(x)
     # is for x >= 0 and the 2nd piece for x < 0 -- solutions
-    # can look better if the 2nd condition is x <= 0.
+    # can look better if the 2nd condition is x <= 0. Since
+    # the solution is a set, duplication of results is not
+    # an issue, e.g. {y, -y} when y is 0 will be {0}
     f, mask = _masked(f, Abs)
-    f = f.rewrite(Piecewise) # everything that's not in Abs
-    for o, n in reversed(mask):
-        # everything *in* abs
-        o = o.func(o.args[0].rewrite(Piecewise))
-        f = f.xreplace({n: o})
+    f = f.rewrite(Piecewise) # everything that's not an Abs
+    for d, e in mask:
+        # everything *in* an Abs
+        e = e.func(e.args[0].rewrite(Piecewise))
+        f = f.xreplace({d: e})
     f = piecewise_fold(f)
 
     return _solveset(f, symbol, domain, _check=True)
