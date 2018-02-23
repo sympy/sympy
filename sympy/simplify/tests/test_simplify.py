@@ -580,8 +580,8 @@ def test_besselsimp():
     assert besselsimp(sqrt(2)*sqrt(pi)*x**(S(1)/4)*exp(I*pi/4)*exp(-I*pi*a/2) *
                       besseli(-S(1)/2, sqrt(x)*exp_polar(I*pi/2)) *
                       besseli(a, sqrt(x)*exp_polar(I*pi/2))/2) == \
-        sqrt(2)*(1 + I)*exp_polar(-I*pi/4)*exp(-I*pi*a/2) *
-        cosh(sqrt(x)*exp_polar(I*pi/2))*besseli(a, sqrt(x)*exp_polar(I*pi/2))/2
+        sqrt(2)*(1 + I)*exp_polar(-I*pi/4)*exp(-I*pi*a/2)*cosh(sqrt(x)*exp_polar(I*pi/2))*besseli(a,
+        sqrt(x)*exp_polar(I*pi/2))/2
     assert besselsimp(besseli(S(-1)/2, z)) == \
         sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besseli(a, z*exp_polar(-I*pi/2))) == \
