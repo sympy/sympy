@@ -21,8 +21,8 @@ from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
 
 def test_branch_bug():
     assert hyperexpand(hyper((-S(1)/3, S(1)/2), (S(2)/3, S(3)/2), -z)) == \
-        -z**S('1/3')*lowergamma(exp_polar(I*pi)/3, z)/5 \
-        + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
+        -z**(1/3)*(-1/2 - sqrt(3)*I/2)*(-1/2 + sqrt(3)*I/2)*lowergamma(exp_polar(I*pi)/3,
+        z)/5 + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
     assert hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S(1)/6, 0], z)) == \
         2*z**S('2/3')*(2*sqrt(pi)*erf(sqrt(z))/sqrt(z) - 2*lowergamma(
                        S(2)/3, z)/z**S('2/3'))*gamma(S(2)/3)/gamma(S(5)/3)
