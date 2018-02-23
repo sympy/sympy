@@ -1337,6 +1337,8 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).lcm(2) == Integer(4)
     assert Integer(4).gcd(Integer(2)) == Integer(2)
     assert Integer(4).lcm(Integer(2)) == Integer(4)
+    a, b = 720**99911, 480**12342
+    assert Integer(a).lcm(b) == a*b/Integer(a).gcd(b)
 
     assert Integer(4).gcd(3) == Integer(1)
     assert Integer(4).lcm(3) == Integer(12)
@@ -1355,6 +1357,7 @@ def test_Rational_gcd_lcm_cofactors():
     assert Rational(4, 3).lcm(Rational(2, 9)) == Rational(4, 3)
     assert Rational(4, 5).gcd(Rational(2, 9)) == Rational(2, 45)
     assert Rational(4, 5).lcm(Rational(2, 9)) == Integer(4)
+    assert Rational(5, 9).lcm(Rational(3, 7)) == Rational(Integer(5).lcm(3),Integer(9).gcd(7))
 
     assert Integer(4).cofactors(2) == (Integer(2), Integer(2), Integer(1))
     assert Integer(4).cofactors(Integer(2)) == \
