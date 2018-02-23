@@ -6096,16 +6096,16 @@ def test_issue_12675():
 
     ucode_str = \
 u("""\
-⎛   t⎞ e_j\n\
-⎜⎛x⎞ ⎟    \n\
+⎛   t⎞    \n\
+⎜⎛x⎞ ⎟ e_j\n\
 ⎜⎜─⎟ ⎟    \n\
 ⎝⎝y⎠ ⎠    \
 """)
     assert upretty((x/y)**t*e.j) == ucode_str
     ucode_str = \
 u("""\
-⎛1⎞ e_j\n\
-⎜─⎟    \n\
+⎛1⎞    \n\
+⎜─⎟ e_j\n\
 ⎝y⎠    \
 """)
     assert upretty((1/y)*e.j) == ucode_str

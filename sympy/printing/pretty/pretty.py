@@ -931,29 +931,36 @@ class PrettyPrinter(Printer):
         #Fixing the newlines
         lengths = []
         strs = ['']
+        flag = 0
         for i, partstr in enumerate(o1):
             # XXX: What is this hack?
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                for paren in range(len(tempstr)):
-                    if tempstr[paren] == u'\N{RIGHT PARENTHESIS UPPER HOOK}':
-                        tempstr = tempstr[:paren] + u'\N{RIGHT PARENTHESIS UPPER HOOK}'\
+                if u'\N{right parenthesis extension}' in tempstr:   # if scalar is a fraction
+                    for paren in range(len(tempstr)):
+                        if tempstr[paren] == u'\N{right parenthesis extension}':
+                            tempstr = tempstr[:paren] + u'\N{right parenthesis extension}'\
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
-                        break
+                            flag = 1
+                            break
+                else:
+                    tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS UPPER HOOK}',
+                                          u'\N{RIGHT PARENTHESIS UPPER HOOK}'
+                                          + ' ' + vectstrs[i])
 
                 o1[i] = tempstr
         o1 = [x.split('\n') for x in o1]
         n_newlines = max([len(x) for x in o1])
         for parts in o1:
-            lengths.append(len(parts[0]))
+            lengths.append(len(parts[flag]))
             for j in range(n_newlines):
                 if j+1 <= len(parts):
                     if j >= len(strs):
                         strs.append(' ' * (sum(lengths[:-1]) +
                                            3*(len(lengths)-1)))
-                    if j == 0:
-                        strs[0] += parts[0] + ' + '
+                    if j == flag:
+                        strs[flag] += parts[flag] + ' + '
                     else:
                         strs[j] += parts[j] + ' '*(lengths[-1] -
                                                    len(parts[j])+
