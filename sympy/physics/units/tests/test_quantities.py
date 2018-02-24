@@ -14,8 +14,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
 
 from sympy.physics.units.dimensions import Dimension, charge, length, time, dimsys_default
 from sympy.physics.units.prefixes import PREFIXES, kilo
-from sympy.physics.units.quantities import Quantity, process_scale_factor
-from sympy.physics.units.definitions import SI_quantity_dimension_map, SI_quantity_scale_factors
+from sympy.physics.units.quantities import Quantity
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -33,8 +32,8 @@ def test_eq():
 
 def test_convert_to():
     q = Quantity("q1")
-    SI_quantity_dimension_map[q] = length
-    SI_quantity_scale_factors[q] = S(5000)
+    q._set_dimension(length)
+    q._set_scale_factor(S(5000))
 
     assert q.convert_to(m) == 5000*m
 
@@ -50,17 +49,17 @@ def test_convert_to():
 
 def test_Quantity_definition():
     q = Quantity("s10", abbrev="sabbr")
-    SI_quantity_dimension_map[q] = time
-    SI_quantity_scale_factors[q] = 10
+    q._set_dimension(time)
+    q._set_scale_factor(10)
     u  =  Quantity("u", abbrev="dam")
-    SI_quantity_dimension_map[u] = length
-    SI_quantity_scale_factors[u] = 10
+    u._set_dimension(length)
+    u._set_scale_factor(10)
     km =  Quantity("km")
-    SI_quantity_dimension_map[km] = length
-    SI_quantity_scale_factors[km] = kilo
+    km._set_dimension(length)
+    km._set_scale_factor(kilo)
     v =  Quantity("u")
-    SI_quantity_dimension_map[v] = length
-    SI_quantity_scale_factors[v] = 5*kilo
+    v._set_dimension(length)
+    v._set_scale_factor(5*kilo)
 
     assert q.scale_factor == 10
     assert q.dimension == time
@@ -70,12 +69,12 @@ def test_Quantity_definition():
     assert u.scale_factor == 10
     assert u.abbrev == Symbol("dam")
 
-    assert km.scale_factor == kilo
+    assert km.scale_factor == 1000
     assert km.func(*km.args) == km
     assert km.func(*km.args).args == km.args
 
     assert v.dimension == length
-    assert v.scale_factor == 5 * kilo
+    assert v.scale_factor == 5000
 
     raises(SymPyDeprecationWarning, lambda: Quantity('invalid', 'dimension', 1))
     raises(SymPyDeprecationWarning, lambda: Quantity('mismatch', dimension=length, scale_factor=kg))
@@ -83,15 +82,15 @@ def test_Quantity_definition():
 
 def test_abbrev():
     u = Quantity("u")
-    SI_quantity_dimension_map[u] = length
-    SI_quantity_scale_factors[u] = S.One
+    u._set_dimension(length)
+    u._set_scale_factor(S.One)
 
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("u")
 
     u = Quantity("u", abbrev="om")
-    SI_quantity_dimension_map[u] = length
-    SI_quantity_scale_factors[u] = S(2)
+    u._set_dimension(length)
+    u._set_scale_factor(S(2))
 
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("om")
@@ -99,11 +98,11 @@ def test_abbrev():
     assert isinstance(u.scale_factor, Number)
 
     u = Quantity("u", abbrev="ikm")
-    SI_quantity_dimension_map[u] = length
-    SI_quantity_scale_factors[u] = 3*kilo
+    u._set_dimension(length)
+    u._set_scale_factor(3*kilo)
 
     assert u.abbrev == Symbol("ikm")
-    assert u.scale_factor == 3*kilo
+    assert u.scale_factor == 3000
 
 
 def test_print():
@@ -127,13 +126,13 @@ def test_add_sub():
     v = Quantity("v")
     w = Quantity("w")
 
-    SI_quantity_dimension_map[u] = length
-    SI_quantity_dimension_map[v] = length
-    SI_quantity_dimension_map[w] = time
+    u._set_dimension(length)
+    v._set_dimension(length)
+    w._set_dimension(time)
 
-    SI_quantity_scale_factors[u] = S(10)
-    SI_quantity_scale_factors[v] = S(5)
-    SI_quantity_scale_factors[w] = S(2)
+    u._set_scale_factor(S(10))
+    v._set_scale_factor(S(5))
+    w._set_scale_factor(S(2))
 
     assert isinstance(u + v, Add)
     assert (u + v.convert_to(u)) == (1 + S.Half)*u
@@ -150,13 +149,13 @@ def test_quantity_abs():
     v_w2 = Quantity('v_w2')
     v_w3 = Quantity('v_w3')
 
-    SI_quantity_dimension_map[v_w1] = length/time
-    SI_quantity_dimension_map[v_w2] = length/time
-    SI_quantity_dimension_map[v_w3] = length/time
+    v_w1._set_dimension(length/time)
+    v_w2._set_dimension(length/time)
+    v_w3._set_dimension(length/time)
 
-    SI_quantity_scale_factors[v_w1] = process_scale_factor(meter/second)
-    SI_quantity_scale_factors[v_w2] = process_scale_factor(meter/second)
-    SI_quantity_scale_factors[v_w3] = process_scale_factor(meter/second)
+    v_w1._set_scale_factor(meter/second)
+    v_w2._set_scale_factor(meter/second)
+    v_w3._set_scale_factor(meter/second)
 
     expr = v_w3 - Abs(v_w1 - v_w2)
 
@@ -173,13 +172,13 @@ def test_check_unit_consistency():
     v = Quantity("v")
     w = Quantity("w")
 
-    SI_quantity_dimension_map[u] = length
-    SI_quantity_dimension_map[v] = length
-    SI_quantity_dimension_map[w] = time
+    u._set_dimension(length)
+    v._set_dimension(length)
+    w._set_dimension(time)
 
-    SI_quantity_scale_factors[u] = S(10)
-    SI_quantity_scale_factors[v] = S(5)
-    SI_quantity_scale_factors[w] = S(2)
+    u._set_scale_factor(S(10))
+    v._set_scale_factor(S(5))
+    w._set_scale_factor(S(2))
 
     def check_unit_consistency(expr):
         Quantity._collect_factor_and_dimension(expr)
@@ -197,17 +196,17 @@ def test_mul_div():
     ut = Quantity("ut")
     v2 = Quantity("v")
 
-    SI_quantity_dimension_map[u] = length
-    SI_quantity_dimension_map[v] = length
-    SI_quantity_dimension_map[t] = time
-    SI_quantity_dimension_map[ut] = length*time
-    SI_quantity_dimension_map[v2] = length/time
+    u._set_dimension(length)
+    v._set_dimension(length)
+    t._set_dimension(time)
+    ut._set_dimension(length*time)
+    v2._set_dimension(length/time)
 
-    SI_quantity_scale_factors[u] = S(10)
-    SI_quantity_scale_factors[v] = S(5)
-    SI_quantity_scale_factors[t] = S(2)
-    SI_quantity_scale_factors[ut] = S(20)
-    SI_quantity_scale_factors[v2] = S(5)
+    u._set_scale_factor(S(10))
+    v._set_scale_factor(S(5))
+    t._set_scale_factor(S(2))
+    ut._set_scale_factor(S(20))
+    v2._set_scale_factor(S(5))
 
     assert 1 / u == u**(-1)
     assert u / 1 == u
@@ -234,8 +233,8 @@ def test_mul_div():
 
     # Mul only supports structural equality:
     lp1 = Quantity("lp1")
-    SI_quantity_dimension_map[lp1] = length**-1
-    SI_quantity_scale_factors[lp1] = S(2)
+    lp1._set_dimension(length**-1)
+    lp1._set_scale_factor(S(2))
     assert u * lp1 != 20
 
     assert u**0 == 1
@@ -244,10 +243,10 @@ def test_mul_div():
     # TODO: Pow only support structural equality:
     u2 = Quantity("u2")
     u3 = Quantity("u3")
-    SI_quantity_dimension_map[u2] = length**2
-    SI_quantity_dimension_map[u3] = length**-1
-    SI_quantity_scale_factors[u2] = S(100)
-    SI_quantity_scale_factors[u3] = S(1)/10
+    u2._set_dimension(length**2)
+    u3._set_dimension(length**-1)
+    u2._set_scale_factor(S(100))
+    u3._set_scale_factor(S(1)/10)
 
     assert u ** 2 != u2
     assert u ** -1 != u3
@@ -336,8 +335,8 @@ def test_quantity_postprocessing():
     q1 = Quantity('q1')
     q2 = Quantity('q2')
 
-    SI_quantity_dimension_map[q1] = length*pressure**2*temperature/time
-    SI_quantity_dimension_map[q2] = energy*pressure*temperature/(length**2*time)
+    q1._set_dimension(length*pressure**2*temperature/time)
+    q2._set_dimension(energy*pressure*temperature/(length**2*time))
 
     assert q1 + q2
     q = q1 + q2
@@ -361,7 +360,7 @@ def test_factor_and_dimension():
         x*m + y*centimeter)
 
     cH = Quantity('cH')
-    SI_quantity_dimension_map[cH] = amount_of_substance/volume
+    cH._set_dimension(amount_of_substance/volume)
 
     pH = -log(cH)
 
@@ -371,10 +370,10 @@ def test_factor_and_dimension():
     v_w1 = Quantity('v_w1')
     v_w2 = Quantity('v_w2')
 
-    SI_quantity_dimension_map[v_w1] = length/time
-    SI_quantity_dimension_map[v_w2] = length/time
-    SI_quantity_scale_factors[v_w1] = process_scale_factor(S(3)/2*meter/second)
-    SI_quantity_scale_factors[v_w2] = process_scale_factor(2*meter/second)
+    v_w1._set_dimension(length/time)
+    v_w2._set_dimension(length/time)
+    v_w1._set_scale_factor(S(3)/2*meter/second)
+    v_w2._set_scale_factor(2*meter/second)
 
     expr = Abs(v_w1/2 - v_w2)
     assert (S(5)/4, length/time) == \
@@ -392,8 +391,8 @@ def test_factor_and_dimension():
 @XFAIL
 def test_factor_and_dimension_with_Abs():
     v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
-    SI_quantity_dimension_map[v_w1] = length/time
-    SI_quantity_scale_factors[v_w1] = S(3)/2*meter/second
+    v_w1._set_dimension(length/time)
+    v_w1._set_scale_factor(S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)
     assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
@@ -402,12 +401,12 @@ def test_dimensional_expr_of_derivative():
     l = Quantity('l')
     t = Quantity('t')
     t1 = Quantity('t1')
-    SI_quantity_dimension_map[l] = length
-    SI_quantity_dimension_map[t] = time
-    SI_quantity_dimension_map[t1] = time
-    SI_quantity_scale_factors[l] = process_scale_factor(36*km)
-    SI_quantity_scale_factors[t] = process_scale_factor(hour)
-    SI_quantity_scale_factors[t1] = process_scale_factor(second)
+    l._set_dimension(length)
+    t._set_dimension(time)
+    t1._set_dimension(time)
+    l._set_scale_factor(36*km)
+    t._set_scale_factor(hour)
+    t1._set_scale_factor(second)
     x = Symbol('x')
     y = Symbol('y')
     f = Function('f')
@@ -424,10 +423,10 @@ def test_dimensional_expr_of_derivative():
 def test_get_dimensional_expr_with_function():
     v_w1 = Quantity('v_w1')
     v_w2 = Quantity('v_w2')
-    SI_quantity_dimension_map[v_w1] = length/time
-    SI_quantity_dimension_map[v_w2] = length/time
-    SI_quantity_scale_factors[v_w1] = meter/second
-    SI_quantity_scale_factors[v_w2] = meter/second
+    v_w1._set_dimension(length/time)
+    v_w2._set_dimension(length/time)
+    v_w1._set_scale_factor(meter/second)
+    v_w2._set_scale_factor(meter/second)
 
     assert Quantity.get_dimensional_expr(sin(v_w1)) == \
         sin(Quantity.get_dimensional_expr(v_w1))

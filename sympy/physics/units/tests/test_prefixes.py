@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import symbols, log, Mul, Symbol, S
 from sympy.physics.units import Quantity, Dimension, length
-from sympy.physics.units.quantities import process_scale_factor
-from sympy.physics.units.definitions import SI_quantity_dimension_map, SI_quantity_scale_factors
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
     kibi
 
@@ -26,8 +24,8 @@ def test_prefix_operations():
     assert dodeca / dodeca == 1
 
     m = Quantity("fake_meter")
-    SI_quantity_dimension_map[m] = S.One
-    SI_quantity_scale_factors[m] = S.One
+    m._set_dimension(S.One)
+    m._set_scale_factor(S.One)
 
     assert dodeca * m == 12 * m
     assert dodeca / m == 12 / m
@@ -51,8 +49,8 @@ def test_prefix_operations():
 
 def test_prefix_unit():
     m = Quantity("fake_meter", abbrev="m")
-    SI_quantity_dimension_map[m] = length
-    SI_quantity_scale_factors[m] = 1
+    m._set_dimension(length)
+    m._set_scale_factor(1)
 
     pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
 
@@ -60,13 +58,13 @@ def test_prefix_unit():
     q2 = Quantity("centifake_meter", abbrev="cm")
     q3 = Quantity("decifake_meter", abbrev="dm")
 
-    SI_quantity_dimension_map[q1] = length
-    SI_quantity_dimension_map[q1] = length
-    SI_quantity_dimension_map[q1] = length
+    q1._set_dimension(length)
+    q1._set_dimension(length)
+    q1._set_dimension(length)
 
-    SI_quantity_scale_factors[q1] = process_scale_factor(PREFIXES["m"])
-    SI_quantity_scale_factors[q1] = process_scale_factor(PREFIXES["c"])
-    SI_quantity_scale_factors[q1] = process_scale_factor(PREFIXES["d"])
+    q1._set_scale_factor(PREFIXES["m"])
+    q1._set_scale_factor(PREFIXES["c"])
+    q1._set_scale_factor(PREFIXES["d"])
 
     res = [q1, q2, q3]
 
