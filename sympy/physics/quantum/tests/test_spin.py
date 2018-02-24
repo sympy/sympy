@@ -86,9 +86,11 @@ def test_represent_spin_states():
     assert represent(JxKet(1, 0), basis=Jz) == sqrt(2)*Matrix([-1, 0, 1])/2
     assert represent(JxKet(1, -1), basis=Jz) == Matrix([1, -sqrt(2), 1])/2
     assert represent(
-        JyKet(S(1)/2, S(1)/2), basis=Jz) == sqrt(2)*Matrix([-1, -I])/2
+        JyKet(S(1)/2, S(1)/2), basis=Jz) == Matrix([[sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/2],
+        [-sqrt(2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/2]])
     assert represent(
-        JyKet(S(1)/2, -S(1)/2), basis=Jz) == sqrt(2)*Matrix([-I, -1])/2
+        JyKet(S(1)/2, -S(1)/2), basis=Jz) == Matrix([[sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [sqrt(2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2]])
     assert represent(JyKet(1, 1), basis=Jz) == Matrix([1, sqrt(2)*I, -1])/2
     assert represent(JyKet(1, 0), basis=Jz) == sqrt(2)*Matrix([I, 0, I])/2
     assert represent(JyKet(1, -1), basis=Jz) == Matrix([-1, sqrt(2)*I, 1])/2
@@ -127,13 +129,13 @@ def test_represent_uncoupled_states():
         Matrix([S(1)/2, S(1)/2, S(1)/2, S(1)/2])
     # Jy basis
     assert represent(TensorProduct(JxKet(S(1)/2, S(1)/2), JxKet(S(1)/2, S(1)/2)), basis=Jy) == \
-        Matrix([I, 0, 0, 0])
+        Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2], [0], [0], [0]])
     assert represent(TensorProduct(JxKet(S(1)/2, S(1)/2), JxKet(S(1)/2, -S(1)/2)), basis=Jy) == \
-        Matrix([0, 1, 0, 0])
+        Matrix([[0], [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)], [0], [0]])
     assert represent(TensorProduct(JxKet(S(1)/2, -S(1)/2), JxKet(S(1)/2, S(1)/2)), basis=Jy) == \
-        Matrix([0, 0, 1, 0])
+        Matrix([[0], [0], [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)], [0]])
     assert represent(TensorProduct(JxKet(S(1)/2, -S(1)/2), JxKet(S(1)/2, -S(1)/2)), basis=Jy) == \
-        Matrix([0, 0, 0, -I])
+        Matrix([[0], [0], [0], [(-sqrt(2)/2 + sqrt(2)*I/2)**2]])
     assert represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, S(1)/2)), basis=Jy) == \
         Matrix([1, 0, 0, 0])
     assert represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, -S(1)/2)), basis=Jy) == \
@@ -3614,37 +3616,37 @@ def test_rotation_d():
     assert Rotation.D(1, -1, -1, pi/2, pi/2, pi/2).doit() == -1/2
     # j = 3/2
     assert Rotation.D(
-        S(3)/2, S(3)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/4
+        S(3)/2, S(3)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)**2/4
     assert Rotation.D(
-        S(3)/2, S(3)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)/4
+        S(3)/2, S(3)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == -sqrt(6)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, S(3)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == -I*sqrt(6)/4
+        S(3)/2, S(3)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, S(3)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == -sqrt(2)/4
+        S(3)/2, S(3)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == -sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, S(1)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
+        S(3)/2, S(1)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, S(1)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == I*sqrt(2)/4
+        S(3)/2, S(1)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == -sqrt(2)*(sqrt(2)/2 - sqrt(2)*I/2)**2/4
     assert Rotation.D(
-        S(3)/2, S(1)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == -sqrt(2)/4
+        S(3)/2, S(1)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == -sqrt(2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, S(1)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == I*sqrt(6)/4
+        S(3)/2, S(1)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, -S(1)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == -I*sqrt(6)/4
+        S(3)/2, -S(1)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, -S(1)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == sqrt(2)/4
+        S(3)/2, -S(1)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == sqrt(2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, -S(1)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/4
+        S(3)/2, -S(1)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == -sqrt(2)*(sqrt(2)/2 + sqrt(2)*I/2)**2/4
     assert Rotation.D(
-        S(3)/2, -S(1)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)/4
+        S(3)/2, -S(1)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == -sqrt(6)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, -S(3)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(2)/4
+        S(3)/2, -S(3)/2, S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, -S(3)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == I*sqrt(6)/4
+        S(3)/2, -S(3)/2, S(1)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, -S(3)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == -sqrt(6)/4
+        S(3)/2, -S(3)/2, -S(1)/2, pi/2, pi/2, pi/2).doit() == sqrt(6)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/4
     assert Rotation.D(
-        S(3)/2, -S(3)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == -I*sqrt(2)/4
+        S(3)/2, -S(3)/2, -S(3)/2, pi/2, pi/2, pi/2).doit() == sqrt(2)*(-sqrt(2)/2 + sqrt(2)*I/2)**2/4
     # j = 2
     assert Rotation.D(2, 2, 2, pi/2, pi/2, pi/2).doit() == 1/4
     assert Rotation.D(2, 2, 1, pi/2, pi/2, pi/2).doit() == -I/2
