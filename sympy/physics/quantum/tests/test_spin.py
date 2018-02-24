@@ -145,13 +145,25 @@ def test_represent_uncoupled_states():
     assert represent(TensorProduct(JyKet(S(1)/2, -S(1)/2), JyKet(S(1)/2, -S(1)/2)), basis=Jy) == \
         Matrix([0, 0, 0, 1])
     assert represent(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2)), basis=Jy) == \
-        Matrix([S(1)/2, -I/2, -I/2, -S(1)/2])
+        Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)**2/2]])
     assert represent(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2)), basis=Jy) == \
-        Matrix([-I/2, S(1)/2, -S(1)/2, -I/2])
+        Matrix([[-(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2]])
     assert represent(TensorProduct(JzKet(S(1)/2, -S(1)/2), JzKet(S(1)/2, S(1)/2)), basis=Jy) == \
-        Matrix([-I/2, -S(1)/2, S(1)/2, -I/2])
+        Matrix([[-(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2]])
     assert represent(TensorProduct(JzKet(S(1)/2, -S(1)/2), JzKet(S(1)/2, -S(1)/2)), basis=Jy) == \
-        Matrix([-S(1)/2, -I/2, -I/2, S(1)/2])
+        Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 + sqrt(2)*I/2)**2/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)**2/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 + sqrt(2)*I/2)**2/2]])
     # Jz basis
     assert represent(TensorProduct(JxKet(S(1)/2, S(1)/2), JxKet(S(1)/2, S(1)/2)), basis=Jz) == \
         Matrix([S(1)/2, S(1)/2, S(1)/2, S(1)/2])
@@ -162,13 +174,25 @@ def test_represent_uncoupled_states():
     assert represent(TensorProduct(JxKet(S(1)/2, -S(1)/2), JxKet(S(1)/2, -S(1)/2)), basis=Jz) == \
         Matrix([S(1)/2, -S(1)/2, -S(1)/2, S(1)/2])
     assert represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, S(1)/2)), basis=Jz) == \
-        Matrix([S(1)/2, I/2, I/2, -S(1)/2])
+        Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)**2/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)**2/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)**2/2]])
     assert represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, -S(1)/2)), basis=Jz) == \
-        Matrix([I/2, S(1)/2, -S(1)/2, I/2])
+        Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [-(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2]])
     assert represent(TensorProduct(JyKet(S(1)/2, -S(1)/2), JyKet(S(1)/2, S(1)/2)), basis=Jz) == \
-        Matrix([I/2, -S(1)/2, S(1)/2, I/2])
+        Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [-(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
+        [-(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2]])
     assert represent(TensorProduct(JyKet(S(1)/2, -S(1)/2), JyKet(S(1)/2, -S(1)/2)), basis=Jz) == \
-        Matrix([-S(1)/2, I/2, I/2, S(1)/2])
+        Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 + sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 - sqrt(2)*I/2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)**2/2],
+        [(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 + sqrt(2)*I/2)**2/2]])
     assert represent(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2)), basis=Jz) == \
         Matrix([1, 0, 0, 0])
     assert represent(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2)), basis=Jz) == \
