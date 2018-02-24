@@ -21,6 +21,7 @@ from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types
 
 from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.misc import filldedent
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import (is_sequence, default_sort_key, range,
     NotIterable)
@@ -1031,20 +1032,22 @@ class MatrixEigen(MatrixSubspaces):
     _cache_eigenvects = None
 
     def diagonalize(self, reals_only=False, sort=False, normalize=False):
-        """
-        Return (P, D), where D is diagonal and
+        """Returns (P, D), where D is diagonal and
 
             D = P^-1 * M * P
 
-        where M is current matrix.
+        where M is current matrix. Raises MatrixError if M is not
+        diagonalizable.
 
         Parameters
         ==========
 
-        reals_only : bool. Whether to throw an error if complex numbers are need
-                     to diagonalize. (Default: False)
-        sort : bool. Sort the eigenvalues along the diagonal. (Default: False)
-        normalize : bool. If True, normalize the columns of P. (Default: False)
+        reals_only : bool, optional (default: False)
+            Raise MatrixError if complex numbers are needed to diagonalize.
+        sort : bool, optional (default: False)
+            Sort the eigenvalues along the diagonal.
+        normalize : bool, optional (default: False)
+            Normalize the columns of P.
 
         Examples
         ========
@@ -1103,69 +1106,80 @@ class MatrixEigen(MatrixSubspaces):
 
         return self.hstack(*p_cols), self.diag(*diag)
 
-    def eigenvals(self, error_when_incomplete=True, **flags):
-        """Return eigenvalues using the Berkowitz agorithm to compute
+
+    def eigenvals(self, error_when_incomplete=True, rational=True, **flags):
+        """Returns eigenvalues using the Berkowitz algorithm to compute
         the characteristic polynomial.
+
+        By default a dictionary {eigenvalue: multiplicity} is returned.
+        To get a list with multiple eigenvalues repeated, set the ``multiple``
+        flag to True.
 
         Parameters
         ==========
 
-        error_when_incomplete : bool
+        error_when_incomplete : bool, optional (default: True)
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
-        Since the roots routine doesn't always work well with Floats,
-        they will be replaced with Rationals before calling that
-        routine. If this is not desired, set flag ``rational`` to False.
+        rational : bool, optional (default: True)
+            Replace Floats with Rationals before calling ``roots``. This
+            is done because ``roots`` does not work well with Floats.
+
+        flags : optional keyword arguments to be passed to ``roots``.
+
         """
         mat = self
         if not mat:
             return {}
-        if flags.pop('rational', True):
-            if any(v.has(Float) for v in mat):
-                mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+        if rational and any(v.has(Float) for v in mat):
+            mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
-        flags.pop('simplify', None)  # pop unsupported flag
         eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
-        # make sure the algebraic multiplicty sums to the
+        # make sure the algebraic multiplicity sums to the
         # size of the matrix
-        if error_when_incomplete and sum(m for m in eigs.values()) != self.cols:
-            raise MatrixError("Could not compute eigenvalues for {}".format(self))
+        if error_when_incomplete:
+            if flags.get('multiple'):
+                eigs_count = len(eigs)
+            else:
+                eigs_count = sum(m for m in eigs.values())
+            if eigs_count != self.cols:
+                raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
         return eigs
 
-    def eigenvects(self, error_when_incomplete=True, **flags):
-        """Return list of triples (eigenval, multiplicity, basis).
 
-        The flag ``simplify`` has two effects:
-            1) if bool(simplify) is True, as_content_primitive()
-            will be used to tidy up normalization artifacts;
-            2) if nullspace needs simplification to compute the
-            basis, the simplify flag will be passed on to the
-            nullspace routine which will interpret it there.
+    def eigenvects(self, error_when_incomplete=True, simplify=None,
+                   chop=False, **flags):
+        """Returns a list of triples (eigenvalue, algebraic multiplicity,
+        eigenspace basis).
 
         Parameters
         ==========
 
-        error_when_incomplete : bool
+        error_when_incomplete : bool, optional (default: True)
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
-        If the matrix contains any Floats, they will be changed to Rationals
-        for computation purposes, but the answers will be returned after being
-        evaluated with evalf. If it is desired to removed small imaginary
-        portions during the evalf step, pass a value for the ``chop`` flag.
+        simplify : bool or None, optional (default: None)
+            If None, the only simplification done is to a nullspace, when
+            its basis cannot be computed otherwise.
+            If True, then the eigenvectors will be simplified as well.
+            The value of False disables all simplification.
+
+        chop : bool, optional (default: False)
+            Truncate approximation errors caused by the conversion of
+            Floats to Rationals in the process of computing eigenvalues
+            and eigenvectors.
+
+        flags : optional keyword arguments to be passed to ``roots``.
+
         """
-        from sympy.matrices import eye
-
-        simplify = flags.get('simplify', True)
-        if not isinstance(simplify, FunctionType):
-            simpfunc = _simplify if simplify else lambda x: x
-        primitive = flags.get('simplify', False)
-        chop = flags.pop('chop', False)
-
-        flags.pop('multiple', None)  # remove this if it's there
+        # For this method, returning a list is not possible.
+        if flags.get('multiple'):
+            raise NotImplementedError(filldedent('''The multiple flag is not
+                supported since eigenvectors cannot be returned as a list.'''))
 
         mat = self
         # roots doesn't like Floats, so replace them with Rationals
@@ -1180,7 +1194,7 @@ class MatrixEigen(MatrixSubspaces):
             # the nullspace for a real eigenvalue should be
             # non-trivial.  If we didn't find an eigenvector, try once
             # more a little harder
-            if len(ret) == 0 and simplify:
+            if len(ret) == 0 and simplify is not False:
                 ret = m.nullspace(simplify=True)
             if len(ret) == 0:
                 raise NotImplementedError(
@@ -1192,32 +1206,30 @@ class MatrixEigen(MatrixSubspaces):
                                   **flags)
         ret = [(val, mult, eigenspace(val)) for val, mult in
                     sorted(eigenvals.items(), key=default_sort_key)]
-        if primitive:
-            # if the primitive flag is set, get rid of any common
-            # integer denominators
+        if simplify is True:
+            # get rid of any common integer denominators
             def denom_clean(l):
-                from sympy import gcd
-                return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
+                from sympy.polys.polytools import gcd
+                return [(v / gcd(list(v))).applyfunc(_simplify) for v in l]
             ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
         if has_floats:
             # if we had floats to start with, turn the eigenvectors to floats
             ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
 
-    def is_diagonalizable(self, reals_only=False, **kwargs):
+
+    def is_diagonalizable(self, reals_only=False, clear_cache=True):
         """Returns true if a matrix is diagonalizable.
 
         Parameters
         ==========
 
-        reals_only : bool. If reals_only=True, determine whether the matrix can be
-                     diagonalized without complex numbers. (Default: False)
+        reals_only : bool, optional (default: False)
+            Determine whether the matrix can be diagonalized without
+            complex numbers.
 
-        kwargs
-        ======
-
-        clear_cache : bool. If True, clear the result of any computations when finished.
-                      (Default: True)
+        clear_cache : bool, optional (default: True)
+            Clear the result of any computations when finished.
 
         Examples
         ========
@@ -1255,10 +1267,6 @@ class MatrixEigen(MatrixSubspaces):
         diagonalize
         """
 
-        clear_cache = kwargs.get('clear_cache', True)
-        if 'clear_subproducts' in kwargs:
-            clear_cache = kwargs.get('clear_subproducts')
-
         def cleanup():
             """Clears any cached values if requested"""
             if clear_cache:
@@ -1293,7 +1301,8 @@ class MatrixEigen(MatrixSubspaces):
         cleanup()
         return ret
 
-    def jordan_form(self, calc_transform=True, **kwargs):
+
+    def jordan_form(self, calc_transform=True, chop=False):
         """Return `(P, J)` where `J` is a Jordan block
         matrix and `P` is a matrix such that
 
@@ -1303,13 +1312,12 @@ class MatrixEigen(MatrixSubspaces):
         Parameters
         ==========
 
-        calc_transform : bool
+        calc_transform : bool, optional (default: True)
             If ``False``, then only `J` is returned.
-        chop : bool
-            All matrices are convered to exact types when computing
-            eigenvalues and eigenvectors.  As a result, there may be
-            approximation errors.  If ``chop==True``, these errors
-            will be truncated.
+        chop : bool, optional (default: False)
+            Truncate approximation errors caused by the conversion of
+            Floats to Rationals in the process of computing eigenvalues
+            and eigenvectors.
 
         Examples
         ========
@@ -1332,7 +1340,6 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError("Only square matrices have Jordan forms")
 
-        chop = kwargs.pop('chop', False)
         mat = self
         has_floats = any(v.has(Float) for v in self)
 
@@ -1518,8 +1525,9 @@ class MatrixEigen(MatrixSubspaces):
 
         return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
 
+
     def singular_values(self):
-        """Compute the singular values of a Matrix
+        """Returns the singular values of a matrix.
 
         Examples
         ========

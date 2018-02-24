@@ -935,6 +935,8 @@ def test_eigen():
                 [0, 0, 1]])
 
     assert M.eigenvals(multiple=False) == {S.One: 3}
+    assert M.eigenvals(multiple=True) == [S.One, S.One, S.One]
+    raises(NotImplementedError, lambda: M.eigenvects(multiple=True))
 
     assert M.eigenvects() == (
         [(1, 3, [Matrix([1, 0, 0]),
@@ -1621,15 +1623,10 @@ def test_diagonalization():
     assert m.is_diagonalizable()
 
 
-@XFAIL
-def test_eigen_vects():
+def test_diagonalizable_over_reals():
     m = Matrix(2, 2, [1, 0, 0, I])
-    raises(NotImplementedError, lambda: m.is_diagonalizable(True))
-    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 5292
-    assert not m.is_diagonalizable(True)
-    raises(MatrixError, lambda: m.diagonalize(True))
-    (P, D) = m.diagonalize(True)
+    assert not m.is_diagonalizable(reals_only=True)
+    raises(MatrixError, lambda: m.diagonalize(reals_only=True))
 
 
 def test_jordan_form():
