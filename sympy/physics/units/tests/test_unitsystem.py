@@ -2,18 +2,22 @@
 import warnings
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy import Rational
+from sympy import Rational, S
 from sympy.physics.units.definitions import c, kg, m, s
 from sympy.physics.units.dimensions import (
     Dimension, DimensionSystem, action, current, length, mass, time, velocity)
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.pytest import raises
+from sympy.physics.units.definitions import SI_quantity_dimension_map, SI_quantity_scale_factors
 
 
 def test_definition():
     # want to test if the system can have several units of the same dimension
-    dm = Quantity("dm", length, Rational(1, 10))
+    dm = Quantity("dm")
+    SI_quantity_dimension_map[dm] = length
+
+    SI_quantity_scale_factors[dm] = Rational(1, 10)
 
     base = (m, s)
     base_dim = (m.dimension, s.dimension)
@@ -43,16 +47,24 @@ def test_str_repr():
 def test_print_unit_base():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        A = Quantity("A", current, 1)
-        Js = Quantity("Js", action, 1)
-        mksa = UnitSystem((m, kg, s, A), (Js,))
 
+        A = Quantity("A")
+        SI_quantity_dimension_map[A] = current
+        SI_quantity_scale_factors[A] = S.One
+
+        Js = Quantity("Js")
+        SI_quantity_dimension_map[Js] = action
+        SI_quantity_scale_factors[Js] = S.One
+
+        mksa = UnitSystem((m, kg, s, A), (Js,))
         assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
 
 
 def test_extend():
     ms = UnitSystem((m, s), (c,))
-    Js = Quantity("Js", action, 1)
+    Js = Quantity("Js")
+    SI_quantity_dimension_map[Js] = action
+    SI_quantity_scale_factors[Js] = 1
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))

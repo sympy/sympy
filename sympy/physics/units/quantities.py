@@ -12,6 +12,7 @@ from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
 from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class Quantity(AtomicExpr):
@@ -25,48 +26,44 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
-    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, dim_sys=dimsys_default, **assumptions):
+    def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None, **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
 
-        if not isinstance(dim_sys, DimensionSystem):
-            raise TypeError("%s is not a DimensionSystem" % dim_sys)
+        if dimension is not None:
+            SymPyDeprecationWarning(
+                deprecated_since_version="1.3",
+                issue=14319,
+                feature="Quantity arguments",
+                useinstead="SI_quantity_dimension_map",
+            ).warn()
 
-        if not isinstance(dimension, dimensions.Dimension):
-            if dimension == 1:
-                dimension = Dimension(1)
-            else:
-                raise ValueError("expected dimension or 1")
-        else:
-            for dim_sym in dimension.name.atoms(Dimension):
-                if dim_sym not in [i.name for i in dim_sys._dimensional_dependencies]:
-                    raise ValueError("Dimension %s is not registered in the "
-                                     "dimensional dependency tree." % dim_sym)
+        if scale_factor is not None:
+            SymPyDeprecationWarning(
+                deprecated_since_version="1.3",
+                issue=14319,
+                feature="Quantity arguments",
+                useinstead="SI_quantity_scale_factors",
+            ).warn()
 
-        scale_factor = sympify(scale_factor)
-
-        dimex = Quantity.get_dimensional_expr(scale_factor)
-        if dimex != 1:
-            if not dim_sys.equivalent_dims(dimension, Dimension(dimex)):
-                raise ValueError("quantity value and dimension mismatch")
-
-        # replace all prefixes by their ratio to canonical units:
-        scale_factor = scale_factor.replace(lambda x: isinstance(x, Prefix), lambda x: x.scale_factor)
-        # replace all quantities by their ratio to canonical units:
-        scale_factor = scale_factor.replace(lambda x: isinstance(x, Quantity), lambda x: x.scale_factor)
+        #if not isinstance(dim_sys, DimensionSystem):
+            #raise TypeError("%s is not a DimensionSystem" % dim_sys)
 
         if abbrev is None:
             abbrev = name
         elif isinstance(abbrev, string_types):
             abbrev = Symbol(abbrev)
 
-        obj = AtomicExpr.__new__(cls, name, dimension, scale_factor, abbrev)
+        obj = AtomicExpr.__new__(cls, name, abbrev)
         obj._name = name
-        obj._dimension = dimension
-        obj._scale_factor = scale_factor
-        obj._dim_sys = dim_sys
         obj._abbrev = abbrev
+
+        if scale_factor is not None:
+            # TODO: remove after deprecation:
+            from sympy.physics.units.definitions import SI_quantity_scale_factors
+            scale_factor = process_scale_factor(scale_factor)
+            SI_quantity_scale_factors[obj] = scale_factor
         return obj
 
     @property
@@ -75,11 +72,9 @@ class Quantity(AtomicExpr):
 
     @property
     def dimension(self):
-        return self._dimension
-
-    @property
-    def dim_sys(self):
-        return self._dim_sys
+        # TODO: add support for units other than SI:
+        from sympy.physics.units.definitions import SI_quantity_dimension_map
+        return SI_quantity_dimension_map[self]
 
     @property
     def abbrev(self):
@@ -95,7 +90,8 @@ class Quantity(AtomicExpr):
         """
         Overall magnitude of the quantity as compared to the canonical units.
         """
-        return self._scale_factor
+        from sympy.physics.units.definitions import SI_quantity_scale_factors
+        return SI_quantity_scale_factors.get(self, S.One)
 
     def _eval_is_positive(self):
         return self.scale_factor.is_positive
@@ -105,8 +101,10 @@ class Quantity(AtomicExpr):
 
     def _eval_Abs(self):
         # FIXME prefer usage of self.__class__ or type(self) instead
-        return self.func(self.name, self.dimension, Abs(self.scale_factor),
-                         self.abbrev, self.dim_sys)
+        q = self.func(self.name, self.abbrev)
+        # TODO: add support for unit systems other that SI:
+        from sympy.physics.units.definitions import SI_quantity_scale_factors
+        SI_quantity_scale_factors[q] = process_scale_factor(Abs(self.scale_factor))
 
     def _eval_subs(self, old, new):
         if isinstance(new, Quantity) and self != old:
@@ -231,3 +229,30 @@ def _Quantity_constructor_postprocessor_Add(expr):
 Basic._constructor_postprocessor_mapping[Quantity] = {
     "Add" : [_Quantity_constructor_postprocessor_Add],
 }
+
+
+def process_dimension(dimension):
+    from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
+    # TODO: add support for more dimension systems:
+    dim_sys = dimsys_default
+
+    if not isinstance(dimension, dimensions.Dimension):
+        if dimension == 1:
+            dimension = Dimension(1)
+        else:
+            raise ValueError("expected dimension or 1")
+    else:
+        for dim_sym in dimension.name.atoms(Dimension):
+            if dim_sym not in [i.name for i in dim_sys._dimensional_dependencies]:
+                raise ValueError("Dimension %s is not registered in the "
+                                 "dimensional dependency tree." % dim_sym)
+    return dimension
+
+
+def process_scale_factor(scale_factor):
+    scale_factor = sympify(scale_factor)
+    # replace all prefixes by their ratio to canonical units:
+    scale_factor = scale_factor.replace(lambda x: isinstance(x, Prefix), lambda x: x.scale_factor)
+    # replace all quantities by their ratio to canonical units:
+    scale_factor = scale_factor.replace(lambda x: isinstance(x, Quantity), lambda x: x.scale_factor)
+    return scale_factor

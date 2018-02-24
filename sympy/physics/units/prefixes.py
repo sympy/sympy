@@ -134,13 +134,18 @@ def prefix_unit(unit, prefixes):
     """
 
     from sympy.physics.units.quantities import Quantity
+    from sympy.physics.units.definitions import SI_quantity_dimension_map, SI_quantity_scale_factors
 
     prefixed_units = []
 
     for prefix_abbr, prefix in prefixes.items():
-        prefixed_units.append(Quantity("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor * prefix,
-                                       abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
-                                       ))
+        quantity = Quantity(
+                "%s%s" % (prefix.name, unit.name),
+                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+           )
+        SI_quantity_dimension_map[quantity] = unit.dimension
+        SI_quantity_scale_factors[quantity] = unit.scale_factor*prefix
+        prefixed_units.append(quantity)
 
     return prefixed_units
 
