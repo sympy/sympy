@@ -68,7 +68,7 @@ def test_represent_spin_states():
     assert represent(JyKet(1, 0), basis=Jy) == Matrix([0, 1, 0])
     assert represent(JyKet(1, -1), basis=Jy) == Matrix([0, 0, 1])
     assert represent(
-        JzKet(S(1)/2, S(1)/2), basis=Jy) == Matrix([[sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/2], 
+        JzKet(S(1)/2, S(1)/2), basis=Jy) == Matrix([[sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/2],
         [sqrt(2)*(-sqrt(2)/2 + sqrt(2)*I/2)*(sqrt(2)/2 - sqrt(2)*I/2)/2]])
     assert represent(
         JzKet(S(1)/2, -S(1)/2), basis=Jy) == Matrix([[-sqrt(2)*(-sqrt(2)/2 - sqrt(2)*I/2)*(sqrt(2)/2 + sqrt(2)*I/2)/2],
