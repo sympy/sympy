@@ -1948,6 +1948,26 @@ class asin(InverseTrigonometricFunction):
         if i_coeff is not None:
             return S.ImaginaryUnit * asinh(i_coeff)
 
+        if isinstance(arg, sin):
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to (-pi,pi]
+                    ang = pi-ang
+
+                # restrict to [-pi/2,pi/2]
+                if ang > pi/2:
+                    ang = pi-ang
+                if ang < -pi/2:
+                    ang = -pi-ang
+
+                return ang
+
+        if isinstance(arg, cos): # acos(x) + asin(x) = pi/2
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                return pi/2 - acos(arg)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -2089,6 +2109,20 @@ class acos(InverseTrigonometricFunction):
 
             if arg in cst_table:
                 return cst_table[arg]
+
+        if isinstance(arg, cos):
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to [0,pi]
+                    ang = 2*pi - ang
+
+                return ang
+
+        if isinstance(arg, sin): # acos(x) + asin(x) = pi/2
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                return pi/2 - asin(arg)
 
     @staticmethod
     @cacheit
@@ -2261,6 +2295,20 @@ class atan(InverseTrigonometricFunction):
         if i_coeff is not None:
             return S.ImaginaryUnit * atanh(i_coeff)
 
+        if isinstance(arg, tan):
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                ang %= pi # restrict to [0,pi)
+                if ang > pi/2: # restrict to [-pi/2,pi/2]
+                    ang = pi - ang
+
+                return ang
+
+        if isinstance(arg, cot): # atan(x) + acot(x) = pi/2
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                return pi/2 - acot(arg)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -2405,6 +2453,16 @@ class acot(InverseTrigonometricFunction):
         if i_coeff is not None:
             return -S.ImaginaryUnit * acoth(i_coeff)
 
+        if isinstance(arg, cot):
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                return ang % pi # restrict to [0,pi)
+
+        if isinstance(arg, tan): # atan(x) + acot(x) = pi/2
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                return pi/2 - atan(arg)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -2531,6 +2589,20 @@ class asec(InverseTrigonometricFunction):
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Pi/2
 
+        if isinstance(arg, sec):
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to [0,pi]
+                    ang = 2*pi - ang
+
+                return ang
+
+        if isinstance(arg, csc): # asec(x) + acsc(x) = pi/2
+            ang = arg.args[0]
+            if not ang.has(Symbol):
+                return pi/2 - acsc(arg)
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return 1/(self.args[0]**2*sqrt(1 - 1/self.args[0]**2))
@@ -2622,6 +2694,26 @@ class acsc(InverseTrigonometricFunction):
                 return -S.Pi/2
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Zero
+
+        if isinstance(arg, csc):
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to (-pi,pi]
+                    ang = pi-ang
+
+                # restrict to [-pi/2,pi/2]
+                if ang > pi/2:
+                    ang = pi-ang
+                if ang < -pi/2:
+                    ang = -pi-ang
+
+                return ang
+
+        if isinstance(arg, sec): # asec(x) + acsc(x) = pi/2
+            ang = arg.args[0]
+            if not ang.has(Symbol) and ang.is_real:
+                return pi/2 - asec(arg)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
