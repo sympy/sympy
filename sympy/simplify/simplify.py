@@ -874,26 +874,20 @@ def _nthroot_solve(p, n, prec):
 
 
 def quantity_simplify(expr):
-    from sympy.physics.units import Quantity, length
-    n = len(expr.args)
-    a = 1
-    for i in range (n):
-        if (expr.args[i].is_Pow):
-            if (expr.args[i].args[1]<0):
-                a *= 1/((1/expr.args[i]).scale_factor)
-            else:
-                b = expr.args[i].args[0]
-                a *= b.scale_factor**(expr.args[i].args[1])
-        elif (expr.args[i].is_Number):
-            a *= expr.args[i]
-        elif (expr.args[i].is_symbol):
-            a *= expr.args[i]
-        elif ((expr.args[i]).has(Quantity)):
-            if (expr.args[i].dimension == length):
-                a *= expr.args[i].scale_factor
-            else:
-                a *= expr.args[i]
-    return a
+    from sympy.physics.units import Quantity
+    if expr.is_Atom:
+        return expr
+    if not expr.is_Mul:
+        return expr.func(*map(quantity_simplify, expr.args))
+    coeff, args = expr.as_coeff_mul(Quantity)
+    args_pow = [arg.as_base_exp() for arg in args]
+    quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
+    quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
+    # Just pick the first quantity:
+    ref_quantities = [i[0][0] for i in quantity_pow_by_dim.values()]
+    new_quantities = [Mul.fromiter((quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
+        for quantity, (k, v) in zip(ref_quantities, quantity_pow_by_dim.items())]
+    return coeff*Mul.fromiter(other_pow)*Mul.fromiter(new_quantities)
 
 
 def logcombine(expr, force=False):
