@@ -1,5 +1,5 @@
-from sympy import AccumBounds, Symbol, floor, nan, oo, E, symbols, ceiling, pi, \
-        Rational, Float, I, sin, exp, log, factorial, frac
+from sympy import AccumBounds, Symbol, floor, nan, oo, zoo, E, symbols, \
+        ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac
 
 from sympy.utilities.pytest import XFAIL
 
