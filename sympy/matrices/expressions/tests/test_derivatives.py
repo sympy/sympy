@@ -3,7 +3,8 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace
+from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative
+from sympy import MatAdd
 
 k = symbols("k")
 
@@ -19,6 +20,15 @@ a = MatrixSymbol("a", k, 1)
 b = MatrixSymbol("b", k, 1)
 c = MatrixSymbol("c", k, 1)
 d = MatrixSymbol("d", k, 1)
+
+
+def test_matrix_derivative_non_matrix_result():
+    # This is a 4-dimensional array:
+    assert A.diff(A) == Derivative(A, A)
+    assert A.T.diff(A) == Derivative(A.T, A)
+    assert (2*A).diff(A) == Derivative(2*A, A)
+    assert MatAdd(A, A).diff(A) == Derivative(MatAdd(A, A), A)
+    assert (A + B).diff(A) == Derivative(A + B, A)  # TODO: `B` can be removed.
 
 
 def test_matrix_derivative_trivial_cases():
