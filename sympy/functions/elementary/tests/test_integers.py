@@ -14,6 +14,7 @@ def test_floor():
 
     assert floor(oo) == oo
     assert floor(-oo) == -oo
+    assert floor(zoo) == zoo
 
     assert floor(0) == 0
 
@@ -48,6 +49,7 @@ def test_floor():
 
     assert floor(oo*I) == oo*I
     assert floor(-oo*I) == -oo*I
+    assert floor(exp(I*pi/4)*oo) == exp(I*pi/4)*oo
 
     assert floor(2*I) == 2*I
     assert floor(-2*I) == -2*I
@@ -117,6 +119,7 @@ def test_ceiling():
 
     assert ceiling(oo) == oo
     assert ceiling(-oo) == -oo
+    assert ceiling(zoo) == zoo
 
     assert ceiling(0) == 0
 
@@ -151,6 +154,7 @@ def test_ceiling():
 
     assert ceiling(oo*I) == oo*I
     assert ceiling(-oo*I) == -oo*I
+    assert ceiling(exp(I*pi/4)*oo) == exp(I*pi/4)*oo
 
     assert ceiling(2*I) == 2*I
     assert ceiling(-2*I) == -2*I
