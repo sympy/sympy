@@ -206,22 +206,6 @@ def test_units():
     t = Symbol('t')
     assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
-    
-def test_eval_simplify():
-    from sympy.physics.units import cm, mm, km, m, K
-    from sympy.simplify.simplify import simplify
-
-    x = symbols('x')
-
-    assert ((cm/mm).simplify()) == 10
-    assert ((km/m).simplify()) == 1000
-    assert ((km/cm).simplify()) == 100000
-    assert ((10*x*K*km**2/m/cm).simplify()) == 1000000000*x*kelvin
-    assert ((cm/km/m).simplify()) == 1/100000
-    
-    q = Quantity("x7", time, None, abbrev="xyl")
-    raises(AttributeError, lambda: (q/cm).simplify())
-    raises(AttributeError, lambda: (km/q).simplify())
 
 
 def test_issue_quart():
