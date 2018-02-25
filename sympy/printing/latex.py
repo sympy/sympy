@@ -1813,15 +1813,15 @@ class LatexPrinter(Printer):
 
     def _print_Poly(self, poly):
         cls = poly.__class__.__name__
-        terms, gens = [], [s for s in poly.gens]
+        terms = []
         for monom, coeff in poly.terms():
-            s_monom = None
+            s_monom = ''
             for i, exp in enumerate(monom):
                 if exp > 0:
                     if exp == 1:
-                        s_monom = self._print(gens[i])
+                        s_monom += self._print(poly.gens[i])
                     else:
-                        s_monom = self._print(pow(gens[i], exp))
+                        s_monom += self._print(pow(poly.gens[i], exp))
 
             if coeff.is_Add:
                 if s_monom:
