@@ -112,3 +112,20 @@ def test_convert_to_tuples_of_quantities():
     assert NS(convert_to(planck_time, second), n=6) == '5.39116e-44*second'
     assert NS(convert_to(planck_temperature, kelvin), n=7) == '1.416809e+32*kelvin'
     assert NS(convert_to(convert_to(meter, [G, speed_of_light, planck]), meter), n=10) == '1.000000000*meter'
+
+
+def test_eval_simplify():
+    from sympy.physics.units import cm, mm, km, m, K, Quantity
+    from sympy.simplify.simplify import simplify
+
+    x = symbols('x')
+
+    assert ((cm/mm).simplify()) == 10
+    assert ((km/m).simplify()) == 1000
+    assert ((km/cm).simplify()) == 100000
+    assert ((10*x*K*km**2/m/cm).simplify()) == 1000000000*x*kelvin
+    assert ((cm/km/m).simplify()) == 1/100000
+    
+    q = Quantity("x7", time, None, abbrev="xyl")
+    raises(AttributeError, lambda: (q/cm).simplify())
+    raises(AttributeError, lambda: (km/q).simplify())
