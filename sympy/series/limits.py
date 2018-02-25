@@ -14,18 +14,31 @@ from sympy.simplify.ratsimp import ratsimp
 from sympy.polys import PolynomialError, factor
 from sympy.simplify.simplify import together
 
-def limit(e, z, z0, dir="+"):
-    """
-    Compute the limit of ``e(z)`` at the point ``z0``.
+def limit(e, z, z0, dir="+", sequence=None):
+    """Computes the limit of ``e(z)`` at the point ``z0``.
 
-    ``z0`` can be any expression, including ``oo`` and ``-oo``.
+    Parameters
+    ==========
 
-    For ``dir="+-"`` it calculates the bi-directional limit; for
-    ``dir="+"`` (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-).
-    For infinite ``z0`` (``oo`` or ``-oo``), the ``dir`` argument is
-    determined from the direction of the infinity (i.e.,
-    ``dir="-"`` for ``oo``).
+    e : expression, the limit of which is to be taken
+
+    z : symbol representing the variable in the limit.
+        Other symbols are treated as constants. Multivariate limits
+        are not supported.
+
+    z0 : the value toward which ``z`` tends. Can be any expression,
+        including ``oo`` and ``-oo``.
+
+    dir : string, optional (default: "+")
+        The limit is bi-directional if ``dir="+-"``, from the right
+        (z->z0+) if ``dir="+"``, and from the left (z->z0-) if
+        ``dir="-"``. For infinite ``z0`` (``oo`` or ``-oo``), the ``dir``
+        argument is determined from the direction of the infinity
+        (i.e., ``dir="-"`` for ``oo``).
+
+    sequence : bool or None, optional (default: None)
+        Consider the limit as a sequence limit. If None, the value is
+        inferred from the variable being integer and z0 being Infinity.
 
     Examples
     ========
@@ -55,8 +68,8 @@ def limit(e, z, z0, dir="+"):
     """
 
     if dir == "+-":
-        llim = Limit(e, z, z0, dir="-").doit(deep=False)
-        rlim = Limit(e, z, z0, dir="+").doit(deep=False)
+        llim = Limit(e, z, z0, dir="-").doit(deep=False, sequence=sequence)
+        rlim = Limit(e, z, z0, dir="+").doit(deep=False, sequence=sequence)
         if llim == rlim:
             return rlim
         else:
@@ -65,7 +78,7 @@ def limit(e, z, z0, dir="+"):
                     "left hand limit = %s and right hand limit = %s"
                     % (llim, rlim))
     else:
-        return Limit(e, z, z0, dir).doit(deep=False)
+        return Limit(e, z, z0, dir).doit(deep=False, sequence=sequence)
 
 
 def heuristics(e, z, z0, dir):
@@ -156,17 +169,37 @@ class Limit(Expr):
         return isyms
 
 
-    def doit(self, **hints):
-        """Evaluates limit"""
+    def doit(self, sequence=None, trials=5, deep=True, **hints):
+        """Evaluates the limit.
+
+        Parameters
+        ==========
+
+        sequence : bool or None, optional (default: None)
+            Consider the limit as a sequence limit. If None, the value is
+            inferred from the variable being integer.
+
+        trials : int, optional (default: 5)
+            Used only for sequences; puts a limit on the number of
+            iterated discrete differences taken.
+
+        deep : bool, optional (default: True)
+            Invoke the ``doit`` method of the expressions involved before
+            taking the limit.
+
+        hints : optional keyword arguments
+            To be passed to ``doit`` methods; only used if deep is True.
+
+        """
         from sympy.series.limitseq import limit_seq
         from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args
 
-        if hints.get('deep', True):
-            e = e.doit(**hints)
-            z = z.doit(**hints)
-            z0 = z0.doit(**hints)
+        if deep:
+            e = e.doit(deep=deep, **hints)
+            z = z.doit(deep=deep, **hints)
+            z0 = z0.doit(deep=deep, **hints)
 
         if e == z:
             return z0
@@ -214,9 +247,10 @@ class Limit(Expr):
             if r is None:
                 return self
         except NotImplementedError:
-            # Trying finding limits of sequences
-            if hints.get('sequence', True) and z0 is S.Infinity:
-                trials = hints.get('trials', 5)
+            # Trying to find the limit of a sequence.
+            if sequence is None:
+                sequence = z.is_integer
+            if sequence and z0 is S.Infinity:
                 r = limit_seq(e, z, trials)
                 if r is None:
                     raise NotImplementedError()
