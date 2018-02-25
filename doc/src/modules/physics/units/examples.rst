@@ -100,8 +100,8 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     >>> eq
     Eq(T**2/venus_a**3, 4*pi**2/(gravitational_constant*solar_mass))
     >>> q = solve(eq, T)[1]
-    >>> q.n()
-    6.28318530717959*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
+    >>> q
+    2*pi*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
 
 To convert to days, use the ``convert_to`` function (and possibly approximate
 the outcoming result:
