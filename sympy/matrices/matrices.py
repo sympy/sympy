@@ -2522,7 +2522,7 @@ class MatrixBase(MatrixDeprecated,
         # n = self.rows
         ret = P * eJ * P.inv()
         if all(value.is_real for value in self.values()):
-            return re(ret)
+            return type(self)(re(ret))
         else:
             return type(self)(ret)
 
