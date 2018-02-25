@@ -36,7 +36,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars)
-
+from sympy.functions.elementary.miscellaneous import Max, Min
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -921,7 +921,7 @@ def test_solve_lambert():
 
 
 def test_solveset():
-    x = Symbol('x')
+    x, y = symbols('x, y')
     f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
     assert solveset(x, 1) == S.EmptySet
@@ -952,6 +952,12 @@ def test_solveset():
                                                   S.Integers)
     # issue 13825
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
+    #issue 10158
+    assert solveset(x*Max(x, 15) - 10, x) == FiniteSet(S("2/3"))
+    assert solveset(x*Min(x, 15) - 10, x) == FiniteSet(-sqrt(10), sqrt(10))
+    assert solveset(Max(abs(x-3)-1,x+2)-3, x, S.Reals) == FiniteSet(-1, 1)
+    assert solveset(Abs(x-1) - Abs(y), x, S.Reals) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
+    assert solveset(Abs(x**3 + 4*Abs(x+1)), x, S.Reals) == FiniteSet(-(54 + 6*sqrt(129))**S((S(1)/3))/3 + 4/(54 + 6*sqrt(129))**(S(1)/3))
 
 
 def test_conditionset():

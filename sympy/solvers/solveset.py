@@ -34,8 +34,10 @@ from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.miscellaneous import Max, Min
 from types import GeneratorType
+from sympy.utilities.iterables import numbered_symbols
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -994,6 +996,21 @@ def solveset(f, symbol=None, domain=S.Complexes):
         else:
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
+
+    reps = list(zip(
+        # do larger expressions first in case they contain
+        # other Abs
+        reversed(list(ordered(
+            [i for i in f.atoms(Abs) if symbol in i.free_symbols]))),
+        numbered_symbols("t", cls=Dummy)))
+    for k in reps:
+        f = f.replace(k[0], k[1])
+
+    f = f.rewrite(Piecewise)
+
+    if reps:
+        f = f.xreplace(dict([(n, o) for o, n in reps]))
+
 
     if isinstance(f, Eq):
         from sympy.core import Add
