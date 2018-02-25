@@ -28,7 +28,7 @@ def test_matrix_derivative_non_matrix_result():
     assert A.T.diff(A) == Derivative(A.T, A)
     assert (2*A).diff(A) == Derivative(2*A, A)
     assert MatAdd(A, A).diff(A) == Derivative(MatAdd(A, A), A)
-    assert (A + B).diff(B) == Derivative(A + B, A)  # TODO: `B` can be removed.
+    assert (A + B).diff(A) == Derivative(A + B, A)  # TODO: `B` can be removed.
 
 
 def test_matrix_derivative_trivial_cases():
