@@ -15,6 +15,8 @@ from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.ellipse import Ellipse
 
+from sympy import sqrt
+
 
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
@@ -40,6 +42,9 @@ class Parabola(GeometrySet):
     p parameter
     vertex
     eccentricity
+    area
+    centroid
+    second moment of area
 
     Raises
     ======
@@ -413,3 +418,126 @@ class Parabola(GeometrySet):
             vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
 
         return vertex
+
+    def area(self, l):
+        """The Area of the parabola upto l distance.
+
+        Parameters
+        ==========
+
+        l : number or Basic instance
+            l is the distance along symmetric axis from vertex to line parallel
+            to directrix upto which area is to be calculated.
+
+        Returns
+        =======
+
+        area : number or Basic instance
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.area(4)
+        128/3
+
+        """
+        return (8*sqrt(self.focal_length)*sqrt(l**3))/3
+
+    def centroid(self, l):
+        """The centroid of the parabola upto l distance.
+
+        Parameters
+        ==========
+
+        l : number or Basic instance
+            l is the distance along symmetric axis from vertex to line parallel
+            to directrix upto which centroid is to be calculated.
+
+        Returns
+        =======
+
+        centroid : Point
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.centroid(4)
+        (0, 1.60000000000000)
+
+        """
+        c = 3*l/5
+        if(self.directrix.slope == 0):
+            if(self.focus[1] > self.vertex[1]):
+                return self.vertex[0], self.vertex[1] + c
+            else:
+                return self.vertex[0], self.vertex[1] - c
+        if(self.directrix.slope == S.Infinity):
+            if(self.focus[0] > self.vertex[0]):
+                return self.vertex[0] + c, self.vertex[1]
+            else:
+                return self.vertex[0] - c, self.vertex[1]
+
+    def second_moment_of_area(self, l, point=None):
+        """Returns the second moment and product moment of area of a Parabola upto l distance.
+
+        Parameters
+        ==========
+
+        l : number or Basic instance
+            l is the distance along symmetric axis from vertex to line parallel
+            to directrix upto which second moment of area is to be calculated.
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
+            point is the point about which second moment of area is to be found.
+            If "point=None" it will be calculated about the axis passing through the
+            centroid of the polygon.
+
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+            I_xx, I_yy are second moment of area of a two dimensional polygon.
+            I_xy is product moment of area of a two dimensional polygon.
+
+        Examples
+        ========
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.second_moment_of_area(4)
+        (538.331428571429, 8192/15, 0)
+
+        """
+        a = self.focal_length
+        I_xx_v = 32*sqrt((a**3)*(l**5))/15
+        I_yy_v = 8*sqrt(a*(l**7))/7
+        I_xy_v = 0;
+        c = self.centroid(l)
+        Ar = self.area(l)
+        if(self.directrix.slope == 0):
+            I_xx_c = I_yy_v + Ar*((c[1] - self.vertex[1])**2)
+            I_yy_c = I_xx_v
+            I_xy_c = I_xy_v
+            if point is None:
+                return I_xx_c, I_yy_c, I_xy_c
+
+            I_xx = I_xx_c + Ar*((c[1] - point[1])**2)
+            I_yy = I_yy_c + Ar*((c[0] - point[0])**2)
+            I_xy = I_xy_c + Ar*((point[0]-c[0])*(point[1]-c[1]))
+
+            return I_xx, I_yy, I_xy
+
+        if(self.directrix.slope == S.Infinity):
+            I_xx_c = I_xx_v
+            I_yy_c = I_yy_v - Ar*((c[0] - self.vertex[0])**2)
+            I_xy_c = I_xy_v
+            if point is None:
+                return I_xx_c, I_yy_c, I_xx_c
+
+            I_xx = I_xx_c + Ar*((c[1] - point[1])**2)
+            I_yy = I_yy_c + Ar*((c[0] - point[0])**2)
+            I_xy = I_xy_c + Ar*((point[0]-c[0])*(point[1]-c[1]))
+
+            return I_xx, I_yy, I_xy
