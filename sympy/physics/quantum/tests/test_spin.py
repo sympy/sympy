@@ -151,7 +151,7 @@ def test_represent_uncoupled_states():
         [(-sqrt(2)/2 + sqrt(2)*I/2)**2*(sqrt(2)/2 - sqrt(2)*I/2)**2/2]])
     assert (represent(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2)), basis=Jy)).expand() == \
         Matrix([[-I/2], [S(1)/2], [-S(1)/2], [-I/2]])
-    assert (represent(TensorProduct(JzKet(S(1)/2, -S(1)/2), JzKet(S(1)/2, S(1)/2)), basis=Jy)).expand == \
+    assert (represent(TensorProduct(JzKet(S(1)/2, -S(1)/2), JzKet(S(1)/2, S(1)/2)), basis=Jy)).expand() == \
         Matrix([[-I/2], [-S(1)/2], [S(1)/2], [-I/2]])
     assert represent(TensorProduct(JzKet(S(1)/2, -S(1)/2), JzKet(S(1)/2, -S(1)/2)), basis=Jy) == \
         Matrix([[(-sqrt(2)/2 - sqrt(2)*I/2)**2*(sqrt(2)/2 + sqrt(2)*I/2)**2/2],
