@@ -1571,6 +1571,7 @@ def test_issue_14320():
     assert acos(cos(30)) == -30 + 10*pi and (0 <= -30 + 10*pi <= pi) and cos(30) == cos(-30 + 10*pi)
 
     assert atan(tan(17)) == -5*pi + 17 and (-pi/2 < -5*pi + 17 < pi/2) and tan(17) == tan(-5*pi + 17)
+    assert atan(tan(15)) == -5*pi + 15 and (-pi/2 < -5*pi + 15 < pi/2) and tan(15) == tan(-5*pi + 15)
     assert atan(cot(12)) == -12 + 7*pi/2 and (-pi/2 < -12 + 7*pi/2 < pi/2) and cot(12) == tan(-12 + 7*pi/2)
     assert acot(cot(15)) == -4*pi + 15 and (0 < -4*pi + 15 < pi) and cot(15) == cot(-4*pi + 15)
     assert acot(tan(19)) == -19 + 13*pi/2 and (0 < -19 + 13*pi/2 < pi) and tan(19) == cot(-19 + 13*pi/2)
