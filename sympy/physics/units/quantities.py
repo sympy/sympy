@@ -113,7 +113,7 @@ class Quantity(AtomicExpr):
             return self
 
     def _eval_simplify(self):
-        return quantsimp(self)
+        return quantity_simplify(self)
 
     @staticmethod
     def get_dimensional_expr(expr):
