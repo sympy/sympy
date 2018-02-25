@@ -1950,22 +1950,22 @@ class asin(InverseTrigonometricFunction):
 
         if isinstance(arg, sin):
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 ang %= 2*pi # restrict to [0,2*pi)
                 if ang > pi: # restrict to (-pi,pi]
-                    ang = pi-ang
+                    ang = pi - ang
 
                 # restrict to [-pi/2,pi/2]
                 if ang > pi/2:
-                    ang = pi-ang
+                    ang = pi - ang
                 if ang < -pi/2:
-                    ang = -pi-ang
+                    ang = -pi - ang
 
                 return ang
 
         if isinstance(arg, cos): # acos(x) + asin(x) = pi/2
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 return pi/2 - acos(arg)
 
     @staticmethod
@@ -2112,7 +2112,7 @@ class acos(InverseTrigonometricFunction):
 
         if isinstance(arg, cos):
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 ang %= 2*pi # restrict to [0,2*pi)
                 if ang > pi: # restrict to [0,pi]
                     ang = 2*pi - ang
@@ -2121,7 +2121,7 @@ class acos(InverseTrigonometricFunction):
 
         if isinstance(arg, sin): # acos(x) + asin(x) = pi/2
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 return pi/2 - asin(arg)
 
     @staticmethod
@@ -2297,7 +2297,7 @@ class atan(InverseTrigonometricFunction):
 
         if isinstance(arg, tan):
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 ang %= pi # restrict to [0,pi)
                 if ang > pi/2: # restrict to [-pi/2,pi/2]
                     ang = pi - ang
@@ -2306,7 +2306,7 @@ class atan(InverseTrigonometricFunction):
 
         if isinstance(arg, cot): # atan(x) + acot(x) = pi/2
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 return pi/2 - acot(arg)
 
     @staticmethod
@@ -2455,12 +2455,12 @@ class acot(InverseTrigonometricFunction):
 
         if isinstance(arg, cot):
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 return ang % pi # restrict to [0,pi)
 
         if isinstance(arg, tan): # atan(x) + acot(x) = pi/2
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 return pi/2 - atan(arg)
 
     @staticmethod
@@ -2591,7 +2591,7 @@ class asec(InverseTrigonometricFunction):
 
         if isinstance(arg, sec):
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 ang %= 2*pi # restrict to [0,2*pi)
                 if ang > pi: # restrict to [0,pi]
                     ang = 2*pi - ang
@@ -2600,7 +2600,7 @@ class asec(InverseTrigonometricFunction):
 
         if isinstance(arg, csc): # asec(x) + acsc(x) = pi/2
             ang = arg.args[0]
-            if not ang.has(Symbol):
+            if ang.is_comparable:
                 return pi/2 - acsc(arg)
 
     def fdiff(self, argindex=1):
@@ -2697,22 +2697,22 @@ class acsc(InverseTrigonometricFunction):
 
         if isinstance(arg, csc):
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 ang %= 2*pi # restrict to [0,2*pi)
                 if ang > pi: # restrict to (-pi,pi]
-                    ang = pi-ang
+                    ang = pi - ang
 
                 # restrict to [-pi/2,pi/2]
                 if ang > pi/2:
-                    ang = pi-ang
+                    ang = pi - ang
                 if ang < -pi/2:
-                    ang = -pi-ang
+                    ang = -pi - ang
 
                 return ang
 
         if isinstance(arg, sec): # asec(x) + acsc(x) = pi/2
             ang = arg.args[0]
-            if not ang.has(Symbol) and ang.is_real:
+            if ang.is_comparable:
                 return pi/2 - asec(arg)
 
     def fdiff(self, argindex=1):
