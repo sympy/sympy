@@ -32,8 +32,8 @@ def test_eq():
 
 def test_convert_to():
     q = Quantity("q1")
-    q._set_dimension(length)
-    q._set_scale_factor(S(5000))
+    q.set_dimension(length)
+    q.set_scale_factor(S(5000))
 
     assert q.convert_to(m) == 5000*m
 
@@ -49,17 +49,17 @@ def test_convert_to():
 
 def test_Quantity_definition():
     q = Quantity("s10", abbrev="sabbr")
-    q._set_dimension(time)
-    q._set_scale_factor(10)
+    q.set_dimension(time)
+    q.set_scale_factor(10)
     u  =  Quantity("u", abbrev="dam")
-    u._set_dimension(length)
-    u._set_scale_factor(10)
+    u.set_dimension(length)
+    u.set_scale_factor(10)
     km =  Quantity("km")
-    km._set_dimension(length)
-    km._set_scale_factor(kilo)
+    km.set_dimension(length)
+    km.set_scale_factor(kilo)
     v =  Quantity("u")
-    v._set_dimension(length)
-    v._set_scale_factor(5*kilo)
+    v.set_dimension(length)
+    v.set_scale_factor(5*kilo)
 
     assert q.scale_factor == 10
     assert q.dimension == time
@@ -82,15 +82,15 @@ def test_Quantity_definition():
 
 def test_abbrev():
     u = Quantity("u")
-    u._set_dimension(length)
-    u._set_scale_factor(S.One)
+    u.set_dimension(length)
+    u.set_scale_factor(S.One)
 
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("u")
 
     u = Quantity("u", abbrev="om")
-    u._set_dimension(length)
-    u._set_scale_factor(S(2))
+    u.set_dimension(length)
+    u.set_scale_factor(S(2))
 
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("om")
@@ -98,8 +98,8 @@ def test_abbrev():
     assert isinstance(u.scale_factor, Number)
 
     u = Quantity("u", abbrev="ikm")
-    u._set_dimension(length)
-    u._set_scale_factor(3*kilo)
+    u.set_dimension(length)
+    u.set_scale_factor(3*kilo)
 
     assert u.abbrev == Symbol("ikm")
     assert u.scale_factor == 3000
@@ -126,13 +126,13 @@ def test_add_sub():
     v = Quantity("v")
     w = Quantity("w")
 
-    u._set_dimension(length)
-    v._set_dimension(length)
-    w._set_dimension(time)
+    u.set_dimension(length)
+    v.set_dimension(length)
+    w.set_dimension(time)
 
-    u._set_scale_factor(S(10))
-    v._set_scale_factor(S(5))
-    w._set_scale_factor(S(2))
+    u.set_scale_factor(S(10))
+    v.set_scale_factor(S(5))
+    w.set_scale_factor(S(2))
 
     assert isinstance(u + v, Add)
     assert (u + v.convert_to(u)) == (1 + S.Half)*u
@@ -149,13 +149,13 @@ def test_quantity_abs():
     v_w2 = Quantity('v_w2')
     v_w3 = Quantity('v_w3')
 
-    v_w1._set_dimension(length/time)
-    v_w2._set_dimension(length/time)
-    v_w3._set_dimension(length/time)
+    v_w1.set_dimension(length/time)
+    v_w2.set_dimension(length/time)
+    v_w3.set_dimension(length/time)
 
-    v_w1._set_scale_factor(meter/second)
-    v_w2._set_scale_factor(meter/second)
-    v_w3._set_scale_factor(meter/second)
+    v_w1.set_scale_factor(meter/second)
+    v_w2.set_scale_factor(meter/second)
+    v_w3.set_scale_factor(meter/second)
 
     expr = v_w3 - Abs(v_w1 - v_w2)
 
@@ -172,13 +172,13 @@ def test_check_unit_consistency():
     v = Quantity("v")
     w = Quantity("w")
 
-    u._set_dimension(length)
-    v._set_dimension(length)
-    w._set_dimension(time)
+    u.set_dimension(length)
+    v.set_dimension(length)
+    w.set_dimension(time)
 
-    u._set_scale_factor(S(10))
-    v._set_scale_factor(S(5))
-    w._set_scale_factor(S(2))
+    u.set_scale_factor(S(10))
+    v.set_scale_factor(S(5))
+    w.set_scale_factor(S(2))
 
     def check_unit_consistency(expr):
         Quantity._collect_factor_and_dimension(expr)
@@ -196,17 +196,17 @@ def test_mul_div():
     ut = Quantity("ut")
     v2 = Quantity("v")
 
-    u._set_dimension(length)
-    v._set_dimension(length)
-    t._set_dimension(time)
-    ut._set_dimension(length*time)
-    v2._set_dimension(length/time)
+    u.set_dimension(length)
+    v.set_dimension(length)
+    t.set_dimension(time)
+    ut.set_dimension(length*time)
+    v2.set_dimension(length/time)
 
-    u._set_scale_factor(S(10))
-    v._set_scale_factor(S(5))
-    t._set_scale_factor(S(2))
-    ut._set_scale_factor(S(20))
-    v2._set_scale_factor(S(5))
+    u.set_scale_factor(S(10))
+    v.set_scale_factor(S(5))
+    t.set_scale_factor(S(2))
+    ut.set_scale_factor(S(20))
+    v2.set_scale_factor(S(5))
 
     assert 1 / u == u**(-1)
     assert u / 1 == u
@@ -233,8 +233,8 @@ def test_mul_div():
 
     # Mul only supports structural equality:
     lp1 = Quantity("lp1")
-    lp1._set_dimension(length**-1)
-    lp1._set_scale_factor(S(2))
+    lp1.set_dimension(length**-1)
+    lp1.set_scale_factor(S(2))
     assert u * lp1 != 20
 
     assert u**0 == 1
@@ -243,10 +243,10 @@ def test_mul_div():
     # TODO: Pow only support structural equality:
     u2 = Quantity("u2")
     u3 = Quantity("u3")
-    u2._set_dimension(length**2)
-    u3._set_dimension(length**-1)
-    u2._set_scale_factor(S(100))
-    u3._set_scale_factor(S(1)/10)
+    u2.set_dimension(length**2)
+    u3.set_dimension(length**-1)
+    u2.set_scale_factor(S(100))
+    u3.set_scale_factor(S(1)/10)
 
     assert u ** 2 != u2
     assert u ** -1 != u3
@@ -335,8 +335,8 @@ def test_quantity_postprocessing():
     q1 = Quantity('q1')
     q2 = Quantity('q2')
 
-    q1._set_dimension(length*pressure**2*temperature/time)
-    q2._set_dimension(energy*pressure*temperature/(length**2*time))
+    q1.set_dimension(length*pressure**2*temperature/time)
+    q2.set_dimension(energy*pressure*temperature/(length**2*time))
 
     assert q1 + q2
     q = q1 + q2
@@ -360,7 +360,7 @@ def test_factor_and_dimension():
         x*m + y*centimeter)
 
     cH = Quantity('cH')
-    cH._set_dimension(amount_of_substance/volume)
+    cH.set_dimension(amount_of_substance/volume)
 
     pH = -log(cH)
 
@@ -370,10 +370,10 @@ def test_factor_and_dimension():
     v_w1 = Quantity('v_w1')
     v_w2 = Quantity('v_w2')
 
-    v_w1._set_dimension(length/time)
-    v_w2._set_dimension(length/time)
-    v_w1._set_scale_factor(S(3)/2*meter/second)
-    v_w2._set_scale_factor(2*meter/second)
+    v_w1.set_dimension(length/time)
+    v_w2.set_dimension(length/time)
+    v_w1.set_scale_factor(S(3)/2*meter/second)
+    v_w2.set_scale_factor(2*meter/second)
 
     expr = Abs(v_w1/2 - v_w2)
     assert (S(5)/4, length/time) == \
@@ -391,8 +391,8 @@ def test_factor_and_dimension():
 @XFAIL
 def test_factor_and_dimension_with_Abs():
     v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
-    v_w1._set_dimension(length/time)
-    v_w1._set_scale_factor(S(3)/2*meter/second)
+    v_w1.set_dimension(length/time)
+    v_w1.set_scale_factor(S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)
     assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
@@ -401,12 +401,12 @@ def test_dimensional_expr_of_derivative():
     l = Quantity('l')
     t = Quantity('t')
     t1 = Quantity('t1')
-    l._set_dimension(length)
-    t._set_dimension(time)
-    t1._set_dimension(time)
-    l._set_scale_factor(36*km)
-    t._set_scale_factor(hour)
-    t1._set_scale_factor(second)
+    l.set_dimension(length)
+    t.set_dimension(time)
+    t1.set_dimension(time)
+    l.set_scale_factor(36*km)
+    t.set_scale_factor(hour)
+    t1.set_scale_factor(second)
     x = Symbol('x')
     y = Symbol('y')
     f = Function('f')
@@ -423,10 +423,10 @@ def test_dimensional_expr_of_derivative():
 def test_get_dimensional_expr_with_function():
     v_w1 = Quantity('v_w1')
     v_w2 = Quantity('v_w2')
-    v_w1._set_dimension(length/time)
-    v_w2._set_dimension(length/time)
-    v_w1._set_scale_factor(meter/second)
-    v_w2._set_scale_factor(meter/second)
+    v_w1.set_dimension(length/time)
+    v_w2.set_dimension(length/time)
+    v_w1.set_scale_factor(meter/second)
+    v_w2.set_scale_factor(meter/second)
 
     assert Quantity.get_dimensional_expr(sin(v_w1)) == \
         sin(Quantity.get_dimensional_expr(v_w1))

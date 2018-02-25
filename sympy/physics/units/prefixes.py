@@ -142,8 +142,8 @@ def prefix_unit(unit, prefixes):
                 "%s%s" % (prefix.name, unit.name),
                 abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
            )
-        quantity._set_dimension(unit.dimension)
-        quantity._set_scale_factor(unit.scale_factor*prefix)
+        quantity.set_dimension(unit.dimension)
+        quantity.set_scale_factor(unit.scale_factor*prefix)
         prefixed_units.append(quantity)
 
     return prefixed_units

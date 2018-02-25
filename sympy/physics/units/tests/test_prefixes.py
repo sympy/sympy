@@ -24,8 +24,8 @@ def test_prefix_operations():
     assert dodeca / dodeca == 1
 
     m = Quantity("fake_meter")
-    m._set_dimension(S.One)
-    m._set_scale_factor(S.One)
+    m.set_dimension(S.One)
+    m.set_scale_factor(S.One)
 
     assert dodeca * m == 12 * m
     assert dodeca / m == 12 / m
@@ -49,8 +49,8 @@ def test_prefix_operations():
 
 def test_prefix_unit():
     m = Quantity("fake_meter", abbrev="m")
-    m._set_dimension(length)
-    m._set_scale_factor(1)
+    m.set_dimension(length)
+    m.set_scale_factor(1)
 
     pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
 
@@ -58,13 +58,13 @@ def test_prefix_unit():
     q2 = Quantity("centifake_meter", abbrev="cm")
     q3 = Quantity("decifake_meter", abbrev="dm")
 
-    q1._set_dimension(length)
-    q1._set_dimension(length)
-    q1._set_dimension(length)
+    q1.set_dimension(length)
+    q1.set_dimension(length)
+    q1.set_dimension(length)
 
-    q1._set_scale_factor(PREFIXES["m"])
-    q1._set_scale_factor(PREFIXES["c"])
-    q1._set_scale_factor(PREFIXES["d"])
+    q1.set_scale_factor(PREFIXES["m"])
+    q1.set_scale_factor(PREFIXES["c"])
+    q1.set_scale_factor(PREFIXES["d"])
 
     res = [q1, q2, q3]
 

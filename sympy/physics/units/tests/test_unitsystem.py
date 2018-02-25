@@ -14,9 +14,9 @@ from sympy.utilities.pytest import raises
 def test_definition():
     # want to test if the system can have several units of the same dimension
     dm = Quantity("dm")
-    dm._set_dimension(length)
+    dm.set_dimension(length)
 
-    dm._set_scale_factor(Rational(1, 10))
+    dm.set_scale_factor(Rational(1, 10))
 
     base = (m, s)
     base_dim = (m.dimension, s.dimension)
@@ -48,12 +48,12 @@ def test_print_unit_base():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
 
         A = Quantity("A")
-        A._set_dimension(current)
-        A._set_scale_factor(S.One)
+        A.set_dimension(current)
+        A.set_scale_factor(S.One)
 
         Js = Quantity("Js")
-        Js._set_dimension(action)
-        Js._set_scale_factor(S.One)
+        Js.set_dimension(action)
+        Js.set_scale_factor(S.One)
 
         mksa = UnitSystem((m, kg, s, A), (Js,))
         assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
@@ -62,8 +62,8 @@ def test_print_unit_base():
 def test_extend():
     ms = UnitSystem((m, s), (c,))
     Js = Quantity("Js")
-    Js._set_dimension(action)
-    Js._set_scale_factor(1)
+    Js.set_dimension(action)
+    Js.set_scale_factor(1)
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))

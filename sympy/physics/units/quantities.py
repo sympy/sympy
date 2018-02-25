@@ -58,11 +58,11 @@ class Quantity(AtomicExpr):
 
         if dimension is not None:
             # TODO: remove after deprecation:
-            obj._set_dimension(dimension)
+            obj.set_dimension(dimension)
 
         if scale_factor is not None:
             # TODO: remove after deprecation:
-            obj._set_scale_factor(scale_factor)
+            obj.set_scale_factor(scale_factor)
         return obj
 
     ### Currently only SI is supported: ###
@@ -72,7 +72,7 @@ class Quantity(AtomicExpr):
     # Scale factors in SI units:
     SI_quantity_scale_factors = {}
 
-    def _set_dimension(self, dimension, unit_system="SI"):
+    def set_dimension(self, dimension, unit_system="SI"):
         from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 
         if unit_system != "SI":
@@ -93,7 +93,7 @@ class Quantity(AtomicExpr):
                                      "dimensional dependency tree." % dim_sym)
         Quantity.SI_quantity_dimension_map[self] = dimension
 
-    def _set_scale_factor(self, scale_factor, unit_system="SI"):
+    def set_scale_factor(self, scale_factor, unit_system="SI"):
         if unit_system != "SI":
             # TODO: add support for more units and dimension systems:
             raise NotImplementedError("Currently only SI is supported")
