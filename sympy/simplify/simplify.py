@@ -596,7 +596,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     from sympy.physics.units import Quantity
 
     if expr.has(Quantity):
-        expr = quantsimp(expr)
+        expr = quantity_simplify(expr)
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, cancel(short))
@@ -873,12 +873,27 @@ def _nthroot_solve(p, n, prec):
                 return sol
 
 
-def quantsimp(expr):
-    from sympy.physics.units import Quantity
-    a, b = symbols('a, b')
-    a = 1/expr.args[0]
-    b = expr.args[1]
-    return b.scale_factor/a.scale_factor
+def quantity_simplify(expr):
+    from sympy.physics.units import Quantity, length
+    n = len(expr.args)
+    a = 1
+    for i in range (n):
+        if (expr.args[i].is_Pow):
+            if (expr.args[i].args[1]<0):
+                a *= 1/((1/expr.args[i]).scale_factor)
+            else:
+                b = expr.args[i].args[0]
+                a *= b.scale_factor**(expr.args[i].args[1])
+        elif (expr.args[i].is_Number):
+            a *= expr.args[i]
+        elif (expr.args[i].is_symbol):
+            a *= expr.args[i]
+        elif ((expr.args[i]).has(Quantity)):
+            if (expr.args[i].dimension == length):
+                a *= expr.args[i].scale_factor
+            else:
+                a *= expr.args[i]
+    return a
 
 
 def logcombine(expr, force=False):
