@@ -2307,7 +2307,10 @@ class atan(InverseTrigonometricFunction):
         if isinstance(arg, cot): # atan(x) + acot(x) = pi/2
             ang = arg.args[0]
             if ang.is_comparable:
-                return pi/2 - acot(arg)
+                ang = pi/2 - acot(arg)
+                if ang > pi/2: # restrict to [-pi/2,pi/2]
+                    ang -= pi
+                return ang
 
     @staticmethod
     @cacheit
@@ -2456,12 +2459,18 @@ class acot(InverseTrigonometricFunction):
         if isinstance(arg, cot):
             ang = arg.args[0]
             if ang.is_comparable:
-                return ang % pi # restrict to [0,pi)
+                ang %= pi # restrict to [0,pi)
+                if ang > pi/2: # restrict to (-pi/2,pi/2]
+                    ang -= pi;
+                return ang
 
         if isinstance(arg, tan): # atan(x) + acot(x) = pi/2
             ang = arg.args[0]
             if ang.is_comparable:
-                return pi/2 - atan(arg)
+                ang = pi/2 - atan(arg)
+                if ang > pi/2: # restrict to (-pi/2,pi/2]
+                    ang -= pi
+                return ang
 
     @staticmethod
     @cacheit
