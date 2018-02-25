@@ -440,9 +440,9 @@ def igcdex(a, b):
 
 def mod_inverse(a, m):
     """
-    Return the number c such that, ( a * c ) % m == 1 where
-    c has the same sign as a. If no such value exists, a
-    ValueError is raised.
+    Return the number c such that, ( a * c ) % m == ( 1 ) % m
+    where c has the same sign as m. If no such value exists,
+    a ValueError is raised.
 
     Examples
     ========
@@ -459,7 +459,7 @@ def mod_inverse(a, m):
     >>> mod_inverse(3, 11)
     4
     >>> mod_inverse(-3, 11)
-    -4
+    7
 
     When there is a common factor between the numerators of
     ``a`` and ``m`` the inverse does not exist:
@@ -477,15 +477,15 @@ def mod_inverse(a, m):
     - https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
     - https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
     """
-    c = None
+    c = m
+    def inv(a, m):
+        if -2 < a < 2: return a
+        return m + (1 - m * inv(m % a, a)) // a
+
     try:
         a, m = as_int(a), as_int(m)
-        if m > 1:
-            x, y, g = igcdex(a, m)
-            if g == 1:
-                c = x % m
-            if a < 0:
-                c -= m
+        if m != 1:
+            c = inv(a, m)
     except ValueError:
         a, m = sympify(a), sympify(m)
         if not (a.is_number and m.is_number):
@@ -500,7 +500,7 @@ def mod_inverse(a, m):
             raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
         elif big:
             c = 1/a
-    if c is None:
+    if c == m:
         raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
     return c
 
