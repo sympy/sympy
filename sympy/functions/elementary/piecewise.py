@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
 from sympy.core.basic import as_Basic
 from sympy.core.sympify import SympifyError
-from sympy.core.relational import Equality, Relational, _canonical
+from sympy.core.relational import (Equality, Unequality, Relational,
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Not, Or, ITE, simplify_logic)
@@ -867,6 +868,7 @@ class Piecewise(Function):
 
         Examples
         ========
+
         >>> from sympy import Piecewise, Interval
         >>> from sympy.abc import x
         >>> p = Piecewise(
@@ -883,7 +885,15 @@ class Piecewise(Function):
         """
         exp_sets = []
         U = domain
+        complex = not domain.is_subset(S.Reals)
         for expr, cond in self.args:
+            if complex:
+                for i in cond.atoms(Relational):
+                    if not isinstance(i, (Equality, Unequality)):
+                        raise ValueError(filldedent('''
+                            Inequalities in the complex domain are
+                            not supported. Try the real domain by
+                            setting domain=S.Reals'''))
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
             exp_sets.append((expr, cond_int))

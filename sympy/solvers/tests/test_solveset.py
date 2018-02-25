@@ -676,8 +676,11 @@ def test_piecewise_solveset():
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
     assert solveset(f, x, domain=S.Reals) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
-    assert solveset(Piecewise((x + 1, x > 0), (I, True)) - I, x) == \
-        Interval(-oo, 0)
+    assert solveset(
+        Piecewise((x + 1, x > 0), (I, True)) - I, x, S.Reals
+        ) == Interval(-oo, 0)
+
+    assert solveset(Piecewise((x - 1, Ne(x, I)), (x, True)), x) == FiniteSet(1)
 
 
 def test_solveset_complex_polynomial():
@@ -1713,17 +1716,12 @@ def test_issue_10158():
     assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
     assert solveset(Abs(x - 1) - Abs(y), x, dom) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
     assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))
-    dom = S.Complexes
-    assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(2/S(3))
-    assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(
-        -sqrt(10), sqrt(10))
-    # the following gets rewritten to
-    # Piecewise((x - 1, x + 2 >= Abs(x - 3) - 1), (Abs(x - 3) - 4, True))
-    # and the Abs in the relational is solved as though x were real so
-    # should there be a check in Piecewise for Abs in conditions when the
-    # domain is complex?
-    assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
-    raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
-    raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
     assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x, S.Reals
         ) == FiniteSet(-1, -2)
+    dom = S.Complexes
+    raises(ValueError, lambda: solveset(x*Max(x, 15) - 10, x, dom))
+    raises(ValueError, lambda: solveset(x*Min(x, 15) - 10, x, dom))
+    raises(ValueError, lambda:
+        solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
+    raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
+    raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))

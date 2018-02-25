@@ -829,8 +829,7 @@ def _solveset(f, symbol, domain, _check=False):
         result = solveset_real(a > 0, symbol)
     elif f.is_Piecewise:
         result = EmptySet()
-        # the conditions can only be solved on the real domain
-        expr_set_pairs = f.as_expr_set_pairs(domain & S.Reals)
+        expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
                 in_set = in_set.as_set()
