@@ -36,59 +36,59 @@ class SetExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return _setexpr_apply_operation(add_sets, self, other)
+        return _setexpr_apply_operation(set_add, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return _setexpr_apply_operation(add_sets, other, self)
+        return _setexpr_apply_operation(set_add, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return _setexpr_apply_operation(mul_sets, self, other)
+        return _setexpr_apply_operation(set_mul, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return _setexpr_apply_operation(mul_sets, other, self)
+        return _setexpr_apply_operation(set_mul, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return _setexpr_apply_operation(sub_sets, self, other)
+        return _setexpr_apply_operation(set_sub, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return _setexpr_apply_operation(sub_sets, other, self)
+        return _setexpr_apply_operation(set_sub, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        return _setexpr_apply_operation(pow_sets, self, other)
+        return _setexpr_apply_operation(set_pow, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        return _setexpr_apply_operation(pow_sets, other, self)
+        return _setexpr_apply_operation(set_pow, other, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return _setexpr_apply_operation(div_sets, self, other)
+        return _setexpr_apply_operation(set_div, self, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        return _setexpr_apply_operation(div_sets, other, self)
+        return _setexpr_apply_operation(set_div, other, self)
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
     def _eval_func(self, func):
         # TODO: this could be implemented straight into `imageset`:
-        res = function_sets(func, self.set)
+        res = set_function(func, self.set)
         if res is None:
             return SetExpr(ImageSet(func, self.set))
         return SetExpr(res)
@@ -131,26 +131,26 @@ def _apply_operation(op, x, y, commutative):
             out = ImageSet(Lambda((_x, _y), op(_x, _y)), x, y)
     return out
 
-def add_sets(x, y):
-    from sympy.sets.handlers.add import _add_sets
-    return _apply_operation(_add_sets, x, y, commutative=True)
+def set_add(x, y):
+    from sympy.sets.handlers.add import _set_add
+    return _apply_operation(_set_add, x, y, commutative=True)
 
-def sub_sets(x, y):
-    from sympy.sets.handlers.add import _sub_sets
-    return _apply_operation(_sub_sets, x, y, commutative=False)
+def set_sub(x, y):
+    from sympy.sets.handlers.add import _set_sub
+    return _apply_operation(_set_sub, x, y, commutative=False)
 
-def mul_sets(x, y):
-    from sympy.sets.handlers.mul import _mul_sets
-    return _apply_operation(_mul_sets, x, y, commutative=True)
+def set_mul(x, y):
+    from sympy.sets.handlers.mul import _set_mul
+    return _apply_operation(_set_mul, x, y, commutative=True)
 
-def div_sets(x, y):
-    from sympy.sets.handlers.mul import _div_sets
-    return _apply_operation(_div_sets, x, y, commutative=False)
+def set_div(x, y):
+    from sympy.sets.handlers.mul import _set_div
+    return _apply_operation(_set_div, x, y, commutative=False)
 
-def pow_sets(x, y):
-    from sympy.sets.handlers.power import _pow_sets
-    return _apply_operation(_pow_sets, x, y, commutative=False)
+def set_pow(x, y):
+    from sympy.sets.handlers.power import _set_pow
+    return _apply_operation(_set_pow, x, y, commutative=False)
 
-def function_sets(f, x):
-    from sympy.sets.handlers.functions import _function_sets
-    return _function_sets(f, x)
+def set_function(f, x):
+    from sympy.sets.handlers.functions import _set_function
+    return _set_function(f, x)

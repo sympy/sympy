@@ -12,15 +12,15 @@ _x, _y = symbols("x y")
 
 
 @dispatch(Basic, Basic)
-def _add_sets(x, y):
+def _set_add(x, y):
     return None
 
 @dispatch(Expr, Expr)
-def _add_sets(x, y):
+def _set_add(x, y):
     return x+y
 
 @dispatch(Interval, Interval)
-def _add_sets(x, y):
+def _set_add(x, y):
     """
     Additions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -29,28 +29,28 @@ def _add_sets(x, y):
         x.left_open or y.left_open, x.right_open or y.right_open)
 
 @dispatch(Interval, Infinity)
-def _add_sets(x, y):
+def _set_add(x, y):
     if x.start == S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet({S.Infinity})
 
 @dispatch(Interval, NegativeInfinity)
-def _add_sets(x, y):
+def _set_add(x, y):
     if x.end == S.Infinity:
         return Interval(-oo, oo)
     return FiniteSet({S.NegativeInfinity})
 
 
 @dispatch(Basic, Basic)
-def _sub_sets(x, y):
+def _set_sub(x, y):
     return None
 
 @dispatch(Expr, Expr)
-def _sub_sets(x, y):
+def _set_sub(x, y):
     return x-y
 
 @dispatch(Interval, Interval)
-def _sub_sets(x, y):
+def _set_sub(x, y):
     """
     Subtractions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -59,13 +59,13 @@ def _sub_sets(x, y):
         x.left_open or y.right_open, x.right_open or y.left_open)
 
 @dispatch(Interval, Infinity)
-def _sub_sets(x, y):
+def _set_sub(x, y):
     if self.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet(-oo)
 
 @dispatch(Interval, NegativeInfinity)
-def _sub_sets(x, y):
+def _set_sub(x, y):
     if self.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet(-oo)

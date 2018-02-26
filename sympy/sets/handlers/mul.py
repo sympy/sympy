@@ -11,19 +11,19 @@ _x, _y = symbols("x y")
 
 
 @dispatch(Basic, Basic)
-def _mul_sets(x, y):
+def _set_mul(x, y):
     return None
 
 @dispatch(Set, Set)
-def _mul_sets(x, y):
+def _set_mul(x, y):
     return None
 
 @dispatch(Expr, Expr)
-def _mul_sets(x, y):
+def _set_mul(x, y):
     return x*y
 
 @dispatch(Interval, Interval)
-def _mul_sets(x, y):
+def _set_mul(x, y):
     """
     Multiplications in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -48,24 +48,24 @@ def _mul_sets(x, y):
 
 
 @dispatch(Basic, Basic)
-def _div_sets(x, y):
+def _set_div(x, y):
     return None
 
 @dispatch(Expr, Expr)
-def _div_sets(x, y):
+def _set_div(x, y):
     return x/y
 
 @dispatch(Set, Set)
-def _div_sets(x, y):
+def _set_div(x, y):
     return None
 
 @dispatch(Interval, Interval)
-def _div_sets(x, y):
+def _set_div(x, y):
     """
     Divisions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
-    from sympy.sets.setexpr import mul_sets
+    from sympy.sets.setexpr import set_mul
     from sympy import oo
     if (y.start*y.end).is_negative:
         return Interval(-oo, oo)
@@ -77,4 +77,4 @@ def _div_sets(x, y):
         s1 = -oo
     else:
         s1 = 1/y.end
-    return mul_sets(x, Interval(s1, s2, y.right_open, y.left_open))
+    return set_mul(x, Interval(s1, s2, y.right_open, y.left_open))

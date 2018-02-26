@@ -15,15 +15,15 @@ FunctionUnion = (FunctionClass, Lambda)
 
 
 @dispatch(FunctionClass, Set)
-def _function_sets(f, x):
+def _set_function(f, x):
     return None
 
 @dispatch(FunctionUnion, FiniteSet)
-def _function_sets(f, x):
+def _set_function(f, x):
     return FiniteSet(*map(f, x))
 
 @dispatch(Lambda, Interval)
-def _function_sets(f, x):
+def _set_function(f, x):
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
     from sympy.core.function import diff, Lambda
@@ -109,7 +109,7 @@ def _function_sets(f, x):
             imageset(f, Interval(sing[-1], x.end, True, x.right_open))
 
 @dispatch(FunctionClass, Interval)
-def _function_sets(f, x):
+def _set_function(f, x):
     if f == exp:
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
@@ -117,11 +117,11 @@ def _function_sets(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Union)
-def _function_sets(f, x):
+def _set_function(f, x):
     return Union(imageset(f, arg) for arg in x.args)
 
 @dispatch(FunctionUnion, Intersection)
-def _function_sets(f, x):
+def _set_function(f, x):
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
@@ -130,15 +130,15 @@ def _function_sets(f, x):
         return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, EmptySet)
-def _function_sets(f, x):
+def _set_function(f, x):
     return x
 
 @dispatch(FunctionUnion, Set)
-def _function_sets(f, x):
+def _set_function(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Range)
-def _function_sets(f, self):
+def _set_function(f, self):
     from sympy.core.function import expand_mul
     if not self:
         return S.EmptySet
@@ -163,7 +163,7 @@ def _function_sets(f, self):
         return imageset(x, F, Range(self.size))
 
 @dispatch(FunctionUnion, Integers)
-def _function_sets(f, self):
+def _set_function(f, self):
     expr = f.expr
     if not isinstance(expr, Expr):
         return

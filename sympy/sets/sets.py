@@ -1768,7 +1768,7 @@ def imageset(*args):
     """
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
-    from sympy.sets.setexpr import function_sets
+    from sympy.sets.setexpr import set_function
 
     if len(args) < 2:
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
@@ -1806,7 +1806,7 @@ def imageset(*args):
 
     if len(set_list) == 1:
         set = set_list[0]
-        r = function_sets(f, set)
+        r = set_function(f, set)
         if r is None:
             r = ImageSet(f, set)
         if isinstance(r, ImageSet):
