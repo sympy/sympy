@@ -1070,5 +1070,7 @@ def test_issue_13956():
     assert Interval(0, 0).is_empty == None
     assert Interval(0, 0, left_open=True, right_open=True).is_empty == True
     assert Union(Interval(0, 1), Interval(0, 1)).is_empty == False
-    assert Union(Interval(1, 0), Interval(1, 0)).is_empty == True
+    assert Union(Interval(1, 0), FiniteSet(1, 2, 3)).is_empty == None
+    assert Union(Interval(1, 0), FiniteSet(1, 2, 3), evaluate=false).is_empty == False
+    assert Union(Interval(1, 0), Interval(1, 0), evaluate=false).is_empty == True
     assert Union(Interval(0, 0), Interval(0, 0)).is_empty == None
