@@ -28,6 +28,7 @@ def _mul_sets(x, y):
     Multiplications in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
+    # TODO: some intervals containing 0 and oo will fail as 0*oo returns nan.
     comvals = (
         (x.start * y.start, bool(x.left_open or y.left_open)),
         (x.start * y.end, bool(x.left_open or y.right_open)),
@@ -73,7 +74,7 @@ def _div_sets(x, y):
     else:
         s2 = 1/y.start
     if y.end == 0:
-        s1 = oo
+        s1 = -oo
     else:
         s1 = 1/y.end
     return mul_sets(x, Interval(s1, s2, y.right_open, y.left_open))
