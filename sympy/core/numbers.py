@@ -440,7 +440,7 @@ def igcdex(a, b):
 
 def mod_inverse(a, m):
     """
-    Return the number c such that, ( a * c ) % m == ( 1 ) % m
+    Return the number c such that, (a * c) = 1 (mod m)
     where c has the same sign as m. If no such value exists,
     a ValueError is raised.
 
