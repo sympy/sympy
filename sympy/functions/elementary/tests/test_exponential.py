@@ -2,7 +2,7 @@ from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
-    AccumBounds)
+    AccumBounds, MatrixSymbol)
 from sympy.abc import x, y, z
 
 
@@ -125,6 +125,11 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
+
+
+def test_exp_MatrixSymbol():
+    A = MatrixSymbol("A", 2, 2)
+    assert exp(A).has(exp)
 
 
 def test_log_values():

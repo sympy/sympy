@@ -391,7 +391,7 @@ def ilcm(*args):
         return 0
     a = args[0]
     for b in args[1:]:
-        a = a*b // igcd(a, b)
+        a = a // igcd(a, b) * b # since gcd(a,b) | a
     return a
 
 
@@ -1862,7 +1862,7 @@ class Rational(Number):
     def lcm(self, other):
         if isinstance(other, Rational):
             return Rational(
-                self.p*other.p//igcd(self.p, other.p),
+                self.p // igcd(self.p, other.p) * other.p,
                 igcd(self.q, other.q))
         return Number.lcm(self, other)
 
@@ -2386,10 +2386,6 @@ class AlgebraicNumber(Expr):
         else:
             rep = DMP.from_list([1, 0], 0, dom)
             scoeffs = Tuple(1, 0)
-
-            if root.is_negative:
-                rep = -rep
-                scoeffs = Tuple(-1, 0)
 
         sargs = (root, scoeffs)
 
