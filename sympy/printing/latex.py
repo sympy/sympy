@@ -128,7 +128,7 @@ class LatexPrinter(Printer):
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
-        "long_frac_ratio": 2,
+        "long_frac_ratio": None,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
         "mat_str": None,
@@ -446,9 +446,17 @@ class LatexPrinter(Printer):
             snumer = convert(numer)
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
-            ratio = self._settings['long_frac_ratio']
+            if self._settings['long_frac_ratio'] == None:
+                exprfind = [x for x in expr.args if \
+                    str(x).startswith('1/')]
+                if len(exprfind)>=1:
+                    ratio = len(expr.args)-1
+                else:
+                    ratio = len(expr.args)
+            else:
+                ratio = self._settings['long_frac_ratio']
             if self._settings['fold_short_frac'] \
-                    and ldenom <= 2 and not "^" in sdenom:
+                   and ldenom <= 2 and not "^" in sdenom:
                 # handle short fractions
                 if self._needs_mul_brackets(numer, last=False):
                     tex += r"\left(%s\right) / %s" % (snumer, sdenom)
@@ -2279,7 +2287,8 @@ def latex(expr, **settings):
 
     long_frac_ratio: The allowed ratio of the width of the numerator to the
     width of the denominator before we start breaking off long fractions.
-    The default value is 2.
+    The default value is width of the numerator to the width of the
+    denominator in the expression itself.
 
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=2))
     \frac{\int r\, dr}{2 \pi}
