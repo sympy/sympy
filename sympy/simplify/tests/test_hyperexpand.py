@@ -23,8 +23,8 @@ def test_branch_bug():
     assert hyperexpand(hyper((-S(1)/3, S(1)/2), (S(2)/3, S(3)/2), -z)) == \
         -z**(1/3)*(-1/2 - sqrt(3)*I/2)*(-1/2 + sqrt(3)*I/2)*lowergamma(exp_polar(I*pi)/3,
         z)/5 + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
-    assert hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S(1)/6, 0], z)) == \
-        2*z**(2/3)*(2*sqrt(pi)*erf(sqrt(z))/sqrt(z) - 2*(-1/2 - sqrt(3)*I/2)*(-1/2 + sqrt(3)*I/2)*lowergamma(2/3, z)/z**(2/3))*gamma(2/3)/gamma(5/3)
+    assert (hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S(1)/6, 0], z))).expand() == \
+        4*sqrt(pi)*z**(1/6)*erf(sqrt(z))*gamma(2/3)/gamma(5/3) - 4*gamma(2/3)*lowergamma(2/3, z)/gamma(5/3)
 
 
 def test_hyperexpand():
