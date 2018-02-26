@@ -259,14 +259,15 @@ def test_is_function_class_equation():
 
 
 def test_garbage_input():
+    # see issue 12217
     raises(ValueError, lambda: solveset_real([x], x))
-    assert solveset_real(x, 1) == S.EmptySet
-    assert solveset_real(x - 1, 1) == FiniteSet(x)
-    assert solveset_real(x, pi) == S.EmptySet
-    assert solveset_real(x, x**2) == S.EmptySet
-
+    raises(ValueError, lambda: solveset_real(x, 1))
+    raises(ValueError, lambda: solveset(x - 1, 1))
+    raises(ValueError, lambda: solveset_real(x, pi))
+    raises(ValueError, lambda: solveset_real(x, x**2))
     raises(ValueError, lambda: solveset_complex([x], x))
-    assert solveset_complex(x, pi) == S.EmptySet
+    raises(ValueError, lambda: solveset_complex(x, pi))
+    raises(ValueError, lambda: solveset(x + 1, S.Reals))
 
     raises(ValueError, lambda: solveset((x, y), x))
     raises(ValueError, lambda: solveset(x + 1, S.Reals))
@@ -939,13 +940,7 @@ def test_solveset():
     x = Symbol('x')
     f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
-    assert solveset(x, 1) == S.EmptySet
-    assert solveset(f(1)**2 + y + 1, f(1)
-        ) == FiniteSet(-sqrt(-y - 1), sqrt(-y - 1))
-    assert solveset(f(1)**2 - 1, f(1), S.Reals) == FiniteSet(-1, 1)
-    assert solveset(f(1)**2 + 1, f(1)) == FiniteSet(-I, I)
-    assert solveset(x - 1, 1) == FiniteSet(x)
-    assert solveset(sin(x) - cos(x), sin(x)) == FiniteSet(cos(x))
+    raises(ValueError, lambda: solveset(x, 1))
 
     assert solveset(0, domain=S.Reals) == S.Reals
     assert solveset(1) == S.EmptySet
@@ -967,6 +962,18 @@ def test_solveset():
                                                   S.Integers)
     # issue 13825
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
+
+
+def test_other_symbols():
+    #  see issue 12239
+    x = Symbol('x')
+    f = Function('f')
+
+    assert solveset(f(1)**2 + y + 1, f(1)) == FiniteSet(-sqrt(-y - 1), sqrt(-y - 1))
+    assert solveset(f(1)**2 - 1, f(1), S.Reals) == FiniteSet(-1, 1)
+    assert solveset(f(1)**2 + 1, f(1)) == FiniteSet(-I, I)
+    assert solveset(sin(x) - cos(x), sin(x)) == FiniteSet(cos(x))
+
 
 
 def test_conditionset():
