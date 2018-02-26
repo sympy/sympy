@@ -835,10 +835,6 @@ def test_issue_14283():
     if not numpy:
         skip("numpy not installed.")
     prntr = PythonCodePrinter()
-    expr1 = zoo
-    func = lambdify(x, expr1, "numpy")
-    assert prntr.doprint(func(1)) == "float('nan')"
 
-    expr2 = -oo
-    func = lambdify(x, expr2, "numpy")
-    assert prntr.doprint(func(1)) == '-inf'
+    assert prntr.doprint(zoo) == "float('nan')"
+    assert prntr.doprint(-oo) == "float('-inf')"
