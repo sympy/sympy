@@ -8,9 +8,8 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy, sinc, zoo)
+    DotProduct, Eq, Dummy, sinc)
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.printing.pycode import PythonCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -830,11 +829,3 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
-
-def test_issue_14283():
-    if not numpy:
-        skip("numpy not installed.")
-    prntr = PythonCodePrinter()
-
-    assert prntr.doprint(zoo) == "float('nan')"
-    assert prntr.doprint(-oo) == "float('-inf')"
