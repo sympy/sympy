@@ -453,7 +453,7 @@ def mod_inverse(a, m):
     Suppose we wish to find multiplicative inverse x of
     3 modulo 11. This is the same as finding x such
     that 3 * x = 1 (mod 11). One value of x that satisfies
-    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 mod(11).
+    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 (mod 11).
     This is the value return by mod_inverse:
 
     >>> mod_inverse(3, 11)
@@ -477,15 +477,13 @@ def mod_inverse(a, m):
     - https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
     - https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
     """
-    c = m
-    def inv(a, m):
-        if -2 < a < 2: return a
-        return m + (1 - m * inv(m % a, a)) // a
-
+    c = None
     try:
         a, m = as_int(a), as_int(m)
-        if m != 1:
-            c = inv(a, m)
+        if m != 1 and m != -1:
+            x, y, g = igcdex(a, m)
+            if g == 1:
+                c = x % m
     except ValueError:
         a, m = sympify(a), sympify(m)
         if not (a.is_number and m.is_number):
@@ -500,7 +498,7 @@ def mod_inverse(a, m):
             raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
         elif big:
             c = 1/a
-    if c == m:
+    if c is None:
         raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
     return c
 
