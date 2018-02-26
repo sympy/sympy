@@ -420,14 +420,14 @@ class Parabola(GeometrySet):
         return vertex
 
     def area(self, l):
-        """The Area of the parabola upto l distance.
+        """The Area of the parabola up to l distance.
 
         Parameters
         ==========
 
         l : number or Basic instance
             l is the distance along symmetric axis from vertex to line parallel
-            to directrix upto which area is to be calculated.
+            to directrix up to which area is to be calculated.
 
         Returns
         =======
@@ -446,14 +446,14 @@ class Parabola(GeometrySet):
         return (8*sqrt(self.focal_length)*sqrt(l**3))/3
 
     def centroid(self, l):
-        """The centroid of the parabola upto l distance.
+        """The centroid of the parabola up to l distance.
 
         Parameters
         ==========
 
         l : number or Basic instance
             l is the distance along symmetric axis from vertex to line parallel
-            to directrix upto which centroid is to be calculated.
+            to directrix up to which centroid is to be calculated.
 
         Returns
         =======
@@ -466,7 +466,7 @@ class Parabola(GeometrySet):
         >>> from sympy import Parabola, Point, Line
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.centroid(4)
-        (0, 1.60000000000000)
+        (0, 1.6)
 
         """
         c = 3*l/5
@@ -482,14 +482,14 @@ class Parabola(GeometrySet):
                 return self.vertex[0] - c, self.vertex[1]
 
     def second_moment_of_area(self, l, point=None):
-        """Returns the second moment and product moment of area of a Parabola upto l distance.
+        """Returns the second moment and product moment of area of a Parabola up to l distance.
 
         Parameters
         ==========
 
         l : number or Basic instance
             l is the distance along symmetric axis from vertex to line parallel
-            to directrix upto which second moment of area is to be calculated.
+            to directrix up to which second moment of area is to be calculated.
         point : Point, two-tuple of sympifiable objects, or None(default=None)
             point is the point about which second moment of area is to be found.
             If "point=None" it will be calculated about the axis passing through the
@@ -507,11 +507,11 @@ class Parabola(GeometrySet):
         >>> from sympy import Parabola, Point, Line
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.second_moment_of_area(4)
-        (538.331428571429, 8192/15, 0)
+        (538.3, 8192/15, 0)
 
         """
         a = self.focal_length
-        I_xx_v = 32*sqrt((a**3)*(l**5))/15
+        I_xx_v = 32*sqrt((a**3))*sqrt((l**5))/15
         I_yy_v = 8*sqrt(a*(l**7))/7
         I_xy_v = 0;
         c = self.centroid(l)
