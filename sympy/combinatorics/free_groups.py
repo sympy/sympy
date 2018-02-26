@@ -1234,7 +1234,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         `identity_cyclic_reduction`.
 
         When `removed` is `True`, return a tuple `(word, r)` where
-        self `r` is such that before the reductin the word was either
+        self `r` is such that before the reduction the word was either
         `r*word*r**-1`.
 
         Examples

@@ -32,11 +32,13 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
+from sympy.physics.units import degree, radian, kg, meter, R
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+from sympy.sets.setexpr import SetExpr
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
@@ -329,14 +331,14 @@ def test_latex_functions():
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
     assert latex(gamma(w)) == r"\Gamma\left(w\right)"
-    assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow \infty\right)"
-    assert latex(Order(x - y, (x, y))) == r"\mathcal{O}\left(x - y; x\rightarrow y\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
+    assert latex(Order(x)) == r"O\left(x\right)"
+    assert latex(Order(x, x)) == r"O\left(x\right)"
+    assert latex(Order(x, (x, 0))) == r"O\left(x\right)"
+    assert latex(Order(x, (x, oo))) == r"O\left(x; x\rightarrow \infty\right)"
+    assert latex(Order(x - y, (x, y))) == r"O\left(x - y; x\rightarrow y\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
@@ -615,6 +617,12 @@ def test_latex_sets():
         r"\left\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12\right\}"
 
 
+def test_latex_SetExpr():
+    iv = Interval(1, 3)
+    se = SetExpr(iv)
+    assert latex(se) == r"SetExpr\left(\left[1, 3\right]\right)"
+
+
 def test_latex_Range():
     assert latex(Range(1, 51)) == \
         r'\left\{1, 2, \ldots, 50\right\}'
@@ -762,6 +770,9 @@ def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+    y = Symbol('y')
+    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
+    assert latex(imgset) == r"\left\{x + y\; |\; x \in \left\{1, 2, 3\right\}, y \in \left\{3, 4\right\}\right\}"
 
 
 def test_latex_ConditionSet():
@@ -818,6 +829,16 @@ def test_latex_limits():
     assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
     # bi-directional limit
     assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
+
+
+def test_latex_log():
+    assert latex(log(x)) == r"\log{\left (x \right )}"
+    assert latex(ln(x)) == r"\log{\left (x \right )}"
+    assert latex(log(x), ln_notation=True) == r"\ln{\left (x \right )}"
+    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
+    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
+    assert latex(pow(log(x),x)) == r"\log{\left (x \right )}^{x}"
+    assert latex(pow(log(x),x), ln_notation=True) == r"\ln{\left (x \right )}^{x}"
 
 
 def test_issue_3568():
@@ -1122,9 +1143,18 @@ def test_latex_Poly():
     assert latex(Poly(x**2 + 2 * x, x)) == \
         r"\operatorname{Poly}{\left( x^{2} + 2 x, x, domain=\mathbb{Z} \right)}"
     assert latex(Poly(x/y, x)) == \
-        r"\operatorname{Poly}{\left( \frac{x}{y}, x, domain=\mathbb{Z}\left(y\right) \right)}"
+        r"\operatorname{Poly}{\left( \frac{1}{y} x, x, domain=\mathbb{Z}\left(y\right) \right)}"
     assert latex(Poly(2.0*x + y)) == \
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
+
+
+def test_latex_Poly_order():
+    assert latex(Poly([a, 1, b, 2, c, 3], x)) == \
+        '\\operatorname{Poly}{\\left( a x^{5} + x^{4} + b x^{3} + 2 x^{2} + c x + 3, x, domain=\\mathbb{Z}\\left[a, b, c\\right] \\right)}'
+    assert latex(Poly([a, 1, b+c, 2, 3], x)) == \
+        '\\operatorname{Poly}{\\left( a x^{4} + x^{3} + \\left(b + c\\right) x^{2} + 2 x + 3, x, domain=\\mathbb{Z}\\left[a, b, c\\right] \\right)}'
+    assert latex(Poly(a*x**3 + x**2*y - x*y - c*y**3 - b*x*y**2 + y - a*x + b, (x, y))) == \
+        '\\operatorname{Poly}{\\left( a x^{3} + x^{2}y -  b xy^{2} - xy -  a x -  c y^{3} + y + b, x, y, domain=\\mathbb{Z}\\left[a, b, c\\right] \\right)}'
 
 
 def test_latex_ComplexRootOf():
@@ -1689,7 +1719,18 @@ def test_MatrixElement_printing():
     assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
+    assert latex(F) == r"\left(-B + A\right)_{0, 0}"
+
+
+def test_MatrixSymbol_printing():
+    # test cases for issue #14237
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert latex(-A) == r"-A"
+    assert latex(A - A*B - B) == r"-B - A B + A"
+    assert latex(-A*B - A*B*C - B) == r"-B - A B - A B C"
 
 
 def test_Quaternion_latex_printing():
@@ -1713,3 +1754,19 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
+
+
+def test_units():
+    expr1 = 2*kg*x*meter**2
+    assert latex(expr1, mul_symbol='dot') == (r'2 \cdot x \cdot \detokenize {kilogram} \cdot \detokenize {meter}^{2}')
+    expr2 = 3*R
+    assert latex(expr2, mul_symbol='dot') == r'3 \cdot \detokenize {molar_gas_constant}'
+
+
+def test_latex_degree():
+    expr1 = 90*degree
+    assert latex(expr1) == r"90 ^\circ"
+    expr2 = x*degree
+    assert latex(expr2) == r"x ^\circ"
+    expr3 = cos(x*degree + 90*degree)
+    assert latex(expr3) == r'\cos{\left (x ^\circ + 90 ^\circ \right )}'
