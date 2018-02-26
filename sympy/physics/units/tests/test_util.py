@@ -126,7 +126,7 @@ def test_eval_simplify():
     assert ((km/cm).simplify()) == 100000
     assert ((10*x*K*km**2/m/cm).simplify()) == 1000000000*x*kelvin
     assert ((cm/km/m).simplify()) == 1/100000
-    
+
     q = Quantity("x7", time, None, abbrev="xyl")
     raises(AttributeError, lambda: (q/cm).simplify())
     raises(AttributeError, lambda: (km/q).simplify())
