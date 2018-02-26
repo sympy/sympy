@@ -11,7 +11,7 @@ from sympy.matrices import SparseMatrix
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
 )
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, skip
 
 numpy = import_module('numpy')
 
