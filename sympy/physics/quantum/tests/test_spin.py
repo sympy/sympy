@@ -164,7 +164,7 @@ def test_represent_uncoupled_states():
         Matrix([-S(1)/2, -S(1)/2, S(1)/2, S(1)/2])
     assert represent(TensorProduct(JxKet(S(1)/2, -S(1)/2), JxKet(S(1)/2, -S(1)/2)), basis=Jz) == \
         Matrix([S(1)/2, -S(1)/2, -S(1)/2, S(1)/2])
-    assert represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, S(1)/2)), basis=Jz) == \
+    assert (represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, S(1)/2)), basis=Jz)).expand() == \
         Matrix([[S(1)/2], [I/2], [I/2], [-S(1)/2]])
     assert (represent(TensorProduct(JyKet(S(1)/2, S(1)/2), JyKet(S(1)/2, -S(1)/2)), basis=Jz)).expand() == \
         Matrix([[I/2], [S(1)/2], [-S(1)/2], [I/2]])
