@@ -7864,44 +7864,24 @@ def _linear_neq_order1_type1(match_):
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
     M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
     evector = M.eigenvects(simplify=True)
-    def is_complex(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
-    def is_complex_conjugate(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
-    conjugate_root = []
-    e_vector = zeros(n,1)
-    for evects in evector:
-        if evects[0] not in conjugate_root:
-            # If number of column of an eigenvector is not equal to the multiplicity
-            # of its eigenvalue then the legt eigenvectors are calculated
-            if len(evects[2])!=evects[1]:
-                var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
-                Mnew = (M - evects[0]*eye(evects[2][-1].rows))*var_mat
-                w = [0 for i in range(evects[1])]
-                w[0] = evects[2][-1]
-                for r in range(1, evects[1]):
-                    w_ = Mnew - w[r-1]
-                    sol_dict = solve(list(w_), var_mat[1:])
-                    sol_dict[var_mat[0]] = var_mat[0]
-                    for key, value in sol_dict.items():
-                        sol_dict[key] = value.subs(var_mat[0],1)
-                    w[r] = Matrix(n, 1, lambda i,j: sol_dict[var_mat[i]])
-                    evects[2].append(w[r])
-            for i in range(evects[1]):
-                C = next(constants)
-                for j in range(i+1):
-                    if evects[0].has(I):
-                        evects[2][j] = simplify(evects[2][j])
-                        e_vector += C*is_complex(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                        C = next(constants)
-                        e_vector += C*is_complex_conjugate(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                    else:
-                        e_vector += C*evects[2][j]*t**(i-j)*exp(evects[0]*t)/factorial(i-j)
-            if evects[0].has(I):
-                conjugate_root.append(conjugate(evects[0]))
+    eigenvals = M.eigenvals(multiple=True)
+    r, P, C = [], [], []
+    for i in range(len(eigenvals)):
+        if i==0:
+            r[i] = exp(eigenvals[i]*t)
+            P[i] = Identity(len(eigenvals))
+        else:
+            _x = dummy('_x')
+            r[i] = exp(eigenvals[i]*t)*integral(exp(-eigenvals[i]*_x),(_x,0,t)).doit()
+            P[i] = P[i-1]*(M-r[i-1]*Identity(len(eigenvals)))
+        C.append(next(constants))
+
+    exp_A = simplify(Sum(r[i]*P[i], (i, 0, len(eigenvals)-1)).doit())
+
     sol = []
     for i in range(len(eq)):
-        sol.append(Eq(func[i],e_vector[i]))
+        e_vector = exp_A.row(i)*Matrix(C)
+        sol.append(Eq(func[i],e_vector))
     return sol
 
 def sysode_nonlinear_2eq_order1(match_):
