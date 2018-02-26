@@ -11,8 +11,6 @@ from sympy.core.compatibility import default_sort_key, with_metaclass
 
 from sympy import sin, Lambda, Q, cos, gamma, Tuple
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import raises
 from sympy.core import I, pi
 
@@ -227,14 +225,6 @@ def test_rewrite():
     assert f1.rewrite([cos],sin) == sin(x) + sin(x + pi/2, evaluate=False)
     f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
-    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
-    assert Max(x, y, z).rewrite(Piecewise) == Piecewise((x, (x >= y) & (x >= z)), (y, y >= z), (z, True))
-    assert Max(x, y, a, b).rewrite(Piecewise) == Piecewise((a, (a >= b) & (a >= x) & (a >= y)),
-        (b, (b >= x) & (b >= y)), (x, x >= y), (y, True))
-    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a <= b), (b, True))
-    assert Min(x, y, z).rewrite(Piecewise) == Piecewise((x, (x <= y) & (x <= z)), (y, y <= z), (z, True))
-    assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
-        (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
 
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
