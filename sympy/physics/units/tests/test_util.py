@@ -117,6 +117,7 @@ def test_convert_to_tuples_of_quantities():
 def test_eval_simplify():
     from sympy.physics.units import cm, mm, km, m, K, Quantity
     from sympy.simplify.simplify import simplify
+    from sympy.core.symbol import symbols
 
     x = symbols('x')
 
