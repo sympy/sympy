@@ -594,6 +594,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
         expr = product_simplify(expr)
 
     from sympy.physics.units import Quantity
+    from sympy.physics.units.util import quantity_simplify
 
     if expr.has(Quantity):
         expr = quantity_simplify(expr)
