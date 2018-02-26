@@ -130,7 +130,7 @@ def convert_to(expr, target_units):
     return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
 
 
-def quantity_simplify():
+def quantity_simplify(expr):
     from sympy.physics.units import Quantity
     if expr.is_Atom:
         return expr
