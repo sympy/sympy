@@ -586,6 +586,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         eq = match['eq']
         order = match['order']
         func = match['func']
+        match['hint'] = hint
         t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
         # keep highest order term coefficient positive
@@ -7824,25 +7825,26 @@ def _linear_neq_order1_type1(match_):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
     M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
-    evector = M.eigenvects(simplify=True)
-    eigenvals = M.eigenvals(multiple=True)
-    r, P, C = [], [], []
-    for i in range(len(eigenvals)):
-        if i==0:
-            r[i] = exp(eigenvals[i]*t)
-            P[i] = Identity(len(eigenvals))
-        else:
-            _x = dummy('_x')
-            r[i] = exp(eigenvals[i]*t)*integral(exp(-eigenvals[i]*_x),(_x,0,t)).doit()
-            P[i] = P[i-1]*(M-r[i-1]*Identity(len(eigenvals)))
-        C.append(next(constants))
+    if match_['hint'] == "putzer":
+        evector = M.eigenvects(simplify=True)
+        eigenvals = M.eigenvals(multiple=True)
+        r, P, C = [], [], []
+        for i in range(len(eigenvals)):
+            if i==0:
+                r[i] = exp(eigenvals[i]*t)
+                P[i] = Identity(len(eigenvals))
+            else:
+                _x = dummy('_x')
+                r[i] = exp(eigenvals[i]*t)*integral(exp(-eigenvals[i]*_x),(_x,0,t)).doit()
+                P[i] = P[i-1]*(M-r[i-1]*Identity(len(eigenvals)))
+            C.append(next(constants))
 
-    exp_A = simplify(Sum(r[i]*P[i], (i, 0, len(eigenvals)-1)).doit())
+        exp_A = simplify(Sum(r[i]*P[i], (i, 0, len(eigenvals)-1)).doit())
 
-    sol = []
-    for i in range(len(eq)):
-        e_vector = exp_A.row(i)*Matrix(C)
-        sol.append(Eq(func[i],e_vector))
+        sol = []
+        for i in range(len(eq)):
+            e_vector = exp_A.row(i)*Matrix(C)
+            sol.append(Eq(func[i],e_vector))
     return sol
 
 def sysode_nonlinear_2eq_order1(match_):
