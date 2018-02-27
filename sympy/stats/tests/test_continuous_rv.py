@@ -850,3 +850,10 @@ def test_prob_neq():
     assert P(Ne(X, 4)) == 1
     assert P(Ne(X, 5)) == 1
     assert P(Ne(E, x)) == 1
+
+def test_union():
+    N = Normal('N', 3, 2)
+    assert simplify(P(N**2 - N > 2)) == \
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + 3/2
+    assert simplify(P(N**2 - 4 > 0)) == \
+        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + 3/2
