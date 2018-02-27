@@ -16,6 +16,7 @@ from sympy.physics.units.dimensions import Dimension, charge, length, time, dims
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 k = PREFIXES["k"]
 
@@ -30,7 +31,10 @@ def test_eq():
 
 
 def test_convert_to():
-    q = Quantity("q1", length, 5000)
+    q = Quantity("q1")
+    q.set_dimension(length)
+    q.set_scale_factor(S(5000))
+
     assert q.convert_to(m) == 5000*m
 
     assert speed_of_light.convert_to(m / s) == 299792458 * m / s
@@ -44,70 +48,91 @@ def test_convert_to():
 
 
 def test_Quantity_definition():
-    q = Quantity("s10", time, 10, abbrev="sabbr")
+    q = Quantity("s10", abbrev="sabbr")
+    q.set_dimension(time)
+    q.set_scale_factor(10)
+    u  =  Quantity("u", abbrev="dam")
+    u.set_dimension(length)
+    u.set_scale_factor(10)
+    km =  Quantity("km")
+    km.set_dimension(length)
+    km.set_scale_factor(kilo)
+    v =  Quantity("u")
+    v.set_dimension(length)
+    v.set_scale_factor(5*kilo)
 
     assert q.scale_factor == 10
     assert q.dimension == time
     assert q.abbrev == Symbol("sabbr")
 
-    u = Quantity("u", length, 10, abbrev="dam")
-
     assert u.dimension == length
     assert u.scale_factor == 10
     assert u.abbrev == Symbol("dam")
 
-    km = Quantity("km", length, kilo)
     assert km.scale_factor == 1000
     assert km.func(*km.args) == km
     assert km.func(*km.args).args == km.args
 
-    v = Quantity("u", length, 5*kilo)
     assert v.dimension == length
-    assert v.scale_factor == 5 * 1000
+    assert v.scale_factor == 5000
 
-    raises(ValueError, lambda: Quantity('invalid', 'dimension', 1))
-    raises(ValueError, lambda: Quantity('mismatch', length, kg))
+    raises(SymPyDeprecationWarning, lambda: Quantity('invalid', 'dimension', 1))
+    raises(SymPyDeprecationWarning, lambda: Quantity('mismatch', dimension=length, scale_factor=kg))
 
 
 def test_abbrev():
-    u = Quantity("u", length, 1)
+    u = Quantity("u")
+    u.set_dimension(length)
+    u.set_scale_factor(S.One)
+
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("u")
 
-    u = Quantity("u", length, 2, abbrev="om")
+    u = Quantity("u", abbrev="om")
+    u.set_dimension(length)
+    u.set_scale_factor(S(2))
+
     assert u.name == Symbol("u")
     assert u.abbrev == Symbol("om")
     assert u.scale_factor == 2
     assert isinstance(u.scale_factor, Number)
 
-    u = Quantity("u", length, 3*kilo, abbrev="ikm")
+    u = Quantity("u", abbrev="ikm")
+    u.set_dimension(length)
+    u.set_scale_factor(3*kilo)
+
     assert u.abbrev == Symbol("ikm")
     assert u.scale_factor == 3000
 
 
 def test_print():
-    u = Quantity("unitname", length, 10, abbrev="dam")
+    u = Quantity("unitname", abbrev="dam")
     assert repr(u) == "unitname"
     assert str(u) == "unitname"
 
 
 def test_Quantity_eq():
-    u = Quantity("u", length, 10, abbrev="dam")
-
-    v = Quantity("v1", length, 10)
+    u = Quantity("u", abbrev="dam")
+    v = Quantity("v1")
     assert u != v
-
-    v = Quantity("v2", time, 10, abbrev="ds")
+    v = Quantity("v2", abbrev="ds")
     assert u != v
-
-    v = Quantity("v3", length, 1, abbrev="dm")
+    v = Quantity("v3", abbrev="dm")
     assert u != v
 
 
 def test_add_sub():
-    u = Quantity("u", length, 10)
-    v = Quantity("v", length, 5)
-    w = Quantity("w", time, 2)
+    u = Quantity("u")
+    v = Quantity("v")
+    w = Quantity("w")
+
+    u.set_dimension(length)
+    v.set_dimension(length)
+    w.set_dimension(time)
+
+    u.set_scale_factor(S(10))
+    v.set_scale_factor(S(5))
+    w.set_scale_factor(S(2))
 
     assert isinstance(u + v, Add)
     assert (u + v.convert_to(u)) == (1 + S.Half)*u
@@ -120,9 +145,18 @@ def test_add_sub():
 
 
 def test_quantity_abs():
-    v_w1 = Quantity('v_w1', length/time, meter/second)
-    v_w2 = Quantity('v_w2', length/time, meter/second)
-    v_w3 = Quantity('v_w3', length/time, meter/second)
+    v_w1 = Quantity('v_w1')
+    v_w2 = Quantity('v_w2')
+    v_w3 = Quantity('v_w3')
+
+    v_w1.set_dimension(length/time)
+    v_w2.set_dimension(length/time)
+    v_w3.set_dimension(length/time)
+
+    v_w1.set_scale_factor(meter/second)
+    v_w2.set_scale_factor(meter/second)
+    v_w3.set_scale_factor(meter/second)
+
     expr = v_w3 - Abs(v_w1 - v_w2)
 
     Dq = Dimension(Quantity.get_dimensional_expr(expr))
@@ -134,9 +168,17 @@ def test_quantity_abs():
 
 
 def test_check_unit_consistency():
-    u = Quantity("u", length, 10)
-    v = Quantity("v", length, 5)
-    w = Quantity("w", time, 2)
+    u = Quantity("u")
+    v = Quantity("v")
+    w = Quantity("w")
+
+    u.set_dimension(length)
+    v.set_dimension(length)
+    w.set_dimension(time)
+
+    u.set_scale_factor(S(10))
+    v.set_scale_factor(S(5))
+    w.set_scale_factor(S(2))
 
     def check_unit_consistency(expr):
         Quantity._collect_factor_and_dimension(expr)
@@ -148,13 +190,29 @@ def test_check_unit_consistency():
 
 
 def test_mul_div():
-    u = Quantity("u", length, 10)
+    u = Quantity("u")
+    v = Quantity("v")
+    t = Quantity("t")
+    ut = Quantity("ut")
+    v2 = Quantity("v")
+
+    u.set_dimension(length)
+    v.set_dimension(length)
+    t.set_dimension(time)
+    ut.set_dimension(length*time)
+    v2.set_dimension(length/time)
+
+    u.set_scale_factor(S(10))
+    v.set_scale_factor(S(5))
+    t.set_scale_factor(S(2))
+    ut.set_scale_factor(S(20))
+    v2.set_scale_factor(S(5))
 
     assert 1 / u == u**(-1)
     assert u / 1 == u
 
-    v1 = u / Quantity("t", time, 2)
-    v2 = Quantity("v", length / time, 5)
+    v1 = u / t
+    v2 = v
 
     # Pow only supports structural equality:
     assert v1 != v2
@@ -162,33 +220,44 @@ def test_mul_div():
 
     # TODO: decide whether to allow such expression in the future
     # (requires somehow manipulating the core).
-    # assert u / Quantity('l2', length, 2) == 5
+    # assert u / Quantity('l2', dimension=length, scale_factor=2) == 5
 
     assert u * 1 == u
 
-    ut1 = u * Quantity("t", time, 2)
-    ut2 = Quantity("ut", length*time, 20)
+    ut1 = u * t
+    ut2 = ut
 
     # Mul only supports structural equality:
     assert ut1 != ut2
     assert ut1 == ut2.convert_to(ut1)
 
     # Mul only supports structural equality:
-    assert u * Quantity("lp1", length**-1, 2) != 20
+    lp1 = Quantity("lp1")
+    lp1.set_dimension(length**-1)
+    lp1.set_scale_factor(S(2))
+    assert u * lp1 != 20
 
     assert u**0 == 1
     assert u**1 == u
-    # TODO: Pow only support structural equality:
-    assert u ** 2 != Quantity("u2", length ** 2, 100)
-    assert u ** -1 != Quantity("u3", length ** -1, 0.1)
 
-    assert u ** 2 == Quantity("u2", length ** 2, 100).convert_to(u)
-    assert u ** -1 == Quantity("u3", length ** -1, S.One/10).convert_to(u)
+    # TODO: Pow only support structural equality:
+    u2 = Quantity("u2")
+    u3 = Quantity("u3")
+    u2.set_dimension(length**2)
+    u3.set_dimension(length**-1)
+    u2.set_scale_factor(S(100))
+    u3.set_scale_factor(S(1)/10)
+
+    assert u ** 2 != u2
+    assert u ** -1 != u3
+
+    assert u ** 2 == u2.convert_to(u)
+    assert u ** -1 == u3.convert_to(u)
 
 
 def test_units():
     assert convert_to((5*m/s * day) / km, 1) == 432
-    assert convert_to(foot / meter, meter) == Rational('0.3048')
+    assert convert_to(foot / meter, meter) == Rational(3048, 10000)
     # amu is a pure mass so mass/mass gives a number, not an amount (mol)
     # TODO: need better simplification routine:
     assert str(convert_to(grams/amu, grams).n(2)) == '6.0e+23'
@@ -263,8 +332,12 @@ def test_sum_of_incompatible_quantities():
 
 
 def test_quantity_postprocessing():
-    q1 = Quantity('q1', length*pressure**2*temperature/time)
-    q2 = Quantity('q2', energy*pressure*temperature/(length**2*time))
+    q1 = Quantity('q1')
+    q2 = Quantity('q2')
+
+    q1.set_dimension(length*pressure**2*temperature/time)
+    q2.set_dimension(energy*pressure*temperature/(length**2*time))
+
     assert q1 + q2
     q = q1 + q2
     Dq = Dimension(Quantity.get_dimensional_expr(q))
@@ -286,14 +359,22 @@ def test_factor_and_dimension():
     assert (x + y/100, length) == Quantity._collect_factor_and_dimension(
         x*m + y*centimeter)
 
-    cH = Quantity('cH', amount_of_substance/volume)
+    cH = Quantity('cH')
+    cH.set_dimension(amount_of_substance/volume)
+
     pH = -log(cH)
 
     assert (1, volume/amount_of_substance) == Quantity._collect_factor_and_dimension(
         exp(pH))
 
-    v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
-    v_w2 = Quantity('v_w2', length/time, 2*meter/second)
+    v_w1 = Quantity('v_w1')
+    v_w2 = Quantity('v_w2')
+
+    v_w1.set_dimension(length/time)
+    v_w2.set_dimension(length/time)
+    v_w1.set_scale_factor(S(3)/2*meter/second)
+    v_w2.set_scale_factor(2*meter/second)
+
     expr = Abs(v_w1/2 - v_w2)
     assert (S(5)/4, length/time) == \
         Quantity._collect_factor_and_dimension(expr)
@@ -310,14 +391,22 @@ def test_factor_and_dimension():
 @XFAIL
 def test_factor_and_dimension_with_Abs():
     v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
+    v_w1.set_dimension(length/time)
+    v_w1.set_scale_factor(S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)
     assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
 
 def test_dimensional_expr_of_derivative():
-    l = Quantity('l', length, 36 * km)
-    t = Quantity('t', time, hour)
-    t1 = Quantity('t1', time, second)
+    l = Quantity('l')
+    t = Quantity('t')
+    t1 = Quantity('t1')
+    l.set_dimension(length)
+    t.set_dimension(time)
+    t1.set_dimension(time)
+    l.set_scale_factor(36*km)
+    t.set_scale_factor(hour)
+    t1.set_scale_factor(second)
     x = Symbol('x')
     y = Symbol('y')
     f = Function('f')
@@ -332,14 +421,15 @@ def test_dimensional_expr_of_derivative():
 
 
 def test_get_dimensional_expr_with_function():
-    v_w1 = Quantity('v_w1', length / time, meter / second)
+    v_w1 = Quantity('v_w1')
+    v_w2 = Quantity('v_w2')
+    v_w1.set_dimension(length/time)
+    v_w2.set_dimension(length/time)
+    v_w1.set_scale_factor(meter/second)
+    v_w2.set_scale_factor(meter/second)
+
     assert Quantity.get_dimensional_expr(sin(v_w1)) == \
         sin(Quantity.get_dimensional_expr(v_w1))
-
-
-def test_get_dimensional_expr_with_function_1():
-    v_w1 = Quantity('v_w1', length / time, meter / second)
-    v_w2 = Quantity('v_w2', length / time, meter / second)
     assert Quantity.get_dimensional_expr(sin(v_w1/v_w2)) == 1
 
 

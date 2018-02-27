@@ -288,17 +288,19 @@ class Application(with_metaclass(FunctionClass, Basic)):
         Examples of eval() for the function "sign"
         ---------------------------------------------
 
-        @classmethod
-        def eval(cls, arg):
-            if arg is S.NaN:
-                return S.NaN
-            if arg is S.Zero: return S.Zero
-            if arg.is_positive: return S.One
-            if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, Mul):
-                coeff, terms = arg.as_coeff_Mul(rational=True)
-                if coeff is not S.One:
-                    return cls(coeff) * cls(terms)
+        .. code-block:: python
+
+            @classmethod
+            def eval(cls, arg):
+                if arg is S.NaN:
+                    return S.NaN
+                if arg is S.Zero: return S.Zero
+                if arg.is_positive: return S.One
+                if arg.is_negative: return S.NegativeOne
+                if isinstance(arg, Mul):
+                    coeff, terms = arg.as_coeff_Mul(rational=True)
+                    if coeff is not S.One:
+                        return cls(coeff) * cls(terms)
 
         """
         return

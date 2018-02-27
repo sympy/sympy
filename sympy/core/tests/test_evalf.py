@@ -174,7 +174,7 @@ def test_evalf_ramanujan():
 def test_evalf_bugs():
     assert NS(sin(1) + exp(-10**10), 10) == NS(sin(1), 10)
     assert NS(exp(10**10) + sin(1), 10) == NS(exp(10**10), 10)
-    assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
+    assert NS('expand_log(log(1+1/10**50))', 20) == '1.0000000000000000000e-50'
     assert NS('log(10**100,10)', 10) == '100.0000000'
     assert NS('log(2)', 10) == '0.6931471806'
     assert NS(
@@ -518,3 +518,10 @@ def test_issue_10395():
     eq = x*Max(y, -1.1)
     assert nfloat(eq) == eq
     assert Max(y, 4).n() == Max(4.0, y)
+
+
+def test_issue_13098():
+    assert floor(log(S('9.'+'9'*20), 10)) == 0
+    assert ceiling(log(S('9.'+'9'*20), 10)) == 1
+    assert floor(log(20 - S('9.'+'9'*20), 10)) == 1
+    assert ceiling(log(20 - S('9.'+'9'*20), 10)) == 2
