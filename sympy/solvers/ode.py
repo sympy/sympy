@@ -7845,6 +7845,19 @@ def _linear_neq_order1_type1(match_):
         for i in range(len(eq)):
             e_vector = exp_A.row(i)*Matrix(C)
             sol.append(Eq(func[i],e_vector))
+    else:
+        P, D = M.diagonalize()
+        exp_M = P*exp(D*t)*P.inv()
+        C = []
+        for i in range(n):
+            C.append(next(constants))
+        C = Matrix(C)
+        e_vector = []
+        for i in range(n):
+            e_vector.append((exp_M.row(i)*C).values()[0])
+        sol = []
+        for i in range(len(eq)):
+            sol.append(Eq(func[i],e_vector[i]))
     return sol
 
 def sysode_nonlinear_2eq_order1(match_):
