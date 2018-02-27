@@ -55,7 +55,7 @@ from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
-from sympy.utilities.pytest import skip
+from sympy.external import import_module
 import random
 
 oo = S.Infinity
@@ -1262,12 +1262,12 @@ class GammaInverseDistribution(SingleContinuousDistribution):
                         (S.Zero, True))
 
     def sample(self):
-        try :
+        scipy = import_module('scipy')
+        if scipy:
             from scipy.stats import invgamma
-        except ImportError:
-            skip("Scipy not found")
-            raise ImportError("can't find invgamma in scipy.stats")
-        return invgamma.rvs(float(self.a), 0, float(self.b))
+            return invgamma.rvs(float(self.a), 0, float(self.b))
+        else:
+            raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
 
 def GammaInverse(name, a, b):
     r"""
@@ -1295,7 +1295,7 @@ def GammaInverse(name, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import GammaInverse, density, cdf, E, variance, sample
+    >>> from sympy.stats import GammaInverse, density, cdf, E, variance
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", positive=True)

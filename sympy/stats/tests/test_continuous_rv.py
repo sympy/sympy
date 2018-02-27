@@ -22,7 +22,8 @@ from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.rv import ProductPSpace
 
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.external import import_module
 
 from sympy.core.compatibility import range
 
@@ -351,10 +352,15 @@ def test_gamma_inverse():
     b = Symbol("b", positive=True)
 
     X = GammaInverse("x", a, b)
-    Y = GammaInverse("y", 1, 1)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
-    assert sample(Y) in Y.pspace.domain.set
+
+def test_sampling_gamma_inverse():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
+    X = GammaInverse("x", 1, 1)
+    assert sample(X) in X.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)
