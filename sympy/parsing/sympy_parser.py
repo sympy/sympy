@@ -991,19 +991,13 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             if isinstance(node.left, ast.UnaryOp) and (isinstance(node.right, ast.UnaryOp) == 0) and sympy_class in ('Mul',):
                 left, right = right, left
             if isinstance(node.op, ast.Sub):
-                from ast import Call
-                if not isinstance(node.right, Call):
-                    sympy_class2 = self.operators[node.right.op.__class__]
-                    if sympy_class2 ==  'Mul':
-                        right = ast.Call(
-                            func=ast.Name(id=sympy_class2, ctx=ast.Load()),
-                            args=[node.right.left, ast.UnaryOp(op=ast.USub(), operand=node.right.right)],
-                            keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
-                            starargs=None,
-                            kwargs=None
-                        )
-                else:
-                    right = ast.UnaryOp(op=ast.USub(), operand=right)
+                right = ast.Call(
+                    func=ast.Name(id='Mul', ctx=ast.Load()),
+                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    starargs=None,
+                    kwargs=None
+                )
             if isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
                     if isinstance(node.right,ast.UnaryOp):
