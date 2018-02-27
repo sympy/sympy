@@ -10,7 +10,7 @@ from sympy.core.function import expand_mul
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
-from sympy.core.numbers import Integer, ilcm, Float
+from sympy.core.numbers import Integer, ilcm, mod_inverse, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -19,6 +19,7 @@ from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types
+from sympy.ntheory import isprime
 
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.core.decorators import call_highest_priority
@@ -524,10 +525,10 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
-    def _eval_echelon_form(self, iszerofunc, simpfunc):
+    def _eval_echelon_form(self, iszerofunc, simpfunc, prime=None):
         """Returns (mat, swaps) where `mat` is a row-equivalent matrix
         in echelon form and `swaps` is a list of row-swaps performed."""
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
+        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc, prime,
                                                       normalize_last=True,
                                                       normalize=False,
                                                       zero_above=False)
@@ -541,8 +542,8 @@ class MatrixReductions(MatrixDeterminant):
             return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
         return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
 
-    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True):
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
+    def _eval_rref(self, iszerofunc, simpfunc, prime=None, normalize_last=True):
+        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc, prime,
                                                       normalize_last, normalize=True,
                                                       zero_above=True)
         return reduced, pivot_cols
@@ -615,7 +616,7 @@ class MatrixReductions(MatrixDeterminant):
 
         return (self.permute(perm, orientation='cols'), perm)
 
-    def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
+    def _row_reduce(self, iszerofunc, simpfunc, prime=None, normalize_last=True,
                     normalize=True, zero_above=True):
         """Row reduce `self` and return a tuple (rref_matrix,
         pivot_cols, swaps) where pivot_cols are the pivot columns
@@ -628,6 +629,7 @@ class MatrixReductions(MatrixDeterminant):
         iszerofunc : determines if an entry can be used as a pivot
         simpfunc : used to simplify elements and test if they are
             zero if `iszerofunc` returns `None`
+        prime : indicates whether reduction has to be done modulo prime
         normalize_last : indicates where all row reduction should
             happen in a fraction-free manner and then the rows are
             normalized (so that the pivots are 1), or whether
@@ -649,9 +651,17 @@ class MatrixReductions(MatrixDeterminant):
 
         def cross_cancel(a, i, b, j):
             """Does the row op row[i] = a*row[i] - b*row[j]"""
-            q = (j - i)*cols
-            for p in range(i*cols, (i + 1)*cols):
-                mat[p] = a*mat[p] - b*mat[p + q]
+            v = (j - i)*cols
+            if prime is None:
+                for u in range(i*cols, (i + 1)*cols):
+                    mat[u] = (a*mat[u] - b*mat[u + v])
+            else:
+                for u in range(i*cols, (i + 1)*cols):
+                    mat[u] = (a*mat[u] - b*mat[u + v]) % prime
+
+        if prime is not None:
+            for i in range(rows*cols):
+                mat[i] %= prime
 
         piv_row, piv_col = 0, 0
         pivot_cols = []
@@ -682,8 +692,13 @@ class MatrixReductions(MatrixDeterminant):
             if normalize_last is False:
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = S.One
-                for p in range(i*cols + j + 1, (i + 1)*cols):
-                    mat[p] = mat[p] / pivot_val
+                if prime is None:
+                    for u in range(i*cols + j + 1, (i + 1)*cols):
+                        mat[u] = mat[u] / pivot_val
+                else:
+                    pivot_inv = mod_inverse(pivot_val, prime)
+                    for u in range(i*cols + j + 1, (i + 1)*cols):
+                        mat[u] = mat[u] * pivot_inv % prime
                 # after normalizing, the pivot value is 1
                 pivot_val = S.One
 
@@ -708,12 +723,17 @@ class MatrixReductions(MatrixDeterminant):
             for piv_i, piv_j in enumerate(pivot_cols):
                 pivot_val = mat[piv_i*cols + piv_j]
                 mat[piv_i*cols + piv_j] = S.One
-                for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                    mat[p] = mat[p] / pivot_val
+                if prime is None:
+                    for u in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
+                        mat[u] = mat[u] / pivot_val
+                else:
+                    pivot_inv = mod_inverse(pivot_val, prime)
+                    for u in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
+                        mat[u] = mat[u] * pivot_inv % prime
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, prime=None, with_pivots=False):
         """Returns a matrix row-equivalent to `self` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
@@ -721,7 +741,10 @@ class MatrixReductions(MatrixDeterminant):
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc)
+        if prime is not None  and not isprime(prime):
+            raise ValueError("Not a valid prime number")
+
+        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc, prime)
         if with_pivots:
             return mat, pivots
         return mat
@@ -788,7 +811,7 @@ class MatrixReductions(MatrixDeterminant):
 
     @property
     def is_echelon(self, iszerofunc=_iszero):
-        """Returns `True` if he matrix is in echelon form.
+        """Returns `True` if the matrix is in echelon form.
         That is, all rows of zeros are at the bottom, and below
         each leading non-zero in a row are exclusively zeros."""
 
@@ -833,7 +856,7 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
+    def rref(self, iszerofunc=_iszero, simplify=False, prime=None, pivots=True, normalize_last=True):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         Parameters
@@ -845,6 +868,8 @@ class MatrixReductions(MatrixDeterminant):
         simplify : Function
             A function used to simplify elements when looking for a pivot.
             By default SymPy's `simplify`is used.
+        prime : prime number for modular reduction
+            If reduced row-echelon form of matrix is to be found in prime field.
         pivots : True or False
             If `True`, a tuple containing the row-reduced matrix and a tuple
             of pivot columns is returned.  If `False` just the row-reduced
@@ -887,8 +912,12 @@ class MatrixReductions(MatrixDeterminant):
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
+        if prime is not None  and not isprime(prime):
+            raise ValueError("Not a valid prime number")
+
         ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
                                           simpfunc=simpfunc,
+                                          prime=prime,
                                           normalize_last=normalize_last)
         if pivots:
             ret = (ret, pivot_cols)
@@ -2687,20 +2716,25 @@ class MatrixBase(MatrixDeprecated,
         [0, 1]])
 
         """
-        from sympy.ntheory import totient
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        N = self.cols
-        phi = totient(m)
-        det_K = self.det()
-        if gcd(det_K, m) != 1:
+        try:
+            return self.inverse_GE(prime=m)
+        except ZeroDivisionError:
             raise ValueError('Matrix is not invertible (mod %d)' % m)
-        det_inv = pow(int(det_K), int(phi - 1), int(m))
-        K_adj = self.adjugate()
-        K_inv = self.__class__(N, N,
-                               [det_inv * K_adj[i, j] % m for i in range(N) for
-                                j in range(N)])
-        return K_inv
+        except NonSquareMatrixError:
+            raise NonSquareMatrixError()
+        except ValueError:
+            N = self.cols
+            det_K = self.det()
+            det_inv = None
+            try:
+                det_inv = mod_inverse(det_K, m)
+            except ValueError:
+                raise ValueError('Matrix is not invertible (mod %d)' % m)
+            K_adj = self.adjugate()
+            K_inv = self.__class__(N, N,
+                                   [det_inv * K_adj[i, j] % m for i in range(N) for
+                                    j in range(N)])
+            return K_inv
 
     def inverse_ADJ(self, iszerofunc=_iszero):
         """Calculates the inverse using the adjugate matrix and a determinant.
@@ -2726,7 +2760,7 @@ class MatrixBase(MatrixDeprecated,
 
         return self.adjugate() / d
 
-    def inverse_GE(self, iszerofunc=_iszero):
+    def inverse_GE(self, iszerofunc=_iszero, prime=None):
         """Calculates the inverse using Gaussian elimination.
 
         See Also
@@ -2740,10 +2774,13 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
+        if prime is not None  and not isprime(prime):
+            raise ValueError("Not a valid prime number.")
+
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
+        red = big.rref(iszerofunc=iszerofunc, simplify=True, prime=prime)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
-            raise ValueError("Matrix det == 0; not invertible.")
+            raise ZeroDivisionError("Matrix det == 0; not invertible.")
 
         return self._new(red[:, big.rows:])
 
