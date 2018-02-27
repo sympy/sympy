@@ -11,9 +11,7 @@ from sympy.matrices import SparseMatrix
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
 )
-from sympy.utilities.pytest import raises, skip
-
-numpy = import_module('numpy')
+from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x y z')
 
@@ -70,8 +68,6 @@ def test_printmethod():
     assert MpmathPrinter().doprint(obj) == 'mpmath'
 
 def test_issue_14283():
-    if not numpy:
-        skip("numpy not installed.")
     prntr = PythonCodePrinter()
 
     assert prntr.doprint(zoo) == "float('nan')"
