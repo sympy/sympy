@@ -132,6 +132,7 @@ def convert_to(expr, target_units):
 
 def quantity_simplify(expr):
     from sympy.physics.units import Quantity
+    from sympy.utilities.iterables import sift
     if expr.is_Atom:
         return expr
     if not expr.is_Mul:
