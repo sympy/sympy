@@ -2718,8 +2718,6 @@ class MatrixBase(MatrixDeprecated,
         """
         try:
             return self.inverse_GE(prime=m)
-        except ZeroDivisionError:
-            raise ValueError('Matrix is not invertible (mod %d)' % m)
         except NonSquareMatrixError:
             raise NonSquareMatrixError()
         except ValueError:
@@ -2780,7 +2778,7 @@ class MatrixBase(MatrixDeprecated,
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True, prime=prime)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
-            raise ZeroDivisionError("Matrix det == 0; not invertible.")
+            raise ValueError("Matrix det == 0; not invertible.")
 
         return self._new(red[:, big.rows:])
 
