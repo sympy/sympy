@@ -1130,7 +1130,7 @@ class MatrixEigen(MatrixSubspaces):
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
-        if error_when_incomplete and type(eigs)==dict and sum(m for m in eigs.values()) != self.cols:
+        if error_when_incomplete and isinstance(eigs, dict) and sum(m for m in eigs.values()) != self.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
         return eigs
