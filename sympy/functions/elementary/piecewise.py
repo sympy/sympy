@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
 from sympy.core.basic import as_Basic
 from sympy.core.sympify import SympifyError
-from sympy.core.relational import Equality, Relational, _canonical
+from sympy.core.relational import (Equality, Unequality, Relational,
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Not, Or, ITE, simplify_logic)
@@ -857,28 +858,42 @@ class Piecewise(Function):
             except TypeError:
                 pass
 
-    def as_expr_set_pairs(self):
+    def as_expr_set_pairs(self, domain=S.Reals):
         """Return tuples for each argument of self that give
-        the expression and the interval in which it is valid.
+        the expression and the interval in which it is valid
+        which is contained within the given domain.
         If a condition cannot be converted to a set, an error
         will be raised. The variable of the conditions is
         assumed to be real; sets of real values are returned.
 
         Examples
         ========
-        >>> from sympy import Piecewise
+
+        >>> from sympy import Piecewise, Interval
         >>> from sympy.abc import x
-        >>> Piecewise(
+        >>> p = Piecewise(
         ...     (1, x < 2),
         ...     (2,(x > 0) & (x < 4)),
-        ...     (3, True)).as_expr_set_pairs()
+        ...     (3, True))
+        >>> p.as_expr_set_pairs()
         [(1, Interval.open(-oo, 2)),
          (2, Interval.Ropen(2, 4)),
          (3, Interval(4, oo))]
+        >>> p.as_expr_set_pairs(Interval(0, 3))
+        [(1, Interval.Ropen(0, 2)),
+         (2, Interval(2, 3)), (3, EmptySet())]
         """
         exp_sets = []
-        U = S.Reals
+        U = domain
+        complex = not domain.is_subset(S.Reals)
         for expr, cond in self.args:
+            if complex:
+                for i in cond.atoms(Relational):
+                    if not isinstance(i, (Equality, Unequality)):
+                        raise ValueError(filldedent('''
+                            Inequalities in the complex domain are
+                            not supported. Try the real domain by
+                            setting domain=S.Reals'''))
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
             exp_sets.append((expr, cond_int))

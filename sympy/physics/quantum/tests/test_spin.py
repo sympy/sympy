@@ -4270,10 +4270,10 @@ def test_jzketcoupled():
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((1, 2),)))
     # all jn are integer or half-integer
     raises(ValueError, lambda: JzKetCoupled(1, 1, (S(1)/3, S(2)/3)))
-    # indicies in coupling scheme must be integers
+    # indices in coupling scheme must be integers
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((S(1)/2, 1, 2),) ))
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((1, S(1)/2, 2),) ))
-    # indicies out of range
+    # indices out of range
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((0, 2, 1),) ))
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((3, 2, 1),) ))
     raises(ValueError, lambda: JzKetCoupled(1, 1, (1, 1), ((1, 0, 1),) ))

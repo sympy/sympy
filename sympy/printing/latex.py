@@ -1477,18 +1477,33 @@ class LatexPrinter(Printer):
             return r"%s^\dagger" % self._print(mat)
 
     def _print_MatAdd(self, expr):
-        terms = list(expr.args)
-        tex = " + ".join(map(self._print, terms))
-        return tex
+        terms = [self._print(t) for t in expr.args]
+        l = []
+        for t in terms:
+            if t.startswith('-'):
+                sign = "-"
+                t = t[1:]
+            else:
+                sign = "+"
+            l.extend([sign, t])
+        sign = l.pop(0)
+        if sign == '+':
+            sign = ""
+        return sign + ' '.join(l)
 
     def _print_MatMul(self, expr):
-        from sympy import Add, MatAdd, HadamardProduct
+        from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
 
         def parens(x):
             if isinstance(x, (Add, MatAdd, HadamardProduct)):
                 return r"\left(%s\right)" % self._print(x)
             return self._print(x)
-        return ' '.join(map(parens, expr.args))
+
+        if isinstance(expr, MatMul) and expr.args[0].is_Number and expr.args[0]<0:
+            expr = Mul(-1*expr.args[0], MatMul(*expr.args[1:]))
+            return '-' + ' '.join(map(parens, expr.args))
+        else:
+            return ' '.join(map(parens, expr.args))
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
@@ -1505,6 +1520,15 @@ class LatexPrinter(Printer):
                 return r"\left(%s\right)" % self._print(x)
             return self._print(x)
         return r' \circ '.join(map(parens, expr.args))
+
+    def _print_KroneckerProduct(self, expr):
+        from sympy import Add, MatAdd, MatMul
+
+        def parens(x):
+            if isinstance(x, (Add, MatAdd, MatMul)):
+                return r"\left(%s\right)" % self._print(x)
+            return self._print(x)
+        return r' \otimes '.join(map(parens, expr.args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1830,7 +1854,50 @@ class LatexPrinter(Printer):
 
     def _print_Poly(self, poly):
         cls = poly.__class__.__name__
-        expr = self._print(poly.as_expr())
+        terms = []
+        for monom, coeff in poly.terms():
+            s_monom = ''
+            for i, exp in enumerate(monom):
+                if exp > 0:
+                    if exp == 1:
+                        s_monom += self._print(poly.gens[i])
+                    else:
+                        s_monom += self._print(pow(poly.gens[i], exp))
+
+            if coeff.is_Add:
+                if s_monom:
+                    s_coeff = r"\left(%s\right)" % self._print(coeff)
+                else:
+                    s_coeff = self._print(coeff)
+            else:
+                if s_monom:
+                    if coeff is S.One:
+                        terms.extend(['+', s_monom])
+                        continue
+
+                    if coeff is S.NegativeOne:
+                        terms.extend(['-', s_monom])
+                        continue
+
+                s_coeff = self._print(coeff)
+
+            if not s_monom:
+                s_term = s_coeff
+            else:
+                s_term = s_coeff + " " + s_monom
+
+            if s_term.startswith('-'):
+                terms.extend(['-', s_term[1:]])
+            else:
+                terms.extend(['+', s_term])
+
+        if terms[0] in ['-', '+']:
+            modifier = terms.pop(0)
+
+            if modifier == '-':
+                terms[0] = '-' + terms[0]
+
+        expr = ' '.join(terms)
         gens = list(map(self._print, poly.gens))
         domain = "domain=%s" % self._print(poly.get_domain())
 
@@ -2109,7 +2176,7 @@ class LatexPrinter(Printer):
     def _print_Quantity(self, expr):
         if expr.name.name == 'degree':
             return r"^\circ"
-        return r"%s" % expr
+        return r"\detokenize {%s}" % expr
 
 def translate(s):
     r'''

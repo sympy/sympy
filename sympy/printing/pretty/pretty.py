@@ -819,7 +819,20 @@ class PrettyPrinter(Printer):
         return self._print(B.blocks)
 
     def _print_MatAdd(self, expr):
-        return self._print_seq(expr.args, None, None, ' + ')
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                if S(item.args[0]).is_negative:
+                    s = prettyForm(*stringPict.next(s, ' '))
+                    pform = self._print(item)
+                else:
+                    s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+
+        return s
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
@@ -854,6 +867,15 @@ class PrettyPrinter(Printer):
             delim = pretty_atom('Ring')
         else:
             delim = '.*'
+        return self._print_seq(expr.args, None, None, delim,
+                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
+
+    def _print_KroneckerProduct(self, expr):
+        from sympy import MatAdd, MatMul
+        if self._use_unicode:
+            delim = u' \N{N-ARY CIRCLED TIMES OPERATOR} '
+        else:
+            delim = ' x '
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 
