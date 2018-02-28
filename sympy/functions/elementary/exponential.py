@@ -458,10 +458,13 @@ class exp(ExpBase):
 
     def _eval_rewrite_as_sqrt(self, arg):
         from sympy.functions.elementary.trigonometric import sin, cos
-        coeff, terms = arg.as_coeff_Mul()
-        cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
-        if not isinstance(cosine, cos) and not isinstance (sine, sin):
-            return cosine + S.ImaginaryUnit*sine
+        if arg.is_Mul:
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+            if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                return cosine + S.ImaginaryUnit*sine
+            else:
+                return self
 
 
 class log(Function):
