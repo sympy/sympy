@@ -591,7 +591,7 @@ def test_AlgebraicNumber():
     assert a.is_aliased is False
 
     assert AlgebraicNumber( sqrt(3)).rep == DMP([ QQ(1), QQ(0)], QQ)
-    assert AlgebraicNumber(-sqrt(3)).rep == DMP([-QQ(1), QQ(0)], QQ)
+    assert AlgebraicNumber(-sqrt(3)).rep == DMP([ QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(2))

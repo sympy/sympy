@@ -174,7 +174,7 @@ def test_evalf_ramanujan():
 def test_evalf_bugs():
     assert NS(sin(1) + exp(-10**10), 10) == NS(sin(1), 10)
     assert NS(exp(10**10) + sin(1), 10) == NS(exp(10**10), 10)
-    assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
+    assert NS('expand_log(log(1+1/10**50))', 20) == '1.0000000000000000000e-50'
     assert NS('log(10**100,10)', 10) == '100.0000000'
     assert NS('log(2)', 10) == '0.6931471806'
     assert NS(

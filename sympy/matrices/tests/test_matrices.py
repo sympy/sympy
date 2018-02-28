@@ -1777,6 +1777,9 @@ def test_exp():
     assert m.exp() == Matrix([[E, 0], [0, E]])
     assert exp(m) == Matrix([[E, 0], [0, E]])
 
+    m = Matrix([[1, -1], [1, 1]])
+    assert m.exp() == Matrix([[E*cos(1), -E*sin(1)], [E*sin(1), E*cos(1)]])
+
 
 def test_has():
     A = Matrix(((x, y), (2, 3)))

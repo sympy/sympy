@@ -2517,10 +2517,14 @@ class MatrixBase(MatrixDeprecated,
 
         blocks = list(map(_jblock_exponential, cells))
         from sympy.matrices import diag
+        from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
         ret = P * eJ * P.inv()
-        return type(self)(ret)
+        if all(value.is_real for value in self.values()):
+            return type(self)(re(ret))
+        else:
+            return type(self)(ret)
 
     def gauss_jordan_solve(self, b, freevar=False):
         """

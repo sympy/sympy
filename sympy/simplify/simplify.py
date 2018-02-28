@@ -908,6 +908,8 @@ def logcombine(expr, force=False):
     See Also
     ========
     posify: replace all symbols with symbols having positive assumptions
+    sympy.core.function.expand_log: expand the logarithms of products
+        and powers; the opposite of logcombine
 
     """
 

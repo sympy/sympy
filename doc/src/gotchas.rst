@@ -431,7 +431,7 @@ to evaluate them to 20 digits, a difference will become apparent:
     not make it a more accurate value of 1/7.
 
 If inexact, low-precision numbers are involved in a calculation with
-with higher precision values, the evalf engine will increase the precision
+higher precision values, the evalf engine will increase the precision
 of the low precision values and inexact results will be obtained. This is
 feature of calculations with limited precision:
 
