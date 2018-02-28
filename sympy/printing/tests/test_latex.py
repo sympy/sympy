@@ -1754,19 +1754,3 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
-
-
-def test_units():
-    expr1 = 2*kg*x*meter**2
-    assert latex(expr1, mul_symbol='dot') == (r'2 \cdot x \cdot \detokenize {kilogram} \cdot \detokenize {meter}^{2}')
-    expr2 = 3*R
-    assert latex(expr2, mul_symbol='dot') == r'3 \cdot \detokenize {molar_gas_constant}'
-
-
-def test_latex_degree():
-    expr1 = 90*degree
-    assert latex(expr1) == r"90 ^\circ"
-    expr2 = x*degree
-    assert latex(expr2) == r"x ^\circ"
-    expr3 = cos(x*degree + 90*degree)
-    assert latex(expr3) == r'\cos{\left (x ^\circ + 90 ^\circ \right )}'
