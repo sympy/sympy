@@ -1805,7 +1805,25 @@ class Subs(Expr):
     def _eval_is_commutative(self):
         return self.expr.is_commutative
 
+    def is_continuous(expression,symbol,points):
+        left_hand_limit = expression.subs(symbol,points-10**(-20))
+        right_hand_limit = expression.subs(symbol,points+10**(-20))
+        value=expression.subs(symbol.points)
+        if left_hand_limit == right_hand_limit and left_hand_limit == value:
+           return True
+        else:
+           return False
+         
     def doit(self):
+        type_of_expr = type(self.expr)
+        type_of_drivative = type(Derivative(x,x))
+        symbol = self.variables
+        point = self.point
+        if type_of_expr == type_of_derivative and len(symbol) == 1:
+              if is_continuous(self.expr, symbol, point) == True:
+                  return self.expr.doit().subs(list(zip(self.variables, self.point)))
+              else:
+                  return "Derivative doesn't exists at the specified point" 
         return self.expr.doit().subs(list(zip(self.variables, self.point)))
 
     def evalf(self, prec=None, **options):
