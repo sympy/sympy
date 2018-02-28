@@ -113,6 +113,8 @@ def test_exp_rewrite():
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
+    assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
+    assert exp(pi*I/3).rewrite(sqrt) == 1/2 + sqrt(3)*I/2
 
 
 def test_exp_leading_term():
