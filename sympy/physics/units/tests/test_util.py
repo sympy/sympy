@@ -118,6 +118,8 @@ def test_eval_simplify():
     from sympy.physics.units import cm, mm, km, m, K, Quantity
     from sympy.simplify.simplify import simplify
     from sympy.core.symbol import symbols
+    from sympy.utilities.pytest import raises
+    from sympy.core.function import Lambda
 
     x = symbols('x')
 
