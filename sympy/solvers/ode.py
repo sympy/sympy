@@ -7854,7 +7854,7 @@ def _linear_neq_order1_type1(match_):
         C = Matrix(C)
         e_vector = []
         for i in range(n):
-            e_vector.append((exp_M.row(i)*C).values()[0])
+            e_vector.append(simplify((exp_M.row(i)*C).values()[0]))
         sol = []
         for i in range(len(eq)):
             sol.append(Eq(func[i],e_vector[i]))

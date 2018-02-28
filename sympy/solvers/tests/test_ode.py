@@ -409,13 +409,19 @@ def test_linear_3eq_order1():
     f = t**3 + log(t)
     g = t**2 + sin(t)
     eq4 = (Eq(diff(x(t),t),(4*f+g)*x(t)-f*y(t)-2*f*z(t)), Eq(diff(y(t),t),2*f*x(t)+(f+g)*y(t)-2*f*z(t)), Eq(diff(z(t),t),5*f*x(t)+f*y(t)+(-3*f+g)*z(t)))
-    sol4 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
-    + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - \
-    sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), \
-    (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
-    C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
-    exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
-    Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
+    sol4 = [Eq(x(t), (sqrt(3)*I*C1*exp(sqrt(3)*I*Integral(t**3 + log(t), t))/3 + C1*exp(-2*Integral(t**3 + log(t), t)) - \
+    sqrt(3)*I*C1*exp(-sqrt(3)*I*Integral(t**3 + log(t), t))/3 + C2*exp(sqrt(3)*I*Integral(t**3 + log(t), t))/2 + \
+    sqrt(3)*I*C2*exp(sqrt(3)*I*Integral(t**3 + log(t), t))/6 - C2*exp(-2*Integral(t**3 + log(t), t)) + C2*exp(-sqrt(3)*I*Integral(t**3 + \
+    log(t), t))/2 - sqrt(3)*I*C2*exp(-sqrt(3)*I*Integral(t**3 + log(t), t))/6 - sqrt(3)*I*C3*exp(sqrt(3)*I*Integral(t**3 + log(t), t))/3 + \
+    sqrt(3)*I*C3*exp(-sqrt(3)*I*Integral(t**3 + log(t), t))/3)*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), (2*sqrt(3)*I*C1*exp(2*sqrt(3)*I*Integral(t**3 + \
+    log(t), t)) - 2*sqrt(3)*I*C1 + 3*C2*exp(2*sqrt(3)*I*Integral(t**3 + log(t), t)) + sqrt(3)*I*C2*exp(2*sqrt(3)*I*Integral(t**3 + log(t), t)) + \
+    3*C2 - sqrt(3)*I*C2 - 2*sqrt(3)*I*C3*exp(2*sqrt(3)*I*Integral(t**3 + log(t), t)) + 2*sqrt(3)*I*C3)*exp(-sqrt(3)*I*Integral(t**3 + \
+    log(t), t))*exp(Integral(-t**2 - sin(t), t))/6), Eq(z(t), (-3*C1*exp(2*(1 + sqrt(3)*I)*Integral(t**3 + log(t), t)) + sqrt(3)*I*C1*exp(2*(1 + \
+    sqrt(3)*I)*Integral(t**3 + log(t), t)) + 3*C1*exp(sqrt(3)*I*Integral(t**3 + log(t), t)) + sqrt(3)*I*C1*exp(sqrt(3)*I*Integral(t**3 + log(t), t)) - \
+    2*sqrt(3)*I*C1*exp(2*Integral(t**3 + log(t), t)) + 2*sqrt(3)*I*C2*exp(2*(1 + sqrt(3)*I)*Integral(t**3 + log(t), t)) - 3*C2*exp(sqrt(3)*I*Integral(t**3 + \
+    log(t), t)) - sqrt(3)*I*C2*exp(sqrt(3)*I*Integral(t**3 + log(t), t)) + 3*C2*exp(2*Integral(t**3 + log(t), t)) - sqrt(3)*I*C2*exp(2*Integral(t**3 + \
+    log(t), t)) + 3*C3*exp(2*(1 + sqrt(3)*I)*Integral(t**3 + log(t), t)) - sqrt(3)*I*C3*exp(2*(1 + sqrt(3)*I)*Integral(t**3 + log(t), t)) + \
+    2*sqrt(3)*I*C3*exp(2*Integral(t**3 + log(t), t)))*exp(-(2 + sqrt(3)*I)*Integral(t**3 + log(t), t))*exp(Integral(-t**2 - sin(t), t))/(3 + sqrt(3)*I))]
     assert dsolve(eq4) == sol4
 
     eq5 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
