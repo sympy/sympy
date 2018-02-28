@@ -449,8 +449,8 @@ class LatexPrinter(Printer):
             if self._settings['long_frac_ratio'] == None:
                 exprfind = [x for x in expr.args if \
                     str(x).startswith('1/')]
-                if len(exprfind)>=1:
-                    ratio = len(expr.args)-1
+                if len(exprfind) >= 1:
+                    ratio = len(expr.args) - 1
                 else:
                     ratio = len(expr.args)
             else:

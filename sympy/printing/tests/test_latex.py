@@ -86,6 +86,9 @@ def test_latex_basic():
         r"\frac{1}{2 x} \left(x + y\right)"
     assert latex((x + y)/x) == r"\frac{1}{x} \left(x + y\right)"
     assert latex((x + y)/x, long_frac_ratio=3) == r"\frac{x + y}{x}"
+    assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
+    assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
+        r"\frac{2 x}{3} \sqrt{2}"
 
     assert latex(2*Integral(x, x)/3) == r"\frac{2}{3} \int x\, dx"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
