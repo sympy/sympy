@@ -231,6 +231,8 @@ class exp(ExpBase):
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
+        from sympy.functions.elementary.trigonometric import sin, cos
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -261,6 +263,10 @@ class exp(ExpBase):
                             return -S.ImaginaryUnit
                         elif ask(Q.odd(coeff + S.Half)):
                             return S.ImaginaryUnit
+                    else :
+                        cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                        if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                            return cosine + S.ImaginaryUnit*sine
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).

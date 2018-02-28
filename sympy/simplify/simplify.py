@@ -1087,6 +1087,8 @@ def besselsimp(expr):
     # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
     # - use contiguity relations?
 
+    from sympy.functions.elementary.trigonometric import sin, cos
+
     def replacer(fro, to, factors):
         factors = set(factors)
 
@@ -1103,7 +1105,11 @@ def besselsimp(expr):
 
     def tominus(fro):
         def tofunc(nu, z):
-            return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
+            c, s = cos(S.Pi*nu), sin(S.Pi*nu)
+            if not isinstance(c, cos) and not isinstance(s, sin):
+                return (c + S.ImaginaryUnit*s)*fro(nu, exp_polar(-I*pi)*z)
+            else :
+                return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
         return tofunc
 
     orig_expr = expr

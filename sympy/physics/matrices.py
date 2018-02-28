@@ -170,9 +170,9 @@ def mdft(n):
     >>> from sympy.physics.matrices import mdft
     >>> mdft(3)
     Matrix([
-    [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3, sqrt(3)*exp(-4*I*pi/3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-4*I*pi/3)/3, sqrt(3)*exp(-8*I*pi/3)/3]])
+    [sqrt(3)/3,                         sqrt(3)/3,                         sqrt(3)/3],
+    [sqrt(3)/3,    sqrt(3)*(-1/2 - sqrt(3)*I/2)/3, sqrt(3)*(-1/2 - sqrt(3)*I/2)**2/3],
+    [sqrt(3)/3, sqrt(3)*(-1/2 - sqrt(3)*I/2)**2/3, sqrt(3)*(-1/2 - sqrt(3)*I/2)**4/3]])
     """
     mat = [[None for x in range(n)] for y in range(n)]
     base = exp(-2*pi*I/n)

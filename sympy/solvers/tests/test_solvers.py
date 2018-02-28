@@ -1535,7 +1535,7 @@ def test_lambert_multivariate():
 
     # issue 4271
     assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
-        6*LambertW(root(-1, 3)*root(a, 3)/3)]
+        6*LambertW(a**(1/3)*(1 + sqrt(3)*I)/6)]
 
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
