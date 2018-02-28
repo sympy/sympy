@@ -231,6 +231,8 @@ class exp(ExpBase):
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
+        from sympy.functions.elementary.trigonometric import sin, cos
+
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
