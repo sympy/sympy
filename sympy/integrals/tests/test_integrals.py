@@ -552,6 +552,7 @@ def test_integrate_returns_piecewise():
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
 
 def test_integrate_max_min():
+    x = symbols('x', real=True)
     assert integrate(Min(x, 2), (x, 0, 3)) == 4
     assert integrate(Max(x**2, x**3), (x, 0, 2)) == S(49)/12
     assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \

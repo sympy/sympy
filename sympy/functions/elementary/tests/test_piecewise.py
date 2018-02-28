@@ -201,6 +201,7 @@ def test_piecewise_integrate1b():
 
 
 def test_piecewise_integrate1c():
+    y = symbols('y', real=True)
     for i, g in enumerate([
         Piecewise((1 - x, Interval(0, 1).contains(x)),
             (1 + x, Interval(-1, 0).contains(x)), (0, True)),
