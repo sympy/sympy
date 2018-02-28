@@ -485,12 +485,12 @@ def test_issue_9205():
 
 
 def test_limit_seq():
-    assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == S.Infinity
-    assert (limit(binomial(2*x, x) / Sum(binomial(2*y, y), (y, 1, x)), x, oo) ==
-            S(3) / 4)
-    assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
-                  (2**x*x), x, oo) == 4)
+    assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo, sequence=True) == EulerGamma
+    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo, sequence=True) == S.Infinity
+    assert limit(binomial(2*x, x) / Sum(binomial(2*y, y), (y, 1, x)), x, oo,
+        sequence=True) == S(3) / 4
+    assert limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
+        (2**x*x), x, oo, sequence=True) == 4
 
 
 def test_issue_11879():
@@ -521,3 +521,7 @@ def test_issue_12564():
     assert limit(((x + sin(x))**2).expand(), x, oo) == oo
     assert limit(((x + cos(x))**2).expand(), x, -oo) == oo
     assert limit(((x + sin(x))**2).expand(), x, -oo) == oo
+
+def test_not_assuming_sequence():
+    raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))
+    assert limit(exp(I*x)*sin(pi*x), x, oo, sequence=True) == 0
