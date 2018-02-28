@@ -32,7 +32,7 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import degree, radian, kg, meter, R
+from sympy.physics.units import degree, radian, kg, meter
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -1757,10 +1757,8 @@ def test_WedgeProduct_printing():
 
 
 def test_units():
-    expr1 = 2*kg*x*meter**2
-    assert latex(expr1, mul_symbol='dot') == (r'2 \cdot x \cdot \detokenize {kilogram} \cdot \detokenize {meter}^{2}')
-    expr2 = 3*R
-    assert latex(expr2, mul_symbol='dot') == r'3 \cdot \detokenize {molar_gas_constant}'
+    expr = 2*kg*x*meter**2
+    assert latex(expr, mul_symbol='dot') == r'2 \cdot x \cdot kilogram \cdot meter^{2}'
 
 
 def test_latex_degree():
