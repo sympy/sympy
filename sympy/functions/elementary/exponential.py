@@ -461,7 +461,7 @@ class exp(ExpBase):
         if arg.is_Mul:
             coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
             if (coeff == 0):
-                return 1
+                return None
             else:
                 cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
