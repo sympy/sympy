@@ -143,6 +143,9 @@ def quantity_simplify(expr):
     quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
     # Just pick the first quantity:
     ref_quantities = [i[0][0] for i in quantity_pow_by_dim.values()]
-    new_quantities = [Mul.fromiter((quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
+    new_quantities = [
+        Mul.fromiter(
+            (quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
+            if len(v) > 1 else v[0][0]**v[0][1]
         for quantity, (k, v) in zip(ref_quantities, quantity_pow_by_dim.items())]
     return coeff*Mul.fromiter(other_pow)*Mul.fromiter(new_quantities)
