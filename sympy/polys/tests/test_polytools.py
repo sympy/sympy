@@ -3243,3 +3243,17 @@ def test_issue_12400():
     # Correction of check for negative exponents
     assert poly(1/(1+sqrt(2)), x) == \
             Poly(1/(1+sqrt(2)), x , domain='EX')
+
+def test_issue_14364():
+    assert gcd(S(4)/7, S(2)/3) == S(2)/21
+    assert gcd(pi*S(4)/7, pi*S(2)/3) == pi*S(2)/21
+
+    assert lcm(S(2)/3*sqrt(3), S(5)/6*sqrt(3)) == S(10)*sqrt(3)/3
+    assert lcm(3*sqrt(3), S(4)/sqrt(3)) == 12*sqrt(3)
+
+    assert gcd(S(2)/3*sqrt(3), S(5)/6/sqrt(3)) == sqrt(3)/18
+    assert gcd(S(4)*pi/7, S(3)*pi/14) == pi/14
+
+    # gcd_list and lcm_list
+    assert gcd([S(2)*pi/7, S(6)*pi/5,S(8)*pi/5]) == S(2)*pi/35
+    assert lcm((S(7)/pi/2, S(5)/pi/6,S(5)/pi/8)) == S(35)/(2*pi)
