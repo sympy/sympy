@@ -14,6 +14,7 @@ from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
 from sympy.core.compatibility import reduce
 from sympy.physics.units.dimensions import Dimension, dimsys_default
 from sympy.physics.units.quantities import Quantity
+from sympy.utilities.iterables import sift
 
 
 def dim_simplify(expr):
@@ -131,8 +132,6 @@ def convert_to(expr, target_units):
 
 
 def quantity_simplify(expr):
-    from sympy.physics.units import Quantity
-    from sympy.utilities.iterables import sift
     if expr.is_Atom:
         return expr
     if not expr.is_Mul:
