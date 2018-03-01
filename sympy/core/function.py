@@ -51,6 +51,7 @@ from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
+from sympy import limit
 
 import sys
 
@@ -1806,6 +1807,17 @@ class Subs(Expr):
         return self.expr.is_commutative
 
     def doit(self):
+        if isinstance(self.expr,Derivative):
+           if len(self.variables) == 1:
+              if sympify(sqrt(self.variables[0]**2)-self.variables[0]) == sympify(Abs(self.variables[0])-self.variables[0]):
+                 lhd=limit(self.expr, self.variables[0], self.point[0], '+')
+                 rhd=limit(self.expr, self.variables[0], self.point[0], '-')
+                 if lhd == rhd:
+                    return self.expr.doit().subs(list(zip(self.variables, self.point)))
+                 else:
+                    return raise ValueError("The drivative does not exist since "
+                    "left hand derivative = %s and right hand derivative = %s"
+                    % (lhd, rhd))
         return self.expr.doit().subs(list(zip(self.variables, self.point)))
 
     def evalf(self, prec=None, **options):
