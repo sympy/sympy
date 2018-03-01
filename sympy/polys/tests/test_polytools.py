@@ -3255,5 +3255,5 @@ def test_issue_14364():
     assert gcd(S(4)*pi/7, S(3)*pi/14) == pi/14
 
     # gcd_list and lcm_list
-    assert gcd([S(2)*pi/7, S(6)*pi/5,S(8)*pi/5]) == S(2)*pi/35
-    assert lcm((S(7)/pi/2, S(5)/pi/6,S(5)/pi/8)) == S(35)/(2*pi)
+    assert gcd([S(2)*pi/7, S(6)*pi/5, S(8)*pi/5]) == S(2)*pi/35
+    assert lcm((S(7)/pi/2, S(5)/pi/6, S(5)/pi/8)) == S(35)/(2*pi)
