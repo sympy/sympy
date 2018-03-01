@@ -107,6 +107,7 @@ def test_exp_conjugate():
 
 
 def test_exp_rewrite():
+    from sympy.concrete.summations import Sum
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
     assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
