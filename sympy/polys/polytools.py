@@ -13,7 +13,6 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
-from sympy.core.numbers import igcd, ilcm
 
 from sympy.logic.boolalg import BooleanAtom
 
@@ -5213,7 +5212,7 @@ def gcd_list(seq, *gens, **args):
                     num, den = 0, 1
                     for element in seq:
                         n, d = (element/genr).as_numer_denom()
-                        num, den = igcd(num, n), ilcm(den, d)
+                        num, den = gcd(num, n), lcm(den, d)
                     return Rational(num, den) * genr
 
     except PolificationFailed as exc:
@@ -5281,7 +5280,7 @@ def gcd(f, g=None, *gens, **args):
                 if a.is_rational and b.is_rational:
                     an, ad = a.as_numer_denom()
                     bn, bd = b.as_numer_denom()
-                    return Rational(igcd(an, bn), ilcm(ad, bd)) * genr
+                    return Rational(gcd(an, bn), lcm(ad, bd)) * genr
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5351,7 +5350,7 @@ def lcm_list(seq, *gens, **args):
                     num, den = 1, 0
                     for element in seq:
                         n, d = (element/genr).as_numer_denom()
-                        num, den = ilcm(num, n), igcd(den, d)
+                        num, den = lcm(num, n), gcd(den, d)
                     return Rational(num, den) * genr
 
     except PolificationFailed as exc:
@@ -5416,7 +5415,7 @@ def lcm(f, g=None, *gens, **args):
                 if a.is_rational and b.is_rational:
                     an, ad = a.as_numer_denom()
                     bn, bd = b.as_numer_denom()
-                    return Rational(ilcm(an, bn), igcd(ad, bd)) * genr
+                    return Rational(lcm(an, bn), gcd(ad, bd)) * genr
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
