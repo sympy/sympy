@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Rational, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 
 from sympy.core.mul import _keep_coeff
@@ -5209,11 +5209,10 @@ def gcd_list(seq, *gens, **args):
             genr = genrs[0]
             if not genr.has(Symbol) and genr.is_irrational:
                 if all((element/genr).is_rational for element in seq):
-                    num, den = 0, 1
-                    for element in seq:
-                        n, d = (element/genr).as_numer_denom()
-                        num, den = gcd(num, n), lcm(den, d)
-                    return Rational(num, den) * genr
+                    g = seq[0]/genr
+                    for element in seq[1:]:
+                        g = gcd(g, element/genr)
+                    return g * genr
 
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
@@ -5278,9 +5277,7 @@ def gcd(f, g=None, *gens, **args):
             if not genr.has(Symbol) and genr.is_irrational:
                 a, b = f/genr, g/genr
                 if a.is_rational and b.is_rational:
-                    an, ad = a.as_numer_denom()
-                    bn, bd = b.as_numer_denom()
-                    return Rational(gcd(an, bn), lcm(ad, bd)) * genr
+                    return gcd(a, b) * genr
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5347,11 +5344,10 @@ def lcm_list(seq, *gens, **args):
             genr = genrs[0]
             if not genr.has(Symbol) and genr.is_irrational:
                 if all((element/genr).is_rational for element in seq):
-                    num, den = 1, 0
-                    for element in seq:
-                        n, d = (element/genr).as_numer_denom()
-                        num, den = lcm(num, n), gcd(den, d)
-                    return Rational(num, den) * genr
+                    l = seq[0]/genr
+                    for element in seq[1:]:
+                        l = lcm(l, element/genr)
+                    return l * genr
 
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
@@ -5413,9 +5409,7 @@ def lcm(f, g=None, *gens, **args):
             if not genr.has(Symbol) and genr.is_irrational:
                 a, b = f/genr, g/genr
                 if a.is_rational and b.is_rational:
-                    an, ad = a.as_numer_denom()
-                    bn, bd = b.as_numer_denom()
-                    return Rational(lcm(an, bn), gcd(ad, bd)) * genr
+                    return lcm(a, b) * genr
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
