@@ -460,12 +460,12 @@ class exp(ExpBase):
         from sympy.functions.elementary.trigonometric import sin, cos
         if arg.is_Mul:
             coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
-            if (coeff == 0):
-                return None
-            elif coeff and coeff.is_number:
+            if coeff and coeff.is_number:
                 cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
                     return cosine + S.ImaginaryUnit*sine
+            else:
+                return None
         else:
             return self
 
