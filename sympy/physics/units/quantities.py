@@ -32,12 +32,8 @@ class Quantity(AtomicExpr):
             name = Symbol(name)
 
         # Interpret as Quantity(name, dim, scale, abbrev) as in the old version of Sympy
-        if not isinstance(abbrev, str):
-            temp_dimension = dimension
-            temp_scale_factor = scale_factor
-            dimension = abbrev
-            scale_factor = temp_dimension
-            abbrev = temp_scale_factor
+        if not isinstance(abbrev, string_types):
+            dimension, scale_factor, abbrev = abbrev, dimension, scale_factor
 
         if dimension is not None:
             SymPyDeprecationWarning(
