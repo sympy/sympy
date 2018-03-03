@@ -464,10 +464,6 @@ class exp(ExpBase):
                 cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
                     return cosine + S.ImaginaryUnit*sine
-            else:
-                return None
-        else:
-            return self
 
 
 class log(Function):
