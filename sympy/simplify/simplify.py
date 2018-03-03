@@ -525,7 +525,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     from sympy import Sum, Product
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
-        return expr
+        if expr == False:
+            raise AttributeError("expression must not be False")
+        else:
+            return expr
 
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
         if isinstance(expr, Function) and hasattr(expr, "inverse"):
