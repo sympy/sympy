@@ -130,5 +130,3 @@ def _apply_operation(op, x, y, commutative):
         else:
             out = ImageSet(Lambda((_x, _y), op(_x, _y)), x, y)
     return out
-
-
