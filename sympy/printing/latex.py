@@ -2287,8 +2287,7 @@ def latex(expr, **settings):
 
     long_frac_ratio: The allowed ratio of the width of the numerator to the
     width of the denominator before we start breaking off long fractions.
-    The default value is width of the numerator to the width of the
-    denominator in the expression itself.
+    If None (the default value), long fractions are not broken up.
 
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=2))
     \frac{\int r\, dr}{2 \pi}
