@@ -899,6 +899,10 @@ def solve(f, *symbols, **flags):
         - dsolve() for solving differential equations
 
     """
+
+    if f == False:
+        raise AttributeError("equation must not be False")
+
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     ###########################################################################
