@@ -20,12 +20,10 @@ from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
-
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import subsets
 from sympy.multipledispatch import dispatch
-
 
 class Set(Basic):
     """
@@ -1959,3 +1957,33 @@ def simplify_intersection(args):
         return args.pop()
     else:
         return Intersection(args, evaluate=False)
+
+def set_add(x, y):
+    from sympy.sets.handlers.add import _set_add
+    from sympy.sets.setexpr import _apply_operation
+    return _apply_operation(_set_add, x, y, commutative=True)
+
+def set_sub(x, y):
+    from sympy.sets.handlers.add import _set_sub
+    from sympy.sets.setexpr import _apply_operation
+    return _apply_operation(_set_sub, x, y, commutative=False)
+
+def set_mul(x, y):
+    from sympy.sets.handlers.mul import _set_mul
+    from sympy.sets.setexpr import _apply_operation
+    return _apply_operation(_set_mul, x, y, commutative=True)
+
+def set_div(x, y):
+    from sympy.sets.handlers.mul import _set_div
+    from sympy.sets.setexpr import _apply_operation
+    return _apply_operation(_set_div, x, y, commutative=False)
+
+def set_pow(x, y):
+    from sympy.sets.handlers.power import _set_pow
+    from sympy.sets.setexpr import _apply_operation
+    return _apply_operation(_set_pow, x, y, commutative=False)
+
+def set_function(f, x):
+    from sympy.sets.handlers.functions import _set_function
+    from sympy.sets.setexpr import _apply_operation
+    return _set_function(f, x)
