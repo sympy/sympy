@@ -1985,5 +1985,4 @@ def set_pow(x, y):
 
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
-    from sympy.sets.setexpr import _apply_operation
     return _set_function(f, x)
