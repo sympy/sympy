@@ -8,7 +8,12 @@ from __future__ import print_function, division
 from functools import wraps
 import inspect
 import textwrap
-
+from sympy import *
+# from sympy import Derivative
+from sympy import Integer
+from sympy import diff
+from sympy import sin
+from sympy import cos
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, integer_types)
 from sympy.utilities.decorator import doctest_depends_on
@@ -338,7 +343,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             modules = ["math", "mpmath", "sympy"]
         else:
             modules = ["numpy"]
-
     # Get the needed namespaces.
     namespaces = []
     # First find any function implementations
@@ -357,6 +361,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
+    # print (namespace)
 
     if hasattr(expr, "atoms"):
         #Try if you can extract symbols from the expression.
@@ -364,7 +369,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
-
+       
     if printer is None:
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer
@@ -410,18 +415,20 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     flat = '__flatten_args__'
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
+
         for k in keys:
             if k not in namespace:
                 imp_mod_lines.append("from %s import %s" % (mod, k))
     for ln in imp_mod_lines:
+
         exec_(ln, {}, namespace)
 
     if flat in lstr:
+
         namespace.update({flat: flatten})
 
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
-
     func = eval(lstr, namespace)
     # For numpy lambdify, wrap all input arguments in arrays.
     # This is a fix for gh-11306.
@@ -515,25 +522,37 @@ def lambdastr(args, expr, printer=None, dummify=False):
         from sympy.printing.lambdarepr import lambdarepr
 
     def sub_args(args, dummies_dict):
+       
         if isinstance(args, str):
-            return args
+           return args
         elif isinstance(args, DeferredVector):
-            return str(args)
+           return str(args)
         elif iterable(args):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
-            return ",".join(str(a) for a in dummies)
+            return ",".join(str(a) for a in dummies if a!=None)
+
+        
         else:
             #Sub in dummy variables for functions or symbols
             if isinstance(args, (Function, Symbol)):
+                
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
+
+            elif isinstance(args,Derivative):
+                dummies = Dummy()
+                dummies_dict.update({args : dummies})
+                return str(dummies)
+
             else:
+                
                 return str(args)
 
     def sub_expr(expr, dummies_dict):
         try:
             expr = sympify(expr).xreplace(dummies_dict)
+            
         except Exception:
             if isinstance(expr, DeferredVector):
                 pass
@@ -541,10 +560,13 @@ def lambdastr(args, expr, printer=None, dummify=False):
                 k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
                 v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
                 expr = dict(zip(k, v))
+
             elif isinstance(expr, tuple):
                 expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+
             elif isinstance(expr, list):
                 expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+                
         return expr
 
     # Transform args
@@ -563,6 +585,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             ','.join(dum_args), lstr, flat, iter_args)
         if len(re.findall(r'\b%s\b' % flat, rv)) > 1:
             raise ValueError('the name %s is reserved by lambdastr' % flat)
+        print (rv)
         return rv
 
     dummies_dict = {}
@@ -580,6 +603,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
+
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 

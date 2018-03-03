@@ -5,10 +5,10 @@ import math
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
-    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
+    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,DotProduct,
+    Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,               
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy, sinc)
+    Eq, Dummy, sinc)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -829,3 +829,19 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+
+def test_lambdify_derivative():
+    
+    from sympy.abc import t
+    f = Function('f')(t)
+    expr = f + f.diff() + f.diff().diff()
+    expr2 = lambdify((f,f.diff(),f.diff().diff()),expr)
+    assert expr2(sin(t),sin(t).diff(),sin(t).diff().diff()) == sin(t)
+
+def test_lambdify_higher_derivative():
+    
+    from sympy.abc import x
+    f = Function('f')(x)
+    expr = f + f.diff().diff()
+    expr2 = lambdify((f,f.diff().diff()),expr)
+    assert expr2(2*exp(x),2*exp(x).diff().diff()) == 4*exp(x)
