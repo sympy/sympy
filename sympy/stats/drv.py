@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum, exp, I, oo)
+        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
@@ -178,13 +178,17 @@ class SingleDiscretePSpace(SinglePSpace):
         return conditional_domain
 
     def probability(self, condition):
+        complement = isinstance(condition, Ne)
+        if complement:
+            condition = Eq(condition.args[0], condition.args[1])
         _domain = self.restricted_domain(condition)
         if condition == False or _domain is S.EmptySet:
             return S.Zero
         if condition == True or _domain == self.set:
             return S.One
         try:
-            return self.eval_prob(_domain)
+            prob = self.eval_prob(_domain)
+            return prob if not complement else S.One - prob
         except NotImplementedError:
             return Probability(condition)
 
