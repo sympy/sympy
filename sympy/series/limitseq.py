@@ -9,6 +9,7 @@ from sympy.core.power import Pow
 from sympy.core.symbol import Dummy
 from sympy.core.function import PoleError
 from sympy.series.limits import Limit
+from sympy.functions.combinatorial.numbers import fibonacci
 
 
 def difference_delta(expr, n=None, step=1):
@@ -102,7 +103,7 @@ def dominant(expr, n):
 
 def _limit_inf(expr, n):
     try:
-        return Limit(expr, n, S.Infinity).doit(deep=False, sequence=False)
+        return Limit(expr, n, S.Infinity).doit(deep=False)
     except (NotImplementedError, PoleError):
         return None
 
@@ -145,15 +146,17 @@ def _limit_seq(expr, n, trials):
 
 
 def limit_seq(expr, n=None, trials=5):
-    """Finds limits of terms having sequences at infinity.
+    """Finds the limit of a sequence as index n tends to infinity.
 
     Parameters
     ==========
 
     expr : Expr
         SymPy expression for the n-th term of the sequence
-    n : Symbol
-        The index of the sequence, an integer that tends to positive infinity.
+    n : Symbol, optional
+        The index of the sequence, an integer that tends to positive
+        infinity. If None, inferred from the expression unless it has
+        multiple symbols.
     trials: int, optional
         The algorithm is highly recursive. ``trials`` is a safeguard from
         infinite recursion in case the limit is not easily computed by the
@@ -202,6 +205,7 @@ def limit_seq(expr, n=None, trials=5):
     elif n not in expr.free_symbols:
         return expr
 
+    expr = expr.rewrite(fibonacci, S.GoldenRatio)
     n_ = Dummy("n", integer=True, positive=True)
 
     # If there is a negative term raised to a power involving n, consider
