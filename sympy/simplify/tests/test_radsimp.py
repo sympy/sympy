@@ -5,7 +5,7 @@ from sympy import (
 
 from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, fraction_expand
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -417,5 +417,5 @@ def test_issue_5615():
 def test_issue_5933():
     from sympy import Polygon, RegularPolygon, denom
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
-    assert abs(denom(x).n()) > 1e-12
-    assert abs(denom(radsimp(x))) > 1e-12  # in case simplify didn't handle it
+    raises(AttributeError, lambda: abs(denom(x).n()) > 1e-12)
+    raises(AttributeError, lambda: abs(denom(radsimp(x))) > 1e-12)  # in case simplify didn't handle it
