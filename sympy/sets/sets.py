@@ -20,12 +20,10 @@ from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
-
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import subsets
 from sympy.multipledispatch import dispatch
-
 
 class Set(Basic):
     """
@@ -1959,3 +1957,60 @@ def simplify_intersection(args):
         return args.pop()
     else:
         return Intersection(args, evaluate=False)
+
+
+def _handle_finite_sets(op, x, y, commutative):
+    # Handle finite sets:
+    fs_args, other = sift([x, y], lambda x: isinstance(x, FiniteSet), binary=True)
+    if len(fs_args) == 2:
+        return FiniteSet(*[op(i, j) for i in fs_args[0] for j in fs_args[1]])
+    elif len(fs_args) == 1:
+        sets = [_apply_operation(op, other[0], i, commutative) for i in fs_args[0]]
+        return Union(*sets)
+    else:
+        return None
+
+def _apply_operation(op, x, y, commutative):
+    from sympy.sets import ImageSet
+    from sympy import symbols,Lambda
+    d = Dummy('d')
+
+    out = _handle_finite_sets(op, x, y, commutative)
+    if out is None:
+        out = op(x, y)
+
+    if out is None and commutative:
+        out = op(y, x)
+    if out is None:
+        _x, _y = symbols("x y")
+        if isinstance(x, Set) and not isinstance(y, Set):
+            out = ImageSet(Lambda(d, op(d, y)), x).doit()
+        elif not isinstance(x, Set) and isinstance(y, Set):
+            out = ImageSet(Lambda(d, op(x, d)), y).doit()
+        else:
+            out = ImageSet(Lambda((_x, _y), op(_x, _y)), x, y)
+    return out
+
+def set_add(x, y):
+    from sympy.sets.handlers.add import _set_add
+    return _apply_operation(_set_add, x, y, commutative=True)
+
+def set_sub(x, y):
+    from sympy.sets.handlers.add import _set_sub
+    return _apply_operation(_set_sub, x, y, commutative=False)
+
+def set_mul(x, y):
+    from sympy.sets.handlers.mul import _set_mul
+    return _apply_operation(_set_mul, x, y, commutative=True)
+
+def set_div(x, y):
+    from sympy.sets.handlers.mul import _set_div
+    return _apply_operation(_set_div, x, y, commutative=False)
+
+def set_pow(x, y):
+    from sympy.sets.handlers.power import _set_pow
+    return _apply_operation(_set_pow, x, y, commutative=False)
+
+def set_function(f, x):
+    from sympy.sets.handlers.functions import _set_function
+    return _set_function(f, x)

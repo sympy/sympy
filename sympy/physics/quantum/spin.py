@@ -1383,9 +1383,9 @@ class CoupledSpinState(SpinState):
         if any(2*ji != int(2*ji) for ji in jn if ji.is_number):
             raise ValueError('All elements of jn must be integer or half-integer, got: %s' % jn)
         if any(n1 != int(n1) or n2 != int(n2) for (n1, n2, _) in jcoupling):
-            raise ValueError('Indicies in jcoupling must be integers')
+            raise ValueError('Indices in jcoupling must be integers')
         if any(n1 < 1 or n2 < 1 or n1 > len(jn) or n2 > len(jn) for (n1, n2, _) in jcoupling):
-            raise ValueError('Indicies must be between 1 and the number of coupled spin spaces')
+            raise ValueError('Indices must be between 1 and the number of coupled spin spaces')
         if any(2*ji != int(2*ji) for (_, _, ji) in jcoupling if ji.is_number):
             raise ValueError('All coupled j values in coupling scheme must be integer or half-integer')
         coupled_n, coupled_jn = _build_coupled(jcoupling, len(jn))
@@ -1644,8 +1644,8 @@ class JzKetCoupled(CoupledSpinState, Ket):
     there are N coupled angular momentum spaces, that is ``jn`` has N elements,
     then there must be N-1 sublists. Each of these sublists making up the
     ``jcoupling`` parameter have length 3. The first two elements are the
-    indicies of the product spaces that are considered to be coupled together.
-    For example, if we want to couple `j_1` and `j_4`, the indicies would be 1
+    indices of the product spaces that are considered to be coupled together.
+    For example, if we want to couple `j_1` and `j_4`, the indices would be 1
     and 4. If a state has already been coupled, it is referenced by the
     smallest index that is coupled, so if `j_2` and `j_4` has already been
     coupled to some `j_{24}`, then this value can be coupled by referencing it

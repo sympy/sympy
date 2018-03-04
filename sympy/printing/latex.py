@@ -2181,10 +2181,6 @@ class LatexPrinter(Printer):
                     self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
-    def _print_Quantity(self, expr):
-        if expr.name.name == 'degree':
-            return r"^\circ"
-        return r"\detokenize {%s}" % expr
 
 def translate(s):
     r'''
