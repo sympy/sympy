@@ -1023,7 +1023,7 @@ def _check_antecedents(g1, g2, x):
             test_meijerint() in test_meijerint.py:
             `meijerint_definite(exp(x), x, 0, I)`
             '''
-            return False if z == 1 else abs(arg_(1 - z)) < pi
+            return z != 1 and abs(arg_(1 - z)) < pi
 
         c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
                   Or(And(Ne(zos, 1), _cond(zos)),
