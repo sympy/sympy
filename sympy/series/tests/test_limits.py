@@ -14,10 +14,12 @@ from sympy.series.order import Order
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.numbers import GoldenRatio
 from sympy.functions.combinatorial.numbers import fibonacci
+from sympy import symbols
 
-from sympy.abc import x, y, z, k
+
 n = Symbol('n', integer=True, positive=True)
 
+x,y,z,k = symbols('x y z k', real=True)
 
 def test_basic1():
     assert limit(x, x, oo) == oo

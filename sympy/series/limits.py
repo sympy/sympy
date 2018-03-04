@@ -53,7 +53,16 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
-
+    
+    check_complex_var = z.is_real
+    check_complex_func = im(e) == 0
+    if check_complex_var ==False and check_complex_func == False:
+        raise ValueError("The variable %s and function %s are not real valued"%(z, e))
+    elif check_complex_var == False:
+        raise ValueError("The variable %s is not real"%(z))
+    else:
+        raise ValueError("The function %s is not real valued"%(e))
+    
     if dir == "+-":
         llim = Limit(e, z, z0, dir="-").doit(deep=False)
         rlim = Limit(e, z, z0, dir="+").doit(deep=False)
