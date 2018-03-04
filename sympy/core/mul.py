@@ -617,8 +617,8 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_distribute[0] and not nc_part and len(c_part) == 2 and c_part[0].is_Number and
-                c_part[1].is_Add):
+        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
+                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
