@@ -447,14 +447,12 @@ class LatexPrinter(Printer):
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
             if self._settings['long_frac_ratio'] == None:
-                exprfind = [x for x in expr.args if \
-                    str(x).startswith('1/')]
-                if len(exprfind) >= 1:
-                    ratio = len(expr.args) - 1
-                else:
-                    ratio = len(expr.args)
+                ratio = len(expr.as_numer_denom()[0].args)
+                if ratio == 0:
+                    ratio = 1
             else:
                 ratio = self._settings['long_frac_ratio']
+
             if self._settings['fold_short_frac'] \
                    and ldenom <= 2 and not "^" in sdenom:
                 # handle short fractions
