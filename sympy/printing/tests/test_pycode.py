@@ -2,8 +2,9 @@
 from __future__ import (absolute_import, division, print_function)
 
 from sympy.codegen import Assignment
-from sympy.core import Expr, Mod, symbols, Eq, Le, Gt
+from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo
 from sympy.core.numbers import pi
+from sympy.external import import_module
 from sympy.logic import And, Or
 from sympy.functions import acos, Piecewise, sign
 from sympy.matrices import SparseMatrix
@@ -76,3 +77,9 @@ def test_printmethod():
     obj = CustomPrintedObject()
     assert NumPyPrinter().doprint(obj) == 'numpy'
     assert MpmathPrinter().doprint(obj) == 'mpmath'
+
+def test_issue_14283():
+    prntr = PythonCodePrinter()
+
+    assert prntr.doprint(zoo) == "float('nan')"
+    assert prntr.doprint(-oo) == "float('-inf')"
