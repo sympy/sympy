@@ -32,7 +32,7 @@ class Quantity(AtomicExpr):
             name = Symbol(name)
 
         # Interpret as Quantity(name, dim, scale, abbrev) as in the old version of Sympy
-        if not isinstance(abbrev, string_types):
+        if not isinstance(abbrev, string_types) and not isinstance(abbrev, Symbol):
             dimension, scale_factor, abbrev = abbrev, dimension, scale_factor
 
         if dimension is not None:
