@@ -525,8 +525,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     from sympy import Sum, Product
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
-        if expr == False:
-            raise AttributeError("expression must not be False")
+        if expr == False or expr == True:
+            raise AttributeError("expression must not be boolean")
         else:
             return expr
 

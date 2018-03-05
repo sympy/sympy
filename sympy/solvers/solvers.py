@@ -900,8 +900,8 @@ def solve(f, *symbols, **flags):
 
     """
 
-    if f is False:
-        raise AttributeError("equation must not be False")
+    if f is False or f is True:
+        raise AttributeError("equation must not be boolean")
 
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
