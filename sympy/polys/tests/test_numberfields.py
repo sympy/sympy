@@ -147,6 +147,8 @@ def test_minimal_polynomial():
     assert minimal_polynomial(I, x, domain=QQ.algebraic_field(I)) == x - I
     K = QQ.algebraic_field(I*(sqrt(2) + 1))
     assert minimal_polynomial(I, x, domain=K) == x - I
+    assert minimal_polynomial(I, x, domain=QQ) == x**2 + 1
+    assert minimal_polynomial(I, x, domain='QQ(y)') == x**2 + 1
 
 
 def test_minimal_polynomial_hi_prec():
