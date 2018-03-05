@@ -250,3 +250,34 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         if symmetric:
             return symmetric_residue(n, m), m
         return n, m
+    
+''' we are trying to define and generalize quadratic residue of a number'''    
+def sqrtmod(a,n):
+	"""sqrtmod(a,n) - Computes sqrt(a) mod n using various algorithms.
+	Currently n must be prime, this will be extended to general case n after some time."""
+	if(not isprime(n)): raise ValueError("*** Error ***:  Currently can only compute sqrtmod(a,n) for prime n.")
+	if(pow(a,(n-1)//2,n)!=1): raise ValueError("*** Error ***:  a is not quadratic residue, so sqrtmod(a,n) has no answer.")
+	return TSRsqrtmod(a,n-1,n)   #if n is prime we can fid its quadratic residue
+
+def TSRsqrtmod(a,grpord,p):
+	"""TSRsqrtmod(a,grpord,p) - Compute sqrt(a) mod n using Tonelli-Shanks-RESSOL algorithm.
+	Here integers mod n must form a cyclic group of order grpord.the paper is given below
+    http://www.cmat.edu.uy/~tornaria/pub/Tornaria-2002.pdf """
+	ordpow2=0; non2=grpord
+	while(not ((non2&0x01)==1)):
+		ordpow2+=1; non2//=2
+	# Find 2-primitive g (i.e. non-QR)
+	for g in range(2,grpord-1):
+		if (pow(g,grpord//2,p)!=1):
+			break
+	g = pow(g,non2,p)
+	# Tweak a by appropriate power of g, so result is (2^ordpow2)-residue
+	gpow=0; atweak=a
+	for pow2 in range(0,ordpow2+1):
+		if(pow(atweak,non2*2**(ordpow2-pow2),p)!=1):
+			gpow+=2**(pow2-1)
+			atweak = (atweak * pow(g,2**(pow2-1),p)) % p
+	# Now a*(g**powg) is in cyclic group of odd order non2 - can sqrt directly
+	d = invmod(2,non2)
+	tmp = pow(a*pow(g,gpow,p),d,p)  # sqrt(a*(g**gpow))
+	return (tmp*inverse_mod(pow(g,gpow//2,p),p)) % p  # sqrt(a*(g**gpow))//g**(gpow//2)	
