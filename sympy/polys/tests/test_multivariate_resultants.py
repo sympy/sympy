@@ -2,7 +2,6 @@
 
 from sympy import Matrix
 from sympy.core import symbols
-from sympy.utilities.lambdify import lambdify
 from sympy.tensor.indexed import IndexedBase
 
 from sympy.polys.multivariate_resultants import (DixonResultant, MacaulayResultant)
@@ -10,8 +9,8 @@ from sympy.polys.multivariate_resultants import (DixonResultant, MacaulayResulta
 c, d = symbols("a, b")
 x, y = symbols("x, y")
 
-p = lambdify((x, y), c * x + y)
-q = lambdify((x, y), x + d * y)
+p =  c * x + y
+q =  x + d * y
 
 dixon = DixonResultant(polynomials=[p, q], variables=[x, y])
 macaulay = MacaulayResultant(polynomials=[p, q], variables=[x, y])
@@ -43,9 +42,9 @@ def test_get_dixon_polynomial_numerical():
     """Test Dixon's polynomial for a numerical example."""
     a = IndexedBase("alpha")
 
-    p = lambdify((x, y), x + y)
-    q = lambdify((x, y), x ** 2 + y **3)
-    h = lambdify((x, y), x ** 2 + y)
+    p = x + y
+    q = x ** 2 + y **3
+    h = x ** 2 + y
 
     dixon = DixonResultant([p, q, h], [x, y])
     polynomial = -x * y ** 2 * a[0] - x * y ** 2 * a[1] - x * y * a[0] * a[1] \
@@ -59,9 +58,9 @@ def test_get_coefficients_of_alpha_numerical():
 
     x, y = symbols('x, y')
 
-    p = lambdify((x, y), x + y)
-    q = lambdify((x, y), x ** 2 + y **3)
-    h = lambdify((x, y), x ** 2 + y)
+    p =  x + y
+    q =  x ** 2 + y ** 3
+    h =  x ** 2 + y
 
     dixon = DixonResultant([p, q, h], [x, y])
     coefficients = [-x - y, -x * y - y ** 2, -x * y ** 2 + x, -x  * y + y,
@@ -72,7 +71,7 @@ def test_get_coefficients_of_alpha_numerical():
 
 def test_get_upper_degree():
     """Tests upper degree function."""
-    h = lambdify((x, y), c * x ** 2 + y)
+    h = c * x ** 2 + y
     dixon = DixonResultant(polynomials=[h, q], variables=[x, y])
 
     assert dixon.get_upper_degree() == 2
@@ -81,9 +80,9 @@ def test_get_dixon_matrix_example_two():
     """Test Dixon's matrix for example from [Palancz08]_."""
     x, y, z = symbols('x, y, z')
 
-    f = lambdify((y, z), x ** 2 + y ** 2 - 1 + z * 0)
-    g = lambdify((y, z), x ** 2 + z ** 2 - 1 + y * 0)
-    h = lambdify((y, z), y ** 2 + z ** 2 - 1)
+    f = x ** 2 + y ** 2 - 1 + z * 0
+    g = x ** 2 + z ** 2 - 1 + y * 0
+    h = y ** 2 + z ** 2 - 1
 
     example_two = DixonResultant([f, g, h], [y, z])
     poly = example_two.get_dixon_polynomial()
@@ -97,9 +96,9 @@ def test_get_dixon_matrix():
 
     x, y = symbols('x, y')
 
-    p = lambdify((x, y), x + y)
-    q = lambdify((x, y), x ** 2 + y **3)
-    h = lambdify((x, y), x ** 2 + y)
+    p = x + y
+    q = x ** 2 + y ** 3
+    h = x ** 2 + y
 
     dixon = DixonResultant([p, q, h], [x, y])
     polynomial = dixon.get_dixon_polynomial()
@@ -141,11 +140,11 @@ def test_macaulay_example_one():
     b_1_1, b_1_2, b_1_3, b_2_2, b_2_3, b_3_3 = symbols('b_1_1, b_1_2, b_1_3, b_2_2, b_2_3, b_3_3')
     c_1, c_2, c_3 = symbols('c_1, c_2, c_3')
 
-    f_1 = lambdify((x, y, z), a_1_1 * x ** 2 + a_1_2 * x * y + a_1_3 * x * z \
-          + a_2_2 * y ** 2 + a_2_3 * y * z + a_3_3 * z ** 2)
-    f_2 = lambdify((x, y, z), b_1_1 * x ** 2 + b_1_2 * x * y + b_1_3 * x * z \
-          + b_2_2 * y ** 2 + b_2_3 * y * z + b_3_3 * z ** 2)
-    f_3 = lambdify((x, y, z), c_1 * x + c_2 * y + c_3 * z)
+    f_1 = a_1_1 * x ** 2 + a_1_2 * x * y + a_1_3 * x * z + a_2_2 * y ** 2 + \
+          a_2_3 * y * z + a_3_3 * z ** 2
+    f_2 = b_1_1 * x ** 2 + b_1_2 * x * y + b_1_3 * x * z + b_2_2 * y ** 2 + \
+          b_2_3 * y * z + b_3_3 * z ** 2
+    f_3 = c_1 * x + c_2 * y + c_3 * z
 
     mac = MacaulayResultant([f_1, f_2, f_3], [x, y, z])
 
@@ -173,9 +172,9 @@ def test_macaulay_example_two():
     b_0, b_1, b_2 = symbols('b_0, b_1, b_2')
     c_0, c_1, c_2, c_3, c_4 = symbols('c_0, c_1, c_2, c_3, c_4')
 
-    f = lambdify((x, y, z), a_0 * y -  a_1 * x + a_2 * z)
-    g = lambdify((x, y, z), b_1 * x ** 2 + b_0 * y ** 2 - b_2 * z ** 2)
-    h = lambdify((x, y, z), c_0 * y - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + c_4 * z ** 3)
+    f = a_0 * y -  a_1 * x + a_2 * z
+    g = b_1 * x ** 2 + b_0 * y ** 2 - b_2 * z ** 2
+    h = c_0 * y - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + c_4 * z ** 3
 
     mac = MacaulayResultant([f, g, h], [x, y, z])
 

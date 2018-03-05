@@ -1,19 +1,19 @@
 """
-This module contains functions for the  of two multivariate resultants. These
-are:
+This module contains functions for two multivariate resultants. These are:
 
 - Dixon's resultant.
 - Maucalay's resultant.
 
-Multivariate resultants are used to identify weather a multivariate system has
+Multivariate resultants are used to identify whether a multivariate system has
 common roots. That is when the resultant is equal to zero.
 """
 
-import sympy as sym
-import functools
-
+from sympy import IndexedBase, Matrix, Mul, Poly, prod, fraction
+from sympy.core.compatibility import range
+from sympy.polys.monomials import monomial_deg
 from sympy.polys.monomials import itermonomials
 from sympy.polys.orderings import monomial_key
+from sympy.polys.polytools import poly_from_expr
 from sympy.functions.combinatorial.factorials import binomial
 
 class DixonResultant():
@@ -23,14 +23,13 @@ class DixonResultant():
     Examples
     ========
     >>> from sympy.core import symbols
-    >>> from sympy.utilities.lambdify import lambdify
 
     >>> from sympy.polys.multivariate_resultants import DixonResultant
     >>> x, y = symbols('x, y')
 
-    >>> p = lambdify((x, y), x + y)
-    >>> q = lambdify((x, y), x ** 2 + y **3)
-    >>> h = lambdify((x, y), x ** 2 + y)
+    >>> p = x + y
+    >>> q = x ** 2 + y ** 3
+    >>> h = x ** 2 + y
 
     >>> dixon = DixonResultant(variables=[x, y], polynomials=[p, q, h])
     >>> poly = dixon.get_dixon_polynomial()
@@ -52,7 +51,7 @@ class DixonResultant():
 
     See Also
     ========
-    Notebook in examples:
+    Notebook in examples: sympy/example/notebooks.
     """
 
     def __init__(self, polynomials, variables):
@@ -62,10 +61,10 @@ class DixonResultant():
 
         Parameters
         ----------
+        polynomials : list of polynomials
+            A  list of m n-degree polynomials
         variables: list
             A list of all n variables
-        polynomials : list of sympy polynomials
-            A  list of m n-degree polynomials
         """
         self.polynomials = polynomials
         self.variables = variables
@@ -84,7 +83,7 @@ class DixonResultant():
         dummy_variables: list
             A list of n alpha variables. These are the replacing variables
         """
-        a = sym.IndexedBase("alpha")
+        a = IndexedBase("alpha")
         dummy_variables = [a[i] for i in range(self.n)]
 
         return dummy_variables
@@ -98,15 +97,14 @@ class DixonResultant():
             A list of the d_max of each variable. The max degree is the
             max(degree(p_1, x_i), ..., degree(p_m, x_i))
         """
-        return [sym.Poly(f(*self.variables)).degree() for f in self.polynomials]
+        return [poly_from_expr(f, self.variables)[0].degree() for f in self.polynomials]
 
     def get_dixon_polynomial(self):
         r"""
         Returns
         -------
 
-        dixon_polynomial: sympy polynomial
-            A sympy polynomial which formulated by Dixon's formulation.
+        dixon_polynomial: polynomial
             Dixon's polynomial is calculated as:
 
             delta = Delta(A) / ((x_1 - a_1) ... (x_n - a_n)) where,
@@ -120,20 +118,23 @@ class DixonResultant():
             raise ValueError('Method invalid for given combination.')
 
         # first row
-        rows = [[poly(*self.variables) for poly in self.polynomials]]
+        rows = [self.polynomials]
 
-        temp = [i for i in self.variables]
+        temp = list(self.variables)
         iterator = iter(self.dummy_variables)
 
-        for idx in (idx for idx in range(self.n)):
+        for idx in range(self.n):
             temp[idx] = next(iterator)
-            rows.append([poly(*temp) for poly in self.polynomials])
+            substitution = {self.variables[i]: temp[i] for i in range(len(temp))}
+            rows.append([f.subs(substitution) for f in self.polynomials])
 
-        A = sym.Matrix(rows)
-        product_of_differences = functools.reduce(lambda x, y: x * y,
-                                                  [a - b for a, b in zip(self.variables, self.dummy_variables)])
+        A = Matrix(rows)
+        product_of_differences = Mul(*[a - b for a, b in zip(self.variables,
+                                                         self.dummy_variables)])
         dixon_polynomial = (A.det() / product_of_differences).factor()
-        return sym.Poly(dixon_polynomial, *self.dummy_variables)
+
+        return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
+
 
     def get_coefficients_of_alpha(self, polynomial):
         r"""
@@ -145,19 +146,18 @@ class DixonResultant():
         """
         coefficients = []
         for powers in polynomial.monoms():
-            monomial = functools.reduce(lambda i, j: i * j,
-                                    [a ** b for a, b in zip(self.dummy_variables, powers)])
+            monomial = Mul(*[a ** b for a, b in zip(self.dummy_variables, powers)])
             coefficients.append(polynomial.coeff_monomial(monomial))
 
         return coefficients
 
     def get_upper_degree(self):
-        list_of_products = [self.variables[i] ** ((i + 1) * self.max_degrees[i] -1)
+        list_of_products = [self.variables[i] ** ((i + 1) * self.max_degrees[i] - 1)
                             for i in range(self.n)]
-        product = sym.prod(list_of_products)
-        product = sym.Poly(product).monoms()
+        product = prod(list_of_products)
+        product = Poly(product).monoms()
 
-        return sym.polys.monomials.monomial_deg(*product)
+        return monomial_deg(*product)
 
     def get_dixon_matrix(self, polynomial):
         r"""
@@ -168,11 +168,11 @@ class DixonResultant():
         monomials = list(itermonomials(self.variables, self.get_upper_degree()))
         monomials = sorted(monomials, key=monomial_key('lex', self.variables))[::-1]
 
-        dixon_matrix = sym.Matrix([[sym.Poly(c, *self.variables).coeff_monomial(m) for m in monomials]
-                                   for c in coefficients])
+        dixon_matrix = Matrix([[Poly(c, *self.variables).coeff_monomial(m) for m in monomials]
+                               for c in coefficients])
 
         keep = [column for column in range(dixon_matrix.shape[-1])
-                if all([elements == 0 for elements in dixon_matrix[:, column]]) is False]
+                if any([element != 0 for element in dixon_matrix[:, column]])]
         return dixon_matrix[:, keep]
 
 class MacaulayResultant():
@@ -183,7 +183,6 @@ class MacaulayResultant():
     Examples
     ========
     >>> from sympy.core import symbols
-    >>> from sympy.utilities.lambdify import lambdify
 
     >>> from sympy.polys.multivariate_resultants import MacaulayResultant
     >>> x, y, z = symbols('x, y, z')
@@ -192,9 +191,9 @@ class MacaulayResultant():
     >>> b_0, b_1, b_2 = symbols('b_0, b_1, b_2')
     >>> c_0, c_1, c_2,c_3, c_4 = symbols('c_0, c_1, c_2, c_3, c_4')
 
-    >>> f = lambdify((x, y, z), a_0 * y -  a_1 * x + a_2 * z)
-    >>> g = lambdify((x, y, z), b_1 * x ** 2 + b_0 * y ** 2 - b_2 * z ** 2)
-    >>> h = lambdify((x, y, z), c_0 * y - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + c_4 * z ** 3)
+    >>> f = a_0 * y -  a_1 * x + a_2 * z
+    >>> g = b_1 * x ** 2 + b_0 * y ** 2 - b_2 * z ** 2
+    >>> h = c_0 * y - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + c_4 * z ** 3
 
     >>> mac = MacaulayResultant(polynomials=[f, g, h], variables=[x, y, z])
     >>> mac.get_monomials_set()
@@ -214,7 +213,7 @@ class MacaulayResultant():
 
     See Also
     ========
-    Notebook in examples:
+    Notebook in examples: sympy/example/notebooks.
     """
     def __init__(self, polynomials, variables):
         """
@@ -250,7 +249,7 @@ class MacaulayResultant():
         degree: int
             The degree of a polynomial
         """
-        return sym.Poly(poly(*self.variables)).degree()
+        return poly_from_expr(poly, self.variables)[0].degree()
 
     def get_degree_m(self):
         r"""
@@ -277,7 +276,7 @@ class MacaulayResultant():
         Returns
         -------
         monomials: list
-            A list of monomials of a certain degree. Sympy returns up to a degree
+            A list of monomials of a certain degree.
         """
         monomials = list(itermonomials(self.variables, degree) -
                          itermonomials(self.variables, degree - 1))
@@ -311,7 +310,7 @@ class MacaulayResultant():
                 poss_rows = self.get_monomials_of_certain_degree(self.degree_m - self.degrees[i])
                 for div in divisible:
                     for p in poss_rows:
-                        if sym.fraction((p / div).expand())[1] == 1:
+                        if fraction((p / div).expand())[1] == 1:
                             poss_rows = [item for item in poss_rows if item != p]
                 row_coefficients.append(poss_rows)
         return row_coefficients
@@ -320,7 +319,7 @@ class MacaulayResultant():
         """
         Returns
         -------
-        macaulay_matrix: sym Matrix
+        macaulay_matrix: Matrix
             The Macaulay's matrix
         """
         rows = []
@@ -328,13 +327,13 @@ class MacaulayResultant():
         for i in range(self.n):
             for multiplier in row_coefficients[i]:
                 coefficients = []
-                poly = sym.Poly(self.polynomials[i](*self.variables) * multiplier, *self.variables)
+                poly = Poly(self.polynomials[i] * multiplier, *self.variables)
 
                 for mono in self.monomial_set:
                     coefficients.append(poly.coeff_monomial(mono))
                 rows.append(coefficients)
 
-        macaulay_matrix = sym.Matrix(rows)
+        macaulay_matrix = Matrix(rows)
         return macaulay_matrix
 
     def get_reduced_nonreduced(self):
@@ -356,7 +355,7 @@ class MacaulayResultant():
         for m in self.monomial_set:
             temp = []
             for i, v in enumerate(self.variables):
-                temp.append(sym.Poly(m, v).degree() >= self.degrees[i])
+                temp.append(Poly(m, v).degree() >= self.degrees[i])
             divisible.append(temp)
 
         reduced = [i for i, r in enumerate(divisible) if sum(r) < self.n - 1]
@@ -368,16 +367,16 @@ class MacaulayResultant():
         r"""
         Returns
         -------
-        macaulay_submatrix: sym Matrix
+        macaulay_submatrix: Matrix
             The Macaulay's matrix. Columns that are non reduced are kept. The row
-            which contain one if the a_{i}s is dropoed. a_{i}s are the coefficients
+            which contain one if the a_{i}s is dropped. a_{i}s are the coefficients
             of x_i ^ {d_i}.
         """
         reduced, non_reduced = self.get_reduced_nonreduced()
 
         reduction_set = [v ** self.degrees[i] for i, v in enumerate(self.variables)]
 
-        ais = list([self.polynomials[i](*self.variables).coeff(reduction_set[i])
+        ais = list([self.polynomials[i].coeff(reduction_set[i])
                     for i in range(self.n)])
 
         reduced_matrix = matrix[:, reduced]
