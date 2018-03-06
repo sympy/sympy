@@ -110,21 +110,24 @@ def mr(n, bases):
     return True
 
 
-def isprimeE(n, b):
-    """Test whether n is prime or an Euler pseudoprime to base b."""
-	if (not mr(n, [b])):
+
+
+"""Tests whether n is prime or an Euler pseudoprime to base b."""
+def is_euler_pseudoprime(n, b):
+	if not mr(n, [b]):
         return False
     
-    r = int(r)
+    
 	r = n-1
-	while (r % 2 == 0):
+    r = as_int(r)
+	while r % 2 == 0:
         r //= 2
     
 	c = pow(b, r, n)
-	if (c == 1):
+	if c == 1:
         return True
     
-	while (1):
+	while True:
 		if (c == 1):
             return False
         
