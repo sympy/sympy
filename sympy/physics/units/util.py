@@ -143,7 +143,7 @@ def quantity_simplify(expr):
         args = list(args)
         for arg in args:
             if isinstance(arg, Pow):
-                coeff = coeff * (arg.args[0].scale_factor ** arg.args[1])
+                coeff = coeff * (arg.base.scale_factor ** arg.exp)
             else:
                 coeff = coeff * arg.scale_factor
         expr = coeff
