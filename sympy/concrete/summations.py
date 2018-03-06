@@ -520,9 +520,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     pass
 
         ### ------------- Limit comparison test -----------###
-        # (n) comparison
-        lim_comp = limit((sequence_term/sym), sym, oo)
-        if lim_comp is not S.Infinity:
+        # (1/n) comparison
+        ref_sequence_term = Sum(1/sym, (sym, 1, S.Infinity)).function
+        lim_comp = limit((sequence_term/ref_sequence_term), sym, oo)
+        if lim_comp is S.Infinity:
             return S.false
 
         ### -------------- Dirichlet tests -------------- ###
