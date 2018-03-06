@@ -81,6 +81,7 @@ def test_exp_infinity():
     assert refine(exp(I*oo)) == nan
     assert refine(exp(-I*oo)) == nan
     assert exp(y*I*oo) != nan
+    assert exp(zoo) == nan
 
 
 def test_exp_subs():

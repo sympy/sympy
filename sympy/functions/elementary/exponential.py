@@ -242,6 +242,8 @@ class exp(ExpBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif isinstance(arg, log):
             return arg.args[0]
         elif isinstance(arg, AccumBounds):
@@ -542,6 +544,8 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        if arg is S.ComplexInfinity:
+                return S.ComplexInfinity
         if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
         elif isinstance(arg, exp_polar):
