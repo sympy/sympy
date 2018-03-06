@@ -26,18 +26,6 @@ def test_dixon_resultant_init():
     assert dixon.dummy_variables == [a[0], a[1]]
     assert dixon.max_degrees == [1, 1]
 
-def test_get_dummy_variables():
-    dummy_variables = dixon.get_dummy_variables()
-
-    assert type(dummy_variables) == list
-    assert len(dummy_variables) == 2
-
-def test_get_max_degrees_dixon():
-    max_degrees = dixon.get_max_degrees()
-
-    assert type(max_degrees) == list
-    assert len(max_degrees) == 2
-
 def test_get_dixon_polynomial_numerical():
     """Test Dixon's polynomial for a numerical example."""
     a = IndexedBase("alpha")
@@ -52,22 +40,6 @@ def test_get_dixon_polynomial_numerical():
     + y ** 2 * a[1] - y * a[0] * a[1] ** 2 + y * a[1] ** 2
 
     assert dixon.get_dixon_polynomial().factor() == polynomial
-
-def test_get_coefficients_of_alpha_numerical():
-    """Test Dixon's coefficients of a_1,..., a_n products for numerical example."""
-
-    x, y = symbols('x, y')
-
-    p =  x + y
-    q =  x ** 2 + y ** 3
-    h =  x ** 2 + y
-
-    dixon = DixonResultant([p, q, h], [x, y])
-    coefficients = [-x - y, -x * y - y ** 2, -x * y ** 2 + x, -x  * y + y,
-                    -x * y ** 2 + y ** 2]
-    polynomial = dixon.get_dixon_polynomial()
-
-    assert dixon.get_coefficients_of_alpha(polynomial) == coefficients
 
 def test_get_upper_degree():
     """Tests upper degree function."""

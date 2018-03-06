@@ -72,32 +72,12 @@ class DixonResultant():
         self.n = len(self.variables)
         self.m = len(self.polynomials)
 
-        self.dummy_variables = self.get_dummy_variables()
-        self.max_degrees = self.get_max_degrees()
-
-    def get_dummy_variables(self):
-        """
-        Returns
-        -------
-
-        dummy_variables: list
-            A list of n alpha variables. These are the replacing variables
-        """
         a = IndexedBase("alpha")
-        dummy_variables = [a[i] for i in range(self.n)]
+        # A list of n alpha variables (the replacing variables)
+        self.dummy_variables = [a[i] for i in range(self.n)]
 
-        return dummy_variables
-
-    def get_max_degrees(self):
-        r"""
-        Returns
-        -------
-
-        degrees: list
-            A list of the d_max of each variable. The max degree is the
-            max(degree(p_1, x_i), ..., degree(p_m, x_i))
-        """
-        return [poly_from_expr(f, self.variables)[0].degree() for f in self.polynomials]
+        # A list of the d_max of each variable.
+        self.max_degrees = [poly_from_expr(f, self.variables)[0].degree() for f in self.polynomials]
 
     def get_dixon_polynomial(self):
         r"""
@@ -117,7 +97,7 @@ class DixonResultant():
         if self.m != (self.n + 1):
             raise ValueError('Method invalid for given combination.')
 
-        # first row
+        # First row
         rows = [self.polynomials]
 
         temp = list(self.variables)
@@ -135,22 +115,6 @@ class DixonResultant():
 
         return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
 
-
-    def get_coefficients_of_alpha(self, polynomial):
-        r"""
-        Returns
-        --------
-        coefficients: list
-            A list of coefficients (in x_i, ..., x_n terms) of the power products
-            a_1, ..., a_n in Dixon's polynomial
-        """
-        coefficients = []
-        for powers in polynomial.monoms():
-            monomial = Mul(*[a ** b for a, b in zip(self.dummy_variables, powers)])
-            coefficients.append(polynomial.coeff_monomial(monomial))
-
-        return coefficients
-
     def get_upper_degree(self):
         list_of_products = [self.variables[i] ** ((i + 1) * self.max_degrees[i] - 1)
                             for i in range(self.n)]
@@ -164,7 +128,11 @@ class DixonResultant():
         Construct the Dixon matrix from the coefficients of polynomial \alpha.
         Each coefficient is viewed as a polynomial of x_1,..., x_n.
         """
-        coefficients = self.get_coefficients_of_alpha(polynomial)
+
+        # A list of coefficients (in x_i, ..., x_n terms) of the power products
+        # a_1, ..., a_n in Dixon's polynomial.
+        coefficients = polynomial.coeffs()
+
         monomials = list(itermonomials(self.variables, self.get_upper_degree()))
         monomials = sorted(monomials, key=monomial_key('lex', self.variables))[::-1]
 
