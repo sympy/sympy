@@ -1981,3 +1981,7 @@ def test_issue_8247_8354():
 def test_Add_is_zero():
     x, y = symbols('x y', zero=True)
     assert (x + y).is_zero
+
+
+def test_issue_14392():
+    assert (sin(zoo)**2).as_real_imag() == (nan, nan)
