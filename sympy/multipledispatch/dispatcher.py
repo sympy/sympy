@@ -112,7 +112,7 @@ class Dispatcher(object):
 
     @classmethod
     def get_func_annotations(cls, func):
-        """ get annotations of function positional paremeters
+        """ get annotations of function positional parameters
         """
         params = cls.get_func_params(func)
         if params:
