@@ -111,18 +111,25 @@ def mr(n, bases):
 
 
 def isprimeE(n, b):
-    """isprimeE(n ,b) - Test whether n is prime or an Euler pseudoprime to base b."""
-	if (not mr(n, b)): return False
+    """Test whether n is prime or an Euler pseudoprime to base b."""
+	if (not mr(n, [b])):
+        return False
     
+    r = int(r)
 	r = n-1
-	while (r % 2 == 0): r //= 2
+	while (r % 2 == 0):
+        r //= 2
     
 	c = pow(b, r, n)
-	if (c == 1): return True
+	if (c == 1):
+        return True
+    
 	while (1):
-		if (c == 1): return False
+		if (c == 1):
+            return False
         
-		if (c == n-1): return True
+		if (c == n-1):
+            return True
         
 		c = pow(c, 2, n)
 
