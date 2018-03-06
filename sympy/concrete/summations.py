@@ -4,6 +4,7 @@ from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
+from sympy.core.numbers import oo
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.add import Add
@@ -517,6 +518,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                         return S(integral_val_evaluated.is_finite)
                 except NotImplementedError:
                     pass
+
+        ### ------------- Limit comparison test -----------###
+        # (n) comparison
+        lim_comp = limit((sequence_term/sym), sym, oo)
+        if lim_comp is not S.Infinity:
+            return S.false
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
