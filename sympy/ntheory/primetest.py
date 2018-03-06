@@ -110,17 +110,22 @@ def mr(n, bases):
     return True
 
 
-def isprimeE(n,b):
-	"""isprimeE(n) - Test whether n is prime or an Euler pseudoprime to base b."""
-	if (not mr(n,b)): return False
+def isprimeE(n, b):
+    """isprimeE(n ,b) - Test whether n is prime or an Euler pseudoprime to base b."""
+	if (not mr(n, b)): return False
+    
 	r = n-1
 	while (r % 2 == 0): r //= 2
-	c = pow(b,r,n)
+    
+	c = pow(b, r, n)
 	if (c == 1): return True
 	while (1):
 		if (c == 1): return False
+        
 		if (c == n-1): return True
-		c = pow(c,2,n)
+        
+		c = pow(c, 2, n)
+
 
 
 def _lucas_sequence(n, P, Q, k):
