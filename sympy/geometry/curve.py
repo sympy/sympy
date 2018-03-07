@@ -1,4 +1,4 @@
-"""Curves in 2-dimensional Euclidean space.
+"""Curves in n-dimensional Euclidean space.
 
 Contains
 ========
@@ -54,6 +54,7 @@ class Curve(GeometrySet):
     Examples
     ========
 
+    2-Dimensional Curves:
     >>> from sympy import sin, cos, Symbol, interpolate
     >>> from sympy.abc import t, a
     >>> from sympy.geometry import Curve
@@ -70,13 +71,26 @@ class Curve(GeometrySet):
     Point2D(4, 16)
     >>> C.arbitrary_point(a)
     Point2D(a, a**2)
+
+    Higher Dimmension Curves:
+    >>> from sympy import sin, cos, Symbol
+    >>> from sympy.abc import t, a
+    >>> C = Curve((sin(t), cos(t), t), (t, 0, 2))
+    >>> C
+    Curve((sin(t), cos(t), t), (t, 0, 2))
+    >>> C.functions
+    (sin(t), cos(t), t)
+    >>> C.limits
+    (t, 0, 2)
+    >>> C.parameter
+    t
+    >>> C.subs(t,4)
+    Point3D(sin(4), cos(4), 4)
+    
     """
 
     def __new__(cls, function, limits):
         fun = sympify(function)
-        if not is_sequence(fun) or len(fun) != 2:
-            raise ValueError("Function argument should be (x(t), y(t)) "
-                "but got %s" % str(function))
         if not is_sequence(limits) or len(limits) != 3:
             raise ValueError("Limit argument should be (t, tmin, tmax) "
                 "but got %s" % str(limits))
@@ -84,6 +98,26 @@ class Curve(GeometrySet):
         return GeometryEntity.__new__(cls, Tuple(*fun), Tuple(*limits))
 
     def _eval_subs(self, old, new):
+        """The function specifying the point after evaluating at the new value.
+
+        Examples
+        ========
+
+        2-Dimensional Curves:
+        >>> from sympy import sin, cos, Symbol, interpolate
+        >>> from sympy.abc import t, a
+        >>> from sympy.geometry import Curve
+        >>> C = Curve((sin(t), cos(t)), (t, 0, 2))
+        >>> C.subs(t, 4)
+        Point2D(4, 16)
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import t
+        >>> C = Curve((t, t**2, t**3), (t, 0, 2))
+        >>> C.subs(t,4)
+        Point3D(4, 16, 64)
+
+        """
         if old == self.parameter:
             return Point(*[f.subs(old, new) for f in self.functions])
 
@@ -152,12 +186,22 @@ class Curve(GeometrySet):
         Examples
         ========
 
+        2-Dimensional Curves:
         >>> from sympy.abc import t, a
         >>> from sympy.geometry import Curve
         >>> Curve((t, t**2), (t, 0, 2)).free_symbols
         set()
         >>> Curve((t, t**2), (t, a, 2)).free_symbols
         {a}
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import t, a
+        >>> C = Curve((t, t**2, t**3), (t, 0, 2))
+        >>> C.free_symbols
+        set([])
+        >>> Curve((t, t**2,t**3), (t, a, 2)).free_symbols
+        set([a])
+        
         """
         free = set()
         for a in self.functions + self.limits[1:]:
@@ -167,6 +211,25 @@ class Curve(GeometrySet):
 
     @property
     def ambient_dimension(self):
+        """The dimmension of the curve
+
+        Examples
+        ========
+
+        2-Dimensional Curves:
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve((t, t**2), (t, 0, 2))
+        >>> C.ambient_dimension
+        2
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import t
+        >>> C = Curve((t, t**2, t**3), (t, 0, 2))
+        >>> C.ambient_dimension
+        3
+
+        """
         return len(self.args[0])
 
     @property
@@ -186,11 +249,18 @@ class Curve(GeometrySet):
         Examples
         ========
 
+        2-Dimensional Curves:
         >>> from sympy.abc import t
         >>> from sympy.geometry import Curve
         >>> C = Curve((t, t**2), (t, 0, 2))
         >>> C.functions
         (t, t**2)
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import t
+        >>> C = Curve((t, t**2, t**3), (t, 0, 2))
+        >>> C.functions
+        (t, t**2, t**3)
 
         """
         return self.args[0]
@@ -213,11 +283,18 @@ class Curve(GeometrySet):
         Examples
         ========
 
+        2-Dimensional Curves:
         >>> from sympy.abc import t
         >>> from sympy.geometry import Curve
         >>> C = Curve([t, t**3], (t, -2, 2))
         >>> C.limits
         (t, -2, 2)
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import t
+        >>> C = Curve((t, t**2, t**3), (t, 0, 2))
+        >>> C.limits
+        (t, 0, 2)
 
         """
         return self.args[1]
@@ -239,9 +316,16 @@ class Curve(GeometrySet):
         Examples
         ========
 
+        2-Dimensional Curves:
         >>> from sympy.abc import t
         >>> from sympy.geometry import Curve
         >>> C = Curve([t, t**2], (t, 0, 2))
+        >>> C.parameter
+        t
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import t
+        C = Curve((t, t**2, t**3), (t, 0, 2))
         >>> C.parameter
         t
 
@@ -255,11 +339,19 @@ class Curve(GeometrySet):
         Examples
         ========
 
+        2-Dimensional Curves:
         >>> from sympy.geometry.curve import Curve
         >>> from sympy import cos, sin
         >>> from sympy.abc import t
         >>> Curve((t, t), (t, 0, 1)).length
         sqrt(2)
+
+        Higher Dimmension Curves:
+        >> from sympy.abc import t
+        >>> C = Curve((t, t, t), (t, 0, 2))
+        >>> C.length
+        2*sqrt(3)
+        
         """
         integrand = sqrt(sum(diff(func, self.limits[0])**2 for func in self.functions))
         return integrate(integrand, self.limits)
@@ -288,12 +380,15 @@ class Curve(GeometrySet):
         Examples
         ========
 
+        2-Dimensional Curves:
         >>> from sympy import Curve, sin
         >>> from sympy.abc import x, t, s
         >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval()
         [t, 1, 2]
         >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval(s)
         [s, 1, 2]
+
+        Higher Dimmension Curves:
 
         """
         t = _symbol(parameter, self.parameter, real=True)
@@ -329,35 +424,56 @@ class Curve(GeometrySet):
             return rv.translate(*pt.args)
         return rv
 
-    def scale(self, x=1, y=1, pt=None):
+    def scale(self, scaling, pt=None):
         """Override GeometryEntity.scale since Curve is not made up of Points.
 
         Examples
         ========
-
+        
+        2-Dimensional Curves:
         >>> from sympy.geometry.curve import Curve
         >>> from sympy import pi
         >>> from sympy.abc import x
-        >>> Curve((x, x), (x, 0, 1)).scale(2)
+        >>> Curve((x, x), (x, 0, 1)).scale([2,1])
         Curve((2*x, x), (x, 0, 1))
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import x, t, s
+        >>> C = Curve((t, t, t), (t, 0, 2))
+        >>> C.scale([2,0,4])
+        Curve((2*t, 0, 4*t), (t, 0, 2))
+        
         """
         if pt:
             pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
-        fx, fy = self.functions
-        return self.func((fx*x, fy*y), self.limits)
+        results = []
+        for i in range(len(self.args[0])):
+            results.append(self.args[0][i] * scaling[i])
+        return self.func(results, self.limits)
 
-    def translate(self, x=0, y=0):
-        """Translate the Curve by (x, y).
+    def translate(self, translations):
+        """ Now supports nDimmensional Curves
+        Translate the Curve by [translations].
 
         Examples
         ========
-
+        
+        2-Dimensional Curves:
         >>> from sympy.geometry.curve import Curve
         >>> from sympy import pi
         >>> from sympy.abc import x
         >>> Curve((x, x), (x, 0, 1)).translate(1, 2)
         Curve((x + 1, x + 2), (x, 0, 1))
+
+        Higher Dimmension Curves:
+        >>> from sympy.abc import t
+        >>> C = Curve((t, t, t), (t, 0, 2))
+        >>> C.translate([1,2,3])
+        Curve((t + 1, t + 2, t + 3), (t, 0, 2))
+        
         """
-        fx, fy = self.functions
-        return self.func((fx + x, fy + y), self.limits)
+        results = []
+        for i in range(len(self.args[0])):
+            results.append(self.args[0][i] + translations[i])
+        return self.func(results, self.limits)
