@@ -900,7 +900,7 @@ def solve(f, *symbols, **flags):
 
     """
 
-    if (f is False or f is True) and (f is not 0 or f is not 1):
+    if isinstance(f, bool):
         raise AttributeError("equation must not be boolean")
 
     # keeping track of how f was passed since if it is a list
