@@ -1648,7 +1648,13 @@ class Mul(Expr, AssocOp):
 
     def _eval_nseries(self, x, n, logx):
         from sympy import Order, powsimp
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
+        ord_list = [Order(t.nseries(x, n=10, logx=logx).as_leading_term(x)) for t in self.args]
+        ord_sum = 0
+        for o in ord_list:
+            ord_sum += o
+        n0 = ord_sum.expr.exp
+
+        terms = [t.nseries(x, n=n-n0, logx=logx) for t in self.args]
         res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
         if res.has(Order):
             res += Order(x**n, x)
