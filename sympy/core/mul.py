@@ -1652,7 +1652,10 @@ class Mul(Expr, AssocOp):
         ord_sum = 0
         for o in ord_list:
             ord_sum += o
-        n0 = ord_sum.expr.exp
+        if isinstance(ord_sum.expr, Pow):
+            n0 = ord_sum.expr.exp
+        else:
+            n0 = 0
 
         terms = [t.nseries(x, n=n-n0, logx=logx) for t in self.args]
         res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
