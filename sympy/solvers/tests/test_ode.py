@@ -660,8 +660,8 @@ def test_checkodesol():
            x), f(x, y)))
     assert checkodesol(f(x).diff(x), Eq(f(x, y), x)) == \
         (False, -f(x).diff(x) + f(x, y).diff(x) - 1)
-    raises(AttributeError, lambda: checkodesol(f(x).diff(x), Eq(f(x), x)) is not True)
-    raises(AttributeError, lambda: checkodesol(f(x).diff(x), Eq(f(x), x)) == (False, 1))
+    assert checkodesol(f(x).diff(x), Eq(f(x), x)) is not True
+    assert checkodesol(f(x).diff(x), Eq(f(x), x)) == (False, 1)
     sol1 = Eq(f(x)**5 + 11*f(x) - 2*f(x) + x, 0)
     assert checkodesol(diff(sol1.lhs, x), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x)*exp(f(x)), sol1) == (True, 0)
@@ -1213,7 +1213,7 @@ def test_old_ode_tests():
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
-    raises(AttributeError, lambda: checkodesol(eq4, sol4, order=2, solve_for_func=False)[0])
+    assert checkodesol(eq4, sol4, order=2, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
     assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
     assert checkodesol(eq7, sol7, order=2, solve_for_func=False)[0]
@@ -1551,7 +1551,7 @@ def test_1st_homogeneous_coeff_ode2():
     # specific hints are applied for speed reasons
     assert dsolve(eq1, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
     assert dsolve(eq2, hint='1st_homogeneous_coeff_best', simplify=False) == sol2
-    raises(AttributeError, lambda: dsolve(eq3, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3)
+    assert dsolve(eq3, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     # test for eq3 is in test_1st_homogeneous_coeff_ode2_check3 below
@@ -2707,7 +2707,7 @@ def test_heuristic_4():
 
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     i = infinitesimals(eq, hint='chi')
-    raises(AttributeError, lambda: checkinfsol(eq, i)[0])
+    assert checkinfsol(eq, i)[0]
 
 
 def test_heuristic_function_sum():

@@ -187,7 +187,7 @@ def test_basic_properties_2d():
     assert Segment(Point(0, -1), Segment(p1, Point(0, 1)).random_point()).slope == Segment(p1, Point(0, 1)).slope
 
     assert l4.coefficients == (0, 1, 0)
-    raises(AttributeError, lambda: Line((-x, x), (-x + 1, x - 1)).coefficients == (1, 1, 0))
+    assert Line((-x, x), (-x + 1, x - 1)).coefficients == (1, 1, 0)
     assert Line(p1, Point(0, 1)).coefficients == (1, 0, 0)
     # issue 7963
     r = Ray((0, 0), angle=x)
@@ -457,7 +457,7 @@ def test_intersection_2d():
     assert intersection(l3, r2) == [r2]
     assert intersection(l3, s3) == [s3]
     assert intersection(s3, l3) == [s3]
-    raises(AttributeError, lambda: intersection(Segment(Point(-10, 10), Point(10, 10)), Segment(Point(-5, -5), Point(-5, 5))) == [])
+    assert intersection(Segment(Point(-10, 10), Point(10, 10)), Segment(Point(-5, -5), Point(-5, 5))) == []
     assert intersection(r2, l3) == [r2]
     assert intersection(r1, Ray(Point(2, 2), Point(0, 0))) == [Segment(Point(1, 1), Point(2, 2))]
     assert intersection(r1, Ray(Point(1, 1), Point(-1, -1))) == [Point(1, 1)]
@@ -476,24 +476,24 @@ def test_intersection_2d():
 
     assert Segment3D((0, 0), (3, 0)).intersection(
         Segment3D((1, 0), (2, 0))) == [Segment3D((1, 0), (2, 0))]
-    raises(AttributeError, lambda: Segment3D((1, 0), (2, 0)).intersection(
-        Segment3D((0, 0), (3, 0))) == [Segment3D((1, 0), (2, 0))])
-    raises(AttributeError, lambda: Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((3, 0), (4, 0))) == [Point3D((3, 0))])
-    raises(AttributeError, lambda: Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((2, 0), (5, 0))) == [Segment3D((2, 0), (3, 0))])
-    raises(AttributeError, lambda: Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((-2, 0), (1, 0))) == [Segment3D((0, 0), (1, 0))])
-    raises(AttributeError, lambda: Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((-2, 0), (0, 0))) == [Point3D(0, 0)])
-    raises(AttributeError, lambda: s1.intersection(Segment(Point(1, 1), Point(2, 2))) == [Point(1, 1)])
-    raises(AttributeError, lambda: s1.intersection(Segment(Point(0.5, 0.5), Point(1.5, 1.5))) == [Segment(Point(0.5, 0.5), p2)])
-    raises(AttributeError, lambda: s1.intersection(Segment(Point(4, 4), Point(5, 5))) == [])
-    raises(AttributeError, lambda: s1.intersection(Segment(Point(-1, -1), p1)) == [p1])
-    raises(AttributeError, lambda: s1.intersection(Segment(Point(-1, -1), Point(0.5, 0.5))) == [Segment(p1, Point(0.5, 0.5))])
+    assert Segment3D((1, 0), (2, 0)).intersection(
+        Segment3D((0, 0), (3, 0))) == [Segment3D((1, 0), (2, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((3, 0), (4, 0))) == [Point3D((3, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((2, 0), (5, 0))) == [Segment3D((2, 0), (3, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((-2, 0), (1, 0))) == [Segment3D((0, 0), (1, 0))]
+    assert Segment3D((0, 0), (3, 0)).intersection(
+        Segment3D((-2, 0), (0, 0))) == [Point3D(0, 0)]
+    assert s1.intersection(Segment(Point(1, 1), Point(2, 2))) == [Point(1, 1)]
+    assert s1.intersection(Segment(Point(0.5, 0.5), Point(1.5, 1.5))) == [Segment(Point(0.5, 0.5), p2)]
+    assert s1.intersection(Segment(Point(4, 4), Point(5, 5))) == []
+    assert s1.intersection(Segment(Point(-1, -1), p1)) == [p1]
+    assert s1.intersection(Segment(Point(-1, -1), Point(0.5, 0.5))) == [Segment(p1, Point(0.5, 0.5))]
     assert s1.intersection(Line(Point(1, 0), Point(2, 1))) == []
     assert s1.intersection(s2) == [s2]
-    raises(AttributeError, lambda: s2.intersection(s1) == [s2])
+    assert s2.intersection(s1) == [s2]
 
 
 def test_intersection_3d():
@@ -711,10 +711,10 @@ def test_issue_2941():
     # intersect at end point
     c, d = (-2, -2), (-2, 0)
     a, b = (0, 0), (1, 1)
-    raises(AttributeError, lambda: _check())
+    _check()
     # midline intersection
     c, d = (-2, -3), (-2, 0)
-    raises(AttributeError, lambda: _check())
+    _check()
 
 
 def test_parameter_value():

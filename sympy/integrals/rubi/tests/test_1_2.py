@@ -26,7 +26,7 @@ from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, hypergeom, rubi_test
 from sympy import pi as Pi
 from sympy import S, hyper, I, simplify, exp_polar, symbols
-from sympy.utilities.pytest import XFAIL, slow, skip, ON_TRAVIS, raises
+from sympy.utilities.pytest import XFAIL, slow, skip, ON_TRAVIS
 
 a, b, c, d, e, f, m, n, x, u = symbols('a b c d e f m n x u')
 
@@ -152,7 +152,7 @@ def test_5():
         if len(i) == 5:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True)
         else:
-            raises(AttributeError, lambda: rubi_test(r, i[1], i[3], expand=True, _diff=True))
+            assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
 
 
 def test_6():
@@ -189,7 +189,7 @@ def test_6():
         if len(i) == 5:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True)
         else:
-            raises(AttributeError, lambda: rubi_test(r, i[1], i[3], expand=True, _diff=True))
+            assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
 
 @XFAIL
 def test_7():

@@ -26,22 +26,22 @@ def test_idiff():
 def test_intersection():
     assert intersection(Point(0, 0)) == []
     raises(TypeError, lambda: intersection(Point(0, 0), 3))
-    raises(AttributeError, lambda: intersection(
+    assert intersection(
             Segment((0, 0), (2, 0)),
             Segment((-1, 0), (1, 0)),
             Line((0, 0), (0, 1)), pairwise=True) == [
-        Point(0, 0), Segment((0, 0), (1, 0))])
-    raises(AttributeError, lambda: intersection(
+        Point(0, 0), Segment((0, 0), (1, 0))]
+    assert intersection(
             Line((0, 0), (0, 1)),
             Segment((0, 0), (2, 0)),
             Segment((-1, 0), (1, 0)), pairwise=True) == [
-        Point(0, 0), Segment((0, 0), (1, 0))])
-    raises(AttributeError, lambda: intersection(
+        Point(0, 0), Segment((0, 0), (1, 0))]
+    assert intersection(
             Line((0, 0), (0, 1)),
             Segment((0, 0), (2, 0)),
             Segment((-1, 0), (1, 0)),
             Line((0, 0), slope=1), pairwise=True) == [
-        Point(0, 0), Segment((0, 0), (1, 0))])
+        Point(0, 0), Segment((0, 0), (1, 0))]
 
 
 def test_convex_hull():

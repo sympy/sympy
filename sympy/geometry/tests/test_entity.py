@@ -65,4 +65,4 @@ def test_reflect_entity_overrides():
                 rvert.remove(ri)
                 break
     assert not rvert
-    raises(AttributeError, lambda: pent.area.equals(-rpent.area))
+    assert pent.area.equals(-rpent.area)

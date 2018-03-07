@@ -417,5 +417,5 @@ def test_issue_5615():
 def test_issue_5933():
     from sympy import Polygon, RegularPolygon, denom
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
-    raises(AttributeError, lambda: abs(denom(x).n()) > 1e-12)
-    raises(AttributeError, lambda: abs(denom(radsimp(x))) > 1e-12)  # in case simplify didn't handle it
+    assert abs(denom(x).n()) > 1e-12
+    assert abs(denom(radsimp(x))) > 1e-12  # in case simplify didn't handle it

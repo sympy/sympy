@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, hypergeom, rubi_test
 from sympy import pi as Pi
 from sympy import S, hyper, I, simplify, exp_polar, symbols
-from sympy.utilities.pytest import slow, skip, ON_TRAVIS, raises
+from sympy.utilities.pytest import slow, skip, ON_TRAVIS
 
 A, B, C, D, a, b, c, d, e, f, m, n, p, x, u = symbols('A B C D a b c d e f m n p x u', real=True, imaginary=False)
 
@@ -182,7 +182,7 @@ def test_simplify():
         if len(i) == 5:
             assert rubi_test(r, i[1], i[3], expand=True) or rubi_test(r, i[1], i[4], expand=True)
         else:
-            raises(AttributeError, lambda: rubi_test(r, i[1], i[3], expand=True))
+            assert rubi_test(r, i[1], i[3], expand=True)
 
 def test_diff():
     test = [

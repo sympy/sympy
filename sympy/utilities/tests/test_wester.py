@@ -488,7 +488,7 @@ def test_H16():
 
 
 def test_H17():
-    raises(AttributeError, lambda: simplify(factor(expand(p1 * p2)) - p1*p2) == 0)
+    assert simplify(factor(expand(p1 * p2)) - p1*p2) == 0
 
 
 @XFAIL

@@ -4,7 +4,6 @@ from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, log,
 from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
-from sympy.utilities.pytest import raises
 
 def test_gosper_normal():
     assert gosper_normal(4*n + 5, 2*(4*n + 1)*(2*n + 3), n) == \
@@ -142,7 +141,7 @@ def test_gosper_sum_AeqB_part2():
     g = gosper_sum(f2a, (n, 0, m))
     assert g is not None and simplify(g - g2a) == 0
     g = gosper_sum(f2b, (n, 0, m))
-    raises(AttributeError, lambda: g is not None and simplify(g - g2b) == 0)
+    assert g is not None and simplify(g - g2b) == 0
     g = gosper_sum(f2c, (n, 1, m))
     assert g is not None and simplify(g - g2c) == 0
 

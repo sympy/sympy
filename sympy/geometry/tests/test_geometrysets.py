@@ -31,11 +31,11 @@ def test_booleans():
 
     fs = FiniteSet(Point(1/3, 1), Point(2/3, 0), Point(9/5, 1/5), Point(7/3, 1))
     # test the intersection of polygons
-    raises(AttributeError, lambda: Intersection(poly1, poly2) == fs)
+    assert Intersection(poly1, poly2) == fs
     # make sure if we union polygons with subsets, the subsets go away
     assert Union(poly1, poly2, fs) == Union(poly1, poly2)
     # make sure that if we union with a FiniteSet that isn't a subset,
     # that the points in the intersection stop being listed
     assert Union(poly1, FiniteSet(Point(0,0), Point(3,5))) == Union(poly1, FiniteSet(Point(3,5)))
     # intersect two polygons that share an edge
-    raises(AttributeError, lambda: Intersection(poly1, poly3) == Union(FiniteSet(Point(3/2, 1), Point(2, 1)), Segment(Point(0, 0), Point(1, 0))))
+    assert Intersection(poly1, poly3) == Union(FiniteSet(Point(3/2, 1), Point(2, 1)), Segment(Point(0, 0), Point(1, 0)))

@@ -180,9 +180,9 @@ def test_rsolve():
             {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
         2**(2*n)*n*(2*n - 1)*(4*n**2 - 1)/12
 
-    raises(AttributeError, lambda: (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
+    assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
             (C0*((sqrt(-a**2 + 1) - 1)/a)**n +
-             C1*((-sqrt(-a**2 + 1) - 1)/a)**n)).simplify() == 0)
+             C1*((-sqrt(-a**2 + 1) - 1)/a)**n)).simplify() == 0
 
     assert rsolve((k + 1)*y(k), y(k)) is None
     assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))
