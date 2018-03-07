@@ -837,14 +837,16 @@ def primitive_element(extension, x=None, **args):
         x, cls = sympify(x), Poly
     else:
         x, cls = Dummy('x'), PurePoly
+
     if not args.get('ex', False):
-        extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
-
-        g, coeffs = extension[0].minpoly.replace(x), [1]
-
+        gen, coeffs = extension[0], [1]
+        g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
-            s, _, g = sqf_norm(g, x, extension=ext)
-            coeffs = [ s*c for c in coeffs ] + [1]
+            _, factors = factor_list(g, extension=ext)
+            g = _choose_factor(factors, x, gen)
+            s, _, g = g.sqf_norm()
+            gen += s*ext
+            coeffs.append(s)
 
         if not args.get('polys', False):
             return g.as_expr(), coeffs
