@@ -521,3 +521,6 @@ def test_issue_12564():
     assert limit(((x + sin(x))**2).expand(), x, oo) == oo
     assert limit(((x + cos(x))**2).expand(), x, -oo) == oo
     assert limit(((x + sin(x))**2).expand(), x, -oo) == oo
+
+def test_issue_14411():
+    assert limit(3*sec(4*pi*x-x/3), x, 3*pi/(-2 + 24*pi)) == -oo
