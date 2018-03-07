@@ -171,3 +171,40 @@ def test_Beam():
     raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
     with raises(TypeError):
         b4.variable = 1
+
+
+def test_beam_units():
+    from sympy.physics.units import meter, kilogram, newton, second, kilo
+    E, I = symbols('E, I')
+    b = Beam(3*meter, E*newton/meter**2, I*meter**4)
+    b.apply_load(8*kilo*newton, 1*meter, -1)
+    b.apply_load(R1*kilo*newton, 0*meter, -1)
+    b.apply_load(R2*kilo*newton, 3*meter, -1)
+    b.apply_load(12*kilo*newton*meter, 2*meter, -2)
+    b.bc_deflection = [(0*meter, 0*meter), (3*meter, 0*meter)]
+    b.solve_for_reaction_loads(R1, R2)
+
+    p = b.reaction_loads
+    q = {R1: -28/3, R2: 4/3}
+    assert p == q
+
+    p = b.load
+    q = 12000*meter*newton*SingularityFunction(x, 2*meter, -2) - 28000*newton*SingularityFunction(x, 0, -1)/3 + 8000*newton*SingularityFunction(x, meter, -1) + 4000*newton*SingularityFunction(x, 3*meter, -1)/3
+    assert p == q
+
+    p = b.shear_force()
+    q = 12000*meter*newton*SingularityFunction(x, 2*meter, -1) - 28000*newton*SingularityFunction(x, 0, 0)/3 + 8000*newton*SingularityFunction(x, meter, 0) + 4000*newton*SingularityFunction(x, 3*meter, 0)/3
+    assert p == q
+
+    p = b.bending_moment()
+    q = 12000*meter*newton*SingularityFunction(x, 2*meter, 0) - 28000*newton*SingularityFunction(x, 0, 1)/3 + 8000*newton*SingularityFunction(x, meter, 1) + 4000*newton*SingularityFunction(x, 3*meter, 1)/3
+    assert p == q
+
+    p = b.slope()
+    q = (76000*meter**2*newton/9 + 12000*meter*newton*SingularityFunction(x, 2*meter, 1) - 14000*newton*SingularityFunction(x, 0, 2)/3 + 4000*newton*SingularityFunction(x, meter, 2) + 2000*newton*SingularityFunction(x, 3*meter, 2)/3)/(meter**2*newton*E*I)
+    assert p == q
+
+
+    p = b.deflection()
+    q = (76000*meter**2*newton*x/9 + 6000*meter*newton*SingularityFunction(x, 2*meter, 2) - 14000*newton*SingularityFunction(x, 0, 3)/9 + 4000*newton*SingularityFunction(x, meter, 3)/3 + 2000*newton*SingularityFunction(x, 3*meter, 3)/9)/(meter**2*newton*E*I)
+    assert p == q
