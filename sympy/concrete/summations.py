@@ -474,6 +474,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
 
+        ### ------------- Limit comparison test -----------###
+        # (1/n) comparison
+        lim_comp = limit(sym*sequence_term, sym, oo)
+        if lim_comp is S.Infinity:
+            return S.false
+
         ### ------------- comparison test ------------- ###
         # (1/log(n)**p) comparison
         log_test = order.expr.match(1/(log(sym)**p))
@@ -518,12 +524,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                         return S(integral_val_evaluated.is_finite)
                 except NotImplementedError:
                     pass
-
-        ### ------------- Limit comparison test -----------###
-        # (1/n) comparison
-        lim_comp = limit((sequence_term/(1/sym)), sym, oo)
-        if lim_comp is S.Infinity:
-            return S.false
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
