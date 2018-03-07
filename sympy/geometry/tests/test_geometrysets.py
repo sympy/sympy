@@ -4,8 +4,6 @@ from sympy import Rational, Symbol
 from sympy.geometry import Circle, Line, Point, Polygon, Segment, Parabola
 from sympy.sets import FiniteSet, Union, Intersection, EmptySet
 
-from sympy.utilities.pytest import raises
-
 
 def test_booleans():
     """ test basic unions and intersections """

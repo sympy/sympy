@@ -5,7 +5,7 @@ from sympy import (
 
 from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, fraction_expand
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 

@@ -25,7 +25,7 @@ import mpmath
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS, raises
+from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
