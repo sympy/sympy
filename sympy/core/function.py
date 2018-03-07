@@ -288,17 +288,19 @@ class Application(with_metaclass(FunctionClass, Basic)):
         Examples of eval() for the function "sign"
         ---------------------------------------------
 
-        @classmethod
-        def eval(cls, arg):
-            if arg is S.NaN:
-                return S.NaN
-            if arg is S.Zero: return S.Zero
-            if arg.is_positive: return S.One
-            if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, Mul):
-                coeff, terms = arg.as_coeff_Mul(rational=True)
-                if coeff is not S.One:
-                    return cls(coeff) * cls(terms)
+        .. code-block:: python
+
+            @classmethod
+            def eval(cls, arg):
+                if arg is S.NaN:
+                    return S.NaN
+                if arg is S.Zero: return S.Zero
+                if arg.is_positive: return S.One
+                if arg.is_negative: return S.NegativeOne
+                if isinstance(arg, Mul):
+                    coeff, terms = arg.as_coeff_Mul(rational=True)
+                    if coeff is not S.One:
+                        return cls(coeff) * cls(terms)
 
         """
         return
@@ -1237,35 +1239,23 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
+            elif (count < 0) == True:
+                obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-                    deriv_fun = derive_by_array
+                    # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
-                else:
-                    deriv_fun = lambda x, y: x._eval_derivative(y)
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                obj = expr
-                if count.is_Integer:
-                    for i in range(count):
-                        obj2 = deriv_fun(obj, v)
-                        if obj == obj2:
-                            break
-                        obj = obj2
-                        nderivs += 1
-                elif obj.is_Derivative:
-                    dict_var_count = dict(obj.variable_count)
-                    if v in dict_var_count:
-                        dict_var_count[v] += count
-                    else:
-                        dict_var_count[v] = count
-                    obj = Derivative(obj.expr, *dict_var_count.items())
-                    nderivs += count
-                else:
-                    obj = None
+                # Evaluate the derivative `n` times.  If
+                # `_eval_derivative_n_times` is not overridden by the current
+                # object, the default in `Basic` will call a loop over
+                # `_eval_derivative`:
+                obj = expr._eval_derivative_n_times(v, count)
+                nderivs += count
                 if not is_symbol:
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
@@ -1394,6 +1384,19 @@ class Derivative(Expr):
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Integer
+        if isinstance(n, (int, Integer)):
+            # TODO: it would be desirable to squash `_eval_derivative` into
+            # this code.
+            return super(Derivative, self)._eval_derivative_n_times(s, n)
+        dict_var_count = dict(self.variable_count)
+        if s in dict_var_count:
+            dict_var_count[s] += n
+        else:
+            dict_var_count[s] = n
+        return Derivative(self.expr, *dict_var_count.items())
 
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we

@@ -1,5 +1,5 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum
+from sympy import Sum, Dummy
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
@@ -291,6 +291,11 @@ def test_matrixelement_diff():
     assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k)*KroneckerDelta(0, p)
     assert str(dexpr) == "Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1))"
     assert str(dexpr.doit()) == 'Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True))'
+    # TODO: bug with .dummy_eq( ), the previous 2 lines should be replaced by:
+    return  # stop eval
+    _i_1 = Dummy("_i_1")
+    assert dexpr.dummy_eq(Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1)))
+    assert dexpr.doit().dummy_eq(Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True)))
 
 
 def test_MatrixElement_with_values():
@@ -322,3 +327,7 @@ def test_MatrixElement_with_values():
     raises(ValueError, lambda: M[i, -1])
     raises(ValueError, lambda: M[2, i])
     raises(ValueError, lambda: M[-1, i])
+
+def test_inv():
+    B = MatrixSymbol('B', 3, 3)
+    assert B.inv() == B**-1

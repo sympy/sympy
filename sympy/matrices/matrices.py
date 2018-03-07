@@ -1,10 +1,12 @@
 from __future__ import print_function, division
 
 import collections
+from mpmath.libmp.libmpf import prec_to_dps
 from sympy.assumptions.refine import refine
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
+from sympy.core.function import expand_mul
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
@@ -20,8 +22,8 @@ from sympy.core.compatibility import reduce, as_int, string_types
 
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
+from sympy.core.compatibility import (is_sequence, default_sort_key, range,
+    NotIterable)
 
 
 from types import FunctionType
@@ -36,6 +38,12 @@ def _iszero(x):
         return x.is_zero
     except AttributeError:
         return None
+
+
+def _is_zero_after_expand_mul(x):
+    """Tests by expand_mul only, suitable for polynomials and rational
+    functions."""
+    return expand_mul(x) == 0
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -173,14 +181,6 @@ class MatrixDeterminant(MatrixCommon):
         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
         """
 
-        # XXX included as a workaround for issue #12362.  Should use `_find_reasonable_pivot` instead
-        def _find_pivot(l):
-            for pos,val in enumerate(l):
-                if val:
-                    return (pos, val, None, None)
-            return (None, None, None, None)
-
-
         # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
         # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         def bareiss(mat, cumm=1):
@@ -190,8 +190,11 @@ class MatrixDeterminant(MatrixCommon):
                 return mat[0, 0]
 
             # find a pivot and extract the remaining matrix
-            # XXX should use `_find_reasonable_pivot`.  Blocked by issue #12362
-            pivot_pos, pivot_val, _, _ = _find_pivot(mat[:, 0])
+            # With the default iszerofunc, _find_reasonable_pivot slows down
+            # the computation by the factor of 2.5 in one test.
+            # Relevant issues: #10279 and #13877.
+            pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
+                                         iszerofunc=_is_zero_after_expand_mul)
             if pivot_pos == None:
                 return S.Zero
 
@@ -1333,11 +1336,22 @@ class MatrixEigen(MatrixSubspaces):
         mat = self
         has_floats = any(v.has(Float) for v in self)
 
+        if has_floats:
+            try:
+                max_prec = max(term._prec for term in self._mat if isinstance(term, Float))
+            except ValueError:
+                # if no term in the matrix is explicitly a Float calling max()
+                # will throw a error so setting max_prec to default value of 53
+                max_prec = 53
+            # setting minimum max_dps to 15 to prevent loss of precision in
+            # matrix containing non evaluated expressions
+            max_dps = max(prec_to_dps(max_prec), 15)
+
         def restore_floats(*args):
             """If `has_floats` is `True`, cast all `args` as
             matrices of floats."""
             if has_floats:
-                args = [m.evalf(chop=chop) for m in args]
+                args = [m.evalf(prec=max_dps, chop=chop) for m in args]
             if len(args) == 1:
                 return args[0]
             return args
@@ -1565,6 +1579,18 @@ class MatrixCalculus(MatrixCommon):
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
+
+    def _accept_eval_derivative(self, s):
+        return s._visit_eval_derivative_array(self)
+
+    def _visit_eval_derivative_scalar(self, base):
+        # Types are (base: scalar, self: matrix)
+        return self.applyfunc(lambda x: base.diff(x))
+
+    def _visit_eval_derivative_array(self, base):
+        # Types are (base: array/matrix, self: matrix)
+        from sympy import derive_by_array
+        return derive_by_array(base, self)
 
     def integrate(self, *args):
         """Integrate each element of the matrix.  ``args`` will
@@ -2491,10 +2517,14 @@ class MatrixBase(MatrixDeprecated,
 
         blocks = list(map(_jblock_exponential, cells))
         from sympy.matrices import diag
+        from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
         ret = P * eJ * P.inv()
-        return type(self)(ret)
+        if all(value.is_real for value in self.values()):
+            return type(self)(re(ret))
+        else:
+            return type(self)(ret)
 
     def gauss_jordan_solve(self, b, freevar=False):
         """
@@ -3378,7 +3408,7 @@ class MatrixBase(MatrixDeprecated,
         =====  ============================  ==========================
         None   Frobenius norm                2-norm
         'fro'  Frobenius norm                - does not exist
-        inf    --                            max(abs(x))
+        inf    maximum row sum               max(abs(x))
         -inf   --                            min(abs(x))
         1      maximum column sum            as below
         -1     --                            as below
@@ -3405,6 +3435,8 @@ class MatrixBase(MatrixDeprecated,
         >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
         0
         >>> A.norm() # Frobenius Norm
+        2
+        >>> A.norm(oo) # Infinity Norm
         2
         >>> Matrix([1, -2]).norm(oo)
         2
@@ -3451,6 +3483,10 @@ class MatrixBase(MatrixDeprecated,
             elif ord == -2:
                 # Minimum singular value
                 return Min(*self.singular_values())
+
+            elif ord == S.Infinity:   # Infinity Norm - Maximum row sum
+                m = self.applyfunc(abs)
+                return Max(*[sum(m.row(i)) for i in range(m.rows)])
 
             elif (ord is None or isinstance(ord,
                                             string_types) and ord.lower() in

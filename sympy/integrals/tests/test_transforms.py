@@ -8,7 +8,7 @@ from sympy.integrals.transforms import (mellin_transform,
     InverseLaplaceTransform, InverseFourierTransform,
     InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy import (
-    gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
+    gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi, arg,
     cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
@@ -771,17 +771,18 @@ def test_issue_8882():
 
 def test_issue_7173():
     from sympy import cse
-    x0, x1, x2 = symbols('x:3')
+    x0, x1, x2, x3 = symbols('x:4')
     ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
     r, e = cse(ans)
     assert r == [
         (x0, pi/2),
-        (x1, Abs(periodic_argument(a, oo))),
-        (x2, Abs(periodic_argument(exp_polar(I*pi)*polar_lift(a), oo)))]
+        (x1, arg(a)),
+        (x2, Abs(x1)),
+        (x3, Abs(x1 + pi))]
     assert e == [
         a/(-4*a**2 + s**2),
         0,
-        ((x0 >= x1) | (x1 < x0)) & ((x0 >= x2) | (x2 < x0))]
+        ((x0 >= x2) | (x2 < x0)) & ((x0 >= x3) | (x3 < x0))]
 
 
 def test_issue_8514():

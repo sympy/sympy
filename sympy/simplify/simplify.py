@@ -593,6 +593,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     if expr.has(Product):
         expr = product_simplify(expr)
 
+    from sympy.physics.units import Quantity
+    from sympy.physics.units.util import quantity_simplify
+
+    if expr.has(Quantity):
+        expr = quantity_simplify(expr)
+
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
@@ -908,6 +914,8 @@ def logcombine(expr, force=False):
     See Also
     ========
     posify: replace all symbols with symbols having positive assumptions
+    sympy.core.function.expand_log: expand the logarithms of products
+        and powers; the opposite of logcombine
 
     """
 
@@ -982,7 +990,7 @@ def logcombine(expr, force=False):
         for k in list(log1.keys()):
             log1[Mul(*k)] = log(logcombine(Mul(*[
                 l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
-                force=force))
+                force=force), evaluate=False)
 
         # logs that have oppositely signed coefficients can divide
         for k in ordered(list(log1.keys())):
@@ -994,7 +1002,9 @@ def logcombine(expr, force=False):
                 num, den = k, -k
                 if num.count_ops() > den.count_ops():
                     num, den = den, num
-                other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0]))
+                other.append(
+                    num*log(log1.pop(num).args[0]/log1.pop(den).args[0],
+                            evaluate=False))
             else:
                 other.append(k*log1.pop(k))
 

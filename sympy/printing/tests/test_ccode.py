@@ -755,7 +755,7 @@ def test_MatrixElement_printing():
     assert(ccode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(ccode(F) == "((-1)*B + A)[0]")
+    assert(ccode(F) == "(-B + A)[0]")
 
 
 def test_subclass_CCodePrinter():

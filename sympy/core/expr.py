@@ -9,7 +9,7 @@ from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range
 from mpmath.libmp import mpf_log, prec_to_dps
 
-from collections import defaultdict
+from collections import defaultdict, Iterable
 
 class Expr(Basic, EvalfMixin):
     """
@@ -807,7 +807,8 @@ class Expr(Basic, EvalfMixin):
 
         self.subs(x, b) - self.subs(x, a),
 
-        possibly using limit() if NaN is returned from subs.
+        possibly using limit() if NaN is returned from subs, or if
+        singularities are found between a and b.
 
         If b or a is None, it only evaluates -self.subs(x, a) or self.subs(b, x),
         respectively.
@@ -816,6 +817,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.series import limit, Limit
         from sympy.solvers.solveset import solveset
         from sympy.sets.sets import Interval
+        from sympy.functions.elementary.exponential import log
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
@@ -861,11 +863,21 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(a, b)
             else:
                 domain = Interval(b, a)
-            singularities = list(solveset(self.cancel().as_numer_denom()[1], x, domain = domain))
+            # check the singularities of self within the interval
+            singularities = solveset(self.cancel().as_numer_denom()[1], x,
+                domain=domain)
+            for logterm in self.atoms(log):
+                singularities = singularities | solveset(logterm.args[0], x,
+                    domain=domain)
             for s in singularities:
-                if a < s < b:
+                if value is S.NaN:
+                    # no need to keep adding, it will stay NaN
+                    break
+                if not s.is_comparable:
+                    continue
+                if (a < s) == (s < b) == True:
                     value += -limit(self, x, s, "+") + limit(self, x, s, "-")
-                elif b < s < a:
+                elif (b < s) == (s < a) == True:
                     value += limit(self, x, s, "+") - limit(self, x, s, "-")
 
         return value
@@ -3351,6 +3363,17 @@ class AtomicExpr(Atom, Expr):
         if self == s:
             return S.One
         return S.Zero
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Piecewise, Eq
+        from sympy import NDimArray, Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(s, (NDimArray, MatrixCommon, Tuple, Iterable)):
+            return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
+        if self == s:
+            return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+        else:
+            return Piecewise((self, Eq(n, 0)), (0, True))
 
     def _eval_is_polynomial(self, syms):
         return True

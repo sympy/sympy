@@ -5,6 +5,8 @@ recursive-include examples *.py README
 
 include sympy/utilities/mathml/data/*.xsl
 
+recursive-include sympy/parsing/latex *.g4 *.tokens *.interp *.txt
+
 include LICENSE
 include TODO
 include AUTHORS

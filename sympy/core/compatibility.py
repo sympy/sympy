@@ -45,8 +45,8 @@ Moved modules:
     * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
-    * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
-      iterator version of range
+    * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
+      compatible iterator version of range.
 
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`

@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core.compatibility import range
-from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
+from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
@@ -114,7 +114,7 @@ def trigintegrate(f, x, conds='piecewise'):
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
         if conds == 'piecewise':
-            return Piecewise((zz, Eq(a, 0)), (fx / a, True))
+            return Piecewise((fx / a, Ne(a, 0)), (zz, True))
         return fx / a
 
     # n & m are both even
@@ -242,7 +242,7 @@ def trigintegrate(f, x, conds='piecewise'):
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
     if conds == 'piecewise':
-        return Piecewise((zz, Eq(a, 0)), (res.subs(x, a*x) / a, True))
+        return Piecewise((res.subs(x, a*x) / a, Ne(a, 0)), (zz, True))
     return res.subs(x, a*x) / a
 
 

@@ -10,7 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth)
+        sinh, cosh, asinh, acosh, atanh, acoth, Abs)
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -184,7 +184,7 @@ class hyper(TupleParametersBase):
     @classmethod
     def eval(cls, ap, bq, z):
         from sympy import unpolarify
-        if len(ap) <= len(bq):
+        if len(ap) <= len(bq) or (len(ap) == len(bq) + 1 and (Abs(z) <= 1) == True):
             nz = unpolarify(z)
             if z != nz:
                 return hyper(ap, bq, nz)

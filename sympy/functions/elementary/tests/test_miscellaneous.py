@@ -1,17 +1,21 @@
 import itertools as it
+import warnings
 
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
                                                       Max, real_root)
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.utilities.pytest import raises
-
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.pytest import raises, skip
+from sympy.external import import_module
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -309,7 +313,7 @@ def test_root():
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
 
-    assert root(x, n, k) == x**(1/n)*(-1)**(2*k/n)
+    assert root(x, n, k) == (-1)**(2*k/n)*x**(1/n)
 
 
 def test_real_root():
@@ -333,6 +337,20 @@ def test_real_root():
     assert g.subs(dict(x=I, n=3)) == cbrt(I)
     assert g.subs(dict(x=-8, n=2)) == sqrt(-8)
     assert g.subs(dict(x=I, n=2)) == sqrt(I)
+
+
+def test_issue_11463():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+    x = Symbol('x')
+    f = lambdify(x, real_root((log(x/(x-2))), 3), 'numpy')
+    # numpy.select evaluates all options before considering conditions,
+    # so it raises a warning about root of negative number which does
+    # not affect the outcome. This warning is suppressed here
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        assert f(numpy.array(-1)) < -1
 
 
 def test_rewrite_MaxMin_as_Heaviside():
@@ -410,3 +428,15 @@ def test_rewrite_as_Abs():
     test(Max(x, y))
     test(Min(x, y, z))
     test(Min(Max(w, x), Max(y, z)))
+
+def test_issue_14000():
+    assert isinstance(sqrt(4, evaluate=False), Pow) == True
+    assert isinstance(cbrt(3.5, evaluate=False), Pow) == True
+    assert isinstance(root(16, 4, evaluate=False), Pow) == True
+
+    assert sqrt(4, evaluate=False) == Pow(4, S.Half, evaluate=False)
+    assert cbrt(3.5, evaluate=False) == Pow(3.5, Rational(1, 3), evaluate=False)
+    assert root(4, 2, evaluate=False) == Pow(4, Rational(1, 2), evaluate=False)
+
+    assert root(16, 4, 2, evaluate=False).has(Pow) == True
+    assert real_root(-8, 3, evaluate=False).has(Pow) == True

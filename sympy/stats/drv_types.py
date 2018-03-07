@@ -3,6 +3,8 @@ from __future__ import print_function, division
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy import factorial, exp, S, sympify
 from sympy.stats.rv import _value_check
+from sympy.sets.sets import Interval
+import random
 
 __all__ = ['Geometric', 'Poisson']
 
@@ -25,6 +27,13 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
+
+    def sample(self):
+        u = random.uniform(0, 1)
+        inf = self.set.inf
+        while u > self.cdf(inf):
+            inf += 1
+        return inf
 
 
 def Poisson(name, lamda):

@@ -1,11 +1,11 @@
 from sympy import (
     Abs, acos, Add, atan, Basic, binomial, besselsimp, collect,cos, cosh, cot,
-    coth, count_ops, Derivative, diff, E, Eq, erf, exp, exp_polar, expand,
+    coth, count_ops, csch, Derivative, diff, E, Eq, erf, exp, exp_polar, expand,
     expand_multinomial, factor, factorial, Float, fraction, Function,
     gamma, GoldenRatio, hyper, hypersimp, I, Integral, integrate, log,
     logcombine, Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise,
     posify, rad, Rational, root, S, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo,
+    sin, sinc, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo,
     Sum, Lt, sign)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import nthroot
@@ -470,6 +470,14 @@ def test_logcombine_complex_coeff():
         i + log(x**2)
 
 
+def test_issue_5950():
+    x, y = symbols("x,y", positive=True)
+    assert logcombine(log(3) - log(2)) == log(Rational(3,2), evaluate=False)
+    assert logcombine(log(x) - log(y)) == log(x/y)
+    assert logcombine(log(Rational(3,2), evaluate=False) - log(2)) == \
+        log(Rational(3,4), evaluate=False)
+
+
 def test_posify():
     from sympy.abc import x
 
@@ -674,6 +682,11 @@ def test_issue_9324_simplify():
     M = MatrixSymbol('M', 10, 10)
     e = M[0, 0] + M[5, 4] + 1304
     assert simplify(e) == e
+
+
+def test_issue_13474():
+    x = Symbol('x')
+    assert simplify(x + csch(sinc(1))) == x + csch(sinc(1))
 
 
 def test_simplify_function_inverse():

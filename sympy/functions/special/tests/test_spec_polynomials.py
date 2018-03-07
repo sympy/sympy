@@ -91,7 +91,6 @@ def test_gegenbauer():
 
 
 def test_legendre():
-    raises(ValueError, lambda: legendre(-1, x))
     assert legendre(0, x) == 1
     assert legendre(1, x) == x
     assert legendre(2, x) == ((3*x**2 - 1)/2).expand()
@@ -106,6 +105,10 @@ def test_legendre():
     assert legendre(11, 1) == 1
     assert legendre(10, 0) != 0
     assert legendre(11, 0) == 0
+
+    assert legendre(-1, x) == 1
+    k = Symbol('k')
+    assert legendre(5 - k, x).subs(k, 2) == ((5*x**3 - 3*x)/2).expand()
 
     assert roots(legendre(4, x), x) == {
         sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
@@ -160,15 +163,12 @@ def test_assoc_legendre():
 
     assert Plm(n, 0, x) == legendre(n, x)
 
-    raises(ValueError, lambda: Plm(-1, 0, x))
-    raises(ValueError, lambda: Plm(0, 1, x))
-
     assert conjugate(assoc_legendre(n, m, x)) == \
         assoc_legendre(n, conjugate(m), conjugate(x))
+    raises(ValueError, lambda: Plm(0, 1, x))
 
 
 def test_chebyshev():
-
     assert chebyshevt(0, x) == 1
     assert chebyshevt(1, x) == x
     assert chebyshevt(2, x) == 2*x**2 - 1

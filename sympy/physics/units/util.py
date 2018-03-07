@@ -14,6 +14,8 @@ from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
 from sympy.core.compatibility import reduce
 from sympy.physics.units.dimensions import Dimension, dimsys_default
 from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.prefixes import Prefix
+from sympy.utilities.iterables import sift
 
 
 def dim_simplify(expr):
@@ -128,3 +130,33 @@ def convert_to(expr, target_units):
 
     expr_scale_factor = get_total_scale_factor(expr)
     return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
+
+
+def quantity_simplify(expr):
+    if expr.is_Atom:
+        return expr
+    if not expr.is_Mul:
+        return expr.func(*map(quantity_simplify, expr.args))
+
+    if expr.has(Prefix):
+        coeff, args = expr.as_coeff_mul(Prefix)
+        args = list(args)
+        for arg in args:
+            if isinstance(arg, Pow):
+                coeff = coeff * (arg.base.scale_factor ** arg.exp)
+            else:
+                coeff = coeff * arg.scale_factor
+        expr = coeff
+
+    coeff, args = expr.as_coeff_mul(Quantity)
+    args_pow = [arg.as_base_exp() for arg in args]
+    quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
+    quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
+    # Just pick the first quantity:
+    ref_quantities = [i[0][0] for i in quantity_pow_by_dim.values()]
+    new_quantities = [
+        Mul.fromiter(
+            (quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
+            if len(v) > 1 else v[0][0]**v[0][1]
+        for quantity, (k, v) in zip(ref_quantities, quantity_pow_by_dim.items())]
+    return coeff*Mul.fromiter(other_pow)*Mul.fromiter(new_quantities)

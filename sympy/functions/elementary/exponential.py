@@ -229,6 +229,8 @@ class exp(ExpBase):
     def eval(cls, arg):
         from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
+        from sympy.sets.setexpr import SetExpr
+        from sympy.matrices.matrices import MatrixBase
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -244,6 +246,8 @@ class exp(ExpBase):
             return arg.args[0]
         elif isinstance(arg, AccumBounds):
             return AccumBounds(exp(arg.min), exp(arg.max))
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
         elif arg.is_Mul:
             if arg.is_number or arg.is_Symbol:
                 coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
@@ -298,7 +302,7 @@ class exp(ExpBase):
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
-        elif arg.is_Matrix:
+        elif isinstance(arg, MatrixBase):
             return arg.exp()
 
     @property
@@ -452,6 +456,15 @@ class exp(ExpBase):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
+    def _eval_rewrite_as_sqrt(self, arg):
+        from sympy.functions.elementary.trigonometric import sin, cos
+        if arg.is_Mul:
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            if coeff and coeff.is_number:
+                cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                    return cosine + S.ImaginaryUnit*sine
+
 
 class log(Function):
     r"""
@@ -485,6 +498,8 @@ class log(Function):
     def eval(cls, arg, base=None):
         from sympy import unpolarify
         from sympy.calculus import AccumBounds
+        from sympy.sets.setexpr import SetExpr
+
         arg = sympify(arg)
 
         if base is not None:
@@ -524,9 +539,8 @@ class log(Function):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
-            elif arg.is_Rational:
-                if arg.q != 1:
-                    return cls(arg.p) - cls(arg.q)
+            elif arg.is_Rational and arg.p == 1:
+                return -cls(arg.q)
 
         if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
@@ -537,6 +551,8 @@ class log(Function):
                 return AccumBounds(log(arg.min), log(arg.max))
             else:
                 return
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
 
         if arg.is_number:
             if arg.is_negative:
@@ -597,6 +613,8 @@ class log(Function):
             p = perfect_power(int(arg))
             if p is not False:
                 return p[1]*self.func(p[0])
+        elif arg.is_Rational:
+            return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
             expr = []
             nonpos = []

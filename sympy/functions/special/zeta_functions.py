@@ -5,7 +5,7 @@ from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import log, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
@@ -271,6 +271,7 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
+        s, z = sympify((s, z))
         if z == 1:
             return zeta(s)
         elif z == -1:
@@ -297,6 +298,11 @@ class polylog(Function):
             return z/(1 - z)
         elif s == -1:
             return z/(1 - z)**2
+        # polylog is branched, but not over the unit disk
+        from sympy.functions.elementary.complexes import (Abs, unpolarify,
+            polar_lift)
+        if z.has(exp_polar, polar_lift) and (Abs(z) <= S.One) == True:
+            return cls(s, unpolarify(z))
 
     def fdiff(self, argindex=1):
         s, z = self.args
@@ -456,20 +462,21 @@ class zeta(Function):
                 return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
-            elif z.is_Integer:
-                if a.is_Integer:
-                    if z.is_negative:
-                        zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
-                    elif z.is_even:
-                        B, F = bernoulli(z), factorial(z)
-                        zeta = 2**(z - 1) * abs(B) * pi**z / F
-                    else:
-                        return
+        if z.is_integer:
+            if a.is_Integer:
+                if z.is_negative:
+                    zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
+                elif z.is_even and z.is_positive:
+                    B, F = bernoulli(z), factorial(z)
+                    zeta = ((-1)**(z/2+1) * 2**(z - 1) * B * pi**z) / F
+                else:
+                    return
 
-                    if a.is_negative:
-                        return zeta + harmonic(abs(a), z)
-                    else:
-                        return zeta - harmonic(a - 1, z)
+                if a.is_negative:
+                    return zeta + harmonic(abs(a), z)
+                else:
+                    return zeta - harmonic(a - 1, z)
+
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
         if a != 1:

@@ -1981,20 +1981,6 @@ class Chi(TrigonometricIntegral):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
-    def _latex(self, printer, exp=None):
-        if len(self.args) != 1:
-            raise ValueError("Arg length should be 1")
-        if exp:
-            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
-                % (printer._print(exp), printer._print(self.args[0]))
-        else:
-            return r'\operatorname{Chi}{\left (%s \right )}' \
-                % printer._print(self.args[0])
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\operatorname{Chi}'
-
     def _sage_(self):
         import sage.all as sage
         return sage.cosh_integral(self.args[0]._sage_())

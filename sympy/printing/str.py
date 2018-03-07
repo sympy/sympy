@@ -21,6 +21,7 @@ class StrPrinter(Printer):
         "order": None,
         "full_prec": "auto",
         "sympy_integers": False,
+        "abbrev": False,
     }
 
     _relationals = dict()
@@ -303,7 +304,14 @@ class StrPrinter(Printer):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_MatMul(self, expr):
-        return '*'.join([self.parenthesize(arg, precedence(expr))
+        c, m = expr.as_coeff_mmul()
+        if c.is_number and c < 0:
+            expr = _keep_coeff(-c, m)
+            sign = "-"
+        else:
+            sign = ""
+
+        return sign + '*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
     def _print_HadamardProduct(self, expr):
@@ -311,8 +319,20 @@ class StrPrinter(Printer):
             for arg in expr.args])
 
     def _print_MatAdd(self, expr):
-        return ' + '.join([self.parenthesize(arg, precedence(expr))
-            for arg in expr.args])
+        terms = [self.parenthesize(arg, precedence(expr))
+             for arg in expr.args]
+        l = []
+        for t in terms:
+            if t.startswith('-'):
+                sign = "-"
+                t = t[1:]
+            else:
+                sign = "+"
+            l.extend([sign, t])
+        sign = l.pop(0)
+        if sign == '+':
+            sign = ""
+        return sign + ' '.join(l)
 
     def _print_NaN(self, expr):
         return 'nan'
@@ -711,6 +731,8 @@ class StrPrinter(Printer):
         return r' \ '.join(self._print(set) for set in expr.args)
 
     def _print_Quantity(self, expr):
+        if self._settings.get("abbrev", False):
+            return "%s" % expr.abbrev
         return "%s" % expr.name
 
     def _print_Quaternion(self, expr):
@@ -786,7 +808,8 @@ def sstr(expr, **settings):
     """Returns the expression as a string.
 
     For large expressions where speed is a concern, use the setting
-    order='none'.
+    order='none'. If abbrev=True setting is used then units are printed in
+    abbreviated form.
 
     Examples
     ========
