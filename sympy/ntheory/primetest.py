@@ -112,30 +112,27 @@ def mr(n, bases):
 
 
 def is_euler_pseudoprime(n, b):
+    """Return True if n is prime or an Euler pseudoprime to base b, else False."""
     from sympy.ntheory.factor_ import trailing
-    """Tests whether n is prime or an Euler pseudoprime to base b."""
+
     if not mr(n, [b]):
         return False
+
     n = as_int(n)
-    r = n-1
-    r = as_int(r)
-    s = trailing(r)
-    s = as_int(s)
-    r = r //(2**s)
-    c = pow(b, r, n)
+    r = n - 1
+    c = pow(b, r >> trailing(r), n)
     if c == 1:
         return True
-    
+
     while True:
-        if c == n-1:
+        if c == n - 1:
             return True
-        
         c = pow(c, 2, n)
         if c == 1:
             return False
-        
 
-        
+
+
 def _lucas_sequence(n, P, Q, k):
     """Return the modular Lucas sequence (U_k, V_k, Q_k).
 
