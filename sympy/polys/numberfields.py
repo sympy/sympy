@@ -843,7 +843,7 @@ def primitive_element(extension, x=None, **args):
         # XXX when minimal_polynomial is extended to work
         # with AlgebraicNumbers this test can be removed
         if isinstance(gen, AlgebraicNumber):
-            g = gen.minpoly
+            g = gen.minpoly.replace(x)
         else:
             g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
