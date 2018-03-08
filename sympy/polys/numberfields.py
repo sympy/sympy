@@ -840,7 +840,12 @@ def primitive_element(extension, x=None, **args):
 
     if not args.get('ex', False):
         gen, coeffs = extension[0], [1]
-        g = minimal_polynomial(gen, x, polys=True)
+        # XXX when minimal_polynomial is extended to work
+        # with AlgebraicNumbers this test can be removed
+        if isinstance(gen, AlgebraicNumber):
+            g = gen.minpoly
+        else:
+            g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
