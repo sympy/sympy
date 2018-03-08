@@ -41,6 +41,7 @@ from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 
+from sympy import factor
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
@@ -790,7 +791,7 @@ def _solveset(f, symbol, domain, _check=False):
     from sympy.simplify.simplify import signsimp
 
     orig_f = f
-    tf = f = together(f)
+    tf = together(f)
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in set([S.ComplexInfinity, S.NegativeInfinity, S.Infinity]):
