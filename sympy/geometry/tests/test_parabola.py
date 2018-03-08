@@ -5,6 +5,7 @@ from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
 from sympy import Circle, Ellipse
 from sympy.utilities.pytest import raises
 
+
 def test_parabola_geom():
     p1 = Point(0, 0)
     p2 = Point(3, 7)
