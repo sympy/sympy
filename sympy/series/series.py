@@ -10,4 +10,3 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     """
     expr = sympify(expr)
     return expr.series(x, x0, n, dir)
-
