@@ -102,7 +102,7 @@ class Shape(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line, Parabola, Ellipse, Circle
+        >>> from sympy import Point, Line, Parabola, Ellipse, Circle, Shape
         >>> e = Ellipse((0, 0), 4, 2)
         >>> p = Parabola((2, 0), Line((-2, 0), (-2, 2)))
         >>> c = Circle((0, 0), 4)
@@ -154,7 +154,7 @@ class Shape(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line, Parabola, Ellipse, Circle
+        >>> from sympy import Point, Line, Parabola, Ellipse, Circle, Shape
         >>> e = Ellipse((0, 0), 4, 2)
         >>> p = Parabola((2, 0), Line((-2, 0), (-2, 2)))
         >>> c = Circle((0, 0), 4)
@@ -208,7 +208,7 @@ class Shape(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line, Parabola, Ellipse, Circle
+        >>> from sympy import Point, Line, Parabola, Ellipse, Circle, Shape
         >>> e = Ellipse((0, 0), 4, 2)
         >>> p = Parabola((2, 0), Line((-2, 0), (-2, 2)))
         >>> c = Circle((0, 0), 4)
