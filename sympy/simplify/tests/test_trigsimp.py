@@ -1,7 +1,8 @@
 from sympy import (
     symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
     cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
-    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise)
+    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise,
+    MatrixSymbol)
 
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL
@@ -415,6 +416,13 @@ def test_issue_6811_fail():
     xp, y, x, z = symbols('xp, y, x, z')
     eq = 4*(-19*sin(x)*y + 5*sin(3*x)*y + 15*cos(2*x)*z - 21*z)*xp/(9*cos(x) - 5*cos(3*x))
     assert trigsimp(eq) == -2*(2*cos(x)*tan(x)*y + 3*z)*xp/cos(x)
+
+
+def test_issue_14421():
+    t = symbols('t')
+    V = MatrixSymbol('V', 2, 1)
+    expr = sin(t)**2*V[1,0] + cos(t)**2*V[1,0]
+    assert trigsimp(expr) == V[1, 0]
 
 
 def test_Piecewise():

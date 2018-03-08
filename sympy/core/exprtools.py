@@ -3,7 +3,8 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS, range
+from sympy.core.compatibility import (iterable, is_sequence, SYMPY_INTS,
+    range, string_types)
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
@@ -1090,6 +1091,8 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
                 return a.func(*[handle(i) for i in a.args])
+            elif isinstance(a, string_types):
+                return a
             return type(a)([handle(i) for i in a])
         return gcd_terms(a, isprimitive, clear, fraction)
 
