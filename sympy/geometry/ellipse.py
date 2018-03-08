@@ -16,6 +16,7 @@ from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
@@ -327,16 +328,10 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
+        4*elliptic_e(2*sqrt(2)/3)
 
         """
-        from sympy import Integral
-        if self.eccentricity == 1:
-            return 2*pi*self.hradius
-        else:
-            x = Dummy('x', real=True)
-            return 4*self.major*Integral(
-                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
+        return 4 * self.minor * elliptic_e(self.eccentricity)
 
     @property
     def eccentricity(self):
