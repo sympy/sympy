@@ -799,9 +799,7 @@ class LatexPrinter(Printer):
     def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"%s\left(%s\right)" % \
-            ", ".join(texargs)
-
+        tex = r"\%s\left(%s\right)" % (self._print((str(expr.func)).lower()), ", ".join(texargs))
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
         else:
@@ -951,13 +949,13 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
-    def _print_gamma(self, expr, exp=None):
+    def _hprint_one_args_func(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"\Gamma^{%s}%s" % (exp, tex)
+            return r"%s^{%s}%s" % (self._print(expr.func), exp, tex)
         else:
-            return r"\Gamma%s" % tex
+            return r"%s%s" % (self._print(expr.func), tex)
 
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
