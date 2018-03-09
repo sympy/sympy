@@ -53,7 +53,7 @@ def test_ellipse_geom():
     assert e3.circumference == 2*pi*y1
     assert e1.plot_interval() == e2.plot_interval() == [t, -pi, pi]
     assert e1.plot_interval(x) == e2.plot_interval(x) == [x, -pi, pi]
-    assert Ellipse(None, 1, None, 1).circumference == 2*pi
+
     assert c1.minor == 1
     assert c1.major == 1
     assert c1.hradius == 1
@@ -76,12 +76,6 @@ def test_ellipse_geom():
     assert e1.encloses(RegularPolygon(p1, 0.5, 3)) is True
     assert e1.encloses(RegularPolygon(p1, 5, 3)) is False
     assert e1.encloses(RegularPolygon(p2, 5, 3)) is False
-
-    # with generic symbols, the hradius is assumed to contain the major radius
-    M = Symbol('M')
-    m = Symbol('m')
-    c = Ellipse(p1, M, m).circumference
-    assert c == 4*m*elliptic_e(sqrt(M**2 - m**2)/M)
 
     assert e2.arbitrary_point() in e2
 
@@ -403,3 +397,11 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
+
+def test_circumference():
+    M = Symbol('M')
+    m = Symbol('m')
+    assert Ellipse(Point(0, 0), M, m).circumference == 4 * M * elliptic_e(sqrt(M ** 2 - m ** 2) / M)
+
+    assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(3) / 5)
+    assert Ellipse(None, 1, None, 1).circumference == 2 * pi
