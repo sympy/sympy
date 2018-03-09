@@ -41,37 +41,75 @@ def test_vector_pretty_print():
 
     expected = """\
  2
-a  n_x + b n_y + c*sin(alpha) n_z\
+a  n_x + b n_y + c*sin(alpha) n_z\n\
 """
     uexpected = u("""\
  2
-a  n_x + b n_y + c⋅sin(α) n_z\
+a  n_x + b n_y + c⋅sin(α) n_z\n\
 """)
+    import sys
+    from sympy.core.compatibility import StringIO
+    result = StringIO()
+    old_stdout = sys.stdout
+    sys.stdout = result
+    try:
+        ascii_vpretty(v)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == expected
+    result = StringIO()
+    sys.stdout = result
+    try:
+        unicode_vpretty(v)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == uexpected
 
-    assert ascii_vpretty(v) == expected
-    assert unicode_vpretty(v) == uexpected
+    expected = u('alpha n_x + sin(omega) n_y + alpha*beta n_z\n')
+    uexpected = u('α n_x + sin(ω) n_y + α⋅β n_z\n')
 
-    expected = u('alpha n_x + sin(omega) n_y + alpha*beta n_z')
-    uexpected = u('α n_x + sin(ω) n_y + α⋅β n_z')
-
-    assert ascii_vpretty(w) == expected
-    assert unicode_vpretty(w) == uexpected
+    result = StringIO()
+    sys.stdout = result
+    try:
+        ascii_vpretty(w)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == expected
+    result = StringIO()
+    sys.stdout = result
+    try:
+        unicode_vpretty(w)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == uexpected
 
     expected = """\
                      2
 a       b + c       c
 - n_x + ----- n_y + -- n_z
-b         a         b\
+b         a         b\n\
 """
     uexpected = u("""\
                      2
 a       b + c       c
 ─ n_x + ───── n_y + ── n_z
-b         a         b\
+b         a         b\n\
 """)
 
-    assert ascii_vpretty(o) == expected
-    assert unicode_vpretty(o) == uexpected
+    result = StringIO()
+    sys.stdout = result
+    try:
+        ascii_vpretty(o)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == expected
+    result = StringIO()
+    sys.stdout = result
+    try:
+        unicode_vpretty(o)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == uexpected
 
 
 def test_vector_latex():
@@ -154,20 +192,47 @@ def test_dyadic_pretty_print():
 
     expected = """\
  2
-a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
+a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\n\
 """
 
     uexpected = u("""\
  2
-a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
+a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\n\
 """)
-    assert ascii_vpretty(y) == expected
-    assert unicode_vpretty(y) == uexpected
+    import sys
+    from sympy.core.compatibility import StringIO
+    result = StringIO()
+    old_stdout = sys.stdout
+    sys.stdout = result
+    try:
+        ascii_vpretty(y)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == expected
+    result = StringIO()
+    sys.stdout = result
+    try:
+        unicode_vpretty(y)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == uexpected
 
-    expected = u('alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x')
-    uexpected = u('α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x')
-    assert ascii_vpretty(x) == expected
-    assert unicode_vpretty(x) == uexpected
+    expected = u('alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x\n')
+    uexpected = u('α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x\n')
+    result = StringIO()
+    sys.stdout = result
+    try:
+        ascii_vpretty(x)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == expected
+    result = StringIO()
+    sys.stdout = result
+    try:
+        unicode_vpretty(x)
+    finally:
+        sys.stdout = old_stdout
+    assert result.getvalue() == uexpected
 
 def test_dyadic_latex():
 

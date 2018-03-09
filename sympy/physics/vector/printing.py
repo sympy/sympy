@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
 from sympy import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
@@ -336,7 +337,7 @@ def vpprint(expr, **settings):
     uflag = pretty_use_unicode(use_unicode)
 
     try:
-        return pp.doprint(expr)
+        print(pp.doprint(expr))
     finally:
         pretty_use_unicode(uflag)
 
