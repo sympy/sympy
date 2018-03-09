@@ -324,6 +324,11 @@ def test_solve_polynomial():
     assert len(solveset_real(x**5 + x**3 + 1, x)) == 1
     assert len(solveset_real(-2*x**3 + 4*x**2 - 2*x + 6, x)) > 0
 
+    assert solveset_real(x**6 + x**4  + I, x) == ConditionSet(x,
+                                        Eq(x**6 + x**4 + I, 0), S.Reals)
+    assert solveset_real(x**8 + x**2 + I,x) == ConditionSet(x,
+                                        Eq(x**8 + x**2 + I, 0), S.Reals)
+
 
 def test_return_root_of():
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
