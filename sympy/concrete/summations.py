@@ -459,6 +459,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if p2_series_test[p] <= 1:
                 return S.false
 
+        ### ------------- Limit comparison test -----------###
+        # (1/n) comparison
+        try:
+            lim_comp = limit(sym*sequence_term, sym, S.Infinity)
+            if lim_comp is S.Infinity:
+                return S.false
+        except NotImplementedError:
+            pass
+
         ### ----------- root test ---------------- ###
         lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         lim_evaluated = lim.doit()
@@ -472,12 +481,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
-
-        ### ------------- Limit comparison test -----------###
-        # (1/n) comparison
-        lim_comp = limit(sym*sequence_term, sym, S.Infinity)
-        if lim_comp is S.Infinity:
-            return S.false
 
         ### ------------- comparison test ------------- ###
         # (1/log(n)**p) comparison
