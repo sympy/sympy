@@ -657,7 +657,7 @@ class Vector(object):
         return Vector(d)
 
     def subs(self, *args, **kwargs):
-        """Substituion on the Vector.
+        """Substitution on the Vector.
 
         Examples
         ========

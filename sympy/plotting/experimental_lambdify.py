@@ -211,7 +211,7 @@ class lambdify(object):
             elif isinstance(e, TypeError) and ('no ordering relation is'
                                                ' defined for complex numbers'
                                                in str(e) or 'unorderable '
-                                               'types' in str(e) or "'>' not "
+                                               'types' in str(e) or "not "
                                                "supported between instances of"
                                                in str(e)):
                 self.lambda_func = experimental_lambdify(self.args, self.expr,

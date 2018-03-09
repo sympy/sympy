@@ -6,8 +6,12 @@ from operator import add, mul, lt, le, gt, ge
 
 from sympy.core.compatibility import is_sequence, reduce, string_types
 from sympy.core.expr import Expr
+from sympy.core.mod import Mod
+from sympy.core.numbers import Exp1
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
+from sympy.functions.elementary.exponential import ExpBase
 from sympy.polys.rings import PolyElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import CoercionFailed
@@ -204,6 +208,8 @@ class FracField(DefaultPrinting):
 
     def _rebuild_expr(self, expr, mapping):
         domain = self.domain
+        powers = tuple((gen, gen.as_base_exp()) for gen in mapping.keys()
+            if gen.is_Pow or isinstance(gen, ExpBase))
 
         def _rebuild(expr):
             generator = mapping.get(expr)
@@ -214,16 +220,22 @@ class FracField(DefaultPrinting):
                 return reduce(add, list(map(_rebuild, expr.args)))
             elif expr.is_Mul:
                 return reduce(mul, list(map(_rebuild, expr.args)))
-            elif expr.is_Pow and expr.exp.is_Integer:
-                return _rebuild(expr.base)**int(expr.exp)
-            else:
-                try:
-                    return domain.convert(expr)
-                except CoercionFailed:
-                    if not domain.is_Field and domain.has_assoc_Field:
-                        return domain.get_field().convert(expr)
-                    else:
-                        raise
+            elif expr.is_Pow or isinstance(expr, (ExpBase, Exp1)):
+                b, e = expr.as_base_exp()
+                # look for bg**eg whose integer power may be b**e
+                for gen, (bg, eg) in powers:
+                    if bg == b and Mod(e, eg) == 0:
+                        return mapping.get(gen)**int(e/eg)
+                if e.is_Integer and e is not S.One:
+                    return _rebuild(b)**int(e)
+
+            try:
+                return domain.convert(expr)
+            except CoercionFailed:
+                if not domain.is_Field and domain.has_assoc_Field:
+                    return domain.get_field().convert(expr)
+                else:
+                    raise
 
         return _rebuild(sympify(expr))
 

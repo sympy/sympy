@@ -25,8 +25,10 @@ import sympy
 from sympy.core.compatibility import reduce
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.strategies.core import switch, do_one, null_safe, condition
-
+from sympy.core.relational import Eq, Ne
+from sympy.polys.polytools import degree
 
 ZERO = sympy.S.Zero
 
@@ -247,8 +249,8 @@ def power_rule(integral):
             return ConstantRule(1, 1, symbol)
 
         return PiecewiseRule([
-            (ConstantRule(1, 1, symbol), sympy.Eq(sympy.log(base), 0)),
-            (rule, True)
+            (rule, sympy.Ne(sympy.log(base), 0)),
+            (ConstantRule(1, 1, symbol), True)
         ], integrand, symbol)
 
 def exp_rule(integral):
@@ -350,8 +352,6 @@ def _parts_rule(integrand, symbol):
         if algebraic:
             u = sympy.Mul(*algebraic)
             dv = (integrand / u).cancel()
-            if not u.is_polynomial() and isinstance(dv, sympy.exp):
-                return
             return u, dv
 
     def pull_out_u(*functions):
@@ -389,10 +389,20 @@ def _parts_rule(integrand, symbol):
             u = u.subs(dummy, 1)
             dv = dv.subs(dummy, 1)
 
+            # Don't pick a non-polynomial algebraic to be differentiated
+            if rule == pull_out_algebraic and not u.is_polynomial(symbol):
+                return
+            # Don't trade one logarithm for another
+            if isinstance(u, sympy.log):
+                rec_dv = 1/dv
+                if (rec_dv.is_polynomial(symbol) and
+                    degree(rec_dv, symbol) == 1):
+                        return
+
             for rule in liate_rules[index + 1:]:
                 r = rule(integrand)
                 # make sure dv is amenable to integration
-                if r and sympy.simplify(r[0].subs(dummy, 1)) == sympy.simplify(dv):
+                if r and r[0].subs(dummy, 1).equals(dv):
                     du = u.diff(symbol)
                     v_step = integral_steps(sympy.simplify(dv), symbol)
                     v = _manualintegrate(v_step)
@@ -732,10 +742,19 @@ def trig_cotcsc_rule(integral):
             [match.get(i, ZERO) for i in (a, b, m, n)] +
             [integrand, symbol]))
 
+def trig_sindouble_rule(integral):
+    integrand, symbol = integral
+    a = sympy.Wild('a', exclude=[sympy.sin(2*symbol)])
+    match = integrand.match(sympy.sin(2*symbol)*a)
+    if match:
+        sin_double = 2*sympy.sin(symbol)*sympy.cos(symbol)/sympy.sin(2*symbol)
+        return integral_steps(integrand * sin_double, symbol)
+
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
                   null_safe(trig_tansec_rule),
-                  null_safe(trig_cotcsc_rule))(integral)
+                  null_safe(trig_cotcsc_rule),
+                  null_safe(trig_sindouble_rule))(integral)
 
 def trig_substitution_rule(integral):
     integrand, symbol = integral
@@ -884,6 +903,12 @@ distribute_expand_rule = rewriter(
         or isinstance(integrand, sympy.Mul)),
     lambda integrand, symbol: integrand.expand())
 
+trig_expand_rule = rewriter(
+    # If there are trig functions with different arguments, expand them
+    lambda integrand, symbol: (
+        len(set(a.args[0] for a in integrand.atoms(TrigonometricFunction))) > 1),
+    lambda integrand, symbol: integrand.expand(trig=True))
+
 def derivative_rule(integral):
     integrand = integral[0]
     diff_variables = integrand.variables
@@ -1021,7 +1046,8 @@ def integral_steps(integrand, symbol, **options):
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     distribute_expand_rule),
-                trig_powers_products_rule
+                trig_powers_products_rule,
+                trig_expand_rule
             )),
             null_safe(trig_substitution_rule)
         ),
@@ -1039,8 +1065,10 @@ def eval_constanttimes(constant, other, substep, integrand, symbol):
 
 @evaluates(PowerRule)
 def eval_power(base, exp, integrand, symbol):
-    return sympy.Piecewise((sympy.log(base), sympy.Eq(exp, -1)),
-        ((base**(exp + 1))/(exp + 1), True))
+    return sympy.Piecewise(
+        ((base**(exp + 1))/(exp + 1), sympy.Ne(exp, -1)),
+        (sympy.log(base), True),
+        )
 
 @evaluates(ExpRule)
 def eval_exp(base, exp, integrand, symbol):
@@ -1237,4 +1265,12 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    return _manualintegrate(integral_steps(f, var))
+    result = _manualintegrate(integral_steps(f, var))
+    # If we got Piecewise with two parts, put generic first
+    if isinstance(result, Piecewise) and len(result.args) == 2:
+        cond = result.args[0][1]
+        if isinstance(cond, Eq) and result.args[1][1] == True:
+            result = result.func(
+                (result.args[1][0], sympy.Ne(*cond.args)),
+                (result.args[0][0], True))
+    return result

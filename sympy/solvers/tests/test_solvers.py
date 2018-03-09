@@ -12,7 +12,8 @@ from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms, \
+    failing_assumptions
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -1300,7 +1301,16 @@ def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
     assert check_assumptions(1, x) == True
+    raises(AssertionError, lambda: check_assumptions(2*x, x, positive=True))
+    raises(TypeError, lambda: check_assumptions(1, 1))
 
+def test_failing_assumptions():
+    x = Symbol('x', real=True, positive=True)
+    y = Symbol('y')
+    assert failing_assumptions(6*x + y, **x.assumptions0) == \
+    {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
+    'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
+    'negative': None, 'zero': None}
 
 def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
@@ -1885,3 +1895,8 @@ def test_issue_12476():
             {x0: 1, x3: -S(1)/3, x2: S(1)/3, x4: -sqrt(5)/3, x1: sqrt(5)/3, x5: -1}]
 
     assert solve(eqns) == sols
+
+
+def test_issue_13849():
+    t = symbols('t')
+    assert solve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == []

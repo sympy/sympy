@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat)
+        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
@@ -79,7 +79,7 @@ def test_derivative_linearity():
     assert diff(8*f(x), x) == 8*diff(f(x), x)
     assert diff(8*f(x), x) != 7*diff(f(x), x)
     assert diff(8*f(x)*x, x) == 8*f(x) + 8*x*diff(f(x), x)
-    assert diff(8*f(x)*y*x, x) == 8*y*f(x) + 8*y*x*diff(f(x), x)
+    assert diff(8*f(x)*y*x, x).expand() == 8*y*f(x) + 8*y*x*diff(f(x), x)
 
 
 def test_derivative_evaluate():
@@ -740,6 +740,12 @@ def test_issue_8469():
     expr = functools.reduce(g,ws)
 
 
+def test_issue_12996():
+    # foo=True imitates the sort of arguments that Derivative can get
+    # from Integral when it passes doit to the expression
+    assert Derivative(im(x), x).doit(foo=True) == Derivative(im(x), x)
+
+
 def test_should_evalf():
     # This should not take forever to run (see #8506)
     assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
@@ -858,6 +864,29 @@ def test_issue_12005():
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+
+def test_issue_13843():
+    x = symbols('x')
+    f = Function('f')
+    m, n = symbols('m n', integer=True)
+    assert Derivative(Derivative(f(x), (x, m)), (x, n)) == Derivative(f(x), (x, m + n))
+    assert Derivative(Derivative(f(x), (x, m+5)), (x, n+3)) == Derivative(f(x), (x, m + n + 8))
+
+    assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
+
+
+def test_issue_13873():
+    from sympy.abc import x
+    assert sin(x).diff((x, -1)).is_Derivative
+
+
+def test_order_could_be_zero():
+    x, y = symbols('x, y')
+    n = symbols('n', integer=True, nonnegative=True)
+    m = symbols('m', integer=True, positive=True)
+    assert diff(y, (x, n)) == Piecewise((y, Eq(n, 0)), (0, True))
+    assert diff(y, (x, n + 1)) == S.Zero
+    assert diff(y, (x, m)) == S.Zero
 
 def test_undefined_function_eq():
     f = Function('f')

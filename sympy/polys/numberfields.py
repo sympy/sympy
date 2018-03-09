@@ -580,22 +580,29 @@ def _minpoly_compose(ex, x, dom):
 
 
 @public
-def minimal_polynomial(ex, x=None, **args):
+def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     """
     Computes the minimal polynomial of an algebraic element.
 
     Parameters
     ==========
 
-    ex : algebraic element expression
-    x : independent variable of the minimal polynomial
+    ex : Expr
+        Element or expression whose minimal polynomial is to be calculated.
 
-    Options
-    =======
+    x : Symbol, optional
+        Independent variable of the minimal polynomial
 
-    compose : if ``True`` ``_minpoly_compose`` is used, if ``False`` the ``groebner`` algorithm
-    polys : if ``True`` returns a ``Poly`` object
-    domain : ground domain
+    compose : boolean, optional (default=True)
+        Method to use for computing minimal polynomial. If ``compose=True``
+        (default) then ``_minpoly_compose`` is used, if ``compose=False`` then
+        groebner bases are used.
+
+    polys : boolean, optional (default=False)
+        If ``True`` returns a ``Poly`` object else an ``Expr`` object.
+
+    domain : Domain, optional
+        Ground domain
 
     Notes
     =====
@@ -630,10 +637,6 @@ def minimal_polynomial(ex, x=None, **args):
     from sympy.polys.domains import FractionField
     from sympy.core.basic import preorder_traversal
 
-    compose = args.get('compose', True)
-    polys = args.get('polys', False)
-    dom = args.get('domain', None)
-
     ex = sympify(ex)
     if ex.is_number:
         # not sure if it's always needed but try it for numbers (issue 8354)
@@ -648,20 +651,24 @@ def minimal_polynomial(ex, x=None, **args):
     else:
         x, cls = Dummy('x'), PurePoly
 
-    if not dom:
-        dom = FractionField(QQ, list(ex.free_symbols)) if ex.free_symbols else QQ
-    if hasattr(dom, 'symbols') and x in dom.symbols:
-        raise GeneratorsError("the variable %s is an element of the ground domain %s" % (x, dom))
+    if not domain:
+        if ex.free_symbols:
+            domain = FractionField(QQ, list(ex.free_symbols))
+        else:
+            domain = QQ
+    if hasattr(domain, 'symbols') and x in domain.symbols:
+        raise GeneratorsError("the variable %s is an element of the ground "
+                              "domain %s" % (x, domain))
 
     if compose:
-        result = _minpoly_compose(ex, x, dom)
+        result = _minpoly_compose(ex, x, domain)
         result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
         if c.is_negative:
             result = expand_mul(-result)
         return cls(result, x, field=True) if polys else result.collect(x)
 
-    if not dom.is_QQ:
+    if not domain.is_QQ:
         raise NotImplementedError("groebner method only works for QQ")
 
     result = _minpoly_groebner(ex, x, cls)
@@ -813,8 +820,11 @@ __all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
-    for coeffs in variations([1, -1], n, repetition=True):
-        yield list(coeffs)
+    for coeffs in variations([1, -1, 2, -2, 3, -3], n, repetition=True):
+        # Two linear combinations with coeffs of opposite signs are
+        # opposites of each other. Hence it suffices to test only one.
+        if coeffs[0] > 0:
+            yield list(coeffs)
 
 
 @public

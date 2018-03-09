@@ -569,7 +569,7 @@ def roots_quintic(f):
     Res_n = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     sol = Symbol('sol')
 
-    # Simplifying improves performace a lot for exact expressions
+    # Simplifying improves performance a lot for exact expressions
     R1 = _quintic_simplify(R1)
     R2 = _quintic_simplify(R2)
     R3 = _quintic_simplify(R3)

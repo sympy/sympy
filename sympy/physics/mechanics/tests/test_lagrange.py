@@ -43,7 +43,7 @@ def test_disc_on_an_incline_plane():
     # supply it the necessary arguments and generate the equations of motion.
     # The'rhs' method solves for the q_double_dots (i.e. the second derivative
     # with respect to time  of the generalized coordinates and the lagrange
-    # multiplers.
+    # multipliers.
     q = [y, theta]
     hol_coneqs = [y - R * theta]
     m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)

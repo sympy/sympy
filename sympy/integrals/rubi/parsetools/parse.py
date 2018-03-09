@@ -293,7 +293,7 @@ def replaceWith(s, symbols, i):
     if type(s) == Function('With') or type(s) == Function('Module'):
         constraints = ', '
         result = '    def With{}({}):'.format(i, ', '.join(symbols))
-        if type(s.args[0]) == Function('List'): # get all local varibles of With and Module
+        if type(s.args[0]) == Function('List'): # get all local variables of With and Module
             L = list(s.args[0].args)
         else:
             L = [s.args[0]]
@@ -426,7 +426,7 @@ def {}(rubi):
     # can raise errors while sympifying
     for i in temporary_variable_replacement:
         fullform = fullform.replace(i, temporary_variable_replacement[i])
-    # Permamenely rename these variables
+    # Permanently rename these variables
     for i in permanent_variable_replacement:
         fullform = fullform.replace(i, permanent_variable_replacement[i])
 

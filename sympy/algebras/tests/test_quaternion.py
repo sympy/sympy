@@ -59,6 +59,8 @@ def test_quaternion_functions():
     assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
     raises(ValueError, lambda: q0.inverse())
     assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
+    assert q1.pow(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
+    assert q1.pow(-0.5) == NotImplemented
 
     assert q1.exp() == \
     Quaternion(E * cos(sqrt(29)),

@@ -205,6 +205,15 @@ EOF
     unset USE_SYMENGINE
 fi
 
+if [[ "${TEST_OPT_DEPENDENCY}" == *"antlr"* ]]; then
+    cat << EOF | python -We:invalid
+print('Testing ANTLR')
+import sympy
+if not sympy.test('sympy/parsing/tests/test_latex'):
+    raise Exception('Tests failed')
+EOF
+fi
+
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     unset COVERAGE_PROCESS_START
 fi

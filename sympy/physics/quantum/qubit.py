@@ -551,7 +551,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
 
 def measure_partial(qubit, bits, format='sympy', normalize=True):
-    """Perform a partial ensemble measure on the specifed qubits.
+    """Perform a partial ensemble measure on the specified qubits.
 
     Parameters
     ==========
