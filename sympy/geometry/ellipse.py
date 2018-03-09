@@ -328,12 +328,12 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        4*elliptic_e(2*sqrt(2)/3)
+        12*elliptic_e(2*sqrt(2)/3)
 
         """
         if self.eccentricity == 1:
             return 2 * pi * self.hradius
-        return 4 * self.minor * elliptic_e(self.eccentricity)
+        return 4 * self.major * elliptic_e(self.eccentricity)
 
     @property
     def eccentricity(self):
