@@ -350,12 +350,10 @@ def _invert_abs(f, g_ys, symbol):
                 condition_base_set = Union(condition_base_set,
                                            FiniteSet(*values_condition.args[0]))
                 conditions = Contains(condition_base_set.args,
-                                      condition_interval,
-                                      evaluate=False)
+                                      condition_interval)
             else:
                 condition = Contains(condition_base_set.args,
-                                     condition_interval,
-                                     evaluate=False)
+                                     condition_interval)
                 conditions = And(values_condition, condition)
         else:
             pass  # No possible usecase
@@ -383,8 +381,7 @@ def _invert_abs(f, g_ys, symbol):
             condition_base = condition_ys.args[0]
         else:
             condition_base = condition_ys.args
-        conditions = Contains(condition_base,
-                              condition_interval, evaluate=False)
+        conditions = Contains(condition_base, condition_interval)
 
     return g_x, ConditionSet(g_x, conditions, values)
 

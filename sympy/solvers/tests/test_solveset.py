@@ -61,13 +61,12 @@ def test_invert_real():
     # issue 14223
     assert invert_real(x, 0, x, Interval(1, 2)) == (x, S.EmptySet)
 
-    minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
-    plus_n = Intersection(Interval(0, oo), FiniteSet(n))
-    assert solveset(abs(x) - n, x, S.Reals) == Union(minus_n, plus_n)
+    assert solveset(abs(x) - n, x, S.Reals) == ConditionSet(
+        x, Contains(n, Interval(0, oo), evaluate=False), {-n, n})
 
     conditions = Contains(n, Interval(0, oo), evaluate=False)
-    assert solveset(abs(x) - n, x, S.Reals) == ConditionSet(x, conditions,
-                                                            FiniteSet(n, -n))
+    assert solveset(abs(x) - n, x, S.Reals) == ConditionSet(
+        x, conditions, FiniteSet(n, -n))
 
     assert invert_real(exp(x), y, x) == (x, ireal(FiniteSet(log(y))))
 
@@ -157,7 +156,7 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    conditions = Contains((b, a + b, a - b), Interval(0, oo), evaluate=False)
+    conditions = Contains((b, a + b, a - b), Interval(0, oo))
     base_values = FiniteSet(- a - b - 3, - a + b - 3, a - b - 3, a + b - 3)
     assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == \
         (x, ConditionSet(x, conditions, base_values))
