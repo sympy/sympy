@@ -251,7 +251,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     atan2, conjugate, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import wronskian, Matrix, eye, zeros
+from sympy.matrices import wronskian, Matrix, eye, zeros, BlockDiagMatrix
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm)
 from sympy.polys.polyroots import roots_quartic
@@ -609,9 +609,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                if match['no_of_equation'] > 3:
+                if match['type_of_equation'] == 'type1' and match['order'] == 1:
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
-                else:
+                elif match['no_of_equation'] <= 3:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
@@ -1582,44 +1582,31 @@ def classify_sysode(eq, funcs=None, **kwargs):
     matching_hints['func_coeff'] = func_coef
     matching_hints['is_linear'] = is_linear
 
+    type_of_equation = None
+
     if len(set(order.values()))==1:
         order_eq = list(matching_hints['order'].values())[0]
         if matching_hints['is_linear'] == True:
-            if matching_hints['no_of_equation'] == 2:
-                if order_eq == 1:
-                    type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
-                elif order_eq == 2:
-                    type_of_equation = check_linear_2eq_order2(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+            if order_eq == 1:
+                type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
 
-            elif matching_hints['no_of_equation'] == 3:
-                if order_eq == 1:
-                    type_of_equation = check_linear_3eq_order1(eq, funcs, func_coef)
-                    if type_of_equation==None:
-                        type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
-            else:
-                if order_eq == 1:
-                    type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+            if type_of_equation is None:
+                if matching_hints['no_of_equation'] == 2:
+                    if order_eq == 1:
+                        type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
+                    elif order_eq == 2:
+                        type_of_equation = check_linear_2eq_order2(eq, funcs, func_coef)
+                elif matching_hints['no_of_equation'] == 3:
+                    if order_eq == 1:
+                        type_of_equation = check_linear_3eq_order1(eq, funcs, func_coef)
+
         else:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_2eq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
             elif matching_hints['no_of_equation'] == 3:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_3eq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
-            else:
-                type_of_equation = None
-    else:
-        type_of_equation = None
 
     matching_hints['type_of_equation'] = type_of_equation
 
@@ -1841,19 +1828,30 @@ def check_linear_3eq_order1(eq, func, func_coef):
     return None
 
 def check_linear_neq_order1(eq, func, func_coef):
-    x = func[0].func
-    y = func[1].func
-    z = func[2].func
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
     n = len(eq)
+    fc = func_coef
+    t = func[0].args[0]
+
+    M = Matrix(n, n, lambda i, j: +fc[i, func[j], 1])
+    L = Matrix(n, n, lambda i, j: -fc[i, func[j], 0])
+
+    if M.has(t) or L.has(t):
+        return
+
+    r = {'M': M, 'L': L}
+    try:
+        r['Minv'] = M.inv()
+    except ValueError:  # pragma: no cover
+        return
+
+    r['forcing'] = [S.Zero]*n
     for i in range(n):
-        for j in range(n):
-            if (fc[i,func[j],0]/fc[i,func[i],1]).has(t):
-                return None
-    if len(eq)==3:
-        return 'type6'
+        for j in Add.make_args(eq[i]):
+              if not j.has(*func):
+                r['forcing'][i] += j
+    if any(not f.is_zero for f in r['forcing']):
+        return  # nonhomogeneous systems aren't supported, see sympy/sympy#9244
+
     return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
@@ -7787,122 +7785,36 @@ def _linear_3eq_order1_type4(x, y, z, t, r, eq):
 
 def sysode_linear_neq_order1(match_):
     sol = _linear_neq_order1_type1(match_)
+    return sol
 
 def _linear_neq_order1_type1(match_):
     r"""
-    System of n first-order constant-coefficient linear nonhomogeneous differential equation
+    System of n first-order constant-coefficient linear differential equations
+    .. math ::
 
-    .. math:: y'_k = a_{k1} y_1 + a_{k2} y_2 +...+ a_{kn} y_n; k = 1,2,...,n
-
-    or that can be written as `\vec{y'} = A . \vec{y}`
-    where `\vec{y}` is matrix of `y_k` for `k = 1,2,...n` and `A` is a `n \times n` matrix.
-
-    Since these equations are equivalent to a first order homogeneous linear
-    differential equation. So the general solution will contain `n` linearly
-    independent parts and solution will consist some type of exponential
-    functions. Assuming `y = \vec{v} e^{rt}` is a solution of the system where
-    `\vec{v}` is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
-    `y' = r v e^{r t}` into the equation `\vec{y'} = A . \vec{y}`, we get
-
-    .. math:: r \vec{v} e^{rt} = A \vec{v} e^{rt}
-
-    .. math:: r \vec{v} = A \vec{v}
-
-    where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
-    of `A` corresponding to `r`. There are three possibilities of eigenvalues of `A`
-
-    - `n` distinct real eigenvalues
-    - complex conjugate eigenvalues
-    - eigenvalues with multiplicity `k`
-
-    1. When all eigenvalues `r_1,..,r_n` are distinct with `n` different eigenvectors
-    `v_1,...v_n` then the solution is given by
-
-    .. math:: \vec{y} = C_1 e^{r_1 t} \vec{v_1} + C_2 e^{r_2 t} \vec{v_2} +...+ C_n e^{r_n t} \vec{v_n}
-
-    where `C_1,C_2,...,C_n` are arbitrary constants.
-
-    2. When some eigenvalues are complex then in order to make the solution real,
-    we take a llinear combination: if `r = a + bi` has an eigenvector
-    `\vec{v} = \vec{w_1} + i \vec{w_2}` then to obtain real-valued solutions to
-    the system, replace the complex-valued solutions `e^{rx} \vec{v}`
-    with real-valued solution `e^{ax} (\vec{w_1} \cos(bx) - \vec{w_2} \sin(bx))`
-    and for `r = a - bi` replace the solution `e^{-r x} \vec{v}` with
-    `e^{ax} (\vec{w_1} \sin(bx) + \vec{w_2} \cos(bx))`
-
-    3. If some eigenvalues are repeated. Then we get fewer than `n` linearly
-    independent eigenvectors, we miss some of the solutions and need to
-    construct the missing ones. We do this via generalized eigenvectors, vectors
-    which are not eigenvectors but are close enough that we can use to write
-    down the remaining solutions. For a eigenvalue `r` with eigenvector `\vec{w}`
-    we obtain `\vec{w_2},...,\vec{w_k}` using
-
-    .. math:: (A - r I) . \vec{w_2} = \vec{w}
-
-    .. math:: (A - r I) . \vec{w_3} = \vec{w_2}
-
-    .. math:: \vdots
-
-    .. math:: (A - r I) . \vec{w_k} = \vec{w_{k-1}}
-
-    Then the solutions to the system for the eigenspace are `e^{rt} [\vec{w}],
-    e^{rt} [t \vec{w} + \vec{w_2}], e^{rt} [\frac{t^2}{2} \vec{w} + t \vec{w_2} + \vec{w_3}],
-    ...,e^{rt} [\frac{t^{k-1}}{(k-1)!} \vec{w} + \frac{t^{k-2}}{(k-2)!} \vec{w_2} +...+ t \vec{w_{k-1}}
-    + \vec{w_k}]`
-
-    So, If `\vec{y_1},...,\vec{y_n}` are `n` solution of obtained from three
-    categories of `A`, then general solution to the system `\vec{y'} = A . \vec{y}`
-
-    .. math:: \vec{y} = C_1 \vec{y_1} + C_2 \vec{y_2} + \cdots + C_n \vec{y_n}
+    M x' = L x + f(t)
+    Notes
+    =====
+    The nonhomogeneous case is not implemented yet.  Mass-matrix
+    assumed to be invertible and provided general solution uses the
+    Jordan canonical form for `A = M^{-1} L`, see [1]_.
 
     """
-    eq = match_['eq']
     func = match_['func']
     fc = match_['func_coeff']
+    eq = match_['eq']
     n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-    M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
-    evector = M.eigenvects(simplify=True)
-    def is_complex(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
-    def is_complex_conjugate(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
-    conjugate_root = []
-    e_vector = zeros(n,1)
-    for evects in evector:
-        if evects[0] not in conjugate_root:
-            # If number of column of an eigenvector is not equal to the multiplicity
-            # of its eigenvalue then the legt eigenvectors are calculated
-            if len(evects[2])!=evects[1]:
-                var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
-                Mnew = (M - evects[0]*eye(evects[2][-1].rows))*var_mat
-                w = [0 for i in range(evects[1])]
-                w[0] = evects[2][-1]
-                for r in range(1, evects[1]):
-                    w_ = Mnew - w[r-1]
-                    sol_dict = solve(list(w_), var_mat[1:])
-                    sol_dict[var_mat[0]] = var_mat[0]
-                    for key, value in sol_dict.items():
-                        sol_dict[key] = value.subs(var_mat[0],1)
-                    w[r] = Matrix(n, 1, lambda i,j: sol_dict[var_mat[i]])
-                    evects[2].append(w[r])
-            for i in range(evects[1]):
-                C = next(constants)
-                for j in range(i+1):
-                    if evects[0].has(I):
-                        evects[2][j] = simplify(evects[2][j])
-                        e_vector += C*is_complex(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                        C = next(constants)
-                        e_vector += C*is_complex_conjugate(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                    else:
-                        e_vector += C*evects[2][j]*t**(i-j)*exp(evects[0]*t)/factorial(i-j)
-            if evects[0].has(I):
-                conjugate_root.append(conjugate(evects[0]))
-    sol = []
-    for i in range(len(eq)):
-        sol.append(Eq(func[i],e_vector[i]))
-    return sol
+    t = func[0].args[0]
+    M = Matrix(n, n, lambda i, j: +fc[i, func[j], 1])
+    L = Matrix(n, n, lambda i, j: -fc[i, func[j], 0])
+    A = M.inv()*L
+    T, JJ = A.jordan_cells()
+    T, Tinv = map(simplify, [T, T.inv()])
+    expm = Matrix(BlockDiagMatrix(*[(J*t).exp() for J in JJ]))
+    q = T*expm*Tinv
+    Cvec = Matrix(get_numbered_constants(eq, num=n))
+    q = q*Cvec
+    return [Eq(func[i], q[i]) for i in range(n)]
 
 def sysode_nonlinear_2eq_order1(match_):
     func = match_['func']
