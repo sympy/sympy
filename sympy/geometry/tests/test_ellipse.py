@@ -10,7 +10,6 @@ from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
 
 
-@slow
 def test_ellipse_geom():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
