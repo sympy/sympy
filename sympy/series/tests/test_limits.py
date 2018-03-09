@@ -4,7 +4,7 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, zoo)
+    binomial, simplify, frac, Float, sec, zoo)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -528,3 +528,7 @@ def test_issue_12564():
 def test_issue_14456():
     raises(NotImplementedError, lambda: Limit(exp(x), x, zoo))
     raises(NotImplementedError, lambda: Limit(x**2/(x+1), x, zoo))
+
+
+def test_issue_14411():
+    assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) == -oo
