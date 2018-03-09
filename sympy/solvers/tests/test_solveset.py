@@ -490,10 +490,9 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 +
-        (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) -
-        1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2
-        )*Abs(q))/Abs(q), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + 1/2)**2) -
+        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2 + (m**2/2 - m -
+        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -1725,6 +1724,7 @@ def test_issue_10158():
         solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
     raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
+
 
 def test_issue_14300():
     x, y, n = symbols('x y n')

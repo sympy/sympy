@@ -41,7 +41,6 @@ from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 
-from sympy import factor
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
@@ -689,9 +688,9 @@ def _solve_abs(f, symbol, domain):
             complex domain.'''))
     p, q, r = Wild('p'), Wild('q'), Wild('r')
     pattern_match = f.match(p*Abs(q) + r) or {}
-    if not pattern_match.get(p, S.Zero).is_zero:
-        f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
+    f_p, f_q, f_r = [pattern_match.get(i, S.Zero) for i in (p, q, r)]
 
+    if not (f_p.is_zero or f_q.is_zero):
         domain = continuous_domain(f_q, symbol, domain)
         q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
                                                  relational=False, domain=domain, continuous=True)
@@ -726,7 +725,7 @@ def solve_decomposition(f, symbol, domain):
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in S.Integers} U {pi*(2*n + 1) - 2 | n in S.Integers}
+    {2*n*pi - 2 | n in S.Integers} U {2*n*pi - 2 + pi | n in S.Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -791,12 +790,11 @@ def _solveset(f, symbol, domain, _check=False):
     from sympy.simplify.simplify import signsimp
 
     orig_f = f
-    tf = together(f)
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in set([S.ComplexInfinity, S.NegativeInfinity, S.Infinity]):
-            f = tf
-    if f.is_Add:
+            f = together(orig_f)
+    elif f.is_Add:
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
         if m not in set([S.ComplexInfinity, S.Zero, S.Infinity,
@@ -839,6 +837,7 @@ def _solveset(f, symbol, domain, _check=False):
     elif isinstance(f, Eq):
         from sympy.core import Add
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
+
     elif f.is_Relational:
         if not domain.is_subset(S.Reals):
             raise NotImplementedError(filldedent('''
