@@ -4,7 +4,7 @@ from __future__ import division
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly)
+    Piecewise, symbols, Poly, sec)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
     homogeneous_order, infinitesimals, checkinfsol, checksysodesol, solve_ics)
@@ -2954,3 +2954,9 @@ def test_issue_11290():
     sol_0 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact')
     assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), (_y,), (f(x),)), C1)"
     assert sol_1.doit() == sol_0
+
+
+def test_issue_14395():
+    sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
+        - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))
+    assert dsolve(Derivative(f(x), x, x) + 9*f(x) - sec(x), f(x)) == sol

@@ -22,7 +22,8 @@ from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.rv import ProductPSpace
 
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.external import import_module
 
 from sympy.core.compatibility import range
 
@@ -354,6 +355,12 @@ def test_gamma_inverse():
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
 
+def test_sampling_gamma_inverse():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
+    X = GammaInverse("x", 1, 1)
+    assert sample(X) in X.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -850,3 +857,10 @@ def test_prob_neq():
     assert P(Ne(X, 4)) == 1
     assert P(Ne(X, 5)) == 1
     assert P(Ne(E, x)) == 1
+
+def test_union():
+    N = Normal('N', 3, 2)
+    assert simplify(P(N**2 - N > 2)) == \
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + 3/2
+    assert simplify(P(N**2 - 4 > 0)) == \
+        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + 3/2

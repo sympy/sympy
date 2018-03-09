@@ -20,7 +20,7 @@ class RoundFunction(Function):
     @classmethod
     def eval(cls, arg):
         from sympy import im
-        if arg.is_integer:
+        if arg.is_integer or arg.is_finite is False:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             i = im(arg)

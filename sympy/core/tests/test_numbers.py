@@ -1709,7 +1709,10 @@ def test_mod_inverse():
     assert mod_inverse(5823991, 3299) == 1442
     assert mod_inverse(123, 44) == 39
     assert mod_inverse(2, 5) == 3
-    assert mod_inverse(-2, 5) == -3
+    assert mod_inverse(-2, 5) == 2
+    assert mod_inverse(2, -5) == -2
+    assert mod_inverse(-2, -5) == -3
+    assert mod_inverse(-3, -7) == -5
     x = Symbol('x')
     assert S(2).invert(x) == S.Half
     raises(TypeError, lambda: mod_inverse(2, x))

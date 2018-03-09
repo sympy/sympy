@@ -16,7 +16,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Interval, Ne, Eq)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
@@ -346,6 +346,10 @@ class ContinuousPSpace(PSpace):
             # return S.Zero if `domain` is empty set
             if domain.set is S.EmptySet or isinstance(domain.set, FiniteSet):
                 return S.Zero if not cond_inv else S.One
+            if isinstance(domain.set, Union):
+                return sum(
+                     Integral(pdf(z), (z, subset), **kwargs) for subset in
+                     domain.set.args if isinstance(subset, Interval))
             # Integrate out the last variable over the special domain
             return Integral(pdf(z), (z, domain.set), **kwargs)
 

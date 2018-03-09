@@ -128,7 +128,7 @@ class LatexPrinter(Printer):
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
-        "long_frac_ratio": 2,
+        "long_frac_ratio": None,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
         "mat_str": None,
@@ -448,13 +448,14 @@ class LatexPrinter(Printer):
             ldenom = len(sdenom.split())
             ratio = self._settings['long_frac_ratio']
             if self._settings['fold_short_frac'] \
-                    and ldenom <= 2 and not "^" in sdenom:
+                   and ldenom <= 2 and not "^" in sdenom:
                 # handle short fractions
                 if self._needs_mul_brackets(numer, last=False):
                     tex += r"\left(%s\right) / %s" % (snumer, sdenom)
                 else:
                     tex += r"%s / %s" % (snumer, sdenom)
-            elif len(snumer.split()) > ratio*ldenom:
+            elif ratio is not None and \
+                    len(snumer.split()) > ratio*ldenom:
                 # handle long fractions
                 if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s}%s\left(%s\right)" \
@@ -2173,10 +2174,6 @@ class LatexPrinter(Printer):
                     self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
-    def _print_Quantity(self, expr):
-        if expr.name.name == 'degree':
-            return r"^\circ"
-        return r"\detokenize {%s}" % expr
 
 def translate(s):
     r'''
@@ -2279,7 +2276,7 @@ def latex(expr, **settings):
 
     long_frac_ratio: The allowed ratio of the width of the numerator to the
     width of the denominator before we start breaking off long fractions.
-    The default value is 2.
+    If None (the default value), long fractions are not broken up.
 
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=2))
     \frac{\int r\, dr}{2 \pi}
