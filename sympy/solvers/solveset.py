@@ -537,8 +537,12 @@ def _solve_trig1(f, symbol, domain):
         return ConditionSet(symbol, Eq(f, 0), S.Reals)
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
+    if isinstance(solns, ConditionSet):
+        raise NotImplementedError
 
     if isinstance(solns, FiniteSet):
+        if any(isinstance(s, RootOf) for s in solns):
+            raise NotImplementedError
         result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
         return Intersection(result, domain)
