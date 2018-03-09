@@ -291,6 +291,11 @@ def test_construction():
     e3 = Ellipse(hradius=None, vradius=1, eccentricity=sqrt(3)/2)
     assert e3.hradius == 2
 
+    # filter(None, iterator) filters out anything that falsey, including 0
+    # eccentricity would be filtered out in this case and the constructor would throw an error
+    e4 = Ellipse(Point(0, 0), hradius=1, eccentricity=0)
+    assert e4.vradius == 1
+
 
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
