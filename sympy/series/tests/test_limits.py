@@ -4,7 +4,7 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float)
+    binomial, simplify, frac, Float, zoo)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -510,9 +510,11 @@ def test_issue_10610():
 def test_issue_6599():
     assert limit((n + cos(n))/n, n, oo) == 1
 
+
 def test_issue_12555():
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, -oo) == 2
     assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo
+
 
 def test_issue_12564():
     assert limit(x**2 + x*sin(x) + cos(x), x, -oo) == oo
@@ -521,3 +523,8 @@ def test_issue_12564():
     assert limit(((x + sin(x))**2).expand(), x, oo) == oo
     assert limit(((x + cos(x))**2).expand(), x, -oo) == oo
     assert limit(((x + sin(x))**2).expand(), x, -oo) == oo
+
+
+def test_issue_14456():
+    raises(NotImplementedError, lambda: Limit(exp(x), x, zoo))
+    raises(NotImplementedError, lambda: Limit(x**2/(x+1), x, zoo))

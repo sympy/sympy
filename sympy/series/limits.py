@@ -128,7 +128,9 @@ class Limit(Expr):
         z = sympify(z)
         z0 = sympify(z0)
 
-        if z0 is S.Infinity:
+        if z0 is S.ComplexInfinity:
+            raise NotImplementedError()
+        elif z0 is S.Infinity:
             dir = "-"
         elif z0 is S.NegativeInfinity:
             dir = "+"
