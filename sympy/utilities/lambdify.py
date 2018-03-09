@@ -8,10 +8,6 @@ from __future__ import print_function, division
 from functools import wraps
 import inspect
 import textwrap
-from sympy import Integer
-from sympy import diff
-from sympy import sin
-from sympy import cos
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, integer_types)
 from sympy.utilities.decorator import doctest_depends_on
