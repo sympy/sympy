@@ -236,8 +236,8 @@ def test_CRootOf_evalf():
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
-    assert r0.n(4) == -1.0*I
-    assert r1.n(4) == 1.0*I
+    assert r0.n(4, chop=True) == -1.0*I
+    assert r1.n(4, chop=True) == 1.0*I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
@@ -444,3 +444,25 @@ def test_issue_8316():
     assert len(f.all_roots()) == 8
     f = Poly(7*x**8 - 10)
     assert len(f.all_roots()) == 8
+
+
+def test__imag_count():
+    from sympy.polys.rootoftools import _imag_count as imag_count
+    assert imag_count(Poly(x**2)) == 0
+    assert imag_count(Poly([1]*3 + [-1], x)) == 0
+    assert imag_count(Poly(x**3 + 1)) == 0
+    assert imag_count(Poly(x**2 + 1)) == 2
+    assert imag_count(Poly(x**2 - 1)) == 0
+    assert imag_count(Poly(x**4 - 1)) == 2
+    assert imag_count(Poly(x**4 + 1)) == 0
+    assert imag_count(Poly([1, 2, 3], x)) == 0
+    assert imag_count(Poly(x**3 + x + 1)) == 0
+    assert imag_count(Poly(x**4 + x + 1)) == 0
+    def q(r1, r2, p):
+        return Poly(((x - r1)*(x - r2)).subs(x, x**p), x)
+    assert imag_count(q(-1, -2, 2)) == 4
+    assert imag_count(q(-1, 2, 2)) == 2
+    assert imag_count(q(1, 2, 2)) == 0
+    assert imag_count(q(1, 2, 3)) == 4
+    assert imag_count(q(-1, 2, 3)) == 2
+    assert imag_count(q(-1, -2, 3)) == 0
