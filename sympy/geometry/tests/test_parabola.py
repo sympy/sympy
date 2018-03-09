@@ -4,8 +4,7 @@ from sympy import Rational, oo, sqrt
 from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
 from sympy import Circle, Ellipse
 from sympy.utilities.pytest import raises
-from sympy import integrate
-from sympy import symbols
+
 
 def test_parabola_geom():
     p1 = Point(0, 0)
@@ -107,36 +106,3 @@ def test_parabola_intersection():
     assert parabola1.intersection(Ellipse(Point(0, 19), 5, 7)) == []
     assert parabola1.intersection(Ellipse((0, 3), 12, 4)) == \
            [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, 59/9), Point2D(4*sqrt(17)/3, 59/9)]
-
-def test_area():
-    p1 = Parabola(Point(2, 0), Line(Point(-2, 2), Point(-2, -2)))
-    l = Line(Point(2, 2), Point(2, -2))
-    x = symbols('x')
-    #equation of parabola
-    y = sqrt(4*2*x)
-    A = integrate(2*y, (x, 0, 2))
-    assert p1.area(l) == A
-
-def test_centroid():
-    p1 = Parabola(Point(2, 0), Line(Point(-2,2), Point(-2, -2)))
-    l = Line(Point(2, 2), Point(2, -2))
-    x = symbols('x')
-    #equation of parabola
-    y = sqrt(4*2*x)
-    c_x = integrate(x*2*y, (x, 0, 2))/p1.area(l)
-    c_y = 0
-    assert p1.centroid(l)[0] == c_x
-    assert p1.centroid(l)[1] == c_y
-
-def test_second_moment_of_area():
-    p1 = Parabola(Point(2, 0), Line(Point(-2, 2), Point(-2, -2)))
-    l = Line(Point(2, 2), Point(2, -2))
-    x, y = symbols('x, y')
-
-    I_xx = integrate((y**2)*(2 - (y**2)/(4*2)), (y, -sqrt(4*2*2), sqrt(4*2*2)))
-    I_yy = integrate((x**2)*2*sqrt(4*2*x), (x, 0, 2))
-    I_xy = 0
-
-    assert p1.second_moment_of_area(l, p1.vertex)[0] == I_xx
-    assert p1.second_moment_of_area(l, p1.vertex)[1] == I_yy
-    assert p1.second_moment_of_area(l, p1.vertex)[2] == I_xy

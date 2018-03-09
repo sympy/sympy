@@ -59,6 +59,7 @@ class Ellipse(GeometrySet):
     apoapsis
     focus_distance
     foci
+    second_moment_of_area
 
     Raises
     ======
@@ -1278,6 +1279,11 @@ class Ellipse(GeometrySet):
 
         Examples
         ========
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.centroid
+        Point2D(0, 0)
 
         """
         return self.center
