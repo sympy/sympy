@@ -68,27 +68,39 @@ class Shape(GeometrySet):
     """
 
     def __new__(cls, conic, line):
-        if isinstance(conic, Circle):
-            cls.name = 'Circle'
-        elif isinstance(conic, Ellipse):
-            cls.name = 'Ellipse'
-        elif isinstance(conic, Parabola):
-            cls.name = 'Parabola'
-        else:
+        if (isinstance(conic, Circle) == 0 and isinstance(conic, Parabola) == 0 and isinstance(conic, Ellipse) == 0):
             raise TypeError('Wrong type of argument were put')
 
         if (line.slope != 0 and line.slope != S.Infinity):
             raise NotImplementedError('The line must be a horizontal'
                                       ' or vertical line')
 
-        cls.intersection = conic.intersection(line)
+        intersection = conic.intersection(line)
 
-        if(len(cls.intersection) < 2):
-            raise TypeError('The shape is not a closed figure')
-        cls.conic = conic
-        cls.line = line
+        if(len(intersection) < 2):
+            if(isinstance(conic, Parabola)):
+                raise TypeError('The shape is not a closed figure')
+            else:
+                raise TypeError('The conic-section is not cut by the line')
 
         return GeometryEntity.__new__(cls, conic, line)
+
+    @property
+    def name(self):
+        if isinstance(self.conic, Circle):
+            return 'Circle'
+        if isinstance(self.conic, Parabola):
+            return 'Parabola'
+        if isinstance(self.conic, Ellipse):
+            return 'Ellipse'
+
+    @property
+    def conic(self):
+        return self.args[0]
+
+    @property
+    def line(self):
+        return self.args[1]
 
     @property
     def area(self):
@@ -104,15 +116,15 @@ class Shape(GeometrySet):
 
         >>> from sympy import Point, Line, Parabola, Ellipse, Circle, Shape
         >>> e = Ellipse((0, 0), 4, 2)
-        >>> p = Parabola((2, 0), Line((-2, 0), (-2, 2)))
+        >>> p = Parabola((1, 0), Line((-3, 0), (-3, 2)))
         >>> c = Circle((0, 0), 4)
-        >>> l = Line((2, 0), (2, 2))
+        >>> l = Line((0, 0), (0, 2))
         >>> Shape(e, l).area
-        -2*sqrt(3) + 8*pi/3
+        4*pi
         >>> Shape(p, l).area
-        32/3
+        8*sqrt(2)/3
         >>> Shape(c, l).area
-        -4*sqrt(3) + 16*pi/3
+        8*pi
 
         """
         if(self.name == 'Parabola'):
@@ -156,15 +168,15 @@ class Shape(GeometrySet):
 
         >>> from sympy import Point, Line, Parabola, Ellipse, Circle, Shape
         >>> e = Ellipse((0, 0), 4, 2)
-        >>> p = Parabola((2, 0), Line((-2, 0), (-2, 2)))
+        >>> p = Parabola((1, 0), Line((-3, 0), (-3, 2)))
         >>> c = Circle((0, 0), 4)
-        >>> l = Line((2, 0), (2, 2))
+        >>> l = Line((0, 0), (0, 2))
         >>> Shape(e, l).centroid
-        Point2D(8*sqrt(3)/(-2*sqrt(3) + 8*pi/3), 0)
+        Point2D(16/(3*pi), 0)
         >>> Shape(p, l).centroid
-        Point2D(6/5, 0)
+        Point2D(-2/5, 0)
         >>> Shape(c, l).centroid
-        Point2D(16*sqrt(3)/(-4*sqrt(3) + 16*pi/3), 0)
+        Point2D(16/(3*pi), 0)
 
         """
         if(self.name == 'Parabola'):
@@ -210,15 +222,15 @@ class Shape(GeometrySet):
 
         >>> from sympy import Point, Line, Parabola, Ellipse, Circle, Shape
         >>> e = Ellipse((0, 0), 4, 2)
-        >>> p = Parabola((2, 0), Line((-2, 0), (-2, 2)))
+        >>> p = Parabola((1, 0), Line((-3, 0), (-3, 2)))
         >>> c = Circle((0, 0), 4)
-        >>> l = Line((2, 0), (2, 2))
+        >>> l = Line((0, 0), (0, 2))
         >>> Shape(e, l).second_moment_of_area()
-        (-4*sqrt(3) + 32*asin(3*sqrt(3)/8), -192/(-2*sqrt(3) + 8*pi/3) + 4*sqrt(3) + 32*pi/3, 0)
+        (4*pi, -1024/(9*pi) + 16*pi, 0)
         >>> Shape(p, l).second_moment_of_area()
-        (512/15, 512/175, 0)
+        (64*sqrt(2)/15, 32*sqrt(2)/175, 0)
         >>> Shape(c, l).second_moment_of_area()
-        (-32*sqrt(3) + 256*asin(5*sqrt(3)/8), -768/(-4*sqrt(3) + 16*pi/3) + 8*sqrt(3) + 64*pi/3, 0)
+        (32*pi, -2048/(9*pi) + 32*pi, 0)
 
         """
         if(self.name == 'Parabola'):
@@ -269,7 +281,7 @@ class Shape(GeometrySet):
 
                 z = (l/b)*sqrt(1 - (l/b)**2)*(1 - 2*(l/b)**2)
 
-                I_yy_v = b*(a**3)*(asin((a/b)*sqrt(1 - (l/b)**2) + z)) - 2*l*(a**3)*(sqrt(1 - (l/b)**2)**3)/3
+                I_yy_v = b*(a**3)*(asin(sqrt(1 - (l/b)**2) + z))/4 - 2*l*(a*(sqrt(1 - (l/b)**2)))**3/3
                 I_xx_v = a*(b**3)*((S.Pi/2) - asin(l/b) + z)/4
 
                 I_xx_c = I_yy_v + Ar*((c[1] - self.conic.center[1])**2)
@@ -290,7 +302,7 @@ class Shape(GeometrySet):
                 z = (l/a)*sqrt(1 - (l/a)**2)*(1 - 2*(l/a)**2)
 
                 I_yy_v = b*(a**3)*((S.Pi/2) - asin(l/a) + z)/4
-                I_xx_v = a*(b**3)*(asin((b/a)*sqrt(1 - (l/a)**2) + z)) - 2*l*(b**3)*(sqrt(1 - (l/a)**2)**3)/3
+                I_xx_v = a*(b**3)*(asin(sqrt(1 - (l/a)**2)) + z)/4 - 2*l*(b*(sqrt(1 - (l/a)**2)))**3/3
 
                 I_xx_c = I_xx_v
                 I_yy_c = I_yy_v - Ar*((c[0] - self.conic.center[0])**2)
