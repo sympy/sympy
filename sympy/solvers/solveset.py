@@ -68,18 +68,16 @@ def _masked(f, *atoms):
     >>> f
     cos(cos(x) + 1)
     """
-    sym = numbered_symbols('a', cls=Dummy)
+    sym = numbered_symbols('a', cls=Dummy, real=True)
     mask = []
     for a in ordered(f.atoms(*atoms)):
         for i in mask:
             a = a.replace(*i)
         mask.append((a, next(sym)))
-    mask = list(reversed(mask))
     for i, (o, n) in enumerate(mask):
         f = f.replace(o, n)
         mask[i] = (n, o)
-    if mask and f == mask[0][1]:
-        f = mask[0][0]
+    mask = list(reversed(mask))
     return f, mask
 
 
