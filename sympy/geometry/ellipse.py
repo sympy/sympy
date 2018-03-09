@@ -151,7 +151,7 @@ class Ellipse(GeometrySet):
         if len(center) != 2:
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
-        if len(list(filter(None, (hradius, vradius, eccentricity)))) != 2:
+        if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
@@ -332,8 +332,13 @@ class Ellipse(GeometrySet):
 
         """
         if self.eccentricity == 1:
+            # degenerate
+            return 4 * self.major
+        elif self.eccentricity == 0:
+            # circle
             return 2 * pi * self.hradius
-        return 4 * self.major * elliptic_e(self.eccentricity)
+        else:
+            return 4 * self.major * elliptic_e(self.eccentricity)
 
     @property
     def eccentricity(self):
