@@ -29,21 +29,21 @@ def test_automatic_symbols():
 
     symbol = "verylongsymbolname"
     assert symbol not in app.user_ns
-    app.run_cell("a = %s" % symbol, True)
+    app.run_cell("a = %s" % symbol)
     assert symbol not in app.user_ns
-    app.run_cell("a = type(%s)" % symbol, True)
+    app.run_cell("a = type(%s)" % symbol)
     assert app.user_ns['a'] == Symbol
-    app.run_cell("%s = Symbol('%s')" % (symbol, symbol), True)
+    app.run_cell("%s = Symbol('%s')" % (symbol, symbol))
     assert symbol in app.user_ns
 
     # Check that built-in names aren't overridden
-    app.run_cell("a = all == __builtin__.all", True)
+    app.run_cell("a = all == __builtin__.all")
     assert "all" not in app.user_ns
     assert app.user_ns['a'] is True
 
     # Check that sympy names aren't overridden
     app.run_cell("import sympy")
-    app.run_cell("a = factorial == sympy.factorial", True)
+    app.run_cell("a = factorial == sympy.factorial")
     assert app.user_ns['a'] is True
 
 
