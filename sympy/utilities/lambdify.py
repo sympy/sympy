@@ -8,8 +8,6 @@ from __future__ import print_function, division
 from functools import wraps
 import inspect
 import textwrap
-from sympy import *
-# from sympy import Derivative
 from sympy import Integer
 from sympy import diff
 from sympy import sin
@@ -361,15 +359,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
-    # print (namespace)
-
     if hasattr(expr, "atoms"):
         #Try if you can extract symbols from the expression.
         #Move on if expr.atoms in not implemented.
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
-       
     if printer is None:
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer
@@ -537,12 +532,12 @@ def lambdastr(args, expr, printer=None, dummify=False):
             if isinstance(args, (Function, Symbol)):
                 
                 dummies = Dummy()
-                dummies_dict.update({args : dummies})
+                dummies_dict.update({args: dummies})
                 return str(dummies)
 
             elif isinstance(args,Derivative):
                 dummies = Dummy()
-                dummies_dict.update({args : dummies})
+                dummies_dict.update({args: dummies})
                 return str(dummies)
 
             else:
@@ -585,7 +580,6 @@ def lambdastr(args, expr, printer=None, dummify=False):
             ','.join(dum_args), lstr, flat, iter_args)
         if len(re.findall(r'\b%s\b' % flat, rv)) > 1:
             raise ValueError('the name %s is reserved by lambdastr' % flat)
-        print (rv)
         return rv
 
     dummies_dict = {}
