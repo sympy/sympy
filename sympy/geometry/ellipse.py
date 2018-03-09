@@ -331,6 +331,8 @@ class Ellipse(GeometrySet):
         4*elliptic_e(2*sqrt(2)/3)
 
         """
+        if self.eccentricity == 1:
+            return 2 * pi * self.hradius
         return 4 * self.minor * elliptic_e(self.eccentricity)
 
     @property
