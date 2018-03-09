@@ -7,6 +7,7 @@ from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon
 from sympy.integrals.integrals import Integral
 from sympy.utilities.pytest import raises, slow
 from sympy import integrate
+from sympy.functions.special.elliptic_integrals import elliptic_e
 
 
 @slow
@@ -80,9 +81,7 @@ def test_ellipse_geom():
     M = Symbol('M')
     m = Symbol('m')
     c = Ellipse(p1, M, m).circumference
-    _x = c.atoms(Dummy).pop()
-    assert c == 4*M*Integral(
-        sqrt((1 - _x**2*(M**2 - m**2)/M**2)/(1 - _x**2)), (_x, 0, 1))
+    assert c == 4*m*elliptic_e(sqrt(M**2 - m**2)/M)
 
     assert e2.arbitrary_point() in e2
 
