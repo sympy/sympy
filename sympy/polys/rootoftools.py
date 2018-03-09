@@ -41,6 +41,11 @@ __all__ = ['CRootOf']
 
 
 
+def _pure_factors(poly):
+    _, factors = poly.factor_list()
+    return [(PurePoly(f, expand=False), m) for f, m in factors]
+
+
 def _imag_count(f):
     """Return the number of imaginary roots for irreducible
     monovariate polynomial ``f``.
@@ -195,6 +200,7 @@ class ComplexRootOf(RootOf):
         obj.index = index
 
         try:
+            assert isinstance(obj.poly, PurePoly)
             _reals_cache[obj.poly] = _reals_cache[poly]
             _complexes_cache[obj.poly] = _complexes_cache[poly]
         except KeyError:
@@ -243,6 +249,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _get_reals_sqf(cls, factor):
         """Get real root isolating intervals for a square-free factor."""
+        assert isinstance(factor, PurePoly)
         if factor in _reals_cache:
             real_part = _reals_cache[factor]
         else:
@@ -255,6 +262,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _get_complexes_sqf(cls, factor):
         """Get complex root isolating intervals for a square-free factor."""
+        assert isinstance(factor, PurePoly)
         if factor in _complexes_cache:
             complex_part = _complexes_cache[factor]
         else:
@@ -269,6 +277,7 @@ class ComplexRootOf(RootOf):
         reals = []
 
         for factor, k in factors:
+            assert isinstance(factor, PurePoly)
             real_part = cls._get_reals_sqf(factor)
             reals.extend([(root, factor, k) for root in real_part])
 
@@ -300,6 +309,7 @@ class ComplexRootOf(RootOf):
         reals = sorted(reals, key=lambda r: r[0].a)
 
         for root, factor, _ in reals:
+            assert isinstance(factor, PurePoly)
             if factor in cache:
                 cache[factor].append(root)
             else:
@@ -373,6 +383,7 @@ class ComplexRootOf(RootOf):
         # update cache
         cache = {}
         for root, factor, _ in complexes:
+            assert isinstance(factor, PurePoly)
             if factor in cache:
                 cache[factor].append(root)
             else:
@@ -411,6 +422,7 @@ class ComplexRootOf(RootOf):
         """
         i = 0
         for j, (_, factor, k) in enumerate(complexes):
+            assert isinstance(factor, PurePoly)
             if index < i + k:
                 poly, index = factor, 0
 
@@ -432,7 +444,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _indexed_root(cls, poly, index):
         """Get a root of a composite polynomial by index. """
-        (_, factors) = poly.factor_list()
+        factors = _pure_factors(poly)
 
         reals = cls._get_reals(factors)
         reals_count = cls._count_roots(reals)
@@ -448,7 +460,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _real_roots(cls, poly):
         """Get real roots of a composite polynomial. """
-        (_, factors) = poly.factor_list()
+        factors = _pure_factors(poly)
 
         reals = cls._get_reals(factors)
         reals = cls._reals_sorted(reals)
@@ -464,7 +476,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _all_roots(cls, poly):
         """Get real and complex roots of a composite polynomial. """
-        (_, factors) = poly.factor_list()
+        factors = _pure_factors(poly)
 
         reals = cls._get_reals(factors)
         reals = cls._reals_sorted(reals)
@@ -527,6 +539,8 @@ class ComplexRootOf(RootOf):
         if roots is not None:
             return roots[index]
         else:
+            if not isinstance(poly, PurePoly):
+                poly = PurePoly(poly, expand=False)
             return cls._new(poly, index)
 
     @classmethod
@@ -545,6 +559,7 @@ class ComplexRootOf(RootOf):
 
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """
+        assert isinstance(self.poly, PurePoly)
         if self.is_real:
             return _reals_cache[self.poly][self.index]
         else:
@@ -553,6 +568,7 @@ class ComplexRootOf(RootOf):
 
     def _set_interval(self, interval):
         """Internal function for updating isolation interval in cache. """
+        assert isinstance(self.poly, PurePoly)
         if self.is_real:
             _reals_cache[self.poly][self.index] = interval
         else:
@@ -793,7 +809,7 @@ class RootSum(Expr):
         func = Lambda(var, expr)
 
         rational = cls._is_func_rational(poly, func)
-        (_, factors), terms = poly.factor_list(), []
+        factors, terms = _pure_factors(poly), []
 
         for poly, k in factors:
             if poly.is_linear:
