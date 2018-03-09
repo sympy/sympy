@@ -409,7 +409,7 @@ class Parabola(GeometrySet):
         focus = self.focus
         if (self.axis_of_symmetry.slope == 0):
             vertex = Point(focus.args[0] - self.p_parameter, focus.args[1])
-		else:
+        else:
             vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
 
         return vertex
