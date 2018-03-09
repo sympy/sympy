@@ -1764,14 +1764,143 @@ class RealInterval(object):
         """Perform one step of real root refinement algorithm. """
         return self._inner_refine()
 
+
 class ComplexInterval(object):
     """A fully qualified representation of a complex isolation interval.
-    The printed form is shown as (x1, y1) x (x2, y2): the southwest x northeast
-    coordinates of the interval's rectangle."""
+    The printed form is shown as (ax, bx) x (ay, by) where (ax, ay)
+    and (bx, by) are the coordinates of the southwest and northeast
+    corners of the interval's rectangle, respectively.
+
+    Examples
+    ========
+
+    >>> from sympy import RootOf
+    >>> from sympy.abc import x
+    >>> root = RootOf(x**10 - 2*x + 3, 9)
+    >>> i = root._get_interval(); i
+    (0, 3/4) x (9/8, 3/2)
+
+    The real part of the root lies within the range [0, 3/4] while
+    the imaginary part lies within the range [9/8, 3/2]:
+
+    >>> root.n(3)
+    0.0766 + 1.14*I
+
+    The width of the ranges in the x and y directions on the complex
+    plane are:
+
+    >>> i.dx, i.dy
+    (3/4, 3/8)
+
+    The center of the range is
+
+    >>> i.center
+    (3/8, 21/16)
+
+    The northeast coordinate of the rectangle bounding the root in the
+    complex plane is given by attribute b and the x and y components
+    are accessed by bx and by:
+
+    >>> i.b, i.bx, i.by
+    ((3/4, 3/2), 3/4, 3/2)
+
+    The southwest coordinate is similarly given by i.a
+
+    >>> i.a, i.ax, i.ay
+    ((0, 9/8), 0, 9/8)
+
+    Although the interval prints to show only the real and imaginary
+    range of the root, all the information of the underlying root
+    is contained as properties of the interval.
+
+    For example, an interval with a nonpositive imaginary range is
+    considered to be the conjugate. Since the y values of y are in the
+    range [0, 1/4] it is not the conjugate:
+
+    >>> i.conj
+    False
+
+    The conjugate's interval is
+
+    >>> ic = i.conjugate(); ic
+    (0, 3/4) x (-3/2, -9/8)
+
+        NOTE: the values printed still represent the x and y range
+        in which the root -- conjugate, in this case -- is located,
+        but the underlying a and b values of a root and its conjugate
+        are the same:
+
+        >>> assert i.a == ic.a and i.b == ic.b
+
+        What changes are the reported coordinates of the bounding rectangle:
+
+        >>> (i.ax, i.ay), (i.bx, i.by)
+        ((0, 9/8), (3/4, 3/2))
+        >>> (ic.ax, ic.ay), (ic.bx, ic.by)
+        ((0, -3/2), (3/4, -9/8))
+
+    The interval can be refined once:
+
+    >>> i.refine()
+    (0, 3/8) x (9/8, 3/2)
+
+    Several refinement steps can be taken, too:
+
+    >>> i.refine_step(2)
+    (0, 3/8) x (9/8, 21/16)
+
+    It is also possible to refine to a given tolerance:
+
+    >>> from sympy import Rational
+    >>> i.refine_size(Rational(1, 10))
+    (0, 3/32) x (9/8, 39/32)
+
+    A disjoint interval is one whose bounding rectangle does not
+    overlap with another. An interval, necessarily, is not disjoint with
+    itself, but any interval is disjoint with a conjugate since the
+    conjugate rectangle will always be in the lower half of the complex
+    plane and the non-conjugate in the upper half:
+
+    >>> i.is_disjoint(i), i.is_disjoint(i.conjugate())
+    (False, True)
+
+    The following interval j is not disjoint from i:
+
+    >>> close = RootOf(x**10 - 7*x + 9, 9)
+    >>> j = close._get_interval(); j
+    (0, 9/4) x (9/8, 9/4)
+    >>> i.is_disjoint(j)
+    False
+
+    The two can be made disjoint, however:
+
+    >>> newi, newj = i.refine_disjoint(j)
+    >>> newi
+    (0, 3/32) x (9/8, 75/64)
+    >>> newj
+    (0, 9/32) x (81/64, 45/32)
+
+    Even though the real ranges overlap, the imaginary do not, so
+    the roots have been resolved as distinct. Intervals are disjoint
+    when either the real or imaginary component of the intervals is
+    distinct. In the case above, the real components have not been
+    resolved (so we don't know, yet, which root has the smaller real
+    part) but the imaginary part of ``close`` is larger than ``root``:
+
+    >>> close.n(3)
+    0.106 + 1.28*I
+    >>> root.n(3)
+    0.0766 + 1.14*I
+    """
 
     def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):
         """Initialize new complex interval with complete information. """
-        self.a, self.b = a, b  # the southwest and northeast corner: (x1, y1), (x2, y2)
+        # a and b are the SW and NE corner of the bounding interval,
+        # (ax, ay) and (bx, by), respectively, for the NON-CONJUGATE
+        # root (the one with the positive imaginary part); when working
+        # with the conjugate, the a and b value are still non-negative
+        # but the ay, by are reversed and have oppositite sign
+        self.a, self.b = a, b
         self.I, self.Q = I, Q
 
         self.f1, self.F1 = f1, F1
@@ -1822,7 +1951,8 @@ class ComplexInterval(object):
         return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
 
     def as_tuple(self):
-        """Return tuple representation of complex isolating interval. """
+        """Return tuple representation of the complex isolating
+        interval's SW and NE corners, respectively. """
         return ((self.ax, self.ay), (self.bx, self.by))
 
     def __repr__(self):

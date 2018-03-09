@@ -409,8 +409,7 @@ class ComplexRootOf(RootOf):
         Map initial complex root index to an index in a factor where
         the root belongs.
         """
-        index, i = index, 0
-
+        i = 0
         for j, (_, factor, k) in enumerate(complexes):
             if index < i + k:
                 poly, index = factor, 0
