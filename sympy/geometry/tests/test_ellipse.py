@@ -281,6 +281,17 @@ def test_ellipse_geom():
     assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
 
 
+def test_construction():
+    e1 = Ellipse(hradius=2, vradius=1, eccentricity=None)
+    assert e1.eccentricity == sqrt(3)/2
+
+    e2 = Ellipse(hradius=2, vradius=None, eccentricity=sqrt(3)/2)
+    assert e2.vradius == 1
+
+    e3 = Ellipse(hradius=None, vradius=1, eccentricity=sqrt(3)/2)
+    assert e3.hradius == 2
+
+
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
     e3 = Ellipse(Point(0, 0), y1, y1)
@@ -403,4 +414,9 @@ def test_circumference():
     assert Ellipse(Point(0, 0), M, m).circumference == 4 * M * elliptic_e(sqrt(M ** 2 - m ** 2) / M)
 
     assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(3) / 5)
-    assert Ellipse(None, 1, None, 1).circumference == 2 * pi
+
+    # degenerate ellipse
+    assert Ellipse(None, 1, None, 1).circumference == 4
+
+    # circle
+    assert Ellipse(None, 1, None, 0).circumference == 2*pi
