@@ -446,15 +446,7 @@ class LatexPrinter(Printer):
             snumer = convert(numer)
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
-            if self._settings['long_frac_ratio'] == None:
-                exprfind = [x for x in expr.args if \
-                    str(x).startswith('1/')]
-                if len(exprfind) >= 1:
-                    ratio = len(expr.args) - 1
-                else:
-                    ratio = len(expr.args)
-            else:
-                ratio = self._settings['long_frac_ratio']
+            ratio = self._settings['long_frac_ratio']
             if self._settings['fold_short_frac'] \
                    and ldenom <= 2 and not "^" in sdenom:
                 # handle short fractions
@@ -462,7 +454,8 @@ class LatexPrinter(Printer):
                     tex += r"\left(%s\right) / %s" % (snumer, sdenom)
                 else:
                     tex += r"%s / %s" % (snumer, sdenom)
-            elif len(snumer.split()) > ratio*ldenom:
+            elif ratio is not None and \
+                    len(snumer.split()) > ratio*ldenom:
                 # handle long fractions
                 if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s}%s\left(%s\right)" \

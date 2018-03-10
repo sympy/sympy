@@ -14,6 +14,7 @@ from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
 from sympy.core.compatibility import reduce
 from sympy.physics.units.dimensions import Dimension, dimsys_default
 from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.iterables import sift
 
 
@@ -136,6 +137,17 @@ def quantity_simplify(expr):
         return expr
     if not expr.is_Mul:
         return expr.func(*map(quantity_simplify, expr.args))
+
+    if expr.has(Prefix):
+        coeff, args = expr.as_coeff_mul(Prefix)
+        args = list(args)
+        for arg in args:
+            if isinstance(arg, Pow):
+                coeff = coeff * (arg.base.scale_factor ** arg.exp)
+            else:
+                coeff = coeff * arg.scale_factor
+        expr = coeff
+
     coeff, args = expr.as_coeff_mul(Quantity)
     args_pow = [arg.as_base_exp() for arg in args]
     quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
