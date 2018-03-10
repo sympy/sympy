@@ -139,10 +139,10 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if not x.is_Symbol:
         raise ValueError("x must be a symbol")
     f_x = sympify(f_x)
-    if not f_x.has(x):
+    if x not in f_x.free_symbols:
         raise ValueError("Inverse of constant function doesn't exist")
     y = sympify(y)
-    if y.has(x):
+    if x in y.free_symbols:
         raise ValueError("y should be independent of x ")
 
     if domain.is_subset(S.Reals):

@@ -1725,3 +1725,12 @@ def test_issue_10158():
         solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
     raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
+
+
+def test_issue_14454():
+    x = Symbol('x')
+    raises(ValueError, lambda: invert_real(CRootOf(x**4 + x - 1, 2), 0, x, S.Reals))
+
+    y = invert_real(x**2, CRootOf(x**4 + x - 1, 2), x, S.Reals)
+    assert y[1].has(Intersection) == True
+    assert y[1].has(CRootOf) == True
