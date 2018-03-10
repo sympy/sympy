@@ -47,7 +47,8 @@ from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
-from sympy.core import PoleError, Function, Expr
+from sympy.core.expr import Expr
+from sympy.core.function import PoleError, Function, UndefinedFunction
 from sympy.core.numbers import Rational, igcd
 from sympy.core.compatibility import as_int, range
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
@@ -1838,14 +1839,6 @@ def rs_compose_add(p1, p2):
     return q
 
 
-_convert_func = {
-        'sin': 'rs_sin',
-        'cos': 'rs_cos',
-        'exp': 'rs_exp',
-        'tan': 'rs_tan',
-        'log': 'rs_log'
-        }
-
 def rs_min_pow(expr, series_rs, a):
     """Find the minimum power of `a` in the series expansion of expr"""
     series = 0
@@ -1894,8 +1887,12 @@ def _rs_series(expr, series_rs, a, prec):
         # the generators of all three.
         R = R.compose(R1).compose(series_inner.ring)
         series_inner = series_inner.set_ring(R)
-        series = eval(_convert_func[str(expr.func)])(series_inner,
-            R(a), prec)
+        if (not isinstance(expr.func, UndefinedFunction) and
+            "rs_" + expr.func.__name__ in globals()):
+                series = globals()["rs_" + expr.func.__name__](series_inner,
+                    R(a), prec)
+        else:
+            raise NotImplementedError("Cannot expand %s" % expr.func)
         return series
 
     elif expr.is_Mul:

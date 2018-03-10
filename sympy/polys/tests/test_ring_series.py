@@ -9,11 +9,12 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
+from sympy.core.function import Function, expand
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
-    tanh, log, sqrt)
+    sinh, cosh, tanh, log, sqrt, LambertW)
 from sympy.core.numbers import Rational
-from sympy.core import expand
+from sympy.core.singleton import S
 
 def is_close(a, b):
     tol = 10**(-10)
@@ -629,3 +630,12 @@ def test_rs_series():
     assert rs_series(log(1 + x*a**2), x, 7).as_expr() == -x**6*a**12/6 + \
                     x**5*a**10/5 - x**4*a**8/4 + x**3*a**6/3 - \
                     x**2*a**4/2 + x*a**2
+
+    for f in [asin, atan, atanh, cosh, cot, sinh, tanh]:
+        assert rs_series(f(x), x, 5).as_expr() == f(x).series(x, 0, 5).removeO()
+
+    assert rs_series(LambertW(x), x, 6).as_expr() == \
+        S(125)/24*x**5 - S(8)/3*x**4 + S(3)/2*x**3 - x**2 + x
+
+    mycos = Function("cos")
+    raises(NotImplementedError, lambda: rs_series(mycos(x), x, 5))
