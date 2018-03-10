@@ -329,10 +329,16 @@ def gray_to_bin(bin_list):
 
     Examples
     ========
-
+    
     >>> from sympy.combinatorics.graycode import gray_to_bin
     >>> gray_to_bin('100')
     '111'
+
+    example taken from issue #117 from:- https://github.com/sympy/sympy-live/issues/117
+    >>>gtay_to_bin('0001000010100')
+    '0001111100111'
+    >>>gray_to_bin('0001000010101')
+    '0001111100110'
 
     See Also
     ========
@@ -357,13 +363,20 @@ def bin_to_gray(bin_list):
     >>> bin_to_gray('111')
     '100'
 
+    example taken from issue #117 from:- https://github.com/sympy/sympy-live/issues/117
+    >>>bin_to_gray('0001111100111')
+    '0001000010100'
+    >>>bin_to_gray('0001111100110')
+    '0001000010101'
+
+
     See Also
     ========
     gray_to_bin
     """
     b = [bin_list[0]]
-    for i in range(0, len(bin_list) - 1):
-        b += str(int(bin_list[i]) ^ int(b[i - 1]))
+    for i in range(1, len(bin_list)):
+        b += str(int(bin_list[i]) ^ int(bin_list[i - 1]))
     return ''.join(b)
 
 
