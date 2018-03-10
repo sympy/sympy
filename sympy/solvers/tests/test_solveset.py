@@ -490,10 +490,9 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq((-2*sqrt(4*q**2*(m - q)**2 +
-        (-m + q)**2) + sqrt((-2*m**2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1) -
-        1)**2 + (2*m**2 - 4*m - sqrt(4*m**4 - 4*m**2 + 8*m + 1) - 1)**2
-        )*Abs(q))/Abs(q), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + 1/2)**2) -
+        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2 + (m**2/2 - m -
+        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -974,7 +973,7 @@ def test_conditionset():
         ConditionSet(x, True, S.Reals)
 
     assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals
-        ) == ConditionSet(x, Eq(x*(x + sin(x)) - 1, 0), S.Reals)
+        ) == ConditionSet(x, Eq(x**2 + x*sin(x) - 1, 0), S.Reals)
 
     assert solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x
         ) == imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
@@ -1161,7 +1160,7 @@ def test_solve_decomposition():
     s2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
     s3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
     s4 = ImageSet(Lambda(n, 2*n*pi - 1), S.Integers)
-    s5 = ImageSet(Lambda(n, (2*n + 1)*pi - 1), S.Integers)
+    s5 = ImageSet(Lambda(n, 2*n*pi - 1 + pi), S.Integers)
 
     assert solve_decomposition(f1, x, S.Reals) == FiniteSet(0, log(2), log(3))
     assert solve_decomposition(f2, x, S.Reals) == s3
@@ -1716,15 +1715,28 @@ def test_issue_10158():
     assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
     assert solveset(Abs(x - 1) - Abs(y), x, dom) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
     assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))
-    assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x, S.Reals
-        ) == FiniteSet(-1, -2)
+    assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x, S.Reals) == FiniteSet(-1, -2)
     dom = S.Complexes
-    raises(ValueError, lambda: solveset(x*Max(x, 15) - 10, x, dom))
-    raises(ValueError, lambda: solveset(x*Min(x, 15) - 10, x, dom))
-    raises(ValueError, lambda:
-        solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
+    assert solveset(x*Max(x, 15) - 10, x, dom) == \
+        ConditionSet(x, Eq(x*Max(15, x) - 10, 0), dom)
+    assert solveset(x*Min(x, 15) - 10, x, dom) == \
+        ConditionSet(x, Eq(x*Min(15, x) - 10, 0), dom)
+    raises(ValueError, lambda: solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
     raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
+
+
+def test_issue_14300():
+    x, y, n = symbols('x y n')
+
+    f = 1 - exp(-18000000*x) - y
+    a1 = FiniteSet(-log(-y + 1)/18000000)
+
+    assert solveset(f, x, S.Reals) == \
+        Intersection(S.Reals, a1)
+    assert solveset(f, x) == \
+        ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
+            log(Abs(y - 1))/18000000), S.Integers)
 
 
 def test_issue_14454():
