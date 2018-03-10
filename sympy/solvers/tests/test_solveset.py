@@ -61,13 +61,6 @@ def test_invert_real():
     # issue 14223
     assert invert_real(x, 0, x, Interval(1, 2)) == (x, S.EmptySet)
 
-    assert solveset(abs(x) - n, x, S.Reals) == ConditionSet(
-        x, Contains(n, Interval(0, oo), evaluate=False), {-n, n})
-
-    conditions = Contains(n, Interval(0, oo), evaluate=False)
-    assert solveset(abs(x) - n, x, S.Reals) == ConditionSet(
-        x, conditions, FiniteSet(n, -n))
-
     assert invert_real(exp(x), y, x) == (x, ireal(FiniteSet(log(y))))
 
     y = Symbol('y', positive=True)
@@ -592,6 +585,8 @@ def test_uselogcombine_2():
 
 
 def test_solve_abs():
+    assert solveset(Abs(x) - n, x, S.Reals) == ConditionSet(
+        x, Contains(n, Interval(0, oo)), {-n, n})
     assert solveset_real(Abs(x) - 2, x) == FiniteSet(-2, 2)
     assert solveset_real(Abs(x + 3) - 2*Abs(x - 3), x) == \
         FiniteSet(1, 9)
@@ -600,7 +595,7 @@ def test_solve_abs():
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
 
-    raises(ValueError, lambda: solveset(abs(x) - 1, x))
+    raises(ValueError, lambda: solveset(Abs(x) - 1, x))
 
 
 def test_issue_9565():
@@ -1197,6 +1192,7 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([x**2 -1], sin(x)) == FiniteSet((S.EmptySet,))
     assert nonlinsolve([x**2 -1], 1) == FiniteSet((x**2,))
     assert nonlinsolve([x**2 -1], x + y) == FiniteSet((S.EmptySet,))
+
 
 @XFAIL
 def test_nonlinsolve_abs():
