@@ -2,7 +2,7 @@
 This module contains functions for two multivariate resultants. These are:
 
 - Dixon's resultant.
-- Maucalay's resultant.
+- Macaulay's resultant.
 
 Multivariate resultants are used to identify whether a multivariate system has
 common roots. That is when the resultant is equal to zero.
@@ -77,7 +77,8 @@ class DixonResultant():
         self.dummy_variables = [a[i] for i in range(self.n)]
 
         # A list of the d_max of each variable.
-        self.max_degrees = [poly_from_expr(f, self.variables)[0].degree() for f in self.polynomials]
+        self.max_degrees = [poly_from_expr(f, self.variables)[0].degree()
+                            for f in self.polynomials]
 
     def get_dixon_polynomial(self):
         r"""
@@ -101,11 +102,10 @@ class DixonResultant():
         rows = [self.polynomials]
 
         temp = list(self.variables)
-        iterator = iter(self.dummy_variables)
 
         for idx in range(self.n):
-            temp[idx] = next(iterator)
-            substitution = {self.variables[i]: temp[i] for i in range(len(temp))}
+            temp[idx] = self.dummy_variables[idx]
+            substitution = {var: t for var, t in zip(self.variables, temp)}
             rows.append([f.subs(substitution) for f in self.polynomials])
 
         A = Matrix(rows)
