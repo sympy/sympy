@@ -128,9 +128,7 @@ class Limit(Expr):
         z = sympify(z)
         z0 = sympify(z0)
 
-        if z0 is S.ComplexInfinity:
-            raise NotImplementedError()
-        elif z0 is S.Infinity:
+        if z0 is S.Infinity:
             dir = "-"
         elif z0 is S.NegativeInfinity:
             dir = "+"
@@ -164,6 +162,9 @@ class Limit(Expr):
         from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args
+
+        if z0 is S.ComplexInfinity:
+            raise NotImplementedError()
 
         if hints.get('deep', True):
             e = e.doit(**hints)
