@@ -1827,7 +1827,7 @@ def imageset(*args):
     return ImageSet(f, *set_list)
 
 
-def is_function_invertible_in_set(func, setv):
+def is_function_invertible_in_set(func, sym, setv):
     """
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
@@ -1836,14 +1836,17 @@ def is_function_invertible_in_set(func, setv):
     # Functions known to always be invertible:
     if func in (exp, log):
         return True
-    u = Dummy("u")
-    fdiff = func(u).diff(u)
+    fdiff = func.diff(sym)
     # monotonous functions:
-    # TODO: check subsets (`func` in `setv`)
-    if (fdiff > 0) == True or (fdiff < 0) == True:
+    if fdiff.diff(sym) == 0:
         return True
-    # TODO: support more
-    return None
+    range_in_setv = imageset(sym, fdiff, setv)
+    initial = range_in_setv.start
+    end = range_in_setv.end
+    if initial*end > 0:
+        return True
+    else:
+        return False
 
 
 def simplify_union(args):
