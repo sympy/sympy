@@ -1319,3 +1319,8 @@ def test_issue_14375():
     # This raised a TypeError. The antiderivative has exp_polar, which
     # may be possible to unpolarify, so the exact output is not asserted here.
     assert integrate(exp(I*x)*log(x), x).has(Ei)
+
+def test_issue_14437():
+    f = Function('f')(x, y, z)
+    assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
+                Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
