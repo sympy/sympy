@@ -326,8 +326,6 @@ def test_solve_polynomial():
 
     assert solveset_real(x**6 + x**4  + I, x) == ConditionSet(x,
                                         Eq(x**6 + x**4 + I, 0), S.Reals)
-    assert solveset_real(x**8 + x**2 + I,x) == ConditionSet(x,
-                                        Eq(x**8 + x**2 + I, 0), S.Reals)
 
 
 def test_return_root_of():
