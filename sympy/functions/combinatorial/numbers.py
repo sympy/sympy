@@ -1007,19 +1007,28 @@ class catalan(Function):
 class carmichael(Function):
     r"""
      Carmichael Numbers 
-     Certain cryptographic algorithms make use of big prime numbers. However, checking whether a big number is prime is not so easy.
-     Randomized primality tests exist that offer a high degree of confidence of accurate determination at low cost, such as the 
-     Fermat test. Let a be a random number between 2 and n - 1, where n is the number whose primality we are testing.
+     Certain cryptographic algorithms make use of big prime numbers.
+     However, checking whether a big number is prime is not so easy.
+     Randomized primality tests exist that offer a high degree of
+     confidence of accurate determination at low cost, such as the 
+     Fermat test. Let a be a random number between 2 and n - 1,
+     where n is the number whose primality we are testing.
      Then, n is probably prime if the following equation holds:
-     an mod n = a.If a number passes the Fermat test several times, then it is prime with a high probability.
-     Unfortunately, there is bad news. Certain composite numbers (non-primes) still pass the Fermat test with every number smaller than themselves.
+     an mod n = a.If a number passes the Fermat test several times,
+     then it is prime with a high probability.
+     Unfortunately, there is bad news. Certain composite numbers (non-primes)
+     still pass the Fermat test with every number smaller than themselves.
      These numbers are called Carmichael numbers.
      
-     A Carmichael number will pass a Fermat primality test to every base b relatively prime to the number,
-     even though it is not actually prime. This makes tests based on Fermat's Little Theorem less effective than 
-     strong probable prime tests such as the Baillie-PSW primality test and the Miller–Rabin primality test.
+     A Carmichael number will pass a Fermat primality test to every base b
+     relatively prime to the number,
+     even though it is not actually prime. This makes tests based on
+     Fermat's Little Theorem less effective than 
+     strong probable prime tests such as the Baillie-PSW primality test and
+     the Miller–Rabin primality test.
      
-     mr functions given in sympy/sympy/ntheory/primetest.py will go wrong for each and every carmichael number
+     mr function given in sympy/sympy/ntheory/primetest.py will go wrong
+     for each and every carmichael number
      
     References
     ==========
