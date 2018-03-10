@@ -440,4 +440,3 @@ def test_issue_14450():
     # some values from Wolfram Alpha for comparison
     assert abs(uppergamma(S(3)/8, 2).evalf() - 0.07105675881) < 1e-9
     assert abs(lowergamma(S(3)/8, 2).evalf() - 2.2993794256) < 1e-9
-
