@@ -1086,6 +1086,7 @@ class carmichael(Function):
     Set([128, 512, 8192, 2821, 2048, 1729, 6601, 8911, 1105, 561, 2465])
 
     """
+    knownPrimes = Set()
     # returns true if n is a perfect square
     def is_perfect_square(n):
         root = int(sqrt(n))
