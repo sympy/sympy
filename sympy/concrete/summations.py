@@ -21,7 +21,7 @@ from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-
+from sympy.calculus.util import AccumulationBounds
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -518,8 +518,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 except NotImplementedError:
                     pass
 
-        ### -------------- Dirichlet tests -------------- ###
+        ### ----- Dirichlet and bounded times convergent tests ----- ###
         if order.expr.is_Mul:
+            ### -------------- Dirichlet tests -------------- ###
             a_n, b_n = order.expr.args[0], order.expr.args[1]
             m = Dummy('m', integer=True)
 
@@ -540,6 +541,26 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 dirich2 = _dirichlet_test(a_n)
                 if dirich2 is not None:
                     return dirich2
+
+            ### -------- bounded times convergent test ---------###
+            def _bounded_convergent_test(g1_n, g2_n):
+                try:
+                    lim_val = limit(g1_n, sym, upper_limit)
+                    if lim_val.is_finite or (isinstance(lim_val, AccumulationBounds)
+                                             and (lim_val.max - lim_val.min).is_finite):
+                        if Sum(g2_n, (sym, lower_limit, upper_limit)).is_absolutely_convergent():
+                            return S.true
+                except NotImplementedError:
+                    pass
+
+            test1 = _bounded_convergent_test(a_n, b_n)
+            if test1 is not None:
+                return test1
+
+            test2 = _bounded_convergent_test(b_n, a_n)
+            if test2 is not None:
+                return test2
+
 
         _sym = self.limits[0][0]
         sequence_term = sequence_term.xreplace({sym: _sym})
