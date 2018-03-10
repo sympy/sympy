@@ -463,7 +463,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # (1/n) comparison
         try:
             lim_comp = limit(sym*sequence_term, sym, S.Infinity)
-            if lim_comp is S.Infinity:
+            if lim_comp > S.Zero:
                 return S.false
         except NotImplementedError:
             pass
