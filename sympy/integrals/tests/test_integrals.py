@@ -1321,8 +1321,5 @@ def test_issue_14375():
 
 def test_issue_14437():
     f = Function('f')(x, y, z)
-    f = exp(x + y + z)
-    Ix = integrate(f, (x, 0, 1))
-    Ixy = integrate(Ix, (y, 0, 2))
-    Ixyz = integrate(Ixy, (z, 0, 3))
-    assert Ixyz == -exp(3) - 1 + E + exp(2) + (-exp(2) - E + 1 + exp(3))*exp(3)
+    assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
+                Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
