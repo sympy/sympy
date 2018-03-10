@@ -206,13 +206,13 @@ class Limit(Expr):
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
         try:
-            r = gruntz(e, z, z0, dir)
-            if r is S.NaN:
-                raise PoleError()
-        except (PoleError, ValueError):
             r = heuristics(e, z, z0, dir)
             if r is None:
                 return self
+        except (PoleError, ValueError):
+            r = gruntz(e, z, z0, dir)
+            if r is S.NaN:
+                raise PoleError()
         except NotImplementedError:
             # Trying finding limits of sequences
             if hints.get('sequence', True) and z0 is S.Infinity:
