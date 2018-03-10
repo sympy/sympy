@@ -241,8 +241,19 @@ class AssumptionKeys(object):
         transcendental numbers. A transcendental number is a real
         or complex number that is not algebraic.
 
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, pi, exp
+        >>> ask(Q.transcendental(exp(1)))
+        >>>
+        True
+        >>> ask(Q.transcendental(pi)))
+        True
+        >>> ask(Q.transcendental(2)))
+        Falses
+
         """
-        # TODO: Add examples
         return Predicate('transcendental')
 
     @predicate_memo
@@ -372,8 +383,19 @@ class AssumptionKeys(object):
         ``Q.infinite(x)`` is true iff the absolute value of ``x`` is
         infinity.
 
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, oo, I
+        >>> ask(Q.infinite(oo+I*oo))
+        >>>
+        True
+        >>> ask(Q.infinite(oo))
+        True
+        >>> ask(Q.infinite(I))
+        False
+
         """
-        # TODO: Add examples
         return Predicate('infinite')
 
     @predicate_memo
@@ -706,8 +728,20 @@ class AssumptionKeys(object):
         ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
         object with respect to multiplication operation.
 
+        Examples
+        ========
+
+        >>> from sympy import ask, Q, MatrixSymbol, I
+        >>> X=MatrixSymbol('X', 2, 2)
+        >>> ask(Q.commutative(X))
+        >>>
+        True
+        >>> ask(Q.commutative(2))
+        True
+        >>> ask(Q.commutative(I))
+        True
+
         """
-        # TODO: Add examples
         return Predicate('commutative')
 
     @predicate_memo
