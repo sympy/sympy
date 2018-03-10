@@ -8,7 +8,7 @@ from __future__ import print_function, division
 from functools import wraps
 import inspect
 import textwrap
-from sympy import Derivative
+from sympy.core.function import Derivative
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, integer_types)
 from sympy.utilities.decorator import doctest_depends_on
@@ -362,26 +362,26 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
-    # if printer is None:
-    #     if _module_present('mpmath', namespaces):
-    #         from sympy.printing.pycode import MpmathPrinter as Printer
-    #     elif _module_present('numpy', namespaces):
-    #         from sympy.printing.pycode import NumPyPrinter as Printer
-    #     elif _module_present('numexpr', namespaces):
-    #         from sympy.printing.lambdarepr import NumExprPrinter as Printer
-    #     elif _module_present('tensorflow', namespaces):
-    #         from sympy.printing.lambdarepr import TensorflowPrinter as Printer
-    #     elif _module_present('sympy', namespaces):
-    #         from sympy.printing.pycode import SymPyPrinter as Printer
-    #     else:
-    #         from sympy.printing.pycode import PythonCodePrinter as Printer
-    #     user_functions = {}
-    #     for m in namespaces[::-1]:
-    #         if isinstance(m, dict):
-    #             for k in m:
-    #                 user_functions[k] = k
-    #     printer = Printer({'fully_qualified_modules': False, 'inline': True,
-    #                        'user_functions': user_functions})
+    if printer is None:
+        if _module_present('mpmath', namespaces):
+            from sympy.printing.pycode import MpmathPrinter as Printer
+        elif _module_present('numpy', namespaces):
+            from sympy.printing.pycode import NumPyPrinter as Printer
+        elif _module_present('numexpr', namespaces):
+            from sympy.printing.lambdarepr import NumExprPrinter as Printer
+        elif _module_present('tensorflow', namespaces):
+            from sympy.printing.lambdarepr import TensorflowPrinter as Printer
+        elif _module_present('sympy', namespaces):
+            from sympy.printing.pycode import SymPyPrinter as Printer
+        else:
+            from sympy.printing.pycode import PythonCodePrinter as Printer
+        user_functions = {}
+        for m in namespaces[::-1]:
+            if isinstance(m, dict):
+                for k in m:
+                    user_functions[k] = k
+        printer = Printer({'fully_qualified_modules': False, 'inline': True,
+                           'user_functions': user_functions})
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
