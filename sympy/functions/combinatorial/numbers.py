@@ -10,6 +10,7 @@ the separate 'factorials' module.
 from __future__ import print_function, division
 from sets import Set
 from math import sqrt
+from sympy.ntheory import isprime
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.cache import cacheit
@@ -1107,12 +1108,9 @@ class carmichael(Function):
     def divides(p, n):
         return n%p == 0
 
-    # returns true if n is prime
+    # returns true if n is prime  
     def is_prime(n):
-        if(n%2 == 0):
-            return False
-        if(n<2):
-            return False
+        return isprime(n)
 
         global knownPrimes
         if(n in knownPrimes):
