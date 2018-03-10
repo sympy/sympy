@@ -345,13 +345,13 @@ class Expr(Basic, EvalfMixin):
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):
-        r = self.round(2)
-        if self in(S.Nan, S.NegativeInfinity, S.Infinity, S.ComplexInfinity):
+        r = int(self)
+        if self in (S.Nan, S.NegativeInfinity, S.Infinity, S.ComplexInfinity):
             raise TypeError("can't truncate", self)
         if not r.is_Number:
             raise TypeError("can't truncate symbols and expressions")
         else:
-            return int(r)
+            return Integer(r)
 
     @staticmethod
     def _from_mpmath(x, prec):
