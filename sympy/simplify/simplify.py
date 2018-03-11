@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -376,16 +376,14 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, Expr) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a) for a in e.args])
+        return e.func(*[signsimp(a, evaluate) for a in e.args])
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
-    # type: (object, object, object, object) -> object
-    """
-    Simplifies the given expression.
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    """Simplifies the given expression.
 
     Simplification is not a well defined term and the exact strategies
     this function tries can change in the future versions of SymPy. If
@@ -505,11 +503,17 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     simplification strategies and then compares them using the measure
     function, we get a completely different result that is still different
     from the input expression by doing this.
-    
+
     If rational=True, Floats will be recast as Rationals before simplification.
     If rational=None, Floats will be recast as Rationals but the result will
     be recast as Floats. If rational=False(default) then nothing will be done
     to the Floats.
+
+    If inverse=True, it will be assumed that a composition of inverse
+    functions, such as sin and asin, can be cancelled in any order.
+    For example, ``asin(sin(x))`` will yield ``x`` without checking whether
+    x belongs to the set where this relation is true. The default is
+    False.
     """
     expr = sympify(expr)
 
@@ -527,13 +531,13 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
 
+    if inverse and expr.has(Function):
+        expr = inversecombine(expr)
+        if not expr.args:  # simplified to atomic
+            return expr
+
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
-        if isinstance(expr, Function) and hasattr(expr, "inverse"):
-            if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
-               isinstance(expr.args[0], expr.inverse(argindex=1)):
-                return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure, fu=fu)
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
                          for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -593,11 +597,17 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     if expr.has(Product):
         expr = product_simplify(expr)
 
+    from sympy.physics.units import Quantity
+    from sympy.physics.units.util import quantity_simplify
+
+    if expr.has(Quantity):
+        expr = quantity_simplify(expr)
+
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
     if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
-        short = exptrigsimp(short, simplify=False)
+        short = exptrigsimp(short)
 
     # get rid of hollow 2-arg Mul factorization
     hollow_mul = Transform(
@@ -932,7 +942,7 @@ def logcombine(expr, force=False):
         logs = []
         log1 = defaultdict(list)
         for a in Add.make_args(rv):
-            if a.func is log and goodlog(a):
+            if isinstance(a, log) and goodlog(a):
                 log1[()].append(([], a))
             elif not a.is_Mul:
                 other.append(a)
@@ -944,7 +954,7 @@ def logcombine(expr, force=False):
                     if ai.is_Rational and ai < 0:
                         ot.append(S.NegativeOne)
                         co.append(-ai)
-                    elif ai.func is log and goodlog(ai):
+                    elif isinstance(ai, log) and goodlog(ai):
                         lo.append(ai)
                     elif gooda(ai):
                         co.append(ai)
@@ -975,7 +985,7 @@ def logcombine(expr, force=False):
                 li = l.pop(0)
                 e = log(li.args[0]**e)
             c, l = Mul(*o), e
-            if l.func is log:  # it should be, but check to be sure
+            if isinstance(l, log):  # it should be, but check to be sure
                 log1[(c,)].append(([], l))
             else:
                 other.append(c*l)
@@ -1007,14 +1017,43 @@ def logcombine(expr, force=False):
     return bottom_up(expr, f)
 
 
+def inversecombine(expr):
+    """Simplify the composition of a function and its inverse.
+
+    No attention is paid to whether the inverse is a left inverse or a
+    right inverse; thus, the result will in general not be equivalent
+    to the original expression.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import inversecombine
+    >>> from sympy import asin, sin, log, exp
+    >>> from sympy.abc import x
+    >>> inversecombine(asin(sin(x)))
+    x
+    >>> inversecombine(2*log(exp(3*x)))
+    6*x
+    """
+
+    def f(rv):
+        if rv.is_Function and hasattr(rv, "inverse"):
+            if (len(rv.args) == 1 and len(rv.args[0].args) == 1 and
+                isinstance(rv.args[0], rv.inverse(argindex=1))):
+                    rv = rv.args[0].args[0]
+        return rv
+
+    return bottom_up(expr, f)
+
+
 def walk(e, *target):
     """iterate through the args that are the given types (target) and
     return a list of the args that were traversed; arguments
     that are not of the specified types are not traversed.
-    
+
     Examples
     ========
-    
+
     >>> from sympy.simplify.simplify import walk
     >>> from sympy import Min, Max
     >>> from sympy.abc import x, y, z
@@ -1022,7 +1061,7 @@ def walk(e, *target):
     [Min(x, Max(y, Min(1, z)))]
     >>> list(walk(Min(x, Max(y, Min(1, z))), Min, Max))
     [Min(x, Max(y, Min(1, z))), Max(y, Min(1, z)), Min(1, z)]
-    
+
     See Also
     ========
     bottom_up
@@ -1127,7 +1166,7 @@ def besselsimp(expr):
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) == S(1)/2:
-                return exptrigsimp(trigsimp(unpolarify(
+                return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))
             elif nu.is_Integer and nu > 1:
@@ -1206,7 +1245,7 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
+def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     rational_conversion='base10'):
     """
     Find a simple representation for a number or, if there are free symbols or
@@ -1228,7 +1267,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
     With full=True, a more extensive search is performed
     (this is useful to find simpler numbers when the tolerance
     is set low).
-    
+
     When converting to rational, if rational_conversion='base10' (the default), then
     convert floats to rationals using their base-10 (string) representation.
     When rational_conversion='exact' it uses the exact, base-2 representation.
@@ -1245,7 +1284,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)
     22/7
-    
+
     >>> nsimplify(0.333333333333333, rational=True, rational_conversion='exact')
     6004799503160655/18014398509481984
     >>> nsimplify(0.333333333333333, rational=True)
@@ -1267,7 +1306,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
-        return _real_to_rational(expr, tolerance)
+        return _real_to_rational(expr, tolerance, rational_conversion)
 
     # SymPy's default tolerance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if None
@@ -1330,7 +1369,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
             im = nsimplify_real(im)
     except ValueError:
         if rational is None:
-            return _real_to_rational(expr)
+            return _real_to_rational(expr, rational_conversion=rational_conversion)
         return expr
 
     rv = re + im*S.ImaginaryUnit
@@ -1338,28 +1377,28 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
     # return the value, else return the Rational representation
     if rv != expr or rational is False:
         return rv
-    return _real_to_rational(expr)
+    return _real_to_rational(expr, rational_conversion=rational_conversion)
 
 
 def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     """
     Replace all reals in expr with rationals.
 
-    >>> from sympy import nsimplify
+    >>> from sympy import Rational
     >>> from sympy.simplify.simplify import _real_to_rational
     >>> from sympy.abc import x
 
-    >>> nsimplify(.76 + .1*x**.5, rational=True)
+    >>> _real_to_rational(.76 + .1*x**.5)
     sqrt(x)/10 + 19/25
-    
+
     If rational_conversion='base10', this uses the base-10 string. If
     rational_conversion='exact', the exact, base-2 representation is used.
-    
+
     >>> _real_to_rational(0.333333333333333, rational_conversion='exact')
     6004799503160655/18014398509481984
     >>> _real_to_rational(0.333333333333333)
     1/3
-    
+
     """
     expr = _sympify(expr)
     inf = Float('inf')
@@ -1368,13 +1407,13 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     reduce_num = None
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
-    for float in p.atoms(Float):
-        key = float
+    for fl in p.atoms(Float):
+        key = fl
         if reduce_num is not None:
-            r = Rational(float).limit_denominator(reduce_num)
+            r = Rational(fl).limit_denominator(reduce_num)
         elif (tolerance is not None and tolerance >= 1 and
-                float.is_Integer is False):
-            r = Rational(tolerance*round(float/tolerance)
+                fl.is_Integer is False):
+            r = Rational(tolerance*round(fl/tolerance)
                 ).limit_denominator(int(tolerance))
         else:
             if rational_conversion == 'exact':
@@ -1384,20 +1423,20 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
             elif rational_conversion != 'base10':
                 raise ValueError("rational_conversion must be 'base10' or 'exact'")
 
-            r = nsimplify(float, rational=False)
+            r = nsimplify(fl, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
-            if float and not r:
-                r = Rational(float)
+            if fl and not r:
+                r = Rational(fl)
             elif not r.is_Rational:
-                if float == inf or float == -inf:
+                if fl == inf or fl == -inf:
                     r = S.ComplexInfinity
-                elif float < 0:
-                    float = -float
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = -Rational(str(float/d))*d
-                elif float > 0:
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = Rational(str(float/d))*d
+                elif fl < 0:
+                    fl = -fl
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = -Rational(str(fl/d))*d
+                elif fl > 0:
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = Rational(str(fl/d))*d
                 else:
                     r = Integer(0)
         reps[key] = r
@@ -1413,7 +1452,7 @@ def clear_coefficients(expr, rhs=S.Zero):
 
     Examples
     ========
-
+    
     >>> from sympy.simplify.simplify import clear_coefficients
     >>> from sympy.abc import x, y
     >>> from sympy import Dummy
