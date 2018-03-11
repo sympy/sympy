@@ -335,7 +335,7 @@ def gray_to_bin(bin_list):
     '111'
 
     example taken from issue #117 from:- https://github.com/sympy/sympy-live/issues/117
-    >>>gtay_to_bin('0001000010100')
+    >>>gray_to_bin('0001000010100')
     '0001111100111'
     >>>gray_to_bin('0001000010101')
     '0001111100110'
