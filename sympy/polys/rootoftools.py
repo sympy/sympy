@@ -574,31 +574,7 @@ class ComplexRootOf(RootOf):
                 func = lambdify(g, self.expr)
 
             interval = self._get_interval()
-            root = None
-            if not self.is_real:
-                ay = interval.ay
-                by = interval.by
-                # For complex intervals, we need to keep refining until the
-                # imaginary interval is disjunct with other roots, that is,
-                # until both ends get refined. But in case one of the
-                # 4 corners of the bounding rectangle is exact, this will
-                # fail so we check for that, first
-                for x0 in [
-                        (interval.bx, interval.by),
-                        (interval.ax, interval.ay),
-                        (interval.ax, interval.by),
-                        (interval.bx, interval.ay),
-                        ]:
-                    if func(x0[0] + I*x0[1]).expand() == 0:
-                        break
-                else:
-                    x0 = None
-                    while interval.ay == ay or interval.by == by:
-                        interval = interval.refine()
-                if x0 is not None:
-                    ax, ay = map(mpf, map(str, x0))
-                    root = mpc(ax, ay)
-            while root is None:
+            while True:
                 if self.is_real:
                     a = mpf(str(interval.a))
                     b = mpf(str(interval.b))
@@ -639,7 +615,6 @@ class ComplexRootOf(RootOf):
                         break
                 except (UnboundLocalError, ValueError):
                     pass
-                root = None
                 interval = interval.refine()
 
         return (Float._new(root.real._mpf_, prec)
