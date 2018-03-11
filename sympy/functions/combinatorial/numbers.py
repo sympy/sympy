@@ -1099,7 +1099,7 @@ class carmichael(Function):
     # returns true if n is a perfect square
     def is_perfect_square(apositiveint):
         x = apositiveint // 2
-        seen = set([x])
+        seen = Set([x])
         while x * x != apositiveint:
             x = (x + (apositiveint // x)) // 2
             if x in seen: return False
