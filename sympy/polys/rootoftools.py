@@ -41,6 +41,10 @@ __all__ = ['CRootOf']
 
 
 
+_reals_cache = {}
+_complexes_cache = {}
+
+
 def _pure_factors(poly):
     _, factors = poly.factor_list()
     return [(PurePoly(f, expand=False), m) for f, m in factors]
@@ -48,42 +52,27 @@ def _pure_factors(poly):
 
 def _imag_count(f):
     """Return the number of imaginary roots for irreducible
-    monovariate polynomial ``f``.
+    univariate polynomial ``f``.
     """
-    L = f.length()
-    if L < 2:
-        return 0
-    if L > 3:
-        return 0
-    pow_coeff = [(m[0][0], m[1]) for m in f.terms() if m[1]]
-    e = pow_coeff[0][0]
-    if e % 2:
-        return 0
-    eby2_odd = bool((e//2) % 2)
-    if L == 2:  # a*x**e + b
-        s = f.LC()*f.TC()
-        if s > 0:
-            if eby2_odd:  # ~~ x**(2*odd) + 1
-                return 2 # imaginary roots
-        elif not eby2_odd: # ~~ x**(2*even) - 1
-            return 2
-        return 0
-    # L = 3
-    if e == 2:
-        return 0
-    if e != 2*pow_coeff[1][0]:
-        return 0
-    a, b, c = [pc[1] for pc in pow_coeff]
-    r12 = roots_quadratic(Poly([a, b, c], f.gens[0]))
-    neg = sum([1 for i in r12 if i.is_real and i < 0])
-    pos = sum([1 for i in r12 if i.is_real and i > 0])
-    if eby2_odd:
-        return 2*pos
-    else:
-        return 2*neg
-
-_reals_cache = {}
-_complexes_cache = {}
+    x = f.gens[0]
+    oo = S.Infinity
+    expr = f.as_expr()
+    even_odd = expr.subs(x, I*x)
+    if not even_odd.has(I):
+        return int(Poly(even_odd, x, expand=False).count_roots(-oo, oo))
+    even = even_odd.xreplace({I: 0})
+    odd = even_odd - even
+    ofactors, efactors = [Poly(i, x, expand=False).factor_list()[1]
+        for i in (odd, even)]
+    count = 0
+    for fe, me in efactors:
+        for f, mo in ofactors:
+            if f == fe:
+                if len(ofactors) ==1:
+                    print(f)
+                    pass
+                count += min(mo, me)*f.count_roots(-oo, oo)
+    return int(count)
 
 
 @public
@@ -321,8 +310,7 @@ class ComplexRootOf(RootOf):
         return reals
 
     @classmethod
-    def _identify_imaginary(cls, complexes):
-        # separate according to the function
+    def _refine_imaginary(cls, complexes):
         sifted = sift(complexes, lambda c: c[1])
         complexes = []
         for f in ordered(sifted):
@@ -338,16 +326,13 @@ class ComplexRootOf(RootOf):
                 potential_imag = list(range(len(sifted[f])))
                 while True:
                     assert len(potential_imag) > 1
-                    done = []
-                    for i in potential_imag:
+                    for i in list(potential_imag):
                         u, f, k = sifted[f][i]
                         if u.ax*u.bx > 0:
-                            done.append(i)
+                            potential_imag.remove(i)
                         else:
                             u = u._inner_refine()
                             sifted[f][i] = u, f, k
-                    for i in done:
-                        potential_imag.remove(i)
                     if len(potential_imag) == nimag:
                         break
                 complexes.extend(sifted[f])
@@ -367,18 +352,13 @@ class ComplexRootOf(RootOf):
                 complexes[i + j + 1] = (v, g, m)
 
             complexes[i] = (u, f, k)
+        complexes = cls._refine_imaginary(complexes)
         return complexes
 
     @classmethod
     def _complexes_sorted(cls, complexes):
         """Make complex isolating intervals disjoint and sort roots. """
-        if not complexes:
-            return []
-
-        # imaginary roots can cause a problem in terms of sorting since
-        # their x-intervals will never refine as distinct from others
-        # so we handle them separately
-        complexes = cls._identify_imaginary(complexes)
+        complexes = cls._refine_complexes(complexes)
 
         # update cache
         cache = {}
@@ -539,8 +519,6 @@ class ComplexRootOf(RootOf):
         if roots is not None:
             return roots[index]
         else:
-            if not isinstance(poly, PurePoly):
-                poly = PurePoly(poly, expand=False)
             return cls._new(poly, index)
 
     @classmethod
@@ -728,32 +706,22 @@ class ComplexRootOf(RootOf):
             return S.false
         o = other.is_real, other.is_imaginary
         s = self.is_real, self.is_imaginary
-        if o != s and None not in o and None not in s:
+        assert None not in s  # this is part of initial refinement
+        if o != s and None not in o:
             return S.false
-        i = self._get_interval()
-        was = i.a, i.b
-        need = [True]*2
-        # make sure it would be distinct from others
-        while any(need):
-            i = i.refine()
-            a, b = i.a, i.b
-            if need[0] and a != was[0]:
-                need[0] = False
-            if need[1] and b != was[1]:
-                need[1] = False
         re, im = other.as_real_imag()
-        if not im:
-            if self.is_real:
-                a, b = [Rational(str(i)) for i in (a, b)]
-                return sympify(a < other and other < b)
-            return S.false
         if self.is_real:
-            return S.false
+            if im:
+                return S.false
+            i = self._get_interval()
+            a, b = [Rational(str(_)) for _ in (i.a, i.b)]
+            return sympify(a <= other and other <= b)
+        i = self._get_interval()
         z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
             i.ax, i.bx, i.ay, i.by)]
         return sympify((
-            r1 < re and re < r2) and (
-            i1 < im and im < i2))
+            r1 <= re and re <= r2) and (
+            i1 <= im and im <= i2))
 
 CRootOf = ComplexRootOf
 

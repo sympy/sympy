@@ -131,8 +131,9 @@ def test_CRootOf___eq__():
 
 def test_CRootOf___eval_Eq__():
     f = Function('f')
-    r = rootof(x**3 + x + 3, 2)
-    r1 = rootof(x**3 + x + 3, 1)
+    eq = x**3 + x + 3
+    r = rootof(eq, 2)
+    r1 = rootof(eq, 1)
     assert Eq(r, r1) is S.false
     assert Eq(r, r) is S.true
     assert Eq(r, x) is S.false
@@ -141,16 +142,17 @@ def test_CRootOf___eval_Eq__():
     assert Eq(r, I) is S.false
     assert Eq(r, f(0)) is S.false
     assert Eq(r, f(0)) is S.false
-    sol = solve(r.expr)
+    sol = solve(eq)
     for s in sol:
         if s.is_real:
             assert Eq(r, s) is S.false
-    r = rootof(r.expr, 0)
+    r = rootof(eq, 0)
     for s in sol:
         if s.is_real:
             assert Eq(r, s) is S.true
-    eq = (x**3 + x + 1)
-    assert [Eq(rootof(eq,i), j) for i in range(3) for j in solve(eq)] == [
+    eq = x**3 + x + 1
+    sol = solve(eq)
+    assert [Eq(rootof(eq,i), j) for i in range(3) for j in sol] == [
         False, False, True, False, True, False, True, False, False]
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
@@ -447,7 +449,10 @@ def test_issue_8316():
 
 
 def test__imag_count():
-    from sympy.polys.rootoftools import _imag_count as imag_count
+    from sympy.polys.rootoftools import _imag_count
+    def imag_count(p):
+        return sum([_imag_count(f)*m for f, m in p.factor_list()[1]])
+    assert imag_count(Poly(x**6 + 10*x**2 + 1)) == 2
     assert imag_count(Poly(x**2)) == 0
     assert imag_count(Poly([1]*3 + [-1], x)) == 0
     assert imag_count(Poly(x**3 + 1)) == 0
@@ -463,6 +468,6 @@ def test__imag_count():
     assert imag_count(q(-1, -2, 2)) == 4
     assert imag_count(q(-1, 2, 2)) == 2
     assert imag_count(q(1, 2, 2)) == 0
-    assert imag_count(q(1, 2, 3)) == 4
-    assert imag_count(q(-1, 2, 3)) == 2
-    assert imag_count(q(-1, -2, 3)) == 0
+    assert imag_count(q(1, 2, 4)) == 4
+    assert imag_count(q(-1, 2, 4)) == 2
+    assert imag_count(q(-1, -2, 4)) == 0
