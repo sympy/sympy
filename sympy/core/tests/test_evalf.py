@@ -503,8 +503,8 @@ def test_AssocOp_Function():
     sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
     I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
-    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''')
-     # if that is changed so a non-comparable number remains as
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
+    # if that is changed so a non-comparable number remains as
     # an arg, then the Min/Max instantiation needs to be changed
     # to watch out for non-comparable args when making simplifications
     # and the following test should be added instead (with e being
