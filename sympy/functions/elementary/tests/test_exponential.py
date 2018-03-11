@@ -2,7 +2,7 @@ from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
-    AccumBounds)
+    AccumBounds, MatrixSymbol)
 from sympy.abc import x, y, z
 
 
@@ -81,6 +81,7 @@ def test_exp_infinity():
     assert refine(exp(I*oo)) == nan
     assert refine(exp(-I*oo)) == nan
     assert exp(y*I*oo) != nan
+    assert exp(zoo) == nan
 
 
 def test_exp_subs():
@@ -107,12 +108,21 @@ def test_exp_conjugate():
 
 
 def test_exp_rewrite():
+    from sympy.concrete.summations import Sum
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
     assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
+    assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
+    assert exp(pi*I/3).rewrite(sqrt) == 1/2 + sqrt(3)*I/2
+
+    n = Symbol('n', integer=True)
+
+    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 4/5 + 2*I/5
+    assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
+    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(3/4 - sqrt(3)*I/4)
 
 
 def test_exp_leading_term():
@@ -125,6 +135,11 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
+
+
+def test_exp_MatrixSymbol():
+    A = MatrixSymbol("A", 2, 2)
+    assert exp(A).has(exp)
 
 
 def test_log_values():
@@ -395,7 +410,6 @@ def test_issue_5673():
 
 def test_exp_expand_NC():
     A, B, C = symbols('A,B,C', commutative=False)
-    x, y, z = symbols('x,y,z')
 
     assert exp(A + B).expand() == exp(A + B)
     assert exp(A + B + C).expand() == exp(A + B + C)
@@ -418,9 +432,10 @@ def test_as_numer_denom():
 
 def test_polar():
     x, y = symbols('x y', polar=True)
-    z = Symbol('z')
 
     assert abs(exp_polar(I*4)) == 1
+    assert abs(exp_polar(0)) == 1
+    assert abs(exp_polar(2 + 3*I)) == exp(2)
     assert exp_polar(I*10).n() == exp_polar(I*10)
 
     assert log(exp_polar(z)) == z
