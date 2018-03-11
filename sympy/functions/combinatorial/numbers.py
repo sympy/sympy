@@ -9,7 +9,6 @@ the separate 'factorials' module.
 
 from __future__ import print_function, division
 from sets import Set
-from math import sqrt
 from sympy.ntheory import isprime
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
