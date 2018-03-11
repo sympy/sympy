@@ -1065,7 +1065,7 @@ class carmichael(Function):
      Output
     ========
      >>> 
-    ======================== RESTART: C:/Python27/sympycarmichael.py ========================
+  ================ RESTART: C:/Python27/sympycarmichael.py ===============
     First 10 Carmichael Numbers:
     1) 561
     2) 1105
@@ -1098,11 +1098,14 @@ class carmichael(Function):
     """
     knownPrimes = Set()
     # returns true if n is a perfect square
-    def is_perfect_square(n):
-        root = int(sqrt(n))
-        if(root**2 == n):
-            return True
-        return False
+    def is_perfect_square(apositiveint):
+        x = apositiveint // 2
+        seen = set([x])
+        while x * x != apositiveint:
+            x = (x + (apositiveint // x)) // 2
+            if x in seen: return False
+            seen.add(x)
+        return True
 
     # returns true if p divides n
     def divides(p, n):
@@ -1113,7 +1116,7 @@ class carmichael(Function):
         return isprime(n)
 
         global knownPrimes
-        if(n in knownPrimes):
+        if n in knownPrimes:
             return True
         else:
             for i in range(3, n/2, 2):
@@ -1124,37 +1127,39 @@ class carmichael(Function):
         return True
     # returns true if n is a Carmichael number
     def is_carmichael(n):
-        if(n==1):
+        if n==1:
             return False
-        if(is_prime(n)):
+        if is_prime(n):
             return False
 
         divisors = Set([1, n])
         # get divisors
         for i in xrange(3, n/2+1, 2):
-            if(n%i == 0):
+            if n%i == 0:
                 divisors.add(i)
 
         for i in divisors:
-            if(is_perfect_square(i) and i != 1):
+            if is_perfect_square(i) and i != 1:
                 return False
-            if(is_prime(i)):
-                if(not divides(i-1, n-1)):
+            if is_prime(i):
+                if not divides(i-1, n-1):
                     return False
 
         return True
 
-    # returns a set object of Carmichaels in [x, y], where x and y are non-negative integers and x <= y
+    # returns a set object of Carmichaels in [x, y],
+    # where x and y are non-negative integers and x <= y
     def find_carmichaels_in_range(x, y):
         return Set([i for i in xrange(x, y) if is_carmichael(i)])
 
-    # returns a set of the first n Carmichael numbers beginning its search from 0
-    #As the numbers are added to that set they are printed out
+    # returns a set of the first n Carmichael numbers
+    # beginning its search from 0
+    # As the numbers are added to that set they are printed out
     def find_first_n_carmichaels(n):
         i = 1
         carmichaels = Set()
         while len(carmichaels) < n:
-            if(is_carmichael(i)):
+            if is_carmichael(i):
                 carmichaels.add(i)
                 print str(len(carmichaels)) + ") " + str(i)
             i += 2
