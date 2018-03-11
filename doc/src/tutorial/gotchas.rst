@@ -183,7 +183,7 @@ not the same symbolically. One is the power of an addition of two terms, and
 the other is the addition of three terms.
 
 It turns out that when using SymPy as a library, having ``==`` test for exact
-symbolic equality is far more useful than having it represent symbolic
+structural equality is far more useful than having it represent symbolic
 equality, or having it test for mathematical equality.  However, as a new
 user, you will probably care more about the latter two.  We have already seen
 an alternative to representing equalities symbolically, ``Eq``.  To test if

@@ -114,6 +114,7 @@ from sympy.polys.euclidtools import (
 
 from sympy.polys.sqfreetools import (
     dup_gff_list,
+    dmp_norm,
     dmp_sqf_p,
     dmp_sqf_norm,
     dmp_sqf_part,
@@ -750,6 +751,11 @@ class DMP(PicklableWithSlots, CantSympify):
         else:
             raise ValueError('univariate polynomial expected')
 
+    def norm(f):
+        """Computes ``Norm(f)``."""
+        r = dmp_norm(f.rep, f.lev, f.dom)
+        return f.per(r, dom=f.dom.dom)
+
     def sqf_norm(f):
         """Computes square-free norm of ``f``. """
         s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
@@ -1000,11 +1006,11 @@ class DMP(PicklableWithSlots, CantSympify):
         return False
 
     def __ne__(f, g):
-        return not f.__eq__(g)
+        return not f == g
 
     def eq(f, g, strict=False):
         if not strict:
-            return f.__eq__(g)
+            return f == g
         else:
             return f._strict_eq(g)
 
@@ -1018,19 +1024,19 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__ge__(G)
+        return F >= G
 
     def __nonzero__(f):
         return not dmp_zero_p(f.rep, f.lev)
@@ -1465,19 +1471,19 @@ class DMF(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__ge__(G)
+        return F >= G
 
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
@@ -1730,19 +1736,19 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__ge__(G)
+        return F >= G
 
     def __nonzero__(f):
         return bool(f.rep)

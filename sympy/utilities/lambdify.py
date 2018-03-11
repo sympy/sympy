@@ -5,11 +5,12 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+from functools import wraps
 import inspect
 import textwrap
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins)
+    NotIterable, string_types, range, builtins, integer_types)
 from sympy.utilities.decorator import doctest_depends_on
 
 # These are the namespaces the lambda functions will use.
@@ -55,7 +56,7 @@ MPMATH_TRANSLATIONS = {
     #"uppergamma":"upper_gamma",
     "LambertW": "lambertw",
     "MutableDenseMatrix": "matrix",
-    "ImmutableMatrix": "matrix",
+    "ImmutableDenseMatrix": "matrix",
     "conjugate": "conj",
     "dirichlet_eta": "altzeta",
     "Ei": "ei",
@@ -65,29 +66,7 @@ MPMATH_TRANSLATIONS = {
     "Ci": "ci"
 }
 
-NUMPY_TRANSLATIONS = {
-    "acos": "arccos",
-    "acosh": "arccosh",
-    "arg": "angle",
-    "asin": "arcsin",
-    "asinh": "arcsinh",
-    "atan": "arctan",
-    "atan2": "arctan2",
-    "atanh": "arctanh",
-    "ceiling": "ceil",
-    "E": "e",
-    "im": "imag",
-    "ln": "log",
-    "Mod": "mod",
-    "oo": "inf",
-    "re": "real",
-    "SparseMatrix": "array",
-    "ImmutableSparseMatrix": "array",
-    "Matrix": "array",
-    "MutableDenseMatrix": "array",
-    "ImmutableMatrix": "array",
-    "ImmutableDenseMatrix": "array",
-}
+NUMPY_TRANSLATIONS = {}
 
 TENSORFLOW_TRANSLATIONS = {
     "Abs": "abs",
@@ -105,7 +84,7 @@ NUMEXPR_TRANSLATIONS = {}
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
-    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -214,13 +193,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
     by default. As of release 1.0 ``numpy.array`` is the default.
-    To get the old default behavior you must pass in ``[{'ImmutableMatrix':
+    To get the old default behavior you must pass in ``[{'ImmutableDenseMatrix':
     numpy.matrix}, 'numpy']`` to the ``modules`` kwarg.
 
     >>> from sympy import lambdify, Matrix
     >>> from sympy.abc import x, y
     >>> import numpy
-    >>> array2mat = [{'ImmutableMatrix': numpy.matrix}, 'numpy']
+    >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
     >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
     >>> f(1, 2)
     matrix([[1],
@@ -386,21 +365,26 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
-    if _module_present('mpmath',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import MpmathPrinter as printer
-
-    if _module_present('numpy',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import NumPyPrinter as printer
-
-    if _module_present('numexpr',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import NumExprPrinter as printer
-
-    if _module_present('tensorflow',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import TensorflowPrinter as printer
+    if printer is None:
+        if _module_present('mpmath', namespaces):
+            from sympy.printing.pycode import MpmathPrinter as Printer
+        elif _module_present('numpy', namespaces):
+            from sympy.printing.pycode import NumPyPrinter as Printer
+        elif _module_present('numexpr', namespaces):
+            from sympy.printing.lambdarepr import NumExprPrinter as Printer
+        elif _module_present('tensorflow', namespaces):
+            from sympy.printing.lambdarepr import TensorflowPrinter as Printer
+        elif _module_present('sympy', namespaces):
+            from sympy.printing.pycode import SymPyPrinter as Printer
+        else:
+            from sympy.printing.pycode import PythonCodePrinter as Printer
+        user_functions = {}
+        for m in namespaces[::-1]:
+            if isinstance(m, dict):
+                for k in m:
+                    user_functions[k] = k
+        printer = Printer({'fully_qualified_modules': False, 'inline': True,
+                           'user_functions': user_functions})
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
@@ -424,6 +408,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
+    imp_mod_lines = []
+    for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
+        for k in keys:
+            if k not in namespace:
+                imp_mod_lines.append("from %s import %s" % (mod, k))
+    for ln in imp_mod_lines:
+        exec_(ln, {}, namespace)
 
     if flat in lstr:
         namespace.update({flat: flatten})
@@ -436,8 +427,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # This is a fix for gh-11306.
     if module_provided and _module_present('numpy',namespaces):
         def array_wrap(funcarg):
+            @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
+                asarray = namespace['asarray']
+                newargs = [asarray(i) if isinstance(i, integer_types + (float,
+                    complex)) else i for i in argsx]
+                return funcarg(*newargs, **kwargsx)
             return wrapper
         func = array_wrap(func)
     # Apply the docstring
@@ -446,8 +441,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     expr_str = str(expr)
     if len(expr_str) > 78:
         expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
-    func.__doc__ = ("Created with lambdify. Signature:\n\n{sig}\n\n"
-                    "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
+    func.__doc__ = (
+        "Created with lambdify. Signature:\n\n"
+        "{sig}\n\n"
+        "Expression:\n\n"
+        "{expr}\n\n"
+        "Source code:\n\n"
+        "{src}\n\n"
+        "Imported modules:\n\n"
+        "{imp_mods}"
+        ).format(sig=sig, expr=expr_str, src=lstr, imp_mods='\n'.join(imp_mod_lines))
     return func
 
 def _module_present(modname, modlist):
@@ -463,7 +466,7 @@ def _get_namespace(m):
     """
     This is used by _lambdify to parse its arguments.
     """
-    if isinstance(m, str):
+    if isinstance(m, string_types):
         _import(m)
         return MODULES[m][0]
     elif isinstance(m, dict):
@@ -578,7 +581,6 @@ def lambdastr(args, expr, printer=None, dummify=False):
         else:
             expr = sub_expr(expr, dummies_dict)
     expr = lambdarepr(expr)
-
     return "lambda %s: (%s)" % (args, expr)
 
 
@@ -666,7 +668,8 @@ def implemented_function(symfunc, implementation):
     ----------
     symfunc : ``str`` or ``UndefinedFunction`` instance
        If ``str``, then create new ``UndefinedFunction`` with this as
-       name.  If `symfunc` is a sympy function, attach implementation to it.
+       name.  If `symfunc` is an Undefined function, create a new function
+       with the same name and the implemented function attached.
     implementation : callable
        numerical implementation to be called by ``evalf()`` or ``lambdify``
 
@@ -681,7 +684,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x: x+1)
+    >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)
     5
@@ -689,11 +692,15 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
+    _extra_kwargs = {}
+    if isinstance(symfunc, UndefinedFunction):
+        _extra_kwargs = symfunc._extra_kwargs
+        symfunc = symfunc.__name__
     if isinstance(symfunc, string_types):
-        symfunc = UndefinedFunction(symfunc)
+        # Keyword arguments to UndefinedFunction are added as attributes to
+        # the created class.
+        symfunc = UndefinedFunction(symfunc, _imp_=staticmethod(implementation), **_extra_kwargs)
     elif not isinstance(symfunc, UndefinedFunction):
         raise ValueError('symfunc should be either a string or'
                          ' an UndefinedFunction instance.')
-    # We need to attach as a method because symfunc will be a class
-    symfunc._imp_ = staticmethod(implementation)
     return symfunc

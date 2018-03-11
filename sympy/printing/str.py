@@ -20,6 +20,8 @@ class StrPrinter(Printer):
     _default_settings = {
         "order": None,
         "full_prec": "auto",
+        "sympy_integers": False,
+        "abbrev": False,
     }
 
     _relationals = dict()
@@ -102,7 +104,9 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_Derivative(self, expr):
-        return 'Derivative(%s)' % ", ".join(map(self._print, expr.args))
+        dexpr = expr.expr
+        dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
+        return 'Derivative(%s)' % ", ".join(map(self._print, [dexpr] + dvars))
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -119,14 +123,13 @@ class StrPrinter(Printer):
 
 
     def _print_RandomDomain(self, d):
-        try:
+        if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
-        except Exception:
-            try:
-                return ('Domain: ' + self._print(d.symbols) + ' in ' +
-                        self._print(d.set))
-            except:
-                return 'Domain on ' + self._print(d.symbols)
+        elif hasattr(d, 'set'):
+            return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                    self._print(d.set))
+        else:
+            return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr):
         return '_' + expr.name
@@ -174,25 +177,26 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        if i.left_open:
-            left = '('
+        fin =  'Interval{m}({a}, {b})'
+        a, b, l, r = i.args
+        if a.is_infinite and b.is_infinite:
+            m = ''
+        elif a.is_infinite and not r:
+            m = ''
+        elif b.is_infinite and not l:
+            m = ''
+        elif not l and not r:
+            m = ''
+        elif l and r:
+            m = '.open'
+        elif l:
+            m = '.Lopen'
         else:
-            left = '['
-
-        if i.right_open:
-            right = ')'
-        else:
-            right = ']'
-
-        return "%s%s, %s%s" % \
-               (left, self._print(i.start), self._print(i.end), right)
+            m = '.Ropen'
+        return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
-        left = '<'
-        right = '>'
-
-        return "%s%s, %s%s" % \
-                (left, self._print(i.min), self._print(i.max), right)
+        return "AccumBounds(%s, %s)" % (self._print(i.min), self._print(i.max))
 
     def _print_Inverse(self, I):
         return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
@@ -232,7 +236,8 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '[%s, %s]' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
@@ -299,7 +304,14 @@ class StrPrinter(Printer):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_MatMul(self, expr):
-        return '*'.join([self.parenthesize(arg, precedence(expr))
+        c, m = expr.as_coeff_mmul()
+        if c.is_number and c < 0:
+            expr = _keep_coeff(-c, m)
+            sign = "-"
+        else:
+            sign = ""
+
+        return sign + '*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
     def _print_HadamardProduct(self, expr):
@@ -307,8 +319,20 @@ class StrPrinter(Printer):
             for arg in expr.args])
 
     def _print_MatAdd(self, expr):
-        return ' + '.join([self.parenthesize(arg, precedence(expr))
-            for arg in expr.args])
+        terms = [self.parenthesize(arg, precedence(expr))
+             for arg in expr.args]
+        l = []
+        for t in terms:
+            if t.startswith('-'):
+                sign = "-"
+                t = t[1:]
+            else:
+                sign = "+"
+            l.extend([sign, t])
+        sign = l.pop(0)
+        if sign == '+':
+            sign = ""
+        return sign + ' '.join(l)
 
     def _print_NaN(self, expr):
         return 'nan'
@@ -327,6 +351,9 @@ class StrPrinter(Printer):
                 return 'O(%s)' % self.stringify((expr.expr,) + expr.variables, ', ', 0)
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
+
+    def _print_Ordinal(self, expr):
+        return expr.__str__()
 
     def _print_Cycle(self, expr):
         return expr.__str__()
@@ -490,10 +517,11 @@ class StrPrinter(Printer):
             if -expr.exp is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
-                return "1/sqrt(%s)" % self._print(expr.base)
+                return "%s/sqrt(%s)" % tuple(map(self._print, (S.One, expr.base)))
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
-                return '1/%s' % self.parenthesize(expr.base, PREC, strict=False)
+                return '%s/%s' % (self._print(S.One),
+                                  self.parenthesize(expr.base, PREC, strict=False))
 
         e = self.parenthesize(expr.exp, PREC, strict=False)
         if self.printmethod == '_sympyrepr' and expr.exp.is_Rational and expr.exp.q != 1:
@@ -518,7 +546,21 @@ class StrPrinter(Printer):
         return str(expr)
 
     def _print_Integer(self, expr):
+        if self._settings.get("sympy_integers", False):
+            return "S(%s)" % (expr)
         return str(expr.p)
+
+    def _print_Integers(self, expr):
+        return 'S.Integers'
+
+    def _print_Naturals(self, expr):
+        return 'S.Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'S.Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'S.Reals'
 
     def _print_int(self, expr):
         return str(expr)
@@ -530,6 +572,8 @@ class StrPrinter(Printer):
         if expr.q == 1:
             return str(expr.p)
         else:
+            if self._settings.get("sympy_integers", False):
+                return "S(%s)/%s" % (expr.p, expr.q)
             return "%s/%s" % (expr.p, expr.q)
 
     def _print_PythonRational(self, expr):
@@ -681,14 +725,20 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return ' U '.join(self._print(set) for set in expr.args)
+        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
-        return ' \ '.join(self._print(set) for set in expr.args)
+        return r' \ '.join(self._print(set) for set in expr.args)
 
+    def _print_Quantity(self, expr):
+        if self._settings.get("abbrev", False):
+            return "%s" % expr.abbrev
+        return "%s" % expr.name
 
-    def _print_Unit(self, expr):
-        return expr.abbrev
+    def _print_Quaternion(self, expr):
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
 
     def _print_Dimension(self, expr):
         return str(expr)
@@ -700,6 +750,8 @@ class StrPrinter(Printer):
         return expr.name + '_'
 
     def _print_Zero(self, expr):
+        if self._settings.get("sympy_integers", False):
+            return "S(0)"
         return "0"
 
     def _print_DMP(self, p):
@@ -756,7 +808,8 @@ def sstr(expr, **settings):
     """Returns the expression as a string.
 
     For large expressions where speed is a concern, use the setting
-    order='none'.
+    order='none'. If abbrev=True setting is used then units are printed in
+    abbreviated form.
 
     Examples
     ========

@@ -67,7 +67,7 @@ def test_function_return_types():
     assert (type(L), type(D)) == (ImmutableMatrix, ImmutableMatrix)
 
     assert X.is_diagonalizable()
-    assert X.berkowitz_det() == -3
+    assert X.det() == -3
     assert X.norm(2) == 3
 
     assert type(X.eigenvects()[0][2][0]) == ImmutableMatrix
@@ -78,7 +78,7 @@ def test_function_return_types():
     assert type(X.lower_triangular_solve(Y)) == ImmutableMatrix
     assert type(X.T.upper_triangular_solve(Y)) == ImmutableMatrix
 
-    assert type(X.minorMatrix(0, 0)) == ImmutableMatrix
+    assert type(X.minor_submatrix(0, 0)) == ImmutableMatrix
 
 # issue 6279
 # https://github.com/sympy/sympy/issues/6279

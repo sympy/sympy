@@ -273,4 +273,4 @@ def permutedims(expr, perm):
 
     new_shape = perm(expr.shape)
 
-    return expr.func(new_array, new_shape)
+    return type(expr)(new_array, new_shape)

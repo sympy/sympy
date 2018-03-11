@@ -26,8 +26,8 @@ def test_singularities():
 def test_singularities_non_rational():
     x = Symbol('x', real=True)
 
-    assert singularities(exp(1/x), x) == (0)
-    assert singularities(log((x - 2)**2), x) == (2)
+    assert singularities(exp(1/x), x) == FiniteSet(0)
+    assert singularities(log((x - 2)**2), x) == FiniteSet(2)
 
 
 def test_is_increasing():
@@ -73,6 +73,7 @@ def test_is_strictly_decreasing():
         1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
     assert not is_strictly_decreasing(-x**2, Interval(-oo, 0))
     assert not is_strictly_decreasing(1)
+    assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
 
 
 def test_is_monotonic():
@@ -82,8 +83,3 @@ def test_is_monotonic():
     assert is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     assert not is_monotonic(-x**2, S.Reals)
     assert is_monotonic(x**2 + y + 1, Interval(1, 2), x)
-
-
-@XFAIL
-def test_strictly_decreasing():
-    assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))

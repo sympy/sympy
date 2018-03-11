@@ -70,7 +70,7 @@ class CoordinateSym(Symbol):
         return False
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __hash__(self):
         return tuple((self._id[0].__hash__(), self._id[1])).__hash__()

@@ -7,6 +7,10 @@ from sympy.matrices import Matrix, zeros
 class RawMatrix(Matrix):
     _sympify = staticmethod(lambda x: x)
 
+    def is_zero():
+        from sympy.matrices import MatrixShaping
+        return MatrixShaping.is_zero(self)
+
 def eqs_to_matrix(eqs, ring):
     """Transform from equations to matrix form. """
     xs = ring.gens
@@ -29,7 +33,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     """
     as_expr = not _raw
 
-    assert ring.domain.has_Field
+    assert ring.domain.is_Field
 
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)

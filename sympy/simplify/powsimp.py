@@ -141,7 +141,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 b, e = term.as_base_exp()
                 if deep:
                     b, e = [recurse(i) for i in [b, e]]
-                if b.is_Pow or b.func is exp:
+                if b.is_Pow or isinstance(b, exp):
                     # don't let smthg like sqrt(x**a) split into x**a, 1/2
                     # or else it will be joined as x**(a/2) later
                     b, e = b**e, S.One
@@ -163,7 +163,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
-            if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
+            if (b and b.is_Rational and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
                 m = multiplicity(abs(b), abs(coeff))
@@ -276,7 +276,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         bases = []
         for b, e in c_powers:
             b, e = bkey(b, e)
-            if b in common_b.keys():
+            if b in common_b:
                 common_b[b] = common_b[b] + e
             else:
                 common_b[b] = e
@@ -351,7 +351,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # there may be terms still in common_b that were bases that were
         # identified as needing processing, so remove those, too
         for (b, q), e in common_b.items():
-            if (b.is_Pow or b.func is exp) and \
+            if (b.is_Pow or isinstance(b, exp)) and \
                     q is not S.One and not b.exp.is_Rational:
                 b, be = b.as_base_exp()
                 b = b**(be/q)
@@ -583,7 +583,7 @@ def powdenest(eq, force=False, polar=False):
 
     new = powsimp(sympify(eq))
     return new.xreplace(Transform(
-        _denest_pow, filter=lambda m: m.is_Pow or m.func is exp))
+        _denest_pow, filter=lambda m: m.is_Pow or isinstance(m, exp)))
 
 _y = Dummy('y')
 
@@ -609,7 +609,7 @@ def _denest_pow(eq):
         logs = []
         other = []
         for ei in e.args:
-            if any(ai.func is log for ai in Add.make_args(ei)):
+            if any(isinstance(ai, log) for ai in Add.make_args(ei)):
                 logs.append(ei)
             else:
                 other.append(ei)
@@ -674,8 +674,8 @@ def _denest_pow(eq):
             glogb = _keep_coeff(cg, rg*Add(*[a/g for a in args]))
 
     # now put the log back together again
-    if glogb.func is log or not glogb.is_Mul:
-        if glogb.args[0].is_Pow or glogb.args[0].func is exp:
+    if isinstance(glogb, log) or not glogb.is_Mul:
+        if glogb.args[0].is_Pow or isinstance(glogb.args[0], exp):
             glogb = _denest_pow(glogb.args[0])
             if (abs(glogb.exp) < 1) == True:
                 return Pow(glogb.base, glogb.exp*e)

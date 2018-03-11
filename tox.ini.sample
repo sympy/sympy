@@ -34,9 +34,9 @@ basepython=/Library/Frameworks/Python.framework/Versions/2.7/bin/python2.7
 commands = python bin/test []
     python bin/doctest []
 
-# Example of testing with a dependancy.
+# Example of testing with a dependency.
 [testenv:py27-gmpy]
-# deps is used to specify the dependancies we need. Tox will
+# deps is used to specify the dependencies we need. Tox will
 # automatically download them from PyPi using easy_install/pip.
 # Note that you have to provide the download link because
 # deps = gmpy will try to install gmpy2.

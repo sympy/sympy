@@ -396,7 +396,7 @@ def test_match_wild_wild():
     assert p.match(q*r) is None
 
 
-def test_combine_inverse():
+def test__combine_inverse():
     x, y = symbols("x y")
     assert Mul._combine_inverse(x*I*y, x*I) == y
     assert Mul._combine_inverse(x*I*y, y*I) == x
@@ -404,6 +404,9 @@ def test_combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Add._combine_inverse(oo, oo) == S(0)
     assert Add._combine_inverse(oo*I, oo*I) == S(0)
+    assert Add._combine_inverse(x*oo, x*oo) == S(0)
+    assert Add._combine_inverse(-x*oo, -x*oo) == S(0)
+    assert Add._combine_inverse((x - oo)*(x + oo), -oo)
 
 
 def test_issue_3773():

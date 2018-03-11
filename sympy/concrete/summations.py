@@ -13,11 +13,14 @@ from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError
-from sympy.solvers import solve
 from sympy.series.limits import limit
 from sympy.series.order import O
+from sympy.sets.sets import FiniteSet
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.powsimp import powsimp
+from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-from sympy.tensor.indexed import Idx
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -400,13 +403,19 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             lower_limit = -upper_limit
             upper_limit = S.Infinity
 
+        sym_ = Dummy(sym.name, integer=True, positive=True)
+        sequence_term = sequence_term.xreplace({sym: sym_})
+        sym = sym_
+
         interval = Interval(lower_limit, upper_limit)
 
         # Piecewise function handle
         if sequence_term.is_Piecewise:
-            for func_cond in sequence_term.args:
-                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
-                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            for func, cond in sequence_term.args:
+                # see if it represents something going to oo
+                if cond == True or cond.as_set().sup is S.Infinity:
+                    s = Sum(func, (sym, lower_limit, upper_limit))
+                    return s.is_convergent()
             return S.true
 
         ###  -------- Divergence test ----------- ###
@@ -426,19 +435,28 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         order = O(sequence_term, (sym, S.Infinity))
 
+        ### ----------- ratio test ---------------- ###
+        next_sequence_term = sequence_term.xreplace({sym: sym + 1})
+        ratio = combsimp(powsimp(next_sequence_term/sequence_term))
+        lim_ratio = limit(ratio, sym, upper_limit)
+        if abs(lim_ratio) > 1:
+            return S.false
+        if abs(lim_ratio) < 1:
+            return S.true
+
         ### --------- p-series test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
         if p1_series_test is not None:
             if p1_series_test[p] < -1:
                 return S.true
-            if p1_series_test[p] > -1:
+            if p1_series_test[p] >= -1:
                 return S.false
 
         p2_series_test = order.expr.match((1/sym)**p)
         if p2_series_test is not None:
             if p2_series_test[p] > 1:
                 return S.true
-            if p2_series_test[p] < 1:
+            if p2_series_test[p] <= 1:
                 return S.false
 
         ### ----------- root test ---------------- ###
@@ -483,14 +501,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        if is_decreasing(sequence_term, interval):
-            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            try:
-                integral_val_evaluated = integral_val.doit()
-                if integral_val_evaluated.is_number:
-                    return S(integral_val_evaluated.is_finite)
-            except NotImplementedError:
-                pass
+        maxima = solveset(sequence_term.diff(sym), sym, interval)
+        if not maxima:
+            check_interval = interval
+        elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
+            check_interval = Interval(maxima.sup, interval.sup)
+            if (
+                    is_decreasing(sequence_term, check_interval) or
+                    is_decreasing(-sequence_term, check_interval)):
+                integral_val = Integral(
+                    sequence_term, (sym, lower_limit, upper_limit))
+                try:
+                    integral_val_evaluated = integral_val.doit()
+                    if integral_val_evaluated.is_number:
+                        return S(integral_val_evaluated.is_finite)
+                except NotImplementedError:
+                    pass
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
@@ -515,6 +541,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if dirich2 is not None:
                     return dirich2
 
+        _sym = self.limits[0][0]
+        sequence_term = sequence_term.xreplace({sym: _sym})
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
                                   "is not yet implemented" % (sequence_term))
 
@@ -963,8 +991,16 @@ def eval_sum_symbolic(f, limits):
         c1 = Wild('c1', exclude=[i])
         c2 = Wild('c2', exclude=[i])
         c3 = Wild('c3', exclude=[i])
+        wexp = Wild('wexp')
 
-        e = f.match(c1**(c2*i + c3))
+        # Here we first attempt powsimp on f for easier matching with the
+        # exponential pattern, and attempt expansion on the exponent for easier
+        # matching with the linear pattern.
+        e = f.powsimp().match(c1 ** wexp)
+        if e is not None:
+            e_exp = e.pop(wexp).expand().match(c2*i + c3)
+            if e_exp is not None:
+                e.update(e_exp)
 
         if e is not None:
             p = (c1**c3).subs(e)

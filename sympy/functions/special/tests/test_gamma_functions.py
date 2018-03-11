@@ -99,6 +99,7 @@ def tn_branch(s, func):
 
 def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
+    assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert td(lowergamma(x, randcplx()), x)
@@ -138,6 +139,11 @@ def test_lowergamma():
     assert lowergamma(k, y).rewrite(expint) == lowergamma(k, y)
     assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
 
+    assert lowergamma(70, 6) == factorial(69) - 69035724522603011058660187038367026272747334489677105069435923032634389419656200387949342530805432320 * exp(-6)
+    assert (lowergamma(S(77) / 2, 6) - lowergamma(S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+    assert (lowergamma(-S(77) / 2, 6) - lowergamma(-S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+
+
 def test_uppergamma():
     from sympy import meijerg, exp_polar, I, expint
     assert uppergamma(4, 0) == 6
@@ -176,6 +182,9 @@ def test_uppergamma():
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
     assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
 
+    assert uppergamma(70, 6) == 69035724522603011058660187038367026272747334489677105069435923032634389419656200387949342530805432320*exp(-6)
+    assert (uppergamma(S(77) / 2, 6) - uppergamma(S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+    assert (uppergamma(-S(77) / 2, 6) - uppergamma(-S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
 
 def test_polygamma():
     from sympy import I
@@ -221,6 +230,7 @@ def test_polygamma():
     assert t(4, 3)
     assert t(3, 4)
     assert t(2, 3)
+    assert t(123, 5)
 
     assert polygamma(0, x).rewrite(zeta) == polygamma(0, x)
     assert polygamma(1, x).rewrite(zeta) == zeta(2, x)
@@ -400,7 +410,7 @@ def test_issue_8657():
     m = Symbol('m', integer=True)
     o = Symbol('o', positive=True)
     p = Symbol('p', negative=True, integer=False)
-    assert gamma(n).is_real is None
+    assert gamma(n).is_real is False
     assert gamma(m).is_real is None
     assert gamma(o).is_real is True
     assert gamma(p).is_real is True
@@ -423,3 +433,10 @@ def test_issue_8524():
     assert gamma(r).is_positive is None
     assert gamma(e + S.Half).is_positive is True
     assert gamma(e - S.Half).is_positive is False
+
+def test_issue_14450():
+    assert uppergamma(3/8, x).evalf() == uppergamma(0.375, x)
+    assert lowergamma(x, 3/8).evalf() == lowergamma(x, 0.375)
+    # some values from Wolfram Alpha for comparison
+    assert abs(uppergamma(S(3)/8, 2).evalf() - 0.07105675881) < 1e-9
+    assert abs(lowergamma(S(3)/8, 2).evalf() - 2.2993794256) < 1e-9

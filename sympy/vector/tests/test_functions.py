@@ -1,10 +1,10 @@
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import express, matrix_to_vector, orthogonalize
 from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix
 from sympy.utilities.pytest import raises
 
-N = CoordSysCartesian('N')
+N = CoordSys3D('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 A = N.orient_new_axis('A', q1, N.k)
 B = A.orient_new_axis('B', q2, A.i)
@@ -161,8 +161,8 @@ def test_matrix_to_vector():
 
 
 def test_orthogonalize():
-    C = CoordSysCartesian('C')
-    a, b = symbols('a b', integer=True);
+    C = CoordSys3D('C')
+    a, b = symbols('a b', integer=True)
     i, j, k = C.base_vectors()
     v1 = i + 2*j
     v2 = 2*i + 3*j

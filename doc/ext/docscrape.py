@@ -219,7 +219,7 @@ class NumpyDocString(collections.Mapping):
                     return g[3], None
                 else:
                     return g[2], g[1]
-            raise ValueError("%s is not a item name" % text)
+            raise ValueError("%s is not an item name" % text)
 
         def push_item(name, rest):
             if not name:

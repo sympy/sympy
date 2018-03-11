@@ -672,11 +672,9 @@ class jn(SphericalBesselBase):
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)
 
-    @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z):
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
-    @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z):
         return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
@@ -953,9 +951,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
                                               int(l)), prec)
                 for l in range(1, k + 1)]
     elif method == "scipy":
-        from scipy.special import sph_jn
         from scipy.optimize import newton
-        f = lambda x: sph_jn(n, x)[0][-1]
+        try:
+            from scipy.special import spherical_jn
+            f = lambda x: spherical_jn(n, x)
+        except ImportError:
+            from scipy.special import sph_jn
+            f = lambda x: sph_jn(n, x)[0][-1]
     else:
         raise NotImplementedError("Unknown method.")
 
@@ -1493,7 +1495,7 @@ class airyaiprime(AiryBase):
                 m = M[m]
                 # The transformation is in principle
                 # given by 03.07.16.0001.01 but note
-                # that there is an error in this formule.
+                # that there is an error in this formula.
                 # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
@@ -1649,7 +1651,7 @@ class airybiprime(AiryBase):
                 m = M[m]
                 # The transformation is in principle
                 # given by 03.08.16.0001.01 but note
-                # that there is an error in this formule.
+                # that there is an error in this formula.
                 # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]

@@ -279,6 +279,16 @@ def test_geometric_sums():
     assert Sum(1.0**n, (n, 1, oo)).doit() == oo
     assert Sum(2.43**n, (n, 1, oo)).doit() == oo
 
+    # Issue 13979:
+    i, k, q = symbols('i k q', integer=True)
+    result = summation(
+        exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
+    )
+    assert result.simplify() == Piecewise(
+            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
+    )
+
+
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
     assert summation(1/k, (k, 1, n)) == harmonic(n)
@@ -470,8 +480,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2 - 1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
-    half = Rational(1, 2)
-    R = pi/2 * factorial(b)**2 / factorial(b - half) / factorial(b + half)
+    R = pi*gamma(b + 1)**2/(2*gamma(b + S(1)/2)*gamma(b + S(3)/2))
     assert simplify(A.doit()) == R
     assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
@@ -927,7 +936,6 @@ def test_is_convergent():
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
-    assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() is S.true
 
     # integral test --
 
@@ -935,6 +943,7 @@ def test_is_convergent():
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
     assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
@@ -961,7 +970,16 @@ def test_is_convergent():
     f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
     assert Sum(f, (n, 1, oo)).is_convergent() is S.false
     assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
-    assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+    #assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+
+    # integral test
+
+    assert Sum(log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(-log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    # the following function has maxima located at (x, y) =
+    # (1.2, 0.43), (3.0, -0.25) and (6.8, 0.050)
+    eq = (x - 2)*(x**2 - 6*x + 4)*exp(-x)
+    assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
 
 
 def test_is_absolutely_convergent():
@@ -972,8 +990,6 @@ def test_is_absolutely_convergent():
 @XFAIL
 def test_convergent_failing():
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    # is_decreasing is not handling "is_decreasing(1)", so raises error
 
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
@@ -994,3 +1010,9 @@ def test_issue_10156():
     e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
+
+
+def test_issue_14112():
+    assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
+    assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum((-2)**n + (-3)**n, (n, 1, oo)).is_convergent() is S.false

@@ -141,7 +141,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     assert language in main_template
     assert language in numerical_test_template
 
-    # Check that evironment variable makes sense
+    # Check that environment variable makes sense
     clean = os.getenv('SYMPY_TEST_CLEAN_TEMP', 'always').lower()
     if clean not in ('always', 'success', 'never'):
         raise ValueError("SYMPY_TEST_CLEAN_TEMP must be one of the following: 'always', 'success' or 'never'.")
@@ -227,8 +227,8 @@ def fortranize_double_constants(code_string):
     Replaces every literal float with literal doubles
     """
     import re
-    pattern_exp = re.compile('\d+(\.)?\d*[eE]-?\d+')
-    pattern_float = re.compile('\d+\.\d*(?!\d*d)')
+    pattern_exp = re.compile(r'\d+(\.)?\d*[eE]-?\d+')
+    pattern_float = re.compile(r'\d+\.\d*(?!\d*d)')
 
     def subs_exp(matchobj):
         return re.sub('[eE]', 'd', matchobj.group(0))

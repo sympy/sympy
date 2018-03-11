@@ -243,8 +243,8 @@ precision argument. Parameter definitions are easily avoided using the ``N``
 function.
 
     >>> print(fcode(x - pi**2 - E))
-          parameter (E = 2.71828182845905d0)
-          parameter (pi = 3.14159265358979d0)
+          parameter (E = 2.7182818284590452d0)
+          parameter (pi = 3.1415926535897932d0)
           x - pi**2 - E
     >>> print(fcode(x - pi**2 - E, precision=25))
           parameter (E = 2.718281828459045235360287d0)
@@ -271,7 +271,7 @@ By default the output is human readable code, ready for copy and paste. With the
 option ``human=False``, the return value is suitable for post-processing with
 source code generators that write routines with multiple instructions. The
 return value is a three-tuple containing: (i) a set of number symbols that must
-be defined as 'Fortran parameters', (ii) a list functions that can not be
+be defined as 'Fortran parameters', (ii) a list functions that cannot be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
@@ -279,7 +279,7 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(1 - sin(x)**2, human=False)
     (set(), set(), '      -sin(x)**2 + 1')
     >>> fcode(x - pi**2, human=False)
-    ({(pi, '3.14159265358979d0')}, set(), '      x - pi**2')
+    ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
 
 Mathematica code printing
 -------------------------
@@ -340,6 +340,20 @@ Octave (and Matlab) Code printing
    .. autoattribute:: OctaveCodePrinter.printmethod
 
 .. autofunction:: sympy.printing.octave.octave_code
+
+Rust code printing
+------------------
+
+.. module:: sympy.printing.rust
+
+.. autodata:: sympy.printing.rust.known_functions
+
+.. autoclass:: sympy.printing.rust.RustCodePrinter
+   :members:
+
+   .. autoattribute:: RustCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.rust.rust_code
 
 Theano Code printing
 --------------------
@@ -412,12 +426,19 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+More info on mathml : http://www.w3.org/TR/MathML2
 
-.. autoclass:: MathMLPrinter
+.. autoclass:: MathMLPrinterBase
+
+.. autoclass:: MathMLContentPrinter
    :members:
 
-   .. autoattribute:: MathMLPrinter.printmethod
+   .. autoattribute:: MathMLContentPrinter.printmethod
+
+.. autoclass:: MathMLPresentationPrinter
+   :members:
+
+   .. autoattribute:: MathMLPresentationPrinter.printmethod
 
 .. autofunction:: mathml
 

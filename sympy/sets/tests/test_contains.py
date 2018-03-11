@@ -1,4 +1,4 @@
-from sympy import Symbol, Contains, S, Interval, FiniteSet, oo
+from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
 
 
 def test_contains_basic():
@@ -20,3 +20,18 @@ def test_issue_6194():
 def test_issue_10326():
     assert Contains(oo, Interval(-oo, oo)) == False
     assert Contains(-oo, Interval(-oo, oo)) == False
+
+
+def test_binary_symbols():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    assert Contains(x, FiniteSet(y, Eq(z, True))
+        ).binary_symbols == set([y, z])
+
+
+def test_as_set():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert Contains(x, FiniteSet(y)
+        ).as_set() == Contains(x, FiniteSet(y))

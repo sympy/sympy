@@ -15,7 +15,7 @@ A Beam is a structural element that is capable of withstanding load
 primarily by resisting against bending. Beams are characterized by
 their second moment of area, their length and their elastic modulus.
 
-In Sympy, we can constuct a 2D beam objects with the following properties :
+In Sympy, we can construct a 2D beam objects with the following properties :
 
 - Length
 - Elastic Modulus

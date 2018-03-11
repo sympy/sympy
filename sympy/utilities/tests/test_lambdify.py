@@ -1,3 +1,4 @@
+from distutils.version import LooseVersion as V
 from itertools import product
 import math
 
@@ -7,7 +8,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq)
+    DotProduct, Eq, Dummy, sinc)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -53,9 +54,17 @@ def test_str_args():
     raises(TypeError, lambda: f(0))
 
 
-def test_own_namespace():
+def test_own_namespace_1():
     myfunc = lambda x: 1
     f = lambdify(x, sin(x), {"sin": myfunc})
+    assert f(0.1) == 1
+    assert f(100) == 1
+
+
+def test_own_namespace_2():
+    def myfunc(x):
+        return 1
+    f = lambdify(x, sin(x), {'sin': myfunc})
     assert f(0.1) == 1
     assert f(100) == 1
 
@@ -357,15 +366,18 @@ def test_numpy_old_matrix():
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
-    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.matrix}, 'numpy'])
+    f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
 def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
-    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    lambdify([x, y], p, modules='numpy')(0, 1)
+    p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
+    f = lambdify([x, y], p, modules='numpy')
+    numpy.seterr(divide='ignore')
+    assert str(float(f(0,1))) == 'inf'
+    numpy.seterr(divide='warn')
 
 def test_issue9474():
     mods = [None, 'math']
@@ -378,10 +390,6 @@ def test_issue9474():
         assert f(2) == 0.5
         f = lambdify(x, floor(sympy.S(1)/x), modules=mod)
         assert f(2) == 0
-
-    if mpmath:
-        f = lambdify(x, sympy.S(1)/sympy.Abs(x), modules=['mpmath'])
-        assert isinstance(f(2), mpmath.mpf)
 
     for absfunc, modules in product([Abs, abs], mods):
         f = lambdify(x, absfunc(x), modules=modules)
@@ -425,12 +433,17 @@ def test_numpy_logical_ops():
     if not numpy:
         skip("numpy not installed.")
     and_func = lambdify((x, y), And(x, y), modules="numpy")
+    and_func_3 = lambdify((x, y, z), And(x, y, z), modules="numpy")
     or_func = lambdify((x, y), Or(x, y), modules="numpy")
+    or_func_3 = lambdify((x, y, z), Or(x, y, z), modules="numpy")
     not_func = lambdify((x), Not(x), modules="numpy")
     arr1 = numpy.array([True, True])
     arr2 = numpy.array([False, True])
+    arr3 = numpy.array([True, False])
     numpy.testing.assert_array_equal(and_func(arr1, arr2), numpy.array([False, True]))
+    numpy.testing.assert_array_equal(and_func_3(arr1, arr2, arr3), numpy.array([False, False]))
     numpy.testing.assert_array_equal(or_func(arr1, arr2), numpy.array([True, True]))
+    numpy.testing.assert_array_equal(or_func_3(arr1, arr2, arr3), numpy.array([True, True]))
     numpy.testing.assert_array_equal(not_func(arr2), numpy.array([True, False]))
 
 def test_numpy_matmul():
@@ -499,7 +512,10 @@ def test_tensorflow_variables():
     func = lambdify(x, expr, modules="tensorflow")
     a = tensorflow.Variable(0, dtype=tensorflow.float32)
     s = tensorflow.Session()
-    s.run(tensorflow.initialize_all_variables())
+    if V(tensorflow.__version__) < '1.0':
+        s.run(tensorflow.initialize_all_variables())
+    else:
+        s.run(tensorflow.global_variables_initializer())
     assert func(a).eval(session=s) == 0.5
 
 def test_tensorflow_logical_operations():
@@ -593,6 +609,13 @@ def test_namespace_order():
     assert if1(1) == 'first f'
 
 
+def test_namespace_type():
+    # lambdify had a bug where it would reject modules of type unicode
+    # on Python 2.
+    x = sympy.Symbol('x')
+    lambdify(x, x, modules=u'math')
+
+
 def test_imps():
     # Here we check if the default returned functions are anonymous - in
     # the sense that we can have more than one function with the same name
@@ -607,7 +630,7 @@ def test_imps():
     func = sympy.Function('myfunc')
     assert not hasattr(func, '_imp_')
     my_f = implemented_function(func, lambda x: 2*x)
-    assert hasattr(func, '_imp_')
+    assert hasattr(my_f, '_imp_')
     # Error for functions with same name and different implementation
     f2 = implemented_function("f", lambda x: x + 101)
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
@@ -699,19 +722,23 @@ def test_python_keywords():
 
 def test_lambdify_docstring():
     func = lambdify((w, x, y, z), w + x + y + z)
-    assert func.__doc__ == (
-            "Created with lambdify. Signature:\n\n"
-            "func(w, x, y, z)\n\n"
-            "Expression:\n\n"
-            "w + x + y + z")
+    ref = (
+        "Created with lambdify. Signature:\n\n"
+        "func(w, x, y, z)\n\n"
+        "Expression:\n\n"
+        "w + x + y + z"
+    ).splitlines()
+    assert func.__doc__.splitlines()[:len(ref)] == ref
     syms = symbols('a1:26')
     func = lambdify(syms, sum(syms))
-    assert func.__doc__ == (
-            "Created with lambdify. Signature:\n\n"
-            "func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,\n"
-            "        a16, a17, a18, a19, a20, a21, a22, a23, a24, a25)\n\n"
-            "Expression:\n\n"
-            "a1 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a2 + a20 +...")
+    ref = (
+        "Created with lambdify. Signature:\n\n"
+        "func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,\n"
+        "        a16, a17, a18, a19, a20, a21, a22, a23, a24, a25)\n\n"
+        "Expression:\n\n"
+        "a1 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19 + a2 + a20 +..."
+    ).splitlines()
+    assert func.__doc__.splitlines()[:len(ref)] == ref
 
 
 #================== Test special printers ==========================
@@ -782,3 +809,23 @@ def test_issue_12173():
     exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
     assert exp1 == uppergamma(1, 2).evalf()
     assert exp2 == lowergamma(1, 2).evalf()
+
+def test_issue_13642():
+    if not numpy:
+        skip("numpy not installed")
+    f = lambdify(x, sinc(x))
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
+def test_sinc_mpmath():
+    f = lambdify(x, sinc(x), "mpmath")
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
+def test_lambdify_dummy_arg():
+    d1 = Dummy()
+    f1 = lambdify(d1, d1 + 1, dummify=False)
+    assert f1(2) == 3
+    f1b = lambdify(d1, d1 + 1)
+    assert f1b(2) == 3
+    d2 = Dummy('x')
+    f2 = lambdify(d2, d2 + 1)
+    assert f2(2) == 3
