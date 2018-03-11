@@ -54,23 +54,27 @@ def _imag_count(f):
     """Return the number of imaginary roots for irreducible
     univariate polynomial ``f``.
     """
-    x = f.gens[0]
+    x = Dummy('x')
     oo = S.Infinity
-    expr = f.as_expr()
-    even_odd = expr.subs(x, I*x)
-    if not even_odd.has(I):
-        return int(Poly(even_odd, x, expand=False).count_roots(-oo, oo))
-    even = even_odd.xreplace({I: 0})
-    odd = even_odd - even
-    ofactors, efactors = [Poly(i, x, expand=False).factor_list()[1]
-        for i in (odd, even)]
+    odd, even = sift([(i, j) for (i,), j in f.terms()],
+        lambda x: x[0] % 2 == 1, binary=True)
+    if not even:
+        return 0
+    # update signs
+    even = [(i, I**i*j) for i, j in even]
+    even = Poly.from_dict(dict(even), x)
+    if not odd:
+        return int(even.count_roots(-oo, oo))
+    # deflate and update signs using I**(j - 1) which also
+    # removes the I that would otherwise be left behind
+    low = min([i[0] for i in odd])
+    odd = [(i - low, I**(i - 1)*j) for i, j in odd]
+    odd = Poly.from_dict(dict(odd), x)
+    ofactors, efactors = [i.factor_list()[1] for i in (odd, even)]
     count = 0
     for fe, me in efactors:
         for f, mo in ofactors:
             if f == fe:
-                if len(ofactors) ==1:
-                    print(f)
-                    pass
                 count += min(mo, me)*f.count_roots(-oo, oo)
     return int(count)
 
