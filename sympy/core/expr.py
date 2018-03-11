@@ -345,11 +345,11 @@ class Expr(Basic, EvalfMixin):
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):
-        r = int(self)
-        if self in (S.Nan, S.NegativeInfinity, S.Infinity, S.ComplexInfinity):
-            raise TypeError("can't truncate", self)
-        if not r.is_Number:
+        if not self.is_number:
             raise TypeError("can't truncate symbols and expressions")
+        r = int(self)
+        if r in (S.NegativeInfinity, S.Infinity, S.ComplexInfinity):
+            raise TypeError("can't truncate", self)
         else:
             return Integer(r)
 
