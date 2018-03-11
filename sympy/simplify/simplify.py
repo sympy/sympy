@@ -1452,7 +1452,7 @@ def clear_coefficients(expr, rhs=S.Zero):
 
     Examples
     ========
-    
+
     >>> from sympy.simplify.simplify import clear_coefficients
     >>> from sympy.abc import x, y
     >>> from sympy import Dummy
