@@ -1,11 +1,11 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Eq, exp, erf, erfi,
+    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
     EulerGamma, Expr, factor, Function, I, im, Integral, integrate,
     Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
-    Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, sign,
+    Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple, Si, Ci
+    symbols, sympify, tan, trigsimp, Tuple
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
@@ -552,6 +552,7 @@ def test_integrate_returns_piecewise():
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
 
 def test_integrate_max_min():
+    x = symbols('x', real=True)
     assert integrate(Min(x, 2), (x, 0, 3)) == 4
     assert integrate(Max(x**2, x**3), (x, 0, 2)) == S(49)/12
     assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
@@ -1313,3 +1314,13 @@ def test_issue_14096():
 def test_issue_14144():
     assert Abs(integrate(1/sqrt(1 - x**3), (x, 0, 1)).n() - 1.402182) < 1e-6
     assert Abs(integrate(sqrt(1 - x**3), (x, 0, 1)).n() - 0.841309) < 1e-6
+
+def test_issue_14375():
+    # This raised a TypeError. The antiderivative has exp_polar, which
+    # may be possible to unpolarify, so the exact output is not asserted here.
+    assert integrate(exp(I*x)*log(x), x).has(Ei)
+
+def test_issue_14437():
+    f = Function('f')(x, y, z)
+    assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
+                Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))

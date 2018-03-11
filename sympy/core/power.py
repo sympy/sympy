@@ -1087,7 +1087,8 @@ class Pow(Expr):
                 if re.is_Number and im.is_Number:
                     # We can be more efficient in this case
                     expr = expand_multinomial(self.base**exp)
-                    return expr.as_real_imag()
+                    if expr != self:
+                        return expr.as_real_imag()
 
                 expr = poly(
                     (a + b)**exp)  # a = re, b = im; expr = (a + b*I)**exp
@@ -1097,7 +1098,8 @@ class Pow(Expr):
                 if re.is_Number and im.is_Number:
                     # We can be more efficient in this case
                     expr = expand_multinomial((re + im*S.ImaginaryUnit)**-exp)
-                    return expr.as_real_imag()
+                    if expr != self:
+                        return expr.as_real_imag()
 
                 expr = poly((a + b)**-exp)
 

@@ -242,6 +242,8 @@ class exp(ExpBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif isinstance(arg, log):
             return arg.args[0]
         elif isinstance(arg, AccumBounds):
@@ -456,6 +458,15 @@ class exp(ExpBase):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
+    def _eval_rewrite_as_sqrt(self, arg):
+        from sympy.functions.elementary.trigonometric import sin, cos
+        if arg.is_Mul:
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            if coeff and coeff.is_number:
+                cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                    return cosine + S.ImaginaryUnit*sine
+
 
 class log(Function):
     r"""
@@ -533,6 +544,8 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        if arg is S.ComplexInfinity:
+                return S.ComplexInfinity
         if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
         elif isinstance(arg, exp_polar):

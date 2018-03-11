@@ -84,10 +84,13 @@ def test_latex_basic():
         r"\left(x + y\right) / 2 x"
     assert latex((x + y)/(2*x), long_frac_ratio=0) == \
         r"\frac{1}{2 x} \left(x + y\right)"
-    assert latex((x + y)/x) == r"\frac{1}{x} \left(x + y\right)"
+    assert latex((x + y)/x) == r"\frac{x + y}{x}"
     assert latex((x + y)/x, long_frac_ratio=3) == r"\frac{x + y}{x}"
+    assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
+    assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
+        r"\frac{2 x}{3} \sqrt{2}"
 
-    assert latex(2*Integral(x, x)/3) == r"\frac{2}{3} \int x\, dx"
+    assert latex(2*Integral(x, x)/3) == r"\frac{2 \int x\, dx}{3}"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
         r"\left(2 \int x\, dx\right) / 3"
 
@@ -689,12 +692,12 @@ def test_latex_sequences():
 
 
 def test_latex_FourierSeries():
-    latex_str = r'2 \sin{\left (x \right )} - \sin{\left (2 x \right )} + \frac{2}{3} \sin{\left (3 x \right )} + \ldots'
+    latex_str = r'2 \sin{\left (x \right )} - \sin{\left (2 x \right )} + \frac{2 \sin{\left (3 x \right )}}{3} + \ldots'
     assert latex(fourier_series(x, (x, -pi, pi))) == latex_str
 
 
 def test_latex_FormalPowerSeries():
-    latex_str = r'\sum_{k=1}^{\infty} - \frac{\left(-1\right)^{- k}}{k} x^{k}'
+    latex_str = r'\sum_{k=1}^{\infty} - \frac{\left(-1\right)^{- k} x^{k}}{k}'
     assert latex(fps(log(1 + x))) == latex_str
 
 
@@ -1631,7 +1634,7 @@ def test_Mul():
     e = Mul(2, x + 1, evaluate=False)
     assert latex(e)  == r'2 \left(x + 1\right)'
     e = Mul(S.One/2, x + 1, evaluate=False)
-    assert latex(e)  == r'\frac{1}{2} \left(x + 1\right)'
+    assert latex(e)  == r'\frac{x + 1}{2}'
     e = Mul(y, x + 1, evaluate=False)
     assert latex(e)  == r'y \left(x + 1\right)'
     e = Mul(-y, x + 1, evaluate=False)
@@ -1754,19 +1757,3 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
-
-
-def test_units():
-    expr1 = 2*kg*x*meter**2
-    assert latex(expr1, mul_symbol='dot') == (r'2 \cdot x \cdot \detokenize {kilogram} \cdot \detokenize {meter}^{2}')
-    expr2 = 3*R
-    assert latex(expr2, mul_symbol='dot') == r'3 \cdot \detokenize {molar_gas_constant}'
-
-
-def test_latex_degree():
-    expr1 = 90*degree
-    assert latex(expr1) == r"90 ^\circ"
-    expr2 = x*degree
-    assert latex(expr2) == r"x ^\circ"
-    expr3 = cos(x*degree + 90*degree)
-    assert latex(expr3) == r'\cos{\left (x ^\circ + 90 ^\circ \right )}'
