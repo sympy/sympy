@@ -4,7 +4,7 @@ import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, expand, oo, pi, signsimp, simplify, sin, sqrt, symbols,
+    S, Symbol, cos, exp, expand_mul, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff, Function)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
@@ -2049,7 +2049,7 @@ def test_cholesky():
     assert A.cholesky().is_lower
     assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
-    assert expand(A.cholesky()) == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
+    assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
 
 def test_LDLdecomposition():
@@ -2066,8 +2066,8 @@ def test_LDLdecomposition():
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     L, D = A.LDLdecomposition()
-    assert expand(L * D * L.H) == A
-    assert expand(L) == Matrix(((1, 0, 0), (I/2, 1, 0), (S(1)/2 - I/2, 0, 1)))
+    assert expand_mul(L * D * L.H) == A
+    assert L == Matrix(((1, 0, 0), (I/2, 1, 0), (S(1)/2 - I/2, 0, 1)))
     assert D == Matrix(((4, 0, 0), (0, 1, 0), (0, 0, 9)))
 
 
@@ -2090,12 +2090,12 @@ def test_cholesky_solve():
     x = Matrix((-2, 1))
     b = A*x
     soln = A.cholesky_solve(b)
-    assert expand(soln) == x
+    assert expand_mul(soln) == x
     A = Matrix(((9*I, 3), (-3 + I, 5)))
     x = Matrix((2 + 3*I, -1))
     b = A*x
     soln = A.cholesky_solve(b)
-    assert expand(soln) == x
+    assert expand_mul(soln) == x
 
 
 def test_LDLsolve():
@@ -2117,12 +2117,12 @@ def test_LDLsolve():
     x = Matrix((-2, 1))
     b = A*x
     soln = A.LDLsolve(b)
-    assert expand(soln) == x
+    assert expand_mul(soln) == x
     A = Matrix(((9*I, 3), (-3 + I, 5)))
     x = Matrix((2 + 3*I, -1))
     b = A*x
     soln = A.cholesky_solve(b)
-    assert expand(soln) == x
+    assert expand_mul(soln) == x
 
 
 def test_lower_triangular_solve():

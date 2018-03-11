@@ -7,7 +7,7 @@ from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range, reduce
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -138,9 +138,10 @@ class DenseMatrix(MatrixBase):
         L = zeros(self.rows, self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / L[j, j])*(self[i, j] -
+                L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
                     sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
-            Lii2 = self[i, i] - sum(Abs(L[i, k])**2 for k in range(i))
+            Lii2 = expand_mul(self[i, i] -
+                sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
             if Lii2.is_positive is False:
                 raise ValueError("Matrix must be positive-definite")
             L[i, i] = sqrt(Lii2)
@@ -296,10 +297,10 @@ class DenseMatrix(MatrixBase):
         L = eye(self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
+                L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
                     L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
-            D[i, i] = self[i, i] - sum(Abs(L[i, k])**2*D[k, k]
-                                       for k in range(i))
+            D[i, i] = expand_mul(self[i, i] -
+                sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
             if D[i, i].is_positive is False:
                 raise ValueError("Matrix must be positive-definite")
         return self._new(L), self._new(D)
