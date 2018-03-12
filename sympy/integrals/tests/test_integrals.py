@@ -1324,3 +1324,7 @@ def test_issue_14437():
     f = Function('f')(x, y, z)
     assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
                 Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
+
+def test_issue_14470():
+    assert integrate(1/sqrt(exp(x) + 1), x) == \
+        log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
