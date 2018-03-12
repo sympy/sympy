@@ -133,7 +133,7 @@ class DenseMatrix(MatrixBase):
         """Helper function of cholesky.
         Without the error checks.
         To be used privately.
-        Implements the Cholesky–Banachiewicz algorithm.
+        Implements the Cholesky-Banachiewicz algorithm.
         """
         L = zeros(self.rows, self.rows)
         for i in range(self.rows):
