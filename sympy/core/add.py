@@ -95,6 +95,8 @@ class Add(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
+        from sympy.core.dispatchers_add import append_arg_Add
+
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -108,94 +110,24 @@ class Add(Expr, AssocOp):
                     return rv
                 return [], rv[0], None
 
-        terms = {}      # term -> coeff
-                        # e.g. x**2 -> 5   for ... + 5*x**2 + ...
+        #args = map(sympify, args)
+        data = dict(
+            coeff=S.Zero,
+            terms={},
+            order_factors=[],
+        )
+        klass = Add
 
-        coeff = S.Zero  # coefficient (Number or zoo) to always be in slot 0
-                        # e.g. 3 + ...
-        order_factors = []
+        # Loop over the dispatchers:
+        for arg in seq:
+            ret = append_arg_Add(klass, data, arg)
+            if not isinstance(ret, tuple):
+                return [ret], [], []
+            klass, data = ret
 
-        for o in seq:
-
-            # O(x)
-            if o.is_Order:
-                for o1 in order_factors:
-                    if o1.contains(o):
-                        o = None
-                        break
-                if o is None:
-                    continue
-                order_factors = [o] + [
-                    o1 for o1 in order_factors if not o.contains(o1)]
-                continue
-
-            # 3 or NaN
-            elif o.is_Number:
-                if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_finite is False):
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                if coeff.is_Number:
-                    coeff += o
-                    if coeff is S.NaN:
-                        # we know for sure the result will be nan
-                        return [S.NaN], [], None
-                continue
-
-            elif isinstance(o, AccumBounds):
-                coeff = o.__add__(coeff)
-                continue
-
-            elif isinstance(o, MatrixExpr):
-                # can't add 0 to Matrix so make sure coeff is not 0
-                coeff = o.__add__(coeff) if coeff else o
-                continue
-
-            elif o is S.ComplexInfinity:
-                if coeff.is_finite is False:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                coeff = S.ComplexInfinity
-                continue
-
-            # Add([...])
-            elif o.is_Add:
-                # NB: here we assume Add is always commutative
-                seq.extend(o.args)  # TODO zerocopy?
-                continue
-
-            # Mul([...])
-            elif o.is_Mul:
-                c, s = o.as_coeff_Mul()
-
-            # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
-            elif o.is_Pow:
-                b, e = o.as_base_exp()
-                if b.is_Number and (e.is_Integer or
-                                   (e.is_Rational and e.is_negative)):
-                    seq.append(b**e)
-                    continue
-                c, s = S.One, o
-
-            else:
-                # everything else
-                c = S.One
-                s = o
-
-            # now we have:
-            # o = c*s, where
-            #
-            # c is a Number
-            # s is an expression with number factor extracted
-            # let's collect terms with the same s, so e.g.
-            # 2*x**2 + 3*x**2  ->  5*x**2
-            if s in terms:
-                terms[s] += c
-                if terms[s] is S.NaN:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-            else:
-                terms[s] = c
+        terms = data["terms"]
+        coeff = data["coeff"]
+        order_factors = data["order_factors"]
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
@@ -265,6 +197,7 @@ class Add(Expr, AssocOp):
                     break
 
         # order args canonically
+        from sympy.core.add import _addsort
         _addsort(newseq)
 
         # current code expects coeff to be first
