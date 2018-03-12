@@ -2,8 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
-        sympify, Rational, Dummy)
+from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
+    symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
 from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.miscellaneous import root as _root
@@ -50,33 +50,17 @@ def _pure_factors(poly):
     return [(PurePoly(f, expand=False), m) for f, m in factors]
 
 
-def _imag_count(f):
+def _imag_count_of_factor(f):
     """Return the number of imaginary roots for irreducible
     univariate polynomial ``f``.
     """
-    x = Dummy('x')
-    oo = S.Infinity
-    odd, even = sift([(i, j) for (i,), j in f.terms()],
-        lambda x: x[0] % 2 == 1, binary=True)
-    if not even:
+    terms = [(i, j) for (i,), j in f.terms()]
+    if any(i % 2 for i, j in terms):
         return 0
     # update signs
-    even = [(i, I**i*j) for i, j in even]
-    even = Poly.from_dict(dict(even), x)
-    if not odd:
-        return int(even.count_roots(-oo, oo))
-    # deflate and update signs using I**(j - 1) which also
-    # removes the I that would otherwise be left behind
-    low = min([i[0] for i in odd])
-    odd = [(i - low, I**(i - 1)*j) for i, j in odd]
-    odd = Poly.from_dict(dict(odd), x)
-    ofactors, efactors = [i.factor_list()[1] for i in (odd, even)]
-    count = 0
-    for fe, me in efactors:
-        for f, mo in ofactors:
-            if f == fe:
-                count += min(mo, me)*f.count_roots(-oo, oo)
-    return int(count)
+    even = [(i, I**i*j) for i, j in terms]
+    even = Poly.from_dict(dict(even), Dummy('x'))
+    return int(even.count_roots(-oo, oo))
 
 
 @public
@@ -318,7 +302,7 @@ class ComplexRootOf(RootOf):
         sifted = sift(complexes, lambda c: c[1])
         complexes = []
         for f in ordered(sifted):
-            nimag = _imag_count(f)
+            nimag = _imag_count_of_factor(f)
             if nimag == 0:
                 # refine until xbounds are neg or pos
                 for u, f, k in sifted[f]:
