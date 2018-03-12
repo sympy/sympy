@@ -1019,3 +1019,6 @@ def test_issue_14112():
 
 def test_issue_14111():
     assert Sum(1/log(log(n)), (n, 22, oo)).is_convergent() is S.false
+
+def test_issue_14484():
+    raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
