@@ -7,6 +7,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
@@ -22,6 +23,7 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
 from sympy.calculus.util import AccumulationBounds
+import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -520,10 +522,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ----- Dirichlet and bounded times convergent tests ----- ###
         if order.expr.is_Mul:
-            ### -------------- Dirichlet tests -------------- ###
-            a_n, b_n = order.expr.args[0], order.expr.args[1]
-            m = Dummy('m', integer=True)
+            args = order.expr.args
+            argset = set(args)
 
+            ### -------------- Dirichlet tests -------------- ###
+            m = Dummy('m', integer=True)
             def _dirichlet_test(g_n):
                 try:
                     ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
@@ -531,16 +534,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                         return S.true
                 except NotImplementedError:
                     pass
-
-            if is_decreasing(a_n, interval):
-                dirich1 = _dirichlet_test(b_n)
-                if dirich1 is not None:
-                    return dirich1
-
-            if is_decreasing(b_n, interval):
-                dirich2 = _dirichlet_test(a_n)
-                if dirich2 is not None:
-                    return dirich2
 
             ### -------- bounded times convergent test ---------###
             def _bounded_convergent_test(g1_n, g2_n):
@@ -553,14 +546,20 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 except NotImplementedError:
                     pass
 
-            test1 = _bounded_convergent_test(a_n, b_n)
-            if test1 is not None:
-                return test1
+            for n in range(1, len(argset)):
+                for a_tuple in itertools.combinations(args, n):
+                    b_set = argset - set(a_tuple)
+                    a_n = Mul(*a_tuple)
+                    b_n = Mul(*b_set)
 
-            test2 = _bounded_convergent_test(b_n, a_n)
-            if test2 is not None:
-                return test2
+                    if is_decreasing(a_n, interval):
+                        dirich = _dirichlet_test(b_n)
+                        if dirich is not None:
+                            return dirich
 
+                    bc_test = _bounded_convergent_test(a_n, b_n)
+                    if bc_test is not None:
+                        return bc_test
 
         _sym = self.limits[0][0]
         sequence_term = sequence_term.xreplace({sym: _sym})
