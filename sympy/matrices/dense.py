@@ -7,10 +7,11 @@ from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range, reduce
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
@@ -131,14 +132,19 @@ class DenseMatrix(MatrixBase):
     def _cholesky(self):
         """Helper function of cholesky.
         Without the error checks.
-        To be used privately. """
+        To be used privately.
+        Implements the Cholesky–Banachiewicz algorithm.
+        """
         L = zeros(self.rows, self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / L[j, j])*(self[i, j] -
-                                         sum(L[i, k]*L[j, k] for k in range(j)))
-            L[i, i] = sqrt(self[i, i] -
-                           sum(L[i, k]**2 for k in range(i)))
+                L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
+                    sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
+            Lii2 = expand_mul(self[i, i] -
+                sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
+            if Lii2.is_positive is False:
+                raise ValueError("Matrix must be positive-definite")
+            L[i, i] = sqrt(Lii2)
         return self._new(L)
 
     def _diagonal_solve(self, rhs):
@@ -286,14 +292,17 @@ class DenseMatrix(MatrixBase):
         Without the error checks.
         To be used privately.
         """
+        # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
         D = zeros(self.rows, self.rows)
         L = eye(self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
-                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
-            D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k]
-                                       for k in range(i))
+                L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
+                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
+            D[i, i] = expand_mul(self[i, i] -
+                sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
+            if D[i, i].is_positive is False:
+                raise ValueError("Matrix must be positive-definite")
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
