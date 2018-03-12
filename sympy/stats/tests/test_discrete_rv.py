@@ -41,6 +41,7 @@ def test_sample():
 def test_discrete_probability():
     X = Geometric('X', S(1)/5)
     Y = Poisson('Y', 4)
+    G = Geometric('e', x)
     assert P(Eq(X, 3)) == S(16)/125
     assert P(X < 3) == S(9)/25
     assert P(X > 3) == S(64)/125
@@ -56,3 +57,5 @@ def test_discrete_probability():
         13*exp(-4) + 32*(-71/32 + 3*exp(4)/32)*exp(-4)/3)
     assert P(X < S.Infinity) is S.One
     assert P(X > S.Infinity) is S.Zero
+    assert P(G < 3) == x*(-x + 1) + x
+    assert P(Eq(G, 3)) == x*(-x + 1)**2

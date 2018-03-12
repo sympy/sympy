@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import factorial, exp, S, sympify
+from sympy import factorial, exp, S, sympify, And
 from sympy.stats.rv import _value_check
 from sympy.sets.sets import Interval
 import random
@@ -105,7 +105,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(0 < p and p <= 1, "p must be between 0 and 1")
+        _value_check(And(0 < p, p<=1), "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
