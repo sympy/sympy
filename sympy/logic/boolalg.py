@@ -4,7 +4,7 @@ Boolean algebra module for SymPy
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import combinations, product
+from itertools import chain, combinations, product
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -875,13 +875,10 @@ class Or(LatticeOp, BooleanFunction):
             kwargs['measure'], S.true)
 
     def to_anf(self, deep=True):
-        n_args = len(self.args)
-        a = self.args[:int(n_args/2)]
-        b = self.args[int(n_args/2):]
-        a = to_anf(Or(*a)) if len(a) > 1 else to_anf(a[0])
-        b = to_anf(Or(*b)) if len(b) > 1 else to_anf(b[0])
-        x = Xor(a, b, distribute_xor_over_and(And(a, b)))
-        return to_anf(x, deep=deep) if deep else x
+        args = chain.from_iterable(combinations(self.args, j) for j in range(1, len(self.args) + 1))  # powerset
+        args = (And(*arg) for arg in args)
+        args = map(lambda x: to_anf(x, deep=deep) if deep else x, args)
+        return Xor(*list(args), remove_true=False)
 
 
 class Not(BooleanFunction):
@@ -2531,12 +2528,19 @@ def ANFform(variables, truthvalues):
     .. [2] https://en.wikipedia.org/wiki/Zhegalkin_polynomial
 
     """
+
+    n_vars = len(variables)
+    n_values = len(truthvalues)
+
+    if n_values != 2 ** n_vars:
+        raise ValueError("The number of truth values must be equal to 2^%d, got %d" % (n_vars, n_values))
+
     variables = [sympify(v) for v in variables]
 
     coeffs = anf_coeffs(truthvalues)
     terms = []
 
-    for i, t in enumerate(product([0, 1], repeat=len(variables))):
+    for i, t in enumerate(product([0, 1], repeat=n_vars)):
         if coeffs[i] == 1:
             terms.append(t)
 
