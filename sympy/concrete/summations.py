@@ -439,10 +439,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         lim_ratio = limit(ratio, sym, upper_limit)
-        if abs(lim_ratio) > 1:
-            return S.false
-        if abs(lim_ratio) < 1:
-            return S.true
+        if lim_ratio.is_number:
+            if abs(lim_ratio) > 1:
+                return S.false
+            if abs(lim_ratio) < 1:
+                return S.true
 
         ### --------- p-series test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
@@ -463,8 +464,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # (1/n) comparison
         try:
             lim_comp = limit(sym*sequence_term, sym, S.Infinity)
-            if lim_comp > S.Zero:
-                return S.false
+            if lim_comp.is_number:
+                if lim_comp > 0:
+                    return S.false
         except NotImplementedError:
             pass
 
