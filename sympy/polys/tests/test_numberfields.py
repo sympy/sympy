@@ -143,6 +143,14 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2)*I + I*(1 + sqrt(2)), x,
             compose=False) ==  x**4 + 18*x**2 + 49
 
+    # minimal polynomial of I
+    assert minimal_polynomial(I, x, domain=QQ.algebraic_field(I)) == x - I
+    K = QQ.algebraic_field(I*(sqrt(2) + 1))
+    assert minimal_polynomial(I, x, domain=K) == x - I
+    assert minimal_polynomial(I, x, domain=QQ) == x**2 + 1
+    assert minimal_polynomial(I, x, domain='QQ(y)') == x**2 + 1
+
+
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
     mp = minimal_polynomial(p, x)

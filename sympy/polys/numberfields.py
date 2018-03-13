@@ -528,7 +528,8 @@ def _minpoly_compose(ex, x, dom):
     if ex.is_Rational:
         return ex.q*x - ex.p
     if ex is I:
-        return x**2 + 1
+        _, factors = factor_list(x**2 + 1, x, domain=dom)
+        return x**2 + 1 if len(factors) == 1 else x - I
     if hasattr(dom, 'symbols') and ex in dom.symbols:
         return x - ex
 
