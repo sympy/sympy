@@ -30,11 +30,15 @@ class Mod(Function):
         from sympy.core.singleton import S
         from sympy.core.exprtools import gcd_terms
         from sympy.polys.polytools import gcd
+        from sympy.matrices.matrices import MatrixBase
 
         def doit(p, q):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
+
+            if isinstance(p, MatrixBase):
+                return p % q
 
             if q == S.Zero:
                 raise ZeroDivisionError("Modulo by zero")
