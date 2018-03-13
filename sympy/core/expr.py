@@ -347,11 +347,10 @@ class Expr(Basic, EvalfMixin):
     def __trunc__(self):
         if not self.is_number:
             raise TypeError("can't truncate symbols and expressions")
-        r = int(self)
-        if r in (S.NegativeInfinity, S.Infinity, S.ComplexInfinity):
+        elif self in (S.NegativeInfinity, S.Infinity, S.ComplexInfinity):
             raise TypeError("can't truncate", self)
         else:
-            return Integer(r)
+            return Integer(self)
 
     @staticmethod
     def _from_mpmath(x, prec):
