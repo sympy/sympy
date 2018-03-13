@@ -1737,3 +1737,12 @@ def test_issue_14300():
     assert solveset(f, x) == \
         ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
             log(Abs(y - 1))/18000000), S.Integers)
+
+
+def test_issue_14454():
+    x = Symbol('x')
+    raises(ValueError, lambda: invert_real(CRootOf(x**4 + x - 1, 2), 0, x, S.Reals))
+
+    y = invert_real(x**2, CRootOf(x**4 + x - 1, 2), x, S.Reals)
+    assert y[1].has(Intersection) == True
+    assert y[1].has(CRootOf) == True
