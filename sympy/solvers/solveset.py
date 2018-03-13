@@ -137,10 +137,10 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if not x.is_Symbol:
         raise ValueError("x must be a symbol")
     f_x = sympify(f_x)
-    if not f_x.has(x):
+    if x not in f_x.free_symbols:
         raise ValueError("Inverse of constant function doesn't exist")
     y = sympify(y)
-    if y.has(x):
+    if x in y.free_symbols:
         raise ValueError("y should be independent of x ")
 
     if domain.is_subset(S.Reals):
@@ -446,7 +446,7 @@ def _solve_as_rational(f, symbol, domain):
             # The polynomial formed from g could end up having
             # coefficients in a ring over which finding roots
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
-            return ConditionSet(f, symbol, domain)
+            return ConditionSet(symbol, Eq(f, 0), domain)
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)

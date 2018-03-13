@@ -324,6 +324,9 @@ def test_solve_polynomial():
     assert len(solveset_real(x**5 + x**3 + 1, x)) == 1
     assert len(solveset_real(-2*x**3 + 4*x**2 - 2*x + 6, x)) > 0
 
+    assert solveset_real(x**6 + x**4  + I, x) == ConditionSet(x,
+                                        Eq(x**6 + x**4 + I, 0), S.Reals)
+
 
 def test_return_root_of():
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
@@ -1737,3 +1740,12 @@ def test_issue_14300():
     assert solveset(f, x) == \
         ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
             log(Abs(y - 1))/18000000), S.Integers)
+
+
+def test_issue_14454():
+    x = Symbol('x')
+    raises(ValueError, lambda: invert_real(CRootOf(x**4 + x - 1, 2), 0, x, S.Reals))
+
+    y = invert_real(x**2, CRootOf(x**4 + x - 1, 2), x, S.Reals)
+    assert y[1].has(Intersection) == True
+    assert y[1].has(CRootOf) == True
