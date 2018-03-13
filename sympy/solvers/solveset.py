@@ -327,8 +327,6 @@ def _invert_abs(f, g_ys, symbol):
 
     n = Dummy('n', real=True)
 
-    condition_interval = Interval(0, oo)
-
     if f.is_positive:
         f_n = f
     else:
@@ -337,31 +335,21 @@ def _invert_abs(f, g_ys, symbol):
     g_x, values = _invert_real(f_n, Union(imageset(Lambda(n, n), g_ys),
                                imageset(Lambda(n, -n), g_ys)), symbol)
 
-    satisfied_ys = S.EmptySet
-    for condition_atom in g_ys.args:
-        if condition_atom.is_Number:
-            if condition_atom not in condition_interval:
-                return g_x, S.EmptySet
-            else:
-                satisfied_ys = Union(FiniteSet(condition_atom),
-                                     satisfied_ys)
-        elif condition_atom.is_positive:
-            satisfied_ys = Union(FiniteSet(condition_atom), satisfied_ys)
-        elif condition_atom.is_positive is False:
-            return g_x, S.EmptySet
-        else:
-            pass
-    condition_ys = g_ys - satisfied_ys
-
-
-    if not condition_ys:
-        return g_x, values
-
-    if not isinstance(condition_ys, FiniteSet):
+    if not isinstance(g_ys, FiniteSet):
         raise NotImplementedError
-
-    conditions = And(*[Contains(i, Interval(0, oo))
-        for i in condition_ys])
+    else:
+        unknown = []
+        for a in g_ys.args:
+            ok = a.is_nonnegative if a.is_Number else a.is_positive
+            if ok is None:
+                unknown.append(a)
+            elif not ok:
+                return g_x, S.EmptySet
+        if unknown:
+            conditions = And(*[Contains(i, Interval(0, oo))
+                for i in unknown])
+        else:
+            conditions = True
     return g_x, ConditionSet(g_x, conditions, values)
 
 

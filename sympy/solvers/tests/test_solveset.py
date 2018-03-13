@@ -150,19 +150,27 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    # XXX this is ugly
-    sol = (x,
-        ConditionSet(x,
-            Contains(b, Interval(0, oo)),
-            ConditionSet(x,
-                Contains(a + b, Interval(0, oo)) & Contains(a - b, Interval(0, oo)),
-                FiniteSet(-a - b - 3, -a + b - 3, a - b - 3, a + b - 3))))
+    sol = ConditionSet(
+            x, 
+            And(
+                Contains(b, Interval(0, oo)),
+                Contains(a + b, Interval(0, oo)),
+                Contains(a - b, Interval(0, oo))),
+            FiniteSet(-a - b - 3, -a + b - 3, a - b - 3, a + b - 3))
     eq = Abs(Abs(x + 3) - a) - b
-    assert invert_real(eq, 0, x) == sol
+    assert invert_real(eq, 0, x)[1] == sol
     reps = {a: 3, b: 1}
     eqab = eq.subs(reps)
-    for i in sol[1].subs(reps):
+    for i in sol.subs(reps):
         assert not eqab.subs(x, i)
+
+
+@XFAIL
+def test_solve_abs_with_imageset():
+    # not sure how to represent this: how do convert something
+    # like imageset(x, (-1)**x, S.Integers) into a set of positive
+    # numbers using set operations or solveset?
+    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals)
 
 
 def test_invert_complex():
